@@ -112,6 +112,34 @@
   color: var(--pf-vet-primary);
 }
 
+.pro-topbar__dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.pro-topbar__dropdown-header .pro-topbar__dropdown-title {
+  margin: 0;
+}
+
+.pro-topbar__mark-all {
+  border: 0;
+  background: transparent;
+  color: var(--pf-vet-accent);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.pro-topbar__mark-all:hover {
+  text-decoration: underline;
+}
+
 .pro-topbar__dropdown-email {
   margin: 0 0 0.75rem;
   font-size: 0.8125rem;

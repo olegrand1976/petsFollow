@@ -66,6 +66,7 @@ definePageMeta({ middleware: 'vet-only' })
 const route = useRoute()
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+const { refresh: refreshNotif } = useProNotifications()
 
 const threads = ref<any[]>([])
 const messages = ref<any[]>([])
@@ -96,12 +97,20 @@ function senderLabel(msg: any) {
 async function loadThreads() {
   const res: any = await $fetch('/api/messaging/threads')
   threads.value = res.data ?? res ?? []
+  if (active.value) {
+    active.value = threads.value.find((item) => item.id === active.value.id) ?? active.value
+  }
 }
 
 async function select(thread: any) {
   active.value = thread
   const res: any = await $fetch(`/api/messaging/threads/${thread.id}/messages`)
   messages.value = res.data ?? res ?? []
+  if ((thread.unreadCount ?? 0) > 0) {
+    await $fetch(`/api/messaging/threads/${thread.id}/read`, { method: 'POST' })
+    await loadThreads()
+    await refreshNotif()
+  }
 }
 
 async function openThreadFromQuery() {

@@ -62,8 +62,10 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/heartrate/sessions/{sessionID}/validate", a.validateHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/cancel", a.cancelHeartRate)
 		pr.Get("/messaging/threads", a.listThreads)
+		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
 		pr.Get("/messaging/threads/{threadID}/messages", a.listMessages)
 		pr.Post("/messaging/threads/{threadID}/messages", a.sendMessage)
+		pr.Post("/messaging/threads/{threadID}/read", a.markThreadRead)
 		pr.Put("/vet/availability", a.setAvailability)
 		pr.Get("/vet/availability", a.getAvailability)
 		pr.Get("/vet/overview", a.vetOverview)
@@ -449,6 +451,41 @@ func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, msgs)
+}
+
+func (a *API) markThreadRead(w http.ResponseWriter, r *http.Request) {
+	thread, err := a.store.GetThreadByID(r.Context(), chi.URLParam(r, "threadID"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "thread_not_found")
+		return
+	}
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
+		return
+	}
+	if err := a.store.MarkThreadRead(r.Context(), thread.ID, id.UserID); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+func (a *API) markAllThreadsRead(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if err := a.store.MarkAllUnreadForUser(r.Context(), id.UserID); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 type msgReq struct {

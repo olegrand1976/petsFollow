@@ -414,6 +414,30 @@ func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, e
 	return out, rows.Err()
 }
 
+// MarkThreadRead sets read_at on messages sent by the other participant.
+func (s *Store) MarkThreadRead(ctx context.Context, threadID, readerUserID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE messaging.messages
+		SET read_at = NOW()
+		WHERE thread_id = $1
+		  AND sender_user_id <> $2
+		  AND read_at IS NULL`, threadID, readerUserID)
+	return err
+}
+
+// MarkAllUnreadForUser marks all unread inbound messages as read for a participant.
+func (s *Store) MarkAllUnreadForUser(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE messaging.messages m
+		SET read_at = NOW()
+		FROM messaging.threads t
+		WHERE m.thread_id = t.id
+		  AND (t.vet_user_id = $1 OR t.client_user_id = $1)
+		  AND m.sender_user_id <> $1
+		  AND m.read_at IS NULL`, userID)
+	return err
+}
+
 func (s *Store) GetVetAvailability(ctx context.Context, vetID string) (kernel.AvailabilityStatus, string, error) {
 	var status kernel.AvailabilityStatus
 	var autoReply string

@@ -29,7 +29,18 @@
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
         </button>
         <div v-if="notifOpen" class="pro-topbar__dropdown" role="menu">
-          <p class="pro-topbar__dropdown-title">{{ $t('components.topbar.notifications') }}</p>
+          <div class="pro-topbar__dropdown-header">
+            <p class="pro-topbar__dropdown-title">{{ $t('components.topbar.notifications') }}</p>
+            <button
+              v-if="notifCount > 0"
+              type="button"
+              class="pro-topbar__mark-all"
+              data-testid="pro-notifications-mark-all"
+              @click="handleMarkAllRead"
+            >
+              {{ $t('components.topbar.markAllRead') }}
+            </button>
+          </div>
           <ProEmptyState
             v-if="!notifItems.length"
             :title="$t('components.topbar.notificationsEmptyTitle')"
@@ -99,7 +110,12 @@ const props = withDefaults(
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser, initials, logout } = useProUser()
-const { items: notifItems, count: notifCount, refresh: refreshNotif } = useProNotifications()
+const {
+  items: notifItems,
+  count: notifCount,
+  refresh: refreshNotif,
+  markAllRead,
+} = useProNotifications()
 
 const notifOpen = ref(false)
 const profileOpen = ref(false)
@@ -119,6 +135,14 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
   profileOpen.value = false
+}
+
+async function handleMarkAllRead() {
+  try {
+    await markAllRead()
+  } catch {
+    // keep dropdown open; badge will refresh on next open
+  }
 }
 
 function toggleProfile() {

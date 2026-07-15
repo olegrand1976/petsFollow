@@ -453,6 +453,7 @@
       "notifications": "Notifications",
       "notificationsEmptyTitle": "Rien de nouveau",
       "notificationsEmptyDescription": "Les conversations clients apparaîtront ici.",
+      "markAllRead": "Tout marquer comme lu",
       "profileMenu": "Menu profil",
       "settings": "Paramètres",
       "themeDark": "Activer le mode sombre",
