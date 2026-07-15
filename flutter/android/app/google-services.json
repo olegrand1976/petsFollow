@@ -1,0 +1,170 @@
+{
+  "project_info": {
+    "project_number": "237481297060",
+    "project_id": "premedica-prod-2025",
+    "storage_bucket": "premedica-prod-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237481297060:android:a20b3cbe89f89410c9d231",
+        "android_client_info": {
+          "package_name": "app.vectasports.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237481297060-lc52m7hdkndrjlshfop8tcen57lpl992.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.vectasports.mobile",
+            "certificate_hash": "edb0034ef8e4baf3076b66cb0bd78b1faa46ab02"
+          }
+        },
+        {
+          "client_id": "237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZdvMc09Ev4ppCNS84bS5yiQRxqeUqrok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237481297060-7u3kdpaiq9jhmgs4rivi3a084mvbptc1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "be.llitsc.petsfollowMobile"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237481297060:android:cfda5c59a08bfd6dc9d231",
+        "android_client_info": {
+          "package_name": "be.llitsc.petsfollow_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZdvMc09Ev4ppCNS84bS5yiQRxqeUqrok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237481297060-7u3kdpaiq9jhmgs4rivi3a084mvbptc1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "be.llitsc.petsfollowMobile"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237481297060:android:c2e4c4bc076a05e1c9d231",
+        "android_client_info": {
+          "package_name": "com.equimind.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZdvMc09Ev4ppCNS84bS5yiQRxqeUqrok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237481297060-7u3kdpaiq9jhmgs4rivi3a084mvbptc1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "be.llitsc.petsfollowMobile"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237481297060:android:76eaa7dcdb688503c9d231",
+        "android_client_info": {
+          "package_name": "com.llit.ketoapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237481297060-mc25ov2msbe9oc16n8i1ubdrn7036222.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.llit.ketoapp",
+            "certificate_hash": "edb0034ef8e4baf3076b66cb0bd78b1faa46ab02"
+          }
+        },
+        {
+          "client_id": "237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZdvMc09Ev4ppCNS84bS5yiQRxqeUqrok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237481297060-7u3kdpaiq9jhmgs4rivi3a084mvbptc1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "be.llitsc.petsfollowMobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

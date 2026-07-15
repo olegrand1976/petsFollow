@@ -88,6 +88,13 @@ Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le 
 - Réponses enveloppées `{ data: ... }` — BFF Nuxt proxy tel quel
 - Côté pages : `const items = res.data ?? res`
 
+## Firebase (Flutter pets uniquement)
+
+- Projet : `premedica-prod-2025` (GCP partagé)
+- Apps : Android `be.llitsc.petsfollow_mobile` · iOS `be.llitsc.petsfollowMobile`
+- **Auth** : PostgreSQL via API Go (`/api/v1/auth/login`) — **ne pas** activer Firebase Auth
+- Firebase sert d'infra mobile (FCM post-MVP) : `make firebase-flutter-setup`
+
 ## Tests
 
 ```bash

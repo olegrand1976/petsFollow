@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-deploy gcp-domain gcp-smoke
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup
 
 help:
 	@echo "petsFollow — commandes"
@@ -20,6 +20,7 @@ help:
 	@echo "  make test-go        tests Go"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
+	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -77,5 +78,8 @@ gcp-deploy:
 
 gcp-domain:
 	bash infra/gcp/setup-custom-domain.sh
+
+firebase-flutter-setup:
+	bash infra/firebase/setup-flutter-firebase.sh
 
 gcp-smoke: smoke-staging
