@@ -110,7 +110,7 @@ steps:
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
         ENV_FILE="$$(mktemp)"
-        pf_write_frontend_env_file "$$ENV_FILE" "${PUBLIC_API_URL}"
+        pf_write_frontend_env_file "$$ENV_FILE" "$${PUBLIC_API_URL}"
         gcloud run deploy ${_FRONTEND_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=3000 \
