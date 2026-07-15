@@ -399,12 +399,12 @@
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring. Gegevens worden bewaard zolang het account actief is."
+      "body": "petsFollow verwerkt persoonsgegevens (naam, e-mail, metingen, berichten) voor cardiologische monitoring. Gegevens worden bewaard zolang het account actief is. Neem contact op via support{'@'}petsfollow.test voor AVG-verzoeken."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
       "link": "Juridische vermeldingen",
-      "body": "Uitgever petsFollow."
+      "body": "Uitgever: petsFollow. Contact: support{'@'}petsfollow.test."
     }
   },
   "errors": {

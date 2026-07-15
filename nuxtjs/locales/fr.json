@@ -397,12 +397,12 @@
     "privacy": {
       "title": "Politique de confidentialité",
       "link": "Confidentialité",
-      "body": "petsFollow traite les donnees personnelles pour fournir le service de suivi cardiaque. Les donnees sont conservees pendant la duree du compte. Contactez le support pour exercer vos droits RGPD."
+      "body": "petsFollow traite les données personnelles (nom, email, relevés, messages) pour fournir le service de suivi cardiaque. Les données sont conservées pendant la durée d'utilisation du compte. Vous pouvez exercer vos droits RGPD en contactant support{'@'}petsfollow.test."
     },
     "mentions": {
       "title": "Mentions légales",
       "link": "Mentions légales",
-      "body": "Editeur petsFollow. Hebergement cloud conforme RGPD."
+      "body": "Éditeur : petsFollow. Contact : support{'@'}petsfollow.test. Hébergement : infrastructure cloud conforme RGPD."
     }
   },
   "errors": {
