@@ -18,7 +18,7 @@
     </ProCard>
 
     <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
-      <PracticeProfileForm
+      <ProPracticeProfileForm
         v-model="profile"
         v-model:heartrate-durations-sec="selectedDurations"
         show-heartrate-durations
@@ -31,7 +31,7 @@
             {{ $t('settings.saveProfile') }}
           </ProButton>
         </template>
-      </PracticeProfileForm>
+      </ProPracticeProfileForm>
     </ProCard>
 
     <ProCard :title="$t('settings.availability')" class="pro-settings-card">
