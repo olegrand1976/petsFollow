@@ -30,6 +30,127 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myPets => 'My pets';
 
   @override
+  String get myData => 'My data';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get logout => 'Sign out';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountConfirm =>
+      'This action cannot be undone. All your pets and data will be deleted.';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get passwordChanged => 'Password changed';
+
+  @override
+  String greeting(String name) {
+    return 'Hello $name,';
+  }
+
+  @override
+  String get latestValues => 'Latest values';
+
+  @override
+  String get startMeasurement => 'START MEASUREMENT';
+
+  @override
+  String get chooseDuration => 'Measurement duration';
+
+  @override
+  String durationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get howToMeasure => 'How to measure?';
+
+  @override
+  String get howToMeasureIntro => 'Measure your pet\'s resting heart rate.';
+
+  @override
+  String get howToMeasureStep1 =>
+      '1. Keep your pet calm, lying down or sitting.';
+
+  @override
+  String get howToMeasureStep2 =>
+      '2. Place your hand on the chest and tap on each beat for the indicated duration.';
+
+  @override
+  String get howToMeasureStep3 =>
+      '3. Validate the reading to send it to your veterinarian.';
+
+  @override
+  String get howToMeasureWhyTitle => 'Why measure?';
+
+  @override
+  String get howToMeasureWhyBody =>
+      'Regular heart rate monitoring helps detect changes and adjust treatment with your vet.';
+
+  @override
+  String get reminders => 'Reminders';
+
+  @override
+  String get remindersHint =>
+      'Receive a daily reminder to take a heart rate reading.';
+
+  @override
+  String get remindersEnabled => 'Enable reminders';
+
+  @override
+  String get remindersTime => 'Reminder time';
+
+  @override
+  String get remindersSaved => 'Reminders saved';
+
+  @override
+  String get legalTermsTitle => 'Terms of use';
+
+  @override
+  String get legalPrivacyTitle => 'Privacy policy';
+
+  @override
+  String get legalNoticeTitle => 'Legal notice';
+
+  @override
+  String get legalTermsBody =>
+      'Terms of use — petsFollow\n\nThe petsFollow app lets pet owners measure heart rate, view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription. Users must use the app as intended.\n\nLast updated: July 2026';
+
+  @override
+  String get legalPrivacyBody =>
+      'Privacy policy — petsFollow\n\nData collected: first name, email, pet data (name, species, breed), heart rate readings, messages to the vet.\n\nPurposes: account management, health monitoring, communication with the veterinary practice.\n\nRetention: until account deletion or 3 years of inactivity.\n\nYou may exercise your rights (access, rectification, deletion) via app settings.\n\nLast updated: July 2026';
+
+  @override
+  String get legalNoticeBody =>
+      'Legal notice — petsFollow\n\nPublisher: petsFollow\nContact: support@petsfollow.test\n\nHosting: GDPR-compliant cloud infrastructure.\n\nPublication director: petsFollow.\n\nLast updated: July 2026';
+
+  @override
   String get language => 'Language';
 
   @override
@@ -126,6 +247,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heartRateInstructions => 'Tap on each beat for 60 seconds.';
+
+  @override
+  String heartRateInstructionsDuration(int seconds) {
+    return 'Tap on each beat for $seconds seconds.';
+  }
 
   @override
   String get start => 'Start';

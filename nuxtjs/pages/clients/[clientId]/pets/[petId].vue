@@ -11,6 +11,9 @@
       :title="pet?.name || $t('clients.pet.title')"
       :subtitle="petSubtitle"
     />
+    <ProCard v-if="chartValues.length" :title="$t('clients.pet.chartTitle')">
+      <ProBpmChart :values="chartValues" :alerts="chartAlerts" />
+    </ProCard>
     <ProCard :title="$t('clients.pet.heartrateTitle')">
       <ProTable
         :empty="!sessions.length"
@@ -21,6 +24,7 @@
           <tr>
             <th>{{ $t('clients.pet.columnDate') }}</th>
             <th>{{ $t('clients.pet.columnBpm') }}</th>
+            <th>{{ $t('clients.pet.columnDuration') }}</th>
             <th>{{ $t('clients.pet.columnStatus') }}</th>
           </tr>
         </thead>
@@ -28,6 +32,7 @@
           <tr v-for="s in sessions" :key="s.id">
             <td>{{ formatDate(s.startedAt) }}</td>
             <td><code>{{ s.bpm }}</code></td>
+            <td>{{ s.durationSec }}s</td>
             <td>
               <ProBadge :variant="s.isAlert ? 'danger' : 'success'">
                 {{ s.isAlert ? $t('clients.pet.alert') : $t('clients.pet.ok') }}
@@ -73,6 +78,10 @@ const petSubtitle = computed(() => {
   if (!pet.value) return ''
   return [pet.value.species, pet.value.breed].filter(Boolean).join(' · ')
 })
+
+const chartSessions = computed(() => [...sessions.value].slice(0, 30).reverse())
+const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number).filter(v => v != null))
+const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
 
 onMounted(async () => {
   const petRes: any = await $fetch(`/api/pets/${petId}`)

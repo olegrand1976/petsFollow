@@ -140,7 +140,25 @@
       "nl": "Nederlands",
       "en": "English",
       "saved": "Taal opgeslagen."
-    }
+    },
+    "heartrate": {
+      "title": "Hartslagmeting",
+      "subtitle": "Meetduur aangeboden aan uw klanten.",
+      "duration15": "15 seconden",
+      "duration30": "30 seconden",
+      "duration60": "60 seconden",
+      "hint": "Selecteer minstens één duur.",
+      "saved": "Duur opgeslagen.",
+      "save": "Duur opslaan"
+    },
+    "notifications": {
+      "title": "E-mailmeldingen",
+      "subtitle": "Kies bij welke gebeurtenissen u een e-mail ontvangt.",
+      "onMessage": "Nieuw klantbericht",
+      "onHeartrate": "Gevalideerde hartslagmeting",
+      "saved": "Voorkeuren opgeslagen."
+    },
+    "legalLinks": "Juridische informatie"
   },
   "clients": {
     "title": "Klanten",
@@ -180,7 +198,9 @@
       "heartrateEmptyDescription": "Gevalideerde BPM-sessies verschijnen hier.",
       "columnDate": "Datum",
       "columnBpm": "BPM",
+      "columnDuration": "Duur",
       "columnStatus": "Status",
+      "chartTitle": "BPM-trend (laatste 30 metingen)",
       "alert": "Waarschuwing",
       "ok": "OK",
       "timelineTitle": "Opvolgingsgeschiedenis",
@@ -367,6 +387,24 @@
       "city": "Stad",
       "website": "Website (optioneel)",
       "websitePlaceholder": "https://"
+    }
+  },
+  "legal": {
+    "updated": "Laatst bijgewerkt: juli 2026",
+    "terms": {
+      "title": "Gebruiksvoorwaarden",
+      "link": "Voorwaarden",
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars."
+    },
+    "privacy": {
+      "title": "Privacybeleid",
+      "link": "Privacy",
+      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring. Gegevens worden bewaard zolang het account actief is."
+    },
+    "mentions": {
+      "title": "Juridische vermeldingen",
+      "link": "Juridische vermeldingen",
+      "body": "Uitgever petsFollow."
     }
   },
   "errors": {

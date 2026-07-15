@@ -30,6 +30,127 @@ class AppLocalizationsNl extends AppLocalizations {
   String get myPets => 'Mijn huisdieren';
 
   @override
+  String get myData => 'Mijn gegevens';
+
+  @override
+  String get settings => 'Instellingen';
+
+  @override
+  String get logout => 'Afmelden';
+
+  @override
+  String get save => 'Opslaan';
+
+  @override
+  String get cancel => 'Annuleren';
+
+  @override
+  String get firstName => 'Voornaam';
+
+  @override
+  String get currentPassword => 'Huidig wachtwoord';
+
+  @override
+  String get newPassword => 'Nieuw wachtwoord';
+
+  @override
+  String get changePassword => 'Wachtwoord wijzigen';
+
+  @override
+  String get deleteAccount => 'Account verwijderen';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Deze actie is onomkeerbaar. Al uw huisdieren en gegevens worden verwijderd.';
+
+  @override
+  String get profileSaved => 'Profiel opgeslagen';
+
+  @override
+  String get passwordChanged => 'Wachtwoord gewijzigd';
+
+  @override
+  String greeting(String name) {
+    return 'Hallo $name,';
+  }
+
+  @override
+  String get latestValues => 'Laatste waarden';
+
+  @override
+  String get startMeasurement => 'METING STARTEN';
+
+  @override
+  String get chooseDuration => 'Meetduur';
+
+  @override
+  String durationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get howToMeasure => 'Hoe meten?';
+
+  @override
+  String get howToMeasureIntro => 'Meet de hartslag van uw huisdier in rust.';
+
+  @override
+  String get howToMeasureStep1 =>
+      '1. Houd uw huisdier rustig, liggend of zittend.';
+
+  @override
+  String get howToMeasureStep2 =>
+      '2. Leg uw hand op de borst en tik bij elke slag gedurende de aangegeven tijd.';
+
+  @override
+  String get howToMeasureStep3 =>
+      '3. Valideer de meting om deze naar uw dierenarts te sturen.';
+
+  @override
+  String get howToMeasureWhyTitle => 'Waarom meten?';
+
+  @override
+  String get howToMeasureWhyBody =>
+      'Regelmatige hartslagmonitoring helpt veranderingen op te sporen en de behandeling met uw dierenarts aan te passen.';
+
+  @override
+  String get reminders => 'Herinneringen';
+
+  @override
+  String get remindersHint =>
+      'Ontvang een dagelijkse herinnering voor een hartslagmeting.';
+
+  @override
+  String get remindersEnabled => 'Herinneringen inschakelen';
+
+  @override
+  String get remindersTime => 'Tijdstip herinnering';
+
+  @override
+  String get remindersSaved => 'Herinneringen opgeslagen';
+
+  @override
+  String get legalTermsTitle => 'Gebruiksvoorwaarden';
+
+  @override
+  String get legalPrivacyTitle => 'Privacybeleid';
+
+  @override
+  String get legalNoticeTitle => 'Juridische vermeldingen';
+
+  @override
+  String get legalTermsBody =>
+      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app laat eigenaars de hartslag meten, de geschiedenis bekijken en communiceren met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement.\n\nLaatst bijgewerkt: juli 2026';
+
+  @override
+  String get legalPrivacyBody =>
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: voornaam, e-mail, huisdiergegevens, hartslagmetingen, berichten aan de dierenarts.\n\nDoeleinden: accountbeheer, gezondheidsmonitoring, communicatie met de praktijk.\n\nBewaring: tot verwijdering van het account of 3 jaar inactiviteit.\n\nLaatst bijgewerkt: juli 2026';
+
+  @override
+  String get legalNoticeBody =>
+      'Juridische vermeldingen — petsFollow\n\nUitgever: petsFollow\nContact: support@petsfollow.test\n\nLaatst bijgewerkt: juli 2026';
+
+  @override
   String get language => 'Taal';
 
   @override
@@ -128,6 +249,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get heartRateInstructions =>
       'Tik bij elke hartslag gedurende 60 seconden.';
+
+  @override
+  String heartRateInstructionsDuration(int seconds) {
+    return 'Tik bij elke hartslag gedurende $seconds seconden.';
+  }
 
   @override
   String get start => 'Starten';

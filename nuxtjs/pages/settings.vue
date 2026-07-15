@@ -52,6 +52,42 @@
       </ProButton>
     </ProCard>
 
+    <ProCard :title="$t('settings.heartrate.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.heartrate.subtitle') }}</p>
+      <div class="pro-heartrate-durations" role="group" :aria-label="$t('settings.heartrate.title')">
+        <label v-for="opt in durationOptions" :key="opt" class="pro-heartrate-durations__item">
+          <input v-model="selectedDurations" type="checkbox" :value="opt">
+          <span>{{ $t(`settings.heartrate.duration${opt}`) }}</span>
+        </label>
+      </div>
+      <p class="pro-settings-hint">{{ $t('settings.heartrate.hint') }}</p>
+      <p v-if="durationsSaved" class="text-muted" role="status">{{ $t('settings.heartrate.saved') }}</p>
+      <p v-if="durationsError" class="pro-field-error" role="alert">{{ durationsError }}</p>
+      <ProButton class="pro-save-btn" :loading="durationsSaving" @click="saveDurations">
+        {{ $t('settings.heartrate.save') }}
+      </ProButton>
+    </ProCard>
+
+    <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
+      <label class="pro-checkbox-row">
+        <input v-model="emailOnMessage" type="checkbox">
+        <span>{{ $t('settings.notifications.onMessage') }}</span>
+      </label>
+      <label class="pro-checkbox-row">
+        <input v-model="emailOnHeartrate" type="checkbox">
+        <span>{{ $t('settings.notifications.onHeartrate') }}</span>
+      </label>
+      <p v-if="notifSaved" class="text-muted" role="status">{{ $t('settings.notifications.saved') }}</p>
+      <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
+        {{ $t('common.save') }}
+      </ProButton>
+    </ProCard>
+
+    <ProCard :title="$t('settings.legalLinks')" class="pro-settings-card">
+      <ProLegalFooter />
+    </ProCard>
+
     <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
       <p class="pro-settings-hint">{{ $t('settings.language.subtitle') }}</p>
       <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">
@@ -175,6 +211,17 @@ const setupCode = ref('')
 const disableCode = ref('')
 const disablePassword = ref('')
 
+const durationOptions = [15, 30, 60] as const
+const selectedDurations = ref<number[]>([60])
+const durationsSaving = ref(false)
+const durationsSaved = ref(false)
+const durationsError = ref('')
+
+const emailOnMessage = ref(true)
+const emailOnHeartrate = ref(true)
+const notifSaving = ref(false)
+const notifSaved = ref(false)
+
 function mapFromApi(data: any): PracticeProfileForm {
   return {
     vetFullName: data.vetFullName || '',
@@ -195,6 +242,7 @@ onMounted(async () => {
   try {
     const res: any = await $fetch('/api/vet/profile')
     profile.value = mapFromApi(res.data ?? res)
+    selectedDurations.value = (res.data ?? res).heartrateDurationsSec ?? [60]
   } catch { /* ignore */ }
 
   const avail: any = await $fetch('/api/vet/availability')
@@ -211,14 +259,59 @@ onMounted(async () => {
     const tfa: any = await $fetch('/api/auth/2fa/status')
     twoFactorEnabled.value = (tfa.data ?? tfa).enabled === true
   } catch { /* ignore */ }
+
+  try {
+    const prefs: any = await $fetch('/api/vet/notification-preferences')
+    const data = prefs.data ?? prefs
+    emailOnMessage.value = data.emailOnMessage !== false
+    emailOnHeartrate.value = data.emailOnHeartrate !== false
+  } catch { /* ignore */ }
 })
+
+async function saveDurations() {
+  if (!selectedDurations.value.length) {
+    durationsError.value = t('settings.heartrate.hint')
+    return
+  }
+  durationsSaving.value = true
+  durationsSaved.value = false
+  durationsError.value = ''
+  try {
+    await $fetch('/api/vet/profile', {
+      method: 'PUT',
+      body: { ...profile.value, heartrateDurationsSec: selectedDurations.value },
+    })
+    durationsSaved.value = true
+  } catch (e: any) {
+    durationsError.value = mapError(e)
+  } finally {
+    durationsSaving.value = false
+  }
+}
+
+async function saveNotifications() {
+  notifSaving.value = true
+  notifSaved.value = false
+  try {
+    await $fetch('/api/vet/notification-preferences', {
+      method: 'PUT',
+      body: { emailOnMessage: emailOnMessage.value, emailOnHeartrate: emailOnHeartrate.value },
+    })
+    notifSaved.value = true
+  } finally {
+    notifSaving.value = false
+  }
+}
 
 async function saveProfile() {
   profileSaving.value = true
   profileSaved.value = false
   profileError.value = ''
   try {
-    await $fetch('/api/vet/profile', { method: 'PUT', body: profile.value })
+    await $fetch('/api/vet/profile', {
+      method: 'PUT',
+      body: { ...profile.value, heartrateDurationsSec: selectedDurations.value },
+    })
     profileSaved.value = true
     await useProUser().fetchUser(true)
   } catch (e: any) {
@@ -343,5 +436,27 @@ async function disable2FA() {
 .pro-2fa-qr {
   border-radius: 8px;
   border: 1px solid var(--pf-vet-border);
+}
+
+.pro-heartrate-durations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pro-heartrate-durations__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.pro-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
 }
 </style>

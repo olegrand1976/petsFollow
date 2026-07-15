@@ -34,13 +34,7 @@ export default defineNuxtConfig({
         { rel: 'icon', href: '/brand/emblem.svg' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap' },
       ],
-      script: [
-        {
-          innerHTML: `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)pf_theme=([^;]+)/);if(m&&decodeURIComponent(m[1])==='dark')document.documentElement.classList.add('dark')}catch(e){}})();`,
-          type: 'text/javascript',
-          tagPosition: 'head',
-        },
-      ],
+      script: [{ src: '/pf-theme-init.js', tagPosition: 'head' }],
     },
   },
 })

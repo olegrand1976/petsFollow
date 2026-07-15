@@ -392,17 +392,17 @@
     "terms": {
       "title": "Conditions générales d'utilisation",
       "link": "CGU",
-      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires.\n\nL'application permet de mesurer la fréquence cardiaque, consulter l'historique et communiquer avec le cabinet.\n\nL'utilisateur s'engage à utiliser le service conformément à sa destination professionnelle ou personnelle."
+      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires. L'application permet de mesurer la fréquence cardiaque, consulter l'historique et communiquer avec le cabinet. L'utilisateur s'engage à utiliser le service conformément à sa destination."
     },
     "privacy": {
       "title": "Politique de confidentialité",
       "link": "Confidentialité",
-      "body": "petsFollow traite les données personnelles (nom, email, relevés, messages) pour fournir le service de suivi cardiaque.\n\nLes données sont conservées pendant la durée d'utilisation du compte.\n\nVous pouvez exercer vos droits RGPD en contactant support@petsfollow.test."
+      "body": "petsFollow traite les donnees personnelles pour fournir le service de suivi cardiaque. Les donnees sont conservees pendant la duree du compte. Contactez le support pour exercer vos droits RGPD."
     },
     "mentions": {
       "title": "Mentions légales",
       "link": "Mentions légales",
-      "body": "Éditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD."
+      "body": "Editeur petsFollow. Hebergement cloud conforme RGPD."
     }
   },
   "errors": {

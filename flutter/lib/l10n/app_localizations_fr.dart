@@ -30,6 +30,128 @@ class AppLocalizationsFr extends AppLocalizations {
   String get myPets => 'Mes animaux';
 
   @override
+  String get myData => 'Mes données';
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get logout => 'Fermer la session';
+
+  @override
+  String get save => 'Sauvegarder';
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get firstName => 'Votre prénom';
+
+  @override
+  String get currentPassword => 'Mot de passe actuel';
+
+  @override
+  String get newPassword => 'Nouveau mot de passe';
+
+  @override
+  String get changePassword => 'Changer le mot de passe';
+
+  @override
+  String get deleteAccount => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Cette action est irréversible. Tous vos animaux et données seront supprimés.';
+
+  @override
+  String get profileSaved => 'Profil enregistré';
+
+  @override
+  String get passwordChanged => 'Mot de passe modifié';
+
+  @override
+  String greeting(String name) {
+    return 'Bonjour $name,';
+  }
+
+  @override
+  String get latestValues => 'Dernières valeurs';
+
+  @override
+  String get startMeasurement => 'DÉMARRER LA MESURE';
+
+  @override
+  String get chooseDuration => 'Durée de la mesure';
+
+  @override
+  String durationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get howToMeasure => 'Comment mesurer ?';
+
+  @override
+  String get howToMeasureIntro =>
+      'Mesurer la fréquence cardiaque de votre animal au repos.';
+
+  @override
+  String get howToMeasureStep1 =>
+      '1. Placez votre animal au calme, allongé ou assis.';
+
+  @override
+  String get howToMeasureStep2 =>
+      '2. Placez votre main sur le thorax et tapez à chaque battement pendant la durée indiquée.';
+
+  @override
+  String get howToMeasureStep3 =>
+      '3. Validez le relevé pour l\'envoyer à votre vétérinaire.';
+
+  @override
+  String get howToMeasureWhyTitle => 'Pourquoi mesurer ?';
+
+  @override
+  String get howToMeasureWhyBody =>
+      'Le suivi régulier de la fréquence cardiaque permet de détecter des variations et d\'adapter le traitement avec votre vétérinaire.';
+
+  @override
+  String get reminders => 'Rappels';
+
+  @override
+  String get remindersHint =>
+      'Recevez un rappel quotidien pour effectuer un relevé cardiaque.';
+
+  @override
+  String get remindersEnabled => 'Activer les rappels';
+
+  @override
+  String get remindersTime => 'Heure du rappel';
+
+  @override
+  String get remindersSaved => 'Rappels enregistrés';
+
+  @override
+  String get legalTermsTitle => 'Conditions générales d\'utilisation';
+
+  @override
+  String get legalPrivacyTitle => 'Politique de confidentialité';
+
+  @override
+  String get legalNoticeTitle => 'Mentions légales';
+
+  @override
+  String get legalTermsBody =>
+      'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux de mesurer la fréquence cardiaque, de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi. L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nDate d\'actualisation : juillet 2026';
+
+  @override
+  String get legalPrivacyBody =>
+      'Politique de confidentialité — petsFollow\n\nDonnées collectées : prénom, email, données animal (nom, espèce, race), relevés cardiaques, messages au vétérinaire.\n\nFinalités : gestion du compte, suivi santé, communication avec le cabinet vétérinaire.\n\nConservation : jusqu\'à suppression du compte ou 3 ans d\'inactivité.\n\nVous pouvez exercer vos droits (accès, rectification, suppression) via les paramètres de l\'application.\n\nDate d\'actualisation : juillet 2026';
+
+  @override
+  String get legalNoticeBody =>
+      'Mentions légales — petsFollow\n\nÉditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD.\n\nDirecteur de publication : petsFollow.\n\nDate d\'actualisation : juillet 2026';
+
+  @override
   String get language => 'Langue';
 
   @override
@@ -130,6 +252,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get heartRateInstructions =>
       'Tapotez à chaque battement pendant 60 secondes.';
+
+  @override
+  String heartRateInstructionsDuration(int seconds) {
+    return 'Tapotez à chaque battement pendant $seconds secondes.';
+  }
 
   @override
   String get start => 'Démarrer';

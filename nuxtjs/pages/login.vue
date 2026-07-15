@@ -52,6 +52,7 @@
           {{ $t('auth.login.noAccount') }}
           <NuxtLink to="/register">{{ $t('auth.login.registerLink') }}</NuxtLink>
         </p>
+        <ProLegalFooter />
       </form>
 
       <form

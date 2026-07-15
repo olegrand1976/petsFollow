@@ -142,6 +142,222 @@ abstract class AppLocalizations {
   /// **'Mes animaux'**
   String get myPets;
 
+  /// No description provided for @myData.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données'**
+  String get myData;
+
+  /// No description provided for @settings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get settings;
+
+  /// No description provided for @logout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer la session'**
+  String get logout;
+
+  /// No description provided for @save.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sauvegarder'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get cancel;
+
+  /// No description provided for @firstName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre prénom'**
+  String get firstName;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe actuel'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau mot de passe'**
+  String get newPassword;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer le mot de passe'**
+  String get changePassword;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le compte'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible. Tous vos animaux et données seront supprimés.'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil enregistré'**
+  String get profileSaved;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe modifié'**
+  String get passwordChanged;
+
+  /// No description provided for @greeting.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour {name},'**
+  String greeting(String name);
+
+  /// No description provided for @latestValues.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernières valeurs'**
+  String get latestValues;
+
+  /// No description provided for @startMeasurement.
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉMARRER LA MESURE'**
+  String get startMeasurement;
+
+  /// No description provided for @chooseDuration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Durée de la mesure'**
+  String get chooseDuration;
+
+  /// No description provided for @durationSeconds.
+  ///
+  /// In fr, this message translates to:
+  /// **'{seconds} s'**
+  String durationSeconds(int seconds);
+
+  /// No description provided for @howToMeasure.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment mesurer ?'**
+  String get howToMeasure;
+
+  /// No description provided for @howToMeasureIntro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mesurer la fréquence cardiaque de votre animal au repos.'**
+  String get howToMeasureIntro;
+
+  /// No description provided for @howToMeasureStep1.
+  ///
+  /// In fr, this message translates to:
+  /// **'1. Placez votre animal au calme, allongé ou assis.'**
+  String get howToMeasureStep1;
+
+  /// No description provided for @howToMeasureStep2.
+  ///
+  /// In fr, this message translates to:
+  /// **'2. Placez votre main sur le thorax et tapez à chaque battement pendant la durée indiquée.'**
+  String get howToMeasureStep2;
+
+  /// No description provided for @howToMeasureStep3.
+  ///
+  /// In fr, this message translates to:
+  /// **'3. Validez le relevé pour l\'envoyer à votre vétérinaire.'**
+  String get howToMeasureStep3;
+
+  /// No description provided for @howToMeasureWhyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi mesurer ?'**
+  String get howToMeasureWhyTitle;
+
+  /// No description provided for @howToMeasureWhyBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le suivi régulier de la fréquence cardiaque permet de détecter des variations et d\'adapter le traitement avec votre vétérinaire.'**
+  String get howToMeasureWhyBody;
+
+  /// No description provided for @reminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels'**
+  String get reminders;
+
+  /// No description provided for @remindersHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez un rappel quotidien pour effectuer un relevé cardiaque.'**
+  String get remindersHint;
+
+  /// No description provided for @remindersEnabled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les rappels'**
+  String get remindersEnabled;
+
+  /// No description provided for @remindersTime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure du rappel'**
+  String get remindersTime;
+
+  /// No description provided for @remindersSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels enregistrés'**
+  String get remindersSaved;
+
+  /// No description provided for @legalTermsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions générales d\'utilisation'**
+  String get legalTermsTitle;
+
+  /// No description provided for @legalPrivacyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get legalPrivacyTitle;
+
+  /// No description provided for @legalNoticeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mentions légales'**
+  String get legalNoticeTitle;
+
+  /// No description provided for @legalTermsBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux de mesurer la fréquence cardiaque, de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi. L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nDate d\'actualisation : juillet 2026'**
+  String get legalTermsBody;
+
+  /// No description provided for @legalPrivacyBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : prénom, email, données animal (nom, espèce, race), relevés cardiaques, messages au vétérinaire.\n\nFinalités : gestion du compte, suivi santé, communication avec le cabinet vétérinaire.\n\nConservation : jusqu\'à suppression du compte ou 3 ans d\'inactivité.\n\nVous pouvez exercer vos droits (accès, rectification, suppression) via les paramètres de l\'application.\n\nDate d\'actualisation : juillet 2026'**
+  String get legalPrivacyBody;
+
+  /// No description provided for @legalNoticeBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mentions légales — petsFollow\n\nÉditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD.\n\nDirecteur de publication : petsFollow.\n\nDate d\'actualisation : juillet 2026'**
+  String get legalNoticeBody;
+
   /// No description provided for @language.
   ///
   /// In fr, this message translates to:
@@ -321,6 +537,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tapotez à chaque battement pendant 60 secondes.'**
   String get heartRateInstructions;
+
+  /// No description provided for @heartRateInstructionsDuration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapotez à chaque battement pendant {seconds} secondes.'**
+  String heartRateInstructionsDuration(int seconds);
 
   /// No description provided for @start.
   ///
