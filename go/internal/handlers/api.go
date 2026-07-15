@@ -113,8 +113,36 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	a.issueLoginResponse(w, r, u)
 }
 
+type refreshReq struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
 func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
-	writeErr(w, r, http.StatusNotImplemented, "not_implemented", "not_implemented")
+	var req refreshReq
+	if err := httpx.DecodeJSON(r, &req); err != nil || req.RefreshToken == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "refresh_token_required")
+		return
+	}
+	id, err := a.tokens.ParseRefresh(req.RefreshToken)
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
+		return
+	}
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, pair)
 }
 
 func (a *API) me(w http.ResponseWriter, r *http.Request) {

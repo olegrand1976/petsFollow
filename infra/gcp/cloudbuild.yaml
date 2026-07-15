@@ -109,8 +109,14 @@ steps:
         source infra/gcp/lib/gcp-env.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        API_URL="$$(gcloud run services describe ${_API_SERVICE} \
+          --region="${_RUN_REGION}" --project="$PROJECT_ID" \
+          --format='value(status.url)' 2>/dev/null || true)"
+        if [[ -z "$$API_URL" ]]; then
+          API_URL="$${PUBLIC_API_URL}"
+        fi
         ENV_FILE="$$(mktemp)"
-        pf_write_frontend_env_file "$$ENV_FILE" "$${PUBLIC_API_URL}"
+        pf_write_frontend_env_file "$$ENV_FILE" "$$API_URL"
         gcloud run deploy ${_FRONTEND_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=3000 \
@@ -124,6 +130,3 @@ steps:
         gcloud run services describe ${_FRONTEND_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
     waitFor: ["build-frontend", "deploy-api"]
 
-images:
-  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID
-  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID
