@@ -30,9 +30,17 @@ func (n *Notifier) SendVetAlert(to, subject, body string) error {
 
 func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL string) error {
 	subject := i18n.T(locale, "emails.confirm_registration_subject", nil)
-	body := i18n.T(locale, "emails.confirm_registration_body", map[string]string{
-		"fullName":   fullName,
-		"confirmUrl": confirmURL,
+	vars := map[string]string{"fullName": fullName}
+	body := renderConfirmRegistration(confirmRegistrationContent{
+		Lang:       locale,
+		Tagline:    i18n.T(locale, "emails.confirm_registration_tagline", nil),
+		Greeting:   i18n.T(locale, "emails.confirm_registration_greeting", vars),
+		Intro:      i18n.T(locale, "emails.confirm_registration_intro", nil),
+		CTALabel:   i18n.T(locale, "emails.confirm_registration_cta", nil),
+		Expiry:     i18n.T(locale, "emails.confirm_registration_expiry", nil),
+		Disclaimer: i18n.T(locale, "emails.confirm_registration_disclaimer", nil),
+		Preheader:  i18n.T(locale, "emails.confirm_registration_preheader", nil),
+		ConfirmURL: confirmURL,
 	})
 	return n.SendVetAlert(to, subject, body)
 }

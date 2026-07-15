@@ -43,6 +43,8 @@
       "practiceName": "Naam praktijk",
       "email": "Professioneel e-mailadres",
       "password": "Wachtwoord",
+      "passwordConfirm": "Bevestig wachtwoord",
+      "passwordMismatch": "Wachtwoorden komen niet overeen.",
       "passwordHint": "Minimaal 8 tekens",
       "submit": "Account aanmaken",
       "alreadyRegistered": "Al geregistreerd?",

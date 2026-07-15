@@ -48,6 +48,15 @@
           required
           test-id="register-password"
         />
+        <ProInput
+          v-model="confirmPassword"
+          :label="$t('auth.register.passwordConfirm')"
+          type="password"
+          name="passwordConfirm"
+          autocomplete="new-password"
+          required
+          test-id="register-password-confirm"
+        />
         <p class="pro-field-hint">{{ $t('auth.register.passwordHint') }}</p>
 
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
@@ -68,17 +77,27 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
 const { mapError } = useApiError()
 
 const fullName = ref('')
 const practiceName = ref('')
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const error = ref('')
 const loading = ref(false)
 
 async function submit() {
   error.value = ''
+  if (password.value !== confirmPassword.value) {
+    error.value = t('auth.register.passwordMismatch')
+    return
+  }
+  if (password.value.length < 8) {
+    error.value = t('errors.password_too_short')
+    return
+  }
   loading.value = true
   try {
     const res: any = await $fetch('/api/auth/register', {

@@ -16,3 +16,23 @@ export function localeHeaders(event: any) {
 export function apiHeaders(event: any) {
   return { ...authHeaders(event), ...localeHeaders(event) }
 }
+
+export async function proxyApi<T>(
+  event: any,
+  path: string,
+  options: { method?: string, body?: unknown } = {},
+): Promise<T> {
+  try {
+    return await $fetch<T>(`${apiBase()}${path}`, {
+      method: options.method,
+      body: options.body,
+      headers: apiHeaders(event),
+    })
+  } catch (e: any) {
+    throw createError({
+      statusCode: e?.statusCode ?? e?.status ?? 500,
+      statusMessage: e?.data?.error?.message ?? e?.statusMessage ?? 'Error',
+      data: e?.data,
+    })
+  }
+}

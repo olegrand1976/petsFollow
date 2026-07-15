@@ -43,6 +43,8 @@
       "practiceName": "Practice name",
       "email": "Professional email",
       "password": "Password",
+      "passwordConfirm": "Confirm password",
+      "passwordMismatch": "Passwords do not match.",
       "passwordHint": "Minimum 8 characters",
       "submit": "Create my account",
       "alreadyRegistered": "Already registered?",

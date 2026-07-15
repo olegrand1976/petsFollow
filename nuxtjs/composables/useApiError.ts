@@ -14,12 +14,12 @@ export function useApiError() {
       const translated = translateKey(msgKey)
       if (translated) return translated
     }
+    if (apiMessage) return apiMessage
     const code = e?.data?.error?.code
     if (code) {
       const translated = translateKey(code)
       if (translated) return translated
     }
-    if (apiMessage) return apiMessage
     return t('errors.generic')
   }
 
