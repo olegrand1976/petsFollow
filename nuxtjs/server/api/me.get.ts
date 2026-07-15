@@ -1,4 +1,4 @@
-import { authHeaders } from '~/server/utils/api'
+import { apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const token = getCookie(event, 'pf_token')
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig()
   try {
-    return await $fetch(`${config.apiBase}/api/v1/me`, { headers: authHeaders(event) })
+    return await $fetch(`${config.apiBase}/api/v1/me`, { headers: apiHeaders(event) })
   } catch {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }

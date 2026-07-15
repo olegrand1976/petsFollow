@@ -1,31 +1,31 @@
 <template>
   <div>
     <ProPageHeader
-      title="Paramètres"
-      subtitle="Fiche d'information, disponibilité et messages automatiques."
+      :title="$t('settings.title')"
+      :subtitle="$t('settings.subtitle')"
     />
 
-    <ProCard title="Fiche d'information du cabinet" class="pro-settings-card">
+    <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
       <PracticeProfileForm v-model="profile" @submit="saveProfile">
         <template #actions>
-          <p v-if="profileSaved" class="text-muted" role="status">Fiche enregistrée.</p>
+          <p v-if="profileSaved" class="text-muted" role="status">{{ $t('settings.profileSaved') }}</p>
           <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
           <ProButton type="submit" :loading="profileSaving" class="pro-save-btn">
-            Enregistrer la fiche
+            {{ $t('settings.saveProfile') }}
           </ProButton>
         </template>
       </PracticeProfileForm>
     </ProCard>
 
-    <ProCard title="Disponibilité" class="pro-settings-card">
-      <div class="pro-toggle" role="group" aria-label="Statut de disponibilité">
+    <ProCard :title="$t('settings.availability')" class="pro-settings-card">
+      <div class="pro-toggle" role="group" :aria-label="$t('settings.availability')">
         <button
           type="button"
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': status === 'available' }"
           @click="status = 'available'"
         >
-          Disponible
+          {{ $t('settings.available') }}
         </button>
         <button
           type="button"
@@ -33,44 +33,63 @@
           :class="{ 'pro-toggle-btn--active': status === 'unavailable' }"
           @click="status = 'unavailable'"
         >
-          Indisponible
+          {{ $t('settings.unavailable') }}
         </button>
       </div>
       <div class="pro-field pro-field-spaced">
-        <label class="pro-label" for="auto-reply">Message auto-réponse</label>
+        <label class="pro-label" for="auto-reply">{{ $t('settings.autoReply') }}</label>
         <textarea
           id="auto-reply"
           v-model="autoReply"
           class="pro-textarea"
           rows="4"
-          placeholder="Message envoyé automatiquement lorsque vous êtes indisponible."
+          :placeholder="$t('settings.autoReplyPlaceholder')"
         />
       </div>
-      <p v-if="saved" class="text-muted" role="status">Paramètres enregistrés.</p>
+      <p v-if="saved" class="text-muted" role="status">{{ $t('settings.availabilitySaved') }}</p>
       <ProButton class="pro-save-btn" :loading="saving" @click="save">
-        Enregistrer la disponibilité
+        {{ $t('settings.saveAvailability') }}
       </ProButton>
     </ProCard>
 
-    <ProCard title="Authentification à deux facteurs (2FA)" class="pro-settings-card">
-      <p class="pro-settings-hint">
-        Optionnel — ajoute une couche de sécurité via une application authenticator (Google Authenticator, Authy…).
-      </p>
+    <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.language.subtitle') }}</p>
+      <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">
+        <button
+          v-for="loc in supportedLocales"
+          :key="loc"
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': selectedLocale === loc }"
+          @click="selectedLocale = loc"
+        >
+          {{ $t(`settings.language.${loc}`) }}
+        </button>
+      </div>
+      <p v-if="localeSaved" class="text-muted" role="status">{{ $t('settings.language.saved') }}</p>
+      <p v-if="localeError" class="pro-field-error" role="alert">{{ localeError }}</p>
+      <ProButton class="pro-save-btn" :loading="localeSaving" @click="saveLocale">
+        {{ $t('common.save') }}
+      </ProButton>
+    </ProCard>
+
+    <ProCard :title="$t('settings.twoFa.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.twoFa.hint') }}</p>
 
       <p v-if="twoFactorEnabled" class="pro-2fa-status pro-2fa-status--on" role="status">
-        2FA activée sur votre compte.
+        {{ $t('settings.twoFa.enabled') }}
       </p>
-      <p v-else class="pro-2fa-status" role="status">2FA désactivée.</p>
+      <p v-else class="pro-2fa-status" role="status">{{ $t('settings.twoFa.disabled') }}</p>
 
       <div v-if="!twoFactorEnabled && setupData" class="pro-2fa-setup">
-        <img :src="setupData.qrCodeDataUrl" alt="QR code 2FA" width="200" height="200" class="pro-2fa-qr">
+        <img :src="setupData.qrCodeDataUrl" :alt="$t('settings.twoFa.qrAlt')" width="200" height="200" class="pro-2fa-qr">
         <p class="pro-settings-hint">
-          Scannez le QR code ou saisissez le secret :
+          {{ $t('settings.twoFa.scanHint') }}
           <code>{{ setupData.secret }}</code>
         </p>
         <ProInput
           v-model="setupCode"
-          label="Code de vérification"
+          :label="$t('settings.twoFa.verifyCode')"
           type="text"
           inputmode="numeric"
           maxlength="6"
@@ -78,33 +97,33 @@
         />
         <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
         <ProButton :loading="twoFactorLoading" @click="confirm2FA">
-          Activer la 2FA
+          {{ $t('settings.twoFa.activate') }}
         </ProButton>
       </div>
 
       <div v-else-if="!twoFactorEnabled" class="pro-2fa-actions">
         <ProButton :loading="twoFactorLoading" @click="start2FASetup">
-          Configurer la 2FA
+          {{ $t('settings.twoFa.setup') }}
         </ProButton>
       </div>
 
       <div v-else class="pro-2fa-disable">
         <ProInput
           v-model="disableCode"
-          label="Code authenticator"
+          :label="$t('auth.twoFa.codeLabel')"
           type="text"
           inputmode="numeric"
           maxlength="6"
         />
         <ProInput
           v-model="disablePassword"
-          label="Mot de passe (si défini)"
+          :label="$t('settings.twoFa.passwordOptional')"
           type="password"
           autocomplete="current-password"
         />
         <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
         <ProButton variant="secondary" :loading="twoFactorLoading" @click="disable2FA">
-          Désactiver la 2FA
+          {{ $t('settings.twoFa.disable') }}
         </ProButton>
       </div>
     </ProCard>
@@ -113,8 +132,14 @@
 
 <script setup lang="ts">
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
+import type { AppLocale } from '~/composables/useLocaleSync'
 
 definePageMeta({ middleware: 'vet-only' })
+
+const { t } = useI18n()
+const { mapError } = useApiError()
+const { saveLocale: persistLocale, supportedLocales } = useLocaleSync()
+const { user } = useProUser()
 
 const profile = ref<PracticeProfileForm>({
   vetFullName: '',
@@ -132,9 +157,14 @@ const profileSaved = ref(false)
 const profileError = ref('')
 
 const status = ref('available')
-const autoReply = ref('Je suis indisponible, je reviens vers vous rapidement.')
+const autoReply = ref('')
 const saving = ref(false)
 const saved = ref(false)
+
+const selectedLocale = ref<AppLocale>('fr')
+const localeSaving = ref(false)
+const localeSaved = ref(false)
+const localeError = ref('')
 
 const twoFactorEnabled = ref(false)
 const twoFactorLoading = ref(false)
@@ -159,6 +189,8 @@ function mapFromApi(data: any): PracticeProfileForm {
 }
 
 onMounted(async () => {
+  autoReply.value = t('settings.autoReplyDefault')
+
   try {
     const res: any = await $fetch('/api/vet/profile')
     profile.value = mapFromApi(res.data ?? res)
@@ -168,6 +200,11 @@ onMounted(async () => {
   const data = avail.data ?? avail
   status.value = data.status ?? status.value
   autoReply.value = data.autoReply || autoReply.value
+
+  const preferred = user.value?.preferredLocale as AppLocale | undefined
+  if (preferred && supportedLocales.includes(preferred)) {
+    selectedLocale.value = preferred
+  }
 
   try {
     const tfa: any = await $fetch('/api/auth/2fa/status')
@@ -184,7 +221,7 @@ async function saveProfile() {
     profileSaved.value = true
     await useProUser().fetchUser(true)
   } catch (e: any) {
-    profileError.value = e?.data?.message || 'Enregistrement impossible'
+    profileError.value = mapError(e)
   } finally {
     profileSaving.value = false
   }
@@ -204,6 +241,20 @@ async function save() {
   }
 }
 
+async function saveLocale() {
+  localeSaving.value = true
+  localeSaved.value = false
+  localeError.value = ''
+  try {
+    await persistLocale(selectedLocale.value)
+    localeSaved.value = true
+  } catch (e: any) {
+    localeError.value = mapError(e)
+  } finally {
+    localeSaving.value = false
+  }
+}
+
 async function start2FASetup() {
   twoFactorLoading.value = true
   twoFactorError.value = ''
@@ -212,7 +263,7 @@ async function start2FASetup() {
     setupData.value = res.data ?? res
     setupCode.value = ''
   } catch (e: any) {
-    twoFactorError.value = e?.data?.message || 'Configuration 2FA impossible'
+    twoFactorError.value = mapError(e)
   } finally {
     twoFactorLoading.value = false
   }
@@ -227,7 +278,7 @@ async function confirm2FA() {
     setupData.value = null
     setupCode.value = ''
   } catch {
-    twoFactorError.value = 'Code invalide'
+    twoFactorError.value = t('settings.twoFa.invalidCode')
   } finally {
     twoFactorLoading.value = false
   }
@@ -245,7 +296,7 @@ async function disable2FA() {
     disableCode.value = ''
     disablePassword.value = ''
   } catch {
-    twoFactorError.value = 'Désactivation impossible — vérifiez le code et le mot de passe'
+    twoFactorError.value = t('settings.twoFa.disableFailed')
   } finally {
     twoFactorLoading.value = false
   }

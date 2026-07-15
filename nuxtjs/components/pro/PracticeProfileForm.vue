@@ -2,61 +2,61 @@
   <form class="pro-profile-form" @submit.prevent="$emit('submit')">
     <ProInput
       v-model="model.vetFullName"
-      label="Nom du vétérinaire"
+      :label="$t('components.profileForm.vetName')"
       name="vetFullName"
       required
     />
     <ProInput
       v-model="model.practiceName"
-      label="Nom du cabinet"
+      :label="$t('components.profileForm.practiceName')"
       name="practiceName"
       required
     />
     <ProInput
       v-model="model.contactEmail"
-      label="Email de contact"
+      :label="$t('components.profileForm.contactEmail')"
       type="email"
       name="contactEmail"
       required
     />
     <ProInput
       v-model="model.phone"
-      label="Téléphone"
+      :label="$t('components.profileForm.phone')"
       type="tel"
       name="phone"
       required
     />
     <ProInput
       v-model="model.addressLine1"
-      label="Adresse"
+      :label="$t('components.profileForm.address')"
       name="addressLine1"
       required
     />
     <ProInput
       v-model="model.addressLine2"
-      label="Complément d'adresse"
+      :label="$t('components.profileForm.addressLine2')"
       name="addressLine2"
     />
     <div class="pro-profile-form__row">
       <ProInput
         v-model="model.postalCode"
-        label="Code postal"
+        :label="$t('components.profileForm.postalCode')"
         name="postalCode"
         required
       />
       <ProInput
         v-model="model.city"
-        label="Ville"
+        :label="$t('components.profileForm.city')"
         name="city"
         required
       />
     </div>
     <ProInput
       v-model="model.website"
-      label="Site web (optionnel)"
+      :label="$t('components.profileForm.website')"
       type="url"
       name="website"
-      placeholder="https://"
+      :placeholder="$t('components.profileForm.websitePlaceholder')"
     />
     <slot name="actions" />
   </form>

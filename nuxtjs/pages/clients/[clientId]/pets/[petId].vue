@@ -1,27 +1,27 @@
 <template>
   <div>
-    <nav class="pro-breadcrumb" aria-label="Fil d'Ariane">
-      <NuxtLink to="/clients">Clients</NuxtLink>
+    <nav class="pro-breadcrumb" :aria-label="$t('common.breadcrumb')">
+      <NuxtLink to="/clients">{{ $t('nav.clients') }}</NuxtLink>
       <span class="pro-breadcrumb-sep">/</span>
-      <NuxtLink :to="`/clients/${clientId}`">Fiche</NuxtLink>
+      <NuxtLink :to="`/clients/${clientId}`">{{ $t('common.profile') }}</NuxtLink>
       <span class="pro-breadcrumb-sep">/</span>
-      <span>{{ pet?.name || 'Animal' }}</span>
+      <span>{{ pet?.name || $t('clients.pet.title') }}</span>
     </nav>
     <ProPageHeader
-      :title="pet?.name || 'Animal'"
+      :title="pet?.name || $t('clients.pet.title')"
       :subtitle="petSubtitle"
     />
-    <ProCard title="Relevés cardiaques validés">
+    <ProCard :title="$t('clients.pet.heartrateTitle')">
       <ProTable
         :empty="!sessions.length"
-        empty-title="Aucun relevé validé"
-        empty-description="Les sessions BPM validées apparaîtront ici."
+        :empty-title="$t('clients.pet.heartrateEmptyTitle')"
+        :empty-description="$t('clients.pet.heartrateEmptyDescription')"
       >
         <thead>
           <tr>
-            <th>Date</th>
-            <th>BPM</th>
-            <th>Statut</th>
+            <th>{{ $t('clients.pet.columnDate') }}</th>
+            <th>{{ $t('clients.pet.columnBpm') }}</th>
+            <th>{{ $t('clients.pet.columnStatus') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -30,14 +30,14 @@
             <td><code>{{ s.bpm }}</code></td>
             <td>
               <ProBadge :variant="s.isAlert ? 'danger' : 'success'">
-                {{ s.isAlert ? 'Alerte' : 'OK' }}
+                {{ s.isAlert ? $t('clients.pet.alert') : $t('clients.pet.ok') }}
               </ProBadge>
             </td>
           </tr>
         </tbody>
       </ProTable>
     </ProCard>
-    <ProCard title="Historique suivi">
+    <ProCard :title="$t('clients.pet.timelineTitle')">
       <ul v-if="timeline.length" class="pro-timeline">
         <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
           <div class="pro-timeline__dot" aria-hidden="true" />
@@ -50,8 +50,8 @@
       </ul>
       <ProEmptyState
         v-else
-        title="Historique vide"
-        description="Aucun événement de suivi pour cet animal."
+        :title="$t('clients.pet.timelineEmptyTitle')"
+        :description="$t('clients.pet.timelineEmptyDescription')"
       />
     </ProCard>
   </div>
@@ -67,14 +67,12 @@ const pet = ref<any>(null)
 const sessions = ref<any[]>([])
 const timeline = ref<any[]>([])
 
+const { formatDate } = useFormatters()
+
 const petSubtitle = computed(() => {
   if (!pet.value) return ''
   return [pet.value.species, pet.value.breed].filter(Boolean).join(' · ')
 })
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleString('fr-FR')
-}
 
 onMounted(async () => {
   const petRes: any = await $fetch(`/api/pets/${petId}`)

@@ -1,11 +1,11 @@
-import { apiBase, authHeaders } from '~/server/utils/api'
+import { apiBase, apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   if (event.method === 'GET') {
-    return $fetch(`${apiBase()}/api/v1/vet/availability`, { headers: authHeaders(event) })
+    return $fetch(`${apiBase()}/api/v1/vet/availability`, { headers: apiHeaders(event) })
   }
   const body = await readBody(event)
   return $fetch(`${apiBase()}/api/v1/vet/availability`, {
-    method: 'PUT', headers: authHeaders(event), body,
+    method: 'PUT', headers: apiHeaders(event), body,
   })
 })

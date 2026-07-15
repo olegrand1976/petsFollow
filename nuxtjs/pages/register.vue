@@ -2,11 +2,8 @@
   <div class="pro-login-page">
     <aside class="pro-login-brand">
       <PetsFollowLogo variant="hero" animated />
-      <h2>Rejoignez petsFollow Pro — gratuit pour les vétérinaires</h2>
-      <p>
-        Créez votre cabinet en quelques minutes et commencez à suivre vos patients cardiaques
-        dès aujourd'hui.
-      </p>
+      <h2>{{ $t('auth.register.brandTitle') }}</h2>
+      <p>{{ $t('auth.register.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
       <form
@@ -15,12 +12,12 @@
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />
-        <h1>Inscription cabinet</h1>
-        <p class="pro-page-header__subtitle">100 % gratuit pour les professionnels vétérinaires.</p>
+        <h1>{{ $t('auth.register.title') }}</h1>
+        <p class="pro-page-header__subtitle">{{ $t('auth.register.subtitle') }}</p>
 
         <ProInput
           v-model="fullName"
-          label="Votre nom"
+          :label="$t('auth.register.fullName')"
           name="fullName"
           autocomplete="name"
           required
@@ -28,14 +25,14 @@
         />
         <ProInput
           v-model="practiceName"
-          label="Nom du cabinet"
+          :label="$t('auth.register.practiceName')"
           name="practiceName"
           required
           test-id="register-practice"
         />
         <ProInput
           v-model="email"
-          label="Email professionnel"
+          :label="$t('auth.register.email')"
           type="email"
           name="email"
           autocomplete="email"
@@ -44,24 +41,24 @@
         />
         <ProInput
           v-model="password"
-          label="Mot de passe"
+          :label="$t('auth.register.password')"
           type="password"
           name="password"
           autocomplete="new-password"
           required
           test-id="register-password"
         />
-        <p class="pro-field-hint">Minimum 8 caractères</p>
+        <p class="pro-field-hint">{{ $t('auth.register.passwordHint') }}</p>
 
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
 
         <ProButton type="submit" block :loading="loading" test-id="register-submit">
-          Créer mon compte
+          {{ $t('auth.register.submit') }}
         </ProButton>
 
         <p class="pro-login-form__footer">
-          Déjà inscrit ?
-          <NuxtLink to="/login">Se connecter</NuxtLink>
+          {{ $t('auth.register.alreadyRegistered') }}
+          <NuxtLink to="/login">{{ $t('auth.register.loginLink') }}</NuxtLink>
         </p>
       </form>
     </div>
@@ -70,6 +67,8 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: false })
+
+const { mapError } = useApiError()
 
 const fullName = ref('')
 const practiceName = ref('')
@@ -97,7 +96,7 @@ async function submit() {
       query: { email: email.value, devLink: import.meta.dev ? data.confirmPath : undefined },
     })
   } catch (e: any) {
-    error.value = e?.data?.error?.message || 'Inscription impossible'
+    error.value = mapError(e)
   } finally {
     loading.value = false
   }

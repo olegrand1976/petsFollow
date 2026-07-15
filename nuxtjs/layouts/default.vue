@@ -16,18 +16,19 @@
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const showNav = computed(() => {
   const bare = ['/login', '/register', '/register/sent', '/confirm-email', '/welcome', '/']
   return !bare.includes(route.path) && !route.path.startsWith('/register')
 })
 const { fetchUser } = useProUser()
 
-const navItems: ProNavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', exact: true, icon: 'dashboard' },
-  { to: '/clients', label: 'Clients', icon: 'clients' },
-  { to: '/messages', label: 'Messagerie', icon: 'messages' },
-  { to: '/settings', label: 'Paramètres', icon: 'settings' },
-]
+const navItems = computed<ProNavItem[]>(() => [
+  { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
+  { to: '/clients', label: t('nav.clients'), icon: 'clients' },
+  { to: '/messages', label: t('nav.messages'), icon: 'messages' },
+  { to: '/settings', label: t('nav.settings'), icon: 'settings' },
+])
 
 onMounted(() => fetchUser())
 </script>

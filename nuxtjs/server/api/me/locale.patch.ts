@@ -1,10 +1,11 @@
 import { apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
-  const q = getQuery(event)
   const config = useRuntimeConfig()
-  return $fetch(`${config.apiBase}/api/v1/admin/payments`, {
+  const body = await readBody(event)
+  return $fetch(`${config.apiBase}/api/v1/me/locale`, {
+    method: 'PATCH',
+    body,
     headers: apiHeaders(event),
-    query: q,
   })
 })

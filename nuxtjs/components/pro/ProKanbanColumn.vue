@@ -8,7 +8,7 @@
       <slot />
       <ProEmptyState
         v-if="empty"
-        :title="emptyTitle"
+        :title="resolvedEmptyTitle"
         :description="emptyDescription"
       />
     </div>
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string
     count: number
@@ -26,8 +26,11 @@ withDefaults(
   }>(),
   {
     empty: false,
-    emptyTitle: 'Aucun élément',
+    emptyTitle: undefined,
     emptyDescription: undefined,
   },
 )
+
+const { t } = useI18n()
+const resolvedEmptyTitle = computed(() => props.emptyTitle ?? t('components.kanban.emptyTitle'))
 </script>

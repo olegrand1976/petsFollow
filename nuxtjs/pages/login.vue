@@ -2,11 +2,8 @@
   <div class="pro-login-page">
     <aside class="pro-login-brand">
       <PetsFollowLogo variant="hero" animated />
-      <h2>Suivi cardiaque et dossier client en un seul outil</h2>
-      <p>
-        Bienvenue sur petsFollow Pro — l'espace pensé pour les pros du soin animal,
-        avec une touche de bonne humeur.
-      </p>
+      <h2>{{ $t('auth.login.brandTitle') }}</h2>
+      <p>{{ $t('auth.login.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
       <form
@@ -16,11 +13,11 @@
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />
-        <h1>Connexion Pro</h1>
-        <p class="pro-page-header__subtitle">Accès réservé aux vétérinaires et administrateurs.</p>
+        <h1>{{ $t('auth.login.title') }}</h1>
+        <p class="pro-page-header__subtitle">{{ $t('auth.login.subtitle') }}</p>
         <ProInput
           v-model="email"
-          label="Email"
+          :label="$t('auth.fields.email')"
           type="email"
           name="email"
           autocomplete="email"
@@ -29,7 +26,7 @@
         />
         <ProInput
           v-model="password"
-          label="Mot de passe"
+          :label="$t('auth.fields.password')"
           type="password"
           name="password"
           autocomplete="current-password"
@@ -38,11 +35,11 @@
         />
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
         <ProButton type="submit" block :loading="loading" test-id="login-submit">
-          Se connecter
+          {{ $t('auth.login.submit') }}
         </ProButton>
 
         <div v-if="googleEnabled" class="pro-login-divider">
-          <span>ou</span>
+          <span>{{ $t('auth.login.or') }}</span>
         </div>
         <div
           v-if="googleEnabled"
@@ -52,8 +49,8 @@
         />
 
         <p class="pro-login-form__footer">
-          Pas encore de compte ?
-          <NuxtLink to="/register">S'inscrire gratuitement</NuxtLink>
+          {{ $t('auth.login.noAccount') }}
+          <NuxtLink to="/register">{{ $t('auth.login.registerLink') }}</NuxtLink>
         </p>
       </form>
 
@@ -64,13 +61,11 @@
         @submit.prevent="submit2FA"
       >
         <PetsFollowLogo variant="default" />
-        <h1>Vérification 2FA</h1>
-        <p class="pro-page-header__subtitle">
-          Saisissez le code à 6 chiffres de votre application d'authentification.
-        </p>
+        <h1>{{ $t('auth.twoFa.title') }}</h1>
+        <p class="pro-page-header__subtitle">{{ $t('auth.twoFa.subtitle') }}</p>
         <ProInput
           v-model="totpCode"
-          label="Code authenticator"
+          :label="$t('auth.twoFa.codeLabel')"
           type="text"
           name="totp"
           inputmode="numeric"
@@ -81,10 +76,10 @@
         />
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
         <ProButton type="submit" block :loading="loading" test-id="login-2fa-submit">
-          Valider
+          {{ $t('auth.twoFa.submit') }}
         </ProButton>
         <button type="button" class="pro-login-back" @click="reset2FA">
-          ← Retour à la connexion
+          {{ $t('auth.twoFa.back') }}
         </button>
       </form>
     </div>
@@ -97,6 +92,9 @@ import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
+const { mapError } = useApiError()
+const { syncFromUser } = useLocaleSync()
 const config = useRuntimeConfig()
 const googleEnabled = computed(() => !!config.public.googleClientId)
 
@@ -111,6 +109,7 @@ const token = useCookie('pf_token')
 const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
+  await syncFromUser()
   const me: any = await $fetch('/api/me')
   const role = me.data?.role || me.role
   const profileComplete = me.data?.profileComplete ?? me.profileComplete
@@ -120,7 +119,7 @@ async function redirectAfterLogin() {
     else await navigateTo('/dashboard')
   } else {
     token.value = null
-    error.value = 'Accès réservé aux profils Pro (véto / admin)'
+    error.value = t('auth.login.proOnly')
   }
 }
 
@@ -134,7 +133,7 @@ async function handleAuthResult(res: unknown) {
   }
   const accessToken = extractAccessToken(data)
   if (!accessToken) {
-    error.value = 'Réponse d\'authentification invalide'
+    error.value = t('auth.login.invalidResponse')
     return
   }
   token.value = accessToken
@@ -142,10 +141,7 @@ async function handleAuthResult(res: unknown) {
 }
 
 function mapAuthError(e: any) {
-  const code = e?.data?.error?.code
-  if (code === 'email_not_verified') return 'Confirmez votre email avant de vous connecter.'
-  if (code === 'use_google_sign_in') return 'Ce compte utilise Google — connectez-vous avec Google.'
-  return 'Identifiants invalides'
+  return mapError(e)
 }
 
 async function submit() {
@@ -174,7 +170,7 @@ async function submit2FA() {
     })
     await handleAuthResult(res)
   } catch {
-    error.value = 'Code 2FA invalide ou expiré'
+    error.value = t('auth.twoFa.invalidCode')
   } finally {
     loading.value = false
   }
@@ -195,9 +191,9 @@ async function handleGoogleCredential(idToken: string) {
     await handleAuthResult(res)
   } catch (e: any) {
     const code = e?.data?.error?.code
-    if (code === 'not_configured') error.value = 'Connexion Google non configurée.'
-    else if (code === 'forbidden') error.value = 'Accès Google réservé aux profils Pro.'
-    else error.value = 'Connexion Google impossible'
+    if (code === 'not_configured') error.value = t('auth.google.notConfigured')
+    else if (code === 'forbidden') error.value = t('auth.google.forbidden')
+    else error.value = t('auth.google.failed')
   } finally {
     loading.value = false
   }
@@ -212,7 +208,7 @@ onMounted(async () => {
       handleGoogleCredential,
     )
   } catch {
-    /* Google indisponible — bouton masqué implicitement */
+    /* Google indisponible */
   }
 })
 </script>

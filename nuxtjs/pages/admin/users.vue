@@ -1,39 +1,39 @@
 <template>
   <div>
-    <ProPageHeader title="Inscriptions" subtitle="Utilisateurs et statuts de paiement." />
+    <ProPageHeader :title="$t('admin.users.title')" :subtitle="$t('admin.users.subtitle')" />
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
           <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="role-filter">Rôle</label>
+            <label class="pro-label" for="role-filter">{{ $t('admin.users.role') }}</label>
             <select id="role-filter" v-model="roleFilter" class="pro-select">
-              <option value="">Tous</option>
-              <option value="client">Clients</option>
-              <option value="vet">Vétos</option>
-              <option value="admin">Admins</option>
+              <option value="">{{ $t('admin.users.roleAll') }}</option>
+              <option value="client">{{ $t('admin.users.roleClient') }}</option>
+              <option value="vet">{{ $t('admin.users.roleVet') }}</option>
+              <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
             </select>
           </div>
           <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="payment-filter">Paiement</label>
+            <label class="pro-label" for="payment-filter">{{ $t('admin.users.payment') }}</label>
             <select id="payment-filter" v-model="paymentFilter" class="pro-select">
-              <option value="all">Tous</option>
-              <option value="active">Actif</option>
-              <option value="pending">En attente</option>
-              <option value="past">Impayé</option>
+              <option value="all">{{ $t('admin.users.paymentAll') }}</option>
+              <option value="active">{{ $t('admin.users.paymentActive') }}</option>
+              <option value="pending">{{ $t('admin.users.paymentPending') }}</option>
+              <option value="past">{{ $t('admin.users.paymentPast') }}</option>
             </select>
           </div>
         </template>
       </ProListToolbar>
 
-      <ProTable v-if="viewMode === 'table'" :empty="!filtered.length" empty-title="Aucun utilisateur">
+      <ProTable v-if="viewMode === 'table'" :empty="!filtered.length" :empty-title="$t('admin.users.emptyTitle')">
         <thead>
           <tr>
-            <th>Email</th>
-            <th>Nom</th>
-            <th>Rôle</th>
-            <th>Inscription</th>
-            <th>Animaux</th>
-            <th>Paiement</th>
+            <th>{{ $t('admin.users.columnEmail') }}</th>
+            <th>{{ $t('admin.users.columnName') }}</th>
+            <th>{{ $t('admin.users.columnRole') }}</th>
+            <th>{{ $t('admin.users.columnRegistered') }}</th>
+            <th>{{ $t('admin.users.columnPets') }}</th>
+            <th>{{ $t('admin.users.columnPayment') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -55,7 +55,7 @@
           :title="col.title"
           :count="col.items.length"
           :empty="!col.items.length"
-          empty-title="Aucun"
+          :empty-title="$t('common.none')"
         >
           <article v-for="u in col.items" :key="u.id" class="pro-kanban-card pro-kanban-card--static">
             <strong>{{ u.fullName }}</strong>
@@ -69,9 +69,9 @@
       </ProKanban>
 
       <div v-if="viewMode === 'table'" class="pro-pagination">
-        <ProButton variant="secondary" :disabled="page <= 1" @click="page--">Précédent</ProButton>
-        <span class="text-muted">Page {{ page }}</span>
-        <ProButton variant="secondary" :disabled="!hasMore" @click="page++">Suivant</ProButton>
+        <ProButton variant="secondary" :disabled="page <= 1" @click="page--">{{ $t('common.previous') }}</ProButton>
+        <span class="text-muted">{{ $t('common.page', { page }) }}</span>
+        <ProButton variant="secondary" :disabled="!hasMore" @click="page++">{{ $t('common.next') }}</ProButton>
       </div>
     </ProCard>
   </div>
@@ -90,6 +90,8 @@ type AdminUser = {
   paymentLabel: string
 }
 
+const { t } = useI18n()
+
 const roleFilter = ref('')
 const paymentFilter = ref<'all' | 'active' | 'pending' | 'past'>('all')
 const users = ref<AdminUser[]>([])
@@ -99,7 +101,7 @@ const { viewMode } = useListView('pf-admin-users-view', 'table')
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
-  if (l.includes('actif') || l.includes('payé')) return 'success'
+  if (l.includes('actif') || l.includes('payé') || l.includes('active') || l.includes('paid')) return 'success'
   if (l.includes('attente') || l.includes('pending')) return 'warning'
   if (l.includes('impayé') || l.includes('past')) return 'danger'
   return 'neutral'
@@ -108,7 +110,7 @@ function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neut
 function matchesPayment(label: string) {
   const l = (label || '').toLowerCase()
   if (paymentFilter.value === 'all') return true
-  if (paymentFilter.value === 'active') return l.includes('actif') || l.includes('payé')
+  if (paymentFilter.value === 'active') return l.includes('actif') || l.includes('payé') || l.includes('active') || l.includes('paid')
   if (paymentFilter.value === 'pending') return l.includes('attente') || l.includes('pending')
   if (paymentFilter.value === 'past') return l.includes('impayé') || l.includes('past')
   return true
@@ -120,9 +122,9 @@ const filtered = computed(() =>
 
 const kanbanColumns = computed(() => {
   const roles = [
-    { role: 'client', title: 'Clients' },
-    { role: 'vet', title: 'Vétos' },
-    { role: 'admin', title: 'Admins' },
+    { role: 'client', title: t('admin.users.roleClient') },
+    { role: 'vet', title: t('admin.users.roleVet') },
+    { role: 'admin', title: t('admin.users.roleAdmin') },
   ]
   return roles.map((r) => ({
     ...r,

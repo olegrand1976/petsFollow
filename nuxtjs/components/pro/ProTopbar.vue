@@ -9,7 +9,7 @@
         <button
           type="button"
           class="pro-topbar__icon-btn"
-          aria-label="Notifications"
+          :aria-label="$t('components.topbar.notifications')"
           aria-haspopup="true"
           :aria-expanded="notifOpen"
           data-testid="pro-notifications-btn"
@@ -27,11 +27,11 @@
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
         </button>
         <div v-if="notifOpen" class="pro-topbar__dropdown" role="menu">
-          <p class="pro-topbar__dropdown-title">Notifications</p>
+          <p class="pro-topbar__dropdown-title">{{ $t('components.topbar.notifications') }}</p>
           <ProEmptyState
             v-if="!notifItems.length"
-            title="Rien de nouveau"
-            description="Les conversations clients apparaîtront ici."
+            :title="$t('components.topbar.notificationsEmptyTitle')"
+            :description="$t('components.topbar.notificationsEmptyDescription')"
           />
           <ul v-else class="pro-topbar__notif-list">
             <li v-for="item in notifItems" :key="item.id">
@@ -42,7 +42,7 @@
             </li>
           </ul>
           <NuxtLink to="/messages" class="pro-topbar__dropdown-link" @click="notifOpen = false">
-            Voir tout →
+            {{ $t('common.seeAll') }}
           </NuxtLink>
         </div>
       </div>
@@ -51,7 +51,7 @@
         <button
           type="button"
           class="pro-topbar__profile-btn"
-          aria-label="Menu profil"
+          :aria-label="$t('components.topbar.profileMenu')"
           aria-haspopup="true"
           :aria-expanded="profileOpen"
           data-testid="pro-profile-btn"
@@ -69,10 +69,10 @@
             class="pro-topbar__dropdown-link"
             @click="profileOpen = false"
           >
-            Paramètres
+            {{ $t('components.topbar.settings') }}
           </NuxtLink>
           <button type="button" class="pro-topbar__logout-btn" @click="handleLogout">
-            Déconnexion
+            {{ $t('common.logout') }}
           </button>
         </div>
       </div>
@@ -94,13 +94,14 @@ const props = withDefaults(
   },
 )
 
+const { t } = useI18n()
 const { user, fetchUser, initials, logout } = useProUser()
 const { items: notifItems, count: notifCount, refresh: refreshNotif } = useProNotifications()
 
 const notifOpen = ref(false)
 const profileOpen = ref(false)
 
-const userName = computed(() => user.value?.fullName || 'Utilisateur')
+const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
 const userInitials = computed(() => initials())
 

@@ -1,32 +1,32 @@
 <template>
   <div>
-    <ProPageHeader title="Clients" subtitle="Liste des clients rattachés à votre cabinet." />
+    <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
           <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="client-search">Rechercher</label>
+            <label class="pro-label" for="client-search">{{ $t('clients.search') }}</label>
             <input
               id="client-search"
               v-model="query"
               type="search"
               class="pro-input"
-              placeholder="Nom ou email…"
+              :placeholder="$t('clients.searchPlaceholder')"
             />
           </div>
           <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="pet-filter">Animaux</label>
+            <label class="pro-label" for="pet-filter">{{ $t('clients.petsFilter') }}</label>
             <select id="pet-filter" v-model="petFilter" class="pro-select">
-              <option value="all">Tous</option>
-              <option value="none">Sans animal</option>
-              <option value="with">Avec animal(s)</option>
+              <option value="all">{{ $t('clients.petsAll') }}</option>
+              <option value="none">{{ $t('clients.petsNone') }}</option>
+              <option value="with">{{ $t('clients.petsWith') }}</option>
             </select>
           </div>
           <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="sort-by">Tri</label>
+            <label class="pro-label" for="sort-by">{{ $t('clients.sort') }}</label>
             <select id="sort-by" v-model="sortBy" class="pro-select">
-              <option value="name">Nom A→Z</option>
-              <option value="pets">Plus d'animaux</option>
+              <option value="name">{{ $t('clients.sortName') }}</option>
+              <option value="pets">{{ $t('clients.sortPets') }}</option>
             </select>
           </div>
         </template>
@@ -35,14 +35,14 @@
       <ProTable
         v-if="viewMode === 'table'"
         :empty="!filtered.length"
-        empty-title="Aucun client"
-        empty-description="Les clients apparaîtront ici une fois rattachés à votre cabinet."
+        :empty-title="$t('clients.emptyTitle')"
+        :empty-description="$t('clients.emptyDescription')"
       >
         <thead>
           <tr>
-            <th>Client</th>
-            <th>Email</th>
-            <th>Animaux</th>
+            <th>{{ $t('clients.columnClient') }}</th>
+            <th>{{ $t('clients.columnEmail') }}</th>
+            <th>{{ $t('clients.columnPets') }}</th>
             <th />
           </tr>
         </thead>
@@ -55,7 +55,7 @@
             <td>{{ c.email }}</td>
             <td>{{ c.petCount }}</td>
             <td>
-              <NuxtLink :to="`/clients/${c.userId}`">Fiche</NuxtLink>
+              <NuxtLink :to="`/clients/${c.userId}`">{{ $t('common.profile') }}</NuxtLink>
             </td>
           </tr>
         </tbody>
@@ -68,7 +68,7 @@
           :title="col.title"
           :count="col.items.length"
           :empty="!col.items.length"
-          empty-title="Vide"
+          :empty-title="$t('common.empty')"
         >
           <NuxtLink
             v-for="c in col.items"
@@ -79,7 +79,7 @@
             <span class="pro-avatar client-avatar">{{ initials(c.fullName) }}</span>
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
-            <ProBadge variant="neutral">{{ c.petCount }} {{ c.petCount > 1 ? 'animaux' : 'animal' }}</ProBadge>
+            <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
           </NuxtLink>
         </ProKanbanColumn>
       </ProKanban>
@@ -97,11 +97,18 @@ type ClientRow = {
   petCount: number
 }
 
+const { t } = useI18n()
+const { compareStrings } = useFormatters()
+
 const clients = ref<ClientRow[]>([])
 const query = ref('')
 const petFilter = ref<'all' | 'none' | 'with'>('all')
 const sortBy = ref<'name' | 'pets'>('name')
 const { viewMode } = useListView('pf-clients-view', 'table')
+
+function petLabel(count: number) {
+  return count > 1 ? t('common.pets') : t('common.pet')
+}
 
 const filtered = computed(() => {
   let list = [...clients.value]
@@ -116,7 +123,7 @@ const filtered = computed(() => {
   if (petFilter.value === 'none') list = list.filter((c) => c.petCount === 0)
   if (petFilter.value === 'with') list = list.filter((c) => c.petCount > 0)
   if (sortBy.value === 'name') {
-    list.sort((a, b) => a.fullName.localeCompare(b.fullName, 'fr'))
+    list.sort((a, b) => compareStrings(a.fullName, b.fullName))
   } else {
     list.sort((a, b) => b.petCount - a.petCount)
   }
@@ -126,17 +133,17 @@ const filtered = computed(() => {
 const kanbanColumns = computed(() => [
   {
     key: 'none',
-    title: 'Sans dossier',
+    title: t('clients.kanbanNone'),
     items: filtered.value.filter((c) => c.petCount === 0),
   },
   {
     key: 'one',
-    title: '1 animal',
+    title: t('clients.kanbanOne'),
     items: filtered.value.filter((c) => c.petCount === 1),
   },
   {
     key: 'multi',
-    title: 'Multi-animaux',
+    title: t('clients.kanbanMulti'),
     items: filtered.value.filter((c) => c.petCount > 1),
   },
 ])

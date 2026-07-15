@@ -1,28 +1,28 @@
 <template>
   <div>
-    <ProPageHeader title="Paiements reçus" subtitle="Historique des transactions Stripe." />
+    <ProPageHeader :title="$t('admin.payments.title')" :subtitle="$t('admin.payments.subtitle')" />
     <ProCard>
       <div class="pro-list-toolbar__filters pro-field-inline-wrap">
         <div class="pro-field pro-field-inline">
-          <label class="pro-label" for="status-filter">Statut</label>
+          <label class="pro-label" for="status-filter">{{ $t('admin.payments.status') }}</label>
           <select id="status-filter" v-model="statusFilter" class="pro-select">
-            <option value="">Tous</option>
-            <option value="active">Actif</option>
-            <option value="pending">En attente</option>
-            <option value="past_due">Impayé</option>
+            <option value="">{{ $t('admin.payments.statusAll') }}</option>
+            <option value="active">{{ $t('admin.payments.statusActive') }}</option>
+            <option value="pending">{{ $t('admin.payments.statusPending') }}</option>
+            <option value="past_due">{{ $t('admin.payments.statusPastDue') }}</option>
           </select>
         </div>
       </div>
-      <ProTable :empty="!payments.length" empty-title="Aucun paiement">
+      <ProTable :empty="!payments.length" :empty-title="$t('admin.payments.emptyTitle')">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Client</th>
-            <th>Animal</th>
-            <th>Plan</th>
-            <th>Mode</th>
-            <th>Montant</th>
-            <th>Statut</th>
+            <th>{{ $t('admin.payments.columnDate') }}</th>
+            <th>{{ $t('admin.payments.columnClient') }}</th>
+            <th>{{ $t('admin.payments.columnPet') }}</th>
+            <th>{{ $t('admin.payments.columnPlan') }}</th>
+            <th>{{ $t('admin.payments.columnMode') }}</th>
+            <th>{{ $t('admin.payments.columnAmount') }}</th>
+            <th>{{ $t('admin.payments.columnStatus') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -32,15 +32,15 @@
             <td>{{ p.petName }}</td>
             <td>{{ p.planCode }}</td>
             <td>{{ p.billingMode }}</td>
-            <td>{{ formatEur(p.amountCents) }}</td>
+            <td>{{ formatCurrency(p.amountCents) }}</td>
             <td><ProBadge :variant="statusVariant(p.status)">{{ p.status }}</ProBadge></td>
           </tr>
         </tbody>
       </ProTable>
       <div class="pro-pagination">
-        <ProButton variant="secondary" :disabled="page <= 1" @click="page--">Précédent</ProButton>
-        <span class="text-muted">Page {{ page }}</span>
-        <ProButton variant="secondary" :disabled="!hasMore" @click="page++">Suivant</ProButton>
+        <ProButton variant="secondary" :disabled="page <= 1" @click="page--">{{ $t('common.previous') }}</ProButton>
+        <span class="text-muted">{{ $t('common.page', { page }) }}</span>
+        <ProButton variant="secondary" :disabled="!hasMore" @click="page++">{{ $t('common.next') }}</ProButton>
       </div>
     </ProCard>
   </div>
@@ -49,14 +49,12 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
+const { formatCurrency } = useFormatters()
+
 const payments = ref<any[]>([])
 const statusFilter = ref('')
 const page = ref(1)
 const hasMore = ref(false)
-
-function formatEur(cents: number) {
-  return `${(cents / 100).toFixed(2)} €`
-}
 
 function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const s = (status || '').toLowerCase()

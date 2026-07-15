@@ -1,5 +1,23 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-15',
+  modules: ['@nuxtjs/i18n'],
+  i18n: {
+    restructureDir: false,
+    locales: [
+      { code: 'fr', language: 'fr-FR', file: 'fr.json' },
+      { code: 'nl', language: 'nl-NL', file: 'nl.json' },
+      { code: 'en', language: 'en-GB', file: 'en.json' },
+    ],
+    defaultLocale: 'fr',
+    strategy: 'no_prefix',
+    lazy: true,
+    langDir: 'locales',
+    detectBrowserLanguage: {
+      cookieKey: 'pf_locale',
+      useCookie: true,
+      fallbackLocale: 'fr',
+    },
+  },
   devtools: { enabled: true },
   css: ['~/assets/css/tokens.css', '~/assets/css/main.css'],
   runtimeConfig: {

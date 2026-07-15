@@ -6,14 +6,15 @@ export type ProNotificationItem = {
 }
 
 export function useProNotifications() {
+  const { t } = useI18n()
   const threadsState = useState<any[]>('pro-notif-threads', () => [])
   const loadedState = useState<boolean>('pro-notif-loaded', () => false)
 
   const items = computed<ProNotificationItem[]>(() =>
-    threadsState.value.map((t) => ({
-      id: t.id,
-      label: t.clientName || `Client ${t.clientUserId?.slice(0, 8) ?? ''}…`,
-      preview: t.lastMessagePreview || undefined,
+    threadsState.value.map((thread) => ({
+      id: thread.id,
+      label: thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' }),
+      preview: thread.lastMessagePreview || undefined,
       href: '/messages',
     })),
   )

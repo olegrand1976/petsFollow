@@ -1,4 +1,4 @@
-import { apiBase, authHeaders } from '~/server/utils/api'
+import { apiBase, apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const complete = query.complete === 'true' ? '?complete=true' : ''
   return $fetch(`${apiBase()}/api/v1/vet/profile${complete}`, {
     method: 'PUT',
-    headers: authHeaders(event),
+    headers: apiHeaders(event),
     body,
   })
 })

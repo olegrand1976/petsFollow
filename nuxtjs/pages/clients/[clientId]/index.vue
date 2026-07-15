@@ -1,30 +1,30 @@
 <template>
   <div>
-    <nav class="pro-breadcrumb" aria-label="Fil d'Ariane">
-      <NuxtLink to="/clients">Clients</NuxtLink>
+    <nav class="pro-breadcrumb" :aria-label="$t('common.breadcrumb')">
+      <NuxtLink to="/clients">{{ $t('nav.clients') }}</NuxtLink>
       <span class="pro-breadcrumb-sep">/</span>
-      <span>{{ client?.fullName || 'Fiche client' }}</span>
+      <span>{{ client?.fullName || $t('clients.detail.title') }}</span>
     </nav>
     <ProPageHeader
-      :title="client?.fullName || 'Fiche client'"
+      :title="client?.fullName || $t('clients.detail.title')"
       :subtitle="clientSubtitle"
     />
-    <ProCard v-if="client" title="Identité">
+    <ProCard v-if="client" :title="$t('clients.detail.identity')">
       <p><strong>{{ client.fullName }}</strong></p>
       <p class="text-muted">{{ client.email }}</p>
-      <ProBadge variant="neutral">{{ client.petCount }} {{ client.petCount > 1 ? 'animaux' : 'animal' }}</ProBadge>
+      <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
     </ProCard>
-    <ProCard title="Animaux">
+    <ProCard :title="$t('clients.detail.petsTitle')">
       <ProTable
         :empty="!pets.length"
-        empty-title="Aucun animal"
-        empty-description="Ce client n'a pas encore enregistré d'animal."
+        :empty-title="$t('clients.detail.petsEmptyTitle')"
+        :empty-description="$t('clients.detail.petsEmptyDescription')"
       >
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Espèce</th>
-            <th>Race</th>
+            <th>{{ $t('clients.detail.columnName') }}</th>
+            <th>{{ $t('clients.detail.columnSpecies') }}</th>
+            <th>{{ $t('clients.detail.columnBreed') }}</th>
             <th />
           </tr>
         </thead>
@@ -32,9 +32,9 @@
           <tr v-for="p in pets" :key="p.id">
             <td>{{ p.name }}</td>
             <td>{{ p.species }}</td>
-            <td>{{ p.breed || '—' }}</td>
+            <td>{{ p.breed || $t('common.dash') }}</td>
             <td>
-              <NuxtLink :to="`/clients/${clientId}/pets/${p.id}`">Détail</NuxtLink>
+              <NuxtLink :to="`/clients/${clientId}/pets/${p.id}`">{{ $t('common.detail') }}</NuxtLink>
             </td>
           </tr>
         </tbody>
@@ -49,7 +49,7 @@
       >
         <ProCard>
           <strong>{{ p.name }}</strong>
-          <p class="text-muted">{{ p.species }} · {{ p.breed || 'Race inconnue' }}</p>
+          <p class="text-muted">{{ p.species }} · {{ p.breed || $t('common.unknownBreed') }}</p>
         </ProCard>
       </NuxtLink>
     </div>
@@ -66,12 +66,18 @@ type ClientRow = {
   petCount: number
 }
 
+const { t } = useI18n()
+
 const route = useRoute()
 const clientId = route.params.clientId as string
 const client = ref<ClientRow | null>(null)
 const pets = ref<any[]>([])
 
-const clientSubtitle = computed(() => client.value?.email || 'Animaux et dossier du client.')
+function petLabel(count: number) {
+  return count > 1 ? t('common.pets') : t('common.pet')
+}
+
+const clientSubtitle = computed(() => client.value?.email || t('clients.detail.subtitle'))
 
 onMounted(async () => {
   try {

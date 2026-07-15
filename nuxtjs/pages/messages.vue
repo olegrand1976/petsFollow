@@ -1,13 +1,13 @@
 <template>
   <div>
-    <ProPageHeader title="Messagerie" subtitle="Échanges sécurisés avec vos clients." />
+    <ProPageHeader :title="$t('messages.title')" :subtitle="$t('messages.subtitle')" />
     <div class="pro-chat">
       <aside class="pro-chat__threads">
-        <h3 class="pro-card__title">Conversations</h3>
+        <h3 class="pro-card__title">{{ $t('messages.threads') }}</h3>
         <ProEmptyState
           v-if="!threads.length"
-          title="Aucune conversation"
-          description="Les threads apparaîtront lorsque vos clients vous écriront."
+          :title="$t('messages.emptyTitle')"
+          :description="$t('messages.emptyDescription')"
         />
         <button
           v-for="t in threads"
@@ -17,9 +17,9 @@
           :class="{ 'pro-chat__thread-btn--active': active?.id === t.id }"
           @click="select(t)"
         >
-          <strong>{{ t.clientName || `Client ${t.clientUserId.slice(0, 8)}…` }}</strong>
+          <strong>{{ threadLabel(t) }}</strong>
           <span v-if="t.lastMessagePreview" class="pro-chat__thread-preview">{{ t.lastMessagePreview }}</span>
-          <ProBadge v-if="t.unreadCount > 0" variant="warning">{{ t.unreadCount }} non lu{{ t.unreadCount > 1 ? 's' : '' }}</ProBadge>
+          <ProBadge v-if="t.unreadCount > 0" variant="warning">{{ unreadLabel(t.unreadCount) }}</ProBadge>
         </button>
       </aside>
       <section class="pro-chat__messages">
@@ -35,16 +35,16 @@
               v-model="draft"
               class="pro-textarea"
               rows="3"
-              placeholder="Votre message…"
+              :placeholder="$t('messages.placeholder')"
               required
             />
-            <ProButton type="submit" :disabled="!draft.trim()">Envoyer</ProButton>
+            <ProButton type="submit" :disabled="!draft.trim()">{{ $t('common.send') }}</ProButton>
           </form>
         </template>
         <ProEmptyState
           v-else
-          title="Sélectionnez une conversation"
-          description="Choisissez un thread dans la liste pour afficher les messages."
+          :title="$t('messages.selectTitle')"
+          :description="$t('messages.selectDescription')"
         />
       </section>
     </div>
@@ -54,19 +54,29 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'vet-only' })
 
+const { t } = useI18n()
+
 const threads = ref<any[]>([])
 const messages = ref<any[]>([])
 const active = ref<any>(null)
 const draft = ref('')
+
+function threadLabel(thread: any) {
+  return thread.clientName || t('common.clientFallback', { id: thread.clientUserId.slice(0, 8) })
+}
+
+function unreadLabel(count: number) {
+  return count > 1 ? t('messages.unreadPlural', { count }) : t('messages.unread', { count })
+}
 
 onMounted(async () => {
   const res: any = await $fetch('/api/messaging/threads')
   threads.value = res.data ?? res ?? []
 })
 
-async function select(t: any) {
-  active.value = t
-  const res: any = await $fetch(`/api/messaging/threads/${t.id}/messages`)
+async function select(thread: any) {
+  active.value = thread
+  const res: any = await $fetch(`/api/messaging/threads/${thread.id}/messages`)
   messages.value = res.data ?? res ?? []
 }
 

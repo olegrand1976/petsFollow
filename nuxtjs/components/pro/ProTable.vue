@@ -1,7 +1,7 @@
 <template>
   <ProEmptyState
     v-if="empty"
-    :title="emptyTitle"
+    :title="resolvedEmptyTitle"
     :description="emptyDescription"
   />
   <div v-else class="pro-table-wrap">
@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+const props = withDefaults(
   defineProps<{
     empty?: boolean
     emptyTitle?: string
@@ -20,8 +20,11 @@ withDefaults(
   }>(),
   {
     empty: false,
-    emptyTitle: 'Aucune donnée',
+    emptyTitle: undefined,
     emptyDescription: undefined,
   },
 )
+
+const { t } = useI18n()
+const resolvedEmptyTitle = computed(() => props.emptyTitle ?? t('components.table.emptyTitle'))
 </script>

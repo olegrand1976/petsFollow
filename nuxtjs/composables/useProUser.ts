@@ -8,6 +8,7 @@ export type ProUser = {
   practiceName?: string
   emailVerified?: boolean
   profileComplete?: boolean
+  preferredLocale?: string
 }
 
 export function useProUser() {

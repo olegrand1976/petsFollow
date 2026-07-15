@@ -15,13 +15,14 @@
 <script setup lang="ts">
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
+const { t } = useI18n()
 const { fetchUser } = useProUser()
 
-const navItems: ProNavItem[] = [
-  { to: '/admin', label: 'Tableau de bord', exact: true, icon: 'admin' },
-  { to: '/admin/users', label: 'Inscriptions', icon: 'users' },
-  { to: '/admin/payments', label: 'Paiements', icon: 'payments' },
-]
+const navItems = computed<ProNavItem[]>(() => [
+  { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin' },
+  { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users' },
+  { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments' },
+])
 
 onMounted(() => fetchUser())
 </script>

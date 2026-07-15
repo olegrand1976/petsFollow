@@ -1,10 +1,10 @@
-import { authHeaders } from '~/server/utils/api'
+import { apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const config = useRuntimeConfig()
   return $fetch(`${config.apiBase}/api/v1/admin/metrics/overview`, {
-    headers: authHeaders(event),
+    headers: apiHeaders(event),
     query: q,
   })
 })

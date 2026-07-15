@@ -2,35 +2,28 @@
   <div class="pro-login-page">
     <aside class="pro-login-brand">
       <PetsFollowLogo variant="hero" animated />
-      <h2>Vérifiez votre boîte mail</h2>
-      <p>
-        Nous avons envoyé un lien de confirmation à votre adresse email.
-        Cliquez dessus pour activer votre compte cabinet.
-      </p>
+      <h2>{{ $t('auth.registerSent.brandTitle') }}</h2>
+      <p>{{ $t('auth.registerSent.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
       <div class="pro-login-form">
         <PetsFollowLogo variant="default" />
-        <h1>Email envoyé</h1>
+        <h1>{{ $t('auth.registerSent.title') }}</h1>
         <p class="pro-page-header__subtitle">
-          Un message de confirmation a été envoyé à
-          <strong>{{ email }}</strong>.
+          {{ $t('auth.registerSent.subtitle', { email }) }}
         </p>
-        <p class="text-muted">
-          Ouvrez le lien dans l'email pour confirmer votre inscription, puis connectez-vous
-          pour configurer votre fiche cabinet.
-        </p>
+        <p class="text-muted">{{ $t('auth.registerSent.instructions') }}</p>
 
         <div v-if="devLink" class="pro-dev-link">
-          <p class="pro-dev-link__label">Lien de confirmation (dev)</p>
+          <p class="pro-dev-link__label">{{ $t('auth.registerSent.devLinkLabel') }}</p>
           <NuxtLink :to="devLink" class="pro-dev-link__url">{{ devLink }}</NuxtLink>
         </div>
 
         <ProButton block class="pro-mt-lg" @click="navigateTo('/login')">
-          Aller à la connexion
+          {{ $t('auth.registerSent.goToLogin') }}
         </ProButton>
         <ProButton variant="ghost" block @click="navigateTo('/')">
-          Retour à l'accueil
+          {{ $t('auth.registerSent.backHome') }}
         </ProButton>
       </div>
     </div>

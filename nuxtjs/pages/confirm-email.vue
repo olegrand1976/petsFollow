@@ -2,34 +2,28 @@
   <div class="pro-login-page">
     <aside class="pro-login-brand">
       <PetsFollowLogo variant="hero" animated />
-      <h2>{{ confirmed ? 'Compte activé !' : 'Confirmation en cours…' }}</h2>
-      <p v-if="confirmed">
-        Votre inscription est confirmée. Découvrez petsFollow Pro et configurez votre cabinet.
-      </p>
-      <p v-else-if="error">
-        Ce lien de confirmation n'est plus valide.
-      </p>
+      <h2>{{ confirmed ? $t('auth.confirmEmail.brandConfirmed') : $t('auth.confirmEmail.brandPending') }}</h2>
+      <p v-if="confirmed">{{ $t('auth.confirmEmail.brandConfirmedText') }}</p>
+      <p v-else-if="error">{{ $t('auth.confirmEmail.brandInvalidLink') }}</p>
     </aside>
     <div class="pro-login-form-panel">
       <div class="pro-login-form">
         <PetsFollowLogo variant="default" />
-        <div v-if="loading" class="text-muted">Confirmation en cours…</div>
+        <div v-if="loading" class="text-muted">{{ $t('auth.confirmEmail.loading') }}</div>
         <template v-else-if="confirmed">
-          <h1>Inscription confirmée</h1>
-          <p class="pro-page-header__subtitle">
-            Bienvenue sur petsFollow Pro{{ confirmedEmail ? `, ${confirmedEmail}` : '' }} !
-          </p>
+          <h1>{{ $t('auth.confirmEmail.title') }}</h1>
+          <p class="pro-page-header__subtitle">{{ welcomeMessage }}</p>
           <ProButton block @click="navigateTo('/welcome')">
-            Découvrir l'application
+            {{ $t('auth.confirmEmail.discover') }}
           </ProButton>
           <ProButton variant="secondary" block class="pro-mt-sm" @click="navigateTo('/login')">
-            Se connecter
+            {{ $t('auth.confirmEmail.login') }}
           </ProButton>
         </template>
         <template v-else>
-          <h1>Confirmation impossible</h1>
+          <h1>{{ $t('auth.confirmEmail.failedTitle') }}</h1>
           <p class="pro-field-error" role="alert">{{ error }}</p>
-          <ProButton block @click="navigateTo('/register')">Réessayer l'inscription</ProButton>
+          <ProButton block @click="navigateTo('/register')">{{ $t('auth.confirmEmail.retry') }}</ProButton>
         </template>
       </div>
     </div>
@@ -39,16 +33,25 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
+const { mapError } = useApiError()
+
 const route = useRoute()
 const loading = ref(true)
 const confirmed = ref(false)
 const confirmedEmail = ref('')
 const error = ref('')
 
+const welcomeMessage = computed(() =>
+  t('auth.confirmEmail.welcome', {
+    emailPart: confirmedEmail.value ? `, ${confirmedEmail.value}` : '',
+  }),
+)
+
 onMounted(async () => {
   const token = String(route.query.token || '')
   if (!token) {
-    error.value = 'Lien de confirmation invalide.'
+    error.value = t('auth.confirmEmail.invalidLink')
     loading.value = false
     return
   }
@@ -61,7 +64,7 @@ onMounted(async () => {
     confirmed.value = true
     confirmedEmail.value = data.email || ''
   } catch (e: any) {
-    error.value = e?.data?.message || 'Ce lien a expiré ou a déjà été utilisé.'
+    error.value = mapError(e) || t('auth.confirmEmail.expiredLink')
   } finally {
     loading.value = false
   }

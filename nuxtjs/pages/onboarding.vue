@@ -1,15 +1,15 @@
 <template>
   <div>
     <ProPageHeader
-      title="Configuration du cabinet"
-      subtitle="Complétez votre fiche d'information — visible par vos clients et modifiable à tout moment dans les paramètres."
+      :title="$t('onboarding.title')"
+      :subtitle="$t('onboarding.subtitle')"
     />
-    <ProCard title="Fiche d'information">
+    <ProCard :title="$t('onboarding.profileCard')">
       <PracticeProfileForm v-model="profile" @submit="save">
         <template #actions>
           <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
           <ProButton type="submit" :loading="saving" class="pro-save-btn">
-            Enregistrer et accéder au dashboard
+            {{ $t('onboarding.submit') }}
           </ProButton>
         </template>
       </PracticeProfileForm>
@@ -21,6 +21,8 @@
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
 
 definePageMeta({ middleware: 'vet-only' })
+
+const { mapError } = useApiError()
 
 const profile = ref<PracticeProfileForm>({
   vetFullName: '',
@@ -75,7 +77,7 @@ async function save() {
     await fetchUser(true)
     await navigateTo('/dashboard')
   } catch (e: any) {
-    error.value = e?.data?.message || 'Enregistrement impossible'
+    error.value = mapError(e)
   } finally {
     saving.value = false
   }

@@ -1,6 +1,6 @@
-import { apiBase, authHeaders } from '~/server/utils/api'
+import { apiBase, apiHeaders } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const petId = getRouterParam(event, 'petId')
-  return $fetch(`${apiBase()}/api/v1/pets/${petId}/heartrate/sessions`, { headers: authHeaders(event) })
+  return $fetch(`${apiBase()}/api/v1/pets/${petId}/heartrate/sessions`, { headers: apiHeaders(event) })
 })
