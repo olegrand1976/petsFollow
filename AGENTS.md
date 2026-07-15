@@ -45,6 +45,20 @@ Confirmation email démo : `/confirm-email?token=demo-confirm-email`
 
 Relancer les données : `make seed`
 
+## Langues (FR / NL / EN)
+
+Locales supportées : `fr` (défaut), `nl`, `en`.
+
+| Face | Mécanisme | Persistance |
+|------|-----------|-------------|
+| **Nuxt Pro** | `@nuxtjs/i18n`, cookie `pf_locale` | `PATCH /api/v1/me/locale` via `/settings` |
+| **Flutter** | `gen-l10n` + `LocaleController` | `shared_preferences` + `PATCH /me/locale` |
+| **API Go** | middleware `Accept-Language` + `users.preferred_locale` | emails/billing/erreurs traduits |
+
+Compte démo NL : `client.marie@petsfollow.test` (`preferred_locale = nl`).
+
+Après migration : `make migrate` (000005_user_locale).
+
 ## Google OAuth + 2FA (optionnel)
 
 | Variable | Où | Description |

@@ -1,0 +1,51 @@
+:root {
+  --pf-vet-topbar-bg: rgba(255, 255, 255, 0.92);
+  --pf-vet-table-row-hover: rgba(42, 157, 143, 0.04);
+  --pf-vet-chat-active-bg: var(--pf-vet-surface);
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --pf-vet-bg: #0f1923;
+  --pf-vet-surface: #1a2733;
+  --pf-vet-primary: #e8edf2;
+  --pf-vet-text: #e8edf2;
+  --pf-vet-text-muted: #94a3b8;
+  --pf-vet-border: #2a3a4a;
+  --pf-vet-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --pf-vet-shadow-md: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --pf-vet-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --pf-vet-gradient-main: linear-gradient(180deg, #0f1923 0%, #1a2733 48%);
+  --pf-vet-focus-ring: 0 0 0 3px rgba(42, 157, 143, 0.45);
+  --pf-vet-topbar-bg: rgba(26, 39, 51, 0.92);
+  --pf-vet-table-row-hover: rgba(42, 157, 143, 0.12);
+  --pf-vet-chat-active-bg: #243142;
+}
+
+html.dark .pro-sidebar {
+  background: #152028;
+}
+
+html.dark .pro-badge--success {
+  background: rgba(82, 183, 136, 0.22);
+  color: #7dcea0;
+}
+
+html.dark .pro-badge--warning {
+  background: rgba(233, 196, 106, 0.2);
+  color: #e9c46a;
+}
+
+html.dark .pro-badge--danger {
+  background: rgba(231, 111, 81, 0.22);
+  color: #f4a261;
+}
+
+html.dark .pro-avatar {
+  background: rgba(42, 157, 143, 0.22);
+}
+
+html.dark .pro-view-toggle__btn--active {
+  background: var(--pf-vet-surface);
+}

@@ -7,22 +7,24 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type PracticeProfile struct {
-	PracticeID          string     `json:"practiceId"`
-	PracticeName        string     `json:"practiceName"`
-	Phone               string     `json:"phone"`
-	ContactEmail        string     `json:"contactEmail"`
-	AddressLine1        string     `json:"addressLine1"`
-	AddressLine2        string     `json:"addressLine2"`
-	City                string     `json:"city"`
-	PostalCode          string     `json:"postalCode"`
-	Website             string     `json:"website"`
-	ProfileCompletedAt  *time.Time `json:"profileCompletedAt,omitempty"`
-	VetFullName         string     `json:"vetFullName"`
-	VetEmail            string     `json:"vetEmail"`
+	PracticeID             string     `json:"practiceId"`
+	PracticeName           string     `json:"practiceName"`
+	Phone                  string     `json:"phone"`
+	ContactEmail           string     `json:"contactEmail"`
+	AddressLine1           string     `json:"addressLine1"`
+	AddressLine2           string     `json:"addressLine2"`
+	City                   string     `json:"city"`
+	PostalCode             string     `json:"postalCode"`
+	Website                string     `json:"website"`
+	ProfileCompletedAt     *time.Time `json:"profileCompletedAt,omitempty"`
+	VetFullName            string     `json:"vetFullName"`
+	VetEmail               string     `json:"vetEmail"`
+	HeartRateDurationsSec  []int      `json:"heartrateDurationsSec"`
 }
 
 type RegisterVetInput struct {
@@ -42,23 +44,49 @@ type RegisterVetResult struct {
 func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID string) (PracticeProfile, error) {
 	var p PracticeProfile
 	var completedAt *time.Time
+	var durations []int32
 	err := s.pool.QueryRow(ctx, `
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
 			COALESCE(pr.postal_code,''), COALESCE(pr.website,''), pr.profile_completed_at,
-			u.full_name, u.email
+			u.full_name, u.email, pr.heartrate_durations_sec
 		FROM practice.practices pr
 		JOIN identity.users u ON u.id = $2 AND u.practice_id = pr.id
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
 		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.Website, &completedAt,
-		&p.VetFullName, &p.VetEmail,
+		&p.VetFullName, &p.VetEmail, &durations,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PracticeProfile{}, ErrNotFound
 	}
 	p.ProfileCompletedAt = completedAt
+	p.HeartRateDurationsSec = int32SliceToInts(durations)
 	return p, err
+}
+
+func int32SliceToInts(in []int32) []int {
+	out := make([]int, len(in))
+	for i, v := range in {
+		out[i] = int(v)
+	}
+	return out
+}
+
+func (s *Store) GetPracticeHeartRateDurations(ctx context.Context, practiceID string) ([]int, error) {
+	var durations []int32
+	err := s.pool.QueryRow(ctx, `
+		SELECT heartrate_durations_sec FROM practice.practices WHERE id = $1`, practiceID).Scan(&durations)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return []int{60}, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(durations) == 0 {
+		return []int{60}, nil
+	}
+	return int32SliceToInts(durations), nil
 }
 
 func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool) error {
@@ -74,11 +102,15 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 		return err
 	}
 
+	durations := p.HeartRateDurationsSec
+	if len(durations) == 0 {
+		durations = []int{60}
+	}
 	q := `
 		UPDATE practice.practices
 		SET name = $2, phone = $3, contact_email = $4, address_line1 = $5, address_line2 = $6,
-			city = $7, postal_code = $8, website = $9`
-	args := []any{practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2, p.City, p.PostalCode, p.Website}
+			city = $7, postal_code = $8, website = $9, heartrate_durations_sec = $10`
+	args := []any{practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2, p.City, p.PostalCode, p.Website, durations}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`
 	}
@@ -125,7 +157,7 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale)
 		VALUES ($1, $2, $3, $4, 'vet', $5, $6)`,
-		userID, in.Email, string(hash), in.FullName, practiceID, in.PreferredLocale); err != nil {
+		userID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
 		return RegisterVetResult{}, err
 	}
 	autoReply := in.AutoReplyDefault

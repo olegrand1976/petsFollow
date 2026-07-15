@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   ApiClient._();
   static final instance = ApiClient._();
+
+  static const _tokenKey = 'pf_token';
 
   String? token;
   final dio = Dio(BaseOptions(
@@ -17,9 +21,31 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        options.headers['Accept-Language'] = LocaleController.instance.languageCode;
         handler.next(options);
       },
     ));
+  }
+
+  Future<void> restoreSession() async {
+    final sp = await SharedPreferences.getInstance();
+    token = sp.getString(_tokenKey);
+    loadToken();
+  }
+
+  Future<void> _persistToken(String? value) async {
+    final sp = await SharedPreferences.getInstance();
+    if (value == null) {
+      await sp.remove(_tokenKey);
+    } else {
+      await sp.setString(_tokenKey, value);
+    }
+  }
+
+  Future<void> logout() async {
+    token = null;
+    await _persistToken(null);
+    loadToken();
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -29,8 +55,49 @@ class ApiClient {
     });
     final data = res.data['data'] as Map<String, dynamic>;
     token = data['accessToken'] as String?;
+    await _persistToken(token);
     loadToken();
+    await syncLocaleFromMe();
     return data;
+  }
+
+  Future<Map<String, dynamic>> getMe() async {
+    final res = await dio.get('/api/v1/me');
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateMe(String fullName) async {
+    final res = await dio.patch('/api/v1/me', data: {'fullName': fullName});
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    await dio.patch('/api/v1/me/password', data: {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+  }
+
+  Future<void> deleteAccount() async {
+    await dio.delete('/api/v1/me');
+    await logout();
+  }
+
+  Future<void> updateLocale(String locale) async {
+    await dio.patch('/api/v1/me/locale', data: {'locale': locale});
+    await LocaleController.instance.setLocale(locale);
+  }
+
+  Future<void> syncLocaleFromMe() async {
+    try {
+      final me = await getMe();
+      final locale = me['preferredLocale'] as String?;
+      if (locale != null) {
+        await LocaleController.instance.setLocale(locale);
+      }
+    } catch (_) {
+      /* ignore if /me unavailable */
+    }
   }
 
   Future<List<dynamic>> getPets() async {
@@ -63,9 +130,17 @@ class ApiClient {
     return res.data['data']['plans'] as List<dynamic>;
   }
 
-  Future<Map<String, dynamic>> startHeartRate(String petId) async {
-    final res = await dio.post('/api/v1/pets/$petId/heartrate/sessions');
+  Future<Map<String, dynamic>> startHeartRate(String petId, {int? durationSec}) async {
+    final res = await dio.post(
+      '/api/v1/pets/$petId/heartrate/sessions',
+      data: durationSec != null ? {'durationSec': durationSec} : null,
+    );
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<List<dynamic>> getHeartRateSessions(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/heartrate/sessions');
+    return res.data['data'] as List<dynamic>;
   }
 
   Future<Map<String, dynamic>> completeHeartRate(String sessionId, int tapCount) async {

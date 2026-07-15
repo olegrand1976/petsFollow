@@ -341,7 +341,9 @@
       "notificationsEmptyTitle": "Niets nieuws",
       "notificationsEmptyDescription": "Klantgesprekken verschijnen hier.",
       "profileMenu": "Profielmenu",
-      "settings": "Instellingen"
+      "settings": "Instellingen",
+      "themeDark": "Donkere modus inschakelen",
+      "themeLight": "Lichte modus inschakelen"
     },
     "table": {
       "emptyTitle": "Geen gegevens"

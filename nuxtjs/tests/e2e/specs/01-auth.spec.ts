@@ -16,5 +16,5 @@ test('login véto et liste clients', async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/)
   await expect(page.getByTestId('pro-topbar')).toBeVisible()
   await page.goto('/clients')
-  await expect(page.getByRole('heading', { name: 'Clients' })).toBeVisible()
+  await expect(page.getByTestId('clients-page')).toBeVisible()
 })

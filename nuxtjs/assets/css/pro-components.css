@@ -149,7 +149,7 @@
 }
 
 .pro-table tbody tr:hover {
-  background: rgba(42, 157, 143, 0.04);
+  background: var(--pf-vet-table-row-hover);
 }
 
 .pro-page-header {
@@ -488,7 +488,7 @@
 .pro-chat__thread-btn--active,
 .pro-chat__thread-btn:hover {
   border-color: var(--pf-vet-accent);
-  background: white;
+  background: var(--pf-vet-chat-active-bg);
 }
 
 .pro-chat__messages {

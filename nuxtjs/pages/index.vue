@@ -71,6 +71,7 @@
     <footer class="pro-landing__footer">
       <PetsFollowLogo variant="compact" />
       <p>{{ $t('index.footer', { year }) }}</p>
+      <ProLegalFooter />
     </footer>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-testid="clients-page">
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">

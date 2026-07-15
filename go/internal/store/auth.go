@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
 
 type RegisterGoogleVetInput struct {
@@ -59,7 +60,7 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, google_sub, auth_provider, preferred_locale)
 		VALUES ($1, $2, NULL, $3, 'vet', $4, $5, $6, 'google', $7)`,
-		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub, in.PreferredLocale); err != nil {
+		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
 		return User{}, err
 	}
 	autoReply := in.AutoReplyDefault

@@ -20,7 +20,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--pf-vet-topbar-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--pf-vet-border);
 }

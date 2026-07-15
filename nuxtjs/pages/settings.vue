@@ -61,6 +61,7 @@
           type="button"
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': selectedLocale === loc }"
+          :data-testid="`settings-locale-${loc}`"
           @click="selectedLocale = loc"
         >
           {{ $t(`settings.language.${loc}`) }}

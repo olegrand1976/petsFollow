@@ -1,12 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 enum HeartRatePhase { ready, running, review }
 
 class HeartRateFlowScreen extends StatefulWidget {
-  const HeartRateFlowScreen({super.key, required this.petId});
+  const HeartRateFlowScreen({
+    super.key,
+    required this.petId,
+    required this.durationsSec,
+  });
+
   final String petId;
+  final List<int> durationsSec;
 
   @override
   State<HeartRateFlowScreen> createState() => _HeartRateFlowScreenState();
@@ -14,6 +21,7 @@ class HeartRateFlowScreen extends StatefulWidget {
 
 class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   HeartRatePhase phase = HeartRatePhase.ready;
+  int selectedDuration = 60;
   int secondsLeft = 60;
   int taps = 0;
   Timer? timer;
@@ -21,12 +29,22 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   Map<String, dynamic>? result;
   DateTime? lastTap;
 
+  @override
+  void initState() {
+    super.initState();
+    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
+    selectedDuration = durations.first;
+  }
+
   Future<void> start() async {
-    final sess = await ApiClient.instance.startHeartRate(widget.petId);
+    final sess = await ApiClient.instance.startHeartRate(
+      widget.petId,
+      durationSec: selectedDuration,
+    );
     setState(() {
       sessionId = sess['id'] as String?;
       phase = HeartRatePhase.running;
-      secondsLeft = 60;
+      secondsLeft = selectedDuration;
       taps = 0;
     });
     timer?.cancel();
@@ -60,7 +78,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     if (sessionId == null) return;
     await ApiClient.instance.validateHeartRate(sessionId!);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Relevé envoyé au véto')));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sentToVet)));
       Navigator.pop(context);
     }
   }
@@ -84,42 +103,66 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
     return Scaffold(
-      appBar: AppBar(title: const Text('Relevé cardiaque')),
+      appBar: AppBar(title: Text(l10n.heartRate)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: switch (phase) {
           HeartRatePhase.ready => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Tapotez à chaque battement pendant 60 secondes.'),
+                if (durations.length > 1) ...[
+                  Text(l10n.chooseDuration),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: durations.map((d) {
+                      return ChoiceChip(
+                        label: Text(l10n.durationSeconds(d)),
+                        selected: selectedDuration == d,
+                        onSelected: (_) => setState(() => selectedDuration = d),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Text(l10n.heartRateInstructionsDuration(selectedDuration)),
                 const SizedBox(height: 24),
-                FilledButton(onPressed: start, child: const Text('Démarrer')),
+                FilledButton(onPressed: start, child: Text(l10n.start)),
               ],
             ),
           HeartRatePhase.running => GestureDetector(
               onTap: onTap,
               behavior: HitTestBehavior.opaque,
               child: Center(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text('$secondsLeft s', style: Theme.of(context).textTheme.displayLarge),
-                  const SizedBox(height: 16),
-                  Text('$taps battements', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 24),
-                  const Icon(Icons.favorite, size: 96),
-                  const Text('Tapez ici à chaque battement'),
-                ]),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(l10n.secondsLeft(secondsLeft), style: Theme.of(context).textTheme.displayLarge),
+                    const SizedBox(height: 16),
+                    Text(l10n.beatsCount(taps), style: Theme.of(context).textTheme.headlineSmall),
+                    const SizedBox(height: 24),
+                    const Icon(Icons.favorite, size: 96),
+                    Text(l10n.tapHere),
+                  ],
+                ),
               ),
             ),
           HeartRatePhase.review => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BPM: ${result?['bpm'] ?? '?'}', style: Theme.of(context).textTheme.headlineMedium),
-                Text('Battements: $taps'),
-                if (result?['isAlert'] == true) const Text('Alerte seuil', style: TextStyle(color: Colors.orangeAccent)),
+                Text(
+                  l10n.bpmLabel('${result?['bpm'] ?? '?'}'),
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                Text(l10n.beatsLabel(taps)),
+                if (result?['isAlert'] == true)
+                  Text(l10n.thresholdAlert, style: const TextStyle(color: Colors.orangeAccent)),
                 const SizedBox(height: 24),
-                FilledButton(onPressed: validate, child: const Text('Valider et envoyer au véto')),
-                TextButton(onPressed: restart, child: const Text('Recommencer')),
+                FilledButton(onPressed: validate, child: Text(l10n.validateAndSend)),
+                TextButton(onPressed: restart, child: Text(l10n.restart)),
               ],
             ),
         },

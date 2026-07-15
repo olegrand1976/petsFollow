@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,22 +17,42 @@ class _PetFormScreenState extends State<PetFormScreen> {
   String selectedPlan = 'triennial';
   bool autoRenew = true;
   bool loading = false;
+  List<Map<String, dynamic>> plans = [];
 
-  static const plans = [
-    {'code': 'annual', 'label': '25 € / an'},
-    {'code': 'triennial', 'label': '60 € / 3 ans', 'recommended': true},
-    {'code': 'quinquennial', 'label': '75 € / 5 ans'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadPlans();
+  }
 
-  String get summary {
-    final plan = plans.firstWhere((p) => p['code'] == selectedPlan);
-    final label = plan['label'] as String;
-    if (autoRenew) {
-      if (selectedPlan == 'annual') return '$label, renouvelé automatiquement';
-      if (selectedPlan == 'triennial') return '60 € tous les 3 ans, renouvelé automatiquement';
-      return '75 € tous les 5 ans, renouvelé automatiquement';
+  Future<void> _loadPlans() async {
+    try {
+      final data = await ApiClient.instance.getBillingPlans();
+      setState(() {
+        plans = data.map((p) => Map<String, dynamic>.from(p as Map)).toList();
+      });
+    } catch (_) {
+      /* fallback labels from API locale via Accept-Language */
     }
-    return '$label, paiement unique';
+  }
+
+  String _summary(AppLocalizations l10n) {
+    final plan = plans.firstWhere(
+      (p) => p['code'] == selectedPlan,
+      orElse: () => {'label': selectedPlan},
+    );
+    final label = plan['label'] as String? ?? selectedPlan;
+    if (autoRenew) {
+      switch (selectedPlan) {
+        case 'annual':
+          return l10n.planAnnualSub(label);
+        case 'triennial':
+          return l10n.planTriennialSub;
+        case 'quinquennial':
+          return l10n.planQuinquennialSub;
+      }
+    }
+    return l10n.planOneTime(label);
   }
 
   Future<void> save() async {
@@ -55,8 +76,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l10n.errorGeneric(e.toString()))),
         );
       }
     } finally {
@@ -65,13 +87,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
   }
 
   Future<void> _waitForPayment(String petId) async {
+    final l10n = AppLocalizations.of(context)!;
     for (var i = 0; i < 20; i++) {
       await Future.delayed(const Duration(seconds: 2));
       final pet = await ApiClient.instance.getPet(petId);
       if (pet['paymentStatus'] == 'active') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Paiement confirmé — animal actif')),
+            SnackBar(content: Text(l10n.paymentConfirmed)),
           );
         }
         return;
@@ -79,62 +102,76 @@ class _PetFormScreenState extends State<PetFormScreen> {
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Paiement en attente — vous pourrez reprendre plus tard')),
+        SnackBar(content: Text(l10n.paymentPending)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final displayPlans = plans.isNotEmpty
+        ? plans
+        : [
+            {'code': 'annual', 'label': '25 € / an'},
+            {'code': 'triennial', 'label': '60 € / 3 ans', 'recommended': true},
+            {'code': 'quinquennial', 'label': '75 € / 5 ans'},
+          ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Nouvel animal')),
+      appBar: AppBar(title: Text(l10n.newPet)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Nom')),
-          TextField(controller: species, decoration: const InputDecoration(labelText: 'Espèce')),
-          TextField(controller: breed, decoration: const InputDecoration(labelText: 'Race')),
-          const SizedBox(height: 24),
-          Text('Choisissez votre formule', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...plans.map((plan) {
-            final code = plan['code'] as String;
-            final recommended = plan['recommended'] == true;
-            return Card(
-              color: selectedPlan == code ? Theme.of(context).colorScheme.primaryContainer : null,
-              child: RadioListTile<String>(
-                value: code,
-                groupValue: selectedPlan,
-                onChanged: (v) => setState(() => selectedPlan = v!),
-                title: Row(children: [
-                  Text(plan['label'] as String),
-                  if (recommended) ...[
-                    const SizedBox(width: 8),
-                    Chip(
-                      label: const Text('Recommandé', style: TextStyle(fontSize: 11)),
-                      visualDensity: VisualDensity.compact,
-                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                    ),
-                  ],
-                ]),
-              ),
-            );
-          }),
-          SwitchListTile(
-            title: const Text('Renouveler automatiquement'),
-            subtitle: const Text('Prélèvement à chaque échéance'),
-            value: autoRenew,
-            onChanged: (v) => setState(() => autoRenew = v),
-          ),
-          Text(summary, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: loading ? null : save,
-            child: loading
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Continuer vers le paiement'),
-          ),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName)),
+            TextField(controller: species, decoration: InputDecoration(labelText: l10n.species)),
+            TextField(controller: breed, decoration: InputDecoration(labelText: l10n.breed)),
+            const SizedBox(height: 24),
+            Text(l10n.choosePlan, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...displayPlans.map((plan) {
+              final code = plan['code'] as String;
+              final recommended = plan['recommended'] == true;
+              return Card(
+                color: selectedPlan == code ? Theme.of(context).colorScheme.primaryContainer : null,
+                child: RadioListTile<String>(
+                  value: code,
+                  groupValue: selectedPlan,
+                  onChanged: (v) => setState(() => selectedPlan = v!),
+                  title: Row(
+                    children: [
+                      Text(plan['label'] as String? ?? code),
+                      if (recommended) ...[
+                        const SizedBox(width: 8),
+                        Chip(
+                          label: Text(l10n.recommended, style: const TextStyle(fontSize: 11)),
+                          visualDensity: VisualDensity.compact,
+                          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+            SwitchListTile(
+              title: Text(l10n.autoRenewTitle),
+              subtitle: Text(l10n.autoRenewSubtitle),
+              value: autoRenew,
+              onChanged: (v) => setState(() => autoRenew = v),
+            ),
+            Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: loading ? null : save,
+              child: loading
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(l10n.continueToPayment),
+            ),
+          ],
+        ),
       ),
     );
   }

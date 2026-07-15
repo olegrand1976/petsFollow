@@ -140,7 +140,25 @@
       "nl": "Nederlands",
       "en": "English",
       "saved": "Language saved."
-    }
+    },
+    "heartrate": {
+      "title": "Heart rate reading",
+      "subtitle": "Measurement durations offered to your clients.",
+      "duration15": "15 seconds",
+      "duration30": "30 seconds",
+      "duration60": "60 seconds",
+      "hint": "Select at least one duration.",
+      "saved": "Durations saved.",
+      "save": "Save durations"
+    },
+    "notifications": {
+      "title": "Email notifications",
+      "subtitle": "Choose which events trigger an email.",
+      "onMessage": "New client message",
+      "onHeartrate": "Validated heart rate reading",
+      "saved": "Preferences saved."
+    },
+    "legalLinks": "Legal information"
   },
   "clients": {
     "title": "Clients",
@@ -180,7 +198,9 @@
       "heartrateEmptyDescription": "Validated BPM sessions will appear here.",
       "columnDate": "Date",
       "columnBpm": "BPM",
+      "columnDuration": "Duration",
       "columnStatus": "Status",
+      "chartTitle": "BPM trend (last 30 readings)",
       "alert": "Alert",
       "ok": "OK",
       "timelineTitle": "Monitoring history",
@@ -341,7 +361,9 @@
       "notificationsEmptyTitle": "Nothing new",
       "notificationsEmptyDescription": "Client conversations will appear here.",
       "profileMenu": "Profile menu",
-      "settings": "Settings"
+      "settings": "Settings",
+      "themeDark": "Enable dark mode",
+      "themeLight": "Enable light mode"
     },
     "table": {
       "emptyTitle": "No data"
@@ -365,6 +387,24 @@
       "city": "City",
       "website": "Website (optional)",
       "websitePlaceholder": "https://"
+    }
+  },
+  "legal": {
+    "updated": "Last updated: July 2026",
+    "terms": {
+      "title": "Terms of use",
+      "link": "Terms",
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners.\n\nThe app enables heart rate measurement, history review and communication with the practice.\n\nUsers must use the service as intended."
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "link": "Privacy",
+      "body": "petsFollow processes personal data (name, email, readings, messages) to provide cardiac monitoring.\n\nData is retained for the lifetime of the account.\n\nYou may exercise your GDPR rights at support@petsfollow.test."
+    },
+    "mentions": {
+      "title": "Legal notice",
+      "link": "Legal notice",
+      "body": "Publisher: petsFollow\nContact: support@petsfollow.test\n\nHosting: GDPR-compliant cloud infrastructure."
     }
   },
   "errors": {

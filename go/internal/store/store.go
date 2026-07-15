@@ -11,7 +11,10 @@ import (
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound   = errors.New("not found")
+	ErrForbidden  = errors.New("forbidden")
+)
 
 type User struct {
 	ID              string
@@ -44,6 +47,7 @@ type Pet struct {
 	WeightKg      *float64  `json:"weightKg,omitempty"`
 	PhotoURL      string    `json:"photoUrl"`
 	PaymentStatus string    `json:"paymentStatus"`
+	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
 }
@@ -212,6 +216,9 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 		if ent, e := s.GetEntitlementByPetID(ctx, id); e == nil {
 			p.Entitlement = &ent
 		}
+		if durations, e := s.GetPracticeHeartRateDurations(ctx, p.PracticeID); e == nil {
+			p.HeartrateDurationsSec = durations
+		}
 	}
 	return p, err
 }
@@ -261,8 +268,24 @@ func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]P
 		if ent, e := s.GetEntitlementByPetID(ctx, pets[i].ID); e == nil {
 			pets[i].Entitlement = &ent
 		}
+		if durations, e := s.GetPracticeHeartRateDurations(ctx, pets[i].PracticeID); e == nil {
+			pets[i].HeartrateDurationsSec = durations
+		}
 	}
 	return pets, nil
+}
+
+func (s *Store) GetHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
+	var sess HeartRateSession
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at
+		FROM heartrate.sessions WHERE id=$1 AND owner_user_id=$2`,
+		sessionID, ownerID).Scan(
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return HeartRateSession{}, ErrNotFound
+	}
+	return sess, err
 }
 
 func (s *Store) StartHeartRateSession(ctx context.Context, petID, ownerID, practiceID string, durationSec int) (HeartRateSession, error) {

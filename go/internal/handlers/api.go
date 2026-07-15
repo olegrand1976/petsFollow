@@ -43,6 +43,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/me", a.me)
+		pr.Patch("/me", a.updateMe)
+		pr.Patch("/me/password", a.changeMePassword)
+		pr.Delete("/me", a.deleteMe)
 		pr.Patch("/me/locale", a.updateMeLocale)
 		pr.Get("/clients", a.listClients)
 		pr.Get("/clients/{clientID}", a.getClient)
@@ -65,6 +68,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/vet/overview", a.vetOverview)
 		pr.Get("/vet/profile", a.getVetProfile)
 		pr.Put("/vet/profile", a.updateVetProfile)
+		pr.Get("/vet/notification-preferences", a.getVetEmailPrefs)
+		pr.Put("/vet/notification-preferences", a.updateVetEmailPrefs)
 	})
 }
 
@@ -270,6 +275,10 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, items)
 }
 
+type startHRReq struct {
+	DurationSec int `json:"durationSec"`
+}
+
 func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
@@ -284,7 +293,29 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePremiumAccess(w, r, pet.ID) {
 		return
 	}
-	sess, err := a.store.StartHeartRateSession(r.Context(), pet.ID, id.UserID, pet.PracticeID, a.cfg.HeartRateSeconds)
+	var req startHRReq
+	_ = httpx.DecodeJSON(r, &req)
+	durationSec := req.DurationSec
+	if durationSec == 0 {
+		durationSec = a.cfg.HeartRateSeconds
+	}
+	allowed, err := a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
+	if err != nil {
+		allowed = []int{a.cfg.HeartRateSeconds}
+	}
+	normalized := kernel.NormalizeHeartRateDurations(allowed)
+	ok := false
+	for _, d := range normalized {
+		if d == durationSec {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_duration")
+		return
+	}
+	sess, err := a.store.StartHeartRateSession(r.Context(), pet.ID, id.UserID, pet.PracticeID, durationSec)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -307,9 +338,14 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	bpm := kernel.CalculateBPM(req.TapCount, a.cfg.HeartRateSeconds)
+	sess, err := a.store.GetHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
+		return
+	}
+	bpm := kernel.CalculateBPM(req.TapCount, sess.DurationSec)
 	alert := kernel.IsHeartRateAlert(bpm, a.cfg.HeartRateMinBPM, a.cfg.HeartRateMaxBPM)
-	sess, err := a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
+	sess, err = a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
@@ -617,6 +653,7 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "profile_fields_required")
 		return
 	}
+	req.HeartRateDurationsSec = kernel.NormalizeHeartRateDurations(req.HeartRateDurationsSec)
 	markComplete := r.URL.Query().Get("complete") == "true"
 	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

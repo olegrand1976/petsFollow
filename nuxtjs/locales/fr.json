@@ -140,7 +140,25 @@
       "nl": "Nederlands",
       "en": "English",
       "saved": "Langue enregistrée."
-    }
+    },
+    "heartrate": {
+      "title": "Relevé cardiaque",
+      "subtitle": "Durées de mesure proposées à vos clients.",
+      "duration15": "15 secondes",
+      "duration30": "30 secondes",
+      "duration60": "60 secondes",
+      "hint": "Sélectionnez au moins une durée.",
+      "saved": "Durées enregistrées.",
+      "save": "Enregistrer les durées"
+    },
+    "notifications": {
+      "title": "Notifications email",
+      "subtitle": "Choisissez les événements pour lesquels vous recevez un email.",
+      "onMessage": "Nouveau message client",
+      "onHeartrate": "Relevé cardiaque validé",
+      "saved": "Préférences enregistrées."
+    },
+    "legalLinks": "Informations légales"
   },
   "clients": {
     "title": "Clients",
@@ -180,7 +198,9 @@
       "heartrateEmptyDescription": "Les sessions BPM validées apparaîtront ici.",
       "columnDate": "Date",
       "columnBpm": "BPM",
+      "columnDuration": "Durée",
       "columnStatus": "Statut",
+      "chartTitle": "Tendance BPM (30 derniers relevés)",
       "alert": "Alerte",
       "ok": "OK",
       "timelineTitle": "Historique suivi",
@@ -365,6 +385,24 @@
       "city": "Ville",
       "website": "Site web (optionnel)",
       "websitePlaceholder": "https://"
+    }
+  },
+  "legal": {
+    "updated": "Date d'actualisation : juillet 2026",
+    "terms": {
+      "title": "Conditions générales d'utilisation",
+      "link": "CGU",
+      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires.\n\nL'application permet de mesurer la fréquence cardiaque, consulter l'historique et communiquer avec le cabinet.\n\nL'utilisateur s'engage à utiliser le service conformément à sa destination professionnelle ou personnelle."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "link": "Confidentialité",
+      "body": "petsFollow traite les données personnelles (nom, email, relevés, messages) pour fournir le service de suivi cardiaque.\n\nLes données sont conservées pendant la durée d'utilisation du compte.\n\nVous pouvez exercer vos droits RGPD en contactant support@petsfollow.test."
+    },
+    "mentions": {
+      "title": "Mentions légales",
+      "link": "Mentions légales",
+      "body": "Éditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD."
     }
   },
   "errors": {

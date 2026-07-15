@@ -42,6 +42,11 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
+	if _, err := pool.Exec(ctx, `
+		UPDATE identity.users SET preferred_locale = 'nl'
+		WHERE email = 'client.marie@petsfollow.test'`); err != nil {
+		return err
+	}
 	logSummary()
 	return nil
 }

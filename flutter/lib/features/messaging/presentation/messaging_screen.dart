@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 
 class MessagingScreen extends StatefulWidget {
@@ -41,26 +42,31 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Messagerie véto')),
-      body: Column(children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: messages.length,
-            itemBuilder: (_, i) {
-              final m = messages[i] as Map<String, dynamic>;
-              return ListTile(title: Text(m['body'] as String? ?? ''));
-            },
+      appBar: AppBar(title: Text(l10n.vetMessaging)),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (_, i) {
+                final m = messages[i] as Map<String, dynamic>;
+                return ListTile(title: Text(m['body'] as String? ?? ''));
+              },
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(children: [
-            Expanded(child: TextField(controller: draft)),
-            IconButton(onPressed: send, icon: const Icon(Icons.send)),
-          ]),
-        ),
-      ]),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(child: TextField(controller: draft)),
+                IconButton(onPressed: send, icon: const Icon(Icons.send)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

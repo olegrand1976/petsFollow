@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/settings_menu_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.onLogout});
+
+  final VoidCallback onLogout;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -15,6 +21,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> pets = [];
+  String? userName;
+  Map<String, List<({DateTime date, int bpm, bool isAlert})>> chartData = {};
 
   @override
   void initState() {
@@ -23,14 +31,86 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> load() async {
+    try {
+      final me = await ApiClient.instance.getMe();
+      userName = me['fullName'] as String?;
+    } catch (_) {}
     final data = await ApiClient.instance.getPets();
-    setState(() => pets = data);
+    final charts = <String, List<({DateTime date, int bpm, bool isAlert})>>{};
+    for (final p in data) {
+      final pet = p as Map<String, dynamic>;
+      final petId = pet['id'] as String;
+      try {
+        final sessions = await ApiClient.instance.getHeartRateSessions(petId);
+        charts[petId] = sessions
+            .where((s) => s['bpm'] != null)
+            .map((s) => (
+                  date: DateTime.parse(s['startedAt'] as String),
+                  bpm: s['bpm'] as int,
+                  isAlert: s['isAlert'] as bool? ?? false,
+                ))
+            .take(7)
+            .toList()
+            .reversed
+            .toList();
+      } catch (_) {
+        charts[petId] = [];
+      }
+    }
+    setState(() {
+      pets = data;
+      chartData = charts;
+    });
+  }
+
+  Future<void> _changeLocale(String code) async {
+    try {
+      await ApiClient.instance.updateLocale(code);
+    } catch (_) {
+      await LocaleController.instance.setLocale(code);
+    }
+    if (mounted) setState(() {});
+  }
+
+  List<int> _durationsForPet(Map<String, dynamic> pet) {
+    final raw = pet['heartrateDurationsSec'] as List<dynamic>?;
+    if (raw == null || raw.isEmpty) return [60];
+    return raw.map((e) => e as int).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final greeting = userName != null && userName!.isNotEmpty
+        ? l10n.greeting(userName!.split(' ').first)
+        : l10n.myPets;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes animaux')),
+      appBar: AppBar(
+        title: Text(l10n.myPets),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: l10n.settings,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SettingsMenuScreen(onLogout: widget.onLogout),
+              ),
+            ),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.language),
+            tooltip: l10n.language,
+            onSelected: _changeLocale,
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'fr', child: Text(l10n.languageFr)),
+              PopupMenuItem(value: 'nl', child: Text(l10n.languageNl)),
+              PopupMenuItem(value: 'en', child: Text(l10n.languageEn)),
+            ],
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(context, MaterialPageRoute(builder: (_) => const PetFormScreen()));
@@ -38,92 +118,150 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: const Icon(Icons.add),
       ),
-      body: ListView.builder(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        itemCount: pets.length,
-        itemBuilder: (_, i) {
-          final p = pets[i] as Map<String, dynamic>;
-          final status = p['paymentStatus'] as String? ?? 'pending_payment';
-          final ent = p['entitlement'] as Map<String, dynamic>?;
-          String badge;
-          switch (status) {
-            case 'active':
-              badge = ent?['billingMode'] == 'subscription' ? 'Renouvellement auto' : 'Actif';
-              if (ent?['validUntil'] != null) badge += ' · expire ${ent!['validUntil'].toString().substring(0, 10)}';
-              break;
-            case 'pending_payment':
-              badge = 'En attente de paiement';
-              break;
-            default:
-              badge = status;
-          }
-          return Card(
-            child: ListTile(
-              title: Text(p['name'] as String? ?? ''),
-              subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${p['species']} · ${p['breed']}'),
-                Text(badge, style: TextStyle(color: status == 'active' ? Colors.green : Colors.orange, fontSize: 12)),
-              ]),
-              onTap: () => _openPetMenu(context, p['id'] as String, p['name'] as String, status, ent),
-            ),
-          );
-        },
+        children: [
+          Text(greeting, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 16),
+          ...pets.map((p) {
+            final pet = p as Map<String, dynamic>;
+            final petId = pet['id'] as String;
+            final status = pet['paymentStatus'] as String? ?? 'pending_payment';
+            final ent = pet['entitlement'] as Map<String, dynamic>?;
+            final points = chartData[petId] ?? [];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                onTap: () => _openPetMenu(context, petId, pet['name'] as String, status, ent, _durationsForPet(pet)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(child: Text((pet['name'] as String? ?? '?').substring(0, 1).toUpperCase())),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(pet['name'] as String? ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text('${pet['species']} · ${pet['breed']}'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (status == 'active' && points.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(l10n.latestValues, style: Theme.of(context).textTheme.labelLarge),
+                        const SizedBox(height: 8),
+                        HeartRateChart(points: points),
+                      ],
+                      if (status == 'active')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: FilledButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => HeartRateFlowScreen(
+                                    petId: petId,
+                                    durationsSec: _durationsForPet(pet),
+                                  ),
+                                ),
+                              ).then((_) => load());
+                            },
+                            child: Text(l10n.startMeasurement),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  void _openPetMenu(BuildContext context, String petId, String name, String status, Map<String, dynamic>? ent) {
+  void _openPetMenu(
+    BuildContext context,
+    String petId,
+    String name,
+    String status,
+    Map<String, dynamic>? ent,
+    List<int> durations,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (_) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold))),
-          if (status == 'pending_payment')
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold))),
+            if (status == 'pending_payment')
+              ListTile(
+                leading: const Icon(Icons.payment),
+                title: Text(l10n.paymentResume),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final url = await ApiClient.instance.resumeCheckout(petId);
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  load();
+                },
+              ),
+            if (status == 'active' && ent?['billingMode'] == 'subscription')
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: Text(l10n.manageSubscription),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final url = await ApiClient.instance.billingPortal(petId);
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                },
+              ),
             ListTile(
-              leading: const Icon(Icons.payment),
-              title: const Text('Reprendre le paiement'),
-              onTap: () async {
+              leading: const Icon(Icons.favorite),
+              title: Text(l10n.heartRate),
+              onTap: () {
                 Navigator.pop(context);
-                final url = await ApiClient.instance.resumeCheckout(petId);
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                load();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HeartRateFlowScreen(petId: petId, durationsSec: durations),
+                  ),
+                ).then((_) => load());
               },
             ),
-          if (status == 'active' && ent?['billingMode'] == 'subscription')
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Gérer mon abonnement'),
-              onTap: () async {
+              leading: const Icon(Icons.history),
+              title: Text(l10n.history),
+              onTap: () {
                 Navigator.pop(context);
-                final url = await ApiClient.instance.billingPortal(petId);
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => PetTimelineScreen(petId: petId)),
+                );
               },
             ),
-          ListTile(
-            leading: const Icon(Icons.favorite),
-            title: const Text('Relevé cardiaque'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => HeartRateFlowScreen(petId: petId)));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.history),
-            title: const Text('Historique'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => PetTimelineScreen(petId: petId)));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.chat),
-            title: const Text('Messagerie véto'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagingScreen()));
-            },
-          ),
-        ]),
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: Text(l10n.vetMessaging),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MessagingScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

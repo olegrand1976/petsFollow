@@ -5,6 +5,32 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <button
+        type="button"
+        class="pro-topbar__icon-btn"
+        :aria-label="isDark ? $t('components.topbar.themeLight') : $t('components.topbar.themeDark')"
+        data-testid="pro-theme-toggle"
+        @click="toggleTheme"
+      >
+        <svg v-if="isDark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+          />
+        </svg>
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M21 14.5A7.5 7.5 0 0110.5 4a6.5 6.5 0 108 10.5z"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
       <div v-if="showNotifications" class="pro-topbar__dropdown-wrap">
         <button
           type="button"
@@ -95,6 +121,7 @@ const props = withDefaults(
 )
 
 const { t } = useI18n()
+const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser, initials, logout } = useProUser()
 const { items: notifItems, count: notifCount, refresh: refreshNotif } = useProNotifications()
 
