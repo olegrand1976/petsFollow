@@ -39,6 +39,10 @@
         <ProButton type="submit" block :loading="loading" test-id="login-submit">
           Se connecter
         </ProButton>
+        <p class="pro-login-form__footer">
+          Pas encore de compte ?
+          <NuxtLink to="/register">S'inscrire gratuitement</NuxtLink>
+        </p>
       </form>
     </div>
   </div>
@@ -64,13 +68,36 @@ async function submit() {
     token.value = res.data?.accessToken || res.accessToken
     const me: any = await $fetch('/api/me')
     const role = me.data?.role || me.role
+    const profileComplete = me.data?.profileComplete ?? me.profileComplete
     if (role === 'admin') await navigateTo('/admin')
-    else if (role === 'vet') await navigateTo('/clients')
+    else if (role === 'vet') {
+      if (profileComplete === false) await navigateTo('/onboarding')
+      else await navigateTo('/dashboard')
+    }
     else error.value = 'Accès réservé aux profils Pro (véto / admin)'
-  } catch {
-    error.value = 'Identifiants invalides'
+  } catch (e: any) {
+    const code = e?.data?.error?.code
+    if (code === 'email_not_verified') {
+      error.value = 'Confirmez votre email avant de vous connecter.'
+    } else {
+      error.value = 'Identifiants invalides'
+    }
   } finally {
     loading.value = false
   }
 }
 </script>
+
+<style scoped>
+.pro-login-form__footer {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-login-form__footer a {
+  color: var(--pf-vet-accent);
+  font-weight: 600;
+}
+</style>

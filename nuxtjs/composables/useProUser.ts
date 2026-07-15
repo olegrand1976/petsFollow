@@ -1,8 +1,13 @@
 export type ProUser = {
   id?: string
+  userId?: string
   email?: string
   fullName?: string
   role?: string
+  practiceId?: string
+  practiceName?: string
+  emailVerified?: boolean
+  profileComplete?: boolean
 }
 
 export function useProUser() {

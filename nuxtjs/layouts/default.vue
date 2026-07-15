@@ -2,7 +2,7 @@
   <div class="pro-app">
     <ProSidebar v-if="showNav" :items="navItems" />
     <div class="pro-app-body">
-      <ProTopbar v-if="showNav" home-link="/" settings-link="/settings" />
+      <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" />
       <main class="pro-main main">
         <div class="pro-main-inner">
           <slot />
@@ -16,11 +16,14 @@
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const route = useRoute()
-const showNav = computed(() => route.path !== '/login')
+const showNav = computed(() => {
+  const bare = ['/login', '/register', '/register/sent', '/confirm-email', '/welcome', '/']
+  return !bare.includes(route.path) && !route.path.startsWith('/register')
+})
 const { fetchUser } = useProUser()
 
 const navItems: ProNavItem[] = [
-  { to: '/', label: 'Dashboard', exact: true, icon: 'dashboard' },
+  { to: '/dashboard', label: 'Dashboard', exact: true, icon: 'dashboard' },
   { to: '/clients', label: 'Clients', icon: 'clients' },
   { to: '/messages', label: 'Messagerie', icon: 'messages' },
   { to: '/settings', label: 'Paramètres', icon: 'settings' },

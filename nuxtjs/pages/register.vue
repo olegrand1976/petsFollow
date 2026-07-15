@@ -97,8 +97,7 @@ async function submit() {
       query: { email: email.value, devLink: import.meta.dev ? data.confirmPath : undefined },
     })
   } catch (e: any) {
-    const msg = e?.data?.message || e?.data?.error || 'Inscription impossible'
-    error.value = typeof msg === 'string' ? msg : 'Inscription impossible'
+    error.value = e?.data?.error?.message || 'Inscription impossible'
   } finally {
     loading.value = false
   }
