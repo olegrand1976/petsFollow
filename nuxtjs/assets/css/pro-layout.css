@@ -178,12 +178,12 @@
 
 .pro-main {
   flex: 1;
+  width: 100%;
   padding: 1.5rem 2rem 2rem;
-  max-width: calc(var(--pf-vet-content-max) + 4rem);
 }
 
 .pro-main-inner {
-  max-width: var(--pf-vet-content-max);
+  width: 100%;
 }
 
 .pro-breadcrumb {
