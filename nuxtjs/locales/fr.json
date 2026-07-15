@@ -158,6 +158,16 @@
       "onHeartrate": "Relevé cardiaque validé",
       "saved": "Préférences enregistrées."
     },
+    "password": {
+      "title": "Mot de passe",
+      "subtitle": "Modifiez votre mot de passe de connexion.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le mot de passe",
+      "save": "Mettre à jour le mot de passe",
+      "saved": "Mot de passe mis à jour.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
     "legalLinks": "Informations légales"
   },
   "clients": {
@@ -201,6 +211,9 @@
       "columnDuration": "Durée",
       "columnStatus": "Statut",
       "chartTitle": "Tendance BPM (30 derniers relevés)",
+      "filterAll": "Tous",
+      "filterAlerts": "Alertes seulement",
+      "recentAlertBanner": "Le dernier relevé est en alerte — contrôle clinique recommandé.",
       "alert": "Alerte",
       "ok": "OK",
       "timelineTitle": "Historique suivi",
@@ -231,7 +244,8 @@
     "unreadPlural": "{count} non lus",
     "placeholder": "Votre message…",
     "selectTitle": "Sélectionnez une conversation",
-    "selectDescription": "Choisissez un thread dans la liste pour afficher les messages."
+    "selectDescription": "Choisissez un thread dans la liste pour afficher les messages.",
+    "you": "Vous"
   },
   "admin": {
     "dashboard": {

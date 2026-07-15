@@ -158,6 +158,16 @@
       "onHeartrate": "Validated heart rate reading",
       "saved": "Preferences saved."
     },
+    "password": {
+      "title": "Password",
+      "subtitle": "Change your login password.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm password",
+      "save": "Update password",
+      "saved": "Password updated.",
+      "mismatch": "Passwords do not match."
+    },
     "legalLinks": "Legal information"
   },
   "clients": {
@@ -201,6 +211,9 @@
       "columnDuration": "Duration",
       "columnStatus": "Status",
       "chartTitle": "BPM trend (last 30 readings)",
+      "filterAll": "All",
+      "filterAlerts": "Alerts only",
+      "recentAlertBanner": "The latest reading is flagged — clinical review recommended.",
       "alert": "Alert",
       "ok": "OK",
       "timelineTitle": "Monitoring history",
@@ -231,7 +244,8 @@
     "unreadPlural": "{count} unread",
     "placeholder": "Your message…",
     "selectTitle": "Select a conversation",
-    "selectDescription": "Choose a thread from the list to view messages."
+    "selectDescription": "Choose a thread from the list to view messages.",
+    "you": "You"
   },
   "admin": {
     "dashboard": {

@@ -158,6 +158,16 @@
       "onHeartrate": "Gevalideerde hartslagmeting",
       "saved": "Voorkeuren opgeslagen."
     },
+    "password": {
+      "title": "Wachtwoord",
+      "subtitle": "Wijzig uw inlogwachtwoord.",
+      "current": "Huidig wachtwoord",
+      "new": "Nieuw wachtwoord",
+      "confirm": "Bevestig wachtwoord",
+      "save": "Wachtwoord bijwerken",
+      "saved": "Wachtwoord bijgewerkt.",
+      "mismatch": "Wachtwoorden komen niet overeen."
+    },
     "legalLinks": "Juridische informatie"
   },
   "clients": {
@@ -201,6 +211,9 @@
       "columnDuration": "Duur",
       "columnStatus": "Status",
       "chartTitle": "BPM-trend (laatste 30 metingen)",
+      "filterAll": "Alle",
+      "filterAlerts": "Alleen waarschuwingen",
+      "recentAlertBanner": "De laatste meting is gemarkeerd — klinische controle aanbevolen.",
       "alert": "Waarschuwing",
       "ok": "OK",
       "timelineTitle": "Opvolgingsgeschiedenis",
