@@ -480,15 +480,34 @@ a.pro-kpi-card:focus-visible {
   font-size: 1.25rem;
 }
 
+.pro-avatar--xl {
+  width: 6.5rem;
+  height: 6.5rem;
+  font-size: 1.5rem;
+}
+
 .pro-avatar--image {
-  background: transparent;
+  background: var(--pf-vet-bg, #f7f9fb);
+}
+
+.pro-avatar--fit-contain.pro-avatar--image {
+  background: var(--pf-vet-bg, #f7f9fb);
 }
 
 .pro-avatar__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
+}
+
+.pro-avatar--fit-contain .pro-avatar__img {
+  object-fit: contain;
+}
+
+.pro-avatar__initials {
+  line-height: 1;
 }
 
 .pro-login-page {
