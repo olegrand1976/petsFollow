@@ -28,6 +28,7 @@ run_job() {
 echo "=== petsFollow postdeploy — ${GCP_PROJECT_ID} ==="
 
 bash "${SCRIPT_DIR}/setup-jobs.sh"
+bash "${SCRIPT_DIR}/grant-app-privileges.sh"
 
 if $RUN_SEED; then
   run_job "petsfollow-seed"

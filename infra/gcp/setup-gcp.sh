@@ -134,15 +134,12 @@ TMP_SQL="$(mktemp)"
 cat >"$TMP_SQL" <<EOSQL
 GRANT CONNECT ON DATABASE ${DB_NAME} TO ${MIGRATE_USER};
 GRANT CONNECT ON DATABASE ${DB_NAME} TO ${DB_USER};
+GRANT CREATE ON DATABASE ${DB_NAME} TO ${MIGRATE_USER};
 GRANT ALL ON SCHEMA public TO ${MIGRATE_USER};
 GRANT USAGE ON SCHEMA public TO ${DB_USER};
-ALTER DEFAULT PRIVILEGES FOR ROLE ${MIGRATE_USER} IN SCHEMA public
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${DB_USER};
-ALTER DEFAULT PRIVILEGES FOR ROLE ${MIGRATE_USER} IN SCHEMA public
-  GRANT USAGE, SELECT ON SEQUENCES TO ${DB_USER};
 EOSQL
-GCS_URI="gs://premedica-db-exports/admin/pg-petsfollow-bootstrap-$(date +%Y%m%d%H%M%S).sql"
-if gcloud storage buckets describe gs://premedica-db-exports --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+GCS_URI="gs://premedica-prod-2025-db-exports/admin/pg-petsfollow-bootstrap-$(date +%Y%m%d%H%M%S).sql"
+if gcloud storage buckets describe gs://premedica-prod-2025-db-exports --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
   echo "→ Grants bootstrap migrate/app"
   gcloud storage cp "$TMP_SQL" "$GCS_URI" --quiet
   gcloud sql import sql "$SQL_INSTANCE" "$GCS_URI" \
