@@ -46,6 +46,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err := tx.Exec(ctx, `TRUNCATE billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
+		identity.email_verification_tokens,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err
@@ -57,8 +58,8 @@ func seedAdmin(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err = tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id)
-		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL)`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
+		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL, NOW())`,
 		uuid.NewString(), string(hash))
 	return err
 }
@@ -71,12 +72,15 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 		return err
 	}
 
-	if _, err := tx.Exec(ctx, `INSERT INTO practice.practices (id, name) VALUES ($1, $2)`, practiceID, p.name); err != nil {
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO practice.practices (id, name, phone, contact_email, address_line1, city, postal_code, profile_completed_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+		practiceID, p.name, p.phone, p.vetEmail, p.address, p.city, p.postalCode); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id)
-		VALUES ($1, $2, $3, $4, 'vet', $5)`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
+		VALUES ($1, $2, $3, $4, 'vet', $5, NOW())`,
 		vetID, p.vetEmail, string(vetHash), p.vetName, practiceID); err != nil {
 		return err
 	}

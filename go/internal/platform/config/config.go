@@ -34,6 +34,7 @@ type Config struct {
 	StripeSuccessURL                string
 	StripeCancelURL                 string
 	APIPublicURL                    string
+	ProPublicSiteURL                string
 	BillingMockEnabled              bool
 }
 
@@ -66,6 +67,7 @@ func Load() Config {
 		StripeSuccessURL:               envOr("STRIPE_SUCCESS_URL", "petsfollow://payment/success"),
 		StripeCancelURL:                envOr("STRIPE_CANCEL_URL", "petsfollow://payment/cancel"),
 		APIPublicURL:                   envOr("PETSFOLLOW_API_PUBLIC_URL", "http://localhost:8291"),
+		ProPublicSiteURL:               envOr("PETSFOLLOW_PUBLIC_SITE_URL", "http://localhost:3002"),
 		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED") || envOr("STRIPE_SECRET_KEY", "") == "",
 	}
 }

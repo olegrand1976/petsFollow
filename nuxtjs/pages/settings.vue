@@ -2,9 +2,22 @@
   <div>
     <ProPageHeader
       title="Paramètres"
-      subtitle="Disponibilité et messages automatiques."
+      subtitle="Fiche d'information, disponibilité et messages automatiques."
     />
-    <ProCard title="Disponibilité">
+
+    <ProCard title="Fiche d'information du cabinet" class="pro-settings-card">
+      <PracticeProfileForm v-model="profile" @submit="saveProfile">
+        <template #actions>
+          <p v-if="profileSaved" class="text-muted" role="status">Fiche enregistrée.</p>
+          <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
+          <ProButton type="submit" :loading="profileSaving" class="pro-save-btn">
+            Enregistrer la fiche
+          </ProButton>
+        </template>
+      </PracticeProfileForm>
+    </ProCard>
+
+    <ProCard title="Disponibilité" class="pro-settings-card">
       <div class="pro-toggle" role="group" aria-label="Statut de disponibilité">
         <button
           type="button"
@@ -35,26 +48,77 @@
       </div>
       <p v-if="saved" class="text-muted" role="status">Paramètres enregistrés.</p>
       <ProButton class="pro-save-btn" :loading="saving" @click="save">
-        Enregistrer
+        Enregistrer la disponibilité
       </ProButton>
     </ProCard>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
+
 definePageMeta({ middleware: 'vet-only' })
+
+const profile = ref<PracticeProfileForm>({
+  vetFullName: '',
+  practiceName: '',
+  contactEmail: '',
+  phone: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  postalCode: '',
+  website: '',
+})
+const profileSaving = ref(false)
+const profileSaved = ref(false)
+const profileError = ref('')
 
 const status = ref('available')
 const autoReply = ref('Je suis indisponible, je reviens vers vous rapidement.')
 const saving = ref(false)
 const saved = ref(false)
 
+function mapFromApi(data: any): PracticeProfileForm {
+  return {
+    vetFullName: data.vetFullName || '',
+    practiceName: data.practiceName || '',
+    contactEmail: data.contactEmail || '',
+    phone: data.phone || '',
+    addressLine1: data.addressLine1 || '',
+    addressLine2: data.addressLine2 || '',
+    city: data.city || '',
+    postalCode: data.postalCode || '',
+    website: data.website || '',
+  }
+}
+
 onMounted(async () => {
-  const res: any = await $fetch('/api/vet/availability')
-  const data = res.data ?? res
+  try {
+    const res: any = await $fetch('/api/vet/profile')
+    profile.value = mapFromApi(res.data ?? res)
+  } catch { /* ignore */ }
+
+  const avail: any = await $fetch('/api/vet/availability')
+  const data = avail.data ?? avail
   status.value = data.status ?? status.value
   autoReply.value = data.autoReply || autoReply.value
 })
+
+async function saveProfile() {
+  profileSaving.value = true
+  profileSaved.value = false
+  profileError.value = ''
+  try {
+    await $fetch('/api/vet/profile', { method: 'PUT', body: profile.value })
+    profileSaved.value = true
+    await useProUser().fetchUser(true)
+  } catch (e: any) {
+    profileError.value = e?.data?.message || 'Enregistrement impossible'
+  } finally {
+    profileSaving.value = false
+  }
+}
 
 async function save() {
   saving.value = true
@@ -72,6 +136,10 @@ async function save() {
 </script>
 
 <style scoped>
+.pro-settings-card {
+  margin-bottom: 1.5rem;
+}
+
 .pro-field-spaced {
   margin-top: 1.25rem;
 }

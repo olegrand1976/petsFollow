@@ -31,6 +31,8 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 
 func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/login", a.login)
+	r.Post("/auth/register", a.register)
+	r.Post("/auth/confirm-email", a.confirmEmail)
 	r.Post("/auth/refresh", a.refresh)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
@@ -57,6 +59,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Put("/vet/availability", a.setAvailability)
 		pr.Get("/vet/availability", a.getAvailability)
 		pr.Get("/vet/overview", a.vetOverview)
+		pr.Get("/vet/profile", a.getVetProfile)
+		pr.Put("/vet/profile", a.updateVetProfile)
 	})
 }
 
@@ -80,6 +84,10 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
 		return
 	}
+	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
+		httpx.WriteError(w, http.StatusForbidden, "email_not_verified", "confirmez votre email avant de vous connecter")
+		return
+	}
 	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
 	if err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
@@ -93,8 +101,17 @@ func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) me(w http.ResponseWriter, r *http.Request) {
-	id, _ := authx.FromContext(r.Context())
-	httpx.WriteData(w, http.StatusOK, id)
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		return
+	}
+	data, err := a.store.GetUserMe(r.Context(), id.UserID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, data)
 }
 
 func (a *API) listClients(w http.ResponseWriter, r *http.Request) {
@@ -485,4 +502,120 @@ func (a *API) getAvailability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"status": status, "autoReply": autoReply})
+}
+
+type registerReq struct {
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	FullName     string `json:"fullName"`
+	PracticeName string `json:"practiceName"`
+}
+
+func (a *API) register(w http.ResponseWriter, r *http.Request) {
+	var req registerReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		return
+	}
+	if req.Email == "" || req.Password == "" || req.FullName == "" || req.PracticeName == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "tous les champs sont requis")
+		return
+	}
+	if len(req.Password) < 8 {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "mot de passe trop court (8 caractères minimum)")
+		return
+	}
+	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
+		httpx.WriteError(w, http.StatusConflict, "conflict", "un compte existe déjà avec cet email")
+		return
+	} else if !errors.Is(err, store.ErrNotFound) {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	result, err := a.store.RegisterVet(r.Context(), store.RegisterVetInput{
+		Email: req.Email, Password: req.Password, FullName: req.FullName, PracticeName: req.PracticeName,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", a.cfg.ProPublicSiteURL, result.Token)
+	body := fmt.Sprintf(`<p>Bonjour %s,</p><p>Confirmez votre inscription petsFollow Pro en cliquant sur le lien ci-dessous :</p><p><a href="%s">Confirmer mon compte</a></p><p>Ce lien expire dans 48 heures.</p>`, req.FullName, confirmURL)
+	_ = a.notifier.SendVetAlert(req.Email, "petsFollow Pro — Confirmez votre inscription", body)
+	httpx.WriteData(w, http.StatusCreated, map[string]any{
+		"message":     "Un email de confirmation a été envoyé.",
+		"confirmPath": "/confirm-email?token=" + result.Token,
+	})
+}
+
+type confirmEmailReq struct {
+	Token string `json:"token"`
+}
+
+func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
+	var req confirmEmailReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		return
+	}
+	if req.Token == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "token requis")
+		return
+	}
+	u, err := a.store.ConfirmEmail(r.Context(), req.Token)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			httpx.WriteError(w, http.StatusNotFound, "not_found", "lien de confirmation invalide")
+			return
+		}
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", err.Error())
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"message": "Email confirmé avec succès.",
+		"email":   u.Email,
+	})
+}
+
+func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		return
+	}
+	profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, profile)
+}
+
+func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		return
+	}
+	var req store.PracticeProfile
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		return
+	}
+	if req.PracticeName == "" || req.Phone == "" || req.ContactEmail == "" ||
+		req.AddressLine1 == "" || req.City == "" || req.PostalCode == "" || req.VetFullName == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "champs obligatoires manquants")
+		return
+	}
+	markComplete := r.URL.Query().Get("complete") == "true"
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, profile)
 }

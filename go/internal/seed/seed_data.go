@@ -57,13 +57,17 @@ type clientDef struct {
 }
 
 type practiceDef struct {
-	name             string
-	vetEmail         string
-	vetName          string
-	availability     kernel.AvailabilityStatus
-	autoReply        string
-	clients          []clientDef
-	notifyOnMessage  bool
+	name              string
+	vetEmail          string
+	vetName           string
+	phone             string
+	address           string
+	city              string
+	postalCode        string
+	availability      kernel.AvailabilityStatus
+	autoReply         string
+	clients           []clientDef
+	notifyOnMessage   bool
 	notifyOnHeartRate bool
 }
 
@@ -72,6 +76,10 @@ var demoPractices = []practiceDef{
 		name:              "Cabinet VetPlus Demo",
 		vetEmail:          "vet.demo@petsfollow.test",
 		vetName:           "Dr Martin Demo",
+		phone:             "01 23 45 67 89",
+		address:           "12 avenue des Vétérinaires",
+		city:              "Paris",
+		postalCode:        "75015",
 		availability:      kernel.AvailabilityAvailable,
 		notifyOnMessage:   true,
 		notifyOnHeartRate: true,
@@ -128,6 +136,10 @@ var demoPractices = []practiceDef{
 		name:              "Clinique du Parc",
 		vetEmail:          "vet.parc@petsfollow.test",
 		vetName:           "Dr Claire Parc",
+		phone:             "01 45 67 89 01",
+		address:           "8 rue du Parc",
+		city:              "Boulogne-Billancourt",
+		postalCode:        "92100",
 		availability:      kernel.AvailabilityAvailable,
 		notifyOnMessage:   true,
 		notifyOnHeartRate: true,
@@ -206,6 +218,10 @@ var demoPractices = []practiceDef{
 		name:              "Centre Cardio Animaux Lyon",
 		vetEmail:          "vet.lyon@petsfollow.test",
 		vetName:           "Dr Antoine Lyon",
+		phone:             "04 78 00 12 34",
+		address:           "25 cours Vitton",
+		city:              "Lyon",
+		postalCode:        "69006",
 		availability:      kernel.AvailabilityUnavailable,
 		autoReply:         "Je suis en consultation. Pour les urgences cardiaques, contactez le service d'astreinte au 04 00 00 00 00.",
 		notifyOnMessage:   true,

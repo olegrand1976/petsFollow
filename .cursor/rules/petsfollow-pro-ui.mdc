@@ -1,0 +1,73 @@
+---
+description: Charte UI petsFollow Pro (Nuxt) — tokens, composants, patterns
+globs: nuxtjs/**/*
+alwaysApply: false
+---
+
+# petsFollow Pro — UI
+
+## Stack
+
+- Nuxt 3, CSS tokens via `make brand-sync`
+- Face **light** uniquement (ne pas importer le dark Flutter)
+
+## Tokens CSS
+
+Utiliser les variables `--pf-vet-*` et `--pf-brand-*` depuis `nuxtjs/assets/css/tokens.css`.
+
+- Primary navy : `--pf-vet-primary`
+- Accent teal (CTA, liens actifs) : `--pf-vet-accent`
+- Alert coral : `--pf-vet-alert`
+- Surfaces : `--pf-vet-surface`, `--pf-vet-bg`, `--pf-vet-border`
+- Ombres / radius : `--pf-vet-shadow-sm`, `--pf-vet-shadow-md`, `--pf-vet-shadow-hover`
+- Gradients : `--pf-vet-gradient-main`, `--pf-vet-gradient-login`
+- Sidebar : `--pf-vet-sidebar-width`
+
+## Shell authentifié
+
+```
+ProApp
+├── ProSidebar (nav + icônes uniquement)
+└── ProAppBody
+    ├── ProTopbar (logo compact, notifications, profil, déconnexion)
+    └── main
+```
+
+- **Ne pas** remettre logout/profil dans la sidebar
+- Topbar : `data-testid="pro-topbar"`
+- Composables : `useProUser`, `useProNotifications`, `useListView`
+
+## Composants Pro
+
+| Composant | Usage |
+|-----------|--------|
+| `ProTopbar` | Header authentifié |
+| `ProPageHeader` | Titre page + sous-titre |
+| `ProCard` | Surface (+ `--interactive` pour hover) |
+| `ProButton` | primary / secondary / ghost |
+| `ProInput` | Champ labelisé |
+| `ProTable` | Table + empty state |
+| `ProListToolbar` | Filtres + `ProViewToggle` |
+| `ProViewToggle` | Liste / Kanban |
+| `ProKanban` / `ProKanbanColumn` | Colonnes kanban |
+| `ProKpi` | KPI admin |
+| `ProBadge` | Statuts |
+| `ProEmptyState` | État vide |
+| `ProSidebar` | Navigation latérale |
+
+## Patterns listes
+
+1. `ProListToolbar` avec filtres en slot `#filters`
+2. Bascule table/kanban persistée via `useListView(storageKey)`
+3. Kanban clients : colonnes par `petCount` (0 / 1 / 2+)
+4. Kanban admin users : colonnes par `role`
+
+## Login
+
+Split-screen + `PetsFollowLogo variant="hero" animated` sur panneau brand.
+
+## Références
+
+- Logo : `brand/emblem/petsfollow-emblem.svg` → `nuxtjs/public/brand/emblem.svg`
+- Charte : `documentation/13-CHARTE-GRAPHIQUE.md`
+- Onboarding : `AGENTS.md`

@@ -14,12 +14,13 @@ import (
 var ErrNotFound = errors.New("not found")
 
 type User struct {
-	ID           string
-	Email        string
-	PasswordHash string
-	FullName     string
-	Role         kernel.Role
-	PracticeID   string
+	ID              string
+	Email           string
+	PasswordHash    string
+	FullName        string
+	Role            kernel.Role
+	PracticeID      string
+	EmailVerifiedAt *time.Time
 }
 
 type Practice struct {
@@ -110,8 +111,8 @@ func New(pool *pgxpool.Pool) *Store {
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	var u User
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,'')
-		FROM identity.users WHERE email=$1`, email).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID)
+		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at
+		FROM identity.users WHERE email=$1`, email).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -121,8 +122,8 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) 
 func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
 	var u User
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,'')
-		FROM identity.users WHERE id=$1`, id).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID)
+		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at
+		FROM identity.users WHERE id=$1`, id).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
