@@ -32,7 +32,7 @@
 
     <section class="pro-welcome__features">
       <div v-for="item in highlights" :key="item.key" class="pro-welcome__highlight">
-        <span aria-hidden="true">{{ item.icon }}</span>
+        <ProIcon :name="item.icon" class="pro-welcome__highlight-icon" :size="32" />
         <h3>{{ $t(`welcome.highlights.${item.key}.title`) }}</h3>
         <p>{{ $t(`welcome.highlights.${item.key}.text`) }}</p>
       </div>
@@ -64,9 +64,9 @@ const steps = [
 ]
 
 const highlights = [
-  { key: 'bpm', icon: '❤️' },
-  { key: 'alerts', icon: '🔔' },
-  { key: 'free', icon: '🆓' },
+  { key: 'bpm', icon: 'favorite' },
+  { key: 'alerts', icon: 'notifications' },
+  { key: 'free', icon: 'card_giftcard' },
 ]
 
 const primaryLabel = computed(() =>

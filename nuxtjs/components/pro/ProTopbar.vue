@@ -12,23 +12,7 @@
         data-testid="pro-theme-toggle"
         @click="toggleTheme"
       >
-        <svg v-if="isDark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
-          <path
-            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-          />
-        </svg>
-        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M21 14.5A7.5 7.5 0 0110.5 4a6.5 6.5 0 108 10.5z"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <ProIcon :name="isDark ? 'light_mode' : 'dark_mode'" :size="20" />
       </button>
 
       <div v-if="showNotifications" class="pro-topbar__dropdown-wrap">
@@ -41,15 +25,7 @@
           data-testid="pro-notifications-btn"
           @click="toggleNotif"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M12 3a5 5 0 00-5 5v2.5c0 .9-.3 1.8-.9 2.5L5 15.5h14l-1.1-2.5c-.6-.7-.9-1.6-.9-2.5V8a5 5 0 00-5-5z"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linejoin="round"
-            />
-            <path d="M10 18a2 2 0 004 0" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          </svg>
+          <ProIcon name="notifications" :size="20" />
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
         </button>
         <div v-if="notifOpen" class="pro-topbar__dropdown" role="menu">

@@ -33,6 +33,10 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', href: '/brand/emblem.svg' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap',
+        },
       ],
       script: [{ src: '/pf-theme-init.js', tagPosition: 'head' }],
     },

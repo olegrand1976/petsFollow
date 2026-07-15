@@ -10,6 +10,7 @@ alwaysApply: false
 
 - Nuxt 3, CSS tokens via `make brand-sync`
 - Face **light** uniquement (ne pas importer le dark Flutter)
+- Icônes UI : **Material Symbols Outlined** (Google Fonts) via `ProIcon` — pas de SVG maison ni d’emojis
 
 ## Tokens CSS
 
@@ -37,11 +38,18 @@ ProApp
 - Topbar : `data-testid="pro-topbar"`
 - Composables : `useProUser`, `useProNotifications`, `useListView`
 
+## Icônes
+
+- Composant : `ProIcon` (`name` = ligature Material, ex. `light_mode`, `notifications`, `dashboard`)
+- Police chargée dans `nuxt.config.ts` (Material Symbols Outlined)
+- Exceptions : logo brand (`PetsFollowLogo` / emblème SVG), graphiques dataviz (`ProBpmChart`)
+
 ## Composants Pro
 
 | Composant | Usage |
 |-----------|--------|
 | `ProTopbar` | Header authentifié |
+| `ProIcon` | Icône Material Symbols Outlined |
 | `ProPageHeader` | Titre page + sous-titre |
 | `ProCard` | Surface (+ `--interactive` pour hover) |
 | `ProButton` | primary / secondary / ghost |

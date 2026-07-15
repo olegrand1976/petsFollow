@@ -25,17 +25,17 @@
       </div>
       <div class="pro-landing__hero-visual" aria-hidden="true">
         <div class="pro-landing__card pro-landing__card--float">
-          <span class="pro-landing__card-icon">❤️</span>
+          <ProIcon name="favorite" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.heartrate.title') }}</strong>
           <p>{{ $t('index.cards.heartrate.text') }}</p>
         </div>
         <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay">
-          <span class="pro-landing__card-icon">💬</span>
+          <ProIcon name="chat" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.messaging.title') }}</strong>
           <p>{{ $t('index.cards.messaging.text') }}</p>
         </div>
         <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay2">
-          <span class="pro-landing__card-icon">📋</span>
+          <ProIcon name="description" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.records.title') }}</strong>
           <p>{{ $t('index.cards.records.text') }}</p>
         </div>
@@ -46,7 +46,7 @@
       <h2>{{ $t('index.featuresTitle') }}</h2>
       <div class="pro-landing__feature-grid">
         <article v-for="feature in features" :key="feature.key" class="pro-landing__feature">
-          <span class="pro-landing__feature-icon" aria-hidden="true">{{ feature.icon }}</span>
+          <ProIcon :name="feature.icon" class="pro-landing__feature-icon" :size="28" />
           <h3>{{ $t(`index.features.${feature.key}.title`) }}</h3>
           <p>{{ $t(`index.features.${feature.key}.text`) }}</p>
         </article>
@@ -83,11 +83,11 @@ definePageMeta({ layout: false })
 const year = new Date().getFullYear()
 
 const features = [
-  { key: 'heartrate', icon: '❤️' },
-  { key: 'alerts', icon: '🔔' },
-  { key: 'messaging', icon: '💬' },
-  { key: 'free', icon: '🆓' },
-  { key: 'security', icon: '🔒' },
-  { key: 'onboarding', icon: '⚡' },
+  { key: 'heartrate', icon: 'favorite' },
+  { key: 'alerts', icon: 'notifications' },
+  { key: 'messaging', icon: 'chat' },
+  { key: 'free', icon: 'card_giftcard' },
+  { key: 'security', icon: 'lock' },
+  { key: 'onboarding', icon: 'bolt' },
 ]
 </script>

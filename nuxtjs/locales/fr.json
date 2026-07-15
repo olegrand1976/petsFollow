@@ -454,7 +454,9 @@
       "notificationsEmptyTitle": "Rien de nouveau",
       "notificationsEmptyDescription": "Les conversations clients apparaîtront ici.",
       "profileMenu": "Menu profil",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "themeDark": "Activer le mode sombre",
+      "themeLight": "Activer le mode clair"
     },
     "table": {
       "emptyTitle": "Aucune donnée"

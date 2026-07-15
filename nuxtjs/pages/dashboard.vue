@@ -7,21 +7,21 @@
     <div class="pro-grid-kpi">
       <ProCard>
         <div class="pro-kpi pro-kpi--with-icon">
-          <span class="pro-kpi__icon" aria-hidden="true">👥</span>
+          <ProIcon name="group" class="pro-kpi__icon" :size="20" />
           <span class="pro-kpi__value">{{ clientCount }}</span>
           <span class="pro-kpi__label">{{ $t('dashboard.activeClients') }}</span>
         </div>
       </ProCard>
       <ProCard>
         <div class="pro-kpi pro-kpi--with-icon">
-          <span class="pro-kpi__icon" aria-hidden="true">💬</span>
+          <ProIcon name="chat" class="pro-kpi__icon" :size="20" />
           <span class="pro-kpi__value">{{ unreadCount }}</span>
           <span class="pro-kpi__label">{{ $t('dashboard.unreadMessages') }}</span>
         </div>
       </ProCard>
       <ProCard>
         <div class="pro-kpi pro-kpi--with-icon">
-          <span class="pro-kpi__icon" aria-hidden="true">❤️</span>
+          <ProIcon name="favorite" class="pro-kpi__icon" :size="20" />
           <span class="pro-kpi__value">{{ recentSessions }}</span>
           <span class="pro-kpi__label">{{ $t('dashboard.recentSessions') }}</span>
         </div>
