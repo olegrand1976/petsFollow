@@ -4,6 +4,8 @@ const PUBLIC_PATHS = new Set([
   '/register',
   '/register/sent',
   '/confirm-email',
+  '/forgot-password',
+  '/reset-password',
   '/welcome',
 ])
 

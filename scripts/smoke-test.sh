@@ -52,4 +52,21 @@ curl -sf -X POST "$API/api/v1/heartrate/sessions/$SESS_ID/validate" \
 
 curl -sf "$API/api/v1/pets/$PET_ID/timeline" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
 
-echo "OK — smoke MVP + billing passed"
+# Auth register → confirm → forgot → reset (emails uniques)
+AUTH_EMAIL="smoke+$(date +%s)@petsfollow.test"
+REG=$(curl -sf -X POST "$API/api/v1/auth/register" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass123!\",\"fullName\":\"Smoke Vet\",\"practiceName\":\"Smoke Practice\"}")
+CONFIRM_PATH=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
+CONFIRM_TOKEN=${CONFIRM_PATH#*token=}
+curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
+  -d "{\"token\":\"$CONFIRM_TOKEN\"}" >/dev/null
+FORGOT=$(curl -sf -X POST "$API/api/v1/auth/forgot-password" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$AUTH_EMAIL\"}")
+RESET_PATH=$(echo "$FORGOT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['resetPath'])")
+RESET_TOKEN=${RESET_PATH#*token=}
+curl -sf -X POST "$API/api/v1/auth/reset-password" -H 'Content-Type: application/json' \
+  -d "{\"token\":\"$RESET_TOKEN\",\"password\":\"SmokePass456!\"}" >/dev/null
+curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass456!\"}" >/dev/null
+
+echo "OK — smoke MVP + billing + auth reset passed"

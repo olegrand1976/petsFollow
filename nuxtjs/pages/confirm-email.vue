@@ -11,14 +11,14 @@
         <PetsFollowLogo variant="default" />
         <div v-if="loading" class="text-muted">{{ $t('auth.confirmEmail.loading') }}</div>
         <template v-else-if="confirmed">
-          <h1>{{ $t('auth.confirmEmail.title') }}</h1>
+          <h1 data-testid="confirm-email-success">{{ $t('auth.confirmEmail.title') }}</h1>
           <p class="pro-page-header__subtitle">{{ welcomeMessage }}</p>
-          <ProButton block @click="continueAfterConfirm">
+          <ProButton block test-id="confirm-email-continue" @click="continueAfterConfirm">
             {{ $t('auth.confirmEmail.discover') }}
           </ProButton>
         </template>
         <template v-else>
-          <h1>{{ $t('auth.confirmEmail.failedTitle') }}</h1>
+          <h1 data-testid="confirm-email-failed">{{ $t('auth.confirmEmail.failedTitle') }}</h1>
           <p class="pro-field-error" role="alert">{{ error }}</p>
           <ProButton block @click="navigateTo('/register')">{{ $t('auth.confirmEmail.retry') }}</ProButton>
         </template>

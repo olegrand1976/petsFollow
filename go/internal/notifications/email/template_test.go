@@ -47,3 +47,25 @@ func TestRenderConfirmRegistration_escapesHTML(t *testing.T) {
 		t.Fatal("expected confirm URL to be escaped in href attribute")
 	}
 }
+
+func TestRenderPasswordResetEmail_containsResetURL(t *testing.T) {
+	html := renderConfirmRegistration(confirmRegistrationContent{
+		Tagline:    "Suivi cardiaque vétérinaire",
+		Greeting:   "Bonjour Dr Reset,",
+		Intro:      "Réinitialisez votre mot de passe.",
+		CTALabel:   "Réinitialiser mon mot de passe",
+		Expiry:     "Ce lien expire dans 1 heure.",
+		Disclaimer: "Ignorez si non demandé.",
+		Preheader:  "Reset password.",
+		ConfirmURL: "http://localhost:3002/reset-password?token=demo-reset",
+	})
+	for _, want := range []string{
+		"Réinitialiser mon mot de passe",
+		"http://localhost:3002/reset-password?token=demo-reset",
+		"Ce lien expire dans 1 heure.",
+	} {
+		if !strings.Contains(html, want) {
+			t.Fatalf("expected rendered email to contain %q", want)
+		}
+	}
+}

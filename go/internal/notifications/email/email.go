@@ -45,6 +45,23 @@ func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL stri
 	return n.SendVetAlert(to, subject, body)
 }
 
+func (n *Notifier) SendPasswordReset(to, locale, fullName, resetURL string) error {
+	subject := i18n.T(locale, "emails.password_reset_subject", nil)
+	vars := map[string]string{"fullName": fullName}
+	body := renderConfirmRegistration(confirmRegistrationContent{
+		Lang:       locale,
+		Tagline:    i18n.T(locale, "emails.password_reset_tagline", nil),
+		Greeting:   i18n.T(locale, "emails.password_reset_greeting", vars),
+		Intro:      i18n.T(locale, "emails.password_reset_intro", nil),
+		CTALabel:   i18n.T(locale, "emails.password_reset_cta", nil),
+		Expiry:     i18n.T(locale, "emails.password_reset_expiry", nil),
+		Disclaimer: i18n.T(locale, "emails.password_reset_disclaimer", nil),
+		Preheader:  i18n.T(locale, "emails.password_reset_preheader", nil),
+		ConfirmURL: resetURL,
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 func (n *Notifier) SendHeartrateValidated(to, locale string, bpm int) error {
 	subject := i18n.T(locale, "emails.heartrate_validated_subject", nil)
 	body := i18n.T(locale, "emails.heartrate_validated_body", map[string]string{

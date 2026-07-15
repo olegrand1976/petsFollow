@@ -65,7 +65,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	_, err := tx.Exec(ctx, `TRUNCATE billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
-		identity.email_verification_tokens,
+		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err
@@ -108,6 +108,14 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 			INSERT INTO identity.email_verification_tokens (id, user_id, token, expires_at)
 			VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
 			uuid.NewString(), vetID, demoEmailConfirmToken); err != nil {
+			return err
+		}
+	}
+	if p.seedPasswordReset {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO identity.password_reset_tokens (id, user_id, token, expires_at)
+			VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
+			uuid.NewString(), vetID, demoPasswordResetToken); err != nil {
 			return err
 		}
 	}
@@ -306,9 +314,11 @@ func logSummary() {
 	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
 	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
+	log.Println("  vet.reset@       — token démo reset mot de passe")
 	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
 	log.Println("  client.demo@     — Rex + Bella · client.vide@ sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
+	log.Printf("Reset password: http://localhost:3002/reset-password?token=%s", demoPasswordResetToken)
 }

@@ -46,6 +46,7 @@
     "thread_not_found": "Gesprek niet gevonden",
     "no_entitlement": "Geen toegangsrecht",
     "invalid_confirm_link": "Ongeldige bevestigingslink",
+    "invalid_reset_link": "Ongeldige of verlopen resetlink",
     "conflict": "Conflict",
     "email_already_exists": "Er bestaat al een account met dit e-mailadres",
     "google_account_mismatch": "Dit Google-account is al gekoppeld aan een andere gebruiker",
@@ -57,7 +58,9 @@
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",
-    "email_confirmed": "E-mail succesvol bevestigd."
+    "email_confirmed": "E-mail succesvol bevestigd.",
+    "password_reset_sent": "Als er een account bestaat voor dit e-mailadres, is er een resetlink verzonden.",
+    "password_reset": "Wachtwoord bijgewerkt. U kunt inloggen."
   },
   "defaults": {
     "auto_reply_unavailable": "Ik ben niet beschikbaar, ik neem snel contact met u op."
@@ -71,6 +74,14 @@
     "confirm_registration_cta": "Mijn account bevestigen",
     "confirm_registration_expiry": "Deze bevestigingslink verloopt over 48 uur.",
     "confirm_registration_disclaimer": "Als u deze registratie niet heeft aangevraagd, kunt u deze e-mail veilig negeren.",
+    "password_reset_subject": "petsFollow Pro — Wachtwoord resetten",
+    "password_reset_tagline": "Veterinaire hartopvolging",
+    "password_reset_preheader": "Reset uw petsFollow-wachtwoord in één klik.",
+    "password_reset_greeting": "Hallo {fullName},",
+    "password_reset_intro": "Er is een verzoek tot wachtwoordreset voor uw account. Klik op de knop hieronder om een nieuw wachtwoord te kiezen.",
+    "password_reset_cta": "Mijn wachtwoord resetten",
+    "password_reset_expiry": "Deze link verloopt over 1 uur.",
+    "password_reset_disclaimer": "Als u deze reset niet heeft aangevraagd, negeer deze e-mail. Uw wachtwoord blijft ongewijzigd.",
     "heartrate_validated_subject": "petsFollow Pro — Hartslagmeting gevalideerd",
     "heartrate_validated_body": "<p>Hartslagmeting gevalideerd voor een patiënt.</p><p>BPM: {bpm}</p>",
     "new_message_subject": "petsFollow Pro — Nieuw bericht",

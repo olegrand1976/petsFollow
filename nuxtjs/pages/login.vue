@@ -49,6 +49,11 @@
         />
 
         <p class="pro-login-form__footer">
+          <NuxtLink to="/forgot-password" data-testid="login-forgot-link">
+            {{ $t('auth.login.forgotLink') }}
+          </NuxtLink>
+        </p>
+        <p class="pro-login-form__footer">
           {{ $t('auth.login.noAccount') }}
           <NuxtLink to="/register">{{ $t('auth.login.registerLink') }}</NuxtLink>
         </p>

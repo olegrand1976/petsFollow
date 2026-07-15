@@ -84,7 +84,12 @@
           >
             {{ $t('components.topbar.settings') }}
           </NuxtLink>
-          <button type="button" class="pro-topbar__logout-btn" @click="handleLogout">
+          <button
+            type="button"
+            class="pro-topbar__logout-btn"
+            data-testid="pro-logout-btn"
+            @click="handleLogout"
+          >
             {{ $t('common.logout') }}
           </button>
         </div>

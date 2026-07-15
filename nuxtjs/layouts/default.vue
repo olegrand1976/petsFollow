@@ -1,13 +1,15 @@
 <template>
   <div class="pro-app">
-    <ProSidebar v-if="showNav" :items="navItems" />
-    <div class="pro-app-body">
-      <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" />
-      <main class="pro-main main">
-        <div class="pro-main-inner">
-          <slot />
-        </div>
-      </main>
+    <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" />
+    <div class="pro-app-shell">
+      <ProSidebar v-if="showNav" :items="navItems" />
+      <div class="pro-app-body">
+        <main class="pro-main main">
+          <div class="pro-main-inner">
+            <slot />
+          </div>
+        </main>
+      </div>
     </div>
   </div>
 </template>
@@ -18,7 +20,16 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 const route = useRoute()
 const { t } = useI18n()
 const showNav = computed(() => {
-  const bare = ['/login', '/register', '/register/sent', '/confirm-email', '/welcome', '/']
+  const bare = [
+    '/login',
+    '/register',
+    '/register/sent',
+    '/confirm-email',
+    '/forgot-password',
+    '/reset-password',
+    '/welcome',
+    '/',
+  ]
   return !bare.includes(route.path) && !route.path.startsWith('/register')
 })
 const { fetchUser } = useProUser()

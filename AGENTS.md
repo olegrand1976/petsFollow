@@ -33,6 +33,7 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.lyon@petsfollow.test` | Centre Cardio Animaux Lyon |
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
 | Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
+| Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
 | Admin | `admin.demo@petsfollow.test` | — (global) |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — Rex, Bella |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |
@@ -41,9 +42,29 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Client | `client.julie@petsfollow.test` | Lyon — Oscar |
 | Client | `client.thomas@petsfollow.test` | Lyon — Luna, Nico (pending) |
 
-Confirmation email démo : `/confirm-email?token=demo-confirm-email`
+Confirmation email démo : `/confirm-email?token=demo-confirm-email`  
+Reset mot de passe démo : `/reset-password?token=demo-reset-password` (`vet.reset@petsfollow.test`)
 
 Relancer les données : `make seed`
+
+## Tests
+
+```bash
+# Unitaires + intégration Go (intégration skip si DB absente ; sinon make up-infra)
+make test-go
+
+# Unitaires Nuxt (Vitest)
+make test-nuxt   # ou: cd nuxtjs && npm test
+
+# E2E Playwright auth (API :8291 + Nuxt :3002 + seed requis)
+cd nuxtjs && npm run test:e2e -- tests/e2e/specs/01-auth.spec.ts
+cd nuxtjs && npm run build
+
+# Smoke API (login + register/confirm/forgot/reset)
+make smoke
+```
+
+Prérequis e2e auth : `make up-infra && make migrate && make seed`, API et `make nuxtjs-dev` démarrés.
 
 ## Langues (FR / NL / EN)
 
@@ -94,14 +115,6 @@ Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le 
 - Apps : Android `be.llitsc.petsfollow_mobile` · iOS `be.llitsc.petsfollowMobile`
 - **Auth** : PostgreSQL via API Go (`/api/v1/auth/login`) — **ne pas** activer Firebase Auth
 - Firebase sert d'infra mobile (FCM post-MVP) : `make firebase-flutter-setup`
-
-## Tests
-
-```bash
-cd nuxtjs && npm run build
-cd nuxtjs && npm run test:e2e   # Playwright
-make smoke
-```
 
 ## Structure clé
 

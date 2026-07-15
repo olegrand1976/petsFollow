@@ -34,6 +34,8 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/login", a.login)
 	r.Post("/auth/register", a.register)
 	r.Post("/auth/confirm-email", a.confirmEmail)
+	r.Post("/auth/forgot-password", a.forgotPassword)
+	r.Post("/auth/reset-password", a.resetPassword)
 	r.Post("/auth/refresh", a.refresh)
 	a.registerAuthRoutes(r)
 	a.registerBillingRoutes(r)
@@ -666,6 +668,70 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 		"accessToken":  pair.AccessToken,
 		"refreshToken": pair.RefreshToken,
 		"expiresIn":    pair.ExpiresIn,
+	})
+}
+
+type forgotPasswordReq struct {
+	Email string `json:"email"`
+}
+
+func (a *API) forgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req forgotPasswordReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if req.Email == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+
+	result, err := a.store.RequestPasswordReset(r.Context(), req.Email)
+	out := map[string]any{
+		"message": t(r, "success.password_reset_sent", nil),
+	}
+	if err == nil {
+		resetURL := fmt.Sprintf("%s/reset-password?token=%s", a.cfg.ProPublicSiteURL, result.Token)
+		_ = a.notifier.SendPasswordReset(result.Email, result.Locale, result.FullName, resetURL)
+		out["resetPath"] = "/reset-password?token=" + result.Token
+	}
+	// Always 200 — do not reveal whether the email exists.
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
+type resetPasswordReq struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}
+
+func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
+	var req resetPasswordReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if req.Token == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "token_required")
+		return
+	}
+	if len(req.Password) < 8 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
+		return
+	}
+	if err := a.store.ResetPassword(r.Context(), req.Token, req.Password); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "invalid_reset_link")
+			return
+		}
+		if err.Error() == "password_too_short" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"message": t(r, "success.password_reset", nil),
 	})
 }
 

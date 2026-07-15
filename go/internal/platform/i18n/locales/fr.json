@@ -46,6 +46,7 @@
     "thread_not_found": "Fil de discussion introuvable",
     "no_entitlement": "Aucun droit d'accès",
     "invalid_confirm_link": "Lien de confirmation invalide",
+    "invalid_reset_link": "Lien de réinitialisation invalide ou expiré",
     "conflict": "Conflit",
     "email_already_exists": "Un compte existe déjà avec cet email",
     "google_account_mismatch": "Ce compte Google est déjà lié à un autre utilisateur",
@@ -57,7 +58,9 @@
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",
-    "email_confirmed": "Email confirmé avec succès."
+    "email_confirmed": "Email confirmé avec succès.",
+    "password_reset_sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
+    "password_reset": "Mot de passe mis à jour. Vous pouvez vous connecter."
   },
   "defaults": {
     "auto_reply_unavailable": "Je suis indisponible, je reviens vers vous rapidement."
@@ -71,6 +74,14 @@
     "confirm_registration_cta": "Confirmer mon compte",
     "confirm_registration_expiry": "Ce lien de confirmation expire dans 48 heures.",
     "confirm_registration_disclaimer": "Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email en toute sécurité.",
+    "password_reset_subject": "petsFollow Pro — Réinitialisation du mot de passe",
+    "password_reset_tagline": "Suivi cardiaque vétérinaire",
+    "password_reset_preheader": "Réinitialisez votre mot de passe petsFollow en un clic.",
+    "password_reset_greeting": "Bonjour {fullName},",
+    "password_reset_intro": "Une demande de réinitialisation de mot de passe a été faite pour votre compte. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.",
+    "password_reset_cta": "Réinitialiser mon mot de passe",
+    "password_reset_expiry": "Ce lien expire dans 1 heure.",
+    "password_reset_disclaimer": "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe reste inchangé.",
     "heartrate_validated_subject": "petsFollow Pro — Relevé cardiaque validé",
     "heartrate_validated_body": "<p>Relevé cardiaque validé pour un patient.</p><p>BPM : {bpm}</p>",
     "new_message_subject": "petsFollow Pro — Nouveau message",

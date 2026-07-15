@@ -14,6 +14,8 @@ const (
 
 	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
 	demoEmailConfirmToken = "demo-confirm-email"
+	// Token fixe pour /reset-password?token=demo-reset-password (compte vet.reset@)
+	demoPasswordResetToken = "demo-reset-password"
 )
 
 type messageDef struct {
@@ -74,13 +76,14 @@ type practiceDef struct {
 	clients           []clientDef
 	notifyOnMessage   bool
 	notifyOnHeartRate bool
-	incompleteProfile bool // profil cabinet non complété (onboarding)
+	incompleteProfile  bool // profil cabinet non complété (onboarding)
 	pendingEmailVerify bool // email non confirmé + token démo
+	seedPasswordReset  bool // token démo reset password
 }
 
 // Comptes démo — mots de passe : VetDemo123! · ClientDemo123! · AdminDemo123!
 //
-// Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ (profil incomplet) · vet.unverified@ (email non confirmé)
+// Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ · vet.unverified@ · vet.reset@ (reset MDP)
 // Admin : admin.demo@
 // Clients : client.demo@ · client.marie@ · client.paul@ · client.julie@ · client.thomas@ · client.vide@ (sans animal)
 
@@ -348,5 +351,19 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate:  true,
 		incompleteProfile:  true,
 		pendingEmailVerify: true,
+	},
+	{
+		name:              "Cabinet Reset Demo",
+		vetEmail:          "vet.reset@petsfollow.test",
+		vetName:           "Dr Reset Demo",
+		phone:             "01 00 00 00 00",
+		address:           "1 rue Reset",
+		city:              "Lille",
+		postalCode:        "59000",
+		website:           "",
+		availability:      kernel.AvailabilityAvailable,
+		notifyOnMessage:   true,
+		notifyOnHeartRate: true,
+		seedPasswordReset: true,
 	},
 }
