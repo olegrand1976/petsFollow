@@ -94,6 +94,17 @@ else
   echo "  Repo déjà dans attributeCondition WIF"
 fi
 
+echo "→ IAM bucket Cloud Build source (${GCP_PROJECT_ID}_cloudbuild)"
+CB_BUCKET="gs://${GCP_PROJECT_ID}_cloudbuild"
+if gcloud storage buckets describe "$CB_BUCKET" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+  gcloud storage buckets add-iam-policy-binding "$CB_BUCKET" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/storage.objectAdmin" --quiet >/dev/null 2>&1 || true
+  gcloud storage buckets add-iam-policy-binding "$CB_BUCKET" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/storage.legacyBucketWriter" --quiet >/dev/null 2>&1 || true
+fi
+
 echo "→ Binding WIF → SA (repo ${GITHUB_REPO})"
 gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
   --project="$GCP_PROJECT_ID" \

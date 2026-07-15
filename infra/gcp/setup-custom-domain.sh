@@ -14,7 +14,7 @@ proxy_cert_names() {
   gcloud compute target-https-proxies describe "$HTTPS_PROXY" \
     --global --project="$GCP_PROJECT_ID" \
     --format='json(sslCertificates)' \
-    | python3 -c "import json,sys; data=json.load(sys.stdin); print(','.join(u.rsplit('/',1)[-1] for u in data))"
+    | python3 -c "import json,sys; data=json.load(sys.stdin); certs=data.get('sslCertificates') or []; print(','.join(u.rsplit('/',1)[-1] for u in certs))"
 }
 
 renew_managed_cert() {
@@ -122,10 +122,18 @@ ensure_host_route() {
   echo "→ Certificat managé (${cert_name})"
   if ! gcloud compute ssl-certificates describe "$cert_name" \
     --global --project="$GCP_PROJECT_ID" &>/dev/null; then
-    gcloud compute ssl-certificates create "$cert_name" \
-      --domains="$domain" \
-      --global \
-      --project="$GCP_PROJECT_ID"
+    # Un seul cert pour les 2 hôtes (quota SSL_CERTIFICATES = 10)
+    if [[ "$cert_name" == "$FRONTEND_CERT_NAME" && "$FRONTEND_CERT_NAME" == "$API_CERT_NAME" ]]; then
+      gcloud compute ssl-certificates create "$cert_name" \
+        --domains="${CUSTOM_DOMAIN},${API_CUSTOM_DOMAIN}" \
+        --global \
+        --project="$GCP_PROJECT_ID"
+    else
+      gcloud compute ssl-certificates create "$cert_name" \
+        --domains="$domain" \
+        --global \
+        --project="$GCP_PROJECT_ID"
+    fi
   else
     renew_managed_cert "$cert_name" "$domain"
   fi
@@ -172,9 +180,8 @@ OK — prochaines étapes manuelles (OVH, zone ll-it-sc.be) :
      Cible        : ${LB_IP}
    - Sous-domaine : api.petsfollow
      Cible        : ${LB_IP}
-2. Attendre propagation DNS + certificats ACTIVE :
+2. Attendre propagation DNS + certificat ACTIVE :
    gcloud compute ssl-certificates describe ${FRONTEND_CERT_NAME} --global --format='yaml(managed)'
-   gcloud compute ssl-certificates describe ${API_CERT_NAME} --global --format='yaml(managed)'
 3. Tester :
    curl -I https://${CUSTOM_DOMAIN}/
    curl -I https://${API_CUSTOM_DOMAIN}/health
