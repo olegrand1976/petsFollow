@@ -305,9 +305,35 @@
   },
   "onboarding": {
     "title": "Practice setup",
-    "subtitle": "Complete your practice profile — visible to clients and editable anytime in settings.",
+    "subtitle": "A few steps to finish your profile — visible to clients and editable anytime in settings.",
     "profileCard": "Practice information",
-    "submit": "Save and go to dashboard"
+    "stepsNav": "Setup steps",
+    "submit": "Save and go to dashboard",
+    "errors": {
+      "required": "Please fill in all required fields."
+    },
+    "steps": {
+      "identity": {
+        "label": "Identity",
+        "title": "Your professional identity",
+        "text": "Veterinarian name and practice name shown to your clients."
+      },
+      "contact": {
+        "label": "Contact",
+        "title": "Contact details",
+        "text": "Email and phone so clients can reach you."
+      },
+      "address": {
+        "label": "Address",
+        "title": "Practice address",
+        "text": "Full postal address of your practice."
+      },
+      "options": {
+        "label": "Options",
+        "title": "Monitoring options",
+        "text": "Website (optional) and heart-rate reading durations offered to clients."
+      }
+    }
   },
   "welcome": {
     "badge": "Welcome to petsFollow Pro",
@@ -340,7 +366,10 @@
     },
     "ctaTitle": "Next step: set up your practice profile",
     "ctaText": "On first login, enter your practice details so clients can reach you easily.",
+    "ctaTitleAuthed": "Next step: set up your practice profile",
+    "ctaTextAuthed": "Your account is active. Enter your practice details so clients can reach you easily.",
     "ctaLogin": "Sign in and configure",
+    "ctaContinue": "Set up my practice",
     "login": "Sign in"
   },
   "index": {

@@ -305,9 +305,35 @@
   },
   "onboarding": {
     "title": "Configuration du cabinet",
-    "subtitle": "Complétez votre fiche d'information — visible par vos clients et modifiable à tout moment dans les paramètres.",
+    "subtitle": "Quelques étapes pour finaliser votre fiche — visible par vos clients et modifiable à tout moment dans les paramètres.",
     "profileCard": "Fiche d'information",
-    "submit": "Enregistrer et accéder au dashboard"
+    "stepsNav": "Étapes de configuration",
+    "submit": "Enregistrer et accéder au dashboard",
+    "errors": {
+      "required": "Merci de renseigner tous les champs obligatoires."
+    },
+    "steps": {
+      "identity": {
+        "label": "Identité",
+        "title": "Votre identité professionnelle",
+        "text": "Nom du vétérinaire et nom du cabinet affichés auprès de vos clients."
+      },
+      "contact": {
+        "label": "Contact",
+        "title": "Coordonnées de contact",
+        "text": "Email et téléphone pour que vos clients puissent vous joindre."
+      },
+      "address": {
+        "label": "Adresse",
+        "title": "Adresse du cabinet",
+        "text": "Adresse postale complète de votre structure."
+      },
+      "options": {
+        "label": "Options",
+        "title": "Options de suivi",
+        "text": "Site web (optionnel) et durées de relevé cardiaque proposées aux clients."
+      }
+    }
   },
   "welcome": {
     "badge": "Bienvenue sur petsFollow Pro",
@@ -340,7 +366,10 @@
     },
     "ctaTitle": "Prochaine étape : configurez votre fiche cabinet",
     "ctaText": "À la première connexion, renseignez les coordonnées de votre cabinet pour que vos clients puissent vous contacter facilement.",
+    "ctaTitleAuthed": "Prochaine étape : configurez votre fiche cabinet",
+    "ctaTextAuthed": "Votre compte est activé. Renseignez les coordonnées de votre cabinet pour que vos clients puissent vous contacter facilement.",
     "ctaLogin": "Me connecter et configurer",
+    "ctaContinue": "Configurer mon cabinet",
     "login": "Se connecter"
   },
   "index": {

@@ -617,10 +617,17 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{
+	out := map[string]any{
 		"message": t(r, "success.email_confirmed", nil),
 		"email":   u.Email,
-	})
+	}
+	// Session ouverte directement après confirmation (évite un re-login inutile).
+	if pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID); err == nil {
+		out["accessToken"] = pair.AccessToken
+		out["refreshToken"] = pair.RefreshToken
+		out["expiresIn"] = pair.ExpiresIn
+	}
+	httpx.WriteData(w, http.StatusOK, out)
 }
 
 func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {

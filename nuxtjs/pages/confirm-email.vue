@@ -13,11 +13,8 @@
         <template v-else-if="confirmed">
           <h1>{{ $t('auth.confirmEmail.title') }}</h1>
           <p class="pro-page-header__subtitle">{{ welcomeMessage }}</p>
-          <ProButton block @click="navigateTo('/welcome')">
+          <ProButton block @click="continueAfterConfirm">
             {{ $t('auth.confirmEmail.discover') }}
-          </ProButton>
-          <ProButton variant="secondary" block class="pro-mt-sm" @click="navigateTo('/login')">
-            {{ $t('auth.confirmEmail.login') }}
           </ProButton>
         </template>
         <template v-else>
@@ -37,9 +34,11 @@ const { t } = useI18n()
 const { mapError } = useApiError()
 
 const route = useRoute()
+const session = useCookie('pf_token')
 const loading = ref(true)
 const confirmed = ref(false)
 const confirmedEmail = ref('')
+const sessionReady = ref(false)
 const error = ref('')
 
 const welcomeMessage = computed(() =>
@@ -47,6 +46,14 @@ const welcomeMessage = computed(() =>
     emailPart: confirmedEmail.value ? `, ${confirmedEmail.value}` : '',
   }),
 )
+
+async function continueAfterConfirm() {
+  if (sessionReady.value) {
+    await navigateTo('/welcome')
+    return
+  }
+  await navigateTo('/login')
+}
 
 onMounted(async () => {
   const token = String(route.query.token || '')
@@ -63,6 +70,10 @@ onMounted(async () => {
     const data = res.data ?? res
     confirmed.value = true
     confirmedEmail.value = data.email || ''
+    if (data.accessToken) {
+      session.value = data.accessToken
+      sessionReady.value = true
+    }
   } catch (e: any) {
     error.value = mapError(e) || t('auth.confirmEmail.expiredLink')
   } finally {
@@ -70,9 +81,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.pro-mt-sm {
-  margin-top: 0.75rem;
-}
-</style>

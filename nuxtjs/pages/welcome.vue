@@ -2,7 +2,7 @@
   <div class="pro-welcome">
     <header class="pro-welcome__header">
       <PetsFollowLogo variant="default" />
-      <ProButton @click="navigateTo('/login')">{{ $t('welcome.login') }}</ProButton>
+      <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
     </header>
 
     <section class="pro-welcome__hero">
@@ -39,10 +39,10 @@
     </section>
 
     <section class="pro-welcome__cta">
-      <h2>{{ $t('welcome.ctaTitle') }}</h2>
-      <p>{{ $t('welcome.ctaText') }}</p>
+      <h2>{{ ctaTitle }}</h2>
+      <p>{{ ctaText }}</p>
       <div class="pro-welcome__cta-actions">
-        <ProButton @click="navigateTo('/login')">{{ $t('welcome.ctaLogin') }}</ProButton>
+        <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
         <ProButton variant="ghost" @click="navigateTo('/')">{{ $t('common.backHome') }}</ProButton>
       </div>
     </section>
@@ -51,6 +51,10 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: false })
+
+const { t } = useI18n()
+const token = useCookie('pf_token')
+const isAuthenticated = computed(() => !!token.value)
 
 const steps = [
   { key: 'profile' },
@@ -64,4 +68,32 @@ const highlights = [
   { key: 'alerts', icon: '🔔' },
   { key: 'free', icon: '🆓' },
 ]
+
+const primaryLabel = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaContinue') : t('welcome.ctaLogin'),
+)
+const ctaTitle = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaTitleAuthed') : t('welcome.ctaTitle'),
+)
+const ctaText = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaTextAuthed') : t('welcome.ctaText'),
+)
+
+async function goPrimary() {
+  if (!isAuthenticated.value) {
+    await navigateTo('/login')
+    return
+  }
+  try {
+    const me: any = await $fetch('/api/me')
+    const data = me.data ?? me
+    if (data.role === 'vet' && data.profileComplete !== true) {
+      await navigateTo('/onboarding')
+      return
+    }
+    await navigateTo(data.role === 'admin' ? '/admin' : '/dashboard')
+  } catch {
+    await navigateTo('/onboarding')
+  }
+}
 </script>

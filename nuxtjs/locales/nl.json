@@ -304,9 +304,35 @@
   },
   "onboarding": {
     "title": "Praktijkconfiguratie",
-    "subtitle": "Vul uw praktijkprofiel in — zichtbaar voor klanten en altijd aanpasbaar in instellingen.",
+    "subtitle": "Een paar stappen om uw profiel af te ronden — zichtbaar voor klanten en altijd aanpasbaar in instellingen.",
     "profileCard": "Praktijkinformatie",
-    "submit": "Opslaan en naar dashboard"
+    "stepsNav": "Configuratiestappen",
+    "submit": "Opslaan en naar dashboard",
+    "errors": {
+      "required": "Vul alle verplichte velden in."
+    },
+    "steps": {
+      "identity": {
+        "label": "Identiteit",
+        "title": "Uw professionele identiteit",
+        "text": "Naam van de dierenarts en praktijknaam die klanten zien."
+      },
+      "contact": {
+        "label": "Contact",
+        "title": "Contactgegevens",
+        "text": "E-mail en telefoon zodat klanten u kunnen bereiken."
+      },
+      "address": {
+        "label": "Adres",
+        "title": "Praktijkadres",
+        "text": "Volledig postadres van uw praktijk."
+      },
+      "options": {
+        "label": "Opties",
+        "title": "Monitoringsopties",
+        "text": "Website (optioneel) en hartslagduur die u aan klanten voorstelt."
+      }
+    }
   },
   "welcome": {
     "badge": "Welkom bij petsFollow Pro",
@@ -339,7 +365,10 @@
     },
     "ctaTitle": "Volgende stap: stel uw praktijkprofiel in",
     "ctaText": "Bij de eerste aanmelding vult u uw praktijkgegevens in zodat klanten u gemakkelijk kunnen bereiken.",
+    "ctaTitleAuthed": "Volgende stap: stel uw praktijkprofiel in",
+    "ctaTextAuthed": "Uw account is geactiveerd. Vul uw praktijkgegevens in zodat klanten u gemakkelijk kunnen bereiken.",
     "ctaLogin": "Aanmelden en configureren",
+    "ctaContinue": "Mijn praktijk configureren",
     "login": "Aanmelden"
   },
   "index": {
