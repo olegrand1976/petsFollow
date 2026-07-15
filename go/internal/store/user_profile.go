@@ -20,7 +20,7 @@ func (s *Store) UpdateUserFullName(ctx context.Context, userID, fullName string)
 }
 
 func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
-	var hash string
+	var hash *string
 	err := s.pool.QueryRow(ctx, `SELECT password_hash FROM identity.users WHERE id = $1`, userID).Scan(&hash)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
@@ -28,10 +28,10 @@ func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword,
 	if err != nil {
 		return err
 	}
-	if hash == "" {
+	if hash == nil || *hash == "" {
 		return ErrForbidden
 	}
-	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(currentPassword)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(*hash), []byte(currentPassword)) != nil {
 		return ErrForbidden
 	}
 	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

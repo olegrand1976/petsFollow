@@ -57,13 +57,17 @@ func (a *API) changeMePassword(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if req.CurrentPassword == "" || len(req.NewPassword) < 8 {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_password")
+	if req.CurrentPassword == "" {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "wrong_password")
+		return
+	}
+	if len(req.NewPassword) < 8 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return
 	}
 	if err := a.store.ChangeUserPassword(r.Context(), id.UserID, req.CurrentPassword, req.NewPassword); err != nil {
 		if errors.Is(err, store.ErrForbidden) {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "invalid_current_password")
+			writeErr(w, r, http.StatusUnauthorized, "unauthorized", "wrong_password")
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
