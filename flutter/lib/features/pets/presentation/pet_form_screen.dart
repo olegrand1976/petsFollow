@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,6 +21,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
   bool autoRenew = true;
   bool loading = false;
   List<Map<String, dynamic>> plans = [];
+  XFile? photoFile;
 
   @override
   void initState() {
@@ -34,6 +38,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
     } catch (_) {
       /* fallback labels from API locale via Accept-Language */
     }
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
+    if (file != null) setState(() => photoFile = file);
   }
 
   String _summary(AppLocalizations l10n) {
@@ -68,6 +78,13 @@ class _PetFormScreenState extends State<PetFormScreen> {
       final checkoutUrl = res['checkoutUrl'] as String?;
       final pet = res['pet'] as Map<String, dynamic>? ?? res;
       final petId = pet['id'] as String?;
+      if (petId != null && photoFile != null) {
+        try {
+          await ApiClient.instance.uploadPetPhoto(petId, photoFile!.path);
+        } catch (_) {
+          /* payment flow continues even if photo fails */
+        }
+      }
       if (checkoutUrl != null && await canLaunchUrl(Uri.parse(checkoutUrl))) {
         await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
       }
@@ -117,6 +134,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
             {'code': 'triennial', 'label': '60 € / 3 ans', 'recommended': true},
             {'code': 'quinquennial', 'label': '75 € / 5 ans'},
           ];
+    final initial = (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
@@ -125,7 +143,24 @@ class _PetFormScreenState extends State<PetFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName)),
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundImage: photoFile != null ? FileImage(File(photoFile!.path)) : null,
+                    child: photoFile == null ? Text(initial, style: const TextStyle(fontSize: 28)) : null,
+                  ),
+                  TextButton.icon(
+                    onPressed: _pickPhoto,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: Text(photoFile == null ? l10n.addPhoto : l10n.changePhoto),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName), onChanged: (_) => setState(() {})),
             TextField(controller: species, decoration: InputDecoration(labelText: l10n.species)),
             TextField(controller: breed, decoration: InputDecoration(labelText: l10n.breed)),
             const SizedBox(height: 24),

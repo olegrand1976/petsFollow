@@ -5,6 +5,18 @@
       :subtitle="$t('settings.subtitle')"
     />
 
+    <ProCard :title="$t('settings.avatar.title')" class="pro-settings-card">
+      <ProAvatarUpload
+        v-model="avatarUrl"
+        :name="user?.fullName || ''"
+        upload-url="/api/me/avatar"
+        :label="$t('settings.avatar.change')"
+        :hint="$t('settings.avatar.hint')"
+        @uploaded="onAvatarUploaded"
+      />
+      <p v-if="avatarSaved" class="text-muted" role="status">{{ $t('settings.avatar.saved') }}</p>
+    </ProCard>
+
     <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
       <PracticeProfileForm
         v-model="profile"
@@ -195,7 +207,10 @@ definePageMeta({ middleware: 'vet-only' })
 const { t } = useI18n()
 const { mapError } = useApiError()
 const { saveLocale: persistLocale, supportedLocales } = useLocaleSync()
-const { user } = useProUser()
+const { user, fetchUser } = useProUser()
+
+const avatarUrl = ref('')
+const avatarSaved = ref(false)
 
 const profile = ref<PracticeProfileForm>({
   vetFullName: '',
@@ -244,6 +259,12 @@ const passwordSaving = ref(false)
 const passwordSaved = ref(false)
 const passwordError = ref('')
 
+function onAvatarUploaded(data: any) {
+  avatarUrl.value = data?.avatarUrl || avatarUrl.value
+  avatarSaved.value = true
+  fetchUser(true)
+}
+
 function mapFromApi(data: any): PracticeProfileForm {
   return {
     vetFullName: data.vetFullName || '',
@@ -260,6 +281,13 @@ function mapFromApi(data: any): PracticeProfileForm {
 
 onMounted(async () => {
   autoReply.value = t('settings.autoReplyDefault')
+  avatarUrl.value = user.value?.avatarUrl || ''
+  if (!avatarUrl.value) {
+    try {
+      const me = await fetchUser(true)
+      avatarUrl.value = me?.avatarUrl || ''
+    } catch { /* ignore */ }
+  }
 
   try {
     const res: any = await $fetch('/api/vet/profile')

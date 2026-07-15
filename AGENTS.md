@@ -42,8 +42,10 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Client | `client.julie@petsfollow.test` | Lyon — Oscar |
 | Client | `client.thomas@petsfollow.test` | Lyon — Luna, Nico (pending) |
 
-Confirmation email démo : `/confirm-email?token=demo-confirm-email`  
+Confirmation email démo : `/confirm-email?token=demo-confirm-email` 
 Reset mot de passe démo : `/reset-password?token=demo-reset-password` (`vet.reset@petsfollow.test`)
+
+Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; staging = bucket GCS `petsfollow-media` (`make gcp-setup-media`, env `GCS_MEDIA_BUCKET`).
 
 Relancer les données : `make seed`
 

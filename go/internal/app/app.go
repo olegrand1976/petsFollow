@@ -15,6 +15,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -47,12 +48,20 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	notifier := email.NewNotifier(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom)
 	bill := billing.NewService(st, cfg)
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill)
+	mediaBundle, err := media.New(cfg)
+	if err != nil {
+		pool.Close()
+		return nil, err
+	}
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store)
 
 	r := httpx.NewBaseRouter()
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(corsMiddleware)
 	httpx.MountHealth(r, func(c context.Context) error { return db.Ping(c, pool) })
+	if mediaBundle.LocalHandler != nil && mediaBundle.LocalMount != "" {
+		r.Handle(mediaBundle.LocalMount+"*", mediaBundle.LocalHandler)
+	}
 	r.Route("/api/v1", func(v1 chi.Router) {
 		api.Routes(v1)
 	})

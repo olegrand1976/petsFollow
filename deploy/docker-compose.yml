@@ -33,8 +33,8 @@ services:
 
   migrate:
     build:
-      context: ../go
-      dockerfile: ../deploy/Dockerfile.api
+      context: ..
+      dockerfile: deploy/Dockerfile.api
     command: ["migrate"]
     env_file:
       - ../.env
@@ -48,8 +48,8 @@ services:
 
   api:
     build:
-      context: ../go
-      dockerfile: ../deploy/Dockerfile.api
+      context: ..
+      dockerfile: deploy/Dockerfile.api
     env_file:
       - ../.env
     environment:

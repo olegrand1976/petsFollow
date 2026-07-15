@@ -28,13 +28,13 @@ type VetOverview struct {
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
 	var c ClientSummary
 	err := s.pool.QueryRow(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1 AND pc.client_user_id = $2
-		GROUP BY u.id, u.email, u.full_name`, practiceID, clientID).Scan(
-		&c.UserID, &c.Email, &c.FullName, &c.PetCount)
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url`, practiceID, clientID).Scan(
+		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ClientSummary{}, ErrNotFound
 	}

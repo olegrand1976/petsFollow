@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-github gcp-setup-media gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup
 
 help:
 	@echo "petsFollow — commandes"
@@ -70,8 +70,14 @@ smoke:
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
 
+gcp-github:
+	bash infra/gcp/setup-github-deploy.sh
+
 gcp-setup:
 	bash infra/gcp/setup-gcp.sh
+
+gcp-setup-media:
+	bash infra/gcp/setup-gcs-media.sh
 
 gcp-deploy:
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .

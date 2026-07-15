@@ -37,6 +37,8 @@ type Config struct {
 	ProPublicSiteURL                string
 	BillingMockEnabled              bool
 	GoogleOAuthClientID             string
+	GCSMediaBucket                  string
+	MediaLocalDir                   string
 }
 
 func Load() Config {
@@ -71,6 +73,8 @@ func Load() Config {
 		ProPublicSiteURL:               envOr("PETSFOLLOW_PUBLIC_SITE_URL", "http://localhost:3002"),
 		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED") || envOr("STRIPE_SECRET_KEY", "") == "",
 		GoogleOAuthClientID:            envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
+		GCSMediaBucket:                 envOr("GCS_MEDIA_BUCKET", ""),
+		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
 	}
 }
 

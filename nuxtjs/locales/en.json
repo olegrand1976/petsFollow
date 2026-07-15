@@ -136,11 +136,18 @@
     "pets": "pets",
     "unknownBreed": "Unknown breed",
     "clientFallback": "Client {id}…",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "loading": "Loading…"
   },
   "settings": {
     "title": "Settings",
     "subtitle": "Practice profile, availability and automatic messages.",
+    "avatar": {
+      "title": "Profile photo",
+      "change": "Change photo",
+      "hint": "JPEG, PNG or WebP — 2 MB max.",
+      "saved": "Photo updated."
+    },
     "profileCard": "Practice information",
     "profileSaved": "Profile saved.",
     "saveProfile": "Save profile",
@@ -254,7 +261,10 @@
       "ok": "OK",
       "timelineTitle": "Monitoring history",
       "timelineEmptyTitle": "Empty history",
-      "timelineEmptyDescription": "No monitoring events for this pet."
+      "timelineEmptyDescription": "No monitoring events for this pet.",
+      "photoTitle": "Pet photo",
+      "photoChange": "Change photo",
+      "photoHint": "JPEG, PNG or WebP — 2 MB max."
     }
   },
   "dashboard": {
@@ -538,6 +548,10 @@
     "invalid_json": "Invalid JSON",
     "fields_required": "All fields are required",
     "password_too_short": "Password too short (minimum 8 characters)",
+    "image_too_large": "Image too large (2 MB max)",
+    "invalid_image_type": "Unsupported image type (JPEG, PNG or WebP)",
+    "file_required": "Image file required",
+    "media_unavailable": "Media storage unavailable",
     "token_required": "Token required",
     "body_required": "Message body required",
     "profile_fields_required": "Required fields missing",

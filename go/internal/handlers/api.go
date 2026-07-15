@@ -12,6 +12,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
@@ -23,10 +24,11 @@ type API struct {
 	cfg      config.Config
 	notifier *email.Notifier
 	billing  *billing.Service
+	media    media.Store
 }
 
-func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service) *API {
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill}
+func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store) *API {
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore}
 }
 
 func (a *API) Routes(r chi.Router) {
@@ -47,6 +49,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
+		pr.Post("/me/avatar", a.uploadMyAvatar)
 		pr.Patch("/me/password", a.changeMePassword)
 		pr.Delete("/me", a.deleteMe)
 		pr.Patch("/me/locale", a.updateMeLocale)
@@ -56,6 +59,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/pets", a.listMyPets)
 		pr.Post("/pets", a.createPet)
 		pr.Put("/pets/{petID}", a.updatePet)
+		pr.Post("/pets/{petID}/photo", a.uploadPetPhoto)
 		pr.Get("/pets/{petID}", a.getPet)
 		pr.Get("/pets/{petID}/timeline", a.petTimeline)
 		pr.Post("/pets/{petID}/heartrate/sessions", a.startHeartRate)

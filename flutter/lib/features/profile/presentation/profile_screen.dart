@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -14,6 +15,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final email = TextEditingController();
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
+  String? avatarUrl;
   bool loading = true;
   bool saving = false;
   String? error;
@@ -29,10 +31,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final me = await ApiClient.instance.getMe();
       fullName.text = me['fullName'] as String? ?? '';
       email.text = me['email'] as String? ?? '';
+      avatarUrl = me['avatarUrl'] as String?;
     } catch (_) {
       error = 'load';
     } finally {
       if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
+    if (file == null) return;
+    setState(() {
+      saving = true;
+      error = null;
+    });
+    try {
+      final me = await ApiClient.instance.uploadAvatar(file.path);
+      if (mounted) {
+        setState(() => avatarUrl = me['avatarUrl'] as String?);
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.photoUpdated)));
+      }
+    } catch (_) {
+      setState(() => error = 'photo');
+    } finally {
+      if (mounted) setState(() => saving = false);
     }
   }
 
@@ -113,11 +138,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (loading) {
       return Scaffold(appBar: AppBar(title: Text(l10n.myData)), body: const Center(child: CircularProgressIndicator()));
     }
+    final initial = (fullName.text.isNotEmpty ? fullName.text : '?').substring(0, 1).toUpperCase();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myData)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 48,
+                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty ? NetworkImage(avatarUrl!) : null,
+                  child: avatarUrl == null || avatarUrl!.isEmpty ? Text(initial, style: const TextStyle(fontSize: 28)) : null,
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: saving ? null : _pickAvatar,
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: Text(l10n.changePhoto),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           TextField(
             controller: fullName,
             decoration: InputDecoration(labelText: l10n.firstName),

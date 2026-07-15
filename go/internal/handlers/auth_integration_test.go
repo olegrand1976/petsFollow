@@ -80,7 +80,7 @@ func newTestAPI(t *testing.T) *testAPI {
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	notifier := email.NewNotifier("127.0.0.1", 9, "test@petsfollow.test")
 	bill := billing.NewService(st, cfg)
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill)
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, nil)
 
 	r := httpx.NewBaseRouter()
 	r.Route("/api/v1", api.Routes)

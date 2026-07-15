@@ -1,31 +1,28 @@
 <template>
-  <div>
+  <div data-testid="vet-dashboard-page">
     <ProPageHeader
       :title="welcomeTitle"
       :subtitle="$t('dashboard.subtitle')"
     />
     <div class="pro-grid-kpi">
-      <ProCard>
-        <div class="pro-kpi pro-kpi--with-icon">
-          <ProIcon name="group" class="pro-kpi__icon" :size="20" />
-          <span class="pro-kpi__value">{{ clientCount }}</span>
-          <span class="pro-kpi__label">{{ $t('dashboard.activeClients') }}</span>
-        </div>
-      </ProCard>
-      <ProCard>
-        <div class="pro-kpi pro-kpi--with-icon">
-          <ProIcon name="chat" class="pro-kpi__icon" :size="20" />
-          <span class="pro-kpi__value">{{ unreadCount }}</span>
-          <span class="pro-kpi__label">{{ $t('dashboard.unreadMessages') }}</span>
-        </div>
-      </ProCard>
-      <ProCard>
-        <div class="pro-kpi pro-kpi--with-icon">
-          <ProIcon name="favorite" class="pro-kpi__icon" :size="20" />
-          <span class="pro-kpi__value">{{ recentSessions }}</span>
-          <span class="pro-kpi__label">{{ $t('dashboard.recentSessions') }}</span>
-        </div>
-      </ProCard>
+      <ProKpi
+        icon="group"
+        :value="clientCount"
+        :label="$t('dashboard.activeClients')"
+        to="/clients"
+      />
+      <ProKpi
+        icon="chat"
+        :value="unreadCount"
+        :label="$t('dashboard.unreadMessages')"
+        to="/messages"
+        :variant="hasUnread ? 'alert' : 'default'"
+      />
+      <ProKpi
+        icon="favorite"
+        :value="recentSessions"
+        :label="$t('dashboard.recentSessions')"
+      />
     </div>
     <div class="pro-grid-2 pro-mt-lg">
       <ProCard :title="$t('dashboard.quickActions')">
@@ -50,7 +47,10 @@ const welcomeTitle = ref(t('dashboard.title'))
 const clientCount = ref('—')
 const unreadCount = ref('—')
 const recentSessions = ref('—')
+const unreadRaw = ref(0)
 const { fetchUser } = useProUser()
+
+const hasUnread = computed(() => unreadRaw.value > 0)
 
 onMounted(async () => {
   const me = await fetchUser()
@@ -60,11 +60,13 @@ onMounted(async () => {
     const res: any = await $fetch('/api/vet/overview')
     const data = res.data ?? res
     clientCount.value = String(data.clientCount ?? 0)
-    unreadCount.value = String(data.unreadMessages ?? 0)
+    unreadRaw.value = Number(data.unreadMessages ?? 0)
+    unreadCount.value = String(unreadRaw.value)
     recentSessions.value = String(data.recentSessions7d ?? 0)
   } catch {
     clientCount.value = '0'
     unreadCount.value = '0'
+    unreadRaw.value = 0
     recentSessions.value = '0'
   }
 })

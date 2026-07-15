@@ -136,11 +136,18 @@
     "pets": "animaux",
     "unknownBreed": "Race inconnue",
     "clientFallback": "Client {id}…",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "loading": "Chargement…"
   },
   "settings": {
     "title": "Paramètres",
     "subtitle": "Fiche d'information, disponibilité et messages automatiques.",
+    "avatar": {
+      "title": "Photo de profil",
+      "change": "Changer la photo",
+      "hint": "JPEG, PNG ou WebP — 2 Mo max.",
+      "saved": "Photo mise à jour."
+    },
     "profileCard": "Fiche d'information du cabinet",
     "profileSaved": "Fiche enregistrée.",
     "saveProfile": "Enregistrer la fiche",
@@ -254,7 +261,10 @@
       "ok": "OK",
       "timelineTitle": "Historique suivi",
       "timelineEmptyTitle": "Historique vide",
-      "timelineEmptyDescription": "Aucun événement de suivi pour cet animal."
+      "timelineEmptyDescription": "Aucun événement de suivi pour cet animal.",
+      "photoTitle": "Photo de l'animal",
+      "photoChange": "Changer la photo",
+      "photoHint": "JPEG, PNG ou WebP — 2 Mo max."
     }
   },
   "dashboard": {
@@ -538,6 +548,10 @@
     "invalid_json": "JSON invalide",
     "fields_required": "Tous les champs sont requis",
     "password_too_short": "Mot de passe trop court (8 caractères minimum)",
+    "image_too_large": "Image trop volumineuse (2 Mo max)",
+    "invalid_image_type": "Format d'image non supporté (JPEG, PNG ou WebP)",
+    "file_required": "Fichier image requis",
+    "media_unavailable": "Stockage média indisponible",
     "token_required": "Token requis",
     "body_required": "Corps du message requis",
     "profile_fields_required": "Champs obligatoires manquants",

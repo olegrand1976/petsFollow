@@ -110,18 +110,68 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
+}
+
+.pro-kpi--with-icon {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pro-kpi__icon-wrap {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--pf-vet-radius-lg);
+  background: rgba(42, 157, 143, 0.12);
+  color: var(--pf-vet-accent);
+}
+
+.pro-kpi-card--alert .pro-kpi__icon-wrap {
+  background: rgba(231, 111, 81, 0.15);
+  color: var(--pf-vet-alert);
+}
+
+.pro-kpi__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
 .pro-kpi__value {
-  font-size: 1.5rem;
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
   font-weight: 700;
   font-family: var(--pf-font-mono);
   color: var(--pf-vet-primary);
+  line-height: 1.1;
 }
 
-.pro-kpi__label {
+.pro-kpi-card--alert .pro-kpi__value {
+  color: var(--pf-vet-alert);
+}
+
+.pro-kpi__label,
+.pro-kpi__trend {
   font-size: 0.8125rem;
   color: var(--pf-vet-text-muted);
+}
+
+.pro-kpi-card {
+  margin-bottom: 0;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+a.pro-kpi-card:focus-visible {
+  outline: 2px solid var(--pf-vet-accent);
+  outline-offset: 2px;
 }
 
 .pro-table-wrap {
@@ -351,13 +401,9 @@
   color: var(--pf-vet-text-muted);
 }
 
-.pro-kpi--with-icon {
-  position: relative;
-}
-
 .pro-kpi__icon {
-  font-size: 1.25rem;
-  margin-bottom: 0.15rem;
+  font-size: 1.375rem;
+  line-height: 1;
 }
 
 @keyframes pro-emblem-pulse {
@@ -384,14 +430,21 @@
 
 .pro-grid-kpi {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+  align-items: stretch;
 }
 
 .pro-grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
+  align-items: stretch;
+}
+
+.pro-grid-2 > .pro-card {
+  margin-bottom: 0;
+  height: 100%;
 }
 
 .pro-avatar {
@@ -405,6 +458,37 @@
   color: var(--pf-vet-accent);
   font-weight: 700;
   font-size: 0.875rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pro-avatar--sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.pro-avatar--md {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
+}
+
+.pro-avatar--lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.25rem;
+}
+
+.pro-avatar--image {
+  background: transparent;
+}
+
+.pro-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .pro-login-page {

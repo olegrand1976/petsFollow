@@ -3,6 +3,7 @@ export type ProUser = {
   userId?: string
   email?: string
   fullName?: string
+  avatarUrl?: string
   role?: string
   practiceId?: string
   practiceName?: string

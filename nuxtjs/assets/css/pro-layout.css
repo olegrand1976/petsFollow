@@ -40,6 +40,20 @@
   min-width: 0;
 }
 
+.pro-topbar__practice {
+  min-width: 0;
+  max-width: min(42vw, 28rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 1rem;
+  border-left: 1px solid var(--pf-vet-border);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+  line-height: 1.2;
+}
+
 .pro-topbar__actions {
   display: flex;
   align-items: center;
@@ -261,4 +275,9 @@
   .pro-main { padding: 1rem 1.25rem 1.5rem; }
   .pro-topbar { padding: 0.65rem 1rem; }
   .pro-topbar__profile-name { display: none; }
+  .pro-topbar__practice {
+    max-width: min(36vw, 12rem);
+    font-size: 0.8125rem;
+    padding-left: 0.75rem;
+  }
 }

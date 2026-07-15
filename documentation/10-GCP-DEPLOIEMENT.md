@@ -14,15 +14,17 @@ Infra partagée : Cloud SQL `premedica-db-staging` (DB `petsfollow`), Redis VM `
 - `gcloud` authentifié sur `premedica-prod-2025`
 - Artifact Registry repo `petsfollow` (`europe-west1`)
 - Secrets SM : `petsfollow-database-url`, `petsfollow-migrate-database-url`, `petsfollow-jwt-signing-key`, `petsfollow-redis-url`
+- Bucket GCS médias : `petsfollow-media` (`make gcp-setup-media`) + env Cloud Run `GCS_MEDIA_BUCKET=petsfollow-media`
 - Entrées registres : `projets/infra` (backup YAML, Redis, grants) + BM `PlatformApp` `petsfollow`
 
 ## Commandes
 
 ```bash
-make gcp-setup    # AR + checklist secrets / DB / Redis
-make gcp-deploy   # Cloud Build → images + deploy Run
-make gcp-domain   # NEG + backends + host rules + certs managés
-make gcp-smoke    # smoke contre api.petsfollow.ll-it-sc.be
+make gcp-setup         # AR + bucket médias + checklist secrets / DB / Redis
+make gcp-setup-media   # bucket petsfollow-media uniquement
+make gcp-deploy        # Cloud Build → images + deploy Run
+make gcp-domain        # NEG + backends + host rules + certs managés
+make gcp-smoke         # smoke contre api.petsfollow.ll-it-sc.be
 ```
 
 Pipeline GitHub : push branche `staging` → [`.github/workflows/deploy-gcp-staging.yml`](../.github/workflows/deploy-gcp-staging.yml) (WIF).

@@ -67,6 +67,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileSaved => 'Profil enregistré';
 
   @override
+  String get changePhoto => 'Changer la photo';
+
+  @override
+  String get addPhoto => 'Ajouter une photo';
+
+  @override
+  String get photoUpdated => 'Photo mise à jour';
+
+  @override
   String get passwordChanged => 'Mot de passe modifié';
 
   @override

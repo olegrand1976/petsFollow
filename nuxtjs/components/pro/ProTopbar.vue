@@ -2,6 +2,11 @@
   <header class="pro-topbar" data-testid="pro-topbar">
     <div class="pro-topbar__left">
       <PetsFollowLogo variant="compact" :link-to="homeLink" />
+      <span
+        v-if="practiceName"
+        class="pro-topbar__practice"
+        data-testid="pro-topbar-practice"
+      >{{ practiceName }}</span>
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
@@ -70,7 +75,7 @@
           data-testid="pro-profile-btn"
           @click="toggleProfile"
         >
-          <span class="pro-avatar">{{ userInitials }}</span>
+          <ProAvatar :src="user?.avatarUrl" :name="userName" size="sm" />
           <span class="pro-topbar__profile-name">{{ userName }}</span>
         </button>
         <div v-if="profileOpen" class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
@@ -114,7 +119,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
-const { user, fetchUser, initials, logout } = useProUser()
+const { user, fetchUser, logout } = useProUser()
 const {
   items: notifItems,
   count: notifCount,
@@ -127,7 +132,7 @@ const profileOpen = ref(false)
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
-const userInitials = computed(() => initials())
+const practiceName = computed(() => user.value?.practiceName?.trim() || '')
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)

@@ -17,6 +17,9 @@ MIGRATE_USER="${MIGRATE_USER:-petsfollow_migrate}"
 REDIS_DB="${REDIS_DB:-14}"
 REDIS_KEY_PREFIX="${REDIS_KEY_PREFIX:-petsfollow}"
 
+REDIS_VM_NAME="${REDIS_VM_NAME:-shared-redis}"
+REDIS_VM_ZONE="${REDIS_VM_ZONE:-${GCP_RUN_REGION}-b}"
+
 CUSTOM_DOMAIN="${CUSTOM_DOMAIN:-petsfollow.ll-it-sc.be}"
 API_CUSTOM_DOMAIN="${API_CUSTOM_DOMAIN:-api.petsfollow.ll-it-sc.be}"
 PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://${CUSTOM_DOMAIN}}"
@@ -41,6 +44,11 @@ WIF_POOL_ID="${WIF_POOL_ID:-github-pool}"
 WIF_PROVIDER_ID="${WIF_PROVIDER_ID:-github-provider}"
 PROJECT_NUMBER="${PROJECT_NUMBER:-237481297060}"
 GCP_WORKLOAD_IDENTITY_PROVIDER="${GCP_WORKLOAD_IDENTITY_PROVIDER:-projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${WIF_POOL_ID}/providers/${WIF_PROVIDER_ID}}"
+
+GCS_MEDIA_BUCKET="${GCS_MEDIA_BUCKET:-petsfollow-media}"
+GCS_MEDIA_LOCATION="${GCS_MEDIA_LOCATION:-${GCP_RUN_REGION}}"
+
+INFRA_ROOT="${INFRA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)/infra}"
 
 connector_path() {
   echo "projects/${GCP_PROJECT_ID}/locations/${GCP_RUN_REGION}/connectors/${VPC_CONNECTOR}"

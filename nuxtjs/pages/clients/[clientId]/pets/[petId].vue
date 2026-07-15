@@ -10,7 +10,22 @@
     <ProPageHeader
       :title="pet?.name || $t('clients.pet.title')"
       :subtitle="petSubtitle"
-    />
+    >
+      <template #actions>
+        <ProAvatar :src="pet?.photoUrl" :name="pet?.name || ''" size="lg" />
+      </template>
+    </ProPageHeader>
+
+    <ProCard :title="$t('clients.pet.photoTitle')" class="pro-settings-card">
+      <ProAvatarUpload
+        v-model="petPhotoUrl"
+        :name="pet?.name || ''"
+        :upload-url="`/api/pets/${petId}/photo`"
+        :label="$t('clients.pet.photoChange')"
+        :hint="$t('clients.pet.photoHint')"
+        @uploaded="onPetPhotoUploaded"
+      />
+    </ProCard>
 
     <div v-if="recentAlert" class="pro-alert-banner" role="status" data-testid="pet-alert-banner">
       <ProBadge variant="danger">{{ $t('clients.pet.alert') }}</ProBadge>
@@ -105,6 +120,7 @@ const route = useRoute()
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
 const pet = ref<any>(null)
+const petPhotoUrl = ref('')
 const sessions = ref<any[]>([])
 const timeline = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
@@ -129,9 +145,15 @@ const chartSessions = computed(() => [...sessions.value].slice(0, 30).reverse())
 const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number).filter(v => v != null))
 const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
 
+function onPetPhotoUploaded(data: any) {
+  pet.value = { ...pet.value, ...data }
+  petPhotoUrl.value = data?.photoUrl || petPhotoUrl.value
+}
+
 onMounted(async () => {
   const petRes: any = await $fetch(`/api/pets/${petId}`)
   pet.value = petRes.data ?? petRes
+  petPhotoUrl.value = pet.value?.photoUrl || ''
 
   const sessionsRes: any = await $fetch(`/api/pets/${petId}/heartrate`)
   sessions.value = sessionsRes.data ?? sessionsRes ?? []

@@ -67,6 +67,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get profileSaved => 'Profiel opgeslagen';
 
   @override
+  String get changePhoto => 'Foto wijzigen';
+
+  @override
+  String get addPhoto => 'Foto toevoegen';
+
+  @override
+  String get photoUpdated => 'Foto bijgewerkt';
+
+  @override
   String get passwordChanged => 'Wachtwoord gewijzigd';
 
   @override

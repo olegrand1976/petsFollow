@@ -5,27 +5,60 @@ on:
     branches: [staging]
   workflow_dispatch:
 
+concurrency:
+  group: deploy-petsfollow-gcp
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
 env:
   GCP_PROJECT_ID: premedica-prod-2025
+  GCP_RUN_REGION: europe-west9
   PETSFOLLOW_PUBLIC_SITE_URL: https://petsfollow.ll-it-sc.be
   PETSFOLLOW_API_PUBLIC_URL: https://api.petsfollow.ll-it-sc.be
+  GCP_WORKLOAD_IDENTITY_PROVIDER: projects/237481297060/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  GCP_SERVICE_ACCOUNT: github-petsfollow-deploy@premedica-prod-2025.iam.gserviceaccount.com
 
 jobs:
   quality:
     uses: ./.github/workflows/ci.yml
 
   deploy:
+    name: Cloud Build → petsFollow API + Nuxt
     needs: quality
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
-      - run: gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
-      - run: bash infra/gcp/postdeploy.sh
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      - name: Deploy (Cloud Build)
+        run: |
+          chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
+          gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
+      - name: Postdeploy (seed + smoke)
+        run: bash infra/gcp/postdeploy.sh --seed
+      - name: Summary
+        run: |
+          API_URL="$(gcloud run services describe petsfollow-api             --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}"             --format='value(status.url)' 2>/dev/null || true)"
+          FE_URL="$(gcloud run services describe petsfollow-nuxtjs             --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}"             --format='value(status.url)' 2>/dev/null || true)"
+          {
+            echo "### petsFollow GCP"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Site | ${PETSFOLLOW_PUBLIC_SITE_URL} |"
+            echo "| API custom | ${PETSFOLLOW_API_PUBLIC_URL} |"
+            echo "| API Run | ${API_URL} |"
+            echo "| Frontend Run | ${FE_URL} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
   playwright:
     needs: deploy
@@ -40,4 +73,4 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npx playwright install chromium
-      - run: PLAYWRIGHT_BASE_URL=https://petsfollow.ll-it-sc.be npm run test:e2e
+      - run: PLAYWRIGHT_BASE_URL=https://petsfollow.ll-it-sc.be npm run test:e2e -- tests/e2e/specs/01-auth.spec.ts

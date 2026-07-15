@@ -29,6 +29,7 @@ type User struct {
 	TOTPSecret        string
 	TOTPEnabled       bool
 	PreferredLocale   string
+	AvatarURL         string
 }
 
 type Practice struct {
@@ -103,10 +104,11 @@ type TimelineItem struct {
 }
 
 type ClientSummary struct {
-	UserID   string `json:"userId"`
-	Email    string `json:"email"`
-	FullName string `json:"fullName"`
-	PetCount int    `json:"petCount"`
+	UserID    string `json:"userId"`
+	Email     string `json:"email"`
+	FullName  string `json:"fullName"`
+	AvatarURL string `json:"avatarUrl,omitempty"`
+	PetCount  int    `json:"petCount"`
 }
 
 type Store struct {
@@ -122,7 +124,7 @@ func scanUser(row pgx.Row) (User, error) {
 	var passwordHash *string
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
-		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale,
+		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -133,7 +135,7 @@ func scanUser(row pgx.Row) (User, error) {
 const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
-	COALESCE(preferred_locale,'fr')`
+	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,'')`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	u, err := scanUser(s.pool.QueryRow(ctx, `
@@ -155,12 +157,12 @@ func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
 
 func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1
-		GROUP BY u.id, u.email, u.full_name
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url
 		ORDER BY u.full_name`, practiceID)
 	if err != nil {
 		return nil, err
@@ -169,7 +171,7 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 	var out []ClientSummary
 	for rows.Next() {
 		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.PetCount); err != nil {
+		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount); err != nil {
 			return nil, err
 		}
 		out = append(out, c)

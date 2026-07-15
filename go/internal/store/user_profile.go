@@ -19,6 +19,28 @@ func (s *Store) UpdateUserFullName(ctx context.Context, userID, fullName string)
 	return nil
 }
 
+func (s *Store) UpdateUserAvatarURL(ctx context.Context, userID, avatarURL string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE identity.users SET avatar_url = $2 WHERE id = $1`, userID, avatarURL)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) UpdatePetPhotoURL(ctx context.Context, petID, photoURL string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE pets.pets SET photo_url = $2, updated_at = NOW() WHERE id = $1`, petID, photoURL)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
 	var hash *string
 	err := s.pool.QueryRow(ctx, `SELECT password_hash FROM identity.users WHERE id = $1`, userID).Scan(&hash)

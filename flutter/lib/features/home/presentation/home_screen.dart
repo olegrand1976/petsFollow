@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
@@ -140,7 +141,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(child: Text((pet['name'] as String? ?? '?').substring(0, 1).toUpperCase())),
+                          CircleAvatar(
+                            backgroundImage: (pet['photoUrl'] as String?)?.isNotEmpty == true
+                                ? NetworkImage(pet['photoUrl'] as String)
+                                : null,
+                            child: (pet['photoUrl'] as String?)?.isNotEmpty == true
+                                ? null
+                                : Text((pet['name'] as String? ?? '?').substring(0, 1).toUpperCase()),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -225,6 +233,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 },
               ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.changePhoto),
+              onTap: () async {
+                Navigator.pop(context);
+                final picker = ImagePicker();
+                final file = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 1024,
+                  imageQuality: 85,
+                );
+                if (file == null) return;
+                try {
+                  await ApiClient.instance.uploadPetPhoto(petId, file.path);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.photoUpdated)),
+                    );
+                  }
+                  load();
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.errorGeneric('photo'))),
+                    );
+                  }
+                }
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.favorite),
               title: Text(l10n.heartRate),

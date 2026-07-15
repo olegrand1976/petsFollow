@@ -214,6 +214,24 @@ abstract class AppLocalizations {
   /// **'Profil enregistré'**
   String get profileSaved;
 
+  /// No description provided for @changePhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer la photo'**
+  String get changePhoto;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo'**
+  String get addPhoto;
+
+  /// No description provided for @photoUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo mise à jour'**
+  String get photoUpdated;
+
   /// No description provided for @passwordChanged.
   ///
   /// In fr, this message translates to:

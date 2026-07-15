@@ -136,11 +136,18 @@
     "pets": "dieren",
     "unknownBreed": "Onbekend ras",
     "clientFallback": "Klant {id}…",
-    "breadcrumb": "Broodkruimelpad"
+    "breadcrumb": "Broodkruimelpad",
+    "loading": "Laden…"
   },
   "settings": {
     "title": "Instellingen",
     "subtitle": "Praktijkprofiel, beschikbaarheid en automatische berichten.",
+    "avatar": {
+      "title": "Profielfoto",
+      "change": "Foto wijzigen",
+      "hint": "JPEG, PNG of WebP — max. 2 MB.",
+      "saved": "Foto bijgewerkt."
+    },
     "profileCard": "Praktijkinformatie",
     "profileSaved": "Profiel opgeslagen.",
     "saveProfile": "Profiel opslaan",
@@ -254,7 +261,10 @@
       "ok": "OK",
       "timelineTitle": "Opvolgingsgeschiedenis",
       "timelineEmptyTitle": "Lege geschiedenis",
-      "timelineEmptyDescription": "Geen opvolgingsgebeurtenissen voor dit dier."
+      "timelineEmptyDescription": "Geen opvolgingsgebeurtenissen voor dit dier.",
+      "photoTitle": "Foto van het dier",
+      "photoChange": "Foto wijzigen",
+      "photoHint": "JPEG, PNG of WebP — max. 2 MB."
     }
   },
   "dashboard": {
@@ -537,6 +547,10 @@
     "invalid_json": "Ongeldige JSON",
     "fields_required": "Alle velden zijn verplicht",
     "password_too_short": "Wachtwoord te kort (minimaal 8 tekens)",
+    "image_too_large": "Afbeelding te groot (max. 2 MB)",
+    "invalid_image_type": "Niet-ondersteund afbeeldingstype (JPEG, PNG of WebP)",
+    "file_required": "Afbeeldingsbestand vereist",
+    "media_unavailable": "Mediaopslag niet beschikbaar",
     "token_required": "Token vereist",
     "body_required": "Berichttekst vereist",
     "profile_fields_required": "Verplichte velden ontbreken",

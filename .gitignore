@@ -4,6 +4,8 @@ node_modules/
 .output/
 dist/
 go/bin/
+data/uploads/
+go/data/uploads/
 *.exe
 .DS_Store
 flutter/.dart_tool/

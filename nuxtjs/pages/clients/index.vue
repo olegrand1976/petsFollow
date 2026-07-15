@@ -49,7 +49,7 @@
         <tbody>
           <tr v-for="c in filtered" :key="c.userId">
             <td>
-              <span class="pro-avatar client-avatar" aria-hidden="true">{{ initials(c.fullName) }}</span>
+              <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
               {{ c.fullName }}
             </td>
             <td>{{ c.email }}</td>
@@ -76,7 +76,7 @@
             :to="`/clients/${c.userId}`"
             class="pro-kanban-card"
           >
-            <span class="pro-avatar client-avatar">{{ initials(c.fullName) }}</span>
+            <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
@@ -94,6 +94,7 @@ type ClientRow = {
   userId: string
   email: string
   fullName: string
+  avatarUrl?: string
   petCount: number
 }
 
@@ -147,15 +148,6 @@ const kanbanColumns = computed(() => [
     items: filtered.value.filter((c) => c.petCount > 1),
   },
 ])
-
-function initials(name: string) {
-  return (name || '?')
-    .split(' ')
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
 
 onMounted(async () => {
   const res: any = await $fetch('/api/clients')

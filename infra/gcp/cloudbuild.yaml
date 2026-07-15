@@ -1,46 +1,129 @@
 substitutions:
   _AR_REGION: europe-west1
   _RUN_REGION: europe-west9
+  _AR_REPO: petsfollow
+  _SERVICE_ACCOUNT: petsfollow-run
   _VPC_CONNECTOR: premedica-connector
   _CLOUDSQL_INSTANCE: premedica-prod-2025:europe-west9:premedica-db-staging
+  _API_SERVICE: petsfollow-api
+  _FRONTEND_SERVICE: petsfollow-nuxtjs
+  _SKIP_MIGRATE: "false"
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - name: gcr.io/kaniko-project/executor:latest
+  - id: build-api
+    name: gcr.io/kaniko-project/executor:latest
     args:
-      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
-      - --context=go
-      - --dockerfile=../deploy/Dockerfile.api
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:latest
+      - --cache=true
+      - --context=dir://.
+      - --dockerfile=deploy/Dockerfile.api
 
-  - name: gcr.io/kaniko-project/executor:latest
+  - id: build-frontend
+    name: gcr.io/kaniko-project/executor:latest
     args:
-      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA
-      - --context=.
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:latest
+      - --cache=true
+      - --context=dir://.
       - --dockerfile=deploy/Dockerfile.nuxtjs
 
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
+  - id: migrate
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
     args:
-      - run
-      - deploy
-      - petsfollow-api
-      - --image=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
-      - --region=${_RUN_REGION}
-      - --platform=managed
-      - --vpc-connector=${_VPC_CONNECTOR}
-      - --set-cloudsql-instances=${_CLOUDSQL_INSTANCE}
-      - --allow-unauthenticated
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_SKIP_MIGRATE}" == "true" ]]; then
+          echo "→ Migrations ignorées (_SKIP_MIGRATE=true)"
+          exit 0
+        fi
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID"
+        SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
+        CONNECTOR="projects/$PROJECT_ID/locations/${_RUN_REGION}/connectors/${_VPC_CONNECTOR}"
+        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/deploy-run-args.sh
+        export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        ENV_FILE="$$(mktemp)"
+        pf_write_api_env_file "$$ENV_FILE"
+        MIGRATE_SECRETS="$$(pf_migrate_secrets)"
+        gcloud run jobs deploy petsfollow-migrate \
+          --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
+          --service-account="$$SA" \
+          --set-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
+          --vpc-connector="$$CONNECTOR" --vpc-egress=private-ranges-only \
+          --env-vars-file="$$ENV_FILE" \
+          --set-secrets="$$MIGRATE_SECRETS" \
+          --command=/app/petsfollow-api --args=migrate \
+          --memory=512Mi --cpu=1 --task-timeout=600 --max-retries=0 --quiet
+        gcloud run jobs execute petsfollow-migrate \
+          --project="$PROJECT_ID" --region="${_RUN_REGION}" --wait --quiet
+    waitFor: ["build-api"]
 
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
+  - id: deploy-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
     args:
-      - run
-      - deploy
-      - petsfollow-nuxtjs
-      - --image=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA
-      - --region=${_RUN_REGION}
-      - --platform=managed
-      - --allow-unauthenticated
+      - -c
+      - |
+        set -euo pipefail
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID"
+        SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
+        CONNECTOR="projects/$PROJECT_ID/locations/${_RUN_REGION}/connectors/${_VPC_CONNECTOR}"
+        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/deploy-run-args.sh
+        export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        ENV_FILE="$$(mktemp)"
+        pf_write_api_env_file "$$ENV_FILE"
+        SECRETS="$$(pf_api_secrets)"
+        gcloud run deploy ${_API_SERVICE} \
+          --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
+          --service-account="$$SA" --allow-unauthenticated --port=8080 \
+          --memory=1Gi --cpu=1 --concurrency=80 --min-instances=0 --max-instances=10 --timeout=300 \
+          --set-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
+          --vpc-connector="$$CONNECTOR" --vpc-egress=private-ranges-only \
+          --env-vars-file="$$ENV_FILE" \
+          --set-secrets="$$SECRETS" \
+          --quiet
+        gcloud run services add-iam-policy-binding ${_API_SERVICE} \
+          --project="$PROJECT_ID" --region="${_RUN_REGION}" \
+          --member=allUsers --role=roles/run.invoker \
+          --quiet 2>/dev/null || true
+        gcloud run services describe ${_API_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
+    waitFor: ["migrate"]
+
+  - id: deploy-frontend
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID"
+        SA="${_SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com"
+        source infra/gcp/lib/gcp-env.sh
+        source infra/gcp/lib/deploy-run-args.sh
+        export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        ENV_FILE="$$(mktemp)"
+        pf_write_frontend_env_file "$$ENV_FILE" "${PUBLIC_API_URL}"
+        gcloud run deploy ${_FRONTEND_SERVICE} \
+          --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
+          --service-account="$$SA" --allow-unauthenticated --port=3000 \
+          --memory=512Mi --cpu=1 --concurrency=80 --min-instances=0 --max-instances=10 --timeout=300 \
+          --env-vars-file="$$ENV_FILE" \
+          --quiet
+        gcloud run services add-iam-policy-binding ${_FRONTEND_SERVICE} \
+          --project="$PROJECT_ID" --region="${_RUN_REGION}" \
+          --member=allUsers --role=roles/run.invoker \
+          --quiet 2>/dev/null || true
+        gcloud run services describe ${_FRONTEND_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
+    waitFor: ["build-frontend", "deploy-api"]
 
 images:
-  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
-  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/api:$BUILD_ID
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/nuxtjs:$BUILD_ID

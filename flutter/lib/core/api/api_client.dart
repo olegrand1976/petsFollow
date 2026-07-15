@@ -22,6 +22,10 @@ class ApiClient {
           options.headers['Authorization'] = 'Bearer $token';
         }
         options.headers['Accept-Language'] = LocaleController.instance.languageCode;
+        if (options.data is FormData) {
+          options.headers.remove(Headers.contentTypeHeader);
+          options.contentType = null;
+        }
         handler.next(options);
       },
     ));
@@ -68,6 +72,22 @@ class ApiClient {
 
   Future<Map<String, dynamic>> updateMe(String fullName) async {
     final res = await dio.patch('/api/v1/me', data: {'fullName': fullName});
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> uploadAvatar(String filePath) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: 'avatar.jpg'),
+    });
+    final res = await dio.post('/api/v1/me/avatar', data: form);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> uploadPetPhoto(String petId, String filePath) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: 'photo.jpg'),
+    });
+    final res = await dio.post('/api/v1/pets/$petId/photo', data: form);
     return res.data['data'] as Map<String, dynamic>;
   }
 
