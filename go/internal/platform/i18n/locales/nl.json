@@ -87,9 +87,19 @@
     "password_reset_expiry": "Deze link verloopt over 1 uur.",
     "password_reset_disclaimer": "Als u deze reset niet heeft aangevraagd, negeer deze e-mail. Uw wachtwoord blijft ongewijzigd.",
     "heartrate_validated_subject": "petsFollow Pro — Hartslagmeting gevalideerd",
-    "heartrate_validated_body": "<p>Hartslagmeting gevalideerd voor een patiënt.</p><p>BPM: {bpm}</p>",
+    "heartrate_validated_tagline": "Veterinaire hartopvolging",
+    "heartrate_validated_preheader": "Een hartslagmeting werd gevalideerd — BPM {bpm}.",
+    "heartrate_validated_greeting": "Hallo,",
+    "heartrate_validated_intro": "Een hartslagmeting werd gevalideerd voor een patiënt. BPM: {bpm}.",
+    "heartrate_validated_disclaimer": "Meld u aan bij petsFollow Pro om het patiëntendossier te raadplegen.",
     "new_message_subject": "petsFollow Pro — Nieuw bericht",
-    "new_message_body": "<p>Nieuw klantbericht.</p><p>{body}</p>"
+    "new_message_tagline": "Beveiligde berichtgeving",
+    "new_message_preheader": "U heeft een nieuw klantbericht ontvangen.",
+    "new_message_greeting": "Hallo,",
+    "new_message_intro": "U heeft een nieuw bericht van een klant ontvangen.",
+    "new_message_disclaimer": "Meld u aan bij petsFollow Pro om te antwoorden.",
+    "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
+    "footer_visit_llit": "Bezoek LL-IT Software & Computer"
   },
   "billing": {
     "annual_label": "25 € / jaar",

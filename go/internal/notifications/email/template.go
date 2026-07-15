@@ -3,6 +3,7 @@ package email
 import (
 	"fmt"
 	"html"
+	"strings"
 )
 
 const (
@@ -18,19 +19,29 @@ const (
 	emailMaxWidth = 600
 )
 
-type confirmRegistrationContent struct {
-	Lang        string
-	Tagline     string
-	Greeting    string
-	Intro       string
-	CTALabel    string
-	Expiry      string
-	Disclaimer  string
-	Preheader   string
-	ConfirmURL  string
+type brandAssets struct {
+	LLITLogoURL    string
+	LLITWebsiteURL string
+	SiteURL        string
 }
 
-func renderConfirmRegistration(c confirmRegistrationContent) string {
+type brandedEmailContent struct {
+	Lang            string
+	Tagline         string
+	Greeting        string
+	Intro           string
+	Detail          string // optional plain-text block (e.g. message preview)
+	CTALabel        string
+	CTAURL          string
+	Expiry          string
+	Disclaimer      string
+	Preheader       string
+	FooterPoweredBy string
+	FooterVisit     string
+	Brand           brandAssets
+}
+
+func renderBrandedEmail(c brandedEmailContent) string {
 	lang := html.EscapeString(c.Lang)
 	if lang == "" {
 		lang = "fr"
@@ -38,11 +49,49 @@ func renderConfirmRegistration(c confirmRegistrationContent) string {
 	tagline := html.EscapeString(c.Tagline)
 	greeting := html.EscapeString(c.Greeting)
 	intro := html.EscapeString(c.Intro)
+	detail := html.EscapeString(c.Detail)
 	ctaLabel := html.EscapeString(c.CTALabel)
+	ctaURL := html.EscapeString(c.CTAURL)
 	expiry := html.EscapeString(c.Expiry)
 	disclaimer := html.EscapeString(c.Disclaimer)
 	preheader := html.EscapeString(c.Preheader)
-	confirmURL := html.EscapeString(c.ConfirmURL)
+	footerPowered := html.EscapeString(c.FooterPoweredBy)
+	footerVisit := html.EscapeString(c.FooterVisit)
+	llitLogo := html.EscapeString(c.Brand.LLITLogoURL)
+	llitURL := html.EscapeString(c.Brand.LLITWebsiteURL)
+	siteURL := html.EscapeString(c.Brand.SiteURL)
+
+	ctaBlock := ""
+	if c.CTAURL != "" && c.CTALabel != "" {
+		ctaBlock = fmt.Sprintf(`
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 28px;">
+                <tr>
+                  <td align="center" style="background-color:%s;border-radius:8px;">
+                    <a href="%s" target="_blank" style="display:inline-block;padding:15px 36px;font-size:16px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;mso-padding-alt:0;">%s</a>
+                  </td>
+                </tr>
+              </table>`, colorAccent, ctaURL, ctaLabel)
+	}
+
+	detailBlock := ""
+	if strings.TrimSpace(c.Detail) != "" {
+		detailBlock = fmt.Sprintf(`
+              <div style="margin:0 0 28px;padding:16px 18px;background-color:%s;border:1px solid %s;border-radius:8px;font-size:15px;line-height:1.6;color:%s;text-align:left;white-space:pre-wrap;">%s</div>`,
+			colorBg, colorBorder, colorText, detail)
+	}
+
+	expiryBlock := ""
+	if strings.TrimSpace(c.Expiry) != "" {
+		expiryBlock = fmt.Sprintf(`<p style="margin:0;font-size:14px;line-height:1.55;color:%s;text-align:center;">%s</p>`, colorMuted, expiry)
+	}
+
+	llitLogoBlock := ""
+	if c.Brand.LLITLogoURL != "" {
+		llitLogoBlock = fmt.Sprintf(`
+              <a href="%s" target="_blank" style="display:inline-block;margin:18px 0 8px;text-decoration:none;">
+                <img src="%s" alt="LL-IT Software &amp; Computer" width="160" style="display:block;width:160px;max-width:70%%;height:auto;border:0;margin:0 auto;" />
+              </a>`, llitURL, llitLogo)
+	}
 
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="%s">
@@ -76,20 +125,24 @@ func renderConfirmRegistration(c confirmRegistrationContent) string {
             <td style="background-color:%s;padding:40px;border-left:1px solid %s;border-right:1px solid %s;">
               <p style="margin:0 0 12px;font-size:20px;font-weight:600;color:%s;line-height:1.3;">%s</p>
               <p style="margin:0 0 28px;font-size:16px;line-height:1.65;color:%s;">%s</p>
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 28px;">
-                <tr>
-                  <td align="center" style="background-color:%s;border-radius:8px;">
-                    <a href="%s" target="_blank" style="display:inline-block;padding:15px 36px;font-size:16px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;mso-padding-alt:0;">%s</a>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0;font-size:14px;line-height:1.55;color:%s;text-align:center;">%s</p>
+              %s
+              %s
+              %s
             </td>
           </tr>
           <tr>
             <td style="background-color:%s;border:1px solid %s;border-top:none;border-radius:0 0 12px 12px;padding:28px 40px;text-align:center;">
               <p style="margin:0;font-size:13px;line-height:1.55;color:%s;">%s</p>
-              <p style="margin:16px 0 0;font-size:12px;color:%s;">petsFollow &mdash; LL-IT-SC</p>
+              %s
+              <p style="margin:8px 0 0;font-size:12px;color:%s;">%s</p>
+              <p style="margin:6px 0 0;font-size:12px;color:%s;">
+                <a href="%s" target="_blank" style="color:%s;text-decoration:none;">%s</a>
+              </p>
+              <p style="margin:10px 0 0;font-size:12px;color:%s;">
+                <a href="%s" target="_blank" style="color:%s;text-decoration:underline;">petsFollow</a>
+                &nbsp;&middot;&nbsp;
+                <a href="%s" target="_blank" style="color:%s;text-decoration:underline;">LL-IT Software &amp; Computer</a>
+              </p>
             </td>
           </tr>
         </table>
@@ -107,10 +160,47 @@ func renderConfirmRegistration(c confirmRegistrationContent) string {
 		colorSurface, colorBorder, colorBorder,
 		colorText, greeting,
 		colorText, intro,
-		colorAccent, confirmURL, ctaLabel,
-		colorMuted, expiry,
+		detailBlock,
+		ctaBlock,
+		expiryBlock,
 		colorBg, colorBorder,
 		colorMuted, disclaimer,
-		colorMuted,
+		llitLogoBlock,
+		colorMuted, footerPowered,
+		colorMuted, llitURL, colorAccent, footerVisit,
+		colorMuted, siteURL, colorMuted, llitURL, colorMuted,
 	)
+}
+
+// Deprecated alias kept for older tests — prefer renderBrandedEmail.
+func renderConfirmRegistration(c confirmRegistrationContent) string {
+	return renderBrandedEmail(brandedEmailContent{
+		Lang:       c.Lang,
+		Tagline:    c.Tagline,
+		Greeting:   c.Greeting,
+		Intro:      c.Intro,
+		CTALabel:   c.CTALabel,
+		CTAURL:     c.ConfirmURL,
+		Expiry:     c.Expiry,
+		Disclaimer: c.Disclaimer,
+		Preheader:  c.Preheader,
+		FooterPoweredBy: "petsFollow — LL-IT Software & Computer",
+		FooterVisit:     "Visit LL-IT Software & Computer",
+		Brand: brandAssets{
+			LLITWebsiteURL: "https://ll-it-sc.be",
+			SiteURL:        "https://petsfollow.ll-it-sc.be",
+		},
+	})
+}
+
+type confirmRegistrationContent struct {
+	Lang       string
+	Tagline    string
+	Greeting   string
+	Intro      string
+	CTALabel   string
+	Expiry     string
+	Disclaimer string
+	Preheader  string
+	ConfirmURL string
 }

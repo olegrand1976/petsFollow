@@ -39,6 +39,7 @@ type Config struct {
 	GoogleOAuthClientID             string
 	GCSMediaBucket                  string
 	MediaLocalDir                   string
+	LLITWebsiteURL                  string
 }
 
 func Load() Config {
@@ -75,6 +76,7 @@ func Load() Config {
 		GoogleOAuthClientID:            envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
 		GCSMediaBucket:                 envOr("GCS_MEDIA_BUCKET", ""),
 		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
+		LLITWebsiteURL:                 envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
 	}
 }
 

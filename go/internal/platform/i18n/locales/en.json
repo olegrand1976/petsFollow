@@ -87,9 +87,19 @@
     "password_reset_expiry": "This link expires in 1 hour.",
     "password_reset_disclaimer": "If you did not request this reset, ignore this email. Your password remains unchanged.",
     "heartrate_validated_subject": "petsFollow Pro — Heart rate reading validated",
-    "heartrate_validated_body": "<p>Heart rate reading validated for a patient.</p><p>BPM: {bpm}</p>",
+    "heartrate_validated_tagline": "Veterinary cardiac monitoring",
+    "heartrate_validated_preheader": "A heart rate reading was validated — BPM {bpm}.",
+    "heartrate_validated_greeting": "Hello,",
+    "heartrate_validated_intro": "A heart rate reading was validated for a patient. BPM: {bpm}.",
+    "heartrate_validated_disclaimer": "Sign in to petsFollow Pro to review the patient record.",
     "new_message_subject": "petsFollow Pro — New message",
-    "new_message_body": "<p>New client message.</p><p>{body}</p>"
+    "new_message_tagline": "Secure messaging",
+    "new_message_preheader": "You received a new client message.",
+    "new_message_greeting": "Hello,",
+    "new_message_intro": "You received a new message from a client.",
+    "new_message_disclaimer": "Sign in to petsFollow Pro to reply.",
+    "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
+    "footer_visit_llit": "Visit LL-IT Software & Computer"
   },
   "billing": {
     "annual_label": "€25 / year",

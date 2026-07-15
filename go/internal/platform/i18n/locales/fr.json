@@ -87,9 +87,19 @@
     "password_reset_expiry": "Ce lien expire dans 1 heure.",
     "password_reset_disclaimer": "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe reste inchangé.",
     "heartrate_validated_subject": "petsFollow Pro — Relevé cardiaque validé",
-    "heartrate_validated_body": "<p>Relevé cardiaque validé pour un patient.</p><p>BPM : {bpm}</p>",
+    "heartrate_validated_tagline": "Suivi cardiaque vétérinaire",
+    "heartrate_validated_preheader": "Un relevé cardiaque a été validé — BPM {bpm}.",
+    "heartrate_validated_greeting": "Bonjour,",
+    "heartrate_validated_intro": "Un relevé cardiaque a été validé pour un patient. BPM : {bpm}.",
+    "heartrate_validated_disclaimer": "Connectez-vous à petsFollow Pro pour consulter le dossier patient.",
     "new_message_subject": "petsFollow Pro — Nouveau message",
-    "new_message_body": "<p>Nouveau message client.</p><p>{body}</p>"
+    "new_message_tagline": "Messagerie sécurisée",
+    "new_message_preheader": "Vous avez reçu un nouveau message client.",
+    "new_message_greeting": "Bonjour,",
+    "new_message_intro": "Vous avez reçu un nouveau message de la part d'un client.",
+    "new_message_disclaimer": "Connectez-vous à petsFollow Pro pour répondre.",
+    "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
+    "footer_visit_llit": "Visiter le site LL-IT Software & Computer"
   },
   "billing": {
     "annual_label": "25 € / an",
