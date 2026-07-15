@@ -228,15 +228,23 @@ func (s *Service) handleCheckoutCompleted(ctx context.Context, event StripeEvent
 	if ownerUserID != "" && customerID != "" {
 		_ = s.store.UpsertStripeCustomer(ctx, ownerUserID, customerID)
 	}
-	return s.store.ActivateEntitlement(ctx, store.ActivateEntitlementParams{
-		PetID:                  petID,
-		Status:                 string(StatusActive),
-		ValidFrom:              now,
-		ValidUntil:             validUntil,
-		StripeCheckoutSession:  sessionID,
-		StripePaymentIntent:    piID,
-		StripeSubscription:     subID,
-	})
+	if err := s.store.ActivateEntitlement(ctx, store.ActivateEntitlementParams{
+		PetID:                 petID,
+		Status:                string(StatusActive),
+		ValidFrom:             now,
+		ValidUntil:            validUntil,
+		StripeCheckoutSession: sessionID,
+		StripePaymentIntent:   piID,
+		StripeSubscription:    subID,
+	}); err != nil {
+		return err
+	}
+	_ = s.store.EnsureDefaultCommissionTiers(ctx)
+	// Accrual must not fail the Stripe webhook once entitlement is active.
+	if err := s.store.AccrueCommissionForPetActivation(ctx, petID); err != nil {
+		fmt.Printf("commission accrual failed for pet %s: %v\n", petID, err)
+	}
+	return nil
 }
 
 func (s *Service) handleInvoicePaid(ctx context.Context, event StripeEvent) error {

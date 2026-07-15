@@ -93,7 +93,7 @@ async function goPrimary() {
     }
     await navigateTo(data.role === 'admin' ? '/admin' : '/dashboard')
   } catch {
-    await navigateTo('/onboarding')
+    await navigateTo('/login')
   }
 }
 </script>

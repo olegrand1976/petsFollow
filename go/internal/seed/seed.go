@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,6 +48,13 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		WHERE email = 'client.marie@petsfollow.test'`); err != nil {
 		return err
 	}
+	st := store.New(pool)
+	if err := st.EnsureDefaultCommissionTiers(ctx); err != nil {
+		return err
+	}
+	if err := st.AccrueAllActiveEntitlements(ctx); err != nil {
+		return err
+	}
 	logSummary()
 	return nil
 }
@@ -55,7 +63,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	_, err := tx.Exec(ctx, `TRUNCATE billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
+	_, err := tx.Exec(ctx, `TRUNCATE billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
+		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
 		identity.email_verification_tokens,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
