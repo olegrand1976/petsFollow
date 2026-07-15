@@ -1,0 +1,46 @@
+substitutions:
+  _AR_REGION: europe-west1
+  _RUN_REGION: europe-west9
+  _VPC_CONNECTOR: premedica-connector
+  _CLOUDSQL_INSTANCE: premedica-prod-2025:europe-west9:premedica-db-staging
+
+steps:
+  - name: gcr.io/kaniko-project/executor:latest
+    args:
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
+      - --context=go
+      - --dockerfile=../deploy/Dockerfile.api
+
+  - name: gcr.io/kaniko-project/executor:latest
+    args:
+      - --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA
+      - --context=.
+      - --dockerfile=deploy/Dockerfile.nuxtjs
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - petsfollow-api
+      - --image=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
+      - --region=${_RUN_REGION}
+      - --platform=managed
+      - --vpc-connector=${_VPC_CONNECTOR}
+      - --set-cloudsql-instances=${_CLOUDSQL_INSTANCE}
+      - --allow-unauthenticated
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - petsfollow-nuxtjs
+      - --image=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA
+      - --region=${_RUN_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+
+images:
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/api:$SHORT_SHA
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/petsfollow/nuxtjs:$SHORT_SHA

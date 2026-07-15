@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: petsfollow
+      POSTGRES_PASSWORD: petsfollow
+      POSTGRES_DB: petsfollow_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petsfollow -d petsfollow_test"]
+      interval: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    tmpfs:
+      - /data
+    ports:
+      - "6383:6379"

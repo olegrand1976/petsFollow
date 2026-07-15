@@ -1,0 +1,12 @@
+.env
+node_modules/
+.nuxt/
+.output/
+dist/
+go/bin/
+*.exe
+.DS_Store
+flutter/.dart_tool/
+flutter/build/
+.idea/
+.vscode/

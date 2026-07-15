@@ -1,0 +1,76 @@
+.pro-field {
+  margin-bottom: 1.25rem;
+}
+
+.pro-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+}
+
+.pro-input,
+.pro-select,
+.pro-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--pf-vet-text);
+  background: var(--pf-vet-surface);
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pro-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.pro-input:focus,
+.pro-select:focus,
+.pro-textarea:focus {
+  border-color: var(--pf-vet-accent);
+  box-shadow: var(--pf-vet-focus-ring);
+  outline: none;
+}
+
+.pro-input--error,
+.pro-select--error {
+  border-color: var(--pf-vet-alert);
+}
+
+.pro-field-error {
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--pf-vet-alert);
+  font-weight: 600;
+}
+
+.pro-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: var(--pf-vet-bg);
+  border-radius: var(--pf-vet-radius-lg);
+  border: 1px solid var(--pf-vet-border);
+}
+
+.pro-toggle-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--pf-vet-radius);
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-toggle-btn--active {
+  background: var(--pf-vet-surface);
+  color: var(--pf-vet-primary);
+  box-shadow: var(--pf-vet-shadow-sm);
+}

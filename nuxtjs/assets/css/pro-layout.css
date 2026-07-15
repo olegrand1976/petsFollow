@@ -1,0 +1,228 @@
+.pro-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.pro-app-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--pf-vet-gradient-main, var(--pf-vet-bg));
+}
+
+.pro-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--pf-vet-border);
+}
+
+.pro-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.pro-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pro-topbar__dropdown-wrap {
+  position: relative;
+}
+
+.pro-topbar__icon-btn,
+.pro-topbar__profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius-lg);
+  background: var(--pf-vet-surface);
+  color: var(--pf-vet-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.pro-topbar__icon-btn:hover,
+.pro-topbar__profile-btn:hover {
+  background: var(--pf-vet-bg);
+  box-shadow: var(--pf-vet-shadow-sm);
+}
+
+.pro-topbar__badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--pf-vet-alert);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pro-topbar__icon-btn {
+  position: relative;
+}
+
+.pro-topbar__profile-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pro-topbar__dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: 260px;
+  padding: 0.75rem;
+  background: var(--pf-vet-surface);
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius-lg);
+  box-shadow: var(--pf-vet-shadow-md);
+}
+
+.pro-topbar__dropdown-title {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  color: var(--pf-vet-primary);
+}
+
+.pro-topbar__dropdown-email {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-topbar__dropdown-link {
+  display: block;
+  padding: 0.5rem 0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pro-topbar__dropdown-link:hover {
+  text-decoration: underline;
+}
+
+.pro-topbar__notif-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.pro-topbar__notif-list a {
+  display: block;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.pro-topbar__notif-preview {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--pf-vet-text-muted);
+  font-weight: 400;
+}
+
+.pro-topbar__notif-list a:hover {
+  text-decoration: underline;
+}
+
+.pro-topbar__logout-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius);
+  background: transparent;
+  color: var(--pf-vet-alert);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pro-topbar__logout-btn:hover {
+  background: rgba(231, 111, 81, 0.08);
+}
+
+.pro-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.pro-main {
+  flex: 1;
+  padding: 1.5rem 2rem 2rem;
+  max-width: calc(var(--pf-vet-content-max) + 4rem);
+}
+
+.pro-main-inner {
+  max-width: var(--pf-vet-content-max);
+}
+
+.pro-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-breadcrumb a {
+  color: var(--pf-vet-accent);
+  text-decoration: none;
+}
+
+.pro-breadcrumb a:hover { text-decoration: underline; }
+
+.pro-breadcrumb-sep { opacity: 0.5; }
+
+.pro-mt-lg { margin-top: 1.5rem; }
+.pro-flex-gap { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.pro-field-inline { max-width: 320px; margin-bottom: 0; }
+.pro-field-spaced { margin-top: 1.25rem; }
+.pro-field-inline-wrap {
+  margin-bottom: 1rem;
+}
+
+.pro-pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 960px) {
+  .pro-app { flex-direction: column; }
+  .pro-main { padding: 1rem 1.25rem 1.5rem; }
+  .pro-topbar { padding: 0.65rem 1rem; }
+  .pro-topbar__profile-name { display: none; }
+}

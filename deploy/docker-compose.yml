@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: petsfollow
+      POSTGRES_PASSWORD: petsfollow
+      POSTGRES_DB: petsfollow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petsfollow -d petsfollow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${PETSFOLLOW_DB_PORT:-5435}:5432"
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "${PETSFOLLOW_REDIS_PORT:-6382}:6379"
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "${PETSFOLLOW_MAILHOG_SMTP_PORT:-1027}:1025"
+      - "${PETSFOLLOW_MAILHOG_UI_PORT:-8027}:8025"
+
+  migrate:
+    build:
+      context: ../go
+      dockerfile: ../deploy/Dockerfile.api
+    command: ["migrate"]
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://petsfollow:petsfollow@db:5432/petsfollow?sslmode=disable
+      MIGRATE_ON_BOOT: "true"
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../go
+      dockerfile: ../deploy/Dockerfile.api
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://petsfollow:petsfollow@db:5432/petsfollow?sslmode=disable
+      REDIS_ADDR: redis:6379
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      HTTP_ADDR: ":8080"
+      MIGRATE_ON_BOOT: "true"
+      DEV_SEED_ENABLED: "true"
+    ports:
+      - "${PETSFOLLOW_API_PORT:-8291}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  nuxtjs:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.nuxtjs
+    environment:
+      NUXT_PUBLIC_API_BASE: http://api:8080
+      NITRO_PORT: "3000"
+    ports:
+      - "${PETSFOLLOW_NUXTJS_PORT:-3002}:3000"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:
