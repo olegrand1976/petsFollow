@@ -26,10 +26,12 @@ type PracticeProfile struct {
 }
 
 type RegisterVetInput struct {
-	Email        string
-	Password     string
-	FullName     string
-	PracticeName string
+	Email            string
+	Password         string
+	FullName         string
+	PracticeName     string
+	PreferredLocale  string
+	AutoReplyDefault string
 }
 
 type RegisterVetResult struct {
@@ -121,15 +123,19 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 		return RegisterVetResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id)
-		VALUES ($1, $2, $3, $4, 'vet', $5)`,
-		userID, in.Email, string(hash), in.FullName, practiceID); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale)
+		VALUES ($1, $2, $3, $4, 'vet', $5, $6)`,
+		userID, in.Email, string(hash), in.FullName, practiceID, in.PreferredLocale); err != nil {
 		return RegisterVetResult{}, err
+	}
+	autoReply := in.AutoReplyDefault
+	if autoReply == "" {
+		autoReply = "Je suis indisponible, je reviens vers vous rapidement."
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.vet_availability (vet_user_id, practice_id, status, auto_reply)
-		VALUES ($1, $2, 'available', 'Je suis indisponible, je reviens vers vous rapidement.')`,
-		userID, practiceID); err != nil {
+		VALUES ($1, $2, 'available', $3)`,
+		userID, practiceID, autoReply); err != nil {
 		return RegisterVetResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -201,6 +207,7 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"authProvider":     u.AuthProvider,
 		"googleLinked":     u.GoogleSub != "",
 		"twoFactorEnabled": u.TOTPEnabled,
+		"preferredLocale":  u.PreferredLocale,
 	}
 	if u.PracticeID != "" {
 		out["practiceId"] = u.PracticeID

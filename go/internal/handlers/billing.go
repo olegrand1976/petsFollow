@@ -21,6 +21,7 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 	}
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
+		pr.Use(a.localeFromUserMiddleware)
 		pr.Post("/pets/{petID}/billing/checkout", a.resumePetCheckout)
 		pr.Post("/pets/{petID}/billing/portal", a.petBillingPortal)
 		pr.Get("/pets/{petID}/entitlement", a.getPetEntitlement)
@@ -28,9 +29,10 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 }
 
 func (a *API) listBillingPlans(w http.ResponseWriter, r *http.Request) {
-	plans := a.billing.ListPlans()
+	locale := localeOf(r)
+	plans := a.billing.ListPlansForLocale(locale)
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"plans":       billing.AllPlans(),
+		"plans":       billing.AllPlansForLocale(locale),
 		"offers":      plans,
 		"recommended": billing.PlanTriennial,
 		"defaultMode": billing.ModeSubscription,
@@ -47,18 +49,18 @@ type createPetBilling struct {
 func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pet store.Pet, owner authx.Identity, b createPetBilling) {
 	planCode, err := billing.ParsePlanCode(defaultStr(b.Plan, string(billing.PlanTriennial)))
 	if err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid plan")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
 		return
 	}
 	mode, err := billing.ParseBillingMode(defaultStr(b.BillingMode, string(billing.ModeSubscription)))
 	if err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid billing mode")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
 		return
 	}
 	plan, _ := billing.GetPlan(planCode)
 	_, err = a.store.CreateEntitlement(r.Context(), pet.ID, owner.UserID, string(planCode), string(mode), plan.AmountCents)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	u, _ := a.store.GetUserByID(r.Context(), owner.UserID)
@@ -72,7 +74,7 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 		CancelURL:   b.CancelURL,
 	})
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, map[string]any{
@@ -85,18 +87,18 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 func (a *API) resumePetCheckout(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	petID := chi.URLParam(r, "petID")
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil || pet.OwnerUserID != id.UserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not your pet")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
 	ent, err := a.store.GetEntitlementByPetID(r.Context(), petID)
 	if err != nil || ent.Status != string(billing.StatusPending) {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "no pending payment")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "no_pending_payment")
 		return
 	}
 	var body createPetBilling
@@ -112,7 +114,7 @@ func (a *API) resumePetCheckout(w http.ResponseWriter, r *http.Request) {
 		CancelURL:   body.CancelURL,
 	})
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"checkoutUrl": sess.URL, "sessionId": sess.ID})
@@ -121,18 +123,18 @@ func (a *API) resumePetCheckout(w http.ResponseWriter, r *http.Request) {
 func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	petID := chi.URLParam(r, "petID")
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil || pet.OwnerUserID != id.UserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not your pet")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
 	ent, err := a.store.GetEntitlementByPetID(r.Context(), petID)
 	if err != nil || ent.BillingMode != string(billing.ModeSubscription) {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "not a subscription")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "not_a_subscription")
 		return
 	}
 	var body struct {
@@ -141,7 +143,7 @@ func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 	_ = httpx.DecodeJSON(r, &body)
 	portal, err := a.billing.CreatePortalSession(r.Context(), id.UserID, body.ReturnURL)
 	if err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", err.Error())
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, portal)
@@ -152,20 +154,20 @@ func (a *API) getPetEntitlement(w http.ResponseWriter, r *http.Request) {
 	id, _ := authx.FromContext(r.Context())
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "pet not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
 	if id.Role == kernel.RoleClient && pet.OwnerUserID != id.UserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not your pet")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
 	if id.Role == kernel.RoleVet && pet.PracticeID != id.PracticeID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "wrong practice")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
 		return
 	}
 	ent, err := a.store.GetEntitlementByPetID(r.Context(), petID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "no entitlement")
+		writeErr(w, r, http.StatusNotFound, "not_found", "no_entitlement")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, ent)
@@ -174,11 +176,11 @@ func (a *API) getPetEntitlement(w http.ResponseWriter, r *http.Request) {
 func (a *API) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid body")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_body")
 		return
 	}
 	if err := a.billing.HandleWebhook(r.Context(), payload, r.Header.Get("Stripe-Signature")); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", err.Error())
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -192,11 +194,11 @@ func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 	billingMode := defaultStr(q.Get("billing_mode"), string(billing.ModeSubscription))
 	sessionID := defaultStr(q.Get("session_id"), "cs_mock_dev")
 	if petID == "" || ownerUserID == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "pet_id and owner_user_id required")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "pet_owner_required")
 		return
 	}
 	if err := a.billing.MockCompleteCheckout(r.Context(), petID, ownerUserID, planCode, billingMode, sessionID); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "completed", "petId": petID})
@@ -205,7 +207,7 @@ func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 func (a *API) requirePremiumAccess(w http.ResponseWriter, r *http.Request, petID string) bool {
 	ok, err := a.billing.PetHasPremiumAccess(r.Context(), petID)
 	if err != nil || !ok {
-		httpx.WriteError(w, http.StatusPaymentRequired, "payment_required", "active subscription required for this pet")
+		writeErr(w, r, http.StatusPaymentRequired, "payment_required", "payment_required")
 		return false
 	}
 	return true

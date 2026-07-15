@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
 
 type PlanCode string
@@ -53,11 +55,25 @@ type PlanOffer struct {
 }
 
 func AllPlans() []Plan {
+	return AllPlansForLocale("fr")
+}
+
+func AllPlansForLocale(locale string) []Plan {
+	locale = i18n.NormalizeLocale(locale)
 	return []Plan{
-		{Code: PlanAnnual, Label: "25 € / an", AmountCents: 2500, Currency: "eur", DurationDays: 365},
-		{Code: PlanTriennial, Label: "60 € / 3 ans", AmountCents: 6000, Currency: "eur", DurationDays: 1095, Recommended: true},
-		{Code: PlanQuinquennial, Label: "75 € / 5 ans", AmountCents: 7500, Currency: "eur", DurationDays: 1825},
+		{Code: PlanAnnual, Label: i18n.T(locale, "billing.annual_label", nil), AmountCents: 2500, Currency: "eur", DurationDays: 365},
+		{Code: PlanTriennial, Label: i18n.T(locale, "billing.triennial_label", nil), AmountCents: 6000, Currency: "eur", DurationDays: 1095, Recommended: true},
+		{Code: PlanQuinquennial, Label: i18n.T(locale, "billing.quinquennial_label", nil), AmountCents: 7500, Currency: "eur", DurationDays: 1825},
 	}
+}
+
+func GetPlanForLocale(code PlanCode, locale string) (Plan, error) {
+	for _, p := range AllPlansForLocale(locale) {
+		if p.Code == code {
+			return p, nil
+		}
+	}
+	return Plan{}, ErrInvalidPlan
 }
 
 func ParsePlanCode(s string) (PlanCode, error) {
@@ -88,26 +104,31 @@ func GetPlan(code PlanCode) (Plan, error) {
 }
 
 func PlanSummary(plan Plan, mode BillingMode) string {
+	return PlanSummaryForLocale(plan, mode, "fr")
+}
+
+func PlanSummaryForLocale(plan Plan, mode BillingMode, locale string) string {
+	locale = i18n.NormalizeLocale(locale)
 	switch mode {
 	case ModeSubscription:
 		switch plan.Code {
 		case PlanAnnual:
-			return "25 € / an, renouvelé automatiquement"
+			return i18n.T(locale, "billing.annual_sub_summary", nil)
 		case PlanTriennial:
-			return "60 € tous les 3 ans, renouvelé automatiquement"
+			return i18n.T(locale, "billing.triennial_sub_summary", nil)
 		case PlanQuinquennial:
-			return "75 € tous les 5 ans, renouvelé automatiquement"
+			return i18n.T(locale, "billing.quinquennial_sub_summary", nil)
 		default:
 			return plan.Label
 		}
 	default:
 		switch plan.Code {
 		case PlanAnnual:
-			return "25 € pour 1 an, paiement unique"
+			return i18n.T(locale, "billing.annual_onetime_summary", nil)
 		case PlanTriennial:
-			return "60 € pour 3 ans, paiement unique"
+			return i18n.T(locale, "billing.triennial_onetime_summary", nil)
 		case PlanQuinquennial:
-			return "75 € pour 5 ans, paiement unique"
+			return i18n.T(locale, "billing.quinquennial_onetime_summary", nil)
 		default:
 			return plan.Label
 		}

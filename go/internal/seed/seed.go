@@ -3,6 +3,7 @@ package seed
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,7 +39,11 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 			return fmt.Errorf("practice %q: %w", practice.name, err)
 		}
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	logSummary()
+	return nil
 }
 
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
@@ -73,16 +78,24 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 	}
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO practice.practices (id, name, phone, contact_email, address_line1, city, postal_code, profile_completed_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-		practiceID, p.name, p.phone, p.vetEmail, p.address, p.city, p.postalCode); err != nil {
+		INSERT INTO practice.practices (id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END)`,
+		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, $2, $3, $4, 'vet', $5, NOW())`,
-		vetID, p.vetEmail, string(vetHash), p.vetName, practiceID); err != nil {
+		VALUES ($1, $2, $3, $4, 'vet', $5, CASE WHEN $6 THEN NULL ELSE NOW() END)`,
+		vetID, p.vetEmail, string(vetHash), p.vetName, practiceID, p.pendingEmailVerify); err != nil {
 		return err
+	}
+	if p.pendingEmailVerify {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO identity.email_verification_tokens (id, user_id, token, expires_at)
+			VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
+			uuid.NewString(), vetID, demoEmailConfirmToken); err != nil {
+			return err
+		}
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO notifications.notification_preferences (vet_user_id, email_on_message, email_on_heartrate)
@@ -122,8 +135,8 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 	reg.clientIDs[c.email] = clientID
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id)
-		VALUES ($1, $2, $3, $4, 'client', $5)`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
+		VALUES ($1, $2, $3, $4, 'client', $5, NOW())`,
 		clientID, c.email, clientHash, c.fullName, reg.practiceID); err != nil {
 		return err
 	}
@@ -268,4 +281,20 @@ func insertDossierEvent(ctx context.Context, tx pgx.Tx, petID, authorID string, 
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		uuid.NewString(), petID, authorID, ev.eventType, ev.content, createdAt)
 	return err
+}
+
+func logSummary() {
+	log.Println("--- Comptes démo petsFollow ---")
+	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
+	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
+	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
+	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
+	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
+	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")
+	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
+	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
+	log.Println("  client.demo@     — Rex + Bella · client.vide@ sans animal (kanban)")
+	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
+	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
+	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
 }

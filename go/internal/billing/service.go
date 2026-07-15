@@ -30,13 +30,17 @@ func NewServiceWithGateway(st *store.Store, cfg config.Config, gw Gateway) *Serv
 }
 
 func (s *Service) ListPlans() []PlanOffer {
+	return s.ListPlansForLocale("fr")
+}
+
+func (s *Service) ListPlansForLocale(locale string) []PlanOffer {
 	var offers []PlanOffer
-	for _, plan := range AllPlans() {
+	for _, plan := range AllPlansForLocale(locale) {
 		for _, mode := range []BillingMode{ModeOneTime, ModeSubscription} {
 			offers = append(offers, PlanOffer{
 				Plan:        plan,
 				BillingMode: mode,
-				Summary:     PlanSummary(plan, mode),
+				Summary:     PlanSummaryForLocale(plan, mode, locale),
 			})
 		}
 	}

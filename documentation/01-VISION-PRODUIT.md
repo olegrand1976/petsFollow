@@ -19,7 +19,8 @@ Stripe, FCM push, documents GCS, rappels récurrents, WebSocket.
 
 ## Comptes seed
 
-| Rôle | Email | Mot de passe |
-|------|-------|--------------|
-| Véto | vet.demo@petsfollow.test | VetDemo123! |
-| Client | client.demo@petsfollow.test | ClientDemo123! |
+Voir [AGENTS.md](../AGENTS.md) pour la liste complète (5 vétos, 7 clients, admin).
+
+Mots de passe : `VetDemo123!` · `ClientDemo123!` · `AdminDemo123!`
+
+Parcours spéciaux : `vet.onboarding@` (profil incomplet), `vet.unverified@` + token `demo-confirm-email`, `client.vide@` (sans animal).

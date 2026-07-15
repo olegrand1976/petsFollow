@@ -30,6 +30,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 }
 
 func (a *API) Routes(r chi.Router) {
+	r.Use(httpx.LocaleMiddleware)
 	r.Post("/auth/login", a.login)
 	r.Post("/auth/register", a.register)
 	r.Post("/auth/confirm-email", a.confirmEmail)
@@ -40,7 +41,9 @@ func (a *API) Routes(r chi.Router) {
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
+		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/me", a.me)
+		pr.Patch("/me/locale", a.updateMeLocale)
 		pr.Get("/clients", a.listClients)
 		pr.Get("/clients/{clientID}", a.getClient)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
@@ -73,42 +76,42 @@ type loginReq struct {
 func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	u, err := a.store.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
 	if u.PasswordHash == "" {
-		httpx.WriteError(w, http.StatusUnauthorized, "use_google_sign_in", "connectez-vous avec Google")
+		writeErr(w, r, http.StatusUnauthorized, "use_google_sign_in", "use_google_sign_in")
 		return
 	}
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
 	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
-		httpx.WriteError(w, http.StatusForbidden, "email_not_verified", "confirmez votre email avant de vous connecter")
+		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
-	a.issueLoginResponse(w, u)
+	a.issueLoginResponse(w, r, u)
 }
 
 func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "not_implemented", "use login in MVP")
+	writeErr(w, r, http.StatusNotImplemented, "not_implemented", "not_implemented")
 }
 
 func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	data, err := a.store.GetUserMe(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, data)
@@ -117,12 +120,12 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 func (a *API) listClients(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	clients, err := a.store.ListClientsByPractice(r.Context(), id.PracticeID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, clients)
@@ -131,16 +134,16 @@ func (a *API) listClients(w http.ResponseWriter, r *http.Request) {
 func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			httpx.WriteError(w, http.StatusNotFound, "not_found", "client not found")
+			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
 			return
 		}
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, client)
@@ -149,12 +152,12 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 func (a *API) listClientPets(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	pets, err := a.store.ListPetsByClientForVet(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pets)
@@ -163,12 +166,12 @@ func (a *API) listClientPets(w http.ResponseWriter, r *http.Request) {
 func (a *API) listMyPets(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	pets, err := a.store.ListPetsByOwner(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pets)
@@ -190,12 +193,12 @@ type petReq struct {
 func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	p := store.Pet{Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment"}
@@ -206,7 +209,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	}
 	created, err := a.store.CreatePet(r.Context(), p)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
@@ -217,12 +220,12 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	p := store.Pet{ID: chi.URLParam(r, "petID"), Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID}
@@ -232,7 +235,7 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if err := a.store.UpdatePet(r.Context(), p); err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "pet not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "updated"})
@@ -241,16 +244,16 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 func (a *API) getPet(w http.ResponseWriter, r *http.Request) {
 	pet, err := a.store.GetPet(r.Context(), chi.URLParam(r, "petID"))
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "pet not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
 	if id.Role == kernel.RoleClient && pet.OwnerUserID != id.UserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not your pet")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
 	if id.Role == kernel.RoleVet && pet.PracticeID != id.PracticeID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "wrong practice")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pet)
@@ -261,7 +264,7 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 	vetView := id.Role == kernel.RoleVet
 	items, err := a.store.PetTimeline(r.Context(), chi.URLParam(r, "petID"), vetView)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, items)
@@ -270,12 +273,12 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	pet, err := a.store.GetPet(r.Context(), chi.URLParam(r, "petID"))
 	if err != nil || pet.OwnerUserID != id.UserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not your pet")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
 	if !a.requirePremiumAccess(w, r, pet.ID) {
@@ -283,7 +286,7 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 	}
 	sess, err := a.store.StartHeartRateSession(r.Context(), pet.ID, id.UserID, pet.PracticeID, a.cfg.HeartRateSeconds)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, sess)
@@ -296,19 +299,19 @@ type completeHRReq struct {
 func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	var req completeHRReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	bpm := kernel.CalculateBPM(req.TapCount, a.cfg.HeartRateSeconds)
 	alert := kernel.IsHeartRateAlert(bpm, a.cfg.HeartRateMinBPM, a.cfg.HeartRateMaxBPM)
 	sess, err := a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "session not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
@@ -317,21 +320,23 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	sess, err := a.store.ValidateHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "session not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
 	}
 	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
 	onMsg, onHR, _ := a.store.EmailPrefs(r.Context(), vetID)
 	if onHR {
 		vet, _ := a.store.GetUserByID(r.Context(), vetID)
-		subject := "petsFollow Pro — Relevé cardiaque validé"
-		body := fmt.Sprintf("<p>Relevé cardiaque validé pour un patient.</p><p>BPM: %d</p>", *sess.BPM)
-		_ = a.notifier.SendVetAlert(vet.Email, subject, body)
+		locale := vet.PreferredLocale
+		if locale == "" {
+			locale = localeOf(r)
+		}
+		_ = a.notifier.SendHeartrateValidated(vet.Email, locale, *sess.BPM)
 		_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": sess.BPM})
 		_ = onMsg
 	}
@@ -341,11 +346,11 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 func (a *API) cancelHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "client only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
 	if err := a.store.CancelHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID); err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "session not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "cancelled"})
@@ -356,7 +361,7 @@ func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
 	vetView := id.Role == kernel.RoleVet
 	sessions, err := a.store.ListHeartRateSessions(r.Context(), chi.URLParam(r, "petID"), vetView)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, sessions)
@@ -365,13 +370,13 @@ func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
 func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	if id.Role == kernel.RoleVet {
 		threads, err := a.store.ListThreadSummariesForVet(r.Context(), id.UserID)
 		if err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
 		httpx.WriteData(w, http.StatusOK, threads)
@@ -379,12 +384,12 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 	}
 	vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	t, err := a.store.GetOrCreateThread(r.Context(), id.PracticeID, id.UserID, vetID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, []store.Thread{t})
@@ -393,17 +398,17 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
 	thread, err := a.store.GetThreadByID(r.Context(), chi.URLParam(r, "threadID"))
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "thread not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "thread_not_found")
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
 	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not participant")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
 	msgs, err := a.store.ListMessages(r.Context(), thread.ID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, msgs)
@@ -416,17 +421,17 @@ type msgReq struct {
 func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 	thread, err := a.store.GetThreadByID(r.Context(), chi.URLParam(r, "threadID"))
 	if err != nil {
-		httpx.WriteError(w, http.StatusNotFound, "not_found", "thread not found")
+		writeErr(w, r, http.StatusNotFound, "not_found", "thread_not_found")
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
 	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "not participant")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
 	var req msgReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.Body == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "body required")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "body_required")
 		return
 	}
 	if id.Role == kernel.RoleClient {
@@ -440,14 +445,18 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	msg, err := a.store.AddMessage(r.Context(), thread.ID, id.UserID, req.Body)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if id.Role == kernel.RoleClient {
 		onMsg, _, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
 		if onMsg {
 			vet, _ := a.store.GetUserByID(r.Context(), thread.VetUserID)
-			_ = a.notifier.SendVetAlert(vet.Email, "petsFollow Pro — Nouveau message", "<p>Nouveau message client.</p><p>"+req.Body+"</p>")
+			locale := vet.PreferredLocale
+			if locale == "" {
+				locale = localeOf(r)
+			}
+			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
 		}
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -461,16 +470,16 @@ type availReq struct {
 func (a *API) setAvailability(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	var req availReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	if err := a.store.SetVetAvailability(r.Context(), id.UserID, id.PracticeID, req.Status, req.AutoReply); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": string(req.Status)})
@@ -479,12 +488,12 @@ func (a *API) setAvailability(w http.ResponseWriter, r *http.Request) {
 func (a *API) vetOverview(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	overview, err := a.store.VetOverview(r.Context(), id.PracticeID, id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, overview)
@@ -493,12 +502,12 @@ func (a *API) vetOverview(w http.ResponseWriter, r *http.Request) {
 func (a *API) getAvailability(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	status, autoReply, err := a.store.GetVetAvailability(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"status": status, "autoReply": autoReply})
@@ -514,36 +523,37 @@ type registerReq struct {
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	var req registerReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	if req.Email == "" || req.Password == "" || req.FullName == "" || req.PracticeName == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "tous les champs sont requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return
 	}
 	if len(req.Password) < 8 {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "mot de passe trop court (8 caractères minimum)")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return
 	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
-		httpx.WriteError(w, http.StatusConflict, "conflict", "un compte existe déjà avec cet email")
+		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
 		return
 	} else if !errors.Is(err, store.ErrNotFound) {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	locale := localeOf(r)
 	result, err := a.store.RegisterVet(r.Context(), store.RegisterVetInput{
 		Email: req.Email, Password: req.Password, FullName: req.FullName, PracticeName: req.PracticeName,
+		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
 	})
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", a.cfg.ProPublicSiteURL, result.Token)
-	body := fmt.Sprintf(`<p>Bonjour %s,</p><p>Confirmez votre inscription petsFollow Pro en cliquant sur le lien ci-dessous :</p><p><a href="%s">Confirmer mon compte</a></p><p>Ce lien expire dans 48 heures.</p>`, req.FullName, confirmURL)
-	_ = a.notifier.SendVetAlert(req.Email, "petsFollow Pro — Confirmez votre inscription", body)
+	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
 	httpx.WriteData(w, http.StatusCreated, map[string]any{
-		"message":     "Un email de confirmation a été envoyé.",
+		"message":     t(r, "success.confirm_email_sent", nil),
 		"confirmPath": "/confirm-email?token=" + result.Token,
 	})
 }
@@ -555,24 +565,24 @@ type confirmEmailReq struct {
 func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 	var req confirmEmailReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	if req.Token == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "token requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "token_required")
 		return
 	}
 	u, err := a.store.ConfirmEmail(r.Context(), req.Token)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			httpx.WriteError(w, http.StatusNotFound, "not_found", "lien de confirmation invalide")
+			writeErr(w, r, http.StatusNotFound, "not_found", "invalid_confirm_link")
 			return
 		}
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", err.Error())
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"message": "Email confirmé avec succès.",
+		"message": t(r, "success.email_confirmed", nil),
 		"email":   u.Email,
 	})
 }
@@ -580,12 +590,12 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, profile)
@@ -594,27 +604,27 @@ func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {
 func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleVet {
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "vet only")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
 	var req store.PracticeProfile
 	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "invalid json")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
 	if req.PracticeName == "" || req.Phone == "" || req.ContactEmail == "" ||
 		req.AddressLine1 == "" || req.City == "" || req.PostalCode == "" || req.VetFullName == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "champs obligatoires manquants")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "profile_fields_required")
 		return
 	}
 	markComplete := r.URL.Query().Get("complete") == "true"
 	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, profile)

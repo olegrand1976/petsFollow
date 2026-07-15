@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/smtp"
+
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
 
 type Notifier struct {
@@ -24,4 +26,29 @@ func (n *Notifier) SendVetAlert(to, subject, body string) error {
 		log.Printf("email send (dev may use mailhog): %v", err)
 	}
 	return nil
+}
+
+func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL string) error {
+	subject := i18n.T(locale, "emails.confirm_registration_subject", nil)
+	body := i18n.T(locale, "emails.confirm_registration_body", map[string]string{
+		"fullName":   fullName,
+		"confirmUrl": confirmURL,
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
+func (n *Notifier) SendHeartrateValidated(to, locale string, bpm int) error {
+	subject := i18n.T(locale, "emails.heartrate_validated_subject", nil)
+	body := i18n.T(locale, "emails.heartrate_validated_body", map[string]string{
+		"bpm": fmt.Sprintf("%d", bpm),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
+func (n *Notifier) SendNewMessage(to, locale, messageBody string) error {
+	subject := i18n.T(locale, "emails.new_message_subject", nil)
+	body := i18n.T(locale, "emails.new_message_body", map[string]string{
+		"body": messageBody,
+	})
+	return n.SendVetAlert(to, subject, body)
 }

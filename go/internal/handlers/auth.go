@@ -25,6 +25,7 @@ func (a *API) registerAuthRoutes(r chi.Router) {
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
+		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/auth/2fa/status", a.twoFactorStatus)
 		pr.Post("/auth/2fa/setup", a.twoFactorSetup)
 		pr.Post("/auth/2fa/confirm", a.twoFactorConfirm)
@@ -38,18 +39,18 @@ type googleLoginReq struct {
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.GoogleOAuthClientID == "" {
-		httpx.WriteError(w, http.StatusNotImplemented, "not_configured", "Google OAuth non configuré")
+		writeErr(w, r, http.StatusNotImplemented, "not_configured", "not_configured")
 		return
 	}
 	var req googleLoginReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.IDToken == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "idToken requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "id_token_required")
 		return
 	}
 
 	payload, err := validateGoogleIDToken(r.Context(), req.IDToken, a.cfg.GoogleOAuthClientID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "token Google invalide")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
 		return
 	}
 	var gClaims struct {
@@ -58,32 +59,33 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		Name          string `json:"name"`
 	}
 	if err := payload.Claims(&gClaims); err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "token Google invalide")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
 		return
 	}
 	email := gClaims.Email
 	name := gClaims.Name
 	if email == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "email Google manquant")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "google_email_missing")
 		return
 	}
 	if !gClaims.EmailVerified {
-		httpx.WriteError(w, http.StatusForbidden, "email_not_verified", "email Google non vérifié")
+		writeErr(w, r, http.StatusForbidden, "email_not_verified", "google_email_not_verified")
 		return
 	}
 	if name == "" {
 		name = strings.Split(email, "@")[0]
 	}
 
-	u, err := a.resolveGoogleUser(r.Context(), email, name, payload.Subject)
+	u, err := a.resolveGoogleUser(r, email, name, payload.Subject)
 	if err != nil {
-		a.writeGoogleAuthError(w, err)
+		a.writeGoogleAuthError(w, r, err)
 		return
 	}
-	a.issueLoginResponse(w, u)
+	a.issueLoginResponse(w, r, u)
 }
 
-func (a *API) resolveGoogleUser(ctx context.Context, email, fullName, googleSub string) (store.User, error) {
+func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub string) (store.User, error) {
+	ctx := r.Context()
 	if u, err := a.store.GetUserByGoogleSub(ctx, googleSub); err == nil {
 		return u, nil
 	} else if !errors.Is(err, store.ErrNotFound) {
@@ -126,8 +128,10 @@ func (a *API) resolveGoogleUser(ctx context.Context, email, fullName, googleSub 
 	}
 
 	practiceName := fmt.Sprintf("Cabinet %s", strings.Split(fullName, " ")[0])
+	locale := localeOf(r)
 	return a.store.RegisterGoogleVet(ctx, store.RegisterGoogleVetInput{
 		Email: email, FullName: fullName, GoogleSub: googleSub, PracticeName: practiceName,
+		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
 	})
 }
 
@@ -136,26 +140,26 @@ var (
 	errGoogleAccountMismatch   = errors.New("google account mismatch")
 )
 
-func (a *API) writeGoogleAuthError(w http.ResponseWriter, err error) {
+func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, errGoogleProOnly):
-		httpx.WriteError(w, http.StatusForbidden, "forbidden", "Google réservé aux profils Pro")
+		writeErr(w, r, http.StatusForbidden, "forbidden", "google_pro_only")
 	case errors.Is(err, errGoogleAccountMismatch):
-		httpx.WriteError(w, http.StatusConflict, "conflict", "ce compte Google est déjà lié à un autre utilisateur")
+		writeErr(w, r, http.StatusConflict, "conflict", "google_account_mismatch")
 	default:
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	}
 }
 
-func (a *API) issueLoginResponse(w http.ResponseWriter, u store.User) {
+func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store.User) {
 	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
-		httpx.WriteError(w, http.StatusForbidden, "email_not_verified", "confirmez votre email avant de vous connecter")
+		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
 	if u.TOTPEnabled {
 		mfa, err := a.tokens.IssueMFA(u.ID, u.Email, u.Role, u.PracticeID)
 		if err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
 		httpx.WriteData(w, http.StatusOK, mfa)
@@ -163,7 +167,7 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, u store.User) {
 	}
 	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pair)
@@ -177,26 +181,26 @@ type verify2FAReq struct {
 func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 	var req verify2FAReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.MFAToken == "" || req.Code == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "mfaToken et code requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "mfa_fields_required")
 		return
 	}
 	id, err := a.tokens.ParseMFA(req.MFAToken)
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "session 2FA expirée")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "mfa_session_expired")
 		return
 	}
 	secret, enabled, err := a.store.GetTOTPSecret(r.Context(), id.UserID)
 	if err != nil || !enabled || secret == "" {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "2FA non activée")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "2fa_not_enabled")
 		return
 	}
 	if !totp.Validate(req.Code, secret) {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "code 2FA invalide")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
 	pair, err := a.tokens.Issue(id.UserID, id.Email, id.Role, id.PracticeID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pair)
@@ -205,12 +209,12 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 func (a *API) twoFactorStatus(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	_, enabled, err := a.store.GetTOTPSecret(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": enabled})
@@ -219,16 +223,16 @@ func (a *API) twoFactorStatus(w http.ResponseWriter, r *http.Request) {
 func (a *API) twoFactorSetup(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	_, enabled, err := a.store.GetTOTPSecret(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if enabled {
-		httpx.WriteError(w, http.StatusConflict, "conflict", "2FA déjà activée")
+		writeErr(w, r, http.StatusConflict, "conflict", "2fa_already_enabled")
 		return
 	}
 	key, err := totp.Generate(totp.GenerateOpts{
@@ -237,16 +241,16 @@ func (a *API) twoFactorSetup(w http.ResponseWriter, r *http.Request) {
 		SecretSize:  20,
 	})
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if err := a.store.SetTOTPSecret(r.Context(), id.UserID, key.Secret()); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	png, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
@@ -263,29 +267,29 @@ type twoFactorCodeReq struct {
 func (a *API) twoFactorConfirm(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	var req twoFactorCodeReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.Code == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "code requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "code_required")
 		return
 	}
 	secret, enabled, err := a.store.GetTOTPSecret(r.Context(), id.UserID)
 	if err != nil || secret == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "lancez d'abord la configuration 2FA")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "setup_2fa_first")
 		return
 	}
 	if enabled {
-		httpx.WriteError(w, http.StatusConflict, "conflict", "2FA déjà activée")
+		writeErr(w, r, http.StatusConflict, "conflict", "2fa_already_enabled")
 		return
 	}
 	if !totp.Validate(req.Code, secret) {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "code 2FA invalide")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
 	if err := a.store.EnableTOTP(r.Context(), id.UserID); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": true})
@@ -299,36 +303,36 @@ type twoFactorDisableReq struct {
 func (a *API) twoFactorDisable(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "login required")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	var req twoFactorDisableReq
 	if err := httpx.DecodeJSON(r, &req); err != nil || req.Code == "" {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "code requis")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "code_required")
 		return
 	}
 	u, err := a.store.GetUserByID(r.Context(), id.UserID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if u.PasswordHash != "" {
 		if req.Password == "" || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
-			httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "mot de passe incorrect")
+			writeErr(w, r, http.StatusUnauthorized, "unauthorized", "wrong_password")
 			return
 		}
 	}
 	secret, enabled, err := a.store.GetTOTPSecret(r.Context(), id.UserID)
 	if err != nil || !enabled {
-		httpx.WriteError(w, http.StatusBadRequest, "bad_request", "2FA non activée")
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "2fa_not_enabled")
 		return
 	}
 	if !totp.Validate(req.Code, secret) {
-		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "code 2FA invalide")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
 	if err := a.store.DisableTOTP(r.Context(), id.UserID); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": false})

@@ -11,6 +11,9 @@ const (
 	passwordVet    = "VetDemo123!"
 	passwordClient = "ClientDemo123!"
 	passwordAdmin  = "AdminDemo123!"
+
+	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
+	demoEmailConfirmToken = "demo-confirm-email"
 )
 
 type messageDef struct {
@@ -62,14 +65,24 @@ type practiceDef struct {
 	vetName           string
 	phone             string
 	address           string
+	addressLine2      string
 	city              string
 	postalCode        string
+	website           string
 	availability      kernel.AvailabilityStatus
 	autoReply         string
 	clients           []clientDef
 	notifyOnMessage   bool
 	notifyOnHeartRate bool
+	incompleteProfile bool // profil cabinet non complété (onboarding)
+	pendingEmailVerify bool // email non confirmé + token démo
 }
+
+// Comptes démo — mots de passe : VetDemo123! · ClientDemo123! · AdminDemo123!
+//
+// Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ (profil incomplet) · vet.unverified@ (email non confirmé)
+// Admin : admin.demo@
+// Clients : client.demo@ · client.marie@ · client.paul@ · client.julie@ · client.thomas@ · client.vide@ (sans animal)
 
 var demoPractices = []practiceDef{
 	{
@@ -78,8 +91,10 @@ var demoPractices = []practiceDef{
 		vetName:           "Dr Martin Demo",
 		phone:             "01 23 45 67 89",
 		address:           "12 avenue des Vétérinaires",
+		addressLine2:      "Bâtiment B",
 		city:              "Paris",
 		postalCode:        "75015",
+		website:           "https://vetplus.demo.petsfollow.test",
 		availability:      kernel.AvailabilityAvailable,
 		notifyOnMessage:   true,
 		notifyOnHeartRate: true,
@@ -130,6 +145,11 @@ var demoPractices = []practiceDef{
 					},
 				},
 			},
+			{
+				email:    "client.vide@petsfollow.test",
+				fullName: "Luc Moreau",
+				pets:     nil,
+			},
 		},
 	},
 	{
@@ -138,8 +158,10 @@ var demoPractices = []practiceDef{
 		vetName:           "Dr Claire Parc",
 		phone:             "01 45 67 89 01",
 		address:           "8 rue du Parc",
+		addressLine2:      "1er étage",
 		city:              "Boulogne-Billancourt",
 		postalCode:        "92100",
+		website:           "https://clinique-parc.demo.petsfollow.test",
 		availability:      kernel.AvailabilityAvailable,
 		notifyOnMessage:   true,
 		notifyOnHeartRate: true,
@@ -220,8 +242,10 @@ var demoPractices = []practiceDef{
 		vetName:           "Dr Antoine Lyon",
 		phone:             "04 78 00 12 34",
 		address:           "25 cours Vitton",
+		addressLine2:      "",
 		city:              "Lyon",
 		postalCode:        "69006",
+		website:           "https://cardio-lyon.demo.petsfollow.test",
 		availability:      kernel.AvailabilityUnavailable,
 		autoReply:         "Je suis en consultation. Pour les urgences cardiaques, contactez le service d'astreinte au 04 00 00 00 00.",
 		notifyOnMessage:   true,
@@ -295,5 +319,34 @@ var demoPractices = []practiceDef{
 				},
 			},
 		},
+	},
+	{
+		name:               "Cabinet Onboarding Demo",
+		vetEmail:           "vet.onboarding@petsfollow.test",
+		vetName:            "Dr Emma Nouveau",
+		phone:              "",
+		address:            "",
+		city:               "",
+		postalCode:         "",
+		website:            "",
+		availability:       kernel.AvailabilityAvailable,
+		notifyOnMessage:    true,
+		notifyOnHeartRate:  true,
+		incompleteProfile:  true,
+	},
+	{
+		name:               "Cabinet Email Pending",
+		vetEmail:           "vet.unverified@petsfollow.test",
+		vetName:            "Dr Pending Verify",
+		phone:              "",
+		address:            "",
+		city:               "",
+		postalCode:         "",
+		website:            "",
+		availability:       kernel.AvailabilityAvailable,
+		notifyOnMessage:    true,
+		notifyOnHeartRate:  true,
+		incompleteProfile:  true,
+		pendingEmailVerify: true,
 	},
 }

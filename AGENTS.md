@@ -28,15 +28,20 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 
 | Rôle | Email | Cabinet |
 |------|-------|---------|
-| Véto (démo) | `vet.demo@petsfollow.test` | Cabinet VetPlus Demo |
+| Véto | `vet.demo@petsfollow.test` | Cabinet VetPlus Demo |
 | Véto | `vet.parc@petsfollow.test` | Clinique du Parc |
 | Véto | `vet.lyon@petsfollow.test` | Centre Cardio Animaux Lyon |
+| Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
+| Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
 | Admin | `admin.demo@petsfollow.test` | — (global) |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — Rex, Bella |
+| Client | `client.vide@petsfollow.test` | VetPlus — sans animal |
 | Client | `client.marie@petsfollow.test` | Parc — Mimi, Chouchou |
 | Client | `client.paul@petsfollow.test` | Parc — Max |
 | Client | `client.julie@petsfollow.test` | Lyon — Oscar |
 | Client | `client.thomas@petsfollow.test` | Lyon — Luna, Nico (pending) |
+
+Confirmation email démo : `/confirm-email?token=demo-confirm-email`
 
 Relancer les données : `make seed`
 

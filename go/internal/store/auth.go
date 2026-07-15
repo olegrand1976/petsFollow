@@ -10,10 +10,12 @@ import (
 )
 
 type RegisterGoogleVetInput struct {
-	Email        string
-	FullName     string
-	GoogleSub    string
-	PracticeName string
+	Email            string
+	FullName         string
+	GoogleSub        string
+	PracticeName     string
+	PreferredLocale  string
+	AutoReplyDefault string
 }
 
 func (s *Store) GetUserByGoogleSub(ctx context.Context, googleSub string) (User, error) {
@@ -55,15 +57,19 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 		return User{}, err
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, google_sub, auth_provider)
-		VALUES ($1, $2, NULL, $3, 'vet', $4, $5, $6, 'google')`,
-		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, google_sub, auth_provider, preferred_locale)
+		VALUES ($1, $2, NULL, $3, 'vet', $4, $5, $6, 'google', $7)`,
+		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub, in.PreferredLocale); err != nil {
 		return User{}, err
+	}
+	autoReply := in.AutoReplyDefault
+	if autoReply == "" {
+		autoReply = "Je suis indisponible, je reviens vers vous rapidement."
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.vet_availability (vet_user_id, practice_id, status, auto_reply)
-		VALUES ($1, $2, 'available', 'Je suis indisponible, je reviens vers vous rapidement.')`,
-		userID, practiceID); err != nil {
+		VALUES ($1, $2, 'available', $3)`,
+		userID, practiceID, autoReply); err != nil {
 		return User{}, err
 	}
 	if _, err := tx.Exec(ctx, `

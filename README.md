@@ -25,10 +25,26 @@ make smoke
 
 ### Comptes demo (seed)
 
-| Rôle | Email | Mot de passe |
-|------|-------|--------------|
-| Véto | vet.demo@petsfollow.test | VetDemo123! |
-| Client | client.demo@petsfollow.test | ClientDemo123! |
+Mot de passe véto : `VetDemo123!` · client : `ClientDemo123!` · admin : `AdminDemo123!`
+
+| Rôle | Email | Notes |
+|------|-------|-------|
+| Véto | vet.demo@petsfollow.test | VetPlus — profil complet |
+| Véto | vet.parc@petsfollow.test | Clinique du Parc |
+| Véto | vet.lyon@petsfollow.test | Lyon — indisponible |
+| Véto | vet.onboarding@petsfollow.test | Profil cabinet à compléter |
+| Véto | vet.unverified@petsfollow.test | Email non confirmé |
+| Admin | admin.demo@petsfollow.test | — |
+| Client | client.demo@petsfollow.test | Rex + Bella |
+| Client | client.vide@petsfollow.test | Sans animal (kanban) |
+| Client | client.marie@petsfollow.test | Mimi + Chouchou |
+| Client | client.paul@petsfollow.test | Max |
+| Client | client.julie@petsfollow.test | Oscar |
+| Client | client.thomas@petsfollow.test | Luna + Nico (pending) |
+
+Confirm email : `http://localhost:3002/confirm-email?token=demo-confirm-email`
+
+Relancer les données : `make seed`
 
 ## Staging GCP
 

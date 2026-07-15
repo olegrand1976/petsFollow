@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
 
 type APIError struct {
@@ -39,17 +40,33 @@ func WriteError(w http.ResponseWriter, status int, code, message string) {
 	_ = json.NewEncoder(w).Encode(envelope{Error: &APIError{Code: code, Message: message}})
 }
 
+func WriteErrorLocalized(w http.ResponseWriter, r *http.Request, status int, code, msgKey string) {
+	if msgKey == "" {
+		msgKey = code
+	}
+	locale := i18n.FromContext(r.Context())
+	msg := i18n.T(locale, "errors."+msgKey, nil)
+	WriteError(w, status, code, msg)
+}
+
+func LocaleMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		locale := i18n.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
+		next.ServeHTTP(w, r.WithContext(i18n.WithLocale(r.Context(), locale)))
+	})
+}
+
 func AuthMiddleware(issuer *authx.TokenIssuer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 			if !strings.HasPrefix(header, "Bearer ") {
-				WriteError(w, http.StatusUnauthorized, "unauthorized", "missing bearer token")
+				WriteErrorLocalized(w, r, http.StatusUnauthorized, "unauthorized", "missing_bearer_token")
 				return
 			}
 			id, err := issuer.Parse(strings.TrimPrefix(header, "Bearer "))
 			if err != nil {
-				WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid token")
+				WriteErrorLocalized(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
 				return
 			}
 			next.ServeHTTP(w, r.WithContext(authx.WithIdentity(r.Context(), id)))
