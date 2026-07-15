@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-testid="messages-page">
     <ProPageHeader :title="$t('messages.title')" :subtitle="$t('messages.subtitle')" />
     <div class="pro-chat">
       <aside class="pro-chat__threads">
@@ -15,6 +15,7 @@
           type="button"
           class="pro-chat__thread-btn"
           :class="{ 'pro-chat__thread-btn--active': active?.id === t.id }"
+          :data-testid="`thread-${t.id}`"
           @click="select(t)"
         >
           <strong>{{ threadLabel(t) }}</strong>
@@ -24,9 +25,17 @@
       </aside>
       <section class="pro-chat__messages">
         <template v-if="active">
+          <header class="pro-chat__header">
+            <strong>{{ threadLabel(active) }}</strong>
+          </header>
           <div class="pro-chat__list">
-            <div v-for="m in messages" :key="m.id" class="pro-chat__bubble">
-              <small>{{ m.senderUserId.slice(0, 8) }}…</small>
+            <div
+              v-for="m in messages"
+              :key="m.id"
+              class="pro-chat__bubble"
+              :class="isVetMessage(m) ? 'pro-chat__bubble--vet' : 'pro-chat__bubble--client'"
+            >
+              <small>{{ senderLabel(m) }}</small>
               <p>{{ m.body }}</p>
             </div>
           </div>
@@ -54,31 +63,66 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'vet-only' })
 
+const route = useRoute()
 const { t } = useI18n()
+const { user, fetchUser } = useProUser()
 
 const threads = ref<any[]>([])
 const messages = ref<any[]>([])
 const active = ref<any>(null)
 const draft = ref('')
 
+const vetUserId = computed(() => user.value?.userId ?? user.value?.id ?? '')
+
 function threadLabel(thread: any) {
-  return thread.clientName || t('common.clientFallback', { id: thread.clientUserId.slice(0, 8) })
+  return thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' })
 }
 
 function unreadLabel(count: number) {
   return count > 1 ? t('messages.unreadPlural', { count }) : t('messages.unread', { count })
 }
 
-onMounted(async () => {
+function isVetMessage(msg: any) {
+  return msg.senderUserId === vetUserId.value
+}
+
+function senderLabel(msg: any) {
+  if (isVetMessage(msg)) {
+    return user.value?.fullName || t('messages.you')
+  }
+  return active.value?.clientName || t('common.clientFallback', { id: active.value?.clientUserId?.slice(0, 8) ?? '' })
+}
+
+async function loadThreads() {
   const res: any = await $fetch('/api/messaging/threads')
   threads.value = res.data ?? res ?? []
-})
+}
 
 async function select(thread: any) {
   active.value = thread
   const res: any = await $fetch(`/api/messaging/threads/${thread.id}/messages`)
   messages.value = res.data ?? res ?? []
 }
+
+async function openThreadFromQuery() {
+  const threadId = String(route.query.thread || '')
+  if (!threadId) return
+  const thread = threads.value.find((item) => item.id === threadId)
+  if (thread) await select(thread)
+}
+
+onMounted(async () => {
+  await fetchUser()
+  await loadThreads()
+  await openThreadFromQuery()
+})
+
+watch(
+  () => route.query.thread,
+  async () => {
+    if (threads.value.length) await openThreadFromQuery()
+  },
+)
 
 async function send() {
   if (!active.value || !draft.value.trim()) return
@@ -89,6 +133,7 @@ async function send() {
   draft.value = ''
   const res: any = await $fetch(`/api/messaging/threads/${active.value.id}/messages`)
   messages.value = res.data ?? res ?? []
+  await loadThreads()
 }
 </script>
 
@@ -97,6 +142,12 @@ async function send() {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.pro-chat__header {
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pf-vet-border);
 }
 
 .pro-chat__thread-preview {

@@ -15,7 +15,7 @@ export function useProNotifications() {
       id: thread.id,
       label: thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' }),
       preview: thread.lastMessagePreview || undefined,
-      href: '/messages',
+      href: `/messages?thread=${thread.id}`,
     })),
   )
 

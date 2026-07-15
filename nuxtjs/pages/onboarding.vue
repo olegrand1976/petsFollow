@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-testid="onboarding-page">
     <ProPageHeader
       :title="$t('onboarding.title')"
       :subtitle="$t('onboarding.subtitle')"

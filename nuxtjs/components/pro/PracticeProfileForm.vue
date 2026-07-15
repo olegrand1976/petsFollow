@@ -58,6 +58,17 @@
       name="website"
       :placeholder="$t('components.profileForm.websitePlaceholder')"
     />
+    <fieldset v-if="showHeartrateDurations" class="pro-profile-form__heartrate">
+      <legend class="pro-label">{{ $t('settings.heartrate.title') }}</legend>
+      <p class="pro-profile-form__hint">{{ $t('settings.heartrate.subtitle') }}</p>
+      <div class="pro-heartrate-durations" role="group" :aria-label="$t('settings.heartrate.title')">
+        <label v-for="opt in durationOptions" :key="opt" class="pro-heartrate-durations__item">
+          <input v-model="heartrateDurationsSec" type="checkbox" :value="opt">
+          <span>{{ $t(`settings.heartrate.duration${opt}`) }}</span>
+        </label>
+      </div>
+      <p class="pro-profile-form__hint">{{ $t('settings.heartrate.hint') }}</p>
+    </fieldset>
     <slot name="actions" />
   </form>
 </template>
@@ -77,7 +88,18 @@ export type PracticeProfileForm = {
 
 const model = defineModel<PracticeProfileForm>({ required: true })
 
+withDefaults(
+  defineProps<{
+    showHeartrateDurations?: boolean
+  }>(),
+  { showHeartrateDurations: false },
+)
+
+const heartrateDurationsSec = defineModel<number[]>('heartrateDurationsSec', { default: () => [60] })
+
 defineEmits<{ submit: [] }>()
+
+const durationOptions = [15, 30, 60] as const
 </script>
 
 <style scoped>
@@ -91,6 +113,31 @@ defineEmits<{ submit: [] }>()
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 1rem;
+}
+
+.pro-profile-form__heartrate {
+  border: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.pro-profile-form__hint {
+  color: var(--pf-vet-text-muted);
+  font-size: 0.875rem;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.pro-heartrate-durations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pro-heartrate-durations__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
 }
 
 @media (max-width: 640px) {

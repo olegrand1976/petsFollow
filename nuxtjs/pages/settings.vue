@@ -6,7 +6,12 @@
     />
 
     <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
-      <PracticeProfileForm v-model="profile" @submit="saveProfile">
+      <PracticeProfileForm
+        v-model="profile"
+        v-model:heartrate-durations-sec="selectedDurations"
+        show-heartrate-durations
+        @submit="saveProfile"
+      >
         <template #actions>
           <p v-if="profileSaved" class="text-muted" role="status">{{ $t('settings.profileSaved') }}</p>
           <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
@@ -52,22 +57,6 @@
       </ProButton>
     </ProCard>
 
-    <ProCard :title="$t('settings.heartrate.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.heartrate.subtitle') }}</p>
-      <div class="pro-heartrate-durations" role="group" :aria-label="$t('settings.heartrate.title')">
-        <label v-for="opt in durationOptions" :key="opt" class="pro-heartrate-durations__item">
-          <input v-model="selectedDurations" type="checkbox" :value="opt">
-          <span>{{ $t(`settings.heartrate.duration${opt}`) }}</span>
-        </label>
-      </div>
-      <p class="pro-settings-hint">{{ $t('settings.heartrate.hint') }}</p>
-      <p v-if="durationsSaved" class="text-muted" role="status">{{ $t('settings.heartrate.saved') }}</p>
-      <p v-if="durationsError" class="pro-field-error" role="alert">{{ durationsError }}</p>
-      <ProButton class="pro-save-btn" :loading="durationsSaving" @click="saveDurations">
-        {{ $t('settings.heartrate.save') }}
-      </ProButton>
-    </ProCard>
-
     <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
       <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
       <label class="pro-checkbox-row">
@@ -86,6 +75,36 @@
 
     <ProCard :title="$t('settings.legalLinks')" class="pro-settings-card">
       <ProLegalFooter />
+    </ProCard>
+
+    <ProCard :title="$t('settings.password.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.password.subtitle') }}</p>
+      <ProInput
+        v-model="currentPassword"
+        :label="$t('settings.password.current')"
+        type="password"
+        autocomplete="current-password"
+        test-id="settings-current-password"
+      />
+      <ProInput
+        v-model="newPassword"
+        :label="$t('settings.password.new')"
+        type="password"
+        autocomplete="new-password"
+        test-id="settings-new-password"
+      />
+      <ProInput
+        v-model="confirmPassword"
+        :label="$t('settings.password.confirm')"
+        type="password"
+        autocomplete="new-password"
+        test-id="settings-confirm-password"
+      />
+      <p v-if="passwordSaved" class="text-muted" role="status">{{ $t('settings.password.saved') }}</p>
+      <p v-if="passwordError" class="pro-field-error" role="alert">{{ passwordError }}</p>
+      <ProButton class="pro-save-btn" :loading="passwordSaving" test-id="settings-password-save" @click="savePassword">
+        {{ $t('settings.password.save') }}
+      </ProButton>
     </ProCard>
 
     <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
@@ -211,16 +230,19 @@ const setupCode = ref('')
 const disableCode = ref('')
 const disablePassword = ref('')
 
-const durationOptions = [15, 30, 60] as const
 const selectedDurations = ref<number[]>([60])
-const durationsSaving = ref(false)
-const durationsSaved = ref(false)
-const durationsError = ref('')
 
 const emailOnMessage = ref(true)
 const emailOnHeartrate = ref(true)
 const notifSaving = ref(false)
 const notifSaved = ref(false)
+
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const passwordSaving = ref(false)
+const passwordSaved = ref(false)
+const passwordError = ref('')
 
 function mapFromApi(data: any): PracticeProfileForm {
   return {
@@ -268,24 +290,34 @@ onMounted(async () => {
   } catch { /* ignore */ }
 })
 
-async function saveDurations() {
-  if (!selectedDurations.value.length) {
-    durationsError.value = t('settings.heartrate.hint')
+async function savePassword() {
+  passwordError.value = ''
+  passwordSaved.value = false
+  if (newPassword.value !== confirmPassword.value) {
+    passwordError.value = t('settings.password.mismatch')
     return
   }
-  durationsSaving.value = true
-  durationsSaved.value = false
-  durationsError.value = ''
+  if (newPassword.value.length < 8) {
+    passwordError.value = t('errors.password_too_short')
+    return
+  }
+  passwordSaving.value = true
   try {
-    await $fetch('/api/vet/profile', {
-      method: 'PUT',
-      body: { ...profile.value, heartrateDurationsSec: selectedDurations.value },
+    await $fetch('/api/me/password', {
+      method: 'PATCH',
+      body: {
+        currentPassword: currentPassword.value,
+        newPassword: newPassword.value,
+      },
     })
-    durationsSaved.value = true
+    passwordSaved.value = true
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
   } catch (e: any) {
-    durationsError.value = mapError(e)
+    passwordError.value = mapError(e)
   } finally {
-    durationsSaving.value = false
+    passwordSaving.value = false
   }
 }
 
@@ -307,6 +339,11 @@ async function saveProfile() {
   profileSaving.value = true
   profileSaved.value = false
   profileError.value = ''
+  if (!selectedDurations.value.length) {
+    profileError.value = t('settings.heartrate.hint')
+    profileSaving.value = false
+    return
+  }
   try {
     await $fetch('/api/vet/profile', {
       method: 'PUT',
@@ -436,20 +473,6 @@ async function disable2FA() {
 .pro-2fa-qr {
   border-radius: 8px;
   border: 1px solid var(--pf-vet-border);
-}
-
-.pro-heartrate-durations {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.pro-heartrate-durations__item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
 }
 
 .pro-checkbox-row {
