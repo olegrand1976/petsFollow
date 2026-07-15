@@ -1,13 +1,15 @@
 <template>
   <div class="pro-app">
-    <ProSidebar :items="navItems" />
-    <div class="pro-app-body">
-      <ProTopbar home-link="/admin" :show-notifications="false" />
-      <main class="pro-main main">
-        <div class="pro-main-inner">
-          <slot />
-        </div>
-      </main>
+    <ProTopbar home-link="/admin" :show-notifications="false" />
+    <div class="pro-app-shell">
+      <ProSidebar :items="navItems" />
+      <div class="pro-app-body">
+        <main class="pro-main main">
+          <div class="pro-main-inner">
+            <slot />
+          </div>
+        </main>
+      </div>
     </div>
   </div>
 </template>

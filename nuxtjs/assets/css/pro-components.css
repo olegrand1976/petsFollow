@@ -192,7 +192,8 @@
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  align-self: stretch;
+  flex-shrink: 0;
 }
 
 .pro-sidebar nav {

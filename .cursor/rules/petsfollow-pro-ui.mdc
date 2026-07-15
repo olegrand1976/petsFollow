@@ -28,10 +28,10 @@ Utiliser les variables `--pf-vet-*` et `--pf-brand-*` depuis `nuxtjs/assets/css/
 
 ```
 ProApp
-├── ProSidebar (nav + icônes uniquement)
-└── ProAppBody
-    ├── ProTopbar (logo compact, notifications, profil, déconnexion)
-    └── main
+├── ProTopbar (full width — logo compact, notifications, profil, déconnexion)
+└── ProAppShell
+    ├── ProSidebar (nav + icônes uniquement)
+    └── ProAppBody → main
 ```
 
 - **Ne pas** remettre logout/profil dans la sidebar

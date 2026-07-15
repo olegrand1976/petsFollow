@@ -1,6 +1,14 @@
 .pro-app {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+.pro-app-shell {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
 }
 
 .pro-app-body {
@@ -249,7 +257,7 @@
 }
 
 @media (max-width: 960px) {
-  .pro-app { flex-direction: column; }
+  .pro-app-shell { flex-direction: column; }
   .pro-main { padding: 1rem 1.25rem 1.5rem; }
   .pro-topbar { padding: 0.65rem 1rem; }
   .pro-topbar__profile-name { display: none; }
