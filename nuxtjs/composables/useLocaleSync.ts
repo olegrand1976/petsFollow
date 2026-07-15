@@ -26,5 +26,10 @@ export function useLocaleSync() {
     await useProUser().fetchUser(true)
   }
 
-  return { syncFromUser, saveLocale, locale, supportedLocales: SUPPORTED_LOCALES }
+  async function switchLocale(newLocale: AppLocale) {
+    await setLocale(newLocale)
+    localeCookie.value = newLocale
+  }
+
+  return { syncFromUser, saveLocale, switchLocale, locale, supportedLocales: SUPPORTED_LOCALES }
 }

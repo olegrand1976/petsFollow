@@ -3,6 +3,7 @@
     <header class="pro-landing__header">
       <PetsFollowLogo variant="default" />
       <nav class="pro-landing__nav">
+        <ProLocaleSelect />
         <NuxtLink to="/login" class="pro-landing__nav-link">{{ $t('index.login') }}</NuxtLink>
         <NuxtLink to="/register">
           <ProButton test-id="landing-cta">{{ $t('index.registerCta') }}</ProButton>

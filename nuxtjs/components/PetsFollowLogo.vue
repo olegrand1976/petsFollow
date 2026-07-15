@@ -2,7 +2,7 @@
   <component :is="linkTo ? 'NuxtLink' : 'div'" :to="linkTo" class="logo" :class="`logo--${variant}`">
     <img
       src="/brand/emblem.svg"
-      alt="petsFollow"
+      :alt="emblemAlt"
       class="logo__emblem"
       :class="{ 'logo__emblem--animated': animated }"
       :width="emblemSize"
@@ -29,6 +29,9 @@ const props = withDefaults(
 )
 
 const showText = computed(() => props.variant !== 'compact')
+
+/** Texte visible à côté : emblème décoratif (évite le doublon alt tronqué « petsl »). */
+const emblemAlt = computed(() => (showText.value ? '' : 'petsFollow'))
 
 const emblemSize = computed(() => {
   switch (props.variant) {
