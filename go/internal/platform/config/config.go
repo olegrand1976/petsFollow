@@ -36,6 +36,7 @@ type Config struct {
 	APIPublicURL                    string
 	ProPublicSiteURL                string
 	BillingMockEnabled              bool
+	GoogleOAuthClientID             string
 }
 
 func Load() Config {
@@ -69,6 +70,7 @@ func Load() Config {
 		APIPublicURL:                   envOr("PETSFOLLOW_API_PUBLIC_URL", "http://localhost:8291"),
 		ProPublicSiteURL:               envOr("PETSFOLLOW_PUBLIC_SITE_URL", "http://localhost:3002"),
 		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED") || envOr("STRIPE_SECRET_KEY", "") == "",
+		GoogleOAuthClientID:            envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
 	}
 }
 

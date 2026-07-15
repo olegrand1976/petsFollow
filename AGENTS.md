@@ -40,6 +40,17 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 
 Relancer les données : `make seed`
 
+## Google OAuth + 2FA (optionnel)
+
+| Variable | Où | Description |
+|----------|-----|-------------|
+| `GOOGLE_OAUTH_CLIENT_ID` | API Go | Client ID Google (validation idToken) |
+| `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | Nuxt | Même Client ID (bouton Google sur `/login`) |
+
+Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le bouton Google est masqué.
+
+**2FA** : activation dans Paramètres (`/settings`) — TOTP via application authenticator.
+
 ## UI Pro (Nuxt)
 
 - Design system : composants `Pro*` dans `nuxtjs/components/pro/`

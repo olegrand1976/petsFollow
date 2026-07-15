@@ -28,14 +28,26 @@ type TokenPair struct {
 	ExpiresIn    int64  `json:"expiresIn"`
 }
 
+type MFALoginResponse struct {
+	Requires2FA bool   `json:"requires2FA"`
+	MFAToken    string `json:"mfaToken"`
+	ExpiresIn   int64  `json:"expiresIn"`
+}
+
 type TokenIssuer struct {
 	secret     []byte
 	accessTTL  time.Duration
 	refreshTTL time.Duration
+	mfaTTL     time.Duration
 }
 
 func NewTokenIssuer(secret string, accessTTL, refreshTTL time.Duration) *TokenIssuer {
-	return &TokenIssuer{secret: []byte(secret), accessTTL: accessTTL, refreshTTL: refreshTTL}
+	return &TokenIssuer{
+		secret:     []byte(secret),
+		accessTTL:  accessTTL,
+		refreshTTL: refreshTTL,
+		mfaTTL:     5 * time.Minute,
+	}
 }
 
 type claims struct {
@@ -71,6 +83,36 @@ func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID s
 		return TokenPair{}, err
 	}
 	return TokenPair{AccessToken: access, RefreshToken: refresh, ExpiresIn: int64(t.accessTTL.Seconds())}, nil
+}
+
+func (t *TokenIssuer) IssueMFA(userID, email string, role kernel.Role, practiceID string) (MFALoginResponse, error) {
+	now := time.Now()
+	mfaClaims := claims{
+		Email: email, Role: role, PracticeID: practiceID, Typ: "mfa_pending",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: userID, IssuedAt: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(t.mfaTTL)), ID: uuid.NewString(),
+		},
+	}
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, mfaClaims).SignedString(t.secret)
+	if err != nil {
+		return MFALoginResponse{}, err
+	}
+	return MFALoginResponse{Requires2FA: true, MFAToken: token, ExpiresIn: int64(t.mfaTTL.Seconds())}, nil
+}
+
+func (t *TokenIssuer) ParseMFA(tokenStr string) (Identity, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (interface{}, error) {
+		return t.secret, nil
+	})
+	if err != nil {
+		return Identity{}, ErrUnauthorized
+	}
+	c, ok := token.Claims.(*claims)
+	if !ok || !token.Valid || c.Typ != "mfa_pending" {
+		return Identity{}, ErrUnauthorized
+	}
+	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID}, nil
 }
 
 func (t *TokenIssuer) Parse(tokenStr string) (Identity, error) {

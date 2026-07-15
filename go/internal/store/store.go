@@ -21,6 +21,10 @@ type User struct {
 	Role            kernel.Role
 	PracticeID      string
 	EmailVerifiedAt *time.Time
+	GoogleSub       string
+	AuthProvider    string
+	TOTPSecret      string
+	TOTPEnabled     bool
 }
 
 type Practice struct {
@@ -108,11 +112,26 @@ func New(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
-func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func scanUser(row pgx.Row) (User, error) {
 	var u User
-	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at
-		FROM identity.users WHERE email=$1`, email).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt)
+	var passwordHash *string
+	err := row.Scan(
+		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
+		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled,
+	)
+	if passwordHash != nil {
+		u.PasswordHash = *passwordHash
+	}
+	return u, err
+}
+
+const userSelectCols = `
+	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
+	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled`
+
+func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	u, err := scanUser(s.pool.QueryRow(ctx, `
+		SELECT `+userSelectCols+` FROM identity.users WHERE email=$1`, email))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -120,10 +139,8 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) 
 }
 
 func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
-	var u User
-	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at
-		FROM identity.users WHERE id=$1`, id).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt)
+	u, err := scanUser(s.pool.QueryRow(ctx, `
+		SELECT `+userSelectCols+` FROM identity.users WHERE id=$1`, id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}

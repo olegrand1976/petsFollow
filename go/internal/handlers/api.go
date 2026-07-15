@@ -34,6 +34,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/register", a.register)
 	r.Post("/auth/confirm-email", a.confirmEmail)
 	r.Post("/auth/refresh", a.refresh)
+	a.registerAuthRoutes(r)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
 
@@ -80,6 +81,10 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
 		return
 	}
+	if u.PasswordHash == "" {
+		httpx.WriteError(w, http.StatusUnauthorized, "use_google_sign_in", "connectez-vous avec Google")
+		return
+	}
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
 		return
@@ -88,12 +93,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusForbidden, "email_not_verified", "confirmez votre email avant de vous connecter")
 		return
 	}
-	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
-	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal", err.Error())
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, pair)
+	a.issueLoginResponse(w, u)
 }
 
 func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
