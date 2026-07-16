@@ -73,4 +73,11 @@ curl -sf -X POST "$API/api/v1/auth/reset-password" -H 'Content-Type: application
 curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass456!\"}" >/dev/null
 
-echo "OK — smoke MVP + billing + auth reset passed"
+COMM=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+  -d '{"email":"commercial.demo@petsfollow.test","password":"CommercialDemo123!"}')
+COMM_TOKEN=$(echo "$COMM" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+curl -sf "$API/api/v1/commercial/overview" -H "Authorization: Bearer $COMM_TOKEN" >/dev/null
+curl -sf -X POST "$API/api/v1/admin/commercials" -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"smoke-comm+$(date +%s)@petsfollow.test\",\"password\":\"CommercialDemo123!\",\"fullName\":\"Smoke Comm\"}" >/dev/null
+
+echo "OK — smoke MVP + billing + auth reset + commercial passed"
