@@ -299,4 +299,241 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sentToVet => 'Reading sent to vet';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navPets => 'Pets';
+
+  @override
+  String get navCare => 'Care';
+
+  @override
+  String get navMessages => 'Messages';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get speciesDog => 'Dog';
+
+  @override
+  String get speciesCat => 'Cat';
+
+  @override
+  String get speciesHorse => 'Horse';
+
+  @override
+  String get speciesOther => 'Other';
+
+  @override
+  String get careComingSoon => 'Care reminders coming soon';
+
+  @override
+  String get emptyPetsTitle => 'No pets yet';
+
+  @override
+  String get emptyPetsBody =>
+      'Add your first pet to start heart rate monitoring with your veterinarian.';
+
+  @override
+  String get discoveryTitle => 'Discover petsFollow';
+
+  @override
+  String get discoveryMission => 'Your 7-day journey';
+
+  @override
+  String get discoveryDay0Title => 'Day 0 — Welcome';
+
+  @override
+  String get discoveryDay0Body =>
+      'Create your pet\'s profile and learn how to measure heart rate.';
+
+  @override
+  String get discoveryDay2Title => 'Day 2 — First reading';
+
+  @override
+  String get discoveryDay2Body =>
+      'Take your first heart rate reading and get comfortable with the technique.';
+
+  @override
+  String get discoveryDay4Title => 'Day 4 — Routine';
+
+  @override
+  String get discoveryDay4Body =>
+      'Build a daily measurement habit with personalized reminders.';
+
+  @override
+  String get discoveryDay6Title => 'Day 6 — Share with vet';
+
+  @override
+  String get discoveryDay6Body =>
+      'Your readings are shared with your vet for optimal follow-up.';
+
+  @override
+  String get myVets => 'My veterinarians';
+
+  @override
+  String get addVetByEmail => 'Add a vet by email';
+
+  @override
+  String get vetEmailHint => 'email@practice.vet';
+
+  @override
+  String get noVets => 'No linked veterinarian';
+
+  @override
+  String get primaryVet => 'Primary veterinarian';
+
+  @override
+  String get setPrimaryVet => 'Set as primary vet';
+
+  @override
+  String get careTitle => 'Care';
+
+  @override
+  String get careDone => 'Done';
+
+  @override
+  String get carePostpone => 'Postpone';
+
+  @override
+  String get careOverdue => 'Overdue';
+
+  @override
+  String get visitHistory => 'Visit history';
+
+  @override
+  String get requestVisit => 'Request a visit';
+
+  @override
+  String get upcomingVisit => 'Upcoming visit';
+
+  @override
+  String get notificationHrTitle => 'petsFollow';
+
+  @override
+  String get notificationHrBody => 'Time for a heart rate reading for your pet';
+
+  @override
+  String get reviewAskTitle => 'Enjoying petsFollow?';
+
+  @override
+  String get reviewAskYes => 'Yes, rate the app';
+
+  @override
+  String get reviewAskNo => 'Later';
+
+  @override
+  String get carePlusUpsell =>
+      'Care+ — personalized medication and care reminders';
+
+  @override
+  String get familyPackHint => 'Family pack — multiple pets, one subscription';
+
+  @override
+  String get discoveryMarkDone => 'Mission complete';
+
+  @override
+  String get notificationPreferences => 'Notification preferences';
+
+  @override
+  String get notificationPrefsHint =>
+      'Choose which notification types you want to receive.';
+
+  @override
+  String get notificationPrefsSaved => 'Preferences saved';
+
+  @override
+  String get notificationPrefHr => 'Heart rate readings';
+
+  @override
+  String get notificationPrefCare => 'Care reminders';
+
+  @override
+  String get notificationPrefVisits => 'Visits';
+
+  @override
+  String get notificationPrefMessages => 'Messages';
+
+  @override
+  String get notificationPrefDiscovery => 'Discovery journey';
+
+  @override
+  String get notificationPrefBilling => 'Billing';
+
+  @override
+  String carePostponeDays(int days) {
+    return 'Postpone by $days days';
+  }
+
+  @override
+  String get noCareReminders => 'No pending care reminders';
+
+  @override
+  String get noThreads => 'No conversations';
+
+  @override
+  String get vetInviteSent => 'Invitation sent to veterinarian';
+
+  @override
+  String get visitRequested => 'Visit request sent';
+
+  @override
+  String get primaryVetSet => 'Primary veterinarian updated';
+
+  @override
+  String get visitStatusRequested => 'Requested';
+
+  @override
+  String get visitStatusConfirmed => 'Confirmed';
+
+  @override
+  String get visitStatusDone => 'Completed';
+
+  @override
+  String get visitStatusCancelled => 'Cancelled';
+
+  @override
+  String get horseHealthTitle => 'Horse health';
+
+  @override
+  String get horseContactsTitle => 'Contacts (farrier, dentist…)';
+
+  @override
+  String get horseCompetitionsTitle => 'Competitions';
+
+  @override
+  String get horseContactsSoon =>
+      'Manage your professional contacts — coming soon.';
+
+  @override
+  String get horseCompetitionsSoon =>
+      'Competition calendar and results — coming soon.';
+
+  @override
+  String get horsePackUpsell =>
+      'Horse pack — farrier, fecal egg count and competition tracking';
+
+  @override
+  String get careTypeFarrier => 'Farrier';
+
+  @override
+  String get careTypeFecalEgg => 'Fecal egg count';
+
+  @override
+  String get careTypeVaccination => 'Vaccination';
+
+  @override
+  String get careTypeDeworming => 'Deworming';
+
+  @override
+  String get careTypeVetCheck => 'Vet check-up';
+
+  @override
+  String get careTypeDental => 'Dental care';
+
+  @override
+  String get careTypeCustom => 'Custom reminder';
 }

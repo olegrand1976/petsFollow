@@ -9,6 +9,7 @@
     "file_required": "Afbeeldingsbestand vereist",
     "media_unavailable": "Mediaopslag niet beschikbaar",
     "token_required": "Token vereist",
+    "refresh_token_required": "Refresh-token vereist",
     "body_required": "Berichttekst vereist",
     "profile_fields_required": "Verplichte velden ontbreken",
     "invalid_plan": "Ongeldig abonnement",
@@ -51,6 +52,14 @@
     "no_entitlement": "Geen toegangsrecht",
     "invalid_confirm_link": "Ongeldige bevestigingslink",
     "invalid_reset_link": "Ongeldige of verlopen resetlink",
+    "cannot_change_practice": "Kan praktijk niet wijzigen met een actief abonnement",
+    "reminder_not_found": "Herinnering niet gevonden",
+    "invalid_postpone_days": "Ongeldig uitstel (7, 14 of 30 dagen)",
+    "visit_not_found": "Bezoek niet gevonden",
+    "invalid_card_key": "Ongeldige ontdekkingskaart",
+    "invalid_platform": "Ongeldig platform",
+    "invalid_status": "Ongeldige status",
+    "invalid_duration": "Ongeldige duur",
     "conflict": "Conflict",
     "email_already_exists": "Er bestaat al een account met dit e-mailadres",
     "google_account_mismatch": "Dit Google-account is al gekoppeld aan een andere gebruiker",
@@ -64,7 +73,8 @@
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",
     "email_confirmed": "E-mail succesvol bevestigd.",
     "password_reset_sent": "Als er een account bestaat voor dit e-mailadres, is er een resetlink verzonden.",
-    "password_reset": "Wachtwoord bijgewerkt. U kunt inloggen."
+    "password_reset": "Wachtwoord bijgewerkt. U kunt inloggen.",
+    "vet_invite_sent": "Als een dierenarts overeenkomt met dit e-mailadres, wordt hij toegevoegd aan uw praktijken."
   },
   "defaults": {
     "auto_reply_unavailable": "Ik ben niet beschikbaar, ik neem snel contact met u op."

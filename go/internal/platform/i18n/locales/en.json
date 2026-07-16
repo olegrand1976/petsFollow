@@ -9,6 +9,7 @@
     "file_required": "Image file required",
     "media_unavailable": "Media storage unavailable",
     "token_required": "Token required",
+    "refresh_token_required": "Refresh token required",
     "body_required": "Message body required",
     "profile_fields_required": "Required fields missing",
     "invalid_plan": "Invalid plan",
@@ -51,6 +52,14 @@
     "no_entitlement": "No entitlement",
     "invalid_confirm_link": "Invalid confirmation link",
     "invalid_reset_link": "Invalid or expired reset link",
+    "cannot_change_practice": "Cannot change practice with an active subscription",
+    "reminder_not_found": "Reminder not found",
+    "invalid_postpone_days": "Invalid postpone (7, 14 or 30 days)",
+    "visit_not_found": "Visit not found",
+    "invalid_card_key": "Invalid discovery card",
+    "invalid_platform": "Invalid platform",
+    "invalid_status": "Invalid status",
+    "invalid_duration": "Invalid duration",
     "conflict": "Conflict",
     "email_already_exists": "An account already exists with this email",
     "google_account_mismatch": "This Google account is already linked to another user",
@@ -64,7 +73,8 @@
     "confirm_email_sent": "A confirmation email has been sent.",
     "email_confirmed": "Email confirmed successfully.",
     "password_reset_sent": "If an account exists for this email, a reset link has been sent.",
-    "password_reset": "Password updated. You can sign in."
+    "password_reset": "Password updated. You can sign in.",
+    "vet_invite_sent": "If a veterinarian matches this email, they will be added to your practices."
   },
   "defaults": {
     "auto_reply_unavailable": "I am unavailable, I will get back to you shortly."

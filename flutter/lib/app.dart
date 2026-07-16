@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
-import 'package:petsfollow_mobile/features/home/presentation/home_screen.dart';
+import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetsFollowApp extends StatefulWidget {
@@ -22,6 +23,7 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     LocaleController.instance.addListener(_onLocaleChanged);
     LocaleController.instance.load();
     ReminderController.instance.init();
+    NotificationService.instance.init();
   }
 
   @override
@@ -68,6 +70,9 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _bootstrap() async {
     await ApiClient.instance.restoreSession();
+    if (ApiClient.instance.token != null) {
+      await NotificationService.instance.init();
+    }
     if (mounted) setState(() => _ready = true);
   }
 
@@ -81,6 +86,6 @@ class _AuthGateState extends State<AuthGate> {
     if (ApiClient.instance.token == null) {
       return LoginScreen(onLoggedIn: _onAuthChanged);
     }
-    return HomeScreen(onLogout: _onAuthChanged);
+    return MainShellScreen(onLogout: _onAuthChanged);
   }
 }

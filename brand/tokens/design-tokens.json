@@ -30,11 +30,16 @@
   "pets": {
     "bg": "#0D1B2A",
     "surface": "#1B2838",
+    "surfaceElevated": "#243447",
     "primary": "#52B788",
     "accent": "#F4A261",
+    "gold": "#E9C46A",
+    "alert": "#E76F51",
     "text": "#FEFAE0",
     "textMuted": "#94A3B8",
-    "radius": "20px"
+    "radius": "20px",
+    "radiusLg": "28px",
+    "gradientBg": "linear-gradient(180deg, #0D1B2A 0%, #1B2838 48%)"
   },
   "font": {
     "sans": "'DM Sans', system-ui, sans-serif",

@@ -30,6 +30,8 @@ const (
 	TimelineMessage   TimelineType = "message"
 	TimelineHeartRate TimelineType = "heartrate"
 	TimelineEvent     TimelineType = "event"
+	TimelineCare      TimelineType = "care"
+	TimelineVisit     TimelineType = "visit"
 )
 
 func CalculateBPM(tapCount, durationSec int) int {

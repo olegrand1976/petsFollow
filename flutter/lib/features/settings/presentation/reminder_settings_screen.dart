@@ -35,13 +35,15 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     await ReminderController.instance.save(
       enabled: enabled,
       hour: time.hour,
       minute: time.minute,
+      notificationTitle: l10n.notificationHrTitle,
+      notificationBody: l10n.notificationHrBody,
     );
     if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.remindersSaved)));
     }
   }

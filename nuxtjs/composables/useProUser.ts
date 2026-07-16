@@ -46,8 +46,7 @@ export function useProUser() {
   }
 
   function logout() {
-    const token = useCookie('pf_token')
-    token.value = null
+    clearAuthTokens()
     userState.value = null
     navigateTo('/login')
   }

@@ -116,6 +116,14 @@ func (t *TokenIssuer) ParseMFA(tokenStr string) (Identity, error) {
 }
 
 func (t *TokenIssuer) Parse(tokenStr string) (Identity, error) {
+	return t.parseTyped(tokenStr, "access")
+}
+
+func (t *TokenIssuer) ParseRefresh(tokenStr string) (Identity, error) {
+	return t.parseTyped(tokenStr, "refresh")
+}
+
+func (t *TokenIssuer) parseTyped(tokenStr, typ string) (Identity, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.secret, nil
 	})
@@ -123,7 +131,7 @@ func (t *TokenIssuer) Parse(tokenStr string) (Identity, error) {
 		return Identity{}, ErrUnauthorized
 	}
 	c, ok := token.Claims.(*claims)
-	if !ok || !token.Valid || c.Typ != "access" {
+	if !ok || !token.Valid || c.Typ != typ {
 		return Identity{}, ErrUnauthorized
 	}
 	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID}, nil

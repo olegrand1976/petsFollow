@@ -9,8 +9,11 @@ abstract final class AppColors {
   static const brandCoral = Color(0xFFF4A261);
   static const bg = Color(0xFF0D1B2A);
   static const surface = Color(0xFF1B2838);
+  static const surfaceElevated = Color(0xFF243447);
   static const primary = Color(0xFF52B788);
   static const accent = Color(0xFFF4A261);
+  static const gold = Color(0xFFE9C46A);
+  static const alert = Color(0xFFE76F51);
   static const cream = Color(0xFFFEFAE0);
   static const textMuted = Color(0xFF94A3B8);
 }

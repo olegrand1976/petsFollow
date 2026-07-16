@@ -1,12 +1,28 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import {
   extractAccessToken,
   isMFAChallenge,
   parseJwtRole,
   unwrapAuthData,
+  persistAuthTokens,
+  clearAuthTokens,
   type AuthMFAChallenge,
   type AuthTokens,
 } from '../../composables/useAuth'
+
+const cookieStore = new Map<string, string | null>()
+
+vi.stubGlobal('useCookie', (name: string, _opts?: unknown) => {
+  if (!cookieStore.has(name)) cookieStore.set(name, null)
+  return {
+    get value() {
+      return cookieStore.get(name) ?? null
+    },
+    set value(v: string | null) {
+      cookieStore.set(name, v)
+    },
+  }
+})
 
 describe('useAuth helpers', () => {
   const tokens: AuthTokens = {
@@ -20,6 +36,10 @@ describe('useAuth helpers', () => {
     mfaToken: 'mfa.jwt',
     expiresIn: 300,
   }
+
+  beforeEach(() => {
+    cookieStore.clear()
+  })
 
   it('unwrapAuthData lit data enveloppé ou brut', () => {
     expect(unwrapAuthData({ data: tokens })).toEqual(tokens)
@@ -45,5 +65,14 @@ describe('useAuth helpers', () => {
     expect(parseJwtRole(token)).toBe('vet')
     expect(parseJwtRole('bad')).toBeNull()
     expect(parseJwtRole(null)).toBeNull()
+  })
+
+  it('persistAuthTokens / clearAuthTokens gèrent pf_token et pf_refresh', () => {
+    persistAuthTokens(tokens)
+    expect(cookieStore.get('pf_token')).toBe('access.jwt')
+    expect(cookieStore.get('pf_refresh')).toBe('refresh.jwt')
+    clearAuthTokens()
+    expect(cookieStore.get('pf_token')).toBeNull()
+    expect(cookieStore.get('pf_refresh')).toBeNull()
   })
 })

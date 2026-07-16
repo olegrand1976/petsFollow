@@ -12,6 +12,10 @@ curl -sf "$API/ready" | grep -q ready
 VET=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"vet.demo@petsfollow.test","password":"VetDemo123!"}')
 VET_TOKEN=$(echo "$VET" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+VET_REFRESH=$(echo "$VET" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['refreshToken'])")
+REFRESHED=$(curl -sf -X POST "$API/api/v1/auth/refresh" -H 'Content-Type: application/json' \
+  -d "{\"refreshToken\":\"$VET_REFRESH\"}")
+echo "$REFRESHED" | python3 -c "import sys,json; d=json.load(sys.stdin)['data']; assert d.get('accessToken'), d"
 
 CLIENT=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"client.demo@petsfollow.test","password":"ClientDemo123!"}')

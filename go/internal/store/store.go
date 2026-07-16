@@ -509,6 +509,13 @@ func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]
 		FROM messaging.messages m
 		JOIN messaging.threads t ON t.id = m.thread_id
 		WHERE t.pet_id=$1 OR EXISTS (SELECT 1 FROM pets.pets p WHERE p.id=$1 AND p.owner_user_id=t.client_user_id)
+		UNION ALL
+		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
+		FROM care.reminders WHERE pet_id=$1 AND status='done'
+		UNION ALL
+		SELECT id::text, 'visit', 'Visite', COALESCE(notes,''), COALESCE(scheduled_at, created_at),
+			jsonb_build_object('status', status, 'source', source)
+		FROM visits.visits WHERE pet_id=$1 AND status='done'
 		ORDER BY 4 DESC`, petID)
 	if err != nil {
 		return nil, err

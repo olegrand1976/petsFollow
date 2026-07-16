@@ -34,7 +34,6 @@ const { t } = useI18n()
 const { mapError } = useApiError()
 
 const route = useRoute()
-const session = useCookie('pf_token')
 const loading = ref(true)
 const confirmed = ref(false)
 const confirmedEmail = ref('')
@@ -71,7 +70,11 @@ onMounted(async () => {
     confirmed.value = true
     confirmedEmail.value = data.email || ''
     if (data.accessToken) {
-      session.value = data.accessToken
+      persistAuthTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      })
       sessionReady.value = true
     }
   } catch (e: any) {

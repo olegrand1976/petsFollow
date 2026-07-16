@@ -35,3 +35,18 @@ flutter run --dart-define=API_BASE=http://10.0.2.2:8291   # émulateur Android
 ```
 
 Deep links Stripe : `petsfollow://payment/success` · `petsfollow://payment/cancel`
+
+## Firebase App Distribution (Android)
+
+Groupe testeurs : `petsfollow-testers`  
+API cible par défaut : Cloud Run `https://petsfollow-api-a7ako2njea-od.a.run.app`  
+(domaine `api.petsfollow.ll-it-sc.be` : à activer via DNS OVH — voir doc GCP)
+
+```bash
+make firebase-android-dist
+# ou URL custom :
+# API_BASE=https://… make firebase-android-dist
+```
+
+Console : https://console.firebase.google.com/project/premedica-prod-2025/appdistribution  
+App Android Tester pour installer les builds invités.

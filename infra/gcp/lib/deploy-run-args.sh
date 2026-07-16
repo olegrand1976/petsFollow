@@ -1,5 +1,8 @@
 # Variables Cloud Run partagées petsFollow. Source : infra/gcp/lib/gcp-env.sh
 # shellcheck shell=bash
+# BILLING_MOCK_ENABLED : défaut true (sécurité). Pour Stripe live :
+#   BILLING_MOCK_ENABLED=false ./infra/gcp/cloudbuild.yaml …
+# ou export avant deploy manuel. Voir documentation/07-STRIPE-BILLING.md
 set -euo pipefail
 
 pf_resolve_redis_addr() {
@@ -29,6 +32,8 @@ pf_write_api_env_file() {
   local path="$1"
   local seed_enabled="${2:-false}"
   local redis_addr
+  local billing_mock
+  billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   cat >"$path" <<EOF
 HTTP_ADDR: ":8080"
@@ -42,7 +47,7 @@ SMTP_PORT: "587"
 SMTP_FROM: "petsFollow <noreply@ll-it-sc.be>"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
-BILLING_MOCK_ENABLED: "true"
+BILLING_MOCK_ENABLED: "${billing_mock}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 EOF

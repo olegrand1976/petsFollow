@@ -301,4 +301,242 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get sentToVet => 'Meting naar dierenarts gestuurd';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navPets => 'Dieren';
+
+  @override
+  String get navCare => 'Zorg';
+
+  @override
+  String get navMessages => 'Berichten';
+
+  @override
+  String get navProfile => 'Profiel';
+
+  @override
+  String get speciesDog => 'Hond';
+
+  @override
+  String get speciesCat => 'Kat';
+
+  @override
+  String get speciesHorse => 'Paard';
+
+  @override
+  String get speciesOther => 'Anders';
+
+  @override
+  String get careComingSoon => 'Zorgherinneringen komen binnenkort';
+
+  @override
+  String get emptyPetsTitle => 'Geen huisdieren';
+
+  @override
+  String get emptyPetsBody =>
+      'Voeg uw eerste huisdier toe om te beginnen met hartslagmonitoring bij uw dierenarts.';
+
+  @override
+  String get discoveryTitle => 'Ontdek petsFollow';
+
+  @override
+  String get discoveryMission => 'Uw 7-daagse traject';
+
+  @override
+  String get discoveryDay0Title => 'Dag 0 — Welkom';
+
+  @override
+  String get discoveryDay0Body =>
+      'Maak het profiel van uw huisdier aan en leer hoe u de hartslag meet.';
+
+  @override
+  String get discoveryDay2Title => 'Dag 2 — Eerste meting';
+
+  @override
+  String get discoveryDay2Body =>
+      'Doe uw eerste hartslagmeting en oefen de techniek.';
+
+  @override
+  String get discoveryDay4Title => 'Dag 4 — Routine';
+
+  @override
+  String get discoveryDay4Body =>
+      'Bouw een dagelijkse meetroutine op met gepersonaliseerde herinneringen.';
+
+  @override
+  String get discoveryDay6Title => 'Dag 6 — Delen met dierenarts';
+
+  @override
+  String get discoveryDay6Body =>
+      'Uw metingen worden gedeeld met uw dierenarts voor optimale opvolging.';
+
+  @override
+  String get myVets => 'Mijn dierenartsen';
+
+  @override
+  String get addVetByEmail => 'Dierenarts toevoegen via e-mail';
+
+  @override
+  String get vetEmailHint => 'email@praktijk.vet';
+
+  @override
+  String get noVets => 'Geen gekoppelde dierenarts';
+
+  @override
+  String get primaryVet => 'Hoofddierenarts';
+
+  @override
+  String get setPrimaryVet => 'Instellen als hoofddierenarts';
+
+  @override
+  String get careTitle => 'Zorg';
+
+  @override
+  String get careDone => 'Gedaan';
+
+  @override
+  String get carePostpone => 'Uitstellen';
+
+  @override
+  String get careOverdue => 'Te laat';
+
+  @override
+  String get visitHistory => 'Bezoekgeschiedenis';
+
+  @override
+  String get requestVisit => 'Bezoek aanvragen';
+
+  @override
+  String get upcomingVisit => 'Komend bezoek';
+
+  @override
+  String get notificationHrTitle => 'petsFollow';
+
+  @override
+  String get notificationHrBody =>
+      'Tijd voor een hartslagmeting van uw huisdier';
+
+  @override
+  String get reviewAskTitle => 'Bevalt petsFollow?';
+
+  @override
+  String get reviewAskYes => 'Ja, app beoordelen';
+
+  @override
+  String get reviewAskNo => 'Later';
+
+  @override
+  String get carePlusUpsell =>
+      'Zorg+ — gepersonaliseerde medicatie- en zorgherinneringen';
+
+  @override
+  String get familyPackHint => 'Gezinspakket — meerdere dieren, één abonnement';
+
+  @override
+  String get discoveryMarkDone => 'Missie voltooid';
+
+  @override
+  String get notificationPreferences => 'Meldingsvoorkeuren';
+
+  @override
+  String get notificationPrefsHint =>
+      'Kies welke meldingstypes u wilt ontvangen.';
+
+  @override
+  String get notificationPrefsSaved => 'Voorkeuren opgeslagen';
+
+  @override
+  String get notificationPrefHr => 'Hartslagmetingen';
+
+  @override
+  String get notificationPrefCare => 'Zorgherinneringen';
+
+  @override
+  String get notificationPrefVisits => 'Bezoeken';
+
+  @override
+  String get notificationPrefMessages => 'Berichten';
+
+  @override
+  String get notificationPrefDiscovery => 'Ontdekkingsreis';
+
+  @override
+  String get notificationPrefBilling => 'Facturering';
+
+  @override
+  String carePostponeDays(int days) {
+    return 'Uitstellen met $days dagen';
+  }
+
+  @override
+  String get noCareReminders => 'Geen openstaande zorgherinneringen';
+
+  @override
+  String get noThreads => 'Geen gesprekken';
+
+  @override
+  String get vetInviteSent => 'Uitnodiging verzonden naar dierenarts';
+
+  @override
+  String get visitRequested => 'Bezoekaanvraag verzonden';
+
+  @override
+  String get primaryVetSet => 'Hoofddierenarts bijgewerkt';
+
+  @override
+  String get visitStatusRequested => 'Aangevraagd';
+
+  @override
+  String get visitStatusConfirmed => 'Bevestigd';
+
+  @override
+  String get visitStatusDone => 'Afgerond';
+
+  @override
+  String get visitStatusCancelled => 'Geannuleerd';
+
+  @override
+  String get horseHealthTitle => 'Paardengezondheid';
+
+  @override
+  String get horseContactsTitle => 'Contacten (hoefsmid, tandarts…)';
+
+  @override
+  String get horseCompetitionsTitle => 'Wedstrijden';
+
+  @override
+  String get horseContactsSoon =>
+      'Beheer uw professionele contacten — binnenkort beschikbaar.';
+
+  @override
+  String get horseCompetitionsSoon =>
+      'Wedstrijdkalender en resultaten — binnenkort beschikbaar.';
+
+  @override
+  String get horsePackUpsell =>
+      'Paardenpakket — hoefsmid, mestonderzoek en wedstrijdopvolging';
+
+  @override
+  String get careTypeFarrier => 'Hoefsmid';
+
+  @override
+  String get careTypeFecalEgg => 'Mestonderzoek';
+
+  @override
+  String get careTypeVaccination => 'Vaccinatie';
+
+  @override
+  String get careTypeDeworming => 'Ontworming';
+
+  @override
+  String get careTypeVetCheck => 'Dierenartscontrole';
+
+  @override
+  String get careTypeDental => 'Gebitsverzorging';
+
+  @override
+  String get careTypeCustom => 'Aangepaste herinnering';
 }

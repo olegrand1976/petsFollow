@@ -9,6 +9,7 @@
     "file_required": "Fichier image requis",
     "media_unavailable": "Stockage média indisponible",
     "token_required": "Token requis",
+    "refresh_token_required": "Refresh token requis",
     "body_required": "Corps du message requis",
     "profile_fields_required": "Champs obligatoires manquants",
     "invalid_plan": "Formule invalide",
@@ -51,6 +52,14 @@
     "no_entitlement": "Aucun droit d'accès",
     "invalid_confirm_link": "Lien de confirmation invalide",
     "invalid_reset_link": "Lien de réinitialisation invalide ou expiré",
+    "cannot_change_practice": "Impossible de changer de cabinet avec un abonnement actif",
+    "reminder_not_found": "Rappel introuvable",
+    "invalid_postpone_days": "Report invalide (7, 14 ou 30 jours)",
+    "visit_not_found": "Visite introuvable",
+    "invalid_card_key": "Carte découverte invalide",
+    "invalid_platform": "Plateforme invalide",
+    "invalid_status": "Statut invalide",
+    "invalid_duration": "Durée invalide",
     "conflict": "Conflit",
     "email_already_exists": "Un compte existe déjà avec cet email",
     "google_account_mismatch": "Ce compte Google est déjà lié à un autre utilisateur",
@@ -64,7 +73,8 @@
     "confirm_email_sent": "Un email de confirmation a été envoyé.",
     "email_confirmed": "Email confirmé avec succès.",
     "password_reset_sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
-    "password_reset": "Mot de passe mis à jour. Vous pouvez vous connecter."
+    "password_reset": "Mot de passe mis à jour. Vous pouvez vous connecter.",
+    "vet_invite_sent": "Si un vétérinaire correspond à cet email, il sera ajouté à vos cabinets."
   },
   "defaults": {
     "auto_reply_unavailable": "Je suis indisponible, je reviens vers vous rapidement."

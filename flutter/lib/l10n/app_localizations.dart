@@ -621,6 +621,456 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Relevé envoyé au véto'**
   String get sentToVet;
+
+  /// No description provided for @navHome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accueil'**
+  String get navHome;
+
+  /// No description provided for @navPets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animaux'**
+  String get navPets;
+
+  /// No description provided for @navCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins'**
+  String get navCare;
+
+  /// No description provided for @navMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get navMessages;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil'**
+  String get navProfile;
+
+  /// No description provided for @speciesDog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chien'**
+  String get speciesDog;
+
+  /// No description provided for @speciesCat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chat'**
+  String get speciesCat;
+
+  /// No description provided for @speciesHorse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cheval'**
+  String get speciesHorse;
+
+  /// No description provided for @speciesOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get speciesOther;
+
+  /// No description provided for @careComingSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les rappels de soins arrivent bientôt'**
+  String get careComingSoon;
+
+  /// No description provided for @emptyPetsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun animal'**
+  String get emptyPetsTitle;
+
+  /// No description provided for @emptyPetsBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez votre premier animal pour commencer le suivi cardiaque avec votre vétérinaire.'**
+  String get emptyPetsBody;
+
+  /// No description provided for @discoveryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Découvrir petsFollow'**
+  String get discoveryTitle;
+
+  /// No description provided for @discoveryMission.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre parcours en 7 jours'**
+  String get discoveryMission;
+
+  /// No description provided for @discoveryDay0Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour 0 — Bienvenue'**
+  String get discoveryDay0Title;
+
+  /// No description provided for @discoveryDay0Body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez le profil de votre animal et découvrez comment mesurer sa fréquence cardiaque.'**
+  String get discoveryDay0Body;
+
+  /// No description provided for @discoveryDay2Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour 2 — Première mesure'**
+  String get discoveryDay2Title;
+
+  /// No description provided for @discoveryDay2Body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.'**
+  String get discoveryDay2Body;
+
+  /// No description provided for @discoveryDay4Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour 4 — Routine'**
+  String get discoveryDay4Title;
+
+  /// No description provided for @discoveryDay4Body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Installez une routine de mesure quotidienne avec les rappels personnalisés.'**
+  String get discoveryDay4Body;
+
+  /// No description provided for @discoveryDay6Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour 6 — Partage véto'**
+  String get discoveryDay6Title;
+
+  /// No description provided for @discoveryDay6Body.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos relevés sont partagés avec votre vétérinaire pour un suivi optimal.'**
+  String get discoveryDay6Body;
+
+  /// No description provided for @myVets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes vétérinaires'**
+  String get myVets;
+
+  /// No description provided for @addVetByEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un véto par email'**
+  String get addVetByEmail;
+
+  /// No description provided for @vetEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'email@cabinet.vet'**
+  String get vetEmailHint;
+
+  /// No description provided for @noVets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vétérinaire lié'**
+  String get noVets;
+
+  /// No description provided for @primaryVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vétérinaire principal'**
+  String get primaryVet;
+
+  /// No description provided for @setPrimaryVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Définir comme véto principal'**
+  String get setPrimaryVet;
+
+  /// No description provided for @careTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins'**
+  String get careTitle;
+
+  /// No description provided for @careDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fait'**
+  String get careDone;
+
+  /// No description provided for @carePostpone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter'**
+  String get carePostpone;
+
+  /// No description provided for @careOverdue.
+  ///
+  /// In fr, this message translates to:
+  /// **'En retard'**
+  String get careOverdue;
+
+  /// No description provided for @visitHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des visites'**
+  String get visitHistory;
+
+  /// No description provided for @requestVisit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander une visite'**
+  String get requestVisit;
+
+  /// No description provided for @upcomingVisit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visite à venir'**
+  String get upcomingVisit;
+
+  /// No description provided for @notificationHrTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'petsFollow'**
+  String get notificationHrTitle;
+
+  /// No description provided for @notificationHrBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il est temps de prendre un relevé cardiaque pour votre animal'**
+  String get notificationHrBody;
+
+  /// No description provided for @reviewAskTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous aimez petsFollow ?'**
+  String get reviewAskTitle;
+
+  /// No description provided for @reviewAskYes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, noter l\'app'**
+  String get reviewAskYes;
+
+  /// No description provided for @reviewAskNo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get reviewAskNo;
+
+  /// No description provided for @carePlusUpsell.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins+ — rappels personnalisés pour médicaments et soins'**
+  String get carePlusUpsell;
+
+  /// No description provided for @familyPackHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pack famille — plusieurs animaux, un seul abonnement'**
+  String get familyPackHint;
+
+  /// No description provided for @discoveryMarkDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mission accomplie'**
+  String get discoveryMarkDone;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences de notifications'**
+  String get notificationPreferences;
+
+  /// No description provided for @notificationPrefsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez les types de notifications que vous souhaitez recevoir.'**
+  String get notificationPrefsHint;
+
+  /// No description provided for @notificationPrefsSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences enregistrées'**
+  String get notificationPrefsSaved;
+
+  /// No description provided for @notificationPrefHr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevés cardiaques'**
+  String get notificationPrefHr;
+
+  /// No description provided for @notificationPrefCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels de soins'**
+  String get notificationPrefCare;
+
+  /// No description provided for @notificationPrefVisits.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visites'**
+  String get notificationPrefVisits;
+
+  /// No description provided for @notificationPrefMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get notificationPrefMessages;
+
+  /// No description provided for @notificationPrefDiscovery.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parcours découverte'**
+  String get notificationPrefDiscovery;
+
+  /// No description provided for @notificationPrefBilling.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturation'**
+  String get notificationPrefBilling;
+
+  /// No description provided for @carePostponeDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter de {days} jours'**
+  String carePostponeDays(int days);
+
+  /// No description provided for @noCareReminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rappel de soin en cours'**
+  String get noCareReminders;
+
+  /// No description provided for @noThreads.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation'**
+  String get noThreads;
+
+  /// No description provided for @vetInviteSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation envoyée au vétérinaire'**
+  String get vetInviteSent;
+
+  /// No description provided for @visitRequested.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande de visite envoyée'**
+  String get visitRequested;
+
+  /// No description provided for @primaryVetSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vétérinaire principal mis à jour'**
+  String get primaryVetSet;
+
+  /// No description provided for @visitStatusRequested.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandée'**
+  String get visitStatusRequested;
+
+  /// No description provided for @visitStatusConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmée'**
+  String get visitStatusConfirmed;
+
+  /// No description provided for @visitStatusDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminée'**
+  String get visitStatusDone;
+
+  /// No description provided for @visitStatusCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulée'**
+  String get visitStatusCancelled;
+
+  /// No description provided for @horseHealthTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Santé équine'**
+  String get horseHealthTitle;
+
+  /// No description provided for @horseContactsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacts (maréchal, dentiste…)'**
+  String get horseContactsTitle;
+
+  /// No description provided for @horseCompetitionsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compétitions'**
+  String get horseCompetitionsTitle;
+
+  /// No description provided for @horseContactsSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérez vos contacts professionnels — bientôt disponible.'**
+  String get horseContactsSoon;
+
+  /// No description provided for @horseCompetitionsSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Calendrier et résultats de compétitions — bientôt disponible.'**
+  String get horseCompetitionsSoon;
+
+  /// No description provided for @horsePackUpsell.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pack Cheval — rappels maréchal, coproscopie et suivi compétitions'**
+  String get horsePackUpsell;
+
+  /// No description provided for @careTypeFarrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maréchal-ferrant'**
+  String get careTypeFarrier;
+
+  /// No description provided for @careTypeFecalEgg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coproscopie'**
+  String get careTypeFecalEgg;
+
+  /// No description provided for @careTypeVaccination.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vaccination'**
+  String get careTypeVaccination;
+
+  /// No description provided for @careTypeDeworming.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vermifuge'**
+  String get careTypeDeworming;
+
+  /// No description provided for @careTypeVetCheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrôle vétérinaire'**
+  String get careTypeVetCheck;
+
+  /// No description provided for @careTypeDental.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins dentaires'**
+  String get careTypeDental;
+
+  /// No description provided for @careTypeCustom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel personnalisé'**
+  String get careTypeCustom;
 }
 
 class _AppLocalizationsDelegate

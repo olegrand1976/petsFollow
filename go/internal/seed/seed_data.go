@@ -41,6 +41,20 @@ type dossierEventDef struct {
 	age        time.Duration
 }
 
+type careReminderDef struct {
+	reminderType string
+	title        string
+	dueDays      int // days from now (negative = past)
+	status       string
+}
+
+type visitDef struct {
+	status      string
+	notes       string
+	source      string
+	scheduledIn time.Duration // from now
+}
+
 type petDef struct {
 	name          string
 	species       string
@@ -53,12 +67,16 @@ type petDef struct {
 	messages      []messageDef
 	heartRates    []heartRateDef
 	dossierEvents []dossierEventDef
+	careReminders []careReminderDef
+	visits        []visitDef
 }
 
 type clientDef struct {
-	email    string
-	fullName string
-	pets     []petDef
+	email              string
+	fullName           string
+	pets               []petDef
+	seedDiscovery      bool
+	extraPracticeVet   string // vet email for secondary practice link
 }
 
 type practiceDef struct {
@@ -103,8 +121,10 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate: true,
 		clients: []clientDef{
 			{
-				email:    "client.demo@petsfollow.test",
-				fullName: "Sophie Demo",
+				email:            "client.demo@petsfollow.test",
+				fullName:         "Sophie Demo",
+				seedDiscovery:    true,
+				extraPracticeVet: "vet.parc@petsfollow.test",
 				pets: []petDef{
 					{
 						name:          "Rex",
@@ -129,6 +149,15 @@ var demoPractices = []practiceDef{
 						dossierEvents: []dossierEventDef{
 							{authorRole: "vet", eventType: "note", content: "Suivi cardiaque post-op. Fréquence stable.", age: -14 * 24 * time.Hour},
 						},
+						careReminders: []careReminderDef{
+							{reminderType: "vaccination", title: "Vaccination", dueDays: 120, status: "pending"},
+							{reminderType: "deworming", title: "Vermifuge", dueDays: 14, status: "pending"},
+							{reminderType: "vet_check", title: "Contrôle vétérinaire", dueDays: -30, status: "done"},
+							{reminderType: "dental", title: "Soins dentaires", dueDays: 200, status: "pending"},
+						},
+						visits: []visitDef{
+							{status: "confirmed", notes: "Contrôle post-op cardiaque", source: "vet", scheduledIn: 7 * 24 * time.Hour},
+						},
 					},
 					{
 						name:          "Bella",
@@ -144,6 +173,20 @@ var demoPractices = []practiceDef{
 						},
 						heartRates: []heartRateDef{
 							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, age: -5 * time.Hour},
+						},
+					},
+					{
+						name:          "Spirit",
+						species:       "horse",
+						breed:         "Pur-sang",
+						weightKg:      480,
+						paymentStatus: "active",
+						plan:          billing.PlanAnnual,
+						billingMode:   billing.ModeOneTime,
+						entitlement:   billing.StatusActive,
+						careReminders: []careReminderDef{
+							{reminderType: "farrier", title: "Maréchal-ferrant", dueDays: 21, status: "pending"},
+							{reminderType: "fecal_egg", title: "Coproscopie", dueDays: 60, status: "pending"},
 						},
 					},
 				},

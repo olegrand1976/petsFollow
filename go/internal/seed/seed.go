@@ -2,6 +2,7 @@ package seed
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -55,6 +56,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := st.AccrueAllActiveEntitlements(ctx); err != nil {
 		return err
 	}
+	if err := seedEnrichment(ctx, pool); err != nil {
+		return err
+	}
 	logSummary()
 	return nil
 }
@@ -66,8 +70,10 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	_, err := tx.Exec(ctx, `TRUNCATE billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
 		identity.email_verification_tokens, identity.password_reset_tokens,
+		notifications.client_preferences, notifications.device_tokens,
+		discovery.progress, visits.visits, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
-		heartrate.sessions, pets.dossier_events, pets.pets, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
+		heartrate.sessions, pets.dossier_events, pets.pets, practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err
 }
 
@@ -203,6 +209,11 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 			}
 		}
 	}
+	if c.seedDiscovery {
+		if err := insertDiscoveryProgress(ctx, tx, clientID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -231,6 +242,16 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 			authorID = clientID
 		}
 		if err := insertDossierEvent(ctx, tx, petID, authorID, ev); err != nil {
+			return err
+		}
+	}
+	for _, cr := range pet.careReminders {
+		if err := insertCareReminder(ctx, tx, petID, reg.practiceID, cr); err != nil {
+			return err
+		}
+	}
+	for _, v := range pet.visits {
+		if err := insertVisit(ctx, tx, petID, reg.practiceID, v); err != nil {
 			return err
 		}
 	}
@@ -303,6 +324,83 @@ func insertDossierEvent(ctx context.Context, tx pgx.Tx, petID, authorID string, 
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		uuid.NewString(), petID, authorID, ev.eventType, ev.content, createdAt)
 	return err
+}
+
+func insertCareReminder(ctx context.Context, tx pgx.Tx, petID, practiceID string, cr careReminderDef) error {
+	status := cr.status
+	if status == "" {
+		status = "pending"
+	}
+	dueAt := time.Now().AddDate(0, 0, cr.dueDays)
+	updatedAt := dueAt
+	if status == "done" {
+		updatedAt = time.Now().AddDate(0, 0, cr.dueDays)
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO care.reminders (id, pet_id, practice_id, type, title, due_at, status, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		uuid.NewString(), petID, practiceID, cr.reminderType, cr.title, dueAt, status, updatedAt)
+	return err
+}
+
+func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v visitDef) error {
+	status := v.status
+	if status == "" {
+		status = "requested"
+	}
+	source := v.source
+	if source == "" {
+		source = "client"
+	}
+	var scheduledAt *time.Time
+	if v.scheduledIn != 0 {
+		t := time.Now().Add(v.scheduledIn)
+		scheduledAt = &t
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source)
+	return err
+}
+
+func insertDiscoveryProgress(ctx context.Context, tx pgx.Tx, userID string) error {
+	_, err := tx.Exec(ctx, `
+		INSERT INTO discovery.progress (user_id, started_at, completed_cards, streak_days, updated_at)
+		VALUES ($1, NOW() - INTERVAL '2 days', '["day0","day2"]'::jsonb, 2, NOW())`,
+		userID)
+	return err
+}
+
+func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
+	for _, practice := range demoPractices {
+		for _, client := range practice.clients {
+			if client.extraPracticeVet == "" {
+				continue
+			}
+			var clientID, vetID, practiceID string
+			err := pool.QueryRow(ctx, `
+				SELECT u.id::text, v.id::text, v.practice_id::text
+				FROM identity.users u
+				JOIN identity.users v ON v.email = $2 AND v.role = 'vet'
+				WHERE u.email = $1 AND u.role = 'client'`,
+				client.email, client.extraPracticeVet).Scan(&clientID, &vetID, &practiceID)
+			if errors.Is(err, pgx.ErrNoRows) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
+				VALUES ($1, $2, $3, $4)
+				ON CONFLICT (practice_id, client_user_id) DO NOTHING`,
+				uuid.NewString(), practiceID, clientID, vetID); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func logSummary() {

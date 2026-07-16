@@ -15,7 +15,7 @@ class PetFormScreen extends StatefulWidget {
 
 class _PetFormScreenState extends State<PetFormScreen> {
   final name = TextEditingController();
-  final species = TextEditingController(text: 'dog');
+  String selectedSpecies = 'dog';
   final breed = TextEditingController();
   String selectedPlan = 'triennial';
   bool autoRenew = true;
@@ -70,7 +70,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
     try {
       final res = await ApiClient.instance.createPet({
         'name': name.text,
-        'species': species.text,
+        'species': selectedSpecies,
         'breed': breed.text,
         'plan': selectedPlan,
         'billingMode': autoRenew ? 'subscription' : 'one_time',
@@ -161,7 +161,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
             ),
             const SizedBox(height: 12),
             TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName), onChanged: (_) => setState(() {})),
-            TextField(controller: species, decoration: InputDecoration(labelText: l10n.species)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: selectedSpecies,
+              decoration: InputDecoration(labelText: l10n.species),
+              items: [
+                DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
+                DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
+                DropdownMenuItem(value: 'horse', child: Text(l10n.speciesHorse)),
+                DropdownMenuItem(value: 'other', child: Text(l10n.speciesOther)),
+              ],
+              onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
+            ),
+            const SizedBox(height: 12),
             TextField(controller: breed, decoration: InputDecoration(labelText: l10n.breed)),
             const SizedBox(height: 24),
             Text(l10n.choosePlan, style: Theme.of(context).textTheme.titleMedium),

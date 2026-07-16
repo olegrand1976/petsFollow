@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 enum HeartRatePhase { ready, running, review }
@@ -77,10 +78,29 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   Future<void> validate() async {
     if (sessionId == null) return;
     await ApiClient.instance.validateHeartRate(sessionId!);
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sentToVet)));
-      Navigator.pop(context);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sentToVet)));
+    await _maybeAskReview(l10n);
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _maybeAskReview(AppLocalizations l10n) async {
+    if (!await InAppReviewHelper.shouldShowDialog()) return;
+    if (!mounted) return;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.reviewAskTitle),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.reviewAskNo)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.reviewAskYes)),
+        ],
+      ),
+    );
+    await InAppReviewHelper.recordAsked();
+    if (yes == true) {
+      await InAppReviewHelper.openStoreReview();
     }
   }
 

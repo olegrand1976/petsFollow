@@ -1,5 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/models/care_reminder.dart';
+import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
+import 'package:petsfollow_mobile/core/models/message_thread.dart';
+import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
+import 'package:petsfollow_mobile/core/models/vet_link.dart';
+import 'package:petsfollow_mobile/core/models/visit.dart';
+import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
@@ -50,6 +58,8 @@ class ApiClient {
     token = null;
     await _persistToken(null);
     loadToken();
+    NotificationService.instance.resetSession();
+    await DiscoveryController.instance.clearLocal();
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -62,6 +72,11 @@ class ApiClient {
     await _persistToken(token);
     loadToken();
     await syncLocaleFromMe();
+    try {
+      final me = await getMe();
+      DiscoveryController.instance.bindUser(me['userId'] as String? ?? me['id'] as String?);
+    } catch (_) {}
+    await NotificationService.instance.onLogin();
     return data;
   }
 
@@ -194,5 +209,104 @@ class ApiClient {
 
   Future<void> sendMessage(String threadId, String body) async {
     await dio.post('/api/v1/messaging/threads/$threadId/messages', data: {'body': body});
+  }
+
+  // --- Client enrichment ---
+
+  Future<List<VetLink>> getMyVets({String? primaryPracticeId}) async {
+    final res = await dio.get('/api/v1/me/vets');
+    final data = res.data['data'] as List<dynamic>;
+    return data
+        .map((v) => VetLink.fromJson(
+              Map<String, dynamic>.from(v as Map),
+              primaryPracticeId: primaryPracticeId,
+            ))
+        .toList();
+  }
+
+  Future<void> inviteVet(String email) async {
+    await dio.post('/api/v1/me/vets/invite', data: {'email': email});
+  }
+
+  Future<void> setPetPrimaryPractice(String petId, String practiceId) async {
+    await dio.patch('/api/v1/pets/$petId/primary-practice', data: {'practiceId': practiceId});
+  }
+
+  Future<List<CareReminder>> getCareReminders(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/care-reminders');
+    final data = res.data['data'] as List<dynamic>;
+    return data.map((r) => CareReminder.fromJson(Map<String, dynamic>.from(r as Map))).toList();
+  }
+
+  Future<CareReminder> createCareReminder(String petId, {String? title, int? dueDays}) async {
+    final res = await dio.post('/api/v1/pets/$petId/care-reminders', data: {
+      if (title != null) 'title': title,
+      if (dueDays != null) 'dueDays': dueDays,
+    });
+    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<CareReminder> markCareReminderDone(String id) async {
+    final res = await dio.post('/api/v1/care-reminders/$id/done');
+    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<CareReminder> postponeCareReminder(String id, int days) async {
+    final res = await dio.post('/api/v1/care-reminders/$id/postpone', data: {'days': days});
+    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<Visit>> getVisits(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/visits');
+    final data = res.data['data'] as List<dynamic>;
+    return data.map((v) => Visit.fromJson(Map<String, dynamic>.from(v as Map))).toList();
+  }
+
+  Future<Visit> createVisit(String petId, {String? notes}) async {
+    final res = await dio.post('/api/v1/pets/$petId/visits', data: {
+      if (notes != null) 'notes': notes,
+    });
+    return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<Visit> updateVisit(String id, String status) async {
+    final res = await dio.patch('/api/v1/visits/$id', data: {'status': status});
+    return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<DiscoveryProgress> getDiscovery() async {
+    final res = await dio.get('/api/v1/me/discovery');
+    return DiscoveryProgress.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<DiscoveryProgress> completeDiscoveryCard(String cardKey) async {
+    final res = await dio.post('/api/v1/me/discovery/complete', data: {'cardKey': cardKey});
+    return DiscoveryProgress.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> putDeviceToken(String token, String platform) async {
+    await dio.put('/api/v1/me/device-tokens', data: {'token': token, 'platform': platform});
+  }
+
+  Future<NotificationPrefs> getNotificationPrefs() async {
+    final res = await dio.get('/api/v1/me/notification-preferences');
+    return NotificationPrefs.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<NotificationPrefs> updateNotificationPrefs(NotificationPrefs prefs) async {
+    final res = await dio.patch('/api/v1/me/notification-preferences', data: prefs.toJson());
+    return NotificationPrefs.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<MessageThread>> getMessageThreads() async {
+    final res = await dio.get('/api/v1/messaging/threads');
+    final data = res.data['data'] as List<dynamic>;
+    return data.map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t as Map))).toList();
+  }
+
+  Future<List<ChatMessage>> getChatMessages(String threadId) async {
+    final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
+    final data = res.data['data'] as List<dynamic>;
+    return data.map((m) => ChatMessage.fromJson(Map<String, dynamic>.from(m as Map))).toList();
   }
 }

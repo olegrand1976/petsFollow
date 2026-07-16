@@ -1,3 +1,6 @@
+/** Aligné sur JWT_REFRESH_TTL (7 jours) — durée cookie ≠ durée JWT access. */
+export const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
+
 export type AuthTokens = {
   accessToken: string
   refreshToken?: string
@@ -36,4 +39,20 @@ export function unwrapAuthData(res: unknown): AuthResponse {
 export function extractAccessToken(res: AuthResponse): string | null {
   if (isMFAChallenge(res)) return null
   return res.accessToken ?? null
+}
+
+export function persistAuthTokens(pair: AuthTokens) {
+  const access = useCookie('pf_token', { maxAge: AUTH_COOKIE_MAX_AGE, sameSite: 'lax' })
+  const refresh = useCookie('pf_refresh', { maxAge: AUTH_COOKIE_MAX_AGE, sameSite: 'lax' })
+  access.value = pair.accessToken
+  if (pair.refreshToken) {
+    refresh.value = pair.refreshToken
+  }
+}
+
+export function clearAuthTokens() {
+  const access = useCookie('pf_token')
+  const refresh = useCookie('pf_refresh')
+  access.value = null
+  refresh.value = null
 }

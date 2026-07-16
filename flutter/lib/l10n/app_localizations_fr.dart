@@ -304,4 +304,243 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sentToVet => 'Relevé envoyé au véto';
+
+  @override
+  String get navHome => 'Accueil';
+
+  @override
+  String get navPets => 'Animaux';
+
+  @override
+  String get navCare => 'Soins';
+
+  @override
+  String get navMessages => 'Messages';
+
+  @override
+  String get navProfile => 'Profil';
+
+  @override
+  String get speciesDog => 'Chien';
+
+  @override
+  String get speciesCat => 'Chat';
+
+  @override
+  String get speciesHorse => 'Cheval';
+
+  @override
+  String get speciesOther => 'Autre';
+
+  @override
+  String get careComingSoon => 'Les rappels de soins arrivent bientôt';
+
+  @override
+  String get emptyPetsTitle => 'Aucun animal';
+
+  @override
+  String get emptyPetsBody =>
+      'Ajoutez votre premier animal pour commencer le suivi cardiaque avec votre vétérinaire.';
+
+  @override
+  String get discoveryTitle => 'Découvrir petsFollow';
+
+  @override
+  String get discoveryMission => 'Votre parcours en 7 jours';
+
+  @override
+  String get discoveryDay0Title => 'Jour 0 — Bienvenue';
+
+  @override
+  String get discoveryDay0Body =>
+      'Créez le profil de votre animal et découvrez comment mesurer sa fréquence cardiaque.';
+
+  @override
+  String get discoveryDay2Title => 'Jour 2 — Première mesure';
+
+  @override
+  String get discoveryDay2Body =>
+      'Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.';
+
+  @override
+  String get discoveryDay4Title => 'Jour 4 — Routine';
+
+  @override
+  String get discoveryDay4Body =>
+      'Installez une routine de mesure quotidienne avec les rappels personnalisés.';
+
+  @override
+  String get discoveryDay6Title => 'Jour 6 — Partage véto';
+
+  @override
+  String get discoveryDay6Body =>
+      'Vos relevés sont partagés avec votre vétérinaire pour un suivi optimal.';
+
+  @override
+  String get myVets => 'Mes vétérinaires';
+
+  @override
+  String get addVetByEmail => 'Ajouter un véto par email';
+
+  @override
+  String get vetEmailHint => 'email@cabinet.vet';
+
+  @override
+  String get noVets => 'Aucun vétérinaire lié';
+
+  @override
+  String get primaryVet => 'Vétérinaire principal';
+
+  @override
+  String get setPrimaryVet => 'Définir comme véto principal';
+
+  @override
+  String get careTitle => 'Soins';
+
+  @override
+  String get careDone => 'Fait';
+
+  @override
+  String get carePostpone => 'Reporter';
+
+  @override
+  String get careOverdue => 'En retard';
+
+  @override
+  String get visitHistory => 'Historique des visites';
+
+  @override
+  String get requestVisit => 'Demander une visite';
+
+  @override
+  String get upcomingVisit => 'Visite à venir';
+
+  @override
+  String get notificationHrTitle => 'petsFollow';
+
+  @override
+  String get notificationHrBody =>
+      'Il est temps de prendre un relevé cardiaque pour votre animal';
+
+  @override
+  String get reviewAskTitle => 'Vous aimez petsFollow ?';
+
+  @override
+  String get reviewAskYes => 'Oui, noter l\'app';
+
+  @override
+  String get reviewAskNo => 'Plus tard';
+
+  @override
+  String get carePlusUpsell =>
+      'Soins+ — rappels personnalisés pour médicaments et soins';
+
+  @override
+  String get familyPackHint =>
+      'Pack famille — plusieurs animaux, un seul abonnement';
+
+  @override
+  String get discoveryMarkDone => 'Mission accomplie';
+
+  @override
+  String get notificationPreferences => 'Préférences de notifications';
+
+  @override
+  String get notificationPrefsHint =>
+      'Choisissez les types de notifications que vous souhaitez recevoir.';
+
+  @override
+  String get notificationPrefsSaved => 'Préférences enregistrées';
+
+  @override
+  String get notificationPrefHr => 'Relevés cardiaques';
+
+  @override
+  String get notificationPrefCare => 'Rappels de soins';
+
+  @override
+  String get notificationPrefVisits => 'Visites';
+
+  @override
+  String get notificationPrefMessages => 'Messages';
+
+  @override
+  String get notificationPrefDiscovery => 'Parcours découverte';
+
+  @override
+  String get notificationPrefBilling => 'Facturation';
+
+  @override
+  String carePostponeDays(int days) {
+    return 'Reporter de $days jours';
+  }
+
+  @override
+  String get noCareReminders => 'Aucun rappel de soin en cours';
+
+  @override
+  String get noThreads => 'Aucune conversation';
+
+  @override
+  String get vetInviteSent => 'Invitation envoyée au vétérinaire';
+
+  @override
+  String get visitRequested => 'Demande de visite envoyée';
+
+  @override
+  String get primaryVetSet => 'Vétérinaire principal mis à jour';
+
+  @override
+  String get visitStatusRequested => 'Demandée';
+
+  @override
+  String get visitStatusConfirmed => 'Confirmée';
+
+  @override
+  String get visitStatusDone => 'Terminée';
+
+  @override
+  String get visitStatusCancelled => 'Annulée';
+
+  @override
+  String get horseHealthTitle => 'Santé équine';
+
+  @override
+  String get horseContactsTitle => 'Contacts (maréchal, dentiste…)';
+
+  @override
+  String get horseCompetitionsTitle => 'Compétitions';
+
+  @override
+  String get horseContactsSoon =>
+      'Gérez vos contacts professionnels — bientôt disponible.';
+
+  @override
+  String get horseCompetitionsSoon =>
+      'Calendrier et résultats de compétitions — bientôt disponible.';
+
+  @override
+  String get horsePackUpsell =>
+      'Pack Cheval — rappels maréchal, coproscopie et suivi compétitions';
+
+  @override
+  String get careTypeFarrier => 'Maréchal-ferrant';
+
+  @override
+  String get careTypeFecalEgg => 'Coproscopie';
+
+  @override
+  String get careTypeVaccination => 'Vaccination';
+
+  @override
+  String get careTypeDeworming => 'Vermifuge';
+
+  @override
+  String get careTypeVetCheck => 'Contrôle vétérinaire';
+
+  @override
+  String get careTypeDental => 'Soins dentaires';
+
+  @override
+  String get careTypeCustom => 'Rappel personnalisé';
 }

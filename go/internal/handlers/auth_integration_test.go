@@ -252,3 +252,65 @@ func TestAuthResetInvalidToken(t *testing.T) {
 		t.Fatalf("expected not_found, got %d %#v", code, env)
 	}
 }
+
+func TestAuthRefresh(t *testing.T) {
+	api := newTestAPI(t)
+	email := uniqueEmail("e2e-refresh")
+	password := "TestPass123!"
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": email, "password": password, "fullName": "Dr Refresh", "practiceName": "Cabinet Refresh",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register status %d: %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := strings.TrimPrefix(confirmPath, "/confirm-email?token=")
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": token,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm status %d: %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login", map[string]any{
+		"email": email, "password": password,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("login status %d: %#v", code, env)
+	}
+	loginData := dataMap(t, env)
+	refreshToken, _ := loginData["refreshToken"].(string)
+	if refreshToken == "" {
+		t.Fatal("expected refreshToken after login")
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh", map[string]any{
+		"refreshToken": refreshToken,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("refresh status %d: %#v", code, env)
+	}
+	refreshed := dataMap(t, env)
+	accessToken, _ := refreshed["accessToken"].(string)
+	newRefresh, _ := refreshed["refreshToken"].(string)
+	if accessToken == "" || newRefresh == "" {
+		t.Fatalf("expected new token pair: %#v", refreshed)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/me", nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept-Language", "fr")
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("me status %d: %s", rec.Code, rec.Body.String())
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/refresh", map[string]any{
+		"refreshToken": "not-a-jwt",
+	})
+	if code != http.StatusUnauthorized || errCode(env) != "unauthorized" {
+		t.Fatalf("expected unauthorized for bad refresh, got %d %#v", code, env)
+	}
+}

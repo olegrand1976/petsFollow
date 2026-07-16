@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { extractAccessToken, isMFAChallenge, unwrapAuthData } from '~/composables/useAuth'
+import { extractAccessToken, isMFAChallenge, unwrapAuthData, persistAuthTokens, clearAuthTokens } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
@@ -111,7 +111,6 @@ const mfaToken = ref('')
 const step = ref<'credentials' | '2fa'>('credentials')
 const error = ref('')
 const loading = ref(false)
-const token = useCookie('pf_token')
 const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
@@ -124,7 +123,7 @@ async function redirectAfterLogin() {
     if (profileComplete === false) await navigateTo('/onboarding')
     else await navigateTo('/dashboard')
   } else {
-    token.value = null
+    clearAuthTokens()
     error.value = t('auth.login.proOnly')
   }
 }
@@ -137,12 +136,11 @@ async function handleAuthResult(res: unknown) {
     totpCode.value = ''
     return
   }
-  const accessToken = extractAccessToken(data)
-  if (!accessToken) {
+  if (!extractAccessToken(data)) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  token.value = accessToken
+  persistAuthTokens(data)
   await redirectAfterLogin()
 }
 

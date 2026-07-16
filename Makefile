@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-github gcp-setup-media gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-android-dist
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-android-dist
 
 help:
 	@echo "petsFollow — commandes"
@@ -22,6 +22,7 @@ help:
 	@echo "  make gcp-deploy     Cloud Build staging"
 	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
 	@echo "  make firebase-android-dist   APK → Firebase App Distribution (groupe petsfollow-testers)"
+	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -79,6 +80,9 @@ gcp-setup:
 
 gcp-setup-media:
 	bash infra/gcp/setup-gcs-media.sh
+
+gcp-setup-stripe:
+	bash infra/gcp/setup-stripe-secrets.sh
 
 gcp-deploy:
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .

@@ -53,11 +53,26 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/me/password", a.changeMePassword)
 		pr.Delete("/me", a.deleteMe)
 		pr.Patch("/me/locale", a.updateMeLocale)
+		pr.Get("/me/vets", a.listMyVets)
+		pr.Post("/me/vets/invite", a.inviteVet)
+		pr.Get("/vet/link-requests", a.listVetLinkRequests)
+		pr.Post("/vet/link-requests/{id}/accept", a.acceptVetLinkRequest)
+		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
+		pr.Get("/me/discovery", a.getDiscovery)
+		pr.Post("/me/discovery/complete", a.completeDiscovery)
+		pr.Put("/me/device-tokens", a.putDeviceToken)
+		pr.Get("/me/notification-preferences", a.getClientNotificationPrefs)
+		pr.Patch("/me/notification-preferences", a.updateClientNotificationPrefs)
 		pr.Get("/clients", a.listClients)
 		pr.Get("/clients/{clientID}", a.getClient)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
 		pr.Get("/pets", a.listMyPets)
 		pr.Post("/pets", a.createPet)
+		pr.Patch("/pets/{petID}/primary-practice", a.setPetPrimaryPractice)
+		pr.Get("/pets/{petID}/care-reminders", a.listCareReminders)
+		pr.Post("/pets/{petID}/care-reminders", a.createCareReminder)
+		pr.Get("/pets/{petID}/visits", a.listVisits)
+		pr.Post("/pets/{petID}/visits", a.createVisit)
 		pr.Put("/pets/{petID}", a.updatePet)
 		pr.Post("/pets/{petID}/photo", a.uploadPetPhoto)
 		pr.Get("/pets/{petID}", a.getPet)
@@ -67,6 +82,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/heartrate/sessions/{sessionID}", a.completeHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/validate", a.validateHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/cancel", a.cancelHeartRate)
+		pr.Post("/care-reminders/{id}/done", a.markCareReminderDone)
+		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
+		pr.Patch("/visits/{id}", a.updateVisit)
 		pr.Get("/messaging/threads", a.listThreads)
 		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
 		pr.Get("/messaging/threads/{threadID}/messages", a.listMessages)
@@ -254,6 +272,10 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if err := a.store.SeedDefaultCareReminders(r.Context(), created.ID, created.PracticeID, created.Species); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
 		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
 	})
@@ -302,9 +324,34 @@ func (a *API) getPet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
-	id, _ := authx.FromContext(r.Context())
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	pet, err := a.store.GetPet(r.Context(), petID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	switch id.Role {
+	case kernel.RoleClient:
+		if pet.OwnerUserID != id.UserID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return
+		}
+	case kernel.RoleVet:
+		if pet.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			return
+		}
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
 	vetView := id.Role == kernel.RoleVet
-	items, err := a.store.PetTimeline(r.Context(), chi.URLParam(r, "petID"), vetView)
+	items, err := a.store.PetTimeline(r.Context(), petID, vetView)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

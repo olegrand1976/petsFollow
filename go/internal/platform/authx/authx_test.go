@@ -36,6 +36,24 @@ func TestParseRejectsRefreshAsAccess(t *testing.T) {
 	}
 }
 
+func TestParseRefresh(t *testing.T) {
+	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
+	pair, err := issuer.Issue("user-1", "vet@test.com", kernel.RoleVet, "practice-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := issuer.ParseRefresh(pair.RefreshToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id.UserID != "user-1" || id.Email != "vet@test.com" || id.Role != kernel.RoleVet || id.PracticeID != "practice-1" {
+		t.Fatalf("unexpected identity %+v", id)
+	}
+	if _, err := issuer.ParseRefresh(pair.AccessToken); err == nil {
+		t.Fatal("expected access token to be rejected by ParseRefresh")
+	}
+}
+
 func TestIssueAndParseMFA(t *testing.T) {
 	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
 	mfa, err := issuer.IssueMFA("user-1", "vet@test.com", kernel.RoleVet, "practice-1")
