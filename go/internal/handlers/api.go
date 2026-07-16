@@ -44,6 +44,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerCommissionRoutes(r)
+	a.registerCommercialRoutes(r)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -263,7 +264,10 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 	if vetName == "" {
 		vetName = vet.Email
 	}
-	_ = a.notifier.SendAppDownloadInvite(client.Email, locale, clientName, vetName, practiceName, downloadURL)
+	if err := a.notifier.SendAppDownloadInvite(client.Email, locale, clientName, vetName, practiceName, downloadURL); err != nil {
+		writeErr(w, r, http.StatusBadGateway, "email_send_failed", "email_send_failed")
+		return
+	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{
 		"status":  "sent",
 		"email":   client.Email,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/media_url.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
@@ -143,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           CircleAvatar(
                             backgroundImage: (pet['photoUrl'] as String?)?.isNotEmpty == true
-                                ? NetworkImage(pet['photoUrl'] as String)
+                                ? NetworkImage(resolveMediaUrl(pet['photoUrl'] as String)!)
                                 : null,
                             child: (pet['photoUrl'] as String?)?.isNotEmpty == true
                                 ? null
@@ -219,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   final url = await ApiClient.instance.resumeCheckout(petId);
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  await openExternalUrl(url);
                   load();
                 },
               ),
@@ -230,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   final url = await ApiClient.instance.billingPortal(petId);
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  await openExternalUrl(url);
                 },
               ),
             ListTile(

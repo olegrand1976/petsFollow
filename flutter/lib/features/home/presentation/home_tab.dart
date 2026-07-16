@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
@@ -12,7 +13,6 @@ import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dar
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key, this.onNavigateToPets});
@@ -27,7 +27,7 @@ class _HomeTabState extends State<HomeTab> {
   List<Pet> pets = [];
   String? userName;
   bool loading = true;
-  bool hasVets = true;
+  bool? hasVets;
   DiscoveryProgress? discoveryProgress;
 
   @override
@@ -49,7 +49,7 @@ class _HomeTabState extends State<HomeTab> {
       final vets = await ApiClient.instance.getMyVets();
       hasVets = vets.isNotEmpty;
     } catch (_) {
-      hasVets = true;
+      // Keep previous / null — do not hide the first-vet CTA on network errors.
     }
     try {
       final data = await ApiClient.instance.getPets();
@@ -119,7 +119,7 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 4),
                   Text(l10n.appTagline, style: TextStyle(color: AppColors.textMuted)),
                   const SizedBox(height: 20),
-                  if (!hasVets) ...[
+                  if (hasVets == false) ...[
                     _AddFirstVetCard(
                       onAdd: () async {
                         await Navigator.push(
@@ -220,7 +220,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _resumePayment(Pet pet) async {
     final url = await ApiClient.instance.resumeCheckout(pet.id);
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    await openExternalUrl(url);
     load();
   }
 

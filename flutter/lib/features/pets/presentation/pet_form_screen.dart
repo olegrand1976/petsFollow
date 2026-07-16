@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PetFormScreen extends StatefulWidget {
   const PetFormScreen({super.key});
@@ -28,6 +28,13 @@ class _PetFormScreenState extends State<PetFormScreen> {
   void initState() {
     super.initState();
     _loadPlans();
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    breed.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPlans() async {
@@ -111,11 +118,22 @@ class _PetFormScreenState extends State<PetFormScreen> {
         try {
           await ApiClient.instance.uploadPetPhoto(petId, photoFile!.path);
         } catch (_) {
-          /* payment flow continues even if photo fails */
+          if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorPhotoUploadFailed)),
+            );
+          }
         }
       }
-      if (checkoutUrl != null && await canLaunchUrl(Uri.parse(checkoutUrl))) {
-        await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
+      if (checkoutUrl != null) {
+        final opened = await openExternalUrl(checkoutUrl);
+        if (!opened && mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+          );
+        }
       }
       if (!mounted || petId == null) return;
       await _waitForPayment(petId);

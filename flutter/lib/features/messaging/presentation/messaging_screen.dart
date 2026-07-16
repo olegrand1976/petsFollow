@@ -1,12 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key, this.embedded = false});
@@ -84,17 +87,33 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
   Future<void> loadMessages() async {
     if (threadId == null) return;
-    final data = await ApiClient.instance.getChatMessages(threadId!);
-    if (mounted) setState(() => messages = data);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final data = await ApiClient.instance.getChatMessages(threadId!);
+      if (mounted) setState(() => messages = data);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mapApiError(e, l10n))),
+        );
+      }
+    }
   }
 
   Future<void> send() async {
     if (threadId == null || draft.text.trim().isEmpty || sending) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => sending = true);
     try {
       await ApiClient.instance.sendMessage(threadId!, draft.text.trim());
       draft.clear();
       await loadMessages();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mapApiError(e, l10n))),
+        );
+      }
     } finally {
       if (mounted) setState(() => sending = false);
     }
@@ -108,6 +127,15 @@ class _MessagingScreenState extends State<MessagingScreen> {
         ? await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 2))
         : await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 85);
     if (file == null) return;
+    final size = await File(file.path).length();
+    if (size > 25 << 20) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorMediaTooLarge)),
+        );
+      }
+      return;
+    }
     setState(() => sending = true);
     try {
       final caption = draft.text.trim();
@@ -122,7 +150,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric(e.toString()))),
+          SnackBar(content: Text(mapApiError(e, l10n))),
         );
       }
     } finally {
@@ -161,9 +189,12 @@ class _MessagingScreenState extends State<MessagingScreen> {
   }
 
   Future<void> _openMedia(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final ok = await openExternalUrl(url);
+    if (!ok && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+      );
     }
   }
 

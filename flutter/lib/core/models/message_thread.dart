@@ -1,3 +1,5 @@
+import 'package:petsfollow_mobile/core/api/media_url.dart';
+
 class MessageThread {
   const MessageThread({
     required this.id,
@@ -80,7 +82,7 @@ class ChatMessage {
       body: json['body'] as String? ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       readAt: json['readAt'] != null ? DateTime.tryParse(json['readAt'] as String) : null,
-      mediaUrl: json['mediaUrl'] as String?,
+      mediaUrl: resolveMediaUrl(json['mediaUrl'] as String?),
       mediaType: json['mediaType'] as String?,
     );
   }

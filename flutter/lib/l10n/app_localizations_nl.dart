@@ -240,6 +240,23 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get errorMediaTooLarge => 'Bestand te groot (max. 25 MB)';
+
+  @override
+  String get errorInvalidMediaType =>
+      'Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)';
+
+  @override
+  String get errorPaymentRequired => 'Abonnement vereist om media te versturen';
+
+  @override
+  String get errorPhotoUploadFailed =>
+      'Huisdier aangemaakt, maar de foto kon niet worden geüpload';
+
+  @override
+  String get errorCouldNotOpenLink => 'Link kon niet worden geopend';
+
+  @override
   String planAnnualSub(String price) {
     return '$price, automatisch verlengd';
   }

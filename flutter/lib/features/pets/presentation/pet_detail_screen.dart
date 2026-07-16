@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -11,7 +12,6 @@ import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PetDetailScreen extends StatefulWidget {
   const PetDetailScreen({super.key, required this.pet, this.onUpdated});
@@ -221,7 +221,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             FilledButton.icon(
               onPressed: () async {
                 final url = await ApiClient.instance.resumeCheckout(pet.id);
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                await openExternalUrl(url);
               },
               icon: const Icon(Icons.payment),
               label: Text(l10n.paymentResume),
@@ -301,7 +301,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               child: OutlinedButton.icon(
                 onPressed: () async {
                   final url = await ApiClient.instance.billingPortal(pet.id);
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  await openExternalUrl(url);
                 },
                 icon: const Icon(Icons.settings),
                 label: Text(l10n.manageSubscription),

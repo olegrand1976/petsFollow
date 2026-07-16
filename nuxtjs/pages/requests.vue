@@ -1,6 +1,7 @@
 <template>
   <div data-testid="requests-page">
     <ProPageHeader :title="$t('requests.title')" :subtitle="$t('requests.subtitle')" />
+    <p v-if="actionError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ actionError }}</p>
 
     <ProCard :title="$t('requests.linkTitle')" class="pro-mb-lg">
       <ProEmptyState
@@ -98,25 +99,35 @@
 definePageMeta({ middleware: 'vet-only' })
 
 const { formatDate } = useFormatters()
+const { mapError } = useApiError()
 
 const linkRequests = ref<any[]>([])
 const visitRequests = ref<any[]>([])
 const busyId = ref('')
+const actionError = ref('')
 
 async function load() {
-  const [linksRes, visitsRes]: any[] = await Promise.all([
-    $fetch('/api/vet/link-requests'),
-    $fetch('/api/vet/visits?status=requested'),
-  ])
-  linkRequests.value = linksRes.data ?? linksRes ?? []
-  visitRequests.value = visitsRes.data ?? visitsRes ?? []
+  actionError.value = ''
+  try {
+    const [linksRes, visitsRes]: any[] = await Promise.all([
+      $fetch('/api/vet/link-requests'),
+      $fetch('/api/vet/visits?status=requested'),
+    ])
+    linkRequests.value = linksRes.data ?? linksRes ?? []
+    visitRequests.value = visitsRes.data ?? visitsRes ?? []
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  }
 }
 
 async function acceptLink(id: string) {
   busyId.value = id
+  actionError.value = ''
   try {
     await $fetch(`/api/vet/link-requests/${id}/accept`, { method: 'POST' })
     await load()
+  } catch (e: any) {
+    actionError.value = mapError(e)
   } finally {
     busyId.value = ''
   }
@@ -124,9 +135,12 @@ async function acceptLink(id: string) {
 
 async function rejectLink(id: string) {
   busyId.value = id
+  actionError.value = ''
   try {
     await $fetch(`/api/vet/link-requests/${id}/reject`, { method: 'POST' })
     await load()
+  } catch (e: any) {
+    actionError.value = mapError(e)
   } finally {
     busyId.value = ''
   }
@@ -134,9 +148,12 @@ async function rejectLink(id: string) {
 
 async function setVisitStatus(id: string, status: string) {
   busyId.value = id
+  actionError.value = ''
   try {
     await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { status } })
     await load()
+  } catch (e: any) {
+    actionError.value = mapError(e)
   } finally {
     busyId.value = ''
   }
@@ -144,3 +161,19 @@ async function setVisitStatus(id: string, status: string) {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.pro-inline-feedback {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pf-vet-radius);
+  background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-surface));
+  border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 30%, transparent);
+}
+
+.pro-inline-feedback--error {
+  background: color-mix(in srgb, var(--pf-vet-danger, #b42318) 10%, var(--pf-vet-surface));
+  border-color: color-mix(in srgb, var(--pf-vet-danger, #b42318) 35%, transparent);
+  color: var(--pf-vet-danger, #b42318);
+}
+</style>

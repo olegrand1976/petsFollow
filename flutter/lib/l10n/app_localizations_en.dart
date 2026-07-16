@@ -239,6 +239,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get errorMediaTooLarge => 'File too large (25 MB max)';
+
+  @override
+  String get errorInvalidMediaType =>
+      'Unsupported format (JPEG, PNG, WebP, MP4, MOV, WebM)';
+
+  @override
+  String get errorPaymentRequired => 'Subscription required to send media';
+
+  @override
+  String get errorPhotoUploadFailed =>
+      'Pet created, but the photo could not be uploaded';
+
+  @override
+  String get errorCouldNotOpenLink => 'Could not open the link';
+
+  @override
   String planAnnualSub(String price) {
     return '$price, auto-renewed';
   }

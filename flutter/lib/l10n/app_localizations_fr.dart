@@ -241,6 +241,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get errorMediaTooLarge => 'Fichier trop volumineux (25 Mo max)';
+
+  @override
+  String get errorInvalidMediaType =>
+      'Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)';
+
+  @override
+  String get errorPaymentRequired => 'Abonnement requis pour envoyer des médias';
+
+  @override
+  String get errorPhotoUploadFailed =>
+      'Animal créé, mais la photo n\'a pas pu être envoyée';
+
+  @override
+  String get errorCouldNotOpenLink => 'Impossible d\'ouvrir le lien';
+
+  @override
   String planAnnualSub(String price) {
     return '$price, renouvelé automatiquement';
   }

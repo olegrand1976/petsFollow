@@ -526,6 +526,36 @@ abstract class AppLocalizations {
   /// **'Erreur: {message}'**
   String errorGeneric(String message);
 
+  /// No description provided for @errorMediaTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fichier trop volumineux (25 Mo max)'**
+  String get errorMediaTooLarge;
+
+  /// No description provided for @errorInvalidMediaType.
+  ///
+  /// In fr, this message translates to:
+  /// **'Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)'**
+  String get errorInvalidMediaType;
+
+  /// No description provided for @errorPaymentRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnement requis pour envoyer des médias'**
+  String get errorPaymentRequired;
+
+  /// No description provided for @errorPhotoUploadFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal créé, mais la photo n'a pas pu être envoyée'**
+  String get errorPhotoUploadFailed;
+
+  /// No description provided for @errorCouldNotOpenLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d'ouvrir le lien'**
+  String get errorCouldNotOpenLink;
+
   /// No description provided for @planAnnualSub.
   ///
   /// In fr, this message translates to:

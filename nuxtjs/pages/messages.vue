@@ -1,6 +1,7 @@
 <template>
   <div data-testid="messages-page">
     <ProPageHeader :title="$t('messages.title')" :subtitle="$t('messages.subtitle')" />
+    <p v-if="actionError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ actionError }}</p>
     <div class="pro-chat">
       <aside class="pro-chat__threads">
         <h3 class="pro-card__title">{{ $t('messages.threads') }}</h3>
@@ -107,6 +108,7 @@ definePageMeta({ middleware: 'vet-only' })
 
 const route = useRoute()
 const { t } = useI18n()
+const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNotif } = useProNotifications()
 
@@ -115,7 +117,10 @@ const messages = ref<any[]>([])
 const active = ref<any>(null)
 const draft = ref('')
 const sending = ref(false)
+const actionError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const MAX_MEDIA_BYTES = 25 * 1024 * 1024
 
 const vetUserId = computed(() => user.value?.userId ?? user.value?.id ?? '')
 
@@ -187,6 +192,7 @@ async function reloadMessages() {
 async function send() {
   if (!active.value || !draft.value.trim() || sending.value) return
   sending.value = true
+  actionError.value = ''
   try {
     await $fetch(`/api/messaging/threads/${active.value.id}/messages`, {
       method: 'POST',
@@ -194,6 +200,8 @@ async function send() {
     })
     draft.value = ''
     await reloadMessages()
+  } catch (e: any) {
+    actionError.value = mapError(e)
   } finally {
     sending.value = false
   }
@@ -204,7 +212,12 @@ async function onFileSelected(event: Event) {
   const file = input.files?.[0]
   input.value = ''
   if (!file || !active.value || sending.value) return
+  if (file.size > MAX_MEDIA_BYTES) {
+    actionError.value = t('errors.image_too_large')
+    return
+  }
   sending.value = true
+  actionError.value = ''
   try {
     const form = new FormData()
     form.append('file', file)
@@ -215,6 +228,8 @@ async function onFileSelected(event: Event) {
     })
     draft.value = ''
     await reloadMessages()
+  } catch (e: any) {
+    actionError.value = mapError(e)
   } finally {
     sending.value = false
   }
@@ -281,5 +296,19 @@ async function onFileSelected(event: Event) {
   margin: 0.35rem 0;
   color: inherit;
   text-decoration: none;
+}
+
+.pro-inline-feedback {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pf-vet-radius);
+  background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-surface));
+  border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 30%, transparent);
+}
+
+.pro-inline-feedback--error {
+  background: color-mix(in srgb, var(--pf-vet-danger, #b42318) 10%, var(--pf-vet-surface));
+  border-color: color-mix(in srgb, var(--pf-vet-danger, #b42318) 35%, transparent);
+  color: var(--pf-vet-danger, #b42318);
 }
 </style>

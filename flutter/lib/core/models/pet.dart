@@ -1,3 +1,5 @@
+import 'package:petsfollow_mobile/core/api/media_url.dart';
+
 class PetEntitlement {
   const PetEntitlement({
     this.billingMode,
@@ -58,7 +60,7 @@ class Pet {
       name: json['name'] as String? ?? '',
       species: json['species'] as String? ?? '',
       breed: json['breed'] as String? ?? '',
-      photoUrl: json['photoUrl'] as String?,
+      photoUrl: resolveMediaUrl(json['photoUrl'] as String?),
       paymentStatus: json['paymentStatus'] as String? ?? 'pending_payment',
       practiceId: json['practiceId'] as String?,
       entitlement: PetEntitlement.fromJson(
