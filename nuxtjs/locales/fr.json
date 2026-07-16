@@ -21,7 +21,7 @@
   "auth": {
     "login": {
       "title": "Connexion Pro",
-      "subtitle": "Accès réservé aux vétérinaires, commerciaux et administrateurs.",
+      "subtitle": "Accès réservé aux vétérinaires, administrateurs.",
       "brandTitle": "Suivi cardiaque et dossier client en un seul outil",
       "brandText": "Bienvenue sur petsFollow Pro — l'espace pensé pour les pros du soin animal, avec une touche de bonne humeur.",
       "submit": "Se connecter",
