@@ -44,7 +44,6 @@ func (a *API) Routes(r chi.Router) {
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerCommissionRoutes(r)
-	a.registerCommercialRoutes(r)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
