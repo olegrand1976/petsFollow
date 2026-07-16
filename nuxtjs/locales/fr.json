@@ -235,6 +235,8 @@
     "kanbanNone": "Sans dossier",
     "kanbanOne": "1 animal",
     "kanbanMulti": "Multi-animaux",
+    "sendAppLink": "Envoyer l'app",
+    "sendingAppLink": "Envoi…",
     "detail": {
       "title": "Fiche client",
       "subtitle": "Animaux et dossier du client.",
@@ -244,7 +246,11 @@
       "petsEmptyDescription": "Ce client n'a pas encore enregistré d'animal.",
       "columnName": "Nom",
       "columnSpecies": "Espèce",
-      "columnBreed": "Race"
+      "columnBreed": "Race",
+      "sendAppLink": "Envoyer le lien de l'app",
+      "sendAppLinkHint": "Un email avec le lien de téléchargement petsFollow est envoyé à l'adresse du client.",
+      "sendAppLinkSuccess": "Lien envoyé à {email}.",
+      "sendAppLinkError": "Impossible d'envoyer le lien pour le moment."
     },
     "pet": {
       "title": "Animal",

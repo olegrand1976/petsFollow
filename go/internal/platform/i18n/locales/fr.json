@@ -74,7 +74,8 @@
     "email_confirmed": "Email confirmé avec succès.",
     "password_reset_sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
     "password_reset": "Mot de passe mis à jour. Vous pouvez vous connecter.",
-    "vet_invite_sent": "Si un vétérinaire correspond à cet email, il sera ajouté à vos cabinets."
+    "vet_invite_sent": "Si un vétérinaire correspond à cet email, il sera ajouté à vos cabinets.",
+    "app_link_sent": "Le lien de téléchargement de l'application a été envoyé au client."
   },
   "defaults": {
     "auto_reply_unavailable": "Je suis indisponible, je reviens vers vous rapidement."
@@ -108,6 +109,13 @@
     "new_message_greeting": "Bonjour,",
     "new_message_intro": "Vous avez reçu un nouveau message de la part d'un client.",
     "new_message_disclaimer": "Connectez-vous à petsFollow Pro pour répondre.",
+    "app_download_subject": "Votre vétérinaire vous invite sur petsFollow",
+    "app_download_tagline": "Suivi santé de votre animal",
+    "app_download_preheader": "{vetName} ({practiceName}) vous invite à télécharger petsFollow.",
+    "app_download_greeting": "Bonjour {fullName},",
+    "app_download_intro": "{vetName} de {practiceName} vous invite à télécharger l'application petsFollow pour suivre la santé de votre animal et rester en contact avec le cabinet.",
+    "app_download_cta": "Télécharger l'application",
+    "app_download_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer.",
     "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
     "footer_visit_llit": "Visiter le site LL-IT Software & Computer"
   },

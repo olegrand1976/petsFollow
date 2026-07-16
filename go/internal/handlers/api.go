@@ -68,6 +68,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/me/notification-preferences", a.updateClientNotificationPrefs)
 		pr.Get("/clients", a.listClients)
 		pr.Get("/clients/{clientID}", a.getClient)
+		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
 		pr.Get("/pets", a.listMyPets)
 		pr.Post("/pets", a.createPet)
@@ -211,6 +212,63 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, client)
+}
+
+func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
+	if downloadURL == "" {
+		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "app_download_url_missing")
+		return
+	}
+	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	clientUser, err := a.store.GetUserByID(r.Context(), client.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	vet, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	practiceName := ""
+	if profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID); err == nil {
+		practiceName = profile.PracticeName
+	}
+	if practiceName == "" {
+		practiceName = "petsFollow"
+	}
+	locale := clientUser.PreferredLocale
+	if locale == "" {
+		locale = localeOf(r)
+	}
+	clientName := client.FullName
+	if clientName == "" {
+		clientName = client.Email
+	}
+	vetName := vet.FullName
+	if vetName == "" {
+		vetName = vet.Email
+	}
+	_ = a.notifier.SendAppDownloadInvite(client.Email, locale, clientName, vetName, practiceName, downloadURL)
+	httpx.WriteData(w, http.StatusOK, map[string]string{
+		"status":  "sent",
+		"email":   client.Email,
+		"message": t(r, "success.app_link_sent", nil),
+	})
 }
 
 func (a *API) listClientPets(w http.ResponseWriter, r *http.Request) {

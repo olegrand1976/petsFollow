@@ -136,6 +136,30 @@ func (n *Notifier) SendNewMessage(to, locale, messageBody string) error {
 	return n.SendVetAlert(to, subject, body)
 }
 
+func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practiceName, downloadURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"fullName":     clientName,
+		"vetName":      vetName,
+		"practiceName": practiceName,
+	}
+	subject := mustT(locale, "emails.app_download_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.app_download_tagline"),
+		Greeting:        mustT(locale, "emails.app_download_greeting", vars),
+		Intro:           mustT(locale, "emails.app_download_intro", vars),
+		CTALabel:        mustT(locale, "emails.app_download_cta"),
+		CTAURL:          downloadURL,
+		Disclaimer:      mustT(locale, "emails.app_download_disclaimer"),
+		Preheader:       mustT(locale, "emails.app_download_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // mustT returns the translation or a clear fallback that still identifies the key in tests/logs.
 func mustT(locale, key string, varsList ...map[string]string) string {
 	var vars map[string]string

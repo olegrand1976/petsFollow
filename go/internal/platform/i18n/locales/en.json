@@ -74,7 +74,8 @@
     "email_confirmed": "Email confirmed successfully.",
     "password_reset_sent": "If an account exists for this email, a reset link has been sent.",
     "password_reset": "Password updated. You can sign in.",
-    "vet_invite_sent": "If a veterinarian matches this email, they will be added to your practices."
+    "vet_invite_sent": "If a veterinarian matches this email, they will be added to your practices.",
+    "app_link_sent": "The app download link was sent to the client."
   },
   "defaults": {
     "auto_reply_unavailable": "I am unavailable, I will get back to you shortly."
@@ -108,6 +109,13 @@
     "new_message_greeting": "Hello,",
     "new_message_intro": "You received a new message from a client.",
     "new_message_disclaimer": "Sign in to petsFollow Pro to reply.",
+    "app_download_subject": "Your vet invites you to petsFollow",
+    "app_download_tagline": "Pet health monitoring",
+    "app_download_preheader": "{vetName} ({practiceName}) invites you to download petsFollow.",
+    "app_download_greeting": "Hello {fullName},",
+    "app_download_intro": "{vetName} from {practiceName} invites you to download the petsFollow app to monitor your pet's health and stay in touch with the practice.",
+    "app_download_cta": "Download the app",
+    "app_download_disclaimer": "If you were not expecting this email, you can ignore it.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visit LL-IT Software & Computer"
   },

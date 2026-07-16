@@ -235,6 +235,8 @@
     "kanbanNone": "No file",
     "kanbanOne": "1 pet",
     "kanbanMulti": "Multi-pet",
+    "sendAppLink": "Send app",
+    "sendingAppLink": "Sending…",
     "detail": {
       "title": "Client profile",
       "subtitle": "Pets and client record.",
@@ -244,7 +246,11 @@
       "petsEmptyDescription": "This client has not registered any pets yet.",
       "columnName": "Name",
       "columnSpecies": "Species",
-      "columnBreed": "Breed"
+      "columnBreed": "Breed",
+      "sendAppLink": "Send app download link",
+      "sendAppLinkHint": "An email with the petsFollow download link is sent to the client's address.",
+      "sendAppLinkSuccess": "Link sent to {email}.",
+      "sendAppLinkError": "Could not send the link right now."
     },
     "pet": {
       "title": "Pet",

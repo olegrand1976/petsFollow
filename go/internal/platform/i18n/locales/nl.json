@@ -74,7 +74,8 @@
     "email_confirmed": "E-mail succesvol bevestigd.",
     "password_reset_sent": "Als er een account bestaat voor dit e-mailadres, is er een resetlink verzonden.",
     "password_reset": "Wachtwoord bijgewerkt. U kunt inloggen.",
-    "vet_invite_sent": "Als een dierenarts overeenkomt met dit e-mailadres, wordt hij toegevoegd aan uw praktijken."
+    "vet_invite_sent": "Als een dierenarts overeenkomt met dit e-mailadres, wordt hij toegevoegd aan uw praktijken.",
+    "app_link_sent": "De downloadlink van de app is naar de klant verzonden."
   },
   "defaults": {
     "auto_reply_unavailable": "Ik ben niet beschikbaar, ik neem snel contact met u op."
@@ -108,6 +109,13 @@
     "new_message_greeting": "Hallo,",
     "new_message_intro": "U heeft een nieuw bericht van een klant ontvangen.",
     "new_message_disclaimer": "Meld u aan bij petsFollow Pro om te antwoorden.",
+    "app_download_subject": "Uw dierenarts nodigt u uit voor petsFollow",
+    "app_download_tagline": "Gezondheidsopvolging van uw dier",
+    "app_download_preheader": "{vetName} ({practiceName}) nodigt u uit om petsFollow te downloaden.",
+    "app_download_greeting": "Hallo {fullName},",
+    "app_download_intro": "{vetName} van {practiceName} nodigt u uit om de petsFollow-app te downloaden om de gezondheid van uw dier op te volgen en in contact te blijven met de praktijk.",
+    "app_download_cta": "App downloaden",
+    "app_download_disclaimer": "Als u deze e-mail niet verwachtte, mag u ze negeren.",
     "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
     "footer_visit_llit": "Bezoek LL-IT Software & Computer"
   },

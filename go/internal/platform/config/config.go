@@ -40,6 +40,7 @@ type Config struct {
 	GCSMediaBucket                  string
 	MediaLocalDir                   string
 	LLITWebsiteURL                  string
+	PetsAppDownloadURL              string
 }
 
 func Load() Config {
@@ -77,6 +78,7 @@ func Load() Config {
 		GCSMediaBucket:                 envOr("GCS_MEDIA_BUCKET", ""),
 		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
 		LLITWebsiteURL:                 envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
+		PetsAppDownloadURL:             envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
 	}
 }
 

@@ -235,6 +235,8 @@
     "kanbanNone": "Zonder dossier",
     "kanbanOne": "1 dier",
     "kanbanMulti": "Meerdere dieren",
+    "sendAppLink": "App sturen",
+    "sendingAppLink": "Verzenden…",
     "detail": {
       "title": "Klantdossier",
       "subtitle": "Dieren en klantdossier.",
@@ -244,7 +246,11 @@
       "petsEmptyDescription": "Deze klant heeft nog geen dier geregistreerd.",
       "columnName": "Naam",
       "columnSpecies": "Soort",
-      "columnBreed": "Ras"
+      "columnBreed": "Ras",
+      "sendAppLink": "App-downloadlink sturen",
+      "sendAppLinkHint": "Er wordt een e-mail met de petsFollow-downloadlink naar het adres van de klant gestuurd.",
+      "sendAppLinkSuccess": "Link verzonden naar {email}.",
+      "sendAppLinkError": "De link kon nu niet worden verzonden."
     },
     "pet": {
       "title": "Dier",

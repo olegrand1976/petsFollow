@@ -1,6 +1,7 @@
 <template>
   <div data-testid="clients-page">
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
+    <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
@@ -55,7 +56,18 @@
             <td>{{ c.email }}</td>
             <td>{{ c.petCount }}</td>
             <td>
-              <NuxtLink :to="`/clients/${c.userId}`">{{ $t('common.profile') }}</NuxtLink>
+              <div class="pro-client-actions">
+                <NuxtLink :to="`/clients/${c.userId}`">{{ $t('common.profile') }}</NuxtLink>
+                <button
+                  type="button"
+                  class="pro-link-btn"
+                  :disabled="sendingId === c.userId"
+                  :data-testid="`send-app-link-${c.userId}`"
+                  @click="sendAppLink(c)"
+                >
+                  {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -80,6 +92,14 @@
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
+            <button
+              type="button"
+              class="pro-link-btn pro-kanban-card__action"
+              :disabled="sendingId === c.userId"
+              @click.prevent="sendAppLink(c)"
+            >
+              {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
+            </button>
           </NuxtLink>
         </ProKanbanColumn>
       </ProKanban>
@@ -105,10 +125,27 @@ const clients = ref<ClientRow[]>([])
 const query = ref('')
 const petFilter = ref<'all' | 'none' | 'with'>('all')
 const sortBy = ref<'name' | 'pets'>('name')
+const sendingId = ref('')
+const appLinkFeedback = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
 
 function petLabel(count: number) {
   return count > 1 ? t('common.pets') : t('common.pet')
+}
+
+async function sendAppLink(c: ClientRow) {
+  if (sendingId.value) return
+  sendingId.value = c.userId
+  appLinkFeedback.value = ''
+  try {
+    const res: any = await $fetch(`/api/clients/${c.userId}/send-app-link`, { method: 'POST' })
+    const data = res.data ?? res
+    appLinkFeedback.value = data.message || t('clients.detail.sendAppLinkSuccess', { email: c.email })
+  } catch {
+    appLinkFeedback.value = t('clients.detail.sendAppLinkError')
+  } finally {
+    sendingId.value = ''
+  }
 }
 
 const filtered = computed(() => {
@@ -159,5 +196,37 @@ onMounted(async () => {
 .client-avatar {
   margin-right: 0.5rem;
   vertical-align: middle;
+}
+.pro-client-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.pro-link-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--pf-vet-accent);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.pro-link-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.pro-kanban-card__action {
+  display: block;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+.pro-inline-feedback {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pf-vet-radius);
+  background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-surface));
+  border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 30%, transparent);
 }
 </style>
