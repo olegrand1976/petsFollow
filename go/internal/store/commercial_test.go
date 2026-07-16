@@ -3,6 +3,7 @@ package store
 import "testing"
 
 func TestCommercialCommissionCents(t *testing.T) {
+	// Addon path still uses flat 15%.
 	if got := CommercialCommissionCents(2500); got != 375 {
 		t.Fatalf("15%% of 2500 = 375, got %d", got)
 	}
@@ -22,5 +23,14 @@ func TestValidProspectStatus(t *testing.T) {
 	}
 	if ValidProspectStatus("unknown") {
 		t.Fatal("expected invalid status")
+	}
+}
+
+func TestValidProspectSource(t *testing.T) {
+	if !ValidProspectSource("commercial") || !ValidProspectSource("vet_referral") {
+		t.Fatal("expected commercial and vet_referral valid")
+	}
+	if ValidProspectSource("other") {
+		t.Fatal("expected invalid source")
 	}
 }
