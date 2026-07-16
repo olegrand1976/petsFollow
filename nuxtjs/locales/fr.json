@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "messages": "Messagerie",
+    "requests": "Demandes",
     "commissions": "Commissions",
     "settings": "Paramètres",
     "adminDashboard": "Tableau de bord",
@@ -137,7 +138,8 @@
     "unknownBreed": "Race inconnue",
     "clientFallback": "Client {id}…",
     "breadcrumb": "Fil d'Ariane",
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "actions": "Actions"
   },
   "settings": {
     "title": "Paramètres",
@@ -264,8 +266,51 @@
       "timelineEmptyDescription": "Aucun événement de suivi pour cet animal.",
       "photoTitle": "Photo de l'animal",
       "photoChange": "Changer la photo",
-      "photoHint": "JPEG, PNG ou WebP — 2 Mo max."
+      "photoHint": "JPEG, PNG ou WebP — 2 Mo max.",
+      "primaryBadge": "Suivi principal",
+      "careTitle": "Soins",
+      "careEmptyTitle": "Aucun rappel de soin",
+      "careEmptyDescription": "Créez un rappel pour suivre vaccins, vermifuges et contrôles.",
+      "careDue": "Échéance",
+      "careType": "Type",
+      "careDone": "Fait",
+      "carePostpone": "Reporter",
+      "careCreate": "Ajouter un rappel",
+      "careTitleField": "Titre",
+      "careOverdue": "En retard",
+      "visitsTitle": "Visites",
+      "visitsEmptyTitle": "Aucune visite",
+      "visitsEmptyDescription": "Les demandes et rendez-vous apparaîtront ici.",
+      "visitPropose": "Proposer un RDV",
+      "visitNotes": "Notes",
+      "visitScheduledAt": "Date prévue",
+      "visitConfirm": "Confirmer",
+      "visitCancel": "Annuler",
+      "visitDone": "Terminer",
+      "visitStatus": "Statut",
+      "visitSource": "Source",
+      "visitSourceClient": "Client",
+      "visitSourceVet": "Cabinet"
     }
+  },
+  "requests": {
+    "title": "Demandes",
+    "subtitle": "Invitations clients et demandes de rendez-vous.",
+    "linkTitle": "Invitations de liaison",
+    "linkEmptyTitle": "Aucune invitation",
+    "linkEmptyDescription": "Les clients qui vous invitent par email apparaîtront ici.",
+    "visitsTitle": "Demandes de visite",
+    "visitsEmptyTitle": "Aucune demande",
+    "visitsEmptyDescription": "Les rendez-vous demandés par les clients apparaîtront ici.",
+    "columnClient": "Client",
+    "columnEmail": "Email",
+    "columnDate": "Date",
+    "columnPet": "Animal",
+    "columnNotes": "Notes",
+    "accept": "Accepter",
+    "reject": "Refuser",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -274,8 +319,12 @@
     "activeClients": "Clients actifs",
     "unreadMessages": "Messages non lus",
     "recentSessions": "Relevés récents (7 j)",
+    "pendingLinks": "Invitations en attente",
+    "pendingVisits": "RDV à confirmer",
+    "overdueCare": "Soins en retard",
     "quickActions": "Actions rapides",
     "viewClients": "Voir les clients",
+    "viewRequests": "Voir les demandes",
     "messaging": "Messagerie",
     "about": "À propos",
     "aboutText": "petsFollow Pro centralise le suivi cardiaque, les dossiers clients et la messagerie sécurisée pour votre cabinet vétérinaire."
@@ -293,7 +342,11 @@
     "selectDescription": "Choisissez un thread dans la liste pour afficher les messages.",
     "you": "Vous",
     "image": "Photo",
-    "video": "Vidéo"
+    "video": "Vidéo",
+    "attach": "Joindre",
+    "attachPhoto": "Photo",
+    "attachVideo": "Vidéo",
+    "sending": "Envoi…"
   },
   "admin": {
     "dashboard": {

@@ -37,6 +37,7 @@ const { fetchUser } = useProUser()
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
   { to: '/clients', label: t('nav.clients'), icon: 'clients' },
+  { to: '/requests', label: t('nav.requests'), icon: 'requests' },
   { to: '/messages', label: t('nav.messages'), icon: 'messages' },
   { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
   { to: '/settings', label: t('nav.settings'), icon: 'settings' },

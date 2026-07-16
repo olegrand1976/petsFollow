@@ -20,9 +20,12 @@ type ThreadSummary struct {
 }
 
 type VetOverview struct {
-	ClientCount      int `json:"clientCount"`
-	UnreadMessages   int `json:"unreadMessages"`
-	RecentSessions7d int `json:"recentSessions7d"`
+	ClientCount          int `json:"clientCount"`
+	UnreadMessages       int `json:"unreadMessages"`
+	RecentSessions7d     int `json:"recentSessions7d"`
+	PendingLinkRequests  int `json:"pendingLinkRequests"`
+	PendingVisits        int `json:"pendingVisits"`
+	OverdueCareCount     int `json:"overdueCareCount"`
 }
 
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
@@ -51,8 +54,17 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			 WHERE t.vet_user_id = $2 AND m.sender_user_id <> $2 AND m.read_at IS NULL),
 			(SELECT COUNT(*)::int FROM heartrate.sessions
 			 WHERE practice_id = $1 AND status = 'validated'
-			   AND validated_at >= NOW() - INTERVAL '7 days')`,
-		practiceID, vetID).Scan(&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d)
+			   AND validated_at >= NOW() - INTERVAL '7 days'),
+			(SELECT COUNT(*)::int FROM practice.client_vet_link_requests
+			 WHERE vet_user_id = $2 AND status = 'pending'),
+			(SELECT COUNT(*)::int FROM visits.visits
+			 WHERE practice_id = $1 AND status = 'requested'),
+			(SELECT COUNT(*)::int FROM care.reminders
+			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW())`,
+		practiceID, vetID).Scan(
+		&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d,
+		&o.PendingLinkRequests, &o.PendingVisits, &o.OverdueCareCount,
+	)
 	return o, err
 }
 

@@ -61,14 +61,35 @@
             </div>
           </div>
           <form class="pro-chat__composer" @submit.prevent="send">
-            <textarea
-              v-model="draft"
-              class="pro-textarea"
-              rows="3"
-              :placeholder="$t('messages.placeholder')"
-              required
-            />
-            <ProButton type="submit" :disabled="!draft.trim()">{{ $t('common.send') }}</ProButton>
+            <div class="pro-chat__composer-row">
+              <textarea
+                v-model="draft"
+                class="pro-textarea"
+                rows="3"
+                :placeholder="$t('messages.placeholder')"
+              />
+              <div class="pro-chat__composer-actions">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  class="pro-sr-only"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                  @change="onFileSelected"
+                >
+                <ProButton
+                  type="button"
+                  variant="secondary"
+                  :disabled="sending || !active"
+                  @click="fileInput?.click()"
+                >
+                  <ProIcon name="attach_file" />
+                  {{ $t('messages.attach') }}
+                </ProButton>
+                <ProButton type="submit" :disabled="sending || !draft.trim()">
+                  {{ sending ? $t('messages.sending') : $t('common.send') }}
+                </ProButton>
+              </div>
+            </div>
           </form>
         </template>
         <ProEmptyState
@@ -93,6 +114,8 @@ const threads = ref<any[]>([])
 const messages = ref<any[]>([])
 const active = ref<any>(null)
 const draft = ref('')
+const sending = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const vetUserId = computed(() => user.value?.userId ?? user.value?.id ?? '')
 
@@ -154,16 +177,47 @@ watch(
   },
 )
 
-async function send() {
-  if (!active.value || !draft.value.trim()) return
-  await $fetch(`/api/messaging/threads/${active.value.id}/messages`, {
-    method: 'POST',
-    body: { body: draft.value },
-  })
-  draft.value = ''
+async function reloadMessages() {
+  if (!active.value) return
   const res: any = await $fetch(`/api/messaging/threads/${active.value.id}/messages`)
   messages.value = res.data ?? res ?? []
   await loadThreads()
+}
+
+async function send() {
+  if (!active.value || !draft.value.trim() || sending.value) return
+  sending.value = true
+  try {
+    await $fetch(`/api/messaging/threads/${active.value.id}/messages`, {
+      method: 'POST',
+      body: { body: draft.value },
+    })
+    draft.value = ''
+    await reloadMessages()
+  } finally {
+    sending.value = false
+  }
+}
+
+async function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || !active.value || sending.value) return
+  sending.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    if (draft.value.trim()) form.append('body', draft.value.trim())
+    await $fetch(`/api/messaging/threads/${active.value.id}/messages/media`, {
+      method: 'POST',
+      body: form,
+    })
+    draft.value = ''
+    await reloadMessages()
+  } finally {
+    sending.value = false
+  }
 }
 </script>
 
@@ -172,6 +226,30 @@ async function send() {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.pro-chat__composer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pro-chat__composer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.pro-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .pro-chat__header {

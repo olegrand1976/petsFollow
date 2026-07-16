@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "clients": "Klanten",
     "messages": "Berichten",
+    "requests": "Aanvragen",
     "commissions": "Commissies",
     "settings": "Instellingen",
     "adminDashboard": "Dashboard",
@@ -137,7 +138,8 @@
     "unknownBreed": "Onbekend ras",
     "clientFallback": "Klant {id}…",
     "breadcrumb": "Broodkruimelpad",
-    "loading": "Laden…"
+    "loading": "Laden…",
+    "actions": "Acties"
   },
   "settings": {
     "title": "Instellingen",
@@ -264,8 +266,51 @@
       "timelineEmptyDescription": "Geen opvolgingsgebeurtenissen voor dit dier.",
       "photoTitle": "Foto van het dier",
       "photoChange": "Foto wijzigen",
-      "photoHint": "JPEG, PNG of WebP — max. 2 MB."
+      "photoHint": "JPEG, PNG of WebP — max. 2 MB.",
+      "primaryBadge": "Primaire opvolging",
+      "careTitle": "Zorg",
+      "careEmptyTitle": "Geen zorgherinneringen",
+      "careEmptyDescription": "Maak een herinnering voor vaccinaties, ontworming en controles.",
+      "careDue": "Vervaldatum",
+      "careType": "Type",
+      "careDone": "Gedaan",
+      "carePostpone": "Uitstellen",
+      "careCreate": "Herinnering toevoegen",
+      "careTitleField": "Titel",
+      "careOverdue": "Te laat",
+      "visitsTitle": "Bezoeken",
+      "visitsEmptyTitle": "Geen bezoeken",
+      "visitsEmptyDescription": "Aanvragen en afspraken verschijnen hier.",
+      "visitPropose": "Bezoek voorstellen",
+      "visitNotes": "Notities",
+      "visitScheduledAt": "Geplande datum",
+      "visitConfirm": "Bevestigen",
+      "visitCancel": "Annuleren",
+      "visitDone": "Afronden",
+      "visitStatus": "Status",
+      "visitSource": "Bron",
+      "visitSourceClient": "Klant",
+      "visitSourceVet": "Praktijk"
     }
+  },
+  "requests": {
+    "title": "Aanvragen",
+    "subtitle": "Klantuitnodigingen en bezoekaanvragen.",
+    "linkTitle": "Koppelingsuitnodigingen",
+    "linkEmptyTitle": "Geen uitnodigingen",
+    "linkEmptyDescription": "Klanten die u via e-mail uitnodigen verschijnen hier.",
+    "visitsTitle": "Bezoekaanvragen",
+    "visitsEmptyTitle": "Geen aanvragen",
+    "visitsEmptyDescription": "Door klanten gevraagde afspraken verschijnen hier.",
+    "columnClient": "Klant",
+    "columnEmail": "E-mail",
+    "columnDate": "Datum",
+    "columnPet": "Dier",
+    "columnNotes": "Notities",
+    "accept": "Accepteren",
+    "reject": "Weigeren",
+    "confirm": "Bevestigen",
+    "cancel": "Annuleren"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -274,8 +319,12 @@
     "activeClients": "Actieve klanten",
     "unreadMessages": "Ongelezen berichten",
     "recentSessions": "Recente metingen (7 d)",
+    "pendingLinks": "Openstaande uitnodigingen",
+    "pendingVisits": "Bezoeken te bevestigen",
+    "overdueCare": "Achterstallige zorg",
     "quickActions": "Snelle acties",
     "viewClients": "Klanten bekijken",
+    "viewRequests": "Aanvragen bekijken",
     "messaging": "Berichten",
     "about": "Over",
     "aboutText": "petsFollow Pro centraliseert hartmonitoring, klantdossiers en beveiligde berichten voor uw dierenartsenpraktijk."
@@ -291,8 +340,13 @@
     "placeholder": "Uw bericht…",
     "selectTitle": "Selecteer een gesprek",
     "selectDescription": "Kies een thread uit de lijst om berichten te bekijken.",
+    "you": "U",
     "image": "Foto",
-    "video": "Video"
+    "video": "Video",
+    "attach": "Bijvoegen",
+    "attachPhoto": "Foto",
+    "attachVideo": "Video",
+    "sending": "Verzenden…"
   },
   "admin": {
     "dashboard": {

@@ -91,6 +91,30 @@ func (a *API) requirePetOwner(w http.ResponseWriter, r *http.Request, petID, use
 	return pet, true
 }
 
+func (a *API) requirePetOwnerOrPractice(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+	pet, err := a.store.GetPet(r.Context(), petID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return store.Pet{}, false
+	}
+	switch id.Role {
+	case kernel.RoleClient:
+		if pet.OwnerUserID != id.UserID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return store.Pet{}, false
+		}
+	case kernel.RoleVet:
+		if pet.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			return store.Pet{}, false
+		}
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return store.Pet{}, false
+	}
+	return pet, true
+}
+
 func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
@@ -130,12 +154,12 @@ type createCareReminderReq struct {
 
 func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetOwner(w, r, petID, id.UserID)
+	pet, ok := a.requirePetOwnerOrPractice(w, r, petID, id)
 	if !ok {
 		return
 	}
@@ -179,11 +203,20 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	updated, err := a.store.MarkCareReminderDone(r.Context(), chi.URLParam(r, "id"), id.UserID)
+	var updated store.CareReminder
+	switch id.Role {
+	case kernel.RoleClient:
+		updated, err = a.store.MarkCareReminderDone(r.Context(), chi.URLParam(r, "id"), id.UserID)
+	case kernel.RoleVet:
+		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "reminder_not_found")
@@ -201,8 +234,8 @@ type postponeCareReq struct {
 
 func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	var req postponeCareReq
@@ -214,7 +247,16 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_postpone_days")
 		return
 	}
-	updated, err := a.store.PostponeCareReminder(r.Context(), chi.URLParam(r, "id"), id.UserID, req.Days)
+	var updated store.CareReminder
+	switch id.Role {
+	case kernel.RoleClient:
+		updated, err = a.store.PostponeCareReminder(r.Context(), chi.URLParam(r, "id"), id.UserID, req.Days)
+	case kernel.RoleVet:
+		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "reminder_not_found")
@@ -263,12 +305,12 @@ type createVisitReq struct {
 
 func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetOwner(w, r, petID, id.UserID)
+	pet, ok := a.requirePetOwnerOrPractice(w, r, petID, id)
 	if !ok {
 		return
 	}
@@ -283,12 +325,54 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			scheduledAt = &t
 		}
 	}
-	visit, err := a.store.CreateVisit(r.Context(), pet.ID, pet.PracticeID, "client", req.Notes, scheduledAt)
+	source := "client"
+	if id.Role == kernel.RoleVet {
+		source = "vet"
+	}
+	visit, err := a.store.CreateVisit(r.Context(), pet.ID, pet.PracticeID, source, req.Notes, scheduledAt)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, visit)
+}
+
+func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	status := r.URL.Query().Get("status")
+	if status == "" {
+		status = "requested"
+	}
+	switch status {
+	case "requested", "confirmed", "done", "cancelled":
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+		return
+	}
+	visits, err := a.store.ListPracticeVisitsByStatus(r.Context(), id.PracticeID, status)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, visits)
+}
+
+func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	items, err := a.store.ListOverdueCareReminders(r.Context(), id.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
 }
 
 type updateVisitReq struct {

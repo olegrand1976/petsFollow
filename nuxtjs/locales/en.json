@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "messages": "Messaging",
+    "requests": "Requests",
     "commissions": "Commissions",
     "settings": "Settings",
     "adminDashboard": "Dashboard",
@@ -137,7 +138,8 @@
     "unknownBreed": "Unknown breed",
     "clientFallback": "Client {id}…",
     "breadcrumb": "Breadcrumb",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "actions": "Actions"
   },
   "settings": {
     "title": "Settings",
@@ -264,8 +266,51 @@
       "timelineEmptyDescription": "No monitoring events for this pet.",
       "photoTitle": "Pet photo",
       "photoChange": "Change photo",
-      "photoHint": "JPEG, PNG or WebP — 2 MB max."
+      "photoHint": "JPEG, PNG or WebP — 2 MB max.",
+      "primaryBadge": "Primary care",
+      "careTitle": "Care",
+      "careEmptyTitle": "No care reminders",
+      "careEmptyDescription": "Create a reminder for vaccines, deworming and check-ups.",
+      "careDue": "Due",
+      "careType": "Type",
+      "careDone": "Done",
+      "carePostpone": "Postpone",
+      "careCreate": "Add reminder",
+      "careTitleField": "Title",
+      "careOverdue": "Overdue",
+      "visitsTitle": "Visits",
+      "visitsEmptyTitle": "No visits",
+      "visitsEmptyDescription": "Requests and appointments will appear here.",
+      "visitPropose": "Propose a visit",
+      "visitNotes": "Notes",
+      "visitScheduledAt": "Scheduled date",
+      "visitConfirm": "Confirm",
+      "visitCancel": "Cancel",
+      "visitDone": "Mark done",
+      "visitStatus": "Status",
+      "visitSource": "Source",
+      "visitSourceClient": "Client",
+      "visitSourceVet": "Practice"
     }
+  },
+  "requests": {
+    "title": "Requests",
+    "subtitle": "Client invitations and visit requests.",
+    "linkTitle": "Link invitations",
+    "linkEmptyTitle": "No invitations",
+    "linkEmptyDescription": "Clients who invite you by email will appear here.",
+    "visitsTitle": "Visit requests",
+    "visitsEmptyTitle": "No requests",
+    "visitsEmptyDescription": "Appointments requested by clients will appear here.",
+    "columnClient": "Client",
+    "columnEmail": "Email",
+    "columnDate": "Date",
+    "columnPet": "Pet",
+    "columnNotes": "Notes",
+    "accept": "Accept",
+    "reject": "Decline",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -274,8 +319,12 @@
     "activeClients": "Active clients",
     "unreadMessages": "Unread messages",
     "recentSessions": "Recent readings (7 d)",
+    "pendingLinks": "Pending invitations",
+    "pendingVisits": "Visits to confirm",
+    "overdueCare": "Overdue care",
     "quickActions": "Quick actions",
     "viewClients": "View clients",
+    "viewRequests": "View requests",
     "messaging": "Messaging",
     "about": "About",
     "aboutText": "petsFollow Pro centralises cardiac monitoring, client records and secure messaging for your veterinary practice."
@@ -293,7 +342,11 @@
     "selectDescription": "Choose a thread from the list to view messages.",
     "you": "You",
     "image": "Photo",
-    "video": "Video"
+    "video": "Video",
+    "attach": "Attach",
+    "attachPhoto": "Photo",
+    "attachVideo": "Video",
+    "sending": "Sending…"
   },
   "admin": {
     "dashboard": {

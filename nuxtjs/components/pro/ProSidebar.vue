@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-export type ProNavIcon = 'dashboard' | 'clients' | 'messages' | 'settings' | 'admin' | 'users' | 'payments'
+export type ProNavIcon = 'dashboard' | 'clients' | 'messages' | 'settings' | 'admin' | 'users' | 'payments' | 'requests'
 
 export type ProNavItem = {
   to: string
@@ -39,6 +39,7 @@ const icons: Record<ProNavIcon, string> = {
   admin: 'admin_panel_settings',
   users: 'person',
   payments: 'payments',
+  requests: 'inbox',
 }
 
 function iconName(name: ProNavIcon) {

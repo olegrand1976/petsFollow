@@ -23,11 +23,32 @@
         :value="recentSessions"
         :label="$t('dashboard.recentSessions')"
       />
+      <ProKpi
+        icon="inbox"
+        :value="pendingLinks"
+        :label="$t('dashboard.pendingLinks')"
+        to="/requests"
+        :variant="pendingLinksRaw > 0 ? 'alert' : 'default'"
+      />
+      <ProKpi
+        icon="event"
+        :value="pendingVisits"
+        :label="$t('dashboard.pendingVisits')"
+        to="/requests"
+        :variant="pendingVisitsRaw > 0 ? 'alert' : 'default'"
+      />
+      <ProKpi
+        icon="medical_services"
+        :value="overdueCare"
+        :label="$t('dashboard.overdueCare')"
+        :variant="overdueCareRaw > 0 ? 'alert' : 'default'"
+      />
     </div>
     <div class="pro-grid-2 pro-mt-lg">
       <ProCard :title="$t('dashboard.quickActions')">
         <div class="pro-flex-gap">
           <ProButton @click="navigateTo('/clients')">{{ $t('dashboard.viewClients') }}</ProButton>
+          <ProButton variant="secondary" @click="navigateTo('/requests')">{{ $t('dashboard.viewRequests') }}</ProButton>
           <ProButton variant="secondary" @click="navigateTo('/messages')">{{ $t('dashboard.messaging') }}</ProButton>
           <ProButton variant="ghost" @click="navigateTo('/settings')">{{ $t('nav.settings') }}</ProButton>
         </div>
@@ -47,7 +68,13 @@ const welcomeTitle = ref(t('dashboard.title'))
 const clientCount = ref('—')
 const unreadCount = ref('—')
 const recentSessions = ref('—')
+const pendingLinks = ref('—')
+const pendingVisits = ref('—')
+const overdueCare = ref('—')
 const unreadRaw = ref(0)
+const pendingLinksRaw = ref(0)
+const pendingVisitsRaw = ref(0)
+const overdueCareRaw = ref(0)
 const { fetchUser } = useProUser()
 
 const hasUnread = computed(() => unreadRaw.value > 0)
@@ -63,11 +90,20 @@ onMounted(async () => {
     unreadRaw.value = Number(data.unreadMessages ?? 0)
     unreadCount.value = String(unreadRaw.value)
     recentSessions.value = String(data.recentSessions7d ?? 0)
+    pendingLinksRaw.value = Number(data.pendingLinkRequests ?? 0)
+    pendingLinks.value = String(pendingLinksRaw.value)
+    pendingVisitsRaw.value = Number(data.pendingVisits ?? 0)
+    pendingVisits.value = String(pendingVisitsRaw.value)
+    overdueCareRaw.value = Number(data.overdueCareCount ?? 0)
+    overdueCare.value = String(overdueCareRaw.value)
   } catch {
     clientCount.value = '0'
     unreadCount.value = '0'
     unreadRaw.value = 0
     recentSessions.value = '0'
+    pendingLinks.value = '0'
+    pendingVisits.value = '0'
+    overdueCare.value = '0'
   }
 })
 </script>

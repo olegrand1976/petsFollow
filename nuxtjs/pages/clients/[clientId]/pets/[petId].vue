@@ -12,7 +12,10 @@
       :subtitle="petSubtitle"
     >
       <template #actions>
-        <ProAvatar :src="pet?.photoUrl" :name="pet?.name || ''" size="lg" />
+        <div class="pro-pet-header-actions">
+          <ProBadge v-if="isPrimaryPractice" variant="success">{{ $t('clients.pet.primaryBadge') }}</ProBadge>
+          <ProAvatar :src="pet?.photoUrl" :name="pet?.name || ''" size="lg" />
+        </div>
       </template>
     </ProPageHeader>
 
@@ -93,6 +96,115 @@
       </ProTable>
     </ProCard>
 
+    <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
+      <form class="pro-pet-inline-form" @submit.prevent="createCare">
+        <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
+        <select v-model="careDraft.type" class="pro-input">
+          <option value="vaccination">vaccination</option>
+          <option value="deworming">deworming</option>
+          <option value="vet_check">vet_check</option>
+          <option value="dental">dental</option>
+          <option value="farrier">farrier</option>
+          <option value="fecal_egg">fecal_egg</option>
+          <option value="custom">custom</option>
+        </select>
+        <ProButton type="submit" :disabled="careBusy">{{ $t('clients.pet.careCreate') }}</ProButton>
+      </form>
+      <ProEmptyState
+        v-if="!careReminders.length"
+        :title="$t('clients.pet.careEmptyTitle')"
+        :description="$t('clients.pet.careEmptyDescription')"
+      />
+      <ProTable v-else>
+        <thead>
+          <tr>
+            <th>{{ $t('clients.pet.careType') }}</th>
+            <th>{{ $t('clients.pet.careTitleField') }}</th>
+            <th>{{ $t('clients.pet.careDue') }}</th>
+            <th>{{ $t('clients.pet.columnStatus') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="c in careReminders" :key="c.id">
+            <td>{{ c.type }}</td>
+            <td>{{ c.title }}</td>
+            <td>
+              {{ formatDate(c.dueAt) }}
+              <ProBadge v-if="isCareOverdue(c)" variant="danger">{{ $t('clients.pet.careOverdue') }}</ProBadge>
+            </td>
+            <td>{{ c.status }}</td>
+            <td>
+              <div v-if="c.status === 'pending'" class="pro-flex-gap">
+                <ProButton :disabled="careBusy" @click="markCareDone(c.id)">{{ $t('clients.pet.careDone') }}</ProButton>
+                <ProButton variant="ghost" :disabled="careBusy" @click="postponeCare(c.id, 7)">{{ $t('clients.pet.carePostpone') }}</ProButton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+
+    <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
+      <form class="pro-pet-inline-form" @submit.prevent="proposeVisit">
+        <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" />
+        <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
+        <ProButton type="submit" :disabled="visitBusy">{{ $t('clients.pet.visitPropose') }}</ProButton>
+      </form>
+      <ProEmptyState
+        v-if="!visits.length"
+        :title="$t('clients.pet.visitsEmptyTitle')"
+        :description="$t('clients.pet.visitsEmptyDescription')"
+      />
+      <ProTable v-else>
+        <thead>
+          <tr>
+            <th>{{ $t('clients.pet.columnDate') }}</th>
+            <th>{{ $t('clients.pet.visitNotes') }}</th>
+            <th>{{ $t('clients.pet.visitStatus') }}</th>
+            <th>{{ $t('clients.pet.visitSource') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="v in visits" :key="v.id">
+            <td>{{ formatDate(v.scheduledAt || v.createdAt) }}</td>
+            <td>{{ v.notes || '—' }}</td>
+            <td>{{ v.status }}</td>
+            <td>
+              {{ v.source === 'vet' ? $t('clients.pet.visitSourceVet') : $t('clients.pet.visitSourceClient') }}
+            </td>
+            <td>
+              <div class="pro-flex-gap">
+                <ProButton
+                  v-if="v.status === 'requested'"
+                  :disabled="visitBusy"
+                  @click="setVisitStatus(v.id, 'confirmed')"
+                >
+                  {{ $t('clients.pet.visitConfirm') }}
+                </ProButton>
+                <ProButton
+                  v-if="v.status === 'confirmed' || v.status === 'requested'"
+                  :disabled="visitBusy"
+                  @click="setVisitStatus(v.id, 'done')"
+                >
+                  {{ $t('clients.pet.visitDone') }}
+                </ProButton>
+                <ProButton
+                  v-if="v.status === 'requested' || v.status === 'confirmed'"
+                  variant="ghost"
+                  :disabled="visitBusy"
+                  @click="setVisitStatus(v.id, 'cancelled')"
+                >
+                  {{ $t('clients.pet.visitCancel') }}
+                </ProButton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+
     <ProCard :title="$t('clients.pet.timelineTitle')">
       <ul v-if="timeline.length" class="pro-timeline">
         <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
@@ -123,13 +235,25 @@ const pet = ref<any>(null)
 const petPhotoUrl = ref('')
 const sessions = ref<any[]>([])
 const timeline = ref<any[]>([])
+const careReminders = ref<any[]>([])
+const visits = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
+const careBusy = ref(false)
+const visitBusy = ref(false)
+const careDraft = reactive({ title: '', type: 'vaccination' })
+const visitDraft = reactive({ scheduledAt: '', notes: '' })
 
 const { formatDate } = useFormatters()
+const { user, fetchUser } = useProUser()
 
 const petSubtitle = computed(() => {
   if (!pet.value) return ''
   return [pet.value.species, pet.value.breed].filter(Boolean).join(' · ')
+})
+
+const isPrimaryPractice = computed(() => {
+  const practiceId = user.value?.practiceId
+  return Boolean(practiceId && pet.value?.practiceId && practiceId === pet.value.practiceId)
 })
 
 const filteredSessions = computed(() => {
@@ -150,7 +274,81 @@ function onPetPhotoUploaded(data: any) {
   petPhotoUrl.value = data?.photoUrl || petPhotoUrl.value
 }
 
+function isCareOverdue(c: any) {
+  return c.status === 'pending' && c.dueAt && new Date(c.dueAt).getTime() < Date.now()
+}
+
+async function loadCareAndVisits() {
+  const [careRes, visitsRes]: any[] = await Promise.all([
+    $fetch(`/api/pets/${petId}/care-reminders`),
+    $fetch(`/api/pets/${petId}/visits`),
+  ])
+  careReminders.value = careRes.data ?? careRes ?? []
+  visits.value = visitsRes.data ?? visitsRes ?? []
+}
+
+async function createCare() {
+  careBusy.value = true
+  try {
+    await $fetch(`/api/pets/${petId}/care-reminders`, {
+      method: 'POST',
+      body: { title: careDraft.title, type: careDraft.type, dueDays: 30 },
+    })
+    careDraft.title = ''
+    await loadCareAndVisits()
+  } finally {
+    careBusy.value = false
+  }
+}
+
+async function markCareDone(id: string) {
+  careBusy.value = true
+  try {
+    await $fetch(`/api/care-reminders/${id}/done`, { method: 'POST' })
+    await loadCareAndVisits()
+  } finally {
+    careBusy.value = false
+  }
+}
+
+async function postponeCare(id: string, days: number) {
+  careBusy.value = true
+  try {
+    await $fetch(`/api/care-reminders/${id}/postpone`, { method: 'POST', body: { days } })
+    await loadCareAndVisits()
+  } finally {
+    careBusy.value = false
+  }
+}
+
+async function proposeVisit() {
+  visitBusy.value = true
+  try {
+    const body: Record<string, string> = { notes: visitDraft.notes }
+    if (visitDraft.scheduledAt) {
+      body.scheduledAt = new Date(visitDraft.scheduledAt).toISOString()
+    }
+    await $fetch(`/api/pets/${petId}/visits`, { method: 'POST', body })
+    visitDraft.notes = ''
+    visitDraft.scheduledAt = ''
+    await loadCareAndVisits()
+  } finally {
+    visitBusy.value = false
+  }
+}
+
+async function setVisitStatus(id: string, status: string) {
+  visitBusy.value = true
+  try {
+    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { status } })
+    await loadCareAndVisits()
+  } finally {
+    visitBusy.value = false
+  }
+}
+
 onMounted(async () => {
+  await fetchUser()
   const petRes: any = await $fetch(`/api/pets/${petId}`)
   pet.value = petRes.data ?? petRes
   petPhotoUrl.value = pet.value?.photoUrl || ''
@@ -160,6 +358,8 @@ onMounted(async () => {
 
   const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
   timeline.value = timelineRes.data ?? timelineRes ?? []
+
+  await loadCareAndVisits()
 })
 </script>
 
@@ -181,6 +381,24 @@ onMounted(async () => {
 
 .pro-table-row--alert {
   background: color-mix(in srgb, var(--pf-vet-alert) 6%, transparent);
+}
+
+.pro-pet-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pro-pet-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pro-pet-inline-form .pro-input {
+  flex: 1 1 10rem;
+  min-width: 8rem;
 }
 
 .pro-timeline {

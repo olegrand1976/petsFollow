@@ -59,6 +59,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/vet/link-requests", a.listVetLinkRequests)
 		pr.Post("/vet/link-requests/{id}/accept", a.acceptVetLinkRequest)
 		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
+		pr.Get("/vet/visits", a.listVetVisits)
+		pr.Get("/vet/care-reminders", a.listVetOverdueCare)
 		pr.Get("/me/discovery", a.getDiscovery)
 		pr.Post("/me/discovery/complete", a.completeDiscovery)
 		pr.Put("/me/device-tokens", a.putDeviceToken)

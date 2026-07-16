@@ -135,6 +135,21 @@ func (s *Store) MarkCareReminderDone(ctx context.Context, id, ownerUserID string
 	return r, err
 }
 
+func (s *Store) MarkCareReminderDoneByPractice(ctx context.Context, id, practiceID string) (CareReminder, error) {
+	var r CareReminder
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.reminders
+		SET status = 'done', updated_at = NOW()
+		WHERE id = $1 AND practice_id = $2 AND status = 'pending'
+		RETURNING id::text, pet_id::text, practice_id::text, type, title, due_at, status, created_at, updated_at`,
+		id, practiceID,
+	).Scan(&r.ID, &r.PetID, &r.PracticeID, &r.Type, &r.Title, &r.DueAt, &r.Status, &r.CreatedAt, &r.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return CareReminder{}, ErrNotFound
+	}
+	return r, err
+}
+
 func (s *Store) PostponeCareReminder(ctx context.Context, id, ownerUserID string, days int) (CareReminder, error) {
 	var r CareReminder
 	err := s.pool.QueryRow(ctx, `
@@ -148,4 +163,33 @@ func (s *Store) PostponeCareReminder(ctx context.Context, id, ownerUserID string
 		return CareReminder{}, ErrNotFound
 	}
 	return r, err
+}
+
+func (s *Store) PostponeCareReminderByPractice(ctx context.Context, id, practiceID string, days int) (CareReminder, error) {
+	var r CareReminder
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.reminders
+		SET due_at = due_at + ($3 || ' days')::interval, updated_at = NOW()
+		WHERE id = $1 AND practice_id = $2 AND status = 'pending'
+		RETURNING id::text, pet_id::text, practice_id::text, type, title, due_at, status, created_at, updated_at`,
+		id, practiceID, days,
+	).Scan(&r.ID, &r.PetID, &r.PracticeID, &r.Type, &r.Title, &r.DueAt, &r.Status, &r.CreatedAt, &r.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return CareReminder{}, ErrNotFound
+	}
+	return r, err
+}
+
+func (s *Store) ListOverdueCareReminders(ctx context.Context, practiceID string) ([]CareReminder, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text, pet_id::text, practice_id::text, type, title, due_at, status, created_at, updated_at
+		FROM care.reminders
+		WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW()
+		ORDER BY due_at ASC
+		LIMIT 100`, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanCareReminders(rows)
 }
