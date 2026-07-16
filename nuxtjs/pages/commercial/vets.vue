@@ -3,26 +3,21 @@
     <ProPageHeader
       :title="$t('commercial.vets.title')"
       :subtitle="$t('commercial.vets.subtitle')"
-    >
-      <template #actions>
-        <ProButton data-testid="commercial-vet-new-btn" @click="showForm = !showForm">
-          {{ showForm ? $t('common.cancel') : $t('commercial.vets.encode') }}
-        </ProButton>
-      </template>
-    </ProPageHeader>
+    />
 
-    <ProCard v-if="showForm" class="pro-mb-lg" data-testid="commercial-vet-form">
+    <ProCard class="pro-mb-lg" data-testid="commercial-vet-form">
+      <h3 class="pro-mb-md">{{ $t('commercial.vets.encode') }}</h3>
       <form class="pro-form" @submit.prevent="submitVet">
-        <ProInput v-model="form.fullName" data-testid="encode-vet-name" :label="$t('commercial.vets.fullName')" required />
-        <ProInput v-model="form.practiceName" data-testid="encode-vet-practice" :label="$t('commercial.vets.practiceName')" required />
-        <ProInput v-model="form.email" data-testid="encode-vet-email" type="email" :label="$t('commercial.vets.email')" required />
-        <ProInput v-model="form.password" data-testid="encode-vet-password" type="password" :label="$t('commercial.vets.password')" required />
-        <ProInput v-model="form.phone" data-testid="encode-vet-phone" :label="$t('commercial.vets.phone')" />
-        <ProInput v-model="form.city" data-testid="encode-vet-city" :label="$t('commercial.vets.city')" />
-        <ProInput v-model="form.postalCode" data-testid="encode-vet-postal" :label="$t('commercial.vets.postalCode')" />
-        <ProInput v-model="form.addressLine1" data-testid="encode-vet-address" :label="$t('commercial.vets.address')" />
+        <ProInput v-model="form.fullName" test-id="encode-vet-name" :label="$t('commercial.vets.fullName')" required />
+        <ProInput v-model="form.practiceName" test-id="encode-vet-practice" :label="$t('commercial.vets.practiceName')" required />
+        <ProInput v-model="form.email" test-id="encode-vet-email" type="email" :label="$t('commercial.vets.email')" required />
+        <ProInput v-model="form.password" test-id="encode-vet-password" type="password" :label="$t('commercial.vets.password')" required />
+        <ProInput v-model="form.phone" test-id="encode-vet-phone" :label="$t('commercial.vets.phone')" />
+        <ProInput v-model="form.city" test-id="encode-vet-city" :label="$t('commercial.vets.city')" />
+        <ProInput v-model="form.postalCode" test-id="encode-vet-postal" :label="$t('commercial.vets.postalCode')" />
+        <ProInput v-model="form.addressLine1" test-id="encode-vet-address" :label="$t('commercial.vets.address')" />
         <p v-if="formError" class="pro-error">{{ formError }}</p>
-        <ProButton type="submit" data-testid="encode-vet-submit" :disabled="saving">{{ $t('commercial.vets.save') }}</ProButton>
+        <ProButton type="submit" test-id="encode-vet-submit" :disabled="saving">{{ $t('commercial.vets.save') }}</ProButton>
       </form>
     </ProCard>
 
@@ -54,7 +49,6 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { t } = useI18n()
 const vets = ref<any[]>([])
-const showForm = ref(false)
 const saving = ref(false)
 const formError = ref('')
 const form = reactive({
@@ -82,7 +76,6 @@ async function submitVet() {
       method: 'POST',
       body: { ...form, contactEmail: form.contactEmail || form.email },
     })
-    showForm.value = false
     Object.assign(form, { fullName: '', practiceName: '', email: '', password: '', phone: '', city: '', postalCode: '', addressLine1: '', contactEmail: '' })
     await load()
   } catch {

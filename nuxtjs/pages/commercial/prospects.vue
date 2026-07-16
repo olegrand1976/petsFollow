@@ -3,23 +3,18 @@
     <ProPageHeader
       :title="$t('commercial.prospects.title')"
       :subtitle="$t('commercial.prospects.subtitle')"
-    >
-      <template #actions>
-        <ProButton data-testid="commercial-prospect-new-btn" @click="showForm = !showForm">
-          {{ showForm ? $t('common.cancel') : $t('commercial.prospects.create') }}
-        </ProButton>
-      </template>
-    </ProPageHeader>
+    />
 
-    <ProCard v-if="showForm" class="pro-mb-lg" data-testid="commercial-prospect-form">
+    <ProCard class="pro-mb-lg" data-testid="commercial-prospect-form">
+      <h3 class="pro-mb-md">{{ $t('commercial.prospects.create') }}</h3>
       <form class="pro-form" @submit.prevent="createProspect">
-        <ProInput v-model="form.practiceName" data-testid="prospect-practice" :label="$t('commercial.prospects.practiceName')" required />
-        <ProInput v-model="form.contactName" data-testid="prospect-contact" :label="$t('commercial.prospects.contactName')" />
-        <ProInput v-model="form.contactEmail" data-testid="prospect-email" type="email" :label="$t('commercial.prospects.contactEmail')" />
-        <ProInput v-model="form.contactPhone" data-testid="prospect-phone" :label="$t('commercial.prospects.contactPhone')" />
-        <ProInput v-model="form.city" data-testid="prospect-city" :label="$t('commercial.prospects.city')" />
-        <ProInput v-model="form.notes" data-testid="prospect-notes" :label="$t('commercial.prospects.notes')" />
-        <ProButton type="submit" data-testid="prospect-submit">{{ $t('commercial.prospects.save') }}</ProButton>
+        <ProInput v-model="form.practiceName" test-id="prospect-practice" :label="$t('commercial.prospects.practiceName')" required />
+        <ProInput v-model="form.contactName" test-id="prospect-contact" :label="$t('commercial.prospects.contactName')" />
+        <ProInput v-model="form.contactEmail" test-id="prospect-email" type="email" :label="$t('commercial.prospects.contactEmail')" />
+        <ProInput v-model="form.contactPhone" test-id="prospect-phone" :label="$t('commercial.prospects.contactPhone')" />
+        <ProInput v-model="form.city" test-id="prospect-city" :label="$t('commercial.prospects.city')" />
+        <ProInput v-model="form.notes" test-id="prospect-notes" :label="$t('commercial.prospects.notes')" />
+        <ProButton type="submit" test-id="prospect-submit">{{ $t('commercial.prospects.save') }}</ProButton>
       </form>
     </ProCard>
 
@@ -60,7 +55,7 @@
             <td>{{ p.daysInStatus }}</td>
             <td>{{ p.city }}</td>
             <td>
-              <ProButton variant="ghost" :data-testid="`prospect-delete-${p.id}`" @click="remove(p.id)">{{ $t('common.delete') }}</ProButton>
+              <ProButton variant="ghost" :test-id="`prospect-delete-${p.id}`" @click="remove(p.id)">{{ $t('common.delete') }}</ProButton>
             </td>
           </tr>
         </tbody>
@@ -74,7 +69,6 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const statuses = ['new', 'contacted', 'qualified', 'converted', 'lost'] as const
 const prospects = ref<any[]>([])
-const showForm = ref(false)
 const statusFilter = ref('')
 const form = reactive({
   practiceName: '',
@@ -96,7 +90,6 @@ async function load() {
 
 async function createProspect() {
   await $fetch('/api/commercial/prospects', { method: 'POST', body: { ...form } })
-  showForm.value = false
   Object.assign(form, { practiceName: '', contactName: '', contactEmail: '', contactPhone: '', city: '', notes: '' })
   await load()
 }

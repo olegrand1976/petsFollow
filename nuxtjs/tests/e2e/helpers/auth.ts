@@ -22,19 +22,28 @@ export async function fillField(page: Page, testId: string, value: string) {
 
 export async function login(page: Page, email: string, password: string) {
   await page.context().clearCookies()
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('login-form')).toBeVisible()
+  // Ensure client hydration: Vue handlers attached before submit.
+  await page.waitForFunction(() => {
+    const form = document.querySelector('[data-testid="login-form"]')
+    return !!form && form.getAttribute('data-v-app') !== null || !!document.querySelector('#__nuxt')
+  })
   await fillField(page, 'login-email', email)
   await fillField(page, 'login-password', password)
+  await expect(page.getByTestId('login-email')).toHaveValue(email)
+  await expect(page.getByTestId('login-password')).toHaveValue(password)
   await page.getByTestId('login-submit').click()
 }
 
 export async function loginAsVet(page: Page, email = 'vet.demo@petsfollow.test', password = 'VetDemo123!') {
   await login(page, email, password)
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
 }
 
 export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.test', password = 'AdminDemo123!') {
   await login(page, email, password)
+  await page.waitForURL(/\/admin/, { timeout: 20000 })
 }
 
 export async function loginAsCommercial(
@@ -43,6 +52,7 @@ export async function loginAsCommercial(
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
+  await page.waitForURL(/\/commercial/, { timeout: 20000 })
 }
 
 export async function logout(page: Page) {

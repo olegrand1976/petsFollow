@@ -248,7 +248,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)';
 
   @override
-  String get errorPaymentRequired => 'Abonnement requis pour envoyer des médias';
+  String get errorPaymentRequired =>
+      'Abonnement requis pour envoyer des médias';
 
   @override
   String get errorPhotoUploadFailed =>

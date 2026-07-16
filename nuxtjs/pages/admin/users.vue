@@ -4,11 +4,11 @@
     <ProCard class="pro-mb-lg" data-testid="admin-create-commercial">
       <h3 class="pro-mb-md">{{ $t('admin.users.createCommercial') }}</h3>
       <form class="pro-form" @submit.prevent="createCommercial">
-        <ProInput v-model="cForm.fullName" data-testid="admin-commercial-name" :label="$t('admin.users.commercialName')" required />
-        <ProInput v-model="cForm.email" data-testid="admin-commercial-email" type="email" :label="$t('admin.users.commercialEmail')" required />
-        <ProInput v-model="cForm.password" data-testid="admin-commercial-password" type="password" :label="$t('admin.users.commercialPassword')" required />
+        <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" :label="$t('admin.users.commercialName')" required />
+        <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" :label="$t('admin.users.commercialEmail')" required />
+        <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" :label="$t('admin.users.commercialPassword')" required />
         <p v-if="cMsg" class="pro-hint" data-testid="admin-commercial-msg">{{ cMsg }}</p>
-        <ProButton type="submit" data-testid="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
+        <ProButton type="submit" test-id="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
       </form>
     </ProCard>
     <ProCard>

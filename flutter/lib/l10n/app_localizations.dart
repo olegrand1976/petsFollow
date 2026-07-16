@@ -547,13 +547,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorPhotoUploadFailed.
   ///
   /// In fr, this message translates to:
-  /// **'Animal créé, mais la photo n'a pas pu être envoyée'**
+  /// **'Animal créé, mais la photo n\'a pas pu être envoyée'**
   String get errorPhotoUploadFailed;
 
   /// No description provided for @errorCouldNotOpenLink.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible d'ouvrir le lien'**
+  /// **'Impossible d\'ouvrir le lien'**
   String get errorCouldNotOpenLink;
 
   /// No description provided for @planAnnualSub.

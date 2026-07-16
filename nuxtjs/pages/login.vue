@@ -10,6 +10,8 @@
         v-if="step === 'credentials'"
         class="pro-login-form"
         data-testid="login-form"
+        method="post"
+        action="#"
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />

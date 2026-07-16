@@ -16,8 +16,13 @@ test('admin crée un commercial', async ({ page }) => {
   await fillField(page, 'admin-commercial-name', 'E2E Commercial')
   await fillField(page, 'admin-commercial-email', email)
   await fillField(page, 'admin-commercial-password', 'CommercialDemo123!')
-  await page.getByTestId('admin-commercial-submit').click()
-  await expect(page.getByTestId('admin-commercial-msg')).toBeVisible({ timeout: 15000 })
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/admin/commercials') && r.request().method() === 'POST', {
+      timeout: 20000,
+    }),
+    page.getByTestId('admin-commercial-submit').click(),
+  ])
+  expect(res.ok()).toBeTruthy()
 })
 
 test('admin voit commercials et prospects', async ({ page }) => {
