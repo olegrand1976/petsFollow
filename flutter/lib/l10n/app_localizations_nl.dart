@@ -492,6 +492,46 @@ class AppLocalizationsNl extends AppLocalizations {
   String get noCareReminders => 'Geen openstaande zorgherinneringen';
 
   @override
+  String get careAddReminder => 'Herinnering toevoegen';
+
+  @override
+  String get careSelectPet => 'Huisdier';
+
+  @override
+  String careDueInDays(int days) {
+    return 'Vervalt over $days dagen';
+  }
+
+  @override
+  String discoveryDayBadge(int day) {
+    return 'D$day';
+  }
+
+  @override
+  String get timelineTypeHeartrate => 'Hartslag';
+
+  @override
+  String get timelineTypeMessage => 'Bericht';
+
+  @override
+  String get timelineTypeCare => 'Zorg';
+
+  @override
+  String get timelineTypeVisit => 'Bezoek';
+
+  @override
+  String get timelineTypeEvent => 'Gebeurtenis';
+
+  @override
+  String get visitCancelAction => 'Aanvraag annuleren';
+
+  @override
+  String get upcomingVisits => 'Komende bezoeken';
+
+  @override
+  String get timelineEmpty => 'Nog geen gebeurtenissen';
+
+  @override
   String get noThreads => 'Geen gesprekken';
 
   @override

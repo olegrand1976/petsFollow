@@ -305,7 +305,14 @@
       "visitStatus": "Status",
       "visitSource": "Source",
       "visitSourceClient": "Client",
-      "visitSourceVet": "Practice"
+      "visitSourceVet": "Practice",
+      "careTypeVaccination": "Vaccination",
+      "careTypeDeworming": "Deworming",
+      "careTypeVetCheck": "Vet check",
+      "careTypeDental": "Dental care",
+      "careTypeFarrier": "Farrier",
+      "careTypeFecalEgg": "Fecal egg count",
+      "careTypeCustom": "Custom"
     }
   },
   "requests": {

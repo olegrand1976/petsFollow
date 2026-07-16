@@ -489,6 +489,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCareReminders => 'No pending care reminders';
 
   @override
+  String get careAddReminder => 'Add a reminder';
+
+  @override
+  String get careSelectPet => 'Pet';
+
+  @override
+  String careDueInDays(int days) {
+    return 'Due in $days days';
+  }
+
+  @override
+  String discoveryDayBadge(int day) {
+    return 'D$day';
+  }
+
+  @override
+  String get timelineTypeHeartrate => 'Heart rate';
+
+  @override
+  String get timelineTypeMessage => 'Message';
+
+  @override
+  String get timelineTypeCare => 'Care';
+
+  @override
+  String get timelineTypeVisit => 'Visit';
+
+  @override
+  String get timelineTypeEvent => 'Event';
+
+  @override
+  String get visitCancelAction => 'Cancel request';
+
+  @override
+  String get upcomingVisits => 'Upcoming visits';
+
+  @override
+  String get timelineEmpty => 'No events yet';
+
+  @override
   String get noThreads => 'No conversations';
 
   @override

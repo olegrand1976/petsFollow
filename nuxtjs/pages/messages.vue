@@ -80,6 +80,7 @@
                 <ProButton
                   type="button"
                   variant="secondary"
+                  data-testid="messages-attach"
                   :disabled="sending || !active"
                   @click="fileInput?.click()"
                 >

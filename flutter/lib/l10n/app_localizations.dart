@@ -976,6 +976,78 @@ abstract class AppLocalizations {
   /// **'Aucun rappel de soin en cours'**
   String get noCareReminders;
 
+  /// No description provided for @careAddReminder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un rappel'**
+  String get careAddReminder;
+
+  /// No description provided for @careSelectPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal'**
+  String get careSelectPet;
+
+  /// No description provided for @careDueInDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échéance dans {days} jours'**
+  String careDueInDays(int days);
+
+  /// No description provided for @discoveryDayBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'J{day}'**
+  String discoveryDayBadge(int day);
+
+  /// No description provided for @timelineTypeHeartrate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fréquence cardiaque'**
+  String get timelineTypeHeartrate;
+
+  /// No description provided for @timelineTypeMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get timelineTypeMessage;
+
+  /// No description provided for @timelineTypeCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soin'**
+  String get timelineTypeCare;
+
+  /// No description provided for @timelineTypeVisit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visite'**
+  String get timelineTypeVisit;
+
+  /// No description provided for @timelineTypeEvent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Événement'**
+  String get timelineTypeEvent;
+
+  /// No description provided for @visitCancelAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande'**
+  String get visitCancelAction;
+
+  /// No description provided for @upcomingVisits.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochaines visites'**
+  String get upcomingVisits;
+
+  /// No description provided for @timelineEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun événement pour le moment'**
+  String get timelineEmpty;
+
   /// No description provided for @noThreads.
   ///
   /// In fr, this message translates to:

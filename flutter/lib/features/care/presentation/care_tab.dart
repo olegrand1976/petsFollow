@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
@@ -6,7 +7,6 @@ import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class CareTab extends StatefulWidget {
   const CareTab({super.key});
@@ -96,6 +96,117 @@ class _CareTabState extends State<CareTab> {
     }
   }
 
+  Future<void> _showCreateSheet() async {
+    if (pets.isEmpty || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    var selectedPetId = pets.first.id;
+    var selectedType = 'vaccination';
+    var dueDays = 30;
+    final titleCtrl = TextEditingController();
+
+    final created = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModal) {
+            final hasHorse = pets.any((p) => p.species == 'horse');
+            final types = <MapEntry<String, String>>[
+              MapEntry('vaccination', l10n.careTypeVaccination),
+              MapEntry('deworming', l10n.careTypeDeworming),
+              MapEntry('vet_check', l10n.careTypeVetCheck),
+              MapEntry('dental', l10n.careTypeDental),
+              if (hasHorse) ...[
+                MapEntry('farrier', l10n.careTypeFarrier),
+                MapEntry('fecal_egg', l10n.careTypeFecalEgg),
+              ],
+              MapEntry('custom', l10n.careTypeCustom),
+            ];
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.careAddReminder, style: Theme.of(ctx).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedPetId,
+                      decoration: InputDecoration(labelText: l10n.careSelectPet),
+                      items: pets
+                          .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setModal(() => selectedPetId = v);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      items: types
+                          .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setModal(() => selectedType = v);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: InputDecoration(hintText: l10n.careTypeCustom),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: dueDays,
+                      decoration: InputDecoration(labelText: l10n.careDueInDays(dueDays)),
+                      items: const [7, 14, 30, 90]
+                          .map((d) => DropdownMenuItem(value: d, child: Text(l10n.careDueInDays(d))))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setModal(() => dueDays = v);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Text(l10n.careAddReminder),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    final title = titleCtrl.text;
+    titleCtrl.dispose();
+    if (created != true) return;
+
+    try {
+      await ApiClient.instance.createCareReminder(
+        selectedPetId,
+        title: title.isEmpty ? null : title,
+        type: selectedType,
+        dueDays: dueDays,
+      );
+      await load();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('care'))),
+        );
+      }
+    }
+  }
+
   String _careTitle(AppLocalizations l10n, CareReminder r) {
     switch (r.type) {
       case 'vaccination':
@@ -125,6 +236,13 @@ class _CareTabState extends State<CareTab> {
 
     return PetsTabScaffold(
       title: Text(l10n.careTitle),
+      floatingActionButton: pets.isEmpty
+          ? null
+          : FloatingActionButton(
+              onPressed: _showCreateSheet,
+              tooltip: l10n.careAddReminder,
+              child: const Icon(Icons.add),
+            ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -139,7 +257,7 @@ class _CareTabState extends State<CareTab> {
                       ],
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
                       itemCount: pets.length,
                       itemBuilder: (_, i) {
                         final pet = pets[i];

@@ -497,6 +497,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noCareReminders => 'Aucun rappel de soin en cours';
 
   @override
+  String get careAddReminder => 'Ajouter un rappel';
+
+  @override
+  String get careSelectPet => 'Animal';
+
+  @override
+  String careDueInDays(int days) {
+    return 'Échéance dans $days jours';
+  }
+
+  @override
+  String discoveryDayBadge(int day) {
+    return 'J$day';
+  }
+
+  @override
+  String get timelineTypeHeartrate => 'Fréquence cardiaque';
+
+  @override
+  String get timelineTypeMessage => 'Message';
+
+  @override
+  String get timelineTypeCare => 'Soin';
+
+  @override
+  String get timelineTypeVisit => 'Visite';
+
+  @override
+  String get timelineTypeEvent => 'Événement';
+
+  @override
+  String get visitCancelAction => 'Annuler la demande';
+
+  @override
+  String get upcomingVisits => 'Prochaines visites';
+
+  @override
+  String get timelineEmpty => 'Aucun événement pour le moment';
+
+  @override
   String get noThreads => 'Aucune conversation';
 
   @override

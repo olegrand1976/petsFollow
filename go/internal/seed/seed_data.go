@@ -157,6 +157,7 @@ var demoPractices = []practiceDef{
 							{reminderType: "dental", title: "Soins dentaires", dueDays: 200, status: "pending"},
 						},
 						visits: []visitDef{
+							{status: "requested", notes: "Demande de contrôle FC", source: "client", scheduledIn: 3 * 24 * time.Hour},
 							{status: "confirmed", notes: "Contrôle post-op cardiaque", source: "vet", scheduledIn: 7 * 24 * time.Hour},
 						},
 					},

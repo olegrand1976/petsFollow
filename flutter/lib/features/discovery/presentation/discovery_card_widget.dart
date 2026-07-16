@@ -45,7 +45,7 @@ class DiscoveryCardWidget extends StatelessWidget {
                     child: card.completed
                         ? Icon(Icons.check, color: AppColors.primary, size: 20)
                         : Text(
-                            'J${card.dayIndex}',
+                            l10n.discoveryDayBadge(card.dayIndex),
                             style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
                           ),
                   ),

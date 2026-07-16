@@ -305,7 +305,14 @@
       "visitStatus": "Status",
       "visitSource": "Bron",
       "visitSourceClient": "Klant",
-      "visitSourceVet": "Praktijk"
+      "visitSourceVet": "Praktijk",
+      "careTypeVaccination": "Vaccinatie",
+      "careTypeDeworming": "Ontworming",
+      "careTypeVetCheck": "Dierenartscontrole",
+      "careTypeDental": "Tandverzorging",
+      "careTypeFarrier": "Hoefsmid",
+      "careTypeFecalEgg": "Mestonderzoek",
+      "careTypeCustom": "Aangepast"
     }
   },
   "requests": {

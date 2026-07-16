@@ -99,14 +99,14 @@
     <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
       <form class="pro-pet-inline-form" @submit.prevent="createCare">
         <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
-        <select v-model="careDraft.type" class="pro-input">
-          <option value="vaccination">vaccination</option>
-          <option value="deworming">deworming</option>
-          <option value="vet_check">vet_check</option>
-          <option value="dental">dental</option>
-          <option value="farrier">farrier</option>
-          <option value="fecal_egg">fecal_egg</option>
-          <option value="custom">custom</option>
+        <select v-model="careDraft.type" class="pro-input" :aria-label="$t('clients.pet.careType')">
+          <option value="vaccination">{{ $t('clients.pet.careTypeVaccination') }}</option>
+          <option value="deworming">{{ $t('clients.pet.careTypeDeworming') }}</option>
+          <option value="vet_check">{{ $t('clients.pet.careTypeVetCheck') }}</option>
+          <option value="dental">{{ $t('clients.pet.careTypeDental') }}</option>
+          <option value="farrier">{{ $t('clients.pet.careTypeFarrier') }}</option>
+          <option value="fecal_egg">{{ $t('clients.pet.careTypeFecalEgg') }}</option>
+          <option value="custom">{{ $t('clients.pet.careTypeCustom') }}</option>
         </select>
         <ProButton type="submit" :disabled="careBusy">{{ $t('clients.pet.careCreate') }}</ProButton>
       </form>
@@ -127,7 +127,7 @@
         </thead>
         <tbody>
           <tr v-for="c in careReminders" :key="c.id">
-            <td>{{ c.type }}</td>
+            <td>{{ careTypeLabel(c.type) }}</td>
             <td>{{ c.title }}</td>
             <td>
               {{ formatDate(c.dueAt) }}
@@ -244,7 +244,29 @@ const careDraft = reactive({ title: '', type: 'vaccination' })
 const visitDraft = reactive({ scheduledAt: '', notes: '' })
 
 const { formatDate } = useFormatters()
+const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+
+function careTypeLabel(type: string) {
+  switch (type) {
+    case 'vaccination':
+      return t('clients.pet.careTypeVaccination')
+    case 'deworming':
+      return t('clients.pet.careTypeDeworming')
+    case 'vet_check':
+      return t('clients.pet.careTypeVetCheck')
+    case 'dental':
+      return t('clients.pet.careTypeDental')
+    case 'farrier':
+      return t('clients.pet.careTypeFarrier')
+    case 'fecal_egg':
+      return t('clients.pet.careTypeFecalEgg')
+    case 'custom':
+      return t('clients.pet.careTypeCustom')
+    default:
+      return type
+  }
+}
 
 const petSubtitle = computed(() => {
   if (!pet.value) return ''

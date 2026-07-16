@@ -7,11 +7,20 @@
         :to="item.to"
         :exact="item.exact"
         class="pro-sidebar__link"
+        :data-testid="item.to === '/requests' ? 'nav-requests' : undefined"
       >
         <span class="pro-sidebar__icon" aria-hidden="true">
           <ProIcon :name="iconName(item.icon)" :size="18" />
         </span>
-        <span>{{ item.label }}</span>
+        <span class="pro-sidebar__label">{{ item.label }}</span>
+        <ProBadge
+          v-if="item.badge && item.badge > 0"
+          variant="warning"
+          class="pro-sidebar__badge"
+          data-testid="nav-requests-badge"
+        >
+          {{ item.badge > 99 ? '99+' : item.badge }}
+        </ProBadge>
       </NuxtLink>
     </nav>
   </aside>
@@ -25,6 +34,7 @@ export type ProNavItem = {
   label: string
   exact?: boolean
   icon: ProNavIcon
+  badge?: number
 }
 
 defineProps<{
@@ -57,5 +67,15 @@ function iconName(name: ProNavIcon) {
 .pro-sidebar__icon {
   display: inline-flex;
   opacity: 0.9;
+}
+
+.pro-sidebar__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.pro-sidebar__badge {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 </style>

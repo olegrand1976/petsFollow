@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class PetTimelineScreen extends StatefulWidget {
   const PetTimelineScreen({super.key, required this.petId, this.petName});
@@ -18,7 +18,7 @@ class PetTimelineScreen extends StatefulWidget {
 }
 
 class _PetTimelineScreenState extends State<PetTimelineScreen> {
-  List<dynamic> items = [];
+  List<Map<String, dynamic>> items = [];
   List<Visit> visits = [];
   List<({DateTime date, int bpm, bool isAlert})> chartPoints = [];
   bool loading = true;
@@ -42,7 +42,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       );
       if (mounted) {
         setState(() {
-          items = data;
+          items = data
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
           visits = visitData;
           chartPoints = sessions
               .where((s) => s['bpm'] != null)
@@ -77,10 +79,74 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'heartrate':
+        return Icons.favorite_outline;
+      case 'message':
+        return Icons.chat_bubble_outline;
+      case 'care':
+        return Icons.medical_services_outlined;
+      case 'visit':
+        return Icons.event_available;
+      case 'event':
+        return Icons.flag_outlined;
+      default:
+        return Icons.circle_outlined;
+    }
+  }
+
+  Color _colorForType(String type) {
+    switch (type) {
+      case 'heartrate':
+        return AppColors.alert;
+      case 'message':
+        return AppColors.primary;
+      case 'care':
+        return AppColors.gold;
+      case 'visit':
+        return AppColors.primary;
+      default:
+        return AppColors.textMuted;
+    }
+  }
+
+  String _typeLabel(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'heartrate':
+        return l10n.timelineTypeHeartrate;
+      case 'message':
+        return l10n.timelineTypeMessage;
+      case 'care':
+        return l10n.timelineTypeCare;
+      case 'visit':
+        return l10n.timelineTypeVisit;
+      case 'event':
+        return l10n.timelineTypeEvent;
+      default:
+        return type;
+    }
+  }
+
+  Future<void> _cancelVisit(Visit visit) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.instance.updateVisit(visit.id, 'cancelled');
+      await load();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('visit'))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    final upcoming = visits.where((v) => v.isUpcoming).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.history)),
@@ -97,16 +163,16 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                     HeartRateChart(points: chartPoints, height: 200),
                     const SizedBox(height: 24),
                   ],
-                  if (visits.isNotEmpty) ...[
-                    Text(l10n.visitHistory, style: Theme.of(context).textTheme.titleMedium),
+                  if (upcoming.isNotEmpty) ...[
+                    Text(l10n.upcomingVisits, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    ...visits.map(
+                    ...upcoming.map(
                       (v) => Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: Icon(
-                            v.isUpcoming ? Icons.event : Icons.event_available,
-                            color: v.isUpcoming ? AppColors.primary : AppColors.textMuted,
+                            Icons.event,
+                            color: AppColors.primary,
                           ),
                           title: Text(_visitStatusLabel(l10n, v.status)),
                           subtitle: Text(
@@ -115,18 +181,46 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                               if (v.notes != null && v.notes!.isNotEmpty) v.notes,
                             ].join(' · '),
                           ),
+                          trailing: v.status == 'requested'
+                              ? TextButton(
+                                  onPressed: () => _cancelVisit(v),
+                                  child: Text(l10n.visitCancelAction),
+                                )
+                              : null,
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
                   ],
-                  ...items.map((item) {
-                    final m = item as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(m['title'] as String? ?? ''),
-                      subtitle: Text(m['body'] as String? ?? ''),
-                    );
-                  }),
+                  Text(l10n.history, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  if (items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(l10n.timelineEmpty, style: TextStyle(color: AppColors.textMuted)),
+                    )
+                  else
+                    ...items.map((m) {
+                      final type = m['type'] as String? ?? 'event';
+                      final createdAt = DateTime.tryParse(m['createdAt'] as String? ?? '');
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: _colorForType(type).withValues(alpha: 0.15),
+                            child: Icon(_iconForType(type), color: _colorForType(type), size: 20),
+                          ),
+                          title: Text(m['title'] as String? ?? _typeLabel(l10n, type)),
+                          subtitle: Text(
+                            [
+                              _typeLabel(l10n, type),
+                              if (createdAt != null) dateFmt.format(createdAt.toLocal()),
+                              if ((m['body'] as String?)?.isNotEmpty == true) m['body'] as String,
+                            ].join(' · '),
+                          ),
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),

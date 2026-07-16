@@ -397,7 +397,14 @@
       "visitStatus": "Statut",
       "visitSource": "Source",
       "visitSourceClient": "Client",
-      "visitSourceVet": "Cabinet"
+      "visitSourceVet": "Cabinet",
+      "careTypeVaccination": "Vaccination",
+      "careTypeDeworming": "Vermifuge",
+      "careTypeVetCheck": "Contrôle vétérinaire",
+      "careTypeDental": "Soins dentaires",
+      "careTypeFarrier": "Maréchal-ferrant",
+      "careTypeFecalEgg": "Coproscopie",
+      "careTypeCustom": "Personnalisé"
     }
   },
   "requests": {
@@ -642,9 +649,18 @@
       }
     },
     "highlights": {
-      "bpm": { "title": "Relevés BPM", "text": "Suivi cardiaque guidé pour chiens et chats." },
-      "alerts": { "title": "Alertes", "text": "Notification immédiate en cas d'anomalie." },
-      "free": { "title": "Gratuit véto", "text": "Aucun coût pour votre cabinet." }
+      "bpm": {
+        "title": "Relevés BPM",
+        "text": "Suivi cardiaque guidé pour chiens et chats."
+      },
+      "alerts": {
+        "title": "Alertes",
+        "text": "Notification immédiate en cas d'anomalie."
+      },
+      "free": {
+        "title": "Gratuit véto",
+        "text": "Aucun coût pour votre cabinet."
+      }
     },
     "ctaTitle": "Prochaine étape : configurez votre fiche cabinet",
     "ctaText": "À la première connexion, renseignez les coordonnées de votre cabinet pour que vos clients puissent vous contacter facilement.",
@@ -663,18 +679,45 @@
     "heroCta": "Créer mon cabinet — c'est gratuit",
     "heroLogin": "J'ai déjà un compte",
     "cards": {
-      "heartrate": { "title": "Relevés cardiaques", "text": "Suivi BPM et alertes en temps réel" },
-      "messaging": { "title": "Messagerie sécurisée", "text": "Échanges direct avec vos clients" },
-      "records": { "title": "Dossiers patients", "text": "Historique complet par animal" }
+      "heartrate": {
+        "title": "Relevés cardiaques",
+        "text": "Suivi BPM et alertes en temps réel"
+      },
+      "messaging": {
+        "title": "Messagerie sécurisée",
+        "text": "Échanges direct avec vos clients"
+      },
+      "records": {
+        "title": "Dossiers patients",
+        "text": "Historique complet par animal"
+      }
     },
     "featuresTitle": "Pourquoi choisir petsFollow Pro ?",
     "features": {
-      "heartrate": { "title": "Relevés cardiaques guidés", "text": "Vos clients réalisent des relevés BPM depuis l'app mobile. Vous validez et suivez l'évolution." },
-      "alerts": { "title": "Alertes intelligentes", "text": "Soyez notifié immédiatement en cas de tachycardie ou d'anomalie détectée." },
-      "messaging": { "title": "Messagerie intégrée", "text": "Communiquez avec vos clients sans quitter la plateforme. Disponibilité configurable." },
-      "free": { "title": "Gratuit pour les vétos", "text": "Aucun abonnement cabinet. petsFollow Pro est offert aux professionnels vétérinaires." },
-      "security": { "title": "Données sécurisées", "text": "Hébergement conforme, accès restreint par rôle, messagerie chiffrée." },
-      "onboarding": { "title": "Prise en main rapide", "text": "Inscription en 2 minutes, configuration de votre fiche cabinet au premier accès." }
+      "heartrate": {
+        "title": "Relevés cardiaques guidés",
+        "text": "Vos clients réalisent des relevés BPM depuis l'app mobile. Vous validez et suivez l'évolution."
+      },
+      "alerts": {
+        "title": "Alertes intelligentes",
+        "text": "Soyez notifié immédiatement en cas de tachycardie ou d'anomalie détectée."
+      },
+      "messaging": {
+        "title": "Messagerie intégrée",
+        "text": "Communiquez avec vos clients sans quitter la plateforme. Disponibilité configurable."
+      },
+      "free": {
+        "title": "Gratuit pour les vétos",
+        "text": "Aucun abonnement cabinet. petsFollow Pro est offert aux professionnels vétérinaires."
+      },
+      "security": {
+        "title": "Données sécurisées",
+        "text": "Hébergement conforme, accès restreint par rôle, messagerie chiffrée."
+      },
+      "onboarding": {
+        "title": "Prise en main rapide",
+        "text": "Inscription en 2 minutes, configuration de votre fiche cabinet au premier accès."
+      }
     },
     "ctaTitle": "Rejoignez petsFollow Pro dès aujourd'hui",
     "ctaText": "L'application est {free}. Vos clients paient uniquement l'abonnement de suivi cardiaque de leurs animaux.",

@@ -451,6 +451,29 @@ func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
 			}
 		}
 	}
+
+	// Pending link request for Pro /requests inbox (client.marie → vet.demo).
+	var marieID, vetDemoID, vetPlusID string
+	err := pool.QueryRow(ctx, `
+		SELECT c.id::text, v.id::text, v.practice_id::text
+		FROM identity.users c
+		JOIN identity.users v ON v.email = 'vet.demo@petsfollow.test' AND v.role = 'vet'
+		WHERE c.email = 'client.marie@petsfollow.test' AND c.role = 'client'`).Scan(&marieID, &vetDemoID, &vetPlusID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if err == nil {
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
+			VALUES ($1, $2, $3, $4, 'pending')
+			ON CONFLICT (client_user_id, practice_id) DO UPDATE SET
+				vet_user_id = EXCLUDED.vet_user_id,
+				status = 'pending',
+				updated_at = NOW()`,
+			uuid.NewString(), marieID, vetPlusID, vetDemoID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

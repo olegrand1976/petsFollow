@@ -41,6 +41,7 @@
         icon="medical_services"
         :value="overdueCare"
         :label="$t('dashboard.overdueCare')"
+        to="/clients"
         :variant="overdueCareRaw > 0 ? 'alert' : 'default'"
       />
     </div>

@@ -266,9 +266,15 @@ class ApiClient {
     return data.map((r) => CareReminder.fromJson(Map<String, dynamic>.from(r as Map))).toList();
   }
 
-  Future<CareReminder> createCareReminder(String petId, {String? title, int? dueDays}) async {
+  Future<CareReminder> createCareReminder(
+    String petId, {
+    String? title,
+    String? type,
+    int? dueDays,
+  }) async {
     final res = await dio.post('/api/v1/pets/$petId/care-reminders', data: {
-      if (title != null) 'title': title,
+      if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+      if (type != null && type.isNotEmpty) 'type': type,
       if (dueDays != null) 'dueDays': dueDays,
     });
     return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
