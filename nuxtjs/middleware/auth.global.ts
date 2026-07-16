@@ -17,6 +17,9 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (isPublic) {
     if (hasSession && to.path === '/') {
+      const role = parseJwtRole(token.value)
+      if (role === 'admin') return navigateTo('/admin')
+      if (role === 'commercial') return navigateTo('/commercial')
       return navigateTo('/dashboard')
     }
     return

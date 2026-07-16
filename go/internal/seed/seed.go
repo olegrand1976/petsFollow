@@ -41,6 +41,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 			return fmt.Errorf("practice %q: %w", practice.name, err)
 		}
 	}
+	if err := seedCommercial(ctx, tx); err != nil {
+		return err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
@@ -56,6 +59,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := st.AccrueAllActiveEntitlements(ctx); err != nil {
 		return err
 	}
+	if err := st.AccrueAllCommercialForActiveEntitlements(ctx); err != nil {
+		return err
+	}
 	if err := seedEnrichment(ctx, pool); err != nil {
 		return err
 	}
@@ -67,7 +73,9 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	_, err := tx.Exec(ctx, `TRUNCATE billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
+	_, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
+		billing.addon_entitlements, sales.prospects,
+		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
@@ -75,6 +83,49 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err
+}
+
+func seedCommercial(ctx context.Context, tx pgx.Tx) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordCommercial), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	commercialID := uuid.NewString()
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
+		VALUES ($1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW())`,
+		commercialID, string(hash)); err != nil {
+		return err
+	}
+	// vet.demo is assigned to the demo commercial.
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = $1
+		WHERE email = 'vet.demo@petsfollow.test' AND role = 'vet'`, commercialID); err != nil {
+		return err
+	}
+	return seedProspects(ctx, tx, commercialID)
+}
+
+func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string) error {
+	prospects := []struct {
+		practiceName, contactName, contactEmail, contactPhone, city, notes, status string
+		ageDays                                                                     int
+	}{
+		{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
+		{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
+		{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
+		{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
+		{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
+	}
+	for _, p := range prospects {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO sales.prospects (id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone, city, notes, status, status_changed_at, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW() - make_interval(days => $10), NOW() - make_interval(days => $10))`,
+			uuid.NewString(), commercialID, p.practiceName, p.contactName, p.contactEmail, p.contactPhone, p.city, p.notes, p.status, p.ageDays); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func seedAdmin(ctx context.Context, tx pgx.Tx) error {
@@ -406,6 +457,7 @@ func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
 func logSummary() {
 	log.Println("--- Comptes démo petsFollow ---")
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
+	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects)", passwordCommercial)
 	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")

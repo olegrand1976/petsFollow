@@ -129,6 +129,9 @@
     "quinquennial_sub_summary": "75 € elke 5 jaar, automatisch verlengd",
     "annual_onetime_summary": "25 € voor 1 jaar, eenmalige betaling",
     "triennial_onetime_summary": "60 € voor 3 jaar, eenmalige betaling",
-    "quinquennial_onetime_summary": "75 € voor 5 jaar, eenmalige betaling"
+    "quinquennial_onetime_summary": "75 € voor 5 jaar, eenmalige betaling",
+    "addon_family_label": "Optie Familie — 40 €",
+    "addon_care_plus_label": "Optie Care+ — 15 €",
+    "addon_horse_label": "Optie Paard — 30 €"
   }
 }

@@ -9,12 +9,19 @@
     "adminDashboard": "Dashboard",
     "adminUsers": "Registraties",
     "adminPayments": "Betalingen",
-    "adminCommissions": "Vergoedingen"
+    "adminCommissions": "Vergoedingen",
+    "adminCommercials": "Commercials",
+    "adminProspects": "Prospects",
+    "commercialDashboard": "Dashboard",
+    "commercialVets": "Dierenartsen",
+    "commercialProspects": "Prospects",
+    "commercialCommissions": "Commissies",
+    "commercialPitch": "Presentatie"
   },
   "auth": {
     "login": {
       "title": "Pro-aanmelding",
-      "subtitle": "Toegang voorbehouden aan dierenartsen en beheerders.",
+      "subtitle": "Toegang voorbehouden aan dierenartsen, commercials en beheerders.",
       "brandTitle": "Hartmonitoring en klantdossier in één tool",
       "brandText": "Welkom bij petsFollow Pro — de werkruimte voor professionals in de dierenzorg, met een vleugje humor.",
       "submit": "Aanmelden",
@@ -22,7 +29,7 @@
       "registerLink": "Gratis registreren",
       "forgotLink": "Wachtwoord vergeten?",
       "or": "of",
-      "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / admin)",
+      "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / admin)",
       "invalidResponse": "Ongeldig authenticatie-antwoord"
     },
     "forgot": {
@@ -139,7 +146,9 @@
     "clientFallback": "Klant {id}…",
     "breadcrumb": "Broodkruimelpad",
     "loading": "Laden…",
-    "actions": "Acties"
+    "actions": "Acties",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen"
   },
   "settings": {
     "title": "Instellingen",
@@ -367,7 +376,11 @@
       "pendingPayments": "Betalingen in afwachting",
       "pastDue": "Achterstallig",
       "planBreakdown": "Verdeling formules",
-      "modeBreakdown": "Facturatiemodi"
+      "modeBreakdown": "Facturatiemodi",
+      "commercials": "Commercials",
+      "prospects": "Prospects",
+      "addonRevenue": "Addon-omzet",
+      "commercialDue": "Commerciële commissies"
     },
     "users": {
       "title": "Registraties",
@@ -388,7 +401,14 @@
       "columnRole": "Rol",
       "columnRegistered": "Registratie",
       "columnPets": "Dieren",
-      "columnPayment": "Betaling"
+      "columnPayment": "Betaling",
+      "roleCommercial": "Commercials",
+      "createCommercial": "Commercial aanmaken",
+      "commercialEmail": "E-mail",
+      "commercialName": "Naam",
+      "commercialPassword": "Wachtwoord",
+      "commercialCreated": "Commercialaccount aangemaakt",
+      "commercialFailed": "Aanmaken mislukt"
     },
     "payments": {
       "title": "Ontvangen betalingen",
@@ -428,6 +448,25 @@
       "statusOpen": "Open",
       "statusClosed": "Afgesloten",
       "statusPaid": "Betaald"
+    },
+    "commercials": {
+      "title": "Commercials",
+      "subtitle": "Verkoopteam en toegewezen dierenartsen.",
+      "empty": "Geen",
+      "columnName": "Naam",
+      "columnEmail": "E-mail",
+      "columnVets": "Toegewezen dierenartsen"
+    },
+    "prospects": {
+      "title": "Marketingprospects",
+      "subtitle": "Globale prospectpipeline.",
+      "empty": "Geen",
+      "columnPractice": "Praktijk",
+      "columnContact": "Contact",
+      "columnStatus": "Status",
+      "columnCommercial": "Commercial",
+      "columnDays": "Dagen",
+      "columnCity": "Stad"
     }
   },
   "commissions": {
@@ -511,9 +550,18 @@
       }
     },
     "highlights": {
-      "bpm": { "title": "BPM-metingen", "text": "Begeleide hartmonitoring voor honden en katten." },
-      "alerts": { "title": "Waarschuwingen", "text": "Onmiddellijke melding bij een anomalie." },
-      "free": { "title": "Gratis voor dierenartsen", "text": "Geen kosten voor uw praktijk." }
+      "bpm": {
+        "title": "BPM-metingen",
+        "text": "Begeleide hartmonitoring voor honden en katten."
+      },
+      "alerts": {
+        "title": "Waarschuwingen",
+        "text": "Onmiddellijke melding bij een anomalie."
+      },
+      "free": {
+        "title": "Gratis voor dierenartsen",
+        "text": "Geen kosten voor uw praktijk."
+      }
     },
     "ctaTitle": "Volgende stap: stel uw praktijkprofiel in",
     "ctaText": "Bij de eerste aanmelding vult u uw praktijkgegevens in zodat klanten u gemakkelijk kunnen bereiken.",
@@ -532,18 +580,45 @@
     "heroCta": "Mijn praktijk aanmaken — het is gratis",
     "heroLogin": "Ik heb al een account",
     "cards": {
-      "heartrate": { "title": "Hartslagmetingen", "text": "BPM-opvolging en realtime waarschuwingen" },
-      "messaging": { "title": "Beveiligde berichten", "text": "Directe uitwisselingen met uw klanten" },
-      "records": { "title": "Patiëntendossiers", "text": "Volledige geschiedenis per dier" }
+      "heartrate": {
+        "title": "Hartslagmetingen",
+        "text": "BPM-opvolging en realtime waarschuwingen"
+      },
+      "messaging": {
+        "title": "Beveiligde berichten",
+        "text": "Directe uitwisselingen met uw klanten"
+      },
+      "records": {
+        "title": "Patiëntendossiers",
+        "text": "Volledige geschiedenis per dier"
+      }
     },
     "featuresTitle": "Waarom petsFollow Pro kiezen?",
     "features": {
-      "heartrate": { "title": "Begeleide hartslagmetingen", "text": "Klanten nemen BPM-metingen via de mobiele app. U valideert en volgt de evolutie." },
-      "alerts": { "title": "Slimme waarschuwingen", "text": "Word onmiddellijk gewaarschuwd bij tachycardie of gedetecteerde anomalieën." },
-      "messaging": { "title": "Geïntegreerde berichten", "text": "Communiceer met klanten zonder het platform te verlaten. Configureerbare beschikbaarheid." },
-      "free": { "title": "Gratis voor dierenartsen", "text": "Geen praktijkabonnement. petsFollow Pro is gratis voor dierenartsen." },
-      "security": { "title": "Beveiligde gegevens", "text": "Conforme hosting, rolbeperkte toegang, versleutelde berichten." },
-      "onboarding": { "title": "Snelle onboarding", "text": "Registratie in 2 minuten, praktijkprofiel instellen bij eerste toegang." }
+      "heartrate": {
+        "title": "Begeleide hartslagmetingen",
+        "text": "Klanten nemen BPM-metingen via de mobiele app. U valideert en volgt de evolutie."
+      },
+      "alerts": {
+        "title": "Slimme waarschuwingen",
+        "text": "Word onmiddellijk gewaarschuwd bij tachycardie of gedetecteerde anomalieën."
+      },
+      "messaging": {
+        "title": "Geïntegreerde berichten",
+        "text": "Communiceer met klanten zonder het platform te verlaten. Configureerbare beschikbaarheid."
+      },
+      "free": {
+        "title": "Gratis voor dierenartsen",
+        "text": "Geen praktijkabonnement. petsFollow Pro is gratis voor dierenartsen."
+      },
+      "security": {
+        "title": "Beveiligde gegevens",
+        "text": "Conforme hosting, rolbeperkte toegang, versleutelde berichten."
+      },
+      "onboarding": {
+        "title": "Snelle onboarding",
+        "text": "Registratie in 2 minuten, praktijkprofiel instellen bij eerste toegang."
+      }
     },
     "ctaTitle": "Word vandaag lid van petsFollow Pro",
     "ctaText": "De app is {free}. Uw klanten betalen alleen het hartmonitoring-abonnement voor hun dieren.",
@@ -669,5 +744,97 @@
     "internal": "Interne serverfout",
     "not_ready": "Service niet gereed",
     "generic": "Er is een fout opgetreden"
+  },
+  "commercial": {
+    "dashboard": {
+      "title": "Commercieel dashboard",
+      "subtitle": "Toegewezen dierenartsen, prospectpipeline en commissies.",
+      "assignedVets": "Toegewezen dierenartsen",
+      "prospects": "Prospects",
+      "prospectsNew": "Nieuw",
+      "converted": "Geconverteerd",
+      "monthEarned": "Commissies maand",
+      "lifetimeEarned": "Commissies lifetime",
+      "subRevenue": "Gekoppelde abonnementsomzet",
+      "addonRevenue": "Gekoppelde addon-omzet"
+    },
+    "vets": {
+      "title": "Toegewezen dierenartsen",
+      "subtitle": "Maak een dierenartsaccount dat automatisch aan u wordt toegewezen.",
+      "encode": "Dierenarts aanmaken",
+      "save": "Account maken",
+      "empty": "Geen toegewezen dierenartsen",
+      "fullName": "Volledige naam",
+      "practiceName": "Praktijk",
+      "email": "E-mail",
+      "password": "Tijdelijk wachtwoord",
+      "phone": "Telefoon",
+      "city": "Stad",
+      "postalCode": "Postcode",
+      "address": "Adres",
+      "clients": "Cliënten",
+      "encodeFailed": "Aanmaken mislukt"
+    },
+    "prospects": {
+      "title": "Prospectfiches",
+      "subtitle": "Commerciële CRM — opvolging van prospectpraktijken.",
+      "create": "Nieuwe fiche",
+      "save": "Opslaan",
+      "empty": "Geen prospects",
+      "practiceName": "Praktijk",
+      "contactName": "Contact",
+      "contactEmail": "E-mail",
+      "contactPhone": "Telefoon",
+      "city": "Stad",
+      "notes": "Notities",
+      "statusLabel": "Status",
+      "statusAll": "Alle statussen",
+      "daysInStatus": "Dagen",
+      "status": {
+        "new": "Nieuw",
+        "contacted": "Gecontacteerd",
+        "qualified": "Gekwalificeerd",
+        "converted": "Geconverteerd",
+        "lost": "Verloren"
+      }
+    },
+    "commissions": {
+      "title": "Mijn commissies",
+      "subtitle": "Vaste 15% op abonnementen van cliënten van uw dierenartsen + 15% op addons.",
+      "rate": "Tarief",
+      "month": "Maand",
+      "lifetime": "Lifetime",
+      "subscriptions": "Abonnementen",
+      "addons": "Addons",
+      "empty": "Geen commissies",
+      "date": "Datum",
+      "type": "Type",
+      "vet": "Dierenarts",
+      "client": "Cliënt",
+      "base": "Basis",
+      "amount": "Commissie"
+    },
+    "pitch": {
+      "title": "petsFollow overzicht",
+      "subtitle": "Web-app dierenarts + Flutter-app en commissieregeling.",
+      "webTitle": "Pro Web-app (dierenarts)",
+      "mobileTitle": "Flutter mobiele app (cliënten)",
+      "commissionTitle": "Commissies",
+      "vetGrid": "Dierenarts: progressieve schaal 5% → 8% → 12% → 15% volgens volume betalende cliënten.",
+      "commercialFlat": "Commercieel: vaste 15% op cliëntabonnementen van toegewezen dierenartsen.",
+      "addons": "Addons (Family, Care+, Horse): 15% voor commercieel op elke aankoop.",
+      "webFeatures": [
+        "Operationeel dashboard cliënten / berichten / HR",
+        "Patiëntdossier en messaging",
+        "Opvolging dierenartscommissies",
+        "Praktijk-onboarding en instellingen"
+      ],
+      "mobileFeatures": [
+        "Dieren en hartslagopvolging",
+        "Stripe-abonnementen per dier",
+        "Family / Care+ / Horse addons",
+        "Berichten en zorgherinneringen"
+      ]
+    }
   }
 }

@@ -37,7 +37,79 @@ var (
 	ErrInvalidPlan        = errors.New("invalid plan")
 	ErrInvalidBillingMode = errors.New("invalid billing mode")
 	ErrPaymentRequired    = errors.New("payment required")
+	ErrInvalidAddon       = errors.New("invalid addon")
 )
+
+type AddonCode string
+
+const (
+	AddonFamily   AddonCode = "family"
+	AddonCarePlus AddonCode = "care_plus"
+	AddonHorse    AddonCode = "horse"
+)
+
+// AddonDurationDays is the validity window for a purchased addon.
+const AddonDurationDays = 365
+
+type Addon struct {
+	Code         AddonCode `json:"code"`
+	Label        string    `json:"label"`
+	AmountCents  int       `json:"amountCents"`
+	Currency     string    `json:"currency"`
+	DurationDays int       `json:"durationDays"`
+}
+
+func AllAddons() []Addon {
+	return AllAddonsForLocale("fr")
+}
+
+func AllAddonsForLocale(locale string) []Addon {
+	locale = i18n.NormalizeLocale(locale)
+	return []Addon{
+		{Code: AddonFamily, Label: i18n.T(locale, "billing.addon_family_label", nil), AmountCents: 4000, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonCarePlus, Label: i18n.T(locale, "billing.addon_care_plus_label", nil), AmountCents: 1500, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonHorse, Label: i18n.T(locale, "billing.addon_horse_label", nil), AmountCents: 3000, Currency: "eur", DurationDays: AddonDurationDays},
+	}
+}
+
+func ParseAddonCode(s string) (AddonCode, error) {
+	switch AddonCode(s) {
+	case AddonFamily, AddonCarePlus, AddonHorse:
+		return AddonCode(s), nil
+	default:
+		return "", ErrInvalidAddon
+	}
+}
+
+func GetAddon(code AddonCode) (Addon, error) {
+	for _, a := range AllAddons() {
+		if a.Code == code {
+			return a, nil
+		}
+	}
+	return Addon{}, ErrInvalidAddon
+}
+
+func AddonValidUntil(from time.Time, addon Addon) time.Time {
+	return from.Add(time.Duration(addon.DurationDays) * 24 * time.Hour)
+}
+
+func AddonPriceIDEnvKey(code AddonCode) string {
+	return fmt.Sprintf("STRIPE_PRICE_ADDON_%s", addonEnvSuffix(code))
+}
+
+func addonEnvSuffix(code AddonCode) string {
+	switch code {
+	case AddonFamily:
+		return "FAMILY"
+	case AddonCarePlus:
+		return "CARE_PLUS"
+	case AddonHorse:
+		return "HORSE"
+	default:
+		return "UNKNOWN"
+	}
+}
 
 type Plan struct {
 	Code         PlanCode    `json:"code"`

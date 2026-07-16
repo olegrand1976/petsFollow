@@ -3,10 +3,20 @@ package kernel
 type Role string
 
 const (
-	RoleVet    Role = "vet"
-	RoleClient Role = "client"
-	RoleAdmin  Role = "admin"
+	RoleVet        Role = "vet"
+	RoleClient     Role = "client"
+	RoleAdmin      Role = "admin"
+	RoleCommercial Role = "commercial"
 )
+
+func ValidRole(role Role) bool {
+	switch role {
+	case RoleVet, RoleClient, RoleAdmin, RoleCommercial:
+		return true
+	default:
+		return false
+	}
+}
 
 type SessionStatus string
 

@@ -91,7 +91,15 @@ async function goPrimary() {
       await navigateTo('/onboarding')
       return
     }
-    await navigateTo(data.role === 'admin' ? '/admin' : '/dashboard')
+    if (data.role === 'admin') {
+      await navigateTo('/admin')
+      return
+    }
+    if (data.role === 'commercial') {
+      await navigateTo('/commercial')
+      return
+    }
+    await navigateTo('/dashboard')
   } catch {
     await navigateTo('/login')
   }

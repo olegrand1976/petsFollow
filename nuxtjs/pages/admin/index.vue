@@ -16,6 +16,10 @@
       />
       <ProKpi :value="metrics.pendingPayments" :label="$t('admin.dashboard.pendingPayments')" />
       <ProKpi :value="metrics.pastDueCount" :label="$t('admin.dashboard.pastDue')" />
+      <ProKpi :value="metrics.commercialCount ?? 0" :label="$t('admin.dashboard.commercials')" />
+      <ProKpi :value="metrics.prospectCount ?? 0" :label="$t('admin.dashboard.prospects')" />
+      <ProKpi :value="formatCurrency(metrics.addonRevenueCents ?? 0)" :label="$t('admin.dashboard.addonRevenue')" />
+      <ProKpi :value="formatCurrency(metrics.commercialCommissionDueCents ?? 0)" :label="$t('admin.dashboard.commercialDue')" />
     </div>
     <div v-if="metrics" class="pro-grid-2 pro-mt-lg">
       <ProCard :title="$t('admin.dashboard.planBreakdown')">

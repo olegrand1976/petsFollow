@@ -5,6 +5,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const role = parseJwtRole(token.value)
   if (role !== 'vet') {
     if (role === 'admin') return navigateTo('/admin')
+    if (role === 'commercial') return navigateTo('/commercial')
     return navigateTo('/login')
   }
 })

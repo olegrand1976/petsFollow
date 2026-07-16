@@ -281,6 +281,19 @@ class _UpsellBanner extends StatelessWidget {
 
   final AppLocalizations l10n;
 
+  Future<void> _buy(BuildContext context, String code) async {
+    try {
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
+      await openExternalUrl(url);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.paymentResume)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -296,6 +309,17 @@ class _UpsellBanner extends StatelessWidget {
           Text(l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 4),
           Text(l10n.familyPackHint, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                onPressed: () => _buy(context, 'family'),
+                child: Text(l10n.familyPackHint.split('—').first.trim()),
+              ),
+            ],
+          ),
         ],
       ),
     );

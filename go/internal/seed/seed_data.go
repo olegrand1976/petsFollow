@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	passwordVet    = "VetDemo123!"
-	passwordClient = "ClientDemo123!"
-	passwordAdmin  = "AdminDemo123!"
+	passwordVet        = "VetDemo123!"
+	passwordClient     = "ClientDemo123!"
+	passwordAdmin      = "AdminDemo123!"
+	passwordCommercial = "CommercialDemo123!"
 
 	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
 	demoEmailConfirmToken = "demo-confirm-email"

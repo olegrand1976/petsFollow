@@ -23,6 +23,8 @@ const { fetchUser } = useProUser()
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin' },
   { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users' },
+  { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users' },
+  { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests' },
   { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments' },
   { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments' },
 ])

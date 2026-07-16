@@ -129,6 +129,9 @@
     "quinquennial_sub_summary": "75 € tous les 5 ans, renouvelé automatiquement",
     "annual_onetime_summary": "25 € pour 1 an, paiement unique",
     "triennial_onetime_summary": "60 € pour 3 ans, paiement unique",
-    "quinquennial_onetime_summary": "75 € pour 5 ans, paiement unique"
+    "quinquennial_onetime_summary": "75 € pour 5 ans, paiement unique",
+    "addon_family_label": "Option Famille — 40 €",
+    "addon_care_plus_label": "Option Care+ — 15 €",
+    "addon_horse_label": "Option Cheval — 30 €"
   }
 }

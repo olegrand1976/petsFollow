@@ -198,7 +198,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           ],
           if (pet.isActive) ...[
             const SizedBox(height: 16),
-            _UpsellHint(l10n: l10n),
+            _UpsellHint(l10n: l10n, petId: pet.id),
           ],
           const SizedBox(height: 24),
           if (pet.isActive)
@@ -314,9 +314,21 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 }
 
 class _UpsellHint extends StatelessWidget {
-  const _UpsellHint({required this.l10n});
+  const _UpsellHint({required this.l10n, required this.petId});
 
   final AppLocalizations l10n;
+  final String petId;
+
+  Future<void> _buy(BuildContext context, String code) async {
+    try {
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: petId);
+      await openExternalUrl(url);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.paymentResume)));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -332,6 +344,14 @@ class _UpsellHint extends StatelessWidget {
         children: [
           Text(l10n.carePlusUpsell, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           Text(l10n.familyPackHint, style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton(onPressed: () => _buy(context, 'care_plus'), child: Text(l10n.carePlusUpsell.split('—').first.trim())),
+              TextButton(onPressed: () => _buy(context, 'family'), child: Text(l10n.familyPackHint.split('—').first.trim())),
+            ],
+          ),
         ],
       ),
     );

@@ -129,6 +129,9 @@
     "quinquennial_sub_summary": "€75 every 5 years, auto-renewed",
     "annual_onetime_summary": "€25 for 1 year, one-time payment",
     "triennial_onetime_summary": "€60 for 3 years, one-time payment",
-    "quinquennial_onetime_summary": "€75 for 5 years, one-time payment"
+    "quinquennial_onetime_summary": "€75 for 5 years, one-time payment",
+    "addon_family_label": "Family add-on — €40",
+    "addon_care_plus_label": "Care+ add-on — €15",
+    "addon_horse_label": "Horse add-on — €30"
   }
 }

@@ -118,14 +118,16 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 
 ---
 
-## Monétisation future (optionnel)
+## Monétisation addons
 
-Offres additionnelles prévues côté produit, **non implémentées** dans l'API actuelle — à modéliser comme nouveaux Products/Prices Stripe :
+| Pack | Code | Prix | Scope |
+|------|------|------|-------|
+| **Family pack** | `family` | 40 € / an | owner (multi-animaux) |
+| **Care+** | `care_plus` | 15 € / an | par animal |
+| **Horse pack** | `horse` | 30 € / an | par animal |
 
-| Pack | Description |
-|------|-------------|
-| **Family pack** | Plusieurs animaux, un seul abonnement familial |
-| **Care+** | Rappels personnalisés médicaments et soins avancés |
-| **Horse pack** | Module équine (maréchal, coproscopie, compétitions) |
+API : `GET /billing/addons`, `POST /billing/addons/checkout` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
 
-Ces packs pourront réutiliser le même pipeline Checkout/webhook une fois les `STRIPE_PRICE_*` dédiés créés.
+Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
+
+Commission **commercial** : 15 % fixe sur abonnements des clients des vétos assignés + 15 % sur addons (indépendant de la grille progressive véto 5→15 %).

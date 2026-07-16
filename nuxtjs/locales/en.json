@@ -9,12 +9,19 @@
     "adminDashboard": "Dashboard",
     "adminUsers": "Registrations",
     "adminPayments": "Payments",
-    "adminCommissions": "Payouts"
+    "adminCommissions": "Payouts",
+    "adminCommercials": "Sales team",
+    "adminProspects": "Prospects",
+    "commercialDashboard": "Dashboard",
+    "commercialVets": "Veterinarians",
+    "commercialProspects": "Prospects",
+    "commercialCommissions": "Commissions",
+    "commercialPitch": "Pitch"
   },
   "auth": {
     "login": {
       "title": "Pro login",
-      "subtitle": "Access reserved for veterinarians and administrators.",
+      "subtitle": "Access reserved for veterinarians, sales and administrators.",
       "brandTitle": "Cardiac monitoring and client records in one tool",
       "brandText": "Welcome to petsFollow Pro — the workspace designed for animal care professionals, with a touch of good humour.",
       "submit": "Sign in",
@@ -22,7 +29,7 @@
       "registerLink": "Sign up for free",
       "forgotLink": "Forgot password?",
       "or": "or",
-      "proOnly": "Access reserved for Pro profiles (vet / admin)",
+      "proOnly": "Access reserved for Pro profiles (vet / sales / admin)",
       "invalidResponse": "Invalid authentication response"
     },
     "forgot": {
@@ -139,7 +146,9 @@
     "clientFallback": "Client {id}…",
     "breadcrumb": "Breadcrumb",
     "loading": "Loading…",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "settings": {
     "title": "Settings",
@@ -367,7 +376,11 @@
       "pendingPayments": "Pending payments",
       "pastDue": "Past due",
       "planBreakdown": "Plan breakdown",
-      "modeBreakdown": "Billing modes"
+      "modeBreakdown": "Billing modes",
+      "commercials": "Sales",
+      "prospects": "Prospects",
+      "addonRevenue": "Addon revenue",
+      "commercialDue": "Sales commissions"
     },
     "users": {
       "title": "Registrations",
@@ -388,7 +401,14 @@
       "columnRole": "Role",
       "columnRegistered": "Registered",
       "columnPets": "Pets",
-      "columnPayment": "Payment"
+      "columnPayment": "Payment",
+      "roleCommercial": "Sales",
+      "createCommercial": "Create sales account",
+      "commercialEmail": "Email",
+      "commercialName": "Name",
+      "commercialPassword": "Password",
+      "commercialCreated": "Sales account created",
+      "commercialFailed": "Creation failed"
     },
     "payments": {
       "title": "Payments received",
@@ -428,6 +448,25 @@
       "statusOpen": "Open",
       "statusClosed": "Closed",
       "statusPaid": "Paid"
+    },
+    "commercials": {
+      "title": "Sales team",
+      "subtitle": "Sales force and assigned vets.",
+      "empty": "None",
+      "columnName": "Name",
+      "columnEmail": "Email",
+      "columnVets": "Assigned vets"
+    },
+    "prospects": {
+      "title": "Marketing prospects",
+      "subtitle": "Global prospect pipeline.",
+      "empty": "None",
+      "columnPractice": "Practice",
+      "columnContact": "Contact",
+      "columnStatus": "Status",
+      "columnCommercial": "Sales",
+      "columnDays": "Days",
+      "columnCity": "City"
     }
   },
   "commissions": {
@@ -511,9 +550,18 @@
       }
     },
     "highlights": {
-      "bpm": { "title": "BPM readings", "text": "Guided cardiac monitoring for dogs and cats." },
-      "alerts": { "title": "Alerts", "text": "Immediate notification when an anomaly is detected." },
-      "free": { "title": "Free for vets", "text": "No cost for your practice." }
+      "bpm": {
+        "title": "BPM readings",
+        "text": "Guided cardiac monitoring for dogs and cats."
+      },
+      "alerts": {
+        "title": "Alerts",
+        "text": "Immediate notification when an anomaly is detected."
+      },
+      "free": {
+        "title": "Free for vets",
+        "text": "No cost for your practice."
+      }
     },
     "ctaTitle": "Next step: set up your practice profile",
     "ctaText": "On first login, enter your practice details so clients can reach you easily.",
@@ -532,18 +580,45 @@
     "heroCta": "Create my practice — it's free",
     "heroLogin": "I already have an account",
     "cards": {
-      "heartrate": { "title": "Heart rate readings", "text": "BPM tracking and real-time alerts" },
-      "messaging": { "title": "Secure messaging", "text": "Direct exchanges with your clients" },
-      "records": { "title": "Patient records", "text": "Complete history per animal" }
+      "heartrate": {
+        "title": "Heart rate readings",
+        "text": "BPM tracking and real-time alerts"
+      },
+      "messaging": {
+        "title": "Secure messaging",
+        "text": "Direct exchanges with your clients"
+      },
+      "records": {
+        "title": "Patient records",
+        "text": "Complete history per animal"
+      }
     },
     "featuresTitle": "Why choose petsFollow Pro?",
     "features": {
-      "heartrate": { "title": "Guided heart rate readings", "text": "Clients take BPM readings from the mobile app. You validate and track progress." },
-      "alerts": { "title": "Smart alerts", "text": "Get notified immediately for tachycardia or detected anomalies." },
-      "messaging": { "title": "Built-in messaging", "text": "Communicate with clients without leaving the platform. Configurable availability." },
-      "free": { "title": "Free for vets", "text": "No practice subscription. petsFollow Pro is free for veterinary professionals." },
-      "security": { "title": "Secure data", "text": "Compliant hosting, role-restricted access, encrypted messaging." },
-      "onboarding": { "title": "Quick onboarding", "text": "Register in 2 minutes, set up your practice profile on first access." }
+      "heartrate": {
+        "title": "Guided heart rate readings",
+        "text": "Clients take BPM readings from the mobile app. You validate and track progress."
+      },
+      "alerts": {
+        "title": "Smart alerts",
+        "text": "Get notified immediately for tachycardia or detected anomalies."
+      },
+      "messaging": {
+        "title": "Built-in messaging",
+        "text": "Communicate with clients without leaving the platform. Configurable availability."
+      },
+      "free": {
+        "title": "Free for vets",
+        "text": "No practice subscription. petsFollow Pro is free for veterinary professionals."
+      },
+      "security": {
+        "title": "Secure data",
+        "text": "Compliant hosting, role-restricted access, encrypted messaging."
+      },
+      "onboarding": {
+        "title": "Quick onboarding",
+        "text": "Register in 2 minutes, set up your practice profile on first access."
+      }
     },
     "ctaTitle": "Join petsFollow Pro today",
     "ctaText": "The app is {free}. Your clients only pay for their pets' cardiac monitoring subscription.",
@@ -669,5 +744,97 @@
     "internal": "Internal server error",
     "not_ready": "Service not ready",
     "generic": "An error occurred"
+  },
+  "commercial": {
+    "dashboard": {
+      "title": "Sales dashboard",
+      "subtitle": "Assigned vets, prospect pipeline and commissions.",
+      "assignedVets": "Assigned vets",
+      "prospects": "Prospects",
+      "prospectsNew": "New",
+      "converted": "Converted",
+      "monthEarned": "Month commissions",
+      "lifetimeEarned": "Lifetime commissions",
+      "subRevenue": "Linked subscription revenue",
+      "addonRevenue": "Linked addon revenue"
+    },
+    "vets": {
+      "title": "Assigned veterinarians",
+      "subtitle": "Create a vet account automatically assigned to you.",
+      "encode": "Create vet",
+      "save": "Create account",
+      "empty": "No assigned veterinarians",
+      "fullName": "Full name",
+      "practiceName": "Practice",
+      "email": "Email",
+      "password": "Temporary password",
+      "phone": "Phone",
+      "city": "City",
+      "postalCode": "Postal code",
+      "address": "Address",
+      "clients": "Clients",
+      "encodeFailed": "Creation failed"
+    },
+    "prospects": {
+      "title": "Prospect sheets",
+      "subtitle": "Sales CRM — track prospective practices.",
+      "create": "New sheet",
+      "save": "Save",
+      "empty": "No prospects",
+      "practiceName": "Practice",
+      "contactName": "Contact",
+      "contactEmail": "Email",
+      "contactPhone": "Phone",
+      "city": "City",
+      "notes": "Notes",
+      "statusLabel": "Status",
+      "statusAll": "All statuses",
+      "daysInStatus": "Days",
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "qualified": "Qualified",
+        "converted": "Converted",
+        "lost": "Lost"
+      }
+    },
+    "commissions": {
+      "title": "My commissions",
+      "subtitle": "Flat 15% on subscriptions of your assigned vets' clients + 15% on addons.",
+      "rate": "Rate",
+      "month": "Month",
+      "lifetime": "Lifetime",
+      "subscriptions": "Subscriptions",
+      "addons": "Addons",
+      "empty": "No commissions",
+      "date": "Date",
+      "type": "Type",
+      "vet": "Vet",
+      "client": "Client",
+      "base": "Base",
+      "amount": "Commission"
+    },
+    "pitch": {
+      "title": "petsFollow overview",
+      "subtitle": "Web vet app + Flutter mobile app and commission scheme.",
+      "webTitle": "Pro Web app (vet)",
+      "mobileTitle": "Flutter mobile app (clients)",
+      "commissionTitle": "Commissioning",
+      "vetGrid": "Vet: progressive grid 5% → 8% → 12% → 15% based on paying client volume (subscriptions).",
+      "commercialFlat": "Sales: flat 15% on client subscriptions of assigned veterinarians.",
+      "addons": "Addons (Family, Care+, Horse): 15% for sales on each purchase.",
+      "webFeatures": [
+        "Operational dashboard clients / messages / HR",
+        "Patient file and messaging",
+        "Vet commission tracking",
+        "Practice onboarding and settings"
+      ],
+      "mobileFeatures": [
+        "Pets and heart-rate tracking",
+        "Stripe subscriptions per pet",
+        "Family / Care+ / Horse addons",
+        "Messages and care reminders"
+      ]
+    }
   }
 }

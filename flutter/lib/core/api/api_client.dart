@@ -165,6 +165,19 @@ class ApiClient {
     return res.data['data']['plans'] as List<dynamic>;
   }
 
+  Future<List<dynamic>> getBillingAddons() async {
+    final res = await dio.get('/api/v1/billing/addons');
+    return res.data['data']['addons'] as List<dynamic>;
+  }
+
+  Future<String> startAddonCheckout({required String addonCode, String? petId}) async {
+    final res = await dio.post('/api/v1/billing/addons/checkout', data: {
+      'addonCode': addonCode,
+      if (petId != null && petId.isNotEmpty) 'petId': petId,
+    });
+    return res.data['data']['checkoutUrl'] as String;
+  }
+
   Future<Map<String, dynamic>> startHeartRate(String petId, {int? durationSec}) async {
     final res = await dio.post(
       '/api/v1/pets/$petId/heartrate/sessions',

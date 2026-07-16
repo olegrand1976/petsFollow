@@ -67,6 +67,14 @@ describe('useAuth helpers', () => {
     expect(parseJwtRole(null)).toBeNull()
   })
 
+  it('parseJwtRole reconnaît commercial', () => {
+    const payload = btoa(JSON.stringify({ role: 'commercial', sub: 'c1' }))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+    expect(parseJwtRole(`hdr.${payload}.sig`)).toBe('commercial')
+  })
+
   it('persistAuthTokens / clearAuthTokens gèrent pf_token et pf_refresh', () => {
     persistAuthTokens(tokens)
     expect(cookieStore.get('pf_token')).toBe('access.jwt')

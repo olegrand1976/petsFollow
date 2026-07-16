@@ -204,9 +204,123 @@ func (s *Service) MockCompleteCheckout(ctx context.Context, petID, ownerUserID, 
 	return s.HandleWebhook(ctx, payload, sig)
 }
 
+type StartAddonCheckoutInput struct {
+	AddonID     string
+	OwnerUserID string
+	OwnerEmail  string
+	AddonCode   AddonCode
+	SuccessURL  string
+	CancelURL   string
+}
+
+func (s *Service) StartAddonCheckout(ctx context.Context, in StartAddonCheckoutInput) (CheckoutSession, error) {
+	addon, err := GetAddon(in.AddonCode)
+	if err != nil {
+		return CheckoutSession{}, err
+	}
+	priceID := s.addonPriceID(in.AddonCode)
+	if priceID == "" && !s.cfg.BillingMockEnabled {
+		return CheckoutSession{}, fmt.Errorf("missing stripe price for addon %s", in.AddonCode)
+	}
+	if priceID == "" {
+		priceID = fmt.Sprintf("price_mock_addon_%s", in.AddonCode)
+	}
+
+	customerID, _ := s.store.GetStripeCustomerID(ctx, in.OwnerUserID)
+	successURL := in.SuccessURL
+	if successURL == "" {
+		successURL = s.cfg.StripeSuccessURL
+	}
+	cancelURL := in.CancelURL
+	if cancelURL == "" {
+		cancelURL = s.cfg.StripeCancelURL
+	}
+	_ = addon
+	return s.gateway.CreateCheckoutSession(ctx, CheckoutRequest{
+		PriceID:       priceID,
+		Mode:          "payment",
+		CustomerID:    customerID,
+		CustomerEmail: in.OwnerEmail,
+		SuccessURL:    successURL,
+		CancelURL:     cancelURL,
+		Metadata: map[string]string{
+			"kind":          "addon",
+			"addon_id":      in.AddonID,
+			"addon_code":    string(in.AddonCode),
+			"owner_user_id": in.OwnerUserID,
+		},
+	})
+}
+
+func (s *Service) MockCompleteAddonCheckout(ctx context.Context, addonID, ownerUserID, addonCode, sessionID string) error {
+	payload, sig, err := BuildTestWebhookPayload(s.cfg.StripeWebhookSecret, "checkout.session.completed", map[string]any{
+		"id":             sessionID,
+		"payment_status": "paid",
+		"customer":       "cus_mock_" + ownerUserID,
+		"subscription":   nil,
+		"payment_intent": "pi_mock_addon_" + addonID,
+		"metadata": map[string]any{
+			"kind":          "addon",
+			"addon_id":      addonID,
+			"addon_code":    addonCode,
+			"owner_user_id": ownerUserID,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return s.HandleWebhook(ctx, payload, sig)
+}
+
+func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[string]any, meta map[string]string) error {
+	addonID := meta["addon_id"]
+	if addonID == "" {
+		return fmt.Errorf("missing addon_id in checkout metadata")
+	}
+	now := time.Now()
+	addon, err := s.store.GetAddonEntitlement(ctx, addonID)
+	if err != nil {
+		return err
+	}
+	addonDef, err := GetAddon(AddonCode(addon.AddonCode))
+	if err != nil {
+		return err
+	}
+	validUntil := AddonValidUntil(now, addonDef)
+	customerID, _ := asString(obj["customer"])
+	piID, _ := asString(obj["payment_intent"])
+	sessionID, _ := asString(obj["id"])
+	if addon.OwnerUserID != "" && customerID != "" {
+		_ = s.store.UpsertStripeCustomer(ctx, addon.OwnerUserID, customerID)
+	}
+	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID); err != nil {
+		return err
+	}
+	if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
+		fmt.Printf("commercial addon accrual failed for addon %s: %v\n", addonID, err)
+	}
+	return nil
+}
+
+func (s *Service) addonPriceID(code AddonCode) string {
+	switch code {
+	case AddonFamily:
+		return s.cfg.StripePriceAddonFamily
+	case AddonCarePlus:
+		return s.cfg.StripePriceAddonCarePlus
+	case AddonHorse:
+		return s.cfg.StripePriceAddonHorse
+	default:
+		return ""
+	}
+}
+
 func (s *Service) handleCheckoutCompleted(ctx context.Context, event StripeEvent) error {
 	obj := objectMap(event)
 	meta := metadataMap(obj)
+	if meta["kind"] == "addon" {
+		return s.handleAddonCheckoutCompleted(ctx, obj, meta)
+	}
 	petID := meta["pet_id"]
 	ownerUserID := meta["owner_user_id"]
 	planCode, _ := ParsePlanCode(meta["plan_code"])

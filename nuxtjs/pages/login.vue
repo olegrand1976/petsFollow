@@ -119,6 +119,7 @@ async function redirectAfterLogin() {
   const role = me.data?.role || me.role
   const profileComplete = me.data?.profileComplete ?? me.profileComplete
   if (role === 'admin') await navigateTo('/admin')
+  else if (role === 'commercial') await navigateTo('/commercial')
   else if (role === 'vet') {
     if (profileComplete === false) await navigateTo('/onboarding')
     else await navigateTo('/dashboard')

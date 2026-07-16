@@ -24,7 +24,7 @@ Après modification des tokens brand : `make brand-sync`.
 
 ## Comptes démo
 
-Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin : `AdminDemo123!`
+Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin : `AdminDemo123!` · commercial : `CommercialDemo123!`
 
 | Rôle | Email | Cabinet |
 |------|-------|---------|
@@ -34,6 +34,7 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
 | Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
 | Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
+| Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné) |
 | Admin | `admin.demo@petsfollow.test` | — (global) |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — Rex, Bella |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |

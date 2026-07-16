@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -64,7 +65,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
       children: [
         Text(l10n.horseHealthTitle, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        _HorsePackUpsell(l10n: l10n),
+        _HorsePackUpsell(l10n: l10n, petId: widget.petId),
         const SizedBox(height: 12),
         if (loading)
           const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
@@ -119,9 +120,10 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
 }
 
 class _HorsePackUpsell extends StatelessWidget {
-  const _HorsePackUpsell({required this.l10n});
+  const _HorsePackUpsell({required this.l10n, required this.petId});
 
   final AppLocalizations l10n;
+  final String petId;
 
   @override
   Widget build(BuildContext context) {
@@ -133,16 +135,32 @@ class _HorsePackUpsell extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.workspace_premium_outlined, color: AppColors.gold, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              l10n.horsePackUpsell,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.35),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.workspace_premium_outlined, color: AppColors.gold, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.horsePackUpsell,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.35),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () async {
+              try {
+                final url = await ApiClient.instance.startAddonCheckout(addonCode: 'horse', petId: petId);
+                // ignore: use_build_context_synchronously
+                await openExternalUrl(url);
+              } catch (_) {}
+            },
+            child: Text(l10n.horsePackUpsell.split('—').first.trim()),
           ),
         ],
       ),

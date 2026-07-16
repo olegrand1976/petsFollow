@@ -9,12 +9,19 @@
     "adminDashboard": "Tableau de bord",
     "adminUsers": "Inscriptions",
     "adminPayments": "Paiements",
-    "adminCommissions": "Rétributions"
+    "adminCommissions": "Rétributions",
+    "adminCommercials": "Commerciaux",
+    "adminProspects": "Prospects",
+    "commercialDashboard": "Dashboard",
+    "commercialVets": "Vétérinaires",
+    "commercialProspects": "Prospects",
+    "commercialCommissions": "Commissions",
+    "commercialPitch": "Présentation"
   },
   "auth": {
     "login": {
       "title": "Connexion Pro",
-      "subtitle": "Accès réservé aux vétérinaires et administrateurs.",
+      "subtitle": "Accès réservé aux vétérinaires, commerciaux et administrateurs.",
       "brandTitle": "Suivi cardiaque et dossier client en un seul outil",
       "brandText": "Bienvenue sur petsFollow Pro — l'espace pensé pour les pros du soin animal, avec une touche de bonne humeur.",
       "submit": "Se connecter",
@@ -22,7 +29,7 @@
       "registerLink": "S'inscrire gratuitement",
       "forgotLink": "Mot de passe oublié ?",
       "or": "ou",
-      "proOnly": "Accès réservé aux profils Pro (véto / admin)",
+      "proOnly": "Accès réservé aux profils Pro (véto / commercial / admin)",
       "invalidResponse": "Réponse d'authentification invalide"
     },
     "forgot": {
@@ -139,7 +146,101 @@
     "clientFallback": "Client {id}…",
     "breadcrumb": "Fil d'Ariane",
     "loading": "Chargement…",
-    "actions": "Actions"
+    "actions": "Actions",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "commercial": {
+    "dashboard": {
+      "title": "Dashboard commercial",
+      "subtitle": "KPI vétos assignés, pipeline prospects et commissions.",
+      "assignedVets": "Vétos assignés",
+      "prospects": "Prospects",
+      "prospectsNew": "Nouveaux",
+      "converted": "Convertis",
+      "monthEarned": "Commissions du mois",
+      "lifetimeEarned": "Commissions lifetime",
+      "subRevenue": "CA abonnements liés",
+      "addonRevenue": "CA addons liés"
+    },
+    "vets": {
+      "title": "Vétérinaires assignés",
+      "subtitle": "Encoder une fiche véto qui vous est automatiquement assignée.",
+      "encode": "Encoder un véto",
+      "save": "Créer le compte",
+      "empty": "Aucun vétérinaire assigné",
+      "fullName": "Nom complet",
+      "practiceName": "Cabinet",
+      "email": "Email",
+      "password": "Mot de passe temporaire",
+      "phone": "Téléphone",
+      "city": "Ville",
+      "postalCode": "Code postal",
+      "address": "Adresse",
+      "clients": "Clients",
+      "encodeFailed": "Création impossible"
+    },
+    "prospects": {
+      "title": "Fiches de prospection",
+      "subtitle": "CRM commercial — suivi des cabinets prospects.",
+      "create": "Nouvelle fiche",
+      "save": "Enregistrer",
+      "empty": "Aucun prospect",
+      "practiceName": "Cabinet",
+      "contactName": "Contact",
+      "contactEmail": "Email",
+      "contactPhone": "Téléphone",
+      "city": "Ville",
+      "notes": "Notes",
+      "statusLabel": "Statut",
+      "statusAll": "Tous les statuts",
+      "daysInStatus": "Jours",
+      "status": {
+        "new": "Nouveau",
+        "contacted": "Contacté",
+        "qualified": "Qualifié",
+        "converted": "Converti",
+        "lost": "Perdu"
+      }
+    },
+    "commissions": {
+      "title": "Mes commissions",
+      "subtitle": "15 % fixe sur abonnements des clients de vos vétos + 15 % sur addons.",
+      "rate": "Taux",
+      "month": "Mois",
+      "lifetime": "Lifetime",
+      "subscriptions": "Abonnements",
+      "addons": "Addons",
+      "empty": "Aucune commission",
+      "date": "Date",
+      "type": "Type",
+      "vet": "Véto",
+      "client": "Client",
+      "base": "Base",
+      "amount": "Commission"
+    },
+    "pitch": {
+      "title": "Présentation petsFollow",
+      "subtitle": "Schéma App Web véto + App Mobile Flutter et rétribution.",
+      "webTitle": "App Web Pro (véto)",
+      "mobileTitle": "App Mobile Flutter (clients)",
+      "commissionTitle": "Commissionnement",
+      "vetGrid": "Véto : grille progressive 5 % → 8 % → 12 % → 15 % selon le volume de clients payants (sur abonnements).",
+      "commercialFlat": "Commercial : 15 % fixe sur les abonnements clients des vétérinaires assignés.",
+      "addons": "Addons (Family, Care+, Horse) : 15 % pour le commercial sur chaque achat.",
+      "webFeatures": [
+        "Dashboard opérationnel clients / messages / FC",
+        "Dossier patient et messagerie",
+        "Suivi commissions vétérinaires",
+        "Onboarding cabinet et paramètres"
+      ],
+      "mobileFeatures": [
+        "Animaux et suivi cardiaque",
+        "Abonnements Stripe par animal",
+        "Addons Family / Care+ / Horse",
+        "Messages et rappels de soins"
+      ]
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -367,7 +468,11 @@
       "pendingPayments": "Paiements en attente",
       "pastDue": "Impayés",
       "planBreakdown": "Répartition plans",
-      "modeBreakdown": "Modes de facturation"
+      "modeBreakdown": "Modes de facturation",
+      "commercials": "Commerciaux",
+      "prospects": "Prospects",
+      "addonRevenue": "CA addons",
+      "commercialDue": "Commissions commerciales"
     },
     "users": {
       "title": "Inscriptions",
@@ -377,6 +482,13 @@
       "roleClient": "Clients",
       "roleVet": "Vétos",
       "roleAdmin": "Admins",
+      "roleCommercial": "Commerciaux",
+      "createCommercial": "Créer un commercial",
+      "commercialEmail": "Email",
+      "commercialName": "Nom",
+      "commercialPassword": "Mot de passe",
+      "commercialCreated": "Compte commercial créé",
+      "commercialFailed": "Création impossible",
       "payment": "Paiement",
       "paymentAll": "Tous",
       "paymentActive": "Actif",
@@ -389,6 +501,25 @@
       "columnRegistered": "Inscription",
       "columnPets": "Animaux",
       "columnPayment": "Paiement"
+    },
+    "commercials": {
+      "title": "Commerciaux",
+      "subtitle": "Suivi force de vente et vétos assignés.",
+      "empty": "Aucun commercial",
+      "columnName": "Nom",
+      "columnEmail": "Email",
+      "columnVets": "Vétos assignés"
+    },
+    "prospects": {
+      "title": "Prospects marketing",
+      "subtitle": "Pipeline global des fiches de prospection.",
+      "empty": "Aucun prospect",
+      "columnPractice": "Cabinet",
+      "columnContact": "Contact",
+      "columnStatus": "Statut",
+      "columnCommercial": "Commercial",
+      "columnDays": "Jours",
+      "columnCity": "Ville"
     },
     "payments": {
       "title": "Paiements reçus",

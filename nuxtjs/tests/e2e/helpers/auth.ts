@@ -37,6 +37,14 @@ export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.te
   await login(page, email, password)
 }
 
+export async function loginAsCommercial(
+  page: Page,
+  email = 'commercial.demo@petsfollow.test',
+  password = 'CommercialDemo123!',
+) {
+  await login(page, email, password)
+}
+
 export async function logout(page: Page) {
   await page.getByTestId('pro-profile-btn').click()
   await page.getByTestId('pro-logout-btn').click()

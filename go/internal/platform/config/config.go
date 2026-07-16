@@ -31,6 +31,9 @@ type Config struct {
 	StripePriceAnnualSub            string
 	StripePriceTriennialSub         string
 	StripePriceQuinquennialSub      string
+	StripePriceAddonFamily          string
+	StripePriceAddonCarePlus        string
+	StripePriceAddonHorse           string
 	StripeSuccessURL                string
 	StripeCancelURL                 string
 	APIPublicURL                    string
@@ -69,6 +72,9 @@ func Load() Config {
 		StripePriceAnnualSub:           envOr("STRIPE_PRICE_ANNUAL_SUB", ""),
 		StripePriceTriennialSub:        envOr("STRIPE_PRICE_TRIENNIAL_SUB", ""),
 		StripePriceQuinquennialSub:     envOr("STRIPE_PRICE_QUINQUENNIAL_SUB", ""),
+		StripePriceAddonFamily:         envOr("STRIPE_PRICE_ADDON_FAMILY", ""),
+		StripePriceAddonCarePlus:       envOr("STRIPE_PRICE_ADDON_CARE_PLUS", ""),
+		StripePriceAddonHorse:          envOr("STRIPE_PRICE_ADDON_HORSE", ""),
 		StripeSuccessURL:               envOr("STRIPE_SUCCESS_URL", "petsfollow://payment/success"),
 		StripeCancelURL:                envOr("STRIPE_CANCEL_URL", "petsfollow://payment/cancel"),
 		APIPublicURL:                   envOr("PETSFOLLOW_API_PUBLIC_URL", "http://localhost:8291"),

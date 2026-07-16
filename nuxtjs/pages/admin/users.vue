@@ -1,15 +1,26 @@
 <template>
-  <div>
+  <div data-testid="admin-users-page">
     <ProPageHeader :title="$t('admin.users.title')" :subtitle="$t('admin.users.subtitle')" />
+    <ProCard class="pro-mb-lg" data-testid="admin-create-commercial">
+      <h3 class="pro-mb-md">{{ $t('admin.users.createCommercial') }}</h3>
+      <form class="pro-form" @submit.prevent="createCommercial">
+        <ProInput v-model="cForm.fullName" data-testid="admin-commercial-name" :label="$t('admin.users.commercialName')" required />
+        <ProInput v-model="cForm.email" data-testid="admin-commercial-email" type="email" :label="$t('admin.users.commercialEmail')" required />
+        <ProInput v-model="cForm.password" data-testid="admin-commercial-password" type="password" :label="$t('admin.users.commercialPassword')" required />
+        <p v-if="cMsg" class="pro-hint" data-testid="admin-commercial-msg">{{ cMsg }}</p>
+        <ProButton type="submit" data-testid="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
+      </form>
+    </ProCard>
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
           <div class="pro-field pro-field-inline">
             <label class="pro-label" for="role-filter">{{ $t('admin.users.role') }}</label>
-            <select id="role-filter" v-model="roleFilter" class="pro-select">
+            <select id="role-filter" v-model="roleFilter" class="pro-select" data-testid="admin-role-filter">
               <option value="">{{ $t('admin.users.roleAll') }}</option>
               <option value="client">{{ $t('admin.users.roleClient') }}</option>
               <option value="vet">{{ $t('admin.users.roleVet') }}</option>
+              <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
               <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
             </select>
           </div>
@@ -98,6 +109,9 @@ const users = ref<AdminUser[]>([])
 const page = ref(1)
 const hasMore = ref(false)
 const { viewMode } = useListView('pf-admin-users-view', 'table')
+const cSaving = ref(false)
+const cMsg = ref('')
+const cForm = reactive({ fullName: '', email: '', password: '' })
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
@@ -124,6 +138,7 @@ const kanbanColumns = computed(() => {
   const roles = [
     { role: 'client', title: t('admin.users.roleClient') },
     { role: 'vet', title: t('admin.users.roleVet') },
+    { role: 'commercial', title: t('admin.users.roleCommercial') },
     { role: 'admin', title: t('admin.users.roleAdmin') },
   ]
   return roles.map((r) => ({
@@ -131,6 +146,21 @@ const kanbanColumns = computed(() => {
     items: filtered.value.filter((u) => u.role === r.role),
   }))
 })
+
+async function createCommercial() {
+  cSaving.value = true
+  cMsg.value = ''
+  try {
+    await $fetch('/api/admin/commercials', { method: 'POST', body: { ...cForm } })
+    cMsg.value = t('admin.users.commercialCreated')
+    Object.assign(cForm, { fullName: '', email: '', password: '' })
+    await load()
+  } catch {
+    cMsg.value = t('admin.users.commercialFailed')
+  } finally {
+    cSaving.value = false
+  }
+}
 
 async function load() {
   const res: any = await $fetch('/api/admin/users', {
