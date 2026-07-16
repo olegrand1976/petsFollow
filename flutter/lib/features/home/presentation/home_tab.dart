@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
@@ -276,10 +277,31 @@ class _AddFirstVetCard extends StatelessWidget {
   }
 }
 
-class _UpsellBanner extends StatelessWidget {
+class _UpsellBanner extends StatefulWidget {
   const _UpsellBanner({required this.l10n});
 
   final AppLocalizations l10n;
+
+  @override
+  State<_UpsellBanner> createState() => _UpsellBannerState();
+}
+
+class _UpsellBannerState extends State<_UpsellBanner> {
+  BillingAddon? _family;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final catalog = await BillingAddon.fetchCatalog();
+      if (!mounted) return;
+      setState(() => _family = BillingAddon.byCode(catalog, 'family'));
+    } catch (_) {}
+  }
 
   Future<void> _buy(BuildContext context, String code) async {
     try {
@@ -288,7 +310,7 @@ class _UpsellBanner extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.paymentResume)),
+          SnackBar(content: Text(widget.l10n.paymentResume)),
         );
       }
     }
@@ -296,6 +318,10 @@ class _UpsellBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_family == null) return const SizedBox.shrink();
+    final label = _family!.label.isNotEmpty
+        ? _family!.label
+        : widget.l10n.familyPackHint.split('—').first.trim();
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -306,17 +332,17 @@ class _UpsellBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 4),
-          Text(l10n.familyPackHint, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          Text(widget.l10n.familyPackHint, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               OutlinedButton(
-                onPressed: () => _buy(context, 'family'),
-                child: Text(l10n.familyPackHint.split('—').first.trim()),
+                onPressed: () => _buy(context, _family!.code),
+                child: Text(label),
               ),
             ],
           ),

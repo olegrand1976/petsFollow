@@ -101,6 +101,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/vet/overview", a.vetOverview)
 		pr.Get("/vet/profile", a.getVetProfile)
 		pr.Put("/vet/profile", a.updateVetProfile)
+		pr.Post("/vet/prospects", a.vetCreateProspect)
 		pr.Get("/vet/notification-preferences", a.getVetEmailPrefs)
 		pr.Put("/vet/notification-preferences", a.updateVetEmailPrefs)
 	})

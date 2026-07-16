@@ -313,6 +313,18 @@
       "careTypeFarrier": "Farrier",
       "careTypeFecalEgg": "Fecal egg count",
       "careTypeCustom": "Custom"
+    },
+    "referral": {
+      "title": "Refer a practice",
+      "hint": "The lead is sent to your assigned sales rep.",
+      "practiceName": "Practice",
+      "contactName": "Contact",
+      "contactEmail": "Email",
+      "city": "City",
+      "notes": "Notes",
+      "submit": "Send to sales",
+      "success": "Referral sent.",
+      "error": "Could not send (no sales rep assigned?)."
     }
   },
   "requests": {
@@ -462,7 +474,16 @@
       "empty": "None",
       "columnName": "Name",
       "columnEmail": "Email",
-      "columnVets": "Assigned vets"
+      "columnVets": "Assigned vets",
+      "columnDue": "Lifetime commissions",
+      "assignTitle": "Assign a vet",
+      "assignCommercial": "Sales rep",
+      "assignCommercialPlaceholder": "Select a sales rep",
+      "assignVet": "Veterinarian",
+      "assignVetPlaceholder": "Select a vet",
+      "assignSubmit": "Assign",
+      "assignSuccess": "Vet assigned.",
+      "assignFailed": "Could not assign this vet."
     },
     "prospects": {
       "title": "Marketing prospects",
@@ -473,7 +494,8 @@
       "columnStatus": "Status",
       "columnCommercial": "Sales",
       "columnDays": "Days",
-      "columnCity": "City"
+      "columnCity": "City",
+      "columnSource": "Source"
     }
   },
   "commissions": {
@@ -803,11 +825,16 @@
         "qualified": "Qualified",
         "converted": "Converted",
         "lost": "Lost"
+      },
+      "sourceLabel": "Source",
+      "source": {
+        "commercial": "Sales",
+        "vet_referral": "Vet referral"
       }
     },
     "commissions": {
       "title": "My commissions",
-      "subtitle": "Flat 15% on subscriptions of your assigned vets' clients + 15% on addons.",
+      "subtitle": "Mirror of vet commissions (same rate) + 15% on addons.",
       "rate": "Rate",
       "month": "Month",
       "lifetime": "Lifetime",
@@ -828,7 +855,6 @@
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
       "vetGrid": "Vet: progressive grid 5% → 8% → 12% → 15% based on paying client volume (subscriptions).",
-      "commercialFlat": "Sales: flat 15% on client subscriptions of assigned veterinarians.",
       "addons": "Addons (Family, Care+, Horse): 15% for sales on each purchase.",
       "webFeatures": [
         "Operational dashboard clients / messages / HR",
@@ -841,7 +867,8 @@
         "Stripe subscriptions per pet",
         "Family / Care+ / Horse addons",
         "Messages and care reminders"
-      ]
+      ],
+      "commercialMirror": "Sales: exact mirror of the assigned vet commission (same % at the same time) on client subscriptions."
     }
   }
 }

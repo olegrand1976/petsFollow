@@ -7,6 +7,7 @@
           <tr>
             <th>{{ $t('admin.prospects.columnPractice') }}</th>
             <th>{{ $t('admin.prospects.columnContact') }}</th>
+            <th>{{ $t('admin.prospects.columnSource') }}</th>
             <th>{{ $t('admin.prospects.columnStatus') }}</th>
             <th>{{ $t('admin.prospects.columnCommercial') }}</th>
             <th>{{ $t('admin.prospects.columnDays') }}</th>
@@ -17,6 +18,7 @@
           <tr v-for="p in rows" :key="p.id">
             <td>{{ p.practiceName }}</td>
             <td>{{ p.contactName }}</td>
+            <td><ProBadge variant="neutral">{{ p.source || 'commercial' }}</ProBadge></td>
             <td><ProBadge variant="neutral">{{ p.status }}</ProBadge></td>
             <td>{{ p.commercialName || p.commercialEmail }}</td>
             <td>{{ p.daysInStatus }}</td>

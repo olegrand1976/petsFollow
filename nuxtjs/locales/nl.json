@@ -313,6 +313,18 @@
       "careTypeFarrier": "Hoefsmid",
       "careTypeFecalEgg": "Mestonderzoek",
       "careTypeCustom": "Aangepast"
+    },
+    "referral": {
+      "title": "Praktijk aanbevelen",
+      "hint": "De fiche gaat naar uw toegewezen commercial.",
+      "practiceName": "Praktijk",
+      "contactName": "Contact",
+      "contactEmail": "E-mail",
+      "city": "Stad",
+      "notes": "Notities",
+      "submit": "Naar commercial sturen",
+      "success": "Aanbeveling verzonden.",
+      "error": "Verzenden mislukt (geen commercial toegewezen?)."
     }
   },
   "requests": {
@@ -462,7 +474,16 @@
       "empty": "Geen",
       "columnName": "Naam",
       "columnEmail": "E-mail",
-      "columnVets": "Toegewezen dierenartsen"
+      "columnVets": "Toegewezen dierenartsen",
+      "columnDue": "Cumulatieve commissies",
+      "assignTitle": "Dierenarts toewijzen",
+      "assignCommercial": "Commercial",
+      "assignCommercialPlaceholder": "Kies een commercial",
+      "assignVet": "Dierenarts",
+      "assignVetPlaceholder": "Kies een dierenarts",
+      "assignSubmit": "Toewijzen",
+      "assignSuccess": "Dierenarts toegewezen.",
+      "assignFailed": "Kon deze dierenarts niet toewijzen."
     },
     "prospects": {
       "title": "Marketingprospects",
@@ -473,7 +494,8 @@
       "columnStatus": "Status",
       "columnCommercial": "Commercial",
       "columnDays": "Dagen",
-      "columnCity": "Stad"
+      "columnCity": "Stad",
+      "columnSource": "Bron"
     }
   },
   "commissions": {
@@ -803,11 +825,16 @@
         "qualified": "Gekwalificeerd",
         "converted": "Geconverteerd",
         "lost": "Verloren"
+      },
+      "sourceLabel": "Bron",
+      "source": {
+        "commercial": "Commercial",
+        "vet_referral": "Doorverwijzing dierenarts"
       }
     },
     "commissions": {
       "title": "Mijn commissies",
-      "subtitle": "Vaste 15% op abonnementen van cliënten van uw dierenartsen + 15% op addons.",
+      "subtitle": "Spiegel van dierenartscommissies (zelfde tarief) + 15% op addons.",
       "rate": "Tarief",
       "month": "Maand",
       "lifetime": "Lifetime",
@@ -828,8 +855,7 @@
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
       "vetGrid": "Dierenarts: progressieve schaal 5% → 8% → 12% → 15% volgens volume betalende cliënten.",
-      "commercialFlat": "Commercieel: vaste 15% op cliëntabonnementen van toegewezen dierenartsen.",
-      "addons": "Addons (Family, Care+, Horse): 15% voor commercieel op elke aankoop.",
+      "addons": "Addons (Family, Care+, Horse): 15% voor de commercial bij elke aankoop.",
       "webFeatures": [
         "Operationeel dashboard cliënten / berichten / HR",
         "Patiëntdossier en messaging",
@@ -841,7 +867,8 @@
         "Stripe-abonnementen per dier",
         "Family / Care+ / Horse addons",
         "Berichten en zorgherinneringen"
-      ]
+      ],
+      "commercialMirror": "Commercial: exacte spiegel van de commissie van de toegewezen dierenarts (zelfde % op hetzelfde moment) op klantabonnementen."
     }
   }
 }

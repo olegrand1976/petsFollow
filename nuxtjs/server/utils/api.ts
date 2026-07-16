@@ -107,13 +107,19 @@ function bearerHeaders(event: H3Event, accessToken: string, extra?: Record<strin
 export async function proxyApi<T>(
   event: H3Event,
   path: string,
-  options: { method?: string, body?: unknown, headers?: Record<string, string> } = {},
+  options: {
+    method?: string
+    body?: unknown
+    headers?: Record<string, string>
+    query?: Record<string, unknown>
+  } = {},
 ): Promise<T> {
   const url = `${apiBase()}${path}`
   const fetchOnce = (accessToken?: string) =>
     $fetch<T>(url, {
       method: options.method,
       body: options.body,
+      query: options.query,
       headers: accessToken
         ? bearerHeaders(event, accessToken, options.headers)
         : { ...apiHeaders(event), ...options.headers },

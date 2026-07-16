@@ -32,6 +32,7 @@
           <tr>
             <th>{{ $t('commercial.prospects.practiceName') }}</th>
             <th>{{ $t('commercial.prospects.contactName') }}</th>
+            <th>{{ $t('commercial.prospects.sourceLabel') }}</th>
             <th>{{ $t('commercial.prospects.statusLabel') }}</th>
             <th>{{ $t('commercial.prospects.daysInStatus') }}</th>
             <th>{{ $t('commercial.prospects.city') }}</th>
@@ -42,6 +43,7 @@
           <tr v-for="p in filtered" :key="p.id" :data-testid="`prospect-row-${p.id}`">
             <td>{{ p.practiceName }}</td>
             <td>{{ p.contactName }}</td>
+            <td>{{ $t(`commercial.prospects.source.${p.source || 'commercial'}`) }}</td>
             <td>
               <select
                 class="pro-select"

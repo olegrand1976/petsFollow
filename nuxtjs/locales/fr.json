@@ -201,11 +201,16 @@
         "qualified": "Qualifié",
         "converted": "Converti",
         "lost": "Perdu"
+      },
+      "sourceLabel": "Source",
+      "source": {
+        "commercial": "Commercial",
+        "vet_referral": "Recommandation véto"
       }
     },
     "commissions": {
       "title": "Mes commissions",
-      "subtitle": "15 % fixe sur abonnements des clients de vos vétos + 15 % sur addons.",
+      "subtitle": "Miroir des commissions véto (même taux) + 15 % sur addons.",
       "rate": "Taux",
       "month": "Mois",
       "lifetime": "Lifetime",
@@ -226,7 +231,6 @@
       "mobileTitle": "App Mobile Flutter (clients)",
       "commissionTitle": "Commissionnement",
       "vetGrid": "Véto : grille progressive 5 % → 8 % → 12 % → 15 % selon le volume de clients payants (sur abonnements).",
-      "commercialFlat": "Commercial : 15 % fixe sur les abonnements clients des vétérinaires assignés.",
       "addons": "Addons (Family, Care+, Horse) : 15 % pour le commercial sur chaque achat.",
       "webFeatures": [
         "Dashboard opérationnel clients / messages / FC",
@@ -239,7 +243,8 @@
         "Abonnements Stripe par animal",
         "Addons Family / Care+ / Horse",
         "Messages et rappels de soins"
-      ]
+      ],
+      "commercialMirror": "Commercial : miroir exact de la commission du véto assigné (même % au même moment) sur les abonnements clients."
     }
   },
   "settings": {
@@ -405,6 +410,18 @@
       "careTypeFarrier": "Maréchal-ferrant",
       "careTypeFecalEgg": "Coproscopie",
       "careTypeCustom": "Personnalisé"
+    },
+    "referral": {
+      "title": "Recommander un cabinet",
+      "hint": "La fiche est transmise au commercial qui vous suit.",
+      "practiceName": "Cabinet / clinique",
+      "contactName": "Contact",
+      "contactEmail": "Email",
+      "city": "Ville",
+      "notes": "Notes",
+      "submit": "Envoyer au commercial",
+      "success": "Recommandation envoyée.",
+      "error": "Impossible d’envoyer (commercial non assigné ?)."
     }
   },
   "requests": {
@@ -515,7 +532,16 @@
       "empty": "Aucun commercial",
       "columnName": "Nom",
       "columnEmail": "Email",
-      "columnVets": "Vétos assignés"
+      "columnVets": "Vétos assignés",
+      "columnDue": "Commissions cumulées",
+      "assignTitle": "Assigner un véto",
+      "assignCommercial": "Commercial",
+      "assignCommercialPlaceholder": "Choisir un commercial",
+      "assignVet": "Vétérinaire",
+      "assignVetPlaceholder": "Choisir un véto",
+      "assignSubmit": "Assigner",
+      "assignSuccess": "Véto assigné.",
+      "assignFailed": "Impossible d’assigner ce véto."
     },
     "prospects": {
       "title": "Prospects marketing",
@@ -526,7 +552,8 @@
       "columnStatus": "Statut",
       "columnCommercial": "Commercial",
       "columnDays": "Jours",
-      "columnCity": "Ville"
+      "columnCity": "Ville",
+      "columnSource": "Source"
     },
     "payments": {
       "title": "Paiements reçus",

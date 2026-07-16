@@ -20,7 +20,7 @@
 
     <ProCard class="pro-mt-lg" :title="$t('commercial.pitch.commissionTitle')">
       <p class="pro-mb-md">{{ $t('commercial.pitch.vetGrid') }}</p>
-      <p class="pro-mb-md">{{ $t('commercial.pitch.commercialFlat') }}</p>
+      <p class="pro-mb-md">{{ $t('commercial.pitch.commercialMirror') }}</p>
       <p>{{ $t('commercial.pitch.addons') }}</p>
     </ProCard>
   </div>

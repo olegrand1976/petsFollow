@@ -12,7 +12,7 @@ ALTER TABLE identity.users
 CREATE INDEX IF NOT EXISTS idx_users_assigned_commercial
     ON identity.users(assigned_commercial_id) WHERE assigned_commercial_id IS NOT NULL;
 
--- 3. Sales CRM prospects (commercial-owned).
+-- 3. Sales CRM prospects (commercial-owned + vet referrals).
 CREATE SCHEMA IF NOT EXISTS sales;
 
 CREATE TABLE IF NOT EXISTS sales.prospects (
@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS sales.prospects (
     contact_phone TEXT NOT NULL DEFAULT '',
     city TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT 'commercial'
+        CHECK (source IN ('commercial', 'vet_referral')),
+    referring_vet_user_id UUID REFERENCES identity.users(id),
     status TEXT NOT NULL DEFAULT 'new'
         CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),
     status_changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -54,13 +57,13 @@ CREATE TABLE IF NOT EXISTS billing.addon_entitlements (
 CREATE INDEX IF NOT EXISTS idx_addon_entitlements_owner ON billing.addon_entitlements(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_addon_entitlements_status ON billing.addon_entitlements(status);
 
--- 5. Commercial commission ledger (flat rate on subscriptions + addons).
+-- 5. Commercial commission ledger (mirror vet subscription + 15% addons).
 CREATE TABLE IF NOT EXISTS billing.commercial_commission_ledger (
     id UUID PRIMARY KEY,
     commercial_user_id UUID NOT NULL REFERENCES identity.users(id),
     vet_user_id UUID NOT NULL REFERENCES identity.users(id),
     client_user_id UUID NOT NULL REFERENCES identity.users(id),
-    source_type TEXT NOT NULL CHECK (source_type IN ('subscription_flat', 'addon_pct')),
+    source_type TEXT NOT NULL CHECK (source_type IN ('subscription_mirror', 'addon_pct')),
     source_id UUID NOT NULL,
     base_amount_cents INT NOT NULL,
     rate_bps INT NOT NULL,

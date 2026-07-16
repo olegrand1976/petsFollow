@@ -1,11 +1,6 @@
-import { apiHeaders } from '~/server/utils/api'
+import { proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const body = await readBody(event)
-  return $fetch(`${config.apiBase}/api/v1/admin/commercials`, {
-    method: 'POST',
-    headers: apiHeaders(event),
-    body,
-  })
+  return proxyApi(event, '/api/v1/admin/commercials', { method: 'POST', body })
 })

@@ -219,7 +219,7 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime)
 	_ = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(base_amount_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type='subscription_flat'`, commercialUserID).Scan(&subRevenue)
+		WHERE commercial_user_id=$1 AND source_type='subscription_mirror'`, commercialUserID).Scan(&subRevenue)
 	_ = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(base_amount_cents),0)::int FROM billing.commercial_commission_ledger
 		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonRevenue)
@@ -247,7 +247,7 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime)
 	_ = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type='subscription_flat'`, commercialUserID).Scan(&subCommission)
+		WHERE commercial_user_id=$1 AND source_type='subscription_mirror'`, commercialUserID).Scan(&subCommission)
 	_ = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
 		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonCommission)
@@ -312,8 +312,8 @@ func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred str
 	return period, nil
 }
 
-// AccrueCommercialForSubscription accrues a flat commission for the commercial
-// assigned to the vet of a subscription pet, once entitlement is active.
+// AccrueCommercialForSubscription mirrors the vet commission ledger line for the
+// commercial assigned to that vet (same rate_bps and commission_cents).
 func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID string) error {
 	ent, err := s.GetEntitlementByPetID(ctx, petID)
 	if err != nil {
@@ -322,16 +322,16 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 		}
 		return err
 	}
-	if ent.BillingMode != "subscription" {
-		return nil
-	}
 	if ent.Status != "active" && ent.Status != "past_due" && ent.Status != "cancelled" {
 		return nil
 	}
 
-	var ownerUserID, practiceID string
+	var vetUserID string
+	var baseAmount, rateBps, commission int
 	err = s.pool.QueryRow(ctx, `
-		SELECT owner_user_id::text, practice_id::text FROM pets.pets WHERE id=$1`, petID).Scan(&ownerUserID, &practiceID)
+		SELECT vet_user_id::text, base_amount_cents, rate_bps, commission_cents
+		FROM billing.commission_ledger
+		WHERE entitlement_id=$1`, ent.ID).Scan(&vetUserID, &baseAmount, &rateBps, &commission)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
@@ -339,7 +339,10 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 		return err
 	}
 
-	vetUserID, commercialUserID, err := s.resolveVetCommercial(ctx, ownerUserID, practiceID)
+	var commercialUserID string
+	err = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE id=$1`,
+		vetUserID).Scan(&commercialUserID)
 	if err != nil {
 		return err
 	}
@@ -351,15 +354,14 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 	if err != nil {
 		return err
 	}
-	commission := CommercialCommissionCents(ent.AmountCents)
 	_, err = s.pool.Exec(ctx, `
 		INSERT INTO billing.commercial_commission_ledger (
 			id, commercial_user_id, vet_user_id, client_user_id, source_type, source_id,
 			base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at
-		) VALUES ($1,$2,$3,$4,'subscription_flat',$5,$6,$7,$8,$9,NOW())
+		) VALUES ($1,$2,$3,$4,'subscription_mirror',$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (source_type, source_id) DO NOTHING`,
-		uuid.NewString(), commercialUserID, vetUserID, ownerUserID, ent.ID,
-		ent.AmountCents, CommercialCommissionRateBps, commission, period)
+		uuid.NewString(), commercialUserID, vetUserID, ent.OwnerUserID, ent.ID,
+		baseAmount, rateBps, commission, period)
 	return err
 }
 
@@ -442,7 +444,7 @@ func (s *Store) resolveVetCommercial(ctx context.Context, clientUserID, practice
 func (s *Store) AccrueAllCommercialForActiveEntitlements(ctx context.Context) error {
 	rows, err := s.pool.Query(ctx, `
 		SELECT pet_id::text FROM billing.pet_entitlements
-		WHERE billing_mode='subscription' AND status IN ('active','past_due','cancelled')
+		WHERE status IN ('active','past_due','cancelled')
 		ORDER BY created_at`)
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
@@ -313,25 +314,51 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 }
 
-class _UpsellHint extends StatelessWidget {
+class _UpsellHint extends StatefulWidget {
   const _UpsellHint({required this.l10n, required this.petId});
 
   final AppLocalizations l10n;
   final String petId;
 
+  @override
+  State<_UpsellHint> createState() => _UpsellHintState();
+}
+
+class _UpsellHintState extends State<_UpsellHint> {
+  BillingAddon? _carePlus;
+  BillingAddon? _family;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final catalog = await BillingAddon.fetchCatalog();
+      if (!mounted) return;
+      setState(() {
+        _carePlus = BillingAddon.byCode(catalog, 'care_plus');
+        _family = BillingAddon.byCode(catalog, 'family');
+      });
+    } catch (_) {}
+  }
+
   Future<void> _buy(BuildContext context, String code) async {
     try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: petId);
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: widget.petId);
       await openExternalUrl(url);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.paymentResume)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.l10n.paymentResume)));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_carePlus == null && _family == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -342,14 +369,30 @@ class _UpsellHint extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.carePlusUpsell, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          Text(l10n.familyPackHint, style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(widget.l10n.familyPackHint, style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
-              TextButton(onPressed: () => _buy(context, 'care_plus'), child: Text(l10n.carePlusUpsell.split('—').first.trim())),
-              TextButton(onPressed: () => _buy(context, 'family'), child: Text(l10n.familyPackHint.split('—').first.trim())),
+              if (_carePlus != null)
+                TextButton(
+                  onPressed: () => _buy(context, _carePlus!.code),
+                  child: Text(
+                    _carePlus!.label.isNotEmpty
+                        ? _carePlus!.label
+                        : widget.l10n.carePlusUpsell.split('—').first.trim(),
+                  ),
+                ),
+              if (_family != null)
+                TextButton(
+                  onPressed: () => _buy(context, _family!.code),
+                  child: Text(
+                    _family!.label.isNotEmpty
+                        ? _family!.label
+                        : widget.l10n.familyPackHint.split('—').first.trim(),
+                  ),
+                ),
             ],
           ),
         ],

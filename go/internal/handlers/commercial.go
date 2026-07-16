@@ -187,6 +187,7 @@ func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 		City:         req.City,
 		Notes:        req.Notes,
 		Status:       req.Status,
+		Source:       "commercial",
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -275,4 +276,47 @@ func (a *API) commercialDeleteProspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+type vetProspectReq struct {
+	PracticeName string `json:"practiceName"`
+	ContactName  string `json:"contactName"`
+	ContactEmail string `json:"contactEmail"`
+	ContactPhone string `json:"contactPhone"`
+	City         string `json:"city"`
+	Notes        string `json:"notes"`
+}
+
+func (a *API) vetCreateProspect(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	var req vetProspectReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if strings.TrimSpace(req.PracticeName) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	prospect, err := a.store.CreateVetReferralProspect(r.Context(), id.UserID, store.ProspectInput{
+		PracticeName: req.PracticeName,
+		ContactName:  req.ContactName,
+		ContactEmail: req.ContactEmail,
+		ContactPhone: req.ContactPhone,
+		City:         req.City,
+		Notes:        req.Notes,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "no_commercial_assigned")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, prospect)
 }

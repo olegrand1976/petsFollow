@@ -29,6 +29,7 @@ test('admin voit commercials et prospects', async ({ page }) => {
   await loginAsAdmin(page)
   await page.goto('/admin/commercials')
   await expect(page.getByTestId('admin-commercials-page')).toBeVisible()
+  await expect(page.getByTestId('admin-assign-vet')).toBeVisible()
   await page.goto('/admin/prospects')
   await expect(page.getByTestId('admin-prospects-page')).toBeVisible()
 })

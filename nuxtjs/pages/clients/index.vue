@@ -2,6 +2,21 @@
   <div data-testid="clients-page">
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
+    <ProCard class="pro-mb-lg" data-testid="vet-referral-form">
+      <h3 class="pro-mb-md">{{ $t('clients.referral.title') }}</h3>
+      <p class="pro-hint pro-mb-md">{{ $t('clients.referral.hint') }}</p>
+      <form class="pro-form" @submit.prevent="submitReferral">
+        <ProInput v-model="referral.practiceName" test-id="referral-practice" :label="$t('clients.referral.practiceName')" required />
+        <ProInput v-model="referral.contactName" test-id="referral-contact" :label="$t('clients.referral.contactName')" />
+        <ProInput v-model="referral.contactEmail" test-id="referral-email" type="email" :label="$t('clients.referral.contactEmail')" />
+        <ProInput v-model="referral.city" test-id="referral-city" :label="$t('clients.referral.city')" />
+        <ProInput v-model="referral.notes" test-id="referral-notes" :label="$t('clients.referral.notes')" />
+        <p v-if="referralMsg" class="pro-hint" data-testid="referral-msg">{{ referralMsg }}</p>
+        <p v-if="referralError" class="pro-error">{{ referralError }}</p>
+        <ProButton type="submit" test-id="referral-submit" :disabled="referralSaving">{{ $t('clients.referral.submit') }}</ProButton>
+      </form>
+    </ProCard>
+
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
@@ -128,6 +143,32 @@ const sortBy = ref<'name' | 'pets'>('name')
 const sendingId = ref('')
 const appLinkFeedback = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
+
+const referral = reactive({
+  practiceName: '',
+  contactName: '',
+  contactEmail: '',
+  city: '',
+  notes: '',
+})
+const referralSaving = ref(false)
+const referralMsg = ref('')
+const referralError = ref('')
+
+async function submitReferral() {
+  referralSaving.value = true
+  referralMsg.value = ''
+  referralError.value = ''
+  try {
+    await $fetch('/api/vet/prospects', { method: 'POST', body: { ...referral } })
+    referralMsg.value = t('clients.referral.success')
+    Object.assign(referral, { practiceName: '', contactName: '', contactEmail: '', city: '', notes: '' })
+  } catch {
+    referralError.value = t('clients.referral.error')
+  } finally {
+    referralSaving.value = false
+  }
+}
 
 function petLabel(count: number) {
   return count > 1 ? t('common.pets') : t('common.pet')

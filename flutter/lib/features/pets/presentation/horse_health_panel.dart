@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -119,14 +120,39 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
   }
 }
 
-class _HorsePackUpsell extends StatelessWidget {
+class _HorsePackUpsell extends StatefulWidget {
   const _HorsePackUpsell({required this.l10n, required this.petId});
 
   final AppLocalizations l10n;
   final String petId;
 
   @override
+  State<_HorsePackUpsell> createState() => _HorsePackUpsellState();
+}
+
+class _HorsePackUpsellState extends State<_HorsePackUpsell> {
+  BillingAddon? _horse;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final catalog = await BillingAddon.fetchCatalog();
+      if (!mounted) return;
+      setState(() => _horse = BillingAddon.byCode(catalog, 'horse'));
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_horse == null) return const SizedBox.shrink();
+    final label = _horse!.label.isNotEmpty
+        ? _horse!.label
+        : widget.l10n.horsePackUpsell.split('—').first.trim();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -145,7 +171,7 @@ class _HorsePackUpsell extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  l10n.horsePackUpsell,
+                  widget.l10n.horsePackUpsell,
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.35),
                 ),
               ),
@@ -155,12 +181,14 @@ class _HorsePackUpsell extends StatelessWidget {
           TextButton(
             onPressed: () async {
               try {
-                final url = await ApiClient.instance.startAddonCheckout(addonCode: 'horse', petId: petId);
-                // ignore: use_build_context_synchronously
+                final url = await ApiClient.instance.startAddonCheckout(
+                  addonCode: _horse!.code,
+                  petId: widget.petId,
+                );
                 await openExternalUrl(url);
               } catch (_) {}
             },
-            child: Text(l10n.horsePackUpsell.split('—').first.trim()),
+            child: Text(label),
           ),
         ],
       ),
