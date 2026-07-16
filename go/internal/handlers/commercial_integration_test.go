@@ -177,3 +177,57 @@ func TestCommercialRBACIsolation(t *testing.T) {
 		}
 	}
 }
+
+func TestVetReferralProspect(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	commEmail := uniqueEmail("ref-comm")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Ref Comm",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create commercial %d %#v", code, env)
+	}
+	commID := dataMap(t, env)["userId"].(string)
+	commTok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
+
+	vetEmail := uniqueEmail("ref-vet")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr Ref",
+		"practiceName": "Cabinet Ref", "phone": "0102030405", "city": "Lyon", "postalCode": "69001", "addressLine1": "1 rue Ref",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode vet %d %#v", code, env)
+	}
+	_ = commID
+
+	vetTok := loginToken(t, api.handler, vetEmail, "VetDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prospects", vetTok, map[string]any{
+		"practiceName": "Cabinet Recommandé", "contactName": "Dr Y", "city": "Nantes",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("vet referral %d %#v", code, env)
+	}
+	p := dataMap(t, env)
+	if p["source"] != "vet_referral" {
+		t.Fatalf("expected vet_referral source, got %#v", p)
+	}
+	if p["commercialUserId"] != commID {
+		t.Fatalf("expected commercial %s, got %#v", commID, p)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/prospects", commTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list %d %#v", code, env)
+	}
+	found := false
+	for _, item := range env["data"].([]any) {
+		m := item.(map[string]any)
+		if m["practiceName"] == "Cabinet Recommandé" && m["source"] == "vet_referral" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("commercial should see vet referral, got %#v", env)
+	}
+}

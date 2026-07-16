@@ -130,4 +130,4 @@ API : `GET /billing/addons`, `POST /billing/addons/checkout` (client). Webhook `
 
 Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
 
-Commission **commercial** : 15 % fixe sur abonnements des clients des vétos assignés + 15 % sur addons (indépendant de la grille progressive véto 5→15 %).
+Commission **commercial** : **miroir** de la commission du véto assigné (même `rate_bps` / `commission_cents` à l’activation) + **15 %** sur addons Family / Care+ / Horse.
