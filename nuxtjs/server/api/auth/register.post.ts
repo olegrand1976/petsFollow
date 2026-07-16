@@ -1,6 +1,6 @@
-import { proxyApi } from '~/server/utils/api'
+import { proxyPublicApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  return proxyApi(event, '/api/v1/auth/register', { method: 'POST', body })
+  return proxyPublicApi(event, '/api/v1/auth/register', { method: 'POST', body })
 })

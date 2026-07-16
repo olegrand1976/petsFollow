@@ -8,16 +8,22 @@ export function useApiError() {
   }
 
   function mapError(e: any): string {
-    const apiMessage = e?.data?.error?.message || e?.data?.message
-    const msgKey = e?.data?.error?.msgKey || e?.data?.error?.messageKey
+    // Nitro createError: corps Go dans e.data.data ; ofetch direct: e.data
+    const raw = e?.data?.data?.error ?? e?.data?.error
+    const apiErr = raw && typeof raw === 'object' ? raw : null
+    const apiMessage = apiErr?.message || e?.data?.message || e?.statusMessage
+    const msgKey = apiErr?.msgKey || apiErr?.messageKey
     if (msgKey) {
       const translated = translateKey(msgKey)
       if (translated) return translated
     }
-    if (apiMessage) return apiMessage
-    const code = e?.data?.error?.code
-    if (code) {
-      const translated = translateKey(code)
+    if (apiErr?.code) {
+      const translated = translateKey(apiErr.code)
+      if (translated) return translated
+    }
+    if (apiMessage && apiMessage !== 'Server Error') return apiMessage
+    if (e?.statusCode === 401 || e?.data?.statusCode === 401) {
+      const translated = translateKey('unauthorized')
       if (translated) return translated
     }
     return t('errors.generic')

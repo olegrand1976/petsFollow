@@ -79,6 +79,23 @@ function toProxyError(e: any) {
   })
 }
 
+/** Proxy sans retry refresh — pour routes auth publiques (login, register, etc.). */
+export async function proxyPublicApi<T>(
+  event: H3Event,
+  path: string,
+  options: { method?: string, body?: unknown, headers?: Record<string, string> } = {},
+): Promise<T> {
+  try {
+    return await $fetch<T>(`${apiBase()}${path}`, {
+      method: options.method,
+      body: options.body,
+      headers: { ...localeHeaders(event), ...options.headers },
+    })
+  } catch (e: any) {
+    throw toProxyError(e)
+  }
+}
+
 function bearerHeaders(event: H3Event, accessToken: string, extra?: Record<string, string>) {
   return {
     ...localeHeaders(event),
