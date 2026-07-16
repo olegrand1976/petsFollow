@@ -15,6 +15,9 @@ GRANT USAGE ON SCHEMA heartrate TO petsfollow_app;
 GRANT USAGE ON SCHEMA messaging TO petsfollow_app;
 GRANT USAGE ON SCHEMA notifications TO petsfollow_app;
 GRANT USAGE ON SCHEMA billing TO petsfollow_app;
+GRANT USAGE ON SCHEMA care TO petsfollow_app;
+GRANT USAGE ON SCHEMA visits TO petsfollow_app;
+GRANT USAGE ON SCHEMA discovery TO petsfollow_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA identity TO petsfollow_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA practice TO petsfollow_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA pets TO petsfollow_app;
@@ -22,6 +25,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA heartrate TO petsfo
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA messaging TO petsfollow_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA notifications TO petsfollow_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA billing TO petsfollow_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA care TO petsfollow_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA visits TO petsfollow_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA discovery TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA identity TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA practice TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA pets TO petsfollow_app;
@@ -29,6 +35,9 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA heartrate TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA messaging TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA notifications TO petsfollow_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA billing TO petsfollow_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA care TO petsfollow_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA visits TO petsfollow_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA discovery TO petsfollow_app;
 -- schema_migrations (public) : lecture seule utile
 GRANT SELECT ON TABLE public.schema_migrations TO petsfollow_app;
 EOSQL
