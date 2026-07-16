@@ -30,10 +30,8 @@ func newLocal(root, apiPublicURL string) (*localStore, http.Handler, error) {
 
 func (s *localStore) Upload(ctx context.Context, objectKey string, r io.Reader, size int64, contentType string) (string, error) {
 	_ = ctx
-	if err := ValidateSize(size); err != nil {
-		return "", err
-	}
-	if _, err := ExtForContentType(contentType); err != nil {
+	_ = contentType
+	if err := ValidateSizeLimit(size, AbsoluteMaxBytes); err != nil {
 		return "", err
 	}
 	full := filepath.Join(s.root, filepath.FromSlash(objectKey))
@@ -45,12 +43,12 @@ func (s *localStore) Upload(ctx context.Context, objectKey string, r io.Reader, 
 		return "", err
 	}
 	defer f.Close()
-	limited := io.LimitReader(r, MaxUploadBytes+1)
+	limited := io.LimitReader(r, AbsoluteMaxBytes+1)
 	n, err := io.Copy(f, limited)
 	if err != nil {
 		return "", err
 	}
-	if n > MaxUploadBytes {
+	if n > AbsoluteMaxBytes {
 		_ = os.Remove(full)
 		return "", ErrTooLarge
 	}

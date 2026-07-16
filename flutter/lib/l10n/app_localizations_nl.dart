@@ -539,4 +539,38 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get careTypeCustom => 'Aangepaste herinnering';
+
+  @override
+  String get homeAddFirstVetTitle => 'Voeg uw dierenarts toe';
+
+  @override
+  String get homeAddFirstVetBody =>
+      'Koppel de praktijk die uw dier volgt om metingen te delen en te chatten.';
+
+  @override
+  String get homeAddFirstVetCta => 'Dierenarts toevoegen';
+
+  @override
+  String get photoFrameHint => 'Centreer de snuit — voorvertoning dierenfiche';
+
+  @override
+  String get takePhoto => 'Foto maken';
+
+  @override
+  String get chooseFromGallery => 'Kiezen uit galerij';
+
+  @override
+  String get attachMedia => 'Foto of video toevoegen';
+
+  @override
+  String get attachPhoto => 'Foto';
+
+  @override
+  String get attachVideo => 'Video';
+
+  @override
+  String get openMedia => 'Openen';
+
+  @override
+  String get mediaVideoLabel => 'Video';
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -89,6 +90,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
 		pr.Get("/messaging/threads/{threadID}/messages", a.listMessages)
 		pr.Post("/messaging/threads/{threadID}/messages", a.sendMessage)
+		pr.Post("/messaging/threads/{threadID}/messages/media", a.sendMessageMedia)
 		pr.Post("/messaging/threads/{threadID}/read", a.markThreadRead)
 		pr.Put("/vet/availability", a.setAvailability)
 		pr.Get("/vet/availability", a.getAvailability)
@@ -612,6 +614,62 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 				locale = localeOf(r)
 			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
+		}
+	}
+	httpx.WriteData(w, http.StatusCreated, msg)
+}
+
+func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
+	thread, err := a.store.GetThreadByID(r.Context(), chi.URLParam(r, "threadID"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "thread_not_found")
+		return
+	}
+	id, _ := authx.FromContext(r.Context())
+	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
+		return
+	}
+	if id.Role == kernel.RoleClient {
+		if thread.PetID != "" && !a.requirePremiumAccess(w, r, thread.PetID) {
+			return
+		}
+	}
+	url, ct, err := a.uploadMessageMedia(r, "messages", thread.ID)
+	if err != nil {
+		a.writeUploadErr(w, r, err)
+		return
+	}
+	body := strings.TrimSpace(r.FormValue("body"))
+	kind := media.MediaKind(ct)
+	if id.Role == kernel.RoleClient {
+		status, autoReply, _ := a.store.GetVetAvailability(r.Context(), thread.VetUserID)
+		if status == kernel.AvailabilityUnavailable && autoReply != "" {
+			_, _ = a.store.AddMessage(r.Context(), thread.ID, thread.VetUserID, autoReply)
+		}
+	}
+	msg, err := a.store.AddMessageMedia(r.Context(), thread.ID, id.UserID, body, url, kind)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if id.Role == kernel.RoleClient {
+		onMsg, _, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
+		if onMsg {
+			vet, _ := a.store.GetUserByID(r.Context(), thread.VetUserID)
+			locale := vet.PreferredLocale
+			if locale == "" {
+				locale = localeOf(r)
+			}
+			preview := body
+			if preview == "" {
+				if kind == "video" {
+					preview = "[video]"
+				} else {
+					preview = "[image]"
+				}
+			}
+			_ = a.notifier.SendNewMessage(vet.Email, locale, preview)
 		}
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)

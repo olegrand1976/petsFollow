@@ -1071,6 +1071,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Rappel personnalisé'**
   String get careTypeCustom;
+
+  /// No description provided for @homeAddFirstVetTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez votre vétérinaire'**
+  String get homeAddFirstVetTitle;
+
+  /// No description provided for @homeAddFirstVetBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez le cabinet qui suit votre animal pour partager les relevés et échanger.'**
+  String get homeAddFirstVetBody;
+
+  /// No description provided for @homeAddFirstVetCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un vétérinaire'**
+  String get homeAddFirstVetCta;
+
+  /// No description provided for @photoFrameHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cadrez le museau au centre — aperçu fiche animal'**
+  String get photoFrameHint;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre une photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans la galerie'**
+  String get chooseFromGallery;
+
+  /// No description provided for @attachMedia.
+  ///
+  /// In fr, this message translates to:
+  /// **'Joindre une photo ou une vidéo'**
+  String get attachMedia;
+
+  /// No description provided for @attachPhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get attachPhoto;
+
+  /// No description provided for @attachVideo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vidéo'**
+  String get attachVideo;
+
+  /// No description provided for @openMedia.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir'**
+  String get openMedia;
+
+  /// No description provided for @mediaVideoLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vidéo'**
+  String get mediaVideoLabel;
 }
 
 class _AppLocalizationsDelegate

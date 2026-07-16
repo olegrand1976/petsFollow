@@ -81,6 +81,8 @@ type Message struct {
 	ThreadID     string     `json:"threadId"`
 	SenderUserID string     `json:"senderUserId"`
 	Body         string     `json:"body"`
+	MediaURL     string     `json:"mediaUrl,omitempty"`
+	MediaType    string     `json:"mediaType,omitempty"`
 	ReadAt       *time.Time `json:"readAt,omitempty"`
 	CreatedAt    time.Time  `json:"createdAt"`
 }
@@ -390,16 +392,30 @@ func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vet
 }
 
 func (s *Store) AddMessage(ctx context.Context, threadID, senderID, body string) (Message, error) {
-	m := Message{ID: uuid.NewString(), ThreadID: threadID, SenderUserID: senderID, Body: body, CreatedAt: time.Now()}
+	return s.AddMessageMedia(ctx, threadID, senderID, body, "", "")
+}
+
+func (s *Store) AddMessageMedia(ctx context.Context, threadID, senderID, body, mediaURL, mediaType string) (Message, error) {
+	m := Message{
+		ID:           uuid.NewString(),
+		ThreadID:     threadID,
+		SenderUserID: senderID,
+		Body:         body,
+		MediaURL:     mediaURL,
+		MediaType:    mediaType,
+		CreatedAt:    time.Now(),
+	}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO messaging.messages (id, thread_id, sender_user_id, body, created_at)
-		VALUES ($1,$2,$3,$4,$5) RETURNING created_at`, m.ID, m.ThreadID, m.SenderUserID, m.Body, m.CreatedAt).Scan(&m.CreatedAt)
+		INSERT INTO messaging.messages (id, thread_id, sender_user_id, body, media_url, media_type, created_at)
+		VALUES ($1,$2,$3,$4,NULLIF($5,''),NULLIF($6,''),$7) RETURNING created_at`,
+		m.ID, m.ThreadID, m.SenderUserID, m.Body, m.MediaURL, m.MediaType, m.CreatedAt).Scan(&m.CreatedAt)
 	return m, err
 }
 
 func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, thread_id::text, sender_user_id::text, body, read_at, created_at
+		SELECT id::text, thread_id::text, sender_user_id::text, body,
+			COALESCE(media_url,''), COALESCE(media_type,''), read_at, created_at
 		FROM messaging.messages WHERE thread_id=$1 ORDER BY created_at ASC`, threadID)
 	if err != nil {
 		return nil, err
@@ -408,7 +424,7 @@ func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, e
 	var out []Message
 	for rows.Next() {
 		var m Message
-		if err := rows.Scan(&m.ID, &m.ThreadID, &m.SenderUserID, &m.Body, &m.ReadAt, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.ThreadID, &m.SenderUserID, &m.Body, &m.MediaURL, &m.MediaType, &m.ReadAt, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

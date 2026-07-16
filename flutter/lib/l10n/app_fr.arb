@@ -173,5 +173,16 @@
   "careTypeDeworming": "Vermifuge",
   "careTypeVetCheck": "Contrôle vétérinaire",
   "careTypeDental": "Soins dentaires",
-  "careTypeCustom": "Rappel personnalisé"
+  "careTypeCustom": "Rappel personnalisé",
+  "homeAddFirstVetTitle": "Ajoutez votre vétérinaire",
+  "homeAddFirstVetBody": "Liez le cabinet qui suit votre animal pour partager les relevés et échanger.",
+  "homeAddFirstVetCta": "Ajouter un vétérinaire",
+  "photoFrameHint": "Cadrez le museau au centre — aperçu fiche animal",
+  "takePhoto": "Prendre une photo",
+  "chooseFromGallery": "Choisir dans la galerie",
+  "attachMedia": "Joindre une photo ou une vidéo",
+  "attachPhoto": "Photo",
+  "attachVideo": "Vidéo",
+  "openMedia": "Ouvrir",
+  "mediaVideoLabel": "Vidéo"
 }

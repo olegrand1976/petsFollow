@@ -164,5 +164,16 @@
   "careTypeDeworming": "Deworming",
   "careTypeVetCheck": "Vet check-up",
   "careTypeDental": "Dental care",
-  "careTypeCustom": "Custom reminder"
+  "careTypeCustom": "Custom reminder",
+  "homeAddFirstVetTitle": "Add your veterinarian",
+  "homeAddFirstVetBody": "Link the practice that follows your pet to share readings and chat.",
+  "homeAddFirstVetCta": "Add a veterinarian",
+  "photoFrameHint": "Center the muzzle — pet profile preview",
+  "takePhoto": "Take a photo",
+  "chooseFromGallery": "Choose from gallery",
+  "attachMedia": "Attach a photo or video",
+  "attachPhoto": "Photo",
+  "attachVideo": "Video",
+  "openMedia": "Open",
+  "mediaVideoLabel": "Video"
 }

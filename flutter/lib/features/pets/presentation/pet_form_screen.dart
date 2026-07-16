@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PetFormScreen extends StatefulWidget {
@@ -41,8 +42,36 @@ class _PetFormScreenState extends State<PetFormScreen> {
   }
 
   Future<void> _pickPhoto() async {
+    final l10n = AppLocalizations.of(context)!;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.takePhoto),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.chooseFromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
+    final file = await picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+      preferredCameraDevice: CameraDevice.rear,
+    );
     if (file != null) setState(() => photoFile = file);
   }
 
@@ -146,10 +175,44 @@ class _PetFormScreenState extends State<PetFormScreen> {
             Center(
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundImage: photoFile != null ? FileImage(File(photoFile!.path)) : null,
-                    child: photoFile == null ? Text(initial, style: const TextStyle(fontSize: 28)) : null,
+                  GestureDetector(
+                    onTap: _pickPhoto,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.18),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: photoFile != null
+                            ? Image.file(
+                                File(photoFile!.path),
+                                fit: BoxFit.cover,
+                                width: 140,
+                                height: 140,
+                              )
+                            : ColoredBox(
+                                color: AppColors.surfaceElevated,
+                                child: Center(
+                                  child: Text(initial, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.photoFrameHint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                   ),
                   TextButton.icon(
                     onPressed: _pickPhoto,

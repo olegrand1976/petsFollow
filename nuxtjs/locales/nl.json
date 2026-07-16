@@ -290,7 +290,9 @@
     "unreadPlural": "{count} ongelezen",
     "placeholder": "Uw bericht…",
     "selectTitle": "Selecteer een gesprek",
-    "selectDescription": "Kies een thread uit de lijst om berichten te bekijken."
+    "selectDescription": "Kies een thread uit de lijst om berichten te bekijken.",
+    "image": "Foto",
+    "video": "Video"
   },
   "admin": {
     "dashboard": {

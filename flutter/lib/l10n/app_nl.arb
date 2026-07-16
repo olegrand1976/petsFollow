@@ -164,5 +164,16 @@
   "careTypeDeworming": "Ontworming",
   "careTypeVetCheck": "Dierenartscontrole",
   "careTypeDental": "Gebitsverzorging",
-  "careTypeCustom": "Aangepaste herinnering"
+  "careTypeCustom": "Aangepaste herinnering",
+  "homeAddFirstVetTitle": "Voeg uw dierenarts toe",
+  "homeAddFirstVetBody": "Koppel de praktijk die uw dier volgt om metingen te delen en te chatten.",
+  "homeAddFirstVetCta": "Dierenarts toevoegen",
+  "photoFrameHint": "Centreer de snuit — voorvertoning dierenfiche",
+  "takePhoto": "Foto maken",
+  "chooseFromGallery": "Kiezen uit galerij",
+  "attachMedia": "Foto of video toevoegen",
+  "attachPhoto": "Foto",
+  "attachVideo": "Video",
+  "openMedia": "Openen",
+  "mediaVideoLabel": "Video"
 }

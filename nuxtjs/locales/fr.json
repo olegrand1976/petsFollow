@@ -291,7 +291,9 @@
     "placeholder": "Votre message…",
     "selectTitle": "Sélectionnez une conversation",
     "selectDescription": "Choisissez un thread dans la liste pour afficher les messages.",
-    "you": "Vous"
+    "you": "Vous",
+    "image": "Photo",
+    "video": "Vidéo"
   },
   "admin": {
     "dashboard": {

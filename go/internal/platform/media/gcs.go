@@ -27,22 +27,19 @@ func newGCS(bucket string) (*gcsStore, error) {
 }
 
 func (s *gcsStore) Upload(ctx context.Context, objectKey string, r io.Reader, size int64, contentType string) (string, error) {
-	if err := ValidateSize(size); err != nil {
-		return "", err
-	}
-	if _, err := ExtForContentType(contentType); err != nil {
+	if err := ValidateSizeLimit(size, AbsoluteMaxBytes); err != nil {
 		return "", err
 	}
 	w := s.client.Bucket(s.bucket).Object(objectKey).NewWriter(ctx)
 	w.ContentType = contentType
 	w.CacheControl = "public, max-age=86400"
-	limited := io.LimitReader(r, MaxUploadBytes+1)
+	limited := io.LimitReader(r, AbsoluteMaxBytes+1)
 	n, err := io.Copy(w, limited)
 	if err != nil {
 		_ = w.Close()
 		return "", err
 	}
-	if n > MaxUploadBytes {
+	if n > AbsoluteMaxBytes {
 		_ = w.Close()
 		return "", ErrTooLarge
 	}

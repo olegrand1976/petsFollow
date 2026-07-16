@@ -53,3 +53,16 @@ func TestNormalizeContentType(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestNormalizeMessageMediaType(t *testing.T) {
+	ct, err := NormalizeMessageMediaType("application/octet-stream", "clip.mp4")
+	if err != nil || ct != "video/mp4" {
+		t.Fatalf("got %q %v", ct, err)
+	}
+	if MediaKind(ct) != "video" {
+		t.Fatalf("expected video kind")
+	}
+	if _, err := NormalizeMessageMediaType("text/plain", "a.txt"); err == nil {
+		t.Fatal("expected error")
+	}
+}

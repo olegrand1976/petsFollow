@@ -211,6 +211,21 @@ class ApiClient {
     await dio.post('/api/v1/messaging/threads/$threadId/messages', data: {'body': body});
   }
 
+  Future<void> sendMessageMedia(String threadId, String filePath, {String? body, String? filename}) async {
+    final form = FormData.fromMap({
+      if (body != null && body.trim().isNotEmpty) 'body': body.trim(),
+      'file': await MultipartFile.fromFile(
+        filePath,
+        filename: filename ?? filePath.split('/').last,
+      ),
+    });
+    await dio.post(
+      '/api/v1/messaging/threads/$threadId/messages/media',
+      data: form,
+      options: Options(sendTimeout: const Duration(minutes: 2), receiveTimeout: const Duration(minutes: 2)),
+    );
+  }
+
   // --- Client enrichment ---
 
   Future<List<VetLink>> getMyVets({String? primaryPracticeId}) async {

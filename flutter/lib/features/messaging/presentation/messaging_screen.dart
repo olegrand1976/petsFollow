@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key, this.embedded = false});
@@ -98,6 +100,73 @@ class _MessagingScreenState extends State<MessagingScreen> {
     }
   }
 
+  Future<void> _pickAndSendMedia({required bool video}) async {
+    if (threadId == null || sending) return;
+    final l10n = AppLocalizations.of(context)!;
+    final picker = ImagePicker();
+    final XFile? file = video
+        ? await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 2))
+        : await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 85);
+    if (file == null) return;
+    setState(() => sending = true);
+    try {
+      final caption = draft.text.trim();
+      await ApiClient.instance.sendMessageMedia(
+        threadId!,
+        file.path,
+        body: caption.isEmpty ? null : caption,
+        filename: file.name,
+      );
+      draft.clear();
+      await loadMessages();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  Future<void> _showAttachSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_outlined),
+              title: Text(l10n.attachPhoto),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndSendMedia(video: false);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam_outlined),
+              title: Text(l10n.attachVideo),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndSendMedia(video: true);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openMedia(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -137,13 +206,23 @@ class _MessagingScreenState extends State<MessagingScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    m.body,
-                                    style: TextStyle(
-                                      color: isMine ? AppColors.bg : null,
-                                      height: 1.3,
+                                  if (m.hasMedia) ...[
+                                    _MessageMedia(
+                                      message: m,
+                                      isMine: isMine,
+                                      onOpen: () => _openMedia(m.mediaUrl!),
+                                      l10n: l10n,
                                     ),
-                                  ),
+                                    if (m.body.isNotEmpty) const SizedBox(height: 8),
+                                  ],
+                                  if (m.body.isNotEmpty)
+                                    Text(
+                                      m.body,
+                                      style: TextStyle(
+                                        color: isMine ? AppColors.bg : null,
+                                        height: 1.3,
+                                      ),
+                                    ),
                                   const SizedBox(height: 4),
                                   Text(
                                     timeFmt.format(m.createdAt),
@@ -165,6 +244,11 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 padding: const EdgeInsets.all(8),
                 child: Row(
                   children: [
+                    IconButton(
+                      tooltip: l10n.attachMedia,
+                      onPressed: sending ? null : _showAttachSheet,
+                      icon: const Icon(Icons.attach_file),
+                    ),
                     Expanded(
                       child: TextField(
                         controller: draft,
@@ -201,27 +285,11 @@ class _MessagingScreenState extends State<MessagingScreen> {
                           itemBuilder: (_, i) {
                             final t = threads[i];
                             final selected = t.id == threadId;
-                            return Material(
-                              color: selected ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
-                              child: ListTile(
-                                dense: true,
-                                selected: selected,
-                                title: Text(
-                                  t.displayLabel,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                subtitle: t.lastMessagePreview != null && t.lastMessagePreview!.isNotEmpty
-                                    ? Text(
-                                        t.lastMessagePreview!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 10),
-                                      )
-                                    : null,
-                                onTap: () => selectThread(t.id),
-                              ),
+                            return ListTile(
+                              dense: true,
+                              selected: selected,
+                              title: Text(t.displayLabel, maxLines: 2, overflow: TextOverflow.ellipsis),
+                              onTap: () => selectThread(t.id),
                             );
                           },
                         )
@@ -231,31 +299,67 @@ class _MessagingScreenState extends State<MessagingScreen> {
             ],
           );
 
-    if (widget.embedded) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(l10n.navMessages),
-          actions: [
-            if (threads.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Center(
-                  child: Text(
-                    threads.where((t) => t.id == threadId).firstOrNull?.displayLabel ?? '',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        body: content,
-      );
-    }
-
+    if (widget.embedded) return content;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vetMessaging)),
       body: content,
+    );
+  }
+}
+
+class _MessageMedia extends StatelessWidget {
+  const _MessageMedia({
+    required this.message,
+    required this.isMine,
+    required this.onOpen,
+    required this.l10n,
+  });
+
+  final ChatMessage message;
+  final bool isMine;
+  final VoidCallback onOpen;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    if (message.isVideo) {
+      return InkWell(
+        onTap: onOpen,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            color: (isMine ? AppColors.bg : AppColors.primary).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.play_circle_outline, size: 40, color: isMine ? AppColors.bg : AppColors.primary),
+              const SizedBox(height: 4),
+              Text(
+                l10n.mediaVideoLabel,
+                style: TextStyle(color: isMine ? AppColors.bg : null, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return GestureDetector(
+      onTap: onOpen,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          message.mediaUrl!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 180,
+          errorBuilder: (_, __, ___) => SizedBox(
+            height: 80,
+            child: Center(child: Text(l10n.openMedia, style: TextStyle(color: isMine ? AppColors.bg : null))),
+          ),
+        ),
+      ),
     );
   }
 }

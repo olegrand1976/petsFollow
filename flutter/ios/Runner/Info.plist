@@ -3,11 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>petsFollow a besoin d'accéder à vos photos pour définir votre avatar et celui de votre animal.</string>
+	<string>petsFollow a besoin d'accéder à vos photos pour l'avatar, la fiche animal et l'envoi au vétérinaire.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>petsFollow a besoin de la caméra pour prendre une photo de profil ou de votre animal.</string>
+	<string>petsFollow a besoin de la caméra pour photographier votre animal.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>petsFollow peut enregistrer des photos sur votre appareil.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>petsFollow peut utiliser le micro lors de l'enregistrement d'une vidéo pour votre vétérinaire.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

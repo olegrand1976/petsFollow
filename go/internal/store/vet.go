@@ -61,7 +61,13 @@ func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]
 		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''), u.full_name, u.email,
 			COALESCE((
-				SELECT LEFT(m.body, 120) FROM messaging.messages m
+				SELECT CASE
+					WHEN COALESCE(m.body, '') <> '' THEN LEFT(m.body, 120)
+					WHEN m.media_type = 'video' THEN '[video]'
+					WHEN m.media_type = 'image' THEN '[image]'
+					ELSE ''
+				END
+				FROM messaging.messages m
 				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
 			), ''),
 			COALESCE((

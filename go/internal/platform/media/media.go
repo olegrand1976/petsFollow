@@ -12,7 +12,11 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 )
 
-const MaxUploadBytes = 2 << 20 // 2 MiB
+const (
+	MaxUploadBytes       = 2 << 20  // 2 MiB — avatars / pet photos
+	MaxMessageMediaBytes = 25 << 20 // 25 MiB — chat image / video
+	AbsoluteMaxBytes     = MaxMessageMediaBytes
+)
 
 var (
 	ErrTooLarge      = errors.New("file too large")
@@ -21,21 +25,30 @@ var (
 	ErrNotConfigured = errors.New("media store not configured")
 )
 
-var allowedTypes = map[string]string{
+var allowedImageTypes = map[string]string{
 	"image/jpeg": ".jpg",
 	"image/png":  ".png",
 	"image/webp": ".webp",
 }
 
-// Store uploads avatar / pet photo binaries and returns a publicly reachable URL.
+var allowedMessageMediaTypes = map[string]string{
+	"image/jpeg":      ".jpg",
+	"image/png":       ".png",
+	"image/webp":      ".webp",
+	"video/mp4":       ".mp4",
+	"video/quicktime": ".mov",
+	"video/webm":      ".webm",
+}
+
+// Store uploads binaries and returns a publicly reachable URL.
 type Store interface {
 	Upload(ctx context.Context, objectKey string, r io.Reader, size int64, contentType string) (publicURL string, err error)
 }
 
 type Bundle struct {
-	Store         Store
-	LocalHandler  http.Handler // nil when GCS is used
-	LocalMount    string       // e.g. "/media/"
+	Store        Store
+	LocalHandler http.Handler // nil when GCS is used
+	LocalMount   string       // e.g. "/media/"
 }
 
 func New(cfg config.Config) (*Bundle, error) {
@@ -59,14 +72,47 @@ func New(cfg config.Config) (*Bundle, error) {
 
 func ExtForContentType(contentType string) (string, error) {
 	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
-	ext, ok := allowedTypes[ct]
+	ext, ok := allowedImageTypes[ct]
 	if !ok {
 		return "", ErrInvalidType
 	}
 	return ext, nil
 }
 
+func ExtForMessageMedia(contentType string) (string, error) {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	ext, ok := allowedMessageMediaTypes[ct]
+	if !ok {
+		return "", ErrInvalidType
+	}
+	return ext, nil
+}
+
+func MediaKind(contentType string) string {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	if strings.HasPrefix(ct, "video/") {
+		return "video"
+	}
+	return "image"
+}
+
 func NormalizeContentType(contentType, filename string) (string, error) {
+	ct := inferContentType(contentType, filename)
+	if _, err := ExtForContentType(ct); err != nil {
+		return "", err
+	}
+	return ct, nil
+}
+
+func NormalizeMessageMediaType(contentType, filename string) (string, error) {
+	ct := inferContentType(contentType, filename)
+	if _, err := ExtForMessageMedia(ct); err != nil {
+		return "", err
+	}
+	return ct, nil
+}
+
+func inferContentType(contentType, filename string) string {
 	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	if ct == "" || ct == "application/octet-stream" {
 		switch strings.ToLower(path.Ext(filename)) {
@@ -76,19 +122,26 @@ func NormalizeContentType(contentType, filename string) (string, error) {
 			ct = "image/png"
 		case ".webp":
 			ct = "image/webp"
+		case ".mp4":
+			ct = "video/mp4"
+		case ".mov":
+			ct = "video/quicktime"
+		case ".webm":
+			ct = "video/webm"
 		}
 	}
-	if _, err := ExtForContentType(ct); err != nil {
-		return "", err
-	}
-	return ct, nil
+	return ct
 }
 
 func ValidateSize(size int64) error {
+	return ValidateSizeLimit(size, MaxUploadBytes)
+}
+
+func ValidateSizeLimit(size, max int64) error {
 	if size <= 0 {
 		return ErrEmptyFile
 	}
-	if size > MaxUploadBytes {
+	if size > max {
 		return ErrTooLarge
 	}
 	return nil

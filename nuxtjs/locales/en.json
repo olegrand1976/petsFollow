@@ -291,7 +291,9 @@
     "placeholder": "Your message…",
     "selectTitle": "Select a conversation",
     "selectDescription": "Choose a thread from the list to view messages.",
-    "you": "You"
+    "you": "You",
+    "image": "Photo",
+    "video": "Video"
   },
   "admin": {
     "dashboard": {

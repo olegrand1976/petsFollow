@@ -36,7 +36,28 @@
               :class="isVetMessage(m) ? 'pro-chat__bubble--vet' : 'pro-chat__bubble--client'"
             >
               <small>{{ senderLabel(m) }}</small>
-              <p>{{ m.body }}</p>
+              <template v-if="m.mediaUrl">
+                <a
+                  v-if="m.mediaType === 'video'"
+                  class="pro-chat__media-link"
+                  :href="m.mediaUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ProIcon name="play_circle" />
+                  {{ $t('messages.video') }}
+                </a>
+                <a
+                  v-else
+                  class="pro-chat__media-link"
+                  :href="m.mediaUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img :src="m.mediaUrl" :alt="$t('messages.image')" class="pro-chat__media-img" />
+                </a>
+              </template>
+              <p v-if="m.body">{{ m.body }}</p>
             </div>
           </div>
           <form class="pro-chat__composer" @submit.prevent="send">
@@ -165,5 +186,22 @@ async function send() {
   font-size: 0.8125rem;
   color: var(--pf-vet-text-muted);
   font-weight: 400;
+}
+
+.pro-chat__media-img {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.pro-chat__media-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0;
+  color: inherit;
+  text-decoration: none;
 }
 </style>

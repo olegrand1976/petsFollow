@@ -543,4 +543,39 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get careTypeCustom => 'Rappel personnalisé';
+
+  @override
+  String get homeAddFirstVetTitle => 'Ajoutez votre vétérinaire';
+
+  @override
+  String get homeAddFirstVetBody =>
+      'Liez le cabinet qui suit votre animal pour partager les relevés et échanger.';
+
+  @override
+  String get homeAddFirstVetCta => 'Ajouter un vétérinaire';
+
+  @override
+  String get photoFrameHint =>
+      'Cadrez le museau au centre — aperçu fiche animal';
+
+  @override
+  String get takePhoto => 'Prendre une photo';
+
+  @override
+  String get chooseFromGallery => 'Choisir dans la galerie';
+
+  @override
+  String get attachMedia => 'Joindre une photo ou une vidéo';
+
+  @override
+  String get attachPhoto => 'Photo';
+
+  @override
+  String get attachVideo => 'Vidéo';
+
+  @override
+  String get openMedia => 'Ouvrir';
+
+  @override
+  String get mediaVideoLabel => 'Vidéo';
 }

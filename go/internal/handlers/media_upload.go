@@ -82,45 +82,72 @@ func (a *API) canEditPetPhoto(id authx.Identity, pet store.Pet) bool {
 }
 
 func (a *API) uploadImage(r *http.Request, kind, entityID string) (string, error) {
+	return a.uploadFile(r, kind, entityID, media.MaxUploadBytes, media.NormalizeContentType, media.ExtForContentType)
+}
+
+func (a *API) uploadMessageMedia(r *http.Request, kind, entityID string) (url string, contentType string, err error) {
+	url, ct, err := a.uploadFileTyped(r, kind, entityID, media.MaxMessageMediaBytes, media.NormalizeMessageMediaType, media.ExtForMessageMedia)
+	return url, ct, err
+}
+
+func (a *API) uploadFile(
+	r *http.Request,
+	kind, entityID string,
+	maxBytes int64,
+	normalize func(string, string) (string, error),
+	extFor func(string) (string, error),
+) (string, error) {
+	url, _, err := a.uploadFileTyped(r, kind, entityID, maxBytes, normalize, extFor)
+	return url, err
+}
+
+func (a *API) uploadFileTyped(
+	r *http.Request,
+	kind, entityID string,
+	maxBytes int64,
+	normalize func(string, string) (string, error),
+	extFor func(string) (string, error),
+) (string, string, error) {
 	if a.media == nil {
-		return "", media.ErrNotConfigured
+		return "", "", media.ErrNotConfigured
 	}
-	if err := r.ParseMultipartForm(media.MaxUploadBytes + (1 << 20)); err != nil {
-		return "", media.ErrTooLarge
+	if err := r.ParseMultipartForm(maxBytes + (1 << 20)); err != nil {
+		return "", "", media.ErrTooLarge
 	}
 	file, hdr, err := r.FormFile("file")
 	if err != nil {
-		return "", media.ErrEmptyFile
+		return "", "", media.ErrEmptyFile
 	}
 	defer file.Close()
 
-	ct, err := media.NormalizeContentType(hdr.Header.Get("Content-Type"), hdr.Filename)
+	ct, err := normalize(hdr.Header.Get("Content-Type"), hdr.Filename)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	ext, err := media.ExtForContentType(ct)
+	ext, err := extFor(ct)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	size := hdr.Size
 	if size <= 0 {
-		// some clients omit size; stream with limit
-		limited := io.LimitReader(file, media.MaxUploadBytes+1)
+		limited := io.LimitReader(file, maxBytes+1)
 		buf, err := io.ReadAll(limited)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
-		if err := media.ValidateSize(int64(len(buf))); err != nil {
-			return "", err
+		if err := media.ValidateSizeLimit(int64(len(buf)), maxBytes); err != nil {
+			return "", "", err
 		}
 		key := media.ObjectKey(kind, entityID, ext)
-		return a.media.Upload(r.Context(), key, bytes.NewReader(buf), int64(len(buf)), ct)
+		url, err := a.media.Upload(r.Context(), key, bytes.NewReader(buf), int64(len(buf)), ct)
+		return url, ct, err
 	}
-	if err := media.ValidateSize(size); err != nil {
-		return "", err
+	if err := media.ValidateSizeLimit(size, maxBytes); err != nil {
+		return "", "", err
 	}
 	key := media.ObjectKey(kind, entityID, ext)
-	return a.media.Upload(r.Context(), key, file, size, ct)
+	url, err := a.media.Upload(r.Context(), key, file, size, ct)
+	return url, ct, err
 }
 
 func (a *API) writeUploadErr(w http.ResponseWriter, r *http.Request, err error) {

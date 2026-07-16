@@ -536,4 +536,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get careTypeCustom => 'Custom reminder';
+
+  @override
+  String get homeAddFirstVetTitle => 'Add your veterinarian';
+
+  @override
+  String get homeAddFirstVetBody =>
+      'Link the practice that follows your pet to share readings and chat.';
+
+  @override
+  String get homeAddFirstVetCta => 'Add a veterinarian';
+
+  @override
+  String get photoFrameHint => 'Center the muzzle — pet profile preview';
+
+  @override
+  String get takePhoto => 'Take a photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get attachMedia => 'Attach a photo or video';
+
+  @override
+  String get attachPhoto => 'Photo';
+
+  @override
+  String get attachVideo => 'Video';
+
+  @override
+  String get openMedia => 'Open';
+
+  @override
+  String get mediaVideoLabel => 'Video';
 }

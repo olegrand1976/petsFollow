@@ -10,6 +10,7 @@ import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flo
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
+import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -26,6 +27,7 @@ class _HomeTabState extends State<HomeTab> {
   List<Pet> pets = [];
   String? userName;
   bool loading = true;
+  bool hasVets = true;
   DiscoveryProgress? discoveryProgress;
 
   @override
@@ -43,6 +45,12 @@ class _HomeTabState extends State<HomeTab> {
       final progress = await DiscoveryController.instance.load();
       discoveryProgress = progress;
     } catch (_) {}
+    try {
+      final vets = await ApiClient.instance.getMyVets();
+      hasVets = vets.isNotEmpty;
+    } catch (_) {
+      hasVets = true;
+    }
     try {
       final data = await ApiClient.instance.getPets();
       if (mounted) {
@@ -111,6 +119,18 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 4),
                   Text(l10n.appTagline, style: TextStyle(color: AppColors.textMuted)),
                   const SizedBox(height: 20),
+                  if (!hasVets) ...[
+                    _AddFirstVetCard(
+                      onAdd: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+                        );
+                        load();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (mission != null) ...[
                     DiscoveryCardWidget(
                       card: mission,
@@ -208,6 +228,50 @@ class _HomeTabState extends State<HomeTab> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => PetDetailScreen(pet: pet, onUpdated: load)),
+    );
+  }
+}
+
+class _AddFirstVetCard extends StatelessWidget {
+  const _AddFirstVetCard({required this.onAdd});
+
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.local_hospital_outlined, color: AppColors.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.homeAddFirstVetTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(l10n.homeAddFirstVetBody, style: TextStyle(color: AppColors.textMuted, height: 1.35)),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.person_add_alt_1),
+            label: Text(l10n.homeAddFirstVetCta),
+          ),
+        ],
+      ),
     );
   }
 }
