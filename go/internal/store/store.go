@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -140,8 +141,9 @@ const userSelectCols = `
 	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,'')`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
 	u, err := scanUser(s.pool.QueryRow(ctx, `
-		SELECT `+userSelectCols+` FROM identity.users WHERE email=$1`, email))
+		SELECT `+userSelectCols+` FROM identity.users WHERE lower(email)=$1`, email))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}

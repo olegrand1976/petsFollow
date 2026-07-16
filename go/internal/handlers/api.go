@@ -118,6 +118,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	u, err := a.store.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
@@ -804,6 +805,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	if req.Email == "" || req.Password == "" || req.FullName == "" || req.PracticeName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return
@@ -883,6 +885,7 @@ func (a *API) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	if req.Email == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return

@@ -176,6 +176,14 @@ func TestAuthRegisterConfirmLoginForgotReset(t *testing.T) {
 		t.Fatalf("login status %d: %#v", code, env)
 	}
 
+	// Email casing / espaces ne doivent pas bloquer le login
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login", map[string]any{
+		"email": "  " + strings.ToUpper(email) + "  ", "password": password,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("login with mixed-case/padded email status %d: %#v", code, env)
+	}
+
 	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/forgot-password", map[string]any{
 		"email": email,
 	})

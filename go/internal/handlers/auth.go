@@ -62,7 +62,7 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
 		return
 	}
-	email := gClaims.Email
+	email := strings.TrimSpace(strings.ToLower(gClaims.Email))
 	name := gClaims.Name
 	if email == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "google_email_missing")
