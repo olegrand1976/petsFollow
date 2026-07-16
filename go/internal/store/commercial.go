@@ -11,7 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// CommercialCommissionRateBps is the flat commercial commission rate (15%).
+// CommercialCommissionRateBps is the flat commercial rate on addons (15%).
+// Subscription commissions use subscription_mirror (copy of the vet ledger line).
 const CommercialCommissionRateBps = 1500
 
 // CommercialCommissionCents returns the flat 15% commission on a base amount.
