@@ -10,12 +10,14 @@
     "adminUsers": "Registraties",
     "adminPayments": "Betalingen",
     "adminCommissions": "Vergoedingen",
+    "adminCommercialCommissions": "Commercials loon",
     "adminCommercials": "Commercials",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
     "commercialVets": "Dierenartsen",
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissies",
+    "commercialSettings": "Betalingsprofiel",
     "commercialPitch": "Presentatie"
   },
   "auth": {
@@ -448,12 +450,17 @@
     },
     "commissions": {
       "title": "Vergoedingen dierenartsen",
-      "subtitle": "Progressieve commissies (max 15%) op doorverwezen betalende klanten — maandelijkse cyclus.",
+      "subtitle": "Progressieve commissies (max 12%) — bewerkbare tarieven. Maandelijkse cyclus.",
       "kpiPeriod": "Periode",
       "kpiDue": "Te betalen",
       "kpiStatus": "Runstatus",
-      "tiersTitle": "Tariefraster",
+      "tiersTitle": "Tariefraster (bewerkbaar)",
       "tierLine": "{min}{max} klanten → {pct}%",
+      "commercialRate": "Commercialcommissie (abos + addons)",
+      "saveSettings": "Commercialtarief opslaan",
+      "saveTiers": "Dierenartsraster opslaan",
+      "tiersHint": "Aaneensluitende niveaus vanaf 1 klant; laatste niveau zonder max (= open).",
+      "openEnded": "∞",
       "periodTitle": "Maandelijks overzicht",
       "period": "Maand",
       "close": "Maand afsluiten",
@@ -467,6 +474,34 @@
       "statusOpen": "Open",
       "statusClosed": "Afgesloten",
       "statusPaid": "Betaald"
+    },
+    "commercialCommissions": {
+      "title": "Commercials loon",
+      "subtitle": "Prognose, te betalen en betaald — maandelijks overzicht met IBAN.",
+      "kpiPeriod": "Periode",
+      "kpiTotal": "Totaal periode",
+      "kpiStatus": "Status",
+      "kpiRate": "Commercialtarief",
+      "periodTitle": "Maandelijks overzicht",
+      "period": "Maand",
+      "close": "Afsluiten (te betalen)",
+      "markPaid": "Als betaald markeren",
+      "empty": "Geen regels voor dit tabblad",
+      "recapGlobal": "Getoond totaal: {amount} — {count} commercial(s)",
+      "colCommercial": "Commercial",
+      "colLedger": "Boekingen",
+      "colAmount": "Bedrag",
+      "colIban": "IBAN",
+      "colHolder": "Rekeninghouder",
+      "colStatus": "Status",
+      "statusOpen": "Prognose",
+      "statusClosed": "Te betalen",
+      "statusPaid": "Betaald",
+      "tab": {
+        "forecast": "Prognose",
+        "toPay": "Te betalen",
+        "paid": "Betaald"
+      }
     },
     "commercials": {
       "title": "Commercials",
@@ -834,7 +869,7 @@
     },
     "commissions": {
       "title": "Mijn commissies",
-      "subtitle": "Spiegel van dierenartscommissies (zelfde tarief) + 15% op addons.",
+      "subtitle": "Vast 12% op abonnementen en addons — maandelijkse opvolging en uitbetalingen.",
       "rate": "Tarief",
       "month": "Maand",
       "lifetime": "Lifetime",
@@ -846,7 +881,23 @@
       "vet": "Dierenarts",
       "client": "Cliënt",
       "base": "Basis",
-      "amount": "Commissie"
+      "amount": "Commissie",
+      "payoutsTitle": "Uitbetalingen",
+      "payoutsEmpty": "Nog geen uitbetalingen",
+      "colPeriod": "Periode",
+      "colAmount": "Bedrag",
+      "colStatus": "Status",
+      "ibanBanner": "Vul uw IBAN in om uw commissies te ontvangen.",
+      "ibanBannerLink": "Betalingsprofiel openen"
+    },
+    "settings": {
+      "title": "Betalingsprofiel",
+      "subtitle": "Bankgegevens voor uitbetaling van uw commissies.",
+      "iban": "IBAN",
+      "bic": "BIC (optioneel)",
+      "accountHolder": "Rekeninghouder",
+      "save": "Opslaan",
+      "saved": "Profiel opgeslagen"
     },
     "pitch": {
       "title": "petsFollow overzicht",
@@ -854,8 +905,8 @@
       "webTitle": "Pro Web-app (dierenarts)",
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
-      "vetGrid": "Dierenarts: progressieve schaal 5% → 8% → 12% → 15% volgens volume betalende cliënten.",
-      "addons": "Addons (Family, Care+, Horse): 15% voor de commercial bij elke aankoop.",
+      "vetGrid": "Dierenarts: progressieve schaal 5% → 8% → 10% → 12% (plafond) volgens volume betalende cliënten.",
+      "addons": "Addons Family / Care+ / Horse: 12% voor de commercial. Care+ = medicatie & persoonlijke herinneringen; Horse = hoefsmid, contacten, wedstrijden (paarden).",
       "webFeatures": [
         "Operationeel dashboard cliënten / berichten / HR",
         "Patiëntdossier en messaging",
@@ -865,10 +916,10 @@
       "mobileFeatures": [
         "Dieren en hartslagopvolging",
         "Stripe-abonnementen per dier",
-        "Family / Care+ / Horse addons",
+        "Family / Care+ / Horse addons met echte privileges",
         "Berichten en zorgherinneringen"
       ],
-      "commercialMirror": "Commercial: exacte spiegel van de commissie van de toegewezen dierenarts (zelfde % op hetzelfde moment) op klantabonnementen."
+      "commercialMirror": "Commercial: vast 12% op abonnementen en addons (~9 € op het triennial abonnement van 75 €)."
     }
   }
 }

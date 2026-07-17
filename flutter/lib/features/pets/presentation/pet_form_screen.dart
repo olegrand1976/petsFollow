@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -137,6 +138,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
       }
       if (!mounted || petId == null) return;
       await _waitForPayment(petId);
+      if (selectedSpecies == 'horse' && mounted) {
+        await _maybeOfferHorsePack(petId);
+      }
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -171,15 +175,43 @@ class _PetFormScreenState extends State<PetFormScreen> {
     }
   }
 
+  Future<void> _maybeOfferHorsePack(String petId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ents = await AddonEntitlements.load();
+    if (ents.hasHorse || !mounted) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.horseHealthTitle),
+        content: Text(l10n.horsePackUpsell),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.activateAddon)),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+    try {
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: 'horse', petId: petId);
+      await openExternalUrl(url);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.paymentResume)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
-            {'code': 'annual', 'label': '25 € / an'},
-            {'code': 'triennial', 'label': '60 € / 3 ans', 'recommended': true},
-            {'code': 'quinquennial', 'label': '75 € / 5 ans'},
+            {'code': 'annual', 'label': '29 € / an'},
+            {'code': 'triennial', 'label': '75 € / 3 ans', 'recommended': true},
+            {'code': 'quinquennial', 'label': '115 € / 5 ans'},
           ];
     final initial = (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 

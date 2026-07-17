@@ -121,17 +121,17 @@
     "footer_visit_llit": "Bezoek LL-IT Software & Computer"
   },
   "billing": {
-    "annual_label": "25 € / jaar",
-    "triennial_label": "60 € / 3 jaar",
-    "quinquennial_label": "75 € / 5 jaar",
-    "annual_sub_summary": "25 € / jaar, automatisch verlengd",
-    "triennial_sub_summary": "60 € elke 3 jaar, automatisch verlengd",
-    "quinquennial_sub_summary": "75 € elke 5 jaar, automatisch verlengd",
-    "annual_onetime_summary": "25 € voor 1 jaar, eenmalige betaling",
-    "triennial_onetime_summary": "60 € voor 3 jaar, eenmalige betaling",
-    "quinquennial_onetime_summary": "75 € voor 5 jaar, eenmalige betaling",
-    "addon_family_label": "Optie Familie — 40 €",
-    "addon_care_plus_label": "Optie Care+ — 15 €",
-    "addon_horse_label": "Optie Paard — 30 €"
+    "annual_label": "29 € / jaar",
+    "triennial_label": "75 € / 3 jaar",
+    "quinquennial_label": "115 € / 5 jaar",
+    "annual_sub_summary": "29 € / jaar, automatisch verlengd",
+    "triennial_sub_summary": "75 € elke 3 jaar, automatisch verlengd",
+    "quinquennial_sub_summary": "115 € elke 5 jaar, automatisch verlengd",
+    "annual_onetime_summary": "29 € voor 1 jaar, eenmalige betaling",
+    "triennial_onetime_summary": "75 € voor 3 jaar, eenmalige betaling",
+    "quinquennial_onetime_summary": "115 € voor 5 jaar, eenmalige betaling",
+    "addon_family_label": "Optie Familie — 55 €",
+    "addon_care_plus_label": "Optie Care+ — 19 €",
+    "addon_horse_label": "Optie Paard — 39 €"
   }
 }

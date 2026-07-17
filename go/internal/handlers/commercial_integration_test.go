@@ -234,18 +234,20 @@ func TestVetReferralProspect(t *testing.T) {
 	}
 }
 
-func TestCommercialMirrorAccrual(t *testing.T) {
+func TestCommercialFlatSubscriptionAccrual(t *testing.T) {
 	api := newTestAPI(t)
 	ctx := context.Background()
 	st := store.New(api.pool)
 	if err := st.EnsureDefaultCommissionTiers(ctx); err != nil {
 		t.Fatal(err)
 	}
+	_ = st.EnsureCommissionSettings(ctx)
+	_ = st.SetCommercialRateBps(ctx, store.DefaultCommercialCommissionRateBps)
 
 	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
-	commEmail := uniqueEmail("mirror-comm")
+	commEmail := uniqueEmail("flat-comm")
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
-		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Mirror Comm",
+		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Flat Comm",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create commercial %d %#v", code, env)
@@ -253,10 +255,10 @@ func TestCommercialMirrorAccrual(t *testing.T) {
 	commID := dataMap(t, env)["userId"].(string)
 	commTok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
 
-	vetEmail := uniqueEmail("mirror-vet")
+	vetEmail := uniqueEmail("flat-vet")
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
-		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr Mirror",
-		"practiceName": "Cabinet Mirror", "phone": "0102030405", "city": "Lyon", "postalCode": "69001", "addressLine1": "2 rue Mirror",
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr Flat",
+		"practiceName": "Cabinet Flat", "phone": "0102030405", "city": "Lyon", "postalCode": "69001", "addressLine1": "2 rue Flat",
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("encode vet %d %#v", code, env)
@@ -272,8 +274,8 @@ func TestCommercialMirrorAccrual(t *testing.T) {
 	clientHash, _ := bcrypt.GenerateFromPassword([]byte("ClientDemo123!"), bcrypt.DefaultCost)
 	if _, err := api.pool.Exec(ctx, `
 		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, $2, $3, 'Client Mirror', 'client', $4, NOW())`,
-		clientID, uniqueEmail("mirror-client"), string(clientHash), practiceID); err != nil {
+		VALUES ($1, $2, $3, 'Client Flat', 'client', $4, NOW())`,
+		clientID, uniqueEmail("flat-client"), string(clientHash), practiceID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := api.pool.Exec(ctx, `
@@ -285,11 +287,12 @@ func TestCommercialMirrorAccrual(t *testing.T) {
 	petID := uuid.NewString()
 	if _, err := api.pool.Exec(ctx, `
 		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, payment_status)
-		VALUES ($1, $2, $3, 'Rex Mirror', 'dog', 'lab', 'pending_payment')`, petID, practiceID, clientID); err != nil {
+		VALUES ($1, $2, $3, 'Rex Flat', 'dog', 'lab', 'pending_payment')`, petID, practiceID, clientID); err != nil {
 		t.Fatal(err)
 	}
 
-	ent, err := st.CreateEntitlement(ctx, petID, clientID, "annual", "subscription", 2500)
+	baseCents := 2900
+	ent, err := st.CreateEntitlement(ctx, petID, clientID, "annual", "subscription", baseCents)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,30 +307,24 @@ func TestCommercialMirrorAccrual(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var vetRate, vetCommission int
-	if err := api.pool.QueryRow(ctx, `
-		SELECT rate_bps, commission_cents FROM billing.commission_ledger WHERE entitlement_id=$1`, ent.ID,
-	).Scan(&vetRate, &vetCommission); err != nil {
-		t.Fatalf("vet ledger missing: %v", err)
-	}
-	if vetRate <= 0 || vetCommission <= 0 {
-		t.Fatalf("expected positive vet commission, rate=%d cents=%d", vetRate, vetCommission)
-	}
+	wantRate := store.DefaultCommercialCommissionRateBps
+	wantCommission := store.CommercialCommissionCents(baseCents, wantRate)
 
 	var sourceType string
-	var mirRate, mirCommission int
-	var mirCommercial string
+	var rateBps, commissionCents int
+	var commercialID string
 	if err := api.pool.QueryRow(ctx, `
 		SELECT source_type, rate_bps, commission_cents, commercial_user_id::text
 		FROM billing.commercial_commission_ledger
-		WHERE source_id=$1 AND source_type='subscription_mirror'`, ent.ID,
-	).Scan(&sourceType, &mirRate, &mirCommission, &mirCommercial); err != nil {
-		t.Fatalf("commercial mirror missing: %v", err)
+		WHERE source_id=$1 AND source_type='subscription_pct'`, ent.ID,
+	).Scan(&sourceType, &rateBps, &commissionCents, &commercialID); err != nil {
+		t.Fatalf("commercial flat accrual missing: %v", err)
 	}
-	if mirCommercial != commID {
-		t.Fatalf("mirror commercial %s want %s", mirCommercial, commID)
+	if commercialID != commID {
+		t.Fatalf("commercial %s want %s", commercialID, commID)
 	}
-	if mirRate != vetRate || mirCommission != vetCommission {
-		t.Fatalf("mirror mismatch vet=(%d,%d) commercial=(%d,%d)", vetRate, vetCommission, mirRate, mirCommission)
+	if rateBps != wantRate || commissionCents != wantCommission {
+		t.Fatalf("flat commission got rate=%d cents=%d want rate=%d cents=%d",
+			rateBps, commissionCents, wantRate, wantCommission)
 	}
 }

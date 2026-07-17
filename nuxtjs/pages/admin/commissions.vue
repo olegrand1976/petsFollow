@@ -12,11 +12,41 @@
     </div>
 
     <ProCard :title="$t('admin.commissions.tiersTitle')" class="pro-mb">
-      <ul class="pro-commissions-tiers">
-        <li v-for="t in tiers" :key="t.minClients">
-          {{ formatTier(t) }}
-        </li>
-      </ul>
+      <div class="pro-field pro-mb-sm">
+        <label class="pro-label" for="commercial-rate">{{ $t('admin.commissions.commercialRate') }}</label>
+        <div class="pro-field-inline-wrap">
+          <input
+            id="commercial-rate"
+            v-model.number="commercialRatePct"
+            class="pro-input pro-input-narrow"
+            type="number"
+            min="0"
+            max="50"
+            step="1"
+          >
+          <span>%</span>
+          <ProButton variant="secondary" :loading="savingSettings" @click="saveSettings">
+            {{ $t('admin.commissions.saveSettings') }}
+          </ProButton>
+        </div>
+      </div>
+      <div v-for="(t, idx) in editTiers" :key="idx" class="pro-tier-row">
+        <input v-model.number="t.minClients" class="pro-input pro-input-narrow" type="number" min="1">
+        <input
+          v-model.number="t.maxClients"
+          class="pro-input pro-input-narrow"
+          type="number"
+          min="1"
+          :placeholder="$t('admin.commissions.openEnded')"
+        >
+        <input v-model.number="t.ratePct" class="pro-input pro-input-narrow" type="number" min="0" max="50">
+        <span>%</span>
+      </div>
+      <p class="text-muted">{{ $t('admin.commissions.tiersHint') }}</p>
+      <ProButton :loading="savingTiers" @click="saveTiers">
+        {{ $t('admin.commissions.saveTiers') }}
+      </ProButton>
+      <p v-if="settingsError" class="pro-field-error" role="alert">{{ settingsError }}</p>
     </ProCard>
 
     <ProCard :title="$t('admin.commissions.periodTitle')">
@@ -90,9 +120,14 @@ const lines = ref<any[]>([])
 const totalCents = ref(0)
 const runStatus = ref('open')
 const tiers = ref<any[]>([])
+const editTiers = ref<{ minClients: number, maxClients: number | null, ratePct: number }[]>([])
+const commercialRatePct = ref(12)
 const closing = ref(false)
 const marking = ref(false)
+const savingTiers = ref(false)
+const savingSettings = ref(false)
 const error = ref('')
+const settingsError = ref('')
 
 const runStatusLabel = computed(() => {
   switch (runStatus.value) {
@@ -107,14 +142,50 @@ const runStatusLabel = computed(() => {
   }
 })
 
-function formatTier(tier: any) {
-  const max = tier.maxClients == null ? '+' : `–${tier.maxClients}`
-  const pct = (tier.rateBps / 100).toFixed(0)
-  return t('admin.commissions.tierLine', {
-    min: tier.minClients,
-    max,
-    pct,
-  })
+function syncEditTiers(list: any[]) {
+  editTiers.value = (list || []).map((t: any) => ({
+    minClients: t.minClients,
+    maxClients: t.maxClients ?? null,
+    ratePct: Math.round((t.rateBps || 0) / 100),
+  }))
+}
+
+async function saveSettings() {
+  savingSettings.value = true
+  settingsError.value = ''
+  try {
+    await $fetch('/api/admin/commissions/settings', {
+      method: 'PUT',
+      body: { commercialRateBps: Math.round(commercialRatePct.value * 100) },
+    })
+  } catch (e: any) {
+    settingsError.value = mapError(e)
+  } finally {
+    savingSettings.value = false
+  }
+}
+
+async function saveTiers() {
+  savingTiers.value = true
+  settingsError.value = ''
+  try {
+    const tiersPayload = editTiers.value.map((t) => ({
+      minClients: t.minClients,
+      maxClients: t.maxClients == null || Number.isNaN(t.maxClients as number) ? null : t.maxClients,
+      rateBps: Math.round(t.ratePct * 100),
+    }))
+    const res: any = await $fetch('/api/admin/commissions/tiers', {
+      method: 'PUT',
+      body: { tiers: tiersPayload },
+    })
+    const data = res.data ?? res
+    tiers.value = data.tiers ?? []
+    syncEditTiers(tiers.value)
+  } catch (e: any) {
+    settingsError.value = mapError(e)
+  } finally {
+    savingTiers.value = false
+  }
 }
 
 function lineVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
@@ -127,6 +198,8 @@ async function loadRunsMeta() {
   const res: any = await $fetch('/api/admin/commissions/runs')
   const data = res.data ?? res
   tiers.value = data.tiers ?? []
+  syncEditTiers(tiers.value)
+  commercialRatePct.value = Math.round((data.commercialRateBps ?? 1200) / 100)
 }
 
 async function loadPeriod() {
@@ -185,10 +258,18 @@ onMounted(async () => {
   margin-bottom: 1.25rem;
 }
 
-.pro-commissions-tiers {
-  margin: 0;
-  padding-left: 1.2rem;
-  color: var(--pf-vet-text-muted);
+.pro-tier-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.pro-input-narrow {
+  max-width: 6rem;
+}
+.pro-mb-sm {
+  margin-bottom: 1rem;
 }
 
 .pro-field-inline-wrap {

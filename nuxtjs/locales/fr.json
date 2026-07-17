@@ -9,13 +9,15 @@
     "adminDashboard": "Tableau de bord",
     "adminUsers": "Inscriptions",
     "adminPayments": "Paiements",
-    "adminCommissions": "Rétributions",
+    "adminCommissions": "Rétributions véto",
+    "adminCommercialCommissions": "Paie commerciaux",
     "adminCommercials": "Commerciaux",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
     "commercialVets": "Vétérinaires",
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissions",
+    "commercialSettings": "Profil paiement",
     "commercialPitch": "Présentation"
   },
   "auth": {
@@ -210,7 +212,7 @@
     },
     "commissions": {
       "title": "Mes commissions",
-      "subtitle": "Miroir des commissions véto (même taux) + 15 % sur addons.",
+      "subtitle": "12 % fixe sur abonnements et addons — suivi mensuel et versements.",
       "rate": "Taux",
       "month": "Mois",
       "lifetime": "Lifetime",
@@ -222,7 +224,23 @@
       "vet": "Véto",
       "client": "Client",
       "base": "Base",
-      "amount": "Commission"
+      "amount": "Commission",
+      "payoutsTitle": "Versements",
+      "payoutsEmpty": "Aucun versement encore",
+      "colPeriod": "Période",
+      "colAmount": "Montant",
+      "colStatus": "Statut",
+      "ibanBanner": "Renseignez votre IBAN pour recevoir vos commissions.",
+      "ibanBannerLink": "Ouvrir le profil paiement"
+    },
+    "settings": {
+      "title": "Profil paiement",
+      "subtitle": "Coordonnées bancaires pour le versement de vos commissions.",
+      "iban": "IBAN",
+      "bic": "BIC (optionnel)",
+      "accountHolder": "Titulaire du compte",
+      "save": "Enregistrer",
+      "saved": "Profil enregistré"
     },
     "pitch": {
       "title": "Présentation petsFollow",
@@ -230,8 +248,8 @@
       "webTitle": "App Web Pro (véto)",
       "mobileTitle": "App Mobile Flutter (clients)",
       "commissionTitle": "Commissionnement",
-      "vetGrid": "Véto : grille progressive 5 % → 8 % → 12 % → 15 % selon le volume de clients payants (sur abonnements).",
-      "addons": "Addons (Family, Care+, Horse) : 15 % pour le commercial sur chaque achat.",
+      "vetGrid": "Véto : grille progressive 5 % → 8 % → 10 % → 12 % (plafond) selon le volume de clients payants.",
+      "addons": "Addons Family / Care+ / Horse : 12 % commercial. Care+ = médicaments & rappels perso ; Horse = maréchal, contacts, compétitions (chevaux).",
       "webFeatures": [
         "Dashboard opérationnel clients / messages / FC",
         "Dossier patient et messagerie",
@@ -241,10 +259,10 @@
       "mobileFeatures": [
         "Animaux et suivi cardiaque",
         "Abonnements Stripe par animal",
-        "Addons Family / Care+ / Horse",
+        "Addons Family / Care+ / Horse avec privilèges réels",
         "Messages et rappels de soins"
       ],
-      "commercialMirror": "Commercial : miroir exact de la commission du véto assigné (même % au même moment) sur les abonnements clients."
+      "commercialMirror": "Commercial : 12 % fixe sur abonnements et addons (~9 € sur le triennial 75 €)."
     }
   },
   "settings": {
@@ -574,12 +592,17 @@
     },
     "commissions": {
       "title": "Rétributions vétos",
-      "subtitle": "Commissions progressives (max 15 %) sur les clients payants envoyés — cycle mensuel.",
+      "subtitle": "Commissions progressives (max 12 %) — taux éditables. Cycle mensuel.",
       "kpiPeriod": "Période",
       "kpiDue": "Total à verser",
       "kpiStatus": "Statut run",
-      "tiersTitle": "Grille de taux",
+      "tiersTitle": "Grille de taux (éditable)",
       "tierLine": "{min}{max} clients → {pct} %",
+      "commercialRate": "Commission commercial (abos + addons)",
+      "saveSettings": "Enregistrer le taux commercial",
+      "saveTiers": "Enregistrer la grille véto",
+      "tiersHint": "Paliers contigus à partir de 1 client ; dernier palier sans max (= open).",
+      "openEnded": "∞",
       "periodTitle": "Détail mensuel",
       "period": "Mois",
       "close": "Clôturer le mois",
@@ -593,11 +616,39 @@
       "statusOpen": "Ouvert",
       "statusClosed": "Clôturé",
       "statusPaid": "Payé"
+    },
+    "commercialCommissions": {
+      "title": "Paie commerciaux",
+      "subtitle": "Prévisionnel, à payer et payé — récap mensuel avec IBAN.",
+      "kpiPeriod": "Période",
+      "kpiTotal": "Total période",
+      "kpiStatus": "Statut",
+      "kpiRate": "Taux commercial",
+      "periodTitle": "Récapitulatif mensuel",
+      "period": "Mois",
+      "close": "Clôturer (à payer)",
+      "markPaid": "Marquer payé",
+      "empty": "Aucune ligne pour cet onglet",
+      "recapGlobal": "Total affiché : {amount} — {count} commercial(aux)",
+      "colCommercial": "Commercial",
+      "colLedger": "Écritures",
+      "colAmount": "Montant",
+      "colIban": "IBAN",
+      "colHolder": "Titulaire",
+      "colStatus": "Statut",
+      "statusOpen": "Prévisionnel",
+      "statusClosed": "À payer",
+      "statusPaid": "Payé",
+      "tab": {
+        "forecast": "Prévisionnel",
+        "toPay": "À payer",
+        "paid": "Payé"
+      }
     }
   },
   "commissions": {
     "title": "Mes commissions",
-    "subtitle": "Suivi des clients envoyés et des rétributions progressives (plafond 15 %).",
+    "subtitle": "Suivi des clients envoyés et des rétributions progressives (plafond 12 %).",
     "kpiClients": "Clients payants",
     "kpiRate": "Taux actuel",
     "kpiMonth": "Gains du mois",

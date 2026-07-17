@@ -66,9 +66,9 @@ func AllAddons() []Addon {
 func AllAddonsForLocale(locale string) []Addon {
 	locale = i18n.NormalizeLocale(locale)
 	return []Addon{
-		{Code: AddonFamily, Label: i18n.T(locale, "billing.addon_family_label", nil), AmountCents: 4000, Currency: "eur", DurationDays: AddonDurationDays},
-		{Code: AddonCarePlus, Label: i18n.T(locale, "billing.addon_care_plus_label", nil), AmountCents: 1500, Currency: "eur", DurationDays: AddonDurationDays},
-		{Code: AddonHorse, Label: i18n.T(locale, "billing.addon_horse_label", nil), AmountCents: 3000, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonFamily, Label: i18n.T(locale, "billing.addon_family_label", nil), AmountCents: 5500, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonCarePlus, Label: i18n.T(locale, "billing.addon_care_plus_label", nil), AmountCents: 1900, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonHorse, Label: i18n.T(locale, "billing.addon_horse_label", nil), AmountCents: 3900, Currency: "eur", DurationDays: AddonDurationDays},
 	}
 }
 
@@ -133,9 +133,9 @@ func AllPlans() []Plan {
 func AllPlansForLocale(locale string) []Plan {
 	locale = i18n.NormalizeLocale(locale)
 	return []Plan{
-		{Code: PlanAnnual, Label: i18n.T(locale, "billing.annual_label", nil), AmountCents: 2500, Currency: "eur", DurationDays: 365},
-		{Code: PlanTriennial, Label: i18n.T(locale, "billing.triennial_label", nil), AmountCents: 6000, Currency: "eur", DurationDays: 1095, Recommended: true},
-		{Code: PlanQuinquennial, Label: i18n.T(locale, "billing.quinquennial_label", nil), AmountCents: 7500, Currency: "eur", DurationDays: 1825},
+		{Code: PlanAnnual, Label: i18n.T(locale, "billing.annual_label", nil), AmountCents: 2900, Currency: "eur", DurationDays: 365},
+		{Code: PlanTriennial, Label: i18n.T(locale, "billing.triennial_label", nil), AmountCents: 7500, Currency: "eur", DurationDays: 1095, Recommended: true},
+		{Code: PlanQuinquennial, Label: i18n.T(locale, "billing.quinquennial_label", nil), AmountCents: 11500, Currency: "eur", DurationDays: 1825},
 	}
 }
 

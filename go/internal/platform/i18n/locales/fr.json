@@ -121,17 +121,17 @@
     "footer_visit_llit": "Visiter le site LL-IT Software & Computer"
   },
   "billing": {
-    "annual_label": "25 € / an",
-    "triennial_label": "60 € / 3 ans",
-    "quinquennial_label": "75 € / 5 ans",
-    "annual_sub_summary": "25 € / an, renouvelé automatiquement",
-    "triennial_sub_summary": "60 € tous les 3 ans, renouvelé automatiquement",
-    "quinquennial_sub_summary": "75 € tous les 5 ans, renouvelé automatiquement",
-    "annual_onetime_summary": "25 € pour 1 an, paiement unique",
-    "triennial_onetime_summary": "60 € pour 3 ans, paiement unique",
-    "quinquennial_onetime_summary": "75 € pour 5 ans, paiement unique",
-    "addon_family_label": "Option Famille — 40 €",
-    "addon_care_plus_label": "Option Care+ — 15 €",
-    "addon_horse_label": "Option Cheval — 30 €"
+    "annual_label": "29 € / an",
+    "triennial_label": "75 € / 3 ans",
+    "quinquennial_label": "115 € / 5 ans",
+    "annual_sub_summary": "29 € / an, renouvelé automatiquement",
+    "triennial_sub_summary": "75 € tous les 3 ans, renouvelé automatiquement",
+    "quinquennial_sub_summary": "115 € tous les 5 ans, renouvelé automatiquement",
+    "annual_onetime_summary": "29 € pour 1 an, paiement unique",
+    "triennial_onetime_summary": "75 € pour 3 ans, paiement unique",
+    "quinquennial_onetime_summary": "115 € pour 5 ans, paiement unique",
+    "addon_family_label": "Option Famille — 55 €",
+    "addon_care_plus_label": "Option Care+ — 19 €",
+    "addon_horse_label": "Option Cheval — 39 €"
   }
 }

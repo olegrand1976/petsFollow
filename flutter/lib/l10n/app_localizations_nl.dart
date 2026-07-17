@@ -262,10 +262,10 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '60 € elke 3 jaar, automatisch verlengd';
+  String get planTriennialSub => '75 € elke 3 jaar, automatisch verlengd';
 
   @override
-  String get planQuinquennialSub => '75 € elke 5 jaar, automatisch verlengd';
+  String get planQuinquennialSub => '115 € elke 5 jaar, automatisch verlengd';
 
   @override
   String planOneTime(String price) {
@@ -274,12 +274,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Tik bij elke hartslag gedurende 60 seconden.';
+      'Tik bij elke hartslag gedurende de tijd die uw dierenarts heeft ingesteld.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
     return 'Tik bij elke hartslag gedurende $seconds seconden.';
   }
+
+  @override
+  String get heartRateNoDurationConfigured =>
+      'Er is geen meetduur geconfigureerd voor deze praktijk. Neem contact op met uw dierenarts.';
 
   @override
   String get start => 'Starten';
@@ -447,10 +451,42 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get carePlusUpsell =>
-      'Zorg+ — gepersonaliseerde medicatie- en zorgherinneringen';
+      'Care+ — medicatie en gepersonaliseerde herinneringen';
 
   @override
-  String get familyPackHint => 'Gezinspakket — meerdere dieren, één abonnement';
+  String get carePlusRequired =>
+      'Care+ is vereist voor medicatie en aangepaste herinneringen.';
+
+  @override
+  String get horsePackRequired =>
+      'Het paardenpakket is vereist voor hoefsmid, contacten en wedstrijden.';
+
+  @override
+  String get activateAddon => 'Activeren';
+
+  @override
+  String get careTypeMedication => 'Medicatie';
+
+  @override
+  String get horseAddContact => 'Contact toevoegen';
+
+  @override
+  String get horseAddCompetition => 'Wedstrijd toevoegen';
+
+  @override
+  String get horseContactName => 'Naam';
+
+  @override
+  String get horseContactRole => 'Rol';
+
+  @override
+  String get horseCompetitionTitle => 'Evenement';
+
+  @override
+  String get horseCompetitionDate => 'Datum (JJJJ-MM-DD)';
+
+  @override
+  String get familyPackHint => 'Gezinspakket — voordelen tot 3 dieren';
 
   @override
   String get discoveryMarkDone => 'Missie voltooid';
@@ -566,15 +602,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get horseContactsSoon =>
-      'Beheer uw professionele contacten — binnenkort beschikbaar.';
+      'Activeer het paardenpakket om contacten te beheren.';
 
   @override
   String get horseCompetitionsSoon =>
-      'Wedstrijdkalender en resultaten — binnenkort beschikbaar.';
+      'Activeer het paardenpakket voor de wedstrijdkalender.';
 
   @override
   String get horsePackUpsell =>
-      'Paardenpakket — hoefsmid, mestonderzoek en wedstrijdopvolging';
+      'Paardenpakket — hoefsmid, mestonderzoek, contacten en wedstrijden';
 
   @override
   String get careTypeFarrier => 'Hoefsmid';

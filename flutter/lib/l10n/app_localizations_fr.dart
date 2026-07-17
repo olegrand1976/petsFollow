@@ -265,11 +265,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planTriennialSub =>
-      '60 € tous les 3 ans, renouvelé automatiquement';
+      '75 € tous les 3 ans, renouvelé automatiquement';
 
   @override
   String get planQuinquennialSub =>
-      '75 € tous les 5 ans, renouvelé automatiquement';
+      '115 € tous les 5 ans, renouvelé automatiquement';
 
   @override
   String planOneTime(String price) {
@@ -278,12 +278,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get heartRateInstructions =>
-      'Tapotez à chaque battement pendant 60 secondes.';
+      'Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
     return 'Tapotez à chaque battement pendant $seconds secondes.';
   }
+
+  @override
+  String get heartRateNoDurationConfigured =>
+      'Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.';
 
   @override
   String get start => 'Démarrer';
@@ -450,12 +454,43 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reviewAskNo => 'Plus tard';
 
   @override
-  String get carePlusUpsell =>
-      'Soins+ — rappels personnalisés pour médicaments et soins';
+  String get carePlusUpsell => 'Care+ — médicaments et rappels personnalisés';
+
+  @override
+  String get carePlusRequired =>
+      'Care+ est requis pour les médicaments et rappels personnalisés.';
+
+  @override
+  String get horsePackRequired =>
+      'Le Pack Cheval est requis pour les rappels maréchal, contacts et compétitions.';
+
+  @override
+  String get activateAddon => 'Activer';
+
+  @override
+  String get careTypeMedication => 'Médicament';
+
+  @override
+  String get horseAddContact => 'Ajouter un contact';
+
+  @override
+  String get horseAddCompetition => 'Ajouter une compétition';
+
+  @override
+  String get horseContactName => 'Nom';
+
+  @override
+  String get horseContactRole => 'Rôle';
+
+  @override
+  String get horseCompetitionTitle => 'Événement';
+
+  @override
+  String get horseCompetitionDate => 'Date (AAAA-MM-JJ)';
 
   @override
   String get familyPackHint =>
-      'Pack famille — plusieurs animaux, un seul abonnement';
+      'Pack famille — avantages foyer jusqu\'à 3 animaux';
 
   @override
   String get discoveryMarkDone => 'Mission accomplie';
@@ -571,15 +606,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get horseContactsSoon =>
-      'Gérez vos contacts professionnels — bientôt disponible.';
+      'Activez le Pack Cheval pour gérer vos contacts professionnels.';
 
   @override
   String get horseCompetitionsSoon =>
-      'Calendrier et résultats de compétitions — bientôt disponible.';
+      'Activez le Pack Cheval pour le calendrier de compétitions.';
 
   @override
   String get horsePackUpsell =>
-      'Pack Cheval — rappels maréchal, coproscopie et suivi compétitions';
+      'Pack Cheval — maréchal, coproscopie, contacts et compétitions';
 
   @override
   String get careTypeFarrier => 'Maréchal-ferrant';

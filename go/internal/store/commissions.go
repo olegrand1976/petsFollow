@@ -139,8 +139,8 @@ func (s *Store) EnsureDefaultCommissionTiers(ctx context.Context) error {
 	tiers := []tierDef{
 		{1, 4, 500, true},
 		{5, 14, 800, true},
-		{15, 39, 1200, true},
-		{40, 0, 1500, false},
+		{15, 39, 1000, true},
+		{40, 0, 1200, false},
 	}
 	for _, t := range tiers {
 		var max any
@@ -154,6 +154,67 @@ func (s *Store) EnsureDefaultCommissionTiers(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// ReplaceCommissionTiers replaces the full progressive ladder (admin).
+func (s *Store) ReplaceCommissionTiers(ctx context.Context, tiers []CommissionTier) error {
+	if len(tiers) == 0 {
+		return errors.New("empty_tiers")
+	}
+	openEnded := 0
+	prevMax := 0
+	for i, t := range tiers {
+		if t.MinClients < 1 || t.RateBps < 0 || t.RateBps > 5000 {
+			return errors.New("invalid_tier")
+		}
+		if t.MaxClients == nil {
+			openEnded++
+			if i != len(tiers)-1 {
+				return errors.New("open_ended_must_be_last")
+			}
+		} else {
+			if *t.MaxClients < t.MinClients {
+				return errors.New("invalid_tier_range")
+			}
+			prevMax = *t.MaxClients
+			_ = prevMax
+		}
+		if i > 0 {
+			prev := tiers[i-1]
+			if prev.MaxClients == nil {
+				return errors.New("invalid_tier_order")
+			}
+			if t.MinClients != *prev.MaxClients+1 {
+				return errors.New("tiers_not_contiguous")
+			}
+		} else if t.MinClients != 1 {
+			return errors.New("tiers_must_start_at_1")
+		}
+	}
+	if openEnded != 1 {
+		return errors.New("exactly_one_open_ended_tier")
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `DELETE FROM billing.commission_tiers`); err != nil {
+		return err
+	}
+	for _, t := range tiers {
+		var max any
+		if t.MaxClients != nil {
+			max = *t.MaxClients
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO billing.commission_tiers (id, min_clients, max_clients, rate_bps)
+			VALUES ($1, $2, $3, $4)`, uuid.NewString(), t.MinClients, max, t.RateBps); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *Store) ListCommissionTiers(ctx context.Context) ([]CommissionTier, error) {

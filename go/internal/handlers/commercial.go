@@ -20,6 +20,8 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Get("/commercial/vets", a.commercialListVets)
 		pr.Post("/commercial/vets", a.commercialEncodeVet)
 		pr.Get("/commercial/commissions", a.commercialCommissions)
+		pr.Get("/commercial/me/payout-profile", a.commercialGetPayoutProfile)
+		pr.Patch("/commercial/me/payout-profile", a.commercialPatchPayoutProfile)
 		pr.Get("/commercial/prospects", a.commercialListProspects)
 		pr.Post("/commercial/prospects", a.commercialCreateProspect)
 		pr.Patch("/commercial/prospects/{id}", a.commercialUpdateProspect)
@@ -131,6 +133,61 @@ func (a *API) commercialCommissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, summary)
+}
+
+func (a *API) commercialGetPayoutProfile(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	profile, err := a.store.GetCommercialPayoutProfile(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, profile)
+}
+
+type payoutProfileReq struct {
+	IBAN          string `json:"iban"`
+	BIC           string `json:"bic"`
+	AccountHolder string `json:"accountHolder"`
+}
+
+func normalizeIBAN(s string) string {
+	s = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(s), " ", ""))
+	return s
+}
+
+func (a *API) commercialPatchPayoutProfile(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	var req payoutProfileReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	iban := normalizeIBAN(req.IBAN)
+	if iban != "" && (len(iban) < 15 || len(iban) > 34) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_iban")
+		return
+	}
+	holder := strings.TrimSpace(req.AccountHolder)
+	if len(holder) > 120 {
+		holder = holder[:120]
+	}
+	bic := strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(req.BIC), " ", ""))
+	if len(bic) > 11 {
+		bic = bic[:11]
+	}
+	profile := store.CommercialPayoutProfile{IBAN: iban, BIC: bic, AccountHolder: holder}
+	if err := a.store.UpdateCommercialPayoutProfile(r.Context(), id.UserID, profile); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, profile)
 }
 
 func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {

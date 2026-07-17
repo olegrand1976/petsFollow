@@ -326,7 +326,7 @@ class _UpsellHint extends StatefulWidget {
 
 class _UpsellHintState extends State<_UpsellHint> {
   BillingAddon? _carePlus;
-  BillingAddon? _family;
+  bool _hasCarePlus = true;
 
   @override
   void initState() {
@@ -337,10 +337,11 @@ class _UpsellHintState extends State<_UpsellHint> {
   Future<void> _load() async {
     try {
       final catalog = await BillingAddon.fetchCatalog();
+      final ents = await AddonEntitlements.load();
       if (!mounted) return;
       setState(() {
         _carePlus = BillingAddon.byCode(catalog, 'care_plus');
-        _family = BillingAddon.byCode(catalog, 'family');
+        _hasCarePlus = ents.hasCarePlus;
       });
     } catch (_) {}
   }
@@ -349,6 +350,7 @@ class _UpsellHintState extends State<_UpsellHint> {
     try {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: widget.petId);
       await openExternalUrl(url);
+      await _load();
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.l10n.paymentResume)));
@@ -358,7 +360,7 @@ class _UpsellHintState extends State<_UpsellHint> {
 
   @override
   Widget build(BuildContext context) {
-    if (_carePlus == null && _family == null) return const SizedBox.shrink();
+    if (_hasCarePlus || _carePlus == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -370,30 +372,14 @@ class _UpsellHintState extends State<_UpsellHint> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          Text(widget.l10n.familyPackHint, style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              if (_carePlus != null)
-                TextButton(
-                  onPressed: () => _buy(context, _carePlus!.code),
-                  child: Text(
-                    _carePlus!.label.isNotEmpty
-                        ? _carePlus!.label
-                        : widget.l10n.carePlusUpsell.split('—').first.trim(),
-                  ),
-                ),
-              if (_family != null)
-                TextButton(
-                  onPressed: () => _buy(context, _family!.code),
-                  child: Text(
-                    _family!.label.isNotEmpty
-                        ? _family!.label
-                        : widget.l10n.familyPackHint.split('—').first.trim(),
-                  ),
-                ),
-            ],
+          TextButton(
+            onPressed: () => _buy(context, _carePlus!.code),
+            child: Text(
+              _carePlus!.label.isNotEmpty
+                  ? _carePlus!.label
+                  : widget.l10n.carePlusUpsell.split('—').first.trim(),
+            ),
           ),
         ],
       ),

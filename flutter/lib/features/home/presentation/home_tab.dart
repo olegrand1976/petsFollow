@@ -158,7 +158,11 @@ class _HomeTabState extends State<HomeTab> {
                         onMeasure: () => _startMeasurement(activePet),
                       ),
                       const SizedBox(height: 12),
-                      _UpsellBanner(l10n: l10n),
+                      _UpsellBanner(
+                        l10n: l10n,
+                        hasHorse: pets.any((p) => p.species == 'horse'),
+                        petCount: pets.length,
+                      ),
                       const SizedBox(height: 24),
                     ],
                     Text(l10n.myPets, style: Theme.of(context).textTheme.titleMedium),
@@ -278,16 +282,27 @@ class _AddFirstVetCard extends StatelessWidget {
 }
 
 class _UpsellBanner extends StatefulWidget {
-  const _UpsellBanner({required this.l10n});
+  const _UpsellBanner({
+    required this.l10n,
+    required this.hasHorse,
+    required this.petCount,
+  });
 
   final AppLocalizations l10n;
+  final bool hasHorse;
+  final int petCount;
 
   @override
   State<_UpsellBanner> createState() => _UpsellBannerState();
 }
 
 class _UpsellBannerState extends State<_UpsellBanner> {
+  BillingAddon? _carePlus;
+  BillingAddon? _horse;
   BillingAddon? _family;
+  bool _hasCarePlus = false;
+  bool _hasHorsePack = false;
+  bool _hasFamily = false;
 
   @override
   void initState() {
@@ -298,8 +313,16 @@ class _UpsellBannerState extends State<_UpsellBanner> {
   Future<void> _load() async {
     try {
       final catalog = await BillingAddon.fetchCatalog();
+      final ents = await AddonEntitlements.load();
       if (!mounted) return;
-      setState(() => _family = BillingAddon.byCode(catalog, 'family'));
+      setState(() {
+        _carePlus = BillingAddon.byCode(catalog, 'care_plus');
+        _horse = BillingAddon.byCode(catalog, 'horse');
+        _family = BillingAddon.byCode(catalog, 'family');
+        _hasCarePlus = ents.hasCarePlus;
+        _hasHorsePack = ents.hasHorse;
+        _hasFamily = ents.hasFamily;
+      });
     } catch (_) {}
   }
 
@@ -307,6 +330,7 @@ class _UpsellBannerState extends State<_UpsellBanner> {
     try {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
       await openExternalUrl(url);
+      await _load();
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -318,10 +342,11 @@ class _UpsellBannerState extends State<_UpsellBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (_family == null) return const SizedBox.shrink();
-    final label = _family!.label.isNotEmpty
-        ? _family!.label
-        : widget.l10n.familyPackHint.split('—').first.trim();
+    final showCare = !_hasCarePlus && _carePlus != null;
+    final showHorse = widget.hasHorse && !_hasHorsePack && _horse != null;
+    final showFamily = widget.petCount >= 2 && !_hasFamily && _family != null;
+    if (!showCare && !showHorse && !showFamily) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -332,20 +357,32 @@ class _UpsellBannerState extends State<_UpsellBanner> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 4),
-          Text(widget.l10n.familyPackHint, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton(
-                onPressed: () => _buy(context, _family!.code),
-                child: Text(label),
-              ),
-            ],
-          ),
+          if (showCare) ...[
+            Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => _buy(context, 'care_plus'),
+              child: Text(_carePlus!.label.isNotEmpty ? _carePlus!.label : widget.l10n.activateAddon),
+            ),
+          ],
+          if (showCare && (showHorse || showFamily)) const SizedBox(height: 12),
+          if (showFamily) ...[
+            Text(widget.l10n.familyPackHint, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => _buy(context, 'family'),
+              child: Text(_family!.label.isNotEmpty ? _family!.label : widget.l10n.activateAddon),
+            ),
+          ],
+          if (showFamily && showHorse) const SizedBox(height: 12),
+          if (showHorse) ...[
+            Text(widget.l10n.horsePackUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => _buy(context, 'horse'),
+              child: Text(_horse!.label.isNotEmpty ? _horse!.label : widget.l10n.activateAddon),
+            ),
+          ],
         ],
       ),
     );

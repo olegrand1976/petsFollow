@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -146,10 +147,12 @@ func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 }
 
 type createCareReminderReq struct {
-	Type    string  `json:"type"`
-	Title   string  `json:"title"`
-	DueAt   *string `json:"dueAt"`
-	DueDays *int    `json:"dueDays"`
+	Type           string  `json:"type"`
+	Title          string  `json:"title"`
+	DueAt          *string `json:"dueAt"`
+	DueDays        *int    `json:"dueDays"`
+	Notes          string  `json:"notes"`
+	RecurrenceDays *int    `json:"recurrenceDays"`
 }
 
 func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
@@ -173,17 +176,55 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 		reminderType = "custom"
 	}
 	switch reminderType {
-	case "vaccination", "deworming", "vet_check", "dental", "farrier", "fecal_egg", "custom":
+	case "vaccination", "deworming", "vet_check", "dental", "farrier", "fecal_egg", "custom", "medication":
 	default:
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_care_type")
 		return
 	}
+
+	ownerID := pet.OwnerUserID
+	if id.Role == kernel.RoleClient {
+		ownerID = id.UserID
+	}
+	needsCarePlus := reminderType == "custom" || reminderType == "medication"
+	needsHorse := reminderType == "farrier" || reminderType == "fecal_egg"
+	if needsCarePlus {
+		okAddon, err := a.store.HasActiveAddon(r.Context(), ownerID, string(billing.AddonCarePlus))
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !okAddon {
+			writeErr(w, r, http.StatusPaymentRequired, "addon_required", "care_plus_required")
+			return
+		}
+	}
+	if needsHorse {
+		if pet.Species != "horse" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "horse_pet_required")
+			return
+		}
+		okAddon, err := a.store.HasActiveAddon(r.Context(), ownerID, string(billing.AddonHorse))
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !okAddon {
+			writeErr(w, r, http.StatusPaymentRequired, "addon_required", "horse_pack_required")
+			return
+		}
+	}
+
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
 		title = reminderType
 	}
 	if len(title) > 200 {
 		title = title[:200]
+	}
+	notes := strings.TrimSpace(req.Notes)
+	if len(notes) > 1000 {
+		notes = notes[:1000]
 	}
 	dueAt := time.Now().AddDate(0, 0, 30)
 	if req.DueAt != nil {
@@ -193,7 +234,7 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	} else if req.DueDays != nil && *req.DueDays > 0 {
 		dueAt = time.Now().AddDate(0, 0, *req.DueDays)
 	}
-	created, err := a.store.CreateCareReminder(r.Context(), pet.ID, pet.PracticeID, reminderType, title, dueAt)
+	created, err := a.store.CreateCareReminderFull(r.Context(), pet.ID, pet.PracticeID, reminderType, title, dueAt, notes, req.RecurrenceDays)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

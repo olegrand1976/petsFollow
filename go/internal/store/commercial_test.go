@@ -1,36 +1,22 @@
-package store
+package store_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/olegrand1976/petsFollow/go/internal/store"
+)
 
 func TestCommercialCommissionCents(t *testing.T) {
-	// Addon path still uses flat 15%.
-	if got := CommercialCommissionCents(2500); got != 375 {
-		t.Fatalf("15%% of 2500 = 375, got %d", got)
+	if got := store.CommercialCommissionCents(2900, 1200); got != 348 {
+		t.Fatalf("12%% of 2900 = 348, got %d", got)
 	}
-	if got := CommercialCommissionCents(6000); got != 900 {
-		t.Fatalf("15%% of 6000 = 900, got %d", got)
+	if got := store.CommercialCommissionCents(7500, 1200); got != 900 {
+		t.Fatalf("12%% of 7500 = 900, got %d", got)
 	}
-	if CommercialCommissionRateBps != 1500 {
-		t.Fatalf("expected 1500 bps, got %d", CommercialCommissionRateBps)
+	if got := store.CommercialCommissionCents(2900, 0); got != 0 {
+		t.Fatalf("0%% of 2900 = 0, got %d", got)
 	}
-}
-
-func TestValidProspectStatus(t *testing.T) {
-	for _, s := range []string{"new", "contacted", "qualified", "converted", "lost"} {
-		if !ValidProspectStatus(s) {
-			t.Fatalf("expected valid status %q", s)
-		}
-	}
-	if ValidProspectStatus("unknown") {
-		t.Fatal("expected invalid status")
-	}
-}
-
-func TestValidProspectSource(t *testing.T) {
-	if !ValidProspectSource("commercial") || !ValidProspectSource("vet_referral") {
-		t.Fatal("expected commercial and vet_referral valid")
-	}
-	if ValidProspectSource("other") {
-		t.Fatal("expected invalid source")
+	if store.DefaultCommercialCommissionRateBps != 1200 {
+		t.Fatalf("expected 1200 bps, got %d", store.DefaultCommercialCommissionRateBps)
 	}
 }

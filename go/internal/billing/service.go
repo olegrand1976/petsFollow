@@ -299,6 +299,11 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
 		fmt.Printf("commercial addon accrual failed for addon %s: %v\n", addonID, err)
 	}
+	if AddonCode(addon.AddonCode) == AddonHorse {
+		if err := s.store.SeedHorsePackReminders(ctx, addon.OwnerUserID); err != nil {
+			fmt.Printf("horse pack reminder seed failed for addon %s: %v\n", addonID, err)
+		}
+	}
 	return nil
 }
 

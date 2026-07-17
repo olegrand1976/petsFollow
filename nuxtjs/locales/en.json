@@ -10,12 +10,14 @@
     "adminUsers": "Registrations",
     "adminPayments": "Payments",
     "adminCommissions": "Payouts",
+    "adminCommercialCommissions": "Sales payroll",
     "adminCommercials": "Sales team",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
     "commercialVets": "Veterinarians",
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissions",
+    "commercialSettings": "Payout profile",
     "commercialPitch": "Pitch"
   },
   "auth": {
@@ -448,12 +450,17 @@
     },
     "commissions": {
       "title": "Vet payouts",
-      "subtitle": "Progressive commissions (max 15%) on referred paying clients — monthly cycle.",
+      "subtitle": "Progressive commissions (max 12%) — editable rates. Monthly cycle.",
       "kpiPeriod": "Period",
       "kpiDue": "Amount due",
       "kpiStatus": "Run status",
-      "tiersTitle": "Rate grid",
+      "tiersTitle": "Rate grid (editable)",
       "tierLine": "{min}{max} clients → {pct}%",
+      "commercialRate": "Sales commission (subs + addons)",
+      "saveSettings": "Save sales rate",
+      "saveTiers": "Save vet grid",
+      "tiersHint": "Contiguous tiers starting at 1 client; last tier has no max (= open).",
+      "openEnded": "∞",
       "periodTitle": "Monthly detail",
       "period": "Month",
       "close": "Close month",
@@ -467,6 +474,34 @@
       "statusOpen": "Open",
       "statusClosed": "Closed",
       "statusPaid": "Paid"
+    },
+    "commercialCommissions": {
+      "title": "Sales payroll",
+      "subtitle": "Forecast, to pay and paid — monthly recap with IBAN.",
+      "kpiPeriod": "Period",
+      "kpiTotal": "Period total",
+      "kpiStatus": "Status",
+      "kpiRate": "Sales rate",
+      "periodTitle": "Monthly recap",
+      "period": "Month",
+      "close": "Close (to pay)",
+      "markPaid": "Mark as paid",
+      "empty": "No rows for this tab",
+      "recapGlobal": "Total shown: {amount} — {count} sales rep(s)",
+      "colCommercial": "Sales rep",
+      "colLedger": "Entries",
+      "colAmount": "Amount",
+      "colIban": "IBAN",
+      "colHolder": "Account holder",
+      "colStatus": "Status",
+      "statusOpen": "Forecast",
+      "statusClosed": "To pay",
+      "statusPaid": "Paid",
+      "tab": {
+        "forecast": "Forecast",
+        "toPay": "To pay",
+        "paid": "Paid"
+      }
     },
     "commercials": {
       "title": "Sales team",
@@ -834,7 +869,7 @@
     },
     "commissions": {
       "title": "My commissions",
-      "subtitle": "Mirror of vet commissions (same rate) + 15% on addons.",
+      "subtitle": "Flat 12% on subscriptions and addons — monthly tracking and payouts.",
       "rate": "Rate",
       "month": "Month",
       "lifetime": "Lifetime",
@@ -846,7 +881,23 @@
       "vet": "Vet",
       "client": "Client",
       "base": "Base",
-      "amount": "Commission"
+      "amount": "Commission",
+      "payoutsTitle": "Payouts",
+      "payoutsEmpty": "No payouts yet",
+      "colPeriod": "Period",
+      "colAmount": "Amount",
+      "colStatus": "Status",
+      "ibanBanner": "Enter your IBAN to receive your commissions.",
+      "ibanBannerLink": "Open payout profile"
+    },
+    "settings": {
+      "title": "Payout profile",
+      "subtitle": "Bank details for commission payouts.",
+      "iban": "IBAN",
+      "bic": "BIC (optional)",
+      "accountHolder": "Account holder",
+      "save": "Save",
+      "saved": "Profile saved"
     },
     "pitch": {
       "title": "petsFollow overview",
@@ -854,8 +905,8 @@
       "webTitle": "Pro Web app (vet)",
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
-      "vetGrid": "Vet: progressive grid 5% → 8% → 12% → 15% based on paying client volume (subscriptions).",
-      "addons": "Addons (Family, Care+, Horse): 15% for sales on each purchase.",
+      "vetGrid": "Vet: progressive grid 5% → 8% → 10% → 12% (cap) based on paying client volume.",
+      "addons": "Addons Family / Care+ / Horse: 12% for sales. Care+ = medications & personal reminders; Horse = farrier, contacts, competitions (horses).",
       "webFeatures": [
         "Operational dashboard clients / messages / HR",
         "Patient file and messaging",
@@ -865,10 +916,10 @@
       "mobileFeatures": [
         "Pets and heart-rate tracking",
         "Stripe subscriptions per pet",
-        "Family / Care+ / Horse addons",
+        "Family / Care+ / Horse addons with real privileges",
         "Messages and care reminders"
       ],
-      "commercialMirror": "Sales: exact mirror of the assigned vet commission (same % at the same time) on client subscriptions."
+      "commercialMirror": "Sales: flat 12% on subscriptions and addons (~€9 on the €75 triennial plan)."
     }
   }
 }

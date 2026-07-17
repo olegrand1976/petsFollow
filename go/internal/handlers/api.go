@@ -76,6 +76,12 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/pets/{petID}/primary-practice", a.setPetPrimaryPractice)
 		pr.Get("/pets/{petID}/care-reminders", a.listCareReminders)
 		pr.Post("/pets/{petID}/care-reminders", a.createCareReminder)
+		pr.Get("/pets/{petID}/horse-contacts", a.listHorseContacts)
+		pr.Post("/pets/{petID}/horse-contacts", a.createHorseContact)
+		pr.Delete("/horse-contacts/{id}", a.deleteHorseContact)
+		pr.Get("/pets/{petID}/horse-competitions", a.listHorseCompetitions)
+		pr.Post("/pets/{petID}/horse-competitions", a.createHorseCompetition)
+		pr.Delete("/horse-competitions/{id}", a.deleteHorseCompetition)
 		pr.Get("/pets/{petID}/visits", a.listVisits)
 		pr.Post("/pets/{petID}/visits", a.createVisit)
 		pr.Put("/pets/{petID}", a.updatePet)
@@ -344,6 +350,11 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if created.Species == "horse" {
+		if has, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonHorse)); err == nil && has {
+			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
+		}
+	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
 		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
 	})
@@ -447,15 +458,16 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 	}
 	var req startHRReq
 	_ = httpx.DecodeJSON(r, &req)
-	durationSec := req.DurationSec
-	if durationSec == 0 {
-		durationSec = a.cfg.HeartRateSeconds
-	}
 	allowed, err := a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
 	if err != nil {
-		allowed = []int{a.cfg.HeartRateSeconds}
+		allowed = nil
 	}
 	normalized := kernel.NormalizeHeartRateDurations(allowed)
+	durationSec := req.DurationSec
+	if durationSec == 0 {
+		// Default to the longest duration enabled by the vet (practice settings).
+		durationSec = normalized[len(normalized)-1]
+	}
 	ok := false
 	for _, d := range normalized {
 		if d == durationSec {

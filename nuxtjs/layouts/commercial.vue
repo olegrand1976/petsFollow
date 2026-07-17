@@ -25,6 +25,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/vets', label: t('nav.commercialVets'), icon: 'users' },
   { to: '/commercial/prospects', label: t('nav.commercialProspects'), icon: 'requests' },
   { to: '/commercial/commissions', label: t('nav.commercialCommissions'), icon: 'payments' },
+  { to: '/commercial/settings', label: t('nav.commercialSettings'), icon: 'settings' },
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'settings' },
 ])
 

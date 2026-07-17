@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -14,6 +16,7 @@ class HeartRateFlowScreen extends StatefulWidget {
   });
 
   final String petId;
+  /// Durations enabled by the pet's primary practice (vet settings).
   final List<int> durationsSec;
 
   @override
@@ -22,22 +25,40 @@ class HeartRateFlowScreen extends StatefulWidget {
 
 class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   HeartRatePhase phase = HeartRatePhase.ready;
-  int selectedDuration = 60;
-  int secondsLeft = 60;
+  late int selectedDuration;
+  int secondsLeft = 0;
   int taps = 0;
   Timer? timer;
   String? sessionId;
   Map<String, dynamic>? result;
   DateTime? lastTap;
 
+  /// Practice-configured durations, ascending. Never invent options the vet did not enable.
+  List<int> get _practiceDurations {
+    final raw = widget.durationsSec.where((d) => d == 15 || d == 30 || d == 60).toSet().toList()
+      ..sort();
+    return raw;
+  }
+
   @override
   void initState() {
     super.initState();
-    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
-    selectedDuration = durations.first;
+    final durations = _practiceDurations;
+    // Prefer the longest duration the vet enabled (clinical default).
+    selectedDuration = durations.isEmpty ? 60 : durations.last;
+    secondsLeft = selectedDuration;
   }
 
   Future<void> start() async {
+    final durations = _practiceDurations;
+    if (durations.isEmpty || !durations.contains(selectedDuration)) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.heartRateNoDurationConfigured)),
+      );
+      return;
+    }
     final sess = await ApiClient.instance.startHeartRate(
       widget.petId,
       durationSec: selectedDuration,
@@ -80,7 +101,29 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     await ApiClient.instance.validateHeartRate(sessionId!);
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sentToVet)));
+    var showCarePlus = false;
+    try {
+      final ents = await AddonEntitlements.load();
+      showCarePlus = !ents.hasCarePlus;
+    } catch (_) {}
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(showCarePlus ? '${l10n.sentToVet}\n${l10n.carePlusUpsell}' : l10n.sentToVet),
+        action: showCarePlus
+            ? SnackBarAction(
+                label: l10n.activateAddon,
+                onPressed: () async {
+                  try {
+                    final url = await ApiClient.instance.startAddonCheckout(addonCode: 'care_plus');
+                    await openExternalUrl(url);
+                  } catch (_) {}
+                },
+              )
+            : null,
+        duration: Duration(seconds: showCarePlus ? 6 : 3),
+      ),
+    );
     await _maybeAskReview(l10n);
     if (mounted) Navigator.pop(context);
   }
@@ -124,7 +167,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
+    final durations = _practiceDurations;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.heartRate)),
       body: Padding(
@@ -133,24 +176,30 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
           HeartRatePhase.ready => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (durations.length > 1) ...[
-                  Text(l10n.chooseDuration),
-                  const SizedBox(height: 8),
+                Text(l10n.chooseDuration),
+                const SizedBox(height: 8),
+                if (durations.isEmpty)
+                  Text(l10n.heartRateNoDurationConfigured)
+                else
                   Wrap(
                     spacing: 8,
                     children: durations.map((d) {
                       return ChoiceChip(
                         label: Text(l10n.durationSeconds(d)),
                         selected: selectedDuration == d,
-                        onSelected: (_) => setState(() => selectedDuration = d),
+                        onSelected: durations.length == 1
+                            ? null
+                            : (_) => setState(() => selectedDuration = d),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
-                ],
+                const SizedBox(height: 16),
                 Text(l10n.heartRateInstructionsDuration(selectedDuration)),
                 const SizedBox(height: 24),
-                FilledButton(onPressed: start, child: Text(l10n.start)),
+                FilledButton(
+                  onPressed: durations.isEmpty ? null : start,
+                  child: Text(l10n.start),
+                ),
               ],
             ),
           HeartRatePhase.running => GestureDetector(

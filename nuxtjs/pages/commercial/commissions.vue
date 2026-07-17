@@ -4,6 +4,10 @@
       :title="$t('commercial.commissions.title')"
       :subtitle="$t('commercial.commissions.subtitle')"
     />
+    <div v-if="!hasIban" class="pro-banner">
+      <span>{{ $t('commercial.commissions.ibanBanner') }}</span>
+      <NuxtLink to="/commercial/settings">{{ $t('commercial.commissions.ibanBannerLink') }}</NuxtLink>
+    </div>
     <div v-if="summary" class="pro-grid-kpi">
       <ProKpi :value="`${(summary.rateBps / 100).toFixed(0)}%`" :label="$t('commercial.commissions.rate')" />
       <ProKpi :value="formatCurrency(summary.monthEarnedCents)" :label="$t('commercial.commissions.month')" />
@@ -35,6 +39,24 @@
         </tbody>
       </ProTable>
     </ProCard>
+    <ProCard :title="$t('commercial.commissions.payoutsTitle')" class="pro-mt-lg">
+      <ProTable :empty="!(summary?.payoutHistory || []).length" :empty-title="$t('commercial.commissions.payoutsEmpty')">
+        <thead>
+          <tr>
+            <th>{{ $t('commercial.commissions.colPeriod') }}</th>
+            <th>{{ $t('commercial.commissions.colAmount') }}</th>
+            <th>{{ $t('commercial.commissions.colStatus') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="p in summary?.payoutHistory || []" :key="p.periodYm">
+            <td>{{ p.periodYm }}</td>
+            <td>{{ formatCurrency(p.amountCents) }}</td>
+            <td><ProBadge :variant="p.runStatus === 'paid' ? 'success' : 'warning'">{{ p.runStatus }}</ProBadge></td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
   </div>
 </template>
 
@@ -43,9 +65,31 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { formatCurrency } = useFormatters()
 const summary = ref<any>(null)
+const hasIban = ref(true)
 
 onMounted(async () => {
-  const res: any = await $fetch('/api/commercial/commissions')
-  summary.value = res.data ?? res
+  const [commRes, profileRes]: any[] = await Promise.all([
+    $fetch('/api/commercial/commissions'),
+    $fetch('/api/commercial/me/payout-profile').catch(() => null),
+  ])
+  summary.value = commRes.data ?? commRes
+  const profile = profileRes?.data ?? profileRes
+  hasIban.value = Boolean(profile?.iban)
 })
 </script>
+
+<style scoped>
+.pro-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--pf-vet-border);
+  background: var(--pf-vet-surface);
+}
+.pro-mt-lg {
+  margin-top: 1.25rem;
+}
+</style>

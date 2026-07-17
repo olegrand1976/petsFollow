@@ -54,6 +54,7 @@ func (a *API) listMyAddons(w http.ResponseWriter, r *http.Request) {
 
 type addonCheckoutReq struct {
 	Addon      string `json:"addon"`
+	AddonCode  string `json:"addonCode"`
 	SuccessURL string `json:"successUrl"`
 	CancelURL  string `json:"cancelUrl"`
 }
@@ -69,7 +70,11 @@ func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	code, err := billing.ParseAddonCode(body.Addon)
+	rawCode := body.Addon
+	if rawCode == "" {
+		rawCode = body.AddonCode
+	}
+	code, err := billing.ParseAddonCode(rawCode)
 	if err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_addon")
 		return

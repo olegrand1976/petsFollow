@@ -26,7 +26,7 @@ func TestAllAddonsPrices(t *testing.T) {
 	for _, a := range addons {
 		byCode[a.Code] = a.AmountCents
 	}
-	if byCode[billing.AddonFamily] != 4000 || byCode[billing.AddonCarePlus] != 1500 || byCode[billing.AddonHorse] != 3000 {
+	if byCode[billing.AddonFamily] != 5500 || byCode[billing.AddonCarePlus] != 1900 || byCode[billing.AddonHorse] != 3900 {
 		t.Fatalf("unexpected addon prices: %#v", byCode)
 	}
 }

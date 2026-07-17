@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -19,6 +21,7 @@ class _CareTabState extends State<CareTab> {
   List<Pet> pets = [];
   Map<String, List<CareReminder>> remindersByPet = {};
   bool loading = true;
+  AddonEntitlements entitlements = AddonEntitlements.empty();
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _CareTabState extends State<CareTab> {
   Future<void> load() async {
     setState(() => loading = true);
     try {
+      final ents = await AddonEntitlements.load();
       final data = await ApiClient.instance.getPets();
       final loadedPets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
       final map = <String, List<CareReminder>>{};
@@ -43,6 +47,7 @@ class _CareTabState extends State<CareTab> {
       }
       if (mounted) {
         setState(() {
+          entitlements = ents;
           pets = loadedPets;
           remindersByPet = map;
           loading = false;
@@ -110,18 +115,28 @@ class _CareTabState extends State<CareTab> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModal) {
-            final hasHorse = pets.any((p) => p.species == 'horse');
+            final selectedPet = pets.firstWhere(
+              (p) => p.id == selectedPetId,
+              orElse: () => pets.first,
+            );
+            final selectedIsHorse = selectedPet.species == 'horse';
             final types = <MapEntry<String, String>>[
               MapEntry('vaccination', l10n.careTypeVaccination),
               MapEntry('deworming', l10n.careTypeDeworming),
               MapEntry('vet_check', l10n.careTypeVetCheck),
               MapEntry('dental', l10n.careTypeDental),
-              if (hasHorse) ...[
+              if (entitlements.hasCarePlus) ...[
+                MapEntry('medication', l10n.careTypeMedication),
+                MapEntry('custom', l10n.careTypeCustom),
+              ],
+              if (selectedIsHorse && entitlements.hasHorse) ...[
                 MapEntry('farrier', l10n.careTypeFarrier),
                 MapEntry('fecal_egg', l10n.careTypeFecalEgg),
               ],
-              MapEntry('custom', l10n.careTypeCustom),
             ];
+            final typeValue = types.any((e) => e.key == selectedType)
+                ? selectedType
+                : types.first.key;
             return Padding(
               padding: EdgeInsets.only(
                 left: 16,
@@ -137,18 +152,26 @@ class _CareTabState extends State<CareTab> {
                     Text(l10n.careAddReminder, style: Theme.of(ctx).textTheme.titleMedium),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedPetId,
+                      value: selectedPet.id,
                       decoration: InputDecoration(labelText: l10n.careSelectPet),
                       items: pets
                           .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null) setModal(() => selectedPetId = v);
+                        if (v == null) return;
+                        setModal(() {
+                          selectedPetId = v;
+                          final pet = pets.firstWhere((p) => p.id == v);
+                          if (pet.species != 'horse' &&
+                              (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
+                            selectedType = 'vaccination';
+                          }
+                        });
                       },
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedType,
+                      value: typeValue,
                       items: types
                           .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                           .toList(),
@@ -190,6 +213,27 @@ class _CareTabState extends State<CareTab> {
     titleCtrl.dispose();
     if (created != true) return;
 
+    final pet = pets.firstWhere(
+      (p) => p.id == selectedPetId,
+      orElse: () => pets.first,
+    );
+    selectedPetId = pet.id;
+    if (pet.species != 'horse' &&
+        (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
+      selectedType = 'vaccination';
+    }
+
+    final needsCarePlus = selectedType == 'custom' || selectedType == 'medication';
+    final needsHorse = selectedType == 'farrier' || selectedType == 'fecal_egg';
+    if (needsCarePlus && !entitlements.hasCarePlus) {
+      await _offerAddonCheckout(context, 'care_plus', l10n.carePlusRequired);
+      return;
+    }
+    if (needsHorse && !entitlements.hasHorse) {
+      await _offerAddonCheckout(context, 'horse', l10n.horsePackRequired);
+      return;
+    }
+
     try {
       await ApiClient.instance.createCareReminder(
         selectedPetId,
@@ -198,10 +242,37 @@ class _CareTabState extends State<CareTab> {
         dueDays: dueDays,
       );
       await load();
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().contains('care_plus')
+          ? l10n.carePlusRequired
+          : e.toString().contains('horse_pack')
+              ? l10n.horsePackRequired
+              : l10n.errorGeneric('care');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
+  Future<void> _offerAddonCheckout(BuildContext context, String code, String message) async {
+    final l10n = AppLocalizations.of(context)!;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.activateAddon)),
+        ],
+      ),
+    );
+    if (go != true || !context.mounted) return;
+    try {
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
+      await openExternalUrl(url);
     } catch (_) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric('care'))),
+          SnackBar(content: Text(l10n.paymentResume)),
         );
       }
     }
@@ -223,6 +294,8 @@ class _CareTabState extends State<CareTab> {
         return l10n.careTypeFecalEgg;
       case 'custom':
         return r.title.isNotEmpty ? r.title : l10n.careTypeCustom;
+      case 'medication':
+        return r.title.isNotEmpty ? r.title : l10n.careTypeMedication;
       default:
         if (r.title.isNotEmpty) return r.title;
         return r.type ?? l10n.careTypeCustom;

@@ -170,12 +170,76 @@ class ApiClient {
     return res.data['data']['addons'] as List<dynamic>;
   }
 
+  Future<List<dynamic>> getMyAddons() async {
+    final res = await dio.get('/api/v1/billing/my-addons');
+    final data = res.data['data'];
+    if (data is List) return data;
+    if (data is Map && data['addons'] is List) return data['addons'] as List<dynamic>;
+    return const [];
+  }
+
   Future<String> startAddonCheckout({required String addonCode, String? petId}) async {
     final res = await dio.post('/api/v1/billing/addons/checkout', data: {
       'addonCode': addonCode,
       if (petId != null && petId.isNotEmpty) 'petId': petId,
     });
     return res.data['data']['checkoutUrl'] as String;
+  }
+
+  Future<List<dynamic>> getHorseContacts(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/horse-contacts');
+    return res.data['data'] as List<dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createHorseContact(
+    String petId, {
+    required String fullName,
+    String role = '',
+    String phone = '',
+    String email = '',
+    String notes = '',
+  }) async {
+    final res = await dio.post('/api/v1/pets/$petId/horse-contacts', data: {
+      'fullName': fullName,
+      'role': role,
+      'phone': phone,
+      'email': email,
+      'notes': notes,
+    });
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<void> deleteHorseContact(String id) async {
+    await dio.delete('/api/v1/horse-contacts/$id');
+  }
+
+  Future<List<dynamic>> getHorseCompetitions(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/horse-competitions');
+    return res.data['data'] as List<dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createHorseCompetition(
+    String petId, {
+    required String title,
+    required String eventDate,
+    String location = '',
+    String discipline = '',
+    String result = '',
+    String notes = '',
+  }) async {
+    final res = await dio.post('/api/v1/pets/$petId/horse-competitions', data: {
+      'title': title,
+      'eventDate': eventDate,
+      'location': location,
+      'discipline': discipline,
+      'result': result,
+      'notes': notes,
+    });
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<void> deleteHorseCompetition(String id) async {
+    await dio.delete('/api/v1/horse-competitions/$id');
   }
 
   Future<Map<String, dynamic>> startHeartRate(String petId, {int? durationSec}) async {
@@ -271,11 +335,15 @@ class ApiClient {
     String? title,
     String? type,
     int? dueDays,
+    String? notes,
+    int? recurrenceDays,
   }) async {
     final res = await dio.post('/api/v1/pets/$petId/care-reminders', data: {
       if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
       if (type != null && type.isNotEmpty) 'type': type,
       if (dueDays != null) 'dueDays': dueDays,
+      if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+      if (recurrenceDays != null) 'recurrenceDays': recurrenceDays,
     });
     return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
   }

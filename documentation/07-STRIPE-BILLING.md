@@ -4,11 +4,13 @@ Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement aut
 
 ## Offres
 
+> Politique économique complète : [`17-POLITIQUE-TARIFAIRE.md`](./17-POLITIQUE-TARIFAIRE.md).
+
 | Plan | Code | Prix | Durée |
 |------|------|------|-------|
-| 25 € / an | `annual` | 2500 ct | 1 an |
-| 60 € / 3 ans | `triennial` | 6000 ct | 3 ans (recommandé) |
-| 75 € / 5 ans | `quinquennial` | 7500 ct | 5 ans |
+| 29 € / an | `annual` | 2900 ct | 1 an |
+| 75 € / 3 ans | `triennial` | 7500 ct | 3 ans (recommandé) |
+| 115 € / 5 ans | `quinquennial` | 11500 ct | 5 ans |
 
 Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscription`, interval 1/3/5 ans).
 
@@ -122,12 +124,30 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 
 | Pack | Code | Prix | Scope |
 |------|------|------|-------|
-| **Family pack** | `family` | 40 € / an | owner (multi-animaux) |
-| **Care+** | `care_plus` | 15 € / an | par animal |
-| **Horse pack** | `horse` | 30 € / an | par animal |
+| **Family pack** | `family` | 55 € / an | owner (foyer ≤3 animaux) |
+| **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso) |
+| **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
 
-API : `GET /billing/addons`, `POST /billing/addons/checkout` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
+API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
 
 Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
 
-Commission **commercial** : **miroir** de la commission du véto assigné (même `rate_bps` / `commission_cents` à l’activation) + **15 %** sur addons Family / Care+ / Horse.
+Commission **commercial** : **12 % fixe** sur abonnements et addons (taux éditable admin). Le véto ne commissionne pas les addons.
+
+### Mise à jour Prices Stripe (ops)
+
+Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les secrets :
+
+| Secret Manager | Variable |
+|----------------|----------|
+| `petsfollow-stripe-price-annual-onetime` | `STRIPE_PRICE_ANNUAL_ONETIME` |
+| `petsfollow-stripe-price-triennial-onetime` | `STRIPE_PRICE_TRIENNIAL_ONETIME` |
+| `petsfollow-stripe-price-quinquennial-onetime` | `STRIPE_PRICE_QUINQUENNIAL_ONETIME` |
+| `petsfollow-stripe-price-annual-sub` | `STRIPE_PRICE_ANNUAL_SUB` |
+| `petsfollow-stripe-price-triennial-sub` | `STRIPE_PRICE_TRIENNIAL_SUB` |
+| `petsfollow-stripe-price-quinquennial-sub` | `STRIPE_PRICE_QUINQUENNIAL_SUB` |
+| `petsfollow-stripe-price-addon-family` | `STRIPE_PRICE_ADDON_FAMILY` |
+| `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
+| `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
+
+Montants attendus : 29 / 75 / 115 € (abos) ; 55 / 19 / 39 € (addons).

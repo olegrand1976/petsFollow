@@ -60,5 +60,5 @@ Voir [documentation/README.md](documentation/README.md)
 - Création animal (client)
 - Suivi clients + animaux (véto)
 - Messagerie interne + mode indisponible
-- Relevé cardiaque 60s (valider / recommencer)
+- Relevé cardiaque (durée configurée par le véto : 15/30/60 s)
 - Historique timeline

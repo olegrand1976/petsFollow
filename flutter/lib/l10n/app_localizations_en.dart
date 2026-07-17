@@ -261,10 +261,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '€60 every 3 years, auto-renewed';
+  String get planTriennialSub => '€75 every 3 years, auto-renewed';
 
   @override
-  String get planQuinquennialSub => '€75 every 5 years, auto-renewed';
+  String get planQuinquennialSub => '€115 every 5 years, auto-renewed';
 
   @override
   String planOneTime(String price) {
@@ -272,12 +272,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get heartRateInstructions => 'Tap on each beat for 60 seconds.';
+  String get heartRateInstructions =>
+      'Tap on each beat for the duration set by your veterinarian.';
 
   @override
   String heartRateInstructionsDuration(int seconds) {
     return 'Tap on each beat for $seconds seconds.';
   }
+
+  @override
+  String get heartRateNoDurationConfigured =>
+      'No measurement duration is configured for this practice. Contact your veterinarian.';
 
   @override
   String get start => 'Start';
@@ -443,11 +448,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewAskNo => 'Later';
 
   @override
-  String get carePlusUpsell =>
-      'Care+ — personalized medication and care reminders';
+  String get carePlusUpsell => 'Care+ — medications and personalized reminders';
 
   @override
-  String get familyPackHint => 'Family pack — multiple pets, one subscription';
+  String get carePlusRequired =>
+      'Care+ is required for medications and custom reminders.';
+
+  @override
+  String get horsePackRequired =>
+      'The Horse pack is required for farrier reminders, contacts and competitions.';
+
+  @override
+  String get activateAddon => 'Activate';
+
+  @override
+  String get careTypeMedication => 'Medication';
+
+  @override
+  String get horseAddContact => 'Add a contact';
+
+  @override
+  String get horseAddCompetition => 'Add a competition';
+
+  @override
+  String get horseContactName => 'Name';
+
+  @override
+  String get horseContactRole => 'Role';
+
+  @override
+  String get horseCompetitionTitle => 'Event';
+
+  @override
+  String get horseCompetitionDate => 'Date (YYYY-MM-DD)';
+
+  @override
+  String get familyPackHint =>
+      'Family pack — household benefits for up to 3 pets';
 
   @override
   String get discoveryMarkDone => 'Mission complete';
@@ -563,15 +600,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horseContactsSoon =>
-      'Manage your professional contacts — coming soon.';
+      'Activate the Horse pack to manage professional contacts.';
 
   @override
   String get horseCompetitionsSoon =>
-      'Competition calendar and results — coming soon.';
+      'Activate the Horse pack for the competition calendar.';
 
   @override
   String get horsePackUpsell =>
-      'Horse pack — farrier, fecal egg count and competition tracking';
+      'Horse pack — farrier, fecal egg count, contacts and competitions';
 
   @override
   String get careTypeFarrier => 'Farrier';

@@ -56,6 +56,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := st.EnsureDefaultCommissionTiers(ctx); err != nil {
 		return err
 	}
+	if err := st.EnsureCommissionSettings(ctx); err != nil {
+		return err
+	}
 	if err := st.AccrueAllActiveEntitlements(ctx); err != nil {
 		return err
 	}
@@ -76,10 +79,11 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	_, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.addon_entitlements, sales.prospects,
 		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
+		billing.commission_settings,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
-		discovery.progress, visits.visits, care.reminders,
+		discovery.progress, visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err

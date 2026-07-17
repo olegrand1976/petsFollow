@@ -10,7 +10,7 @@
 1. Création animal (client — Flutter)
 2. Suivi clients + animaux (véto — Nuxt Pro)
 3. Messagerie interne + mode indisponible véto
-4. Relevé cardiaque 60s — Valider envoi véto / Recommencer (client)
+4. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client)
 5. Timeline historique (messages, relevés validés, événements)
 
 ## Livré au-delà du MVP initial (web Pro)

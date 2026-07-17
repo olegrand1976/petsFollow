@@ -565,13 +565,13 @@ abstract class AppLocalizations {
   /// No description provided for @planTriennialSub.
   ///
   /// In fr, this message translates to:
-  /// **'60 € tous les 3 ans, renouvelé automatiquement'**
+  /// **'75 € tous les 3 ans, renouvelé automatiquement'**
   String get planTriennialSub;
 
   /// No description provided for @planQuinquennialSub.
   ///
   /// In fr, this message translates to:
-  /// **'75 € tous les 5 ans, renouvelé automatiquement'**
+  /// **'115 € tous les 5 ans, renouvelé automatiquement'**
   String get planQuinquennialSub;
 
   /// No description provided for @planOneTime.
@@ -583,7 +583,7 @@ abstract class AppLocalizations {
   /// No description provided for @heartRateInstructions.
   ///
   /// In fr, this message translates to:
-  /// **'Tapotez à chaque battement pendant 60 secondes.'**
+  /// **'Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.'**
   String get heartRateInstructions;
 
   /// No description provided for @heartRateInstructionsDuration.
@@ -591,6 +591,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tapotez à chaque battement pendant {seconds} secondes.'**
   String heartRateInstructionsDuration(int seconds);
+
+  /// No description provided for @heartRateNoDurationConfigured.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.'**
+  String get heartRateNoDurationConfigured;
 
   /// No description provided for @start.
   ///
@@ -895,13 +901,73 @@ abstract class AppLocalizations {
   /// No description provided for @carePlusUpsell.
   ///
   /// In fr, this message translates to:
-  /// **'Soins+ — rappels personnalisés pour médicaments et soins'**
+  /// **'Care+ — médicaments et rappels personnalisés'**
   String get carePlusUpsell;
+
+  /// No description provided for @carePlusRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Care+ est requis pour les médicaments et rappels personnalisés.'**
+  String get carePlusRequired;
+
+  /// No description provided for @horsePackRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le Pack Cheval est requis pour les rappels maréchal, contacts et compétitions.'**
+  String get horsePackRequired;
+
+  /// No description provided for @activateAddon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer'**
+  String get activateAddon;
+
+  /// No description provided for @careTypeMedication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Médicament'**
+  String get careTypeMedication;
+
+  /// No description provided for @horseAddContact.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un contact'**
+  String get horseAddContact;
+
+  /// No description provided for @horseAddCompetition.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une compétition'**
+  String get horseAddCompetition;
+
+  /// No description provided for @horseContactName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get horseContactName;
+
+  /// No description provided for @horseContactRole.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rôle'**
+  String get horseContactRole;
+
+  /// No description provided for @horseCompetitionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Événement'**
+  String get horseCompetitionTitle;
+
+  /// No description provided for @horseCompetitionDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date (AAAA-MM-JJ)'**
+  String get horseCompetitionDate;
 
   /// No description provided for @familyPackHint.
   ///
   /// In fr, this message translates to:
-  /// **'Pack famille — plusieurs animaux, un seul abonnement'**
+  /// **'Pack famille — avantages foyer jusqu\'à 3 animaux'**
   String get familyPackHint;
 
   /// No description provided for @discoveryMarkDone.
@@ -1117,19 +1183,19 @@ abstract class AppLocalizations {
   /// No description provided for @horseContactsSoon.
   ///
   /// In fr, this message translates to:
-  /// **'Gérez vos contacts professionnels — bientôt disponible.'**
+  /// **'Activez le Pack Cheval pour gérer vos contacts professionnels.'**
   String get horseContactsSoon;
 
   /// No description provided for @horseCompetitionsSoon.
   ///
   /// In fr, this message translates to:
-  /// **'Calendrier et résultats de compétitions — bientôt disponible.'**
+  /// **'Activez le Pack Cheval pour le calendrier de compétitions.'**
   String get horseCompetitionsSoon;
 
   /// No description provided for @horsePackUpsell.
   ///
   /// In fr, this message translates to:
-  /// **'Pack Cheval — rappels maréchal, coproscopie et suivi compétitions'**
+  /// **'Pack Cheval — maréchal, coproscopie, contacts et compétitions'**
   String get horsePackUpsell;
 
   /// No description provided for @careTypeFarrier.
