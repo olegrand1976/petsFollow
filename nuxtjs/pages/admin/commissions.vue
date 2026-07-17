@@ -212,6 +212,7 @@ async function loadPeriod() {
 }
 
 async function closePeriod() {
+  if (!confirm(t('admin.commissions.confirmClose', { period: periodYm.value }))) return
   closing.value = true
   error.value = ''
   try {
@@ -225,6 +226,7 @@ async function closePeriod() {
 }
 
 async function markPaid() {
+  if (!confirm(t('admin.commissions.confirmMarkPaid', { period: periodYm.value }))) return
   marking.value = true
   error.value = ''
   try {

@@ -1,5 +1,6 @@
 const SKIP_PATHS = new Set([
   '/',
+  '/produits',
   '/login',
   '/register',
   '/register/sent',

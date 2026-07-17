@@ -4,6 +4,7 @@
       <PetsFollowLogo variant="default" />
       <nav class="pro-landing__nav">
         <ProLocaleSelect />
+        <NuxtLink to="/produits" class="pro-landing__nav-link">{{ $t('index.productsLink') }}</NuxtLink>
         <NuxtLink to="/login" class="pro-landing__nav-link">{{ $t('index.login') }}</NuxtLink>
         <NuxtLink to="/register">
           <ProButton test-id="landing-cta">{{ $t('index.registerCta') }}</ProButton>
@@ -53,6 +54,23 @@
       </div>
     </section>
 
+    <section id="produits" class="pro-landing__products">
+      <h2>{{ $t('index.productsTitle') }}</h2>
+      <p class="pro-landing__products-lead">{{ $t('index.productsLead') }}</p>
+      <div class="pro-landing__products-grid">
+        <article v-for="item in productHighlights" :key="item.key" class="pro-landing__feature">
+          <strong class="pro-landing__products-price">{{ $t(`index.productHighlights.${item.key}.price`) }}</strong>
+          <h3>{{ $t(`index.productHighlights.${item.key}.title`) }}</h3>
+          <p>{{ $t(`index.productHighlights.${item.key}.text`) }}</p>
+        </article>
+      </div>
+      <div class="pro-landing__products-actions">
+        <NuxtLink to="/produits">
+          <ProButton test-id="landing-products-cta">{{ $t('index.productsCta') }}</ProButton>
+        </NuxtLink>
+      </div>
+    </section>
+
     <section class="pro-landing__cta">
       <div class="pro-landing__cta-inner">
         <h2>{{ $t('index.ctaTitle') }}</h2>
@@ -89,5 +107,11 @@ const features = [
   { key: 'free', icon: 'card_giftcard' },
   { key: 'security', icon: 'lock' },
   { key: 'onboarding', icon: 'bolt' },
+]
+
+const productHighlights = [
+  { key: 'plans' },
+  { key: 'family' },
+  { key: 'careHorse' },
 ]
 </script>

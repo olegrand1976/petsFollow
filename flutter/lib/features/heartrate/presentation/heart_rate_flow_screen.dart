@@ -59,25 +59,38 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
       );
       return;
     }
-    final sess = await ApiClient.instance.startHeartRate(
-      widget.petId,
-      durationSec: selectedDuration,
-    );
-    setState(() {
-      sessionId = sess['id'] as String?;
-      phase = HeartRatePhase.running;
-      secondsLeft = selectedDuration;
-      taps = 0;
-    });
-    timer?.cancel();
-    timer = Timer.periodic(const Duration(seconds: 1), (t) async {
-      if (secondsLeft <= 1) {
-        t.cancel();
-        await finish();
-      } else {
-        setState(() => secondsLeft--);
-      }
-    });
+    try {
+      final sess = await ApiClient.instance.startHeartRate(
+        widget.petId,
+        durationSec: selectedDuration,
+      );
+      if (!mounted) return;
+      setState(() {
+        sessionId = sess['id'] as String?;
+        phase = HeartRatePhase.running;
+        secondsLeft = selectedDuration;
+        taps = 0;
+      });
+      timer?.cancel();
+      timer = Timer.periodic(const Duration(seconds: 1), (t) async {
+        if (!mounted) {
+          t.cancel();
+          return;
+        }
+        if (secondsLeft <= 1) {
+          t.cancel();
+          await finish();
+        } else {
+          setState(() => secondsLeft--);
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+    }
   }
 
   void onTap() {
@@ -89,16 +102,34 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
 
   Future<void> finish() async {
     if (sessionId == null) return;
-    final data = await ApiClient.instance.completeHeartRate(sessionId!, taps);
-    setState(() {
-      phase = HeartRatePhase.review;
-      result = data;
-    });
+    try {
+      final data = await ApiClient.instance.completeHeartRate(sessionId!, taps);
+      if (!mounted) return;
+      setState(() {
+        phase = HeartRatePhase.review;
+        result = data;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+    }
   }
 
   Future<void> validate() async {
     if (sessionId == null) return;
-    await ApiClient.instance.validateHeartRate(sessionId!);
+    try {
+      await ApiClient.instance.validateHeartRate(sessionId!);
+    } catch (_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+      return;
+    }
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     var showCarePlus = false;
@@ -148,9 +179,14 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   }
 
   Future<void> restart() async {
-    if (sessionId != null) {
-      await ApiClient.instance.cancelHeartRate(sessionId!);
+    timer?.cancel();
+    final id = sessionId;
+    if (id != null) {
+      try {
+        await ApiClient.instance.cancelHeartRate(id);
+      } catch (_) {}
     }
+    if (!mounted) return;
     setState(() {
       phase = HeartRatePhase.ready;
       sessionId = null;
@@ -161,6 +197,14 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   @override
   void dispose() {
     timer?.cancel();
+    final id = sessionId;
+    if (id != null) {
+      unawaited(() async {
+        try {
+          await ApiClient.instance.cancelHeartRate(id);
+        } catch (_) {}
+      }());
+    }
     super.dispose();
   }
 

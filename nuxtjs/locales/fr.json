@@ -18,7 +18,8 @@
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissions",
     "commercialSettings": "Profil paiement",
-    "commercialPitch": "Présentation"
+    "commercialPitch": "Présentation",
+    "products": "Produits"
   },
   "auth": {
     "login": {
@@ -262,7 +263,8 @@
         "Addons Family / Care+ / Horse avec privilèges réels",
         "Messages et rappels de soins"
       ],
-      "commercialMirror": "Commercial : 12 % fixe sur abonnements et addons (~9 € sur le triennial 75 €)."
+      "commercialMirror": "Commercial : 12 % fixe sur abonnements et addons (~9 € sur le triennial 75 €).",
+      "productsLink": "Voir la grille produits complète (support présentation)"
     }
   },
   "settings": {
@@ -607,6 +609,8 @@
       "period": "Mois",
       "close": "Clôturer le mois",
       "markPaid": "Marquer payé",
+      "confirmClose": "Clôturer la période {period} ? Les lignes de paie seront figées.",
+      "confirmMarkPaid": "Marquer la période {period} comme payée ?",
       "empty": "Aucune commission sur cette période",
       "colVet": "Vétérinaire",
       "colClients": "Clients",
@@ -628,6 +632,9 @@
       "period": "Mois",
       "close": "Clôturer (à payer)",
       "markPaid": "Marquer payé",
+      "confirmClose": "Clôturer la période {period} et passer en « à payer » ?",
+      "confirmMarkPaid": "Marquer la période {period} comme payée ?",
+      "confirmMarkPaidMissingIban": "Attention : au moins un IBAN est manquant. Marquer quand même {period} comme payée ?",
       "empty": "Aucune ligne pour cet onglet",
       "recapGlobal": "Total affiché : {amount} — {count} commercial(aux)",
       "colCommercial": "Commercial",
@@ -801,7 +808,135 @@
     "ctaText": "L'application est {free}. Vos clients paient uniquement l'abonnement de suivi cardiaque de leurs animaux.",
     "ctaFree": "entièrement gratuite pour les vétérinaires",
     "ctaButton": "Commencer l'inscription",
+    "productsLink": "Produits",
+    "productsTitle": "Ce que vos clients souscrivent",
+    "productsLead": "Grille claire pour présenter le suivi prescrit par le cabinet — sans boîtier, à partir d'environ 2 € / mois par animal.",
+    "productsCta": "Voir toutes les offres (support présentation)",
+    "productHighlights": {
+      "plans": {
+        "price": "29 / 75 / 115 €",
+        "title": "Abonnements par animal",
+        "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés cardiaques, messagerie et rappels de soins."
+      },
+      "family": {
+        "price": "55 € / an",
+        "title": "Pack Famille",
+        "text": "Option foyer jusqu'à 3 animaux — complément des abonnements animal, pas un substitut."
+      },
+      "careHorse": {
+        "price": "19 € · 39 €",
+        "title": "Care+ et Horse",
+        "text": "Care+ pour médicaments et carnet enrichi ; Horse pour le suivi équine (maréchal, contacts, compétitions)."
+      }
+    },
     "footer": "© {year} petsFollow — Suivi cardiaque vétérinaire"
+  },
+  "products": {
+    "seoTitle": "petsFollow — Offres & produits",
+    "seoDescription": "Grille des abonnements et options petsFollow pour présentation cabinet vétérinaire.",
+    "backHome": "Accueil",
+    "print": "Imprimer / PDF",
+    "badge": "Support de présentation cabinet",
+    "title": "Offres petsFollow",
+    "lead": "Présentez à vos clients un suivi cardiaque prescrit par le vétérinaire, sans collier ni boîtier — simple, transparent, adapté au foyer.",
+    "positioning": "petsFollow Pro est gratuit pour le cabinet. Seul le propriétaire paie le suivi de ses animaux (abonnement par animal + options foyer).",
+    "includedTitle": "Inclus dans chaque abonnement animal",
+    "includedLead": "Quel que soit le plan choisi (1, 3 ou 5 ans), le propriétaire dispose de :",
+    "included": [
+      "Relevés de fréquence cardiaque guidés depuis l'app mobile",
+      "Envoi et validation des sessions par le cabinet",
+      "Messagerie sécurisée avec le vétérinaire",
+      "Dossier patient partagé (historique relevés et échanges)",
+      "Rappels de soins standards (vaccin, vermifuge, contrôle, dentaire)"
+    ],
+    "plansTitle": "Abonnements par animal",
+    "plansLead": "Un abonnement par animal suivi. Prix TTC indicatifs — renouvellement possible en paiement unique ou abonnement Stripe.",
+    "recommended": "Recommandé",
+    "plansTip": "Conseil présentation : privilégiez le Triennial (75 € / 3 ans ≈ 2,1 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
+    "plans": {
+      "annual": {
+        "name": "Annual",
+        "price": "29 €",
+        "period": "par an",
+        "monthly": "≈ 2,4 € / mois",
+        "benefits": [
+          "Entrée de gamme — idéal pour démarrer un animal",
+          "Tous les bénéfices du suivi animal inclus",
+          "Engagement d'un an"
+        ]
+      },
+      "triennial": {
+        "name": "Triennial",
+        "price": "75 €",
+        "period": "pour 3 ans",
+        "monthly": "≈ 2,1 € / mois",
+        "benefits": [
+          "Cœur d'offre — −14 % vs 3× Annual",
+          "Suivi continu sur 3 ans",
+          "Meilleur argument prix pour le foyer"
+        ]
+      },
+      "quinquennial": {
+        "name": "Quinquennial",
+        "price": "115 €",
+        "period": "pour 5 ans",
+        "monthly": "≈ 1,9 € / mois",
+        "benefits": [
+          "Engagement long terme — −21 % vs 5× Annual",
+          "Idéal animaux chroniques / seniors",
+          "Prix mensuel le plus bas"
+        ]
+      }
+    },
+    "addonsTitle": "Options foyer (compte propriétaire)",
+    "addonsLead": "Addons achetés une fois pour le compte — ils enrichissent l'expérience de tous les animaux du foyer selon les règles ci-dessous.",
+    "addonsTip": "Family ne remplace jamais l'abonnement animal : chaque animal reste abonné. Horse ne se propose que si le foyer a au moins un cheval.",
+    "addons": {
+      "family": {
+        "name": "Family",
+        "price": "55 € / an",
+        "tagline": "Forfait foyer — jusqu'à 3 animaux",
+        "scope": "Compte",
+        "benefits": [
+          "Option foyer disponible à l'achat dans l'app",
+          "Complément des abonnements animal (pas un substitut)",
+          "Règle produit : jusqu'à 3 animaux (pas d'abo illimité)"
+        ]
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "19 € / an",
+        "tagline": "Carnet de soins enrichi",
+        "scope": "Compte",
+        "benefits": [
+          "Rappels médicaments",
+          "Rappels personnalisés"
+        ]
+      },
+      "horse": {
+        "name": "Horse",
+        "price": "39 € / an",
+        "tagline": "Pack équine",
+        "scope": "Compte",
+        "benefits": [
+          "Rappels maréchal et coproscopie",
+          "Carnet maréchal",
+          "Contacts professionnels (maréchal, etc.)",
+          "Suivi des compétitions",
+          "Proposé uniquement si le foyer a ≥ 1 cheval"
+        ]
+      }
+    },
+    "summaryTitle": "Récapitulatif grille",
+    "summary": {
+      "annual": { "name": "Annual", "price": "29 € / an", "role": "Abonnement animal — entrée" },
+      "triennial": { "name": "Triennial", "price": "75 € / 3 ans", "role": "Abonnement animal — recommandé" },
+      "quinquennial": { "name": "Quinquennial", "price": "115 € / 5 ans", "role": "Abonnement animal — long terme" },
+      "family": { "name": "Family", "price": "55 € / an", "role": "Addon foyer ≤ 3 animaux" },
+      "carePlus": { "name": "Care+", "price": "19 € / an", "role": "Addon soins / médicaments" },
+      "horse": { "name": "Horse", "price": "39 € / an", "role": "Addon pack équine" }
+    },
+    "footer": "petsFollow — suivi prescrit par le vétérinaire, sans hardware"
   },
   "components": {
     "topbar": {
@@ -870,6 +1005,9 @@
     "body_required": "Corps du message requis",
     "profile_fields_required": "Champs obligatoires manquants",
     "invalid_plan": "Formule invalide",
+    "invalid_iban": "IBAN invalide",
+    "invalid_bic": "BIC invalide (8 ou 11 caractères)",
+    "invalid_account_holder": "Titulaire de compte invalide",
     "invalid_billing_mode": "Mode de facturation invalide",
     "no_pending_payment": "Aucun paiement en attente",
     "not_a_subscription": "Ce n'est pas un abonnement",

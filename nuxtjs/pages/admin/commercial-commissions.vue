@@ -217,6 +217,7 @@ async function loadPeriod(opts?: { syncTab?: boolean }) {
 }
 
 async function closePeriod() {
+  if (!confirm(t('admin.commercialCommissions.confirmClose', { period: periodYm.value }))) return
   closing.value = true
   error.value = ''
   try {
@@ -231,6 +232,11 @@ async function closePeriod() {
 }
 
 async function markPaid() {
+  const missingIban = lines.value.some((l: any) => !l.payoutIban)
+  const msg = missingIban
+    ? t('admin.commercialCommissions.confirmMarkPaidMissingIban', { period: periodYm.value })
+    : t('admin.commercialCommissions.confirmMarkPaid', { period: periodYm.value })
+  if (!confirm(msg)) return
   marking.value = true
   error.value = ''
   try {

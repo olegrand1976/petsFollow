@@ -18,7 +18,8 @@
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissies",
     "commercialSettings": "Betalingsprofiel",
-    "commercialPitch": "Presentatie"
+    "commercialPitch": "Presentatie",
+    "products": "Producten"
   },
   "auth": {
     "login": {
@@ -465,6 +466,8 @@
       "period": "Maand",
       "close": "Maand afsluiten",
       "markPaid": "Als betaald markeren",
+      "confirmClose": "Periode {period} afsluiten? Uitbetalingslijnen worden bevroren.",
+      "confirmMarkPaid": "Periode {period} als betaald markeren?",
       "empty": "Geen commissies in deze periode",
       "colVet": "Dierenarts",
       "colClients": "Klanten",
@@ -486,6 +489,9 @@
       "period": "Maand",
       "close": "Afsluiten (te betalen)",
       "markPaid": "Als betaald markeren",
+      "confirmClose": "Periode {period} afsluiten en naar “te betalen” verplaatsen?",
+      "confirmMarkPaid": "Periode {period} als betaald markeren?",
+      "confirmMarkPaidMissingIban": "Let op: minstens één IBAN ontbreekt. {period} toch als betaald markeren?",
       "empty": "Geen regels voor dit tabblad",
       "recapGlobal": "Getoond totaal: {amount} — {count} commercial(s)",
       "colCommercial": "Commercial",
@@ -688,7 +694,135 @@
     "ctaText": "De app is {free}. Uw klanten betalen alleen het hartmonitoring-abonnement voor hun dieren.",
     "ctaFree": "volledig gratis voor dierenartsen",
     "ctaButton": "Registratie starten",
+    "productsLink": "Producten",
+    "productsTitle": "Waarvoor uw cliënten intekenen",
+    "productsLead": "Duidelijke grid om voorgeschreven monitoring voor te stellen — zonder sensor, vanaf ongeveer €2 / maand per dier.",
+    "productsCta": "Alle aanbiedingen bekijken (presentatie)",
+    "productHighlights": {
+      "plans": {
+        "price": "€29 / €75 / €115",
+        "title": "Abonnementen per dier",
+        "text": "Annual, Triennial (aanbevolen) of Quinquennial — hartmetingen, berichten en zorgherinneringen."
+      },
+      "family": {
+        "price": "€55 / jaar",
+        "title": "Familiepakket",
+        "text": "Huishoudoptie tot 3 dieren — vult dierabonnementen aan, vervangt ze niet."
+      },
+      "careHorse": {
+        "price": "€19 · €39",
+        "title": "Care+ en Horse",
+        "text": "Care+ voor medicatie en uitgebreid zorgboek; Horse voor paardenopvolging (hoefsmid, contacten, wedstrijden)."
+      }
+    },
     "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
+  },
+  "products": {
+    "seoTitle": "petsFollow — Aanbiedingen & producten",
+    "seoDescription": "petsFollow abonnementen- en add-onraster voor presentaties in de dierenartspraktijk.",
+    "backHome": "Home",
+    "print": "Afdrukken / PDF",
+    "badge": "Presentatieondersteuning praktijk",
+    "title": "petsFollow-aanbiedingen",
+    "lead": "Stel cliënten een door de dierenarts voorgeschreven hartopvolging voor — zonder halsband of apparaat, met transparante prijzen.",
+    "positioning": "petsFollow Pro is gratis voor de praktijk. Alleen de eigenaar betaalt de opvolging (abonnement per dier + huishoudopties).",
+    "includedTitle": "Inbegrepen in elk dierabonnement",
+    "includedLead": "Ongeacht het plan (1, 3 of 5 jaar) krijgt de eigenaar:",
+    "included": [
+      "Begeleide hartmetingen via de mobiele app",
+      "Sessies verzonden naar en gevalideerd door de praktijk",
+      "Veilige berichten met de dierenarts",
+      "Gedeeld patiëntendossier (geschiedenis metingen en gesprekken)",
+      "Standaard zorgherinneringen (vaccin, ontworming, controle, gebit)"
+    ],
+    "plansTitle": "Abonnementen per dier",
+    "plansLead": "Één abonnement per opgevolgd dier. Indicatieve prijzen — eenmalig of Stripe-abonnement.",
+    "recommended": "Aanbevolen",
+    "plansTip": "Presentatietip: start met Triennial (€75 / 3 jaar ≈ €2,1/maand) — beste balans prijs / engagement voor het gezin.",
+    "plans": {
+      "annual": {
+        "name": "Annual",
+        "price": "€29",
+        "period": "per jaar",
+        "monthly": "≈ €2,4 / maand",
+        "benefits": [
+          "Instapplan — ideaal om één dier te starten",
+          "Alle kernvoordelen van dieropvolging inbegrepen",
+          "Verbintenis van één jaar"
+        ]
+      },
+      "triennial": {
+        "name": "Triennial",
+        "price": "€75",
+        "period": "voor 3 jaar",
+        "monthly": "≈ €2,1 / maand",
+        "benefits": [
+          "Kernaanbod — 14% korting t.o.v. 3× Annual",
+          "Continue opvolging gedurende 3 jaar",
+          "Sterkste prijsargument voor het gezin"
+        ]
+      },
+      "quinquennial": {
+        "name": "Quinquennial",
+        "price": "€115",
+        "period": "voor 5 jaar",
+        "monthly": "≈ €1,9 / maand",
+        "benefits": [
+          "Lange termijn — 21% korting t.o.v. 5× Annual",
+          "Ideaal voor chronische / senior dieren",
+          "Laagste maandelijkse equivalent"
+        ]
+      }
+    },
+    "addonsTitle": "Huishoudopties (eigenaarsaccount)",
+    "addonsLead": "Add-ons eenmaal gekocht voor het account — ze verrijken de ervaring voor dieren in het huishouden volgens de regels hieronder.",
+    "addonsTip": "Family vervangt nooit een dierabonnement: elk dier blijft geabonneerd. Horse wordt alleen aangeboden als het huishouden minstens één paard heeft.",
+    "addons": {
+      "family": {
+        "name": "Family",
+        "price": "€55 / jaar",
+        "tagline": "Gezinspakket — tot 3 dieren",
+        "scope": "Account",
+        "benefits": [
+          "Huishoudoptie beschikbaar in de app",
+          "Vult dierabonnementen aan (geen substitutie)",
+          "Productregel: tot 3 dieren (geen onbeperkt abo)"
+        ]
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "€19 / jaar",
+        "tagline": "Uitgebreid zorgboek",
+        "scope": "Account",
+        "benefits": [
+          "Medicatieherinneringen",
+          "Persoonlijke herinneringen"
+        ]
+      },
+      "horse": {
+        "name": "Horse",
+        "price": "€39 / jaar",
+        "tagline": "Paardenpakket",
+        "scope": "Account",
+        "benefits": [
+          "Herinneringen hoefsmid en mestonderzoek",
+          "Hoefsmitlogboek",
+          "Professionele contacten (hoefsmid, enz.)",
+          "Wedstrijdopvolging",
+          "Enkel als het huishouden ≥ 1 paard heeft"
+        ]
+      }
+    },
+    "summaryTitle": "Overzicht prijzen",
+    "summary": {
+      "annual": { "name": "Annual", "price": "€29 / jaar", "role": "Dierabonnement — instap" },
+      "triennial": { "name": "Triennial", "price": "€75 / 3 jaar", "role": "Dierabonnement — aanbevolen" },
+      "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 jaar", "role": "Dierabonnement — lange termijn" },
+      "family": { "name": "Family", "price": "€55 / jaar", "role": "Huishoud-addon ≤ 3 dieren" },
+      "carePlus": { "name": "Care+", "price": "€19 / jaar", "role": "Addon zorg / medicatie" },
+      "horse": { "name": "Horse", "price": "€39 / jaar", "role": "Addon paardenpakket" }
+    },
+    "footer": "petsFollow — voorgeschreven door de dierenarts, zonder hardware"
   },
   "components": {
     "topbar": {
@@ -757,6 +891,9 @@
     "body_required": "Berichttekst vereist",
     "profile_fields_required": "Verplichte velden ontbreken",
     "invalid_plan": "Ongeldig abonnement",
+    "invalid_iban": "Ongeldig IBAN",
+    "invalid_bic": "Ongeldige BIC (8 of 11 tekens)",
+    "invalid_account_holder": "Ongeldige rekeninghouder",
     "invalid_billing_mode": "Ongeldige facturatiemodus",
     "no_pending_payment": "Geen betaling in afwachting",
     "not_a_subscription": "Dit is geen abonnement",
@@ -919,7 +1056,8 @@
         "Family / Care+ / Horse addons met echte privileges",
         "Berichten en zorgherinneringen"
       ],
-      "commercialMirror": "Commercial: vast 12% op abonnementen en addons (~9 € op het triennial abonnement van 75 €)."
+      "commercialMirror": "Commercial: vast 12% op abonnementen en addons (~9 € op het triennial abonnement van 75 €).",
+      "productsLink": "Volledige productgrid openen (presentatie)"
     }
   }
 }

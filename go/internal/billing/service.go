@@ -296,8 +296,9 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID); err != nil {
 		return err
 	}
+	// Return error so Stripe retries; Activate + Accrue are idempotent (ON CONFLICT).
 	if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
-		fmt.Printf("commercial addon accrual failed for addon %s: %v\n", addonID, err)
+		return fmt.Errorf("commercial addon accrual: %w", err)
 	}
 	if AddonCode(addon.AddonCode) == AddonHorse {
 		if err := s.store.SeedHorsePackReminders(ctx, addon.OwnerUserID); err != nil {
@@ -359,9 +360,9 @@ func (s *Service) handleCheckoutCompleted(ctx context.Context, event StripeEvent
 		return err
 	}
 	_ = s.store.EnsureDefaultCommissionTiers(ctx)
-	// Accrual must not fail the Stripe webhook once entitlement is active.
+	// Return error so Stripe retries; Activate + Accrue are idempotent (ON CONFLICT).
 	if err := s.store.AccrueCommissionForPetActivation(ctx, petID); err != nil {
-		fmt.Printf("commission accrual failed for pet %s: %v\n", petID, err)
+		return fmt.Errorf("commission accrual: %w", err)
 	}
 	return nil
 }

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -200,6 +201,10 @@ func (s *Store) ReplaceCommissionTiers(ctx context.Context, tiers []CommissionTi
 		return err
 	}
 	defer tx.Rollback(ctx)
+	// Block concurrent accruals from reading an empty tiers table mid-replace.
+	if _, err := tx.Exec(ctx, `LOCK TABLE billing.commission_tiers IN EXCLUSIVE MODE`); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `DELETE FROM billing.commission_tiers`); err != nil {
 		return err
 	}
@@ -263,6 +268,9 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 	if ent.Status != "active" && ent.Status != "past_due" && ent.Status != "cancelled" {
 		return nil
 	}
+	if err := s.EnsureDefaultCommissionTiers(ctx); err != nil {
+		return err
+	}
 
 	var vetUserID string
 	err = s.pool.QueryRow(ctx, `
@@ -271,6 +279,7 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		JOIN practice.practice_clients pc
 			ON pc.client_user_id = p.owner_user_id AND pc.practice_id = p.practice_id
 		WHERE p.id = $1
+		ORDER BY pc.created_at DESC
 		LIMIT 1`, petID).Scan(&vetUserID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
@@ -332,7 +341,8 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 			ORDER BY min_clients DESC
 			LIMIT 1`, distinctClients+1).Scan(&rateBps)
 		if errors.Is(err, pgx.ErrNoRows) {
-			rateBps = 0
+			// Never persist 0% silently (race with ReplaceCommissionTiers, or empty table).
+			return fmt.Errorf("no_commission_tiers")
 		} else if err != nil {
 			return err
 		}
@@ -381,12 +391,17 @@ func (s *Store) GetOrCreatePayoutRun(ctx context.Context, periodYM string) (Payo
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return PayoutRun{}, err
 	}
-	id := uuid.NewString()
-	err = s.pool.QueryRow(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO billing.payout_runs (id, period_ym, status)
 		VALUES ($1, $2, 'open')
-		RETURNING id::text, period_ym, status, closed_at, paid_at, COALESCE(note,''), created_at`,
-		id, periodYM).Scan(&r.ID, &r.PeriodYM, &r.Status, &r.ClosedAt, &r.PaidAt, &r.Note, &r.CreatedAt)
+		ON CONFLICT (period_ym) DO NOTHING`, uuid.NewString(), periodYM)
+	if err != nil {
+		return PayoutRun{}, err
+	}
+	err = s.pool.QueryRow(ctx, `
+		SELECT id::text, period_ym, status, closed_at, paid_at, COALESCE(note,''), created_at
+		FROM billing.payout_runs WHERE period_ym=$1`, periodYM).Scan(
+		&r.ID, &r.PeriodYM, &r.Status, &r.ClosedAt, &r.PaidAt, &r.Note, &r.CreatedAt)
 	return r, err
 }
 
@@ -479,21 +494,30 @@ func (s *Store) PreviewPeriodCommissions(ctx context.Context, periodYM string) (
 }
 
 func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun, error) {
-	run, err := s.GetOrCreatePayoutRun(ctx, periodYM)
-	if err != nil {
-		return PayoutRun{}, err
-	}
-	if run.Status != "open" {
-		return run, ErrPayoutNotOpen
-	}
-
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return PayoutRun{}, err
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, `DELETE FROM billing.payout_lines WHERE run_id=$1`, run.ID); err != nil {
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO billing.payout_runs (id, period_ym, status)
+		VALUES ($1, $2, 'open')
+		ON CONFLICT (period_ym) DO NOTHING`, uuid.NewString(), periodYM); err != nil {
+		return PayoutRun{}, err
+	}
+
+	var runID, status string
+	if err := tx.QueryRow(ctx, `
+		SELECT id::text, status FROM billing.payout_runs WHERE period_ym=$1 FOR UPDATE`,
+		periodYM).Scan(&runID, &status); err != nil {
+		return PayoutRun{}, err
+	}
+	if status != "open" {
+		return PayoutRun{}, ErrPayoutNotOpen
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM billing.payout_lines WHERE run_id=$1`, runID); err != nil {
 		return PayoutRun{}, err
 	}
 
@@ -531,13 +555,14 @@ func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun,
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO billing.payout_lines (id, run_id, vet_user_id, eligible_clients, ledger_count, amount_cents, status)
 			VALUES ($1,$2,$3,$4,$5,$6,'pending')`,
-			uuid.NewString(), run.ID, a.vetID, a.clients, a.ledgerCount, a.amount); err != nil {
+			uuid.NewString(), runID, a.vetID, a.clients, a.ledgerCount, a.amount); err != nil {
 			return PayoutRun{}, err
 		}
 	}
 
 	if _, err := tx.Exec(ctx, `
-		UPDATE billing.payout_runs SET status='closed', closed_at=NOW() WHERE id=$1`, run.ID); err != nil {
+		UPDATE billing.payout_runs SET status='closed', closed_at=NOW()
+		WHERE id=$1 AND status='open'`, runID); err != nil {
 		return PayoutRun{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {

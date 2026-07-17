@@ -18,7 +18,8 @@
     "commercialProspects": "Prospects",
     "commercialCommissions": "Commissions",
     "commercialSettings": "Payout profile",
-    "commercialPitch": "Pitch"
+    "commercialPitch": "Pitch",
+    "products": "Products"
   },
   "auth": {
     "login": {
@@ -465,6 +466,8 @@
       "period": "Month",
       "close": "Close month",
       "markPaid": "Mark as paid",
+      "confirmClose": "Close period {period}? Payout lines will be frozen.",
+      "confirmMarkPaid": "Mark period {period} as paid?",
       "empty": "No commissions in this period",
       "colVet": "Veterinarian",
       "colClients": "Clients",
@@ -486,6 +489,9 @@
       "period": "Month",
       "close": "Close (to pay)",
       "markPaid": "Mark as paid",
+      "confirmClose": "Close period {period} and move to “to pay”?",
+      "confirmMarkPaid": "Mark period {period} as paid?",
+      "confirmMarkPaidMissingIban": "Warning: at least one IBAN is missing. Mark {period} as paid anyway?",
       "empty": "No rows for this tab",
       "recapGlobal": "Total shown: {amount} — {count} sales rep(s)",
       "colCommercial": "Sales rep",
@@ -688,7 +694,135 @@
     "ctaText": "The app is {free}. Your clients only pay for their pets' cardiac monitoring subscription.",
     "ctaFree": "entirely free for veterinarians",
     "ctaButton": "Start registration",
+    "productsLink": "Products",
+    "productsTitle": "What your clients subscribe to",
+    "productsLead": "A clear grid to present vet-prescribed monitoring — no wearable, from about €2 / month per pet.",
+    "productsCta": "See all offers (presentation support)",
+    "productHighlights": {
+      "plans": {
+        "price": "€29 / €75 / €115",
+        "title": "Per-pet subscriptions",
+        "text": "Annual, Triennial (recommended) or Quinquennial — heart-rate checks, messaging and care reminders."
+      },
+      "family": {
+        "price": "€55 / year",
+        "title": "Family pack",
+        "text": "Household option for up to 3 pets — complements pet subscriptions, does not replace them."
+      },
+      "careHorse": {
+        "price": "€19 · €39",
+        "title": "Care+ and Horse",
+        "text": "Care+ for medication and an enriched care book; Horse for equine follow-up (farrier, contacts, competitions)."
+      }
+    },
     "footer": "© {year} petsFollow — Veterinary cardiac monitoring"
+  },
+  "products": {
+    "seoTitle": "petsFollow — Offers & products",
+    "seoDescription": "petsFollow subscription and addon grid for veterinary practice presentations.",
+    "backHome": "Home",
+    "print": "Print / PDF",
+    "badge": "Practice presentation support",
+    "title": "petsFollow offers",
+    "lead": "Present vet-prescribed cardiac monitoring to clients — no collar or device, simple pricing for the household.",
+    "positioning": "petsFollow Pro is free for the practice. Only pet owners pay for monitoring (per-pet plan + household options).",
+    "includedTitle": "Included in every pet subscription",
+    "includedLead": "Whatever the plan (1, 3 or 5 years), owners get:",
+    "included": [
+      "Guided heart-rate checks from the mobile app",
+      "Sessions sent to and validated by the practice",
+      "Secure messaging with the veterinarian",
+      "Shared patient record (history of checks and conversations)",
+      "Standard care reminders (vaccine, deworming, check-up, dental)"
+    ],
+    "plansTitle": "Per-pet subscriptions",
+    "plansLead": "One subscription per monitored pet. Indicative prices — one-time or Stripe subscription renewal.",
+    "recommended": "Recommended",
+    "plansTip": "Presentation tip: lead with Triennial (€75 / 3 years ≈ €2.1/month) — best price / commitment balance for households.",
+    "plans": {
+      "annual": {
+        "name": "Annual",
+        "price": "€29",
+        "period": "per year",
+        "monthly": "≈ €2.4 / month",
+        "benefits": [
+          "Entry plan — ideal to start one pet",
+          "All core pet monitoring benefits included",
+          "One-year commitment"
+        ]
+      },
+      "triennial": {
+        "name": "Triennial",
+        "price": "€75",
+        "period": "for 3 years",
+        "monthly": "≈ €2.1 / month",
+        "benefits": [
+          "Core offer — 14% off vs 3× Annual",
+          "Continuous monitoring for 3 years",
+          "Strongest household price argument"
+        ]
+      },
+      "quinquennial": {
+        "name": "Quinquennial",
+        "price": "€115",
+        "period": "for 5 years",
+        "monthly": "≈ €1.9 / month",
+        "benefits": [
+          "Long-term — 21% off vs 5× Annual",
+          "Ideal for chronic / senior pets",
+          "Lowest monthly equivalent"
+        ]
+      }
+    },
+    "addonsTitle": "Household options (owner account)",
+    "addonsLead": "Addons purchased once for the account — they enrich the experience for pets in the household under the rules below.",
+    "addonsTip": "Family never replaces a pet subscription: each pet still needs a plan. Horse is only offered when the household has at least one horse.",
+    "addons": {
+      "family": {
+        "name": "Family",
+        "price": "€55 / year",
+        "tagline": "Household pack — up to 3 pets",
+        "scope": "Account",
+        "benefits": [
+          "Household option available for purchase in the app",
+          "Complements pet subscriptions (not a substitute)",
+          "Product rule: up to 3 pets (never an unlimited plan)"
+        ]
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "€19 / year",
+        "tagline": "Enriched care book",
+        "scope": "Account",
+        "benefits": [
+          "Medication reminders",
+          "Custom reminders"
+        ]
+      },
+      "horse": {
+        "name": "Horse",
+        "price": "€39 / year",
+        "tagline": "Equine pack",
+        "scope": "Account",
+        "benefits": [
+          "Farrier and fecal-egg reminders",
+          "Farrier log",
+          "Professional contacts (farrier, etc.)",
+          "Competition tracking",
+          "Offered only if the household has ≥ 1 horse"
+        ]
+      }
+    },
+    "summaryTitle": "Price grid summary",
+    "summary": {
+      "annual": { "name": "Annual", "price": "€29 / year", "role": "Pet subscription — entry" },
+      "triennial": { "name": "Triennial", "price": "€75 / 3 years", "role": "Pet subscription — recommended" },
+      "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 years", "role": "Pet subscription — long term" },
+      "family": { "name": "Family", "price": "€55 / year", "role": "Household addon ≤ 3 pets" },
+      "carePlus": { "name": "Care+", "price": "€19 / year", "role": "Care / medication addon" },
+      "horse": { "name": "Horse", "price": "€39 / year", "role": "Equine pack addon" }
+    },
+    "footer": "petsFollow — vet-prescribed monitoring, no hardware"
   },
   "components": {
     "topbar": {
@@ -757,6 +891,9 @@
     "body_required": "Message body required",
     "profile_fields_required": "Required fields missing",
     "invalid_plan": "Invalid plan",
+    "invalid_iban": "Invalid IBAN",
+    "invalid_bic": "Invalid BIC (8 or 11 characters)",
+    "invalid_account_holder": "Invalid account holder",
     "invalid_billing_mode": "Invalid billing mode",
     "no_pending_payment": "No pending payment",
     "not_a_subscription": "This is not a subscription",
@@ -919,7 +1056,8 @@
         "Family / Care+ / Horse addons with real privileges",
         "Messages and care reminders"
       ],
-      "commercialMirror": "Sales: flat 12% on subscriptions and addons (~€9 on the €75 triennial plan)."
+      "commercialMirror": "Sales: flat 12% on subscriptions and addons (~€9 on the €75 triennial plan).",
+      "productsLink": "Open full product grid (presentation support)"
     }
   }
 }

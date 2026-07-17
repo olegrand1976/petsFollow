@@ -154,11 +154,6 @@ type payoutProfileReq struct {
 	AccountHolder string `json:"accountHolder"`
 }
 
-func normalizeIBAN(s string) string {
-	s = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(s), " ", ""))
-	return s
-}
-
 func (a *API) commercialPatchPayoutProfile(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireCommercial(w, r)
 	if !ok {
@@ -170,17 +165,19 @@ func (a *API) commercialPatchPayoutProfile(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	iban := normalizeIBAN(req.IBAN)
-	if iban != "" && (len(iban) < 15 || len(iban) > 34) {
+	if iban != "" && !validIBAN(iban) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_iban")
 		return
 	}
 	holder := strings.TrimSpace(req.AccountHolder)
 	if len(holder) > 120 {
-		holder = holder[:120]
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_account_holder")
+		return
 	}
 	bic := strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(req.BIC), " ", ""))
-	if len(bic) > 11 {
-		bic = bic[:11]
+	if !validBIC(bic) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_bic")
+		return
 	}
 	profile := store.CommercialPayoutProfile{IBAN: iban, BIC: bic, AccountHolder: holder}
 	if err := a.store.UpdateCommercialPayoutProfile(r.Context(), id.UserID, profile); err != nil {

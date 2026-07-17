@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,6 +21,9 @@ func CommercialCommissionCents(baseAmountCents, rateBps int) int {
 	if rateBps < 0 {
 		rateBps = 0
 	}
+	if baseAmountCents < 0 {
+		baseAmountCents = 0
+	}
 	return baseAmountCents * rateBps / 10000
 }
 
@@ -31,7 +35,8 @@ func (s *Store) GetCommercialRateBps(ctx context.Context) (int, error) {
 		return DefaultCommercialCommissionRateBps, nil
 	}
 	if err != nil {
-		return DefaultCommercialCommissionRateBps, err
+		// Fail-closed: never invent a monetary rate on DB errors.
+		return 0, err
 	}
 	return bps, nil
 }
@@ -247,18 +252,26 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 
 	month := PeriodYM(time.Now())
 	var monthEarned, lifetime, subRevenue, addonRevenue int
-	_ = s.pool.QueryRow(ctx, `
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND period_ym=$2`, commercialUserID, month).Scan(&monthEarned)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1 AND period_ym=$2`, commercialUserID, month).Scan(&monthEarned); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(base_amount_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type IN ('subscription_pct','subscription_mirror')`, commercialUserID).Scan(&subRevenue)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1 AND source_type IN ('subscription_pct','subscription_mirror')`, commercialUserID).Scan(&subRevenue); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(base_amount_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonRevenue)
+		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonRevenue); err != nil {
+		return nil, err
+	}
 
 	return map[string]any{
 		"assignedVets":                  assignedVets,
@@ -275,18 +288,26 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUserID string) (map[string]any, error) {
 	month := PeriodYM(time.Now())
 	var monthEarned, lifetime, subCommission, addonCommission int
-	_ = s.pool.QueryRow(ctx, `
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND period_ym=$2`, commercialUserID, month).Scan(&monthEarned)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1 AND period_ym=$2`, commercialUserID, month).Scan(&monthEarned); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1`, commercialUserID).Scan(&lifetime); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type IN ('subscription_pct','subscription_mirror')`, commercialUserID).Scan(&subCommission)
-	_ = s.pool.QueryRow(ctx, `
+		WHERE commercial_user_id=$1 AND source_type IN ('subscription_pct','subscription_mirror')`, commercialUserID).Scan(&subCommission); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger
-		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonCommission)
+		WHERE commercial_user_id=$1 AND source_type='addon_pct'`, commercialUserID).Scan(&addonCommission); err != nil {
+		return nil, err
+	}
 
 	rows, err := s.pool.Query(ctx, `
 		SELECT cl.id::text, cl.source_type, ve.email, ce.email,
@@ -314,8 +335,14 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 		return nil, err
 	}
 
-	rateBps, _ := s.GetCommercialRateBps(ctx)
-	payoutHistory, _ := s.ListCommercialPayoutHistory(ctx, commercialUserID)
+	rateBps, err := s.GetCommercialRateBps(ctx)
+	if err != nil {
+		return nil, err
+	}
+	payoutHistory, err := s.ListCommercialPayoutHistory(ctx, commercialUserID)
+	if err != nil {
+		return nil, err
+	}
 	return map[string]any{
 		"rateBps":                     rateBps,
 		"monthPeriodYm":               month,
@@ -348,7 +375,42 @@ func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred str
 		}
 		period = next
 	}
-	return period, nil
+	return "", fmt.Errorf("no_open_commercial_period")
+}
+
+// lockOpenCommercialPeriodYM locks (or creates) an open commercial payout run and returns its period.
+// Callers must hold tx until ledger insert commits so close cannot race mid-accrual.
+func (s *Store) lockOpenCommercialPeriodYM(ctx context.Context, tx pgx.Tx, preferred string) (string, error) {
+	period := preferred
+	for i := 0; i < 24; i++ {
+		var status string
+		err := tx.QueryRow(ctx, `
+			SELECT status FROM billing.commercial_payout_runs WHERE period_ym=$1 FOR UPDATE`, period).Scan(&status)
+		if errors.Is(err, pgx.ErrNoRows) {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO billing.commercial_payout_runs (id, period_ym, status)
+				VALUES ($1, $2, 'open')
+				ON CONFLICT (period_ym) DO NOTHING`, uuid.NewString(), period); err != nil {
+				return "", err
+			}
+			err = tx.QueryRow(ctx, `
+				SELECT status FROM billing.commercial_payout_runs WHERE period_ym=$1 FOR UPDATE`, period).Scan(&status)
+			if err != nil {
+				return "", err
+			}
+		} else if err != nil {
+			return "", err
+		}
+		if status == "open" {
+			return period, nil
+		}
+		next, err := NextPeriodYM(period)
+		if err != nil {
+			return "", err
+		}
+		period = next
+	}
+	return "", fmt.Errorf("no_open_commercial_period")
 }
 
 // AccrueCommercialForSubscription accrues a flat commercial % on the pet entitlement.
@@ -379,33 +441,37 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 	if err != nil {
 		return err
 	}
-	if commercialUserID == "" {
+	if commercialUserID == "" || vetUserID == "" {
 		return nil
-	}
-	if vetUserID == "" {
-		// Ledger requires a vet_user_id; fall back to commercial self if somehow empty.
-		vetUserID = commercialUserID
 	}
 
 	rateBps, err := s.GetCommercialRateBps(ctx)
 	if err != nil {
-		rateBps = DefaultCommercialCommissionRateBps
+		return err
 	}
 	commission := CommercialCommissionCents(ent.AmountCents, rateBps)
 
-	period, err := s.ResolveOpenCommercialPeriodYM(ctx, PeriodYM(time.Now()))
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = s.pool.Exec(ctx, `
+	defer tx.Rollback(ctx)
+
+	period, err := s.lockOpenCommercialPeriodYM(ctx, tx, PeriodYM(time.Now()))
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
 		INSERT INTO billing.commercial_commission_ledger (
 			id, commercial_user_id, vet_user_id, client_user_id, source_type, source_id,
 			base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at
 		) VALUES ($1,$2,$3,$4,'subscription_pct',$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (source_type, source_id) DO NOTHING`,
 		uuid.NewString(), commercialUserID, vetUserID, ent.OwnerUserID, ent.ID,
-		ent.AmountCents, rateBps, commission, period)
-	return err
+		ent.AmountCents, rateBps, commission, period); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 // AccrueCommercialForAddon accrues a flat commission for the commercial assigned
@@ -431,33 +497,47 @@ func (s *Store) AccrueCommercialForAddon(ctx context.Context, addonID string) er
 	if err != nil {
 		return err
 	}
+	if practiceID == "" {
+		_ = s.pool.QueryRow(ctx, `
+			SELECT practice_id::text FROM pets.pets
+			WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 1`, addon.OwnerUserID).Scan(&practiceID)
+	}
 
 	vetUserID, commercialUserID, err := s.resolveVetCommercial(ctx, addon.OwnerUserID, practiceID)
 	if err != nil {
 		return err
 	}
-	if commercialUserID == "" {
+	if commercialUserID == "" || vetUserID == "" {
 		return nil
 	}
 
-	period, err := s.ResolveOpenCommercialPeriodYM(ctx, PeriodYM(time.Now()))
+	rateBps, err := s.GetCommercialRateBps(ctx)
 	if err != nil {
 		return err
 	}
-	rateBps, err := s.GetCommercialRateBps(ctx)
-	if err != nil {
-		rateBps = DefaultCommercialCommissionRateBps
-	}
 	commission := CommercialCommissionCents(addon.AmountCents, rateBps)
-	_, err = s.pool.Exec(ctx, `
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	period, err := s.lockOpenCommercialPeriodYM(ctx, tx, PeriodYM(time.Now()))
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
 		INSERT INTO billing.commercial_commission_ledger (
 			id, commercial_user_id, vet_user_id, client_user_id, source_type, source_id,
 			base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at
 		) VALUES ($1,$2,$3,$4,'addon_pct',$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (source_type, source_id) DO NOTHING`,
 		uuid.NewString(), commercialUserID, vetUserID, addon.OwnerUserID, addon.ID,
-		addon.AmountCents, rateBps, commission, period)
-	return err
+		addon.AmountCents, rateBps, commission, period); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 // resolveVetCommercial finds the vet linked to a client (preferring the given
@@ -474,7 +554,8 @@ func (s *Store) resolveVetCommercial(ctx context.Context, clientUserID, practice
 		q += ` AND pc.practice_id=$2`
 		args = append(args, practiceID)
 	}
-	q += ` LIMIT 1`
+	// Deterministic: newest client↔vet link wins.
+	q += ` ORDER BY pc.created_at DESC NULLS LAST, pc.vet_user_id LIMIT 1`
 	err = s.pool.QueryRow(ctx, q, args...).Scan(&vetUserID, &commercial)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", "", nil
@@ -599,12 +680,17 @@ func (s *Store) GetOrCreateCommercialPayoutRun(ctx context.Context, periodYM str
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return PayoutRun{}, err
 	}
-	id := uuid.NewString()
-	err = s.pool.QueryRow(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO billing.commercial_payout_runs (id, period_ym, status)
 		VALUES ($1, $2, 'open')
-		RETURNING id::text, period_ym, status, closed_at, paid_at, COALESCE(note,''), created_at`,
-		id, periodYM).Scan(&r.ID, &r.PeriodYM, &r.Status, &r.ClosedAt, &r.PaidAt, &r.Note, &r.CreatedAt)
+		ON CONFLICT (period_ym) DO NOTHING`, uuid.NewString(), periodYM)
+	if err != nil {
+		return PayoutRun{}, err
+	}
+	err = s.pool.QueryRow(ctx, `
+		SELECT id::text, period_ym, status, closed_at, paid_at, COALESCE(note,''), created_at
+		FROM billing.commercial_payout_runs WHERE period_ym=$1`, periodYM).Scan(
+		&r.ID, &r.PeriodYM, &r.Status, &r.ClosedAt, &r.PaidAt, &r.Note, &r.CreatedAt)
 	return r, err
 }
 
@@ -735,19 +821,30 @@ func (s *Store) AdminCommercialCommissionPeriodDetail(ctx context.Context, perio
 }
 
 func (s *Store) CloseCommercialPayoutRun(ctx context.Context, periodYM string) (PayoutRun, error) {
-	run, err := s.GetOrCreateCommercialPayoutRun(ctx, periodYM)
-	if err != nil {
-		return PayoutRun{}, err
-	}
-	if run.Status != "open" {
-		return run, ErrPayoutNotOpen
-	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return PayoutRun{}, err
 	}
 	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `DELETE FROM billing.commercial_payout_lines WHERE run_id=$1`, run.ID); err != nil {
+
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO billing.commercial_payout_runs (id, period_ym, status)
+		VALUES ($1, $2, 'open')
+		ON CONFLICT (period_ym) DO NOTHING`, uuid.NewString(), periodYM); err != nil {
+		return PayoutRun{}, err
+	}
+
+	var runID, status string
+	if err := tx.QueryRow(ctx, `
+		SELECT id::text, status FROM billing.commercial_payout_runs WHERE period_ym=$1 FOR UPDATE`,
+		periodYM).Scan(&runID, &status); err != nil {
+		return PayoutRun{}, err
+	}
+	if status != "open" {
+		return PayoutRun{}, ErrPayoutNotOpen
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM billing.commercial_payout_lines WHERE run_id=$1`, runID); err != nil {
 		return PayoutRun{}, err
 	}
 	rows, err := tx.Query(ctx, `
@@ -759,13 +856,13 @@ func (s *Store) CloseCommercialPayoutRun(ctx context.Context, periodYM string) (
 		return PayoutRun{}, err
 	}
 	var aggs []struct {
-		userID       string
+		userID      string
 		ledgerCount int
 		amount      int
 	}
 	for rows.Next() {
 		var a struct {
-			userID       string
+			userID      string
 			ledgerCount int
 			amount      int
 		}
@@ -783,12 +880,13 @@ func (s *Store) CloseCommercialPayoutRun(ctx context.Context, periodYM string) (
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO billing.commercial_payout_lines (id, run_id, commercial_user_id, ledger_count, amount_cents, status)
 			VALUES ($1,$2,$3,$4,$5,'pending')`,
-			uuid.NewString(), run.ID, a.userID, a.ledgerCount, a.amount); err != nil {
+			uuid.NewString(), runID, a.userID, a.ledgerCount, a.amount); err != nil {
 			return PayoutRun{}, err
 		}
 	}
 	if _, err := tx.Exec(ctx, `
-		UPDATE billing.commercial_payout_runs SET status='closed', closed_at=NOW() WHERE id=$1`, run.ID); err != nil {
+		UPDATE billing.commercial_payout_runs SET status='closed', closed_at=NOW()
+		WHERE id=$1 AND status='open'`, runID); err != nil {
 		return PayoutRun{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {

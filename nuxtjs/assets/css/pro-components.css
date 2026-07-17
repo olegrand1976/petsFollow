@@ -670,6 +670,7 @@ a.pro-kpi-card:focus-visible {
   .pro-landing__hero { grid-template-columns: 1fr; }
   .pro-landing__hero-visual { display: none; }
   .pro-landing__feature-grid { grid-template-columns: 1fr; }
+  .pro-landing__products-grid { grid-template-columns: 1fr; }
 }
 
 /* Landing page */
@@ -836,6 +837,45 @@ a.pro-kpi-card:focus-visible {
   color: var(--pf-vet-text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.pro-landing__products {
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pro-landing__products h2 {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  color: var(--pf-vet-primary);
+}
+
+.pro-landing__products-lead {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+  color: var(--pf-vet-text-muted);
+  line-height: 1.55;
+}
+
+.pro-landing__products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.pro-landing__products-price {
+  display: block;
+  color: var(--pf-vet-accent);
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.pro-landing__products-actions {
+  display: flex;
+  justify-content: center;
 }
 
 .pro-landing__cta {
