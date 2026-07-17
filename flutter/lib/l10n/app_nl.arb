@@ -79,7 +79,7 @@
   "errorPhotoUploadFailed": "Huisdier aangemaakt, maar de foto kon niet worden geüpload",
   "errorCouldNotOpenLink": "Link kon niet worden geopend",
   "planAnnualSub": "{price}, automatisch verlengd",
-  "planTriennialSub": "75 € elke 3 jaar, automatisch verlengd",
+  "planTriennialSub": "79 € elke 3 jaar, automatisch verlengd",
   "planQuinquennialSub": "115 € elke 5 jaar, automatisch verlengd",
   "planOneTime": "{price}, eenmalige betaling",
   "heartRateInstructions": "Tik bij elke hartslag gedurende de tijd die uw dierenarts heeft ingesteld.",
@@ -146,7 +146,17 @@
   "horseContactRole": "Rol",
   "horseCompetitionTitle": "Evenement",
   "horseCompetitionDate": "Datum (JJJJ-MM-DD)",
-  "familyPackHint": "Gezinspakket — voordelen tot 3 dieren",
+  "familyPackHint": "Familiepakket — gezinsweergave van herinneringen, tot 3 dieren",
+  "familyHouseholdTitle": "Familiehuishouden — {count}/{max} dieren",
+  "@familyHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "familyHouseholdNext": "Komende gezinsherinneringen",
+  "familyPetLimit": "Familiepakket is beperkt tot 3 dieren",
+  "familyRequiresTwoPets": "Familiepakket vereist minstens 2 dieren",
   "discoveryMarkDone": "Missie voltooid",
   "notificationPreferences": "Meldingsvoorkeuren",
   "notificationPrefsHint": "Kies welke meldingstypes u wilt ontvangen.",

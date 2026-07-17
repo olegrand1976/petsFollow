@@ -20,7 +20,7 @@
 
     <ProCard class="pro-mt-lg" :title="$t('commercial.pitch.commissionTitle')">
       <p class="pro-mb-md">{{ $t('commercial.pitch.vetGrid') }}</p>
-      <p class="pro-mb-md">{{ $t('commercial.pitch.commercialMirror') }}</p>
+      <p class="pro-mb-md">{{ $t('commercial.pitch.commercialFlat') }}</p>
       <p class="pro-mb-md">{{ $t('commercial.pitch.addons') }}</p>
       <NuxtLink to="/produits">
         <ProButton variant="secondary">{{ $t('commercial.pitch.productsLink') }}</ProButton>

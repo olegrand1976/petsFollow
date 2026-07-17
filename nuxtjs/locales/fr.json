@@ -263,7 +263,7 @@
         "Addons Family / Care+ / Horse avec privilèges réels",
         "Messages et rappels de soins"
       ],
-      "commercialMirror": "Commercial : 12 % fixe sur abonnements et addons (~9 € sur le triennial 75 €).",
+      "commercialFlat": "Commercial : 12 % fixe sur abonnements et addons (~9,5 € sur le triennial 79 €).",
       "productsLink": "Voir la grille produits complète (support présentation)"
     }
   },
@@ -814,14 +814,14 @@
     "productsCta": "Voir toutes les offres (support présentation)",
     "productHighlights": {
       "plans": {
-        "price": "29 / 75 / 115 €",
+        "price": "29 / 79 / 115 €",
         "title": "Abonnements par animal",
         "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés cardiaques, messagerie et rappels de soins."
       },
       "family": {
         "price": "55 € / an",
         "title": "Pack Famille",
-        "text": "Option foyer jusqu'à 3 animaux — complément des abonnements animal, pas un substitut."
+        "text": "Vue foyer des rappels pour 2 à 3 animaux — chaque animal reste abonné individuellement."
       },
       "careHorse": {
         "price": "19 € · 39 €",
@@ -852,7 +852,7 @@
     "plansTitle": "Abonnements par animal",
     "plansLead": "Un abonnement par animal suivi. Prix TTC indicatifs — renouvellement possible en paiement unique ou abonnement Stripe.",
     "recommended": "Recommandé",
-    "plansTip": "Conseil présentation : privilégiez le Triennial (75 € / 3 ans ≈ 2,1 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
+    "plansTip": "Conseil présentation : privilégiez le Triennial (79 € / 3 ans ≈ 2,2 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
     "plans": {
       "annual": {
         "name": "Annual",
@@ -867,11 +867,11 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "75 €",
+        "price": "79 €",
         "period": "pour 3 ans",
-        "monthly": "≈ 2,1 € / mois",
+        "monthly": "≈ 2,2 € / mois",
         "benefits": [
-          "Cœur d'offre — −14 % vs 3× Annual",
+          "Cœur d'offre — −9 % vs 3× Annual",
           "Suivi continu sur 3 ans",
           "Meilleur argument prix pour le foyer"
         ]
@@ -898,9 +898,9 @@
         "tagline": "Forfait foyer — jusqu'à 3 animaux",
         "scope": "Compte",
         "benefits": [
-          "Option foyer disponible à l'achat dans l'app",
-          "Complément des abonnements animal (pas un substitut)",
-          "Règle produit : jusqu'à 3 animaux (pas d'abo illimité)"
+          "Vue foyer : prochains rappels de tous les animaux du compte",
+          "Pour les foyers de 2 à 3 animaux (plafond 3)",
+          "Chaque animal reste abonné individuellement"
         ]
       },
       "carePlus": {
@@ -930,7 +930,7 @@
     "summaryTitle": "Récapitulatif grille",
     "summary": {
       "annual": { "name": "Annual", "price": "29 € / an", "role": "Abonnement animal — entrée" },
-      "triennial": { "name": "Triennial", "price": "75 € / 3 ans", "role": "Abonnement animal — recommandé" },
+      "triennial": { "name": "Triennial", "price": "79 € / 3 ans", "role": "Abonnement animal — recommandé" },
       "quinquennial": { "name": "Quinquennial", "price": "115 € / 5 ans", "role": "Abonnement animal — long terme" },
       "family": { "name": "Family", "price": "55 € / an", "role": "Addon foyer ≤ 3 animaux" },
       "carePlus": { "name": "Care+", "price": "19 € / an", "role": "Addon soins / médicaments" },
@@ -1008,6 +1008,9 @@
     "invalid_iban": "IBAN invalide",
     "invalid_bic": "BIC invalide (8 ou 11 caractères)",
     "invalid_account_holder": "Titulaire de compte invalide",
+    "family_pet_limit": "Le pack Famille est limité à 3 animaux",
+    "family_requires_two_pets": "Le pack Famille nécessite au moins 2 animaux",
+    "family_required": "Pack Famille requis",
     "invalid_billing_mode": "Mode de facturation invalide",
     "no_pending_payment": "Aucun paiement en attente",
     "not_a_subscription": "Ce n'est pas un abonnement",

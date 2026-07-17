@@ -565,7 +565,7 @@ abstract class AppLocalizations {
   /// No description provided for @planTriennialSub.
   ///
   /// In fr, this message translates to:
-  /// **'75 € tous les 3 ans, renouvelé automatiquement'**
+  /// **'79 € tous les 3 ans, renouvelé automatiquement'**
   String get planTriennialSub;
 
   /// No description provided for @planQuinquennialSub.
@@ -967,8 +967,32 @@ abstract class AppLocalizations {
   /// No description provided for @familyPackHint.
   ///
   /// In fr, this message translates to:
-  /// **'Pack famille — avantages foyer jusqu\'à 3 animaux'**
+  /// **'Pack Famille — vue foyer des rappels, jusqu\'à 3 animaux'**
   String get familyPackHint;
+
+  /// No description provided for @familyHouseholdTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Foyer Famille — {count}/{max} animaux'**
+  String familyHouseholdTitle(int count, int max);
+
+  /// No description provided for @familyHouseholdNext.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochains rappels du foyer'**
+  String get familyHouseholdNext;
+
+  /// No description provided for @familyPetLimit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pack Famille limité à 3 animaux'**
+  String get familyPetLimit;
+
+  /// No description provided for @familyRequiresTwoPets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pack Famille nécessite au moins 2 animaux'**
+  String get familyRequiresTwoPets;
 
   /// No description provided for @discoveryMarkDone.
   ///

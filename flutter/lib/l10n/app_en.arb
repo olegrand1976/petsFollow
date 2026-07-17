@@ -79,7 +79,7 @@
   "errorPhotoUploadFailed": "Pet created, but the photo could not be uploaded",
   "errorCouldNotOpenLink": "Could not open the link",
   "planAnnualSub": "{price}, auto-renewed",
-  "planTriennialSub": "€75 every 3 years, auto-renewed",
+  "planTriennialSub": "€79 every 3 years, auto-renewed",
   "planQuinquennialSub": "€115 every 5 years, auto-renewed",
   "planOneTime": "{price}, one-time payment",
   "heartRateInstructions": "Tap on each beat for the duration set by your veterinarian.",
@@ -136,7 +136,17 @@
   "reviewAskYes": "Yes, rate the app",
   "reviewAskNo": "Later",
   "carePlusUpsell": "Care+ — medications and personalized reminders",
-  "familyPackHint": "Family pack — household benefits for up to 3 pets",
+  "familyPackHint": "Family pack — household care view, up to 3 pets",
+  "familyHouseholdTitle": "Family household — {count}/{max} pets",
+  "@familyHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "familyHouseholdNext": "Upcoming household reminders",
+  "familyPetLimit": "Family pack is limited to 3 pets",
+  "familyRequiresTwoPets": "Family pack requires at least 2 pets",
   "discoveryMarkDone": "Mission complete",
   "notificationPreferences": "Notification preferences",
   "notificationPrefsHint": "Choose which notification types you want to receive.",

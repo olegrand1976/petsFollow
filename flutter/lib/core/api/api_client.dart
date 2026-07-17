@@ -186,6 +186,12 @@ class ApiClient {
     return res.data['data']['checkoutUrl'] as String;
   }
 
+  /// Family privilege: household digest (requires active Family addon).
+  Future<Map<String, dynamic>> getHousehold() async {
+    final res = await dio.get('/api/v1/me/household');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
   Future<List<dynamic>> getHorseContacts(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/horse-contacts');
     return res.data['data'] as List<dynamic>;

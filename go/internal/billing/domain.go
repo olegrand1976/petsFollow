@@ -134,7 +134,7 @@ func AllPlansForLocale(locale string) []Plan {
 	locale = i18n.NormalizeLocale(locale)
 	return []Plan{
 		{Code: PlanAnnual, Label: i18n.T(locale, "billing.annual_label", nil), AmountCents: 2900, Currency: "eur", DurationDays: 365},
-		{Code: PlanTriennial, Label: i18n.T(locale, "billing.triennial_label", nil), AmountCents: 7500, Currency: "eur", DurationDays: 1095, Recommended: true},
+		{Code: PlanTriennial, Label: i18n.T(locale, "billing.triennial_label", nil), AmountCents: 7900, Currency: "eur", DurationDays: 1095, Recommended: true},
 		{Code: PlanQuinquennial, Label: i18n.T(locale, "billing.quinquennial_label", nil), AmountCents: 11500, Currency: "eur", DurationDays: 1825},
 	}
 }

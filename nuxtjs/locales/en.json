@@ -700,14 +700,14 @@
     "productsCta": "See all offers (presentation support)",
     "productHighlights": {
       "plans": {
-        "price": "€29 / €75 / €115",
+        "price": "€29 / €79 / €115",
         "title": "Per-pet subscriptions",
         "text": "Annual, Triennial (recommended) or Quinquennial — heart-rate checks, messaging and care reminders."
       },
       "family": {
         "price": "€55 / year",
         "title": "Family pack",
-        "text": "Household option for up to 3 pets — complements pet subscriptions, does not replace them."
+        "text": "Household care view for 2–3 pets — each pet still needs its own subscription."
       },
       "careHorse": {
         "price": "€19 · €39",
@@ -738,7 +738,7 @@
     "plansTitle": "Per-pet subscriptions",
     "plansLead": "One subscription per monitored pet. Indicative prices — one-time or Stripe subscription renewal.",
     "recommended": "Recommended",
-    "plansTip": "Presentation tip: lead with Triennial (€75 / 3 years ≈ €2.1/month) — best price / commitment balance for households.",
+    "plansTip": "Presentation tip: lead with Triennial (€79 / 3 years ≈ €2.2/month) — best price / commitment balance for households.",
     "plans": {
       "annual": {
         "name": "Annual",
@@ -753,11 +753,11 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "€75",
+        "price": "€79",
         "period": "for 3 years",
-        "monthly": "≈ €2.1 / month",
+        "monthly": "≈ €2.2 / month",
         "benefits": [
-          "Core offer — 14% off vs 3× Annual",
+          "Core offer — 9% off vs 3× Annual",
           "Continuous monitoring for 3 years",
           "Strongest household price argument"
         ]
@@ -784,9 +784,9 @@
         "tagline": "Household pack — up to 3 pets",
         "scope": "Account",
         "benefits": [
-          "Household option available for purchase in the app",
-          "Complements pet subscriptions (not a substitute)",
-          "Product rule: up to 3 pets (never an unlimited plan)"
+          "Household view: upcoming care reminders across all pets",
+          "For households of 2 to 3 pets (cap of 3)",
+          "Each pet still needs its own subscription"
         ]
       },
       "carePlus": {
@@ -816,7 +816,7 @@
     "summaryTitle": "Price grid summary",
     "summary": {
       "annual": { "name": "Annual", "price": "€29 / year", "role": "Pet subscription — entry" },
-      "triennial": { "name": "Triennial", "price": "€75 / 3 years", "role": "Pet subscription — recommended" },
+      "triennial": { "name": "Triennial", "price": "€79 / 3 years", "role": "Pet subscription — recommended" },
       "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 years", "role": "Pet subscription — long term" },
       "family": { "name": "Family", "price": "€55 / year", "role": "Household addon ≤ 3 pets" },
       "carePlus": { "name": "Care+", "price": "€19 / year", "role": "Care / medication addon" },
@@ -894,6 +894,9 @@
     "invalid_iban": "Invalid IBAN",
     "invalid_bic": "Invalid BIC (8 or 11 characters)",
     "invalid_account_holder": "Invalid account holder",
+    "family_pet_limit": "Family pack is limited to 3 pets",
+    "family_requires_two_pets": "Family pack requires at least 2 pets",
+    "family_required": "Family pack required",
     "invalid_billing_mode": "Invalid billing mode",
     "no_pending_payment": "No pending payment",
     "not_a_subscription": "This is not a subscription",
@@ -1056,7 +1059,7 @@
         "Family / Care+ / Horse addons with real privileges",
         "Messages and care reminders"
       ],
-      "commercialMirror": "Sales: flat 12% on subscriptions and addons (~€9 on the €75 triennial plan).",
+      "commercialFlat": "Sales: flat 12% on subscriptions and addons (~€9.5 on the €79 triennial plan).",
       "productsLink": "Open full product grid (presentation support)"
     }
   }

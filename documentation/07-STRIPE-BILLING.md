@@ -9,7 +9,7 @@ Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement aut
 | Plan | Code | Prix | Durée |
 |------|------|------|-------|
 | 29 € / an | `annual` | 2900 ct | 1 an |
-| 75 € / 3 ans | `triennial` | 7500 ct | 3 ans (recommandé) |
+| 79 € / 3 ans | `triennial` | 7900 ct | 3 ans (recommandé) |
 | 115 € / 5 ans | `quinquennial` | 11500 ct | 5 ans |
 
 Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscription`, interval 1/3/5 ans).
@@ -124,8 +124,8 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 
 | Pack | Code | Prix | Scope |
 |------|------|------|-------|
-| **Family pack** | `family` | 55 € / an | owner (foyer ≤3 animaux) |
-| **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso) |
+| **Family pack** | `family` | 55 € / an | owner (foyer 2–3 animaux, vue foyer, plafond 3) |
+| **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso ; export & emails = roadmap) |
 | **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
 
 API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
@@ -150,4 +150,4 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
 
-Montants attendus : 29 / 75 / 115 € (abos) ; 55 / 19 / 39 € (addons).
+Montants attendus : 29 / 79 / 115 € (abos) ; 55 / 19 / 39 € (addons).

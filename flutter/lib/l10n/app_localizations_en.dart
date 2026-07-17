@@ -261,7 +261,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '€75 every 3 years, auto-renewed';
+  String get planTriennialSub => '€79 every 3 years, auto-renewed';
 
   @override
   String get planQuinquennialSub => '€115 every 5 years, auto-renewed';
@@ -484,7 +484,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Family pack — household benefits for up to 3 pets';
+      'Family pack — household care view, up to 3 pets';
+
+  @override
+  String familyHouseholdTitle(int count, int max) {
+    return 'Family household — $count/$max pets';
+  }
+
+  @override
+  String get familyHouseholdNext => 'Upcoming household reminders';
+
+  @override
+  String get familyPetLimit => 'Family pack is limited to 3 pets';
+
+  @override
+  String get familyRequiresTwoPets => 'Family pack requires at least 2 pets';
 
   @override
   String get discoveryMarkDone => 'Mission complete';

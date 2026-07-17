@@ -67,6 +67,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Put("/me/device-tokens", a.putDeviceToken)
 		pr.Get("/me/notification-preferences", a.getClientNotificationPrefs)
 		pr.Patch("/me/notification-preferences", a.updateClientNotificationPrefs)
+		pr.Get("/me/household", a.getHousehold)
 		pr.Get("/clients", a.listClients)
 		pr.Get("/clients/{clientID}", a.getClient)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
@@ -333,6 +334,14 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.AssertFamilyCanAddPet(r.Context(), id.UserID); err != nil {
+		if errors.Is(err, store.ErrFamilyPetLimit) {
+			writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	p := store.Pet{Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment"}

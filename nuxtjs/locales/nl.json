@@ -700,14 +700,14 @@
     "productsCta": "Alle aanbiedingen bekijken (presentatie)",
     "productHighlights": {
       "plans": {
-        "price": "€29 / €75 / €115",
+        "price": "€29 / €79 / €115",
         "title": "Abonnementen per dier",
         "text": "Annual, Triennial (aanbevolen) of Quinquennial — hartmetingen, berichten en zorgherinneringen."
       },
       "family": {
         "price": "€55 / jaar",
         "title": "Familiepakket",
-        "text": "Huishoudoptie tot 3 dieren — vult dierabonnementen aan, vervangt ze niet."
+        "text": "Gezinsweergave van herinneringen voor 2–3 dieren — elk dier blijft individueel geabonneerd."
       },
       "careHorse": {
         "price": "€19 · €39",
@@ -738,7 +738,7 @@
     "plansTitle": "Abonnementen per dier",
     "plansLead": "Één abonnement per opgevolgd dier. Indicatieve prijzen — eenmalig of Stripe-abonnement.",
     "recommended": "Aanbevolen",
-    "plansTip": "Presentatietip: start met Triennial (€75 / 3 jaar ≈ €2,1/maand) — beste balans prijs / engagement voor het gezin.",
+    "plansTip": "Presentatietip: start met Triennial (€79 / 3 jaar ≈ €2,2/maand) — beste balans prijs / engagement voor het gezin.",
     "plans": {
       "annual": {
         "name": "Annual",
@@ -753,11 +753,11 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "€75",
+        "price": "€79",
         "period": "voor 3 jaar",
-        "monthly": "≈ €2,1 / maand",
+        "monthly": "≈ €2,2 / maand",
         "benefits": [
-          "Kernaanbod — 14% korting t.o.v. 3× Annual",
+          "Kernaanbod — 9% korting t.o.v. 3× Annual",
           "Continue opvolging gedurende 3 jaar",
           "Sterkste prijsargument voor het gezin"
         ]
@@ -784,9 +784,9 @@
         "tagline": "Gezinspakket — tot 3 dieren",
         "scope": "Account",
         "benefits": [
-          "Huishoudoptie beschikbaar in de app",
-          "Vult dierabonnementen aan (geen substitutie)",
-          "Productregel: tot 3 dieren (geen onbeperkt abo)"
+          "Gezinsweergave: komende zorgherinneringen voor alle dieren",
+          "Voor gezinnen van 2 tot 3 dieren (plafond 3)",
+          "Elk dier blijft individueel geabonneerd"
         ]
       },
       "carePlus": {
@@ -816,7 +816,7 @@
     "summaryTitle": "Overzicht prijzen",
     "summary": {
       "annual": { "name": "Annual", "price": "€29 / jaar", "role": "Dierabonnement — instap" },
-      "triennial": { "name": "Triennial", "price": "€75 / 3 jaar", "role": "Dierabonnement — aanbevolen" },
+      "triennial": { "name": "Triennial", "price": "€79 / 3 jaar", "role": "Dierabonnement — aanbevolen" },
       "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 jaar", "role": "Dierabonnement — lange termijn" },
       "family": { "name": "Family", "price": "€55 / jaar", "role": "Huishoud-addon ≤ 3 dieren" },
       "carePlus": { "name": "Care+", "price": "€19 / jaar", "role": "Addon zorg / medicatie" },
@@ -894,6 +894,9 @@
     "invalid_iban": "Ongeldig IBAN",
     "invalid_bic": "Ongeldige BIC (8 of 11 tekens)",
     "invalid_account_holder": "Ongeldige rekeninghouder",
+    "family_pet_limit": "Familiepakket is beperkt tot 3 dieren",
+    "family_requires_two_pets": "Familiepakket vereist minstens 2 dieren",
+    "family_required": "Familiepakket vereist",
     "invalid_billing_mode": "Ongeldige facturatiemodus",
     "no_pending_payment": "Geen betaling in afwachting",
     "not_a_subscription": "Dit is geen abonnement",
@@ -1056,7 +1059,7 @@
         "Family / Care+ / Horse addons met echte privileges",
         "Berichten en zorgherinneringen"
       ],
-      "commercialMirror": "Commercial: vast 12% op abonnementen en addons (~9 € op het triennial abonnement van 75 €).",
+      "commercialFlat": "Commercial: vast 12% op abonnementen en addons (~9,5 € op het triennial abonnement van 79 €).",
       "productsLink": "Volledige productgrid openen (presentatie)"
     }
   }

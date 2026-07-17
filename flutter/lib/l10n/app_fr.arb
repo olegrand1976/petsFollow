@@ -82,7 +82,7 @@
   "errorCouldNotOpenLink": "Impossible d'ouvrir le lien",
   "planAnnualSub": "{price}, renouvelé automatiquement",
   "@planAnnualSub": { "placeholders": { "price": { "type": "String" } } },
-  "planTriennialSub": "75 € tous les 3 ans, renouvelé automatiquement",
+  "planTriennialSub": "79 € tous les 3 ans, renouvelé automatiquement",
   "planQuinquennialSub": "115 € tous les 5 ans, renouvelé automatiquement",
   "planOneTime": "{price}, paiement unique",
   "@planOneTime": { "placeholders": { "price": { "type": "String" } } },
@@ -155,7 +155,17 @@
   "horseContactRole": "Rôle",
   "horseCompetitionTitle": "Événement",
   "horseCompetitionDate": "Date (AAAA-MM-JJ)",
-  "familyPackHint": "Pack famille — avantages foyer jusqu'à 3 animaux",
+  "familyPackHint": "Pack Famille — vue foyer des rappels, jusqu'à 3 animaux",
+  "familyHouseholdTitle": "Foyer Famille — {count}/{max} animaux",
+  "@familyHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "familyHouseholdNext": "Prochains rappels du foyer",
+  "familyPetLimit": "Pack Famille limité à 3 animaux",
+  "familyRequiresTwoPets": "Le pack Famille nécessite au moins 2 animaux",
   "discoveryMarkDone": "Mission accomplie",
   "notificationPreferences": "Préférences de notifications",
   "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",

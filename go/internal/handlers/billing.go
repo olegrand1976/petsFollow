@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -78,6 +79,20 @@ func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_addon")
 		return
+	}
+	if code == billing.AddonFamily {
+		if err := a.store.AssertFamilyPurchaseEligible(r.Context(), id.UserID); err != nil {
+			if errors.Is(err, store.ErrFamilyRequiresTwoPets) {
+				writeErr(w, r, http.StatusBadRequest, "family_limit", "family_requires_two_pets")
+				return
+			}
+			if errors.Is(err, store.ErrFamilyPetLimit) {
+				writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
 	}
 	addon, _ := billing.GetAddon(code)
 	ent, err := a.store.CreateAddonEntitlement(r.Context(), id.UserID, string(code), addon.AmountCents)

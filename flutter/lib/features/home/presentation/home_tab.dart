@@ -163,6 +163,8 @@ class _HomeTabState extends State<HomeTab> {
                         hasHorse: pets.any((p) => p.species == 'horse'),
                         petCount: pets.length,
                       ),
+                      const SizedBox(height: 12),
+                      _FamilyHouseholdCard(l10n: l10n),
                       const SizedBox(height: 24),
                     ],
                     Text(l10n.myPets, style: Theme.of(context).textTheme.titleMedium),
@@ -281,6 +283,83 @@ class _AddFirstVetCard extends StatelessWidget {
   }
 }
 
+class _FamilyHouseholdCard extends StatefulWidget {
+  const _FamilyHouseholdCard({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  State<_FamilyHouseholdCard> createState() => _FamilyHouseholdCardState();
+}
+
+class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
+  Map<String, dynamic>? _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final ents = await AddonEntitlements.load();
+      if (!ents.hasFamily) {
+        if (mounted) setState(() => _data = null);
+        return;
+      }
+      final data = await ApiClient.instance.getHousehold();
+      if (!mounted) return;
+      setState(() => _data = data);
+    } catch (_) {
+      if (mounted) setState(() => _data = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = _data;
+    if (data == null) return const SizedBox.shrink();
+    final count = (data['petCount'] as num?)?.toInt() ?? 0;
+    final max = (data['maxPets'] as num?)?.toInt() ?? 3;
+    final upcoming = (data['upcomingReminders'] as List?) ?? const [];
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.l10n.familyHouseholdTitle(count, max),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          if (upcoming.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(widget.l10n.familyHouseholdNext, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            const SizedBox(height: 6),
+            ...upcoming.take(3).map((raw) {
+              final item = Map<String, dynamic>.from(raw as Map);
+              final petName = '${item['petName'] ?? ''}';
+              final title = '${item['title'] ?? item['type'] ?? ''}';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• $petName — $title',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _UpsellBanner extends StatefulWidget {
   const _UpsellBanner({
     required this.l10n,
@@ -331,12 +410,17 @@ class _UpsellBannerState extends State<_UpsellBanner> {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
       await openExternalUrl(url);
       await _load();
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.l10n.paymentResume)),
-        );
-      }
+    } catch (e) {
+      if (!context.mounted) return;
+      final raw = e.toString();
+      final msg = raw.contains('family_requires_two_pets')
+          ? widget.l10n.familyRequiresTwoPets
+          : raw.contains('family_pet_limit')
+              ? widget.l10n.familyPetLimit
+              : widget.l10n.paymentResume;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
     }
   }
 

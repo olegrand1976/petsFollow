@@ -145,8 +145,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        final raw = e.toString();
+        final msg = raw.contains('family_pet_limit')
+            ? l10n.familyPetLimit
+            : raw.contains('family_requires_two_pets')
+                ? l10n.familyRequiresTwoPets
+                : l10n.errorGeneric(raw);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric(e.toString()))),
+          SnackBar(content: Text(msg)),
         );
       }
     } finally {
@@ -210,7 +216,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
         ? plans
         : [
             {'code': 'annual', 'label': '29 € / an'},
-            {'code': 'triennial', 'label': '75 € / 3 ans', 'recommended': true},
+            {'code': 'triennial', 'label': '79 € / 3 ans', 'recommended': true},
             {'code': 'quinquennial', 'label': '115 € / 5 ans'},
           ];
     final initial = (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();

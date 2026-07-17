@@ -265,7 +265,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planTriennialSub =>
-      '75 € tous les 3 ans, renouvelé automatiquement';
+      '79 € tous les 3 ans, renouvelé automatiquement';
 
   @override
   String get planQuinquennialSub =>
@@ -490,7 +490,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Pack famille — avantages foyer jusqu\'à 3 animaux';
+      'Pack Famille — vue foyer des rappels, jusqu\'à 3 animaux';
+
+  @override
+  String familyHouseholdTitle(int count, int max) {
+    return 'Foyer Famille — $count/$max animaux';
+  }
+
+  @override
+  String get familyHouseholdNext => 'Prochains rappels du foyer';
+
+  @override
+  String get familyPetLimit => 'Pack Famille limité à 3 animaux';
+
+  @override
+  String get familyRequiresTwoPets =>
+      'Le pack Famille nécessite au moins 2 animaux';
 
   @override
   String get discoveryMarkDone => 'Mission accomplie';

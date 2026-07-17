@@ -262,7 +262,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '75 € elke 3 jaar, automatisch verlengd';
+  String get planTriennialSub => '79 € elke 3 jaar, automatisch verlengd';
 
   @override
   String get planQuinquennialSub => '115 € elke 5 jaar, automatisch verlengd';
@@ -486,7 +486,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get horseCompetitionDate => 'Datum (JJJJ-MM-DD)';
 
   @override
-  String get familyPackHint => 'Gezinspakket — voordelen tot 3 dieren';
+  String get familyPackHint =>
+      'Familiepakket — gezinsweergave van herinneringen, tot 3 dieren';
+
+  @override
+  String familyHouseholdTitle(int count, int max) {
+    return 'Familiehuishouden — $count/$max dieren';
+  }
+
+  @override
+  String get familyHouseholdNext => 'Komende gezinsherinneringen';
+
+  @override
+  String get familyPetLimit => 'Familiepakket is beperkt tot 3 dieren';
+
+  @override
+  String get familyRequiresTwoPets => 'Familiepakket vereist minstens 2 dieren';
 
   @override
   String get discoveryMarkDone => 'Missie voltooid';
