@@ -2,6 +2,7 @@ package billing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -282,9 +283,27 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err != nil {
 		return err
 	}
+	if addon.Status == "active" {
+		// Idempotent webhook retry after successful activation.
+		return s.store.AccrueCommercialForAddon(ctx, addonID)
+	}
+	if addon.Status != "pending" {
+		return nil
+	}
 	addonDef, err := GetAddon(AddonCode(addon.AddonCode))
 	if err != nil {
 		return err
+	}
+	// Family must still be 2–3 pets at activation (closes race after pending checkout).
+	if AddonCode(addon.AddonCode) == AddonFamily {
+		if err := s.store.AssertFamilyPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
+			if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
+				return fmt.Errorf("family activate reject + cancel: %v / %w", err, cerr)
+			}
+			// Ack webhook (avoid endless Stripe retries); payment needs manual refund.
+			fmt.Printf("CRITICAL: family addon %s cancelled after payment — eligibility failed: %v (manual refund)\n", addonID, err)
+			return nil
+		}
 	}
 	validUntil := AddonValidUntil(now, addonDef)
 	customerID, _ := asString(obj["customer"])

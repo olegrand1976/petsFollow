@@ -30,6 +30,7 @@ class _HomeTabState extends State<HomeTab> {
   bool loading = true;
   bool? hasVets;
   DiscoveryProgress? discoveryProgress;
+  int householdEpoch = 0;
 
   @override
   void initState() {
@@ -58,10 +59,16 @@ class _HomeTabState extends State<HomeTab> {
         setState(() {
           pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
           loading = false;
+          householdEpoch++;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() {
+          loading = false;
+          householdEpoch++;
+        });
+      }
     }
   }
 
@@ -164,9 +171,12 @@ class _HomeTabState extends State<HomeTab> {
                         petCount: pets.length,
                       ),
                       const SizedBox(height: 12),
-                      _FamilyHouseholdCard(l10n: l10n),
-                      const SizedBox(height: 24),
                     ],
+                    _FamilyHouseholdCard(
+                      key: ValueKey(householdEpoch),
+                      l10n: l10n,
+                    ),
+                    const SizedBox(height: 24),
                     Text(l10n.myPets, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 12),
                     ...pets.map(
@@ -284,7 +294,7 @@ class _AddFirstVetCard extends StatelessWidget {
 }
 
 class _FamilyHouseholdCard extends StatefulWidget {
-  const _FamilyHouseholdCard({required this.l10n});
+  const _FamilyHouseholdCard({super.key, required this.l10n});
 
   final AppLocalizations l10n;
 

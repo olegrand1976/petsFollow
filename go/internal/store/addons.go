@@ -98,3 +98,34 @@ func (s *Store) HasActiveAddon(ctx context.Context, ownerUserID, addonCode strin
 		)`, ownerUserID, addonCode).Scan(&exists)
 	return exists, err
 }
+
+// HasActiveOrPendingAddon is true for an active entitlement or a recent pending checkout
+// (24h). Used to enforce Family pet caps during the payment window.
+func (s *Store) HasActiveOrPendingAddon(ctx context.Context, ownerUserID, addonCode string) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM billing.addon_entitlements
+			WHERE owner_user_id=$1 AND addon_code=$2
+				AND (
+					(status='pending' AND created_at > NOW() - INTERVAL '24 hours')
+					OR (status='active' AND (valid_until IS NULL OR valid_until > NOW()))
+				)
+		)`, ownerUserID, addonCode).Scan(&exists)
+	return exists, err
+}
+
+// CancelAddonEntitlement marks a pending/active addon as cancelled.
+func (s *Store) CancelAddonEntitlement(ctx context.Context, id string) error {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE billing.addon_entitlements
+		SET status='cancelled', updated_at=NOW()
+		WHERE id=$1 AND status IN ('pending','active')`, id)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

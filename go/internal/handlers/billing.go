@@ -100,7 +100,11 @@ func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	u, _ := a.store.GetUserByID(r.Context(), id.UserID)
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err := a.billing.StartAddonCheckout(r.Context(), billing.StartAddonCheckoutInput{
 		AddonID:     ent.ID,
 		OwnerUserID: id.UserID,

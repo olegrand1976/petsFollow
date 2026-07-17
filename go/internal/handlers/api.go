@@ -336,22 +336,18 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if err := a.store.AssertFamilyCanAddPet(r.Context(), id.UserID); err != nil {
-		if errors.Is(err, store.ErrFamilyPetLimit) {
-			writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
-			return
-		}
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
 	p := store.Pet{Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment"}
 	if req.BirthDate != nil {
 		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
 			p.BirthDate = &t
 		}
 	}
-	created, err := a.store.CreatePet(r.Context(), p)
+	created, err := a.store.CreatePetRespectingFamily(r.Context(), p)
 	if err != nil {
+		if errors.Is(err, store.ErrFamilyPetLimit) {
+			writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
