@@ -61,19 +61,33 @@ func (s *Store) ClientIsMemberOfPractice(ctx context.Context, clientUserID, prac
 	return exists, err
 }
 
+// VetInviteResult is returned after a client attempts to link a vet by email.
+type VetInviteResult struct {
+	Found        bool   `json:"found"`
+	Status       string `json:"status"` // pending | not_found
+	PracticeName string `json:"practiceName,omitempty"`
+	VetFullName  string `json:"vetFullName,omitempty"`
+}
+
 // InviteClientToVetByEmail creates a pending link request (no auto-membership).
-// Unknown emails return nil (anti-enumeration).
-func (s *Store) InviteClientToVetByEmail(ctx context.Context, clientUserID, vetEmail string) error {
+// Unknown emails return Found=false (client UX needs an explicit not_found).
+func (s *Store) InviteClientToVetByEmail(ctx context.Context, clientUserID, vetEmail string) (VetInviteResult, error) {
 	email := strings.ToLower(strings.TrimSpace(vetEmail))
-	var vetID, practiceID string
+	if email == "" {
+		return VetInviteResult{Found: false, Status: "not_found"}, nil
+	}
+	var vetID, practiceID, vetName, practiceName string
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text FROM identity.users
-		WHERE lower(email) = $1 AND role = 'vet' AND practice_id IS NOT NULL`, email).Scan(&vetID, &practiceID)
+		SELECT u.id::text, u.practice_id::text, u.full_name, pr.name
+		FROM identity.users u
+		JOIN practice.practices pr ON pr.id = u.practice_id
+		WHERE lower(u.email) = $1 AND u.role = 'vet' AND u.practice_id IS NOT NULL`, email).
+		Scan(&vetID, &practiceID, &vetName, &practiceName)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
+		return VetInviteResult{Found: false, Status: "not_found"}, nil
 	}
 	if err != nil {
-		return err
+		return VetInviteResult{}, err
 	}
 	_, err = s.pool.Exec(ctx, `
 		INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
@@ -83,7 +97,15 @@ func (s *Store) InviteClientToVetByEmail(ctx context.Context, clientUserID, vetE
 			status = 'pending',
 			updated_at = NOW()`,
 		uuid.NewString(), clientUserID, practiceID, vetID)
-	return err
+	if err != nil {
+		return VetInviteResult{}, err
+	}
+	return VetInviteResult{
+		Found:        true,
+		Status:       "pending",
+		PracticeName: practiceName,
+		VetFullName:  vetName,
+	}, nil
 }
 
 type VetLinkRequest struct {

@@ -322,8 +322,13 @@ class ApiClient {
         .toList();
   }
 
-  Future<void> inviteVet(String email) async {
-    await dio.post('/api/v1/me/vets/invite', data: {'email': email});
+  Future<Map<String, dynamic>> inviteVet(String email) async {
+    final res = await dio.post('/api/v1/me/vets/invite', data: {'email': email});
+    final data = res.data['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'found': false, 'status': 'not_found'};
   }
 
   Future<void> setPetPrimaryPractice(String petId, String practiceId) async {

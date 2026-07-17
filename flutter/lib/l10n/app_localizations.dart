@@ -1147,8 +1147,26 @@ abstract class AppLocalizations {
   /// No description provided for @vetInviteSent.
   ///
   /// In fr, this message translates to:
-  /// **'Invitation envoyée au vétérinaire'**
+  /// **'Invitation envoyée — le cabinet doit accepter la demande'**
   String get vetInviteSent;
+
+  /// No description provided for @vetInviteSentNamed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à {practice} — le cabinet doit l’accepter'**
+  String vetInviteSentNamed(String practice);
+
+  /// No description provided for @vetNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vétérinaire trouvé avec cet email'**
+  String get vetNotFound;
+
+  /// No description provided for @addVetSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.'**
+  String get addVetSearchHint;
 
   /// No description provided for @visitRequested.
   ///

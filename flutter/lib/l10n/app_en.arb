@@ -175,7 +175,15 @@
   "upcomingVisits": "Upcoming visits",
   "timelineEmpty": "No events yet",
   "noThreads": "No conversations",
-  "vetInviteSent": "Invitation sent to veterinarian",
+  "vetInviteSent": "Invitation sent — the practice must accept the request",
+  "vetInviteSentNamed": "Request sent to {practice} — the practice must accept it",
+  "@vetInviteSentNamed": {
+    "placeholders": {
+      "practice": { "type": "String" }
+    }
+  },
+  "vetNotFound": "No veterinarian found with this email",
+  "addVetSearchHint": "We look up this veterinarian account in petsFollow. If it exists, a link request is sent to the practice.",
   "visitRequested": "Visit request sent",
   "primaryVetSet": "Primary veterinarian updated",
   "visitStatusRequested": "Requested",

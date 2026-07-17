@@ -43,10 +43,12 @@ func (a *API) inviteVet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	_ = a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
-	httpx.WriteData(w, http.StatusOK, map[string]string{
-		"message": t(r, "success.vet_invite_sent", nil),
-	})
+	result, err := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, result)
 }
 
 type primaryPracticeReq struct {

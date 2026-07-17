@@ -16,7 +16,7 @@ Objectif : grille **attractive pour véto et commercial**, **concurrentielle** p
 | Annual | `annual` | **29 € / an** | 2,4 € | Ancre d’entrée |
 | Triennial **recommandé** | `triennial` | **79 € / 3 ans** | 2,2 € | Cœur d’offre & pitch commercial |
 | Quinquennial | `quinquennial` | **115 € / 5 ans** | 1,9 € | Engagement long sans dumping |
-| Family | `family` | **55 € / an** | — | Addon foyer (compte, ≤3 animaux) |
+| Family | `family` | **55 € / an** | — | Addon foyer **2–3** animaux + digest consolidé |
 | Care+ | `care_plus` | **19 € / an** | — | Upsell soins / médicaments (compte) |
 | Horse | `horse` | **39 € / an** | — | Pack équine (compte, pets horse) |
 
@@ -33,11 +33,12 @@ Règle : ne jamais descendre sous **≈ −25 %** sur le 5 ans.
 
 ### Family — règle produit
 
-- Scope **owner** (compte) : pack foyer jusqu’à **3 animaux**.
+- Scope **owner** (compte) : pack foyer **2–3** animaux (achat et plafond).
 - **Addon** (complément), pas un substitut des abonnements animal.
 - Achat : foyer avec **2 ou 3** animaux déjà créés.
-- Avec Family actif : plafond **3 animaux** (création du 4ᵉ bloquée).
-- Privilège livré : **vue foyer** (`GET /me/household`) — digest des prochains rappels de soins sur tous les animaux du compte.
+- Avec Family actif (ou pending checkout de moins de 24 h) : plafond **3 animaux** (création du 4ᵉ bloquée).
+- **Sans Family** : la liste Care **par animal** (et la navigation multi-animaux) reste accessible — aucun blocage des rappels standards.
+- **Avec Family** — privilège payant : **digest consolidé foyer** (`GET /me/household`) — prochains rappels de soins agrégés sur tous les animaux du compte.
 - Copy UI : « Forfait foyer — jusqu’à 3 animaux » (pas « abo illimité »).
 
 ### Care+ — privilèges

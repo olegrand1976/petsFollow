@@ -185,7 +185,15 @@
   "upcomingVisits": "Komende bezoeken",
   "timelineEmpty": "Nog geen gebeurtenissen",
   "noThreads": "Geen gesprekken",
-  "vetInviteSent": "Uitnodiging verzonden naar dierenarts",
+  "vetInviteSent": "Uitnodiging verzonden — de praktijk moet de aanvraag aanvaarden",
+  "vetInviteSentNamed": "Aanvraag verzonden naar {practice} — de praktijk moet ze aanvaarden",
+  "@vetInviteSentNamed": {
+    "placeholders": {
+      "practice": { "type": "String" }
+    }
+  },
+  "vetNotFound": "Geen dierenarts gevonden met dit e-mailadres",
+  "addVetSearchHint": "We zoeken dit dierenartsaccount in petsFollow. Als het bestaat, wordt een koppelingsaanvraag naar de praktijk gestuurd.",
   "visitRequested": "Bezoekaanvraag verzonden",
   "primaryVetSet": "Hoofddierenarts bijgewerkt",
   "visitStatusRequested": "Aangevraagd",

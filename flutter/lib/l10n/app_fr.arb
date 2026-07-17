@@ -194,7 +194,15 @@
   "upcomingVisits": "Prochaines visites",
   "timelineEmpty": "Aucun événement pour le moment",
   "noThreads": "Aucune conversation",
-  "vetInviteSent": "Invitation envoyée au vétérinaire",
+  "vetInviteSent": "Invitation envoyée — le cabinet doit accepter la demande",
+  "vetInviteSentNamed": "Demande envoyée à {practice} — le cabinet doit l’accepter",
+  "@vetInviteSentNamed": {
+    "placeholders": {
+      "practice": { "type": "String" }
+    }
+  },
+  "vetNotFound": "Aucun vétérinaire trouvé avec cet email",
+  "addVetSearchHint": "Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.",
   "visitRequested": "Demande de visite envoyée",
   "primaryVetSet": "Vétérinaire principal mis à jour",
   "visitStatusRequested": "Demandée",

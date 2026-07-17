@@ -44,11 +44,25 @@ class _MyVetsScreenState extends State<MyVetsScreen> {
     if (email.isEmpty) return;
     setState(() => inviting = true);
     try {
-      await ApiClient.instance.inviteVet(email);
-      emailCtrl.clear();
-      await load();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.vetInviteSent)));
+      final result = await ApiClient.instance.inviteVet(email);
+      final found = result['found'] == true;
+      if (!mounted) return;
+      if (found) {
+        emailCtrl.clear();
+        await load();
+        if (!mounted) return;
+        final practice = (result['practiceName'] as String?)?.trim() ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              practice.isEmpty ? l10n.vetInviteSent : l10n.vetInviteSentNamed(practice),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vetNotFound)),
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -75,17 +89,31 @@ class _MyVetsScreenState extends State<MyVetsScreen> {
                   TextField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
                     decoration: InputDecoration(
                       labelText: l10n.addVetByEmail,
                       hintText: l10n.vetEmailHint,
                       suffixIcon: inviting
                           ? const Padding(
                               padding: EdgeInsets.all(12),
-                              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
                             )
-                          : IconButton(icon: const Icon(Icons.person_add), onPressed: invite),
+                          : IconButton(
+                              icon: const Icon(Icons.person_add),
+                              onPressed: invite,
+                              tooltip: l10n.homeAddFirstVetCta,
+                            ),
                     ),
                     onSubmitted: (_) => invite(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.addVetSearchHint,
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.35),
                   ),
                   const SizedBox(height: 20),
                   if (vets.isEmpty)

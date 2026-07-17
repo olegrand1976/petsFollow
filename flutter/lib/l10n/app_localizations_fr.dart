@@ -590,7 +590,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noThreads => 'Aucune conversation';
 
   @override
-  String get vetInviteSent => 'Invitation envoyée au vétérinaire';
+  String get vetInviteSent =>
+      'Invitation envoyée — le cabinet doit accepter la demande';
+
+  @override
+  String vetInviteSentNamed(String practice) {
+    return 'Demande envoyée à $practice — le cabinet doit l’accepter';
+  }
+
+  @override
+  String get vetNotFound => 'Aucun vétérinaire trouvé avec cet email';
+
+  @override
+  String get addVetSearchHint =>
+      'Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.';
 
   @override
   String get visitRequested => 'Demande de visite envoyée';

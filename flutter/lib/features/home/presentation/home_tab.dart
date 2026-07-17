@@ -12,7 +12,6 @@ import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flo
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
-import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class HomeTab extends StatefulWidget {
@@ -129,13 +128,7 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 20),
                   if (hasVets == false) ...[
                     _AddFirstVetCard(
-                      onAdd: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MyVetsScreen()),
-                        );
-                        load();
-                      },
+                      onLinked: load,
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -249,10 +242,59 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
-class _AddFirstVetCard extends StatelessWidget {
-  const _AddFirstVetCard({required this.onAdd});
+class _AddFirstVetCard extends StatefulWidget {
+  const _AddFirstVetCard({required this.onLinked});
 
-  final VoidCallback onAdd;
+  final VoidCallback onLinked;
+
+  @override
+  State<_AddFirstVetCard> createState() => _AddFirstVetCardState();
+}
+
+class _AddFirstVetCardState extends State<_AddFirstVetCard> {
+  final _emailCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty || _submitting) return;
+    setState(() => _submitting = true);
+    try {
+      final result = await ApiClient.instance.inviteVet(email);
+      if (!mounted) return;
+      final found = result['found'] == true;
+      if (found) {
+        _emailCtrl.clear();
+        final practice = (result['practiceName'] as String?)?.trim() ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              practice.isEmpty ? l10n.vetInviteSent : l10n.vetInviteSentNamed(practice),
+            ),
+          ),
+        );
+        widget.onLinked();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vetNotFound)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('invite'))),
+        );
+      }
+    }
+    if (mounted) setState(() => _submitting = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -282,9 +324,34 @@ class _AddFirstVetCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(l10n.homeAddFirstVetBody, style: TextStyle(color: AppColors.textMuted, height: 1.35)),
           const SizedBox(height: 14),
+          TextField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            enabled: !_submitting,
+            decoration: InputDecoration(
+              labelText: l10n.addVetByEmail,
+              hintText: l10n.vetEmailHint,
+              filled: true,
+              fillColor: AppColors.surface,
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.addVetSearchHint,
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.35),
+          ),
+          const SizedBox(height: 14),
           FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.person_add_alt_1),
+            onPressed: _submitting ? null : _submit,
+            icon: _submitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.person_add_alt_1),
             label: Text(l10n.homeAddFirstVetCta),
           ),
         ],
