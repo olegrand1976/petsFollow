@@ -196,6 +196,7 @@
       "fr": "Français",
       "nl": "Nederlands",
       "en": "English",
+      "es": "Español",
       "saved": "Taal opgeslagen."
     },
     "heartrate": {
@@ -457,8 +458,6 @@
       "kpiStatus": "Runstatus",
       "tiersTitle": "Tariefraster (bewerkbaar)",
       "tierLine": "{min}{max} klanten → {pct}%",
-      "commercialRate": "Commercialcommissie (abos + addons)",
-      "saveSettings": "Commercialtarief opslaan",
       "saveTiers": "Dierenartsraster opslaan",
       "tiersHint": "Aaneensluitende niveaus vanaf 1 klant; laatste niveau zonder max (= open).",
       "openEnded": "∞",
@@ -476,7 +475,9 @@
       "colStatus": "Status",
       "statusOpen": "Open",
       "statusClosed": "Afgesloten",
-      "statusPaid": "Betaald"
+      "statusPaid": "Betaald",
+      "sheetTitle": "Commissiemodel (overzicht)",
+      "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% annual · 12% triennial · 8% quinquennial · 10% addons — hier niet bewerkbaar (zie fiche hierboven)."
     },
     "commercialCommissions": {
       "title": "Commercials loon",
@@ -541,7 +542,7 @@
   },
   "commissions": {
     "title": "Mijn commissies",
-    "subtitle": "Opvolging van doorverwezen klanten en progressieve vergoedingen (plafond 15%).",
+    "subtitle": "Progressieve vergoeding excl. btw — push triennial voor het beste tarief.",
     "kpiClients": "Betalende klanten",
     "kpiRate": "Huidig tarief",
     "kpiMonth": "Deze maand",
@@ -556,12 +557,16 @@
     "colDate": "Datum",
     "colClient": "Klant",
     "colPet": "Dier",
-    "colBase": "Omzetbasis",
+    "colBase": "Basis excl. btw",
     "colRate": "Tarief",
     "colCommission": "Commissie",
     "colPeriod": "Periode",
     "colAmount": "Bedrag",
-    "colStatus": "Status"
+    "colStatus": "Status",
+    "gainsTitle": "Indicatieve verdiensten & bonussen",
+    "sheetTitle": "Mijn vergoeding begrijpen",
+    "kpiRateBase": "Basistarief (schaal)",
+    "kpiRateHeart": "Kerntarief (triennial)"
   },
   "onboarding": {
     "title": "Praktijkconfiguratie",
@@ -700,7 +705,7 @@
     "productsCta": "Alle aanbiedingen bekijken (presentatie)",
     "productHighlights": {
       "plans": {
-        "price": "€29 / €79 / €115",
+        "price": "€35 / €95 / €145",
         "title": "Abonnementen per dier",
         "text": "Annual, Triennial (aanbevolen) of Quinquennial — hartmetingen, berichten en zorgherinneringen."
       },
@@ -738,13 +743,13 @@
     "plansTitle": "Abonnementen per dier",
     "plansLead": "Één abonnement per opgevolgd dier. Indicatieve prijzen — eenmalig of Stripe-abonnement.",
     "recommended": "Aanbevolen",
-    "plansTip": "Presentatietip: start met Triennial (€79 / 3 jaar ≈ €2,2/maand) — beste balans prijs / engagement voor het gezin.",
+    "plansTip": "Presentatietip: start met Triennial (€95 / 3 jaar ≈ €2,6/maand) — beste balans prijs / engagement voor het gezin.",
     "plans": {
       "annual": {
         "name": "Annual",
-        "price": "€29",
+        "price": "€35",
         "period": "per jaar",
-        "monthly": "≈ €2,4 / maand",
+        "monthly": "≈ €2,9 / maand",
         "benefits": [
           "Instapplan — ideaal om één dier te starten",
           "Alle kernvoordelen van dieropvolging inbegrepen",
@@ -753,9 +758,9 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "€79",
+        "price": "€95",
         "period": "voor 3 jaar",
-        "monthly": "≈ €2,2 / maand",
+        "monthly": "≈ €2,6 / maand",
         "benefits": [
           "Kernaanbod — 9% korting t.o.v. 3× Annual",
           "Continue opvolging gedurende 3 jaar",
@@ -764,9 +769,9 @@
       },
       "quinquennial": {
         "name": "Quinquennial",
-        "price": "€115",
+        "price": "€145",
         "period": "voor 5 jaar",
-        "monthly": "≈ €1,9 / maand",
+        "monthly": "≈ €2,4 / maand",
         "benefits": [
           "Lange termijn — 21% korting t.o.v. 5× Annual",
           "Ideaal voor chronische / senior dieren",
@@ -815,12 +820,36 @@
     },
     "summaryTitle": "Overzicht prijzen",
     "summary": {
-      "annual": { "name": "Annual", "price": "€29 / jaar", "role": "Dierabonnement — instap" },
-      "triennial": { "name": "Triennial", "price": "€79 / 3 jaar", "role": "Dierabonnement — aanbevolen" },
-      "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 jaar", "role": "Dierabonnement — lange termijn" },
-      "family": { "name": "Family", "price": "€55 / jaar", "role": "Huishoud-addon ≤ 3 dieren" },
-      "carePlus": { "name": "Care+", "price": "€19 / jaar", "role": "Addon zorg / medicatie" },
-      "horse": { "name": "Horse", "price": "€39 / jaar", "role": "Addon paardenpakket" }
+      "annual": {
+        "name": "Annual",
+        "price": "€35 / jaar",
+        "role": "Dierabonnement — instap"
+      },
+      "triennial": {
+        "name": "Triennial",
+        "price": "€95 / 3 jaar",
+        "role": "Dierabonnement — aanbevolen"
+      },
+      "quinquennial": {
+        "name": "Quinquennial",
+        "price": "€145 / 5 jaar",
+        "role": "Dierabonnement — lange termijn"
+      },
+      "family": {
+        "name": "Family",
+        "price": "€55 / jaar",
+        "role": "Huishoud-addon ≤ 3 dieren"
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "€19 / jaar",
+        "role": "Addon zorg / medicatie"
+      },
+      "horse": {
+        "name": "Horse",
+        "price": "€39 / jaar",
+        "role": "Addon paardenpakket"
+      }
     },
     "footer": "petsFollow — voorgeschreven door de dierenarts, zonder hardware"
   },
@@ -1009,7 +1038,7 @@
     },
     "commissions": {
       "title": "Mijn commissies",
-      "subtitle": "Vast 12% op abonnementen en addons — maandelijkse opvolging en uitbetalingen.",
+      "subtitle": "Tarieven per plan excl. btw (8 / 12 / 8%) — push triennial.",
       "rate": "Tarief",
       "month": "Maand",
       "lifetime": "Lifetime",
@@ -1028,7 +1057,11 @@
       "colAmount": "Bedrag",
       "colStatus": "Status",
       "ibanBanner": "Vul uw IBAN in om uw commissies te ontvangen.",
-      "ibanBannerLink": "Betalingsprofiel openen"
+      "ibanBannerLink": "Betalingsprofiel openen",
+      "rateHeart": "Kerntarief (triennial)",
+      "gainsTitle": "Indicatieve verdiensten & bonussen",
+      "sheetTitle": "Commissiefiche",
+      "pitchLink": "Volledige pitch openen"
     },
     "settings": {
       "title": "Betalingsprofiel",
@@ -1045,7 +1078,7 @@
       "webTitle": "Pro Web-app (dierenarts)",
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
-      "vetGrid": "Dierenarts: progressieve schaal 5% → 8% → 10% → 12% (plafond) volgens volume betalende cliënten.",
+      "vetGrid": "Dierenarts: 7% → 12% excl. btw volgens volume betalende cliënten, met planfactor (annual / triennial / quinquennial).",
       "addons": "Addons Family / Care+ / Horse: 12% voor de commercial. Care+ = medicatie & persoonlijke herinneringen; Horse = hoefsmid, contacten, wedstrijden (paarden).",
       "webFeatures": [
         "Operationeel dashboard cliënten / berichten / HR",
@@ -1059,8 +1092,52 @@
         "Family / Care+ / Horse addons met echte privileges",
         "Berichten en zorgherinneringen"
       ],
-      "commercialFlat": "Commercial: vast 12% op abonnementen en addons (~9,5 € op het triennial abonnement van 79 €).",
+      "commercialFlat": "Commercial: 8% / 12% / 8% excl. btw per plan (annual / triennial / quinquennial); ~€9,4 op het triennial abonnement van €95 incl. btw.",
       "productsLink": "Volledige productgrid openen (presentatie)"
+    }
+  },
+  "commissionSheet": {
+    "htvaNote": "Commissies op bedrag excl. btw (BE 21%). Klant-/Stripe-prijzen incl. btw.",
+    "leadVet": "Uw vergoeding als voorschrijver: progressieve schaal × planfactor.",
+    "leadCommercial": "Uw commissie als aanbrenger, plus de dierenarts-schaal voor co-selling.",
+    "leadAdmin": "Volledig model: dierenarts + commercial + SPIFF + marges.",
+    "vetTitle": "Vet commissioning",
+    "commercialTitle": "Sales commissioning",
+    "bonusesTitle": "Available bonuses",
+    "recommended": "Aanbevolen",
+    "colPlan": "Offer",
+    "colVetRate": "Max vet rate",
+    "colVetEuros": "Max vet €",
+    "colCommRate": "Sales rate",
+    "colCommEuros": "Sales €",
+    "vetAddonNote": "Addons (Family / Care+ / Horse) are not commissioned for vets.",
+    "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
+    "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
+    "tier": "{min}–{max} clients → {pct}% (base)",
+    "tierOpen": "{min}+ clients → {pct}% (base)",
+    "plans": {
+      "annual": "Annual (€35 TTC)",
+      "triennial": "Triennial (€95 TTC)",
+      "quinquennial": "Quinquennial (€145 TTC)",
+      "family": "Family",
+      "care_plus": "Care+",
+      "horse": "Horse"
+    },
+    "bonusTitles": {
+      "vet_tier_31": "31-client tier bonus",
+      "commercial_ramp": "Practice ramp bonus",
+      "commercial_mix": "Triennial mix bonus"
+    },
+    "bonusHints": {
+      "vet_tier_31": "€50 one-shot when first reaching 31 paying clients.",
+      "commercial_ramp": "€25 when 5 paid pets activate within 60 days under an assigned vet.",
+      "commercial_mix": "€50 / month if ≥ 55% of the month’s activations are triennial."
+    },
+    "status": {
+      "available": "Te verdienen",
+      "in_progress": "Bezig",
+      "earned": "Behaald",
+      "paid": "Betaald"
     }
   }
 }

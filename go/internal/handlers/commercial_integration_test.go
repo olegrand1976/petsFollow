@@ -307,8 +307,8 @@ func TestCommercialFlatSubscriptionAccrual(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantRate := store.DefaultCommercialCommissionRateBps
-	wantCommission := store.CommercialCommissionCents(baseCents, wantRate)
+	wantRate := store.CommercialRateBpsForPlan("annual")
+	wantCommission := store.CommissionFromTTCCents(baseCents, wantRate)
 
 	var sourceType string
 	var rateBps, commissionCents int

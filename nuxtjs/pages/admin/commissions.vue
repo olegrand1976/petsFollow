@@ -11,25 +11,17 @@
       <ProKpi :label="$t('admin.commissions.kpiStatus')" :value="runStatusLabel" />
     </div>
 
+    <ProCard :title="$t('admin.commissions.sheetTitle')" class="pro-mb">
+      <ProCommissionSheet
+        audience="admin"
+        :plan-rates="planRates"
+        :addon-rates="addonRates"
+        :bonuses="bonuses"
+      />
+    </ProCard>
+
     <ProCard :title="$t('admin.commissions.tiersTitle')" class="pro-mb">
-      <div class="pro-field pro-mb-sm">
-        <label class="pro-label" for="commercial-rate">{{ $t('admin.commissions.commercialRate') }}</label>
-        <div class="pro-field-inline-wrap">
-          <input
-            id="commercial-rate"
-            v-model.number="commercialRatePct"
-            class="pro-input pro-input-narrow"
-            type="number"
-            min="0"
-            max="50"
-            step="1"
-          >
-          <span>%</span>
-          <ProButton variant="secondary" :loading="savingSettings" @click="saveSettings">
-            {{ $t('admin.commissions.saveSettings') }}
-          </ProButton>
-        </div>
-      </div>
+      <p class="text-muted pro-mb-sm">{{ $t('admin.commissions.planRatesHint') }}</p>
       <div v-for="(t, idx) in editTiers" :key="idx" class="pro-tier-row">
         <input v-model.number="t.minClients" class="pro-input pro-input-narrow" type="number" min="1">
         <input
@@ -121,11 +113,12 @@ const totalCents = ref(0)
 const runStatus = ref('open')
 const tiers = ref<any[]>([])
 const editTiers = ref<{ minClients: number, maxClients: number | null, ratePct: number }[]>([])
-const commercialRatePct = ref(12)
+const planRates = ref<any[]>([])
+const addonRates = ref<any[]>([])
+const bonuses = ref<any[]>([])
 const closing = ref(false)
 const marking = ref(false)
 const savingTiers = ref(false)
-const savingSettings = ref(false)
 const error = ref('')
 const settingsError = ref('')
 
@@ -148,21 +141,6 @@ function syncEditTiers(list: any[]) {
     maxClients: t.maxClients ?? null,
     ratePct: Math.round((t.rateBps || 0) / 100),
   }))
-}
-
-async function saveSettings() {
-  savingSettings.value = true
-  settingsError.value = ''
-  try {
-    await $fetch('/api/admin/commissions/settings', {
-      method: 'PUT',
-      body: { commercialRateBps: Math.round(commercialRatePct.value * 100) },
-    })
-  } catch (e: any) {
-    settingsError.value = mapError(e)
-  } finally {
-    savingSettings.value = false
-  }
 }
 
 async function saveTiers() {
@@ -199,7 +177,9 @@ async function loadRunsMeta() {
   const data = res.data ?? res
   tiers.value = data.tiers ?? []
   syncEditTiers(tiers.value)
-  commercialRatePct.value = Math.round((data.commercialRateBps ?? 1200) / 100)
+  planRates.value = data.planRates ?? []
+  addonRates.value = data.addonRates ?? []
+  bonuses.value = data.bonuses ?? []
 }
 
 async function loadPeriod() {

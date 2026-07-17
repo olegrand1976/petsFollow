@@ -172,6 +172,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageEn => 'English';
 
   @override
+  String get languageEs => 'Español';
+
+  @override
   String get paymentResume => 'Betaling hervatten';
 
   @override

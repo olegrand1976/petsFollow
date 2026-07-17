@@ -9,12 +9,49 @@
       <NuxtLink to="/commercial/settings">{{ $t('commercial.commissions.ibanBannerLink') }}</NuxtLink>
     </div>
     <div v-if="summary" class="pro-grid-kpi">
-      <ProKpi :value="`${(summary.rateBps / 100).toFixed(0)}%`" :label="$t('commercial.commissions.rate')" />
+      <ProKpi :value="`${(summary.rateBps / 100).toFixed(0)}%`" :label="$t('commercial.commissions.rateHeart')" />
       <ProKpi :value="formatCurrency(summary.monthEarnedCents)" :label="$t('commercial.commissions.month')" />
       <ProKpi :value="formatCurrency(summary.lifetimeEarnedCents)" :label="$t('commercial.commissions.lifetime')" />
       <ProKpi :value="formatCurrency(summary.subscriptionCommissionCents)" :label="$t('commercial.commissions.subscriptions')" />
       <ProKpi :value="formatCurrency(summary.addonCommissionCents)" :label="$t('commercial.commissions.addons')" />
     </div>
+
+    <ProCard :title="$t('commercial.commissions.gainsTitle')" class="pro-mt-lg">
+      <div class="pf-plan-compare">
+        <div
+          v-for="row in summary?.planRates || []"
+          :key="row.code"
+          class="pf-plan-compare__item"
+          :class="{ 'pf-plan-compare__item--rec': row.recommended }"
+        >
+          <strong>{{ $t(`commissionSheet.plans.${row.code}`) }}</strong>
+          <span>{{ formatPct(row.commercialRateBps) }} · {{ formatCurrency(row.commercialCents) }}</span>
+          <ProBadge v-if="row.recommended" variant="success">{{ $t('commissionSheet.recommended') }}</ProBadge>
+        </div>
+      </div>
+      <div class="pf-bonus-row">
+        <ProCard v-for="b in commercialBonuses" :key="b.code" class="pf-bonus-card">
+          <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
+          <p>{{ formatCurrency(b.amountCents) }}</p>
+          <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
+          <ProBadge :variant="b.status === 'earned' ? 'success' : b.status === 'in_progress' ? 'warning' : 'neutral'">
+            {{ $t(`commissionSheet.status.${b.status || 'available'}`) }}
+            <template v-if="b.progress != null && b.target"> — {{ b.progress }}/{{ b.target }}</template>
+          </ProBadge>
+        </ProCard>
+      </div>
+    </ProCard>
+
+    <ProCard :title="$t('commercial.commissions.sheetTitle')" class="pro-mt-lg">
+      <ProCommissionSheet
+        audience="commercial"
+        :plan-rates="summary?.planRates || []"
+        :addon-rates="summary?.addonRates || []"
+        :bonuses="summary?.bonuses || []"
+      />
+      <NuxtLink to="/commercial/pitch" class="pro-hint-link">{{ $t('commercial.commissions.pitchLink') }}</NuxtLink>
+    </ProCard>
+
     <ProCard class="pro-mt-lg">
       <ProTable :empty="!summary?.recentLedger?.length" :empty-title="$t('commercial.commissions.empty')">
         <thead>
@@ -67,6 +104,14 @@ const { formatCurrency } = useFormatters()
 const summary = ref<any>(null)
 const hasIban = ref(true)
 
+const commercialBonuses = computed(() =>
+  (summary.value?.bonuses || []).filter((b: any) => b.audience === 'commercial'),
+)
+
+function formatPct(bps: number) {
+  return `${((bps || 0) / 100).toFixed(0)} %`
+}
+
 onMounted(async () => {
   const [commRes, profileRes]: any[] = await Promise.all([
     $fetch('/api/commercial/commissions'),
@@ -74,22 +119,55 @@ onMounted(async () => {
   ])
   summary.value = commRes.data ?? commRes
   const profile = profileRes?.data ?? profileRes
-  hasIban.value = Boolean(profile?.iban)
+  if (profile && (profile.iban != null || profile.payoutIban != null)) {
+    hasIban.value = Boolean(profile.iban || profile.payoutIban)
+  }
 })
 </script>
 
 <style scoped>
-.pro-banner {
-  display: flex;
-  flex-wrap: wrap;
+.pro-grid-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.75rem;
-  align-items: center;
+}
+.pro-mt-lg { margin-top: 1.25rem; }
+.pro-banner {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--pf-vet-border);
+  border-radius: 8px;
   background: var(--pf-vet-surface);
+  border: 1px solid var(--pf-vet-border);
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
-.pro-mt-lg {
-  margin-top: 1.25rem;
+.pf-plan-compare {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.pf-plan-compare__item {
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.pf-plan-compare__item--rec { border-color: var(--pf-vet-accent); }
+.pf-bonus-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+.pf-bonus-card p { margin: 0.25rem 0; }
+.pro-hint-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: var(--pf-vet-accent);
+}
+@media (max-width: 900px) {
+  .pf-plan-compare { grid-template-columns: 1fr; }
 }
 </style>

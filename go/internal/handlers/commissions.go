@@ -77,13 +77,14 @@ func (a *API) adminListCommissionRuns(w http.ResponseWriter, r *http.Request) {
 	if tiers == nil {
 		tiers = []store.CommissionTier{}
 	}
-	commercialRateBps, _ := a.store.GetCommercialRateBps(r.Context())
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"runs":                runs,
 		"currentPeriodYm":     period,
 		"currentPreviewCents": previewTotal,
 		"tiers":               tiers,
-		"commercialRateBps":   commercialRateBps,
+		"planRates":           store.SubscriptionPlanRates(),
+		"addonRates":          store.AddonPlanRates(),
+		"bonuses":             store.DefaultBonusRules(),
 	})
 }
 
@@ -182,33 +183,19 @@ func (a *API) adminGetCommissionSettings(w http.ResponseWriter, r *http.Request)
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	_ = a.store.EnsureCommissionSettings(r.Context())
-	bps, err := a.store.GetCommercialRateBps(r.Context())
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{"commercialRateBps": bps})
-}
-
-type putSettingsReq struct {
-	CommercialRateBps int `json:"commercialRateBps"`
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"planRates":  store.SubscriptionPlanRates(),
+		"addonRates": store.AddonPlanRates(),
+		"bonuses":    store.DefaultBonusRules(),
+	})
 }
 
 func (a *API) adminPutCommissionSettings(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	var req putSettingsReq
-	if err := httpx.DecodeJSON(r, &req); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
-	if err := a.store.SetCommercialRateBps(r.Context(), req.CommercialRateBps); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_rate_bps")
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{"commercialRateBps": req.CommercialRateBps})
+	// Commercial rates are plan-based constants (see store.CommercialRateBpsForPlan).
+	writeErr(w, r, http.StatusBadRequest, "bad_request", "commercial_rates_are_plan_based")
 }
 
 func (a *API) adminListCommercialCommissionRuns(w http.ResponseWriter, r *http.Request) {
@@ -227,12 +214,12 @@ func (a *API) adminListCommercialCommissionRuns(w http.ResponseWriter, r *http.R
 	for _, l := range preview {
 		previewTotal += l.AmountCents
 	}
-	rateBps, _ := a.store.GetCommercialRateBps(r.Context())
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"runs":                runs,
 		"currentPeriodYm":     period,
 		"currentPreviewCents": previewTotal,
-		"commercialRateBps":   rateBps,
+		"planRates":           store.SubscriptionPlanRates(),
+		"addonRates":          store.AddonPlanRates(),
 	})
 }
 

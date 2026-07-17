@@ -1,4 +1,4 @@
-const SUPPORTED_LOCALES = ['fr', 'nl', 'en'] as const
+const SUPPORTED_LOCALES = ['fr', 'nl', 'en', 'es'] as const
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export function useLocaleSync() {

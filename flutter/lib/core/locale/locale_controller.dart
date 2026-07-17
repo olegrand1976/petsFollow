@@ -28,5 +28,6 @@ class LocaleController extends ChangeNotifier {
     await prefs.setString(_prefKey, code);
   }
 
-  bool _isSupported(String code) => code == 'fr' || code == 'nl' || code == 'en';
+  bool _isSupported(String code) =>
+      code == 'fr' || code == 'nl' || code == 'en' || code == 'es';
 }

@@ -213,18 +213,22 @@
     },
     "commissions": {
       "title": "Mes commissions",
-      "subtitle": "12 % fixe sur abonnements et addons — suivi mensuel et versements.",
+      "subtitle": "Taux par plan sur HTVA (8 / 12 / 8 %) — poussez le triennial.",
       "rate": "Taux",
+      "rateHeart": "Taux cœur (triennial)",
       "month": "Mois",
       "lifetime": "Lifetime",
       "subscriptions": "Abonnements",
       "addons": "Addons",
+      "gainsTitle": "Gains indicatifs & bonus",
+      "sheetTitle": "Fiche de commissionnement",
+      "pitchLink": "Voir la présentation complète",
       "empty": "Aucune commission",
       "date": "Date",
       "type": "Type",
       "vet": "Véto",
       "client": "Client",
-      "base": "Base",
+      "base": "Base HTVA",
       "amount": "Commission",
       "payoutsTitle": "Versements",
       "payoutsEmpty": "Aucun versement encore",
@@ -249,7 +253,7 @@
       "webTitle": "App Web Pro (véto)",
       "mobileTitle": "App Mobile Flutter (clients)",
       "commissionTitle": "Commissionnement",
-      "vetGrid": "Véto : grille progressive 5 % → 8 % → 10 % → 12 % (plafond) selon le volume de clients payants.",
+      "vetGrid": "Véto : 7 % → 12 % HTVA selon le volume, avec facteur plan (annual / triennial / quinquennial).",
       "addons": "Addons Family / Care+ / Horse : 12 % commercial. Care+ = médicaments & rappels perso ; Horse = maréchal, contacts, compétitions (chevaux).",
       "webFeatures": [
         "Dashboard opérationnel clients / messages / FC",
@@ -263,7 +267,7 @@
         "Addons Family / Care+ / Horse avec privilèges réels",
         "Messages et rappels de soins"
       ],
-      "commercialFlat": "Commercial : 12 % fixe sur abonnements et addons (~9,5 € sur le triennial 79 €).",
+      "commercialFlat": "Commercial : 8 % / 12 % / 8 % HTVA selon le plan (annual / triennial / quinquennial) ; ~9,4 € sur le triennial 95 € TTC.",
       "productsLink": "Voir la grille produits complète (support présentation)"
     }
   },
@@ -310,6 +314,7 @@
       "fr": "Français",
       "nl": "Nederlands",
       "en": "English",
+      "es": "Español",
       "saved": "Langue enregistrée."
     },
     "heartrate": {
@@ -594,17 +599,18 @@
     },
     "commissions": {
       "title": "Rétributions vétos",
-      "subtitle": "Commissions progressives (max 12 %) — taux éditables. Cycle mensuel.",
+      "subtitle": "Modèle Apporteur / Prescripteur — HTVA, taux par plan, cycle mensuel.",
       "kpiPeriod": "Période",
       "kpiDue": "Total à verser",
       "kpiStatus": "Statut run",
-      "tiersTitle": "Grille de taux (éditable)",
+      "sheetTitle": "Modèle de commissionnement (vue d’ensemble)",
+      "planRatesHint": "Taux commercial figés par plan (HTVA) : 8 % annual · 12 % triennial · 8 % quinquennial · 10 % addons — non éditables ici (voir fiche ci-dessus).",
+      "tiersTitle": "Grille de taux véto (éditable)",
       "tierLine": "{min}{max} clients → {pct} %",
-      "commercialRate": "Commission commercial (abos + addons)",
-      "saveSettings": "Enregistrer le taux commercial",
       "saveTiers": "Enregistrer la grille véto",
-      "tiersHint": "Paliers contigus à partir de 1 client ; dernier palier sans max (= open).",
+      "tiersHint": "Paliers contigus à partir de 1 client ; dernier palier sans max (= open). Facteur plan appliqué à l’accrual (annual/quin ×0,67, triennial ×1).",
       "openEnded": "∞",
+
       "periodTitle": "Détail mensuel",
       "period": "Mois",
       "close": "Clôturer le mois",
@@ -655,11 +661,15 @@
   },
   "commissions": {
     "title": "Mes commissions",
-    "subtitle": "Suivi des clients envoyés et des rétributions progressives (plafond 12 %).",
+    "subtitle": "Rétribution progressive sur HTVA — poussez le triennial pour le meilleur taux.",
     "kpiClients": "Clients payants",
-    "kpiRate": "Taux actuel",
+    "kpiRate": "Taux de base actuel",
+    "kpiRateBase": "Taux de base (palier)",
+    "kpiRateHeart": "Taux cœur (triennial)",
     "kpiMonth": "Gains du mois",
     "kpiLifetime": "Total gagné",
+    "gainsTitle": "Gains indicatifs & bonus",
+    "sheetTitle": "Comprendre ma rémunération",
     "tiersTitle": "Grille progressive",
     "tierLine": "{min}{max} clients → {pct} %",
     "nextTier": "Prochain palier à {n} clients payants.",
@@ -670,12 +680,56 @@
     "colDate": "Date",
     "colClient": "Client",
     "colPet": "Animal",
-    "colBase": "Base CA",
+    "colBase": "Base HTVA",
     "colRate": "Taux",
     "colCommission": "Commission",
     "colPeriod": "Période",
     "colAmount": "Montant",
     "colStatus": "Statut"
+  },
+  "commissionSheet": {
+    "htvaNote": "Commissions calculées sur le HTVA (TVA BE 21 %). Prix clients / Stripe en TTC.",
+    "leadVet": "Votre rémunération de prescripteur : grille progressive × facteur selon le plan vendu.",
+    "leadCommercial": "Votre commissionnement d’apporteur, et la grille véto pour pitcher le co-selling.",
+    "leadAdmin": "Vue d’ensemble du modèle : véto + commercial + bonus SPIFF + garde-fous marge.",
+    "vetTitle": "Commissionnement véto",
+    "commercialTitle": "Commissionnement commercial",
+    "bonusesTitle": "Bonus possibles",
+    "recommended": "Recommandé",
+    "colPlan": "Offre",
+    "colVetRate": "Taux véto max",
+    "colVetEuros": "€ véto max",
+    "colCommRate": "Taux commercial",
+    "colCommEuros": "€ commercial",
+    "vetAddonNote": "Les addons (Family / Care+ / Horse) ne sont pas commissionnés pour le véto.",
+    "coSellNote": "Le véto n’est pas pénalisé si vous êtes assigné — co-selling gagnant-gagnant.",
+    "adminGuardrails": "Garde-fous : marge nette ≥ 55 % du TTC · net/an cœur ≥ 17 € · take rate max cœur 24 % HT.",
+    "tier": "{min}–{max} clients → {pct} % (base)",
+    "tierOpen": "{min}+ clients → {pct} % (base)",
+    "plans": {
+      "annual": "Annual (35 € TTC)",
+      "triennial": "Triennial (95 € TTC)",
+      "quinquennial": "Quinquennial (145 € TTC)",
+      "family": "Family",
+      "care_plus": "Care+",
+      "horse": "Horse"
+    },
+    "bonusTitles": {
+      "vet_tier_31": "Bonus palier 31 clients",
+      "commercial_ramp": "Bonus ramp cabinet",
+      "commercial_mix": "Bonus mix triennial"
+    },
+    "bonusHints": {
+      "vet_tier_31": "50 € one-shot au 1er passage de 31 clients payants.",
+      "commercial_ramp": "25 € si 5 animaux payants activés sous 60 j sur un véto assigné.",
+      "commercial_mix": "50 € / mois si ≥ 55 % des activations du mois sont en triennial."
+    },
+    "status": {
+      "available": "À gagner",
+      "in_progress": "En cours",
+      "earned": "Obtenu",
+      "paid": "Payé"
+    }
   },
   "onboarding": {
     "title": "Configuration du cabinet",
@@ -814,7 +868,7 @@
     "productsCta": "Voir toutes les offres (support présentation)",
     "productHighlights": {
       "plans": {
-        "price": "29 / 79 / 115 €",
+        "price": "35 / 95 / 145 €",
         "title": "Abonnements par animal",
         "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés cardiaques, messagerie et rappels de soins."
       },
@@ -852,13 +906,13 @@
     "plansTitle": "Abonnements par animal",
     "plansLead": "Un abonnement par animal suivi. Prix TTC indicatifs — renouvellement possible en paiement unique ou abonnement Stripe.",
     "recommended": "Recommandé",
-    "plansTip": "Conseil présentation : privilégiez le Triennial (79 € / 3 ans ≈ 2,2 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
+    "plansTip": "Conseil présentation : privilégiez le Triennial (95 € / 3 ans ≈ 2,6 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
     "plans": {
       "annual": {
         "name": "Annual",
-        "price": "29 €",
+        "price": "35 €",
         "period": "par an",
-        "monthly": "≈ 2,4 € / mois",
+        "monthly": "≈ 2,9 € / mois",
         "benefits": [
           "Entrée de gamme — idéal pour démarrer un animal",
           "Tous les bénéfices du suivi animal inclus",
@@ -867,9 +921,9 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "79 €",
+        "price": "95 €",
         "period": "pour 3 ans",
-        "monthly": "≈ 2,2 € / mois",
+        "monthly": "≈ 2,6 € / mois",
         "benefits": [
           "Cœur d'offre — −9 % vs 3× Annual",
           "Suivi continu sur 3 ans",
@@ -878,9 +932,9 @@
       },
       "quinquennial": {
         "name": "Quinquennial",
-        "price": "115 €",
+        "price": "145 €",
         "period": "pour 5 ans",
-        "monthly": "≈ 1,9 € / mois",
+        "monthly": "≈ 2,4 € / mois",
         "benefits": [
           "Engagement long terme — −21 % vs 5× Annual",
           "Idéal animaux chroniques / seniors",
@@ -929,9 +983,9 @@
     },
     "summaryTitle": "Récapitulatif grille",
     "summary": {
-      "annual": { "name": "Annual", "price": "29 € / an", "role": "Abonnement animal — entrée" },
-      "triennial": { "name": "Triennial", "price": "79 € / 3 ans", "role": "Abonnement animal — recommandé" },
-      "quinquennial": { "name": "Quinquennial", "price": "115 € / 5 ans", "role": "Abonnement animal — long terme" },
+      "annual": { "name": "Annual", "price": "35 € / an", "role": "Abonnement animal — entrée" },
+      "triennial": { "name": "Triennial", "price": "95 € / 3 ans", "role": "Abonnement animal — recommandé" },
+      "quinquennial": { "name": "Quinquennial", "price": "145 € / 5 ans", "role": "Abonnement animal — long terme" },
       "family": { "name": "Family", "price": "55 € / an", "role": "Addon foyer ≤ 3 animaux" },
       "carePlus": { "name": "Care+", "price": "19 € / an", "role": "Addon soins / médicaments" },
       "horse": { "name": "Horse", "price": "39 € / an", "role": "Addon pack équine" }

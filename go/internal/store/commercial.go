@@ -335,24 +335,93 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 		return nil, err
 	}
 
-	rateBps, err := s.GetCommercialRateBps(ctx)
-	if err != nil {
-		return nil, err
-	}
 	payoutHistory, err := s.ListCommercialPayoutHistory(ctx, commercialUserID)
 	if err != nil {
 		return nil, err
 	}
+	bonuses, err := s.commercialBonusProgress(ctx, commercialUserID, month)
+	if err != nil {
+		return nil, err
+	}
 	return map[string]any{
-		"rateBps":                     rateBps,
+		"rateBps":                     CommercialRateTriennialBps, // heart-rate display: recommended plan
 		"monthPeriodYm":               month,
 		"monthEarnedCents":            monthEarned,
 		"lifetimeEarnedCents":         lifetime,
 		"subscriptionCommissionCents": subCommission,
 		"addonCommissionCents":        addonCommission,
+		"planRates":                   SubscriptionPlanRates(),
+		"addonRates":                  AddonPlanRates(),
+		"vetTiers":                    DefaultVetCommissionTiers(),
+		"bonuses":                     bonuses,
 		"recentLedger":                recent,
 		"payoutHistory":               payoutHistory,
 	}, nil
+}
+
+// commercialBonusProgress fills SPIFF status for commercial (+ vet tier rule for pitch sheets).
+func (s *Store) commercialBonusProgress(ctx context.Context, commercialUserID, month string) ([]BonusRule, error) {
+	var rampBest int
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(MAX(cnt), 0) FROM (
+			SELECT COUNT(*)::int AS cnt
+			FROM billing.commercial_commission_ledger
+			WHERE commercial_user_id=$1
+			  AND source_type='subscription_pct'
+			  AND accrued_at >= NOW() - INTERVAL '60 days'
+			GROUP BY vet_user_id
+		) t`, commercialUserID).Scan(&rampBest)
+
+	var triennialN, subN int
+	_ = s.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE pe.plan_code='triennial')::int,
+			COUNT(*)::int
+		FROM billing.commercial_commission_ledger cl
+		JOIN billing.pet_entitlements pe ON pe.id = cl.source_id
+		WHERE cl.commercial_user_id=$1
+		  AND cl.period_ym=$2
+		  AND cl.source_type='subscription_pct'`, commercialUserID, month).Scan(&triennialN, &subN)
+
+	out := make([]BonusRule, 0, 3)
+	for _, b := range DefaultBonusRules() {
+		switch b.Code {
+		case "commercial_ramp":
+			target := 5
+			b.Target = &target
+			b.Progress = &rampBest
+			switch {
+			case rampBest >= 5:
+				b.Status = "earned"
+			case rampBest > 0:
+				b.Status = "in_progress"
+			default:
+				b.Status = "available"
+			}
+			out = append(out, b)
+		case "commercial_mix":
+			target := 55
+			b.Target = &target
+			pct := 0
+			if subN > 0 {
+				pct = triennialN * 100 / subN
+			}
+			b.Progress = &pct
+			switch {
+			case subN > 0 && pct >= 55:
+				b.Status = "earned"
+			case subN > 0:
+				b.Status = "in_progress"
+			default:
+				b.Status = "available"
+			}
+			out = append(out, b)
+		case "vet_tier_31":
+			// Included so commercial pitch/sheet can show vet SPIFF without front hardcoding.
+			out = append(out, b)
+		}
+	}
+	return out, nil
 }
 
 func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred string) (string, error) {
@@ -445,11 +514,9 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 		return nil
 	}
 
-	rateBps, err := s.GetCommercialRateBps(ctx)
-	if err != nil {
-		return err
-	}
-	commission := CommercialCommissionCents(ent.AmountCents, rateBps)
+	rateBps := CommercialRateBpsForPlan(ent.PlanCode)
+	baseHT := HTVACents(ent.AmountCents)
+	commission := CommercialCommissionCents(baseHT, rateBps)
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -468,7 +535,7 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 		) VALUES ($1,$2,$3,$4,'subscription_pct',$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (source_type, source_id) DO NOTHING`,
 		uuid.NewString(), commercialUserID, vetUserID, ent.OwnerUserID, ent.ID,
-		ent.AmountCents, rateBps, commission, period); err != nil {
+		baseHT, rateBps, commission, period); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -511,11 +578,9 @@ func (s *Store) AccrueCommercialForAddon(ctx context.Context, addonID string) er
 		return nil
 	}
 
-	rateBps, err := s.GetCommercialRateBps(ctx)
-	if err != nil {
-		return err
-	}
-	commission := CommercialCommissionCents(addon.AmountCents, rateBps)
+	rateBps := CommercialRateBpsForAddon(addon.AddonCode)
+	baseHT := HTVACents(addon.AmountCents)
+	commission := CommercialCommissionCents(baseHT, rateBps)
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -534,7 +599,7 @@ func (s *Store) AccrueCommercialForAddon(ctx context.Context, addonID string) er
 		) VALUES ($1,$2,$3,$4,'addon_pct',$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (source_type, source_id) DO NOTHING`,
 		uuid.NewString(), commercialUserID, vetUserID, addon.OwnerUserID, addon.ID,
-		addon.AmountCents, rateBps, commission, period); err != nil {
+		baseHT, rateBps, commission, period); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

@@ -109,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
               PopupMenuItem(value: 'fr', child: Text(l10n.languageFr)),
               PopupMenuItem(value: 'nl', child: Text(l10n.languageNl)),
               PopupMenuItem(value: 'en', child: Text(l10n.languageEn)),
+              PopupMenuItem(value: 'es', child: Text(l10n.languageEs)),
             ],
           ),
         ],

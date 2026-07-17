@@ -8,9 +8,9 @@ Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement aut
 
 | Plan | Code | Prix | Durée |
 |------|------|------|-------|
-| 29 € / an | `annual` | 2900 ct | 1 an |
-| 79 € / 3 ans | `triennial` | 7900 ct | 3 ans (recommandé) |
-| 115 € / 5 ans | `quinquennial` | 11500 ct | 5 ans |
+| 35 € / an | `annual` | 3500 ct | 1 an |
+| 95 € / 3 ans | `triennial` | 9500 ct | 3 ans (recommandé) |
+| 145 € / 5 ans | `quinquennial` | 14500 ct | 5 ans |
 
 Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscription`, interval 1/3/5 ans).
 
@@ -132,7 +132,7 @@ API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-a
 
 Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
 
-Commission **commercial** : **12 % fixe** sur abonnements et addons (taux éditable admin). Le véto ne commissionne pas les addons.
+Commission **commercial** : **12 % fixe du HTVA** (TVA BE 21 %) sur abonnements et addons (taux éditable admin) — les Prices Stripe restent en **TTC**. Le véto ne commissionne pas les addons.
 
 ### Mise à jour Prices Stripe (ops)
 
@@ -150,4 +150,4 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
 
-Montants attendus : 29 / 79 / 115 € (abos) ; 55 / 19 / 39 € (addons).
+Montants attendus : 35 / 95 / 145 € (abos) ; 55 / 19 / 39 € (addons).

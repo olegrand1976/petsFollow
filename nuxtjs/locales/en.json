@@ -196,6 +196,7 @@
       "fr": "Français",
       "nl": "Nederlands",
       "en": "English",
+      "es": "Español",
       "saved": "Language saved."
     },
     "heartrate": {
@@ -457,8 +458,6 @@
       "kpiStatus": "Run status",
       "tiersTitle": "Rate grid (editable)",
       "tierLine": "{min}{max} clients → {pct}%",
-      "commercialRate": "Sales commission (subs + addons)",
-      "saveSettings": "Save sales rate",
       "saveTiers": "Save vet grid",
       "tiersHint": "Contiguous tiers starting at 1 client; last tier has no max (= open).",
       "openEnded": "∞",
@@ -476,7 +475,9 @@
       "colStatus": "Status",
       "statusOpen": "Open",
       "statusClosed": "Closed",
-      "statusPaid": "Paid"
+      "statusPaid": "Paid",
+      "sheetTitle": "Commissioning model (overview)",
+      "planRatesHint": "Commercial rates are fixed by plan (ex-VAT): 8% annual · 12% triennial · 8% quinquennial · 10% addons — not editable here (see sheet above)."
     },
     "commercialCommissions": {
       "title": "Sales payroll",
@@ -541,7 +542,7 @@
   },
   "commissions": {
     "title": "My commissions",
-    "subtitle": "Track referred clients and progressive payouts (capped at 15%).",
+    "subtitle": "Progressive ex-VAT earnings — push triennial for the best rate.",
     "kpiClients": "Paying clients",
     "kpiRate": "Current rate",
     "kpiMonth": "This month",
@@ -556,12 +557,16 @@
     "colDate": "Date",
     "colClient": "Client",
     "colPet": "Pet",
-    "colBase": "Base revenue",
+    "colBase": "Ex-VAT base",
     "colRate": "Rate",
     "colCommission": "Commission",
     "colPeriod": "Period",
     "colAmount": "Amount",
-    "colStatus": "Status"
+    "colStatus": "Status",
+    "gainsTitle": "Indicative earnings & bonuses",
+    "sheetTitle": "Understand my earnings",
+    "kpiRateBase": "Base rate (tier)",
+    "kpiRateHeart": "Core rate (triennial)"
   },
   "onboarding": {
     "title": "Practice setup",
@@ -700,7 +705,7 @@
     "productsCta": "See all offers (presentation support)",
     "productHighlights": {
       "plans": {
-        "price": "€29 / €79 / €115",
+        "price": "€35 / €95 / €145",
         "title": "Per-pet subscriptions",
         "text": "Annual, Triennial (recommended) or Quinquennial — heart-rate checks, messaging and care reminders."
       },
@@ -738,13 +743,13 @@
     "plansTitle": "Per-pet subscriptions",
     "plansLead": "One subscription per monitored pet. Indicative prices — one-time or Stripe subscription renewal.",
     "recommended": "Recommended",
-    "plansTip": "Presentation tip: lead with Triennial (€79 / 3 years ≈ €2.2/month) — best price / commitment balance for households.",
+    "plansTip": "Presentation tip: lead with Triennial (€95 / 3 years ≈ €2.6/month) — best price / commitment balance for households.",
     "plans": {
       "annual": {
         "name": "Annual",
-        "price": "€29",
+        "price": "€35",
         "period": "per year",
-        "monthly": "≈ €2.4 / month",
+        "monthly": "≈ €2.9 / month",
         "benefits": [
           "Entry plan — ideal to start one pet",
           "All core pet monitoring benefits included",
@@ -753,9 +758,9 @@
       },
       "triennial": {
         "name": "Triennial",
-        "price": "€79",
+        "price": "€95",
         "period": "for 3 years",
-        "monthly": "≈ €2.2 / month",
+        "monthly": "≈ €2.6 / month",
         "benefits": [
           "Core offer — 9% off vs 3× Annual",
           "Continuous monitoring for 3 years",
@@ -764,9 +769,9 @@
       },
       "quinquennial": {
         "name": "Quinquennial",
-        "price": "€115",
+        "price": "€145",
         "period": "for 5 years",
-        "monthly": "≈ €1.9 / month",
+        "monthly": "≈ €2.4 / month",
         "benefits": [
           "Long-term — 21% off vs 5× Annual",
           "Ideal for chronic / senior pets",
@@ -815,12 +820,36 @@
     },
     "summaryTitle": "Price grid summary",
     "summary": {
-      "annual": { "name": "Annual", "price": "€29 / year", "role": "Pet subscription — entry" },
-      "triennial": { "name": "Triennial", "price": "€79 / 3 years", "role": "Pet subscription — recommended" },
-      "quinquennial": { "name": "Quinquennial", "price": "€115 / 5 years", "role": "Pet subscription — long term" },
-      "family": { "name": "Family", "price": "€55 / year", "role": "Household addon ≤ 3 pets" },
-      "carePlus": { "name": "Care+", "price": "€19 / year", "role": "Care / medication addon" },
-      "horse": { "name": "Horse", "price": "€39 / year", "role": "Equine pack addon" }
+      "annual": {
+        "name": "Annual",
+        "price": "€35 / year",
+        "role": "Pet subscription — entry"
+      },
+      "triennial": {
+        "name": "Triennial",
+        "price": "€95 / 3 years",
+        "role": "Pet subscription — recommended"
+      },
+      "quinquennial": {
+        "name": "Quinquennial",
+        "price": "€145 / 5 years",
+        "role": "Pet subscription — long term"
+      },
+      "family": {
+        "name": "Family",
+        "price": "€55 / year",
+        "role": "Household addon ≤ 3 pets"
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "€19 / year",
+        "role": "Care / medication addon"
+      },
+      "horse": {
+        "name": "Horse",
+        "price": "€39 / year",
+        "role": "Equine pack addon"
+      }
     },
     "footer": "petsFollow — vet-prescribed monitoring, no hardware"
   },
@@ -1009,7 +1038,7 @@
     },
     "commissions": {
       "title": "My commissions",
-      "subtitle": "Flat 12% on subscriptions and addons — monthly tracking and payouts.",
+      "subtitle": "Plan-based rates on ex-VAT (8 / 12 / 8%) — push triennial.",
       "rate": "Rate",
       "month": "Month",
       "lifetime": "Lifetime",
@@ -1028,7 +1057,11 @@
       "colAmount": "Amount",
       "colStatus": "Status",
       "ibanBanner": "Enter your IBAN to receive your commissions.",
-      "ibanBannerLink": "Open payout profile"
+      "ibanBannerLink": "Open payout profile",
+      "rateHeart": "Core rate (triennial)",
+      "gainsTitle": "Indicative earnings & bonuses",
+      "sheetTitle": "Commissioning sheet",
+      "pitchLink": "Open full pitch"
     },
     "settings": {
       "title": "Payout profile",
@@ -1045,7 +1078,7 @@
       "webTitle": "Pro Web app (vet)",
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
-      "vetGrid": "Vet: progressive grid 5% → 8% → 10% → 12% (cap) based on paying client volume.",
+      "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (annual / triennial / quinquennial).",
       "addons": "Addons Family / Care+ / Horse: 12% for sales. Care+ = medications & personal reminders; Horse = farrier, contacts, competitions (horses).",
       "webFeatures": [
         "Operational dashboard clients / messages / HR",
@@ -1059,8 +1092,52 @@
         "Family / Care+ / Horse addons with real privileges",
         "Messages and care reminders"
       ],
-      "commercialFlat": "Sales: flat 12% on subscriptions and addons (~€9.5 on the €79 triennial plan).",
+      "commercialFlat": "Sales: 8% / 12% / 8% ex-VAT by plan (annual / triennial / quinquennial); ~€9.4 on the €95 TTC triennial plan.",
       "productsLink": "Open full product grid (presentation support)"
+    }
+  },
+  "commissionSheet": {
+    "htvaNote": "Commissions are calculated on the ex-VAT amount (BE VAT 21%). Client/Stripe prices are TTC.",
+    "leadVet": "Your prescriber earnings: progressive grid × plan factor.",
+    "leadCommercial": "Your introducer commissioning, plus the vet grid for co-selling pitches.",
+    "leadAdmin": "Full model overview: vet + sales + SPIFF bonuses + margin guardrails.",
+    "vetTitle": "Vet commissioning",
+    "commercialTitle": "Sales commissioning",
+    "bonusesTitle": "Available bonuses",
+    "recommended": "Recommended",
+    "colPlan": "Offer",
+    "colVetRate": "Max vet rate",
+    "colVetEuros": "Max vet €",
+    "colCommRate": "Sales rate",
+    "colCommEuros": "Sales €",
+    "vetAddonNote": "Addons (Family / Care+ / Horse) are not commissioned for vets.",
+    "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
+    "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
+    "tier": "{min}–{max} clients → {pct}% (base)",
+    "tierOpen": "{min}+ clients → {pct}% (base)",
+    "plans": {
+      "annual": "Annual (€35 TTC)",
+      "triennial": "Triennial (€95 TTC)",
+      "quinquennial": "Quinquennial (€145 TTC)",
+      "family": "Family",
+      "care_plus": "Care+",
+      "horse": "Horse"
+    },
+    "bonusTitles": {
+      "vet_tier_31": "31-client tier bonus",
+      "commercial_ramp": "Practice ramp bonus",
+      "commercial_mix": "Triennial mix bonus"
+    },
+    "bonusHints": {
+      "vet_tier_31": "€50 one-shot when first reaching 31 paying clients.",
+      "commercial_ramp": "€25 when 5 paid pets activate within 60 days under an assigned vet.",
+      "commercial_mix": "€50 / month if ≥ 55% of the month’s activations are triennial."
+    },
+    "status": {
+      "available": "Available",
+      "in_progress": "In progress",
+      "earned": "Earned",
+      "paid": "Paid"
     }
   }
 }

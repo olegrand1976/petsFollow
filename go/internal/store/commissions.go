@@ -63,15 +63,19 @@ type PayoutLine struct {
 }
 
 type VetCommissionSummary struct {
-	EligibleClients    int                   `json:"eligibleClients"`
-	CurrentRateBps     int                   `json:"currentRateBps"`
-	NextTierMinClients *int                  `json:"nextTierMinClients,omitempty"`
-	MonthPeriodYM      string                `json:"monthPeriodYm"`
-	MonthEarnedCents   int                   `json:"monthEarnedCents"`
-	LifetimeEarnedCents   int                   `json:"lifetimeEarnedCents"`
-	Tiers              []CommissionTier      `json:"tiers"`
-	RecentLedger       []CommissionLedgerRow `json:"recentLedger"`
-	PayoutHistory      []PayoutLineHistory   `json:"payoutHistory"`
+	EligibleClients      int                   `json:"eligibleClients"`
+	CurrentBaseRateBps   int                   `json:"currentBaseRateBps"`
+	CurrentRateBps       int                   `json:"currentRateBps"` // alias base (compat)
+	HeartRateBps         int                   `json:"heartRateBps"`   // base × triennial factor (offer cœur)
+	NextTierMinClients   *int                  `json:"nextTierMinClients,omitempty"`
+	MonthPeriodYM        string                `json:"monthPeriodYm"`
+	MonthEarnedCents     int                   `json:"monthEarnedCents"`
+	LifetimeEarnedCents     int                   `json:"lifetimeEarnedCents"`
+	Tiers                []CommissionTier      `json:"tiers"`
+	PlanRates            []PlanRateInfo        `json:"planRates"`
+	Bonuses              []BonusRule           `json:"bonuses"`
+	RecentLedger         []CommissionLedgerRow `json:"recentLedger"`
+	PayoutHistory        []PayoutLineHistory   `json:"payoutHistory"`
 }
 
 type PayoutLineHistory struct {
@@ -133,28 +137,7 @@ func (s *Store) EnsureDefaultCommissionTiers(ctx context.Context) error {
 	if n > 0 {
 		return nil
 	}
-	type tierDef struct {
-		min, max, bps int
-		hasMax        bool
-	}
-	tiers := []tierDef{
-		{1, 4, 500, true},
-		{5, 14, 800, true},
-		{15, 39, 1000, true},
-		{40, 0, 1200, false},
-	}
-	for _, t := range tiers {
-		var max any
-		if t.hasMax {
-			max = t.max
-		}
-		if _, err := s.pool.Exec(ctx, `
-			INSERT INTO billing.commission_tiers (id, min_clients, max_clients, rate_bps)
-			VALUES ($1, $2, $3, $4)`, uuid.NewString(), t.min, max, t.bps); err != nil {
-			return err
-		}
-	}
-	return nil
+	return s.ReplaceCommissionTiers(ctx, DefaultVetCommissionTiers())
 }
 
 // ReplaceCommissionTiers replaces the full progressive ladder (admin).
@@ -320,12 +303,14 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		return err
 	}
 
-	var rateBps int
+	var clientRank int
 	if alreadyClient {
 		if err := tx.QueryRow(ctx, `
-			SELECT rate_bps FROM billing.commission_ledger
-			WHERE vet_user_id=$1 AND client_user_id=$2
-			ORDER BY accrued_at ASC LIMIT 1`, vetUserID, ent.OwnerUserID).Scan(&rateBps); err != nil {
+			SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger
+			WHERE vet_user_id=$1 AND accrued_at <= (
+				SELECT MIN(accrued_at) FROM billing.commission_ledger
+				WHERE vet_user_id=$1 AND client_user_id=$2
+			)`, vetUserID, ent.OwnerUserID).Scan(&clientRank); err != nil {
 			return err
 		}
 	} else {
@@ -335,18 +320,21 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 			vetUserID).Scan(&distinctClients); err != nil {
 			return err
 		}
-		err = tx.QueryRow(ctx, `
-			SELECT rate_bps FROM billing.commission_tiers
-			WHERE min_clients <= $1 AND (max_clients IS NULL OR max_clients >= $1)
-			ORDER BY min_clients DESC
-			LIMIT 1`, distinctClients+1).Scan(&rateBps)
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Never persist 0% silently (race with ReplaceCommissionTiers, or empty table).
-			return fmt.Errorf("no_commission_tiers")
-		} else if err != nil {
-			return err
-		}
+		clientRank = distinctClients + 1
 	}
+
+	var baseRateBps int
+	err = tx.QueryRow(ctx, `
+		SELECT rate_bps FROM billing.commission_tiers
+		WHERE min_clients <= $1 AND (max_clients IS NULL OR max_clients >= $1)
+		ORDER BY min_clients DESC
+		LIMIT 1`, clientRank).Scan(&baseRateBps)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("no_commission_tiers")
+	} else if err != nil {
+		return err
+	}
+	rateBps := ApplyVetPlanFactor(baseRateBps, ent.PlanCode)
 
 	preferred := PeriodYM(time.Now())
 	period, err := s.ResolveOpenPeriodYM(ctx, preferred)
@@ -354,7 +342,8 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		return err
 	}
 
-	commission := ent.AmountCents * rateBps / 10000
+	baseHT := HTVACents(ent.AmountCents)
+	commission := CommercialCommissionCents(baseHT, rateBps)
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO billing.commission_ledger (
 			id, vet_user_id, client_user_id, pet_id, entitlement_id,
@@ -362,7 +351,7 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
 		ON CONFLICT (entitlement_id) DO NOTHING`,
 		uuid.NewString(), vetUserID, ent.OwnerUserID, petID, ent.ID,
-		ent.AmountCents, rateBps, commission, period); err != nil {
+		baseHT, rateBps, commission, period); err != nil {
 		return err
 	}
 	if err := tx.Commit(ctx); err != nil {
@@ -679,14 +668,40 @@ func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (Vet
 		history = append(history, h)
 	}
 
+	bonuses := make([]BonusRule, 0)
+	for _, b := range DefaultBonusRules() {
+		if b.Audience != "vet" {
+			continue
+		}
+		if b.Code == "vet_tier_31" {
+			target := 31
+			b.Target = &target
+			prog := clients
+			b.Progress = &prog
+			switch {
+			case clients >= 31:
+				b.Status = "earned"
+			case clients > 0:
+				b.Status = "in_progress"
+			default:
+				b.Status = "available"
+			}
+		}
+		bonuses = append(bonuses, b)
+	}
+
 	return VetCommissionSummary{
 		EligibleClients:    clients,
+		CurrentBaseRateBps: rate,
 		CurrentRateBps:     rate,
+		HeartRateBps:       ApplyVetPlanFactor(rate, "triennial"),
 		NextTierMinClients: nextMin,
 		MonthPeriodYM:      month,
 		MonthEarnedCents:   monthEarned,
 		LifetimeEarnedCents:   lifetime,
 		Tiers:              tiers,
+		PlanRates:          SubscriptionPlanRates(),
+		Bonuses:            bonuses,
 		RecentLedger:       recent,
 		PayoutHistory:      history,
 	}, nil

@@ -18,7 +18,7 @@
 | Extension | Statut |
 |-----------|--------|
 | Inscription véto + confirmation email + onboarding profil cabinet | Livré |
-| i18n FR / NL / EN (UI + erreurs API) | Livré |
+| i18n FR / NL / EN / ES (UI + erreurs API) | Livré |
 | Google OAuth + 2FA TOTP (optionnel) | Livré |
 | Admin plateforme (métriques, users, payments) | Livré |
 | Stripe billing par animal (client Flutter + smoke API) | Livré |

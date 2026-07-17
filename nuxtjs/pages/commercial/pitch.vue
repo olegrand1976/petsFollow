@@ -19,9 +19,12 @@
     </div>
 
     <ProCard class="pro-mt-lg" :title="$t('commercial.pitch.commissionTitle')">
-      <p class="pro-mb-md">{{ $t('commercial.pitch.vetGrid') }}</p>
-      <p class="pro-mb-md">{{ $t('commercial.pitch.commercialFlat') }}</p>
-      <p class="pro-mb-md">{{ $t('commercial.pitch.addons') }}</p>
+      <ProCommissionSheet
+        audience="commercial"
+        :plan-rates="planRates"
+        :addon-rates="addonRates"
+        :bonuses="bonuses"
+      />
       <NuxtLink to="/produits">
         <ProButton variant="secondary">{{ $t('commercial.pitch.productsLink') }}</ProButton>
       </NuxtLink>
@@ -34,6 +37,10 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { tm, rt } = useI18n()
 
+const planRates = ref<any[]>([])
+const addonRates = ref<any[]>([])
+const bonuses = ref<any[]>([])
+
 const webFeatures = computed(() => {
   const raw = tm('commercial.pitch.webFeatures') as string[]
   return Array.isArray(raw) ? raw.map((x) => (typeof x === 'string' ? x : rt(x as any))) : []
@@ -41,6 +48,14 @@ const webFeatures = computed(() => {
 const mobileFeatures = computed(() => {
   const raw = tm('commercial.pitch.mobileFeatures') as string[]
   return Array.isArray(raw) ? raw.map((x) => (typeof x === 'string' ? x : rt(x as any))) : []
+})
+
+onMounted(async () => {
+  const res: any = await $fetch('/api/commercial/commissions')
+  const data = res.data ?? res
+  planRates.value = data.planRates ?? []
+  addonRates.value = data.addonRates ?? []
+  bonuses.value = data.bonuses ?? []
 })
 </script>
 
@@ -50,5 +65,14 @@ const mobileFeatures = computed(() => {
   padding-left: 1.25rem;
   display: grid;
   gap: 0.5rem;
+}
+.pro-mt-lg { margin-top: 1.25rem; }
+.pro-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 900px) {
+  .pro-grid-2 { grid-template-columns: 1fr; }
 }
 </style>

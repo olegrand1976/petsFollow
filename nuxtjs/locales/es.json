@@ -1,0 +1,1143 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "clients": "Clientes",
+    "messages": "Mensajería",
+    "requests": "Solicitudes",
+    "commissions": "Comisiones",
+    "settings": "Ajustes",
+    "adminDashboard": "Panel",
+    "adminUsers": "Registros",
+    "adminPayments": "Pagos",
+    "adminCommissions": "Pagos a veterinarios",
+    "adminCommercialCommissions": "Nómina comercial",
+    "adminCommercials": "Equipo comercial",
+    "adminProspects": "Prospectos",
+    "commercialDashboard": "Panel",
+    "commercialVets": "Veterinarios",
+    "commercialProspects": "Prospectos",
+    "commercialCommissions": "Comisiones",
+    "commercialSettings": "Perfil de pago",
+    "commercialPitch": "Pitch",
+    "products": "Productos"
+  },
+  "auth": {
+    "login": {
+      "title": "Acceso Pro",
+      "subtitle": "Acceso reservado a veterinarios y administradores.",
+      "brandTitle": "Seguimiento cardíaco y fichas de clientes en una sola herramienta",
+      "brandText": "Bienvenido a petsFollow Pro — el espacio de trabajo pensado para los profesionales del cuidado animal, con un toque de buen humor.",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿Todavía no tiene cuenta?",
+      "registerLink": "Regístrese gratis",
+      "forgotLink": "¿Ha olvidado la contraseña?",
+      "or": "o",
+      "proOnly": "Acceso reservado a perfiles Pro (vet / comercial / admin)",
+      "invalidResponse": "Respuesta de autenticación no válida"
+    },
+    "forgot": {
+      "brandTitle": "Recupere el acceso a su cuenta",
+      "brandText": "Le enviaremos un enlace seguro para elegir una nueva contraseña.",
+      "title": "Contraseña olvidada",
+      "subtitle": "Introduzca el correo de su cuenta Pro.",
+      "submit": "Enviar enlace de restablecimiento",
+      "backToLogin": "Volver al inicio de sesión",
+      "failed": "No se ha podido enviar el correo",
+      "sentTitle": "Correo enviado",
+      "sentSubtitle": "Si existe una cuenta para {email}, se ha enviado un enlace.",
+      "sentInstructions": "Abra el enlace para elegir una nueva contraseña. El enlace caduca en 1 hora.",
+      "devLinkLabel": "Enlace de restablecimiento (dev)"
+    },
+    "reset": {
+      "brandTitle": "Elija una nueva contraseña",
+      "brandText": "Tras guardar, podrá iniciar sesión de inmediato.",
+      "brandDone": "Contraseña actualizada",
+      "brandDoneText": "Su cuenta está lista. Inicie sesión con la nueva contraseña.",
+      "title": "Nueva contraseña",
+      "subtitle": "Mínimo 8 caracteres.",
+      "password": "Nueva contraseña",
+      "passwordConfirm": "Confirmar contraseña",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordHint": "Mínimo 8 caracteres",
+      "submit": "Guardar",
+      "backToLogin": "Ir al inicio de sesión",
+      "invalidLink": "Enlace de restablecimiento no válido.",
+      "failed": "Restablecimiento fallido",
+      "doneTitle": "Contraseña actualizada",
+      "doneSubtitle": "Ya puede iniciar sesión."
+    },
+    "twoFa": {
+      "title": "Verificación 2FA",
+      "subtitle": "Introduzca el código de 6 dígitos de su aplicación de autenticación.",
+      "codeLabel": "Código del autenticador",
+      "submit": "Verificar",
+      "back": "← Volver al inicio de sesión",
+      "invalidCode": "Código 2FA no válido o caducado"
+    },
+    "google": {
+      "notConfigured": "El inicio de sesión con Google no está configurado.",
+      "forbidden": "El acceso con Google está reservado a perfiles Pro.",
+      "failed": "Error en el inicio de sesión con Google"
+    },
+    "register": {
+      "title": "Registro de clínica",
+      "subtitle": "100 % gratis para profesionales veterinarios.",
+      "brandTitle": "Únase a petsFollow Pro — gratis para veterinarios",
+      "brandText": "Cree su clínica en minutos y empiece hoy el seguimiento de sus pacientes cardíacos.",
+      "fullName": "Su nombre",
+      "practiceName": "Nombre de la clínica",
+      "email": "Correo profesional",
+      "password": "Contraseña",
+      "passwordConfirm": "Confirmar contraseña",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordHint": "Mínimo 8 caracteres",
+      "submit": "Crear mi cuenta",
+      "alreadyRegistered": "¿Ya está registrado?",
+      "loginLink": "Iniciar sesión",
+      "failed": "Registro fallido"
+    },
+    "registerSent": {
+      "brandTitle": "Revise su bandeja de entrada",
+      "brandText": "Hemos enviado un enlace de confirmación a su correo. Haga clic para activar la cuenta de su clínica.",
+      "title": "Correo enviado",
+      "subtitle": "Se ha enviado un mensaje de confirmación a {email}.",
+      "instructions": "Abra el enlace del correo para confirmar su registro y, a continuación, inicie sesión para configurar el perfil de su clínica.",
+      "devLinkLabel": "Enlace de confirmación (dev)",
+      "goToLogin": "Ir al inicio de sesión",
+      "backHome": "Volver al inicio"
+    },
+    "confirmEmail": {
+      "brandConfirmed": "¡Cuenta activada!",
+      "brandPending": "Confirmando…",
+      "brandConfirmedText": "Su registro está confirmado. Descubra petsFollow Pro y configure su clínica.",
+      "brandInvalidLink": "Este enlace de confirmación ya no es válido.",
+      "loading": "Confirmando…",
+      "title": "Registro confirmado",
+      "welcome": "¡Bienvenido a petsFollow Pro{emailPart}!",
+      "discover": "Descubrir la aplicación",
+      "login": "Iniciar sesión",
+      "failedTitle": "Confirmación fallida",
+      "retry": "Volver a registrarse",
+      "invalidLink": "Enlace de confirmación no válido.",
+      "expiredLink": "Este enlace ha caducado o ya se ha utilizado."
+    },
+    "fields": {
+      "email": "Correo",
+      "password": "Contraseña"
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "send": "Enviar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page}",
+    "all": "Todos",
+    "empty": "Vacío",
+    "none": "Ninguno",
+    "detail": "Detalle",
+    "profile": "Perfil",
+    "user": "Usuario",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "seeAll": "Ver todo →",
+    "backHome": "Volver al inicio",
+    "dash": "—",
+    "pet": "mascota",
+    "pets": "mascotas",
+    "unknownBreed": "Raza desconocida",
+    "clientFallback": "Cliente {id}…",
+    "breadcrumb": "Ruta de navegación",
+    "loading": "Cargando…",
+    "actions": "Acciones",
+    "cancel": "Cancelar",
+    "delete": "Eliminar"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Perfil de clínica, disponibilidad y mensajes automáticos.",
+    "avatar": {
+      "title": "Foto de perfil",
+      "change": "Cambiar foto",
+      "hint": "JPEG, PNG o WebP — máx. 2 MB.",
+      "saved": "Foto actualizada."
+    },
+    "profileCard": "Información de la clínica",
+    "profileSaved": "Perfil guardado.",
+    "saveProfile": "Guardar perfil",
+    "saveFailed": "No se ha podido guardar",
+    "availability": "Disponibilidad",
+    "available": "Disponible",
+    "unavailable": "No disponible",
+    "autoReply": "Mensaje de respuesta automática",
+    "autoReplyPlaceholder": "Mensaje enviado automáticamente cuando no está disponible.",
+    "autoReplyDefault": "No estoy disponible y le responderé en breve.",
+    "availabilitySaved": "Ajustes guardados.",
+    "saveAvailability": "Guardar disponibilidad",
+    "twoFa": {
+      "title": "Autenticación en dos factores (2FA)",
+      "hint": "Opcional — añade una capa de seguridad mediante una app de autenticación (Google Authenticator, Authy…).",
+      "enabled": "El 2FA está activado en su cuenta.",
+      "disabled": "El 2FA está desactivado.",
+      "qrAlt": "Código QR 2FA",
+      "scanHint": "Escanee el código QR o introduzca el secreto:",
+      "verifyCode": "Código de verificación",
+      "activate": "Activar 2FA",
+      "setup": "Configurar 2FA",
+      "disable": "Desactivar 2FA",
+      "passwordOptional": "Contraseña (si está definida)",
+      "setupFailed": "No se ha podido configurar el 2FA",
+      "invalidCode": "Código no válido",
+      "disableFailed": "No se ha podido desactivar — compruebe el código y la contraseña"
+    },
+    "language": {
+      "title": "Idioma",
+      "subtitle": "Elija el idioma de la interfaz y de los mensajes.",
+      "fr": "Français",
+      "nl": "Nederlands",
+      "en": "English",
+      "es": "Español",
+      "saved": "Idioma guardado."
+    },
+    "heartrate": {
+      "title": "Lectura de frecuencia cardíaca",
+      "subtitle": "Duraciones de medición ofrecidas a sus clientes.",
+      "duration15": "15 segundos",
+      "duration30": "30 segundos",
+      "duration60": "60 segundos",
+      "hint": "Seleccione al menos una duración.",
+      "saved": "Duraciones guardadas.",
+      "save": "Guardar duraciones"
+    },
+    "notifications": {
+      "title": "Notificaciones por correo",
+      "subtitle": "Elija qué eventos desencadenan un correo.",
+      "onMessage": "Nuevo mensaje de cliente",
+      "onHeartrate": "Lectura de frecuencia cardíaca validada",
+      "saved": "Preferencias guardadas."
+    },
+    "password": {
+      "title": "Contraseña",
+      "subtitle": "Cambie su contraseña de acceso.",
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "confirm": "Confirmar contraseña",
+      "save": "Actualizar contraseña",
+      "saved": "Contraseña actualizada.",
+      "mismatch": "Las contraseñas no coinciden."
+    },
+    "legalLinks": "Información legal"
+  },
+  "clients": {
+    "title": "Clientes",
+    "subtitle": "Clientes vinculados a su clínica.",
+    "search": "Buscar",
+    "searchPlaceholder": "Nombre o correo…",
+    "petsFilter": "Mascotas",
+    "petsAll": "Todas",
+    "petsNone": "Sin mascotas",
+    "petsWith": "Con mascota(s)",
+    "sort": "Ordenar",
+    "sortName": "Nombre A→Z",
+    "sortPets": "Más mascotas",
+    "emptyTitle": "Sin clientes",
+    "emptyDescription": "Los clientes aparecerán aquí cuando estén vinculados a su clínica.",
+    "columnClient": "Cliente",
+    "columnEmail": "Correo",
+    "columnPets": "Mascotas",
+    "kanbanNone": "Sin ficha",
+    "kanbanOne": "1 mascota",
+    "kanbanMulti": "Varias mascotas",
+    "sendAppLink": "Enviar app",
+    "sendingAppLink": "Enviando…",
+    "detail": {
+      "title": "Perfil del cliente",
+      "subtitle": "Mascotas y ficha del cliente.",
+      "identity": "Identidad",
+      "petsTitle": "Mascotas",
+      "petsEmptyTitle": "Sin mascotas",
+      "petsEmptyDescription": "Este cliente aún no ha registrado ninguna mascota.",
+      "columnName": "Nombre",
+      "columnSpecies": "Especie",
+      "columnBreed": "Raza",
+      "sendAppLink": "Enviar enlace de descarga de la app",
+      "sendAppLinkHint": "Se envía un correo con el enlace de descarga de petsFollow a la dirección del cliente.",
+      "sendAppLinkSuccess": "Enlace enviado a {email}.",
+      "sendAppLinkError": "No se ha podido enviar el enlace en este momento."
+    },
+    "pet": {
+      "title": "Mascota",
+      "heartrateTitle": "Lecturas de frecuencia cardíaca validadas",
+      "heartrateEmptyTitle": "Sin lecturas validadas",
+      "heartrateEmptyDescription": "Las sesiones BPM validadas aparecerán aquí.",
+      "columnDate": "Fecha",
+      "columnBpm": "BPM",
+      "columnDuration": "Duración",
+      "columnStatus": "Estado",
+      "chartTitle": "Tendencia BPM (últimas 30 lecturas)",
+      "filterAll": "Todas",
+      "filterAlerts": "Solo alertas",
+      "recentAlertBanner": "La última lectura está marcada — se recomienda revisión clínica.",
+      "alert": "Alerta",
+      "ok": "OK",
+      "timelineTitle": "Historial de seguimiento",
+      "timelineEmptyTitle": "Historial vacío",
+      "timelineEmptyDescription": "No hay eventos de seguimiento para esta mascota.",
+      "photoTitle": "Foto de la mascota",
+      "photoChange": "Cambiar foto",
+      "photoHint": "JPEG, PNG o WebP — máx. 2 MB.",
+      "primaryBadge": "Atención principal",
+      "careTitle": "Cuidados",
+      "careEmptyTitle": "Sin recordatorios de cuidados",
+      "careEmptyDescription": "Cree un recordatorio para vacunas, desparasitación y revisiones.",
+      "careDue": "Vencimiento",
+      "careType": "Tipo",
+      "careDone": "Hecho",
+      "carePostpone": "Aplazar",
+      "careCreate": "Añadir recordatorio",
+      "careTitleField": "Título",
+      "careOverdue": "Atrasado",
+      "visitsTitle": "Visitas",
+      "visitsEmptyTitle": "Sin visitas",
+      "visitsEmptyDescription": "Las solicitudes y citas aparecerán aquí.",
+      "visitPropose": "Proponer una visita",
+      "visitNotes": "Notas",
+      "visitScheduledAt": "Fecha programada",
+      "visitConfirm": "Confirmar",
+      "visitCancel": "Cancelar",
+      "visitDone": "Marcar como hecha",
+      "visitStatus": "Estado",
+      "visitSource": "Origen",
+      "visitSourceClient": "Cliente",
+      "visitSourceVet": "Clínica",
+      "careTypeVaccination": "Vacunación",
+      "careTypeDeworming": "Desparasitación",
+      "careTypeVetCheck": "Revisión veterinaria",
+      "careTypeDental": "Cuidado dental",
+      "careTypeFarrier": "Herrador",
+      "careTypeFecalEgg": "Coprocultivo / recuento de huevos",
+      "careTypeCustom": "Personalizado"
+    },
+    "referral": {
+      "title": "Recomendar una clínica",
+      "hint": "El lead se envía a su comercial asignado.",
+      "practiceName": "Clínica",
+      "contactName": "Contacto",
+      "contactEmail": "Correo",
+      "city": "Ciudad",
+      "notes": "Notas",
+      "submit": "Enviar al comercial",
+      "success": "Recomendación enviada.",
+      "error": "No se ha podido enviar (¿sin comercial asignado?)."
+    }
+  },
+  "requests": {
+    "title": "Solicitudes",
+    "subtitle": "Invitaciones de clientes y solicitudes de visita.",
+    "linkTitle": "Invitaciones de vinculación",
+    "linkEmptyTitle": "Sin invitaciones",
+    "linkEmptyDescription": "Los clientes que le inviten por correo aparecerán aquí.",
+    "visitsTitle": "Solicitudes de visita",
+    "visitsEmptyTitle": "Sin solicitudes",
+    "visitsEmptyDescription": "Las citas solicitadas por los clientes aparecerán aquí.",
+    "columnClient": "Cliente",
+    "columnEmail": "Correo",
+    "columnDate": "Fecha",
+    "columnPet": "Mascota",
+    "columnNotes": "Notas",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Hola, {name}",
+    "subtitle": "Resumen de su actividad en petsFollow Pro.",
+    "activeClients": "Clientes activos",
+    "unreadMessages": "Mensajes no leídos",
+    "recentSessions": "Lecturas recientes (7 d)",
+    "pendingLinks": "Invitaciones pendientes",
+    "pendingVisits": "Visitas por confirmar",
+    "overdueCare": "Cuidados atrasados",
+    "quickActions": "Acciones rápidas",
+    "viewClients": "Ver clientes",
+    "viewRequests": "Ver solicitudes",
+    "messaging": "Mensajería",
+    "about": "Acerca de",
+    "aboutText": "petsFollow Pro centraliza el seguimiento cardíaco, las fichas de clientes y la mensajería segura para su clínica veterinaria."
+  },
+  "messages": {
+    "title": "Mensajería",
+    "subtitle": "Intercambios seguros con sus clientes.",
+    "threads": "Conversaciones",
+    "emptyTitle": "Sin conversaciones",
+    "emptyDescription": "Los hilos aparecerán cuando sus clientes le escriban.",
+    "unread": "{count} no leído",
+    "unreadPlural": "{count} no leídos",
+    "placeholder": "Su mensaje…",
+    "selectTitle": "Seleccione una conversación",
+    "selectDescription": "Elija un hilo de la lista para ver los mensajes.",
+    "you": "Usted",
+    "image": "Foto",
+    "video": "Vídeo",
+    "attach": "Adjuntar",
+    "attachPhoto": "Foto",
+    "attachVideo": "Vídeo",
+    "sending": "Enviando…"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Panel de administración",
+      "subtitle": "KPI comerciales, de marketing y de facturación.",
+      "totalRevenue": "Ingresos totales",
+      "periodRevenue": "Ingresos 30 días",
+      "mrr": "MRR de suscripciones",
+      "registrations": "Registros",
+      "pets": "Mascotas",
+      "conversion": "Conversión de pago",
+      "pendingPayments": "Pagos pendientes",
+      "pastDue": "Vencidos",
+      "planBreakdown": "Desglose por plan",
+      "modeBreakdown": "Modos de facturación",
+      "commercials": "Comerciales",
+      "prospects": "Prospectos",
+      "addonRevenue": "Ingresos por complementos",
+      "commercialDue": "Comisiones comerciales"
+    },
+    "users": {
+      "title": "Registros",
+      "subtitle": "Usuarios y estados de pago.",
+      "role": "Rol",
+      "roleAll": "Todos",
+      "roleClient": "Clientes",
+      "roleVet": "Veterinarios",
+      "roleAdmin": "Admins",
+      "payment": "Pago",
+      "paymentAll": "Todos",
+      "paymentActive": "Activo",
+      "paymentPending": "Pendiente",
+      "paymentPast": "Vencido",
+      "emptyTitle": "Sin usuarios",
+      "columnEmail": "Correo",
+      "columnName": "Nombre",
+      "columnRole": "Rol",
+      "columnRegistered": "Registrado",
+      "columnPets": "Mascotas",
+      "columnPayment": "Pago",
+      "roleCommercial": "Comercial",
+      "createCommercial": "Crear cuenta comercial",
+      "commercialEmail": "Correo",
+      "commercialName": "Nombre",
+      "commercialPassword": "Contraseña",
+      "commercialCreated": "Cuenta comercial creada",
+      "commercialFailed": "Creación fallida"
+    },
+    "payments": {
+      "title": "Pagos recibidos",
+      "subtitle": "Historial de transacciones Stripe.",
+      "status": "Estado",
+      "statusAll": "Todos",
+      "statusActive": "Activo",
+      "statusPending": "Pendiente",
+      "statusPastDue": "Vencido",
+      "emptyTitle": "Sin pagos",
+      "columnDate": "Fecha",
+      "columnClient": "Cliente",
+      "columnPet": "Mascota",
+      "columnPlan": "Plan",
+      "columnMode": "Modo",
+      "columnAmount": "Importe",
+      "columnStatus": "Estado"
+    },
+    "commissions": {
+      "title": "Pagos a veterinarios",
+      "subtitle": "Comisiones progresivas (máx. 12 %) — tasas editables. Ciclo mensual.",
+      "kpiPeriod": "Periodo",
+      "kpiDue": "Importe a pagar",
+      "kpiStatus": "Estado del ciclo",
+      "tiersTitle": "Tabla de tasas (editable)",
+      "tierLine": "{min}{max} clientes → {pct} %",
+      "saveTiers": "Guardar tabla vet",
+      "tiersHint": "Tramos contiguos desde 1 cliente; el último tramo no tiene máximo (= abierto).",
+      "openEnded": "∞",
+      "periodTitle": "Detalle mensual",
+      "period": "Mes",
+      "close": "Cerrar mes",
+      "markPaid": "Marcar como pagado",
+      "confirmClose": "¿Cerrar el periodo {period}? Las líneas de pago se congelarán.",
+      "confirmMarkPaid": "¿Marcar el periodo {period} como pagado?",
+      "empty": "Sin comisiones en este periodo",
+      "colVet": "Veterinario",
+      "colClients": "Clientes",
+      "colLedger": "Activaciones",
+      "colAmount": "Comisión",
+      "colStatus": "Estado",
+      "statusOpen": "Abierto",
+      "statusClosed": "Cerrado",
+      "statusPaid": "Pagado",
+      "sheetTitle": "Modelo de comisiones (visión general)",
+      "planRatesHint": "Tasas comerciales fijas por plan (sin IVA): 8 % anual · 12 % trienal · 8 % quinquenal · 10 % complementos — no editables aquí (ver ficha arriba)."
+    },
+    "commercialCommissions": {
+      "title": "Nómina comercial",
+      "subtitle": "Previsión, a pagar y pagado — resumen mensual con IBAN.",
+      "kpiPeriod": "Periodo",
+      "kpiTotal": "Total del periodo",
+      "kpiStatus": "Estado",
+      "kpiRate": "Tasa comercial",
+      "periodTitle": "Resumen mensual",
+      "period": "Mes",
+      "close": "Cerrar (a pagar)",
+      "markPaid": "Marcar como pagado",
+      "confirmClose": "¿Cerrar el periodo {period} y pasarlo a «a pagar»?",
+      "confirmMarkPaid": "¿Marcar el periodo {period} como pagado?",
+      "confirmMarkPaidMissingIban": "Atención: falta al menos un IBAN. ¿Marcar {period} como pagado de todos modos?",
+      "empty": "Sin filas para esta pestaña",
+      "recapGlobal": "Total mostrado: {amount} — {count} comercial(es)",
+      "colCommercial": "Comercial",
+      "colLedger": "Entradas",
+      "colAmount": "Importe",
+      "colIban": "IBAN",
+      "colHolder": "Titular",
+      "colStatus": "Estado",
+      "statusOpen": "Previsión",
+      "statusClosed": "A pagar",
+      "statusPaid": "Pagado",
+      "tab": {
+        "forecast": "Previsión",
+        "toPay": "A pagar",
+        "paid": "Pagado"
+      }
+    },
+    "commercials": {
+      "title": "Equipo comercial",
+      "subtitle": "Fuerza de ventas y veterinarios asignados.",
+      "empty": "Ninguno",
+      "columnName": "Nombre",
+      "columnEmail": "Correo",
+      "columnVets": "Veterinarios asignados",
+      "columnDue": "Comisiones de por vida",
+      "assignTitle": "Asignar un veterinario",
+      "assignCommercial": "Comercial",
+      "assignCommercialPlaceholder": "Seleccione un comercial",
+      "assignVet": "Veterinario",
+      "assignVetPlaceholder": "Seleccione un veterinario",
+      "assignSubmit": "Asignar",
+      "assignSuccess": "Veterinario asignado.",
+      "assignFailed": "No se ha podido asignar este veterinario."
+    },
+    "prospects": {
+      "title": "Prospectos de marketing",
+      "subtitle": "Pipeline global de prospectos.",
+      "empty": "Ninguno",
+      "columnPractice": "Clínica",
+      "columnContact": "Contacto",
+      "columnStatus": "Estado",
+      "columnCommercial": "Comercial",
+      "columnDays": "Días",
+      "columnCity": "Ciudad",
+      "columnSource": "Origen"
+    }
+  },
+  "commissions": {
+    "title": "Mis comisiones",
+    "subtitle": "Retribución progresiva sin IVA — impulse el trienal para la mejor tasa.",
+    "kpiClients": "Clientes de pago",
+    "kpiRate": "Tasa actual",
+    "kpiMonth": "Este mes",
+    "kpiLifetime": "Ganado de por vida",
+    "tiersTitle": "Tabla progresiva",
+    "tierLine": "{min}{max} clientes → {pct} %",
+    "nextTier": "Siguiente tramo a partir de {n} clientes de pago.",
+    "ledgerTitle": "Comisiones generadas",
+    "ledgerEmpty": "Aún no hay comisiones",
+    "payoutsTitle": "Pagos",
+    "payoutsEmpty": "Aún no hay pagos",
+    "colDate": "Fecha",
+    "colClient": "Cliente",
+    "colPet": "Mascota",
+    "colBase": "Base sin IVA",
+    "colRate": "Tasa",
+    "colCommission": "Comisión",
+    "colPeriod": "Periodo",
+    "colAmount": "Importe",
+    "colStatus": "Estado",
+    "gainsTitle": "Ganancias indicativas y bonos",
+    "sheetTitle": "Entender mi retribución",
+    "kpiRateBase": "Tasa base (tramo)",
+    "kpiRateHeart": "Tasa núcleo (trienal)"
+  },
+  "onboarding": {
+    "title": "Configuración de la clínica",
+    "subtitle": "Algunos pasos para completar su perfil — visible para los clientes y editable en cualquier momento en ajustes.",
+    "profileCard": "Información de la clínica",
+    "stepsNav": "Pasos de configuración",
+    "submit": "Guardar e ir al panel",
+    "errors": {
+      "required": "Complete todos los campos obligatorios."
+    },
+    "steps": {
+      "identity": {
+        "label": "Identidad",
+        "title": "Su identidad profesional",
+        "text": "Nombre del veterinario y de la clínica mostrados a sus clientes."
+      },
+      "contact": {
+        "label": "Contacto",
+        "title": "Datos de contacto",
+        "text": "Correo y teléfono para que los clientes puedan contactarle."
+      },
+      "address": {
+        "label": "Dirección",
+        "title": "Dirección de la clínica",
+        "text": "Dirección postal completa de su clínica."
+      },
+      "options": {
+        "label": "Opciones",
+        "title": "Opciones de seguimiento",
+        "text": "Sitio web (opcional) y duraciones de lectura de frecuencia cardíaca ofrecidas a los clientes."
+      }
+    }
+  },
+  "welcome": {
+    "badge": "Bienvenido a petsFollow Pro",
+    "title": "Su clínica cardíaca, lista para empezar",
+    "lead": "petsFollow Pro le acompaña a diario: lecturas de frecuencia cardíaca, alertas, mensajería y fichas de pacientes — todo {free}.",
+    "free": "gratis para veterinarios",
+    "howItWorks": "¿Cómo funciona?",
+    "steps": {
+      "profile": {
+        "title": "Configure el perfil de su clínica",
+        "text": "Introduzca teléfono, dirección y correo de contacto en su primer acceso."
+      },
+      "invite": {
+        "title": "Invite a sus clientes",
+        "text": "Los clientes se registran con la app móvil petsFollow y se vinculan a usted automáticamente."
+      },
+      "monitor": {
+        "title": "Supervise las lecturas de frecuencia cardíaca",
+        "text": "Reciba datos BPM, valide sesiones e intervenga cuando haya alertas."
+      },
+      "communicate": {
+        "title": "Comunique con facilidad",
+        "text": "Mensajería integrada con estado de disponibilidad configurable."
+      }
+    },
+    "highlights": {
+      "bpm": {
+        "title": "Lecturas BPM",
+        "text": "Seguimiento cardíaco guiado para perros y gatos."
+      },
+      "alerts": {
+        "title": "Alertas",
+        "text": "Notificación inmediata cuando se detecta una anomalía."
+      },
+      "free": {
+        "title": "Gratis para veterinarios",
+        "text": "Sin coste para su clínica."
+      }
+    },
+    "ctaTitle": "Siguiente paso: configure el perfil de su clínica",
+    "ctaText": "En el primer acceso, introduzca los datos de su clínica para que los clientes puedan contactarle fácilmente.",
+    "ctaTitleAuthed": "Siguiente paso: configure el perfil de su clínica",
+    "ctaTextAuthed": "Su cuenta está activa. Introduzca los datos de su clínica para que los clientes puedan contactarle fácilmente.",
+    "ctaLogin": "Iniciar sesión y configurar",
+    "ctaContinue": "Configurar mi clínica",
+    "login": "Iniciar sesión"
+  },
+  "index": {
+    "login": "Iniciar sesión",
+    "registerCta": "Regístrese gratis",
+    "badge": "100 % gratis para veterinarios",
+    "heroTitle": "Seguimiento cardíaco de sus pacientes, simplificado",
+    "heroLead": "petsFollow Pro centraliza las lecturas de frecuencia cardíaca, las fichas de clientes y la mensajería segura en una herramienta pensada para clínicas veterinarias.",
+    "heroCta": "Crear mi clínica — es gratis",
+    "heroLogin": "Ya tengo una cuenta",
+    "cards": {
+      "heartrate": {
+        "title": "Lecturas de frecuencia cardíaca",
+        "text": "Seguimiento BPM y alertas en tiempo real"
+      },
+      "messaging": {
+        "title": "Mensajería segura",
+        "text": "Intercambios directos con sus clientes"
+      },
+      "records": {
+        "title": "Fichas de pacientes",
+        "text": "Historial completo por animal"
+      }
+    },
+    "featuresTitle": "¿Por qué elegir petsFollow Pro?",
+    "features": {
+      "heartrate": {
+        "title": "Lecturas de frecuencia cardíaca guiadas",
+        "text": "Los clientes toman lecturas BPM desde la app móvil. Usted valida y sigue la evolución."
+      },
+      "alerts": {
+        "title": "Alertas inteligentes",
+        "text": "Reciba una notificación inmediata ante taquicardia o anomalías detectadas."
+      },
+      "messaging": {
+        "title": "Mensajería integrada",
+        "text": "Comunique con los clientes sin salir de la plataforma. Disponibilidad configurable."
+      },
+      "free": {
+        "title": "Gratis para veterinarios",
+        "text": "Sin suscripción de clínica. petsFollow Pro es gratis para profesionales veterinarios."
+      },
+      "security": {
+        "title": "Datos seguros",
+        "text": "Alojamiento conforme, acceso restringido por rol, mensajería cifrada."
+      },
+      "onboarding": {
+        "title": "Puesta en marcha rápida",
+        "text": "Regístrese en 2 minutos y configure el perfil de su clínica en el primer acceso."
+      }
+    },
+    "ctaTitle": "Únase a petsFollow Pro hoy",
+    "ctaText": "La aplicación es {free}. Sus clientes solo pagan la suscripción de seguimiento cardíaco de sus mascotas.",
+    "ctaFree": "totalmente gratis para veterinarios",
+    "ctaButton": "Empezar el registro",
+    "productsLink": "Productos",
+    "productsTitle": "A qué se suscriben sus clientes",
+    "productsLead": "Una tabla clara para presentar el seguimiento prescrito por el veterinario — sin dispositivo, desde unos 2 € / mes por mascota.",
+    "productsCta": "Ver todas las ofertas (soporte de presentación)",
+    "productHighlights": {
+      "plans": {
+        "price": "35 € / 95 € / 145 €",
+        "title": "Suscripciones por mascota",
+        "text": "Anual, Trienal (recomendada) o Quinquenal — controles de frecuencia cardíaca, mensajería y recordatorios de cuidados."
+      },
+      "family": {
+        "price": "55 € / año",
+        "title": "Pack Familia",
+        "text": "Vista de cuidados del hogar para 2–3 mascotas — cada mascota sigue necesitando su propia suscripción."
+      },
+      "careHorse": {
+        "price": "19 € · 39 €",
+        "title": "Care+ y Caballo",
+        "text": "Care+ para medicación y libreta de cuidados enriquecida; Caballo para seguimiento equino (herrador, contactos, competiciones)."
+      }
+    },
+    "footer": "© {year} petsFollow — Seguimiento cardíaco veterinario"
+  },
+  "products": {
+    "seoTitle": "petsFollow — Ofertas y productos",
+    "seoDescription": "Tabla de suscripciones y complementos petsFollow para presentaciones en clínica veterinaria.",
+    "backHome": "Inicio",
+    "print": "Imprimir / PDF",
+    "badge": "Soporte de presentación para clínicas",
+    "title": "Ofertas petsFollow",
+    "lead": "Presente a los clientes el seguimiento cardíaco prescrito por el veterinario — sin collar ni dispositivo, precios sencillos para el hogar.",
+    "positioning": "petsFollow Pro es gratis para la clínica. Solo los propietarios pagan el seguimiento (plan por mascota + opciones del hogar).",
+    "includedTitle": "Incluido en cada suscripción de mascota",
+    "includedLead": "Sea cual sea el plan (1, 3 o 5 años), los propietarios obtienen:",
+    "included": [
+      "Controles de frecuencia cardíaca guiados desde la app móvil",
+      "Sesiones enviadas y validadas por la clínica",
+      "Mensajería segura con el veterinario",
+      "Ficha de paciente compartida (historial de controles y conversaciones)",
+      "Recordatorios de cuidados estándar (vacuna, desparasitación, revisión, dental)"
+    ],
+    "plansTitle": "Suscripciones por mascota",
+    "plansLead": "Una suscripción por mascota monitorizada. Precios orientativos — pago único o renovación de suscripción Stripe.",
+    "recommended": "Recomendado",
+    "plansTip": "Consejo de presentación: priorice el Trienal (95 € / 3 años ≈ 2,6 €/mes) — mejor equilibrio precio / compromiso para los hogares.",
+    "plans": {
+      "annual": {
+        "name": "Anual",
+        "price": "35 €",
+        "period": "al año",
+        "monthly": "≈ 2,9 € / mes",
+        "benefits": [
+          "Plan de entrada — ideal para empezar con una mascota",
+          "Todos los beneficios principales de seguimiento incluidos",
+          "Compromiso de un año"
+        ]
+      },
+      "triennial": {
+        "name": "Trienal",
+        "price": "95 €",
+        "period": "por 3 años",
+        "monthly": "≈ 2,6 € / mes",
+        "benefits": [
+          "Oferta principal — 9 % de descuento frente a 3× Anual",
+          "Seguimiento continuo durante 3 años",
+          "Mejor argumento de precio para el hogar"
+        ]
+      },
+      "quinquennial": {
+        "name": "Quinquenal",
+        "price": "145 €",
+        "period": "por 5 años",
+        "monthly": "≈ 2,4 € / mes",
+        "benefits": [
+          "Largo plazo — 21 % de descuento frente a 5× Anual",
+          "Ideal para mascotas crónicas / seniors",
+          "Equivalente mensual más bajo"
+        ]
+      }
+    },
+    "addonsTitle": "Opciones del hogar (cuenta del propietario)",
+    "addonsLead": "Complementos comprados una vez para la cuenta — enriquecen la experiencia de las mascotas del hogar según las reglas siguientes.",
+    "addonsTip": "Familia nunca sustituye una suscripción de mascota: cada mascota sigue necesitando un plan. Caballo solo se ofrece si el hogar tiene al menos un caballo.",
+    "addons": {
+      "family": {
+        "name": "Familia",
+        "price": "55 € / año",
+        "tagline": "Pack del hogar — hasta 3 mascotas",
+        "scope": "Cuenta",
+        "benefits": [
+          "Vista del hogar: próximos recordatorios de cuidados de todas las mascotas",
+          "Para hogares de 2 a 3 mascotas (tope de 3)",
+          "Cada mascota sigue necesitando su propia suscripción"
+        ]
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "19 € / año",
+        "tagline": "Libreta de cuidados enriquecida",
+        "scope": "Cuenta",
+        "benefits": [
+          "Recordatorios de medicación",
+          "Recordatorios personalizados"
+        ]
+      },
+      "horse": {
+        "name": "Caballo",
+        "price": "39 € / año",
+        "tagline": "Pack equino",
+        "scope": "Cuenta",
+        "benefits": [
+          "Recordatorios de herrador y recuento de huevos fecales",
+          "Registro del herrador",
+          "Contactos profesionales (herrador, etc.)",
+          "Seguimiento de competiciones",
+          "Solo si el hogar tiene ≥ 1 caballo"
+        ]
+      }
+    },
+    "summaryTitle": "Resumen de la tabla de precios",
+    "summary": {
+      "annual": {
+        "name": "Anual",
+        "price": "35 € / año",
+        "role": "Suscripción mascota — entrada"
+      },
+      "triennial": {
+        "name": "Trienal",
+        "price": "95 € / 3 años",
+        "role": "Suscripción mascota — recomendada"
+      },
+      "quinquennial": {
+        "name": "Quinquenal",
+        "price": "145 € / 5 años",
+        "role": "Suscripción mascota — largo plazo"
+      },
+      "family": {
+        "name": "Familia",
+        "price": "55 € / año",
+        "role": "Complemento hogar ≤ 3 mascotas"
+      },
+      "carePlus": {
+        "name": "Care+",
+        "price": "19 € / año",
+        "role": "Complemento cuidados / medicación"
+      },
+      "horse": {
+        "name": "Caballo",
+        "price": "39 € / año",
+        "role": "Complemento pack equino"
+      }
+    },
+    "footer": "petsFollow — seguimiento prescrito por el veterinario, sin hardware"
+  },
+  "components": {
+    "topbar": {
+      "notifications": "Notificaciones",
+      "notificationsEmptyTitle": "Nada nuevo",
+      "notificationsEmptyDescription": "Las conversaciones con clientes aparecerán aquí.",
+      "markAllRead": "Marcar todo como leído",
+      "profileMenu": "Menú de perfil",
+      "settings": "Ajustes",
+      "themeDark": "Activar modo oscuro",
+      "themeLight": "Activar modo claro"
+    },
+    "table": {
+      "emptyTitle": "Sin datos"
+    },
+    "kanban": {
+      "emptyTitle": "Sin elementos"
+    },
+    "viewToggle": {
+      "ariaLabel": "Modo de visualización",
+      "table": "Lista",
+      "kanban": "Kanban"
+    },
+    "profileForm": {
+      "vetName": "Nombre del veterinario",
+      "practiceName": "Nombre de la clínica",
+      "contactEmail": "Correo de contacto",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "addressLine2": "Dirección (línea 2)",
+      "postalCode": "Código postal",
+      "city": "Ciudad",
+      "website": "Sitio web (opcional)",
+      "websitePlaceholder": "https://"
+    }
+  },
+  "legal": {
+    "updated": "Última actualización: julio de 2026",
+    "terms": {
+      "title": "Condiciones de uso",
+      "link": "Condiciones",
+      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite medir la frecuencia cardíaca, consultar el historial y comunicarse con la clínica."
+    },
+    "privacy": {
+      "title": "Política de privacidad",
+      "link": "Privacidad",
+      "body": "petsFollow trata datos personales (nombre, correo, lecturas, mensajes) para prestar el seguimiento cardíaco. Los datos se conservan durante la vida de la cuenta. Contacte con support{'@'}petsfollow.test para solicitudes RGPD."
+    },
+    "mentions": {
+      "title": "Aviso legal",
+      "link": "Aviso legal",
+      "body": "Editor: petsFollow. Contacto: support{'@'}petsfollow.test. Alojamiento: infraestructura cloud conforme al RGPD."
+    }
+  },
+  "errors": {
+    "bad_request": "Solicitud no válida",
+    "invalid_json": "JSON no válido",
+    "fields_required": "Todos los campos son obligatorios",
+    "password_too_short": "Contraseña demasiado corta (mínimo 8 caracteres)",
+    "image_too_large": "Archivo demasiado grande (límite superado)",
+    "invalid_image_type": "Formato no admitido (JPEG, PNG, WebP, MP4, MOV, WebM)",
+    "file_required": "Archivo obligatorio",
+    "media_unavailable": "Almacenamiento de medios no disponible",
+    "email_send_failed": "No se ha podido enviar el correo en este momento",
+    "token_required": "Token obligatorio",
+    "body_required": "Cuerpo del mensaje obligatorio",
+    "profile_fields_required": "Faltan campos obligatorios",
+    "invalid_plan": "Plan no válido",
+    "invalid_iban": "IBAN no válido",
+    "invalid_bic": "BIC no válido (8 u 11 caracteres)",
+    "invalid_account_holder": "Titular de la cuenta no válido",
+    "family_pet_limit": "El pack Familia está limitado a 3 mascotas",
+    "family_requires_two_pets": "El pack Familia requiere al menos 2 mascotas",
+    "family_required": "Se requiere el pack Familia",
+    "invalid_billing_mode": "Modo de facturación no válido",
+    "no_pending_payment": "Ningún pago pendiente",
+    "not_a_subscription": "Esto no es una suscripción",
+    "invalid_body": "Cuerpo de la solicitud no válido",
+    "pet_owner_required": "pet_id y owner_user_id obligatorios",
+    "id_token_required": "idToken obligatorio",
+    "google_email_missing": "Falta el correo de Google",
+    "mfa_fields_required": "mfaToken y código obligatorios",
+    "code_required": "Código obligatorio",
+    "setup_2fa_first": "Configure primero el 2FA",
+    "unauthorized": "Credenciales no válidas",
+    "login_required": "Inicio de sesión obligatorio",
+    "missing_bearer_token": "Falta el token Bearer",
+    "invalid_token": "Token no válido",
+    "use_google_sign_in": "Esta cuenta usa Google — inicie sesión con Google.",
+    "invalid_google_token": "Token de Google no válido",
+    "google_email_not_verified": "Correo de Google no verificado",
+    "wrong_password": "Contraseña incorrecta",
+    "mfa_session_expired": "Sesión 2FA caducada",
+    "2fa_not_enabled": "2FA no activado",
+    "invalid_2fa_code": "Código 2FA no válido",
+    "forbidden": "Acceso denegado",
+    "vet_only": "Solo veterinarios",
+    "client_only": "Solo clientes",
+    "admin_only": "Solo administradores",
+    "invalid_period": "Periodo no válido (formato YYYY-MM)",
+    "payout_not_open": "Este periodo ya no está abierto",
+    "payout_not_closed": "Cierre el periodo antes de marcarlo como pagado",
+    "run_not_found": "Ciclo de pago no encontrado",
+    "google_pro_only": "Acceso Google reservado a perfiles Pro.",
+    "not_your_pet": "Esta no es su mascota",
+    "wrong_practice": "Clínica incorrecta",
+    "not_participant": "No es participante",
+    "email_not_verified": "Confirme su correo antes de iniciar sesión.",
+    "payment_required": "Se requiere una suscripción activa para esta mascota",
+    "not_found": "No encontrado",
+    "client_not_found": "Cliente no encontrado",
+    "pet_not_found": "Mascota no encontrada",
+    "session_not_found": "Sesión no encontrada",
+    "thread_not_found": "Conversación no encontrada",
+    "no_entitlement": "Sin derecho de acceso",
+    "invalid_confirm_link": "Enlace de confirmación no válido.",
+    "conflict": "Conflicto",
+    "email_already_exists": "Ya existe una cuenta con este correo",
+    "google_account_mismatch": "Esta cuenta de Google ya está vinculada a otro usuario",
+    "2fa_already_enabled": "2FA ya activado",
+    "not_implemented": "No implementado",
+    "not_configured": "El inicio de sesión con Google no está configurado.",
+    "internal": "Error interno del servidor",
+    "not_ready": "Servicio no disponible",
+    "generic": "Se ha producido un error"
+  },
+  "commercial": {
+    "dashboard": {
+      "title": "Panel comercial",
+      "subtitle": "Veterinarios asignados, pipeline de prospectos y comisiones.",
+      "assignedVets": "Veterinarios asignados",
+      "prospects": "Prospectos",
+      "prospectsNew": "Nuevos",
+      "converted": "Convertidos",
+      "monthEarned": "Comisiones del mes",
+      "lifetimeEarned": "Comisiones de por vida",
+      "subRevenue": "Ingresos de suscripciones vinculadas",
+      "addonRevenue": "Ingresos de complementos vinculados"
+    },
+    "vets": {
+      "title": "Veterinarios asignados",
+      "subtitle": "Cree una cuenta de veterinario asignada automáticamente a usted.",
+      "encode": "Crear veterinario",
+      "save": "Crear cuenta",
+      "empty": "Sin veterinarios asignados",
+      "fullName": "Nombre completo",
+      "practiceName": "Clínica",
+      "email": "Correo",
+      "password": "Contraseña temporal",
+      "phone": "Teléfono",
+      "city": "Ciudad",
+      "postalCode": "Código postal",
+      "address": "Dirección",
+      "clients": "Clientes",
+      "encodeFailed": "Creación fallida"
+    },
+    "prospects": {
+      "title": "Fichas de prospectos",
+      "subtitle": "CRM comercial — seguimiento de clínicas potenciales.",
+      "create": "Nueva ficha",
+      "save": "Guardar",
+      "empty": "Sin prospectos",
+      "practiceName": "Clínica",
+      "contactName": "Contacto",
+      "contactEmail": "Correo",
+      "contactPhone": "Teléfono",
+      "city": "Ciudad",
+      "notes": "Notas",
+      "statusLabel": "Estado",
+      "statusAll": "Todos los estados",
+      "daysInStatus": "Días",
+      "status": {
+        "new": "Nuevo",
+        "contacted": "Contactado",
+        "qualified": "Cualificado",
+        "converted": "Convertido",
+        "lost": "Perdido"
+      },
+      "sourceLabel": "Origen",
+      "source": {
+        "commercial": "Comercial",
+        "vet_referral": "Recomendación vet"
+      }
+    },
+    "commissions": {
+      "title": "Mis comisiones",
+      "subtitle": "Tasas por plan sin IVA (8 / 12 / 8 %) — impulse el trienal.",
+      "rate": "Tasa",
+      "month": "Mes",
+      "lifetime": "De por vida",
+      "subscriptions": "Suscripciones",
+      "addons": "Complementos",
+      "empty": "Sin comisiones",
+      "date": "Fecha",
+      "type": "Tipo",
+      "vet": "Veterinario",
+      "client": "Cliente",
+      "base": "Base",
+      "amount": "Comisión",
+      "payoutsTitle": "Pagos",
+      "payoutsEmpty": "Aún no hay pagos",
+      "colPeriod": "Periodo",
+      "colAmount": "Importe",
+      "colStatus": "Estado",
+      "ibanBanner": "Introduzca su IBAN para recibir sus comisiones.",
+      "ibanBannerLink": "Abrir perfil de pago",
+      "rateHeart": "Tasa núcleo (trienal)",
+      "gainsTitle": "Ganancias indicativas y bonos",
+      "sheetTitle": "Ficha de comisionamiento",
+      "pitchLink": "Ver presentación completa"
+    },
+    "settings": {
+      "title": "Perfil de pago",
+      "subtitle": "Datos bancarios para el pago de comisiones.",
+      "iban": "IBAN",
+      "bic": "BIC (opcional)",
+      "accountHolder": "Titular de la cuenta",
+      "save": "Guardar",
+      "saved": "Perfil guardado"
+    },
+    "pitch": {
+      "title": "Visión general de petsFollow",
+      "subtitle": "App web vet + app móvil Flutter y esquema de comisiones.",
+      "webTitle": "App web Pro (vet)",
+      "mobileTitle": "App móvil Flutter (clientes)",
+      "commissionTitle": "Comisionamiento",
+      "vetGrid": "Veterinario: 7 % → 12 % sin IVA según volumen de clientes de pago, con factor de plan (annual / triennial / quinquennial).",
+      "addons": "Complementos Familia / Care+ / Caballo: 12 % para el comercial. Care+ = medicación y recordatorios personales; Caballo = herrador, contactos, competiciones (caballos).",
+      "webFeatures": [
+        "Panel operativo clientes / mensajes / FC",
+        "Ficha de paciente y mensajería",
+        "Seguimiento de comisiones del veterinario",
+        "Onboarding y ajustes de la clínica"
+      ],
+      "mobileFeatures": [
+        "Mascotas y seguimiento de frecuencia cardíaca",
+        "Suscripciones Stripe por mascota",
+        "Complementos Familia / Care+ / Caballo con privilegios reales",
+        "Mensajes y recordatorios de cuidados"
+      ],
+      "commercialFlat": "Comercial: 8 % / 12 % / 8 % sin IVA según plan (annual / triennial / quinquennial); ~9,4 € sobre el plan trienal de 95 € IVA incluido.",
+      "productsLink": "Abrir la tabla completa de productos (soporte de presentación)"
+    }
+  },
+  "commissionSheet": {
+    "htvaNote": "Comisiones sobre la base sin IVA (IVA BE 21 %). Precios cliente/Stripe con IVA.",
+    "leadVet": "Su retribución como prescriptor: escala progresiva × factor de plan.",
+    "leadCommercial": "Su comisión como aportador, y la tabla del vet para el pitch conjunto.",
+    "leadAdmin": "Vista completa: vet + comercial + SPIFF + márgenes.",
+    "vetTitle": "Comisiones del veterinario",
+    "commercialTitle": "Comisiones comerciales",
+    "bonusesTitle": "Bonificaciones disponibles",
+    "recommended": "Recomendado",
+    "colPlan": "Oferta",
+    "colVetRate": "Tasa vet máx.",
+    "colVetEuros": "€ vet máx.",
+    "colCommRate": "Tasa comercial",
+    "colCommEuros": "€ comercial",
+    "vetAddonNote": "Los addons (Family / Care+ / Horse) no generan comisión para el veterinario.",
+    "coSellNote": "El veterinario no se penaliza si usted está asignado — co-selling beneficioso para ambos.",
+    "adminGuardrails": "Límites: margen neto ≥ 55 % del TTC · neto/año núcleo ≥ 17 € · take rate máx. núcleo 24 % HT.",
+    "tier": "{min}–{max} clientes → {pct} % (base)",
+    "tierOpen": "{min}+ clientes → {pct} % (base)",
+    "plans": {
+      "annual": "Annual (35 € TTC)",
+      "triennial": "Triennial (95 € TTC)",
+      "quinquennial": "Quinquennial (145 € TTC)",
+      "family": "Family",
+      "care_plus": "Care+",
+      "horse": "Horse"
+    },
+    "bonusTitles": {
+      "vet_tier_31": "Bonus tramo 31 clientes",
+      "commercial_ramp": "Bonus ramp de clínica",
+      "commercial_mix": "Bonus mix triennial"
+    },
+    "bonusHints": {
+      "vet_tier_31": "50 € de una sola vez al alcanzar por primera vez 31 clientes de pago.",
+      "commercial_ramp": "25 € si 5 mascotas de pago se activan en 60 días con un vet asignado.",
+      "commercial_mix": "50 € / mes si ≥ 55 % de las activaciones del mes son triennial."
+    },
+    "status": {
+      "available": "Por ganar",
+      "in_progress": "En curso",
+      "earned": "Conseguido",
+      "paid": "Pagado"
+    }
+  }
+}
