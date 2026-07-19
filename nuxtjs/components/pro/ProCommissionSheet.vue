@@ -1,10 +1,10 @@
 <template>
   <div class="pf-commission-sheet" :data-audience="audience" data-testid="commission-sheet">
-    <p class="pf-commission-sheet__lead">{{ leadText }}</p>
+    <p v-if="leadText" class="pf-commission-sheet__lead">{{ leadText }}</p>
     <p class="pf-commission-sheet__meta text-muted">{{ $t('commissionSheet.htvaNote') }}</p>
 
     <div v-if="showVetGrid" class="pf-commission-sheet__block">
-      <h3 class="pf-commission-sheet__h">{{ $t('commissionSheet.vetTitle') }}</h3>
+      <h3 v-if="audience !== 'vet'" class="pf-commission-sheet__h">{{ $t('commissionSheet.vetTitle') }}</h3>
       <ul class="pf-commission-sheet__tiers">
         <li v-for="t in vetTierLabels" :key="t">{{ t }}</li>
       </ul>
@@ -101,7 +101,8 @@ const showCommercialGrid = computed(() => props.audience === 'commercial' || pro
 const leadText = computed(() => {
   switch (props.audience) {
     case 'vet':
-      return t('commissionSheet.leadVet')
+      // Page véto : pas de lead redondant — grille + tableau suffisent.
+      return ''
     case 'commercial':
       return t('commissionSheet.leadCommercial')
     case 'admin':

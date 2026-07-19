@@ -41,7 +41,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
+    final file = await picker.pickImage(
+        source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
     if (file == null) return;
     setState(() {
       saving = true;
@@ -52,7 +53,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => avatarUrl = me['avatarUrl'] as String?);
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.photoUpdated)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.photoUpdated)));
       }
     } catch (_) {
       setState(() => error = 'photo');
@@ -70,7 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await ApiClient.instance.updateMe(fullName.text.trim());
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.profileSaved)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.profileSaved)));
       }
     } catch (_) {
       setState(() => error = 'save');
@@ -86,12 +89,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       error = null;
     });
     try {
-      await ApiClient.instance.changePassword(currentPassword.text, newPassword.text);
+      await ApiClient.instance
+          .changePassword(currentPassword.text, newPassword.text);
       currentPassword.clear();
       newPassword.clear();
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
       }
     } catch (_) {
       setState(() => error = 'password');
@@ -108,8 +113,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(l10n.deleteAccount),
         content: Text(l10n.deleteAccountConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.deleteAccount)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.deleteAccount)),
         ],
       ),
     );
@@ -136,72 +145,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (loading) {
-      return Scaffold(appBar: AppBar(title: Text(l10n.myData)), body: const Center(child: CircularProgressIndicator()));
+      return Scaffold(
+          appBar: AppBar(title: Text(l10n.myData)),
+          body: const Center(child: CircularProgressIndicator()));
     }
-    final initial = (fullName.text.isNotEmpty ? fullName.text : '?').substring(0, 1).toUpperCase();
+    final initial = (fullName.text.isNotEmpty ? fullName.text : '?')
+        .substring(0, 1)
+        .toUpperCase();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myData)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Center(
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 48,
-                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty ? NetworkImage(avatarUrl!) : null,
-                  child: avatarUrl == null || avatarUrl!.isEmpty ? Text(initial, style: const TextStyle(fontSize: 28)) : null,
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: saving ? null : _pickAvatar,
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(l10n.changePhoto),
-                ),
-              ],
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                        ? NetworkImage(avatarUrl!)
+                        : null,
+                    child: avatarUrl == null || avatarUrl!.isEmpty
+                        ? Text(initial, style: const TextStyle(fontSize: 28))
+                        : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: saving ? null : _pickAvatar,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: Text(l10n.changePhoto),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: fullName,
-            decoration: InputDecoration(labelText: l10n.firstName),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: email,
-            readOnly: true,
-            decoration: InputDecoration(labelText: l10n.email),
-          ),
-          const SizedBox(height: 24),
-          Text(l10n.changePassword, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          TextField(
-            controller: currentPassword,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l10n.currentPassword),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: newPassword,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l10n.newPassword),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(onPressed: saving ? null : _changePassword, child: Text(l10n.changePassword)),
-          if (error != null) ...[
+            const SizedBox(height: 16),
+            TextField(
+              controller: fullName,
+              decoration: InputDecoration(labelText: l10n.firstName),
+            ),
             const SizedBox(height: 12),
-            Text(l10n.errorGeneric(error!), style: const TextStyle(color: Colors.redAccent)),
-          ],
-          const SizedBox(height: 24),
-          FilledButton(onPressed: saving ? null : _save, child: Text(l10n.save)),
-          const SizedBox(height: 32),
-          Center(
-            child: TextButton(
-              onPressed: _deleteAccount,
-              child: Text(l10n.deleteAccount, style: const TextStyle(color: Colors.redAccent)),
+            TextField(
+              controller: email,
+              readOnly: true,
+              decoration: InputDecoration(labelText: l10n.email),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(l10n.changePassword,
+                style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            TextField(
+              controller: currentPassword,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.currentPassword),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: newPassword,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.newPassword),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+                onPressed: saving ? null : _changePassword,
+                child: Text(l10n.changePassword)),
+            if (error != null) ...[
+              const SizedBox(height: 12),
+              Text(l10n.errorGeneric(error!),
+                  style: const TextStyle(color: Colors.redAccent)),
+            ],
+            const SizedBox(height: 24),
+            FilledButton(
+                onPressed: saving ? null : _save, child: Text(l10n.save)),
+            const SizedBox(height: 32),
+            Center(
+              child: TextButton(
+                onPressed: _deleteAccount,
+                child: Text(l10n.deleteAccount,
+                    style: const TextStyle(color: Colors.redAccent)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

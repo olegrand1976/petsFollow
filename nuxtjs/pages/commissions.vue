@@ -6,49 +6,15 @@
     />
 
     <div class="pro-kpi-grid">
-      <ProKpi :label="$t('commissions.kpiClients')" :value="String(summary.eligibleClients ?? 0)" />
-      <ProKpi :label="$t('commissions.kpiRateBase')" :value="baseRateLabel" />
-      <ProKpi :label="$t('commissions.kpiRateHeart')" :value="heartRateLabel" />
       <ProKpi :label="$t('commissions.kpiMonth')" :value="formatCurrency(summary.monthEarnedCents ?? 0)" />
       <ProKpi :label="$t('commissions.kpiLifetime')" :value="formatCurrency(summary.lifetimeEarnedCents ?? 0)" />
+      <ProKpi :label="$t('commissions.kpiClients')" :value="String(summary.eligibleClients ?? 0)" />
+      <ProKpi :label="$t('commissions.kpiRateHeart')" :value="heartRateLabel" />
     </div>
 
-    <ProCard :title="$t('commissions.gainsTitle')" class="pro-mb">
-      <div class="pf-plan-compare">
-        <div
-          v-for="row in summary.planRates || []"
-          :key="row.code"
-          class="pf-plan-compare__item"
-          :class="{ 'pf-plan-compare__item--rec': row.recommended }"
-        >
-          <strong>{{ $t(`commissionSheet.plans.${row.code}`) }}</strong>
-          <span>{{ formatPct(row.vetRateBpsMax) }} · {{ formatCurrency(row.vetCentsMax) }}</span>
-          <ProBadge v-if="row.recommended" variant="success">{{ $t('commissionSheet.recommended') }}</ProBadge>
-        </div>
-      </div>
-      <div v-if="(summary.bonuses || []).length" class="pf-bonus-row">
-        <ProCard v-for="b in summary.bonuses" :key="b.code" class="pf-bonus-card">
-          <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
-          <p>{{ formatCurrency(b.amountCents) }}</p>
-          <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
-          <ProBadge :variant="b.status === 'earned' ? 'success' : b.status === 'in_progress' ? 'warning' : 'neutral'">
-            {{ $t(`commissionSheet.status.${b.status || 'available'}`) }}
-            <template v-if="b.progress != null && b.target"> — {{ b.progress }}/{{ b.target }}</template>
-          </ProBadge>
-        </ProCard>
-      </div>
-      <p v-if="summary.nextTierMinClients" class="pro-hint">
-        {{ $t('commissions.nextTier', { n: summary.nextTierMinClients }) }}
-      </p>
-    </ProCard>
-
-    <ProCard :title="$t('commissions.sheetTitle')" class="pro-mb">
-      <ProCommissionSheet
-        audience="vet"
-        :plan-rates="summary.planRates || []"
-        :bonuses="summary.bonuses || []"
-      />
-    </ProCard>
+    <p v-if="summary.nextTierMinClients" class="pro-hint pro-mb">
+      {{ $t('commissions.nextTier', { n: summary.nextTierMinClients }) }}
+    </p>
 
     <ProCard :title="$t('commissions.ledgerTitle')" class="pro-mb">
       <ProTable :empty="!(summary.recentLedger || []).length" :empty-title="$t('commissions.ledgerEmpty')">
@@ -75,7 +41,7 @@
       </ProTable>
     </ProCard>
 
-    <ProCard :title="$t('commissions.payoutsTitle')">
+    <ProCard :title="$t('commissions.payoutsTitle')" class="pro-mb">
       <ProTable :empty="!(summary.payoutHistory || []).length" :empty-title="$t('commissions.payoutsEmpty')">
         <thead>
           <tr>
@@ -97,6 +63,17 @@
         </tbody>
       </ProTable>
     </ProCard>
+
+    <details class="pf-commissions-details">
+      <summary>{{ $t('commissions.detailsSummary') }}</summary>
+      <div class="pf-commissions-details__body">
+        <ProCommissionSheet
+          audience="vet"
+          :plan-rates="summary.planRates || []"
+          :bonuses="vetBonuses"
+        />
+      </div>
+    </details>
   </div>
 </template>
 
@@ -117,16 +94,13 @@ const summary = ref<any>({
   payoutHistory: [],
 })
 
-const baseRateLabel = computed(() =>
-  `${((summary.value.currentBaseRateBps ?? summary.value.currentRateBps ?? 0) / 100).toFixed(0)}%`,
-)
 const heartRateLabel = computed(() =>
   `${((summary.value.heartRateBps ?? summary.value.currentRateBps ?? 0) / 100).toFixed(0)}%`,
 )
 
-function formatPct(bps: number) {
-  return `${((bps || 0) / 100).toFixed(0)} %`
-}
+const vetBonuses = computed(() =>
+  (summary.value.bonuses || []).filter((b: any) => !b.audience || b.audience === 'vet'),
+)
 
 onMounted(async () => {
   const res: any = await $fetch('/api/vet/commissions')
@@ -137,39 +111,46 @@ onMounted(async () => {
 <style scoped>
 .pro-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
 .pro-mb { margin-bottom: 1.25rem; }
 .pro-hint {
-  margin: 0.75rem 0 0;
+  margin: 0 0 1.25rem;
   color: var(--pf-vet-accent);
   font-size: 0.9rem;
 }
-.pf-plan-compare {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.pf-plan-compare__item {
+.pf-commissions-details {
   border: 1px solid var(--pf-vet-border);
   border-radius: 8px;
-  padding: 0.75rem;
-  display: grid;
-  gap: 0.35rem;
+  background: var(--pf-vet-surface);
+  padding: 0.75rem 1rem;
 }
-.pf-plan-compare__item--rec {
-  border-color: var(--pf-vet-accent);
+.pf-commissions-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+  list-style: none;
 }
-.pf-bonus-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
+.pf-commissions-details > summary::-webkit-details-marker {
+  display: none;
 }
-.pf-bonus-card p { margin: 0.25rem 0; }
+.pf-commissions-details > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4rem;
+  transition: transform 0.15s ease;
+}
+.pf-commissions-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+.pf-commissions-details__body {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pf-vet-border);
+}
 @media (max-width: 900px) {
-  .pro-kpi-grid, .pf-plan-compare { grid-template-columns: 1fr 1fr; }
+  .pro-kpi-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>

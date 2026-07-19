@@ -193,14 +193,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
         title: Text(l10n.horseHealthTitle),
         content: Text(l10n.horsePackUpsell),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.activateAddon)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.activateAddon)),
         ],
       ),
     );
     if (go != true || !mounted) return;
     try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: 'horse', petId: petId);
+      final url = await ApiClient.instance
+          .startAddonCheckout(addonCode: 'horse', petId: petId);
       await openExternalUrl(url);
     } catch (_) {
       if (mounted) {
@@ -221,138 +226,168 @@ class _PetFormScreenState extends State<PetFormScreen> {
             {'code': 'triennial', 'label': '95 € / 3 ans', 'recommended': true},
             {'code': 'quinquennial', 'label': '145 € / 5 ans'},
           ];
-    final initial = (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
+    final initial =
+        (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: _pickPhoto,
-                    child: Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.18),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: photoFile != null
-                            ? Image.file(
-                                File(photoFile!.path),
-                                fit: BoxFit.cover,
-                                width: 140,
-                                height: 140,
-                              )
-                            : ColoredBox(
-                                color: AppColors.surfaceElevated,
-                                child: Center(
-                                  child: Text(initial, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w600)),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickPhoto,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border:
+                              Border.all(color: AppColors.primary, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: photoFile != null
+                              ? Image.file(
+                                  File(photoFile!.path),
+                                  fit: BoxFit.cover,
+                                  width: 140,
+                                  height: 140,
+                                )
+                              : ColoredBox(
+                                  color: AppColors.surfaceElevated,
+                                  child: Center(
+                                    child: Text(initial,
+                                        style: const TextStyle(
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.w600)),
+                                  ),
                                 ),
-                              ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.photoFrameHint,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                  TextButton.icon(
-                    onPressed: _pickPhoto,
-                    icon: const Icon(Icons.photo_camera_outlined),
-                    label: Text(photoFile == null ? l10n.addPhoto : l10n.changePhoto),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.photoFrameHint,
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    ),
+                    TextButton.icon(
+                      onPressed: _pickPhoto,
+                      icon: const Icon(Icons.photo_camera_outlined),
+                      label: Text(
+                          photoFile == null ? l10n.addPhoto : l10n.changePhoto),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: name,
+                  decoration: InputDecoration(labelText: l10n.petName),
+                  onChanged: (_) => setState(() {})),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: selectedSpecies,
+                decoration: InputDecoration(labelText: l10n.species),
+                items: [
+                  DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
+                  DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
+                  DropdownMenuItem(
+                      value: 'horse', child: Text(l10n.speciesHorse)),
+                  DropdownMenuItem(
+                      value: 'other', child: Text(l10n.speciesOther)),
                 ],
+                onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName), onChanged: (_) => setState(() {})),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: selectedSpecies,
-              decoration: InputDecoration(labelText: l10n.species),
-              items: [
-                DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
-                DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
-                DropdownMenuItem(value: 'horse', child: Text(l10n.speciesHorse)),
-                DropdownMenuItem(value: 'other', child: Text(l10n.speciesOther)),
-              ],
-              onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
-            ),
-            const SizedBox(height: 12),
-            TextField(controller: breed, decoration: InputDecoration(labelText: l10n.breed)),
-            const SizedBox(height: 24),
-            Text(l10n.choosePlan, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...displayPlans.map((plan) {
-              final code = plan['code'] as String;
-              final recommended = plan['recommended'] == true;
-              return Card(
-                color: selectedPlan == code ? Theme.of(context).colorScheme.primaryContainer : null,
-                child: RadioListTile<String>(
-                  value: code,
-                  groupValue: selectedPlan,
-                  onChanged: (v) => setState(() {
-                    selectedPlan = v!;
-                    if (selectedPlan == 'quinquennial') {
-                      autoRenew = false;
-                    }
-                  }),
-                  title: Row(
-                    children: [
-                      Text(plan['label'] as String? ?? code),
-                      if (recommended) ...[
-                        const SizedBox(width: 8),
-                        Chip(
-                          label: Text(l10n.recommended, style: const TextStyle(fontSize: 11)),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                        ),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: breed,
+                  decoration: InputDecoration(labelText: l10n.breed)),
+              const SizedBox(height: 24),
+              Text(l10n.choosePlan,
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              ...displayPlans.map((plan) {
+                final code = plan['code'] as String;
+                final recommended = plan['recommended'] == true;
+                return Card(
+                  color: selectedPlan == code
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : null,
+                  child: RadioListTile<String>(
+                    value: code,
+                    groupValue: selectedPlan,
+                    onChanged: (v) => setState(() {
+                      selectedPlan = v!;
+                      if (selectedPlan == 'quinquennial') {
+                        autoRenew = false;
+                      }
+                    }),
+                    title: Row(
+                      children: [
+                        Text(plan['label'] as String? ?? code),
+                        if (recommended) ...[
+                          const SizedBox(width: 8),
+                          Chip(
+                            label: Text(l10n.recommended,
+                                style: const TextStyle(fontSize: 11)),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
+                );
+              }),
+              SwitchListTile(
+                title: Text(l10n.autoRenewTitle),
+                subtitle: Text(
+                  _subscriptionAllowed
+                      ? l10n.autoRenewSubtitle
+                      : l10n.planOneTime(
+                          displayPlans.firstWhere(
+                                (p) => p['code'] == 'quinquennial',
+                                orElse: () => {'label': '145 € / 5 ans'},
+                              )['label'] as String? ??
+                              '145 € / 5 ans',
+                        ),
                 ),
-              );
-            }),
-            SwitchListTile(
-              title: Text(l10n.autoRenewTitle),
-              subtitle: Text(
-                _subscriptionAllowed ? l10n.autoRenewSubtitle : l10n.planOneTime(
-                  displayPlans.firstWhere(
-                    (p) => p['code'] == 'quinquennial',
-                    orElse: () => {'label': '145 € / 5 ans'},
-                  )['label'] as String? ?? '145 € / 5 ans',
-                ),
+                value: autoRenew && _subscriptionAllowed,
+                onChanged: _subscriptionAllowed
+                    ? (v) => setState(() => autoRenew = v)
+                    : null,
               ),
-              value: autoRenew && _subscriptionAllowed,
-              onChanged: _subscriptionAllowed
-                  ? (v) => setState(() => autoRenew = v)
-                  : null,
-            ),
-            Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: loading ? null : save,
-              child: loading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.continueToPayment),
-            ),
-          ],
+              Text(_summary(l10n),
+                  style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: loading ? null : save,
+                child: loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(l10n.continueToPayment),
+              ),
+            ],
+          ),
         ),
       ),
     );

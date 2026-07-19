@@ -8,10 +8,12 @@ class NotificationPreferencesScreen extends StatefulWidget {
   const NotificationPreferencesScreen({super.key});
 
   @override
-  State<NotificationPreferencesScreen> createState() => _NotificationPreferencesScreenState();
+  State<NotificationPreferencesScreen> createState() =>
+      _NotificationPreferencesScreenState();
 }
 
-class _NotificationPreferencesScreenState extends State<NotificationPreferencesScreen> {
+class _NotificationPreferencesScreenState
+    extends State<NotificationPreferencesScreen> {
   bool loading = true;
   bool hr = true;
   bool care = true;
@@ -58,7 +60,8 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
         ),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.notificationPrefsSaved)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.notificationPrefsSaved)));
       }
     } catch (_) {
       if (mounted) {
@@ -81,25 +84,50 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
     }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationPreferences)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(l10n.notificationPrefsHint, style: TextStyle(color: AppColors.textMuted, height: 1.4)),
-          const SizedBox(height: 8),
-          SwitchListTile(title: Text(l10n.notificationPrefHr), value: hr, onChanged: (v) => setState(() => hr = v)),
-          SwitchListTile(title: Text(l10n.notificationPrefCare), value: care, onChanged: (v) => setState(() => care = v)),
-          SwitchListTile(title: Text(l10n.notificationPrefVisits), value: visits, onChanged: (v) => setState(() => visits = v)),
-          SwitchListTile(title: Text(l10n.notificationPrefMessages), value: messages, onChanged: (v) => setState(() => messages = v)),
-          SwitchListTile(title: Text(l10n.notificationPrefDiscovery), value: discovery, onChanged: (v) => setState(() => discovery = v)),
-          SwitchListTile(title: Text(l10n.notificationPrefBilling), value: billing, onChanged: (v) => setState(() => billing = v)),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: saving ? null : _save,
-            child: saving
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(l10n.save),
-          ),
-        ],
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(l10n.notificationPrefsHint,
+                style: TextStyle(color: AppColors.textMuted, height: 1.4)),
+            const SizedBox(height: 8),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefHr),
+                value: hr,
+                onChanged: (v) => setState(() => hr = v)),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefCare),
+                value: care,
+                onChanged: (v) => setState(() => care = v)),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefVisits),
+                value: visits,
+                onChanged: (v) => setState(() => visits = v)),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefMessages),
+                value: messages,
+                onChanged: (v) => setState(() => messages = v)),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefDiscovery),
+                value: discovery,
+                onChanged: (v) => setState(() => discovery = v)),
+            SwitchListTile(
+                title: Text(l10n.notificationPrefBilling),
+                value: billing,
+                onChanged: (v) => setState(() => billing = v)),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: saving ? null : _save,
+              child: saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(l10n.save),
+            ),
+          ],
+        ),
       ),
     );
   }

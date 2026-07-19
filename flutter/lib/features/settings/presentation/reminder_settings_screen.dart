@@ -44,7 +44,8 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
       notificationBody: l10n.notificationHrBody,
     );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.remindersSaved)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.remindersSaved)));
     }
   }
 
@@ -52,31 +53,36 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (loading) {
-      return Scaffold(appBar: AppBar(title: Text(l10n.reminders)), body: const Center(child: CircularProgressIndicator()));
+      return Scaffold(
+          appBar: AppBar(title: Text(l10n.reminders)),
+          body: const Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.reminders)),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.remindersHint, style: const TextStyle(height: 1.4)),
-            const SizedBox(height: 20),
-            SwitchListTile(
-              title: Text(l10n.remindersEnabled),
-              value: enabled,
-              onChanged: (v) => setState(() => enabled = v),
-            ),
-            ListTile(
-              title: Text(l10n.remindersTime),
-              subtitle: Text(time.format(context)),
-              trailing: const Icon(Icons.schedule),
-              onTap: enabled ? _pickTime : null,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(onPressed: _save, child: Text(l10n.save)),
-          ],
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.remindersHint, style: const TextStyle(height: 1.4)),
+              const SizedBox(height: 20),
+              SwitchListTile(
+                title: Text(l10n.remindersEnabled),
+                value: enabled,
+                onChanged: (v) => setState(() => enabled = v),
+              ),
+              ListTile(
+                title: Text(l10n.remindersTime),
+                subtitle: Text(time.format(context)),
+                trailing: const Icon(Icons.schedule),
+                onTap: enabled ? _pickTime : null,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(onPressed: _save, child: Text(l10n.save)),
+            ],
+          ),
         ),
       ),
     );
