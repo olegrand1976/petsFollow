@@ -160,6 +160,8 @@ var demoPractices = []practiceDef{
 							{status: "done", notes: "Consultation annuelle", source: "vet", scheduledIn: -90 * 24 * time.Hour},
 							{status: "done", notes: "Contrôle cardiaque", source: "vet", scheduledIn: -45 * 24 * time.Hour},
 							{status: "done", notes: "Suivi post-op", source: "vet", scheduledIn: -14 * 24 * time.Hour},
+							{status: "requested", notes: "Demande contrôle cardiaque Rex", source: "client", scheduledIn: 2 * 24 * time.Hour},
+							{status: "requested", notes: "Consultation générale Rex", source: "client", scheduledIn: 5 * 24 * time.Hour},
 						},
 					},
 					{
@@ -176,6 +178,9 @@ var demoPractices = []practiceDef{
 						},
 						heartRates: []heartRateDef{
 							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, age: -5 * time.Hour},
+						},
+						visits: []visitDef{
+							{status: "requested", notes: "Contrôle Bella — vaccination", source: "client", scheduledIn: 8 * 24 * time.Hour},
 						},
 					},
 					{
