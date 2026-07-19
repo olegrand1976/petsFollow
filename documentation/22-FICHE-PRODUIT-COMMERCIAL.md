@@ -23,8 +23,9 @@ Monétisation : **cabinet gratuit** → activation clients payants.
 - Messagerie client ↔ véto (+ mode indisponible)
 - Timeline historique (messages, relevés validés)
 - Langues **FR / NL / EN / ES**
+- Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
-Ne pas promettre : push FCM, hardware, WebSocket temps réel (post-MVP).
+Ne pas promettre : hardware, WebSocket temps réel (refresh via ouverture app / push).
 
 ## Offre à pitcher
 
@@ -36,7 +37,14 @@ Prix **TTC** client. Steer = **triennial**.
 | **Triennial** | **95 € / 3 ans** | **2,6 €** | **Recommandé** |
 | Quinquennial | 145 € / 5 ans | 2,4 € | Engagement long |
 
-Addons : Family **39 €** · Kennel **119 €** (≥6) · Care+ **19 €** · Horse **39 €** (détail [17](17-POLITIQUE-TARIFAIRE.md)).
+| Addon | Prix TTC | Pitch |
+|-------|----------|-------|
+| Family | **39 € / an** | Dès 2 animaux ; vue foyer ; **−10 %** sur abos suivants ; pas de plafond |
+| Kennel | **119 € / an** | Dès 6 animaux ; encodage rapide ; **−15 %** ; **exclusif** Family (upgrade) |
+| Care+ | **19 € / an** | Médicaments / rappels perso |
+| Horse | **39 € / an** | Pack équine (si ≥1 cheval) |
+
+Détail économique → [17](17-POLITIQUE-TARIFAIRE.md).
 
 Commission indicative triennial (plafond) : **~9,4 €** pour vous **et** pour le véto — grille complète [19](19-FICHE-COMMISSION-COMMERCIAL.md).
 
@@ -84,7 +92,7 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 | **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant** (abonnement client). Tant qu’il n’y a pas d’activation → **0 €**. Le bonus ramp (25 €) exige **5 pets payants / 60 j**, pas juste un compte créé. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
 | **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Le véto n’est **pas pénalisé** si vous êtes assigné ; même plafond (~9,4 € sur le triennial). |
-| **Promettre un boîtier ou des notifications push** | Ce qui est vendable aujourd’hui = app + Pro (relevé, messagerie, timeline, addons). Push FCM / hardware = **pas livré**. |
+| **Promettre un boîtier ou du chat temps réel type WebSocket** | Vendable = app + Pro (relevé, messagerie, timeline, addons, push FCM messages/RDV). Hardware et WebSocket = **pas livré**. |
 
 ## Liens
 

@@ -18,10 +18,12 @@ Prix **TTC** client / Stripe. Les commissions partenaires se calculent sur le **
 | Annual | `annual` | **35 € / an** | 2,9 € | Ancre d’entrée |
 | Triennial **recommandé** | `triennial` | **95 € / 3 ans** | 2,6 € | Cœur d’offre & pitch |
 | Quinquennial | `quinquennial` | **145 € / 5 ans** | 2,4 € | Engagement long (**paiement unique** — pas de sub Stripe) |
-| Family | `family` | **39 € / an** | — | Addon foyer (≥2) ; remise plans **−10 %** |
-| Kennel | `kennel` | **119 € / an** | — | Addon élevage (≥6) ; remise plans **−15 %** |
+| Family | `family` | **39 € / an** | — | Addon foyer (≥2) ; remise plans **−10 %** ; **pas de plafond** pets |
+| Kennel | `kennel` | **119 € / an** | — | Addon élevage (≥6) ; remise plans **−15 %** ; encodage rapide |
 | Care+ | `care_plus` | **19 € / an** | — | Upsell soins |
 | Horse | `horse` | **39 € / an** | — | Pack équine |
+
+**Exclusivité foyer** : Family et Kennel ne se cumulent pas. Achat Kennel avec Family **active** = upgrade (Family annulé à l’activation Kennel). Family **pending** bloque Kennel (évite double charge).
 
 Modes Stripe : annual / triennial → `one_time` **ou** `subscription` (`year`×1 / `year`×3). Quinquennial → **`one_time` uniquement** (intervalle récurrent Stripe max **3 ans** ; entitlement app = 1825 j).
 
@@ -115,4 +117,4 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 | Taux / facteurs | `go/internal/store/commission_rates.go` |
 | Tiers seed | migration `000019` + `DefaultVetCommissionTiers` |
 | Fiches UI | `ProCommissionSheet` (vet / commercial / admin) |
-| Stripe | Prices `STRIPE_PRICE_*` à aligner TTC 35 / 95 / 145 |
+| Stripe | Prices `STRIPE_PRICE_*` : plans 35 / 95 / 145 · addons Family 39 / Kennel 119 / Care+ 19 / Horse 39 |

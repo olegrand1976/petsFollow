@@ -23,7 +23,7 @@ Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par an
 | **Triennial** | **95 € / 3 ans** (~2,6 €/mois) | **Recommandé** |
 | Quinquennial | 145 € / 5 ans | Engagement long |
 
-Addons : Family 39 € · Kennel 119 € · Care+ 19 € · Horse 39 €.
+Addons : Family 39 € (≥2, −10 %) · Kennel 119 € (≥6, −15 %, exclusif Family) · Care+ 19 € · Horse 39 €.
 
 ## Différenciation
 
@@ -41,4 +41,5 @@ Addons : Family 39 € · Kennel 119 € · Care+ 19 € · Horse 39 €.
 
 ## Interdits pitch
 
-Ne pas promettre hardware, push FCM, ni % sur TTC — voir interdits dans [22](22-FICHE-PRODUIT-COMMERCIAL.md).
+Ne pas promettre hardware, WebSocket temps réel, ni % sur TTC — voir interdits dans [22](22-FICHE-PRODUIT-COMMERCIAL.md).  
+Push FCM livré (messages véto → client, confirmation RDV) — détail [08](08-MESSAGERIE-NOTIFICATIONS.md).
