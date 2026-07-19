@@ -27,6 +27,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginFailed => 'Connexion impossible';
 
   @override
+  String get loginOr => 'ou';
+
+  @override
+  String get loginWithGoogle => 'Continuer avec Google';
+
+  @override
+  String get googleNotConfigured => 'Connexion Google non configurée';
+
+  @override
+  String get googleLoginFailed => 'Connexion Google impossible';
+
+  @override
+  String get googleClientNotFound =>
+      'Aucun compte client pour cet email. Demandez une invitation à votre vétérinaire';
+
+  @override
+  String get googleWrongAudience =>
+      'Ce compte Google n\'est pas un profil client';
+
+  @override
   String get myPets => 'Mes animaux';
 
   @override
@@ -268,7 +288,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planTriennialSub =>
-      '79 € tous les 3 ans, renouvelé automatiquement';
+      '95 € tous les 3 ans, renouvelé automatiquement';
 
   @override
   String get planQuinquennialSub => '145 € pour 5 ans, paiement unique';

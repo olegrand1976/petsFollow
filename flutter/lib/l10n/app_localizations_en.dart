@@ -27,6 +27,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFailed => 'Sign in failed';
 
   @override
+  String get loginOr => 'or';
+
+  @override
+  String get loginWithGoogle => 'Continue with Google';
+
+  @override
+  String get googleNotConfigured => 'Google sign-in is not configured';
+
+  @override
+  String get googleLoginFailed => 'Google sign-in failed';
+
+  @override
+  String get googleClientNotFound =>
+      'No client account for this email. Ask your vet for an invite';
+
+  @override
+  String get googleWrongAudience =>
+      'This Google account is not a client profile';
+
+  @override
   String get myPets => 'My pets';
 
   @override
@@ -264,7 +284,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '€79 every 3 years, auto-renewed';
+  String get planTriennialSub => '€95 every 3 years, auto-renewed';
 
   @override
   String get planQuinquennialSub => '€145 for 5 years, one-time payment';

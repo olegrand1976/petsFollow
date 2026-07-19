@@ -87,10 +87,13 @@ Après migration : `make migrate` (000005_user_locale, 000018_locale_es).
 
 | Variable | Où | Description |
 |----------|-----|-------------|
-| `GOOGLE_OAUTH_CLIENT_ID` | API Go | Client ID Google (validation idToken) |
+| `GOOGLE_OAUTH_CLIENT_ID` | API Go | Client ID Google Web (validation idToken) |
 | `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | Nuxt | Même Client ID (bouton Google sur `/login`) |
+| `GOOGLE_SERVER_CLIENT_ID` | Flutter (`--dart-define`) | Même Client ID Web (`google_sign_in` → idToken) |
 
 Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le bouton Google est masqué.
+
+**Flutter pets** : Google Sign-In avec `audience=client` — lie un compte client existant (invitation véto). Ne crée pas de compte. Un email Pro → erreur `google_client_only`.
 
 **2FA** : activation dans Paramètres (`/settings`) — TOTP via application authenticator.
 

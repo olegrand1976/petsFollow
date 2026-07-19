@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
@@ -60,6 +61,7 @@ class ApiClient {
     loadToken();
     NotificationService.instance.resetSession();
     await DiscoveryController.instance.clearLocal();
+    await GoogleAuth.signOut();
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -67,8 +69,27 @@ class ApiClient {
       'email': email,
       'password': password,
     });
-    final data = res.data['data'] as Map<String, dynamic>;
+    return _completeLogin(res.data['data'] as Map<String, dynamic>);
+  }
+
+  /// Google Sign-In for pets clients. [idToken] must be issued for the same
+  /// Web client ID as API `GOOGLE_OAUTH_CLIENT_ID`.
+  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final res = await dio.post('/api/v1/auth/google', data: {
+      'idToken': idToken,
+      'audience': 'client',
+    });
+    return _completeLogin(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> _completeLogin(Map<String, dynamic> data) async {
     token = data['accessToken'] as String?;
+    if (token == null || token!.isEmpty) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/api/v1/auth/login'),
+        message: 'mfa_required_or_missing_token',
+      );
+    }
     await _persistToken(token);
     loadToken();
     await syncLocaleFromMe();

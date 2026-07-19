@@ -10,8 +10,9 @@ ANDROID_APP_ID="${FIREBASE_ANDROID_APP_ID:-1:237481297060:android:cfda5c59a08bfd
 # Domaine custom (api.petsfollow.ll-it-sc.be) : NXDOMAIN tant que DNS OVH non posé.
 # URL Cloud Run directe (voir documentation/10-GCP-DEPLOIEMENT.md).
 API_BASE="${API_BASE:-https://petsfollow-api-a7ako2njea-od.a.run.app}"
+GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 GROUP_ALIAS="${APP_DIST_GROUP:-petsfollow-testers}"
-RELEASE_NOTES="${RELEASE_NOTES:-petsFollow pets — build staging (API ${API_BASE})}"
+RELEASE_NOTES="${RELEASE_NOTES:-petsFollow pets — Google Sign-In client (API ${API_BASE})}"
 
 cd "${FLUTTER_DIR}"
 
@@ -19,7 +20,9 @@ echo "→ flutter pub get"
 flutter pub get
 
 echo "→ Build APK release (API_BASE=${API_BASE})"
-flutter build apk --release --dart-define="API_BASE=${API_BASE}"
+flutter build apk --release \
+  --dart-define="API_BASE=${API_BASE}" \
+  --dart-define="GOOGLE_SERVER_CLIENT_ID=${GOOGLE_SERVER_CLIENT_ID}"
 
 APK_PATH="${FLUTTER_DIR}/build/app/outputs/flutter-apk/app-release.apk"
 test -f "${APK_PATH}"

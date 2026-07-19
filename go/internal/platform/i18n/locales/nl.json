@@ -46,6 +46,8 @@
     "client_only": "Alleen voor klanten",
     "admin_only": "Alleen voor beheerders",
     "google_pro_only": "Google alleen voor Pro-profielen",
+    "google_client_only": "Dit Google-account is een Pro-profiel — gebruik de webapp",
+    "google_client_not_found": "Geen petsFollow-klantaccount voor dit e-mailadres. Vraag uw dierenarts om een uitnodiging",
     "not_your_pet": "Dit is niet uw huisdier",
     "wrong_practice": "Verkeerde praktijk",
     "not_participant": "U bent geen deelnemer",

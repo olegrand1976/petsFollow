@@ -27,6 +27,25 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loginFailed => 'Inloggen mislukt';
 
   @override
+  String get loginOr => 'of';
+
+  @override
+  String get loginWithGoogle => 'Doorgaan met Google';
+
+  @override
+  String get googleNotConfigured => 'Google-aanmelding is niet geconfigureerd';
+
+  @override
+  String get googleLoginFailed => 'Google-aanmelding mislukt';
+
+  @override
+  String get googleClientNotFound =>
+      'Geen klantaccount voor dit e-mailadres. Vraag uw dierenarts om een uitnodiging';
+
+  @override
+  String get googleWrongAudience => 'Dit Google-account is geen klantprofiel';
+
+  @override
   String get myPets => 'Mijn huisdieren';
 
   @override
@@ -265,7 +284,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '79 € elke 3 jaar, automatisch verlengd';
+  String get planTriennialSub => '95 € elke 3 jaar, automatisch verlengd';
 
   @override
   String get planQuinquennialSub => '145 € voor 5 jaar, eenmalige betaling';

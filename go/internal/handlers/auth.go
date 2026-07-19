@@ -34,7 +34,8 @@ func (a *API) registerAuthRoutes(r chi.Router) {
 }
 
 type googleLoginReq struct {
-	IDToken string `json:"idToken"`
+	IDToken  string `json:"idToken"`
+	Audience string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +77,7 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		name = strings.Split(email, "@")[0]
 	}
 
-	u, err := a.resolveGoogleUser(r, email, name, payload.Subject)
+	u, err := a.resolveGoogleUser(r, email, name, payload.Subject, req.Audience)
 	if err != nil {
 		a.writeGoogleAuthError(w, r, err)
 		return
@@ -84,9 +85,48 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 	a.issueLoginResponse(w, r, u)
 }
 
-func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub string) (store.User, error) {
+func normalizeGoogleAudience(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "client":
+		return "client"
+	default:
+		return "pro"
+	}
+}
+
+func roleMatchesGoogleAudience(role kernel.Role, audience string) bool {
+	switch audience {
+	case "client":
+		return role == kernel.RoleClient
+	default:
+		return role == kernel.RoleVet || role == kernel.RoleAdmin
+	}
+}
+
+func (a *API) linkOrMatchGoogle(ctx context.Context, u store.User, googleSub string) (store.User, error) {
+	if u.GoogleSub == "" {
+		if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
+			return store.User{}, err
+		}
+		return a.store.GetUserByID(ctx, u.ID)
+	}
+	if u.GoogleSub != googleSub {
+		return store.User{}, errGoogleAccountMismatch
+	}
+	return u, nil
+}
+
+func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, audienceRaw string) (store.User, error) {
 	ctx := r.Context()
+	audience := normalizeGoogleAudience(audienceRaw)
+
 	if u, err := a.store.GetUserByGoogleSub(ctx, googleSub); err == nil {
+		if !roleMatchesGoogleAudience(u.Role, audience) {
+			if audience == "client" {
+				return store.User{}, errGoogleClientOnly
+			}
+			return store.User{}, errGoogleProOnly
+		}
 		return u, nil
 	} else if !errors.Is(err, store.ErrNotFound) {
 		return store.User{}, err
@@ -94,37 +134,21 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub stri
 
 	u, err := a.store.GetUserByEmail(ctx, email)
 	if err == nil {
-		switch u.Role {
-		case kernel.RoleClient:
-			return store.User{}, errGoogleProOnly
-		case kernel.RoleAdmin:
-			if u.GoogleSub == "" {
-				if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
-					return store.User{}, err
-				}
-				return a.store.GetUserByID(ctx, u.ID)
+		if !roleMatchesGoogleAudience(u.Role, audience) {
+			if audience == "client" {
+				return store.User{}, errGoogleClientOnly
 			}
-			if u.GoogleSub != googleSub {
-				return store.User{}, errGoogleAccountMismatch
-			}
-			return u, nil
-		case kernel.RoleVet:
-			if u.GoogleSub == "" {
-				if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
-					return store.User{}, err
-				}
-				return a.store.GetUserByID(ctx, u.ID)
-			}
-			if u.GoogleSub != googleSub {
-				return store.User{}, errGoogleAccountMismatch
-			}
-			return u, nil
-		default:
 			return store.User{}, errGoogleProOnly
 		}
+		return a.linkOrMatchGoogle(ctx, u, googleSub)
 	}
 	if !errors.Is(err, store.ErrNotFound) {
 		return store.User{}, err
+	}
+
+	// Unknown email: Pro can auto-register a vet; clients must already exist (invite flow).
+	if audience == "client" {
+		return store.User{}, errGoogleClientNotFound
 	}
 
 	practiceName := fmt.Sprintf("Cabinet %s", strings.Split(fullName, " ")[0])
@@ -136,16 +160,22 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub stri
 }
 
 var (
-	errGoogleProOnly           = errors.New("google pro only")
-	errGoogleAccountMismatch   = errors.New("google account mismatch")
+	errGoogleProOnly         = errors.New("google pro only")
+	errGoogleClientOnly      = errors.New("google client only")
+	errGoogleClientNotFound  = errors.New("google client not found")
+	errGoogleAccountMismatch = errors.New("google account mismatch")
 )
 
 func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, errGoogleProOnly):
-		writeErr(w, r, http.StatusForbidden, "forbidden", "google_pro_only")
+		writeErr(w, r, http.StatusForbidden, "google_pro_only", "google_pro_only")
+	case errors.Is(err, errGoogleClientOnly):
+		writeErr(w, r, http.StatusForbidden, "google_client_only", "google_client_only")
+	case errors.Is(err, errGoogleClientNotFound):
+		writeErr(w, r, http.StatusNotFound, "google_client_not_found", "google_client_not_found")
 	case errors.Is(err, errGoogleAccountMismatch):
-		writeErr(w, r, http.StatusConflict, "conflict", "google_account_mismatch")
+		writeErr(w, r, http.StatusConflict, "google_account_mismatch", "google_account_mismatch")
 	default:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	}

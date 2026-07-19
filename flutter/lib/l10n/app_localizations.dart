@@ -138,6 +138,42 @@ abstract class AppLocalizations {
   /// **'Connexion impossible'**
   String get loginFailed;
 
+  /// No description provided for @loginOr.
+  ///
+  /// In fr, this message translates to:
+  /// **'ou'**
+  String get loginOr;
+
+  /// No description provided for @loginWithGoogle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec Google'**
+  String get loginWithGoogle;
+
+  /// No description provided for @googleNotConfigured.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion Google non configurée'**
+  String get googleNotConfigured;
+
+  /// No description provided for @googleLoginFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion Google impossible'**
+  String get googleLoginFailed;
+
+  /// No description provided for @googleClientNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte client pour cet email. Demandez une invitation à votre vétérinaire'**
+  String get googleClientNotFound;
+
+  /// No description provided for @googleWrongAudience.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte Google n\'est pas un profil client'**
+  String get googleWrongAudience;
+
   /// No description provided for @myPets.
   ///
   /// In fr, this message translates to:
@@ -573,7 +609,7 @@ abstract class AppLocalizations {
   /// No description provided for @planTriennialSub.
   ///
   /// In fr, this message translates to:
-  /// **'79 € tous les 3 ans, renouvelé automatiquement'**
+  /// **'95 € tous les 3 ans, renouvelé automatiquement'**
   String get planTriennialSub;
 
   /// No description provided for @planQuinquennialSub.

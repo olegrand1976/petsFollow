@@ -46,6 +46,8 @@
     "client_only": "Clients only",
     "admin_only": "Admins only",
     "google_pro_only": "Google reserved for Pro profiles",
+    "google_client_only": "This Google account is a Pro profile — use the web app",
+    "google_client_not_found": "No petsFollow client account for this email. Ask your vet for an invite",
     "not_your_pet": "Not your pet",
     "wrong_practice": "Wrong practice",
     "not_participant": "Not a participant",

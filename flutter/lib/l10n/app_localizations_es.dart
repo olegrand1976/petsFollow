@@ -27,6 +27,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginFailed => 'Error al iniciar sesión';
 
   @override
+  String get loginOr => 'o';
+
+  @override
+  String get loginWithGoogle => 'Continuar con Google';
+
+  @override
+  String get googleNotConfigured =>
+      'Inicio de sesión con Google no configurado';
+
+  @override
+  String get googleLoginFailed => 'No se pudo iniciar sesión con Google';
+
+  @override
+  String get googleClientNotFound =>
+      'No hay cuenta de cliente para este correo. Pida una invitación a su veterinario';
+
+  @override
+  String get googleWrongAudience =>
+      'Esta cuenta de Google no es un perfil de cliente';
+
+  @override
   String get myPets => 'Mis mascotas';
 
   @override
@@ -266,7 +287,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get planTriennialSub => '79 € cada 3 años, renovación automática';
+  String get planTriennialSub => '95 € cada 3 años, renovación automática';
 
   @override
   String get planQuinquennialSub => '145 € por 5 años, pago único';

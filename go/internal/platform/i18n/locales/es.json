@@ -46,6 +46,8 @@
     "client_only": "Solo clientes",
     "admin_only": "Solo administradores",
     "google_pro_only": "Google reservado para perfiles Pro",
+    "google_client_only": "Esta cuenta de Google es un perfil Pro — use la app web",
+    "google_client_not_found": "No hay cuenta de cliente petsFollow para este correo. Pida una invitación a su veterinario",
     "not_your_pet": "No es su mascota",
     "wrong_practice": "Clínica incorrecta",
     "not_participant": "No es participante",
