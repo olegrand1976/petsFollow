@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,7 +24,9 @@ class MessagingScreen extends StatefulWidget {
   State<MessagingScreen> createState() => _MessagingScreenState();
 }
 
-class _MessagingScreenState extends State<MessagingScreen> {
+class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingObserver {
+  static const _pollInterval = Duration(seconds: 4);
+
   List<MessageThread> threads = [];
   List<ChatMessage> messages = [];
   String? threadId;
@@ -31,25 +34,45 @@ class _MessagingScreenState extends State<MessagingScreen> {
   final draft = TextEditingController();
   bool loading = true;
   bool sending = false;
+  bool _refreshing = false;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     PushNavigation.instance.messageRefreshTick.addListener(_onPushRefresh);
     PushNavigation.instance.onOpenMessageThread = _openThreadFromPush;
-    initThreads();
+    initThreads().then((_) {
+      if (widget.active) _startPolling();
+    });
   }
 
   @override
   void didUpdateWidget(MessagingScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.active && !oldWidget.active) {
-      initThreads();
+      _silentRefresh();
+      _startPolling();
+    } else if (!widget.active && oldWidget.active) {
+      _stopPolling();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && widget.active) {
+      _silentRefresh();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused) {
+      _stopPolling();
     }
   }
 
   @override
   void dispose() {
+    _stopPolling();
+    WidgetsBinding.instance.removeObserver(this);
     PushNavigation.instance.messageRefreshTick.removeListener(_onPushRefresh);
     if (PushNavigation.instance.onOpenMessageThread == _openThreadFromPush) {
       PushNavigation.instance.onOpenMessageThread = null;
@@ -58,9 +81,23 @@ class _MessagingScreenState extends State<MessagingScreen> {
     super.dispose();
   }
 
+  void _startPolling() {
+    _pollTimer?.cancel();
+    if (!widget.active) return;
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      if (!mounted || !widget.active || sending) return;
+      _silentRefresh();
+    });
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
   void _onPushRefresh() {
     if (!mounted) return;
-    initThreads();
+    _silentRefresh();
   }
 
   void _openThreadFromPush(String id) {
@@ -69,10 +106,28 @@ class _MessagingScreenState extends State<MessagingScreen> {
   }
 
   Future<void> initThreads() async {
-    setState(() => loading = true);
+    if (mounted) setState(() => loading = true);
+    await _fetchThreadsAndMessages(showErrors: true);
+    if (mounted) setState(() => loading = false);
+  }
+
+  /// Refresh threads + open conversation without blanking the UI.
+  Future<void> _silentRefresh() async {
+    if (_refreshing || !mounted) return;
+    _refreshing = true;
     try {
-      final me = await ApiClient.instance.getMe();
-      currentUserId = me['userId'] as String?;
+      await _fetchThreadsAndMessages(showErrors: false);
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  Future<void> _fetchThreadsAndMessages({required bool showErrors}) async {
+    try {
+      if (currentUserId == null) {
+        final me = await ApiClient.instance.getMe();
+        currentUserId = me['userId'] as String?;
+      }
       final rawThreads = await ApiClient.instance.getMessageThreads();
       List<VetLink> vets = [];
       try {
@@ -92,18 +147,28 @@ class _MessagingScreenState extends State<MessagingScreen> {
           unreadCount: t.unreadCount,
         );
       }).toList();
-      if (mounted) {
-        setState(() {
-          threads = enriched;
-          if (threads.isNotEmpty && threadId == null) {
-            threadId = threads.first.id;
-          }
-          loading = false;
-        });
+      var nextThreadId = threadId;
+      if (enriched.isNotEmpty &&
+          (nextThreadId == null || !enriched.any((t) => t.id == nextThreadId))) {
+        nextThreadId = enriched.first.id;
       }
-      if (threadId != null) await loadMessages();
-    } catch (_) {
-      if (mounted) setState(() => loading = false);
+      List<ChatMessage> nextMessages = messages;
+      if (nextThreadId != null) {
+        nextMessages = await ApiClient.instance.getChatMessages(nextThreadId);
+      }
+      if (!mounted) return;
+      setState(() {
+        threads = enriched;
+        threadId = nextThreadId;
+        messages = nextMessages;
+      });
+    } catch (e) {
+      if (showErrors && mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mapApiError(e, l10n))),
+        );
+      }
     }
   }
 

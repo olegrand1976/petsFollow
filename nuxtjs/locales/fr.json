@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clients",
+    "recommend": "Recommander un cabinet",
     "messages": "Messagerie",
     "requests": "Demandes",
     "commissions": "Commissions",
@@ -377,6 +378,7 @@
     "subtitle": "Liste des clients rattachés à votre cabinet.",
     "create": {
       "title": "Créer un compte client",
+      "open": "Créer un compte client",
       "hint": "Le client devra changer son mot de passe à la première connexion dans l'app.",
       "fullName": "Nom complet",
       "email": "Email",
@@ -471,19 +473,22 @@
       "careTypeFarrier": "Maréchal-ferrant",
       "careTypeFecalEgg": "Coproscopie",
       "careTypeCustom": "Personnalisé"
-    },
-    "referral": {
-      "title": "Recommander un cabinet",
-      "hint": "La fiche est transmise au commercial qui vous suit.",
-      "practiceName": "Cabinet / clinique",
-      "contactName": "Contact",
-      "contactEmail": "Email",
-      "city": "Ville",
-      "notes": "Notes",
-      "submit": "Envoyer au commercial",
-      "success": "Recommandation envoyée.",
-      "error": "Impossible d’envoyer (commercial non assigné ?)."
     }
+  },
+  "recommend": {
+    "title": "Recommander un cabinet",
+    "subtitle": "Signalez un confrère intéressé — votre commercial assure le suivi.",
+    "hint": "La fiche est transmise au commercial qui vous suit.",
+    "practiceName": "Cabinet / clinique",
+    "contactName": "Contact",
+    "contactEmail": "Email",
+    "city": "Ville",
+    "notes": "Notes",
+    "submit": "Envoyer au commercial",
+    "thanksTitle": "Merci pour votre recommandation !",
+    "thanksBody": "Votre commercial a bien reçu la fiche et reprendra contact avec le cabinet. Merci de contribuer au réseau petsFollow.",
+    "another": "Recommander un autre cabinet",
+    "error": "Impossible d’envoyer (commercial non assigné ?)."
   },
   "requests": {
     "title": "Demandes",
@@ -766,11 +771,13 @@
     "bonusesTitle": "Bonus possibles",
     "recommended": "Recommandé",
     "colPlan": "Offre",
-    "colVetRate": "Taux véto max",
-    "colVetEuros": "€ véto max",
+    "colVetRate": "Taux max (61+)",
+    "colVetEuros": "€ max (61+)",
     "colCommRate": "Taux commercial",
     "colCommEuros": "€ commercial",
-    "vetAddonNote": "Les addons (Family / Care+ / Horse) ne sont pas commissionnés pour le véto.",
+    "vetBaseExplain": "Taux de base selon le nombre de clients payants liés à votre cabinet :",
+    "vetMaxExplain": "Ce taux de base est ensuite multiplié par un facteur selon le plan (100 % sur Triennial, 67 % sur Annual et Quinquennial), puis plafonné à 12 %. Le tableau indique le maximum au palier 61+ clients — votre taux réel peut être inférieur si vous êtes encore sur un palier plus bas.",
+    "vetAddonNote": "Pas de commission supplémentaire sur les addons Family, Care+ et Horse : seuls les abonnements animal (Annual / Triennial / Quinquennial) sont commissionnés pour le véto.",
     "coSellNote": "Le véto n’est pas pénalisé si vous êtes assigné — co-selling gagnant-gagnant.",
     "adminGuardrails": "Garde-fous : marge nette ≥ 55 % du TTC · net/an cœur ≥ 17 € · take rate max cœur 24 % HT.",
     "tier": "{min}–{max} clients → {pct} % (base)",

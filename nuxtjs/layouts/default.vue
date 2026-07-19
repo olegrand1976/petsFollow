@@ -38,6 +38,7 @@ const requestsBadge = ref(0)
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
   { to: '/clients', label: t('nav.clients'), icon: 'clients' },
+  { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/requests', label: t('nav.requests'), icon: 'requests', badge: requestsBadge.value },
   { to: '/messages', label: t('nav.messages'), icon: 'messages' },
   { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },

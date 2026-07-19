@@ -5,9 +5,11 @@
 
     <div v-if="showVetGrid" class="pf-commission-sheet__block">
       <h3 v-if="audience !== 'vet'" class="pf-commission-sheet__h">{{ $t('commissionSheet.vetTitle') }}</h3>
+      <p class="pf-commission-sheet__explain">{{ $t('commissionSheet.vetBaseExplain') }}</p>
       <ul class="pf-commission-sheet__tiers">
         <li v-for="t in vetTierLabels" :key="t">{{ t }}</li>
       </ul>
+      <p class="pf-commission-sheet__explain">{{ $t('commissionSheet.vetMaxExplain') }}</p>
       <ProTable>
         <thead>
           <tr>
@@ -31,7 +33,15 @@
           </tr>
         </tbody>
       </ProTable>
-      <p v-if="audience === 'vet'" class="pro-hint">{{ $t('commissionSheet.vetAddonNote') }}</p>
+      <p
+        v-if="audience === 'vet' || audience === 'admin'"
+        class="pf-commission-sheet__addon-note"
+        role="note"
+        data-testid="vet-addon-commission-note"
+      >
+        <ProIcon name="info" :size="18" />
+        <span>{{ $t('commissionSheet.vetAddonNote') }}</span>
+      </p>
     </div>
 
     <div v-if="showCommercialGrid" class="pf-commission-sheet__block">
@@ -173,6 +183,30 @@ function bonusVariant(status: string): 'success' | 'warning' | 'neutral' {
 .pf-commission-sheet__tiers {
   margin: 0 0 0.75rem;
   padding-left: 1.2rem;
+}
+.pf-commission-sheet__explain {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--pf-vet-text-muted);
+  line-height: 1.45;
+}
+.pf-commission-sheet__addon-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.85rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--pf-vet-radius);
+  background: color-mix(in srgb, var(--pf-vet-accent) 8%, var(--pf-vet-surface));
+  border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 28%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--pf-vet-primary);
+}
+.pf-commission-sheet__addon-note .pro-icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: var(--pf-vet-accent);
 }
 .pf-commission-sheet__row--rec td {
   font-weight: 600;

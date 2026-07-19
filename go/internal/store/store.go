@@ -174,7 +174,7 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var out []ClientSummary
+	out := make([]ClientSummary, 0)
 	for rows.Next() {
 		var c ClientSummary
 		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount); err != nil {

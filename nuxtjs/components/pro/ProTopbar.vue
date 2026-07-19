@@ -125,6 +125,8 @@ const {
   count: notifCount,
   refresh: refreshNotif,
   markAllRead,
+  startPolling,
+  stopPolling,
 } = useProNotifications()
 
 const notifOpen = ref(false)
@@ -137,14 +139,21 @@ const practiceName = computed(() => user.value?.practiceName?.trim() || '')
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
   await fetchUser()
-  if (props.showNotifications) await refreshNotif()
+  if (props.showNotifications) {
+    await refreshNotif()
+    startPolling()
+  }
 })
 
-onUnmounted(() => document.removeEventListener('click', onDocClick))
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick)
+  if (props.showNotifications) stopPolling()
+})
 
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
   profileOpen.value = false
+  if (notifOpen.value) void refreshNotif()
 }
 
 async function handleMarkAllRead() {

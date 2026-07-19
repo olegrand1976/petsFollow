@@ -120,7 +120,10 @@ const draft = ref('')
 const sending = ref(false)
 const actionError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const refreshing = ref(false)
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
+const POLL_MS = 4_000
 const MAX_MEDIA_BYTES = 25 * 1024 * 1024
 
 const vetUserId = computed(() => user.value?.userId ?? user.value?.id ?? '')
@@ -144,18 +147,30 @@ function senderLabel(msg: any) {
   return active.value?.clientName || t('common.clientFallback', { id: active.value?.clientUserId?.slice(0, 8) ?? '' })
 }
 
+function asThreadList(raw: unknown): any[] {
+  const list = Array.isArray(raw) ? raw : []
+  return list.filter((item) => item != null && item.id != null)
+}
+
+function asMessageList(raw: unknown): any[] {
+  const list = Array.isArray(raw) ? raw : []
+  return list.filter((item) => item != null && item.id != null)
+}
+
 async function loadThreads() {
   const res: any = await $fetch('/api/messaging/threads')
-  threads.value = res.data ?? res ?? []
-  if (active.value) {
-    active.value = threads.value.find((item) => item.id === active.value.id) ?? active.value
+  threads.value = asThreadList(res?.data ?? res)
+  const currentId = active.value?.id
+  if (currentId) {
+    active.value = threads.value.find((item) => item?.id === currentId) ?? active.value
   }
 }
 
 async function select(thread: any) {
+  if (!thread?.id) return
   active.value = thread
   const res: any = await $fetch(`/api/messaging/threads/${thread.id}/messages`)
-  messages.value = res.data ?? res ?? []
+  messages.value = asMessageList(res?.data ?? res)
   if ((thread.unreadCount ?? 0) > 0) {
     await $fetch(`/api/messaging/threads/${thread.id}/read`, { method: 'POST' })
     await loadThreads()
@@ -166,14 +181,76 @@ async function select(thread: any) {
 async function openThreadFromQuery() {
   const threadId = String(route.query.thread || '')
   if (!threadId) return
-  const thread = threads.value.find((item) => item.id === threadId)
+  const thread = threads.value.find((item) => item?.id === threadId)
   if (thread) await select(thread)
+}
+
+async function silentRefresh() {
+  if (sending.value || refreshing.value) return
+  refreshing.value = true
+  try {
+    await loadThreads()
+    const threadId = active.value?.id
+    if (!threadId) {
+      await refreshNotif()
+      return
+    }
+    const res: any = await $fetch(`/api/messaging/threads/${threadId}/messages`)
+    const next = asMessageList(res?.data ?? res)
+    const prevLast = messages.value[messages.value.length - 1]?.id
+    const nextLast = next[next.length - 1]?.id
+    if (next.length !== messages.value.length || nextLast !== prevLast) {
+      messages.value = next
+    }
+    // Re-read active after awaits — user may have cleared selection.
+    if (active.value?.id !== threadId) return
+    const thread = threads.value.find((item) => item?.id === threadId)
+    if (thread && (thread.unreadCount ?? 0) > 0) {
+      await $fetch(`/api/messaging/threads/${threadId}/read`, { method: 'POST' })
+      await loadThreads()
+    }
+    await refreshNotif()
+  } catch {
+    // ignore background poll errors
+  } finally {
+    refreshing.value = false
+  }
+}
+
+function onVisibility() {
+  if (document.visibilityState === 'visible') void silentRefresh()
+}
+
+function startPoll() {
+  stopPoll()
+  pollTimer = setInterval(() => {
+    if (document.visibilityState === 'hidden') return
+    void silentRefresh()
+  }, POLL_MS)
+}
+
+function stopPoll() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 }
 
 onMounted(async () => {
   await fetchUser()
   await loadThreads()
   await openThreadFromQuery()
+  if (import.meta.client) {
+    document.addEventListener('visibilitychange', onVisibility)
+    startPoll()
+  }
+})
+
+onUnmounted(() => {
+  stopPoll()
+  if (import.meta.client) {
+    document.removeEventListener('visibilitychange', onVisibility)
+  }
 })
 
 watch(
@@ -184,18 +261,21 @@ watch(
 )
 
 async function reloadMessages() {
-  if (!active.value) return
-  const res: any = await $fetch(`/api/messaging/threads/${active.value.id}/messages`)
-  messages.value = res.data ?? res ?? []
+  const threadId = active.value?.id
+  if (!threadId) return
+  const res: any = await $fetch(`/api/messaging/threads/${threadId}/messages`)
+  messages.value = asMessageList(res?.data ?? res)
   await loadThreads()
+  await refreshNotif()
 }
 
 async function send() {
-  if (!active.value || !draft.value.trim() || sending.value) return
+  const threadId = active.value?.id
+  if (!threadId || !draft.value.trim() || sending.value) return
   sending.value = true
   actionError.value = ''
   try {
-    await $fetch(`/api/messaging/threads/${active.value.id}/messages`, {
+    await $fetch(`/api/messaging/threads/${threadId}/messages`, {
       method: 'POST',
       body: { body: draft.value },
     })
@@ -212,7 +292,8 @@ async function onFileSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
-  if (!file || !active.value || sending.value) return
+  const threadId = active.value?.id
+  if (!file || !threadId || sending.value) return
   if (file.size > MAX_MEDIA_BYTES) {
     actionError.value = t('errors.image_too_large')
     return
@@ -223,7 +304,7 @@ async function onFileSelected(event: Event) {
     const form = new FormData()
     form.append('file', file)
     if (draft.value.trim()) form.append('body', draft.value.trim())
-    await $fetch(`/api/messaging/threads/${active.value.id}/messages/media`, {
+    await $fetch(`/api/messaging/threads/${threadId}/messages/media`, {
       method: 'POST',
       body: form,
     })

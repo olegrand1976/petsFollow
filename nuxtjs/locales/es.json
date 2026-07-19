@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Panel",
     "clients": "Clientes",
+    "recommend": "Recomendar una clínica",
     "messages": "Mensajería",
     "requests": "Solicitudes",
     "commissions": "Comisiones",
@@ -245,6 +246,7 @@
     "subtitle": "Clientes vinculados a su clínica.",
     "create": {
       "title": "Crear cuenta de cliente",
+      "open": "Crear cuenta de cliente",
       "hint": "El cliente deberá cambiar su contraseña en el primer inicio de sesión en la app.",
       "fullName": "Nombre completo",
       "email": "Correo",
@@ -339,19 +341,22 @@
       "careTypeFarrier": "Herrador",
       "careTypeFecalEgg": "Coprocultivo / recuento de huevos",
       "careTypeCustom": "Personalizado"
-    },
-    "referral": {
-      "title": "Recomendar una clínica",
-      "hint": "El lead se envía a su comercial asignado.",
-      "practiceName": "Clínica",
-      "contactName": "Contacto",
-      "contactEmail": "Correo",
-      "city": "Ciudad",
-      "notes": "Notas",
-      "submit": "Enviar al comercial",
-      "success": "Recomendación enviada.",
-      "error": "No se ha podido enviar (¿sin comercial asignado?)."
     }
+  },
+  "recommend": {
+    "title": "Recomendar una clínica",
+    "subtitle": "Presente a un colega interesado — su comercial hará el seguimiento.",
+    "hint": "El lead se envía a su comercial asignado.",
+    "practiceName": "Clínica",
+    "contactName": "Contacto",
+    "contactEmail": "Correo",
+    "city": "Ciudad",
+    "notes": "Notas",
+    "submit": "Enviar al comercial",
+    "thanksTitle": "¡Gracias por su recomendación!",
+    "thanksBody": "Su comercial ha recibido la ficha y contactará con la clínica. Gracias por contribuir a la red petsFollow.",
+    "another": "Recomendar otra clínica",
+    "error": "No se ha podido enviar (¿sin comercial asignado?)."
   },
   "requests": {
     "title": "Solicitudes",
@@ -1175,11 +1180,13 @@
     "bonusesTitle": "Bonificaciones disponibles",
     "recommended": "Recomendado",
     "colPlan": "Oferta",
-    "colVetRate": "Tasa vet máx.",
-    "colVetEuros": "€ vet máx.",
+    "colVetRate": "Tasa máx. (61+)",
+    "colVetEuros": "€ máx. (61+)",
     "colCommRate": "Tasa comercial",
     "colCommEuros": "€ comercial",
-    "vetAddonNote": "Los addons (Family / Care+ / Horse) no generan comisión para el veterinario.",
+    "vetBaseExplain": "Tasa base según el número de clientes de pago vinculados a su clínica:",
+    "vetMaxExplain": "Esa tasa base se multiplica luego por un factor según el plan (100 % en Triennial, 67 % en Annual y Quinquennial), con un tope del 12 %. La tabla muestra el máximo en el tramo 61+ clientes — su tasa real puede ser inferior en un tramo anterior.",
+    "vetAddonNote": "Sin comisión adicional por los addons Family, Care+ u Horse: solo las suscripciones de mascota (Annual / Triennial / Quinquennial) generan comisión para el veterinario.",
     "coSellNote": "El veterinario no se penaliza si usted está asignado — co-selling beneficioso para ambos.",
     "adminGuardrails": "Límites: margen neto ≥ 55 % del TTC · neto/año núcleo ≥ 17 € · take rate máx. núcleo 24 % HT.",
     "tier": "{min}–{max} clientes → {pct} % (base)",

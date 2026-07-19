@@ -1,33 +1,38 @@
 <template>
   <div data-testid="clients-page">
-    <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
+    <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')">
+      <template #actions>
+        <ProButton
+          test-id="create-client-open"
+          class="pro-btn--icon"
+          :aria-label="$t('clients.create.open')"
+          @click="openCreateModal"
+        >
+          <ProIcon name="add" :size="22" />
+        </ProButton>
+      </template>
+    </ProPageHeader>
+    <p v-if="loadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ loadError }}</p>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
-    <ProCard class="pro-mb-lg" data-testid="vet-create-client-form">
-      <h3 class="pro-mb-md">{{ $t('clients.create.title') }}</h3>
+
+    <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
       <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
-      <form class="pro-form" @submit.prevent="createClient">
+      <form class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
         <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
         <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
-        <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">{{ $t('clients.create.submit') }}</ProButton>
+        <div class="create-client-actions">
+          <ProButton variant="secondary" type="button" @click="createOpen = false">
+            {{ $t('common.cancel') }}
+          </ProButton>
+          <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">
+            {{ $t('clients.create.submit') }}
+          </ProButton>
+        </div>
       </form>
-    </ProCard>
-    <ProCard class="pro-mb-lg" data-testid="vet-referral-form">
-      <h3 class="pro-mb-md">{{ $t('clients.referral.title') }}</h3>
-      <p class="pro-hint pro-mb-md">{{ $t('clients.referral.hint') }}</p>
-      <form class="pro-form" @submit.prevent="submitReferral">
-        <ProInput v-model="referral.practiceName" test-id="referral-practice" :label="$t('clients.referral.practiceName')" required />
-        <ProInput v-model="referral.contactName" test-id="referral-contact" :label="$t('clients.referral.contactName')" />
-        <ProInput v-model="referral.contactEmail" test-id="referral-email" type="email" :label="$t('clients.referral.contactEmail')" />
-        <ProInput v-model="referral.city" test-id="referral-city" :label="$t('clients.referral.city')" />
-        <ProInput v-model="referral.notes" test-id="referral-notes" :label="$t('clients.referral.notes')" />
-        <p v-if="referralMsg" class="pro-hint" data-testid="referral-msg">{{ referralMsg }}</p>
-        <p v-if="referralError" class="pro-error">{{ referralError }}</p>
-        <ProButton type="submit" test-id="referral-submit" :disabled="referralSaving">{{ $t('clients.referral.submit') }}</ProButton>
-      </form>
-    </ProCard>
+    </ProModal>
 
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
@@ -154,23 +159,40 @@ const petFilter = ref<'all' | 'none' | 'with'>('all')
 const sortBy = ref<'name' | 'pets'>('name')
 const sendingId = ref('')
 const appLinkFeedback = ref('')
+const loadError = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
 
-const referral = reactive({
-  practiceName: '',
-  contactName: '',
-  contactEmail: '',
-  city: '',
-  notes: '',
-})
-const referralSaving = ref(false)
-const referralMsg = ref('')
-const referralError = ref('')
+function asClientList(raw: unknown): ClientRow[] {
+  const list = Array.isArray((raw as any)?.data)
+    ? (raw as any).data
+    : Array.isArray(raw)
+      ? raw
+      : []
+  return list.filter((c: any) => c?.userId) as ClientRow[]
+}
 
+async function loadClients() {
+  loadError.value = ''
+  try {
+    const res: any = await $fetch('/api/clients')
+    clients.value = asClientList(res)
+  } catch {
+    clients.value = []
+    loadError.value = t('clients.emptyDescription')
+  }
+}
+
+const createOpen = ref(false)
 const clientForm = reactive({ fullName: '', email: '', password: '' })
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
+
+function openCreateModal() {
+  clientMsg.value = ''
+  clientError.value = ''
+  createOpen.value = true
+}
 
 async function createClient() {
   clientSaving.value = true
@@ -180,27 +202,11 @@ async function createClient() {
     await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
     clientMsg.value = t('clients.create.success')
     Object.assign(clientForm, { fullName: '', email: '', password: '' })
-    const res: any = await $fetch('/api/clients')
-    clients.value = res.data ?? res ?? []
+    await loadClients()
   } catch {
     clientError.value = t('clients.create.error')
   } finally {
     clientSaving.value = false
-  }
-}
-
-async function submitReferral() {
-  referralSaving.value = true
-  referralMsg.value = ''
-  referralError.value = ''
-  try {
-    await $fetch('/api/vet/prospects', { method: 'POST', body: { ...referral } })
-    referralMsg.value = t('clients.referral.success')
-    Object.assign(referral, { practiceName: '', contactName: '', contactEmail: '', city: '', notes: '' })
-  } catch {
-    referralError.value = t('clients.referral.error')
-  } finally {
-    referralSaving.value = false
   }
 }
 
@@ -224,7 +230,7 @@ async function sendAppLink(c: ClientRow) {
 }
 
 const filtered = computed(() => {
-  let list = [...clients.value]
+  let list = Array.isArray(clients.value) ? [...clients.value] : []
   const q = query.value.trim().toLowerCase()
   if (q) {
     list = list.filter(
@@ -236,9 +242,9 @@ const filtered = computed(() => {
   if (petFilter.value === 'none') list = list.filter((c) => c.petCount === 0)
   if (petFilter.value === 'with') list = list.filter((c) => c.petCount > 0)
   if (sortBy.value === 'name') {
-    list.sort((a, b) => compareStrings(a.fullName, b.fullName))
+    list.sort((a, b) => compareStrings(a.fullName || '', b.fullName || ''))
   } else {
-    list.sort((a, b) => b.petCount - a.petCount)
+    list.sort((a, b) => (b.petCount || 0) - (a.petCount || 0))
   }
   return list
 })
@@ -261,9 +267,8 @@ const kanbanColumns = computed(() => [
   },
 ])
 
-onMounted(async () => {
-  const res: any = await $fetch('/api/clients')
-  clients.value = res.data ?? res ?? []
+onMounted(() => {
+  void loadClients()
 })
 </script>
 
@@ -271,6 +276,16 @@ onMounted(async () => {
 .client-avatar {
   margin-right: 0.5rem;
   vertical-align: middle;
+}
+.create-client-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+:deep(.pro-btn--icon) {
+  min-width: 44px;
+  padding-inline: 0.65rem;
 }
 .pro-client-actions {
   display: flex;
@@ -303,5 +318,10 @@ onMounted(async () => {
   border-radius: var(--pf-vet-radius);
   background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-surface));
   border: 1px solid color-mix(in srgb, var(--pf-vet-accent) 30%, transparent);
+}
+.pro-inline-feedback--error {
+  background: color-mix(in srgb, var(--pf-vet-danger, #b42318) 10%, var(--pf-vet-surface));
+  border-color: color-mix(in srgb, var(--pf-vet-danger, #b42318) 35%, transparent);
+  color: var(--pf-vet-danger, #b42318);
 }
 </style>

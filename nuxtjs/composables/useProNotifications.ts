@@ -5,6 +5,18 @@ export type ProNotificationItem = {
   href: string
 }
 
+const POLL_MS = 8_000
+
+let sharedTimer: ReturnType<typeof setInterval> | null = null
+let sharedListeners = 0
+let sharedRefresh: (() => Promise<void>) | null = null
+
+function onVisibility() {
+  if (document.visibilityState === 'visible') {
+    void sharedRefresh?.()
+  }
+}
+
 export function useProNotifications() {
   const { t } = useI18n()
   const threadsState = useState<any[]>('pro-notif-threads', () => [])
@@ -30,13 +42,16 @@ export function useProNotifications() {
   async function refresh() {
     try {
       const res: any = await $fetch('/api/messaging/threads')
-      threadsState.value = res.data ?? res ?? []
+      const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      threadsState.value = list.filter((item: any) => item != null && item.id != null)
     } catch {
       threadsState.value = []
     } finally {
       loadedState.value = true
     }
   }
+
+  sharedRefresh = refresh
 
   async function markAllRead() {
     await $fetch('/api/messaging/threads/read-all', { method: 'POST' })
@@ -46,5 +61,30 @@ export function useProNotifications() {
     }))
   }
 
-  return { items, count, loaded: loadedState, refresh, markAllRead }
+  function startPolling() {
+    sharedListeners += 1
+    if (sharedTimer) return
+    void refresh()
+    sharedTimer = setInterval(() => {
+      if (import.meta.client && document.visibilityState === 'hidden') return
+      void sharedRefresh?.()
+    }, POLL_MS)
+    if (import.meta.client) {
+      document.addEventListener('visibilitychange', onVisibility)
+    }
+  }
+
+  function stopPolling() {
+    sharedListeners = Math.max(0, sharedListeners - 1)
+    if (sharedListeners > 0) return
+    if (sharedTimer) {
+      clearInterval(sharedTimer)
+      sharedTimer = null
+    }
+    if (import.meta.client) {
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }
+
+  return { items, count, loaded: loadedState, refresh, markAllRead, startPolling, stopPolling }
 }

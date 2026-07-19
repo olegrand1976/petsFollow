@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clients",
+    "recommend": "Refer a practice",
     "messages": "Messaging",
     "requests": "Requests",
     "commissions": "Commissions",
@@ -245,6 +246,7 @@
     "subtitle": "Clients linked to your practice.",
     "create": {
       "title": "Create client account",
+      "open": "Create client account",
       "hint": "The client must change their password on first app sign-in.",
       "fullName": "Full name",
       "email": "Email",
@@ -339,19 +341,22 @@
       "careTypeFarrier": "Farrier",
       "careTypeFecalEgg": "Fecal egg count",
       "careTypeCustom": "Custom"
-    },
-    "referral": {
-      "title": "Refer a practice",
-      "hint": "The lead is sent to your assigned sales rep.",
-      "practiceName": "Practice",
-      "contactName": "Contact",
-      "contactEmail": "Email",
-      "city": "City",
-      "notes": "Notes",
-      "submit": "Send to sales",
-      "success": "Referral sent.",
-      "error": "Could not send (no sales rep assigned?)."
     }
+  },
+  "recommend": {
+    "title": "Refer a practice",
+    "subtitle": "Introduce a colleague — your sales rep will follow up.",
+    "hint": "The lead is sent to your assigned sales rep.",
+    "practiceName": "Practice",
+    "contactName": "Contact",
+    "contactEmail": "Email",
+    "city": "City",
+    "notes": "Notes",
+    "submit": "Send to sales",
+    "thanksTitle": "Thank you for your referral!",
+    "thanksBody": "Your sales rep has received the lead and will contact the practice. Thank you for growing the petsFollow network.",
+    "another": "Refer another practice",
+    "error": "Could not send (no sales rep assigned?)."
   },
   "requests": {
     "title": "Requests",
@@ -1175,11 +1180,13 @@
     "bonusesTitle": "Available bonuses",
     "recommended": "Recommended",
     "colPlan": "Offer",
-    "colVetRate": "Max vet rate",
-    "colVetEuros": "Max vet €",
+    "colVetRate": "Max rate (61+)",
+    "colVetEuros": "Max € (61+)",
     "colCommRate": "Sales rate",
     "colCommEuros": "Sales €",
-    "vetAddonNote": "Addons (Family / Care+ / Horse) are not commissioned for vets.",
+    "vetBaseExplain": "Base rate by number of paying clients linked to your practice:",
+    "vetMaxExplain": "That base rate is then scaled by plan (100% on Triennial, 67% on Annual and Quinquennial), and capped at 12%. The table shows the maximum at the 61+ client tier — your actual rate may be lower on an earlier tier.",
+    "vetAddonNote": "No extra commission on Family, Care+ or Horse addons: only pet subscriptions (Annual / Triennial / Quinquennial) are commissioned for vets.",
     "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
     "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
     "tier": "{min}–{max} clients → {pct}% (base)",
