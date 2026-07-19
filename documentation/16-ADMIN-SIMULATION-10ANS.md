@@ -1,5 +1,7 @@
 # Simulation prospection admin — 10 ans
 
+> **Statut : backlog / non livré.** Aucune page `/admin/simulation` en code à ce jour. Document = plan d’implémentation uniquement.
+
 Plan d’implémentation (hors correctifs flux API). Décisions figées faute de réponse utilisateur :
 
 | Choix | Décision |

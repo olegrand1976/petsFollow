@@ -24,6 +24,7 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 - Ramp 25 € · Mix mois 50 € · Palier véto 50 €
 
 ## Interdits
-- Compter un cabinet signé sans pet payant
-- Promettre du % sur TTC
-- Dire au véto qu’il gagne moins s’il y a un commercial
+- Compter une commission (ou un « deal gagné ») dès l’inscription du véto — un cabinet commence à **0** payant ; revenu = animal payant
+- Promettre un % calculé sur le **TTC** (assiette = **HTVA**)
+- Dire au véto qu’il gagne moins s’il y a un commercial (grilles indépendantes)
+- Détail → [22-FICHE-PRODUIT-COMMERCIAL.md](22-FICHE-PRODUIT-COMMERCIAL.md)

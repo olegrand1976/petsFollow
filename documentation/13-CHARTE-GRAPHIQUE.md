@@ -46,6 +46,7 @@ Variantes composant `PetsFollowLogo` : `default`, `compact` (topbar), `hero` (lo
 | `ProBadge` | Statuts colorés |
 | `ProEmptyState` | État vide |
 | `ProSidebar` | Nav latérale |
+| `ProCommissionSheet` | Fiche commission (vet / commercial / admin) |
 
 ## Listes (table / kanban)
 

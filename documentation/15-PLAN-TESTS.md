@@ -16,6 +16,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `04-messaging` | Page messagerie + deep-link thread |
 | `05-onboarding` | Redirection véto profil incomplet |
 | `06-admin` | Login admin → dashboard |
+| `07-commercial` | Login commercial → overview / prospects |
+| `08-requests` | Link-requests véto |
 
 Local : `cd nuxtjs && npm run test:e2e` (API + Nuxt sur 8291/3002).
 

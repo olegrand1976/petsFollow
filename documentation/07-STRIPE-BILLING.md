@@ -71,7 +71,7 @@ Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 
 ### 2. Webhook
 
-- [ ] Endpoint : `https://api.petsfollow.ll-it-sc.be/api/v1/billing/webhook` (ou URL Cloud Run API)
+- [ ] Endpoint : `https://api.petsfollow.ll-it-sc.be/api/v1/billing/webhooks/stripe` (ou URL Cloud Run API)
 - [ ] Événements : `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - [ ] Copier le signing secret `whsec_…`
 
@@ -131,7 +131,16 @@ API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-a
 
 Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
 
-Commission **commercial** : **12 % fixe du HTVA** (TVA BE 21 %) sur abonnements et addons (taux éditable admin) — les Prices Stripe restent en **TTC**. Le véto ne commissionne pas les addons.
+Commissions **commercial** (assiette **HTVA**, TVA BE 21 % ; Prices Stripe = **TTC**) :
+
+| Offre | Taux HT |
+|-------|---------|
+| Annual | 8 % |
+| Triennial | **12 %** |
+| Quinquennial | 8 % |
+| Addons (Family / Care+ / Horse) | **10 %** |
+
+Détail économique → [17-POLITIQUE-TARIFAIRE.md](./17-POLITIQUE-TARIFAIRE.md) · fiche commercial → [19-FICHE-COMMISSION-COMMERCIAL.md](./19-FICHE-COMMISSION-COMMERCIAL.md). Le véto ne commissionne **pas** les addons.
 
 ### Mise à jour Prices Stripe (ops)
 

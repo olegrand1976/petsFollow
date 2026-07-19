@@ -28,4 +28,5 @@ Sur le triennial au plafond : **~9,4 €** aussi pour le véto.
 **Le véto n’est pas pénalisé** si vous êtes assigné.
 
 ## Ne pas compter
-- Inscription véto sans activation animal payant → **0 €**
+- Inscription véto seule (cabinet à 0 payant = normal) → **0 €** de commission
+- Revenu = animal qui passe **payant** ; bonus ramp = 5 pets payants / 60 j
