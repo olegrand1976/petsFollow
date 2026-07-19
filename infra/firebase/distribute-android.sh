@@ -16,6 +16,23 @@ RELEASE_NOTES="${RELEASE_NOTES:-petsFollow pets — Google Sign-In client (API $
 
 cd "${FLUTTER_DIR}"
 
+PUBSPEC="${FLUTTER_DIR}/pubspec.yaml"
+# Toujours bump le build number (+N) avant dist — requis App Distribution / versionCode.
+CURRENT="$(grep -E '^version:' "${PUBSPEC}" | head -1 | awk '{print $2}')"
+NAME="${CURRENT%%+*}"
+BUILD="${CURRENT##*+}"
+if [[ "${CURRENT}" != *"+"* ]] || ! [[ "${BUILD}" =~ ^[0-9]+$ ]]; then
+  echo "version pubspec invalide: ${CURRENT} (attendu name+build, ex. 0.2.9+15)" >&2
+  exit 1
+fi
+NEW_BUILD=$((BUILD + 1))
+NEW_VERSION="${NAME}+${NEW_BUILD}"
+sed -i "s/^version: .*/version: ${NEW_VERSION}/" "${PUBSPEC}"
+echo "→ Version ${CURRENT} → ${NEW_VERSION}"
+if [[ "${RELEASE_NOTES}" == "petsFollow pets — Google Sign-In client (API ${API_BASE})" ]]; then
+  RELEASE_NOTES="petsFollow pets ${NEW_VERSION} (API ${API_BASE})"
+fi
+
 echo "→ flutter pub get"
 flutter pub get
 
@@ -35,5 +52,6 @@ firebase appdistribution:distribute "${APK_PATH}" \
   --release-notes "${RELEASE_NOTES}"
 
 echo ""
-echo "✓ Distribué. Les testeurs ${GROUP_ALIAS} reçoivent un email / notif App Tester."
+echo "✓ Distribué ${NEW_VERSION}. Les testeurs ${GROUP_ALIAS} reçoivent un email / notif App Tester."
 echo "  Console : https://console.firebase.google.com/project/${PROJECT_ID}/appdistribution"
+echo "  N'oublie pas de committer flutter/pubspec.yaml (version ${NEW_VERSION})."
