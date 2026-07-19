@@ -529,21 +529,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Family pack — household care view, up to 3 pets';
+      'Family pack — household care view, −10% on next pet plans';
 
   @override
-  String familyHouseholdTitle(int count, int max) {
-    return 'Family household — $count/$max pets';
+  String familyHouseholdTitle(int count) {
+    return 'Family household — $count pets';
+  }
+
+  @override
+  String kennelHouseholdTitle(int count) {
+    return 'Kennel household — $count pets';
   }
 
   @override
   String get familyHouseholdNext => 'Upcoming household reminders';
 
   @override
-  String get familyPetLimit => 'Family pack is limited to 3 pets';
+  String get familyPetLimit =>
+      'A household pack is already active or being purchased';
 
   @override
   String get familyRequiresTwoPets => 'Family pack requires at least 2 pets';
+
+  @override
+  String get kennelPackHint => 'Kennel pack — 6+ pets, −15% on next pet plans';
+
+  @override
+  String get kennelRequiresSixPets => 'Kennel pack requires at least 6 pets';
+
+  @override
+  String get kennelQuickEncodeTitle => 'Litter quick encode';
+
+  @override
+  String get kennelRequired => 'Kennel pack is required for batch encoding';
+
+  @override
+  String get litterTag => 'Litter tag';
 
   @override
   String get discoveryMarkDone => 'Mission complete';

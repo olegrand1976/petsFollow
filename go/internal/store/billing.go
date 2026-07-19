@@ -87,6 +87,13 @@ func (s *Store) GetEntitlementBySubscriptionID(ctx context.Context, subID string
 	return e, err
 }
 
+func (s *Store) SetEntitlementAmountCents(ctx context.Context, petID string, amountCents int) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE billing.pet_entitlements SET amount_cents=$2, updated_at=NOW()
+		WHERE pet_id=$1`, petID, amountCents)
+	return err
+}
+
 func (s *Store) SetEntitlementCheckoutSession(ctx context.Context, petID, sessionID string) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE billing.pet_entitlements SET stripe_checkout_session_id=$2, updated_at=NOW() WHERE pet_id=$1`, petID, sessionID)

@@ -53,7 +53,7 @@ var defaultCareBySpecies = map[string][]careReminderTemplate{
 
 var horsePackCareTemplates = []careReminderTemplate{
 	{Type: "farrier", Title: "Maréchal-ferrant", Days: 42},
-	{Type: "fecal_egg", Title: "Coproscopie", Days: 90},
+	{Type: "fecal_egg", Title: "Coproscopie", Days: 365},
 }
 
 func (s *Store) SeedDefaultCareReminders(ctx context.Context, petID, practiceID, species string) error {

@@ -770,9 +770,9 @@
         "text": "Anual, Trienal (recomendada) o Quinquenal — controles de frecuencia cardíaca, mensajería y recordatorios de cuidados."
       },
       "family": {
-        "price": "55 € / año",
+        "price": "39 € / año",
         "title": "Pack Familia",
-        "text": "Vista de cuidados del hogar para 2–3 mascotas — cada mascota sigue necesitando su propia suscripción."
+        "text": "Vista del hogar desde 2 mascotas, −10 % en planes siguientes — cada mascota sigue necesitando su propia suscripción."
       },
       "careHorse": {
         "price": "19 € · 39 €",
@@ -841,17 +841,17 @@
     },
     "addonsTitle": "Opciones del hogar (cuenta del propietario)",
     "addonsLead": "Complementos comprados una vez para la cuenta — enriquecen la experiencia de las mascotas del hogar según las reglas siguientes.",
-    "addonsTip": "Familia nunca sustituye una suscripción de mascota: cada mascota sigue necesitando un plan. Caballo solo se ofrece si el hogar tiene al menos un caballo.",
+    "addonsTip": "Family nunca sustituye una suscripción de mascota. Kennel requiere ≥ 6. Horse solo si hay al menos un caballo.",
     "addons": {
       "family": {
-        "name": "Familia",
-        "price": "55 € / año",
-        "tagline": "Pack del hogar — hasta 3 mascotas",
+        "name": "Family",
+        "price": "39 € / año",
+        "tagline": "Hogar desde 2 mascotas, −10% en planes",
         "scope": "Cuenta",
         "benefits": [
-          "Vista del hogar: próximos recordatorios de cuidados de todas las mascotas",
-          "Para hogares de 2 a 3 mascotas (tope de 3)",
-          "Cada mascota sigue necesitando su propia suscripción"
+          "Vista de recordatorios del hogar",
+          "−10% en planes desde la 2.ª mascota de pago",
+          "Desde 6: Kennel recomendado"
         ]
       },
       "carePlus": {
@@ -876,6 +876,17 @@
           "Seguimiento de competiciones",
           "Solo si el hogar tiene ≥ 1 caballo"
         ]
+      },
+      "kennel": {
+        "name": "Kennel",
+        "price": "119 € / año",
+        "tagline": "Cría / plantel desde 6 mascotas",
+        "scope": "Cuenta",
+        "benefits": [
+          "Alta rápida multi-mascota",
+          "Roster, tags de camada, export",
+          "−15% en planes desde la 2.ª de pago"
+        ]
       }
     },
     "summaryTitle": "Resumen de la tabla de precios",
@@ -896,9 +907,9 @@
         "role": "Acceso 5 años — pago único"
       },
       "family": {
-        "name": "Familia",
-        "price": "55 € / año",
-        "role": "Complemento hogar ≤ 3 mascotas"
+        "name": "Family",
+        "price": "39 € / año",
+        "role": "Addon hogar desde 2 (−10%)"
       },
       "carePlus": {
         "name": "Care+",
@@ -909,6 +920,11 @@
         "name": "Caballo",
         "price": "39 € / año",
         "role": "Complemento pack equino"
+      },
+      "kennel": {
+        "name": "Kennel",
+        "price": "119 € / año",
+        "role": "Addon cría desde 6 (−15%)"
       }
     },
     "footer": "petsFollow — seguimiento prescrito por el veterinario, sin hardware"
@@ -1153,7 +1169,7 @@
       "mobileTitle": "App móvil Flutter (clientes)",
       "commissionTitle": "Comisionamiento",
       "vetGrid": "Veterinario: 7 % → 12 % sin IVA según volumen de clientes de pago, con factor de plan (annual / triennial / quinquennial).",
-      "addons": "Complementos Familia / Care+ / Caballo: 12 % para el comercial. Care+ = medicación y recordatorios personales; Caballo = herrador, contactos, competiciones (caballos).",
+      "addons": "Complementos Family / Kennel: 10 % comercial + 5 % vet. Care+ / Horse: 10 % comercial, 0 % vet.",
       "webFeatures": [
         "Panel operativo clientes / mensajes / FC",
         "Ficha de paciente y mensajería",
@@ -1163,7 +1179,7 @@
       "mobileFeatures": [
         "Mascotas y seguimiento de frecuencia cardíaca",
         "Suscripciones Stripe por mascota",
-        "Complementos Familia / Care+ / Caballo con privilegios reales",
+        "Complementos Family / Kennel / Care+ / Horse con privilegios reales",
         "Mensajes y recordatorios de cuidados"
       ],
       "commercialFlat": "Comercial: 8 % / 12 % / 8 % sin IVA según plan (annual / triennial / quinquennial); ~9,4 € sobre el plan trienal de 95 € IVA incluido.",
@@ -1186,7 +1202,7 @@
     "colCommEuros": "€ comercial",
     "vetBaseExplain": "Tasa base según el número de clientes de pago vinculados a su clínica:",
     "vetMaxExplain": "Esa tasa base se multiplica luego por un factor según el plan (100 % en Triennial, 67 % en Annual y Quinquennial), con un tope del 12 %. La tabla muestra el máximo en el tramo 61+ clientes — su tasa real puede ser inferior en un tramo anterior.",
-    "vetAddonNote": "Sin comisión adicional por los addons Family, Care+ u Horse: solo las suscripciones de mascota (Annual / Triennial / Quinquennial) generan comisión para el veterinario.",
+    "vetAddonNote": "Family y Kennel: 5 % sin IVA para el veterinario. Care+ y Horse: 0 % vet (solo 10 % comercial).",
     "coSellNote": "El veterinario no se penaliza si usted está asignado — co-selling beneficioso para ambos.",
     "adminGuardrails": "Límites: margen neto ≥ 55 % del TTC · neto/año núcleo ≥ 17 € · take rate máx. núcleo 24 % HT.",
     "tier": "{min}–{max} clientes → {pct} % (base)",
@@ -1195,9 +1211,10 @@
       "annual": "Annual (35 € TTC)",
       "triennial": "Triennial (95 € TTC)",
       "quinquennial": "Quinquennial (145 € TTC)",
-      "family": "Family",
+      "family": "Family (39 € TTC)",
       "care_plus": "Care+",
-      "horse": "Horse"
+      "horse": "Horse",
+      "kennel": "Kennel (119 € TTC)"
     },
     "bonusTitles": {
       "vet_tier_31": "Bonus tramo 31 clientes",
@@ -1214,6 +1231,7 @@
       "in_progress": "En curso",
       "earned": "Conseguido",
       "paid": "Pagado"
-    }
+    },
+    "discountNote": "Los importes en € son indicativos a precio de catálogo. Los descuentos hogar/criadero (−10 % / −15 %) reducen la base HT realmente cobrada."
   }
 }

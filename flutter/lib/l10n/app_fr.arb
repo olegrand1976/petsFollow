@@ -169,17 +169,27 @@
   "horseContactRole": "Rôle",
   "horseCompetitionTitle": "Événement",
   "horseCompetitionDate": "Date (AAAA-MM-JJ)",
-  "familyPackHint": "Pack Famille — vue foyer des rappels, jusqu'à 3 animaux",
-  "familyHouseholdTitle": "Foyer Famille — {count}/{max} animaux",
+  "familyPackHint": "Pack Famille — vue foyer des rappels, −10 % sur les abos suivants",
+  "familyHouseholdTitle": "Foyer Famille — {count} animaux",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" },
-      "max": { "type": "int" }
+      "count": { "type": "int" }
+    }
+  },
+  "kennelHouseholdTitle": "Foyer Élevage — {count} animaux",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "familyHouseholdNext": "Prochains rappels du foyer",
-  "familyPetLimit": "Pack Famille limité à 3 animaux",
+  "familyPetLimit": "Un pack foyer est déjà actif ou en cours d'achat",
   "familyRequiresTwoPets": "Le pack Famille nécessite au moins 2 animaux",
+  "kennelPackHint": "Pack Élevage — ≥6 animaux, −15 % sur les abos suivants",
+  "kennelRequiresSixPets": "Le pack Élevage nécessite au moins 6 animaux",
+  "kennelQuickEncodeTitle": "Encodage portée (élevage)",
+  "kennelRequired": "Le pack Élevage est requis pour l'encodage par lot",
+  "litterTag": "Tag portée",
   "discoveryMarkDone": "Mission accomplie",
   "notificationPreferences": "Préférences de notifications",
   "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",

@@ -80,15 +80,18 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
 		pr.Get("/pets", a.listMyPets)
 		pr.Post("/pets", a.createPet)
+		pr.Post("/pets/batch", a.createPetsBatch)
 		pr.Patch("/pets/{petID}/primary-practice", a.setPetPrimaryPractice)
 		pr.Get("/pets/{petID}/care-reminders", a.listCareReminders)
 		pr.Post("/pets/{petID}/care-reminders", a.createCareReminder)
 		pr.Get("/pets/{petID}/horse-contacts", a.listHorseContacts)
 		pr.Post("/pets/{petID}/horse-contacts", a.createHorseContact)
 		pr.Delete("/horse-contacts/{id}", a.deleteHorseContact)
+		pr.Patch("/horse-contacts/{id}", a.updateHorseContact)
 		pr.Get("/pets/{petID}/horse-competitions", a.listHorseCompetitions)
 		pr.Post("/pets/{petID}/horse-competitions", a.createHorseCompetition)
 		pr.Delete("/horse-competitions/{id}", a.deleteHorseCompetition)
+		pr.Patch("/horse-competitions/{id}", a.updateHorseCompetition)
 		pr.Get("/pets/{petID}/visits", a.listVisits)
 		pr.Post("/pets/{petID}/visits", a.createVisit)
 		pr.Put("/pets/{petID}", a.updatePet)
@@ -325,10 +328,15 @@ type petReq struct {
 	BirthDate   *string  `json:"birthDate"`
 	WeightKg    *float64 `json:"weightKg"`
 	PhotoURL    string   `json:"photoUrl"`
+	LitterTag   string   `json:"litterTag"`
 	Plan        string   `json:"plan"`
 	BillingMode string   `json:"billingMode"`
 	SuccessURL  string   `json:"successUrl"`
 	CancelURL   string   `json:"cancelUrl"`
+}
+
+type petsBatchReq struct {
+	Pets []petReq `json:"pets"`
 }
 
 func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
@@ -342,7 +350,11 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	p := store.Pet{Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment"}
+	p := store.Pet{
+		Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg,
+		PhotoURL: req.PhotoURL, LitterTag: strings.TrimSpace(req.LitterTag),
+		OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+	}
 	if req.BirthDate != nil {
 		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
 			p.BirthDate = &t
@@ -350,10 +362,6 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	}
 	created, err := a.store.CreatePetRespectingFamily(r.Context(), p)
 	if err != nil {
-		if errors.Is(err, store.ErrFamilyPetLimit) {
-			writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
-			return
-		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
@@ -371,6 +379,78 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	hasKennel, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !hasKennel {
+		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "kennel_required")
+		return
+	}
+	var body petsBatchReq
+	if err := httpx.DecodeJSON(r, &body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if len(body.Pets) == 0 || len(body.Pets) > 50 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "batch_size")
+		return
+	}
+	created := make([]store.Pet, 0, len(body.Pets))
+	for _, req := range body.Pets {
+		name := strings.TrimSpace(req.Name)
+		species := strings.TrimSpace(req.Species)
+		if name == "" || species == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "name_species_required")
+			return
+		}
+		p := store.Pet{
+			Name: name, Species: species, Breed: strings.TrimSpace(req.Breed),
+			LitterTag: strings.TrimSpace(req.LitterTag),
+			OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+		}
+		if req.BirthDate != nil {
+			if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
+				p.BirthDate = &t
+			}
+		}
+		pet, err := a.store.CreatePetRespectingFamily(r.Context(), p)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, pet.PracticeID, pet.Species)
+		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
+		if err != nil {
+			planCode = billing.PlanTriennial
+		}
+		mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
+		if err != nil || !billing.SupportsBillingMode(planCode, mode) {
+			mode = billing.ModeSubscription
+			if !billing.SupportsBillingMode(planCode, mode) {
+				mode = billing.ModeOneTime
+			}
+		}
+		plan, _ := billing.GetPlan(planCode)
+		if _, err := a.store.CreateEntitlement(r.Context(), pet.ID, id.UserID, string(planCode), string(mode), plan.AmountCents); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
+			pet.Entitlement = &ent
+		}
+		created = append(created, pet)
+	}
+	httpx.WriteData(w, http.StatusCreated, map[string]any{"pets": created, "count": len(created)})
+}
+
 func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
@@ -382,7 +462,23 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	p := store.Pet{ID: chi.URLParam(r, "petID"), Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID}
+	existing, err := a.store.GetPet(r.Context(), chi.URLParam(r, "petID"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	if existing.OwnerUserID != id.UserID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+		return
+	}
+	p := store.Pet{
+		ID: existing.ID, Name: req.Name, Species: req.Species, Breed: req.Breed,
+		WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID,
+		LitterTag: existing.LitterTag,
+	}
+	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
+		p.LitterTag = tag
+	}
 	if req.BirthDate != nil {
 		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
 			p.BirthDate = &t

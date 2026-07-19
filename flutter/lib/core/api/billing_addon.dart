@@ -53,6 +53,7 @@ class AddonEntitlements {
   bool get hasCarePlus => _activeCodes.contains('care_plus');
   bool get hasHorse => _activeCodes.contains('horse');
   bool get hasFamily => _activeCodes.contains('family');
+  bool get hasKennel => _activeCodes.contains('kennel');
   bool has(String code) => _activeCodes.contains(code);
 
   /// Returns active entitlements, or `null` if the request failed.

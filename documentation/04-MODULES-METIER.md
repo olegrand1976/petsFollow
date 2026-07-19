@@ -22,7 +22,7 @@ Threads client↔véto, messages texte + media, read/read-all, mode indisponible
 
 ## Billing
 
-Plans + Checkout Stripe (ou mock), entitlements, Customer Portal, addons Family / Care+ / Horse — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
+Plans + Checkout Stripe (ou mock), entitlements, Customer Portal, addons Family / Kennel / Care+ / Horse — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
 
 ## Commissions
 
@@ -34,7 +34,7 @@ Overview, encode/list vets assignés, CRM prospects, commissions, payout profile
 
 ## Care & Horse
 
-Rappels care (+ seed horse pack), contacts professionnels, compétitions ; household / family limit 2–3 pets.
+Rappels care (+ seed horse pack), contacts professionnels, compétitions ; household Family (≥2, pas de plafond) / Kennel (≥6, `litter_tag`, batch).
 
 ## Admin plateforme
 

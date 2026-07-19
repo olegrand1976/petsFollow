@@ -14,6 +14,8 @@ const (
 	CommercialRateTriennialBps    = 1200
 	CommercialRateQuinquennialBps = 800
 	CommercialRateAddonBps        = 1000
+	// VetAddonRateBps is the flat vet rate on Family / Kennel (Care+/Horse = 0).
+	VetAddonRateBps = 500
 )
 
 // DefaultVetCommissionTiers is the progressive ladder (7% → 9% → 11% → 12%).
@@ -69,4 +71,14 @@ func CommercialRateBpsForPlan(planCode string) int {
 // CommercialRateBpsForAddon returns the commercial commission rate for an addon.
 func CommercialRateBpsForAddon(_ string) int {
 	return CommercialRateAddonBps
+}
+
+// VetRateBpsForAddon returns the vet commission rate for an addon (0 if none).
+func VetRateBpsForAddon(addonCode string) int {
+	switch addonCode {
+	case "family", "kennel":
+		return VetAddonRateBps
+	default:
+		return 0
+	}
 }

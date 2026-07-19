@@ -50,6 +50,7 @@ type Pet struct {
 	WeightKg      *float64  `json:"weightKg,omitempty"`
 	PhotoURL      string    `json:"photoUrl"`
 	PaymentStatus string    `json:"paymentStatus"`
+	LitterTag     string    `json:"litterTag,omitempty"`
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
@@ -191,16 +192,16 @@ func (s *Store) CreatePet(ctx context.Context, p Pet) (Pet, error) {
 		p.PaymentStatus = "pending_payment"
 	}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus).Scan(&p.CreatedAt)
+		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag).Scan(&p.CreatedAt)
 	return p, err
 }
 
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	ct, err := s.pool.Exec(ctx, `
-		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$8`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.OwnerUserID)
+		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$9`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag, p.OwnerUserID)
 	if err != nil {
 		return err
 	}
@@ -214,9 +215,9 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 	var p Pet
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
-		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.CreatedAt)
+		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Pet{}, ErrNotFound
 	}
@@ -234,7 +235,7 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
 		return nil, err
@@ -246,7 +247,7 @@ func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, err
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {
 		return nil, err
@@ -259,7 +260,7 @@ func scanPets(rows pgx.Rows) ([]Pet, error) {
 	var out []Pet
 	for rows.Next() {
 		var p Pet
-		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, p)

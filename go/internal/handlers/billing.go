@@ -80,14 +80,36 @@ func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_addon")
 		return
 	}
-	if code == billing.AddonFamily {
+	switch code {
+	case billing.AddonFamily:
 		if err := a.store.AssertFamilyPurchaseEligible(r.Context(), id.UserID); err != nil {
 			if errors.Is(err, store.ErrFamilyRequiresTwoPets) {
 				writeErr(w, r, http.StatusBadRequest, "family_limit", "family_requires_two_pets")
 				return
 			}
-			if errors.Is(err, store.ErrFamilyPetLimit) {
-				writeErr(w, r, http.StatusConflict, "family_limit", "family_pet_limit")
+			if errors.Is(err, store.ErrHouseholdExclusive) {
+				writeErr(w, r, http.StatusConflict, "household_exclusive", "kennel_active")
+				return
+			}
+			if errors.Is(err, store.ErrAddonAlreadyActive) {
+				writeErr(w, r, http.StatusConflict, "addon_already_active", "family_already_active")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	case billing.AddonKennel:
+		if err := a.store.AssertKennelPurchaseEligible(r.Context(), id.UserID); err != nil {
+			if errors.Is(err, store.ErrKennelRequiresSixPets) {
+				writeErr(w, r, http.StatusBadRequest, "kennel_limit", "kennel_requires_six_pets")
+				return
+			}
+			if errors.Is(err, store.ErrHouseholdExclusive) {
+				writeErr(w, r, http.StatusConflict, "household_exclusive", "family_pending")
+				return
+			}
+			if errors.Is(err, store.ErrAddonAlreadyActive) {
+				writeErr(w, r, http.StatusConflict, "addon_already_active", "kennel_already_active")
 				return
 			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

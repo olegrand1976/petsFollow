@@ -44,14 +44,41 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		}
 		customerID = c.ID
 	}
+	lineItem := &stripe.CheckoutSessionLineItemParams{Quantity: stripe.Int64(1)}
+	if req.UnitAmountCents > 0 {
+		currency := req.Currency
+		if currency == "" {
+			currency = "eur"
+		}
+		name := req.ProductName
+		if name == "" {
+			name = "petsFollow"
+		}
+		lineItem.PriceData = &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency:   stripe.String(currency),
+			UnitAmount: stripe.Int64(int64(req.UnitAmountCents)),
+			ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+				Name: stripe.String(name),
+			},
+		}
+		if req.Mode == "subscription" {
+			recurring := &stripe.CheckoutSessionLineItemPriceDataRecurringParams{
+				Interval: stripe.String(string(stripe.PriceRecurringIntervalYear)),
+			}
+			if n := req.Metadata["interval_count"]; n == "3" {
+				recurring.IntervalCount = stripe.Int64(3)
+			}
+			lineItem.PriceData.Recurring = recurring
+		}
+	} else {
+		lineItem.Price = stripe.String(req.PriceID)
+	}
 	params := &stripe.CheckoutSessionParams{
 		Mode:       stripe.String(req.Mode),
 		SuccessURL: stripe.String(req.SuccessURL),
 		CancelURL:  stripe.String(req.CancelURL),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{Price: stripe.String(req.PriceID), Quantity: stripe.Int64(1)},
-		},
-		Metadata: req.Metadata,
+		LineItems:  []*stripe.CheckoutSessionLineItemParams{lineItem},
+		Metadata:   req.Metadata,
 	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)

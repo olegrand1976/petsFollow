@@ -534,22 +534,45 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Pack Familia — vista de cuidados del hogar, hasta 3 mascotas';
+      'Pack Familia — vista del hogar, −10% en siguientes planes';
 
   @override
-  String familyHouseholdTitle(int count, int max) {
-    return 'Hogar Familia — $count/$max mascotas';
+  String familyHouseholdTitle(int count) {
+    return 'Hogar Familia — $count mascotas';
+  }
+
+  @override
+  String kennelHouseholdTitle(int count) {
+    return 'Hogar Criadero — $count mascotas';
   }
 
   @override
   String get familyHouseholdNext => 'Próximos recordatorios del hogar';
 
   @override
-  String get familyPetLimit => 'El pack Familia está limitado a 3 mascotas';
+  String get familyPetLimit => 'Ya hay un pack hogar activo o en compra';
 
   @override
   String get familyRequiresTwoPets =>
       'El pack Familia requiere al menos 2 mascotas';
+
+  @override
+  String get kennelPackHint =>
+      'Pack Criadero — ≥6 mascotas, −15% en siguientes planes';
+
+  @override
+  String get kennelRequiresSixPets =>
+      'El pack Criadero requiere al menos 6 mascotas';
+
+  @override
+  String get kennelQuickEncodeTitle => 'Codificación rápida de camada';
+
+  @override
+  String get kennelRequired =>
+      'El pack Criadero es necesario para la codificación por lotes';
+
+  @override
+  String get litterTag => 'Etiqueta de camada';
 
   @override
   String get discoveryMarkDone => 'Misión completada';

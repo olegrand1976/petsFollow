@@ -27,8 +27,11 @@
 ## Bonus
 - **50 €** one-shot au 1er passage de **31** clients payants
 
-## Exclusions
-- Addons Family / Care+ / Horse : **0 %**
+## Addons (assiette = HT payé, après remise)
+| Addon | Taux HT |
+|-------|---------|
+| Family / Kennel | **5 %** |
+| Care+ / Horse | **0 %** |
 
 ## Message
 Poussez le **triennial** — meilleur taux dès le 1er client. Même plafond avec ou sans commercial assigné.

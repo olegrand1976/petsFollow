@@ -299,6 +299,7 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		SELECT EXISTS(
 			SELECT 1 FROM billing.commission_ledger
 			WHERE vet_user_id=$1 AND client_user_id=$2
+				AND COALESCE(source_kind,'pet_plan')='pet_plan'
 		)`, vetUserID, ent.OwnerUserID).Scan(&alreadyClient); err != nil {
 		return err
 	}
@@ -307,16 +308,17 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 	if alreadyClient {
 		if err := tx.QueryRow(ctx, `
 			SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger
-			WHERE vet_user_id=$1 AND accrued_at <= (
+			WHERE vet_user_id=$1 AND COALESCE(source_kind,'pet_plan')='pet_plan' AND accrued_at <= (
 				SELECT MIN(accrued_at) FROM billing.commission_ledger
-				WHERE vet_user_id=$1 AND client_user_id=$2
+				WHERE vet_user_id=$1 AND client_user_id=$2 AND COALESCE(source_kind,'pet_plan')='pet_plan'
 			)`, vetUserID, ent.OwnerUserID).Scan(&clientRank); err != nil {
 			return err
 		}
 	} else {
 		var distinctClients int
 		if err := tx.QueryRow(ctx, `
-			SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger WHERE vet_user_id=$1`,
+			SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger
+			WHERE vet_user_id=$1 AND COALESCE(source_kind,'pet_plan')='pet_plan'`,
 			vetUserID).Scan(&distinctClients); err != nil {
 			return err
 		}
@@ -364,8 +366,74 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 func (s *Store) CountVetEligibleClients(ctx context.Context, vetUserID string) (int, error) {
 	var n int
 	err := s.pool.QueryRow(ctx, `
-		SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger WHERE vet_user_id=$1`, vetUserID).Scan(&n)
+		SELECT COUNT(DISTINCT client_user_id) FROM billing.commission_ledger
+		WHERE vet_user_id=$1 AND COALESCE(source_kind,'pet_plan')='pet_plan'`, vetUserID).Scan(&n)
 	return n, err
+}
+
+// AccrueVetForAddon accrues a flat 5% vet commission on Family/Kennel (0% for other addons).
+func (s *Store) AccrueVetForAddon(ctx context.Context, addonID string) error {
+	addon, err := s.GetAddonEntitlement(ctx, addonID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	if addon.Status != "active" {
+		return nil
+	}
+	rateBps := VetRateBpsForAddon(addon.AddonCode)
+	if rateBps <= 0 {
+		return nil
+	}
+
+	var practiceID string
+	err = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(practice_id::text,'') FROM identity.users WHERE id=$1`, addon.OwnerUserID).Scan(&practiceID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if practiceID == "" {
+		_ = s.pool.QueryRow(ctx, `
+			SELECT practice_id::text FROM pets.pets
+			WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 1`, addon.OwnerUserID).Scan(&practiceID)
+	}
+	vetUserID, _, err := s.resolveVetCommercial(ctx, addon.OwnerUserID, practiceID)
+	if err != nil {
+		return err
+	}
+	if vetUserID == "" {
+		return nil
+	}
+
+	baseHT := HTVACents(addon.AmountCents)
+	commission := CommercialCommissionCents(baseHT, rateBps)
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	period, err := s.ResolveOpenPeriodYM(ctx, PeriodYM(time.Now()))
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO billing.commission_ledger (
+			id, vet_user_id, client_user_id, pet_id, entitlement_id, addon_entitlement_id,
+			base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at, source_kind
+		) VALUES ($1,$2,$3,NULL,NULL,$4,$5,$6,$7,$8,NOW(),'addon')
+		ON CONFLICT (addon_entitlement_id) DO NOTHING`,
+		uuid.NewString(), vetUserID, addon.OwnerUserID, addon.ID,
+		baseHT, rateBps, commission, period); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *Store) GetOrCreatePayoutRun(ctx context.Context, periodYM string) (PayoutRun, error) {

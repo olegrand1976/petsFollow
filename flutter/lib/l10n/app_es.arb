@@ -150,17 +150,27 @@
   "reviewAskYes": "Sí, valorar la app",
   "reviewAskNo": "Más tarde",
   "carePlusUpsell": "Care+ — medicación y recordatorios personalizados",
-  "familyPackHint": "Pack Familia — vista de cuidados del hogar, hasta 3 mascotas",
-  "familyHouseholdTitle": "Hogar Familia — {count}/{max} mascotas",
+  "familyPackHint": "Pack Familia — vista del hogar, −10% en siguientes planes",
+  "familyHouseholdTitle": "Hogar Familia — {count} mascotas",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" },
-      "max": { "type": "int" }
+      "count": { "type": "int" }
+    }
+  },
+  "kennelHouseholdTitle": "Hogar Criadero — {count} mascotas",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "familyHouseholdNext": "Próximos recordatorios del hogar",
-  "familyPetLimit": "El pack Familia está limitado a 3 mascotas",
+  "familyPetLimit": "Ya hay un pack hogar activo o en compra",
   "familyRequiresTwoPets": "El pack Familia requiere al menos 2 mascotas",
+  "kennelPackHint": "Pack Criadero — ≥6 mascotas, −15% en siguientes planes",
+  "kennelRequiresSixPets": "El pack Criadero requiere al menos 6 mascotas",
+  "kennelQuickEncodeTitle": "Codificación rápida de camada",
+  "kennelRequired": "El pack Criadero es necesario para la codificación por lotes",
+  "litterTag": "Etiqueta de camada",
   "discoveryMarkDone": "Misión completada",
   "notificationPreferences": "Preferencias de notificación",
   "notificationPrefsHint": "Elija qué tipos de notificación desea recibir.",

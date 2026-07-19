@@ -1053,14 +1053,20 @@ abstract class AppLocalizations {
   /// No description provided for @familyPackHint.
   ///
   /// In fr, this message translates to:
-  /// **'Pack Famille — vue foyer des rappels, jusqu\'à 3 animaux'**
+  /// **'Pack Famille — vue foyer des rappels, −10 % sur les abos suivants'**
   String get familyPackHint;
 
   /// No description provided for @familyHouseholdTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Foyer Famille — {count}/{max} animaux'**
-  String familyHouseholdTitle(int count, int max);
+  /// **'Foyer Famille — {count} animaux'**
+  String familyHouseholdTitle(int count);
+
+  /// No description provided for @kennelHouseholdTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Foyer Élevage — {count} animaux'**
+  String kennelHouseholdTitle(int count);
 
   /// No description provided for @familyHouseholdNext.
   ///
@@ -1071,7 +1077,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyPetLimit.
   ///
   /// In fr, this message translates to:
-  /// **'Pack Famille limité à 3 animaux'**
+  /// **'Un pack foyer est déjà actif ou en cours d\'achat'**
   String get familyPetLimit;
 
   /// No description provided for @familyRequiresTwoPets.
@@ -1079,6 +1085,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le pack Famille nécessite au moins 2 animaux'**
   String get familyRequiresTwoPets;
+
+  /// No description provided for @kennelPackHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pack Élevage — ≥6 animaux, −15 % sur les abos suivants'**
+  String get kennelPackHint;
+
+  /// No description provided for @kennelRequiresSixPets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pack Élevage nécessite au moins 6 animaux'**
+  String get kennelRequiresSixPets;
+
+  /// No description provided for @kennelQuickEncodeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Encodage portée (élevage)'**
+  String get kennelQuickEncodeTitle;
+
+  /// No description provided for @kennelRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pack Élevage est requis pour l\'encodage par lot'**
+  String get kennelRequired;
+
+  /// No description provided for @litterTag.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tag portée'**
+  String get litterTag;
 
   /// No description provided for @discoveryMarkDone.
   ///

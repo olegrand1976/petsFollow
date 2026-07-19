@@ -160,17 +160,27 @@
   "horseContactRole": "Rol",
   "horseCompetitionTitle": "Evenement",
   "horseCompetitionDate": "Datum (JJJJ-MM-DD)",
-  "familyPackHint": "Familiepakket — gezinsweergave van herinneringen, tot 3 dieren",
-  "familyHouseholdTitle": "Familiehuishouden — {count}/{max} dieren",
+  "familyPackHint": "Familiepakket — gezinsweergave, −10% op volgende abonnementen",
+  "familyHouseholdTitle": "Familiehuishouden — {count} dieren",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" },
-      "max": { "type": "int" }
+      "count": { "type": "int" }
+    }
+  },
+  "kennelHouseholdTitle": "Kennelhuishouden — {count} dieren",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "familyHouseholdNext": "Komende gezinsherinneringen",
-  "familyPetLimit": "Familiepakket is beperkt tot 3 dieren",
+  "familyPetLimit": "Er is al een huishoudpakket actief of in aankoop",
   "familyRequiresTwoPets": "Familiepakket vereist minstens 2 dieren",
+  "kennelPackHint": "Kennelpakket — 6+ dieren, −15% op volgende abonnementen",
+  "kennelRequiresSixPets": "Kennelpakket vereist minstens 6 dieren",
+  "kennelQuickEncodeTitle": "Nest snel encoderen",
+  "kennelRequired": "Kennelpakket is vereist voor batch-encoding",
+  "litterTag": "Nest-tag",
   "discoveryMarkDone": "Missie voltooid",
   "notificationPreferences": "Meldingsvoorkeuren",
   "notificationPrefsHint": "Kies welke meldingstypes u wilt ontvangen.",

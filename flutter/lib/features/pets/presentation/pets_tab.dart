@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
@@ -17,6 +19,7 @@ class PetsTab extends StatefulWidget {
 class _PetsTabState extends State<PetsTab> {
   List<Pet> pets = [];
   bool loading = true;
+  bool hasKennel = false;
 
   @override
   void initState() {
@@ -27,9 +30,11 @@ class _PetsTabState extends State<PetsTab> {
   Future<void> load() async {
     try {
       final data = await ApiClient.instance.getPets();
+      final ents = await AddonEntitlements.load();
       if (mounted) {
         setState(() {
           pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
+          hasKennel = ents?.hasKennel ?? false;
           loading = false;
         });
       }
@@ -112,15 +117,37 @@ class _PetsTabState extends State<PetsTab> {
                     },
                   ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PetFormScreen()),
-          );
-          load();
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (hasKennel) ...[
+            FloatingActionButton.extended(
+              heroTag: 'kennel-encode',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
+                );
+                load();
+              },
+              icon: const Icon(Icons.pets_outlined),
+              label: Text(l10n.kennelQuickEncodeTitle),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FloatingActionButton(
+            heroTag: 'add-pet',
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PetFormScreen()),
+              );
+              load();
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }

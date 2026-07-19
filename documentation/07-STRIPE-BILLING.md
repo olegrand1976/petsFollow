@@ -65,7 +65,7 @@ Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 ### 1. Dashboard Stripe (mode Live)
 
 - [ ] Activer le compte Stripe en mode **Live**
-- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **3 Prices** addons
+- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **4 Prices** addons (Family / Kennel / Care+ / Horse)
 - [ ] Noter chaque `price_…` ID pour les variables `STRIPE_PRICE_*`
 - [ ] Activer le **Customer Portal** (Settings → Billing → Customer portal) pour la gestion d'abonnement Flutter
 
@@ -123,24 +123,26 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 
 | Pack | Code | Prix | Scope |
 |------|------|------|-------|
-| **Family pack** | `family` | 55 € / an | owner (foyer 2–3 animaux, vue foyer, plafond 3) |
+| **Family pack** | `family` | 39 € / an | owner (≥2 animaux ; vue foyer ; remise plans **−10 %**) |
+| **Kennel pack** | `kennel` | 119 € / an | owner (≥6 animaux ; batch / `litter_tag` ; remise plans **−15 %**) |
 | **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso ; export & emails = roadmap) |
 | **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
 
 API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
 
-Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
+Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_KENNEL`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
 
-Commissions **commercial** (assiette **HTVA**, TVA BE 21 % ; Prices Stripe = **TTC**) :
+Commissions (assiette **HTVA du montant payé**, TVA BE 21 % ; Prices Stripe = **TTC**) :
 
-| Offre | Taux HT |
-|-------|---------|
-| Annual | 8 % |
-| Triennial | **12 %** |
-| Quinquennial | 8 % |
-| Addons (Family / Care+ / Horse) | **10 %** |
+| Offre | Commercial | Véto |
+|-------|------------|------|
+| Annual | 8 % | progressif × facteur |
+| Triennial | **12 %** | progressif × facteur |
+| Quinquennial | 8 % | progressif × facteur |
+| Family / Kennel | **10 %** | **5 %** |
+| Care+ / Horse | **10 %** | **0 %** |
 
-Détail économique → [17-POLITIQUE-TARIFAIRE.md](./17-POLITIQUE-TARIFAIRE.md) · fiche commercial → [19-FICHE-COMMISSION-COMMERCIAL.md](./19-FICHE-COMMISSION-COMMERCIAL.md). Le véto ne commissionne **pas** les addons.
+Détail économique → [17-POLITIQUE-TARIFAIRE.md](./17-POLITIQUE-TARIFAIRE.md) · fiches → [18](./18-FICHE-COMMISSION-VETO.md) / [19](./19-FICHE-COMMISSION-COMMERCIAL.md).
 
 ### Mise à jour Prices Stripe (ops)
 
@@ -154,7 +156,8 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-annual-sub` | `STRIPE_PRICE_ANNUAL_SUB` |
 | `petsfollow-stripe-price-triennial-sub` | `STRIPE_PRICE_TRIENNIAL_SUB` |
 | `petsfollow-stripe-price-addon-family` | `STRIPE_PRICE_ADDON_FAMILY` |
+| `petsfollow-stripe-price-addon-kennel` | `STRIPE_PRICE_ADDON_KENNEL` |
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
 
-Montants attendus : 35 / 95 / 145 € (abos) ; 55 / 19 / 39 € (addons).
+Montants attendus : 35 / 95 / 145 € (abos) ; 39 / 119 / 19 / 39 € (addons Family / Kennel / Care+ / Horse).

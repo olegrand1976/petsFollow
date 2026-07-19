@@ -3,7 +3,7 @@
 **Scope** : modèle complet Apporteur / Prescripteur.
 
 ## Prix TTC
-35 / 95 / 145 € (annual / triennial / quinquennial) · addons 55 / 19 / 39 €
+35 / 95 / 145 € (annual / triennial / quinquennial) · addons Family 39 · Kennel 119 · Care+ 19 · Horse 39 €
 
 ## Assiette
 Commissions sur **HTVA** (`DefaultVATRateBps = 2100`). Stripe Prices = TTC.
@@ -15,7 +15,7 @@ Commissions sur **HTVA** (`DefaultVATRateBps = 2100`). Stripe Prices = TTC.
 - SPIFF : 50 € @ 31 clients (manuel V1)
 
 ## Commercial
-- Plans : 8 / 12 / 8 % · addons 10 %
+- Plans : 8 / 12 / 8 % · addons commercial 10 % · véto Family/Kennel 5 % (Care+/Horse 0 %)
 - SPIFF : ramp 25 € · mix 50 €/mois (manuel V1)
 - Pas de commission sur inscription véto seule
 

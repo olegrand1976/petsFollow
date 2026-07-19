@@ -31,6 +31,11 @@
             <td>{{ formatPct(row.vetRateBpsMax) }}</td>
             <td>{{ formatCurrency(row.vetCentsMax) }}</td>
           </tr>
+          <tr v-for="row in vetAddonRows" :key="'vet-addon-' + row.code">
+            <td>{{ planLabel(row.code) }}</td>
+            <td>{{ formatPct(row.vetRateBpsMax) }}</td>
+            <td>{{ formatCurrency(row.vetCentsMax) }}</td>
+          </tr>
         </tbody>
       </ProTable>
       <p
@@ -42,6 +47,7 @@
         <ProIcon name="info" :size="18" />
         <span>{{ $t('commissionSheet.vetAddonNote') }}</span>
       </p>
+      <p class="pro-hint">{{ $t('commissionSheet.discountNote') }}</p>
     </div>
 
     <div v-if="showCommercialGrid" class="pf-commission-sheet__block">
@@ -107,6 +113,10 @@ const { formatCurrency } = useFormatters()
 
 const showVetGrid = computed(() => props.audience === 'vet' || props.audience === 'commercial' || props.audience === 'admin')
 const showCommercialGrid = computed(() => props.audience === 'commercial' || props.audience === 'admin')
+
+const vetAddonRows = computed(() =>
+  (props.addonRates || []).filter((r: any) => (r.vetRateBpsMax || 0) > 0),
+)
 
 const leadText = computed(() => {
   switch (props.audience) {

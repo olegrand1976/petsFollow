@@ -176,6 +176,12 @@ class ApiClient {
     return res.data['data'] as Map<String, dynamic>;
   }
 
+  /// Kennel privilege: create several pets in one call (`POST /pets/batch`).
+  Future<Map<String, dynamic>> createPetsBatch(List<Map<String, dynamic>> pets) async {
+    final res = await dio.post('/api/v1/pets/batch', data: {'pets': pets});
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
   Future<Map<String, dynamic>> getPet(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId');
     return res.data['data'] as Map<String, dynamic>;

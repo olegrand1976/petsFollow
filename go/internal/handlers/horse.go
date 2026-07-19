@@ -105,6 +105,35 @@ func (a *API) deleteHorseContact(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
+func (a *API) updateHorseContact(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	var req horseContactReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	name := strings.TrimSpace(req.FullName)
+	if name == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "full_name_required")
+		return
+	}
+	updated, err := a.store.UpdateProfessionalContact(r.Context(), chi.URLParam(r, "id"), id.UserID,
+		strings.TrimSpace(req.Role), name, strings.TrimSpace(req.Phone), strings.TrimSpace(req.Email), strings.TrimSpace(req.Notes))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "contact_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, updated)
+}
+
 func (a *API) listHorseCompetitions(w http.ResponseWriter, r *http.Request) {
 	petID := chi.URLParam(r, "petID")
 	ownerID, ok := a.requireHorsePackOwner(w, r, petID)
@@ -176,4 +205,41 @@ func (a *API) deleteHorseCompetition(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+func (a *API) updateHorseCompetition(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	var req horseCompetitionReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "title_required")
+		return
+	}
+	eventDate := strings.TrimSpace(req.EventDate)
+	if eventDate == "" {
+		eventDate = time.Now().Format("2006-01-02")
+	}
+	if _, err := time.Parse("2006-01-02", eventDate); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_event_date")
+		return
+	}
+	updated, err := a.store.UpdateCompetition(r.Context(), chi.URLParam(r, "id"), id.UserID, eventDate, title,
+		strings.TrimSpace(req.Location), strings.TrimSpace(req.Discipline), strings.TrimSpace(req.Result), strings.TrimSpace(req.Notes))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "competition_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, updated)
 }

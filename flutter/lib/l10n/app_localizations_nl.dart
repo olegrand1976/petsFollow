@@ -531,21 +531,43 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Familiepakket — gezinsweergave van herinneringen, tot 3 dieren';
+      'Familiepakket — gezinsweergave, −10% op volgende abonnementen';
 
   @override
-  String familyHouseholdTitle(int count, int max) {
-    return 'Familiehuishouden — $count/$max dieren';
+  String familyHouseholdTitle(int count) {
+    return 'Familiehuishouden — $count dieren';
+  }
+
+  @override
+  String kennelHouseholdTitle(int count) {
+    return 'Kennelhuishouden — $count dieren';
   }
 
   @override
   String get familyHouseholdNext => 'Komende gezinsherinneringen';
 
   @override
-  String get familyPetLimit => 'Familiepakket is beperkt tot 3 dieren';
+  String get familyPetLimit =>
+      'Er is al een huishoudpakket actief of in aankoop';
 
   @override
   String get familyRequiresTwoPets => 'Familiepakket vereist minstens 2 dieren';
+
+  @override
+  String get kennelPackHint =>
+      'Kennelpakket — 6+ dieren, −15% op volgende abonnementen';
+
+  @override
+  String get kennelRequiresSixPets => 'Kennelpakket vereist minstens 6 dieren';
+
+  @override
+  String get kennelQuickEncodeTitle => 'Nest snel encoderen';
+
+  @override
+  String get kennelRequired => 'Kennelpakket is vereist voor batch-encoding';
+
+  @override
+  String get litterTag => 'Nest-tag';
 
   @override
   String get discoveryMarkDone => 'Missie voltooid';

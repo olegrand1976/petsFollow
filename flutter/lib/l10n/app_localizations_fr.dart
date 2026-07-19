@@ -534,22 +534,46 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Pack Famille — vue foyer des rappels, jusqu\'à 3 animaux';
+      'Pack Famille — vue foyer des rappels, −10 % sur les abos suivants';
 
   @override
-  String familyHouseholdTitle(int count, int max) {
-    return 'Foyer Famille — $count/$max animaux';
+  String familyHouseholdTitle(int count) {
+    return 'Foyer Famille — $count animaux';
+  }
+
+  @override
+  String kennelHouseholdTitle(int count) {
+    return 'Foyer Élevage — $count animaux';
   }
 
   @override
   String get familyHouseholdNext => 'Prochains rappels du foyer';
 
   @override
-  String get familyPetLimit => 'Pack Famille limité à 3 animaux';
+  String get familyPetLimit =>
+      'Un pack foyer est déjà actif ou en cours d\'achat';
 
   @override
   String get familyRequiresTwoPets =>
       'Le pack Famille nécessite au moins 2 animaux';
+
+  @override
+  String get kennelPackHint =>
+      'Pack Élevage — ≥6 animaux, −15 % sur les abos suivants';
+
+  @override
+  String get kennelRequiresSixPets =>
+      'Le pack Élevage nécessite au moins 6 animaux';
+
+  @override
+  String get kennelQuickEncodeTitle => 'Encodage portée (élevage)';
+
+  @override
+  String get kennelRequired =>
+      'Le pack Élevage est requis pour l\'encodage par lot';
+
+  @override
+  String get litterTag => 'Tag portée';
 
   @override
   String get discoveryMarkDone => 'Mission accomplie';

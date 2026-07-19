@@ -70,6 +70,7 @@
         <ProCommissionSheet
           audience="vet"
           :plan-rates="summary.planRates || []"
+          :addon-rates="summary.addonRates || []"
           :bonuses="vetBonuses"
         />
       </div>

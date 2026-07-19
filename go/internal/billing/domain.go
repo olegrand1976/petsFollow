@@ -46,6 +46,7 @@ const (
 	AddonFamily   AddonCode = "family"
 	AddonCarePlus AddonCode = "care_plus"
 	AddonHorse    AddonCode = "horse"
+	AddonKennel   AddonCode = "kennel"
 )
 
 // AddonDurationDays is the validity window for a purchased addon.
@@ -66,7 +67,8 @@ func AllAddons() []Addon {
 func AllAddonsForLocale(locale string) []Addon {
 	locale = i18n.NormalizeLocale(locale)
 	return []Addon{
-		{Code: AddonFamily, Label: i18n.T(locale, "billing.addon_family_label", nil), AmountCents: 5500, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonFamily, Label: i18n.T(locale, "billing.addon_family_label", nil), AmountCents: 3900, Currency: "eur", DurationDays: AddonDurationDays},
+		{Code: AddonKennel, Label: i18n.T(locale, "billing.addon_kennel_label", nil), AmountCents: 11900, Currency: "eur", DurationDays: AddonDurationDays},
 		{Code: AddonCarePlus, Label: i18n.T(locale, "billing.addon_care_plus_label", nil), AmountCents: 1900, Currency: "eur", DurationDays: AddonDurationDays},
 		{Code: AddonHorse, Label: i18n.T(locale, "billing.addon_horse_label", nil), AmountCents: 3900, Currency: "eur", DurationDays: AddonDurationDays},
 	}
@@ -74,11 +76,16 @@ func AllAddonsForLocale(locale string) []Addon {
 
 func ParseAddonCode(s string) (AddonCode, error) {
 	switch AddonCode(s) {
-	case AddonFamily, AddonCarePlus, AddonHorse:
+	case AddonFamily, AddonKennel, AddonCarePlus, AddonHorse:
 		return AddonCode(s), nil
 	default:
 		return "", ErrInvalidAddon
 	}
+}
+
+// IsHouseholdAddon reports Family / Kennel (mutually exclusive volume packs).
+func IsHouseholdAddon(code AddonCode) bool {
+	return code == AddonFamily || code == AddonKennel
 }
 
 func GetAddon(code AddonCode) (Addon, error) {
@@ -102,6 +109,8 @@ func addonEnvSuffix(code AddonCode) string {
 	switch code {
 	case AddonFamily:
 		return "FAMILY"
+	case AddonKennel:
+		return "KENNEL"
 	case AddonCarePlus:
 		return "CARE_PLUS"
 	case AddonHorse:

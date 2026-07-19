@@ -199,6 +199,10 @@ var demoPractices = []practiceDef{
 							{reminderType: "fecal_egg", title: "Coproscopie", dueDays: 60, status: "pending"},
 						},
 					},
+					// Kennel demo (≥6) — portées Nala
+					{name: "Nala", species: "dog", breed: "Labrador", weightKg: 28, paymentStatus: "active", plan: billing.PlanTriennial, billingMode: billing.ModeSubscription, entitlement: billing.StatusActive},
+					{name: "Kira", species: "dog", breed: "Labrador", weightKg: 26, paymentStatus: "active", plan: billing.PlanAnnual, billingMode: billing.ModeOneTime, entitlement: billing.StatusActive},
+					{name: "Oreo", species: "dog", breed: "Labrador", weightKg: 30, paymentStatus: "pending_payment", plan: billing.PlanAnnual, billingMode: billing.ModeOneTime, entitlement: billing.StatusPending},
 				},
 			},
 			{

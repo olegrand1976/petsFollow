@@ -148,22 +148,23 @@ func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, reminders)
 }
 
-// getHousehold returns the Family household digest (privilege gated).
+// getHousehold returns the Family/Kennel household digest (privilege gated).
 func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	has, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonFamily))
+	has, err := a.store.HasHouseholdAddon(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if !has {
-		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "family_required")
+		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "household_required")
 		return
 	}
+	hasKennel, _ := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))
 	pets, err := a.store.ListPetsByOwner(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -178,8 +179,9 @@ func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 		upcoming = []store.HouseholdCareItem{}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"maxPets":           store.FamilyMaxPets,
-		"minPets":           store.FamilyMinPets,
+		"familyMinPets":     store.FamilyMinPets,
+		"kennelMinPets":     store.KennelMinPets,
+		"pack":              map[bool]string{true: "kennel", false: "family"}[hasKennel],
 		"petCount":          len(pets),
 		"pets":              pets,
 		"upcomingReminders": upcoming,

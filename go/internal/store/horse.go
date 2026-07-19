@@ -81,6 +81,21 @@ func (s *Store) DeleteProfessionalContact(ctx context.Context, id, ownerUserID s
 	return nil
 }
 
+func (s *Store) UpdateProfessionalContact(ctx context.Context, id, ownerUserID, role, fullName, phone, email, notes string) (ProfessionalContact, error) {
+	var c ProfessionalContact
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.professional_contacts
+		SET role=$3, full_name=$4, phone=$5, email=$6, notes=$7, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$2
+		RETURNING id::text, pet_id::text, owner_user_id::text, role, full_name, phone, email, notes, created_at, updated_at`,
+		id, ownerUserID, role, fullName, phone, email, notes,
+	).Scan(&c.ID, &c.PetID, &c.OwnerUserID, &c.Role, &c.FullName, &c.Phone, &c.Email, &c.Notes, &c.CreatedAt, &c.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ProfessionalContact{}, ErrNotFound
+	}
+	return c, err
+}
+
 func (s *Store) ListCompetitions(ctx context.Context, petID, ownerUserID string) ([]Competition, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, pet_id::text, owner_user_id::text, event_date::text, title, location, discipline, result, notes, created_at, updated_at
@@ -124,6 +139,21 @@ func (s *Store) DeleteCompetition(ctx context.Context, id, ownerUserID string) e
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (s *Store) UpdateCompetition(ctx context.Context, id, ownerUserID, eventDate, title, location, discipline, result, notes string) (Competition, error) {
+	var c Competition
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.competitions
+		SET event_date=$3::date, title=$4, location=$5, discipline=$6, result=$7, notes=$8, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$2
+		RETURNING id::text, pet_id::text, owner_user_id::text, event_date::text, title, location, discipline, result, notes, created_at, updated_at`,
+		id, ownerUserID, eventDate, title, location, discipline, result, notes,
+	).Scan(&c.ID, &c.PetID, &c.OwnerUserID, &c.EventDate, &c.Title, &c.Location, &c.Discipline, &c.Result, &c.Notes, &c.CreatedAt, &c.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Competition{}, ErrNotFound
+	}
+	return c, err
 }
 
 // PetOwnedBy checks pet belongs to owner (and optionally horse species).

@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
@@ -396,7 +397,7 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
   Future<void> _load() async {
     try {
       final ents = await AddonEntitlements.load();
-      if (ents == null || !ents.hasFamily) {
+      if (ents == null || (!ents.hasFamily && !ents.hasKennel)) {
         if (mounted) setState(() => _data = null);
         return;
       }
@@ -413,8 +414,11 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
     final data = _data;
     if (data == null) return const SizedBox.shrink();
     final count = (data['petCount'] as num?)?.toInt() ?? 0;
-    final max = (data['maxPets'] as num?)?.toInt() ?? 3;
+    final pack = '${data['pack'] ?? 'family'}';
     final upcoming = (data['upcomingReminders'] as List?) ?? const [];
+    final title = pack == 'kennel'
+        ? widget.l10n.kennelHouseholdTitle(count)
+        : widget.l10n.familyHouseholdTitle(count);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -426,7 +430,7 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.l10n.familyHouseholdTitle(count, max),
+            title,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
           if (upcoming.isNotEmpty) ...[
@@ -474,10 +478,12 @@ class _UpsellBannerState extends State<_UpsellBanner> {
   BillingAddon? _carePlus;
   BillingAddon? _horse;
   BillingAddon? _family;
+  BillingAddon? _kennel;
   // Fail-closed defaults: hide upsells until entitlements are confirmed missing.
   bool _hasCarePlus = true;
   bool _hasHorsePack = true;
   bool _hasFamily = true;
+  bool _hasKennel = true;
   bool _ready = false;
 
   @override
@@ -495,15 +501,18 @@ class _UpsellBannerState extends State<_UpsellBanner> {
         _carePlus = BillingAddon.byCode(catalog, 'care_plus');
         _horse = BillingAddon.byCode(catalog, 'horse');
         _family = BillingAddon.byCode(catalog, 'family');
+        _kennel = BillingAddon.byCode(catalog, 'kennel');
         if (ents == null) {
           // API failure: keep fail-closed (no upsell flash).
           _hasCarePlus = true;
           _hasHorsePack = true;
           _hasFamily = true;
+          _hasKennel = true;
         } else {
           _hasCarePlus = ents.hasCarePlus;
           _hasHorsePack = ents.hasHorse;
           _hasFamily = ents.hasFamily;
+          _hasKennel = ents.hasKennel;
         }
         _ready = true;
       });
@@ -521,11 +530,15 @@ class _UpsellBannerState extends State<_UpsellBanner> {
     } catch (e) {
       if (!context.mounted) return;
       final raw = e.toString();
-      final msg = raw.contains('family_requires_two_pets')
-          ? widget.l10n.familyRequiresTwoPets
-          : raw.contains('family_pet_limit')
-              ? widget.l10n.familyPetLimit
-              : widget.l10n.paymentResume;
+      final msg = raw.contains('kennel_requires_six_pets')
+          ? widget.l10n.kennelRequiresSixPets
+          : raw.contains('family_requires_two_pets')
+              ? widget.l10n.familyRequiresTwoPets
+              : (raw.contains('household_exclusive') ||
+                      raw.contains('addon_already_active') ||
+                      raw.contains('family_pet_limit'))
+                  ? widget.l10n.familyPetLimit
+                  : widget.l10n.paymentResume;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg)),
       );
@@ -537,8 +550,13 @@ class _UpsellBannerState extends State<_UpsellBanner> {
     if (!_ready) return const SizedBox.shrink();
     final showCare = !_hasCarePlus && _carePlus != null;
     final showHorse = widget.hasHorse && !_hasHorsePack && _horse != null;
-    final showFamily = widget.petCount >= 2 && !_hasFamily && _family != null;
-    if (!showCare && !showHorse && !showFamily) return const SizedBox.shrink();
+    // Prefer Kennel over Family when ≥6 pets.
+    final showKennel = widget.petCount >= 6 && !_hasKennel && _kennel != null;
+    final showFamily =
+        widget.petCount >= 2 && !_hasFamily && !_hasKennel && !showKennel && _family != null;
+    if (!showCare && !showHorse && !showFamily && !showKennel && !_hasKennel) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -558,7 +576,15 @@ class _UpsellBannerState extends State<_UpsellBanner> {
               child: Text(_carePlus!.label.isNotEmpty ? _carePlus!.label : widget.l10n.activateAddon),
             ),
           ],
-          if (showCare && (showHorse || showFamily)) const SizedBox(height: 12),
+          if (showCare && (showHorse || showFamily || showKennel)) const SizedBox(height: 12),
+          if (showKennel) ...[
+            Text(widget.l10n.kennelPackHint, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => _buy(context, 'kennel'),
+              child: Text(_kennel!.label.isNotEmpty ? _kennel!.label : widget.l10n.activateAddon),
+            ),
+          ],
           if (showFamily) ...[
             Text(widget.l10n.familyPackHint, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             const SizedBox(height: 8),
@@ -567,13 +593,27 @@ class _UpsellBannerState extends State<_UpsellBanner> {
               child: Text(_family!.label.isNotEmpty ? _family!.label : widget.l10n.activateAddon),
             ),
           ],
-          if (showFamily && showHorse) const SizedBox(height: 12),
+          if ((showFamily || showKennel) && showHorse) const SizedBox(height: 12),
           if (showHorse) ...[
             Text(widget.l10n.horsePackUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: () => _buy(context, 'horse'),
               child: Text(_horse!.label.isNotEmpty ? _horse!.label : widget.l10n.activateAddon),
+            ),
+          ],
+          if (_hasKennel) ...[
+            if (showCare || showHorse || showFamily || showKennel) const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
+                );
+                await widget.onPurchased?.call();
+              },
+              icon: const Icon(Icons.pets_outlined, size: 18),
+              label: Text(widget.l10n.kennelQuickEncodeTitle),
             ),
           ],
         ],

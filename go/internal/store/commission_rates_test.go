@@ -37,6 +37,18 @@ func TestCommercialRateBpsForPlan(t *testing.T) {
 	if got := store.CommercialRateBpsForAddon("family"); got != 1000 {
 		t.Fatalf("addon = 1000, got %d", got)
 	}
+	if got := store.CommercialRateBpsForAddon("kennel"); got != 1000 {
+		t.Fatalf("kennel commercial = 1000, got %d", got)
+	}
+	if got := store.VetRateBpsForAddon("family"); got != 500 {
+		t.Fatalf("family vet = 500, got %d", got)
+	}
+	if got := store.VetRateBpsForAddon("kennel"); got != 500 {
+		t.Fatalf("kennel vet = 500, got %d", got)
+	}
+	if got := store.VetRateBpsForAddon("horse"); got != 0 {
+		t.Fatalf("horse vet = 0, got %d", got)
+	}
 }
 
 func TestDefaultVetCommissionTiers(t *testing.T) {

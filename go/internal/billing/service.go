@@ -102,20 +102,42 @@ func (s *Service) StartCheckout(ctx context.Context, in StartCheckoutInput) (Che
 		cancelURL = s.cfg.StripeCancelURL
 	}
 
-	sess, err := s.gateway.CreateCheckoutSession(ctx, CheckoutRequest{
+	plan, _ := GetPlan(in.PlanCode)
+	payCents, discountBps, err := s.store.ResolvePetCheckoutAmount(ctx, in.OwnerUserID, in.PetID, plan.AmountCents)
+	if err != nil {
+		return CheckoutSession{}, err
+	}
+	// Always sync stored amount to what will be charged (catalogue or discounted).
+	if err := s.store.SetEntitlementAmountCents(ctx, in.PetID, payCents); err != nil {
+		return CheckoutSession{}, err
+	}
+
+	meta := map[string]string{
+		"pet_id":        in.PetID,
+		"owner_user_id": in.OwnerUserID,
+		"plan_code":     string(in.PlanCode),
+		"billing_mode":  string(mode),
+	}
+	req := CheckoutRequest{
 		PriceID:       priceID,
 		Mode:          checkoutMode,
 		CustomerID:    customerID,
 		CustomerEmail: in.OwnerEmail,
 		SuccessURL:    successURL,
 		CancelURL:     cancelURL,
-		Metadata: map[string]string{
-			"pet_id":       in.PetID,
-			"owner_user_id": in.OwnerUserID,
-			"plan_code":    string(in.PlanCode),
-			"billing_mode": string(mode),
-		},
-	})
+		Metadata:      meta,
+	}
+	if discountBps > 0 && payCents < plan.AmountCents {
+		req.UnitAmountCents = payCents
+		req.ProductName = plan.Label
+		req.Currency = plan.Currency
+		req.PriceID = ""
+		if in.PlanCode == PlanTriennial && mode == ModeSubscription {
+			meta["interval_count"] = "3"
+		}
+	}
+
+	sess, err := s.gateway.CreateCheckoutSession(ctx, req)
 	if err != nil {
 		return CheckoutSession{}, err
 	}
@@ -291,7 +313,10 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	}
 	if addon.Status == "active" {
 		// Idempotent webhook retry after successful activation.
-		return s.store.AccrueCommercialForAddon(ctx, addonID)
+		if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
+			return err
+		}
+		return s.store.AccrueVetForAddon(ctx, addonID)
 	}
 	if addon.Status != "pending" {
 		return nil
@@ -300,14 +325,22 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err != nil {
 		return err
 	}
-	// Family must still be 2–3 pets at activation (closes race after pending checkout).
-	if AddonCode(addon.AddonCode) == AddonFamily {
+	code := AddonCode(addon.AddonCode)
+	switch code {
+	case AddonFamily:
 		if err := s.store.AssertFamilyPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
 			if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
 				return fmt.Errorf("family activate reject + cancel: %v / %w", err, cerr)
 			}
-			// Ack webhook (avoid endless Stripe retries); payment needs manual refund.
 			fmt.Printf("CRITICAL: family addon %s cancelled after payment — eligibility failed: %v (manual refund)\n", addonID, err)
+			return nil
+		}
+	case AddonKennel:
+		if err := s.store.AssertKennelPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
+			if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
+				return fmt.Errorf("kennel activate reject + cancel: %v / %w", err, cerr)
+			}
+			fmt.Printf("CRITICAL: kennel addon %s cancelled after payment — eligibility failed: %v (manual refund)\n", addonID, err)
 			return nil
 		}
 	}
@@ -321,11 +354,18 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID); err != nil {
 		return err
 	}
-	// Return error so Stripe retries; Activate + Accrue are idempotent (ON CONFLICT).
+	if code == AddonKennel {
+		if err := s.store.DeactivateHouseholdAddon(ctx, addon.OwnerUserID, string(AddonFamily)); err != nil {
+			return fmt.Errorf("deactivate family on kennel upgrade: %w", err)
+		}
+	}
 	if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
 		return fmt.Errorf("commercial addon accrual: %w", err)
 	}
-	if AddonCode(addon.AddonCode) == AddonHorse {
+	if err := s.store.AccrueVetForAddon(ctx, addonID); err != nil {
+		return fmt.Errorf("vet addon accrual: %w", err)
+	}
+	if code == AddonHorse {
 		if err := s.store.SeedHorsePackReminders(ctx, addon.OwnerUserID); err != nil {
 			fmt.Printf("horse pack reminder seed failed for addon %s: %v\n", addonID, err)
 		}
@@ -337,6 +377,8 @@ func (s *Service) addonPriceID(code AddonCode) string {
 	switch code {
 	case AddonFamily:
 		return s.cfg.StripePriceAddonFamily
+	case AddonKennel:
+		return s.cfg.StripePriceAddonKennel
 	case AddonCarePlus:
 		return s.cfg.StripePriceAddonCarePlus
 	case AddonHorse:

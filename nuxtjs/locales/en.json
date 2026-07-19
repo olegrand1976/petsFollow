@@ -770,9 +770,9 @@
         "text": "Annual, Triennial (recommended) or Quinquennial — heart-rate checks, messaging and care reminders."
       },
       "family": {
-        "price": "€55 / year",
+        "price": "€39 / year",
         "title": "Family pack",
-        "text": "Household care view for 2–3 pets — each pet still needs its own subscription."
+        "text": "Household care view from 2 pets, −10% on further plans — each pet still needs its own subscription."
       },
       "careHorse": {
         "price": "€19 · €39",
@@ -841,17 +841,17 @@
     },
     "addonsTitle": "Household options (owner account)",
     "addonsLead": "Addons purchased once for the account — they enrich the experience for pets in the household under the rules below.",
-    "addonsTip": "Family never replaces a pet subscription: each pet still needs a plan. Horse is only offered when the household has at least one horse.",
+    "addonsTip": "Family never replaces a pet subscription. Kennel requires ≥ 6 pets. Horse only if the household has a horse.",
     "addons": {
       "family": {
         "name": "Family",
-        "price": "€55 / year",
-        "tagline": "Household pack — up to 3 pets",
+        "price": "€39 / year",
+        "tagline": "Household pack — from 2 pets, −10% on plans",
         "scope": "Account",
         "benefits": [
-          "Household view: upcoming care reminders across all pets",
-          "For households of 2 to 3 pets (cap of 3)",
-          "Each pet still needs its own subscription"
+          "Household upcoming-care view",
+          "−10% on pet plans from the 2nd paying pet",
+          "From 6 pets: Kennel recommended"
         ]
       },
       "carePlus": {
@@ -876,6 +876,17 @@
           "Competition tracking",
           "Offered only if the household has ≥ 1 horse"
         ]
+      },
+      "kennel": {
+        "name": "Kennel",
+        "price": "€119 / year",
+        "tagline": "Breeding / roster from 6 pets",
+        "scope": "Account",
+        "benefits": [
+          "Quick multi-pet encode",
+          "Roster, litter tags, export",
+          "−15% on pet plans from the 2nd paying pet"
+        ]
       }
     },
     "summaryTitle": "Price grid summary",
@@ -897,8 +908,8 @@
       },
       "family": {
         "name": "Family",
-        "price": "€55 / year",
-        "role": "Household addon ≤ 3 pets"
+        "price": "€39 / year",
+        "role": "Household addon from 2 pets (−10%)"
       },
       "carePlus": {
         "name": "Care+",
@@ -909,6 +920,11 @@
         "name": "Horse",
         "price": "€39 / year",
         "role": "Equine pack addon"
+      },
+      "kennel": {
+        "name": "Kennel",
+        "price": "€119 / year",
+        "role": "Breeding addon from 6 (−15%)"
       }
     },
     "footer": "petsFollow — vet-prescribed monitoring, no hardware"
@@ -1153,7 +1169,7 @@
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
       "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (annual / triennial / quinquennial).",
-      "addons": "Addons Family / Care+ / Horse: 12% for sales. Care+ = medications & personal reminders; Horse = farrier, contacts, competitions (horses).",
+      "addons": "Addons Family / Kennel: 10% sales + 5% vet. Care+ / Horse: 10% sales, 0% vet.",
       "webFeatures": [
         "Operational dashboard clients / messages / HR",
         "Patient file and messaging",
@@ -1163,7 +1179,7 @@
       "mobileFeatures": [
         "Pets and heart-rate tracking",
         "Stripe subscriptions per pet",
-        "Family / Care+ / Horse addons with real privileges",
+        "Family / Kennel / Care+ / Horse addons with real privileges",
         "Messages and care reminders"
       ],
       "commercialFlat": "Sales: 8% / 12% / 8% ex-VAT by plan (annual / triennial / quinquennial); ~€9.4 on the €95 TTC triennial plan.",
@@ -1186,7 +1202,7 @@
     "colCommEuros": "Sales €",
     "vetBaseExplain": "Base rate by number of paying clients linked to your practice:",
     "vetMaxExplain": "That base rate is then scaled by plan (100% on Triennial, 67% on Annual and Quinquennial), and capped at 12%. The table shows the maximum at the 61+ client tier — your actual rate may be lower on an earlier tier.",
-    "vetAddonNote": "No extra commission on Family, Care+ or Horse addons: only pet subscriptions (Annual / Triennial / Quinquennial) are commissioned for vets.",
+    "vetAddonNote": "Family and Kennel: 5% ex-VAT for the vet. Care+ and Horse: 0% vet (10% sales only).",
     "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
     "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
     "tier": "{min}–{max} clients → {pct}% (base)",
@@ -1195,9 +1211,10 @@
       "annual": "Annual (€35 TTC)",
       "triennial": "Triennial (€95 TTC)",
       "quinquennial": "Quinquennial (€145 TTC)",
-      "family": "Family",
+      "family": "Family (€39 TTC)",
       "care_plus": "Care+",
-      "horse": "Horse"
+      "horse": "Horse",
+      "kennel": "Kennel (€119 TTC)"
     },
     "bonusTitles": {
       "vet_tier_31": "31-client tier bonus",
@@ -1214,6 +1231,7 @@
       "in_progress": "In progress",
       "earned": "Earned",
       "paid": "Paid"
-    }
+    },
+    "discountNote": "Euro amounts are full-price indicatives. Household/kennel discounts (−10% / −15%) reduce the HT base actually collected."
   }
 }

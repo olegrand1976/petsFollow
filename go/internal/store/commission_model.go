@@ -43,7 +43,8 @@ var catalogAddons = []struct {
 	code string
 	ttc  int
 }{
-	{"family", 5500},
+	{"family", 3900},
+	{"kennel", 11900},
 	{"care_plus", 1900},
 	{"horse", 3900},
 }
@@ -69,16 +70,19 @@ func SubscriptionPlanRates() []PlanRateInfo {
 	return out
 }
 
-// AddonPlanRates returns indicative commercial rates for addons.
+// AddonPlanRates returns indicative commercial (+ vet when applicable) rates for addons.
 func AddonPlanRates() []PlanRateInfo {
 	out := make([]PlanRateInfo, 0, len(catalogAddons))
 	for _, a := range catalogAddons {
 		ht := HTVACents(a.ttc)
 		commBps := CommercialRateBpsForAddon(a.code)
+		vetBps := VetRateBpsForAddon(a.code)
 		out = append(out, PlanRateInfo{
 			Code:              a.code,
 			TTCCents:          a.ttc,
 			HTVACents:         ht,
+			VetRateBpsMax:     vetBps,
+			VetCentsMax:       CommercialCommissionCents(ht, vetBps),
 			CommercialRateBps: commBps,
 			CommercialCents:   CommercialCommissionCents(ht, commBps),
 		})

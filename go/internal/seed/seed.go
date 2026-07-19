@@ -281,7 +281,7 @@ func seedClientActiveAddons(ctx context.Context, tx pgx.Tx, ownerUserID string) 
 	now := time.Now()
 	from := now.Add(-30 * 24 * time.Hour)
 	until := from.AddDate(0, 0, billing.AddonDurationDays)
-	for _, code := range []billing.AddonCode{billing.AddonCarePlus, billing.AddonFamily, billing.AddonHorse} {
+	for _, code := range []billing.AddonCode{billing.AddonCarePlus, billing.AddonKennel, billing.AddonHorse} {
 		addon, err := billing.GetAddon(code)
 		if err != nil {
 			return err
@@ -517,7 +517,7 @@ func logSummary() {
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
 	log.Println("  vet.reset@       — token démo reset mot de passe")
 	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
-	log.Println("  client.demo@     — Rex + Bella + Spirit · addons Care+/Family/Horse actifs")
+	log.Println("  client.demo@     — 6 animaux · addons Care+/Kennel/Horse actifs")
 	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")

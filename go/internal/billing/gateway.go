@@ -10,6 +10,11 @@ type CheckoutRequest struct {
 	SuccessURL    string
 	CancelURL     string
 	Metadata      map[string]string
+	// When UnitAmountCents > 0, live Stripe uses price_data instead of PriceID
+	// (household discounts). Mock ignores and still succeeds.
+	UnitAmountCents int
+	ProductName     string
+	Currency        string
 }
 
 type CheckoutSession struct {

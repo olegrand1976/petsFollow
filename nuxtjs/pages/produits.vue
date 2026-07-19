@@ -123,7 +123,7 @@ const plans = computed(() =>
 )
 
 const addons = computed(() =>
-  (['family', 'carePlus', 'horse'] as const).map((key) => ({
+  (['family', 'kennel', 'carePlus', 'horse'] as const).map((key) => ({
     key,
     name: t(`products.addons.${key}.name`),
     price: t(`products.addons.${key}.price`),
@@ -134,7 +134,7 @@ const addons = computed(() =>
 )
 
 const summaryRows = computed(() =>
-  (['annual', 'triennial', 'quinquennial', 'family', 'carePlus', 'horse'] as const).map((key) => ({
+  (['annual', 'triennial', 'quinquennial', 'family', 'kennel', 'carePlus', 'horse'] as const).map((key) => ({
     code: key,
     name: t(`products.summary.${key}.name`),
     price: t(`products.summary.${key}.price`),

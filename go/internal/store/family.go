@@ -2,22 +2,9 @@ package store
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
-)
-
-// Family pack rules (owner-scoped addon).
-const (
-	FamilyMinPets   = 2
-	FamilyMaxPets   = 3
-	familyAddonCode = "family"
-)
-
-var (
-	ErrFamilyPetLimit        = errors.New("family_pet_limit")
-	ErrFamilyRequiresTwoPets = errors.New("family_requires_two_pets")
 )
 
 type HouseholdCareItem struct {
@@ -29,25 +16,6 @@ type HouseholdCareItem struct {
 	DueAt     time.Time `json:"dueAt"`
 	Status    string    `json:"status"`
 	IsOverdue bool      `json:"isOverdue"`
-}
-
-// CheckFamilyPurchasePetCount validates 2 ≤ n ≤ 3 for buying / activating Family.
-func CheckFamilyPurchasePetCount(n int) error {
-	if n < FamilyMinPets {
-		return ErrFamilyRequiresTwoPets
-	}
-	if n > FamilyMaxPets {
-		return ErrFamilyPetLimit
-	}
-	return nil
-}
-
-// CheckFamilyCanAddPetCount blocks adding a pet when Family is engaged and n >= max.
-func CheckFamilyCanAddPetCount(n int, familyEngaged bool) error {
-	if familyEngaged && n >= FamilyMaxPets {
-		return ErrFamilyPetLimit
-	}
-	return nil
 }
 
 func (s *Store) CountPetsByOwner(ctx context.Context, ownerUserID string) (int, error) {
@@ -86,29 +54,7 @@ func (s *Store) ListHouseholdUpcomingCare(ctx context.Context, ownerUserID strin
 	return out, rows.Err()
 }
 
-// AssertFamilyPurchaseEligible checks 2 ≤ pets ≤ 3 for buying / activating Family.
-func (s *Store) AssertFamilyPurchaseEligible(ctx context.Context, ownerUserID string) error {
-	n, err := s.CountPetsByOwner(ctx, ownerUserID)
-	if err != nil {
-		return err
-	}
-	return CheckFamilyPurchasePetCount(n)
-}
-
-// AssertFamilyCanAddPet blocks a 4th pet while Family is active or pending checkout.
-func (s *Store) AssertFamilyCanAddPet(ctx context.Context, ownerUserID string) error {
-	engaged, err := s.HasActiveOrPendingAddon(ctx, ownerUserID, familyAddonCode)
-	if err != nil {
-		return err
-	}
-	n, err := s.CountPetsByOwner(ctx, ownerUserID)
-	if err != nil {
-		return err
-	}
-	return CheckFamilyCanAddPetCount(n, engaged)
-}
-
-// CreatePetRespectingFamily atomically enforces the Family pet cap then inserts the pet.
+// CreatePet inserts a pet (Family no longer caps pet count).
 func (s *Store) CreatePetRespectingFamily(ctx context.Context, p Pet) (Pet, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -120,36 +66,15 @@ func (s *Store) CreatePetRespectingFamily(ctx context.Context, p Pet) (Pet, erro
 		return Pet{}, err
 	}
 
-	var engaged bool
-	if err := tx.QueryRow(ctx, `
-		SELECT EXISTS(
-			SELECT 1 FROM billing.addon_entitlements
-			WHERE owner_user_id=$1 AND addon_code=$2
-				AND (
-					(status='pending' AND created_at > NOW() - INTERVAL '24 hours')
-					OR (status='active' AND (valid_until IS NULL OR valid_until > NOW()))
-				)
-		)`, p.OwnerUserID, familyAddonCode).Scan(&engaged); err != nil {
-		return Pet{}, err
-	}
-	var n int
-	if err := tx.QueryRow(ctx, `
-		SELECT COUNT(*)::int FROM pets.pets WHERE owner_user_id=$1`, p.OwnerUserID).Scan(&n); err != nil {
-		return Pet{}, err
-	}
-	if err := CheckFamilyCanAddPetCount(n, engaged); err != nil {
-		return Pet{}, err
-	}
-
 	p.ID = uuid.NewString()
 	if p.PaymentStatus == "" {
 		p.PaymentStatus = "pending_payment"
 	}
 	err = tx.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING created_at`,
-		p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus,
+		p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag,
 	).Scan(&p.CreatedAt)
 	if err != nil {
 		return Pet{}, err

@@ -150,17 +150,27 @@
   "reviewAskYes": "Yes, rate the app",
   "reviewAskNo": "Later",
   "carePlusUpsell": "Care+ — medications and personalized reminders",
-  "familyPackHint": "Family pack — household care view, up to 3 pets",
-  "familyHouseholdTitle": "Family household — {count}/{max} pets",
+  "familyPackHint": "Family pack — household care view, −10% on next pet plans",
+  "familyHouseholdTitle": "Family household — {count} pets",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" },
-      "max": { "type": "int" }
+      "count": { "type": "int" }
+    }
+  },
+  "kennelHouseholdTitle": "Kennel household — {count} pets",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "familyHouseholdNext": "Upcoming household reminders",
-  "familyPetLimit": "Family pack is limited to 3 pets",
+  "familyPetLimit": "A household pack is already active or being purchased",
   "familyRequiresTwoPets": "Family pack requires at least 2 pets",
+  "kennelPackHint": "Kennel pack — 6+ pets, −15% on next pet plans",
+  "kennelRequiresSixPets": "Kennel pack requires at least 6 pets",
+  "kennelQuickEncodeTitle": "Litter quick encode",
+  "kennelRequired": "Kennel pack is required for batch encoding",
+  "litterTag": "Litter tag",
   "discoveryMarkDone": "Mission complete",
   "notificationPreferences": "Notification preferences",
   "notificationPrefsHint": "Choose which notification types you want to receive.",

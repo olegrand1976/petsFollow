@@ -12,7 +12,9 @@
 | Annual 35 € | 8 % | ~2,3 € |
 | **Triennial 95 €** | **12 %** | **~9,4 €** |
 | Quinquennial 145 € | 8 % | ~9,6 € |
-| Addons | 10 % | ~4,5 / 1,6 / 3,2 € |
+| Family 39 € | 10 % | ~3,2 € |
+| **Kennel 119 €** | **10 %** | **~9,8 €** |
+| Care+ / Horse | 10 % | ~1,6 / 3,2 € |
 
 Steer : triennial = **meilleur taux** et **meilleur €/an**. Quin ≈ même cash one-shot, moins bon annualisé.
 

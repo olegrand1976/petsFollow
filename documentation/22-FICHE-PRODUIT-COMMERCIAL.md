@@ -36,7 +36,7 @@ Prix **TTC** client. Steer = **triennial**.
 | **Triennial** | **95 € / 3 ans** | **2,6 €** | **Recommandé** |
 | Quinquennial | 145 € / 5 ans | 2,4 € | Engagement long |
 
-Addons : Family **55 €** · Care+ **19 €** · Horse **39 €** (détail [17](17-POLITIQUE-TARIFAIRE.md)).
+Addons : Family **39 €** · Kennel **119 €** (≥6) · Care+ **19 €** · Horse **39 €** (détail [17](17-POLITIQUE-TARIFAIRE.md)).
 
 Commission indicative triennial (plafond) : **~9,4 €** pour vous **et** pour le véto — grille complète [19](19-FICHE-COMMISSION-COMMERCIAL.md).
 

@@ -18,7 +18,8 @@ Prix **TTC** client / Stripe. Les commissions partenaires se calculent sur le **
 | Annual | `annual` | **35 € / an** | 2,9 € | Ancre d’entrée |
 | Triennial **recommandé** | `triennial` | **95 € / 3 ans** | 2,6 € | Cœur d’offre & pitch |
 | Quinquennial | `quinquennial` | **145 € / 5 ans** | 2,4 € | Engagement long (**paiement unique** — pas de sub Stripe) |
-| Family | `family` | **55 € / an** | — | Addon foyer 2–3 animaux |
+| Family | `family` | **39 € / an** | — | Addon foyer (≥2) ; remise plans **−10 %** |
+| Kennel | `kennel` | **119 € / an** | — | Addon élevage (≥6) ; remise plans **−15 %** |
 | Care+ | `care_plus` | **19 € / an** | — | Upsell soins |
 | Horse | `horse` | **39 € / an** | — | Pack équine |
 
@@ -50,7 +51,9 @@ Aucune pénalité véto si commercial assigné.
 | 61+ | **12 %** |
 
 Facteur plan : annual / quinquennial **×0,67** · triennial **×1,00** (plafond effectif 8 / 12 / 8 %).  
-Addons : **0 %** véto.
+Addons : Family / Kennel **5 %** · Care+ / Horse **0 %**.
+
+Assiette commission = **HT du montant payé** (après remise foyer/élevage si applicable).
 
 ### Commercial — fixe par plan
 
@@ -59,7 +62,8 @@ Addons : **0 %** véto.
 | Annual | **8 %** | ~2,3 € |
 | Triennial | **12 %** | ~**9,4 €** |
 | Quinquennial | **8 %** | ~9,6 € |
-| Addons | **10 %** | ~4,5 / 1,6 / 3,2 € |
+| Family / Kennel | **10 %** | ~3,2 / **~9,8 €** |
+| Care+ / Horse | **10 %** | ~1,6 / 3,2 € |
 
 ### SPIFF (V1 manuelle)
 
@@ -90,6 +94,8 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 | Remise max multi-ans | **≤ 20 %** |
 | Prix d’entrée | **≤ ~3 € / mois** |
 | Take rate max cœur | **≤ 24 %** HT |
+
+**Risque accepté** : triennial avec remise Kennel **−15 %** → net ~**16,4 € / an** sous plafonds commissions (sous le garde-fou 17 €) — documenté et accepté.
 
 ---
 
