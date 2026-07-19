@@ -24,7 +24,7 @@ class PetDetailScreen extends StatefulWidget {
   State<PetDetailScreen> createState() => _PetDetailScreenState();
 }
 
-class _PetDetailScreenState extends State<PetDetailScreen> {
+class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingObserver {
   late Pet pet;
   List<VetLink> vets = [];
   bool loadingVets = true;
@@ -32,8 +32,31 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     pet = widget.pet;
     _loadVets();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reloadPet();
+    }
+  }
+
+  Future<void> _reloadPet() async {
+    try {
+      final updated = await ApiClient.instance.getPet(pet.id);
+      if (!mounted) return;
+      setState(() => pet = Pet.fromJson(updated));
+      widget.onUpdated?.call();
+    } catch (_) {}
   }
 
   Future<void> _loadVets() async {
@@ -199,7 +222,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           ],
           if (pet.isActive) ...[
             const SizedBox(height: 16),
-            _UpsellHint(l10n: l10n, petId: pet.id),
+            _UpsellHint(l10n: l10n, petId: pet.id, onPurchased: _reloadPet),
           ],
           const SizedBox(height: 24),
           if (pet.isActive)
@@ -218,11 +241,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               icon: const Icon(Icons.favorite),
               label: Text(l10n.startMeasurement),
             ),
-          if (pet.paymentStatus == 'pending_payment') ...[
+          if (pet.needsResumePayment) ...[
             FilledButton.icon(
               onPressed: () async {
                 final url = await ApiClient.instance.resumeCheckout(pet.id);
                 await openExternalUrl(url);
+                await _reloadPet();
               },
               icon: const Icon(Icons.payment),
               label: Text(l10n.paymentResume),
@@ -315,10 +339,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 }
 
 class _UpsellHint extends StatefulWidget {
-  const _UpsellHint({required this.l10n, required this.petId});
+  const _UpsellHint({required this.l10n, required this.petId, this.onPurchased});
 
   final AppLocalizations l10n;
   final String petId;
+  final Future<void> Function()? onPurchased;
 
   @override
   State<_UpsellHint> createState() => _UpsellHintState();
@@ -326,7 +351,9 @@ class _UpsellHint extends StatefulWidget {
 
 class _UpsellHintState extends State<_UpsellHint> {
   BillingAddon? _carePlus;
+  // Fail-closed: hide upsell until entitlements confirm Care+ is missing.
   bool _hasCarePlus = true;
+  bool _ready = false;
 
   @override
   void initState() {
@@ -341,9 +368,12 @@ class _UpsellHintState extends State<_UpsellHint> {
       if (!mounted) return;
       setState(() {
         _carePlus = BillingAddon.byCode(catalog, 'care_plus');
-        _hasCarePlus = ents.hasCarePlus;
+        _hasCarePlus = ents == null ? true : ents.hasCarePlus;
+        _ready = true;
       });
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _ready = true);
+    }
   }
 
   Future<void> _buy(BuildContext context, String code) async {
@@ -351,6 +381,7 @@ class _UpsellHintState extends State<_UpsellHint> {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: widget.petId);
       await openExternalUrl(url);
       await _load();
+      await widget.onPurchased?.call();
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.l10n.paymentResume)));
@@ -360,7 +391,7 @@ class _UpsellHintState extends State<_UpsellHint> {
 
   @override
   Widget build(BuildContext context) {
-    if (_hasCarePlus || _carePlus == null) return const SizedBox.shrink();
+    if (!_ready || _hasCarePlus || _carePlus == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

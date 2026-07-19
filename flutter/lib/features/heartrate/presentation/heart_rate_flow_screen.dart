@@ -140,7 +140,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     var showCarePlus = false;
     try {
       final ents = await AddonEntitlements.load();
-      showCarePlus = !ents.hasCarePlus;
+      // Fail-closed: only upsell when entitlements loaded and Care+ is missing.
+      showCarePlus = ents != null && !ents.hasCarePlus;
     } catch (_) {}
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

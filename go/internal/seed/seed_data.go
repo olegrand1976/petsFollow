@@ -77,6 +77,7 @@ type clientDef struct {
 	fullName           string
 	pets               []petDef
 	seedDiscovery      bool
+	seedActiveAddons   bool   // care_plus + family + horse (compte démo « full »)
 	extraPracticeVet   string // vet email for secondary practice link
 }
 
@@ -125,6 +126,7 @@ var demoPractices = []practiceDef{
 				email:            "client.demo@petsfollow.test",
 				fullName:         "Sophie Demo",
 				seedDiscovery:    true,
+				seedActiveAddons: true,
 				extraPracticeVet: "vet.parc@petsfollow.test",
 				pets: []petDef{
 					{

@@ -26,6 +26,21 @@ class PetEntitlement {
   }
 
   bool get isSubscription => billingMode == 'subscription';
+
+  /// Aligns with Go `HasActiveEntitlement` / `AllowsAccess`.
+  bool get allowsAccess {
+    switch (status) {
+      case 'active':
+      case 'past_due':
+      case 'cancelled':
+        if (validUntil != null && DateTime.now().isAfter(validUntil!)) {
+          return false;
+        }
+        return true;
+      default:
+        return false;
+    }
+  }
 }
 
 class Pet {
@@ -51,7 +66,18 @@ class Pet {
   final PetEntitlement? entitlement;
   final List<int> heartrateDurationsSec;
 
-  bool get isActive => paymentStatus == 'active';
+  /// Premium access aligned with Go `HasActiveEntitlement` when entitlement is present.
+  bool get isActive {
+    final ent = entitlement;
+    if (ent?.status != null && ent!.status!.isNotEmpty) {
+      return ent.allowsAccess;
+    }
+    return paymentStatus == 'active';
+  }
+
+  /// Resume checkout only when payment is pending and entitlement does not grant access.
+  bool get needsResumePayment =>
+      paymentStatus == 'pending_payment' && !isActive;
 
   factory Pet.fromJson(Map<String, dynamic> json) {
     final rawDurations = json['heartrateDurationsSec'] as List<dynamic>?;

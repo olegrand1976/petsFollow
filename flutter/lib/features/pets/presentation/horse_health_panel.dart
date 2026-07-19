@@ -19,22 +19,39 @@ class HorseHealthPanel extends StatefulWidget {
   State<HorseHealthPanel> createState() => _HorseHealthPanelState();
 }
 
-class _HorseHealthPanelState extends State<HorseHealthPanel> {
+class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBindingObserver {
   List<CareReminder> reminders = [];
   List<Map<String, dynamic>> contacts = [];
   List<Map<String, dynamic>> competitions = [];
   bool loading = true;
   bool hasHorsePack = false;
+  // Fail-closed for upsells: hide until entitlements confirm pack is missing.
+  bool showHorseUpsell = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
     final ents = await AddonEntitlements.load();
-    final pack = ents.hasHorse;
+    final pack = ents?.hasHorse ?? false;
+    final upsell = ents != null && !ents.hasHorse;
     try {
       final data = await ApiClient.instance.getCareReminders(widget.petId);
       List<Map<String, dynamic>> c = [];
@@ -56,6 +73,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
       if (mounted) {
         setState(() {
           hasHorsePack = pack;
+          showHorseUpsell = upsell;
           reminders = data.where((r) => !r.isDone).toList();
           contacts = c;
           competitions = comps;
@@ -66,6 +84,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
       if (mounted) {
         setState(() {
           hasHorsePack = pack;
+          showHorseUpsell = upsell;
           loading = false;
         });
       }
@@ -155,8 +174,8 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> {
       children: [
         Text(l10n.horseHealthTitle, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        if (!hasHorsePack) _HorsePackUpsell(l10n: l10n, petId: widget.petId, onPurchased: _load),
-        if (!hasHorsePack) const SizedBox(height: 12),
+        if (showHorseUpsell) _HorsePackUpsell(l10n: l10n, petId: widget.petId, onPurchased: _load),
+        if (showHorseUpsell) const SizedBox(height: 12),
         if (loading)
           const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
         else ...[

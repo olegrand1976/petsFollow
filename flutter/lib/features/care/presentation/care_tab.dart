@@ -17,16 +17,31 @@ class CareTab extends StatefulWidget {
   State<CareTab> createState() => _CareTabState();
 }
 
-class _CareTabState extends State<CareTab> {
+class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   List<Pet> pets = [];
   Map<String, List<CareReminder>> remindersByPet = {};
   bool loading = true;
   AddonEntitlements entitlements = AddonEntitlements.empty();
+  bool entitlementsKnown = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      load();
+    }
   }
 
   Future<void> load() async {
@@ -47,7 +62,12 @@ class _CareTabState extends State<CareTab> {
       }
       if (mounted) {
         setState(() {
-          entitlements = ents;
+          if (ents != null) {
+            entitlements = ents;
+            entitlementsKnown = true;
+          } else {
+            entitlementsKnown = false;
+          }
           pets = loadedPets;
           remindersByPet = map;
           loading = false;
@@ -125,11 +145,13 @@ class _CareTabState extends State<CareTab> {
               MapEntry('deworming', l10n.careTypeDeworming),
               MapEntry('vet_check', l10n.careTypeVetCheck),
               MapEntry('dental', l10n.careTypeDental),
-              if (entitlements.hasCarePlus) ...[
+              // If entitlements unknown (API fail), keep Care+/Horse types visible;
+              // create path lets the API enforce access.
+              if (!entitlementsKnown || entitlements.hasCarePlus) ...[
                 MapEntry('medication', l10n.careTypeMedication),
                 MapEntry('custom', l10n.careTypeCustom),
               ],
-              if (selectedIsHorse && entitlements.hasHorse) ...[
+              if (selectedIsHorse && (!entitlementsKnown || entitlements.hasHorse)) ...[
                 MapEntry('farrier', l10n.careTypeFarrier),
                 MapEntry('fecal_egg', l10n.careTypeFecalEgg),
               ],
@@ -225,11 +247,12 @@ class _CareTabState extends State<CareTab> {
 
     final needsCarePlus = selectedType == 'custom' || selectedType == 'medication';
     final needsHorse = selectedType == 'farrier' || selectedType == 'fecal_egg';
-    if (needsCarePlus && !entitlements.hasCarePlus) {
+    // Only gate locally when entitlements were loaded successfully (fail-closed on API error).
+    if (entitlementsKnown && needsCarePlus && !entitlements.hasCarePlus) {
       await _offerAddonCheckout(context, 'care_plus', l10n.carePlusRequired);
       return;
     }
-    if (needsHorse && !entitlements.hasHorse) {
+    if (entitlementsKnown && needsHorse && !entitlements.hasHorse) {
       await _offerAddonCheckout(context, 'horse', l10n.horsePackRequired);
       return;
     }
@@ -269,6 +292,7 @@ class _CareTabState extends State<CareTab> {
     try {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
       await openExternalUrl(url);
+      await load();
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

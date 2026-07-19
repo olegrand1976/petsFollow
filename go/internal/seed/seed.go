@@ -269,6 +269,30 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 			return err
 		}
 	}
+	if c.seedActiveAddons {
+		if err := seedClientActiveAddons(ctx, tx, clientID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func seedClientActiveAddons(ctx context.Context, tx pgx.Tx, ownerUserID string) error {
+	now := time.Now()
+	from := now.Add(-30 * 24 * time.Hour)
+	until := from.AddDate(0, 0, billing.AddonDurationDays)
+	for _, code := range []billing.AddonCode{billing.AddonCarePlus, billing.AddonFamily, billing.AddonHorse} {
+		addon, err := billing.GetAddon(code)
+		if err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO billing.addon_entitlements (id, owner_user_id, addon_code, status, amount_cents, currency, valid_from, valid_until)
+			VALUES ($1, $2, $3, 'active', $4, 'eur', $5, $6)`,
+			uuid.NewString(), ownerUserID, string(code), addon.AmountCents, from, until); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -493,7 +517,8 @@ func logSummary() {
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
 	log.Println("  vet.reset@       — token démo reset mot de passe")
 	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
-	log.Println("  client.demo@     — Rex + Bella · client.vide@ sans animal (kanban)")
+	log.Println("  client.demo@     — Rex + Bella + Spirit · addons Care+/Family/Horse actifs")
+	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)

@@ -23,7 +23,7 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   List<Pet> pets = [];
   String? userName;
   bool loading = true;
@@ -34,7 +34,21 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      load();
+    }
   }
 
   Future<void> load() async {
@@ -159,9 +173,11 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       const SizedBox(height: 12),
                       _UpsellBanner(
+                        key: ValueKey('upsell-$householdEpoch'),
                         l10n: l10n,
                         hasHorse: pets.any((p) => p.species == 'horse'),
                         petCount: pets.length,
+                        onPurchased: load,
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -179,9 +195,8 @@ class _HomeTabState extends State<HomeTab> {
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
                         onMeasure: pet.isActive ? () => _startMeasurement(pet) : null,
-                        onResumePayment: pet.paymentStatus == 'pending_payment'
-                            ? () => _resumePayment(pet)
-                            : null,
+                        onResumePayment:
+                            pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),
                     ),
                   ],
@@ -381,7 +396,7 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
   Future<void> _load() async {
     try {
       final ents = await AddonEntitlements.load();
-      if (!ents.hasFamily) {
+      if (ents == null || !ents.hasFamily) {
         if (mounted) setState(() => _data = null);
         return;
       }
@@ -439,14 +454,17 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
 
 class _UpsellBanner extends StatefulWidget {
   const _UpsellBanner({
+    super.key,
     required this.l10n,
     required this.hasHorse,
     required this.petCount,
+    this.onPurchased,
   });
 
   final AppLocalizations l10n;
   final bool hasHorse;
   final int petCount;
+  final Future<void> Function()? onPurchased;
 
   @override
   State<_UpsellBanner> createState() => _UpsellBannerState();
@@ -456,9 +474,11 @@ class _UpsellBannerState extends State<_UpsellBanner> {
   BillingAddon? _carePlus;
   BillingAddon? _horse;
   BillingAddon? _family;
-  bool _hasCarePlus = false;
-  bool _hasHorsePack = false;
-  bool _hasFamily = false;
+  // Fail-closed defaults: hide upsells until entitlements are confirmed missing.
+  bool _hasCarePlus = true;
+  bool _hasHorsePack = true;
+  bool _hasFamily = true;
+  bool _ready = false;
 
   @override
   void initState() {
@@ -475,11 +495,21 @@ class _UpsellBannerState extends State<_UpsellBanner> {
         _carePlus = BillingAddon.byCode(catalog, 'care_plus');
         _horse = BillingAddon.byCode(catalog, 'horse');
         _family = BillingAddon.byCode(catalog, 'family');
-        _hasCarePlus = ents.hasCarePlus;
-        _hasHorsePack = ents.hasHorse;
-        _hasFamily = ents.hasFamily;
+        if (ents == null) {
+          // API failure: keep fail-closed (no upsell flash).
+          _hasCarePlus = true;
+          _hasHorsePack = true;
+          _hasFamily = true;
+        } else {
+          _hasCarePlus = ents.hasCarePlus;
+          _hasHorsePack = ents.hasHorse;
+          _hasFamily = ents.hasFamily;
+        }
+        _ready = true;
       });
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _ready = true);
+    }
   }
 
   Future<void> _buy(BuildContext context, String code) async {
@@ -487,6 +517,7 @@ class _UpsellBannerState extends State<_UpsellBanner> {
       final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
       await openExternalUrl(url);
       await _load();
+      await widget.onPurchased?.call();
     } catch (e) {
       if (!context.mounted) return;
       final raw = e.toString();
@@ -503,6 +534,7 @@ class _UpsellBannerState extends State<_UpsellBanner> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_ready) return const SizedBox.shrink();
     final showCare = !_hasCarePlus && _carePlus != null;
     final showHorse = widget.hasHorse && !_hasHorsePack && _horse != null;
     final showFamily = widget.petCount >= 2 && !_hasFamily && _family != null;
@@ -741,7 +773,7 @@ class _PaymentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ent = pet.entitlement;
-    if (pet.paymentStatus == 'pending_payment') {
+    if (pet.needsResumePayment) {
       return _BadgeChip(label: l10n.badgePendingPayment, color: AppColors.alert);
     }
     if (pet.isActive) {

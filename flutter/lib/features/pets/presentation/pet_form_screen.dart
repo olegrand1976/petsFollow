@@ -186,7 +186,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
   Future<void> _maybeOfferHorsePack(String petId) async {
     final l10n = AppLocalizations.of(context)!;
     final ents = await AddonEntitlements.load();
-    if (ents.hasHorse || !mounted) return;
+    // Fail-closed: skip upsell if entitlements unknown or horse pack already active.
+    if (ents == null || ents.hasHorse || !mounted) return;
     final go = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
