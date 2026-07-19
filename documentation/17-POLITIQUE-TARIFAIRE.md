@@ -51,7 +51,12 @@ Aucune pénalité véto si commercial assigné.
 | 61+ | **12 %** |
 
 Facteur plan : annual / quinquennial **×0,67** · triennial **×1,00** (plafond effectif 8 / 12 / 8 %).  
-Addons : Family / Kennel **5 %** · Care+ / Horse **0 %**.
+
+| Addon | Taux HT véto | € indicatif |
+|-------|--------------|-------------|
+| Family 39 € | **5 %** | ~1,6 € |
+| Kennel 119 € | **5 %** | ~4,9 € |
+| Care+ / Horse | **0 %** | — |
 
 Assiette commission = **HT du montant payé** (après remise foyer/élevage si applicable).
 
@@ -64,6 +69,8 @@ Assiette commission = **HT du montant payé** (après remise foyer/élevage si a
 | Quinquennial | **8 %** | ~9,6 € |
 | Family / Kennel | **10 %** | ~3,2 / **~9,8 €** |
 | Care+ / Horse | **10 %** | ~1,6 / 3,2 € |
+
+Fiches pitch : [18 véto](./18-FICHE-COMMISSION-VETO.md) · [19 commercial](./19-FICHE-COMMISSION-COMMERCIAL.md) · [20 admin](./20-FICHE-COMMISSION-ADMIN.md).
 
 ### SPIFF (V1 manuelle)
 

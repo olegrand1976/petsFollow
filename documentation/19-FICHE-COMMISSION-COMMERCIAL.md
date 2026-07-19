@@ -5,6 +5,7 @@
 ## Assiette
 - Prix client / Stripe = **TTC**
 - Commission = **% du HTVA**
+- Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
 ## Votre grille
 | Offre | Taux HT | € indicatif |
@@ -28,6 +29,8 @@ Steer : triennial = **meilleur taux** et **meilleur €/an**. Quin ≈ même cas
 Progressif 7 → 9 → 11 → 12 % × facteur plan (plafond effectif 8 / 12 / 8 %).  
 Sur le triennial au plafond : **~9,4 €** aussi pour le véto.  
 **Le véto n’est pas pénalisé** si vous êtes assigné.
+
+Addons côté véto : Family / Kennel **5 %** HT · Care+ / Horse **0 %** (vous gardez **10 %** sur tous les addons).
 
 ## Ne pas compter
 - Inscription véto seule (cabinet à 0 payant = normal) → **0 €** de commission

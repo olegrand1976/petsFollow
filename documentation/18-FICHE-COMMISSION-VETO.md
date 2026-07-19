@@ -5,6 +5,7 @@
 ## Assiette
 - Prix client / Stripe = **TTC**
 - Commission = **% du HTVA** (TVA BE 21 %)
+- Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
 ## Grille progressive (base)
 | Clients payants | Taux |
@@ -27,11 +28,14 @@
 ## Bonus
 - **50 €** one-shot au 1er passage de **31** clients payants
 
-## Addons (assiette = HT payé, après remise)
-| Addon | Taux HT |
-|-------|---------|
-| Family / Kennel | **5 %** |
-| Care+ / Horse | **0 %** |
+## Addons (assiette = HT payé)
+| Addon | Taux HT | € indicatif |
+|-------|---------|-------------|
+| Family 39 € | **5 %** | ~1,6 € |
+| Kennel 119 € | **5 %** | ~4,9 € |
+| Care+ / Horse | **0 %** | — |
+
+Accrual : `AccrueVetForAddon` → ledger `source_kind=addon`.
 
 ## Message
 Poussez le **triennial** — meilleur taux dès le 1er client. Même plafond avec ou sans commercial assigné.
