@@ -151,14 +151,15 @@ var demoPractices = []practiceDef{
 							{authorRole: "vet", eventType: "note", content: "Suivi cardiaque post-op. Fréquence stable.", age: -14 * 24 * time.Hour},
 						},
 						careReminders: []careReminderDef{
-							{reminderType: "vaccination", title: "Vaccination", dueDays: 120, status: "pending"},
+							{reminderType: "vaccination", title: "Vaccination", dueDays: 30, status: "pending"},
 							{reminderType: "deworming", title: "Vermifuge", dueDays: 14, status: "pending"},
 							{reminderType: "vet_check", title: "Contrôle vétérinaire", dueDays: -30, status: "done"},
 							{reminderType: "dental", title: "Soins dentaires", dueDays: 200, status: "pending"},
 						},
 						visits: []visitDef{
-							{status: "requested", notes: "Demande de contrôle FC", source: "client", scheduledIn: 3 * 24 * time.Hour},
-							{status: "confirmed", notes: "Contrôle post-op cardiaque", source: "vet", scheduledIn: 7 * 24 * time.Hour},
+							{status: "done", notes: "Consultation annuelle", source: "vet", scheduledIn: -90 * 24 * time.Hour},
+							{status: "done", notes: "Contrôle cardiaque", source: "vet", scheduledIn: -45 * 24 * time.Hour},
+							{status: "done", notes: "Suivi post-op", source: "vet", scheduledIn: -14 * 24 * time.Hour},
 						},
 					},
 					{
