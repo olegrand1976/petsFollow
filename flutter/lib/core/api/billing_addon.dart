@@ -57,7 +57,7 @@ class AddonEntitlements {
   bool has(String code) => _activeCodes.contains(code);
 
   /// Returns active entitlements, or `null` if the request failed.
-  /// Matches Go `HasActiveAddon`: status `active` and `validUntil` null or in the future.
+  /// Matches Go `HasActiveAddon`: status `active`/`past_due` and `validUntil` null or in the future.
   static Future<AddonEntitlements?> load() async {
     try {
       final raw = await ApiClient.instance.getMyAddons();
@@ -68,7 +68,7 @@ class AddonEntitlements {
         final m = Map<String, dynamic>.from(item);
         final status = m['status'] as String? ?? '';
         final code = m['addonCode'] as String? ?? m['code'] as String? ?? '';
-        if (status != 'active' || code.isEmpty) continue;
+        if ((status != 'active' && status != 'past_due') || code.isEmpty) continue;
         final untilRaw = m['validUntil'] as String?;
         if (untilRaw != null) {
           final until = DateTime.tryParse(untilRaw);

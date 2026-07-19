@@ -10,6 +10,7 @@ import (
 	billingportal "github.com/stripe/stripe-go/v81/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
+	subapi "github.com/stripe/stripe-go/v81/subscription"
 	"github.com/stripe/stripe-go/v81/webhook"
 )
 
@@ -80,6 +81,11 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		LineItems:  []*stripe.CheckoutSessionLineItemParams{lineItem},
 		Metadata:   req.Metadata,
 	}
+	if req.Mode == "subscription" && len(req.Metadata) > 0 {
+		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
+			Metadata: req.Metadata,
+		}
+	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)
 	}
@@ -88,6 +94,17 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		return CheckoutSession{}, fmt.Errorf("stripe checkout session: %w", err)
 	}
 	return CheckoutSession{ID: sess.ID, URL: sess.URL}, nil
+}
+
+func (g *LiveGateway) CancelSubscription(_ context.Context, subscriptionID string) error {
+	if subscriptionID == "" {
+		return nil
+	}
+	_, err := subapi.Cancel(subscriptionID, nil)
+	if err != nil {
+		return fmt.Errorf("stripe cancel subscription: %w", err)
+	}
+	return nil
 }
 
 func (g *LiveGateway) CreatePortalSession(_ context.Context, customerID, returnURL string) (PortalSession, error) {

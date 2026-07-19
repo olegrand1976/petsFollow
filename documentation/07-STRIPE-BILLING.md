@@ -65,7 +65,7 @@ Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 ### 1. Dashboard Stripe (mode Live)
 
 - [ ] Activer le compte Stripe en mode **Live**
-- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **4 Prices** addons (Family / Kennel / Care+ / Horse)
+- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **4 Prices addons récurrents** `year`×1 (Family / Kennel / Care+ / Horse)
 - [ ] Noter chaque `price_…` ID pour les variables `STRIPE_PRICE_*`
 - [ ] Activer le **Customer Portal** (Settings → Billing → Customer portal) pour la gestion d'abonnement Flutter
 
@@ -128,9 +128,13 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 | **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso ; export & emails = roadmap) |
 | **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
 
-API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhook `checkout.session.completed` avec `metadata.kind=addon`.
+Mode Stripe : Checkout **`subscription`** (`year`×1) pour les 4 addons. Renouvellement via `invoice.paid` (étend `valid_until`) ; échec → `past_due` (privileges maintenus) ; cancel → `cancelled`.
 
-Variables Stripe optionnelles : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_KENNEL`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE`.
+API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhooks : `checkout.session.completed` (`metadata.kind=addon` + `subscription_data.metadata`) · `invoice.paid` / `payment_failed` · `customer.subscription.updated` / `deleted`.
+
+Variables Stripe : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_KENNEL`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE` (Prices **récurrents** yearly).
+
+Customer Portal : activer l’annulation des abonnements (gestion addons + pets).
 
 Commissions (assiette **HTVA du montant payé**, TVA BE 21 % ; Prices Stripe = **TTC**) :
 
@@ -160,4 +164,4 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
 
-Montants attendus : 35 / 95 / 145 € (abos) ; 39 / 119 / 19 / 39 € (addons Family / Kennel / Care+ / Horse).
+Montants attendus : 35 / 95 / 145 € (abos) ; 39 / 119 / 19 / 39 € **/ an récurrents** (addons Family / Kennel / Care+ / Horse).

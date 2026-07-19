@@ -267,7 +267,7 @@ func (s *Service) StartAddonCheckout(ctx context.Context, in StartAddonCheckoutI
 	_ = addon
 	return s.gateway.CreateCheckoutSession(ctx, CheckoutRequest{
 		PriceID:       priceID,
-		Mode:          "payment",
+		Mode:          "subscription",
 		CustomerID:    customerID,
 		CustomerEmail: in.OwnerEmail,
 		SuccessURL:    successURL,
@@ -286,7 +286,7 @@ func (s *Service) MockCompleteAddonCheckout(ctx context.Context, addonID, ownerU
 		"id":             sessionID,
 		"payment_status": "paid",
 		"customer":       "cus_mock_" + ownerUserID,
-		"subscription":   nil,
+		"subscription":   "sub_mock_addon_" + addonID,
 		"payment_intent": "pi_mock_addon_" + addonID,
 		"metadata": map[string]any{
 			"kind":          "addon",
@@ -325,38 +325,38 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if err != nil {
 		return err
 	}
+	customerID, _ := asString(obj["customer"])
+	piID, _ := asString(obj["payment_intent"])
+	sessionID, _ := asString(obj["id"])
+	subID, _ := asString(obj["subscription"])
 	code := AddonCode(addon.AddonCode)
 	switch code {
 	case AddonFamily:
 		if err := s.store.AssertFamilyPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
-			if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
-				return fmt.Errorf("family activate reject + cancel: %v / %w", err, cerr)
-			}
-			fmt.Printf("CRITICAL: family addon %s cancelled after payment — eligibility failed: %v (manual refund)\n", addonID, err)
-			return nil
+			return s.rejectAddonAfterPayment(ctx, addonID, subID, "family", err)
 		}
 	case AddonKennel:
 		if err := s.store.AssertKennelPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
-			if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
-				return fmt.Errorf("kennel activate reject + cancel: %v / %w", err, cerr)
-			}
-			fmt.Printf("CRITICAL: kennel addon %s cancelled after payment — eligibility failed: %v (manual refund)\n", addonID, err)
-			return nil
+			return s.rejectAddonAfterPayment(ctx, addonID, subID, "kennel", err)
 		}
 	}
 	validUntil := AddonValidUntil(now, addonDef)
-	customerID, _ := asString(obj["customer"])
-	piID, _ := asString(obj["payment_intent"])
-	sessionID, _ := asString(obj["id"])
 	if addon.OwnerUserID != "" && customerID != "" {
 		_ = s.store.UpsertStripeCustomer(ctx, addon.OwnerUserID, customerID)
 	}
-	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID); err != nil {
-		return err
+	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID, subID); err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		// Concurrent webhook: another worker already activated.
+		again, gerr := s.store.GetAddonEntitlement(ctx, addonID)
+		if gerr != nil || again.Status != "active" {
+			return err
+		}
 	}
 	if code == AddonKennel {
-		if err := s.store.DeactivateHouseholdAddon(ctx, addon.OwnerUserID, string(AddonFamily)); err != nil {
-			return fmt.Errorf("deactivate family on kennel upgrade: %w", err)
+		if err := s.cancelFamilySubscriptionOnKennelUpgrade(ctx, addon.OwnerUserID); err != nil {
+			return err
 		}
 	}
 	if err := s.store.AccrueCommercialForAddon(ctx, addonID); err != nil {
@@ -369,6 +369,35 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 		if err := s.store.SeedHorsePackReminders(ctx, addon.OwnerUserID); err != nil {
 			fmt.Printf("horse pack reminder seed failed for addon %s: %v\n", addonID, err)
 		}
+	}
+	return nil
+}
+
+func (s *Service) rejectAddonAfterPayment(ctx context.Context, addonID, subID, label string, reason error) error {
+	if subID != "" {
+		if err := s.gateway.CancelSubscription(ctx, subID); err != nil {
+			fmt.Printf("CRITICAL: failed to cancel Stripe sub %s after %s reject: %v\n", subID, label, err)
+		}
+	}
+	if cerr := s.store.CancelAddonEntitlement(ctx, addonID); cerr != nil && !errors.Is(cerr, store.ErrNotFound) {
+		return fmt.Errorf("%s activate reject + cancel: %v / %w", label, reason, cerr)
+	}
+	fmt.Printf("CRITICAL: %s addon %s cancelled after payment — eligibility failed: %v (refund if charge stuck)\n", label, addonID, reason)
+	return nil
+}
+
+func (s *Service) cancelFamilySubscriptionOnKennelUpgrade(ctx context.Context, ownerUserID string) error {
+	familySubID, err := s.store.GetAddonSubscriptionID(ctx, ownerUserID, string(AddonFamily))
+	if err != nil {
+		return fmt.Errorf("lookup family sub on kennel upgrade: %w", err)
+	}
+	if familySubID != "" {
+		if err := s.gateway.CancelSubscription(ctx, familySubID); err != nil {
+			fmt.Printf("CRITICAL: failed to cancel Family Stripe sub %s on Kennel upgrade: %v\n", familySubID, err)
+		}
+	}
+	if err := s.store.DeactivateHouseholdAddon(ctx, ownerUserID, string(AddonFamily)); err != nil {
+		return fmt.Errorf("deactivate family on kennel upgrade: %w", err)
 	}
 	return nil
 }
@@ -440,22 +469,39 @@ func (s *Service) handleInvoicePaid(ctx context.Context, event StripeEvent) erro
 	if subID == "" {
 		return nil
 	}
-	ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID)
+	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
+		plan, err := GetPlan(PlanCode(ent.PlanCode))
+		if err != nil {
+			return err
+		}
+		now := time.Now()
+		validUntil := ValidUntil(now, plan)
+		return s.store.ActivateEntitlement(ctx, store.ActivateEntitlementParams{
+			PetID:      ent.PetID,
+			Status:     string(StatusActive),
+			ValidFrom:  now,
+			ValidUntil: validUntil,
+		})
+	}
+	addon, err := s.store.GetAddonBySubscriptionID(ctx, subID)
 	if err != nil {
+		return nil // race, cancelled, or unknown sub
+	}
+	if addon.Status != "active" && addon.Status != "past_due" {
 		return nil
 	}
-	plan, err := GetPlan(PlanCode(ent.PlanCode))
+	addonDef, err := GetAddon(AddonCode(addon.AddonCode))
 	if err != nil {
 		return err
 	}
 	now := time.Now()
-	validUntil := ValidUntil(now, plan)
-	return s.store.ActivateEntitlement(ctx, store.ActivateEntitlementParams{
-		PetID:      ent.PetID,
-		Status:     string(StatusActive),
-		ValidFrom:  now,
-		ValidUntil: validUntil,
-	})
+	if err := s.store.ExtendAddonBySubscriptionID(ctx, subID, now, AddonValidUntil(now, addonDef)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Service) handleInvoicePaymentFailed(ctx context.Context, event StripeEvent) error {
@@ -464,41 +510,58 @@ func (s *Service) handleInvoicePaymentFailed(ctx context.Context, event StripeEv
 	if subID == "" {
 		return nil
 	}
-	ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID)
-	if err != nil {
-		return nil
+	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
+		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusPastDue))
 	}
-	return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusPastDue))
+	if err := s.store.UpdateAddonStatusBySubscriptionID(ctx, subID, string(StatusPastDue)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Service) handleSubscriptionUpdated(ctx context.Context, event StripeEvent) error {
 	obj := objectMap(event)
 	subID, _ := asString(obj["id"])
 	status, _ := asString(obj["status"])
-	ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID)
-	if err != nil {
-		return nil
-	}
+	mapped := ""
 	switch status {
 	case "active", "trialing":
-		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusActive))
+		mapped = string(StatusActive)
 	case "past_due", "unpaid":
-		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusPastDue))
+		mapped = string(StatusPastDue)
 	case "canceled":
-		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusCancelled))
+		mapped = string(StatusCancelled)
 	default:
 		return nil
 	}
+	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
+		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, mapped)
+	}
+	if err := s.store.UpdateAddonStatusBySubscriptionID(ctx, subID, mapped); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Service) handleSubscriptionDeleted(ctx context.Context, event StripeEvent) error {
 	obj := objectMap(event)
 	subID, _ := asString(obj["id"])
-	ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID)
-	if err != nil {
-		return nil
+	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
+		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusCancelled))
 	}
-	return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusCancelled))
+	if err := s.store.UpdateAddonStatusBySubscriptionID(ctx, subID, string(StatusCancelled)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Service) PetHasPremiumAccess(ctx context.Context, petID string) (bool, error) {
@@ -544,6 +607,14 @@ func metadataMap(obj map[string]any) map[string]string {
 }
 
 func asString(v any) (string, bool) {
-	s, ok := v.(string)
-	return s, ok && s != ""
+	switch t := v.(type) {
+	case string:
+		return t, t != ""
+	case map[string]any:
+		// Expanded Stripe object: {"id":"sub_…"}.
+		if id, ok := t["id"].(string); ok && id != "" {
+			return id, true
+		}
+	}
+	return "", false
 }

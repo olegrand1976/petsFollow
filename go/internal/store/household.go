@@ -126,13 +126,13 @@ func (s *Store) HasHouseholdAddon(ctx context.Context, ownerUserID string) (bool
 	return s.HasActiveAddon(ctx, ownerUserID, familyAddonCode)
 }
 
-// DeactivateHouseholdAddon marks an active/pending household addon cancelled.
+// DeactivateHouseholdAddon marks an active/pending/past_due household addon cancelled.
 func (s *Store) DeactivateHouseholdAddon(ctx context.Context, ownerUserID, addonCode string) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE billing.addon_entitlements
 		SET status='cancelled', updated_at=NOW()
 		WHERE owner_user_id=$1 AND addon_code=$2
-			AND status IN ('active','pending')`, ownerUserID, addonCode)
+			AND status IN ('active','pending','past_due')`, ownerUserID, addonCode)
 	return err
 }
 

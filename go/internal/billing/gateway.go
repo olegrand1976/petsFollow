@@ -35,5 +35,6 @@ type StripeEvent struct {
 type Gateway interface {
 	CreateCheckoutSession(ctx context.Context, req CheckoutRequest) (CheckoutSession, error)
 	CreatePortalSession(ctx context.Context, customerID, returnURL string) (PortalSession, error)
+	CancelSubscription(ctx context.Context, subscriptionID string) error
 	VerifyWebhook(payload []byte, signature string) (StripeEvent, error)
 }

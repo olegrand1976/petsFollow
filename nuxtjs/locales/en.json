@@ -840,7 +840,7 @@
       }
     },
     "addonsTitle": "Household options (owner account)",
-    "addonsLead": "Addons purchased once for the account — they enrich the experience for pets in the household under the rules below.",
+    "addonsLead": "Addons are annual recurring subscriptions (renewed each year) — they enrich the experience for pets in the household under the rules below.",
     "addonsTip": "Family never replaces a pet subscription. Kennel requires ≥ 6 pets. Horse only if the household has a horse.",
     "addons": {
       "family": {

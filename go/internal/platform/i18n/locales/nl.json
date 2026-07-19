@@ -144,9 +144,9 @@
     "annual_onetime_summary": "35 € voor 1 jaar, eenmalige betaling",
     "triennial_onetime_summary": "95 € voor 3 jaar, eenmalige betaling",
     "quinquennial_onetime_summary": "145 € voor 5 jaar, eenmalige betaling",
-    "addon_family_label": "Optie Familie — 39 €",
-    "addon_care_plus_label": "Optie Care+ — 19 €",
-    "addon_horse_label": "Optie Paard — 39 €",
-    "addon_kennel_label": "Optie Kennel — 119 €"
+    "addon_family_label": "Optie Familie — 39 € / jaar",
+    "addon_care_plus_label": "Optie Care+ — 19 € / jaar",
+    "addon_horse_label": "Optie Paard — 39 € / jaar",
+    "addon_kennel_label": "Optie Kennel — 119 € / jaar"
   }
 }

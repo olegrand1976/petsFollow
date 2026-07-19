@@ -1020,7 +1020,7 @@
       }
     },
     "addonsTitle": "Options foyer (compte propriétaire)",
-    "addonsLead": "Addons achetés une fois pour le compte — ils enrichissent l'expérience de tous les animaux du foyer selon les règles ci-dessous.",
+    "addonsLead": "Addons en abonnement annuel récurrent (renouvelé chaque année) — ils enrichissent l'expérience de tous les animaux du foyer selon les règles ci-dessous.",
     "addonsTip": "Family ne remplace jamais l'abonnement animal. Kennel dès 6 animaux. Horse uniquement si le foyer a au moins un cheval.",
     "addons": {
       "family": {

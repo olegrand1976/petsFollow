@@ -250,7 +250,7 @@ func (s *Store) ListCarePlusEmailCandidates(ctx context.Context, daysAhead int) 
 		FROM care.reminders cr
 		JOIN pets.pets p ON p.id = cr.pet_id
 		JOIN billing.addon_entitlements ae ON ae.owner_user_id = p.owner_user_id
-			AND ae.addon_code = 'care_plus' AND ae.status = 'active'
+			AND ae.addon_code = 'care_plus' AND ae.status IN ('active','past_due')
 			AND (ae.valid_until IS NULL OR ae.valid_until > NOW())
 		WHERE cr.status = 'pending'
 			AND cr.due_at::date <= (CURRENT_DATE + ($1 || ' days')::interval)::date

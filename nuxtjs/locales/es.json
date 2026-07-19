@@ -840,7 +840,7 @@
       }
     },
     "addonsTitle": "Opciones del hogar (cuenta del propietario)",
-    "addonsLead": "Complementos comprados una vez para la cuenta — enriquecen la experiencia de las mascotas del hogar según las reglas siguientes.",
+    "addonsLead": "Los complementos son suscripciones anuales recurrentes (renovadas cada año) — enriquecen la experiencia de las mascotas del hogar según las reglas siguientes.",
     "addonsTip": "Family nunca sustituye una suscripción de mascota. Kennel requiere ≥ 6. Horse solo si hay al menos un caballo.",
     "addons": {
       "family": {
