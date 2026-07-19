@@ -18,9 +18,14 @@ type BonusRule struct {
 	Audience    string `json:"audience"` // vet | commercial
 	AmountCents int    `json:"amountCents"`
 	TitleKey    string `json:"titleKey"`
-	Status      string `json:"status,omitempty"`   // available | in_progress | earned
-	Progress    *int   `json:"progress,omitempty"` // e.g. pets count
+	Status      string `json:"status,omitempty"`   // available | in_progress | earned | paid
+	Progress    *int   `json:"progress,omitempty"` // e.g. pets count or mix %
 	Target      *int   `json:"target,omitempty"`
+	AwardID     string `json:"awardId,omitempty"`
+	VetUserID   string `json:"vetUserId,omitempty"`
+	VetEmail    string `json:"vetEmail,omitempty"`
+	VetFullName string `json:"vetFullName,omitempty"`
+	PeriodYM    string `json:"periodYm,omitempty"`
 }
 
 // catalogTTC mirrors go/internal/billing/domain.go plan/addon amounts (avoid import cycle).

@@ -29,14 +29,22 @@
           <ProBadge v-if="row.recommended" variant="success">{{ $t('commissionSheet.recommended') }}</ProBadge>
         </div>
       </div>
-      <div class="pf-bonus-row">
-        <ProCard v-for="b in commercialBonuses" :key="b.code" class="pf-bonus-card">
+      <div class="pf-bonus-row" data-testid="commercial-bonus-cards">
+        <ProCard v-for="b in commercialBonuses" :key="b.code" class="pf-bonus-card" :data-testid="`bonus-card-${b.code}`">
           <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
           <p>{{ formatCurrency(b.amountCents) }}</p>
           <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
-          <ProBadge :variant="b.status === 'earned' ? 'success' : b.status === 'in_progress' ? 'warning' : 'neutral'">
+          <p v-if="b.code === 'commercial_ramp' && (b.vetFullName || b.vetEmail)" class="text-muted">
+            {{ $t('commercial.commissions.bonusVet', { vet: b.vetFullName || b.vetEmail }) }}
+          </p>
+          <p v-if="b.code === 'commercial_mix' && b.periodYm" class="text-muted">
+            {{ $t('commercial.commissions.bonusPeriod', { period: b.periodYm }) }}
+          </p>
+          <ProBadge :variant="bonusBadgeVariant(b.status)">
             {{ $t(`commissionSheet.status.${b.status || 'available'}`) }}
-            <template v-if="b.progress != null && b.target"> — {{ b.progress }}/{{ b.target }}</template>
+            <template v-if="b.progress != null && b.target">
+              — {{ b.progress }}/{{ b.target }}<template v-if="b.code === 'commercial_mix'"> %</template>
+            </template>
           </ProBadge>
         </ProCard>
       </div>
@@ -110,6 +118,12 @@ const commercialBonuses = computed(() =>
 
 function formatPct(bps: number) {
   return `${((bps || 0) / 100).toFixed(0)} %`
+}
+
+function bonusBadgeVariant(status?: string): 'success' | 'warning' | 'neutral' {
+  if (status === 'paid' || status === 'earned') return 'success'
+  if (status === 'in_progress') return 'warning'
+  return 'neutral'
 }
 
 onMounted(async () => {

@@ -34,6 +34,13 @@ test('admin voit commercials et prospects', async ({ page }) => {
   await expect(page.getByTestId('admin-prospects-page')).toBeVisible()
 })
 
+test('admin voit page bonus SPIFF', async ({ page }) => {
+  await loginAsAdmin(page)
+  await page.goto('/admin/commercial-bonuses')
+  await expect(page.getByTestId('admin-commercial-bonuses-page')).toBeVisible()
+  await expect(page.getByTestId('bonus-filter-status')).toBeVisible()
+})
+
 test('commercial bloqué sur admin', async ({ page }) => {
   await loginAsCommercial(page)
   await page.goto('/admin')

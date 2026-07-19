@@ -11,6 +11,7 @@
     "adminPayments": "Paiements",
     "adminCommissions": "Rétributions véto",
     "adminCommercialCommissions": "Paie commerciaux",
+    "adminCommercialBonuses": "Bonus SPIFF",
     "adminCommercials": "Commerciaux",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
@@ -236,7 +237,9 @@
       "colAmount": "Montant",
       "colStatus": "Statut",
       "ibanBanner": "Renseignez votre IBAN pour recevoir vos commissions.",
-      "ibanBannerLink": "Ouvrir le profil paiement"
+      "ibanBannerLink": "Ouvrir le profil paiement",
+      "bonusVet": "Meilleur cabinet : {vet}",
+      "bonusPeriod": "Mois : {period}"
     },
     "settings": {
       "title": "Profil paiement",
@@ -626,6 +629,23 @@
       "statusOpen": "Ouvert",
       "statusClosed": "Clôturé",
       "statusPaid": "Payé"
+    },
+    "commercialBonuses": {
+      "title": "Bonus SPIFF",
+      "subtitle": "Suivi Ramp cabinet (25 €) et Mix triennial (50 €/mois) — paiement manuel.",
+      "filterStatus": "Statut",
+      "filterCommercial": "Commercial",
+      "filterAll": "Tous",
+      "empty": "Aucun bonus à afficher",
+      "colCommercial": "Commercial",
+      "colBonus": "Bonus",
+      "colProgress": "Progression",
+      "colDetail": "Cabinet / période",
+      "colAmount": "Montant",
+      "colStatus": "Statut",
+      "colActions": "Actions",
+      "markPaid": "Marquer payé",
+      "confirmMarkPaid": "Marquer ce bonus SPIFF comme payé ?"
     },
     "commercialCommissions": {
       "title": "Paie commerciaux",

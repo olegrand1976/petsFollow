@@ -28,6 +28,9 @@ test('commercial voit pitch et commissions', async ({ page }) => {
   await expect(page.getByTestId('commercial-pitch-page')).toBeVisible()
   await page.goto('/commercial/commissions')
   await expect(page.getByTestId('commercial-commissions-page')).toBeVisible()
+  await expect(page.getByTestId('commercial-bonus-cards')).toBeVisible()
+  await expect(page.getByTestId('bonus-card-commercial_ramp')).toBeVisible()
+  await expect(page.getByTestId('bonus-card-commercial_mix')).toBeVisible()
 })
 
 test('commercial CRM prospects', async ({ page }) => {

@@ -29,6 +29,9 @@ func (a *API) registerCommissionRoutes(r chi.Router) {
 		pr.Get("/admin/commercial-commissions/periods/{period}", a.adminCommercialCommissionPeriod)
 		pr.Post("/admin/commercial-commissions/periods/{period}/close", a.adminCloseCommercialCommissionPeriod)
 		pr.Post("/admin/commercial-commissions/periods/{period}/mark-paid", a.adminMarkCommercialCommissionPaid)
+
+		pr.Get("/admin/commercial-bonuses", a.adminListCommercialBonuses)
+		pr.Post("/admin/commercial-bonuses/{id}/mark-paid", a.adminMarkCommercialBonusPaid)
 	})
 }
 
@@ -283,4 +286,52 @@ func (a *API) adminMarkCommercialCommissionPaid(w http.ResponseWriter, r *http.R
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, run)
+}
+
+func (a *API) adminListCommercialBonuses(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	status := r.URL.Query().Get("status")
+	commercialID := r.URL.Query().Get("commercialId")
+	rows, err := a.store.ListCommercialBonusTrackRows(r.Context(), status, commercialID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"items":     rows,
+		"bonuses":   store.DefaultBonusRules(),
+		"planRates": store.SubscriptionPlanRates(),
+	})
+}
+
+func (a *API) adminMarkCommercialBonusPaid(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireAdmin(w, r)
+	if !ok {
+		return
+	}
+	awardID := chi.URLParam(r, "id")
+	if awardID == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "id_required")
+		return
+	}
+	award, err := a.store.MarkCommercialBonusPaid(r.Context(), awardID, id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "bonus_not_found")
+			return
+		}
+		if errors.Is(err, store.ErrBonusAlreadyPaid) {
+			writeErr(w, r, http.StatusConflict, "conflict", "bonus_already_paid")
+			return
+		}
+		if errors.Is(err, store.ErrBonusNotEarned) {
+			writeErr(w, r, http.StatusConflict, "conflict", "bonus_not_earned")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, award)
 }
