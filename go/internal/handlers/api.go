@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
@@ -26,10 +27,14 @@ type API struct {
 	notifier *email.Notifier
 	billing  *billing.Service
 	media    media.Store
+	pusher   fcm.Pusher
 }
 
-func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store) *API {
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore}
+func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
+	if pusher == nil {
+		pusher = fcm.NopPusher{}
+	}
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher}
 }
 
 func (a *API) Routes(r chi.Router) {
@@ -69,6 +74,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/me/notification-preferences", a.updateClientNotificationPrefs)
 		pr.Get("/me/household", a.getHousehold)
 		pr.Get("/clients", a.listClients)
+		pr.Post("/vet/clients", a.createVetClient)
 		pr.Get("/clients/{clientID}", a.getClient)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
@@ -699,6 +705,9 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
 		}
 	}
+	if id.Role == kernel.RoleVet {
+		a.pushNewMessage(thread.ClientUserID, thread.ID, req.Body)
+	}
 	httpx.WriteData(w, http.StatusCreated, msg)
 }
 
@@ -736,6 +745,14 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	preview := body
+	if preview == "" {
+		if kind == "video" {
+			preview = "[video]"
+		} else {
+			preview = "[image]"
+		}
+	}
 	if id.Role == kernel.RoleClient {
 		onMsg, _, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
 		if onMsg {
@@ -744,16 +761,11 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 			if locale == "" {
 				locale = localeOf(r)
 			}
-			preview := body
-			if preview == "" {
-				if kind == "video" {
-					preview = "[video]"
-				} else {
-					preview = "[image]"
-				}
-			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, preview)
 		}
+	}
+	if id.Role == kernel.RoleVet {
+		a.pushNewMessage(thread.ClientUserID, thread.ID, preview)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
 }

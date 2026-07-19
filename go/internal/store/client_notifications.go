@@ -37,6 +37,31 @@ func (s *Store) UpsertDeviceToken(ctx context.Context, userID, token, platform s
 	return dt, err
 }
 
+func (s *Store) ListDeviceTokens(ctx context.Context, userID string) ([]DeviceToken, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT user_id::text, token, platform, updated_at
+		FROM notifications.device_tokens WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []DeviceToken
+	for rows.Next() {
+		var dt DeviceToken
+		if err := rows.Scan(&dt.UserID, &dt.Token, &dt.Platform, &dt.UpdatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, dt)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) DeleteDeviceToken(ctx context.Context, userID, token string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM notifications.device_tokens WHERE user_id = $1 AND token = $2`, userID, token)
+	return err
+}
+
 func (s *Store) GetClientNotificationPrefs(ctx context.Context, userID string) (ClientNotificationPrefs, error) {
 	var p ClientNotificationPrefs
 	err := s.pool.QueryRow(ctx, `

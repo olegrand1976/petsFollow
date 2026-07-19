@@ -7,6 +7,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
+import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -15,9 +16,22 @@ class NotificationService {
   static final instance = NotificationService._();
 
   bool _fcmRegistered = false;
+  bool _handlersBound = false;
+  int _localPushId = 900000;
 
   Future<void> init() async {
-    await ReminderController.instance.init();
+    await ReminderController.instance.init(
+      onNotificationTap: (response) {
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          final data = jsonDecode(payload) as Map<String, dynamic>;
+          PushNavigation.instance.handlePushData(data);
+        } catch (_) {}
+      },
+    );
+    await _ensureAndroidChannels();
+    await _bindFcmHandlers();
     await _registerFcmToken();
   }
 
@@ -29,6 +43,82 @@ class NotificationService {
   Future<void> onLogin() async {
     _fcmRegistered = false;
     await _registerFcmToken();
+  }
+
+  Future<void> _ensureAndroidChannels() async {
+    final android = ReminderController.instance.plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    await android.createNotificationChannel(
+      const AndroidNotificationChannel('pf_messages', 'Messages', importance: Importance.high),
+    );
+    await android.createNotificationChannel(
+      const AndroidNotificationChannel('pf_visits', 'Visites', importance: Importance.high),
+    );
+    await android.createNotificationChannel(
+      const AndroidNotificationChannel('pf_care', 'Soins', importance: Importance.defaultImportance),
+    );
+  }
+
+  Future<void> _bindFcmHandlers() async {
+    if (_handlersBound) return;
+    _handlersBound = true;
+    FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    if (initial != null) {
+      _onMessageOpened(initial);
+    }
+  }
+
+  void _onForegroundMessage(RemoteMessage message) {
+    final data = Map<String, dynamic>.from(message.data);
+    final type = data['type']?.toString() ?? '';
+    if (type == 'message') {
+      PushNavigation.instance.bumpMessageRefresh();
+    }
+    final title = message.notification?.title ?? _fallbackTitle(type);
+    final body = message.notification?.body ?? '';
+    _showLocalPush(title: title, body: body, data: data);
+  }
+
+  void _onMessageOpened(RemoteMessage message) {
+    final data = Map<String, dynamic>.from(message.data);
+    PushNavigation.instance.handlePushData(data);
+  }
+
+  String _fallbackTitle(String type) {
+    return switch (type) {
+      'message' => 'Nouveau message',
+      'visit_confirmed' => 'Rendez-vous confirmé',
+      _ => 'petsFollow',
+    };
+  }
+
+  Future<void> _showLocalPush({
+    required String title,
+    required String body,
+    required Map<String, dynamic> data,
+  }) async {
+    final type = data['type']?.toString() ?? '';
+    final channelId = type == 'visit_confirmed' ? 'pf_visits' : 'pf_messages';
+    final id = _localPushId++;
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelId,
+        channelId,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(),
+    );
+    await ReminderController.instance.plugin.show(
+      id,
+      title,
+      body,
+      details,
+      payload: jsonEncode(data),
+    );
   }
 
   Future<void> _registerFcmToken() async {
@@ -45,6 +135,12 @@ class NotificationService {
       };
       await ApiClient.instance.putDeviceToken(token, platform);
       _fcmRegistered = true;
+      messaging.onTokenRefresh.listen((newToken) async {
+        if (ApiClient.instance.token == null) return;
+        try {
+          await ApiClient.instance.putDeviceToken(newToken, platform);
+        } catch (_) {}
+      });
       if (kDebugMode) {
         debugPrint('FCM token registered ($platform)');
       }

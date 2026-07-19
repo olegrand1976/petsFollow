@@ -8,13 +8,16 @@ import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
+import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class MessagingScreen extends StatefulWidget {
-  const MessagingScreen({super.key, this.embedded = false});
+  const MessagingScreen({super.key, this.embedded = false, this.active = true});
 
   final bool embedded;
+  /// When embedded in IndexedStack, true while the Messages tab is selected.
+  final bool active;
 
   @override
   State<MessagingScreen> createState() => _MessagingScreenState();
@@ -32,13 +35,37 @@ class _MessagingScreenState extends State<MessagingScreen> {
   @override
   void initState() {
     super.initState();
+    PushNavigation.instance.messageRefreshTick.addListener(_onPushRefresh);
+    PushNavigation.instance.onOpenMessageThread = _openThreadFromPush;
     initThreads();
   }
 
   @override
+  void didUpdateWidget(MessagingScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      initThreads();
+    }
+  }
+
+  @override
   void dispose() {
+    PushNavigation.instance.messageRefreshTick.removeListener(_onPushRefresh);
+    if (PushNavigation.instance.onOpenMessageThread == _openThreadFromPush) {
+      PushNavigation.instance.onOpenMessageThread = null;
+    }
     draft.dispose();
     super.dispose();
+  }
+
+  void _onPushRefresh() {
+    if (!mounted) return;
+    initThreads();
+  }
+
+  void _openThreadFromPush(String id) {
+    if (!mounted || id.isEmpty) return;
+    selectThread(id);
   }
 
   Future<void> initThreads() async {

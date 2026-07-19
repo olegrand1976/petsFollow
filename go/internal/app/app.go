@@ -11,6 +11,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
@@ -53,7 +54,8 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		pool.Close()
 		return nil, err
 	}
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store)
+	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
 
 	r := httpx.NewBaseRouter()
 	r.Use(middleware.Timeout(60 * time.Second))

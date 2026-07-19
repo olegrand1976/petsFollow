@@ -25,7 +25,7 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 
 | Item | Doc / note |
 |------|------------|
-| Push FCM opérationnel | Device tokens en base |
+| Push FCM opérationnel | **Livré** — messages véto + confirmation RDV (voir [08](08-MESSAGERIE-NOTIFICATIONS.md)) |
 | WebSocket temps réel | — |
 | Refresh silencieux clients | — |
 | Simulation admin 10 ans | [16](16-ADMIN-SIMULATION-10ANS.md) **non livré** |

@@ -128,6 +128,12 @@
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visitar LL-IT Software & Computer"
   },
+  "push": {
+    "new_message_title": "Nuevo mensaje",
+    "new_message_body": "{preview}",
+    "visit_confirmed_title": "Cita confirmada",
+    "visit_confirmed_body": "La cita de {petName} está confirmada."
+  },
   "billing": {
     "annual_label": "35 € / año",
     "triennial_label": "95 € / 3 años",

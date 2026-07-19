@@ -18,11 +18,27 @@ Préférences :
 - Véto : `GET/PUT /vet/notification-preferences`
 - Client : `GET/PATCH /me/notification-preferences`
 
-## Push FCM
+Quand le **client** écrit un message et que le véto a `email_on_message`, un email est envoyé au véto.
 
-- Device tokens : `PUT /me/device-tokens` (schéma présent).
-- **Envoi push = post-MVP** (pas de pipeline FCM opérationnel dans le périmètre actuel).
+## Push FCM (livré)
+
+Device tokens : `PUT /me/device-tokens` (enregistrés par l’app Flutter au login).
+
+Envoi serveur (API Go, package `internal/notifications/fcm`) via Firebase Admin + ADC :
+
+| Événement | Pref client | Payload `data.type` |
+|-----------|-------------|---------------------|
+| Véto envoie un message (texte/média) | `messages` | `message` (+ `threadId`) |
+| Véto confirme un RDV (`PATCH` → `confirmed`) | `visits` | `visit_confirmed` (+ `visitId`, `petId`) |
+
+- Locale des titres/corps : `users.preferred_locale` (clés `push.*` dans `go/internal/platform/i18n/locales/`).
+- Sans credentials ADC / si `FCM_ENABLED=false` : no-op (handlers restent 200).
+- Tokens invalides (unregistered) : supprimés de `notifications.device_tokens`.
+
+Flutter : handlers `onMessage` / `onMessageOpenedApp` + notif locale au premier plan ; tap → onglet Messages ou timeline animal.
+
+Prérequis ops : projet Firebase `premedica-prod-2025`, ADC (`GOOGLE_APPLICATION_CREDENTIALS` en local, ou SA Cloud Run avec droits FCM).
 
 ## Hors scope actuel
 
-WebSocket temps réel — polling / refresh client pour l’instant.
+WebSocket temps réel — refresh à l’ouverture de l’onglet Messages / à la réception push.

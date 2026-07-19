@@ -513,6 +513,9 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if id.Role == kernel.RoleVet && req.Status == "confirmed" && visit.Status != "confirmed" {
+		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+	}
 	httpx.WriteData(w, http.StatusOK, updated)
 }
 

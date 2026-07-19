@@ -44,6 +44,7 @@ type Config struct {
 	MediaLocalDir                   string
 	LLITWebsiteURL                  string
 	PetsAppDownloadURL              string
+	FCMEnabled                      bool
 }
 
 func Load() Config {
@@ -85,6 +86,8 @@ func Load() Config {
 		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
 		LLITWebsiteURL:                 envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
 		PetsAppDownloadURL:             envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
+		// FCM enabled by default; ADC (GOOGLE_APPLICATION_CREDENTIALS / Cloud Run SA) required to actually send.
+		FCMEnabled: envBoolDefault("FCM_ENABLED", true),
 	}
 }
 
@@ -97,6 +100,14 @@ func envOr(k, def string) string {
 
 func envBool(k string) bool {
 	return os.Getenv(k) == "true" || os.Getenv(k) == "1"
+}
+
+func envBoolDefault(k string, def bool) bool {
+	v := os.Getenv(k)
+	if v == "" {
+		return def
+	}
+	return v == "true" || v == "1"
 }
 
 func envInt(k string, def int) int {

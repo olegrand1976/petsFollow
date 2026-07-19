@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
-import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
+import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
@@ -22,7 +22,6 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     super.initState();
     LocaleController.instance.addListener(_onLocaleChanged);
     LocaleController.instance.load();
-    ReminderController.instance.init();
     NotificationService.instance.init();
   }
 
@@ -39,6 +38,7 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     return MaterialApp(
       title: 'petsFollow',
       theme: buildAppTheme(),
+      navigatorKey: PushNavigation.instance.navigatorKey,
       locale: LocaleController.instance.locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

@@ -115,12 +115,13 @@ Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le 
 - Réponses enveloppées `{ data: ... }` — BFF Nuxt proxy tel quel
 - Côté pages : `const items = res.data ?? res`
 
-## Firebase (Flutter pets uniquement)
+## Firebase (Flutter pets + push API)
 
 - Projet : `premedica-prod-2025` (GCP partagé)
 - Apps : Android `be.llitsc.petsfollow_mobile` · iOS `be.llitsc.petsfollowMobile`
 - **Auth** : PostgreSQL via API Go (`/api/v1/auth/login`) — **ne pas** activer Firebase Auth
-- Firebase sert d'infra mobile (FCM post-MVP) : `make firebase-flutter-setup`
+- Setup apps : `make firebase-flutter-setup`
+- **Push FCM** : l’API Go envoie les push (message véto → client, confirmation RDV) via ADC (`GOOGLE_APPLICATION_CREDENTIALS` ou SA Cloud Run). Désactiver : `FCM_ENABLED=false`. Détails : `documentation/08-MESSAGERIE-NOTIFICATIONS.md`.
 
 ## Structure clé
 

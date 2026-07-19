@@ -36,7 +36,7 @@ class ReminderController {
 
   FlutterLocalNotificationsPlugin get plugin => _plugin;
 
-  Future<void> init() async {
+  Future<void> init({DidReceiveNotificationResponseCallback? onNotificationTap}) async {
     if (_initialized) return;
     tz_data.initializeTimeZones();
     try {
@@ -51,7 +51,10 @@ class ReminderController {
     }
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
-    await _plugin.initialize(const InitializationSettings(android: android, iOS: ios));
+    await _plugin.initialize(
+      const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: onNotificationTap,
+    );
     _initialized = true;
     final prefs = await load();
     if (prefs.enabled && prefs.notificationTitle != null && prefs.notificationBody != null) {
