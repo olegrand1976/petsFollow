@@ -21,6 +21,28 @@
       </form>
     </ProCard>
 
+    <ProCard class="pro-mb-lg" data-testid="commercial-client-form">
+      <h3 class="pro-mb-md">{{ $t('commercial.clients.create') }}</h3>
+      <p class="pro-hint pro-mb-md">{{ $t('commercial.clients.hint') }}</p>
+      <form class="pro-form" @submit.prevent="submitClient">
+        <div class="pro-field">
+          <label class="pro-label" for="client-vet">{{ $t('commercial.clients.vet') }}</label>
+          <select id="client-vet" v-model="clientForm.vetUserId" class="pro-select" required data-testid="create-client-vet">
+            <option value="">{{ $t('commercial.clients.vetPlaceholder') }}</option>
+            <option v-for="v in vets" :key="v.userId" :value="v.userId">
+              {{ v.fullName }} — {{ v.practiceName }}
+            </option>
+          </select>
+        </div>
+        <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('commercial.clients.fullName')" required />
+        <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('commercial.clients.email')" required />
+        <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('commercial.clients.password')" required />
+        <p v-if="clientMsg" class="pro-hint">{{ clientMsg }}</p>
+        <p v-if="clientError" class="pro-error">{{ clientError }}</p>
+        <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">{{ $t('commercial.clients.submit') }}</ProButton>
+      </form>
+    </ProCard>
+
     <ProCard>
       <ProTable :empty="!vets.length" :empty-title="$t('commercial.vets.empty')">
         <thead>
@@ -62,6 +84,10 @@ const form = reactive({
   addressLine1: '',
   contactEmail: '',
 })
+const clientForm = reactive({ vetUserId: '', fullName: '', email: '', password: '' })
+const clientSaving = ref(false)
+const clientMsg = ref('')
+const clientError = ref('')
 
 async function load() {
   const res: any = await $fetch('/api/commercial/vets')
@@ -82,6 +108,22 @@ async function submitVet() {
     formError.value = t('commercial.vets.encodeFailed')
   } finally {
     saving.value = false
+  }
+}
+
+async function submitClient() {
+  clientSaving.value = true
+  clientMsg.value = ''
+  clientError.value = ''
+  try {
+    await $fetch('/api/commercial/clients', { method: 'POST', body: { ...clientForm } })
+    clientMsg.value = t('commercial.clients.success')
+    Object.assign(clientForm, { vetUserId: '', fullName: '', email: '', password: '' })
+    await load()
+  } catch {
+    clientError.value = t('commercial.clients.error')
+  } finally {
+    clientSaving.value = false
   }
 }
 

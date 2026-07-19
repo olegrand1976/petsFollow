@@ -5,6 +5,7 @@ import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/features/auth/presentation/force_change_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -61,6 +62,7 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   bool _ready = false;
+  bool _mustChangePassword = false;
 
   @override
   void initState() {
@@ -72,11 +74,20 @@ class _AuthGateState extends State<AuthGate> {
     await ApiClient.instance.restoreSession();
     if (ApiClient.instance.token != null) {
       await NotificationService.instance.init();
+      _mustChangePassword = await ApiClient.instance.mustChangePassword();
     }
     if (mounted) setState(() => _ready = true);
   }
 
-  void _onAuthChanged() => setState(() {});
+  Future<void> _onAuthChanged() async {
+    var mustChange = false;
+    if (ApiClient.instance.token != null) {
+      mustChange = await ApiClient.instance.mustChangePassword();
+    }
+    if (mounted) {
+      setState(() => _mustChangePassword = mustChange);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +96,9 @@ class _AuthGateState extends State<AuthGate> {
     }
     if (ApiClient.instance.token == null) {
       return LoginScreen(onLoggedIn: _onAuthChanged);
+    }
+    if (_mustChangePassword) {
+      return ForceChangePasswordScreen(onChanged: _onAuthChanged);
     }
     return MainShellScreen(onLogout: _onAuthChanged);
   }

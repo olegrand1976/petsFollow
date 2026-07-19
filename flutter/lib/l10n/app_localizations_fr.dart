@@ -74,7 +74,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newPassword => 'Nouveau mot de passe';
 
   @override
+  String get confirmNewPassword => 'Confirmer le mot de passe';
+
+  @override
   String get changePassword => 'Changer le mot de passe';
+
+  @override
+  String get forceChangePasswordTitle => 'Changer le mot de passe';
+
+  @override
+  String get forceChangePasswordSubtitle =>
+      'Ce compte a été créé avec un mot de passe temporaire. Choisissez le vôtre pour continuer.';
+
+  @override
+  String get forceChangePasswordSubmit => 'Enregistrer et continuer';
+
+  @override
+  String get passwordTooShort => 'Minimum 8 caractères';
+
+  @override
+  String get passwordMismatch => 'Les mots de passe ne correspondent pas';
+
+  @override
+  String get passwordChangeFailed => 'Impossible de modifier le mot de passe';
 
   @override
   String get deleteAccount => 'Supprimer le compte';

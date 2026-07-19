@@ -19,6 +19,7 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Get("/commercial/overview", a.commercialOverview)
 		pr.Get("/commercial/vets", a.commercialListVets)
 		pr.Post("/commercial/vets", a.commercialEncodeVet)
+		pr.Post("/commercial/clients", a.commercialCreateClient)
 		pr.Get("/commercial/commissions", a.commercialCommissions)
 		pr.Get("/commercial/me/payout-profile", a.commercialGetPayoutProfile)
 		pr.Patch("/commercial/me/payout-profile", a.commercialPatchPayoutProfile)

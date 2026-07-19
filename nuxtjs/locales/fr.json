@@ -67,6 +67,17 @@
       "doneTitle": "Mot de passe mis à jour",
       "doneSubtitle": "Vous pouvez maintenant vous connecter."
     },
+    "forceChange": {
+      "brandTitle": "Sécurisez votre accès",
+      "brandText": "Ce compte a été créé avec un mot de passe temporaire. Choisissez le vôtre pour continuer.",
+      "title": "Changer le mot de passe",
+      "subtitle": "Obligatoire à la première connexion.",
+      "password": "Nouveau mot de passe",
+      "passwordConfirm": "Confirmer le mot de passe",
+      "passwordHint": "Minimum 8 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "submit": "Enregistrer et continuer"
+    },
     "twoFa": {
       "title": "Vérification 2FA",
       "subtitle": "Saisissez le code à 6 chiffres de votre application d'authentification.",
@@ -183,6 +194,18 @@
       "address": "Adresse",
       "clients": "Clients",
       "encodeFailed": "Création impossible"
+    },
+    "clients": {
+      "create": "Créer un compte client",
+      "hint": "Le client devra changer son mot de passe à la première connexion.",
+      "vet": "Vétérinaire",
+      "vetPlaceholder": "Choisir un véto",
+      "fullName": "Nom complet",
+      "email": "Email",
+      "password": "Mot de passe temporaire",
+      "submit": "Créer le client",
+      "success": "Compte client créé",
+      "error": "Création impossible"
     },
     "prospects": {
       "title": "Fiches de prospection",
@@ -352,6 +375,16 @@
   "clients": {
     "title": "Clients",
     "subtitle": "Liste des clients rattachés à votre cabinet.",
+    "create": {
+      "title": "Créer un compte client",
+      "hint": "Le client devra changer son mot de passe à la première connexion dans l'app.",
+      "fullName": "Nom complet",
+      "email": "Email",
+      "password": "Mot de passe temporaire",
+      "submit": "Créer le compte",
+      "success": "Compte client créé",
+      "error": "Création impossible"
+    },
     "search": "Rechercher",
     "searchPlaceholder": "Nom ou email…",
     "petsFilter": "Animaux",
@@ -541,6 +574,21 @@
       "commercialPassword": "Mot de passe",
       "commercialCreated": "Compte commercial créé",
       "commercialFailed": "Création impossible",
+      "createVet": "Créer un vétérinaire",
+      "vetName": "Nom complet",
+      "vetPractice": "Cabinet",
+      "vetEmail": "Email",
+      "vetPassword": "Mot de passe temporaire",
+      "vetCreated": "Compte véto créé",
+      "vetFailed": "Création impossible",
+      "createClient": "Créer un client",
+      "clientVet": "Vétérinaire",
+      "clientVetPlaceholder": "Choisir un véto",
+      "clientName": "Nom complet",
+      "clientEmail": "Email",
+      "clientPassword": "Mot de passe temporaire",
+      "clientCreated": "Compte client créé",
+      "clientFailed": "Création impossible",
       "payment": "Paiement",
       "paymentAll": "Tous",
       "paymentActive": "Actif",

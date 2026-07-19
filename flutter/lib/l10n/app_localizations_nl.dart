@@ -73,7 +73,29 @@ class AppLocalizationsNl extends AppLocalizations {
   String get newPassword => 'Nieuw wachtwoord';
 
   @override
+  String get confirmNewPassword => 'Bevestig wachtwoord';
+
+  @override
   String get changePassword => 'Wachtwoord wijzigen';
+
+  @override
+  String get forceChangePasswordTitle => 'Wachtwoord wijzigen';
+
+  @override
+  String get forceChangePasswordSubtitle =>
+      'Dit account is aangemaakt met een tijdelijk wachtwoord. Kies uw eigen wachtwoord om verder te gaan.';
+
+  @override
+  String get forceChangePasswordSubmit => 'Opslaan en doorgaan';
+
+  @override
+  String get passwordTooShort => 'Minimaal 8 tekens';
+
+  @override
+  String get passwordMismatch => 'Wachtwoorden komen niet overeen';
+
+  @override
+  String get passwordChangeFailed => 'Wachtwoord wijzigen mislukt';
 
   @override
   String get deleteAccount => 'Account verwijderen';

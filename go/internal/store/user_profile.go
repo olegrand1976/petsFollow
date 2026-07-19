@@ -43,7 +43,9 @@ func (s *Store) UpdatePetPhotoURL(ctx context.Context, petID, photoURL string) e
 
 func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword, newPassword string) error {
 	var hash *string
-	err := s.pool.QueryRow(ctx, `SELECT password_hash FROM identity.users WHERE id = $1`, userID).Scan(&hash)
+	var mustChange bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT password_hash, must_change_password FROM identity.users WHERE id = $1`, userID).Scan(&hash, &mustChange)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
@@ -53,14 +55,18 @@ func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword,
 	if hash == nil || *hash == "" {
 		return ErrForbidden
 	}
-	if bcrypt.CompareHashAndPassword([]byte(*hash), []byte(currentPassword)) != nil {
-		return ErrForbidden
+	if !mustChange {
+		if currentPassword == "" || bcrypt.CompareHashAndPassword([]byte(*hash), []byte(currentPassword)) != nil {
+			return ErrForbidden
+		}
 	}
 	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	_, err = s.pool.Exec(ctx, `UPDATE identity.users SET password_hash = $2 WHERE id = $1`, userID, string(newHash))
+	_, err = s.pool.Exec(ctx, `
+		UPDATE identity.users SET password_hash = $2, must_change_password = false WHERE id = $1`,
+		userID, string(newHash))
 	return err
 }
 

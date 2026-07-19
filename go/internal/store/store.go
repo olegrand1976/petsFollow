@@ -18,19 +18,20 @@ var (
 )
 
 type User struct {
-	ID              string
-	Email           string
-	PasswordHash    string
-	FullName        string
-	Role            kernel.Role
-	PracticeID      string
-	EmailVerifiedAt *time.Time
-	GoogleSub       string
-	AuthProvider    string
-	TOTPSecret        string
-	TOTPEnabled       bool
-	PreferredLocale   string
-	AvatarURL         string
+	ID                 string
+	Email              string
+	PasswordHash       string
+	FullName           string
+	Role               kernel.Role
+	PracticeID         string
+	EmailVerifiedAt    *time.Time
+	GoogleSub          string
+	AuthProvider       string
+	TOTPSecret         string
+	TOTPEnabled        bool
+	PreferredLocale    string
+	AvatarURL          string
+	MustChangePassword bool
 }
 
 type Practice struct {
@@ -128,6 +129,7 @@ func scanUser(row pgx.Row) (User, error) {
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
 		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
+		&u.MustChangePassword,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -138,7 +140,7 @@ func scanUser(row pgx.Row) (User, error) {
 const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
-	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,'')`
+	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))

@@ -11,6 +11,36 @@
         <ProButton type="submit" test-id="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
       </form>
     </ProCard>
+    <ProCard class="pro-mb-lg" data-testid="admin-create-vet">
+      <h3 class="pro-mb-md">{{ $t('admin.users.createVet') }}</h3>
+      <form class="pro-form" @submit.prevent="createVet">
+        <ProInput v-model="vForm.fullName" test-id="admin-vet-name" :label="$t('admin.users.vetName')" required />
+        <ProInput v-model="vForm.practiceName" test-id="admin-vet-practice" :label="$t('admin.users.vetPractice')" required />
+        <ProInput v-model="vForm.email" test-id="admin-vet-email" type="email" :label="$t('admin.users.vetEmail')" required />
+        <ProInput v-model="vForm.password" test-id="admin-vet-password" type="password" :label="$t('admin.users.vetPassword')" required />
+        <p v-if="vMsg" class="pro-hint" data-testid="admin-vet-msg">{{ vMsg }}</p>
+        <ProButton type="submit" test-id="admin-vet-submit" :disabled="vSaving">{{ $t('admin.users.createVet') }}</ProButton>
+      </form>
+    </ProCard>
+    <ProCard class="pro-mb-lg" data-testid="admin-create-client">
+      <h3 class="pro-mb-md">{{ $t('admin.users.createClient') }}</h3>
+      <form class="pro-form" @submit.prevent="createClient">
+        <div class="pro-field">
+          <label class="pro-label" for="admin-client-vet">{{ $t('admin.users.clientVet') }}</label>
+          <select id="admin-client-vet" v-model="clForm.vetUserId" class="pro-select" required data-testid="admin-client-vet">
+            <option value="">{{ $t('admin.users.clientVetPlaceholder') }}</option>
+            <option v-for="v in vetOptions" :key="v.userId" :value="v.userId">
+              {{ v.fullName }} — {{ v.practiceName }}
+            </option>
+          </select>
+        </div>
+        <ProInput v-model="clForm.fullName" test-id="admin-client-name" :label="$t('admin.users.clientName')" required />
+        <ProInput v-model="clForm.email" test-id="admin-client-email" type="email" :label="$t('admin.users.clientEmail')" required />
+        <ProInput v-model="clForm.password" test-id="admin-client-password" type="password" :label="$t('admin.users.clientPassword')" required />
+        <p v-if="clMsg" class="pro-hint" data-testid="admin-client-msg">{{ clMsg }}</p>
+        <ProButton type="submit" test-id="admin-client-submit" :disabled="clSaving">{{ $t('admin.users.createClient') }}</ProButton>
+      </form>
+    </ProCard>
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
@@ -112,6 +142,13 @@ const { viewMode } = useListView('pf-admin-users-view', 'table')
 const cSaving = ref(false)
 const cMsg = ref('')
 const cForm = reactive({ fullName: '', email: '', password: '' })
+const vSaving = ref(false)
+const vMsg = ref('')
+const vForm = reactive({ fullName: '', practiceName: '', email: '', password: '' })
+const clSaving = ref(false)
+const clMsg = ref('')
+const clForm = reactive({ vetUserId: '', fullName: '', email: '', password: '' })
+const vetOptions = ref<{ userId: string; fullName: string; practiceName: string }[]>([])
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
@@ -162,6 +199,41 @@ async function createCommercial() {
   }
 }
 
+async function createVet() {
+  vSaving.value = true
+  vMsg.value = ''
+  try {
+    await $fetch('/api/admin/vets', { method: 'POST', body: { ...vForm } })
+    vMsg.value = t('admin.users.vetCreated')
+    Object.assign(vForm, { fullName: '', practiceName: '', email: '', password: '' })
+    await Promise.all([load(), loadVets()])
+  } catch {
+    vMsg.value = t('admin.users.vetFailed')
+  } finally {
+    vSaving.value = false
+  }
+}
+
+async function createClient() {
+  clSaving.value = true
+  clMsg.value = ''
+  try {
+    await $fetch('/api/admin/clients', { method: 'POST', body: { ...clForm } })
+    clMsg.value = t('admin.users.clientCreated')
+    Object.assign(clForm, { vetUserId: '', fullName: '', email: '', password: '' })
+    await load()
+  } catch {
+    clMsg.value = t('admin.users.clientFailed')
+  } finally {
+    clSaving.value = false
+  }
+}
+
+async function loadVets() {
+  const res: any = await $fetch('/api/admin/vets')
+  vetOptions.value = res.data ?? res ?? []
+}
+
 async function load() {
   const res: any = await $fetch('/api/admin/users', {
     query: { role: roleFilter.value || undefined, page: page.value },
@@ -173,7 +245,9 @@ async function load() {
 
 watch([roleFilter, page], load)
 watch(paymentFilter, () => { /* client-side filter */ })
-onMounted(load)
+onMounted(async () => {
+  await Promise.all([load(), loadVets()])
+})
 </script>
 
 <style scoped>

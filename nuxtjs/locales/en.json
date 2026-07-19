@@ -67,6 +67,17 @@
       "doneTitle": "Password updated",
       "doneSubtitle": "You can now sign in."
     },
+    "forceChange": {
+      "brandTitle": "Secure your access",
+      "brandText": "This account was created with a temporary password. Choose your own to continue.",
+      "title": "Change your password",
+      "subtitle": "Required on first sign-in.",
+      "password": "New password",
+      "passwordConfirm": "Confirm password",
+      "passwordHint": "At least 8 characters",
+      "passwordMismatch": "Passwords do not match.",
+      "submit": "Save and continue"
+    },
     "twoFa": {
       "title": "2FA verification",
       "subtitle": "Enter the 6-digit code from your authenticator app.",
@@ -232,6 +243,16 @@
   "clients": {
     "title": "Clients",
     "subtitle": "Clients linked to your practice.",
+    "create": {
+      "title": "Create client account",
+      "hint": "The client must change their password on first app sign-in.",
+      "fullName": "Full name",
+      "email": "Email",
+      "password": "Temporary password",
+      "submit": "Create account",
+      "success": "Client account created",
+      "error": "Creation failed"
+    },
     "search": "Search",
     "searchPlaceholder": "Name or email…",
     "petsFilter": "Pets",
@@ -432,7 +453,22 @@
       "commercialName": "Name",
       "commercialPassword": "Password",
       "commercialCreated": "Sales account created",
-      "commercialFailed": "Creation failed"
+      "commercialFailed": "Creation failed",
+      "createVet": "Create veterinarian",
+      "vetName": "Full name",
+      "vetPractice": "Practice",
+      "vetEmail": "Email",
+      "vetPassword": "Temporary password",
+      "vetCreated": "Vet account created",
+      "vetFailed": "Creation failed",
+      "createClient": "Create client",
+      "clientVet": "Veterinarian",
+      "clientVetPlaceholder": "Select a vet",
+      "clientName": "Full name",
+      "clientEmail": "Email",
+      "clientPassword": "Temporary password",
+      "clientCreated": "Client account created",
+      "clientFailed": "Creation failed"
     },
     "payments": {
       "title": "Payments received",
@@ -1026,6 +1062,18 @@
       "address": "Address",
       "clients": "Clients",
       "encodeFailed": "Creation failed"
+    },
+    "clients": {
+      "create": "Create client account",
+      "hint": "The client must change their password on first sign-in.",
+      "vet": "Veterinarian",
+      "vetPlaceholder": "Select a vet",
+      "fullName": "Full name",
+      "email": "Email",
+      "password": "Temporary password",
+      "submit": "Create client",
+      "success": "Client account created",
+      "error": "Creation failed"
     },
     "prospects": {
       "title": "Prospect sheets",

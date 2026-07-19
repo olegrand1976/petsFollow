@@ -100,7 +100,9 @@ func (s *Store) ResetPassword(ctx context.Context, token, newPassword string) er
 		return ErrNotFound
 	}
 
-	if _, err := tx.Exec(ctx, `UPDATE identity.users SET password_hash = $2 WHERE id = $1`, userID, string(newHash)); err != nil {
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET password_hash = $2, must_change_password = false WHERE id = $1`,
+		userID, string(newHash)); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE identity.password_reset_tokens SET used_at = NOW() WHERE token = $1`, token); err != nil {

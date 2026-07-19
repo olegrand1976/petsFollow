@@ -2,6 +2,18 @@
   <div data-testid="clients-page">
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')" />
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
+    <ProCard class="pro-mb-lg" data-testid="vet-create-client-form">
+      <h3 class="pro-mb-md">{{ $t('clients.create.title') }}</h3>
+      <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
+      <form class="pro-form" @submit.prevent="createClient">
+        <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
+        <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
+        <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
+        <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
+        <p v-if="clientError" class="pro-error">{{ clientError }}</p>
+        <ProButton type="submit" test-id="create-client-submit" :disabled="clientSaving">{{ $t('clients.create.submit') }}</ProButton>
+      </form>
+    </ProCard>
     <ProCard class="pro-mb-lg" data-testid="vet-referral-form">
       <h3 class="pro-mb-md">{{ $t('clients.referral.title') }}</h3>
       <p class="pro-hint pro-mb-md">{{ $t('clients.referral.hint') }}</p>
@@ -154,6 +166,28 @@ const referral = reactive({
 const referralSaving = ref(false)
 const referralMsg = ref('')
 const referralError = ref('')
+
+const clientForm = reactive({ fullName: '', email: '', password: '' })
+const clientSaving = ref(false)
+const clientMsg = ref('')
+const clientError = ref('')
+
+async function createClient() {
+  clientSaving.value = true
+  clientMsg.value = ''
+  clientError.value = ''
+  try {
+    await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
+    clientMsg.value = t('clients.create.success')
+    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    const res: any = await $fetch('/api/clients')
+    clients.value = res.data ?? res ?? []
+  } catch {
+    clientError.value = t('clients.create.error')
+  } finally {
+    clientSaving.value = false
+  }
+}
 
 async function submitReferral() {
   referralSaving.value = true

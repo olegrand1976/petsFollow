@@ -231,16 +231,17 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		return nil, err
 	}
 	out := map[string]any{
-		"userId":           u.ID,
-		"email":            u.Email,
-		"role":             u.Role,
-		"fullName":         u.FullName,
-		"avatarUrl":        u.AvatarURL,
-		"emailVerified":    u.EmailVerifiedAt != nil,
-		"authProvider":     u.AuthProvider,
-		"googleLinked":     u.GoogleSub != "",
-		"twoFactorEnabled": u.TOTPEnabled,
-		"preferredLocale":  u.PreferredLocale,
+		"userId":             u.ID,
+		"email":              u.Email,
+		"role":               u.Role,
+		"fullName":           u.FullName,
+		"avatarUrl":          u.AvatarURL,
+		"emailVerified":      u.EmailVerifiedAt != nil,
+		"authProvider":       u.AuthProvider,
+		"googleLinked":       u.GoogleSub != "",
+		"twoFactorEnabled":   u.TOTPEnabled,
+		"preferredLocale":    u.PreferredLocale,
+		"mustChangePassword": u.MustChangePassword,
 	}
 	if u.PracticeID != "" {
 		out["practiceId"] = u.PracticeID

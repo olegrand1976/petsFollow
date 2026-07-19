@@ -128,10 +128,20 @@ class ApiClient {
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
-    await dio.patch('/api/v1/me/password', data: {
-      'currentPassword': currentPassword,
-      'newPassword': newPassword,
-    });
+    final body = <String, dynamic>{'newPassword': newPassword};
+    if (currentPassword.isNotEmpty) {
+      body['currentPassword'] = currentPassword;
+    }
+    await dio.patch('/api/v1/me/password', data: body);
+  }
+
+  Future<bool> mustChangePassword() async {
+    try {
+      final me = await getMe();
+      return me['mustChangePassword'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> deleteAccount() async {

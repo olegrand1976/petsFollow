@@ -67,6 +67,17 @@
       "doneTitle": "Wachtwoord bijgewerkt",
       "doneSubtitle": "U kunt nu inloggen."
     },
+    "forceChange": {
+      "brandTitle": "Beveilig uw toegang",
+      "brandText": "Dit account is aangemaakt met een tijdelijk wachtwoord. Kies uw eigen wachtwoord om verder te gaan.",
+      "title": "Wachtwoord wijzigen",
+      "subtitle": "Verplicht bij de eerste aanmelding.",
+      "password": "Nieuw wachtwoord",
+      "passwordConfirm": "Bevestig wachtwoord",
+      "passwordHint": "Minimaal 8 tekens",
+      "passwordMismatch": "Wachtwoorden komen niet overeen.",
+      "submit": "Opslaan en doorgaan"
+    },
     "twoFa": {
       "title": "2FA-verificatie",
       "subtitle": "Voer de 6-cijferige code van uw authenticator-app in.",
@@ -232,6 +243,16 @@
   "clients": {
     "title": "Klanten",
     "subtitle": "Klanten gekoppeld aan uw praktijk.",
+    "create": {
+      "title": "Klantaccount aanmaken",
+      "hint": "De klant moet het wachtwoord wijzigen bij de eerste aanmelding in de app.",
+      "fullName": "Volledige naam",
+      "email": "E-mail",
+      "password": "Tijdelijk wachtwoord",
+      "submit": "Account aanmaken",
+      "success": "Klantaccount aangemaakt",
+      "error": "Aanmaken mislukt"
+    },
     "search": "Zoeken",
     "searchPlaceholder": "Naam of e-mail…",
     "petsFilter": "Dieren",
@@ -432,7 +453,22 @@
       "commercialName": "Naam",
       "commercialPassword": "Wachtwoord",
       "commercialCreated": "Commercialaccount aangemaakt",
-      "commercialFailed": "Aanmaken mislukt"
+      "commercialFailed": "Aanmaken mislukt",
+      "createVet": "Dierenarts aanmaken",
+      "vetName": "Volledige naam",
+      "vetPractice": "Praktijk",
+      "vetEmail": "E-mail",
+      "vetPassword": "Tijdelijk wachtwoord",
+      "vetCreated": "Dierenartsaccount aangemaakt",
+      "vetFailed": "Aanmaken mislukt",
+      "createClient": "Cliënt aanmaken",
+      "clientVet": "Dierenarts",
+      "clientVetPlaceholder": "Kies een dierenarts",
+      "clientName": "Volledige naam",
+      "clientEmail": "E-mail",
+      "clientPassword": "Tijdelijk wachtwoord",
+      "clientCreated": "Cliëntaccount aangemaakt",
+      "clientFailed": "Aanmaken mislukt"
     },
     "payments": {
       "title": "Ontvangen betalingen",
@@ -1026,6 +1062,18 @@
       "address": "Adres",
       "clients": "Cliënten",
       "encodeFailed": "Aanmaken mislukt"
+    },
+    "clients": {
+      "create": "Klantaccount aanmaken",
+      "hint": "De klant moet het wachtwoord wijzigen bij de eerste aanmelding.",
+      "vet": "Dierenarts",
+      "vetPlaceholder": "Kies een dierenarts",
+      "fullName": "Volledige naam",
+      "email": "E-mail",
+      "password": "Tijdelijk wachtwoord",
+      "submit": "Klant aanmaken",
+      "success": "Klantaccount aangemaakt",
+      "error": "Aanmaken mislukt"
     },
     "prospects": {
       "title": "Prospectfiches",

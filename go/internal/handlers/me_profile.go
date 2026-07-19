@@ -57,10 +57,6 @@ func (a *API) changeMePassword(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if req.CurrentPassword == "" {
-		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "wrong_password")
-		return
-	}
 	if len(req.NewPassword) < 8 {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return

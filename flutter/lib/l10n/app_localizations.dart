@@ -228,11 +228,53 @@ abstract class AppLocalizations {
   /// **'Nouveau mot de passe'**
   String get newPassword;
 
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le mot de passe'**
+  String get confirmNewPassword;
+
   /// No description provided for @changePassword.
   ///
   /// In fr, this message translates to:
   /// **'Changer le mot de passe'**
   String get changePassword;
+
+  /// No description provided for @forceChangePasswordTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer le mot de passe'**
+  String get forceChangePasswordTitle;
+
+  /// No description provided for @forceChangePasswordSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte a été créé avec un mot de passe temporaire. Choisissez le vôtre pour continuer.'**
+  String get forceChangePasswordSubtitle;
+
+  /// No description provided for @forceChangePasswordSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer et continuer'**
+  String get forceChangePasswordSubmit;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Minimum 8 caractères'**
+  String get passwordTooShort;
+
+  /// No description provided for @passwordMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les mots de passe ne correspondent pas'**
+  String get passwordMismatch;
+
+  /// No description provided for @passwordChangeFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de modifier le mot de passe'**
+  String get passwordChangeFailed;
 
   /// No description provided for @deleteAccount.
   ///

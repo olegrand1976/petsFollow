@@ -108,8 +108,8 @@ func (s *Store) CreateCommercialUser(ctx context.Context, email, password, fullN
 	}
 	userID := uuid.NewString()
 	_, err = s.pool.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, $2, $3, $4, 'commercial', NULL, NOW())`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, $2, $3, $4, 'commercial', NULL, NOW(), true)`,
 		userID, email, string(hash), fullName)
 	if err != nil {
 		return "", err
@@ -142,8 +142,8 @@ func (s *Store) EncodeVetForCommercial(ctx context.Context, commercialUserID str
 		return "", err
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, assigned_commercial_id, preferred_locale)
-		VALUES ($1, $2, $3, $4, 'vet', $5, NOW(), $6, $7)`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, assigned_commercial_id, preferred_locale, must_change_password)
+		VALUES ($1, $2, $3, $4, 'vet', $5, NOW(), $6, $7, true)`,
 		userID, in.Email, string(hash), in.FullName, practiceID, commercialUserID, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
 		return "", err
 	}

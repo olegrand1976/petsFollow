@@ -67,6 +67,17 @@
       "doneTitle": "Contraseña actualizada",
       "doneSubtitle": "Ya puede iniciar sesión."
     },
+    "forceChange": {
+      "brandTitle": "Proteja su acceso",
+      "brandText": "Esta cuenta se creó con una contraseña temporal. Elija la suya para continuar.",
+      "title": "Cambiar la contraseña",
+      "subtitle": "Obligatorio en el primer inicio de sesión.",
+      "password": "Nueva contraseña",
+      "passwordConfirm": "Confirmar contraseña",
+      "passwordHint": "Mínimo 8 caracteres",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "submit": "Guardar y continuar"
+    },
     "twoFa": {
       "title": "Verificación 2FA",
       "subtitle": "Introduzca el código de 6 dígitos de su aplicación de autenticación.",
@@ -232,6 +243,16 @@
   "clients": {
     "title": "Clientes",
     "subtitle": "Clientes vinculados a su clínica.",
+    "create": {
+      "title": "Crear cuenta de cliente",
+      "hint": "El cliente deberá cambiar su contraseña en el primer inicio de sesión en la app.",
+      "fullName": "Nombre completo",
+      "email": "Correo",
+      "password": "Contraseña temporal",
+      "submit": "Crear cuenta",
+      "success": "Cuenta de cliente creada",
+      "error": "Creación fallida"
+    },
     "search": "Buscar",
     "searchPlaceholder": "Nombre o correo…",
     "petsFilter": "Mascotas",
@@ -432,7 +453,22 @@
       "commercialName": "Nombre",
       "commercialPassword": "Contraseña",
       "commercialCreated": "Cuenta comercial creada",
-      "commercialFailed": "Creación fallida"
+      "commercialFailed": "Creación fallida",
+      "createVet": "Crear veterinario",
+      "vetName": "Nombre completo",
+      "vetPractice": "Clínica",
+      "vetEmail": "Correo",
+      "vetPassword": "Contraseña temporal",
+      "vetCreated": "Cuenta veterinario creada",
+      "vetFailed": "Creación fallida",
+      "createClient": "Crear cliente",
+      "clientVet": "Veterinario",
+      "clientVetPlaceholder": "Elegir un veterinario",
+      "clientName": "Nombre completo",
+      "clientEmail": "Correo",
+      "clientPassword": "Contraseña temporal",
+      "clientCreated": "Cuenta cliente creada",
+      "clientFailed": "Creación fallida"
     },
     "payments": {
       "title": "Pagos recibidos",
@@ -1026,6 +1062,18 @@
       "address": "Dirección",
       "clients": "Clientes",
       "encodeFailed": "Creación fallida"
+    },
+    "clients": {
+      "create": "Crear cuenta de cliente",
+      "hint": "El cliente deberá cambiar su contraseña en el primer inicio de sesión.",
+      "vet": "Veterinario",
+      "vetPlaceholder": "Elegir un veterinario",
+      "fullName": "Nombre completo",
+      "email": "Correo",
+      "password": "Contraseña temporal",
+      "submit": "Crear cliente",
+      "success": "Cuenta de cliente creada",
+      "error": "Creación fallida"
     },
     "prospects": {
       "title": "Fichas de prospectos",

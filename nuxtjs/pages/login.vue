@@ -120,6 +120,11 @@ async function redirectAfterLogin() {
   const me: any = await $fetch('/api/me')
   const role = me.data?.role || me.role
   const profileComplete = me.data?.profileComplete ?? me.profileComplete
+  const mustChangePassword = me.data?.mustChangePassword ?? me.mustChangePassword
+  if (mustChangePassword === true) {
+    await navigateTo('/change-password')
+    return
+  }
   if (role === 'admin') await navigateTo('/admin')
   else if (role === 'commercial') await navigateTo('/commercial')
   else if (role === 'vet') {

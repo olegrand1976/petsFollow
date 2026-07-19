@@ -10,6 +10,7 @@ export type ProUser = {
   emailVerified?: boolean
   profileComplete?: boolean
   preferredLocale?: string
+  mustChangePassword?: boolean
 }
 
 export function useProUser() {
