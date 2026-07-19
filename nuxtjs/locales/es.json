@@ -770,12 +770,12 @@
       "quinquennial": {
         "name": "Quinquenal",
         "price": "145 €",
-        "period": "por 5 años",
+        "period": "por 5 años (pago único)",
         "monthly": "≈ 2,4 € / mes",
         "benefits": [
-          "Largo plazo — 21 % de descuento frente a 5× Anual",
+          "Largo plazo — 17 % de descuento frente a 5× Anual",
           "Ideal para mascotas crónicas / seniors",
-          "Equivalente mensual más bajo"
+          "Pago único — sin renovación automática Stripe"
         ]
       }
     },
@@ -833,7 +833,7 @@
       "quinquennial": {
         "name": "Quinquenal",
         "price": "145 € / 5 años",
-        "role": "Suscripción mascota — largo plazo"
+        "role": "Acceso 5 años — pago único"
       },
       "family": {
         "name": "Familia",

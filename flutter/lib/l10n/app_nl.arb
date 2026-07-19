@@ -81,7 +81,7 @@
   "errorCouldNotOpenLink": "Link kon niet worden geopend",
   "planAnnualSub": "{price}, automatisch verlengd",
   "planTriennialSub": "95 € elke 3 jaar, automatisch verlengd",
-  "planQuinquennialSub": "145 € elke 5 jaar, automatisch verlengd",
+  "planQuinquennialSub": "145 € voor 5 jaar, eenmalige betaling",
   "planOneTime": "{price}, eenmalige betaling",
   "heartRateInstructions": "Tik bij elke hartslag gedurende de tijd die uw dierenarts heeft ingesteld.",
   "heartRateInstructionsDuration": "Tik bij elke hartslag gedurende {seconds} seconden.",

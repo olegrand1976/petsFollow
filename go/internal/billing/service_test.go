@@ -61,3 +61,34 @@ func TestPlanSummary(t *testing.T) {
 		t.Fatal("empty summary")
 	}
 }
+
+func TestSupportsBillingModeQuinquennial(t *testing.T) {
+	if !billing.SupportsBillingMode(billing.PlanQuinquennial, billing.ModeOneTime) {
+		t.Fatal("quinquennial one_time must be allowed")
+	}
+	if billing.SupportsBillingMode(billing.PlanQuinquennial, billing.ModeSubscription) {
+		t.Fatal("quinquennial subscription must be blocked (Stripe max 3y interval)")
+	}
+	if !billing.SupportsBillingMode(billing.PlanTriennial, billing.ModeSubscription) {
+		t.Fatal("triennial subscription must be allowed")
+	}
+}
+
+func TestListPlansOmitsQuinquennialSubscription(t *testing.T) {
+	var svc billing.Service
+	offers := svc.ListPlansForLocale("fr")
+	for _, o := range offers {
+		if o.Plan.Code == billing.PlanQuinquennial && o.BillingMode == billing.ModeSubscription {
+			t.Fatal("quinquennial/subscription must not be listed")
+		}
+	}
+	var quinOneTime bool
+	for _, o := range offers {
+		if o.Plan.Code == billing.PlanQuinquennial && o.BillingMode == billing.ModeOneTime {
+			quinOneTime = true
+		}
+	}
+	if !quinOneTime {
+		t.Fatal("expected quinquennial one_time offer")
+	}
+}

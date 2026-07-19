@@ -933,12 +933,12 @@
       "quinquennial": {
         "name": "Quinquennial",
         "price": "145 €",
-        "period": "pour 5 ans",
+        "period": "pour 5 ans (paiement unique)",
         "monthly": "≈ 2,4 € / mois",
         "benefits": [
-          "Engagement long terme — −21 % vs 5× Annual",
+          "Engagement long terme — −17 % vs 5× Annual",
           "Idéal animaux chroniques / seniors",
-          "Prix mensuel le plus bas"
+          "Paiement unique — pas de renouvellement auto Stripe"
         ]
       }
     },
@@ -985,7 +985,7 @@
     "summary": {
       "annual": { "name": "Annual", "price": "35 € / an", "role": "Abonnement animal — entrée" },
       "triennial": { "name": "Triennial", "price": "95 € / 3 ans", "role": "Abonnement animal — recommandé" },
-      "quinquennial": { "name": "Quinquennial", "price": "145 € / 5 ans", "role": "Abonnement animal — long terme" },
+      "quinquennial": { "name": "Quinquennial", "price": "145 € / 5 ans", "role": "Accès 5 ans — paiement unique" },
       "family": { "name": "Family", "price": "55 € / an", "role": "Addon foyer ≤ 3 animaux" },
       "carePlus": { "name": "Care+", "price": "19 € / an", "role": "Addon soins / médicaments" },
       "horse": { "name": "Horse", "price": "39 € / an", "role": "Addon pack équine" }

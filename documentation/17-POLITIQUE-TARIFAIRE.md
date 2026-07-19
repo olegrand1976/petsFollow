@@ -17,10 +17,12 @@ Prix **TTC** client / Stripe. Les commissions partenaires se calculent sur le **
 |-------|------|----------|----------|-----------------|
 | Annual | `annual` | **35 € / an** | 2,9 € | Ancre d’entrée |
 | Triennial **recommandé** | `triennial` | **95 € / 3 ans** | 2,6 € | Cœur d’offre & pitch |
-| Quinquennial | `quinquennial` | **145 € / 5 ans** | 2,4 € | Engagement long |
+| Quinquennial | `quinquennial` | **145 € / 5 ans** | 2,4 € | Engagement long (**paiement unique** — pas de sub Stripe) |
 | Family | `family` | **55 € / an** | — | Addon foyer 2–3 animaux |
 | Care+ | `care_plus` | **19 € / an** | — | Upsell soins |
 | Horse | `horse` | **39 € / an** | — | Pack équine |
+
+Modes Stripe : annual / triennial → `one_time` **ou** `subscription` (`year`×1 / `year`×3). Quinquennial → **`one_time` uniquement** (intervalle récurrent Stripe max **3 ans** ; entitlement app = 1825 j).
 
 ### Remises engagement (vs 3× / 5× annual)
 

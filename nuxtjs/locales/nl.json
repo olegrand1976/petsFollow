@@ -770,12 +770,12 @@
       "quinquennial": {
         "name": "Quinquennial",
         "price": "€145",
-        "period": "voor 5 jaar",
+        "period": "voor 5 jaar (eenmalig)",
         "monthly": "≈ €2,4 / maand",
         "benefits": [
-          "Lange termijn — 21% korting t.o.v. 5× Annual",
+          "Lange termijn — 17% korting t.o.v. 5× Annual",
           "Ideaal voor chronische / senior dieren",
-          "Laagste maandelijkse equivalent"
+          "Eenmalige betaling — geen Stripe auto-verlenging"
         ]
       }
     },
@@ -833,7 +833,7 @@
       "quinquennial": {
         "name": "Quinquennial",
         "price": "€145 / 5 jaar",
-        "role": "Dierabonnement — lange termijn"
+        "role": "5 jaar toegang — eenmalige betaling"
       },
       "family": {
         "name": "Family",

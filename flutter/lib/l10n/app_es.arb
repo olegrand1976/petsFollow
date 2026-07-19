@@ -81,7 +81,7 @@
   "errorCouldNotOpenLink": "No se ha podido abrir el enlace",
   "planAnnualSub": "{price}, renovación automática",
   "planTriennialSub": "95 € cada 3 años, renovación automática",
-  "planQuinquennialSub": "145 € cada 5 años, renovación automática",
+  "planQuinquennialSub": "145 € por 5 años, pago único",
   "planOneTime": "{price}, pago único",
   "heartRateInstructions": "Pulse en cada latido durante la duración fijada por su veterinario.",
   "heartRateInstructionsDuration": "Pulse en cada latido durante {seconds} segundos.",

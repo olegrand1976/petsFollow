@@ -271,8 +271,7 @@ class AppLocalizationsFr extends AppLocalizations {
       '79 € tous les 3 ans, renouvelé automatiquement';
 
   @override
-  String get planQuinquennialSub =>
-      '115 € tous les 5 ans, renouvelé automatiquement';
+  String get planQuinquennialSub => '145 € pour 5 ans, paiement unique';
 
   @override
   String planOneTime(String price) {

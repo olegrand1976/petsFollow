@@ -6,13 +6,13 @@ Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement aut
 
 > Politique économique complète : [`17-POLITIQUE-TARIFAIRE.md`](./17-POLITIQUE-TARIFAIRE.md).
 
-| Plan | Code | Prix | Durée |
-|------|------|------|-------|
-| 35 € / an | `annual` | 3500 ct | 1 an |
-| 95 € / 3 ans | `triennial` | 9500 ct | 3 ans (recommandé) |
-| 145 € / 5 ans | `quinquennial` | 14500 ct | 5 ans |
+| Plan | Code | Prix | Durée entitlement | Modes Stripe |
+|------|------|------|-------------------|--------------|
+| 35 € / an | `annual` | 3500 ct | 1 an | `one_time` **et** `subscription` (`year`×1) |
+| 95 € / 3 ans | `triennial` | 9500 ct | 3 ans (recommandé) | `one_time` **et** `subscription` (`year`×3) |
+| 145 € / 5 ans | `quinquennial` | 14500 ct | 5 ans | **`one_time` uniquement** (Stripe refuse un intervalle récurrent > 3 ans) |
 
-Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscription`, interval 1/3/5 ans).
+Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscription`, interval max **3 ans**).
 
 ## Variables d'environnement
 
@@ -24,7 +24,7 @@ STRIPE_PRICE_TRIENNIAL_ONETIME=price_...
 STRIPE_PRICE_QUINQUENNIAL_ONETIME=price_...
 STRIPE_PRICE_ANNUAL_SUB=price_...
 STRIPE_PRICE_TRIENNIAL_SUB=price_...
-STRIPE_PRICE_QUINQUENNIAL_SUB=price_...
+# STRIPE_PRICE_QUINQUENNIAL_SUB — non utilisé (Stripe max 3 ans en récurrent)
 STRIPE_SUCCESS_URL=petsfollow://payment/success
 STRIPE_CANCEL_URL=petsfollow://payment/cancel
 BILLING_MOCK_ENABLED=true   # dev sans clé Stripe
@@ -65,7 +65,7 @@ Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 ### 1. Dashboard Stripe (mode Live)
 
 - [ ] Activer le compte Stripe en mode **Live**
-- [ ] Créer 6 **Prices** (annual / triennial / quinquennial × `one_time` + `subscription`)
+- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **3 Prices** addons
 - [ ] Noter chaque `price_…` ID pour les variables `STRIPE_PRICE_*`
 - [ ] Activer le **Customer Portal** (Settings → Billing → Customer portal) pour la gestion d'abonnement Flutter
 
@@ -94,7 +94,6 @@ Secrets attendus :
 | `petsfollow-stripe-price-quinquennial-onetime` | `STRIPE_PRICE_QUINQUENNIAL_ONETIME` |
 | `petsfollow-stripe-price-annual-sub` | `STRIPE_PRICE_ANNUAL_SUB` |
 | `petsfollow-stripe-price-triennial-sub` | `STRIPE_PRICE_TRIENNIAL_SUB` |
-| `petsfollow-stripe-price-quinquennial-sub` | `STRIPE_PRICE_QUINQUENNIAL_SUB` |
 
 Monter les secrets sur Cloud Run via `--set-secrets` (fusionner avec `pf_api_secrets` dans `infra/gcp/lib/deploy-run-args.sh`).
 
@@ -145,7 +144,6 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-quinquennial-onetime` | `STRIPE_PRICE_QUINQUENNIAL_ONETIME` |
 | `petsfollow-stripe-price-annual-sub` | `STRIPE_PRICE_ANNUAL_SUB` |
 | `petsfollow-stripe-price-triennial-sub` | `STRIPE_PRICE_TRIENNIAL_SUB` |
-| `petsfollow-stripe-price-quinquennial-sub` | `STRIPE_PRICE_QUINQUENNIAL_SUB` |
 | `petsfollow-stripe-price-addon-family` | `STRIPE_PRICE_ADDON_FAMILY` |
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |

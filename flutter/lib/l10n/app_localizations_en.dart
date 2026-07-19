@@ -267,7 +267,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTriennialSub => '€79 every 3 years, auto-renewed';
 
   @override
-  String get planQuinquennialSub => '€115 every 5 years, auto-renewed';
+  String get planQuinquennialSub => '€145 for 5 years, one-time payment';
 
   @override
   String planOneTime(String price) {

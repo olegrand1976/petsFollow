@@ -89,28 +89,30 @@ class _PetFormScreenState extends State<PetFormScreen> {
       orElse: () => {'label': selectedPlan},
     );
     final label = plan['label'] as String? ?? selectedPlan;
-    if (autoRenew) {
+    // Quinquennial is Stripe one-time only (max recurring interval = 3 years).
+    if (autoRenew && selectedPlan != 'quinquennial') {
       switch (selectedPlan) {
         case 'annual':
           return l10n.planAnnualSub(label);
         case 'triennial':
           return l10n.planTriennialSub;
-        case 'quinquennial':
-          return l10n.planQuinquennialSub;
       }
     }
     return l10n.planOneTime(label);
   }
 
+  bool get _subscriptionAllowed => selectedPlan != 'quinquennial';
+
   Future<void> save() async {
     setState(() => loading = true);
     try {
+      final renew = autoRenew && _subscriptionAllowed;
       final res = await ApiClient.instance.createPet({
         'name': name.text,
         'species': selectedSpecies,
         'breed': breed.text,
         'plan': selectedPlan,
-        'billingMode': autoRenew ? 'subscription' : 'one_time',
+        'billingMode': renew ? 'subscription' : 'one_time',
       });
       final checkoutUrl = res['checkoutUrl'] as String?;
       final pet = res['pet'] as Map<String, dynamic>? ?? res;
@@ -215,9 +217,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
-            {'code': 'annual', 'label': '29 € / an'},
-            {'code': 'triennial', 'label': '79 € / 3 ans', 'recommended': true},
-            {'code': 'quinquennial', 'label': '115 € / 5 ans'},
+            {'code': 'annual', 'label': '35 € / an'},
+            {'code': 'triennial', 'label': '95 € / 3 ans', 'recommended': true},
+            {'code': 'quinquennial', 'label': '145 € / 5 ans'},
           ];
     final initial = (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
@@ -305,7 +307,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
                 child: RadioListTile<String>(
                   value: code,
                   groupValue: selectedPlan,
-                  onChanged: (v) => setState(() => selectedPlan = v!),
+                  onChanged: (v) => setState(() {
+                    selectedPlan = v!;
+                    if (selectedPlan == 'quinquennial') {
+                      autoRenew = false;
+                    }
+                  }),
                   title: Row(
                     children: [
                       Text(plan['label'] as String? ?? code),
@@ -324,9 +331,18 @@ class _PetFormScreenState extends State<PetFormScreen> {
             }),
             SwitchListTile(
               title: Text(l10n.autoRenewTitle),
-              subtitle: Text(l10n.autoRenewSubtitle),
-              value: autoRenew,
-              onChanged: (v) => setState(() => autoRenew = v),
+              subtitle: Text(
+                _subscriptionAllowed ? l10n.autoRenewSubtitle : l10n.planOneTime(
+                  displayPlans.firstWhere(
+                    (p) => p['code'] == 'quinquennial',
+                    orElse: () => {'label': '145 € / 5 ans'},
+                  )['label'] as String? ?? '145 € / 5 ans',
+                ),
+              ),
+              value: autoRenew && _subscriptionAllowed,
+              onChanged: _subscriptionAllowed
+                  ? (v) => setState(() => autoRenew = v)
+                  : null,
             ),
             Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 24),

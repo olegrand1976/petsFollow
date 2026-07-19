@@ -84,7 +84,7 @@
   "planAnnualSub": "{price}, renouvelé automatiquement",
   "@planAnnualSub": { "placeholders": { "price": { "type": "String" } } },
   "planTriennialSub": "95 € tous les 3 ans, renouvelé automatiquement",
-  "planQuinquennialSub": "145 € tous les 5 ans, renouvelé automatiquement",
+  "planQuinquennialSub": "145 € pour 5 ans, paiement unique",
   "planOneTime": "{price}, paiement unique",
   "@planOneTime": { "placeholders": { "price": { "type": "String" } } },
   "heartRateInstructions": "Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.",

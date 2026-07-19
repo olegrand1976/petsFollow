@@ -579,7 +579,7 @@ abstract class AppLocalizations {
   /// No description provided for @planQuinquennialSub.
   ///
   /// In fr, this message translates to:
-  /// **'115 € tous les 5 ans, renouvelé automatiquement'**
+  /// **'145 € pour 5 ans, paiement unique'**
   String get planQuinquennialSub;
 
   /// No description provided for @planOneTime.

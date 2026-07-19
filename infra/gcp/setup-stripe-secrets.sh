@@ -31,7 +31,6 @@ declare -A STRIPE_SECRETS=(
   [petsfollow-stripe-price-quinquennial-onetime]=STRIPE_PRICE_QUINQUENNIAL_ONETIME
   [petsfollow-stripe-price-annual-sub]=STRIPE_PRICE_ANNUAL_SUB
   [petsfollow-stripe-price-triennial-sub]=STRIPE_PRICE_TRIENNIAL_SUB
-  [petsfollow-stripe-price-quinquennial-sub]=STRIPE_PRICE_QUINQUENNIAL_SUB
 )
 
 echo "=== petsFollow Stripe secrets — ${GCP_PROJECT_ID} ==="

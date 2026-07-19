@@ -38,6 +38,9 @@ func (s *Service) ListPlansForLocale(locale string) []PlanOffer {
 	var offers []PlanOffer
 	for _, plan := range AllPlansForLocale(locale) {
 		for _, mode := range []BillingMode{ModeOneTime, ModeSubscription} {
+			if !SupportsBillingMode(plan.Code, mode) {
+				continue
+			}
 			offers = append(offers, PlanOffer{
 				Plan:        plan,
 				BillingMode: mode,
@@ -65,6 +68,9 @@ func (s *Service) StartCheckout(ctx context.Context, in StartCheckoutInput) (Che
 	mode, err := ParseBillingMode(string(in.BillingMode))
 	if err != nil {
 		return CheckoutSession{}, err
+	}
+	if !SupportsBillingMode(in.PlanCode, mode) {
+		return CheckoutSession{}, fmt.Errorf("%w: %s/%s", ErrInvalidBillingMode, in.PlanCode, mode)
 	}
 	priceID := s.priceID(in.PlanCode, mode)
 	if priceID == "" && !s.cfg.BillingMockEnabled {
@@ -469,8 +475,6 @@ func (s *Service) priceID(plan PlanCode, mode BillingMode) string {
 		return s.cfg.StripePriceAnnualSub
 	case plan == PlanTriennial && mode == ModeSubscription:
 		return s.cfg.StripePriceTriennialSub
-	case plan == PlanQuinquennial && mode == ModeSubscription:
-		return s.cfg.StripePriceQuinquennialSub
 	default:
 		return ""
 	}

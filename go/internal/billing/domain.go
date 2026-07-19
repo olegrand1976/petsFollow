@@ -166,6 +166,16 @@ func ParseBillingMode(s string) (BillingMode, error) {
 	}
 }
 
+// SupportsBillingMode reports whether a plan can be sold with the given mode.
+// Stripe recurring Prices cannot exceed a 3-year interval, so quinquennial
+// (5 years) is one_time only — entitlement duration stays 1825 days in-app.
+func SupportsBillingMode(plan PlanCode, mode BillingMode) bool {
+	if mode == ModeSubscription && plan == PlanQuinquennial {
+		return false
+	}
+	return mode == ModeOneTime || mode == ModeSubscription
+}
+
 func GetPlan(code PlanCode) (Plan, error) {
 	for _, p := range AllPlans() {
 		if p.Code == code {
@@ -189,7 +199,8 @@ func PlanSummaryForLocale(plan Plan, mode BillingMode, locale string) string {
 		case PlanTriennial:
 			return i18n.T(locale, "billing.triennial_sub_summary", nil)
 		case PlanQuinquennial:
-			return i18n.T(locale, "billing.quinquennial_sub_summary", nil)
+			// Unreachable via ListPlans/StartCheckout; keep one_time copy if called.
+			return i18n.T(locale, "billing.quinquennial_onetime_summary", nil)
 		default:
 			return plan.Label
 		}

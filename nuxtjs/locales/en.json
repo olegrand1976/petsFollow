@@ -770,12 +770,12 @@
       "quinquennial": {
         "name": "Quinquennial",
         "price": "€145",
-        "period": "for 5 years",
+        "period": "for 5 years (one-time)",
         "monthly": "≈ €2.4 / month",
         "benefits": [
-          "Long-term — 21% off vs 5× Annual",
+          "Long-term — 17% off vs 5× Annual",
           "Ideal for chronic / senior pets",
-          "Lowest monthly equivalent"
+          "One-time payment — no Stripe auto-renew"
         ]
       }
     },
@@ -833,7 +833,7 @@
       "quinquennial": {
         "name": "Quinquennial",
         "price": "€145 / 5 years",
-        "role": "Pet subscription — long term"
+        "role": "5-year access — one-time payment"
       },
       "family": {
         "name": "Family",
