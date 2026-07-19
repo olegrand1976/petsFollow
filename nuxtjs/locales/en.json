@@ -542,7 +542,7 @@
   },
   "commissions": {
     "title": "My commissions",
-    "subtitle": "Progressive ex-VAT earnings — push triennial for the best rate.",
+    "subtitle": "Your earnings and payouts as a veterinarian.",
     "kpiClients": "Paying clients",
     "kpiRate": "Current rate",
     "kpiMonth": "This month",
@@ -565,8 +565,9 @@
     "colStatus": "Status",
     "gainsTitle": "Indicative earnings & bonuses",
     "sheetTitle": "Understand my earnings",
+    "detailsSummary": "Rate grid and bonuses",
     "kpiRateBase": "Base rate (tier)",
-    "kpiRateHeart": "Core rate (triennial)"
+    "kpiRateHeart": "Current rate"
   },
   "onboarding": {
     "title": "Practice setup",
@@ -1098,7 +1099,7 @@
   },
   "commissionSheet": {
     "htvaNote": "Commissions are calculated on the ex-VAT amount (BE VAT 21%). Client/Stripe prices are TTC.",
-    "leadVet": "Your prescriber earnings: progressive grid × plan factor.",
+    "leadVet": "Your earnings: progressive grid by client volume and plan.",
     "leadCommercial": "Your introducer commissioning, plus the vet grid for co-selling pitches.",
     "leadAdmin": "Full model overview: vet + sales + SPIFF bonuses + margin guardrails.",
     "vetTitle": "Vet commissioning",

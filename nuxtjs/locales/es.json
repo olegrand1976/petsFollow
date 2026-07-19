@@ -542,7 +542,7 @@
   },
   "commissions": {
     "title": "Mis comisiones",
-    "subtitle": "Retribución progresiva sin IVA — impulse el trienal para la mejor tasa.",
+    "subtitle": "Sus ganancias y pagos como veterinario.",
     "kpiClients": "Clientes de pago",
     "kpiRate": "Tasa actual",
     "kpiMonth": "Este mes",
@@ -565,8 +565,9 @@
     "colStatus": "Estado",
     "gainsTitle": "Ganancias indicativas y bonos",
     "sheetTitle": "Entender mi retribución",
+    "detailsSummary": "Tabla de tasas y bonificaciones",
     "kpiRateBase": "Tasa base (tramo)",
-    "kpiRateHeart": "Tasa núcleo (trienal)"
+    "kpiRateHeart": "Tasa actual"
   },
   "onboarding": {
     "title": "Configuración de la clínica",
@@ -1098,7 +1099,7 @@
   },
   "commissionSheet": {
     "htvaNote": "Comisiones sobre la base sin IVA (IVA BE 21 %). Precios cliente/Stripe con IVA.",
-    "leadVet": "Su retribución como prescriptor: escala progresiva × factor de plan.",
+    "leadVet": "Su retribución: escala progresiva según el volumen de clientes y el plan.",
     "leadCommercial": "Su comisión como aportador, y la tabla del vet para el pitch conjunto.",
     "leadAdmin": "Vista completa: vet + comercial + SPIFF + márgenes.",
     "vetTitle": "Comisiones del veterinario",

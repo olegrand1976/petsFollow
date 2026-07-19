@@ -542,7 +542,7 @@
   },
   "commissions": {
     "title": "Mijn commissies",
-    "subtitle": "Progressieve vergoeding excl. btw — push triennial voor het beste tarief.",
+    "subtitle": "Uw verdiensten en uitbetalingen als dierenarts.",
     "kpiClients": "Betalende klanten",
     "kpiRate": "Huidig tarief",
     "kpiMonth": "Deze maand",
@@ -565,8 +565,9 @@
     "colStatus": "Status",
     "gainsTitle": "Indicatieve verdiensten & bonussen",
     "sheetTitle": "Mijn vergoeding begrijpen",
+    "detailsSummary": "Tariefraster en bonussen",
     "kpiRateBase": "Basistarief (schaal)",
-    "kpiRateHeart": "Kerntarief (triennial)"
+    "kpiRateHeart": "Huidig tarief"
   },
   "onboarding": {
     "title": "Praktijkconfiguratie",
@@ -1098,7 +1099,7 @@
   },
   "commissionSheet": {
     "htvaNote": "Commissies op bedrag excl. btw (BE 21%). Klant-/Stripe-prijzen incl. btw.",
-    "leadVet": "Uw vergoeding als voorschrijver: progressieve schaal × planfactor.",
+    "leadVet": "Uw vergoeding: progressieve schaal op basis van klantvolume en plan.",
     "leadCommercial": "Uw commissie als aanbrenger, plus de dierenarts-schaal voor co-selling.",
     "leadAdmin": "Volledig model: dierenarts + commercial + SPIFF + marges.",
     "vetTitle": "Vet commissioning",
