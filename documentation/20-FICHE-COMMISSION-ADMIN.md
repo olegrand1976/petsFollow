@@ -32,5 +32,5 @@ Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 - `go/internal/store/commission_rates.go` — taux plans / addons
 - `go/internal/store/commissions.go` — `AccrueCommercialForAddon`, `AccrueVetForAddon`
 - `go/internal/store/vat.go`
-- migration `000019_commission_plan_rates` · ledger addon `000022_kennel_litter_tag`
+- migration `000019_commission_plan_rates` · ledger addon `000022_kennel_litter_tag` · addon sub `000023_addon_subscription`
 - UI : `ProCommissionSheet` audience `admin`

@@ -22,7 +22,7 @@ Threads client↔véto, messages texte + media, read/read-all, mode indisponible
 
 ## Billing
 
-Plans + Checkout Stripe (ou mock), entitlements, Customer Portal, addons Family / Kennel / Care+ / Horse — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
+Plans animal (one_time / subscription) + **addons foyer en abo annuel récurrent** (Family / Kennel / Care+ / Horse), Checkout Stripe (ou mock), entitlements + `past_due`, Customer Portal, webhooks renew/cancel — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
 
 ## Commissions
 

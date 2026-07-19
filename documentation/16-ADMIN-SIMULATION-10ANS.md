@@ -7,7 +7,7 @@ Plan d’implémentation (hors correctifs flux API). Décisions figées faute de
 | Choix | Décision |
 |-------|----------|
 | **1A** | Page dédiée `/admin/simulation`, calcul **100 % navigateur** (pas d’API / pas de persistance) |
-| **2B** | Revenus abonnements (35 / 95 / 145 €) **+** addons Family / Care+ / Horse + option affichage commission commercial 12 % |
+| **2B** | Revenus abonnements (35 / 95 / 145 €) **+** addons Family / Kennel / Care+ / Horse (abos annuels récurrents) + option affichage commission commercial (plans 8/12/8 %, addons 10 %) |
 
 ## Objectif
 
@@ -34,10 +34,10 @@ Permettre à un admin de projeter sur **10 ans** :
 | Animaux moyens / client | 1.5 |
 | Mix annual / triennial / quinquennial (%) | 25 / 60 / 15 |
 | Taux de renouvellement en fin de période (%) | 80 |
-| Attach rate Family / Care+ / Horse (% clients ou pets) | 10 / 15 / 5 |
-| Afficher commission commercial 12 % | off |
+| Attach rate Family / Kennel / Care+ / Horse (% clients) | 10 / 3 / 15 / 5 |
+| Afficher commission commercial (grille plan + 10 % addons) | off |
 
-Tarifs figés alignés billing Go : annual 3500 ct, triennial 9500, quinquennial 14500 ; addons 5500 / 1900 / 3900.
+Tarifs figés alignés billing Go : annual 3500 · triennial 9500 · quinquennial 14500 ct ; addons Family 3900 · Kennel 11900 · Care+ 1900 · Horse 3900 ct (/ an récurrents).
 
 ## Moteur
 

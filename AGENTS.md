@@ -36,7 +36,7 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
 | Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné) |
 | Admin | `admin.demo@petsfollow.test` | — (global) |
-| Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — Rex, Bella |
+| Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — 6 pets démo + Care+/Kennel/Horse (seed) |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |
 | Client | `client.marie@petsfollow.test` | Parc — Mimi, Chouchou |
 | Client | `client.paul@petsfollow.test` | Parc — Max |

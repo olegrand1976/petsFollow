@@ -114,9 +114,10 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 
 | Couche | Source |
 |--------|--------|
-| Montants TTC | `go/internal/billing/domain.go` (3500 / 9500 / 14500) |
+| Montants TTC | `go/internal/billing/domain.go` (3500 / 9500 / 14500 · addons 3900 / 11900 / 1900 / 3900) |
 | HTVA | `go/internal/store/vat.go` |
 | Taux / facteurs | `go/internal/store/commission_rates.go` |
 | Tiers seed | migration `000019` + `DefaultVetCommissionTiers` |
+| Addon sub | migration `000023` · `stripe_subscription_id` · renew `invoice.paid` |
 | Fiches UI | `ProCommissionSheet` (vet / commercial / admin) |
 | Stripe | Prices `STRIPE_PRICE_*` : plans 35 / 95 / 145 · addons récurrents yearly Family 39 / Kennel 119 / Care+ 19 / Horse 39 |

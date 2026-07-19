@@ -1,6 +1,7 @@
 # Stripe billing — petsFollow
 
-Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement auto-renouvelé).
+Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement auto-renouvelé).  
+Addons foyer (Family / Kennel / Care+ / Horse) : **abonnement annuel récurrent** uniquement.
 
 ## Offres
 
@@ -128,7 +129,13 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 | **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso ; export & emails = roadmap) |
 | **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
 
-Mode Stripe : Checkout **`subscription`** (`year`×1) pour les 4 addons. Renouvellement via `invoice.paid` (étend `valid_until`) ; échec → `past_due` (privileges maintenus) ; cancel → `cancelled`.
+Mode Stripe : Checkout **`subscription`** (`year`×1) pour les 4 addons. Renouvellement via `invoice.paid` (étend `valid_until`) ; échec → `past_due` (privileges maintenus) ; cancel → `cancelled`.  
+Colonne `billing.addon_entitlements.stripe_subscription_id` (migration `000023`).
+
+Cycle de vie :
+- Reject post-paiement (éligibilité Family/Kennel) → cancel Stripe sub + entitlement DB
+- Upgrade Kennel → cancel immédiat sub Family + deactivate DB (pas de revive via `invoice.paid` si `cancelled`)
+- Entitlements one-shot historiques : expirent à `valid_until` ; nouveaux achats = sub
 
 API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhooks : `checkout.session.completed` (`metadata.kind=addon` + `subscription_data.metadata`) · `invoice.paid` / `payment_failed` · `customer.subscription.updated` / `deleted`.
 
