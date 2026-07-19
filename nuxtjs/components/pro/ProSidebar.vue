@@ -15,7 +15,7 @@
         <span class="pro-sidebar__label">{{ item.label }}</span>
         <ProBadge
           v-if="item.badge && item.badge > 0"
-          variant="warning"
+          variant="danger"
           class="pro-sidebar__badge"
           data-testid="nav-requests-badge"
         >
@@ -77,5 +77,14 @@ function iconName(name: ProNavIcon) {
 .pro-sidebar__badge {
   margin-left: auto;
   flex-shrink: 0;
+  min-width: 1.25rem;
+  justify-content: center;
+  padding: 0.15rem 0.4rem;
+  background: var(--pf-vet-alert);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: none;
+  line-height: 1.2;
 }
 </style>
