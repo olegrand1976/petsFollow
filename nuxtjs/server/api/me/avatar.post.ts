@@ -2,6 +2,7 @@ import { proxyUpload } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const contentType = getHeader(event, 'content-type') || ''
-  const body = await readRawBody(event)
+  // false = Buffer brut — l'UTF-8 par défaut corrompt PNG/JPEG (0x89 → U+FFFD)
+  const body = await readRawBody(event, false)
   return proxyUpload(event, '/api/v1/me/avatar', body, contentType)
 })
