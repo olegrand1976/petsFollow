@@ -82,11 +82,6 @@ watch(
     if (isOpen) {
       await nextTick()
       panelRef.value?.focus()
-      // #region agent log
-      const panel = panelRef.value
-      const styles = panel ? getComputedStyle(panel) : null
-      fetch('http://127.0.0.1:7559/ingest/40c2d4f1-caa5-4176-9f2c-2684de74f4a7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac27fb'},body:JSON.stringify({sessionId:'ac27fb',runId:'post-fix',hypothesisId:'A,B',location:'ProModal.vue:watch(open)',message:'modal panel size on open',data:{title:props.title,size:props.size,panelWidthPx:panel?.offsetWidth??null,computedWidth:styles?.width||null,viewportWidth:window.innerWidth},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
   },
 )
