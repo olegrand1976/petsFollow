@@ -1,4 +1,4 @@
-import { apiBase, apiHeaders } from '~/server/utils/api'
+import { apiBase, apiHeaders, proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -7,6 +7,9 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     throw createError({ statusCode: 400, statusMessage: 'token_required' })
   }
+
+  // Touch a JSON route first so proxyApi can refresh an expired access token.
+  await proxyApi(event, `/api/v1/admin/client-imports/${id}`).catch(() => null)
 
   const url = `${apiBase()}/api/v1/admin/client-imports/${id}/credentials?token=${encodeURIComponent(token)}`
   const res = await fetch(url, { headers: apiHeaders(event) })

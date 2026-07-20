@@ -127,12 +127,13 @@ func (r *Runner) maybeSendTimed(ctx context.Context, j store.EmailJourney, seg s
 	if exists {
 		return nil
 	}
+	// Do not persist temporary deferrals (pref off / not yet eligible) — retry later.
 	if !PrefEnabled(seg, step.Pref) {
-		return r.store.RecordEmailSend(ctx, j.UserID, step.Key, "skipped", map[string]any{"reason": "pref_off"})
+		return nil
 	}
-	ok, reason := step.Eligible(seg, now)
+	ok, _ := step.Eligible(seg, now)
 	if !ok {
-		return r.store.RecordEmailSend(ctx, j.UserID, step.Key, "skipped", map[string]any{"reason": reason})
+		return nil
 	}
 	if err := r.send(ctx, seg, step.Key); err != nil {
 		return err

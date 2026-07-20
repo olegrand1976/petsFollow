@@ -522,14 +522,19 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 	if err != nil {
 		return CommitClientImportResult{}, err
 	}
-	if job.Status != "preview_ready" && job.Status != "completed" {
+	// Only preview_ready can be committed — re-commit of completed would wipe credentials.
+	if job.Status != "preview_ready" {
 		return CommitClientImportResult{}, ErrConflict
 	}
 
-	_, err = s.pool.Exec(ctx, `
-		UPDATE practice.client_import_jobs SET status='importing', updated_at=NOW() WHERE id=$1 AND status='preview_ready'`, jobID)
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE practice.client_import_jobs SET status='importing', updated_at=NOW()
+		WHERE id=$1 AND status='preview_ready'`, jobID)
 	if err != nil {
 		return CommitClientImportResult{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return CommitClientImportResult{}, ErrConflict
 	}
 
 	rows, err := s.listClientImportRows(ctx, jobID)
@@ -606,7 +611,7 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 			status=$2,
 			created_count=created_count+$3,
 			error_count=(SELECT COUNT(*) FROM practice.client_import_rows WHERE job_id=$1 AND status='error'),
-			ok_count=(SELECT COUNT(*) FROM practice.client_import_rows WHERE job_id=$1 AND status='ready'),
+			ok_count=(SELECT COUNT(*) FROM practice.client_import_rows WHERE job_id=$1 AND status='created'),
 			credentials_cipher=$4,
 			credentials_token_hash=$5,
 			credentials_expires_at=$6,

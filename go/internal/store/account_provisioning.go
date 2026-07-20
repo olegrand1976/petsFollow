@@ -75,8 +75,11 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
-	// Best-effort: start in-app discovery + email loyalty journey (skipped for bulk imports).
-	if !in.SkipJourney {
+	// Best-effort: start in-app discovery + email loyalty journey.
+	// SkipJourney: mark completed so BackfillEmailJourneys never enrolls the import later.
+	if in.SkipJourney {
+		_ = s.MarkEmailJourneySkipped(ctx, clientID)
+	} else {
 		_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
 	}
 	return clientID, nil

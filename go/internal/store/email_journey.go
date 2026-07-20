@@ -63,7 +63,21 @@ func (s *Store) EnrollEmailJourney(ctx context.Context, userID string, anchorAt 
 	return err
 }
 
-// BackfillEmailJourneys enrolls all clients not yet on the journey.
+// MarkEmailJourneySkipped records that this client must not receive the drip
+// (bulk import). Status completed blocks BackfillEmailJourneys via ON CONFLICT.
+func (s *Store) MarkEmailJourneySkipped(ctx context.Context, userID string) error {
+	if _, err := s.EnsureDiscoveryStarted(ctx, userID); err != nil {
+		return err
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO discovery.email_journey (user_id, anchor_at, enrolled_at, status)
+		VALUES ($1, NOW(), NOW(), 'completed')
+		ON CONFLICT (user_id) DO NOTHING`, userID)
+	return err
+}
+
+// BackfillEmailJourneys enrolls clients not yet on the journey.
+// Skips users already marked completed (imports) or paused. Does NOT un-pause.
 // Anchor is NOW() to avoid flooding legacy accounts with every overdue step at once.
 func (s *Store) BackfillEmailJourneys(ctx context.Context) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
@@ -76,29 +90,21 @@ func (s *Store) BackfillEmailJourneys(ctx context.Context) (int, error) {
 		return 0, err
 	}
 	_ = ct
-	// Anchor = NOW() for backfill to avoid flooding legacy accounts with every overdue step.
+	// Exclude clients created via admin import (row already linked) and any existing journey row.
 	ct, err = s.pool.Exec(ctx, `
 		INSERT INTO discovery.email_journey (user_id, anchor_at, enrolled_at, status)
 		SELECT u.id, NOW(), NOW(), 'active'
 		FROM identity.users u
 		WHERE u.role = 'client'
+		  AND NOT EXISTS (
+			SELECT 1 FROM practice.client_import_rows r
+			WHERE r.created_user_id = u.id AND r.status = 'created'
+		  )
 		ON CONFLICT (user_id) DO NOTHING`)
 	if err != nil {
 		return 0, err
 	}
-	n := int(ct.RowsAffected())
-	// Repair: older unsubscribe paused the whole journey; re-activate unless discovery pref is explicitly off.
-	if _, err := s.pool.Exec(ctx, `
-		UPDATE discovery.email_journey j
-		SET status = 'active'
-		WHERE j.status = 'paused'
-		  AND NOT EXISTS (
-			SELECT 1 FROM notifications.client_preferences p
-			WHERE p.user_id = j.user_id AND p.discovery = false
-		  )`); err != nil {
-		return n, err
-	}
-	return n, nil
+	return int(ct.RowsAffected()), nil
 }
 
 func (s *Store) GetEmailJourney(ctx context.Context, userID string) (EmailJourney, error) {
@@ -117,11 +123,12 @@ func (s *Store) ListActiveEmailJourneys(ctx context.Context, limit int) ([]Email
 	if limit <= 0 {
 		limit = 500
 	}
+	// Hourly hash rotation avoids starving newly enrolled clients when count > limit.
 	rows, err := s.pool.Query(ctx, `
 		SELECT user_id::text, anchor_at, enrolled_at, status
 		FROM discovery.email_journey
 		WHERE status = 'active'
-		ORDER BY enrolled_at ASC
+		ORDER BY md5(user_id::text || to_char(date_trunc('hour', NOW()), 'YYYYMMDDHH24'))
 		LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
@@ -178,11 +185,13 @@ func (s *Store) WithAdvisoryLock(ctx context.Context, key int64, fn func(context
 	return fn(ctx)
 }
 
+// HasEmailSend is true when a permanent send or intentional skip exists for the step.
 func (s *Store) HasEmailSend(ctx context.Context, userID, stepKey string) (bool, error) {
 	var exists bool
 	err := s.pool.QueryRow(ctx, `
 		SELECT EXISTS(
-			SELECT 1 FROM discovery.email_sends WHERE user_id = $1 AND step_key = $2
+			SELECT 1 FROM discovery.email_sends
+			WHERE user_id = $1 AND step_key = $2 AND status IN ('sent', 'skipped')
 		)`, userID, stepKey).Scan(&exists)
 	return exists, err
 }
