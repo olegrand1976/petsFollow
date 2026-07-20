@@ -9,7 +9,10 @@
       <ProKpi :label="$t('admin.commercialCommissions.kpiPeriod')" :value="periodYm" />
       <ProKpi :label="$t('admin.commercialCommissions.kpiTotal')" :value="formatCurrency(totalCents)" />
       <ProKpi :label="$t('admin.commercialCommissions.kpiStatus')" :value="runStatusLabel" />
-      <ProKpi :label="$t('admin.commercialCommissions.kpiRate')" :value="`${(commercialRateBps / 100).toFixed(0)}%`" />
+      <ProKpi
+        :label="$t('admin.commercialCommissions.kpiRate')"
+        :value="$t('admin.commercialCommissions.kpiRatePlans')"
+      />
     </div>
 
     <ProCard :title="$t('admin.commercialCommissions.periodTitle')">
@@ -42,7 +45,7 @@
           {{ $t('admin.commercialCommissions.close') }}
         </ProButton>
         <ProButton
-          :disabled="runStatus !== 'closed' || marking"
+          :disabled="runStatus !== 'closed' || marking || hasMissingIban"
           :loading="marking"
           test-id="commercial-commissions-mark-paid"
           @click="markPaid"
@@ -51,6 +54,9 @@
         </ProButton>
       </div>
 
+      <p v-if="hasMissingIban && runStatus === 'closed'" class="pro-field-error" role="alert">
+        {{ $t('admin.commercialCommissions.missingIbanBlock') }}
+      </p>
       <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
 
       <p class="pro-recap">
@@ -106,7 +112,6 @@ const periodYm = ref(currentPeriodYm)
 const lines = ref<any[]>([])
 const totalCents = ref(0)
 const runStatus = ref('open')
-const commercialRateBps = ref(1200)
 const runs = ref<any[]>([])
 const closing = ref(false)
 const marking = ref(false)
@@ -152,6 +157,7 @@ const periodsForTab = computed(() => {
 })
 
 const runStatusLabel = computed(() => statusLabel(runStatus.value))
+const hasMissingIban = computed(() => lines.value.some((l: any) => !String(l.payoutIban || '').trim()))
 
 function statusLabel(status: string) {
   switch (status) {
@@ -162,21 +168,26 @@ function statusLabel(status: string) {
     case 'paid':
       return t('admin.commercialCommissions.statusPaid')
     case 'pending':
-      return t('admin.commercialCommissions.statusClosed')
+      // Preview lines stay "pending" while the run is open (= forecast, not yet due).
+      return runStatus.value === 'open'
+        ? t('admin.commercialCommissions.statusOpen')
+        : t('admin.commercialCommissions.statusClosed')
     default:
       return status
   }
 }
 
 function effectiveStatus(line: any) {
-  return line.status === 'pending' && runStatus.value !== 'open'
-    ? runStatus.value
-    : (line.status || runStatus.value)
+  if (line.status === 'paid') return 'paid'
+  if (runStatus.value === 'open') return 'open'
+  if (line.status === 'pending' || !line.status) return 'closed'
+  return line.status || runStatus.value
 }
 
 function lineVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
   if (status === 'paid') return 'success'
   if (status === 'closed' || status === 'pending') return 'warning'
+  if (status === 'open') return 'neutral'
   return 'neutral'
 }
 
@@ -195,7 +206,6 @@ async function selectTab(tab: Tab) {
 async function loadRunsMeta() {
   const res: any = await $fetch('/api/admin/commercial-commissions/runs')
   const data = res.data ?? res
-  commercialRateBps.value = data.commercialRateBps ?? 1200
   runs.value = data.runs ?? []
   if (data.currentPeriodYm) {
     // keep
@@ -232,11 +242,11 @@ async function closePeriod() {
 }
 
 async function markPaid() {
-  const missingIban = lines.value.some((l: any) => !l.payoutIban)
-  const msg = missingIban
-    ? t('admin.commercialCommissions.confirmMarkPaidMissingIban', { period: periodYm.value })
-    : t('admin.commercialCommissions.confirmMarkPaid', { period: periodYm.value })
-  if (!confirm(msg)) return
+  if (hasMissingIban.value) {
+    error.value = t('admin.commercialCommissions.missingIbanBlock')
+    return
+  }
+  if (!confirm(t('admin.commercialCommissions.confirmMarkPaid', { period: periodYm.value }))) return
   marking.value = true
   error.value = ''
   try {

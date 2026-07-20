@@ -482,6 +482,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'La reserva en línea no está disponible para esta clínica. Puede enviar una solicitud sin horario.';
 
   @override
+  String get calendarBookingDisabledReschedule =>
+      'La reserva en línea no está disponible. Proponga una fecha manualmente.';
+
+  @override
   String get calendarNoSlots =>
       'No hay huecos disponibles en los próximos 14 días.';
 
@@ -490,6 +494,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get visitConfirm => 'Confirmar';
+
+  @override
+  String get visitProposeReschedule => 'Proponer otro horario';
+
+  @override
+  String get visitRescheduleProposed => 'Propuesta de cambio enviada';
+
+  @override
+  String get paymentSuccessSnack => 'Pago recibido — actualizando…';
+
+  @override
+  String get paymentCancelSnack => 'Pago cancelado';
 
   @override
   String get visitRejectReschedule => 'Rechazar cambio';

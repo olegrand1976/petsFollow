@@ -265,7 +265,12 @@
       "ibanBanner": "Renseignez votre IBAN pour recevoir vos commissions.",
       "ibanBannerLink": "Ouvrir le profil paiement",
       "bonusVet": "Meilleur cabinet : {vet}",
-      "bonusPeriod": "Mois : {period}"
+      "bonusPeriod": "Mois : {period}",
+      "runStatus": {
+        "open": "Ouvert",
+        "closed": "Clôturé",
+        "paid": "Payé"
+      }
     },
     "settings": {
       "title": "Profil paiement",
@@ -760,13 +765,14 @@
       "kpiTotal": "Total période",
       "kpiStatus": "Statut",
       "kpiRate": "Taux commercial",
+      "kpiRatePlans": "8 / 12 / 8 %",
       "periodTitle": "Récapitulatif mensuel",
       "period": "Mois",
       "close": "Clôturer (à payer)",
       "markPaid": "Marquer payé",
       "confirmClose": "Clôturer la période {period} et passer en « à payer » ?",
       "confirmMarkPaid": "Marquer la période {period} comme payée ?",
-      "confirmMarkPaidMissingIban": "Attention : au moins un IBAN est manquant. Marquer quand même {period} comme payée ?",
+      "missingIbanBlock": "Impossible de marquer payé : au moins un commercial n'a pas d'IBAN.",
       "empty": "Aucune ligne pour cet onglet",
       "recapGlobal": "Total affiché : {amount} — {count} commercial(aux)",
       "colCommercial": "Commercial",
@@ -1367,6 +1373,7 @@
     "invalid_iban": "IBAN invalide",
     "invalid_bic": "BIC invalide (8 ou 11 caractères)",
     "invalid_account_holder": "Titulaire de compte invalide",
+    "invalid_locale": "Langue non supportée",
     "family_pet_limit": "Le pack Famille est limité à 3 animaux",
     "family_requires_two_pets": "Le pack Famille nécessite au moins 2 animaux",
     "family_required": "Pack Famille requis",
@@ -1400,6 +1407,7 @@
     "payout_not_closed": "Clôturez d'abord la période avant de marquer payé",
     "payout_line_not_ready": "Cette ligne n'est pas prête à être payée (infos manquantes ou déjà payée)",
     "payout_no_ready_lines": "Aucune ligne prête à payer sur cette période",
+    "payout_missing_iban": "Impossible de marquer payé : IBAN manquant pour au moins un commercial",
     "line_not_found": "Ligne de commission introuvable",
     "run_not_found": "Cycle de rétribution introuvable",
     "google_pro_only": "Accès Google réservé aux profils Pro.",

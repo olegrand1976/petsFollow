@@ -483,6 +483,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.';
 
   @override
+  String get calendarBookingDisabledReschedule =>
+      'La réservation en ligne n\'est pas disponible. Proposez une date manuellement.';
+
+  @override
   String get calendarNoSlots =>
       'Aucun créneau disponible sur les 14 prochains jours.';
 
@@ -491,6 +495,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get visitConfirm => 'Confirmer';
+
+  @override
+  String get visitProposeReschedule => 'Proposer un autre créneau';
+
+  @override
+  String get visitRescheduleProposed => 'Proposition de déplacement envoyée';
+
+  @override
+  String get paymentSuccessSnack => 'Paiement reçu — actualisation…';
+
+  @override
+  String get paymentCancelSnack => 'Paiement annulé';
 
   @override
   String get visitRejectReschedule => 'Refuser le déplacement';

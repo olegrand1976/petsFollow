@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/deeplink/payment_deeplink.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
@@ -24,11 +25,13 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     LocaleController.instance.addListener(_onLocaleChanged);
     LocaleController.instance.load();
     NotificationService.instance.init();
+    PaymentDeepLink.instance.start();
   }
 
   @override
   void dispose() {
     LocaleController.instance.removeListener(_onLocaleChanged);
+    PaymentDeepLink.instance.dispose();
     super.dispose();
   }
 
@@ -63,10 +66,14 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   bool _ready = false;
   bool _mustChangePassword = false;
+  int _petsRefreshTick = 0;
 
   @override
   void initState() {
     super.initState();
+    PaymentDeepLink.instance.onPaymentSuccess = () {
+      if (mounted) setState(() => _petsRefreshTick++);
+    };
     _bootstrap();
   }
 
@@ -100,6 +107,9 @@ class _AuthGateState extends State<AuthGate> {
     if (_mustChangePassword) {
       return ForceChangePasswordScreen(onChanged: _onAuthChanged);
     }
-    return MainShellScreen(onLogout: _onAuthChanged);
+    return MainShellScreen(
+      onLogout: _onAuthChanged,
+      billingRefreshTick: _petsRefreshTick,
+    );
   }
 }

@@ -5,6 +5,7 @@ import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetTimelineScreen extends StatefulWidget {
@@ -158,6 +159,31 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
+  Future<void> _proposeReschedule(Visit visit) async {
+    final l10n = AppLocalizations.of(context)!;
+    final practiceId = visit.practiceId;
+    if (practiceId == null || practiceId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('visit'))),
+        );
+      }
+      return;
+    }
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookVisitScreen(
+          petId: widget.petId,
+          petName: widget.petName ?? '',
+          practiceId: practiceId,
+          rescheduleVisitId: visit.id,
+        ),
+      ),
+    );
+    if (ok == true && mounted) await load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -210,6 +236,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                     TextButton(
                                       onPressed: () => _cancelVisit(v),
                                       child: Text(l10n.visitCancelAction),
+                                    ),
+                                  if ((v.status == 'requested' || v.status == 'confirmed') &&
+                                      !v.awaitingClient)
+                                    TextButton(
+                                      onPressed: () => _proposeReschedule(v),
+                                      child: Text(l10n.visitProposeReschedule),
                                     ),
                                   if (v.awaitingClient && v.status == 'requested')
                                     TextButton(

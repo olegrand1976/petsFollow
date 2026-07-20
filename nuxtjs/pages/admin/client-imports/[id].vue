@@ -130,7 +130,7 @@
         <div class="pro-flex-gap">
           <ProButton
             test-id="admin-import-commit-btn"
-            :disabled="busy || job.status !== 'preview_ready' || job.okCount < 1"
+            :disabled="busy || !canCommit"
             @click="commit"
           >
             {{ $t('admin.clientImport.commit') }}
@@ -192,6 +192,13 @@ const credentialsToken = ref('')
 const canMap = computed(() => {
   const s = job.value?.status
   return s === 'uploaded' || s === 'mapping_ready' || s === 'preview_ready'
+})
+
+const readyRowCount = computed(() => rows.value.filter(r => r.status === 'ready').length)
+
+const canCommit = computed(() => {
+  const s = job.value?.status
+  return (s === 'preview_ready' || s === 'failed') && readyRowCount.value > 0
 })
 
 function statusLabel(status: string) {

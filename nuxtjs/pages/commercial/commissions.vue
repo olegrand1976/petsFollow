@@ -97,7 +97,11 @@
           <tr v-for="p in summary?.payoutHistory || []" :key="p.periodYm">
             <td>{{ p.periodYm }}</td>
             <td>{{ formatCurrency(p.amountCents) }}</td>
-            <td><ProBadge :variant="p.runStatus === 'paid' ? 'success' : 'warning'">{{ p.runStatus }}</ProBadge></td>
+            <td>
+              <ProBadge :variant="p.runStatus === 'paid' ? 'success' : 'warning'">
+                {{ payoutStatusLabel(p.runStatus) }}
+              </ProBadge>
+            </td>
           </tr>
         </tbody>
       </ProTable>
@@ -108,9 +112,16 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
+const { t } = useI18n()
 const { formatCurrency } = useFormatters()
 const summary = ref<any>(null)
-const hasIban = ref(true)
+const hasIban = ref(false)
+
+function payoutStatusLabel(status: string) {
+  const key = `commercial.commissions.runStatus.${status}`
+  const label = t(key)
+  return label === key ? status : label
+}
 
 const commercialBonuses = computed(() =>
   (summary.value?.bonuses || []).filter((b: any) => b.audience === 'commercial'),
@@ -133,9 +144,7 @@ onMounted(async () => {
   ])
   summary.value = commRes.data ?? commRes
   const profile = profileRes?.data ?? profileRes
-  if (profile && (profile.iban != null || profile.payoutIban != null)) {
-    hasIban.value = Boolean(profile.iban || profile.payoutIban)
-  }
+  hasIban.value = Boolean(profile?.iban || profile?.payoutIban)
 })
 </script>
 

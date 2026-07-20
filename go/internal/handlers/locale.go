@@ -45,7 +45,7 @@ func (a *API) updateMeLocale(w http.ResponseWriter, r *http.Request) {
 	}
 	locale, ok := i18n.MatchSupported(req.Locale)
 	if !ok {
-		httpx.WriteErrorLocalized(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		httpx.WriteErrorLocalized(w, r, http.StatusBadRequest, "bad_request", "invalid_locale")
 		return
 	}
 	if err := a.store.UpdateUserLocale(r.Context(), id.UserID, locale); err != nil {

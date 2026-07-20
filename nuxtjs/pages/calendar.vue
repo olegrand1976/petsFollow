@@ -216,19 +216,34 @@ function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'neut
   }
 }
 
+function toLocalRFC3339(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const offMin = -d.getTimezoneOffset()
+  const sign = offMin >= 0 ? '+' : '-'
+  const abs = Math.abs(offMin)
+  const oh = pad(Math.floor(abs / 60))
+  const om = pad(abs % 60)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${oh}:${om}`
+}
+
 async function load() {
   actionError.value = ''
-  const from = weekStart.value.toISOString()
-  const to = new Date(weekStart.value)
-  to.setDate(to.getDate() + 7)
+  const from = toLocalRFC3339(weekStart.value)
+  const toDate = new Date(weekStart.value)
+  toDate.setDate(toDate.getDate() + 7)
+  const to = toLocalRFC3339(toDate)
   try {
     const [calRes, schedRes]: any[] = await Promise.all([
-      $fetch(`/api/vet/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to.toISOString())}`),
+      $fetch(`/api/vet/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
       $fetch('/api/vet/schedule'),
     ])
     const cal = calRes.data ?? calRes
     pending.value = cal.pending ?? []
-    weekVisits.value = (cal.visits ?? []).filter((v: any) => v.scheduledAt || v.proposedScheduledAt)
+    const pendingIds = new Set((pending.value || []).map((v: any) => v.id))
+    weekVisits.value = (cal.visits ?? []).filter(
+      (v: any) => (v.scheduledAt || v.proposedScheduledAt) && !pendingIds.has(v.id),
+    )
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {

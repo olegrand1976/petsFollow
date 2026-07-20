@@ -15,6 +15,7 @@ var (
 	ErrPayoutNotClosed    = errors.New("payout_not_closed")
 	ErrPayoutLineNotReady = errors.New("payout_line_not_ready")
 	ErrPayoutNoReadyLines = errors.New("payout_no_ready_lines")
+	ErrPayoutMissingIban  = errors.New("payout_missing_iban")
 )
 
 type CommissionTier struct {
@@ -83,6 +84,7 @@ type VetCommissionSummary struct {
 	LifetimeEarnedCents      int                   `json:"lifetimeEarnedCents"`
 	Tiers                 []CommissionTier      `json:"tiers"`
 	PlanRates             []PlanRateInfo        `json:"planRates"`
+	AddonRates            []PlanRateInfo        `json:"addonRates"`
 	Bonuses               []BonusRule           `json:"bonuses"`
 	RecentLedger          []CommissionLedgerRow `json:"recentLedger"`
 	PayoutHistory         []PayoutLineHistory   `json:"payoutHistory"`
@@ -809,7 +811,7 @@ func (s *Store) MarkPayoutLinePaid(ctx context.Context, periodYM, vetUserID stri
 	if err != nil {
 		return PayoutRun{}, err
 	}
-	if run.Status != "closed" && run.Status != "partially_paid" {
+	if run.Status != "closed" && run.Status != "partially_paid" && run.Status != "paid" {
 		return PayoutRun{}, ErrPayoutNotClosed
 	}
 	tx, err := s.pool.Begin(ctx)
@@ -938,7 +940,11 @@ func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (Vet
 	if err != nil {
 		return VetCommissionSummary{}, err
 	}
+	// Align KPI with accrual period (may be next month if current period was closed early).
 	month := PeriodYM(time.Now())
+	if openPeriod, err := s.ResolveOpenPeriodYM(ctx, month); err == nil && openPeriod != "" {
+		month = openPeriod
+	}
 	var monthEarned, lifetime int
 	_ = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(commission_cents),0) FROM billing.commission_ledger
@@ -1042,6 +1048,7 @@ func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (Vet
 		LifetimeEarnedCents:      lifetime,
 		Tiers:                 tiers,
 		PlanRates:             SubscriptionPlanRates(),
+		AddonRates:            AddonPlanRates(),
 		Bonuses:               bonuses,
 		RecentLedger:          recent,
 		PayoutHistory:         history,

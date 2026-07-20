@@ -440,6 +440,22 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "slot_required")
 			return
 		}
+	} else if scheduledAt != nil {
+		// Vet-created timed visits: still block vacation / overlap (slot grid optional).
+		if onVac, err := a.store.IsOnVacation(r.Context(), pet.PracticeID, *scheduledAt); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		} else if onVac {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "on_vacation")
+			return
+		}
+		if overlap, err := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *scheduledAt, duration, ""); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		} else if overlap {
+			writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+			return
+		}
 	}
 
 	in := store.CreateVisitInput{
@@ -640,14 +656,26 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 		}
 	case "cancel":
+		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "cancelled")
 	case "done":
 		if id.Role != kernel.RoleVet {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 			return
 		}
+		if visit.Status != "confirmed" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "done")
 	case "propose_reschedule":
+		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
 		if req.ProposedScheduledAt == nil || *req.ProposedScheduledAt == "" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "proposed_required")
 			return
@@ -738,6 +766,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 			return
 		}
+		if visit.Status != "cancelled" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
 		updated, err = a.store.ReopenVisitAsRequested(r.Context(), visit.ID)
 	default:
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_action")
@@ -746,6 +778,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

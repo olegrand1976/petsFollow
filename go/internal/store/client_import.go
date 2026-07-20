@@ -522,14 +522,15 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 	if err != nil {
 		return CommitClientImportResult{}, err
 	}
-	// Only preview_ready can be committed — re-commit of completed would wipe credentials.
-	if job.Status != "preview_ready" {
+	// preview_ready = first commit; failed = retry after abort (remaining ready rows only).
+	// Never re-commit completed — that would wipe credentials.
+	if job.Status != "preview_ready" && job.Status != "failed" {
 		return CommitClientImportResult{}, ErrConflict
 	}
 
 	tag, err := s.pool.Exec(ctx, `
-		UPDATE practice.client_import_jobs SET status='importing', updated_at=NOW()
-		WHERE id=$1 AND status='preview_ready'`, jobID)
+		UPDATE practice.client_import_jobs SET status='importing', error_message=NULL, updated_at=NOW()
+		WHERE id=$1 AND status IN ('preview_ready', 'failed')`, jobID)
 	if err != nil {
 		return CommitClientImportResult{}, err
 	}
@@ -537,8 +538,17 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 		return CommitClientImportResult{}, ErrConflict
 	}
 
+	failJob := func(msg string) error {
+		_, _ = s.pool.Exec(ctx, `
+			UPDATE practice.client_import_jobs
+			SET status='failed', error_message=$2, updated_at=NOW()
+			WHERE id=$1 AND status='importing'`, jobID, truncateMsg(msg, 500))
+		return fmt.Errorf("%s", msg)
+	}
+
 	rows, err := s.listClientImportRows(ctx, jobID)
 	if err != nil {
+		_ = failJob("list_rows_failed")
 		return CommitClientImportResult{}, err
 	}
 
@@ -551,6 +561,11 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 		}
 		password, err := randomPassword(16)
 		if err != nil {
+			if created > 0 {
+				// Partial progress: finalize what we have rather than leave importing.
+				break
+			}
+			_ = failJob("password_generation_failed")
 			return CommitClientImportResult{}, err
 		}
 		userID, err := s.CreateClientForVet(ctx, job.VetUserID, CreateClientInput{
@@ -582,43 +597,51 @@ func (s *Store) CommitClientImport(ctx context.Context, jobID, signingKey string
 			WHERE id=$1`, row.ID, userID)
 	}
 
+	if created == 0 && failed == 0 {
+		_ = failJob("no_ready_rows")
+		return CommitClientImportResult{}, ErrConflict
+	}
+
 	token := ""
 	var cipherBlob []byte
 	var tokenHash any
 	var expires any
+	var credsWarn string
 	if len(creds) > 0 {
 		csvBytes, err := buildCredentialsCSV(creds)
 		if err != nil {
-			return CommitClientImportResult{}, err
+			credsWarn = "credentials_csv_failed"
+		} else if cipherBlob, err = encryptBytes(signingKey, csvBytes); err != nil {
+			credsWarn = "credentials_encrypt_failed"
+			cipherBlob = nil
+		} else if rawToken, err := randomToken(32); err != nil {
+			credsWarn = "credentials_token_failed"
+			cipherBlob = nil
+		} else {
+			token = rawToken
+			h := sha256.Sum256([]byte(rawToken))
+			tokenHash = hex.EncodeToString(h[:])
+			expires = time.Now().UTC().Add(24 * time.Hour)
 		}
-		cipherBlob, err = encryptBytes(signingKey, csvBytes)
-		if err != nil {
-			return CommitClientImportResult{}, err
-		}
-		rawToken, err := randomToken(32)
-		if err != nil {
-			return CommitClientImportResult{}, err
-		}
-		token = rawToken
-		h := sha256.Sum256([]byte(rawToken))
-		tokenHash = hex.EncodeToString(h[:])
-		expires = time.Now().UTC().Add(24 * time.Hour)
+		// Accounts already exist: always finalize completed (never leave importing),
+		// even if the downloadable CSV could not be packaged.
 	}
 
-	status := "completed"
 	_, err = s.pool.Exec(ctx, `
 		UPDATE practice.client_import_jobs SET
-			status=$2,
-			created_count=created_count+$3,
+			status='completed',
+			created_count=created_count+$2,
 			error_count=(SELECT COUNT(*) FROM practice.client_import_rows WHERE job_id=$1 AND status='error'),
 			ok_count=(SELECT COUNT(*) FROM practice.client_import_rows WHERE job_id=$1 AND status='created'),
-			credentials_cipher=$4,
-			credentials_token_hash=$5,
-			credentials_expires_at=$6,
-			credentials_downloaded_at=NULL,
+			credentials_cipher=COALESCE($3, credentials_cipher),
+			credentials_token_hash=COALESCE($4, credentials_token_hash),
+			credentials_expires_at=COALESCE($5, credentials_expires_at),
+			credentials_downloaded_at=CASE WHEN $3 IS NOT NULL THEN NULL ELSE credentials_downloaded_at END,
+			error_message=$6,
 			updated_at=NOW()
-		WHERE id=$1`, jobID, status, created, cipherBlob, tokenHash, expires)
+		WHERE id=$1`, jobID, created, cipherBlob, tokenHash, expires, nullIfEmpty(credsWarn))
 	if err != nil {
+		_ = failJob("finalize_failed")
 		return CommitClientImportResult{}, err
 	}
 

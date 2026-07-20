@@ -479,6 +479,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Online booking is not available for this practice. You can still send a request without a time slot.';
 
   @override
+  String get calendarBookingDisabledReschedule =>
+      'Online booking is not available. Propose a date manually.';
+
+  @override
   String get calendarNoSlots => 'No slots available in the next 14 days.';
 
   @override
@@ -486,6 +490,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get visitConfirm => 'Confirm';
+
+  @override
+  String get visitProposeReschedule => 'Propose another time';
+
+  @override
+  String get visitRescheduleProposed => 'Reschedule proposal sent';
+
+  @override
+  String get paymentSuccessSnack => 'Payment received — refreshing…';
+
+  @override
+  String get paymentCancelSnack => 'Payment cancelled';
 
   @override
   String get visitRejectReschedule => 'Decline reschedule';

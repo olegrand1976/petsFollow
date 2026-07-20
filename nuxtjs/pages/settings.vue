@@ -479,11 +479,16 @@ async function saveSchedule() {
     vacationsConfigured.value = !!sched.vacationsConfiguredForYear
     scheduleSaved.value = true
   } catch (e: any) {
-    scheduleError.value = mapError(e)
-    if (String(e?.data?.error?.message || e?.data?.message || '').includes('schedule_incomplete')
-      || e?.data?.error === 'schedule_incomplete') {
-      scheduleError.value = t('settings.calendar.scheduleIncomplete')
-    }
+    const raw = [
+      e?.data?.error?.message,
+      e?.data?.message,
+      e?.data?.error?.code,
+      e?.statusMessage,
+      mapError(e),
+    ].filter(Boolean).join(' ')
+    scheduleError.value = /schedule_incomplete/i.test(raw)
+      ? t('settings.calendar.scheduleIncomplete')
+      : mapError(e)
   } finally {
     scheduleSaving.value = false
   }

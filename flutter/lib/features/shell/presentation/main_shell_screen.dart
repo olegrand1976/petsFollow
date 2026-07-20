@@ -12,9 +12,15 @@ import 'package:petsfollow_mobile/features/settings/presentation/settings_menu_s
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class MainShellScreen extends StatefulWidget {
-  const MainShellScreen({super.key, required this.onLogout});
+  const MainShellScreen({
+    super.key,
+    required this.onLogout,
+    this.billingRefreshTick = 0,
+  });
 
   final VoidCallback onLogout;
+  /// Bumps Home/Pets tabs after Stripe return without remounting the whole shell.
+  final int billingRefreshTick;
 
   @override
   State<MainShellScreen> createState() => _MainShellScreenState();
@@ -65,8 +71,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
         body: IndexedStack(
           index: _index,
           children: [
-            HomeTab(onNavigateToPets: () => setState(() => _index = 1)),
-            const PetsTab(),
+            HomeTab(
+              key: ValueKey('home-${widget.billingRefreshTick}'),
+              onNavigateToPets: () => setState(() => _index = 1),
+            ),
+            PetsTab(key: ValueKey('pets-${widget.billingRefreshTick}')),
             const CareTab(),
             MessagingScreen(embedded: true, active: _index == PushNavigation.tabMessages),
             SettingsMenuScreen(onLogout: widget.onLogout, embedded: true),

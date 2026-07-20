@@ -479,6 +479,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Online reserveren is niet beschikbaar voor deze praktijk. U kunt nog een aanvraag zonder tijdstip sturen.';
 
   @override
+  String get calendarBookingDisabledReschedule =>
+      'Online reserveren is niet beschikbaar. Stel handmatig een datum voor.';
+
+  @override
   String get calendarNoSlots =>
       'Geen slots beschikbaar in de komende 14 dagen.';
 
@@ -487,6 +491,18 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get visitConfirm => 'Bevestigen';
+
+  @override
+  String get visitProposeReschedule => 'Ander moment voorstellen';
+
+  @override
+  String get visitRescheduleProposed => 'Verplaatsingsvoorstel verzonden';
+
+  @override
+  String get paymentSuccessSnack => 'Betaling ontvangen — vernieuwen…';
+
+  @override
+  String get paymentCancelSnack => 'Betaling geannuleerd';
 
   @override
   String get visitRejectReschedule => 'Verplaatsing weigeren';

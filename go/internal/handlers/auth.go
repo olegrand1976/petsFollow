@@ -99,7 +99,7 @@ func roleMatchesGoogleAudience(role kernel.Role, audience string) bool {
 	case "client":
 		return role == kernel.RoleClient
 	default:
-		return role == kernel.RoleVet || role == kernel.RoleAdmin
+		return role == kernel.RoleVet || role == kernel.RoleAdmin || role == kernel.RoleCommercial
 	}
 }
 

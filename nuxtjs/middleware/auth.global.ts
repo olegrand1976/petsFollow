@@ -8,13 +8,18 @@ const PUBLIC_PATHS = new Set([
   '/forgot-password',
   '/reset-password',
   '/welcome',
+  '/legal/privacy',
+  '/legal/terms',
+  '/legal/mentions',
 ])
 
 export default defineNuxtRouteMiddleware((to) => {
   const token = useCookie('pf_token')
   const refresh = useCookie('pf_refresh')
   const hasSession = !!(token.value || refresh.value)
-  const isPublic = PUBLIC_PATHS.has(to.path) || to.path.startsWith('/register')
+  const isPublic = PUBLIC_PATHS.has(to.path)
+    || to.path.startsWith('/register')
+    || to.path.startsWith('/legal/')
 
   if (isPublic) {
     if (hasSession && to.path === '/') {

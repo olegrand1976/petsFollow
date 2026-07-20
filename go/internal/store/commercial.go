@@ -1033,6 +1033,17 @@ func (s *Store) MarkCommercialPayoutRunPaid(ctx context.Context, periodYM, note 
 	if run.Status != "closed" && run.Status != "paid" {
 		return PayoutRun{}, ErrPayoutNotClosed
 	}
+	var missing int
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM billing.commercial_payout_lines pl
+		JOIN identity.users u ON u.id = pl.commercial_user_id
+		WHERE pl.run_id=$1 AND TRIM(COALESCE(u.payout_iban, '')) = ''`,
+		run.ID).Scan(&missing); err != nil {
+		return PayoutRun{}, err
+	}
+	if missing > 0 {
+		return PayoutRun{}, ErrPayoutMissingIban
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return PayoutRun{}, err

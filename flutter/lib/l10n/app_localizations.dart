@@ -954,6 +954,12 @@ abstract class AppLocalizations {
   /// **'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.'**
   String get calendarBookingDisabled;
 
+  /// No description provided for @calendarBookingDisabledReschedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'La réservation en ligne n\'est pas disponible. Proposez une date manuellement.'**
+  String get calendarBookingDisabledReschedule;
+
   /// No description provided for @calendarNoSlots.
   ///
   /// In fr, this message translates to:
@@ -971,6 +977,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Confirmer'**
   String get visitConfirm;
+
+  /// No description provided for @visitProposeReschedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposer un autre créneau'**
+  String get visitProposeReschedule;
+
+  /// No description provided for @visitRescheduleProposed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition de déplacement envoyée'**
+  String get visitRescheduleProposed;
+
+  /// No description provided for @paymentSuccessSnack.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement reçu — actualisation…'**
+  String get paymentSuccessSnack;
+
+  /// No description provided for @paymentCancelSnack.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement annulé'**
+  String get paymentCancelSnack;
 
   /// No description provided for @visitRejectReschedule.
   ///

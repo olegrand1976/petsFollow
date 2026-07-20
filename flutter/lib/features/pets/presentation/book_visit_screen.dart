@@ -9,11 +9,16 @@ class BookVisitScreen extends StatefulWidget {
     required this.petId,
     required this.petName,
     required this.practiceId,
+    this.rescheduleVisitId,
   });
 
   final String petId;
   final String petName;
   final String practiceId;
+  /// When set, picking a slot proposes a reschedule instead of creating a visit.
+  final String? rescheduleVisitId;
+
+  bool get isReschedule => rescheduleVisitId != null && rescheduleVisitId!.isNotEmpty;
 
   @override
   State<BookVisitScreen> createState() => _BookVisitScreenState();
@@ -70,9 +75,23 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _booking = true);
     try {
-      await ApiClient.instance.createVisit(widget.petId, scheduledAt: slot);
+      if (widget.isReschedule) {
+        await ApiClient.instance.visitAction(
+          widget.rescheduleVisitId!,
+          action: 'propose_reschedule',
+          proposedScheduledAt: slot,
+        );
+      } else {
+        await ApiClient.instance.createVisit(widget.petId, scheduledAt: slot);
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.visitRequested)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.isReschedule ? l10n.visitRescheduleProposed : l10n.visitRequested,
+          ),
+        ),
+      );
       Navigator.pop(context, true);
     } catch (_) {
       if (!mounted) return;
@@ -85,6 +104,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
   }
 
   Future<void> _legacyRequest() async {
+    if (widget.isReschedule) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() => _booking = true);
     try {
@@ -102,11 +122,30 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
     }
   }
 
+  Future<void> _pickManualSlot() async {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 60)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 10, minute: 0),
+    );
+    if (time == null || !mounted) return;
+    await _book(DateTime(date.year, date.month, date.day, time.hour, time.minute));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final title = widget.isReschedule ? l10n.visitProposeReschedule : l10n.requestVisit;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.requestVisit)),
+      appBar: AppBar(title: Text(title)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -119,14 +158,31 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
                 const SizedBox(height: 12),
                 if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 if (!_enabled) ...[
-                  Text(l10n.calendarBookingDisabled),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: _booking ? null : _legacyRequest,
-                    child: Text(l10n.requestVisit),
+                  Text(
+                    widget.isReschedule
+                        ? l10n.calendarBookingDisabledReschedule
+                        : l10n.calendarBookingDisabled,
                   ),
+                  const SizedBox(height: 16),
+                  if (widget.isReschedule)
+                    FilledButton(
+                      onPressed: _booking ? null : _pickManualSlot,
+                      child: Text(l10n.visitProposeReschedule),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: _booking ? null : _legacyRequest,
+                      child: Text(l10n.requestVisit),
+                    ),
                 ] else if (_slots.isEmpty) ...[
                   Text(l10n.calendarNoSlots),
+                  if (widget.isReschedule) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: _booking ? null : _pickManualSlot,
+                      child: Text(l10n.visitProposeReschedule),
+                    ),
+                  ],
                 ] else ...[
                   Text(l10n.calendarPickSlot),
                   const SizedBox(height: 12),

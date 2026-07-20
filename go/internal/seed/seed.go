@@ -68,11 +68,84 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedEnrichment(ctx, pool); err != nil {
 		return err
 	}
+	if err := seedDemoSchedules(ctx, pool, st); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
 	logSummary()
 	return nil
+}
+
+func seedDemoSchedules(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	rows, err := pool.Query(ctx, `
+		SELECT id::text FROM practice.practices
+		WHERE profile_completed_at IS NOT NULL
+		ORDER BY name`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	year := time.Now().Year()
+	slots := []store.ScheduleSlot{
+		{Weekday: 1, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 1, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 2, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 2, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 3, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 4, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 4, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 5, StartTime: "09:00", EndTime: "12:00"},
+	}
+	for rows.Next() {
+		var practiceID string
+		if err := rows.Scan(&practiceID); err != nil {
+			return err
+		}
+		if _, err := st.PutVetSchedule(ctx, practiceID, true, 30, &year, slots); err != nil {
+			return err
+		}
+	}
+	return rows.Err()
+}
+
+func payoutLegalName(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return p.name + " SRL"
+}
+func payoutVAT(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "BE0123456789"
+}
+func payoutCompanyNumber(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "0123.456.789"
+}
+func payoutLegalForm(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "srl"
+}
+func payoutIBAN(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	// Valid Belgian IBAN (checksum) for demo payouts.
+	return "BE68539007547034"
+}
+func payoutHolder(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return p.vetName
 }
 
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
@@ -102,8 +175,13 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	}
 	commercialID := uuid.NewString()
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW())`,
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder
+		) VALUES (
+			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente'
+		)`,
 		commercialID, string(hash)); err != nil {
 		return err
 	}
@@ -159,9 +237,17 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 	}
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO practice.practices (id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END)`,
-		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile); err != nil {
+		INSERT INTO practice.practices (
+			id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at,
+			company_legal_name, vat_number, company_number, legal_form, billing_same_as_practice,
+			payout_iban, payout_bic, payout_account_holder
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END,
+			$11, $12, $13, $14, TRUE, $15, $16, $17
+		)`,
+		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile,
+		payoutLegalName(p), payoutVAT(p), payoutCompanyNumber(p), payoutLegalForm(p),
+		payoutIBAN(p), "GEBABEBB", payoutHolder(p)); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `

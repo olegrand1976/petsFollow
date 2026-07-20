@@ -2,6 +2,7 @@ class Visit {
   const Visit({
     required this.id,
     required this.petId,
+    this.practiceId,
     this.scheduledAt,
     this.status = 'requested',
     this.notes,
@@ -13,6 +14,7 @@ class Visit {
 
   final String id;
   final String petId;
+  final String? practiceId;
   final DateTime? scheduledAt;
   final String status;
   final String? notes;
@@ -36,6 +38,7 @@ class Visit {
     return Visit(
       id: json['id'] as String? ?? '',
       petId: json['petId'] as String? ?? '',
+      practiceId: json['practiceId'] as String?,
       scheduledAt: json['scheduledAt'] != null
           ? DateTime.tryParse(json['scheduledAt'] as String)
           : null,

@@ -19,7 +19,7 @@ Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 - Payouts mensuels (versement **début de mois**) :
   - run : `open` → `closed` → `partially_paid` → `paid`
   - lignes : `accruing` (preview) → `missing_info` / `ready_to_pay` (à la clôture) → `paid`
-  - profil société/banque sur `practice.practices` (migration `000025`)
+  - profil société/banque sur `practice.practices` (migration `000026`)
   - admin : mark-paid **ligne** ou **bulk des lignes prêtes** (`/admin/commissions/…`)
 
 ## Commercial
@@ -41,5 +41,5 @@ Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 - `go/internal/store/commissions.go` — `AccrueCommercialForAddon`, `AccrueVetForAddon`
 - `go/internal/store/commercial_bonuses.go` — `SyncCommercialBonusAwards`, mark-paid
 - `go/internal/store/vat.go`
-- migrations : `000019_commission_plan_rates` · `000020` `commercial_bonus_awards` · ledger addon `000022` · addon sub `000023` · vet payout profile `000025`
+- migrations : `000019_commission_plan_rates` · `000020` `commercial_bonus_awards` · ledger addon `000022` · addon sub `000023` · vet payout profile `000026`
 - UI : `ProCommissionSheet` audience `admin` · pages `/admin/commissions`, `/admin/commercial-commissions`, `/admin/commercial-bonuses`

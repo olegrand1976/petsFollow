@@ -219,16 +219,26 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 }
 
 func (s *Store) UpdateVisitStatus(ctx context.Context, id, status string) (Visit, error) {
+	var allowedFrom []string
+	switch status {
+	case "cancelled":
+		allowedFrom = []string{"requested", "confirmed", "reschedule_pending"}
+	case "done":
+		allowedFrom = []string{"confirmed"}
+	default:
+		return Visit{}, fmt.Errorf("%w: invalid_status", ErrValidation)
+	}
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
 		UPDATE visits.visits SET
 			status = $2,
 			proposed_scheduled_at = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE proposed_scheduled_at END,
-			pending_action_by = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE pending_action_by END
-		WHERE id = $1
+			pending_action_by = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE pending_action_by END,
+			status_before_reschedule = CASE WHEN $2 IN ('confirmed','done','cancelled') THEN NULL ELSE status_before_reschedule END
+		WHERE id = $1 AND status = ANY($3::text[])
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by`,
-		id, status,
+		id, status, allowedFrom,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -324,14 +334,14 @@ func (s *Store) RejectReschedule(ctx context.Context, id string) (Visit, error) 
 	return v, err
 }
 
-// ReopenVisitAsRequested restores a cancelled/client reopen into pending vet action.
+// ReopenVisitAsRequested restores a cancelled visit into pending vet action.
 func (s *Store) ReopenVisitAsRequested(ctx context.Context, id string) (Visit, error) {
 	vet := "vet"
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
 		UPDATE visits.visits
 		SET status = 'requested', pending_action_by = $2, proposed_scheduled_at = NULL, status_before_reschedule = NULL
-		WHERE id = $1
+		WHERE id = $1 AND status = 'cancelled'
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by`,
 		id, vet,

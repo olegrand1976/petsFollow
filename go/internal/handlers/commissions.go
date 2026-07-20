@@ -320,6 +320,10 @@ func (a *API) adminMarkCommercialCommissionPaid(w http.ResponseWriter, r *http.R
 			writeErr(w, r, http.StatusConflict, "conflict", "payout_not_closed")
 			return
 		}
+		if errors.Is(err, store.ErrPayoutMissingIban) {
+			writeErr(w, r, http.StatusConflict, "conflict", "payout_missing_iban")
+			return
+		}
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}

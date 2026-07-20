@@ -64,7 +64,7 @@ func (s *Store) EnrollEmailJourney(ctx context.Context, userID string, anchorAt 
 }
 
 // MarkEmailJourneySkipped records that this client must not receive the drip
-// (bulk import). Status completed blocks BackfillEmailJourneys via ON CONFLICT.
+// (bulk import). Forces completed even if a prior active row exists.
 func (s *Store) MarkEmailJourneySkipped(ctx context.Context, userID string) error {
 	if _, err := s.EnsureDiscoveryStarted(ctx, userID); err != nil {
 		return err
@@ -72,7 +72,7 @@ func (s *Store) MarkEmailJourneySkipped(ctx context.Context, userID string) erro
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO discovery.email_journey (user_id, anchor_at, enrolled_at, status)
 		VALUES ($1, NOW(), NOW(), 'completed')
-		ON CONFLICT (user_id) DO NOTHING`, userID)
+		ON CONFLICT (user_id) DO UPDATE SET status = 'completed'`, userID)
 	return err
 }
 
@@ -185,13 +185,21 @@ func (s *Store) WithAdvisoryLock(ctx context.Context, key int64, fn func(context
 	return fn(ctx)
 }
 
-// HasEmailSend is true when a permanent send or intentional skip exists for the step.
+// HasEmailSend is true when the step was sent, or intentionally skipped for good
+// (e.g. app_download_invite). Temporary deferrals (pref_off / not_eligible) must
+// not block retries — those reasons are no longer written by the runner.
 func (s *Store) HasEmailSend(ctx context.Context, userID, stepKey string) (bool, error) {
 	var exists bool
 	err := s.pool.QueryRow(ctx, `
 		SELECT EXISTS(
 			SELECT 1 FROM discovery.email_sends
-			WHERE user_id = $1 AND step_key = $2 AND status IN ('sent', 'skipped')
+			WHERE user_id = $1 AND step_key = $2 AND (
+				status = 'sent'
+				OR (
+					status = 'skipped'
+					AND COALESCE(meta->>'reason', '') NOT IN ('pref_off', 'not_eligible', '')
+				)
+			)
 		)`, userID, stepKey).Scan(&exists)
 	return exists, err
 }
