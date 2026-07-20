@@ -19,6 +19,7 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 - **Client** : « Suivi prescrit par votre véto, sans boîtier — moins de 3 €/mois. »
 - **Véto** : « Vous gagnez sur chaque activation ; plafond ~9,4 € sur le triennial ; pas de perte si un commercial vous a apporté. »
 - **Commercial** : « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. »
+- **Téléphone → RDV** : funnel complet → [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md)
 
 ## SPIFF
 - Ramp 25 € · Mix mois 50 € : détection auto + mark-paid admin

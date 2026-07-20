@@ -26,6 +26,7 @@ Index des documents de référence du projet.
 | 22 | [22-FICHE-PRODUIT-COMMERCIAL.md](22-FICHE-PRODUIT-COMMERCIAL.md) | Fiche produit commerciaux |
 | 23 | [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md) | Drip découverte / fidélisation client |
 | 24 | [24-IMPORT-CLIENTS-ADMIN.md](24-IMPORT-CLIENTS-ADMIN.md) | Import CSV/XLS clients admin + Gemini |
+| 25 | [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md) | Funnel téléphone → RDV démo véto |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.
