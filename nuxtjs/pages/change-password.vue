@@ -9,6 +9,8 @@
       <form
         class="pro-login-form"
         data-testid="force-change-password-form"
+        method="post"
+        action="#"
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />

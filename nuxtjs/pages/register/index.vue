@@ -9,6 +9,8 @@
       <form
         class="pro-login-form"
         data-testid="register-form"
+        method="post"
+        action="#"
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />

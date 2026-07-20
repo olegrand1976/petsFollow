@@ -47,20 +47,17 @@ test.describe('auth — login / logout', () => {
 test.describe('auth — inscription et confirmation', () => {
   test('register → sent → confirm → dashboard/welcome', async ({ page }) => {
     const email = uniqueE2EEmail('register')
-    await registerVet(page, {
+    const { confirmPath, status } = await registerVet(page, {
       fullName: 'Dr E2E Register',
       practiceName: 'Cabinet E2E',
       email,
       password: 'E2ePass123!',
     })
+    expect(status === 200 || status === 201).toBeTruthy()
+    expect(confirmPath).toBeTruthy()
     await expect(page).toHaveURL(/register\/sent/, { timeout: 15000 })
 
-    const devLink = page.locator('.pro-dev-link__url')
-    await expect(devLink).toBeVisible()
-    const href = await devLink.getAttribute('href')
-    expect(href).toBeTruthy()
-
-    await page.goto(href!)
+    await page.goto(confirmPath!)
     await expect(page.getByTestId('confirm-email-success')).toBeVisible({ timeout: 15000 })
     await page.getByTestId('confirm-email-continue').click()
     await expect(page).toHaveURL(/welcome|onboarding|dashboard/, { timeout: 10000 })
@@ -98,17 +95,14 @@ test.describe('auth — inscription et confirmation', () => {
 })
 
 test.describe('auth — forgot / reset password', () => {
-  test('forgot → reset via devLink → login nouveau MDP', async ({ page }) => {
+  test('forgot → reset via API path → login nouveau MDP', async ({ page }) => {
     const email = 'vet.reset@petsfollow.test'
     const newPassword = `Reset${Date.now()}!`
 
-    await requestPasswordReset(page, email)
-    const devLink = page.locator('[data-testid="forgot-dev-link"] .pro-dev-link__url')
-    await expect(devLink).toBeVisible()
-    const href = await devLink.getAttribute('href')
-    expect(href).toBeTruthy()
+    const { resetPath } = await requestPasswordReset(page, email)
+    expect(resetPath).toBeTruthy()
 
-    await page.goto(href!)
+    await page.goto(resetPath!)
     await fillField(page, 'reset-password', newPassword)
     await fillField(page, 'reset-password-confirm', newPassword)
     await page.getByTestId('reset-submit').click()
@@ -119,8 +113,9 @@ test.describe('auth — forgot / reset password', () => {
   })
 
   test('forgot email inconnu affiche message générique', async ({ page }) => {
-    await requestPasswordReset(page, 'unknown.e2e@petsfollow.test')
+    const { resetPath } = await requestPasswordReset(page, 'unknown.e2e@petsfollow.test')
     await expect(page.getByTestId('forgot-sent')).toBeVisible()
+    expect(resetPath).toBeFalsy()
     await expect(page.getByTestId('forgot-dev-link')).toHaveCount(0)
   })
 

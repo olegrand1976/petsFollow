@@ -10,6 +10,8 @@
         v-if="!sent"
         class="pro-login-form"
         data-testid="forgot-form"
+        method="post"
+        action="#"
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />

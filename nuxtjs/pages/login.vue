@@ -66,6 +66,8 @@
         v-else
         class="pro-login-form"
         data-testid="login-2fa-form"
+        method="post"
+        action="#"
         @submit.prevent="submit2FA"
       >
         <PetsFollowLogo variant="default" />
