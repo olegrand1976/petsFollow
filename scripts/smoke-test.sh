@@ -80,4 +80,17 @@ curl -sf "$API/api/v1/commercial/overview" -H "Authorization: Bearer $COMM_TOKEN
 curl -sf -X POST "$API/api/v1/admin/commercials" -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
   -d "{\"email\":\"smoke-comm+$(date +%s)@petsfollow.test\",\"password\":\"CommercialDemo123!\",\"fullName\":\"Smoke Comm\"}" >/dev/null
 
-echo "OK — smoke MVP + billing + auth reset + commercial passed"
+MGR=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+  -d '{"email":"commercial.manager@petsfollow.test","password":"CommercialDemo123!"}')
+MGR_TOKEN=$(echo "$MGR" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+MGR_ME=$(curl -sf "$API/api/v1/me" -H "Authorization: Bearer $MGR_TOKEN")
+echo "$MGR_ME" | python3 -c "import sys,json; d=json.load(sys.stdin)['data']; assert d.get('role')=='commercial_manager', d"
+curl -sf "$API/api/v1/commercial-manager/overview" -H "Authorization: Bearer $MGR_TOKEN" >/dev/null
+
+# Mauvais MDP → 401 (régression login)
+BAD=$(curl -s -o /tmp/pf-smoke-bad-login.json -w '%{http_code}' -X POST "$API/api/v1/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"vet.demo@petsfollow.test","password":"WrongPass999!"}')
+test "$BAD" = "401"
+
+echo "OK — smoke MVP + billing + auth reset + commercial + manager passed"

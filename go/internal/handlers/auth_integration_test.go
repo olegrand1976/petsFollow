@@ -261,6 +261,57 @@ func TestAuthResetInvalidToken(t *testing.T) {
 	}
 }
 
+// TestAuthSeedRoleLogins vérifie que les comptes seed Pro peuvent se connecter
+// et que /me expose le bon rôle (garde-fou régression login / déploiement).
+func TestAuthSeedRoleLogins(t *testing.T) {
+	api := newTestAPI(t)
+	cases := []struct {
+		email, password, role string
+	}{
+		{"admin.demo@petsfollow.test", "AdminDemo123!", "admin"},
+		{"vet.demo@petsfollow.test", "VetDemo123!", "vet"},
+		{"commercial.demo@petsfollow.test", "CommercialDemo123!", "commercial"},
+		{"commercial.manager@petsfollow.test", "CommercialDemo123!", "commercial_manager"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.role, func(t *testing.T) {
+			code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login", map[string]any{
+				"email": tc.email, "password": tc.password,
+			})
+			if code != http.StatusOK {
+				t.Fatalf("login %s status %d: %#v (seed manquant ? make seed)", tc.email, code, env)
+			}
+			tok, _ := dataMap(t, env)["accessToken"].(string)
+			if tok == "" {
+				t.Fatal("expected accessToken")
+			}
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/me", nil)
+			req.Header.Set("Authorization", "Bearer "+tok)
+			rec := httptest.NewRecorder()
+			api.handler.ServeHTTP(rec, req)
+			if rec.Code != http.StatusOK {
+				t.Fatalf("me status %d: %s", rec.Code, rec.Body.String())
+			}
+			var envelope map[string]any
+			_ = json.Unmarshal(rec.Body.Bytes(), &envelope)
+			me := dataMap(t, envelope)
+			if me["role"] != tc.role {
+				t.Fatalf("expected role %q, got %#v", tc.role, me["role"])
+			}
+			if me["email"] != tc.email {
+				t.Fatalf("expected email %q, got %#v", tc.email, me["email"])
+			}
+		})
+	}
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/login", map[string]any{
+		"email": "vet.demo@petsfollow.test", "password": "WrongPass999!",
+	})
+	if code != http.StatusUnauthorized || errCode(env) != "unauthorized" {
+		t.Fatalf("bad password: expected unauthorized, got %d %#v", code, env)
+	}
+}
+
 func TestAuthRefresh(t *testing.T) {
 	api := newTestAPI(t)
 	email := uniqueEmail("e2e-refresh")

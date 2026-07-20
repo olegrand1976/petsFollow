@@ -44,7 +44,12 @@ async function jsonFromResponse(res: Response | null): Promise<Record<string, un
   }
 }
 
-export async function login(page: Page, email: string, password: string) {
+export async function login(
+  page: Page,
+  email: string,
+  password: string,
+  opts?: { expectStatus?: number },
+): Promise<{ status?: number }> {
   await page.context().clearCookies()
   await page.goto('/login', { waitUntil: 'networkidle' })
   await waitForAuthForm(page, 'login-form')
@@ -52,7 +57,17 @@ export async function login(page: Page, email: string, password: string) {
   await fillField(page, 'login-password', password)
   await expect(page.getByTestId('login-email')).toHaveValue(email)
   await expect(page.getByTestId('login-password')).toHaveValue(password)
+
+  const responsePromise = page.waitForResponse(
+    (r) => r.url().includes('/api/auth/login') && r.request().method() === 'POST',
+    { timeout: 20000 },
+  )
   await page.getByTestId('login-submit').click()
+  const res = await responsePromise
+  if (opts?.expectStatus != null) {
+    expect(res.status()).toBe(opts.expectStatus)
+  }
+  return { status: res.status() }
 }
 
 export async function loginAsVet(page: Page, email = 'vet.demo@petsfollow.test', password = 'VetDemo123!') {

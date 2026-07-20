@@ -2,6 +2,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import {
   extractAccessToken,
   isMFAChallenge,
+  isProRole,
+  isSalesForceRole,
+  homePathForRole,
   parseJwtRole,
   unwrapAuthData,
   persistAuthTokens,
@@ -82,5 +85,35 @@ describe('useAuth helpers', () => {
     clearAuthTokens()
     expect(cookieStore.get('pf_token')).toBeNull()
     expect(cookieStore.get('pf_refresh')).toBeNull()
+  })
+
+  it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
+    expect(isProRole('admin')).toBe(true)
+    expect(isProRole('vet')).toBe(true)
+    expect(isProRole('commercial')).toBe(true)
+    expect(isProRole('commercial_manager')).toBe(true)
+    expect(isProRole('client')).toBe(false)
+    expect(isSalesForceRole('commercial')).toBe(true)
+    expect(isSalesForceRole('commercial_manager')).toBe(true)
+    expect(isSalesForceRole('vet')).toBe(false)
+  })
+
+  it('homePathForRole route chaque rôle Pro', () => {
+    expect(homePathForRole('admin')).toBe('/admin')
+    expect(homePathForRole('commercial')).toBe('/commercial')
+    expect(homePathForRole('commercial_manager')).toBe('/commercial-manager')
+    expect(homePathForRole('vet')).toBe('/dashboard')
+    expect(homePathForRole('vet', { profileComplete: false })).toBe('/onboarding')
+    expect(homePathForRole('vet', { profileComplete: true })).toBe('/dashboard')
+    expect(homePathForRole('client')).toBe('/login')
+    expect(homePathForRole(null)).toBe('/login')
+  })
+
+  it('parseJwtRole reconnaît commercial_manager', () => {
+    const payload = btoa(JSON.stringify({ role: 'commercial_manager', sub: 'm1' }))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+    expect(parseJwtRole(`hdr.${payload}.sig`)).toBe('commercial_manager')
   })
 })

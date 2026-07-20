@@ -1,19 +1,23 @@
 import { test, expect } from '@playwright/test'
 import {
-  fillField,
   login,
   loginAsAdmin,
+  loginAsCommercial,
+  loginAsCommercialManager,
   loginAsVet,
   logout,
   registerVet,
   requestPasswordReset,
   submitPasswordReset,
   uniqueE2EEmail,
+  waitForAuthForm,
 } from '../helpers/auth'
 
 test.describe('auth — login / logout', () => {
   test('login véto vers dashboard', async ({ page }) => {
-    await loginAsVet(page)
+    const { status } = await login(page, 'vet.demo@petsfollow.test', 'VetDemo123!', { expectStatus: 200 })
+    expect(status).toBe(200)
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
     await expect(page).toHaveURL(/dashboard/, { timeout: 10000 })
     await expect(page.getByTestId('pro-topbar')).toBeVisible()
   })
@@ -24,16 +28,38 @@ test.describe('auth — login / logout', () => {
     await expect(page.getByTestId('pro-topbar')).toBeVisible()
   })
 
+  test('login commercial vers /commercial', async ({ page }) => {
+    await loginAsCommercial(page)
+    await expect(page).toHaveURL(/\/commercial(?:\/|$)/, { timeout: 10000 })
+    await expect(page.getByTestId('pro-topbar')).toBeVisible()
+  })
+
+  test('login responsable commercial vers /commercial-manager', async ({ page }) => {
+    await loginAsCommercialManager(page)
+    await expect(page).toHaveURL(/commercial-manager/, { timeout: 10000 })
+    await expect(page.getByTestId('pro-topbar')).toBeVisible()
+  })
+
   test('login mauvais mot de passe', async ({ page }) => {
-    await login(page, 'vet.demo@petsfollow.test', 'WrongPass999!')
+    const { status } = await login(page, 'vet.demo@petsfollow.test', 'WrongPass999!')
+    expect(status).toBe(401)
     await expect(page.getByTestId('login-form')).toBeVisible()
     await expect(page.locator('[data-testid="login-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
   })
 
   test('login email non vérifié', async ({ page }) => {
-    await login(page, 'vet.unverified@petsfollow.test', 'VetDemo123!')
+    const { status } = await login(page, 'vet.unverified@petsfollow.test', 'VetDemo123!')
+    expect(status === 403 || status === 401).toBeTruthy()
     await expect(page.getByTestId('login-form')).toBeVisible()
     await expect(page.locator('[data-testid="login-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('lien forgot depuis login', async ({ page }) => {
+    await page.goto('/login', { waitUntil: 'networkidle' })
+    await waitForAuthForm(page, 'login-form')
+    await page.getByTestId('login-forgot-link').click()
+    await expect(page).toHaveURL(/forgot-password/)
+    await waitForAuthForm(page, 'forgot-form')
   })
 
   test('logout depuis topbar', async ({ page }) => {
