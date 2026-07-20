@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const defaultModel = "gemini-2.0-flash"
+const defaultModel = "gemini-3.5-flash"
 
 type Mapper interface {
 	Configured() bool

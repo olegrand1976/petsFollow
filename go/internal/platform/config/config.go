@@ -97,7 +97,7 @@ func Load() Config {
 		JourneyEmailEnabled:  envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
 		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
 		GeminiAPIKey:         envOr("GEMINI_API_KEY", ""),
-		GeminiModel:          envOr("GEMINI_MODEL", "gemini-2.0-flash"),
+		GeminiModel:          envOr("GEMINI_MODEL", "gemini-3.5-flash"),
 	}
 }
 

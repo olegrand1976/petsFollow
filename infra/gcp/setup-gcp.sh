@@ -114,7 +114,7 @@ else
 fi
 
 COMPUTE_SA="$(gcloud projects describe "$GCP_PROJECT_ID" --format='value(projectNumber)')-compute@developer.gserviceaccount.com"
-for secret in petsfollow-database-url petsfollow-migrate-database-url petsfollow-jwt-signing-key petsfollow-redis-url petsfollow-db-password petsfollow-migrate-db-password; do
+for secret in petsfollow-database-url petsfollow-migrate-database-url petsfollow-jwt-signing-key petsfollow-redis-url petsfollow-db-password petsfollow-migrate-db-password petsfollow-gemini-api-key; do
   if gcloud secrets describe "$secret" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     gcloud secrets add-iam-policy-binding "$secret" \
       --project="$GCP_PROJECT_ID" \

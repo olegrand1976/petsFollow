@@ -43,10 +43,22 @@ BFF Nuxt : `/api/admin/client-imports/*` · UI : `/admin/client-imports`.
 
 ```bash
 GEMINI_API_KEY=...          # requis pour suggest-mapping
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 Sans clé Gemini, le mapping manuel reste possible.
+
+### Staging GCP
+
+- Secret Manager : `petsfollow-gemini-api-key` → Cloud Run `GEMINI_API_KEY` (via `pf_api_secrets`)
+- Env non secrète : `GEMINI_MODEL` (via `pf_write_api_env_file`, défaut `gemini-3.5-flash`)
+
+```bash
+# Mettre à jour la clé depuis le .env local
+source .env
+echo -n "$GEMINI_API_KEY" | gcloud secrets versions add petsfollow-gemini-api-key \
+  --data-file=- --project=premedica-prod-2025
+```
 
 ## Code
 

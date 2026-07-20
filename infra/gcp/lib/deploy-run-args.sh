@@ -50,6 +50,7 @@ PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
+GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.5-flash}"
 EOF
 }
 
@@ -66,7 +67,13 @@ EOF
 }
 
 pf_api_secrets() {
-  printf '%s' "DATABASE_URL=petsfollow-database-url:latest,JWT_SIGNING_KEY=petsfollow-jwt-signing-key:latest"
+  local secrets="DATABASE_URL=petsfollow-database-url:latest,JWT_SIGNING_KEY=petsfollow-jwt-signing-key:latest"
+  # Import clients admin — mapping colonnes (Secret Manager).
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-gemini-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},GEMINI_API_KEY=petsfollow-gemini-api-key:latest"
+  fi
+  printf '%s' "$secrets"
 }
 
 pf_migrate_secrets() {
