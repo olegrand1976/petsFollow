@@ -16,7 +16,11 @@ Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 - Facteur plan : annual & quin ×0,67 · triennial ×1
 - Addons : Family / Kennel **5 %** · Care+ / Horse **0 %**
 - SPIFF : 50 € @ 31 clients — **affichage / progression seule** (pas d’award DB ; payout hors système)
-- Payouts : périodes `open` → `close` → `mark-paid` (`/admin/commissions/…`)
+- Payouts mensuels (versement **début de mois**) :
+  - run : `open` → `closed` → `partially_paid` → `paid`
+  - lignes : `accruing` (preview) → `missing_info` / `ready_to_pay` (à la clôture) → `paid`
+  - profil société/banque sur `practice.practices` (migration `000025`)
+  - admin : mark-paid **ligne** ou **bulk des lignes prêtes** (`/admin/commissions/…`)
 
 ## Commercial
 - Plans : 8 / 12 / 8 % · addons **10 %** (Family / Kennel / Care+ / Horse) — **constantes code** (pas éditables ; `PUT /admin/commissions/settings` rejette)
@@ -37,5 +41,5 @@ Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 - `go/internal/store/commissions.go` — `AccrueCommercialForAddon`, `AccrueVetForAddon`
 - `go/internal/store/commercial_bonuses.go` — `SyncCommercialBonusAwards`, mark-paid
 - `go/internal/store/vat.go`
-- migrations : `000019_commission_plan_rates` · `000020` `commercial_bonus_awards` · ledger addon `000022` · addon sub `000023`
+- migrations : `000019_commission_plan_rates` · `000020` `commercial_bonus_awards` · ledger addon `000022` · addon sub `000023` · vet payout profile `000025`
 - UI : `ProCommissionSheet` audience `admin` · pages `/admin/commissions`, `/admin/commercial-commissions`, `/admin/commercial-bonuses`

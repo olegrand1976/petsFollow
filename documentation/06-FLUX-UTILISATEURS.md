@@ -33,6 +33,11 @@ flowchart TD
   Active --> Addons[Addons Family Care+ Horse]
 ```
 
+En parallèle (engagement) :
+
+- **Discovery in-app** (accueil Flutter) : missions J0 / J2 / J4 / J6
+- **Parcours email 12 mois** : drip éducatif + upsells (voir [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md)) — opt-out via pref `discovery`
+
 ## Parcours commercial
 
 ```mermaid

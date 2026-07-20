@@ -46,6 +46,8 @@ type Config struct {
 	LLITWebsiteURL                  string
 	PetsAppDownloadURL              string
 	FCMEnabled                      bool
+	JourneyEmailEnabled             bool
+	JourneyEmailInterval            time.Duration
 }
 
 func Load() Config {
@@ -90,6 +92,8 @@ func Load() Config {
 		PetsAppDownloadURL:             envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
 		// FCM enabled by default; ADC (GOOGLE_APPLICATION_CREDENTIALS / Cloud Run SA) required to actually send.
 		FCMEnabled: envBoolDefault("FCM_ENABLED", true),
+		JourneyEmailEnabled:  envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
+		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
 	}
 }
 

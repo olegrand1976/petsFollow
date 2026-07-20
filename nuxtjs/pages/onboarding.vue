@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
+import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -161,33 +162,13 @@ const error = ref('')
 const heartrateDurationsSec = ref<number[]>([60])
 const durationOptions = [15, 30, 60] as const
 
-const profile = ref<PracticeProfileForm>({
-  vetFullName: '',
-  practiceName: '',
-  contactEmail: '',
-  phone: '',
-  addressLine1: '',
-  addressLine2: '',
-  city: '',
-  postalCode: '',
-  website: '',
-})
+const profile = ref<PracticeProfileForm>(emptyPracticeProfileForm())
 
 const currentKey = computed(() => stepKeys[step.value] as StepKey)
 const isLast = computed(() => step.value === stepKeys.length - 1)
 
 function mapFromApi(data: any): PracticeProfileForm {
-  return {
-    vetFullName: data.vetFullName || '',
-    practiceName: data.practiceName || '',
-    contactEmail: data.contactEmail || '',
-    phone: data.phone || '',
-    addressLine1: data.addressLine1 || '',
-    addressLine2: data.addressLine2 || '',
-    city: data.city || '',
-    postalCode: data.postalCode || '',
-    website: data.website || '',
-  }
+  return mapPracticeProfileFromApi(data)
 }
 
 function goToStep(i: number) {

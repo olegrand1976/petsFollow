@@ -545,17 +545,32 @@
       "period": "Maand",
       "close": "Maand afsluiten",
       "markPaid": "Als betaald markeren",
+      "markReadyPaid": "Klaarstaande lijnen betalen",
+      "markLinePaid": "Als betaald markeren",
       "confirmClose": "Periode {period} afsluiten? Uitbetalingslijnen worden bevroren.",
       "confirmMarkPaid": "Periode {period} als betaald markeren?",
+      "confirmMarkReady": "Alle klaarstaande lijnen van periode {period} als betaald markeren?",
+      "confirmMarkReadyMissing": "Klaarstaande lijnen van {period} als betaald markeren? {n} lijn(en) blijven geblokkeerd (ontbrekende info).",
+      "confirmMarkLinePaid": "Deze commissielijn als betaald markeren?",
       "empty": "Geen commissies in deze periode",
       "colVet": "Dierenarts",
+      "colCompany": "Vennootschap",
+      "colIban": "IBAN",
       "colClients": "Klanten",
       "colLedger": "Activaties",
       "colAmount": "Commissie",
       "colStatus": "Status",
+      "colActions": "Acties",
       "statusOpen": "Open",
       "statusClosed": "Afgesloten",
+      "statusPartiallyPaid": "Gedeeltelijk betaald",
       "statusPaid": "Betaald",
+      "lineStatus": {
+        "accruing": "Lopend",
+        "missing_info": "Info ontbreekt",
+        "ready_to_pay": "Klaar om te betalen",
+        "paid": "Betaald"
+      },
       "sheetTitle": "Commissiemodel (overzicht)",
       "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% annual · 12% triennial · 8% quinquennial · 10% addons — hier niet bewerkbaar (zie fiche hierboven)."
     },
@@ -640,6 +655,9 @@
   "commissions": {
     "title": "Mijn vergoedingen",
     "subtitle": "Uw verdiensten en uitbetalingen als dierenarts.",
+    "payoutSchedule": "Commissiebetalingen gebeuren aan het begin van elke maand.",
+    "payoutIncompleteBanner": "Vul uw bedrijfs- en bankgegevens in zodat we uw commissies kunnen uitbetalen.",
+    "payoutIncompleteLink": "Instellingen openen",
     "kpiClients": "Betalende klanten",
     "kpiRate": "Huidig tarief",
     "kpiMonth": "Deze maand",
@@ -664,7 +682,13 @@
     "sheetTitle": "Mijn vergoeding begrijpen",
     "detailsSummary": "Tariefraster en bonussen",
     "kpiRateBase": "Basistarief (schaal)",
-    "kpiRateHeart": "Huidig tarief"
+    "kpiRateHeart": "Huidig tarief",
+    "lineStatus": {
+      "accruing": "Lopend",
+      "missing_info": "Info ontbreekt",
+      "ready_to_pay": "Klaar om te betalen",
+      "paid": "Betaald"
+    }
   },
   "onboarding": {
     "title": "Praktijkconfiguratie",
@@ -1002,7 +1026,27 @@
       "postalCode": "Postcode",
       "city": "Stad",
       "website": "Website (optioneel)",
-      "websitePlaceholder": "https://"
+      "websitePlaceholder": "https://",
+      "payoutSection": "Betalingen & vennootschap",
+      "payoutHint": "Gegevens nodig om uw commissiefiches op te stellen en uit te betalen.",
+      "companyLegalName": "Maatschappelijke naam",
+      "vatNumber": "Btw-nummer",
+      "companyNumber": "Ondernemingsnummer (KBO)",
+      "legalForm": "Rechtsvorm",
+      "legalFormPlaceholder": "Kiezen…",
+      "legalForms": {
+        "srl": "BV",
+        "sa": "NV",
+        "asbl": "VZW",
+        "independent": "Zelfstandige / natuurlijke persoon",
+        "other": "Andere"
+      },
+      "billingSameAsPractice": "Facturatieadres gelijk aan praktijk",
+      "billingAddress": "Facturatieadres",
+      "billingAddressLine2": "Facturatieadres regel 2",
+      "payoutIban": "IBAN",
+      "payoutBic": "BIC (optioneel)",
+      "payoutAccountHolder": "Rekeninghouder"
     }
   },
   "legal": {
@@ -1071,6 +1115,9 @@
     "invalid_period": "Ongeldige periode (formaat JJJJ-MM)",
     "payout_not_open": "Deze periode is niet meer open",
     "payout_not_closed": "Sluit de periode af voordat u betaald markeert",
+    "payout_line_not_ready": "Deze lijn is niet klaar om te betalen (info ontbreekt of al betaald)",
+    "payout_no_ready_lines": "Geen klaarstaande lijnen in deze periode",
+    "line_not_found": "Commissielijn niet gevonden",
     "run_not_found": "Uitbetalingsronde niet gevonden",
     "google_pro_only": "Google-toegang voorbehouden aan Pro-profielen.",
     "not_your_pet": "Dit is niet uw dier",

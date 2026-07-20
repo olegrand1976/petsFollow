@@ -545,17 +545,32 @@
       "period": "Month",
       "close": "Close month",
       "markPaid": "Mark as paid",
+      "markReadyPaid": "Pay ready lines",
+      "markLinePaid": "Mark paid",
       "confirmClose": "Close period {period}? Payout lines will be frozen.",
       "confirmMarkPaid": "Mark period {period} as paid?",
+      "confirmMarkReady": "Mark all ready lines for period {period} as paid?",
+      "confirmMarkReadyMissing": "Mark ready lines for {period} as paid? {n} line(s) remain blocked (missing info).",
+      "confirmMarkLinePaid": "Mark this commission line as paid?",
       "empty": "No commissions in this period",
       "colVet": "Veterinarian",
+      "colCompany": "Company",
+      "colIban": "IBAN",
       "colClients": "Clients",
       "colLedger": "Activations",
       "colAmount": "Commission",
       "colStatus": "Status",
+      "colActions": "Actions",
       "statusOpen": "Open",
       "statusClosed": "Closed",
+      "statusPartiallyPaid": "Partially paid",
       "statusPaid": "Paid",
+      "lineStatus": {
+        "accruing": "Accruing",
+        "missing_info": "Missing info",
+        "ready_to_pay": "Ready to pay",
+        "paid": "Paid"
+      },
       "sheetTitle": "Commissioning model (overview)",
       "planRatesHint": "Commercial rates are fixed by plan (ex-VAT): 8% annual · 12% triennial · 8% quinquennial · 10% addons — not editable here (see sheet above)."
     },
@@ -640,6 +655,9 @@
   "commissions": {
     "title": "My payouts",
     "subtitle": "Your earnings and payouts as a veterinarian.",
+    "payoutSchedule": "Commission payments are made at the beginning of each month.",
+    "payoutIncompleteBanner": "Complete your company and bank details so we can pay your commissions.",
+    "payoutIncompleteLink": "Open settings",
     "kpiClients": "Paying clients",
     "kpiRate": "Current rate",
     "kpiMonth": "This month",
@@ -664,7 +682,13 @@
     "sheetTitle": "Understand my earnings",
     "detailsSummary": "Rate grid and bonuses",
     "kpiRateBase": "Base rate (tier)",
-    "kpiRateHeart": "Current rate"
+    "kpiRateHeart": "Current rate",
+    "lineStatus": {
+      "accruing": "Accruing",
+      "missing_info": "Missing info",
+      "ready_to_pay": "Ready to pay",
+      "paid": "Paid"
+    }
   },
   "onboarding": {
     "title": "Practice setup",
@@ -1002,7 +1026,27 @@
       "postalCode": "Postal code",
       "city": "City",
       "website": "Website (optional)",
-      "websitePlaceholder": "https://"
+      "websitePlaceholder": "https://",
+      "payoutSection": "Payments & company",
+      "payoutHint": "Details required to prepare and pay your commission statements.",
+      "companyLegalName": "Legal company name",
+      "vatNumber": "VAT number",
+      "companyNumber": "Company number (BCE)",
+      "legalForm": "Legal form",
+      "legalFormPlaceholder": "Select…",
+      "legalForms": {
+        "srl": "SRL",
+        "sa": "SA",
+        "asbl": "ASBL",
+        "independent": "Sole trader / natural person",
+        "other": "Other"
+      },
+      "billingSameAsPractice": "Billing address same as practice",
+      "billingAddress": "Billing address",
+      "billingAddressLine2": "Billing address line 2",
+      "payoutIban": "IBAN",
+      "payoutBic": "BIC (optional)",
+      "payoutAccountHolder": "Account holder"
     }
   },
   "legal": {
@@ -1071,6 +1115,9 @@
     "invalid_period": "Invalid period (YYYY-MM format)",
     "payout_not_open": "This period is no longer open",
     "payout_not_closed": "Close the period before marking it paid",
+    "payout_line_not_ready": "This line is not ready to pay (missing info or already paid)",
+    "payout_no_ready_lines": "No ready-to-pay lines in this period",
+    "line_not_found": "Commission line not found",
     "run_not_found": "Payout run not found",
     "google_pro_only": "Google access reserved for Pro profiles.",
     "not_your_pet": "This is not your pet",

@@ -260,6 +260,7 @@
 
 <script setup lang="ts">
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
+import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
 import type { AppLocale } from '~/composables/useLocaleSync'
 
 definePageMeta({ middleware: 'vet-only' })
@@ -272,17 +273,7 @@ const { user, fetchUser } = useProUser()
 const avatarUrl = ref('')
 const avatarSaved = ref(false)
 
-const profile = ref<PracticeProfileForm>({
-  vetFullName: '',
-  practiceName: '',
-  contactEmail: '',
-  phone: '',
-  addressLine1: '',
-  addressLine2: '',
-  city: '',
-  postalCode: '',
-  website: '',
-})
+const profile = ref<PracticeProfileForm>(emptyPracticeProfileForm())
 const profileSaving = ref(false)
 const profileSaved = ref(false)
 const profileError = ref('')
@@ -359,17 +350,7 @@ function onAvatarUploaded(data: any) {
 }
 
 function mapFromApi(data: any): PracticeProfileForm {
-  return {
-    vetFullName: data.vetFullName || '',
-    practiceName: data.practiceName || '',
-    contactEmail: data.contactEmail || '',
-    phone: data.phone || '',
-    addressLine1: data.addressLine1 || '',
-    addressLine2: data.addressLine2 || '',
-    city: data.city || '',
-    postalCode: data.postalCode || '',
-    website: data.website || '',
-  }
+  return mapPracticeProfileFromApi(data)
 }
 
 onMounted(async () => {

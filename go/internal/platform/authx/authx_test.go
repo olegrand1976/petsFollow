@@ -74,3 +74,21 @@ func TestIssueAndParseMFA(t *testing.T) {
 		t.Fatal("expected MFA token rejected by Parse")
 	}
 }
+
+func TestJourneyUnsubscribeToken(t *testing.T) {
+	issuer := NewTokenIssuer("test-secret", time.Minute, time.Hour)
+	tok, err := issuer.IssueJourneyUnsubscribe("client-1", "client@test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := issuer.ParseJourneyUnsubscribe(tok)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id.UserID != "client-1" || id.Email != "client@test.com" || id.Role != kernel.RoleClient {
+		t.Fatalf("unexpected identity %+v", id)
+	}
+	if _, err := issuer.Parse(tok); err == nil {
+		t.Fatal("expected journey token rejected by Parse")
+	}
+}

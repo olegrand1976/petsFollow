@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/engagement/journey"
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
@@ -23,9 +24,10 @@ import (
 )
 
 type Application struct {
-	pool   *pgxpool.Pool
-	router chi.Router
-	cfg    config.Config
+	pool          *pgxpool.Pool
+	router        chi.Router
+	cfg           config.Config
+	journeyCancel context.CancelFunc
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
@@ -68,7 +70,16 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		api.Routes(v1)
 	})
 
-	return &Application{pool: pool, router: r, cfg: cfg}, nil
+	journeyCtx, journeyCancel := context.WithCancel(context.Background())
+	jr := journey.NewRunner(st, notifier, tokens, journey.Config{
+		AppDownloadURL: cfg.PetsAppDownloadURL,
+		APIPublicURL:   cfg.APIPublicURL,
+		Interval:       cfg.JourneyEmailInterval,
+		Enabled:        cfg.JourneyEmailEnabled,
+	})
+	go jr.Start(journeyCtx)
+
+	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -87,6 +98,9 @@ func corsMiddleware(next http.Handler) http.Handler {
 func (a *Application) Handler() http.Handler { return a.router }
 
 func (a *Application) Close() {
+	if a.journeyCancel != nil {
+		a.journeyCancel()
+	}
 	if a.pool != nil {
 		a.pool.Close()
 	}

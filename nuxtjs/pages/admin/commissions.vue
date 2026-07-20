@@ -22,16 +22,16 @@
 
     <ProCard :title="$t('admin.commissions.tiersTitle')" class="pro-mb">
       <p class="text-muted pro-mb-sm">{{ $t('admin.commissions.planRatesHint') }}</p>
-      <div v-for="(t, idx) in editTiers" :key="idx" class="pro-tier-row">
-        <input v-model.number="t.minClients" class="pro-input pro-input-narrow" type="number" min="1">
+      <div v-for="(tier, idx) in editTiers" :key="idx" class="pro-tier-row">
+        <input v-model.number="tier.minClients" class="pro-input pro-input-narrow" type="number" min="1">
         <input
-          v-model.number="t.maxClients"
+          v-model.number="tier.maxClients"
           class="pro-input pro-input-narrow"
           type="number"
           min="1"
           :placeholder="$t('admin.commissions.openEnded')"
         >
-        <input v-model.number="t.ratePct" class="pro-input pro-input-narrow" type="number" min="0" max="50">
+        <input v-model.number="tier.ratePct" class="pro-input pro-input-narrow" type="number" min="0" max="50">
         <span>%</span>
       </div>
       <p class="text-muted">{{ $t('admin.commissions.tiersHint') }}</p>
@@ -57,12 +57,12 @@
           {{ $t('admin.commissions.close') }}
         </ProButton>
         <ProButton
-          :disabled="runStatus !== 'closed' || marking"
+          :disabled="!canMarkReady || marking"
           :loading="marking"
           test-id="commissions-mark-paid"
           @click="markPaid"
         >
-          {{ $t('admin.commissions.markPaid') }}
+          {{ $t('admin.commissions.markReadyPaid') }}
         </ProButton>
       </div>
 
@@ -72,10 +72,13 @@
         <thead>
           <tr>
             <th>{{ $t('admin.commissions.colVet') }}</th>
+            <th>{{ $t('admin.commissions.colCompany') }}</th>
+            <th>{{ $t('admin.commissions.colIban') }}</th>
             <th>{{ $t('admin.commissions.colClients') }}</th>
             <th>{{ $t('admin.commissions.colLedger') }}</th>
             <th>{{ $t('admin.commissions.colAmount') }}</th>
             <th>{{ $t('admin.commissions.colStatus') }}</th>
+            <th>{{ $t('admin.commissions.colActions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -84,13 +87,31 @@
               <div>{{ l.vetFullName }}</div>
               <div class="text-muted">{{ l.vetEmail }}</div>
             </td>
+            <td>
+              <div>{{ l.companyLegalName || '—' }}</div>
+              <div v-if="l.vatNumber" class="text-muted">{{ l.vatNumber }}</div>
+            </td>
+            <td>
+              <div class="pro-mono">{{ l.payoutIban || '—' }}</div>
+              <div v-if="l.payoutAccountHolder" class="text-muted">{{ l.payoutAccountHolder }}</div>
+            </td>
             <td>{{ l.eligibleClients }}</td>
             <td>{{ l.ledgerCount }}</td>
             <td>{{ formatCurrency(l.amountCents) }}</td>
             <td>
               <ProBadge :variant="lineVariant(l.status || runStatus)">
-                {{ l.status || runStatus }}
+                {{ lineStatusLabel(l.status || runStatus) }}
               </ProBadge>
+            </td>
+            <td>
+              <ProButton
+                v-if="l.status === 'ready_to_pay'"
+                variant="secondary"
+                :loading="markingLineId === l.vetUserId"
+                @click="markLinePaid(l.vetUserId)"
+              >
+                {{ $t('admin.commissions.markLinePaid') }}
+              </ProButton>
             </td>
           </tr>
         </tbody>
@@ -118,6 +139,7 @@ const addonRates = ref<any[]>([])
 const bonuses = ref<any[]>([])
 const closing = ref(false)
 const marking = ref(false)
+const markingLineId = ref('')
 const savingTiers = ref(false)
 const error = ref('')
 const settingsError = ref('')
@@ -128,6 +150,8 @@ const runStatusLabel = computed(() => {
       return t('admin.commissions.statusOpen')
     case 'closed':
       return t('admin.commissions.statusClosed')
+    case 'partially_paid':
+      return t('admin.commissions.statusPartiallyPaid')
     case 'paid':
       return t('admin.commissions.statusPaid')
     default:
@@ -135,11 +159,16 @@ const runStatusLabel = computed(() => {
   }
 })
 
+const canMarkReady = computed(() =>
+  (runStatus.value === 'closed' || runStatus.value === 'partially_paid')
+  && lines.value.some((l: any) => l.status === 'ready_to_pay'),
+)
+
 function syncEditTiers(list: any[]) {
-  editTiers.value = (list || []).map((t: any) => ({
-    minClients: t.minClients,
-    maxClients: t.maxClients ?? null,
-    ratePct: Math.round((t.rateBps || 0) / 100),
+  editTiers.value = (list || []).map((tier: any) => ({
+    minClients: tier.minClients,
+    maxClients: tier.maxClients ?? null,
+    ratePct: Math.round((tier.rateBps || 0) / 100),
   }))
 }
 
@@ -147,10 +176,10 @@ async function saveTiers() {
   savingTiers.value = true
   settingsError.value = ''
   try {
-    const tiersPayload = editTiers.value.map((t) => ({
-      minClients: t.minClients,
-      maxClients: t.maxClients == null || Number.isNaN(t.maxClients as number) ? null : t.maxClients,
-      rateBps: Math.round(t.ratePct * 100),
+    const tiersPayload = editTiers.value.map((tier) => ({
+      minClients: tier.minClients,
+      maxClients: tier.maxClients == null || Number.isNaN(tier.maxClients as number) ? null : tier.maxClients,
+      rateBps: Math.round(tier.ratePct * 100),
     }))
     const res: any = await $fetch('/api/admin/commissions/tiers', {
       method: 'PUT',
@@ -166,10 +195,31 @@ async function saveTiers() {
   }
 }
 
+function lineStatusLabel(status: string) {
+  const key = `admin.commissions.lineStatus.${status}`
+  const label = t(key)
+  if (label !== key) return label
+  switch (status) {
+    case 'open': return t('admin.commissions.statusOpen')
+    case 'closed': return t('admin.commissions.statusClosed')
+    case 'partially_paid': return t('admin.commissions.statusPartiallyPaid')
+    case 'paid': return t('admin.commissions.statusPaid')
+    default: return status
+  }
+}
+
 function lineVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
-  if (status === 'paid') return 'success'
-  if (status === 'closed' || status === 'pending') return 'warning'
-  return 'neutral'
+  switch (status) {
+    case 'paid':
+      return 'success'
+    case 'ready_to_pay':
+    case 'closed':
+      return 'warning'
+    case 'missing_info':
+      return 'danger'
+    default:
+      return 'neutral'
+  }
 }
 
 async function loadRunsMeta() {
@@ -206,7 +256,11 @@ async function closePeriod() {
 }
 
 async function markPaid() {
-  if (!confirm(t('admin.commissions.confirmMarkPaid', { period: periodYm.value }))) return
+  const missing = lines.value.filter((l: any) => l.status === 'missing_info').length
+  const msg = missing
+    ? t('admin.commissions.confirmMarkReadyMissing', { period: periodYm.value, n: missing })
+    : t('admin.commissions.confirmMarkReady', { period: periodYm.value })
+  if (!confirm(msg)) return
   marking.value = true
   error.value = ''
   try {
@@ -219,6 +273,22 @@ async function markPaid() {
     error.value = mapError(e)
   } finally {
     marking.value = false
+  }
+}
+
+async function markLinePaid(vetUserId: string) {
+  if (!confirm(t('admin.commissions.confirmMarkLinePaid'))) return
+  markingLineId.value = vetUserId
+  error.value = ''
+  try {
+    await $fetch(`/api/admin/commissions/periods/${periodYm.value}/lines/${vetUserId}/mark-paid`, {
+      method: 'POST',
+    })
+    await loadPeriod()
+  } catch (e: any) {
+    error.value = mapError(e)
+  } finally {
+    markingLineId.value = ''
   }
 }
 
@@ -260,6 +330,11 @@ onMounted(async () => {
   gap: 0.75rem;
   align-items: flex-end;
   margin-bottom: 1rem;
+}
+
+.pro-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 768px) {

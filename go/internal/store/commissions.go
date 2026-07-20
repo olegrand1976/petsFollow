@@ -11,8 +11,10 @@ import (
 )
 
 var (
-	ErrPayoutNotOpen   = errors.New("payout_not_open")
-	ErrPayoutNotClosed = errors.New("payout_not_closed")
+	ErrPayoutNotOpen      = errors.New("payout_not_open")
+	ErrPayoutNotClosed    = errors.New("payout_not_closed")
+	ErrPayoutLineNotReady = errors.New("payout_line_not_ready")
+	ErrPayoutNoReadyLines = errors.New("payout_no_ready_lines")
 )
 
 type CommissionTier struct {
@@ -51,31 +53,40 @@ type PayoutRun struct {
 }
 
 type PayoutLine struct {
-	ID              string `json:"id"`
-	RunID           string `json:"runId"`
-	VetUserID       string `json:"vetUserId"`
-	VetEmail        string `json:"vetEmail"`
-	VetFullName     string `json:"vetFullName"`
-	EligibleClients int    `json:"eligibleClients"`
-	LedgerCount     int    `json:"ledgerCount"`
-	AmountCents     int    `json:"amountCents"`
-	Status          string `json:"status"`
+	ID                  string `json:"id"`
+	RunID               string `json:"runId"`
+	VetUserID           string `json:"vetUserId"`
+	VetEmail            string `json:"vetEmail"`
+	VetFullName         string `json:"vetFullName"`
+	EligibleClients     int    `json:"eligibleClients"`
+	LedgerCount         int    `json:"ledgerCount"`
+	AmountCents         int    `json:"amountCents"`
+	Status              string `json:"status"`
+	CompanyLegalName    string `json:"companyLegalName,omitempty"`
+	VATNumber           string `json:"vatNumber,omitempty"`
+	CompanyNumber       string `json:"companyNumber,omitempty"`
+	LegalForm           string `json:"legalForm,omitempty"`
+	PayoutIBAN          string `json:"payoutIban,omitempty"`
+	PayoutBIC           string `json:"payoutBic,omitempty"`
+	PayoutAccountHolder string `json:"payoutAccountHolder,omitempty"`
+	PayoutComplete      bool   `json:"payoutComplete"`
 }
 
 type VetCommissionSummary struct {
-	EligibleClients      int                   `json:"eligibleClients"`
-	CurrentBaseRateBps   int                   `json:"currentBaseRateBps"`
-	CurrentRateBps       int                   `json:"currentRateBps"` // alias base (compat)
-	HeartRateBps         int                   `json:"heartRateBps"`   // base × triennial factor (offer cœur)
-	NextTierMinClients   *int                  `json:"nextTierMinClients,omitempty"`
-	MonthPeriodYM        string                `json:"monthPeriodYm"`
-	MonthEarnedCents     int                   `json:"monthEarnedCents"`
-	LifetimeEarnedCents     int                   `json:"lifetimeEarnedCents"`
-	Tiers                []CommissionTier      `json:"tiers"`
-	PlanRates            []PlanRateInfo        `json:"planRates"`
-	Bonuses              []BonusRule           `json:"bonuses"`
-	RecentLedger         []CommissionLedgerRow `json:"recentLedger"`
-	PayoutHistory        []PayoutLineHistory   `json:"payoutHistory"`
+	EligibleClients       int                   `json:"eligibleClients"`
+	CurrentBaseRateBps    int                   `json:"currentBaseRateBps"`
+	CurrentRateBps        int                   `json:"currentRateBps"` // alias base (compat)
+	HeartRateBps          int                   `json:"heartRateBps"`   // base × triennial factor (offer cœur)
+	NextTierMinClients    *int                  `json:"nextTierMinClients,omitempty"`
+	MonthPeriodYM         string                `json:"monthPeriodYm"`
+	MonthEarnedCents      int                   `json:"monthEarnedCents"`
+	LifetimeEarnedCents      int                   `json:"lifetimeEarnedCents"`
+	Tiers                 []CommissionTier      `json:"tiers"`
+	PlanRates             []PlanRateInfo        `json:"planRates"`
+	Bonuses               []BonusRule           `json:"bonuses"`
+	RecentLedger          []CommissionLedgerRow `json:"recentLedger"`
+	PayoutHistory         []PayoutLineHistory   `json:"payoutHistory"`
+	PayoutProfileComplete bool                  `json:"payoutProfileComplete"`
 }
 
 type PayoutLineHistory struct {
@@ -498,12 +509,51 @@ func (s *Store) GetPayoutRunByPeriod(ctx context.Context, periodYM string) (Payo
 	return r, err
 }
 
+func scanPayoutLineExtras(l *PayoutLine, company, vat, companyNum, legalForm, iban, bic, holder string, practiceAddr1, practiceCity, practicePostal, billAddr1, billCity, billPostal string, billingSame bool) {
+	l.CompanyLegalName = company
+	l.VATNumber = vat
+	l.CompanyNumber = companyNum
+	l.LegalForm = legalForm
+	l.PayoutIBAN = iban
+	l.PayoutBIC = bic
+	l.PayoutAccountHolder = holder
+	p := PracticeProfile{
+		CompanyLegalName:      company,
+		VATNumber:             vat,
+		CompanyNumber:         companyNum,
+		LegalForm:             legalForm,
+		BillingSameAsPractice: billingSame,
+		AddressLine1:          practiceAddr1,
+		City:                  practiceCity,
+		PostalCode:            practicePostal,
+		BillingAddressLine1:   billAddr1,
+		BillingCity:           billCity,
+		BillingPostalCode:     billPostal,
+		PayoutIBAN:            iban,
+		PayoutAccountHolder:   holder,
+	}
+	l.PayoutComplete = IsVetPayoutProfileComplete(p)
+}
+
+func lineStatusForPayoutComplete(complete bool) string {
+	if complete {
+		return "ready_to_pay"
+	}
+	return "missing_info"
+}
+
 func (s *Store) ListPayoutLines(ctx context.Context, runID string) ([]PayoutLine, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT pl.id::text, pl.run_id::text, pl.vet_user_id::text, u.email, u.full_name,
-			pl.eligible_clients, pl.ledger_count, pl.amount_cents, pl.status
+			pl.eligible_clients, pl.ledger_count, pl.amount_cents, pl.status,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.address_line1,''), COALESCE(pr.city,''), COALESCE(pr.postal_code,''),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_city,''), COALESCE(pr.billing_postal_code,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,'')
 		FROM billing.payout_lines pl
 		JOIN identity.users u ON u.id = pl.vet_user_id
+		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE pl.run_id=$1
 		ORDER BY pl.amount_cents DESC, u.full_name`, runID)
 	if err != nil {
@@ -513,10 +563,19 @@ func (s *Store) ListPayoutLines(ctx context.Context, runID string) ([]PayoutLine
 	var out []PayoutLine
 	for rows.Next() {
 		var l PayoutLine
+		var company, vat, companyNum, legalForm, practiceAddr1, practiceCity, practicePostal string
+		var billAddr1, billCity, billPostal, iban, bic, holder string
+		var billingSame bool
 		if err := rows.Scan(&l.ID, &l.RunID, &l.VetUserID, &l.VetEmail, &l.VetFullName,
-			&l.EligibleClients, &l.LedgerCount, &l.AmountCents, &l.Status); err != nil {
+			&l.EligibleClients, &l.LedgerCount, &l.AmountCents, &l.Status,
+			&company, &vat, &companyNum, &legalForm, &billingSame,
+			&practiceAddr1, &practiceCity, &practicePostal,
+			&billAddr1, &billCity, &billPostal,
+			&iban, &bic, &holder); err != nil {
 			return nil, err
 		}
+		scanPayoutLineExtras(&l, company, vat, companyNum, legalForm, iban, bic, holder,
+			practiceAddr1, practiceCity, practicePostal, billAddr1, billCity, billPostal, billingSame)
 		out = append(out, l)
 	}
 	return out, rows.Err()
@@ -527,11 +586,20 @@ func (s *Store) PreviewPeriodCommissions(ctx context.Context, periodYM string) (
 		SELECT cl.vet_user_id::text, u.email, u.full_name,
 			COUNT(DISTINCT cl.client_user_id)::int,
 			COUNT(*)::int,
-			COALESCE(SUM(cl.commission_cents),0)::int
+			COALESCE(SUM(cl.commission_cents),0)::int,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.address_line1,''), COALESCE(pr.city,''), COALESCE(pr.postal_code,''),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_city,''), COALESCE(pr.billing_postal_code,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,'')
 		FROM billing.commission_ledger cl
 		JOIN identity.users u ON u.id = cl.vet_user_id
+		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE cl.period_ym=$1
-		GROUP BY cl.vet_user_id, u.email, u.full_name
+		GROUP BY cl.vet_user_id, u.email, u.full_name,
+			pr.company_legal_name, pr.vat_number, pr.company_number, pr.legal_form, pr.billing_same_as_practice,
+			pr.address_line1, pr.city, pr.postal_code, pr.billing_address_line1, pr.billing_city, pr.billing_postal_code,
+			pr.payout_iban, pr.payout_bic, pr.payout_account_holder
 		ORDER BY SUM(cl.commission_cents) DESC`, periodYM)
 	if err != nil {
 		return nil, err
@@ -540,11 +608,20 @@ func (s *Store) PreviewPeriodCommissions(ctx context.Context, periodYM string) (
 	var out []PayoutLine
 	for rows.Next() {
 		var l PayoutLine
-		l.Status = "pending"
+		l.Status = "accruing"
+		var company, vat, companyNum, legalForm, practiceAddr1, practiceCity, practicePostal string
+		var billAddr1, billCity, billPostal, iban, bic, holder string
+		var billingSame bool
 		if err := rows.Scan(&l.VetUserID, &l.VetEmail, &l.VetFullName,
-			&l.EligibleClients, &l.LedgerCount, &l.AmountCents); err != nil {
+			&l.EligibleClients, &l.LedgerCount, &l.AmountCents,
+			&company, &vat, &companyNum, &legalForm, &billingSame,
+			&practiceAddr1, &practiceCity, &practicePostal,
+			&billAddr1, &billCity, &billPostal,
+			&iban, &bic, &holder); err != nil {
 			return nil, err
 		}
+		scanPayoutLineExtras(&l, company, vat, companyNum, legalForm, iban, bic, holder,
+			practiceAddr1, practiceCity, practicePostal, billAddr1, billCity, billPostal, billingSame)
 		out = append(out, l)
 	}
 	return out, rows.Err()
@@ -582,10 +659,20 @@ func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun,
 		SELECT cl.vet_user_id::text,
 			COUNT(DISTINCT cl.client_user_id)::int,
 			COUNT(*)::int,
-			COALESCE(SUM(cl.commission_cents),0)::int
+			COALESCE(SUM(cl.commission_cents),0)::int,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.address_line1,''), COALESCE(pr.city,''), COALESCE(pr.postal_code,''),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_city,''), COALESCE(pr.billing_postal_code,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_account_holder,'')
 		FROM billing.commission_ledger cl
+		JOIN identity.users u ON u.id = cl.vet_user_id
+		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE cl.period_ym=$1
-		GROUP BY cl.vet_user_id`, periodYM)
+		GROUP BY cl.vet_user_id,
+			pr.company_legal_name, pr.vat_number, pr.company_number, pr.legal_form, pr.billing_same_as_practice,
+			pr.address_line1, pr.city, pr.postal_code, pr.billing_address_line1, pr.billing_city, pr.billing_postal_code,
+			pr.payout_iban, pr.payout_account_holder`, periodYM)
 	if err != nil {
 		return PayoutRun{}, err
 	}
@@ -593,14 +680,29 @@ func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun,
 	type aggRow struct {
 		vetID                        string
 		clients, ledgerCount, amount int
+		status                       string
 	}
 	var aggs []aggRow
 	for rows.Next() {
 		var a aggRow
-		if err := rows.Scan(&a.vetID, &a.clients, &a.ledgerCount, &a.amount); err != nil {
+		var company, vat, companyNum, legalForm, practiceAddr1, practiceCity, practicePostal string
+		var billAddr1, billCity, billPostal, iban, holder string
+		var billingSame bool
+		if err := rows.Scan(&a.vetID, &a.clients, &a.ledgerCount, &a.amount,
+			&company, &vat, &companyNum, &legalForm, &billingSame,
+			&practiceAddr1, &practiceCity, &practicePostal,
+			&billAddr1, &billCity, &billPostal, &iban, &holder); err != nil {
 			rows.Close()
 			return PayoutRun{}, err
 		}
+		complete := IsVetPayoutProfileComplete(PracticeProfile{
+			CompanyLegalName: company, VATNumber: vat, CompanyNumber: companyNum, LegalForm: legalForm,
+			BillingSameAsPractice: billingSame,
+			AddressLine1:          practiceAddr1, City: practiceCity, PostalCode: practicePostal,
+			BillingAddressLine1: billAddr1, BillingCity: billCity, BillingPostalCode: billPostal,
+			PayoutIBAN: iban, PayoutAccountHolder: holder,
+		})
+		a.status = lineStatusForPayoutComplete(complete)
 		aggs = append(aggs, a)
 	}
 	rows.Close()
@@ -611,8 +713,8 @@ func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun,
 	for _, a := range aggs {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO billing.payout_lines (id, run_id, vet_user_id, eligible_clients, ledger_count, amount_cents, status)
-			VALUES ($1,$2,$3,$4,$5,$6,'pending')`,
-			uuid.NewString(), runID, a.vetID, a.clients, a.ledgerCount, a.amount); err != nil {
+			VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+			uuid.NewString(), runID, a.vetID, a.clients, a.ledgerCount, a.amount, a.status); err != nil {
 			return PayoutRun{}, err
 		}
 	}
@@ -628,12 +730,49 @@ func (s *Store) ClosePayoutRun(ctx context.Context, periodYM string) (PayoutRun,
 	return s.GetPayoutRunByPeriod(ctx, periodYM)
 }
 
-func (s *Store) MarkPayoutRunPaid(ctx context.Context, periodYM, note string) (PayoutRun, error) {
+func (s *Store) refreshPayoutRunStatusTx(ctx context.Context, tx pgx.Tx, runID, note string) error {
+	var total, paid int
+	if err := tx.QueryRow(ctx, `
+		SELECT COUNT(*)::int,
+			COUNT(*) FILTER (WHERE status = 'paid')::int
+		FROM billing.payout_lines WHERE run_id=$1`, runID).Scan(&total, &paid); err != nil {
+		return err
+	}
+	status := "closed"
+	switch {
+	case total == 0:
+		status = "closed"
+	case paid == 0:
+		status = "closed"
+	case paid < total:
+		status = "partially_paid"
+	default:
+		status = "paid"
+	}
+	if note != "" {
+		_, err := tx.Exec(ctx, `
+			UPDATE billing.payout_runs
+			SET status=$2,
+				paid_at = CASE WHEN $2 IN ('paid','partially_paid') THEN COALESCE(paid_at, NOW()) ELSE paid_at END,
+				note = CASE WHEN $3 <> '' THEN $3 ELSE note END
+			WHERE id=$1`, runID, status, note)
+		return err
+	}
+	_, err := tx.Exec(ctx, `
+		UPDATE billing.payout_runs
+		SET status=$2,
+			paid_at = CASE WHEN $2 IN ('paid','partially_paid') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
+		WHERE id=$1`, runID, status)
+	return err
+}
+
+// MarkReadyPayoutLinesPaid marks all ready_to_pay lines as paid for a closed/partially_paid run.
+func (s *Store) MarkReadyPayoutLinesPaid(ctx context.Context, periodYM, note string) (PayoutRun, error) {
 	run, err := s.GetPayoutRunByPeriod(ctx, periodYM)
 	if err != nil {
 		return PayoutRun{}, err
 	}
-	if run.Status != "closed" && run.Status != "paid" {
+	if run.Status != "closed" && run.Status != "partially_paid" && run.Status != "paid" {
 		return PayoutRun{}, ErrPayoutNotClosed
 	}
 	tx, err := s.pool.Begin(ctx)
@@ -641,18 +780,144 @@ func (s *Store) MarkPayoutRunPaid(ctx context.Context, periodYM, note string) (P
 		return PayoutRun{}, err
 	}
 	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `
-		UPDATE billing.payout_runs SET status='paid', paid_at=COALESCE(paid_at, NOW()), note=$2 WHERE id=$1`,
-		run.ID, note); err != nil {
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE billing.payout_lines SET status='paid'
+		WHERE run_id=$1 AND status='ready_to_pay'`, run.ID)
+	if err != nil {
 		return PayoutRun{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE billing.payout_lines SET status='paid' WHERE run_id=$1`, run.ID); err != nil {
+	if tag.RowsAffected() == 0 && run.Status != "paid" {
+		return PayoutRun{}, ErrPayoutNoReadyLines
+	}
+	if err := s.refreshPayoutRunStatusTx(ctx, tx, run.ID, note); err != nil {
 		return PayoutRun{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return PayoutRun{}, err
 	}
 	return s.GetPayoutRunByPeriod(ctx, periodYM)
+}
+
+// MarkPayoutRunPaid keeps the previous name as an alias for bulk ready-line payment.
+func (s *Store) MarkPayoutRunPaid(ctx context.Context, periodYM, note string) (PayoutRun, error) {
+	return s.MarkReadyPayoutLinesPaid(ctx, periodYM, note)
+}
+
+func (s *Store) MarkPayoutLinePaid(ctx context.Context, periodYM, vetUserID string) (PayoutRun, error) {
+	run, err := s.GetPayoutRunByPeriod(ctx, periodYM)
+	if err != nil {
+		return PayoutRun{}, err
+	}
+	if run.Status != "closed" && run.Status != "partially_paid" {
+		return PayoutRun{}, ErrPayoutNotClosed
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return PayoutRun{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var lineStatus string
+	err = tx.QueryRow(ctx, `
+		SELECT status FROM billing.payout_lines
+		WHERE run_id=$1 AND vet_user_id=$2 FOR UPDATE`, run.ID, vetUserID).Scan(&lineStatus)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return PayoutRun{}, ErrNotFound
+	}
+	if err != nil {
+		return PayoutRun{}, err
+	}
+	if lineStatus != "ready_to_pay" {
+		return PayoutRun{}, ErrPayoutLineNotReady
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE billing.payout_lines SET status='paid'
+		WHERE run_id=$1 AND vet_user_id=$2`, run.ID, vetUserID); err != nil {
+		return PayoutRun{}, err
+	}
+	if err := s.refreshPayoutRunStatusTx(ctx, tx, run.ID, ""); err != nil {
+		return PayoutRun{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return PayoutRun{}, err
+	}
+	return s.GetPayoutRunByPeriod(ctx, periodYM)
+}
+
+// RefreshVetPayoutLineStatusesForPractice recomputes missing_info ↔ ready_to_pay for unpaid lines.
+func (s *Store) RefreshVetPayoutLineStatusesForPractice(ctx context.Context, practiceID string) error {
+	rows, err := s.pool.Query(ctx, `
+		SELECT pl.id::text, pl.status,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.address_line1,''), COALESCE(pr.city,''), COALESCE(pr.postal_code,''),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_city,''), COALESCE(pr.billing_postal_code,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_account_holder,''),
+			r.id::text
+		FROM billing.payout_lines pl
+		JOIN billing.payout_runs r ON r.id = pl.run_id
+		JOIN identity.users u ON u.id = pl.vet_user_id
+		JOIN practice.practices pr ON pr.id = u.practice_id
+		WHERE pr.id = $1
+			AND r.status IN ('closed', 'partially_paid')
+			AND pl.status IN ('missing_info', 'ready_to_pay')`, practiceID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type upd struct {
+		lineID, runID, status string
+	}
+	var updates []upd
+	runIDs := map[string]struct{}{}
+	for rows.Next() {
+		var lineID, curStatus, runID string
+		var company, vat, companyNum, legalForm, practiceAddr1, practiceCity, practicePostal string
+		var billAddr1, billCity, billPostal, iban, holder string
+		var billingSame bool
+		if err := rows.Scan(&lineID, &curStatus,
+			&company, &vat, &companyNum, &legalForm, &billingSame,
+			&practiceAddr1, &practiceCity, &practicePostal,
+			&billAddr1, &billCity, &billPostal, &iban, &holder, &runID); err != nil {
+			return err
+		}
+		next := lineStatusForPayoutComplete(IsVetPayoutProfileComplete(PracticeProfile{
+			CompanyLegalName: company, VATNumber: vat, CompanyNumber: companyNum, LegalForm: legalForm,
+			BillingSameAsPractice: billingSame,
+			AddressLine1:          practiceAddr1, City: practiceCity, PostalCode: practicePostal,
+			BillingAddressLine1: billAddr1, BillingCity: billCity, BillingPostalCode: billPostal,
+			PayoutIBAN: iban, PayoutAccountHolder: holder,
+		}))
+		if next != curStatus {
+			updates = append(updates, upd{lineID: lineID, runID: runID, status: next})
+			runIDs[runID] = struct{}{}
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	for _, u := range updates {
+		if _, err := tx.Exec(ctx, `UPDATE billing.payout_lines SET status=$2 WHERE id=$1`, u.lineID, u.status); err != nil {
+			return err
+		}
+	}
+	for runID := range runIDs {
+		if err := s.refreshPayoutRunStatusTx(ctx, tx, runID, ""); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (VetCommissionSummary, error) {
@@ -758,20 +1023,29 @@ func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (Vet
 		bonuses = append(bonuses, b)
 	}
 
+	payoutComplete := false
+	var practiceID string
+	if err := s.pool.QueryRow(ctx, `SELECT COALESCE(practice_id::text,'') FROM identity.users WHERE id=$1`, vetUserID).Scan(&practiceID); err == nil && practiceID != "" {
+		if profile, err := s.GetPracticeProfile(ctx, practiceID, vetUserID); err == nil {
+			payoutComplete = profile.PayoutProfileComplete
+		}
+	}
+
 	return VetCommissionSummary{
-		EligibleClients:    clients,
-		CurrentBaseRateBps: rate,
-		CurrentRateBps:     rate,
-		HeartRateBps:       ApplyVetPlanFactor(rate, "triennial"),
-		NextTierMinClients: nextMin,
-		MonthPeriodYM:      month,
-		MonthEarnedCents:   monthEarned,
-		LifetimeEarnedCents:   lifetime,
-		Tiers:              tiers,
-		PlanRates:          SubscriptionPlanRates(),
-		Bonuses:            bonuses,
-		RecentLedger:       recent,
-		PayoutHistory:      history,
+		EligibleClients:       clients,
+		CurrentBaseRateBps:    rate,
+		CurrentRateBps:        rate,
+		HeartRateBps:          ApplyVetPlanFactor(rate, "triennial"),
+		NextTierMinClients:    nextMin,
+		MonthPeriodYM:         month,
+		MonthEarnedCents:      monthEarned,
+		LifetimeEarnedCents:      lifetime,
+		Tiers:                 tiers,
+		PlanRates:             SubscriptionPlanRates(),
+		Bonuses:               bonuses,
+		RecentLedger:          recent,
+		PayoutHistory:         history,
+		PayoutProfileComplete: payoutComplete,
 	}, nil
 }
 
@@ -782,7 +1056,7 @@ func (s *Store) AdminCommissionPeriodDetail(ctx context.Context, periodYM string
 		return nil, err
 	}
 	var lines []PayoutLine
-	if !notFound && (run.Status == "closed" || run.Status == "paid") {
+	if !notFound && (run.Status == "closed" || run.Status == "partially_paid" || run.Status == "paid") {
 		lines, err = s.ListPayoutLines(ctx, run.ID)
 		if err != nil {
 			return nil, err

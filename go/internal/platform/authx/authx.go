@@ -119,6 +119,25 @@ func (t *TokenIssuer) Parse(tokenStr string) (Identity, error) {
 	return t.parseTyped(tokenStr, "access")
 }
 
+// IssueJourneyUnsubscribe issues a long-lived token for email journey opt-out links.
+func (t *TokenIssuer) IssueJourneyUnsubscribe(userID, email string) (string, error) {
+	now := time.Now()
+	c := claims{
+		Email: email, Role: kernel.RoleClient, Typ: "journey_unsub",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   userID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(400 * 24 * time.Hour)),
+			ID:        uuid.NewString(),
+		},
+	}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, c).SignedString(t.secret)
+}
+
+func (t *TokenIssuer) ParseJourneyUnsubscribe(tokenStr string) (Identity, error) {
+	return t.parseTyped(tokenStr, "journey_unsub")
+}
+
 func (t *TokenIssuer) ParseRefresh(tokenStr string) (Identity, error) {
 	return t.parseTyped(tokenStr, "refresh")
 }

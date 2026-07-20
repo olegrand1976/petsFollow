@@ -26,25 +26,41 @@ type brandAssets struct {
 }
 
 type brandedEmailContent struct {
-	Lang            string
-	Tagline         string
-	Greeting        string
-	Intro           string
-	Detail          string // optional plain-text block (e.g. message preview)
-	CTALabel        string
-	CTAURL          string
-	Expiry          string
-	Disclaimer      string
-	Preheader       string
-	FooterPoweredBy string
-	FooterVisit     string
-	Brand           brandAssets
+	Lang             string
+	ProductLabel     string // default "petsFollow Pro"; use "petsFollow" for client emails
+	Tagline          string
+	Greeting         string
+	Intro            string
+	Detail           string // optional plain-text block (e.g. message preview)
+	CTALabel         string
+	CTAURL           string
+	Expiry           string
+	Disclaimer       string
+	Preheader        string
+	FooterPoweredBy  string
+	FooterVisit      string
+	UnsubscribeLabel string
+	UnsubscribeURL   string
+	Brand            brandAssets
 }
 
 func renderBrandedEmail(c brandedEmailContent) string {
 	lang := html.EscapeString(c.Lang)
 	if lang == "" {
 		lang = "fr"
+	}
+	productLabel := strings.TrimSpace(c.ProductLabel)
+	if productLabel == "" {
+		productLabel = "petsFollow Pro"
+	}
+	// Split "petsFollow Pro" for gold accent on the second word when present.
+	productHTML := html.EscapeString(productLabel)
+	if productLabel == "petsFollow Pro" {
+		productHTML = `petsFollow <span style="color:` + colorGold + `;font-weight:600;">Pro</span>`
+	} else if productLabel == "petsFollow" {
+		productHTML = `petsFollow`
+	} else {
+		productHTML = html.EscapeString(productLabel)
 	}
 	tagline := html.EscapeString(c.Tagline)
 	greeting := html.EscapeString(c.Greeting)
@@ -57,9 +73,19 @@ func renderBrandedEmail(c brandedEmailContent) string {
 	preheader := html.EscapeString(c.Preheader)
 	footerPowered := html.EscapeString(c.FooterPoweredBy)
 	footerVisit := html.EscapeString(c.FooterVisit)
+	unsubLabel := html.EscapeString(c.UnsubscribeLabel)
+	unsubURL := html.EscapeString(c.UnsubscribeURL)
 	llitLogo := html.EscapeString(c.Brand.LLITLogoURL)
 	llitURL := html.EscapeString(c.Brand.LLITWebsiteURL)
 	siteURL := html.EscapeString(c.Brand.SiteURL)
+
+	unsubBlock := ""
+	if c.UnsubscribeURL != "" && c.UnsubscribeLabel != "" {
+		unsubBlock = fmt.Sprintf(`
+              <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:%s;">
+                <a href="%s" target="_blank" style="color:%s;text-decoration:underline;">%s</a>
+              </p>`, colorMuted, unsubURL, colorMuted, unsubLabel)
+	}
 
 	ctaBlock := ""
 	if c.CTAURL != "" && c.CTALabel != "" {
@@ -116,7 +142,7 @@ func renderBrandedEmail(c brandedEmailContent) string {
           <tr>
             <td style="background-color:%s;background:linear-gradient(135deg, %s 0%%, %s 100%%);border-radius:12px 12px 0 0;padding:36px 40px;text-align:center;">
               <div style="font-size:30px;font-weight:700;color:#FFFFFF;letter-spacing:-0.03em;line-height:1.2;">
-                petsFollow <span style="color:%s;font-weight:600;">Pro</span>
+                %s
               </div>
               <div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.88);letter-spacing:0.01em;">%s</div>
             </td>
@@ -143,6 +169,7 @@ func renderBrandedEmail(c brandedEmailContent) string {
                 &nbsp;&middot;&nbsp;
                 <a href="%s" target="_blank" style="color:%s;text-decoration:underline;">LL-IT Software &amp; Computer</a>
               </p>
+              %s
             </td>
           </tr>
         </table>
@@ -156,7 +183,7 @@ func renderBrandedEmail(c brandedEmailContent) string {
 		colorBg,
 		emailMaxWidth, emailMaxWidth,
 		colorPrimary, colorPrimary, colorAccent,
-		colorGold, tagline,
+		productHTML, tagline,
 		colorSurface, colorBorder, colorBorder,
 		colorText, greeting,
 		colorText, intro,
@@ -169,6 +196,7 @@ func renderBrandedEmail(c brandedEmailContent) string {
 		colorMuted, footerPowered,
 		colorMuted, llitURL, colorAccent, footerVisit,
 		colorMuted, siteURL, colorMuted, llitURL, colorMuted,
+		unsubBlock,
 	)
 }
 

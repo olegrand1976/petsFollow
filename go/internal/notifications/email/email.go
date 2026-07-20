@@ -179,6 +179,7 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 	subject := mustT(locale, "emails.app_download_subject", vars)
 	body := renderBrandedEmail(brandedEmailContent{
 		Lang:            locale,
+		ProductLabel:    "petsFollow",
 		Tagline:         mustT(locale, "emails.app_download_tagline"),
 		Greeting:        mustT(locale, "emails.app_download_greeting", vars),
 		Intro:           mustT(locale, "emails.app_download_intro", vars),
@@ -189,6 +190,42 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 		Brand:           n.brandURLs(),
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
+// SendJourneyStep sends one client discovery/loyalty drip email.
+func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubscribeURL string, vars map[string]string) error {
+	locale = i18n.NormalizeLocale(locale)
+	if vars == nil {
+		vars = map[string]string{}
+	}
+	if _, ok := vars["fullName"]; !ok {
+		vars["fullName"] = fullName
+	}
+	prefix := "emails.journey." + stepKey + "."
+	subject := mustT(locale, prefix+"subject", vars)
+	detailKey := prefix + "detail"
+	detail := mustT(locale, detailKey, vars)
+	if detail == detailKey {
+		detail = ""
+	}
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:             locale,
+		ProductLabel:     "petsFollow",
+		Tagline:          mustT(locale, prefix+"tagline", vars),
+		Greeting:         mustT(locale, prefix+"greeting", vars),
+		Intro:            mustT(locale, prefix+"intro", vars),
+		Detail:           detail,
+		CTALabel:         mustT(locale, prefix+"cta", vars),
+		CTAURL:           ctaURL,
+		Disclaimer:       mustT(locale, prefix+"disclaimer", vars),
+		Preheader:        mustT(locale, prefix+"preheader", vars),
+		Brand:            n.brandURLs(),
+		FooterPoweredBy:  mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:      mustT(locale, "emails.footer_visit_llit"),
+		UnsubscribeLabel: mustT(locale, "emails.journey.unsubscribe"),
+		UnsubscribeURL:   unsubscribeURL,
 	})
 	return n.SendVetAlert(to, subject, body)
 }

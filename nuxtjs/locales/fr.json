@@ -708,17 +708,32 @@
       "period": "Mois",
       "close": "Clôturer le mois",
       "markPaid": "Marquer payé",
+      "markReadyPaid": "Payer les lignes prêtes",
+      "markLinePaid": "Marquer payé",
       "confirmClose": "Clôturer la période {period} ? Les lignes de paie seront figées.",
       "confirmMarkPaid": "Marquer la période {period} comme payée ?",
+      "confirmMarkReady": "Marquer comme payées toutes les lignes prêtes de la période {period} ?",
+      "confirmMarkReadyMissing": "Marquer comme payées les lignes prêtes de {period} ? {n} ligne(s) restent bloquées (infos manquantes).",
+      "confirmMarkLinePaid": "Marquer cette ligne de commission comme payée ?",
       "empty": "Aucune commission sur cette période",
       "colVet": "Vétérinaire",
+      "colCompany": "Société",
+      "colIban": "IBAN",
       "colClients": "Clients",
       "colLedger": "Activations",
       "colAmount": "Commission",
       "colStatus": "Statut",
+      "colActions": "Actions",
       "statusOpen": "Ouvert",
       "statusClosed": "Clôturé",
-      "statusPaid": "Payé"
+      "statusPartiallyPaid": "Partiellement payé",
+      "statusPaid": "Payé",
+      "lineStatus": {
+        "accruing": "En cours",
+        "missing_info": "Infos manquantes",
+        "ready_to_pay": "Prêt à payer",
+        "paid": "Payé"
+      }
     },
     "commercialBonuses": {
       "title": "Bonus SPIFF",
@@ -805,6 +820,9 @@
   "commissions": {
     "title": "Mes rétributions",
     "subtitle": "Vos gains et versements en tant que vétérinaire.",
+    "payoutSchedule": "Les paiements des commissions sont effectués en début de chaque mois.",
+    "payoutIncompleteBanner": "Complétez vos informations société et bancaires pour permettre le versement de vos commissions.",
+    "payoutIncompleteLink": "Ouvrir les paramètres",
     "kpiClients": "Clients payants",
     "kpiRate": "Taux de base actuel",
     "kpiRateBase": "Taux de base (palier)",
@@ -829,7 +847,13 @@
     "colCommission": "Commission",
     "colPeriod": "Période",
     "colAmount": "Montant",
-    "colStatus": "Statut"
+    "colStatus": "Statut",
+    "lineStatus": {
+      "accruing": "En cours",
+      "missing_info": "Infos manquantes",
+      "ready_to_pay": "Prêt à payer",
+      "paid": "Payé"
+    }
   },
   "commissionSheet": {
     "htvaNote": "Commissions calculées sur le HTVA (TVA BE 21 %). Prix clients / Stripe en TTC.",
@@ -1215,7 +1239,27 @@
       "postalCode": "Code postal",
       "city": "Ville",
       "website": "Site web (optionnel)",
-      "websitePlaceholder": "https://"
+      "websitePlaceholder": "https://",
+      "payoutSection": "Paiements & société",
+      "payoutHint": "Informations nécessaires pour établir et verser vos fiches de commissions.",
+      "companyLegalName": "Raison sociale",
+      "vatNumber": "N° TVA",
+      "companyNumber": "N° entreprise (BCE)",
+      "legalForm": "Forme juridique",
+      "legalFormPlaceholder": "Choisir…",
+      "legalForms": {
+        "srl": "SRL",
+        "sa": "SA",
+        "asbl": "ASBL",
+        "independent": "Indépendant / personne physique",
+        "other": "Autre"
+      },
+      "billingSameAsPractice": "Adresse de facturation identique au cabinet",
+      "billingAddress": "Adresse de facturation",
+      "billingAddressLine2": "Complément d'adresse de facturation",
+      "payoutIban": "IBAN",
+      "payoutBic": "BIC (optionnel)",
+      "payoutAccountHolder": "Titulaire du compte"
     }
   },
   "legal": {
@@ -1284,6 +1328,9 @@
     "invalid_period": "Période invalide (format AAAA-MM)",
     "payout_not_open": "Cette période n'est plus ouverte",
     "payout_not_closed": "Clôturez d'abord la période avant de marquer payé",
+    "payout_line_not_ready": "Cette ligne n'est pas prête à être payée (infos manquantes ou déjà payée)",
+    "payout_no_ready_lines": "Aucune ligne prête à payer sur cette période",
+    "line_not_found": "Ligne de commission introuvable",
     "run_not_found": "Cycle de rétribution introuvable",
     "google_pro_only": "Accès Google réservé aux profils Pro.",
     "not_your_pet": "Ce n'est pas votre animal",

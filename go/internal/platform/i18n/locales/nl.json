@@ -84,7 +84,8 @@
     "password_reset_sent": "Als er een account bestaat voor dit e-mailadres, is er een resetlink verzonden.",
     "password_reset": "Wachtwoord bijgewerkt. U kunt inloggen.",
     "vet_invite_sent": "Als een dierenarts overeenkomt met dit e-mailadres, wordt hij toegevoegd aan uw praktijken.",
-    "app_link_sent": "De downloadlink van de app is naar de klant verzonden."
+    "app_link_sent": "De downloadlink van de app is naar de klant verzonden.",
+    "journey_unsubscribed": "U bent uitgeschreven van het e-mail ontdekkingstraject."
   },
   "defaults": {
     "auto_reply_unavailable": "Ik ben niet beschikbaar, ik neem snel contact met u op."
@@ -134,7 +135,210 @@
     "visit_request_cta": "Aanvraag bekijken",
     "visit_request_disclaimer": "Meld u aan bij petsFollow Pro om te bevestigen of een ander moment voor te stellen.",
     "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
-    "footer_visit_llit": "Bezoek LL-IT Software & Computer"
+    "footer_visit_llit": "Bezoek LL-IT Software & Computer",
+    "journey": {
+      "unsubscribe": "Uitschrijven van het ontdekkingstraject",
+      "d0_welcome": {
+        "subject": "Welkom bij petsFollow",
+        "tagline": "Gezondheidsopvolging van uw dier",
+        "preheader": "Uw petsFollow-traject start vandaag.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Uw dierenarts schreef petsFollow voor: hartopvolging zonder apparaat, rechtstreeks op uw telefoon. Download de app om te starten.",
+        "detail": "Wat u kunt doen:\n• Hartmetingen 15 / 30 / 60 s\n• Beveiligde berichten met de praktijk\n• Tijdlijn en zorgherinneringen\n• Minder dan €3 / maand per dier",
+        "cta": "App downloaden",
+        "disclaimer": "U kunt deze e-mails uitschakelen via de link onderaan."
+      },
+      "d1_activate": {
+        "subject": "Activeer de opvolging van uw dier",
+        "tagline": "Eerste stappen",
+        "preheader": "Maak het profiel van uw dier en kies een plan.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Om de voorgeschreven opvolging te activeren, maakt u het dierenprofiel aan en kiest u een plan. Wij raden het 3-jarenplan (€95) aan — ongeveer €2,6 / maand.",
+        "detail": "Plannen incl. btw:\n• €35 / jaar\n• €95 / 3 jaar (aanbevolen)\n• €145 / 5 jaar (eenmalig)",
+        "cta": "App openen",
+        "disclaimer": "Zonder betaling blijft de hartopvolging in afwachting."
+      },
+      "d2_first_measure": {
+        "subject": "Klaar voor uw eerste meting?",
+        "tagline": "Hartmeting",
+        "preheader": "Leer de hartslag van uw dier meten.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Vandaag doet u uw eerste hartmeting. Houd uw dier rustig, plaats de hand op de borstkas en tik bij elke slag gedurende de ingestelde duur (15, 30 of 60 s volgens de praktijk).",
+        "detail": "Tip: een ontspannen dier geeft een betrouwbaardere meting. Valideer daarna om het resultaat met uw dierenarts te delen.",
+        "cta": "Meting doen",
+        "disclaimer": "Bij twijfel, contacteer uw praktijk via berichten."
+      },
+      "d4_routine": {
+        "subject": "Bouw een opvolgingsroutine",
+        "tagline": "Herinneringen & zorg",
+        "preheader": "Herinneringen helpen u niets te vergeten.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Een goede routine maakt het verschil: activeer meet- en zorgherinneringen (vaccin, ontworming, controle…). Uw dierenarts ziet de geschiedenis in het dossier.",
+        "detail": "Optie Care+ (€19 / jaar): medicatie en gepersonaliseerde herinneringen bij regelmatige behandeling.",
+        "cta": "Herinneringen bekijken",
+        "disclaimer": "Optionele add-ons beheert u in de app."
+      },
+      "d6_vet_link": {
+        "subject": "Uw dierenarts is één bericht verwijderd",
+        "tagline": "Berichten & delen",
+        "preheader": "Uw metingen worden gedeeld met de praktijk.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Gevalideerde metingen komen in de gedeelde tijdlijn met uw dierenarts. Gebruik berichten om een vraag te stellen of een foto te sturen.",
+        "detail": "Tip: houd de thread per dier aan voor een duidelijker opvolging.",
+        "cta": "Berichten openen",
+        "disclaimer": "Uw praktijk kan tijdelijk onbeschikbaar zijn; een automatisch antwoord informeert u."
+      },
+      "d10_visits": {
+        "subject": "Vraag een bezoek tussen consultaties",
+        "tagline": "Afspraken",
+        "preheader": "Plan een afspraak met uw praktijk via de app.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Moet u de dierenarts opnieuw zien? Vraag een bezoek aan via de app. U krijgt een melding wanneer het moment bevestigd is.",
+        "detail": "",
+        "cta": "Bezoek aanvragen",
+        "disclaimer": "Beschikbaarheid hangt af van de praktijk."
+      },
+      "d14_checkpoint": {
+        "subject": "Balans van uw eerste 2 weken",
+        "tagline": "Ontdekkingstraject",
+        "preheader": "Kort overzicht van wat petsFollow omvat.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Al 14 dagen: metingen, berichten, tijdlijn en herinneringen zitten in uw dierenabonnement. Blijf meten volgens de richtlijnen van de praktijk.",
+        "detail": "Inbegrepen: metingen 15/30/60 s · berichten + push · tijdlijn · herinneringen · FR/NL/EN/ES",
+        "cta": "Verder in de app",
+        "disclaimer": "Bedankt dat u petsFollow vertrouwt voor de opvolging van uw dier."
+      },
+      "d30_habit": {
+        "subject": "Eén maand opvolging — houd het ritme",
+        "tagline": "Hartgewoonte",
+        "preheader": "Regelmatige metingen helpen uw dierenarts.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Al een maand! Regelmatige metingen verrijken het dossier van uw dier. Bij meerdere dieren biedt de Family-optie (€39 / jaar) een huishoudoverzicht en −10% vanaf het 2e dier.",
+        "detail": "",
+        "cta": "Mijn dieren bekijken",
+        "disclaimer": "Opties beheert u in de app-instellingen / abonnementen."
+      },
+      "d45_care_plus": {
+        "subject": "Care+: medicatie & gepersonaliseerde herinneringen",
+        "tagline": "Optie Care+",
+        "preheader": "€19 / jaar voor fijnere behandelingsopvolging.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Als uw dier een behandeling volgt, voegt Care+ (€19 / jaar) medicatie en gepersonaliseerde herinneringen toe — naast de standaard zorgherinneringen.",
+        "detail": "",
+        "cta": "Care+ ontdekken",
+        "disclaimer": "Jaarlijkse recurrente optie, opzegbaar via het betalingsportaal."
+      },
+      "d60_horse": {
+        "subject": "Horse-pack: hoefsmid, mestonderzoek & wedstrijden",
+        "tagline": "Optie Paard",
+        "preheader": "€39 / jaar voor aangepaste paardenopvolging.",
+        "greeting": "Hallo {fullName},",
+        "intro": "U volgt een paard: het Horse-pack (€39 / jaar) voegt herinneringen voor hoefsmid en mestonderzoek, professionele contacten en een wedstrijdkalender toe.",
+        "detail": "",
+        "cta": "Horse-pack ontdekken",
+        "disclaimer": "Jaarlijkse optie voor accounts met minstens één paard."
+      },
+      "d75_kennel": {
+        "subject": "Kennel: snelle encoding voor fokkers",
+        "tagline": "Optie Kennel",
+        "preheader": "€119 / jaar · −15% · vanaf 6 dieren.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Met 6+ dieren versnelt Kennel (€119 / jaar) de encoding (batch) en past −15% toe op dierenabonnementen. Exclusief met Family.",
+        "detail": "",
+        "cta": "Kennel ontdekken",
+        "disclaimer": "Kennel vervangt Family (upgrade)."
+      },
+      "d90_quarter": {
+        "subject": "3 maanden petsFollow — de tijdlijn telt",
+        "tagline": "Kwartaalwaarde",
+        "preheader": "Uw historiek ondersteunt de voorgeschreven opvolging.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Drie maanden data: tijdlijn, berichten en metingen vormen een nuttig dossier tussen consultaties. Met 2–5 dieren vereenvoudigt Family (€39 / jaar) het huishoudoverzicht (−10%).",
+        "detail": "",
+        "cta": "Tijdlijn openen",
+        "disclaimer": "Volg de richtlijnen van uw dierenarts."
+      },
+      "d120_seasonal": {
+        "subject": "Denk aan seizoenszorg",
+        "tagline": "Zorg & preventie",
+        "preheader": "Controleer herinneringen vaccin / ontworming / controle.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Afhankelijk van het seizoen keren sommige zorgen terug: vaccinatie, ontworming, tandcontrole… Open het tabblad Zorg en houd herinneringen up-to-date.",
+        "detail": "",
+        "cta": "Zorg bekijken",
+        "disclaimer": "Uw dierenarts blijft de referentie voor het zorgschema."
+      },
+      "d180_midyear": {
+        "subject": "Halverwege: uw opvolging in één oogopslag",
+        "tagline": "Check-in na 6 maanden",
+        "preheader": "Tijdlijn, metingen en berichten vormen uw dossier.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Halverwege het jaar: bekijk de tijdlijn van uw dieren en controleer of abonnementen up-to-date zijn. Via het betalingsportaal beheert u een recurrente formule.",
+        "detail": "",
+        "cta": "App openen",
+        "disclaimer": "Voor facturatievragen gebruikt u het Stripe-portaal in de app."
+      },
+      "d270_reengage": {
+        "subject": "We zien u graag terug in petsFollow",
+        "tagline": "Zachte herinnering",
+        "preheader": "Een korte meting werkt de opvolging bij.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Het is even geleden zonder gevalideerde meting. Een korte hartmeting helpt uw dierenarts bij een nuttige opvolging — het duurt maar seconden.",
+        "detail": "",
+        "cta": "Meting doen",
+        "disclaimer": "Gebruikt u de app niet meer, dan kunt u zich hieronder uitschrijven."
+      },
+      "d330_prerenew": {
+        "subject": "Uw petsFollow-opvolging loopt verder",
+        "tagline": "Voor verlenging",
+        "preheader": "Denk aan verlenging of het 3-jarenplan.",
+        "greeting": "Hallo {fullName},",
+        "intro": "De komende weken: controleer de einddatum van uw dierenabonnement. Het 3-jarenplan (€95) blijft de beste balans duur / prijs voor duurzame voorgeschreven opvolging.",
+        "detail": "€35 / jaar · €95 / 3 jaar · €145 / 5 jaar",
+        "cta": "Abonnement beheren",
+        "disclaimer": "Het betalingsportaal is beschikbaar via het dierenprofiel."
+      },
+      "d365_anniversary": {
+        "subject": "1 jaar petsFollow — bedankt!",
+        "tagline": "Verjaardag",
+        "preheader": "Eén jaar voorgeschreven opvolging, zonder apparaat.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Fijne trajectverjaardag! Bedankt dat u petsFollow vertrouwt voor de hartopvolging van uw dier. Denk aan verlenging — het 3-jarenplan (€95) is ideaal om rustig verder te gaan.",
+        "detail": "",
+        "cta": "Opvolging verderzetten",
+        "disclaimer": "Het hele petsFollow-team bedankt u."
+      },
+      "evt_pending_payment": {
+        "subject": "Rond de activatie van uw dier af",
+        "tagline": "Betaling in afwachting",
+        "preheader": "Een dier wacht nog op betaling van het plan.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Een dierenprofiel is aangemaakt maar de betaling is niet afgerond. Voltooi de checkout om metingen en delen met uw dierenarts te activeren.",
+        "detail": "",
+        "cta": "Betaling afronden",
+        "disclaimer": "Zonder betaling blijft de opvolging in afwachting."
+      },
+      "evt_past_due": {
+        "subject": "Actie nodig: betaling van uw abonnement",
+        "tagline": "Facturatie",
+        "preheader": "Een petsFollow-abonnement is achterstallig.",
+        "greeting": "Hallo {fullName},",
+        "intro": "We konden een abonnementsbetaling niet innen. Werk uw betaalmethode bij via het portaal om onderbreking van de opvolging te vermijden.",
+        "detail": "",
+        "cta": "Betaling bijwerken",
+        "disclaimer": "Contacteer uw bank of gebruik het Stripe-portaal in de app."
+      },
+      "evt_inactive_hr": {
+        "subject": "Een snelle meting om weer op koers te komen",
+        "tagline": "Herengagement",
+        "preheader": "Geen gevalideerde meting recent.",
+        "greeting": "Hallo {fullName},",
+        "intro": "Al een tijd geen gevalideerde hartmeting. Een korte meting werkt het dossier bij voor uw dierenarts.",
+        "detail": "",
+        "cta": "Meting doen",
+        "disclaimer": "Schakel deze e-mails uit via de uitschrijflink indien gewenst."
+      }
+    }
   },
   "push": {
     "new_message_title": "Nieuw bericht",

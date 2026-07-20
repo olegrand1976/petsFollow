@@ -84,7 +84,8 @@
     "password_reset_sent": "Si existe una cuenta con este correo, se ha enviado un enlace de restablecimiento.",
     "password_reset": "Contraseña actualizada. Ya puede iniciar sesión.",
     "vet_invite_sent": "Si un veterinario coincide con este correo, se añadirá a sus clínicas.",
-    "app_link_sent": "El enlace de descarga de la app se ha enviado al cliente."
+    "app_link_sent": "El enlace de descarga de la app se ha enviado al cliente.",
+    "journey_unsubscribed": "Se ha dado de baja del recorrido de descubrimiento por email."
   },
   "defaults": {
     "auto_reply_unavailable": "No estoy disponible, le responderé en breve."
@@ -134,7 +135,210 @@
     "visit_request_cta": "Ver solicitud",
     "visit_request_disclaimer": "Inicie sesión en petsFollow Pro para confirmar o proponer otro horario.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
-    "footer_visit_llit": "Visitar LL-IT Software & Computer"
+    "footer_visit_llit": "Visitar LL-IT Software & Computer",
+    "journey": {
+      "unsubscribe": "Darse de baja del recorrido de descubrimiento",
+      "d0_welcome": {
+        "subject": "Bienvenido a petsFollow",
+        "tagline": "Seguimiento de salud de su animal",
+        "preheader": "Su recorrido petsFollow empieza hoy.",
+        "greeting": "Hola {fullName},",
+        "intro": "Su veterinario le ha prescrito petsFollow: seguimiento cardíaco sin dispositivo, en su teléfono. Descargue la app para empezar.",
+        "detail": "Qué podrá hacer:\n• Lecturas cardíacas 15 / 30 / 60 s\n• Mensajería segura con la clínica\n• Timeline y recordatorios de cuidados\n• Menos de 3 € / mes por animal",
+        "cta": "Descargar la aplicación",
+        "disclaimer": "Puede desactivar estos correos con el enlace al final."
+      },
+      "d1_activate": {
+        "subject": "Active el seguimiento de su animal",
+        "tagline": "Primeros pasos",
+        "preheader": "Cree el perfil de su animal y elija un plan.",
+        "greeting": "Hola {fullName},",
+        "intro": "Para activar el seguimiento prescrito, cree el perfil de su animal y elija un plan. Recomendamos el plan de 3 años (95 €) — unos 2,6 € / mes.",
+        "detail": "Planes IVA incl.:\n• 35 € / año\n• 95 € / 3 años (recomendado)\n• 145 € / 5 años (pago único)",
+        "cta": "Abrir la aplicación",
+        "disclaimer": "Sin pago, el seguimiento cardíaco queda pendiente."
+      },
+      "d2_first_measure": {
+        "subject": "¿Listo para su primera lectura?",
+        "tagline": "Medición cardíaca",
+        "preheader": "Aprenda a medir la frecuencia cardíaca de su animal.",
+        "greeting": "Hola {fullName},",
+        "intro": "Hoy realice su primera lectura cardíaca. Mantenga a su animal en calma, coloque la mano en el tórax y pulse en cada latido durante la duración indicada (15, 30 o 60 s según la clínica).",
+        "detail": "Consejo: un animal relajado da una medida más fiable. Luego valide para compartir el resultado con su veterinario.",
+        "cta": "Hacer una lectura",
+        "disclaimer": "Si duda, contacte a su clínica por mensajería."
+      },
+      "d4_routine": {
+        "subject": "Cree una rutina de seguimiento",
+        "tagline": "Recordatorios y cuidados",
+        "preheader": "Los recordatorios le ayudan a no olvidar nada.",
+        "greeting": "Hola {fullName},",
+        "intro": "Una buena rutina marca la diferencia: active recordatorios de lecturas y cuidados (vacuna, desparasitación, control…). Su veterinario ve el historial en el expediente.",
+        "detail": "Opción Care+ (19 € / año): medicamentos y recordatorios personalizados si su animal tiene tratamiento regular.",
+        "cta": "Ver recordatorios",
+        "disclaimer": "Los complementos opcionales se gestionan en la app."
+      },
+      "d6_vet_link": {
+        "subject": "Su veterinario está a un mensaje",
+        "tagline": "Mensajería y compartición",
+        "preheader": "Sus lecturas se comparten con la clínica.",
+        "greeting": "Hola {fullName},",
+        "intro": "Las lecturas validadas entran en la timeline compartida con su veterinario. Use la mensajería para preguntar o enviar una foto.",
+        "detail": "Consejo: mantenga el hilo del mismo animal para un seguimiento más claro.",
+        "cta": "Abrir mensajes",
+        "disclaimer": "Su clínica puede estar temporalmente no disponible; un mensaje automático se lo indicará."
+      },
+      "d10_visits": {
+        "subject": "Solicite una visita entre consultas",
+        "tagline": "Citas",
+        "preheader": "Planifique una cita con su clínica desde la app.",
+        "greeting": "Hola {fullName},",
+        "intro": "¿Necesita ver al veterinario de nuevo? Solicite una visita desde la app. Recibirá una notificación cuando se confirme el horario.",
+        "detail": "",
+        "cta": "Solicitar una visita",
+        "disclaimer": "La disponibilidad depende de la clínica."
+      },
+      "d14_checkpoint": {
+        "subject": "Balance de sus 2 primeras semanas",
+        "tagline": "Recorrido de descubrimiento",
+        "preheader": "Resumen de lo que incluye petsFollow.",
+        "greeting": "Hola {fullName},",
+        "intro": "Ya van 14 días: lecturas, mensajería, timeline y recordatorios están incluidos en su plan por animal. Siga midiendo según las indicaciones de la clínica.",
+        "detail": "Incluido: lecturas 15/30/60 s · mensajería + push · timeline · recordatorios · FR/NL/EN/ES",
+        "cta": "Seguir en la app",
+        "disclaimer": "Gracias por confiar en petsFollow para el seguimiento de su animal."
+      },
+      "d30_habit": {
+        "subject": "Un mes de seguimiento — mantenga el ritmo",
+        "tagline": "Hábito cardíaco",
+        "preheader": "Las lecturas regulares ayudan a su veterinario.",
+        "greeting": "Hola {fullName},",
+        "intro": "¡Ya un mes! Las lecturas regulares enriquecen el expediente de su animal. Si tiene varios compañeros, la opción Familia (39 € / año) ofrece vista del hogar y −10 % desde el 2.º animal.",
+        "detail": "",
+        "cta": "Ver mis animales",
+        "disclaimer": "Las opciones se gestionan en Ajustes / suscripciones de la app."
+      },
+      "d45_care_plus": {
+        "subject": "Care+: medicamentos y recordatorios personalizados",
+        "tagline": "Opción Care+",
+        "preheader": "19 € / año para un seguimiento de tratamientos más fino.",
+        "greeting": "Hola {fullName},",
+        "intro": "Si su animal sigue un tratamiento, Care+ (19 € / año) añade medicamentos y recordatorios personalizados — además de los recordatorios de cuidados estándar.",
+        "detail": "",
+        "cta": "Descubrir Care+",
+        "disclaimer": "Opción anual recurrente, cancelable desde el portal de pago."
+      },
+      "d60_horse": {
+        "subject": "Pack Caballo: herrador, cópro y competiciones",
+        "tagline": "Opción Caballo",
+        "preheader": "39 € / año para un seguimiento equino adaptado.",
+        "greeting": "Hola {fullName},",
+        "intro": "Cuida un caballo: el pack Caballo (39 € / año) añade recordatorios de herrador y coproscopia, contactos profesionales y calendario de competiciones.",
+        "detail": "",
+        "cta": "Descubrir el pack Caballo",
+        "disclaimer": "Opción anual para cuentas con al menos un caballo."
+      },
+      "d75_kennel": {
+        "subject": "Kennel: codificación rápida para criaderos",
+        "tagline": "Opción Kennel",
+        "preheader": "119 € / año · −15 % · desde 6 animales.",
+        "greeting": "Hola {fullName},",
+        "intro": "Con 6+ animales, Kennel (119 € / año) acelera la codificación (lote) y aplica −15 % en los planes por animal. Exclusivo con Familia.",
+        "detail": "",
+        "cta": "Descubrir Kennel",
+        "disclaimer": "Kennel sustituye a Familia (upgrade)."
+      },
+      "d90_quarter": {
+        "subject": "3 meses con petsFollow — la timeline cuenta",
+        "tagline": "Valor trimestral",
+        "preheader": "Su historial apoya el seguimiento prescrito.",
+        "greeting": "Hola {fullName},",
+        "intro": "Tres meses de datos: timeline, mensajes y lecturas forman un expediente útil entre consultas. Con 2–5 animales, Familia (39 € / año) simplifica la vista del hogar (−10 %).",
+        "detail": "",
+        "cta": "Abrir la timeline",
+        "disclaimer": "Siga las indicaciones de su veterinario."
+      },
+      "d120_seasonal": {
+        "subject": "Piense en los cuidados de temporada",
+        "tagline": "Cuidados y prevención",
+        "preheader": "Revise recordatorios de vacuna / desparasitación / control.",
+        "greeting": "Hola {fullName},",
+        "intro": "Según la temporada, algunos cuidados vuelven: vacunación, desparasitación, control dental… Abra la pestaña Cuidados y mantenga los recordatorios al día.",
+        "detail": "",
+        "cta": "Ver cuidados",
+        "disclaimer": "Su veterinario sigue siendo la referencia del calendario de cuidados."
+      },
+      "d180_midyear": {
+        "subject": "Mitad de recorrido: su seguimiento de un vistazo",
+        "tagline": "Punto a 6 meses",
+        "preheader": "Timeline, lecturas y mensajes forman su expediente.",
+        "greeting": "Hola {fullName},",
+        "intro": "A mitad de año, revise la timeline de sus animales y compruebe que las suscripciones estén al día. El portal de pago le permite gestionar un plan recurrente.",
+        "detail": "",
+        "cta": "Abrir la aplicación",
+        "disclaimer": "Para dudas de facturación, use el portal Stripe desde la app."
+      },
+      "d270_reengage": {
+        "subject": "Nos gustaría verle de nuevo en petsFollow",
+        "tagline": "Recordatorio suave",
+        "preheader": "Una lectura corta actualiza el seguimiento.",
+        "greeting": "Hola {fullName},",
+        "intro": "Hace tiempo sin una lectura validada. Una lectura cardíaca breve ayuda a su veterinario a mantener un seguimiento útil — solo toma segundos.",
+        "detail": "",
+        "cta": "Hacer una lectura",
+        "disclaimer": "Si ya no usa la app, puede darse de baja del recorrido abajo."
+      },
+      "d330_prerenew": {
+        "subject": "Su seguimiento petsFollow continúa",
+        "tagline": "Antes del vencimiento",
+        "preheader": "Piense en la renovación o el plan de 3 años.",
+        "greeting": "Hola {fullName},",
+        "intro": "En las próximas semanas, revise la fecha de fin de su plan por animal. El plan de 3 años (95 €) sigue siendo el mejor equilibrio duración / precio para un seguimiento prescrito duradero.",
+        "detail": "35 € / año · 95 € / 3 años · 145 € / 5 años",
+        "cta": "Gestionar mi suscripción",
+        "disclaimer": "El portal de pago está disponible desde la ficha del animal."
+      },
+      "d365_anniversary": {
+        "subject": "1 año con petsFollow — ¡gracias!",
+        "tagline": "Aniversario",
+        "preheader": "Un año de seguimiento prescrito, sin dispositivo.",
+        "greeting": "Hola {fullName},",
+        "intro": "¡Feliz aniversario de recorrido! Gracias por confiar en petsFollow para el seguimiento cardíaco de su animal. Piense en la renovación — el plan de 3 años (95 €) es ideal para continuar con tranquilidad.",
+        "detail": "",
+        "cta": "Continuar mi seguimiento",
+        "disclaimer": "Todo el equipo petsFollow le agradece."
+      },
+      "evt_pending_payment": {
+        "subject": "Finalice la activación de su animal",
+        "tagline": "Pago pendiente",
+        "preheader": "Un animal sigue esperando el pago del plan.",
+        "greeting": "Hola {fullName},",
+        "intro": "Se creó el perfil de un animal pero el pago del plan no está terminado. Finalice el checkout para activar lecturas y compartición con su veterinario.",
+        "detail": "",
+        "cta": "Finalizar el pago",
+        "disclaimer": "Sin pago, el seguimiento queda pendiente."
+      },
+      "evt_past_due": {
+        "subject": "Acción requerida: pago de su suscripción",
+        "tagline": "Facturación",
+        "preheader": "Una suscripción petsFollow tiene el pago atrasado.",
+        "greeting": "Hola {fullName},",
+        "intro": "No pudimos cobrar un pago de suscripción. Actualice su método de pago en el portal para evitar interrupciones del seguimiento.",
+        "detail": "",
+        "cta": "Actualizar el pago",
+        "disclaimer": "Contacte a su banco o use el portal Stripe desde la app."
+      },
+      "evt_inactive_hr": {
+        "subject": "Una lectura rápida para retomar el hilo",
+        "tagline": "Reenganche",
+        "preheader": "Ninguna lectura validada recientemente.",
+        "greeting": "Hola {fullName},",
+        "intro": "Hace tiempo sin una lectura cardíaca validada. Una lectura corta actualiza el expediente para su veterinario.",
+        "detail": "",
+        "cta": "Hacer una lectura",
+        "disclaimer": "Desactive estos correos con el enlace de baja si lo prefiere."
+      }
+    }
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

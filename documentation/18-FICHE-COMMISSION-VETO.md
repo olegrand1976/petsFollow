@@ -42,3 +42,11 @@ Accrual : `AccrueVetForAddon` → ledger `source_kind=addon`.
 
 ## Message
 Poussez le **triennial** — meilleur taux dès le 1er client. Même plafond avec ou sans commercial assigné.
+
+## Versements
+- Les paiements des commissions sont effectués **en début de chaque mois**.
+- Profil payout (Paramètres → Paiements & société) requis pour passer une ligne en **prêt à payer** :
+  - raison sociale, n° TVA, n° entreprise (BCE), forme juridique
+  - adresse de facturation (cabinet ou distincte)
+  - IBAN + titulaire (BIC optionnel)
+- Statuts ligne visibles par le véto : `accruing` → `missing_info` / `ready_to_pay` → `paid`.

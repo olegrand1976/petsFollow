@@ -21,11 +21,12 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 - Espace commercial (prospects, encode, pitch)
 - Link-requests, care reminders, horse pack
 
-## Phase 3 — Backlog
+## Phase 3 — Engagement & backlog
 
 | Item | Doc / note |
 |------|------------|
 | Push FCM opérationnel | **Livré** — messages véto + confirmation RDV (voir [08](08-MESSAGERIE-NOTIFICATIONS.md)) |
+| Parcours email client 12 mois | **Livré** — [23](23-PARCOURS-EMAIL-CLIENT.md) (parallèle Discovery in-app) |
 | WebSocket temps réel | — |
 | Refresh silencieux clients | — |
 | Simulation admin 10 ans | [16](16-ADMIN-SIMULATION-10ANS.md) **non livré** |

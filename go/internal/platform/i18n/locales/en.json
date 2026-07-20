@@ -84,7 +84,8 @@
     "password_reset_sent": "If an account exists for this email, a reset link has been sent.",
     "password_reset": "Password updated. You can sign in.",
     "vet_invite_sent": "If a veterinarian matches this email, they will be added to your practices.",
-    "app_link_sent": "The app download link was sent to the client."
+    "app_link_sent": "The app download link was sent to the client.",
+    "journey_unsubscribed": "You have been unsubscribed from the discovery email journey."
   },
   "defaults": {
     "auto_reply_unavailable": "I am unavailable, I will get back to you shortly."
@@ -134,7 +135,210 @@
     "visit_request_cta": "View request",
     "visit_request_disclaimer": "Sign in to petsFollow Pro to confirm or propose another slot.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
-    "footer_visit_llit": "Visit LL-IT Software & Computer"
+    "footer_visit_llit": "Visit LL-IT Software & Computer",
+    "journey": {
+      "unsubscribe": "Unsubscribe from the discovery journey",
+      "d0_welcome": {
+        "subject": "Welcome to petsFollow",
+        "tagline": "Pet health monitoring",
+        "preheader": "Your petsFollow journey starts today.",
+        "greeting": "Hello {fullName},",
+        "intro": "Your vet prescribed petsFollow: cardiac monitoring without a device, right on your phone. Download the app to get started.",
+        "detail": "What you can do:\n• Heart readings 15 / 30 / 60 s\n• Secure messaging with your practice\n• Timeline and care reminders\n• Under €3 / month per pet",
+        "cta": "Download the app",
+        "disclaimer": "You can turn off these emails using the link at the bottom."
+      },
+      "d1_activate": {
+        "subject": "Activate your pet's monitoring",
+        "tagline": "Getting started",
+        "preheader": "Create your pet profile and choose a plan.",
+        "greeting": "Hello {fullName},",
+        "intro": "To activate prescribed monitoring, create your pet's profile and choose a plan. We recommend the 3-year plan (€95) — about €2.6 / month.",
+        "detail": "Plans incl. VAT:\n• €35 / year\n• €95 / 3 years (recommended)\n• €145 / 5 years (one-time)",
+        "cta": "Open the app",
+        "disclaimer": "Without payment, heart monitoring stays pending."
+      },
+      "d2_first_measure": {
+        "subject": "Ready for your first reading?",
+        "tagline": "Heart measurement",
+        "preheader": "Learn how to measure your pet's heart rate.",
+        "greeting": "Hello {fullName},",
+        "intro": "Today, take your first heart reading. Keep your pet calm, place your hand on the chest and tap with each beat for the set duration (15, 30 or 60 s depending on the practice).",
+        "detail": "Tip: a relaxed pet gives a more reliable reading. Then validate to share the result with your vet.",
+        "cta": "Take a reading",
+        "disclaimer": "If unsure, contact your practice via messaging."
+      },
+      "d4_routine": {
+        "subject": "Build a monitoring routine",
+        "tagline": "Reminders & care",
+        "preheader": "Reminders help you stay on track.",
+        "greeting": "Hello {fullName},",
+        "intro": "A good routine makes the difference: enable reading and care reminders (vaccine, deworming, check-up…). Your vet sees the history in the record.",
+        "detail": "Care+ option (€19 / year): medications and custom reminders if your pet has regular treatment.",
+        "cta": "View reminders",
+        "disclaimer": "Optional add-ons are managed in the app."
+      },
+      "d6_vet_link": {
+        "subject": "Your vet is one message away",
+        "tagline": "Messaging & sharing",
+        "preheader": "Your readings are shared with the practice.",
+        "greeting": "Hello {fullName},",
+        "intro": "Validated readings join the timeline shared with your vet. Use messaging to ask a question or send a photo.",
+        "detail": "Tip: keep the thread for the same pet for clearer follow-up.",
+        "cta": "Open messages",
+        "disclaimer": "Your practice may be temporarily unavailable; an automatic reply will notify you."
+      },
+      "d10_visits": {
+        "subject": "Request a visit between consultations",
+        "tagline": "Appointments",
+        "preheader": "Schedule a visit with your practice from the app.",
+        "greeting": "Hello {fullName},",
+        "intro": "Need to see the vet again? Request a visit from the app. You'll get a notification when the slot is confirmed.",
+        "detail": "",
+        "cta": "Request a visit",
+        "disclaimer": "Availability depends on the practice."
+      },
+      "d14_checkpoint": {
+        "subject": "Your first 2 weeks check-in",
+        "tagline": "Discovery journey",
+        "preheader": "A quick recap of what petsFollow includes.",
+        "greeting": "Hello {fullName},",
+        "intro": "It's been 14 days: readings, messaging, timeline and reminders are included in your pet plan. Keep measuring as advised by your practice.",
+        "detail": "Included: 15/30/60 s readings · messaging + push · timeline · reminders · FR/NL/EN/ES",
+        "cta": "Continue in the app",
+        "disclaimer": "Thank you for trusting petsFollow with your pet's care."
+      },
+      "d30_habit": {
+        "subject": "One month in — keep the pace",
+        "tagline": "Heart habit",
+        "preheader": "Regular readings help your vet.",
+        "greeting": "Hello {fullName},",
+        "intro": "One month already! Regular readings enrich your pet's record. If you have several companions, the Family option (€39 / year) gives a household view and −10% from the 2nd pet.",
+        "detail": "",
+        "cta": "View my pets",
+        "disclaimer": "Options are managed in the app settings / subscriptions."
+      },
+      "d45_care_plus": {
+        "subject": "Care+: medications & custom reminders",
+        "tagline": "Care+ option",
+        "preheader": "€19 / year for finer treatment follow-up.",
+        "greeting": "Hello {fullName},",
+        "intro": "If your pet is on treatment, Care+ (€19 / year) adds medications and custom reminders in the app — on top of standard care reminders.",
+        "detail": "",
+        "cta": "Discover Care+",
+        "disclaimer": "Annual recurring option, cancellable from the payment portal."
+      },
+      "d60_horse": {
+        "subject": "Horse pack: farrier, fecal & competitions",
+        "tagline": "Horse option",
+        "preheader": "€39 / year for tailored equine follow-up.",
+        "greeting": "Hello {fullName},",
+        "intro": "You care for a horse: the Horse pack (€39 / year) adds farrier and fecal reminders, professional contacts and a competition calendar.",
+        "detail": "",
+        "cta": "Discover the Horse pack",
+        "disclaimer": "Annual option for accounts with at least one horse."
+      },
+      "d75_kennel": {
+        "subject": "Kennel: fast encoding for breeders",
+        "tagline": "Kennel option",
+        "preheader": "€119 / year · −15% · from 6 pets.",
+        "greeting": "Hello {fullName},",
+        "intro": "With 6+ pets, Kennel (€119 / year) speeds up encoding (batch entry) and applies −15% on pet plans. Exclusive with Family.",
+        "detail": "",
+        "cta": "Discover Kennel",
+        "disclaimer": "Kennel replaces Family (upgrade)."
+      },
+      "d90_quarter": {
+        "subject": "3 months with petsFollow — timeline matters",
+        "tagline": "Quarterly value",
+        "preheader": "Your history supports prescribed follow-up.",
+        "greeting": "Hello {fullName},",
+        "intro": "Three months of data: timeline, messages and readings form a useful record between visits. With 2–5 pets, Family (€39 / year) simplifies the household view (−10%).",
+        "detail": "",
+        "cta": "Open the timeline",
+        "disclaimer": "Keep following your vet's guidance."
+      },
+      "d120_seasonal": {
+        "subject": "Think about seasonal care",
+        "tagline": "Care & prevention",
+        "preheader": "Check vaccine / deworming / check-up reminders.",
+        "greeting": "Hello {fullName},",
+        "intro": "Depending on the season, some care returns: vaccination, deworming, dental check… Open the Care tab and keep reminders up to date.",
+        "detail": "",
+        "cta": "View care",
+        "disclaimer": "Your vet remains the reference for the care schedule."
+      },
+      "d180_midyear": {
+        "subject": "Mid-year: your follow-up at a glance",
+        "tagline": "6-month check-in",
+        "preheader": "Timeline, readings and messages form your record.",
+        "greeting": "Hello {fullName},",
+        "intro": "Halfway through the year, review your pets' timeline and check that subscriptions are current. The payment portal lets you manage a recurring plan.",
+        "detail": "",
+        "cta": "Open the app",
+        "disclaimer": "For billing questions, use the Stripe portal from the app."
+      },
+      "d270_reengage": {
+        "subject": "We'd love to see you back in petsFollow",
+        "tagline": "Gentle nudge",
+        "preheader": "A short reading brings follow-up up to date.",
+        "greeting": "Hello {fullName},",
+        "intro": "It's been a while without a validated reading. A short heart reading helps your vet keep useful follow-up — it only takes seconds.",
+        "detail": "",
+        "cta": "Take a reading",
+        "disclaimer": "If you no longer use the app, you can unsubscribe from the journey below."
+      },
+      "d330_prerenew": {
+        "subject": "Your petsFollow monitoring continues",
+        "tagline": "Before renewal",
+        "preheader": "Consider renewal or the 3-year plan.",
+        "greeting": "Hello {fullName},",
+        "intro": "In the coming weeks, check your pet plan end date. The 3-year plan (€95) remains the best duration / price balance for lasting prescribed follow-up.",
+        "detail": "€35 / year · €95 / 3 years · €145 / 5 years",
+        "cta": "Manage my subscription",
+        "disclaimer": "The payment portal is available from the pet profile."
+      },
+      "d365_anniversary": {
+        "subject": "1 year with petsFollow — thank you!",
+        "tagline": "Anniversary",
+        "preheader": "One year of prescribed monitoring, without a device.",
+        "greeting": "Hello {fullName},",
+        "intro": "Happy journey anniversary! Thank you for trusting petsFollow with your pet's cardiac follow-up. Consider renewal — the 3-year plan (€95) is ideal to continue with peace of mind.",
+        "detail": "",
+        "cta": "Continue monitoring",
+        "disclaimer": "The whole petsFollow team thanks you."
+      },
+      "evt_pending_payment": {
+        "subject": "Finish activating your pet",
+        "tagline": "Pending payment",
+        "preheader": "A pet is still waiting for plan payment.",
+        "greeting": "Hello {fullName},",
+        "intro": "A pet profile was created but plan payment is not complete. Finish checkout to activate readings and sharing with your vet.",
+        "detail": "",
+        "cta": "Complete payment",
+        "disclaimer": "Without payment, monitoring stays pending."
+      },
+      "evt_past_due": {
+        "subject": "Action needed: subscription payment",
+        "tagline": "Billing",
+        "preheader": "A petsFollow subscription payment is past due.",
+        "greeting": "Hello {fullName},",
+        "intro": "We could not collect a subscription payment. Update your payment method via the portal to avoid interrupting monitoring.",
+        "detail": "",
+        "cta": "Update payment",
+        "disclaimer": "Contact your bank or use the Stripe portal from the app."
+      },
+      "evt_inactive_hr": {
+        "subject": "A quick reading to get back on track",
+        "tagline": "Re-engagement",
+        "preheader": "No validated reading recently.",
+        "greeting": "Hello {fullName},",
+        "intro": "No validated heart reading for a while. A short reading updates the record for your vet.",
+        "detail": "",
+        "cta": "Take a reading",
+        "disclaimer": "Turn off these emails via the unsubscribe link if you prefer."
+      }
+    }
   },
   "push": {
     "new_message_title": "New message",

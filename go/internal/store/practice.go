@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,19 +13,50 @@ import (
 )
 
 type PracticeProfile struct {
-	PracticeID             string     `json:"practiceId"`
-	PracticeName           string     `json:"practiceName"`
-	Phone                  string     `json:"phone"`
-	ContactEmail           string     `json:"contactEmail"`
-	AddressLine1           string     `json:"addressLine1"`
-	AddressLine2           string     `json:"addressLine2"`
-	City                   string     `json:"city"`
-	PostalCode             string     `json:"postalCode"`
-	Website                string     `json:"website"`
-	ProfileCompletedAt     *time.Time `json:"profileCompletedAt,omitempty"`
-	VetFullName            string     `json:"vetFullName"`
-	VetEmail               string     `json:"vetEmail"`
-	HeartRateDurationsSec  []int      `json:"heartrateDurationsSec"`
+	PracticeID            string     `json:"practiceId"`
+	PracticeName          string     `json:"practiceName"`
+	Phone                 string     `json:"phone"`
+	ContactEmail          string     `json:"contactEmail"`
+	AddressLine1          string     `json:"addressLine1"`
+	AddressLine2          string     `json:"addressLine2"`
+	City                  string     `json:"city"`
+	PostalCode            string     `json:"postalCode"`
+	Website               string     `json:"website"`
+	ProfileCompletedAt    *time.Time `json:"profileCompletedAt,omitempty"`
+	VetFullName           string     `json:"vetFullName"`
+	VetEmail              string     `json:"vetEmail"`
+	HeartRateDurationsSec []int      `json:"heartrateDurationsSec"`
+	// Company / payout (for commission sheets) — not required for onboarding.
+	CompanyLegalName       string `json:"companyLegalName"`
+	VATNumber              string `json:"vatNumber"`
+	CompanyNumber          string `json:"companyNumber"`
+	LegalForm              string `json:"legalForm"`
+	BillingSameAsPractice  bool   `json:"billingSameAsPractice"`
+	BillingAddressLine1    string `json:"billingAddressLine1"`
+	BillingAddressLine2    string `json:"billingAddressLine2"`
+	BillingPostalCode      string `json:"billingPostalCode"`
+	BillingCity            string `json:"billingCity"`
+	PayoutIBAN             string `json:"payoutIban"`
+	PayoutBIC              string `json:"payoutBic"`
+	PayoutAccountHolder    string `json:"payoutAccountHolder"`
+	PayoutProfileComplete  bool   `json:"payoutProfileComplete"`
+}
+
+// IsVetPayoutProfileComplete reports whether company + bank fields are sufficient for payout.
+func IsVetPayoutProfileComplete(p PracticeProfile) bool {
+	if strings.TrimSpace(p.CompanyLegalName) == "" || strings.TrimSpace(p.VATNumber) == "" ||
+		strings.TrimSpace(p.CompanyNumber) == "" || strings.TrimSpace(p.LegalForm) == "" {
+		return false
+	}
+	if strings.TrimSpace(p.PayoutIBAN) == "" || strings.TrimSpace(p.PayoutAccountHolder) == "" {
+		return false
+	}
+	if p.BillingSameAsPractice {
+		return strings.TrimSpace(p.AddressLine1) != "" && strings.TrimSpace(p.City) != "" && strings.TrimSpace(p.PostalCode) != ""
+	}
+	return strings.TrimSpace(p.BillingAddressLine1) != "" &&
+		strings.TrimSpace(p.BillingCity) != "" &&
+		strings.TrimSpace(p.BillingPostalCode) != ""
 }
 
 type RegisterVetInput struct {
@@ -49,20 +81,32 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
 			COALESCE(pr.postal_code,''), COALESCE(pr.website,''), pr.profile_completed_at,
-			u.full_name, u.email, pr.heartrate_durations_sec
+			u.full_name, u.email, pr.heartrate_durations_sec,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_address_line2,''),
+			COALESCE(pr.billing_postal_code,''), COALESCE(pr.billing_city,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,'')
 		FROM practice.practices pr
 		JOIN identity.users u ON u.id = $2 AND u.practice_id = pr.id
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
 		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.Website, &completedAt,
 		&p.VetFullName, &p.VetEmail, &durations,
+		&p.CompanyLegalName, &p.VATNumber, &p.CompanyNumber, &p.LegalForm, &p.BillingSameAsPractice,
+		&p.BillingAddressLine1, &p.BillingAddressLine2, &p.BillingPostalCode, &p.BillingCity,
+		&p.PayoutIBAN, &p.PayoutBIC, &p.PayoutAccountHolder,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PracticeProfile{}, ErrNotFound
 	}
+	if err != nil {
+		return PracticeProfile{}, err
+	}
 	p.ProfileCompletedAt = completedAt
 	p.HeartRateDurationsSec = int32SliceToInts(durations)
-	return p, err
+	p.PayoutProfileComplete = IsVetPayoutProfileComplete(p)
+	return p, nil
 }
 
 func int32SliceToInts(in []int32) []int {
@@ -109,8 +153,19 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	q := `
 		UPDATE practice.practices
 		SET name = $2, phone = $3, contact_email = $4, address_line1 = $5, address_line2 = $6,
-			city = $7, postal_code = $8, website = $9, heartrate_durations_sec = $10`
-	args := []any{practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2, p.City, p.PostalCode, p.Website, durations}
+			city = $7, postal_code = $8, website = $9, heartrate_durations_sec = $10,
+			company_legal_name = $11, vat_number = $12, company_number = $13, legal_form = $14,
+			billing_same_as_practice = $15, billing_address_line1 = $16, billing_address_line2 = $17,
+			billing_postal_code = $18, billing_city = $19,
+			payout_iban = $20, payout_bic = $21, payout_account_holder = $22`
+	args := []any{
+		practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2,
+		p.City, p.PostalCode, p.Website, durations,
+		p.CompanyLegalName, p.VATNumber, p.CompanyNumber, p.LegalForm,
+		p.BillingSameAsPractice, p.BillingAddressLine1, p.BillingAddressLine2,
+		p.BillingPostalCode, p.BillingCity,
+		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
+	}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`
 	}
@@ -118,7 +173,11 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	if _, err := tx.Exec(ctx, q, args...); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	_ = s.RefreshVetPayoutLineStatusesForPractice(ctx, practiceID)
+	return nil
 }
 
 func (s *Store) IsProfileComplete(ctx context.Context, practiceID string) (bool, error) {

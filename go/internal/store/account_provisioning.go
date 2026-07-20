@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -73,6 +74,8 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
+	// Best-effort: start in-app discovery + email loyalty journey.
+	_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
 	return clientID, nil
 }
 

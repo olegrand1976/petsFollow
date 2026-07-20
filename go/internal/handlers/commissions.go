@@ -21,6 +21,7 @@ func (a *API) registerCommissionRoutes(r chi.Router) {
 		pr.Get("/admin/commissions/periods/{period}", a.adminCommissionPeriod)
 		pr.Post("/admin/commissions/periods/{period}/close", a.adminCloseCommissionPeriod)
 		pr.Post("/admin/commissions/periods/{period}/mark-paid", a.adminMarkCommissionPaid)
+		pr.Post("/admin/commissions/periods/{period}/lines/{vetUserId}/mark-paid", a.adminMarkCommissionLinePaid)
 		pr.Put("/admin/commissions/tiers", a.adminPutCommissionTiers)
 		pr.Get("/admin/commissions/settings", a.adminGetCommissionSettings)
 		pr.Put("/admin/commissions/settings", a.adminPutCommissionSettings)
@@ -141,7 +142,7 @@ func (a *API) adminMarkCommissionPaid(w http.ResponseWriter, r *http.Request) {
 	}
 	var req markPaidReq
 	_ = httpx.DecodeJSON(r, &req)
-	run, err := a.store.MarkPayoutRunPaid(r.Context(), period, req.Note)
+	run, err := a.store.MarkReadyPayoutLinesPaid(r.Context(), period, req.Note)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "run_not_found")
@@ -149,6 +150,43 @@ func (a *API) adminMarkCommissionPaid(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, store.ErrPayoutNotClosed) {
 			writeErr(w, r, http.StatusConflict, "conflict", "payout_not_closed")
+			return
+		}
+		if errors.Is(err, store.ErrPayoutNoReadyLines) {
+			writeErr(w, r, http.StatusConflict, "conflict", "payout_no_ready_lines")
+			return
+		}
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, run)
+}
+
+func (a *API) adminMarkCommissionLinePaid(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	period, ok := requirePeriodYM(w, r)
+	if !ok {
+		return
+	}
+	vetUserID := chi.URLParam(r, "vetUserId")
+	if vetUserID == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_user_id_required")
+		return
+	}
+	run, err := a.store.MarkPayoutLinePaid(r.Context(), period, vetUserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "line_not_found")
+			return
+		}
+		if errors.Is(err, store.ErrPayoutNotClosed) {
+			writeErr(w, r, http.StatusConflict, "conflict", "payout_not_closed")
+			return
+		}
+		if errors.Is(err, store.ErrPayoutLineNotReady) {
+			writeErr(w, r, http.StatusConflict, "conflict", "payout_line_not_ready")
 			return
 		}
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")

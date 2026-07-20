@@ -84,7 +84,8 @@
     "password_reset_sent": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.",
     "password_reset": "Mot de passe mis à jour. Vous pouvez vous connecter.",
     "vet_invite_sent": "Si un vétérinaire correspond à cet email, il sera ajouté à vos cabinets.",
-    "app_link_sent": "Le lien de téléchargement de l'application a été envoyé au client."
+    "app_link_sent": "Le lien de téléchargement de l'application a été envoyé au client.",
+    "journey_unsubscribed": "Vous êtes désabonné du parcours découverte par email."
   },
   "defaults": {
     "auto_reply_unavailable": "Je suis indisponible, je reviens vers vous rapidement."
@@ -134,7 +135,210 @@
     "visit_request_cta": "Voir la demande",
     "visit_request_disclaimer": "Connectez-vous à petsFollow Pro pour confirmer ou proposer un autre créneau.",
     "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
-    "footer_visit_llit": "Visiter le site LL-IT Software & Computer"
+    "footer_visit_llit": "Visiter le site LL-IT Software & Computer",
+    "journey": {
+      "unsubscribe": "Se désabonner du parcours découverte",
+      "d0_welcome": {
+        "subject": "Bienvenue sur petsFollow",
+        "tagline": "Suivi santé de votre animal",
+        "preheader": "Votre parcours petsFollow commence aujourd'hui.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Votre vétérinaire vous a prescrit petsFollow : un suivi cardiaque sans boîtier, directement dans votre téléphone. Téléchargez l'application pour démarrer.",
+        "detail": "Ce que vous pourrez faire :\n• Relevés cardiaques 15 / 30 / 60 s\n• Messagerie sécurisée avec le cabinet\n• Timeline et rappels de soins\n• Moins de 3 € / mois par animal",
+        "cta": "Télécharger l'application",
+        "disclaimer": "Vous pouvez désactiver ces emails depuis le lien en bas de message."
+      },
+      "d1_activate": {
+        "subject": "Activez le suivi de votre animal",
+        "tagline": "Premiers pas",
+        "preheader": "Créez le profil de votre animal et choisissez un plan.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Pour activer le suivi prescrit, créez le profil de votre animal et choisissez un plan. Nous recommandons le plan 3 ans (95 €) — environ 2,6 € / mois.",
+        "detail": "Plans TTC :\n• 35 € / an\n• 95 € / 3 ans (recommandé)\n• 145 € / 5 ans (paiement unique)",
+        "cta": "Ouvrir l'application",
+        "disclaimer": "Sans paiement, le suivi cardiaque reste en attente d'activation."
+      },
+      "d2_first_measure": {
+        "subject": "Prêt pour votre premier relevé ?",
+        "tagline": "Mesure cardiaque",
+        "preheader": "Apprenez à mesurer la fréquence cardiaque de votre animal.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Aujourd'hui, réalisez votre premier relevé cardiaque. Placez votre animal au calme, posez la main sur le thorax et tapez à chaque battement pendant la durée indiquée (15, 30 ou 60 s selon le cabinet).",
+        "detail": "Astuce : un animal détendu donne une mesure plus fiable. Validez ensuite pour partager le résultat avec votre vétérinaire.",
+        "cta": "Faire un relevé",
+        "disclaimer": "En cas de doute, contactez votre cabinet via la messagerie."
+      },
+      "d4_routine": {
+        "subject": "Installez une routine de suivi",
+        "tagline": "Rappels & soins",
+        "preheader": "Les rappels vous aident à ne rien oublier.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Une bonne routine fait la différence : activez les rappels de relevés et de soins (vaccin, vermifuge, contrôle…). Votre vétérinaire voit l'historique dans le dossier.",
+        "detail": "Option Care+ (19 € / an) : médicaments et rappels personnalisés si votre animal a un traitement régulier.",
+        "cta": "Voir les rappels",
+        "disclaimer": "Les offres optionnelles se gèrent dans l'application."
+      },
+      "d6_vet_link": {
+        "subject": "Votre vétérinaire est à un message",
+        "tagline": "Messagerie & partage",
+        "preheader": "Vos relevés sont partagés avec le cabinet.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Les relevés validés rejoignent la timeline partagée avec votre vétérinaire. Utilisez la messagerie pour poser une question ou envoyer une photo.",
+        "detail": "Astuce : gardez le fil du même animal pour un suivi plus clair.",
+        "cta": "Ouvrir les messages",
+        "disclaimer": "Votre cabinet peut être temporairement indisponible ; un message automatique vous prévient."
+      },
+      "d10_visits": {
+        "subject": "Demandez une visite entre deux consultations",
+        "tagline": "Rendez-vous",
+        "preheader": "Planifiez un RDV avec votre cabinet depuis l'app.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Besoin de revoir le vétérinaire ? Demandez une visite depuis l'application. Vous recevrez une notification lorsque le créneau est confirmé.",
+        "detail": "",
+        "cta": "Demander une visite",
+        "disclaimer": "Les disponibilités dépendent du cabinet."
+      },
+      "d14_checkpoint": {
+        "subject": "Bilan de vos 2 premières semaines",
+        "tagline": "Parcours découverte",
+        "preheader": "Récapitulatif de ce que petsFollow inclut.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Voilà déjà 14 jours : relevés, messagerie, timeline et rappels sont inclus dans votre abonnement animal. Continuez à rythmer les mesures selon les consignes du cabinet.",
+        "detail": "Inclus : relevés 15/30/60 s · messagerie + push · timeline · rappels · FR/NL/EN/ES",
+        "cta": "Continuer dans l'app",
+        "disclaimer": "Merci de faire confiance à petsFollow pour le suivi de votre animal."
+      },
+      "d30_habit": {
+        "subject": "Un mois de suivi — gardez le rythme",
+        "tagline": "Habitude cardiaque",
+        "preheader": "La régularité des relevés aide votre vétérinaire.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Un mois déjà ! Les relevés réguliers enrichissent le dossier de votre animal. Si vous avez plusieurs compagnons, l'option Famille (39 € / an) offre une vue foyer et −10 % dès le 2ᵉ animal.",
+        "detail": "",
+        "cta": "Voir mes animaux",
+        "disclaimer": "Les options se gèrent dans Paramètres / abonnements de l'app."
+      },
+      "d45_care_plus": {
+        "subject": "Care+ : médicaments & rappels personnalisés",
+        "tagline": "Option Care+",
+        "preheader": "19 € / an pour un suivi de traitements plus fin.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Si votre animal suit un traitement, Care+ (19 € / an) ajoute médicaments et rappels personnalisés dans l'application — en complément des rappels de soins standards.",
+        "detail": "",
+        "cta": "Découvrir Care+",
+        "disclaimer": "Option annuelle récurrente, résiliable depuis le portail de paiement."
+      },
+      "d60_horse": {
+        "subject": "Pack Cheval : maréchal, copro & compétitions",
+        "tagline": "Option Cheval",
+        "preheader": "39 € / an pour un suivi équin adapté.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Vous suivez un cheval : le pack Cheval (39 € / an) ajoute rappels maréchal et coproscopie, contacts professionnels et calendrier de compétitions.",
+        "detail": "",
+        "cta": "Découvrir le pack Cheval",
+        "disclaimer": "Option annuelle pour les comptes avec au moins un cheval."
+      },
+      "d75_kennel": {
+        "subject": "Kennel : encodage rapide pour élevages",
+        "tagline": "Option Kennel",
+        "preheader": "119 € / an · −15 % · dès 6 animaux.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Avec 6 animaux ou plus, Kennel (119 € / an) accélère l'encodage (saisie par lot) et applique −15 % sur les abonnements animaux. Exclusif avec Famille.",
+        "detail": "",
+        "cta": "Découvrir Kennel",
+        "disclaimer": "Kennel remplace Famille (upgrade)."
+      },
+      "d90_quarter": {
+        "subject": "3 mois avec petsFollow — la timeline compte",
+        "tagline": "Valeur trimestre",
+        "preheader": "Votre historique aide le suivi prescrit.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Trois mois de données : timeline, messages et relevés forment un dossier utile entre les consultations. Si vous avez 2 à 5 animaux, Famille (39 € / an) simplifie la vue foyer (−10 %).",
+        "detail": "",
+        "cta": "Ouvrir la timeline",
+        "disclaimer": "Continuez selon les consignes de votre vétérinaire."
+      },
+      "d120_seasonal": {
+        "subject": "Pensez aux soins de saison",
+        "tagline": "Soins & prévention",
+        "preheader": "Vérifiez les rappels vaccin / vermifuge / contrôle.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Selon la saison, certains soins reviennent : vaccination, vermifuge, contrôle dentaire… Consultez l'onglet Soins et validez les rappels à jour.",
+        "detail": "",
+        "cta": "Voir les soins",
+        "disclaimer": "Votre vétérinaire reste la référence pour le calendrier de soins."
+      },
+      "d180_midyear": {
+        "subject": "Mi-parcours : votre suivi en un coup d'œil",
+        "tagline": "Point à 6 mois",
+        "preheader": "Timeline, relevés et messages forment votre dossier.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "À mi-chemin de l'année, relisez la timeline de vos animaux et vérifiez que les abonnements sont à jour. Le portail de paiement vous permet de gérer un abonnement récurrent.",
+        "detail": "",
+        "cta": "Ouvrir l'application",
+        "disclaimer": "Pour toute question facturation, utilisez le portail Stripe depuis l'app."
+      },
+      "d270_reengage": {
+        "subject": "On aimerait vous revoir dans petsFollow",
+        "tagline": "Relance douce",
+        "preheader": "Un petit relevé remet le suivi à jour.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Cela fait un moment sans relevé validé. Un court relevé cardiaque aide votre vétérinaire à garder un suivi utile — quelques secondes suffisent.",
+        "detail": "",
+        "cta": "Faire un relevé",
+        "disclaimer": "Si vous n'utilisez plus l'app, vous pouvez vous désabonner du parcours ci-dessous."
+      },
+      "d330_prerenew": {
+        "subject": "Votre suivi petsFollow continue",
+        "tagline": "Avant échéance",
+        "preheader": "Pensez au renouvellement ou au plan 3 ans.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Dans les semaines à venir, vérifiez la date de fin de votre abonnement animal. Le plan 3 ans (95 €) reste le meilleur rapport durée / prix pour un suivi prescrit durable.",
+        "detail": "35 € / an · 95 € / 3 ans · 145 € / 5 ans",
+        "cta": "Gérer mon abonnement",
+        "disclaimer": "Le portail de paiement est accessible depuis la fiche animal."
+      },
+      "d365_anniversary": {
+        "subject": "1 an avec petsFollow — merci !",
+        "tagline": "Anniversaire",
+        "preheader": "Un an de suivi prescrit, sans boîtier.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Joyeux anniversaire de parcours ! Merci de faire confiance à petsFollow pour le suivi cardiaque de votre animal. Pensez au renouvellement — le plan 3 ans (95 €) est idéal pour poursuivre sereinement.",
+        "detail": "",
+        "cta": "Continuer mon suivi",
+        "disclaimer": "Toute l'équipe petsFollow vous remercie."
+      },
+      "evt_pending_payment": {
+        "subject": "Finalisez l'activation de votre animal",
+        "tagline": "Paiement en attente",
+        "preheader": "Un animal attend encore le paiement du plan.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Le profil d'un animal est créé mais le paiement du plan n'est pas terminé. Finalisez le checkout pour activer les relevés et le partage avec votre vétérinaire.",
+        "detail": "",
+        "cta": "Finaliser le paiement",
+        "disclaimer": "Sans paiement, le suivi reste en attente."
+      },
+      "evt_past_due": {
+        "subject": "Action requise : paiement de votre abonnement",
+        "tagline": "Paiement",
+        "preheader": "Un abonnement petsFollow est en retard de paiement.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Nous n'avons pas pu encaisser un paiement d'abonnement. Mettez à jour votre moyen de paiement via le portail pour éviter une interruption du suivi.",
+        "detail": "",
+        "cta": "Mettre à jour le paiement",
+        "disclaimer": "Contactez votre banque ou utilisez le portail Stripe depuis l'app."
+      },
+      "evt_inactive_hr": {
+        "subject": "Un relevé rapide pour reprendre le fil",
+        "tagline": "Réengagement",
+        "preheader": "Aucun relevé validé récemment.",
+        "greeting": "Bonjour {fullName},",
+        "intro": "Aucun relevé cardiaque validé depuis un moment. Un relevé court remet le dossier à jour pour votre vétérinaire.",
+        "detail": "",
+        "cta": "Faire un relevé",
+        "disclaimer": "Désactivez ces emails via le lien de désabonnement si vous le souhaitez."
+      }
+    }
   },
   "push": {
     "new_message_title": "Nouveau message",

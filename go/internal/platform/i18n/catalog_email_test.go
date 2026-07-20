@@ -76,6 +76,7 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"emails.visit_request_disclaimer",
 		"emails.footer_powered_by",
 		"emails.footer_visit_llit",
+		"emails.journey.unsubscribe",
 	}
 	vars := map[string]string{
 		"fullName": "Ada", "bpm": "120", "vetName": "Dr. Vet", "practiceName": "VetPlus",
@@ -86,6 +87,29 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 			got := T(loc, key, vars)
 			if got == "" || got == key {
 				t.Errorf("%s missing/unresolved key %s", loc, key)
+			}
+		}
+	}
+}
+
+func TestJourneyEmailCatalogKeys(t *testing.T) {
+	steps := []string{
+		"d0_welcome", "d1_activate", "d2_first_measure", "d4_routine", "d6_vet_link",
+		"d10_visits", "d14_checkpoint", "d30_habit", "d45_care_plus", "d60_horse",
+		"d75_kennel", "d90_quarter", "d120_seasonal", "d180_midyear", "d270_reengage",
+		"d330_prerenew", "d365_anniversary",
+		"evt_pending_payment", "evt_past_due", "evt_inactive_hr",
+	}
+	fields := []string{"subject", "tagline", "preheader", "greeting", "intro", "cta", "disclaimer"}
+	vars := map[string]string{"fullName": "Ada"}
+	for _, loc := range Supported {
+		for _, step := range steps {
+			for _, field := range fields {
+				key := "emails.journey." + step + "." + field
+				got := T(loc, key, vars)
+				if got == "" || got == key {
+					t.Errorf("%s missing/unresolved key %s", loc, key)
+				}
 			}
 		}
 	}

@@ -29,9 +29,7 @@ func (s *Store) GetDiscoveryProgress(ctx context.Context, userID string) (Discov
 		FROM discovery.progress WHERE user_id = $1`, userID,
 	).Scan(&p.UserID, &p.StartedAt, &cardsJSON, &p.StreakDays, &p.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return DiscoveryProgress{
-			UserID: userID, StartedAt: time.Now(), CompletedCards: []string{}, StreakDays: 0,
-		}, nil
+		return s.EnsureDiscoveryStarted(ctx, userID)
 	}
 	if err != nil {
 		return DiscoveryProgress{}, err

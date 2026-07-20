@@ -13,10 +13,12 @@ Surfaces : Pro `/messages` · Flutter messagerie animal/véto.
 
 Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon locale user.
 
+**Parcours découverte / fidélisation client** (drip 12 mois) : scheduler in-process + tables `discovery.email_*` — détail [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md). Respecte `client_preferences.discovery` / `.billing`. Désabonnement : `GET/POST /api/v1/public/journey/unsubscribe?token=…`.
+
 Préférences :
 
 - Véto : `GET/PUT /vet/notification-preferences` (`emailOnMessage`, `emailOnHeartrate`, `emailOnVisitRequest`)
-- Client : `GET/PATCH /me/notification-preferences`
+- Client : `GET/PATCH /me/notification-preferences` (`hr`, `care`, `visits`, `messages`, `discovery`, `billing`)
 
 Quand le **client** écrit un message et que le véto a `email_on_message`, un email est envoyé au véto.
 

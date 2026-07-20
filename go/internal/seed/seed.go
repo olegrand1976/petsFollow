@@ -68,6 +68,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedEnrichment(ctx, pool); err != nil {
 		return err
 	}
+	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
+		return err
+	}
 	logSummary()
 	return nil
 }
@@ -83,7 +86,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
-		discovery.progress, visits.visits, care.competitions, care.professional_contacts, care.reminders,
+		discovery.email_sends, discovery.email_journey, discovery.progress,
+		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets, practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err

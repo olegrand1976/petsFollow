@@ -545,17 +545,32 @@
       "period": "Mes",
       "close": "Cerrar mes",
       "markPaid": "Marcar como pagado",
+      "markReadyPaid": "Pagar líneas listas",
+      "markLinePaid": "Marcar pagado",
       "confirmClose": "¿Cerrar el periodo {period}? Las líneas de pago se congelarán.",
       "confirmMarkPaid": "¿Marcar el periodo {period} como pagado?",
+      "confirmMarkReady": "¿Marcar como pagadas todas las líneas listas del periodo {period}?",
+      "confirmMarkReadyMissing": "¿Marcar como pagadas las líneas listas de {period}? Quedan {n} línea(s) bloqueadas (datos incompletos).",
+      "confirmMarkLinePaid": "¿Marcar esta línea de comisión como pagada?",
       "empty": "Sin comisiones en este periodo",
       "colVet": "Veterinario",
+      "colCompany": "Sociedad",
+      "colIban": "IBAN",
       "colClients": "Clientes",
       "colLedger": "Activaciones",
       "colAmount": "Comisión",
       "colStatus": "Estado",
+      "colActions": "Acciones",
       "statusOpen": "Abierto",
       "statusClosed": "Cerrado",
+      "statusPartiallyPaid": "Parcialmente pagado",
       "statusPaid": "Pagado",
+      "lineStatus": {
+        "accruing": "En curso",
+        "missing_info": "Datos incompletos",
+        "ready_to_pay": "Listo para pagar",
+        "paid": "Pagado"
+      },
       "sheetTitle": "Modelo de comisiones (visión general)",
       "planRatesHint": "Tasas comerciales fijas por plan (sin IVA): 8 % anual · 12 % trienal · 8 % quinquenal · 10 % complementos — no editables aquí (ver ficha arriba)."
     },
@@ -640,6 +655,9 @@
   "commissions": {
     "title": "Mis retribuciones",
     "subtitle": "Sus ganancias y pagos como veterinario.",
+    "payoutSchedule": "Los pagos de comisiones se realizan a principios de cada mes.",
+    "payoutIncompleteBanner": "Complete los datos de su sociedad y cuenta bancaria para poder cobrar sus comisiones.",
+    "payoutIncompleteLink": "Abrir ajustes",
     "kpiClients": "Clientes de pago",
     "kpiRate": "Tasa actual",
     "kpiMonth": "Este mes",
@@ -664,7 +682,13 @@
     "sheetTitle": "Entender mi retribución",
     "detailsSummary": "Tabla de tasas y bonificaciones",
     "kpiRateBase": "Tasa base (tramo)",
-    "kpiRateHeart": "Tasa actual"
+    "kpiRateHeart": "Tasa actual",
+    "lineStatus": {
+      "accruing": "En curso",
+      "missing_info": "Datos incompletos",
+      "ready_to_pay": "Listo para pagar",
+      "paid": "Pagado"
+    }
   },
   "onboarding": {
     "title": "Configuración de la clínica",
@@ -1002,7 +1026,27 @@
       "postalCode": "Código postal",
       "city": "Ciudad",
       "website": "Sitio web (opcional)",
-      "websitePlaceholder": "https://"
+      "websitePlaceholder": "https://",
+      "payoutSection": "Pagos y sociedad",
+      "payoutHint": "Datos necesarios para elaborar y pagar sus fichas de comisiones.",
+      "companyLegalName": "Razón social",
+      "vatNumber": "N.º IVA",
+      "companyNumber": "N.º de empresa",
+      "legalForm": "Forma jurídica",
+      "legalFormPlaceholder": "Elegir…",
+      "legalForms": {
+        "srl": "SRL",
+        "sa": "SA",
+        "asbl": "ASBL",
+        "independent": "Autónomo / persona física",
+        "other": "Otro"
+      },
+      "billingSameAsPractice": "Dirección de facturación igual a la clínica",
+      "billingAddress": "Dirección de facturación",
+      "billingAddressLine2": "Complemento de dirección de facturación",
+      "payoutIban": "IBAN",
+      "payoutBic": "BIC (opcional)",
+      "payoutAccountHolder": "Titular de la cuenta"
     }
   },
   "legal": {
@@ -1071,6 +1115,9 @@
     "invalid_period": "Periodo no válido (formato YYYY-MM)",
     "payout_not_open": "Este periodo ya no está abierto",
     "payout_not_closed": "Cierre el periodo antes de marcarlo como pagado",
+    "payout_line_not_ready": "Esta línea no está lista para pagar (datos incompletos o ya pagada)",
+    "payout_no_ready_lines": "No hay líneas listas para pagar en este periodo",
+    "line_not_found": "Línea de comisión no encontrada",
     "run_not_found": "Ciclo de pago no encontrado",
     "google_pro_only": "Acceso Google reservado a perfiles Pro.",
     "not_your_pet": "Esta no es su mascota",

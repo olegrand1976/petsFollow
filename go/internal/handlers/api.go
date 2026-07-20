@@ -45,6 +45,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/forgot-password", a.forgotPassword)
 	r.Post("/auth/reset-password", a.resetPassword)
 	r.Post("/auth/refresh", a.refresh)
+	a.registerJourneyPublicRoutes(r)
 	a.registerAuthRoutes(r)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
@@ -293,6 +294,9 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadGateway, "email_send_failed", "email_send_failed")
 		return
 	}
+	// App invite covers d0_welcome — avoid duplicate welcome drip.
+	_ = a.store.EnrollEmailJourney(r.Context(), client.UserID, time.Now().UTC())
+	_ = a.store.RecordEmailSend(r.Context(), client.UserID, "d0_welcome", "skipped", map[string]any{"reason": "app_download_invite"})
 	httpx.WriteData(w, http.StatusOK, map[string]string{
 		"status":  "sent",
 		"email":   client.Email,
@@ -1100,6 +1104,33 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		req.AddressLine1 == "" || req.City == "" || req.PostalCode == "" || req.VetFullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "profile_fields_required")
 		return
+	}
+	req.PayoutIBAN = normalizeIBAN(req.PayoutIBAN)
+	if req.PayoutIBAN != "" && !validIBAN(req.PayoutIBAN) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_iban")
+		return
+	}
+	req.PayoutBIC = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(req.PayoutBIC), " ", ""))
+	if !validBIC(req.PayoutBIC) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_bic")
+		return
+	}
+	req.PayoutAccountHolder = strings.TrimSpace(req.PayoutAccountHolder)
+	if len(req.PayoutAccountHolder) > 120 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_account_holder")
+		return
+	}
+	req.CompanyLegalName = strings.TrimSpace(req.CompanyLegalName)
+	req.VATNumber = strings.TrimSpace(req.VATNumber)
+	req.CompanyNumber = strings.TrimSpace(req.CompanyNumber)
+	req.LegalForm = strings.TrimSpace(req.LegalForm)
+	req.BillingAddressLine1 = strings.TrimSpace(req.BillingAddressLine1)
+	req.BillingAddressLine2 = strings.TrimSpace(req.BillingAddressLine2)
+	req.BillingPostalCode = strings.TrimSpace(req.BillingPostalCode)
+	req.BillingCity = strings.TrimSpace(req.BillingCity)
+	// JSON omits default bool to false; treat empty billing address as same-as-practice.
+	if !req.BillingSameAsPractice && req.BillingAddressLine1 == "" {
+		req.BillingSameAsPractice = true
 	}
 	req.HeartRateDurationsSec = kernel.NormalizeHeartRateDurations(req.HeartRateDurationsSec)
 	markComplete := r.URL.Query().Get("complete") == "true"
