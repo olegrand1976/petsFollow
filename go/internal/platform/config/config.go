@@ -50,6 +50,9 @@ type Config struct {
 	JourneyEmailInterval            time.Duration
 	GeminiAPIKey                    string
 	GeminiModel                     string
+	PitchAnalyzerSecret             string
+	VertexProject                   string
+	VertexLocation                  string
 }
 
 func Load() Config {
@@ -98,6 +101,9 @@ func Load() Config {
 		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
 		GeminiAPIKey:         envOr("GEMINI_API_KEY", ""),
 		GeminiModel:          envOr("GEMINI_MODEL", "gemini-3.5-flash"),
+		PitchAnalyzerSecret:  envOr("PITCH_ANALYZER_SECRET", ""),
+		VertexProject:        envOr("VERTEX_PROJECT", ""),
+		VertexLocation:       envOr("VERTEX_LOCATION", "europe-west9"),
 	}
 }
 

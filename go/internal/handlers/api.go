@@ -29,18 +29,18 @@ type API struct {
 	billing  *billing.Service
 	media    media.Store
 	pusher   fcm.Pusher
-	gemini   gemini.Mapper
+	gemini   *gemini.Client
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
 	if pusher == nil {
 		pusher = fcm.NopPusher{}
 	}
-	var mapper gemini.Mapper
+	var g *gemini.Client
 	if cfg.GeminiAPIKey != "" {
-		mapper = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel)
+		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel)
 	}
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: mapper}
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g}
 }
 
 func (a *API) Routes(r chi.Router) {
@@ -58,6 +58,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerCommissionRoutes(r)
 	a.registerCommercialRoutes(r)
 	a.registerCommercialManagerRoutes(r)
+	a.registerPitchTrainingRoutes(r)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))

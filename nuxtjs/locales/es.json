@@ -22,6 +22,8 @@
     "commercialCommissions": "Mis pagos",
     "commercialSettings": "Perfil de pago",
     "commercialPitch": "Ayuda de venta",
+    "commercialTraining": "Entrenamiento IA",
+    "adminTraining": "Formación IA",
     "products": "Productos",
     "calendar": "Calendario",
     "managerDashboard": "Panel del equipo",
@@ -1598,6 +1600,104 @@
       "title": "Prospectos del equipo",
       "subtitle": "Vista CRM del equipo y del directorio compartido.",
       "allCommercials": "Todos los comerciales"
+    }
+  },
+  "training": {
+    "title": "Entraînement IA",
+    "subtitle": "Simulez un appel chez le vétérinaire et recevez un coaching.",
+    "tabCall": "Appel",
+    "tabHistory": "Historique",
+    "tabScripts": "Scripts",
+    "scriptFollow": "Script à suivre",
+    "selectScript": "Script d'entretien",
+    "personalized": "perso",
+    "personalize": "Personnaliser",
+    "exampleDialogue": "Exemple d'échange",
+    "phone": "Téléphone",
+    "difficultyHint": "Choisissez le niveau d'intérêt du vétérinaire (difficulté).",
+    "voice": "Voix",
+    "callBtn": "J'appelle le vétérinaire",
+    "ringing": "Ça sonne…",
+    "hangUp": "Raccrocher",
+    "listening": "Écoute…",
+    "pushToTalk": "Parler",
+    "typePlaceholder": "Ou tapez votre réplique…",
+    "send": "Envoyer",
+    "analyzing": "Analyse de l'échange en cours…",
+    "coachTitle": "Coach",
+    "yourScore": "Votre note (sur 10)",
+    "saveScore": "Enregistrer ma note",
+    "feedbackTitle": "Retour sur la simulation",
+    "feedbackHint": "Aide à améliorer le véto IA et le coach.",
+    "vetRealism": "Réalisme du véto",
+    "coachUsefulness": "Utilité du coach",
+    "difficultyFelt": "Difficulté ressentie",
+    "comment": "Commentaire",
+    "submitFeedback": "Envoyer le retour",
+    "skipFeedback": "Passer (1×/jour)",
+    "newCall": "Nouvel appel",
+    "replay": "Réécouter l'appel",
+    "historyTitle": "Mes entretiens",
+    "historyEmpty": "Aucun entretien pour l'instant",
+    "scriptsTitle": "Scripts d'entretien",
+    "roleVet": "Véto",
+    "roleCommercial": "Vous",
+    "errorStart": "Impossible de démarrer l'appel (GEMINI_API_KEY ?)",
+    "errorTurn": "Erreur pendant l'échange",
+    "noSpeechApi": "Reconnaissance vocale indisponible — utilisez le champ texte.",
+    "managerTitle": "Formation équipe",
+    "managerSubtitle": "Suivi des entraînements de vos commerciaux.",
+    "goTrain": "S'entraîner",
+    "teamHistory": "Sessions équipe",
+    "adminTitle": "Formation IA",
+    "adminSubtitle": "Scripts, prompts agents, analyseur et retours.",
+    "restore": "Restaurer",
+    "runs": "Runs analyseur",
+    "feedbacks": "Retours commerciaux",
+    "colDate": "Date",
+    "colDifficulty": "Difficulté",
+    "colOutcome": "Fin",
+    "colScore": "Note",
+    "colUser": "Collab",
+    "adminTab": {
+      "scripts": "Scripts",
+      "vet": "Agent véto",
+      "coach": "Agent coach",
+      "analyzer": "Analyseur & retours"
+    },
+    "difficulty": {
+      "hostile": {
+        "label": "Très difficile",
+        "desc": "Hostile, raccroche vite"
+      },
+      "sceptique": {
+        "label": "Difficile",
+        "desc": "Beaucoup d'objections"
+      },
+      "neutre": {
+        "label": "Standard",
+        "desc": "Poli mais non convaincu"
+      },
+      "interesse": {
+        "label": "Facile",
+        "desc": "Curieux, ouvert"
+      },
+      "chaud": {
+        "label": "Très facile",
+        "desc": "Déjà positif"
+      }
+    },
+    "outcome": {
+      "appointment": "RDV pris",
+      "hangup": "Pas intéressé",
+      "timeout": "Temps écoulé",
+      "manual": "Raccroché",
+      "in_progress": "En cours"
+    },
+    "felt": {
+      "too_easy": "Trop facile",
+      "ok": "Adaptée",
+      "too_hard": "Trop difficile"
     }
   }
 }

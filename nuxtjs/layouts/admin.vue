@@ -30,6 +30,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments' },
   { to: '/admin/commercial-commissions', label: t('nav.adminCommercialCommissions'), icon: 'payments' },
   { to: '/admin/commercial-bonuses', label: t('nav.adminCommercialBonuses'), icon: 'payments' },
+  { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over' },
 ])
 
 onMounted(() => fetchUser())

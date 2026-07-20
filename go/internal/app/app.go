@@ -60,7 +60,7 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
 
 	r := httpx.NewBaseRouter()
-	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(selectiveTimeout)
 	r.Use(corsMiddleware)
 	httpx.MountHealth(r, func(c context.Context) error { return db.Ping(c, pool) })
 	if mediaBundle.LocalHandler != nil && mediaBundle.LocalMount != "" {
@@ -96,6 +96,28 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Pitch turn/finalize/audio may exceed the default 60s (Gemini + upload).
+func selectiveTimeout(next http.Handler) http.Handler {
+	short := middleware.Timeout(60 * time.Second)(next)
+	long := middleware.Timeout(10 * time.Minute)(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isPitchLongRequest(r.URL.Path) {
+			long.ServeHTTP(w, r)
+			return
+		}
+		short.ServeHTTP(w, r)
+	})
+}
+
+func isPitchLongRequest(path string) bool {
+	if !strings.Contains(path, "/pitch-sims/") {
+		return false
+	}
+	return strings.HasSuffix(path, "/turn") ||
+		strings.HasSuffix(path, "/finalize") ||
+		strings.HasSuffix(path, "/audio")
 }
 
 func (a *Application) Handler() http.Handler { return a.router }

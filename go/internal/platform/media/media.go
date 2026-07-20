@@ -15,6 +15,7 @@ import (
 const (
 	MaxUploadBytes       = 2 << 20  // 2 MiB — avatars / pet photos
 	MaxMessageMediaBytes = 25 << 20 // 25 MiB — chat image / video
+	MaxPitchAudioBytes   = 20 << 20 // 20 MiB — pitch simulation recordings
 	AbsoluteMaxBytes     = MaxMessageMediaBytes
 )
 
@@ -38,6 +39,16 @@ var allowedMessageMediaTypes = map[string]string{
 	"video/mp4":       ".mp4",
 	"video/quicktime": ".mov",
 	"video/webm":      ".webm",
+}
+
+var allowedPitchAudioTypes = map[string]string{
+	"audio/webm":       ".webm",
+	"audio/ogg":        ".ogg",
+	"audio/mpeg":       ".mp3",
+	"audio/mp4":        ".m4a",
+	"audio/wav":        ".wav",
+	"audio/x-wav":      ".wav",
+	"video/webm":       ".webm",
 }
 
 // Store uploads binaries and returns a publicly reachable URL.
@@ -86,6 +97,37 @@ func ExtForMessageMedia(contentType string) (string, error) {
 		return "", ErrInvalidType
 	}
 	return ext, nil
+}
+
+func ExtForPitchAudio(contentType string) (string, error) {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	ext, ok := allowedPitchAudioTypes[ct]
+	if !ok {
+		return "", ErrInvalidType
+	}
+	return ext, nil
+}
+
+func NormalizePitchAudioType(contentType, filename string) (string, error) {
+	ct := inferContentType(contentType, filename)
+	if ct == "" || ct == "application/octet-stream" {
+		switch strings.ToLower(path.Ext(filename)) {
+		case ".webm":
+			ct = "audio/webm"
+		case ".ogg":
+			ct = "audio/ogg"
+		case ".mp3":
+			ct = "audio/mpeg"
+		case ".m4a":
+			ct = "audio/mp4"
+		case ".wav":
+			ct = "audio/wav"
+		}
+	}
+	if _, err := ExtForPitchAudio(ct); err != nil {
+		return "", err
+	}
+	return ct, nil
 }
 
 func MediaKind(contentType string) string {
@@ -149,4 +191,16 @@ func ValidateSizeLimit(size, max int64) error {
 
 func ObjectKey(kind, entityID, ext string) string {
 	return fmt.Sprintf("%s/%s/%s%s", kind, entityID, newObjectID(), ext)
+}
+
+// PublicURL builds a reachable URL for an object key (empty key → "").
+func PublicURL(cfg config.Config, objectKey string) string {
+	objectKey = strings.TrimSpace(objectKey)
+	if objectKey == "" {
+		return ""
+	}
+	if cfg.GCSMediaBucket != "" {
+		return fmt.Sprintf("https://storage.googleapis.com/%s/%s", cfg.GCSMediaBucket, objectKey)
+	}
+	return strings.TrimRight(cfg.APIPublicURL, "/") + "/media/" + objectKey
 }
