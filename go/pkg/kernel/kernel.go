@@ -3,19 +3,25 @@ package kernel
 type Role string
 
 const (
-	RoleVet        Role = "vet"
-	RoleClient     Role = "client"
-	RoleAdmin      Role = "admin"
-	RoleCommercial Role = "commercial"
+	RoleVet               Role = "vet"
+	RoleClient            Role = "client"
+	RoleAdmin             Role = "admin"
+	RoleCommercial        Role = "commercial"
+	RoleCommercialManager Role = "commercial_manager"
 )
 
 func ValidRole(role Role) bool {
 	switch role {
-	case RoleVet, RoleClient, RoleAdmin, RoleCommercial:
+	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager:
 		return true
 	default:
 		return false
 	}
+}
+
+// IsSalesForce reports whether the role belongs to the commercial sales force.
+func IsSalesForce(role Role) bool {
+	return role == RoleCommercial || role == RoleCommercialManager
 }
 
 type SessionStatus string

@@ -23,7 +23,11 @@
     "commercialSettings": "Perfil de pago",
     "commercialPitch": "Pitch",
     "products": "Productos",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "managerDashboard": "Panel del equipo",
+    "managerFollowups": "Seguimiento",
+    "managerProspects": "Prospectos del equipo",
+    "managerPortfolio": "Mi cartera"
   },
   "auth": {
     "login": {
@@ -905,7 +909,7 @@
       "family": {
         "price": "39 € · 119 € / año",
         "title": "Family y Kennel",
-        "text": "Family desde 2 mascotas (−10 %, sin tope). Kennel desde 6 (−15 %, alta rápida) — mutuamente excluyentes."
+        "text": "Family desde 2 (−10 % desde la 2.ª de pago, sin tope). Kennel desde 6 (−15 %, alta rápida). Ej. 2× Anual + Family: 105,50 € / año."
       },
       "careHorse": {
         "price": "19 € · 39 €",
@@ -974,8 +978,8 @@
       }
     },
     "addonsTitle": "Opciones del hogar (cuenta del propietario)",
-    "addonsLead": "Los complementos son suscripciones anuales recurrentes (renovadas cada año) — enriquecen la experiencia de las mascotas del hogar según las reglas siguientes.",
-    "addonsTip": "Family nunca sustituye una suscripción de mascota. Family y Kennel son excluyentes (Kennel = upgrade). Kennel desde 6. Horse solo si hay ≥ 1 caballo.",
+    "addonsLead": "Los complementos se suman a las suscripciones de mascota (nunca las sustituyen). Suscripción anual recurrente por cuenta — ventajas compartidas por todo el hogar.",
+    "addonsTip": "Mecánica Family / Kennel: 1.ª mascota de pago a precio completo, descuento desde la 2.ª (−10 % / −15 %). Family y Kennel son excluyentes (Kennel = upgrade). Horse solo si hay ≥ 1 caballo.",
     "addons": {
       "family": {
         "name": "Family",
@@ -983,9 +987,10 @@
         "tagline": "Hogar desde 2 mascotas, −10% en planes",
         "scope": "Cuenta",
         "benefits": [
-          "Vista de recordatorios del hogar",
-          "−10% en planes desde la 2.ª mascota de pago",
-          "Sin tope de mascotas",
+          "Vista del hogar: próximos recordatorios de todas las mascotas",
+          "−10 % en cada plan desde la 2.ª mascota de pago (1.ª = precio completo)",
+          "Sin tope — Family sigue en 39 € / año sea cual sea el número",
+          "Ej. 2× Anual: 35 + 31,50 + 39 = 105,50 € / año",
           "Exclusivo con Kennel — desde 6, upgrade Kennel recomendado"
         ]
       },
@@ -995,8 +1000,10 @@
         "tagline": "Libreta de cuidados enriquecida",
         "scope": "Cuenta",
         "benefits": [
-          "Recordatorios de medicación",
-          "Recordatorios personalizados"
+          "Recordatorios de medicación para todo el hogar",
+          "Recordatorios personalizados",
+          "Además de los planes — sin descuento en planes",
+          "Ej. hogar con 2 mascotas: +19 € / año en la cuenta"
         ]
       },
       "horse": {
@@ -1006,9 +1013,8 @@
         "scope": "Cuenta",
         "benefits": [
           "Recordatorios de herrador y recuento de huevos fecales",
-          "Registro del herrador",
-          "Contactos profesionales (herrador, etc.)",
-          "Seguimiento de competiciones",
+          "Registro del herrador + contactos pro + competiciones",
+          "Además de los planes — sin descuento en planes",
           "Solo si el hogar tiene ≥ 1 caballo"
         ]
       },
@@ -1018,10 +1024,63 @@
         "tagline": "Cría / plantel desde 6 mascotas",
         "scope": "Cuenta",
         "benefits": [
-          "Alta rápida multi-mascota",
-          "Roster, tags de camada, export",
-          "−15% en planes desde la 2.ª de pago",
+          "Alta rápida multi-mascota, roster, tags de camada, export",
+          "−15 % en cada plan desde la 2.ª mascota de pago",
+          "Ej. 6× Anual: 35 + 5×29,75 + 119 = 302,75 € / año",
           "Exclusivo con Family (compra Kennel = upgrade, Family cancelado)"
+        ]
+      }
+    },
+    "examplesTitle": "Ejemplos concretos (plan Anual)",
+    "examplesLead": "Los complementos nunca sustituyen una suscripción de mascota. Importes TTC con Anual 35 € — 1.ª de pago a precio completo, siguientes con descuento si Family / Kennel está activo.",
+    "examplesTip": "Family y Kennel = suscripción anual recurrente de cuenta (39 € o 119 €), independiente del número de mascotas. Care+ y Horse se suman sin cambiar el precio de los planes.",
+    "examplesCareHorseTitle": "Care+ y Horse — complementos de cuidados",
+    "examplesCareHorseLead": "Complementos de cuenta, sin descuento en las suscripciones de mascota.",
+    "examplesCareHorseBenefits": [
+      "Care+ 19 € / año: recordatorios de medicación y personalizados para el hogar",
+      "Horse 39 € / año: pack equino (herrador, contactos, competiciones) si ≥ 1 caballo",
+      "Acumulables con Family o Kennel"
+    ],
+    "examples": {
+      "withoutFamily2": {
+        "title": "Sin Family — 2 mascotas",
+        "total": "70 € / año",
+        "breakdown": "35 + 35 (2× Anual a precio completo)",
+        "benefits": [
+          "Cada mascota tiene su propia suscripción",
+          "Sin vista unificada del hogar",
+          "Sin descuento multi-mascota"
+        ]
+      },
+      "withFamily2": {
+        "title": "Con Family — 2 mascotas",
+        "total": "105,50 € / año",
+        "breakdown": "35 + 31,50 + 39 (Family)",
+        "benefits": [
+          "1.ª mascota: 35 € (precio completo)",
+          "2.ª mascota: 31,50 € (−10 %)",
+          "Family 39 €: vista del hogar + descuento en las siguientes",
+          "Ventaja principal: comodidad del hogar, no ahorro desde 2"
+        ]
+      },
+      "withFamily4": {
+        "title": "Con Family — 4 mascotas",
+        "total": "168,50 € / año",
+        "breakdown": "35 + 3×31,50 + 39 (vs 140 € sin Family)",
+        "benefits": [
+          "1.ª: 35 € · 3 siguientes: 31,50 € cada una",
+          "Family sigue en 39 € / año — sin tope",
+          "Cada nueva mascota de pago obtiene −10 %"
+        ]
+      },
+      "kennel6": {
+        "title": "Con Kennel — 6 mascotas",
+        "total": "302,75 € / año",
+        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "benefits": [
+          "1.ª: 35 € · 5 siguientes: 29,75 € (−15 %)",
+          "Alta rápida, roster, tags de camada",
+          "Sustituye Family si estaba activo (upgrade)"
         ]
       }
     },
@@ -1156,7 +1215,7 @@
     "invalid_locale": "Idioma no admitido",
     "invalid_bic": "BIC no válido (8 u 11 caracteres)",
     "invalid_account_holder": "Titular de la cuenta no válido",
-    "family_pet_limit": "El pack Familia está limitado a 3 mascotas",
+    "family_pet_limit": "Ya hay un pack hogar (Family o Kennel) activo o en compra",
     "family_requires_two_pets": "El pack Familia requiere al menos 2 mascotas",
     "family_required": "Se requiere el pack Familia",
     "invalid_billing_mode": "Modo de facturación no válido",
@@ -1243,7 +1302,8 @@
       "postalCode": "Código postal",
       "address": "Dirección",
       "clients": "Clientes",
-      "encodeFailed": "Creación fallida"
+      "encodeFailed": "Creación fallida",
+      "prospectId": "ID prospecto (conversión)"
     },
     "clients": {
       "create": "Crear cuenta de cliente",
@@ -1282,7 +1342,17 @@
       "sourceLabel": "Origen",
       "source": {
         "commercial": "Comercial",
-        "vet_referral": "Recomendación vet"
+        "vet_referral": "Recomendación vet",
+        "directory": "Directorio BCE"
+      },
+      "appointmentAt": "Cita",
+      "appointmentOutcome": "Resultado cita",
+      "lostReason": "Motivo de pérdida",
+      "outcome": {
+        "scheduled": "Planificado",
+        "done": "Realizado",
+        "no_show": "No presentado",
+        "cancelled": "Cancelado"
       }
     },
     "commissions": {
@@ -1431,6 +1501,44 @@
       "reschedule_pending": "Cambio pendiente",
       "done": "Hecha",
       "cancelled": "Cancelada"
+    }
+  },
+  "manager": {
+    "dashboard": {
+      "title": "Panel responsable comercial",
+      "subtitle": "Control del equipo: contactos, citas y resultados.",
+      "teamSection": "Equipo",
+      "selfSection": "Mi producción (privado)",
+      "prospects": "Prospectos del equipo",
+      "contacted": "Contactados",
+      "appointmentsUpcoming": "Citas próximas",
+      "converted": "Convertidos",
+      "conversionRate": "Tasa de conversión",
+      "stale": "Seguimiento (>7 d)",
+      "teamMonthEarned": "Comisiones equipo (mes)",
+      "directory": "Directorio BCE",
+      "teamEmpty": "Ningún comercial asignado",
+      "colCommercial": "Comercial",
+      "colVets": "Veterinarios",
+      "colContacts": "Contactos 30 d",
+      "colAppointments": "Citas (próximas / hechas)",
+      "colConverted": "Convertidos",
+      "colStale": "Stale",
+      "colMonth": "Mes"
+    },
+    "followups": {
+      "title": "Seguimiento del equipo",
+      "subtitle": "Citas próximas y prospectos a reactivar.",
+      "upcomingTitle": "Citas próximas",
+      "upcomingEmpty": "Sin citas planificadas",
+      "staleTitle": "Prospectos a reactivar (>7 días)",
+      "staleEmpty": "Sin prospectos pendientes",
+      "colCommercial": "Comercial"
+    },
+    "prospects": {
+      "title": "Prospectos del equipo",
+      "subtitle": "Vista CRM del equipo y del directorio compartido.",
+      "allCommercials": "Todos los comerciales"
     }
   }
 }

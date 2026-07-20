@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
@@ -31,12 +32,7 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 }
 
 func (a *API) requireCommercial(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleCommercial {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "commercial_only")
-		return authx.Identity{}, false
-	}
-	return id, true
+	return a.requireCommercialOrManager(w, r)
 }
 
 func (a *API) commercialOverview(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +71,7 @@ type encodeVetReq struct {
 	PostalCode   string `json:"postalCode"`
 	AddressLine1 string `json:"addressLine1"`
 	ContactEmail string `json:"contactEmail"`
+	ProspectID   string `json:"prospectId"`
 }
 
 func (a *API) commercialEncodeVet(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +112,7 @@ func (a *API) commercialEncodeVet(w http.ResponseWriter, r *http.Request) {
 		ContactEmail:     req.ContactEmail,
 		PreferredLocale:  localeOf(r),
 		AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
+		ProspectID:       strings.TrimSpace(req.ProspectID),
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -206,22 +204,12 @@ func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, prospects)
 }
 
-type prospectReq struct {
-	PracticeName string `json:"practiceName"`
-	ContactName  string `json:"contactName"`
-	ContactEmail string `json:"contactEmail"`
-	ContactPhone string `json:"contactPhone"`
-	City         string `json:"city"`
-	Notes        string `json:"notes"`
-	Status       string `json:"status"`
-}
-
 func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireCommercial(w, r)
 	if !ok {
 		return
 	}
-	var req prospectReq
+	var req prospectUpdateReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
@@ -234,16 +222,29 @@ func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 		return
 	}
-	prospect, err := a.store.CreateProspect(r.Context(), id.UserID, store.ProspectInput{
-		PracticeName: req.PracticeName,
-		ContactName:  req.ContactName,
-		ContactEmail: req.ContactEmail,
-		ContactPhone: req.ContactPhone,
-		City:         req.City,
-		Notes:        req.Notes,
-		Status:       req.Status,
-		Source:       "commercial",
-	})
+	in := store.ProspectInput{
+		PracticeName:       req.PracticeName,
+		ContactName:        req.ContactName,
+		ContactEmail:       req.ContactEmail,
+		ContactPhone:       req.ContactPhone,
+		City:               req.City,
+		Notes:              req.Notes,
+		Status:             req.Status,
+		Source:             "commercial",
+		AppointmentOutcome: req.AppointmentOutcome,
+		LostReason:         req.LostReason,
+	}
+	if req.AppointmentAt != nil && strings.TrimSpace(*req.AppointmentAt) != "" {
+		parsed, ok := parseAppointmentAt(w, r, *req.AppointmentAt)
+		if !ok {
+			return
+		}
+		in.AppointmentAt = parsed
+		if in.AppointmentOutcome == "" {
+			in.AppointmentOutcome = "scheduled"
+		}
+	}
+	prospect, err := a.store.CreateProspect(r.Context(), id.UserID, in)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -266,44 +267,9 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	var req prospectReq
-	if err := httpx.DecodeJSON(r, &req); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+	in, ok := a.parseProspectUpdate(w, r, existing)
+	if !ok {
 		return
-	}
-	in := store.ProspectInput{
-		PracticeName: existing.PracticeName,
-		ContactName:  existing.ContactName,
-		ContactEmail: existing.ContactEmail,
-		ContactPhone: existing.ContactPhone,
-		City:         existing.City,
-		Notes:        existing.Notes,
-		Status:       existing.Status,
-	}
-	if req.PracticeName != "" {
-		in.PracticeName = req.PracticeName
-	}
-	if req.ContactName != "" {
-		in.ContactName = req.ContactName
-	}
-	if req.ContactEmail != "" {
-		in.ContactEmail = req.ContactEmail
-	}
-	if req.ContactPhone != "" {
-		in.ContactPhone = req.ContactPhone
-	}
-	if req.City != "" {
-		in.City = req.City
-	}
-	if req.Notes != "" {
-		in.Notes = req.Notes
-	}
-	if req.Status != "" {
-		if !store.ValidProspectStatus(req.Status) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
-			return
-		}
-		in.Status = req.Status
 	}
 	prospect, err := a.store.UpdateProspect(r.Context(), id.UserID, prospectID, in)
 	if err != nil {
@@ -315,6 +281,19 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, prospect)
+}
+
+func parseAppointmentAt(w http.ResponseWriter, r *http.Request, raw string) (*time.Time, bool) {
+	raw = strings.TrimSpace(raw)
+	t, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		t, err = time.Parse("2006-01-02T15:04", raw)
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_appointment_at")
+		return nil, false
+	}
+	return &t, true
 }
 
 func (a *API) commercialDeleteProspect(w http.ResponseWriter, r *http.Request) {

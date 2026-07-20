@@ -22,8 +22,9 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Pets / FC | `/pets`, heartrate sessions, timeline, photo, care-reminders, visits, horse-* |
 | Messaging | `/messaging/threads…` |
 | Billing | `GET /billing/plans`, `/billing/addons`, webhook Stripe, checkout/portal pet, my-addons |
-| Commercial | `/commercial/overview`, `/vets`, `/prospects`, `/commissions`, `GET/PATCH /commercial/me/payout-profile` |
-| Admin | `/admin/metrics/overview`, `/users`, `/payments`, `/commercials`, `/prospects`, `/vets`, `/clients` |
+| Commercial | `/commercial/overview`, `/vets`, `/prospects`, `/commissions`, `GET/PATCH /commercial/me/payout-profile` (aussi accessible `commercial_manager` pour portefeuille perso) |
+| Commercial manager | `/commercial-manager/overview`, `/team`, `/team/{id}/overview`, `/prospects`, `PATCH /prospects/{id}`, `/followups` |
+| Admin | `/admin/metrics/overview`, `/users`, `/payments`, `/commercials` (+ `role` / `managerUserId`, `PATCH …/manager`), `/prospects`, `/vets`, `/clients` |
 | Admin import clients | `POST/GET /admin/client-imports`, `GET …/{id}`, `POST …/suggest-mapping`, `PUT …/mapping`, `PATCH …/rows/{rowId}`, `POST …/commit`, `GET …/credentials` — voir [24](24-IMPORT-CLIENTS-ADMIN.md) |
 | Admin commissions véto | `GET /admin/commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid`, `PUT /admin/commissions/tiers`, `GET/PUT /admin/commissions/settings` (PUT rejette : taux commercial = constantes plan) |
 | Admin commissions commercial | `GET /admin/commercial-commissions/runs`, `GET …/periods/{YYYY-MM}`, `POST …/close`, `POST …/mark-paid` |

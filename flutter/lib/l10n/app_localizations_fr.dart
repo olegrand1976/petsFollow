@@ -570,7 +570,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Pack Famille — vue foyer des rappels, −10 % sur les abos suivants';
+      'Pack Famille — vue foyer des rappels, −10 % dès le 2ᵉ abonnement animal payant';
 
   @override
   String familyHouseholdTitle(int count) {

@@ -10,6 +10,7 @@
       <div
         ref="panelRef"
         class="pro-modal__panel"
+        :class="sizeClass"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"
@@ -39,11 +40,15 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  open: boolean
-  title: string
-  closeLabel?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    title: string
+    closeLabel?: string
+    size?: 'md' | 'lg'
+  }>(),
+  { size: 'md' },
+)
 
 const emit = defineEmits<{ 'update:open': [boolean] }>()
 
@@ -52,6 +57,18 @@ const panelRef = ref<HTMLElement | null>(null)
 const titleId = `pro-modal-title-${useId()}`
 
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
+const sizeClass = computed(() => {
+  switch (props.size) {
+    case 'lg':
+      return 'pro-modal__panel--lg'
+    case 'md':
+      return 'pro-modal__panel--md'
+    default: {
+      const _exhaustive: never = props.size
+      return _exhaustive
+    }
+  }
+})
 
 function close() {
   emit('update:open', false)
@@ -65,6 +82,11 @@ watch(
     if (isOpen) {
       await nextTick()
       panelRef.value?.focus()
+      // #region agent log
+      const panel = panelRef.value
+      const styles = panel ? getComputedStyle(panel) : null
+      fetch('http://127.0.0.1:7559/ingest/40c2d4f1-caa5-4176-9f2c-2684de74f4a7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac27fb'},body:JSON.stringify({sessionId:'ac27fb',runId:'post-fix',hypothesisId:'A,B',location:'ProModal.vue:watch(open)',message:'modal panel size on open',data:{title:props.title,size:props.size,panelWidthPx:panel?.offsetWidth??null,computedWidth:styles?.width||null,viewportWidth:window.innerWidth},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     }
   },
 )
@@ -101,6 +123,10 @@ onBeforeUnmount(() => {
   border-radius: var(--pf-vet-radius);
   box-shadow: var(--pf-vet-shadow-md);
   outline: none;
+}
+
+.pro-modal__panel--lg {
+  width: min(100%, 42rem);
 }
 
 .pro-modal__header {

@@ -23,7 +23,11 @@
     "commercialSettings": "Betalingsprofiel",
     "commercialPitch": "Presentatie",
     "products": "Producten",
-    "calendar": "Agenda"
+    "calendar": "Agenda",
+    "managerDashboard": "Teamdashboard",
+    "managerFollowups": "Opvolging",
+    "managerProspects": "Teamprospects",
+    "managerPortfolio": "Mijn portefeuille"
   },
   "auth": {
     "login": {
@@ -905,7 +909,7 @@
       "family": {
         "price": "€39 · €119 / jaar",
         "title": "Family en Kennel",
-        "text": "Family vanaf 2 dieren (−10%, geen plafond). Kennel vanaf 6 (−15%, snelle encoding) — onderling exclusief."
+        "text": "Family vanaf 2 (−10% vanaf 2e betalend, geen plafond). Kennel vanaf 6 (−15%, snelle encoding). Bv. 2× Annual + Family: 105,50 € / jaar."
       },
       "careHorse": {
         "price": "€19 · €39",
@@ -974,8 +978,8 @@
       }
     },
     "addonsTitle": "Huishoudopties (eigenaarsaccount)",
-    "addonsLead": "Add-ons zijn jaarlijkse abonnementen (elk jaar vernieuwd) — ze verrijken de ervaring voor dieren in het huishouden volgens de regels hieronder.",
-    "addonsTip": "Family vervangt nooit een dierabonnement. Family en Kennel zijn exclusief (Kennel = upgrade). Kennel vanaf 6 dieren. Horse alleen met ≥ 1 paard.",
+    "addonsLead": "Add-ons komen bovenop dierabonnementen (ze vervangen ze nooit). Jaarlijks terugkerend abonnement per account — voordelen voor het hele huishouden.",
+    "addonsTip": "Family / Kennel: 1e betalend dier volle prijs, korting vanaf het 2e betalende dier (−10% / −15%). Family en Kennel zijn exclusief (Kennel = upgrade). Horse alleen met ≥ 1 paard.",
     "addons": {
       "family": {
         "name": "Family",
@@ -983,9 +987,10 @@
         "tagline": "Huishouden vanaf 2 dieren, −10% op plannen",
         "scope": "Account",
         "benefits": [
-          "Gezinsweergave herinneringen",
-          "−10% op dierabonnementen vanaf 2e betalend",
-          "Geen plafond op aantal dieren",
+          "Gezinsweergave: aankomende herinneringen van alle dieren",
+          "−10% op elk dierabonnement vanaf het 2e betalende dier (1e = volle prijs)",
+          "Geen plafond — Family blijft 39 € / jaar ongeacht het aantal",
+          "Bv. 2× Annual: 35 + 31,50 + 39 = 105,50 € / jaar",
           "Exclusief met Kennel — vanaf 6 dieren, Kennel-upgrade aanbevolen"
         ]
       },
@@ -995,8 +1000,10 @@
         "tagline": "Uitgebreid zorgboek",
         "scope": "Account",
         "benefits": [
-          "Medicatieherinneringen",
-          "Persoonlijke herinneringen"
+          "Medicatieherinneringen voor het hele huishouden",
+          "Persoonlijke herinneringen",
+          "Bovenop dierplannen — geen korting op plannen",
+          "Bv. huishouden met 2 dieren: +19 € / jaar op het account"
         ]
       },
       "horse": {
@@ -1006,9 +1013,8 @@
         "scope": "Account",
         "benefits": [
           "Herinneringen hoefsmid en mestonderzoek",
-          "Hoefsmitlogboek",
-          "Professionele contacten (hoefsmid, enz.)",
-          "Wedstrijdopvolging",
+          "Hoefsmitlogboek + pro-contacten + wedstrijden",
+          "Bovenop dierplannen — geen korting op plannen",
           "Enkel als het huishouden ≥ 1 paard heeft"
         ]
       },
@@ -1018,10 +1024,63 @@
         "tagline": "Fokkerij / bestand vanaf 6 dieren",
         "scope": "Account",
         "benefits": [
-          "Snelle multi-dier encoding",
-          "Roster, nest-tags, export",
-          "−15% op dierabonnementen vanaf 2e betalend",
+          "Snelle multi-dier encoding, roster, nest-tags, export",
+          "−15% op elk dierabonnement vanaf het 2e betalende dier",
+          "Bv. 6× Annual: 35 + 5×29,75 + 119 = 302,75 € / jaar",
           "Exclusief met Family (Kennel-aankoop = upgrade, Family geannuleerd)"
+        ]
+      }
+    },
+    "examplesTitle": "Concrete voorbeelden (Annual-plan)",
+    "examplesLead": "Add-ons vervangen nooit een dierabonnement. Bedragen incl. btw op basis van Annual 35 € — 1e betalend dier volle prijs, volgende met korting als Family / Kennel actief is.",
+    "examplesTip": "Family en Kennel = jaarlijks terugkerend accountabonnement (39 € of 119 €), ongeacht het aantal dieren. Care+ en Horse komen erbij zonder de planprijzen te wijzigen.",
+    "examplesCareHorseTitle": "Care+ en Horse — zorg-add-ons",
+    "examplesCareHorseLead": "Account-add-ons, zonder korting op dierabonnementen.",
+    "examplesCareHorseBenefits": [
+      "Care+ 19 € / jaar: medicatie- en persoonlijke herinneringen voor het huishouden",
+      "Horse 39 € / jaar: paardenpakket (hoefsmid, contacten, wedstrijden) bij ≥ 1 paard",
+      "Combineerbaar met Family of Kennel"
+    ],
+    "examples": {
+      "withoutFamily2": {
+        "title": "Zonder Family — 2 dieren",
+        "total": "70 € / jaar",
+        "breakdown": "35 + 35 (2× Annual volle prijs)",
+        "benefits": [
+          "Elk dier heeft een eigen abonnement",
+          "Geen gezamenlijke gezinsweergave",
+          "Geen multi-dierkorting"
+        ]
+      },
+      "withFamily2": {
+        "title": "Met Family — 2 dieren",
+        "total": "105,50 € / jaar",
+        "breakdown": "35 + 31,50 + 39 (Family)",
+        "benefits": [
+          "1e dier: 35 € (volle prijs)",
+          "2e dier: 31,50 € (−10%)",
+          "Family 39 €: gezinsweergave + korting op volgende",
+          "Voordeel: comfort in het huishouden, geen besparing vanaf 2"
+        ]
+      },
+      "withFamily4": {
+        "title": "Met Family — 4 dieren",
+        "total": "168,50 € / jaar",
+        "breakdown": "35 + 3×31,50 + 39 (vs 140 € zonder Family)",
+        "benefits": [
+          "1e: 35 € · volgende 3: 31,50 € elk",
+          "Family blijft 39 € / jaar — geen plafond",
+          "Elk nieuw betalend dier krijgt −10%"
+        ]
+      },
+      "kennel6": {
+        "title": "Met Kennel — 6 dieren",
+        "total": "302,75 € / jaar",
+        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "benefits": [
+          "1e: 35 € · volgende 5: 29,75 € (−15%)",
+          "Snelle encoding, roster, nest-tags",
+          "Vervangt Family indien actief (upgrade)"
         ]
       }
     },
@@ -1156,7 +1215,7 @@
     "invalid_locale": "Niet-ondersteunde taal",
     "invalid_bic": "Ongeldige BIC (8 of 11 tekens)",
     "invalid_account_holder": "Ongeldige rekeninghouder",
-    "family_pet_limit": "Familiepakket is beperkt tot 3 dieren",
+    "family_pet_limit": "Er is al een huishoudpakket (Family of Kennel) actief of in aankoop",
     "family_requires_two_pets": "Familiepakket vereist minstens 2 dieren",
     "family_required": "Familiepakket vereist",
     "invalid_billing_mode": "Ongeldige facturatiemodus",
@@ -1243,7 +1302,8 @@
       "postalCode": "Postcode",
       "address": "Adres",
       "clients": "Cliënten",
-      "encodeFailed": "Aanmaken mislukt"
+      "encodeFailed": "Aanmaken mislukt",
+      "prospectId": "Prospect-ID (conversie)"
     },
     "clients": {
       "create": "Klantaccount aanmaken",
@@ -1282,7 +1342,17 @@
       "sourceLabel": "Bron",
       "source": {
         "commercial": "Commercial",
-        "vet_referral": "Doorverwijzing dierenarts"
+        "vet_referral": "Doorverwijzing dierenarts",
+        "directory": "BCE-directory"
+      },
+      "appointmentAt": "Afspraak",
+      "appointmentOutcome": "Resultaat afspraak",
+      "lostReason": "Reden verloren",
+      "outcome": {
+        "scheduled": "Gepland",
+        "done": "Gedaan",
+        "no_show": "No-show",
+        "cancelled": "Geannuleerd"
       }
     },
     "commissions": {
@@ -1431,6 +1501,44 @@
       "reschedule_pending": "Verplaatsing in afwachting",
       "done": "Afgerond",
       "cancelled": "Geannuleerd"
+    }
+  },
+  "manager": {
+    "dashboard": {
+      "title": "Dashboard salesmanager",
+      "subtitle": "Teamsturing: contacten, afspraken en resultaten.",
+      "teamSection": "Team",
+      "selfSection": "Mijn productie (privé)",
+      "prospects": "Teamprospects",
+      "contacted": "Gecontacteerd",
+      "appointmentsUpcoming": "Aankomende afspraken",
+      "converted": "Geconverteerd",
+      "conversionRate": "Conversieratio",
+      "stale": "Opvolging (>7 d)",
+      "teamMonthEarned": "Teamcommissies (maand)",
+      "directory": "BCE-directory",
+      "teamEmpty": "Geen commercial toegewezen",
+      "colCommercial": "Commercial",
+      "colVets": "Dierenartsen",
+      "colContacts": "Contacten 30 d",
+      "colAppointments": "Afspraken (komend / gedaan)",
+      "colConverted": "Geconverteerd",
+      "colStale": "Stale",
+      "colMonth": "Maand"
+    },
+    "followups": {
+      "title": "Teamopvolging",
+      "subtitle": "Aankomende afspraken en te heractiveren prospects.",
+      "upcomingTitle": "Aankomende afspraken",
+      "upcomingEmpty": "Geen geplande afspraken",
+      "staleTitle": "Prospects te heractiveren (>7 dagen)",
+      "staleEmpty": "Geen stale prospects",
+      "colCommercial": "Commercial"
+    },
+    "prospects": {
+      "title": "Teamprospects",
+      "subtitle": "CRM-weergave van het team en gedeelde directory.",
+      "allCommercials": "Alle commercials"
     }
   }
 }

@@ -32,7 +32,7 @@
     <p v-if="loadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ loadError }}</p>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
 
-    <ProModal v-model:open="invitationsOpen" :title="$t('clients.invitations.title')">
+    <ProModal v-model:open="invitationsOpen" size="lg" :title="$t('clients.invitations.title')">
       <p v-if="inviteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ inviteError }}</p>
       <ProEmptyState
         v-if="!linkRequests.length"
@@ -364,9 +364,17 @@ async function rejectLink(id: string) {
 
 onMounted(async () => {
   await Promise.all([loadClients(), loadLinkRequests()])
-  if (route.query.invitations === '1') {
+  const queryInvitations = route.query.invitations === '1'
+  const hasPending = linkRequests.value.length > 0
+  // #region agent log
+  fetch('http://127.0.0.1:7559/ingest/40c2d4f1-caa5-4176-9f2c-2684de74f4a7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac27fb'},body:JSON.stringify({sessionId:'ac27fb',runId:'post-fix',hypothesisId:'C,D,E',location:'clients/index.vue:onMounted',message:'clients mount invitations decision',data:{queryInvitations,hasPending,linkRequestsCount:linkRequests.value.length,invitationsOpenBefore:invitationsOpen.value,routePath:route.path,routeQuery:String(route.query.invitations||'')},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+  if (queryInvitations || hasPending) {
     invitationsOpen.value = true
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7559/ingest/40c2d4f1-caa5-4176-9f2c-2684de74f4a7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ac27fb'},body:JSON.stringify({sessionId:'ac27fb',runId:'post-fix',hypothesisId:'C,D',location:'clients/index.vue:onMounted:after',message:'invitations open state after auto-open',data:{invitationsOpen:invitationsOpen.value,openedByQuery:queryInvitations,openedByPending:hasPending&&!queryInvitations},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 })
 </script>
 

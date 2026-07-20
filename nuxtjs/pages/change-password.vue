@@ -58,6 +58,7 @@ async function redirectAfterChange() {
   const me = await fetchUser(true)
   const role = me?.role
   if (role === 'admin') await navigateTo('/admin')
+  else if (role === 'commercial_manager') await navigateTo('/commercial-manager')
   else if (role === 'commercial') await navigateTo('/commercial')
   else if (role === 'vet') {
     if (me?.profileComplete === false) await navigateTo('/onboarding')

@@ -1119,7 +1119,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyPackHint.
   ///
   /// In fr, this message translates to:
-  /// **'Pack Famille — vue foyer des rappels, −10 % sur les abos suivants'**
+  /// **'Pack Famille — vue foyer des rappels, −10 % dès le 2ᵉ abonnement animal payant'**
   String get familyPackHint;
 
   /// No description provided for @familyHouseholdTitle.

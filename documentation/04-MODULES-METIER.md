@@ -32,7 +32,9 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan/add
 
 ## Commercial / sales
 
-Overview, encode/list vets assignés, CRM prospects, commissions, payout profile, page pitch. Admin : CRUD commercials, assign, prospects globaux, payouts commissions, SPIFF bonuses.
+Overview, encode/list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile, page pitch. Annuaire partagé `source=directory`.  
+**Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; production manager privée (hors tableaux équipe).  
+Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.
 
 ## Care & Horse
 

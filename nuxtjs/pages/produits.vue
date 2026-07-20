@@ -72,6 +72,31 @@
         <p class="pf-products__tip">{{ $t('products.addonsTip') }}</p>
       </section>
 
+      <section class="pf-products__block" data-testid="products-examples">
+        <h2>{{ $t('products.examplesTitle') }}</h2>
+        <p class="pf-products__block-lead">{{ $t('products.examplesLead') }}</p>
+        <div class="pf-products__grid pf-products__grid--2">
+          <article v-for="ex in examples" :key="ex.key" class="pf-products__card">
+            <div class="pf-products__card-top">
+              <h3>{{ ex.title }}</h3>
+            </div>
+            <p class="pf-products__price">{{ ex.total }}</p>
+            <p class="pf-products__price-sub">{{ ex.breakdown }}</p>
+            <ul class="pf-products__benefits">
+              <li v-for="b in ex.benefits" :key="b">{{ b }}</li>
+            </ul>
+          </article>
+        </div>
+        <div class="pf-products__card pf-products__card--aside">
+          <h3>{{ $t('products.examplesCareHorseTitle') }}</h3>
+          <p class="pf-products__price-sub">{{ $t('products.examplesCareHorseLead') }}</p>
+          <ul class="pf-products__benefits">
+            <li v-for="b in careHorseBenefits" :key="b">{{ b }}</li>
+          </ul>
+        </div>
+        <p class="pf-products__tip">{{ $t('products.examplesTip') }}</p>
+      </section>
+
       <section class="pf-products__block pf-products__block--summary">
         <h2>{{ $t('products.summaryTitle') }}</h2>
         <div class="pf-products__summary">
@@ -132,6 +157,18 @@ const addons = computed(() =>
     benefits: listFrom(`products.addons.${key}.benefits`),
   })),
 )
+
+const examples = computed(() =>
+  (['withoutFamily2', 'withFamily2', 'withFamily4', 'kennel6'] as const).map((key) => ({
+    key,
+    title: t(`products.examples.${key}.title`),
+    total: t(`products.examples.${key}.total`),
+    breakdown: t(`products.examples.${key}.breakdown`),
+    benefits: listFrom(`products.examples.${key}.benefits`),
+  })),
+)
+
+const careHorseBenefits = computed(() => listFrom('products.examplesCareHorseBenefits'))
 
 const summaryRows = computed(() =>
   (['annual', 'triennial', 'quinquennial', 'family', 'kennel', 'carePlus', 'horse'] as const).map((key) => ({
@@ -268,6 +305,14 @@ function printPage() {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.pf-products__grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.pf-products__card--aside {
+  margin-top: 1rem;
+}
+
 .pf-products__card {
   background: var(--pf-vet-surface);
   border: 1px solid var(--pf-vet-border);
@@ -357,7 +402,8 @@ function printPage() {
 }
 
 @media (max-width: 900px) {
-  .pf-products__grid--3 {
+  .pf-products__grid--3,
+  .pf-products__grid--2 {
     grid-template-columns: 1fr;
   }
 

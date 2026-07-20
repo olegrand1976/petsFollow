@@ -55,3 +55,31 @@ func TestApplyDiscountCents(t *testing.T) {
 		t.Fatalf("kennel wins over family: %d", got)
 	}
 }
+
+// Commercial Annual totals: 1st pet full price, later pets discounted, + household addon.
+// Mirrors ResolvePetCheckoutAmount (others ≥ 1) + catalogue amounts in billing/domain.go.
+func TestAnnualHouseholdCheckoutTotals(t *testing.T) {
+	const (
+		annualCents = 3500
+		familyCents = 3900
+		kennelCents = 11900
+	)
+	familyPet := store.ApplyDiscountCents(annualCents, store.FamilyPetDiscountBps) // 3150
+	kennelPet := store.ApplyDiscountCents(annualCents, store.KennelPetDiscountBps) // 2975
+
+	cases := []struct {
+		name string
+		got  int
+		want int
+	}{
+		{"without Family — 2 pets", annualCents + annualCents, 7000},
+		{"with Family — 2 pets", annualCents + familyPet + familyCents, 10550},
+		{"with Family — 4 pets", annualCents + 3*familyPet + familyCents, 16850},
+		{"with Kennel — 6 pets", annualCents + 5*kennelPet + kennelCents, 30275},
+	}
+	for _, tc := range cases {
+		if tc.got != tc.want {
+			t.Fatalf("%s: got %d want %d", tc.name, tc.got, tc.want)
+		}
+	}
+}

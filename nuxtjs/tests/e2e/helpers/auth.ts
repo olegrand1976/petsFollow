@@ -52,7 +52,16 @@ export async function loginAsCommercial(
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
-  await page.waitForURL(/\/commercial/, { timeout: 20000 })
+  await page.waitForURL((url) => /^\/commercial(?:\/|$)/.test(url.pathname), { timeout: 20000 })
+}
+
+export async function loginAsCommercialManager(
+  page: Page,
+  email = 'commercial.manager@petsfollow.test',
+  password = 'CommercialDemo123!',
+) {
+  await login(page, email, password)
+  await page.waitForURL(/\/commercial-manager/, { timeout: 20000 })
 }
 
 export async function logout(page: Page) {

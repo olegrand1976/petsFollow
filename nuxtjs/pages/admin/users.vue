@@ -7,6 +7,22 @@
         <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" :label="$t('admin.users.commercialName')" required />
         <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" :label="$t('admin.users.commercialEmail')" required />
         <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" :label="$t('admin.users.commercialPassword')" required />
+        <div class="pro-field">
+          <label class="pro-label" for="admin-commercial-role">{{ $t('admin.users.commercialRole') }}</label>
+          <select id="admin-commercial-role" v-model="cForm.role" class="pro-select" data-testid="admin-commercial-role">
+            <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
+            <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
+          </select>
+        </div>
+        <div v-if="cForm.role === 'commercial'" class="pro-field">
+          <label class="pro-label" for="admin-commercial-manager">{{ $t('admin.users.commercialManager') }}</label>
+          <select id="admin-commercial-manager" v-model="cForm.managerUserId" class="pro-select" data-testid="admin-commercial-manager">
+            <option value="">{{ $t('admin.users.commercialManagerNone') }}</option>
+            <option v-for="m in managers" :key="m.userId" :value="m.userId">
+              {{ m.fullName }} ({{ m.email }})
+            </option>
+          </select>
+        </div>
         <p v-if="cMsg" class="pro-hint" data-testid="admin-commercial-msg">{{ cMsg }}</p>
         <ProButton type="submit" test-id="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
       </form>
@@ -51,6 +67,7 @@
               <option value="client">{{ $t('admin.users.roleClient') }}</option>
               <option value="vet">{{ $t('admin.users.roleVet') }}</option>
               <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
+              <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
               <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
             </select>
           </div>
@@ -141,7 +158,8 @@ const hasMore = ref(false)
 const { viewMode } = useListView('pf-admin-users-view', 'table')
 const cSaving = ref(false)
 const cMsg = ref('')
-const cForm = reactive({ fullName: '', email: '', password: '' })
+const cForm = reactive({ fullName: '', email: '', password: '', role: 'commercial', managerUserId: '' })
+const managers = ref<{ userId: string; fullName: string; email: string }[]>([])
 const vSaving = ref(false)
 const vMsg = ref('')
 const vForm = reactive({ fullName: '', practiceName: '', email: '', password: '' })
@@ -176,6 +194,7 @@ const kanbanColumns = computed(() => {
     { role: 'client', title: t('admin.users.roleClient') },
     { role: 'vet', title: t('admin.users.roleVet') },
     { role: 'commercial', title: t('admin.users.roleCommercial') },
+    { role: 'commercial_manager', title: t('admin.users.roleCommercialManager') },
     { role: 'admin', title: t('admin.users.roleAdmin') },
   ]
   return roles.map((r) => ({
@@ -188,10 +207,19 @@ async function createCommercial() {
   cSaving.value = true
   cMsg.value = ''
   try {
-    await $fetch('/api/admin/commercials', { method: 'POST', body: { ...cForm } })
+    const body: Record<string, string> = {
+      fullName: cForm.fullName,
+      email: cForm.email,
+      password: cForm.password,
+      role: cForm.role,
+    }
+    if (cForm.role === 'commercial' && cForm.managerUserId) {
+      body.managerUserId = cForm.managerUserId
+    }
+    await $fetch('/api/admin/commercials', { method: 'POST', body })
     cMsg.value = t('admin.users.commercialCreated')
-    Object.assign(cForm, { fullName: '', email: '', password: '' })
-    await load()
+    Object.assign(cForm, { fullName: '', email: '', password: '', role: 'commercial', managerUserId: '' })
+    await Promise.all([load(), loadManagers()])
   } catch {
     cMsg.value = t('admin.users.commercialFailed')
   } finally {
@@ -234,6 +262,11 @@ async function loadVets() {
   vetOptions.value = res.data ?? res ?? []
 }
 
+async function loadManagers() {
+  const res: any = await $fetch('/api/admin/commercial-managers').catch(() => null)
+  managers.value = res?.data ?? res ?? []
+}
+
 async function load() {
   const res: any = await $fetch('/api/admin/users', {
     query: { role: roleFilter.value || undefined, page: page.value },
@@ -246,7 +279,7 @@ async function load() {
 watch([roleFilter, page], load)
 watch(paymentFilter, () => { /* client-side filter */ })
 onMounted(async () => {
-  await Promise.all([load(), loadVets()])
+  await Promise.all([load(), loadVets(), loadManagers()])
 })
 </script>
 

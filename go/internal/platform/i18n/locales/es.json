@@ -18,7 +18,7 @@
     "invalid_locale": "Idioma no admitido",
     "invalid_bic": "BIC no válido (8 u 11 caracteres)",
     "invalid_account_holder": "Titular de la cuenta no válido",
-    "family_pet_limit": "El pack Familia está limitado a 3 mascotas",
+    "family_pet_limit": "Ya hay un pack hogar (Family o Kennel) activo o en compra",
     "family_requires_two_pets": "El pack Familia requiere al menos 2 mascotas",
     "family_required": "Se requiere el pack Familia",
     "invalid_billing_mode": "Modo de facturación no válido",

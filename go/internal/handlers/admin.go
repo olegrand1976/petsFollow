@@ -21,8 +21,10 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
+		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
 		pr.Post("/admin/commercials", a.adminCreateCommercial)
 		pr.Patch("/admin/commercials/{id}/assign", a.adminAssignVet)
+		pr.Patch("/admin/commercials/{id}/manager", a.adminSetCommercialManager)
 		pr.Get("/admin/vets", a.adminListVets)
 		pr.Post("/admin/vets", a.adminCreateVet)
 		pr.Post("/admin/clients", a.adminCreateClient)
@@ -44,10 +46,24 @@ func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, rows)
 }
 
+func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rows, err := a.store.ListCommercialManagers(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
 type createCommercialReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"fullName"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	FullName      string `json:"fullName"`
+	ManagerUserID string `json:"managerUserId"`
+	Role          string `json:"role"` // commercial (default) | commercial_manager
 }
 
 func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
@@ -75,16 +91,63 @@ func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	userID, err := a.store.CreateCommercialUser(r.Context(), req.Email, req.Password, req.FullName)
+	role := strings.TrimSpace(req.Role)
+	if role == "" {
+		role = "commercial"
+	}
+	var userID string
+	var err error
+	switch role {
+	case "commercial_manager":
+		userID, err = a.store.CreateCommercialManagerUser(r.Context(), req.Email, req.Password, req.FullName)
+	case "commercial":
+		userID, err = a.store.CreateCommercialUserWithManager(r.Context(), req.Email, req.Password, req.FullName, strings.TrimSpace(req.ManagerUserID))
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_role")
+		return
+	}
 	if err != nil {
+		if err.Error() == "invalid_manager" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": userID, "email": req.Email})
+	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": userID, "email": req.Email, "role": role})
 }
 
 type assignVetReq struct {
 	VetUserID string `json:"vetUserId"`
+}
+
+type setManagerReq struct {
+	ManagerUserID string `json:"managerUserId"`
+}
+
+func (a *API) adminSetCommercialManager(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	commercialID := chi.URLParam(r, "id")
+	var req setManagerReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.SetCommercialManager(r.Context(), commercialID, strings.TrimSpace(req.ManagerUserID)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if err.Error() == "invalid_manager" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {

@@ -18,7 +18,7 @@
     "invalid_locale": "Unsupported language",
     "invalid_bic": "Invalid BIC (8 or 11 characters)",
     "invalid_account_holder": "Invalid account holder",
-    "family_pet_limit": "Family pack is limited to 3 pets",
+    "family_pet_limit": "A household pack (Family or Kennel) is already active or being purchased",
     "family_requires_two_pets": "Family pack requires at least 2 pets",
     "family_required": "Family pack required",
     "invalid_billing_mode": "Invalid billing mode",

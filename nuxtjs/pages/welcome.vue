@@ -95,6 +95,10 @@ async function goPrimary() {
       await navigateTo('/admin')
       return
     }
+    if (data.role === 'commercial_manager') {
+      await navigateTo('/commercial-manager')
+      return
+    }
     if (data.role === 'commercial') {
       await navigateTo('/commercial')
       return

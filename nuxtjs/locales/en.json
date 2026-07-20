@@ -23,7 +23,11 @@
     "commercialSettings": "Payout profile",
     "commercialPitch": "Pitch",
     "products": "Products",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "managerDashboard": "Team dashboard",
+    "managerFollowups": "Follow-up",
+    "managerProspects": "Team prospects",
+    "managerPortfolio": "My portfolio"
   },
   "auth": {
     "login": {
@@ -905,7 +909,7 @@
       "family": {
         "price": "€39 · €119 / year",
         "title": "Family and Kennel",
-        "text": "Family from 2 pets (−10%, no pet cap). Kennel from 6 (−15%, quick encode) — mutually exclusive."
+        "text": "Family from 2 (−10% from the 2nd paying pet, no cap). Kennel from 6 (−15%, quick encode). Ex. 2× Annual + Family: €105.50 / year."
       },
       "careHorse": {
         "price": "€19 · €39",
@@ -974,8 +978,8 @@
       }
     },
     "addonsTitle": "Household options (owner account)",
-    "addonsLead": "Addons are annual recurring subscriptions (renewed each year) — they enrich the experience for pets in the household under the rules below.",
-    "addonsTip": "Family never replaces a pet subscription. Family and Kennel are exclusive (Kennel = upgrade). Kennel from 6 pets. Horse only if the household has ≥ 1 horse.",
+    "addonsLead": "Addons stack on top of pet subscriptions (they never replace them). Annual recurring subscription per account — benefits shared across the household.",
+    "addonsTip": "Family / Kennel mechanics: 1st paying pet at full price, discount from the 2nd paying pet (−10% / −15%). Family and Kennel are exclusive (Kennel = upgrade). Horse only if the household has ≥ 1 horse.",
     "addons": {
       "family": {
         "name": "Family",
@@ -983,9 +987,10 @@
         "tagline": "Household pack — from 2 pets, −10% on plans",
         "scope": "Account",
         "benefits": [
-          "Household upcoming-care view",
-          "−10% on pet plans from the 2nd paying pet",
-          "No pet count cap",
+          "Household upcoming-care view for all pets",
+          "−10% on each pet plan from the 2nd paying pet (1st = full price)",
+          "No pet cap — Family stays €39 / year whatever the count",
+          "Ex. 2× Annual: 35 + 31.50 + 39 = €105.50 / year",
           "Exclusive with Kennel — from 6 pets, Kennel upgrade recommended"
         ]
       },
@@ -995,8 +1000,10 @@
         "tagline": "Enriched care book",
         "scope": "Account",
         "benefits": [
-          "Medication reminders",
-          "Custom reminders"
+          "Medication reminders for the whole household",
+          "Custom reminders",
+          "On top of pet plans — no plan discount",
+          "Ex. 2-pet household: +€19 / year on the account"
         ]
       },
       "horse": {
@@ -1006,9 +1013,8 @@
         "scope": "Account",
         "benefits": [
           "Farrier and fecal-egg reminders",
-          "Farrier log",
-          "Professional contacts (farrier, etc.)",
-          "Competition tracking",
+          "Farrier log + pro contacts + competitions",
+          "On top of pet plans — no plan discount",
           "Offered only if the household has ≥ 1 horse"
         ]
       },
@@ -1018,10 +1024,63 @@
         "tagline": "Breeding / roster from 6 pets",
         "scope": "Account",
         "benefits": [
-          "Quick multi-pet encode",
-          "Roster, litter tags, export",
-          "−15% on pet plans from the 2nd paying pet",
+          "Quick multi-pet encode, roster, litter tags, export",
+          "−15% on each pet plan from the 2nd paying pet",
+          "Ex. 6× Annual: 35 + 5×29.75 + 119 = €302.75 / year",
           "Exclusive with Family (Kennel purchase = upgrade, Family cancelled)"
+        ]
+      }
+    },
+    "examplesTitle": "Concrete examples (Annual plan)",
+    "examplesLead": "Addons never replace a pet subscription. TTC figures based on Annual €35 — 1st paying pet full price, later pets discounted if Family / Kennel is active.",
+    "examplesTip": "Family and Kennel = annual recurring account subscription (€39 or €119), independent of pet count. Care+ and Horse stack without changing plan prices.",
+    "examplesCareHorseTitle": "Care+ and Horse — care addons",
+    "examplesCareHorseLead": "Account add-ons, with no discount on pet subscriptions.",
+    "examplesCareHorseBenefits": [
+      "Care+ €19 / year: medication and custom reminders for the household",
+      "Horse €39 / year: equine pack (farrier, contacts, competitions) if ≥ 1 horse",
+      "Stackable with Family or Kennel"
+    ],
+    "examples": {
+      "withoutFamily2": {
+        "title": "Without Family — 2 pets",
+        "total": "€70 / year",
+        "breakdown": "35 + 35 (2× Annual full price)",
+        "benefits": [
+          "Each pet has its own subscription",
+          "No unified household care view",
+          "No multi-pet discount"
+        ]
+      },
+      "withFamily2": {
+        "title": "With Family — 2 pets",
+        "total": "€105.50 / year",
+        "breakdown": "35 + 31.50 + 39 (Family)",
+        "benefits": [
+          "1st pet: €35 (full price)",
+          "2nd pet: €31.50 (−10%)",
+          "Family €39: household view + discount on later pets",
+          "Main benefit: household comfort, not savings from 2 pets"
+        ]
+      },
+      "withFamily4": {
+        "title": "With Family — 4 pets",
+        "total": "€168.50 / year",
+        "breakdown": "35 + 3×31.50 + 39 (vs €140 without Family)",
+        "benefits": [
+          "1st: €35 · next 3: €31.50 each",
+          "Family stays €39 / year — no pet cap",
+          "Every new paying pet gets −10%"
+        ]
+      },
+      "kennel6": {
+        "title": "With Kennel — 6 pets",
+        "total": "€302.75 / year",
+        "breakdown": "35 + 5×29.75 + 119 (Kennel)",
+        "benefits": [
+          "1st: €35 · next 5: €29.75 (−15%)",
+          "Quick encode, roster, litter tags",
+          "Replaces Family if it was active (upgrade)"
         ]
       }
     },
@@ -1156,7 +1215,7 @@
     "invalid_locale": "Unsupported language",
     "invalid_bic": "Invalid BIC (8 or 11 characters)",
     "invalid_account_holder": "Invalid account holder",
-    "family_pet_limit": "Family pack is limited to 3 pets",
+    "family_pet_limit": "A household pack (Family or Kennel) is already active or being purchased",
     "family_requires_two_pets": "Family pack requires at least 2 pets",
     "family_required": "Family pack required",
     "invalid_billing_mode": "Invalid billing mode",
@@ -1243,7 +1302,8 @@
       "postalCode": "Postal code",
       "address": "Address",
       "clients": "Clients",
-      "encodeFailed": "Creation failed"
+      "encodeFailed": "Creation failed",
+      "prospectId": "Prospect ID (conversion)"
     },
     "clients": {
       "create": "Create client account",
@@ -1282,7 +1342,17 @@
       "sourceLabel": "Source",
       "source": {
         "commercial": "Sales",
-        "vet_referral": "Vet referral"
+        "vet_referral": "Vet referral",
+        "directory": "BCE directory"
+      },
+      "appointmentAt": "Appointment",
+      "appointmentOutcome": "Appointment outcome",
+      "lostReason": "Lost reason",
+      "outcome": {
+        "scheduled": "Scheduled",
+        "done": "Done",
+        "no_show": "No-show",
+        "cancelled": "Cancelled"
       }
     },
     "commissions": {
@@ -1431,6 +1501,44 @@
       "reschedule_pending": "Reschedule pending",
       "done": "Done",
       "cancelled": "Cancelled"
+    }
+  },
+  "manager": {
+    "dashboard": {
+      "title": "Sales manager dashboard",
+      "subtitle": "Team control: contacts, appointments and results.",
+      "teamSection": "Team",
+      "selfSection": "My production (private)",
+      "prospects": "Team prospects",
+      "contacted": "Contacted",
+      "appointmentsUpcoming": "Upcoming appointments",
+      "converted": "Converted",
+      "conversionRate": "Conversion rate",
+      "stale": "Stale (>7 d)",
+      "teamMonthEarned": "Team commissions (month)",
+      "directory": "BCE directory",
+      "teamEmpty": "No commercial assigned",
+      "colCommercial": "Sales rep",
+      "colVets": "Vets",
+      "colContacts": "Contacts 30 d",
+      "colAppointments": "Appts (upcoming / done)",
+      "colConverted": "Converted",
+      "colStale": "Stale",
+      "colMonth": "Month"
+    },
+    "followups": {
+      "title": "Team follow-up",
+      "subtitle": "Upcoming appointments and prospects to chase.",
+      "upcomingTitle": "Upcoming appointments",
+      "upcomingEmpty": "No scheduled appointments",
+      "staleTitle": "Prospects to chase (>7 days)",
+      "staleEmpty": "No stale prospects",
+      "colCommercial": "Sales rep"
+    },
+    "prospects": {
+      "title": "Team prospects",
+      "subtitle": "CRM view for the team and shared directory.",
+      "allCommercials": "All sales reps"
     }
   }
 }

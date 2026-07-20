@@ -23,7 +23,11 @@
     "commercialCommissions": "Rétributions",
     "commercialSettings": "Profil paiement",
     "commercialPitch": "Présentation",
-    "products": "Produits"
+    "products": "Produits",
+    "managerDashboard": "Dashboard équipe",
+    "managerFollowups": "Suivi",
+    "managerProspects": "Prospects équipe",
+    "managerPortfolio": "Mon portefeuille"
   },
   "auth": {
     "login": {
@@ -196,7 +200,8 @@
       "postalCode": "Code postal",
       "address": "Adresse",
       "clients": "Clients",
-      "encodeFailed": "Création impossible"
+      "encodeFailed": "Création impossible",
+      "prospectId": "ID prospect (conversion)"
     },
     "clients": {
       "create": "Créer un compte client",
@@ -235,7 +240,17 @@
       "sourceLabel": "Source",
       "source": {
         "commercial": "Commercial",
-        "vet_referral": "Recommandation véto"
+        "vet_referral": "Recommandation véto",
+        "directory": "Annuaire BCE"
+      },
+      "appointmentAt": "RDV",
+      "appointmentOutcome": "Résultat RDV",
+      "lostReason": "Raison de perte",
+      "outcome": {
+        "scheduled": "Planifié",
+        "done": "Tenu",
+        "no_show": "No-show",
+        "cancelled": "Annulé"
       }
     },
     "commissions": {
@@ -1123,7 +1138,7 @@
       "family": {
         "price": "39 € · 119 € / an",
         "title": "Family et Kennel",
-        "text": "Family dès 2 animaux (−10 %, sans plafond). Kennel dès 6 (−15 %, encodage rapide) — exclusifs l’un de l’autre."
+        "text": "Family dès 2 (−10 % dès le 2ᵉ payant, sans plafond). Kennel dès 6 (−15 %, encodage). Ex. 2× Annual + Family : 105,50 € / an."
       },
       "careHorse": {
         "price": "19 € · 39 €",
@@ -1192,8 +1207,8 @@
       }
     },
     "addonsTitle": "Options foyer (compte propriétaire)",
-    "addonsLead": "Addons en abonnement annuel récurrent (renouvelé chaque année) — ils enrichissent l'expérience de tous les animaux du foyer selon les règles ci-dessous.",
-    "addonsTip": "Family ne remplace jamais l'abonnement animal. Family et Kennel sont exclusifs (Kennel = upgrade). Kennel dès 6 animaux. Horse uniquement si le foyer a ≥ 1 cheval.",
+    "addonsLead": "Les addons s'ajoutent aux abonnements animal (ils ne les remplacent jamais). Abonnement annuel récurrent par compte — avantages partagés par tout le foyer.",
+    "addonsTip": "Mécanique Family / Kennel : 1er animal payant au plein tarif, remise dès le 2ᵉ payant (−10 % / −15 %). Family et Kennel sont exclusifs (Kennel = upgrade). Horse uniquement si le foyer a ≥ 1 cheval.",
     "addons": {
       "family": {
         "name": "Family",
@@ -1202,8 +1217,9 @@
         "scope": "Compte",
         "benefits": [
           "Vue foyer : prochains rappels de tous les animaux",
-          "−10 % sur les abonnements animal dès le 2ᵉ payant",
-          "Pas de plafond d'animaux",
+          "−10 % sur chaque abonnement animal dès le 2ᵉ payant (1er = plein tarif)",
+          "Pas de plafond d'animaux — Family reste 39 € / an quel que soit le nombre",
+          "Ex. 2× Annual : 35 + 31,50 + 39 = 105,50 € / an",
           "Exclusif Kennel — dès 6 animaux, upgrade Kennel recommandé"
         ]
       },
@@ -1213,8 +1229,10 @@
         "tagline": "Carnet de soins enrichi",
         "scope": "Compte",
         "benefits": [
-          "Rappels médicaments",
-          "Rappels personnalisés"
+          "Rappels médicaments pour tout le foyer",
+          "Rappels personnalisés",
+          "En plus des plans animal — aucune remise plans",
+          "Ex. foyer 2 animaux : +19 € / an sur le compte"
         ]
       },
       "horse": {
@@ -1224,9 +1242,8 @@
         "scope": "Compte",
         "benefits": [
           "Rappels maréchal et coproscopie",
-          "Carnet maréchal",
-          "Contacts professionnels (maréchal, etc.)",
-          "Suivi des compétitions",
+          "Carnet maréchal + contacts pro + compétitions",
+          "En plus des plans animal — aucune remise plans",
           "Proposé uniquement si le foyer a ≥ 1 cheval"
         ]
       },
@@ -1236,10 +1253,63 @@
         "tagline": "Élevage / effectif dès 6 animaux",
         "scope": "Compte",
         "benefits": [
-          "Encodage rapide multi-animaux",
-          "Roster, tags portée, export",
-          "−15 % sur les abonnements animal dès le 2ᵉ payant",
+          "Encodage rapide multi-animaux, roster, tags portée, export",
+          "−15 % sur chaque abonnement animal dès le 2ᵉ payant",
+          "Ex. 6× Annual : 35 + 5×29,75 + 119 = 302,75 € / an",
           "Exclusif Family (achat Kennel = upgrade, Family annulé)"
+        ]
+      }
+    },
+    "examplesTitle": "Exemples concrets (plan Annual)",
+    "examplesLead": "Les addons ne remplacent jamais l'abonnement animal. Chiffres TTC sur la base Annual 35 € — 1er payant plein tarif, suivants remisés si Family / Kennel actif.",
+    "examplesTip": "Family et Kennel = abonnement annuel récurrent sur le compte (39 € ou 119 €), indépendamment du nombre d'animaux. Care+ et Horse s'ajoutent sans modifier le prix des plans.",
+    "examplesCareHorseTitle": "Care+ et Horse — addons soins",
+    "examplesCareHorseLead": "Compléments compte, sans remise sur les abonnements animal.",
+    "examplesCareHorseBenefits": [
+      "Care+ 19 € / an : rappels médicaments et personnalisés pour tout le foyer",
+      "Horse 39 € / an : pack équine (maréchal, contacts, compétitions) si ≥ 1 cheval",
+      "Cumulables avec Family ou Kennel"
+    ],
+    "examples": {
+      "withoutFamily2": {
+        "title": "Sans Family — 2 animaux",
+        "total": "70 € / an",
+        "breakdown": "35 + 35 (2× Annual plein tarif)",
+        "benefits": [
+          "Chaque animal a son propre abonnement",
+          "Pas de vue foyer unifiée",
+          "Pas de remise multi-animaux"
+        ]
+      },
+      "withFamily2": {
+        "title": "Avec Family — 2 animaux",
+        "total": "105,50 € / an",
+        "breakdown": "35 + 31,50 + 39 (Family)",
+        "benefits": [
+          "1er animal : 35 € (plein tarif)",
+          "2ᵉ animal : 31,50 € (−10 %)",
+          "Family 39 € : vue foyer + remise pour les suivants",
+          "Avantage principal : confort foyer, pas une économie dès 2"
+        ]
+      },
+      "withFamily4": {
+        "title": "Avec Family — 4 animaux",
+        "total": "168,50 € / an",
+        "breakdown": "35 + 3×31,50 + 39 (vs 140 € sans Family)",
+        "benefits": [
+          "1er : 35 € · 3 suivants : 31,50 € chacun",
+          "Family reste 39 € / an — pas de plafond",
+          "Chaque nouvel animal payant bénéficie du −10 %"
+        ]
+      },
+      "kennel6": {
+        "title": "Avec Kennel — 6 animaux",
+        "total": "302,75 € / an",
+        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "benefits": [
+          "1er : 35 € · 5 suivants : 29,75 € (−15 %)",
+          "Encodage rapide, roster, tags portée",
+          "Remplace Family s'il était actif (upgrade)"
         ]
       }
     },
@@ -1374,7 +1444,7 @@
     "invalid_bic": "BIC invalide (8 ou 11 caractères)",
     "invalid_account_holder": "Titulaire de compte invalide",
     "invalid_locale": "Langue non supportée",
-    "family_pet_limit": "Le pack Famille est limité à 3 animaux",
+    "family_pet_limit": "Un pack foyer (Family ou Kennel) est déjà actif ou en cours d'achat",
     "family_requires_two_pets": "Le pack Famille nécessite au moins 2 animaux",
     "family_required": "Pack Famille requis",
     "invalid_billing_mode": "Mode de facturation invalide",
@@ -1432,5 +1502,43 @@
     "internal": "Erreur interne du serveur",
     "not_ready": "Service non prêt",
     "generic": "Une erreur est survenue"
+  },
+  "manager": {
+    "dashboard": {
+      "title": "Dashboard responsable commercial",
+      "subtitle": "Pilotage de l'équipe : contacts, RDV et résultats.",
+      "teamSection": "Équipe",
+      "selfSection": "Ma production (privé)",
+      "prospects": "Prospects équipe",
+      "contacted": "Contactés",
+      "appointmentsUpcoming": "RDV à venir",
+      "converted": "Convertis",
+      "conversionRate": "Taux conversion",
+      "stale": "Relances (>7 j)",
+      "teamMonthEarned": "Commissions équipe (mois)",
+      "directory": "Annuaire BCE",
+      "teamEmpty": "Aucun commercial rattaché",
+      "colCommercial": "Commercial",
+      "colVets": "Vétos",
+      "colContacts": "Contacts 30 j",
+      "colAppointments": "RDV (à venir / tenus)",
+      "colConverted": "Convertis",
+      "colStale": "Stale",
+      "colMonth": "Mois"
+    },
+    "followups": {
+      "title": "Suivi équipe",
+      "subtitle": "RDV à venir et prospects à relancer.",
+      "upcomingTitle": "RDV à venir",
+      "upcomingEmpty": "Aucun RDV planifié",
+      "staleTitle": "Prospects à relancer (>7 jours)",
+      "staleEmpty": "Aucune relance en attente",
+      "colCommercial": "Commercial"
+    },
+    "prospects": {
+      "title": "Prospects équipe",
+      "subtitle": "Vue CRM de l'équipe et de l'annuaire partagé.",
+      "allCommercials": "Tous les commerciaux"
+    }
   }
 }

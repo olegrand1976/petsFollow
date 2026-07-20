@@ -570,7 +570,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Pack Familia — vista del hogar, −10% en siguientes planes';
+      'Pack Familia — vista del hogar, −10% desde el 2.º plan de mascota de pago';
 
   @override
   String familyHouseholdTitle(int count) {

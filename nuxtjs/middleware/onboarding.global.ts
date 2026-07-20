@@ -12,7 +12,13 @@ const SKIP_PATHS = new Set([
 export default defineNuxtRouteMiddleware(async (to) => {
   const token = useCookie('pf_token')
   if (!token.value) return
-  if (SKIP_PATHS.has(to.path) || to.path.startsWith('/register') || to.path.startsWith('/admin') || to.path.startsWith('/commercial')) {
+  if (
+    SKIP_PATHS.has(to.path)
+    || to.path.startsWith('/register')
+    || to.path.startsWith('/admin')
+    || to.path.startsWith('/commercial')
+    || to.path.startsWith('/commercial-manager')
+  ) {
     return
   }
 

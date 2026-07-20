@@ -7,6 +7,7 @@
 | `vet` | Pro | Prescrire / suivre / messagerie |
 | `client` | Flutter pets | Animaux, FC, paiement, messages |
 | `commercial` | Pro | Apporter cabinets, prospects, activations |
+| `commercial_manager` | Pro | Piloter l’équipe commerciale (KPI contact / RDV / résultat) + portefeuille perso |
 | `admin` | Pro | Ops plateforme, commissions, commercials |
 
 ## Parcours véto
@@ -47,6 +48,17 @@ flowchart TD
   Over --> Encode[Encoder / suivre vétos]
   Encode --> Act[Activer pets payants]
   Act --> Earn[Commissions ledger]
+```
+
+## Parcours responsable commercial
+
+```mermaid
+flowchart TD
+  LoginM[Login commercial_manager] --> Dash[Dashboard équipe]
+  Dash --> Suivi[RDV + relances]
+  Dash --> TeamPros[Prospects équipe + directory]
+  Dash --> Self[Ma production privée]
+  Self --> EncodeM[Encode / CRM perso]
 ```
 
 ## Parcours admin

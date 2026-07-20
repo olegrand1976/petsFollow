@@ -161,7 +161,7 @@
   "reviewAskYes": "Yes, rate the app",
   "reviewAskNo": "Later",
   "carePlusUpsell": "Care+ — medications and personalized reminders",
-  "familyPackHint": "Family pack — household care view, −10% on next pet plans",
+  "familyPackHint": "Family pack — household care view, −10% from the 2nd paying pet plan",
   "familyHouseholdTitle": "Family household — {count} pets",
   "@familyHouseholdTitle": {
     "placeholders": {

@@ -7,6 +7,7 @@
     <div v-if="overview" class="pro-grid-kpi">
       <ProKpi :value="overview.assignedVets" :label="$t('commercial.dashboard.assignedVets')" />
       <ProKpi :value="overview.prospectsTotal" :label="$t('commercial.dashboard.prospects')" />
+      <ProKpi :value="overview.directoryProspects ?? 0" :label="$t('commercial.dashboard.directory')" />
       <ProKpi :value="overview.prospectsNew" :label="$t('commercial.dashboard.prospectsNew')" />
       <ProKpi :value="overview.prospectsConverted" :label="$t('commercial.dashboard.converted')" />
       <ProKpi :value="formatCurrency(overview.monthEarnedCents)" :label="$t('commercial.dashboard.monthEarned')" />

@@ -567,7 +567,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyPackHint =>
-      'Familiepakket — gezinsweergave, −10% op volgende abonnementen';
+      'Familiepakket — gezinsweergave, −10% vanaf het 2e betalende dierabonnement';
 
   @override
   String familyHouseholdTitle(int count) {

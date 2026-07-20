@@ -34,7 +34,8 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
 | Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
 | Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
-| Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné) |
+| Commercial manager | `commercial.manager@petsfollow.test` | Responsable commercial (équipe) |
+| Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné, rattaché manager) |
 | Admin | `admin.demo@petsfollow.test` | — (global) |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — 6 pets démo + Care+/Kennel/Horse (seed) |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |

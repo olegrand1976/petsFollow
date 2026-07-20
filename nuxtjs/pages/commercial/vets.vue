@@ -16,6 +16,7 @@
         <ProInput v-model="form.city" test-id="encode-vet-city" :label="$t('commercial.vets.city')" />
         <ProInput v-model="form.postalCode" test-id="encode-vet-postal" :label="$t('commercial.vets.postalCode')" />
         <ProInput v-model="form.addressLine1" test-id="encode-vet-address" :label="$t('commercial.vets.address')" />
+        <ProInput v-model="form.prospectId" test-id="encode-vet-prospect" :label="$t('commercial.vets.prospectId')" />
         <p v-if="formError" class="pro-error">{{ formError }}</p>
         <ProButton type="submit" test-id="encode-vet-submit" :disabled="saving">{{ $t('commercial.vets.save') }}</ProButton>
       </form>
@@ -83,6 +84,7 @@ const form = reactive({
   postalCode: '',
   addressLine1: '',
   contactEmail: '',
+  prospectId: '',
 })
 const clientForm = reactive({ vetUserId: '', fullName: '', email: '', password: '' })
 const clientSaving = ref(false)
@@ -102,7 +104,7 @@ async function submitVet() {
       method: 'POST',
       body: { ...form, contactEmail: form.contactEmail || form.email },
     })
-    Object.assign(form, { fullName: '', practiceName: '', email: '', password: '', phone: '', city: '', postalCode: '', addressLine1: '', contactEmail: '' })
+    Object.assign(form, { fullName: '', practiceName: '', email: '', password: '', phone: '', city: '', postalCode: '', addressLine1: '', contactEmail: '', prospectId: '' })
     await load()
   } catch {
     formError.value = t('commercial.vets.encodeFailed')

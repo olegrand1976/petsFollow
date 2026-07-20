@@ -99,6 +99,7 @@ type EncodeVetInput struct {
 	ContactEmail     string
 	PreferredLocale  string
 	AutoReplyDefault string
+	ProspectID       string
 }
 
 func (s *Store) CreateCommercialUser(ctx context.Context, email, password, fullName string) (string, error) {
@@ -163,6 +164,9 @@ func (s *Store) EncodeVetForCommercial(ctx context.Context, commercialUserID str
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
+	}
+	if in.ProspectID != "" {
+		_ = s.MarkProspectConverted(ctx, in.ProspectID, commercialUserID, userID)
 	}
 	return userID, nil
 }
@@ -235,7 +239,7 @@ func (s *Store) ListAllCommercials(ctx context.Context) ([]CommercialRow, error)
 }
 
 func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string) (map[string]any, error) {
-	var assignedVets, prospectsTotal, prospectsNew, prospectsConverted int
+	var assignedVets, prospectsTotal, prospectsNew, prospectsConverted, directoryProspects int
 	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM identity.users WHERE role='vet' AND assigned_commercial_id=$1`,
 		commercialUserID).Scan(&assignedVets); err != nil {
@@ -247,6 +251,10 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 			COUNT(*) FILTER (WHERE status='converted')::int
 		FROM sales.prospects WHERE commercial_user_id=$1`,
 		commercialUserID).Scan(&prospectsTotal, &prospectsNew, &prospectsConverted); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM sales.prospects WHERE source='directory'`).Scan(&directoryProspects); err != nil {
 		return nil, err
 	}
 
@@ -278,6 +286,7 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		"prospectsTotal":                 prospectsTotal,
 		"prospectsNew":                   prospectsNew,
 		"prospectsConverted":             prospectsConverted,
+		"directoryProspects":             directoryProspects,
 		"monthEarnedCents":               monthEarned,
 		"lifetimeEarnedCents":            lifetime,
 		"linkedSubscriptionRevenueCents": subRevenue,
@@ -787,7 +796,7 @@ func (s *Store) UpdateCommercialPayoutProfile(ctx context.Context, userID string
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE identity.users
 		SET payout_iban=$2, payout_bic=$3, payout_account_holder=$4
-		WHERE id=$1 AND role='commercial'`,
+		WHERE id=$1 AND role IN ('commercial', 'commercial_manager')`,
 		userID, p.IBAN, p.BIC, p.AccountHolder)
 	if err != nil {
 		return err

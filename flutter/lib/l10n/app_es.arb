@@ -161,7 +161,7 @@
   "reviewAskYes": "Sí, valorar la app",
   "reviewAskNo": "Más tarde",
   "carePlusUpsell": "Care+ — medicación y recordatorios personalizados",
-  "familyPackHint": "Pack Familia — vista del hogar, −10% en siguientes planes",
+  "familyPackHint": "Pack Familia — vista del hogar, −10% desde el 2.º plan de mascota de pago",
   "familyHouseholdTitle": "Hogar Familia — {count} mascotas",
   "@familyHouseholdTitle": {
     "placeholders": {

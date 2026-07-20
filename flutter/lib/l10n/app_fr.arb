@@ -180,7 +180,7 @@
   "horseContactRole": "Rôle",
   "horseCompetitionTitle": "Événement",
   "horseCompetitionDate": "Date (AAAA-MM-JJ)",
-  "familyPackHint": "Pack Famille — vue foyer des rappels, −10 % sur les abos suivants",
+  "familyPackHint": "Pack Famille — vue foyer des rappels, −10 % dès le 2ᵉ abonnement animal payant",
   "familyHouseholdTitle": "Foyer Famille — {count} animaux",
   "@familyHouseholdTitle": {
     "placeholders": {

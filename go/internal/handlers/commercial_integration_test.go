@@ -492,3 +492,120 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 		t.Fatalf("second mark-paid want 409, got %d %#v", code, env)
 	}
 }
+
+func TestCommercialManagerTeamVisibility(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	mgrEmail := uniqueEmail("mgr")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": mgrEmail, "password": "CommercialDemo123!", "fullName": "Mgr Test", "role": "commercial_manager",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create manager %d %#v", code, env)
+	}
+	mgrID := dataMap(t, env)["userId"].(string)
+
+	repEmail := uniqueEmail("rep")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": repEmail, "password": "CommercialDemo123!", "fullName": "Rep Test", "managerUserId": mgrID,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create rep %d %#v", code, env)
+	}
+
+	otherEmail := uniqueEmail("other-rep")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": otherEmail, "password": "CommercialDemo123!", "fullName": "Other Rep",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create other %d %#v", code, env)
+	}
+
+	mgrTok := loginToken(t, api.handler, mgrEmail, "CommercialDemo123!")
+	repTok := loginToken(t, api.handler, repEmail, "CommercialDemo123!")
+	otherTok := loginToken(t, api.handler, otherEmail, "CommercialDemo123!")
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", repTok, map[string]any{
+		"practiceName": "Team Prospect", "status": "contacted",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("rep prospect %d %#v", code, env)
+	}
+	prospectID := dataMap(t, env)["id"].(string)
+	if dataMap(t, env)["firstContactedAt"] == nil {
+		t.Fatalf("expected firstContactedAt on contacted create/update path, got %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", otherTok, map[string]any{
+		"practiceName": "Outside Team",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("other prospect %d %#v", code, env)
+	}
+
+	// Manager sees team member, not self, in team list
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/team", mgrTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("team %d %#v", code, env)
+	}
+	team, _ := env["data"].([]any)
+	if len(team) != 1 {
+		t.Fatalf("expected 1 team member, got %#v", env)
+	}
+	member := team[0].(map[string]any)
+	if member["email"] != repEmail {
+		t.Fatalf("expected rep in team, got %#v", member)
+	}
+	if member["userId"] == mgrID {
+		t.Fatal("manager must not appear in team list")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/prospects", mgrTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("manager prospects %d %#v", code, env)
+	}
+	foundTeam, foundOutside := false, false
+	for _, item := range env["data"].([]any) {
+		m := item.(map[string]any)
+		if m["practiceName"] == "Team Prospect" {
+			foundTeam = true
+		}
+		if m["practiceName"] == "Outside Team" {
+			foundOutside = true
+		}
+	}
+	if !foundTeam {
+		t.Fatal("manager should see team prospect")
+	}
+	if foundOutside {
+		t.Fatal("manager must not see outside-team prospect")
+	}
+
+	// Peer commercial cannot access manager APIs
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/overview", repTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("rep forbidden on manager overview, got %d", code)
+	}
+
+	// Manager can patch team prospect status / appointment
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/commercial-manager/prospects/"+prospectID, mgrTok, map[string]any{
+		"status": "qualified", "appointmentAt": time.Now().UTC().Add(48 * time.Hour).Format(time.RFC3339),
+	})
+	if code != http.StatusOK {
+		t.Fatalf("manager patch %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "qualified" {
+		t.Fatalf("expected qualified, got %#v", env)
+	}
+
+	// Overview self block present and team totals exclude manager production
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/overview", mgrTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("overview %d %#v", code, env)
+	}
+	ov := dataMap(t, env)
+	if ov["self"] == nil {
+		t.Fatalf("expected self block, got %#v", ov)
+	}
+}

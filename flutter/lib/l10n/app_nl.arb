@@ -171,7 +171,7 @@
   "horseContactRole": "Rol",
   "horseCompetitionTitle": "Evenement",
   "horseCompetitionDate": "Datum (JJJJ-MM-DD)",
-  "familyPackHint": "Familiepakket — gezinsweergave, −10% op volgende abonnementen",
+  "familyPackHint": "Familiepakket — gezinsweergave, −10% vanaf het 2e betalende dierabonnement",
   "familyHouseholdTitle": "Familiehuishouden — {count} dieren",
   "@familyHouseholdTitle": {
     "placeholders": {

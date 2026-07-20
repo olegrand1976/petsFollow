@@ -173,16 +173,28 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err != nil {
 		return err
 	}
-	commercialID := uuid.NewString()
+	managerID := uuid.NewString()
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder
 		) VALUES (
-			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Camille Vente'
+			$1, 'commercial.manager@petsfollow.test', $2, 'Bérénice Manager', 'commercial_manager', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager'
 		)`,
-		commercialID, string(hash)); err != nil {
+		managerID, string(hash)); err != nil {
+		return err
+	}
+	commercialID := uuid.NewString()
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id
+		) VALUES (
+			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3
+		)`,
+		commercialID, string(hash), managerID); err != nil {
 		return err
 	}
 	// vet.demo is assigned to the demo commercial.
@@ -612,7 +624,8 @@ func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
 func logSummary() {
 	log.Println("--- Comptes démo petsFollow ---")
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
-	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects)", passwordCommercial)
+	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
+	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
 	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
