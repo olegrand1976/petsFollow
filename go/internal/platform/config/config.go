@@ -48,6 +48,8 @@ type Config struct {
 	FCMEnabled                      bool
 	JourneyEmailEnabled             bool
 	JourneyEmailInterval            time.Duration
+	GeminiAPIKey                    string
+	GeminiModel                     string
 }
 
 func Load() Config {
@@ -94,6 +96,8 @@ func Load() Config {
 		FCMEnabled: envBoolDefault("FCM_ENABLED", true),
 		JourneyEmailEnabled:  envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
 		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
+		GeminiAPIKey:         envOr("GEMINI_API_KEY", ""),
+		GeminiModel:          envOr("GEMINI_MODEL", "gemini-2.0-flash"),
 	}
 }
 

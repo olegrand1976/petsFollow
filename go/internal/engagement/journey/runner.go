@@ -2,6 +2,7 @@ package journey
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/url"
 	"strings"
@@ -72,24 +73,17 @@ func (r *Runner) Start(ctx context.Context) {
 }
 
 func (r *Runner) RunOnce(ctx context.Context) {
-	ok, err := r.store.TryAdvisoryLock(ctx, advisoryLockKey)
-	if err != nil {
-		log.Printf("journey: advisory lock error: %v", err)
-		return
+	if err := r.store.WithAdvisoryLock(ctx, advisoryLockKey, func(ctx context.Context) error {
+		return r.runLocked(ctx)
+	}); err != nil {
+		log.Printf("journey: run error: %v", err)
 	}
-	if !ok {
-		return
-	}
-	defer func() {
-		if err := r.store.UnlockAdvisoryLock(ctx, advisoryLockKey); err != nil {
-			log.Printf("journey: unlock error: %v", err)
-		}
-	}()
+}
 
+func (r *Runner) runLocked(ctx context.Context) error {
 	journeys, err := r.store.ListActiveEmailJourneys(ctx, r.cfg.BatchLimit)
 	if err != nil {
-		log.Printf("journey: list error: %v", err)
-		return
+		return err
 	}
 	now := time.Now().UTC()
 	for _, j := range journeys {
@@ -97,12 +91,13 @@ func (r *Runner) RunOnce(ctx context.Context) {
 			log.Printf("journey: user %s: %v", j.UserID, err)
 		}
 	}
+	return nil
 }
 
 func (r *Runner) processJourney(ctx context.Context, j store.EmailJourney, now time.Time) error {
 	seg, err := r.store.LoadJourneyClientSegment(ctx, j.UserID, j.AnchorAt, now)
 	if err != nil {
-		if err == store.ErrNotFound {
+		if errors.Is(err, store.ErrNotFound) {
 			return nil
 		}
 		return err
@@ -139,7 +134,49 @@ func (r *Runner) maybeSendTimed(ctx context.Context, j store.EmailJourney, seg s
 	if !ok {
 		return r.store.RecordEmailSend(ctx, j.UserID, step.Key, "skipped", map[string]any{"reason": reason})
 	}
-	return r.send(ctx, seg, step.Key)
+	if err := r.send(ctx, seg, step.Key); err != nil {
+		return err
+	}
+	if step.Key == "d365_anniversary" {
+		_ = r.store.CompleteEmailJourney(ctx, j.UserID)
+	}
+	return nil
+}
+
+// TriggerPastDue sends evt_past_due immediately after a Stripe past_due transition (best-effort).
+func (r *Runner) TriggerPastDue(ctx context.Context, ownerUserID string) {
+	if !r.cfg.Enabled || ownerUserID == "" {
+		return
+	}
+	j, err := r.store.GetEmailJourney(ctx, ownerUserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			_ = r.store.EnrollEmailJourney(ctx, ownerUserID, time.Now().UTC())
+			j, err = r.store.GetEmailJourney(ctx, ownerUserID)
+		}
+		if err != nil {
+			log.Printf("journey: TriggerPastDue enroll %s: %v", ownerUserID, err)
+			return
+		}
+	}
+	if j.Status != store.JourneyStatusActive && j.Status != "" {
+		// Still allow billing emails when paused — past_due is gated by billing pref only.
+	}
+	now := time.Now().UTC()
+	seg, err := r.store.LoadJourneyClientSegment(ctx, ownerUserID, j.AnchorAt, now)
+	if err != nil {
+		log.Printf("journey: TriggerPastDue segment %s: %v", ownerUserID, err)
+		return
+	}
+	for _, step := range EventSteps() {
+		if step.Key != "evt_past_due" {
+			continue
+		}
+		if err := r.maybeSendEvent(ctx, j, seg, step, now); err != nil {
+			log.Printf("journey: TriggerPastDue send %s: %v", ownerUserID, err)
+		}
+		return
+	}
 }
 
 func (r *Runner) maybeSendEvent(ctx context.Context, j store.EmailJourney, seg store.JourneyClientSegment, step Step, now time.Time) error {
@@ -180,6 +217,25 @@ func (r *Runner) send(ctx context.Context, seg store.JourneyClientSegment, stepK
 	}
 	vars := map[string]string{
 		"fullName": name,
+	}
+	// Soft upsells live in the detail block — omit when not contextual.
+	switch stepKey {
+	case "d4_routine":
+		if seg.ActiveAddons["care_plus"] {
+			vars["_omitDetail"] = "1"
+		}
+	case "d30_habit":
+		if !FamilySoftEligible(seg) {
+			vars["_omitDetail"] = "1"
+		}
+	case "d90_quarter":
+		if !QuarterFamilySoftEligible(seg) {
+			vars["_omitDetail"] = "1"
+		}
+	case "d330_prerenew":
+		if AnnualNearRenewal(seg, time.Now().UTC()) {
+			vars["_introNear"] = "1"
+		}
 	}
 	if err := r.mailer.SendJourneyStep(seg.Email, seg.Locale, name, stepKey, cta, unsub, vars); err != nil {
 		return err

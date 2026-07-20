@@ -27,6 +27,7 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 |------|------------|
 | Push FCM opérationnel | **Livré** — messages véto + confirmation RDV (voir [08](08-MESSAGERIE-NOTIFICATIONS.md)) |
 | Parcours email client 12 mois | **Livré** — [23](23-PARCOURS-EMAIL-CLIENT.md) (parallèle Discovery in-app) |
+| Import clients admin CSV/XLS + Gemini | **Livré** — [24](24-IMPORT-CLIENTS-ADMIN.md) |
 | WebSocket temps réel | — |
 | Refresh silencieux clients | — |
 | Simulation admin 10 ans | [16](16-ADMIN-SIMULATION-10ANS.md) **non livré** |

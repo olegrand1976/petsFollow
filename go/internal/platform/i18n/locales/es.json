@@ -76,7 +76,21 @@
     "not_implemented": "No implementado",
     "not_configured": "Google OAuth no configurado",
     "internal": "Error interno del servidor",
-    "not_ready": "Servicio no disponible"
+    "not_ready": "Servicio no disponible",
+    "gemini_not_configured": "Gemini no configurado (GEMINI_API_KEY)",
+    "gemini_failed": "Falló el análisis Gemini",
+    "import_not_found": "Importación no encontrada",
+    "import_status_conflict": "Conflicto de estado de importación",
+    "vet_user_id_required": "Veterinario obligatorio",
+    "file_too_large": "Archivo demasiado grande (máx. 5 MB)",
+    "unsupported_format": "Formato no soportado (CSV o Excel)",
+    "email_column_required": "Columna email obligatoria",
+    "full_name_column_required": "Columna nombre obligatoria",
+    "row_not_found": "Fila no encontrada",
+    "credentials_unavailable": "Credenciales no disponibles o ya descargadas",
+    "invalid_multipart": "Formulario multipart inválido",
+    "no_data_rows": "Sin filas de datos",
+    "too_many_rows": "Demasiadas filas (máx. 2000)"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",
@@ -213,8 +227,8 @@
         "tagline": "Hábito cardíaco",
         "preheader": "Las lecturas regulares ayudan a su veterinario.",
         "greeting": "Hola {fullName},",
-        "intro": "¡Ya un mes! Las lecturas regulares enriquecen el expediente de su animal. Si tiene varios compañeros, la opción Familia (39 € / año) ofrece vista del hogar y −10 % desde el 2.º animal.",
-        "detail": "",
+        "intro": "¡Ya un mes! Las lecturas regulares enriquecen el expediente de su animal y ayudan a su veterinario entre consultas.",
+        "detail": "¿Varios animales? La opción Familia (39 € / año) ofrece vista del hogar y −10 % desde el 2.º animal (sin tope). Exclusiva con Kennel.",
         "cta": "Ver mis animales",
         "disclaimer": "Las opciones se gestionan en Ajustes / suscripciones de la app."
       },
@@ -253,8 +267,8 @@
         "tagline": "Valor trimestral",
         "preheader": "Su historial apoya el seguimiento prescrito.",
         "greeting": "Hola {fullName},",
-        "intro": "Tres meses de datos: timeline, mensajes y lecturas forman un expediente útil entre consultas. Con 2–5 animales, Familia (39 € / año) simplifica la vista del hogar (−10 %).",
-        "detail": "",
+        "intro": "Tres meses de datos: timeline, mensajes y lecturas forman un expediente útil entre consultas.",
+        "detail": "Con 2–5 animales, Familia (39 € / año) simplifica la vista del hogar (−10 %). Exclusiva con Kennel.",
         "cta": "Abrir la timeline",
         "disclaimer": "Siga las indicaciones de su veterinario."
       },
@@ -296,7 +310,8 @@
         "intro": "En las próximas semanas, revise la fecha de fin de su plan por animal. El plan de 3 años (95 €) sigue siendo el mejor equilibrio duración / precio para un seguimiento prescrito duradero.",
         "detail": "35 € / año · 95 € / 3 años · 145 € / 5 años",
         "cta": "Gestionar mi suscripción",
-        "disclaimer": "El portal de pago está disponible desde la ficha del animal."
+        "disclaimer": "El portal de pago está disponible desde la ficha del animal.",
+        "intro_near": "Su plan anual está cerca del vencimiento. Revise la fecha de fin y valore el plan de 3 años (95 €) para un seguimiento prescrito más tranquilo — unos 2,6 € / mes."
       },
       "d365_anniversary": {
         "subject": "1 año con petsFollow — ¡gracias!",

@@ -89,7 +89,9 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		discovery.email_sends, discovery.email_journey, discovery.progress,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
-		heartrate.sessions, pets.dossier_events, pets.pets, practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
+		heartrate.sessions, pets.dossier_events, pets.pets,
+		practice.client_import_rows, practice.client_import_jobs,
+		practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
 	return err
 }
 

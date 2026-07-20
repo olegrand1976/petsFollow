@@ -195,6 +195,9 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 }
 
 // SendJourneyStep sends one client discovery/loyalty drip email.
+// vars may include:
+//   "_omitDetail=1" — suppress soft-upsell detail block
+//   "_introNear=1"  — use intro_near when present (d330 annual near renewal)
 func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubscribeURL string, vars map[string]string) error {
 	locale = i18n.NormalizeLocale(locale)
 	if vars == nil {
@@ -203,19 +206,30 @@ func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubs
 	if _, ok := vars["fullName"]; !ok {
 		vars["fullName"] = fullName
 	}
+	omitDetail := vars["_omitDetail"] == "1"
+	introNear := vars["_introNear"] == "1"
+	delete(vars, "_omitDetail")
+	delete(vars, "_introNear")
 	prefix := "emails.journey." + stepKey + "."
 	subject := mustT(locale, prefix+"subject", vars)
 	detailKey := prefix + "detail"
 	detail := mustT(locale, detailKey, vars)
-	if detail == detailKey {
+	if detail == detailKey || omitDetail {
 		detail = ""
+	}
+	introKey := prefix + "intro"
+	if introNear {
+		nearKey := prefix + "intro_near"
+		if near := mustT(locale, nearKey, vars); near != nearKey {
+			introKey = nearKey
+		}
 	}
 	body := renderBrandedEmail(brandedEmailContent{
 		Lang:             locale,
 		ProductLabel:     "petsFollow",
 		Tagline:          mustT(locale, prefix+"tagline", vars),
 		Greeting:         mustT(locale, prefix+"greeting", vars),
-		Intro:            mustT(locale, prefix+"intro", vars),
+		Intro:            mustT(locale, introKey, vars),
 		Detail:           detail,
 		CTALabel:         mustT(locale, prefix+"cta", vars),
 		CTAURL:           ctaURL,

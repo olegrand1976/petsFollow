@@ -77,6 +77,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		Interval:       cfg.JourneyEmailInterval,
 		Enabled:        cfg.JourneyEmailEnabled,
 	})
+	bill.Hooks.OnOwnerPastDue = func(ctx context.Context, ownerUserID string) {
+		jr.TriggerPastDue(ctx, ownerUserID)
+	}
 	go jr.Start(journeyCtx)
 
 	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil

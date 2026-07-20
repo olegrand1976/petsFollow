@@ -76,7 +76,21 @@
     "not_implemented": "Not implemented",
     "not_configured": "Google OAuth not configured",
     "internal": "Internal server error",
-    "not_ready": "Service not ready"
+    "not_ready": "Service not ready",
+    "gemini_not_configured": "Gemini not configured (GEMINI_API_KEY)",
+    "gemini_failed": "Gemini analysis failed",
+    "import_not_found": "Import not found",
+    "import_status_conflict": "Import status conflict",
+    "vet_user_id_required": "Veterinarian required",
+    "file_too_large": "File too large (max 5 MB)",
+    "unsupported_format": "Unsupported format (CSV or Excel)",
+    "email_column_required": "Email column required",
+    "full_name_column_required": "Name column required",
+    "row_not_found": "Row not found",
+    "credentials_unavailable": "Credentials unavailable or already downloaded",
+    "invalid_multipart": "Invalid multipart form",
+    "no_data_rows": "No data rows",
+    "too_many_rows": "Too many rows (max 2000)"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",
@@ -213,8 +227,8 @@
         "tagline": "Heart habit",
         "preheader": "Regular readings help your vet.",
         "greeting": "Hello {fullName},",
-        "intro": "One month already! Regular readings enrich your pet's record. If you have several companions, the Family option (€39 / year) gives a household view and −10% from the 2nd pet.",
-        "detail": "",
+        "intro": "One month already! Regular readings enrich your pet's record and help your vet between visits.",
+        "detail": "Several pets? The Family option (€39 / year) gives a household view and −10% from the 2nd pet (no cap). Exclusive with Kennel.",
         "cta": "View my pets",
         "disclaimer": "Options are managed in the app settings / subscriptions."
       },
@@ -253,8 +267,8 @@
         "tagline": "Quarterly value",
         "preheader": "Your history supports prescribed follow-up.",
         "greeting": "Hello {fullName},",
-        "intro": "Three months of data: timeline, messages and readings form a useful record between visits. With 2–5 pets, Family (€39 / year) simplifies the household view (−10%).",
-        "detail": "",
+        "intro": "Three months of data: timeline, messages and readings form a useful record between visits.",
+        "detail": "With 2–5 pets, Family (€39 / year) simplifies the household view (−10%). Exclusive with Kennel.",
         "cta": "Open the timeline",
         "disclaimer": "Keep following your vet's guidance."
       },
@@ -296,7 +310,8 @@
         "intro": "In the coming weeks, check your pet plan end date. The 3-year plan (€95) remains the best duration / price balance for lasting prescribed follow-up.",
         "detail": "€35 / year · €95 / 3 years · €145 / 5 years",
         "cta": "Manage my subscription",
-        "disclaimer": "The payment portal is available from the pet profile."
+        "disclaimer": "The payment portal is available from the pet profile.",
+        "intro_near": "Your annual plan is nearing renewal. Check the end date and consider the 3-year plan (€95) for lasting prescribed follow-up — about €2.6 / month."
       },
       "d365_anniversary": {
         "subject": "1 year with petsFollow — thank you!",

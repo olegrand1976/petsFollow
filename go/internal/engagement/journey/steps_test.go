@@ -84,3 +84,41 @@ func TestAppendUTM(t *testing.T) {
 		t.Fatalf("unexpected utm url: %s", got)
 	}
 }
+
+func TestFamilySoftEligible(t *testing.T) {
+	if !FamilySoftEligible(store.JourneyClientSegment{PetCount: 2, ActiveAddons: map[string]bool{}}) {
+		t.Fatal("expected family soft for 2 pets")
+	}
+	if FamilySoftEligible(store.JourneyClientSegment{PetCount: 2, ActiveAddons: map[string]bool{"kennel": true}}) {
+		t.Fatal("kennel excludes family soft")
+	}
+	if FamilySoftEligible(store.JourneyClientSegment{PetCount: 0, ActiveAddons: map[string]bool{}}) {
+		t.Fatal("no pets → no family soft")
+	}
+}
+
+func TestQuarterFamilySoftEligible(t *testing.T) {
+	if !QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 3, ActiveAddons: map[string]bool{}}) {
+		t.Fatal("expected quarter family soft")
+	}
+	if QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 6, ActiveAddons: map[string]bool{}}) {
+		t.Fatal("6 pets is kennel territory, not family soft")
+	}
+	if QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 3, ActiveAddons: map[string]bool{"family": true}}) {
+		t.Fatal("already family")
+	}
+}
+
+func TestAnnualNearRenewal(t *testing.T) {
+	now := time.Date(2026, 7, 20, 0, 0, 0, 0, time.UTC)
+	until := now.AddDate(0, 0, 30)
+	seg := store.JourneyClientSegment{HasAnnualPlan: true, AnnualValidUntil: &until}
+	if !AnnualNearRenewal(seg, now) {
+		t.Fatal("expected near renewal")
+	}
+	far := now.AddDate(0, 0, 120)
+	seg.AnnualValidUntil = &far
+	if AnnualNearRenewal(seg, now) {
+		t.Fatal("120 days is not near")
+	}
+}

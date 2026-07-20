@@ -9,7 +9,7 @@
     "file_required": "Fichier requis",
     "media_unavailable": "Stockage média indisponible",
     "email_send_failed": "Impossible d'envoyer l'email pour le moment",
-    "token_required": "Token requis",
+    "token_required": "Jeton requis",
     "refresh_token_required": "Refresh token requis",
     "body_required": "Corps du message requis",
     "profile_fields_required": "Champs obligatoires manquants",
@@ -76,7 +76,21 @@
     "not_implemented": "Non implémenté",
     "not_configured": "Google OAuth non configuré",
     "internal": "Erreur interne du serveur",
-    "not_ready": "Service non prêt"
+    "not_ready": "Service non prêt",
+    "gemini_not_configured": "Gemini non configuré (GEMINI_API_KEY)",
+    "gemini_failed": "Échec de l’analyse Gemini",
+    "import_not_found": "Import introuvable",
+    "import_status_conflict": "Statut d’import incompatible",
+    "vet_user_id_required": "Vétérinaire requis",
+    "file_too_large": "Fichier trop volumineux (max 5 Mo)",
+    "unsupported_format": "Format non supporté (CSV ou Excel)",
+    "email_column_required": "Colonne email requise",
+    "full_name_column_required": "Colonne nom requise",
+    "row_not_found": "Ligne introuvable",
+    "credentials_unavailable": "Identifiants indisponibles ou déjà téléchargés",
+    "invalid_multipart": "Formulaire multipart invalide",
+    "no_data_rows": "Aucune ligne de données",
+    "too_many_rows": "Trop de lignes (max 2000)"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",
@@ -213,8 +227,8 @@
         "tagline": "Habitude cardiaque",
         "preheader": "La régularité des relevés aide votre vétérinaire.",
         "greeting": "Bonjour {fullName},",
-        "intro": "Un mois déjà ! Les relevés réguliers enrichissent le dossier de votre animal. Si vous avez plusieurs compagnons, l'option Famille (39 € / an) offre une vue foyer et −10 % dès le 2ᵉ animal.",
-        "detail": "",
+        "intro": "Un mois déjà ! Les relevés réguliers enrichissent le dossier de votre animal et aident votre vétérinaire entre les consultations.",
+        "detail": "Plusieurs animaux ? L'option Famille (39 € / an) offre une vue foyer et −10 % dès le 2ᵉ animal (pas de plafond). Exclusive avec Kennel.",
         "cta": "Voir mes animaux",
         "disclaimer": "Les options se gèrent dans Paramètres / abonnements de l'app."
       },
@@ -253,8 +267,8 @@
         "tagline": "Valeur trimestre",
         "preheader": "Votre historique aide le suivi prescrit.",
         "greeting": "Bonjour {fullName},",
-        "intro": "Trois mois de données : timeline, messages et relevés forment un dossier utile entre les consultations. Si vous avez 2 à 5 animaux, Famille (39 € / an) simplifie la vue foyer (−10 %).",
-        "detail": "",
+        "intro": "Trois mois de données : timeline, messages et relevés forment un dossier utile entre les consultations.",
+        "detail": "Avec 2 à 5 animaux, Famille (39 € / an) simplifie la vue foyer (−10 %). Exclusive avec Kennel.",
         "cta": "Ouvrir la timeline",
         "disclaimer": "Continuez selon les consignes de votre vétérinaire."
       },
@@ -296,7 +310,8 @@
         "intro": "Dans les semaines à venir, vérifiez la date de fin de votre abonnement animal. Le plan 3 ans (95 €) reste le meilleur rapport durée / prix pour un suivi prescrit durable.",
         "detail": "35 € / an · 95 € / 3 ans · 145 € / 5 ans",
         "cta": "Gérer mon abonnement",
-        "disclaimer": "Le portail de paiement est accessible depuis la fiche animal."
+        "disclaimer": "Le portail de paiement est accessible depuis la fiche animal.",
+        "intro_near": "Votre abonnement annuel arrive bientôt à échéance. Vérifiez la date de fin et envisagez le plan 3 ans (95 €) pour un suivi prescrit plus serein — environ 2,6 € / mois."
       },
       "d365_anniversary": {
         "subject": "1 an avec petsFollow — merci !",

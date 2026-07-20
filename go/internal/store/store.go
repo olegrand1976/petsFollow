@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	ErrNotFound    = errors.New("not found")
-	ErrValidation  = errors.New("validation")
+	ErrNotFound   = errors.New("not found")
+	ErrValidation = errors.New("validation")
 	ErrForbidden  = errors.New("forbidden")
+	ErrConflict   = errors.New("conflict")
 )
 
 type User struct {

@@ -13,6 +13,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -28,13 +29,18 @@ type API struct {
 	billing  *billing.Service
 	media    media.Store
 	pusher   fcm.Pusher
+	gemini   gemini.Mapper
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
 	if pusher == nil {
 		pusher = fcm.NopPusher{}
 	}
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher}
+	var mapper gemini.Mapper
+	if cfg.GeminiAPIKey != "" {
+		mapper = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel)
+	}
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: mapper}
 }
 
 func (a *API) Routes(r chi.Router) {

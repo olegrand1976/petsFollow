@@ -37,15 +37,15 @@ func TimedSteps() []Step {
 		{Key: "d6_vet_link", Kind: KindTimed, OffsetDays: 6, Pref: PrefDiscovery, Eligible: always},
 		{Key: "d10_visits", Kind: KindTimed, OffsetDays: 10, Pref: PrefDiscovery, Eligible: always},
 		{Key: "d14_checkpoint", Kind: KindTimed, OffsetDays: 14, Pref: PrefDiscovery, Eligible: always},
-		{Key: "d30_habit", Kind: KindTimed, OffsetDays: 30, Pref: PrefDiscovery, Eligible: always},
+		{Key: "d30_habit", Kind: KindTimed, OffsetDays: 30, Pref: PrefDiscovery, Eligible: needsD30Habit},
 		{Key: "d45_care_plus", Kind: KindTimed, OffsetDays: 45, Pref: PrefDiscovery, Eligible: needsCarePlusUpsell},
 		{Key: "d60_horse", Kind: KindTimed, OffsetDays: 60, Pref: PrefDiscovery, Eligible: needsHorseUpsell},
 		{Key: "d75_kennel", Kind: KindTimed, OffsetDays: 75, Pref: PrefDiscovery, Eligible: needsKennelUpsell},
-		{Key: "d90_quarter", Kind: KindTimed, OffsetDays: 90, Pref: PrefDiscovery, Eligible: always},
+		{Key: "d90_quarter", Kind: KindTimed, OffsetDays: 90, Pref: PrefDiscovery, Eligible: needsD90Quarter},
 		{Key: "d120_seasonal", Kind: KindTimed, OffsetDays: 120, Pref: PrefDiscovery, Eligible: always},
 		{Key: "d180_midyear", Kind: KindTimed, OffsetDays: 180, Pref: PrefDiscovery, Eligible: always},
 		{Key: "d270_reengage", Kind: KindTimed, OffsetDays: 270, Pref: PrefDiscovery, Eligible: needsReengage},
-		{Key: "d330_prerenew", Kind: KindTimed, OffsetDays: 330, Pref: PrefDiscovery, Eligible: always},
+		{Key: "d330_prerenew", Kind: KindTimed, OffsetDays: 330, Pref: PrefDiscovery, Eligible: needsPrerenew},
 		{Key: "d365_anniversary", Kind: KindTimed, OffsetDays: 365, Pref: PrefDiscovery, Eligible: always},
 	}
 }
@@ -122,6 +122,45 @@ func needsReengage(seg store.JourneyClientSegment, _ time.Time) (bool, string) {
 		return true, ""
 	}
 	return false, "recent_hr"
+}
+
+// needsD30Habit: monthly habit tip — always send (Family soft-upsell is detail-gated in runner).
+func needsD30Habit(_ store.JourneyClientSegment, _ time.Time) (bool, string) {
+	return true, ""
+}
+
+// hasHouseholdAddon is true when Family or Kennel is already active (mutually exclusive packs).
+func hasHouseholdAddon(seg store.JourneyClientSegment) bool {
+	return seg.ActiveAddons["family"] || seg.ActiveAddons["kennel"]
+}
+
+// needsD90Quarter: quarterly value tip — always send (Family soft-upsell is detail-gated in runner).
+func needsD90Quarter(_ store.JourneyClientSegment, _ time.Time) (bool, string) {
+	return true, ""
+}
+
+// FamilySoftEligible reports whether Family soft-upsell detail applies (≥1 pet, no Family/Kennel).
+func FamilySoftEligible(seg store.JourneyClientSegment) bool {
+	return seg.PetCount >= 1 && !hasHouseholdAddon(seg)
+}
+
+// QuarterFamilySoftEligible is true for 2–5 pets without Family/Kennel.
+func QuarterFamilySoftEligible(seg store.JourneyClientSegment) bool {
+	return seg.PetCount >= 2 && seg.PetCount <= 5 && !hasHouseholdAddon(seg)
+}
+
+// needsPrerenew: always send tip; annual near-renewal is used for messaging context (AnnualNearRenewal).
+func needsPrerenew(_ store.JourneyClientSegment, _ time.Time) (bool, string) {
+	return true, ""
+}
+
+// AnnualNearRenewal is true when an annual entitlement ends within 75 days.
+func AnnualNearRenewal(seg store.JourneyClientSegment, now time.Time) bool {
+	if !seg.HasAnnualPlan || seg.AnnualValidUntil == nil {
+		return false
+	}
+	daysLeft := int(seg.AnnualValidUntil.UTC().Sub(now.UTC()).Hours() / 24)
+	return daysLeft >= 0 && daysLeft <= 75
 }
 
 func needsPendingPayment(seg store.JourneyClientSegment, _ time.Time) (bool, string) {

@@ -6,10 +6,10 @@
     "password_too_short": "Wachtwoord te kort (minimaal 8 tekens)",
     "image_too_large": "Bestand te groot (limiet overschreden)",
     "invalid_image_type": "Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)",
-    "file_required": "Bestand vereist",
+    "file_required": "Bestand verplicht",
     "media_unavailable": "Mediaopslag niet beschikbaar",
     "email_send_failed": "E-mail kon nu niet worden verzonden",
-    "token_required": "Token vereist",
+    "token_required": "Token verplicht",
     "refresh_token_required": "Refresh-token vereist",
     "body_required": "Berichttekst vereist",
     "profile_fields_required": "Verplichte velden ontbreken",
@@ -76,7 +76,21 @@
     "not_implemented": "Niet geïmplementeerd",
     "not_configured": "Google OAuth niet geconfigureerd",
     "internal": "Interne serverfout",
-    "not_ready": "Service niet gereed"
+    "not_ready": "Service niet gereed",
+    "gemini_not_configured": "Gemini niet geconfigureerd (GEMINI_API_KEY)",
+    "gemini_failed": "Gemini-analyse mislukt",
+    "import_not_found": "Import niet gevonden",
+    "import_status_conflict": "Importstatusconflict",
+    "vet_user_id_required": "Dierenarts verplicht",
+    "file_too_large": "Bestand te groot (max 5 MB)",
+    "unsupported_format": "Niet-ondersteund formaat (CSV of Excel)",
+    "email_column_required": "E-mailkolom verplicht",
+    "full_name_column_required": "Naamkolom verplicht",
+    "row_not_found": "Rij niet gevonden",
+    "credentials_unavailable": "Inloggegevens niet beschikbaar of al gedownload",
+    "invalid_multipart": "Ongeldig multipart-formulier",
+    "no_data_rows": "Geen gegevensrijen",
+    "too_many_rows": "Te veel rijen (max 2000)"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",
@@ -213,8 +227,8 @@
         "tagline": "Hartgewoonte",
         "preheader": "Regelmatige metingen helpen uw dierenarts.",
         "greeting": "Hallo {fullName},",
-        "intro": "Al een maand! Regelmatige metingen verrijken het dossier van uw dier. Bij meerdere dieren biedt de Family-optie (€39 / jaar) een huishoudoverzicht en −10% vanaf het 2e dier.",
-        "detail": "",
+        "intro": "Al een maand! Regelmatige metingen verrijken het dossier van uw dier en helpen uw dierenarts tussen consultaties.",
+        "detail": "Meerdere dieren? De Family-optie (€39 / jaar) biedt een huishoudoverzicht en −10% vanaf het 2e dier (geen plafond). Exclusief met Kennel.",
         "cta": "Mijn dieren bekijken",
         "disclaimer": "Opties beheert u in de app-instellingen / abonnementen."
       },
@@ -253,8 +267,8 @@
         "tagline": "Kwartaalwaarde",
         "preheader": "Uw historiek ondersteunt de voorgeschreven opvolging.",
         "greeting": "Hallo {fullName},",
-        "intro": "Drie maanden data: tijdlijn, berichten en metingen vormen een nuttig dossier tussen consultaties. Met 2–5 dieren vereenvoudigt Family (€39 / jaar) het huishoudoverzicht (−10%).",
-        "detail": "",
+        "intro": "Drie maanden data: tijdlijn, berichten en metingen vormen een nuttig dossier tussen consultaties.",
+        "detail": "Met 2–5 dieren vereenvoudigt Family (€39 / jaar) het huishoudoverzicht (−10%). Exclusief met Kennel.",
         "cta": "Tijdlijn openen",
         "disclaimer": "Volg de richtlijnen van uw dierenarts."
       },
@@ -296,7 +310,8 @@
         "intro": "De komende weken: controleer de einddatum van uw dierenabonnement. Het 3-jarenplan (€95) blijft de beste balans duur / prijs voor duurzame voorgeschreven opvolging.",
         "detail": "€35 / jaar · €95 / 3 jaar · €145 / 5 jaar",
         "cta": "Abonnement beheren",
-        "disclaimer": "Het betalingsportaal is beschikbaar via het dierenprofiel."
+        "disclaimer": "Het betalingsportaal is beschikbaar via het dierenprofiel.",
+        "intro_near": "Uw jaarabonnement nadert de einddatum. Controleer de datum en overweeg het 3-jarenplan (€95) voor een rustige voorgeschreven opvolging — ongeveer €2,6 / maand."
       },
       "d365_anniversary": {
         "subject": "1 jaar petsFollow — bedankt!",

@@ -885,6 +885,10 @@ func (a *API) updateClientNotificationPrefs(w http.ResponseWriter, r *http.Reque
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Re-enable discovery journey if the client turns the preference back on.
+	if prefs.Discovery {
+		_ = a.store.ResumeEmailJourney(r.Context(), id.UserID)
+	}
 	httpx.WriteData(w, http.StatusOK, prefs)
 }
 

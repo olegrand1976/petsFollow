@@ -32,11 +32,11 @@ func (a *API) journeyUnsubscribe(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
 		return
 	}
+	// Opt-out discovery emails only — billing events (past_due / pending_payment) keep using pref billing.
 	if err := a.store.SetClientDiscoveryPrefOnly(r.Context(), id.UserID, false); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	_ = a.store.PauseEmailJourney(r.Context(), id.UserID)
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"status":  "unsubscribed",
 		"message": t(r, "success.journey_unsubscribed", nil),

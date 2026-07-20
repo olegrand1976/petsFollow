@@ -63,7 +63,8 @@ func (s *Store) EnrollEmailJourney(ctx context.Context, userID string, anchorAt 
 	return err
 }
 
-// BackfillEmailJourneys enrolls all clients not yet on the journey (anchor = discovery.started_at or users.created_at).
+// BackfillEmailJourneys enrolls all clients not yet on the journey.
+// Anchor is NOW() to avoid flooding legacy accounts with every overdue step at once.
 func (s *Store) BackfillEmailJourneys(ctx context.Context) (int, error) {
 	ct, err := s.pool.Exec(ctx, `
 		INSERT INTO discovery.progress (user_id, started_at, completed_cards, streak_days, updated_at)
@@ -85,7 +86,19 @@ func (s *Store) BackfillEmailJourneys(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int(ct.RowsAffected()), nil
+	n := int(ct.RowsAffected())
+	// Repair: older unsubscribe paused the whole journey; re-activate unless discovery pref is explicitly off.
+	if _, err := s.pool.Exec(ctx, `
+		UPDATE discovery.email_journey j
+		SET status = 'active'
+		WHERE j.status = 'paused'
+		  AND NOT EXISTS (
+			SELECT 1 FROM notifications.client_preferences p
+			WHERE p.user_id = j.user_id AND p.discovery = false
+		  )`); err != nil {
+		return n, err
+	}
+	return n, nil
 }
 
 func (s *Store) GetEmailJourney(ctx context.Context, userID string) (EmailJourney, error) {
@@ -127,8 +140,42 @@ func (s *Store) ListActiveEmailJourneys(ctx context.Context, limit int) ([]Email
 
 func (s *Store) PauseEmailJourney(ctx context.Context, userID string) error {
 	_, err := s.pool.Exec(ctx, `
-		UPDATE discovery.email_journey SET status = 'paused' WHERE user_id = $1`, userID)
+		UPDATE discovery.email_journey SET status = 'paused' WHERE user_id = $1 AND status = 'active'`, userID)
 	return err
+}
+
+func (s *Store) ResumeEmailJourney(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE discovery.email_journey SET status = 'active' WHERE user_id = $1 AND status = 'paused'`, userID)
+	return err
+}
+
+func (s *Store) CompleteEmailJourney(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE discovery.email_journey SET status = 'completed' WHERE user_id = $1`, userID)
+	return err
+}
+
+// WithAdvisoryLock runs fn while holding a session advisory lock on a dedicated pool connection.
+// Required for pgxpool: lock acquire/release must use the same backend session.
+func (s *Store) WithAdvisoryLock(ctx context.Context, key int64, fn func(context.Context) error) error {
+	conn, err := s.pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	var ok bool
+	if err := conn.QueryRow(ctx, `SELECT pg_try_advisory_lock($1)`, key).Scan(&ok); err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+	defer func() {
+		_, _ = conn.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, key)
+	}()
+	return fn(ctx)
 }
 
 func (s *Store) HasEmailSend(ctx context.Context, userID, stepKey string) (bool, error) {
@@ -169,18 +216,6 @@ func (s *Store) RecordEmailSend(ctx context.Context, userID, stepKey, status str
 			status = EXCLUDED.status,
 			meta = EXCLUDED.meta`,
 		userID, stepKey, status, string(raw))
-	return err
-}
-
-// TryAdvisoryLock acquires a session-level advisory lock. Caller must UnlockAdvisoryLock.
-func (s *Store) TryAdvisoryLock(ctx context.Context, key int64) (bool, error) {
-	var ok bool
-	err := s.pool.QueryRow(ctx, `SELECT pg_try_advisory_lock($1)`, key).Scan(&ok)
-	return ok, err
-}
-
-func (s *Store) UnlockAdvisoryLock(ctx context.Context, key int64) error {
-	_, err := s.pool.Exec(ctx, `SELECT pg_advisory_unlock($1)`, key)
 	return err
 }
 

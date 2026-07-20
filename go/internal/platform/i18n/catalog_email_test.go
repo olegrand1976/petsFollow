@@ -112,5 +112,9 @@ func TestJourneyEmailCatalogKeys(t *testing.T) {
 				}
 			}
 		}
+		near := T(loc, "emails.journey.d330_prerenew.intro_near", vars)
+		if near == "" || near == "emails.journey.d330_prerenew.intro_near" {
+			t.Errorf("%s missing d330 intro_near", loc)
+		}
 	}
 }

@@ -13,10 +13,11 @@ import (
 )
 
 type CreateClientInput struct {
-	Email    string
-	Password string
-	FullName string
-	Locale   string
+	Email       string
+	Password    string
+	FullName    string
+	Locale      string
+	SkipJourney bool
 }
 
 type VetOption struct {
@@ -74,8 +75,10 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
-	// Best-effort: start in-app discovery + email loyalty journey.
-	_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
+	// Best-effort: start in-app discovery + email loyalty journey (skipped for bulk imports).
+	if !in.SkipJourney {
+		_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
+	}
 	return clientID, nil
 }
 

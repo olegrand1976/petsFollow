@@ -10,10 +10,16 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
+// Hooks are optional best-effort callbacks for side effects (e.g. client email journey).
+type Hooks struct {
+	OnOwnerPastDue func(ctx context.Context, ownerUserID string)
+}
+
 type Service struct {
 	store   *store.Store
 	gateway Gateway
 	cfg     config.Config
+	Hooks   Hooks
 }
 
 func NewService(st *store.Store, cfg config.Config) *Service {
@@ -28,6 +34,13 @@ func NewService(st *store.Store, cfg config.Config) *Service {
 
 func NewServiceWithGateway(st *store.Store, cfg config.Config, gw Gateway) *Service {
 	return &Service{store: st, gateway: gw, cfg: cfg}
+}
+
+func (s *Service) notifyOwnerPastDue(ctx context.Context, ownerUserID string) {
+	if s.Hooks.OnOwnerPastDue == nil || ownerUserID == "" {
+		return
+	}
+	s.Hooks.OnOwnerPastDue(ctx, ownerUserID)
 }
 
 func (s *Service) ListPlans() []PlanOffer {
@@ -511,7 +524,18 @@ func (s *Service) handleInvoicePaymentFailed(ctx context.Context, event StripeEv
 		return nil
 	}
 	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
-		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusPastDue))
+		if err := s.store.UpdateEntitlementStatus(ctx, ent.PetID, string(StatusPastDue)); err != nil {
+			return err
+		}
+		s.notifyOwnerPastDue(ctx, ent.OwnerUserID)
+		return nil
+	}
+	addon, err := s.store.GetAddonBySubscriptionID(ctx, subID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
 	}
 	if err := s.store.UpdateAddonStatusBySubscriptionID(ctx, subID, string(StatusPastDue)); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -519,6 +543,7 @@ func (s *Service) handleInvoicePaymentFailed(ctx context.Context, event StripeEv
 		}
 		return err
 	}
+	s.notifyOwnerPastDue(ctx, addon.OwnerUserID)
 	return nil
 }
 
@@ -538,13 +563,29 @@ func (s *Service) handleSubscriptionUpdated(ctx context.Context, event StripeEve
 		return nil
 	}
 	if ent, err := s.store.GetEntitlementBySubscriptionID(ctx, subID); err == nil {
-		return s.store.UpdateEntitlementStatus(ctx, ent.PetID, mapped)
+		if err := s.store.UpdateEntitlementStatus(ctx, ent.PetID, mapped); err != nil {
+			return err
+		}
+		if mapped == string(StatusPastDue) {
+			s.notifyOwnerPastDue(ctx, ent.OwnerUserID)
+		}
+		return nil
+	}
+	addon, err := s.store.GetAddonBySubscriptionID(ctx, subID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
 	}
 	if err := s.store.UpdateAddonStatusBySubscriptionID(ctx, subID, mapped); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil
 		}
 		return err
+	}
+	if mapped == string(StatusPastDue) {
+		s.notifyOwnerPastDue(ctx, addon.OwnerUserID)
 	}
 	return nil
 }
