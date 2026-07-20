@@ -152,7 +152,7 @@
   </form>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
 export type PracticeProfileForm = {
   vetFullName: string
   practiceName: string
@@ -229,7 +229,9 @@ export function mapPracticeProfileFromApi(data: any): PracticeProfileForm {
     payoutAccountHolder: data?.payoutAccountHolder || '',
   }
 }
+</script>
 
+<script setup lang="ts">
 const model = defineModel<PracticeProfileForm>({ required: true })
 
 withDefaults(
