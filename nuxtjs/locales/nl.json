@@ -516,7 +516,11 @@
       "clientEmail": "E-mail",
       "clientPassword": "Tijdelijk wachtwoord",
       "clientCreated": "Cliëntaccount aangemaakt",
-      "clientFailed": "Aanmaken mislukt"
+      "clientFailed": "Aanmaken mislukt",
+      "commercialRole": "Rol",
+      "roleCommercialManager": "Salesmanager",
+      "commercialManager": "Manager",
+      "commercialManagerNone": "Geen (niet toegewezen)"
     },
     "payments": {
       "title": "Ontvangen betalingen",
@@ -643,7 +647,13 @@
       "assignVetPlaceholder": "Kies een dierenarts",
       "assignSubmit": "Toewijzen",
       "assignSuccess": "Dierenarts toegewezen.",
-      "assignFailed": "Kon deze dierenarts niet toewijzen."
+      "assignFailed": "Kon deze dierenarts niet toewijzen.",
+      "assignManagerTitle": "Toewijzen aan manager",
+      "assignManager": "Salesmanager",
+      "assignManagerNone": "Geen",
+      "assignManagerSubmit": "Toewijzing opslaan",
+      "assignManagerSuccess": "Toewijzing bijgewerkt",
+      "assignManagerFailed": "Toewijzing mislukt"
     },
     "prospects": {
       "title": "Marketingprospects",
@@ -1285,7 +1295,8 @@
       "monthEarned": "Commissies maand",
       "lifetimeEarned": "Commissies lifetime",
       "subRevenue": "Gekoppelde abonnementsomzet",
-      "addonRevenue": "Gekoppelde addon-omzet"
+      "addonRevenue": "Gekoppelde addon-omzet",
+      "directory": "BCE-directory"
     },
     "vets": {
       "title": "Toegewezen dierenartsen",

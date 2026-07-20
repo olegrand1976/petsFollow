@@ -183,7 +183,8 @@
       "monthEarned": "Commissions du mois",
       "lifetimeEarned": "Commissions lifetime",
       "subRevenue": "CA abonnements liés",
-      "addonRevenue": "CA addons liés"
+      "addonRevenue": "CA addons liés",
+      "directory": "Annuaire BCE"
     },
     "vets": {
       "title": "Vétérinaires assignés",
@@ -664,7 +665,11 @@
       "columnRole": "Rôle",
       "columnRegistered": "Inscription",
       "columnPets": "Animaux",
-      "columnPayment": "Paiement"
+      "columnPayment": "Paiement",
+      "commercialRole": "Rôle",
+      "roleCommercialManager": "Responsable commercial",
+      "commercialManager": "Responsable",
+      "commercialManagerNone": "Aucun (non rattaché)"
     },
     "commercials": {
       "title": "Commerciaux",
@@ -681,7 +686,13 @@
       "assignVetPlaceholder": "Choisir un véto",
       "assignSubmit": "Assigner",
       "assignSuccess": "Véto assigné.",
-      "assignFailed": "Impossible d’assigner ce véto."
+      "assignFailed": "Impossible d’assigner ce véto.",
+      "assignManagerTitle": "Rattacher à un responsable",
+      "assignManager": "Responsable commercial",
+      "assignManagerNone": "Aucun",
+      "assignManagerSubmit": "Enregistrer le rattachement",
+      "assignManagerSuccess": "Rattachement mis à jour",
+      "assignManagerFailed": "Rattachement impossible"
     },
     "prospects": {
       "title": "Prospects marketing",

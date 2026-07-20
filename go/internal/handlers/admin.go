@@ -111,6 +111,10 @@ func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
 			return
 		}
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

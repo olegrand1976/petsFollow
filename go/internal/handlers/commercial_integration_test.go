@@ -608,4 +608,25 @@ func TestCommercialManagerTeamVisibility(t *testing.T) {
 	if ov["self"] == nil {
 		t.Fatalf("expected self block, got %#v", ov)
 	}
+
+	// Invalid manager must not leave orphan commercial
+	orphanEmail := uniqueEmail("orphan")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": orphanEmail, "password": "CommercialDemo123!", "fullName": "Orphan",
+		"managerUserId": uuid.NewString(),
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("invalid manager want 400, got %d %#v", code, env)
+	}
+	var n int
+	_ = api.pool.QueryRow(context.Background(), `SELECT COUNT(*) FROM identity.users WHERE email=$1`, orphanEmail).Scan(&n)
+	if n != 0 {
+		t.Fatalf("orphan commercial created despite invalid manager")
+	}
+
+	// Filter commercialUserId outside team → 404
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/prospects?commercialUserId="+uuid.NewString(), mgrTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("outside team filter want 404, got %d", code)
+	}
 }

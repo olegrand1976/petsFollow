@@ -516,7 +516,11 @@
       "clientEmail": "Correo",
       "clientPassword": "Contraseña temporal",
       "clientCreated": "Cuenta cliente creada",
-      "clientFailed": "Creación fallida"
+      "clientFailed": "Creación fallida",
+      "commercialRole": "Rol",
+      "roleCommercialManager": "Responsable comercial",
+      "commercialManager": "Responsable",
+      "commercialManagerNone": "Ninguno (sin asignar)"
     },
     "payments": {
       "title": "Pagos recibidos",
@@ -643,7 +647,13 @@
       "assignVetPlaceholder": "Seleccione un veterinario",
       "assignSubmit": "Asignar",
       "assignSuccess": "Veterinario asignado.",
-      "assignFailed": "No se ha podido asignar este veterinario."
+      "assignFailed": "No se ha podido asignar este veterinario.",
+      "assignManagerTitle": "Asignar a un responsable",
+      "assignManager": "Responsable comercial",
+      "assignManagerNone": "Ninguno",
+      "assignManagerSubmit": "Guardar asignación",
+      "assignManagerSuccess": "Asignación actualizada",
+      "assignManagerFailed": "Asignación imposible"
     },
     "prospects": {
       "title": "Prospectos de marketing",
@@ -1285,7 +1295,8 @@
       "monthEarned": "Comisiones del mes",
       "lifetimeEarned": "Comisiones de por vida",
       "subRevenue": "Ingresos de suscripciones vinculadas",
-      "addonRevenue": "Ingresos de complementos vinculados"
+      "addonRevenue": "Ingresos de complementos vinculados",
+      "directory": "Directorio BCE"
     },
     "vets": {
       "title": "Veterinarios asignados",

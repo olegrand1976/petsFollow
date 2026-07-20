@@ -516,7 +516,11 @@
       "clientEmail": "Email",
       "clientPassword": "Temporary password",
       "clientCreated": "Client account created",
-      "clientFailed": "Creation failed"
+      "clientFailed": "Creation failed",
+      "commercialRole": "Role",
+      "roleCommercialManager": "Sales manager",
+      "commercialManager": "Manager",
+      "commercialManagerNone": "None (unassigned)"
     },
     "payments": {
       "title": "Payments received",
@@ -643,7 +647,13 @@
       "assignVetPlaceholder": "Select a vet",
       "assignSubmit": "Assign",
       "assignSuccess": "Vet assigned.",
-      "assignFailed": "Could not assign this vet."
+      "assignFailed": "Could not assign this vet.",
+      "assignManagerTitle": "Assign to a manager",
+      "assignManager": "Sales manager",
+      "assignManagerNone": "None",
+      "assignManagerSubmit": "Save assignment",
+      "assignManagerSuccess": "Assignment updated",
+      "assignManagerFailed": "Assignment failed"
     },
     "prospects": {
       "title": "Marketing prospects",
@@ -1285,7 +1295,8 @@
       "monthEarned": "Month commissions",
       "lifetimeEarned": "Lifetime commissions",
       "subRevenue": "Linked subscription revenue",
-      "addonRevenue": "Linked addon revenue"
+      "addonRevenue": "Linked addon revenue",
+      "directory": "BCE directory"
     },
     "vets": {
       "title": "Assigned veterinarians",
