@@ -76,13 +76,15 @@ Assiette commission = **HT du montant payé** (après remise foyer/élevage si a
 
 Fiches pitch : [18 véto](./18-FICHE-COMMISSION-VETO.md) · [19 commercial](./19-FICHE-COMMISSION-COMMERCIAL.md) · [20 admin](./20-FICHE-COMMISSION-ADMIN.md).
 
-### SPIFF (V1 manuelle)
+**Déclenchement** : commission accrétée **une fois** à l’activation payante (`checkout.session.completed` → animal ou addon). Idempotent par entitlement. Les renouvellements Stripe (`invoice.paid`) prolongent l’abo **sans** nouvelle ligne ledger.
 
-| Bonus | Montant | Condition |
-|-------|---------|-----------|
-| Ramp cabinet | 25 € | 5 pets / 60 j (commercial) |
-| Mix triennial | 50 € / mois | ≥ 55 % activations triennial |
-| Palier véto 31 | 50 € | 1er passage 31 clients |
+### SPIFF
+
+| Bonus | Montant | Condition | Statut technique |
+|-------|---------|-----------|------------------|
+| Ramp cabinet | 25 € | **5 pets payants / 60 j** sur un véto assigné | Détection auto (`SyncCommercialBonusAwards`) + mark-paid admin |
+| Mix triennial | 50 € / mois | ≥ 55 % activations triennial | Idem |
+| Palier véto 31 | 50 € | 1er passage 31 clients payants | Affichage / progression seule — payout hors système |
 
 ---
 
@@ -118,6 +120,7 @@ Hypothèses : Stripe **1,5 % + 0,25 €** (TTC) ; TVA 21 % sortie ; partners sur
 | HTVA | `go/internal/store/vat.go` |
 | Taux / facteurs | `go/internal/store/commission_rates.go` |
 | Tiers seed | migration `000019` + `DefaultVetCommissionTiers` |
-| Addon sub | migration `000023` · `stripe_subscription_id` · renew `invoice.paid` |
+| SPIFF commercial | `go/internal/store/commercial_bonuses.go` · mig `000020` · UI `/admin/commercial-bonuses` |
+| Addon sub | migration `000023` · `stripe_subscription_id` · renew `invoice.paid` (pas de re-commission) |
 | Fiches UI | `ProCommissionSheet` (vet / commercial / admin) |
 | Stripe | Prices `STRIPE_PRICE_*` : plans 35 / 95 / 145 · addons récurrents yearly Family 39 / Kennel 119 / Care+ 19 / Horse 39 |

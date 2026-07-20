@@ -7,6 +7,8 @@
 - Commission = **% du HTVA** (TVA BE 21 %)
 - Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
+**Déclenchement** : **une fois** à l’activation payante (checkout animal ou addon Family/Kennel). Pas de commission au renouvellement Stripe.
+
 ## Grille progressive (base)
 | Clients payants | Taux |
 |-----------------|------|
@@ -26,7 +28,8 @@
 | Quinquennial 145 € | ~9,6 € |
 
 ## Bonus
-- **50 €** one-shot au 1er passage de **31** clients payants
+- **50 €** one-shot au 1er passage de **31** clients payants  
+  Affichage / progression dans Pro — **payout hors système** (pas d’award ledger).
 
 ## Addons (assiette = HT payé)
 | Addon | Taux HT | € indicatif |

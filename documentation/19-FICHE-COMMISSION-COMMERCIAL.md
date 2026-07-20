@@ -7,6 +7,8 @@
 - Commission = **% du HTVA**
 - Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
+**Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal ou addon) du cabinet assigné. Pas de re-commission au renouvellement Stripe.
+
 ## Votre grille
 | Offre | Taux HT | € indicatif |
 |-------|---------|-------------|
@@ -25,6 +27,8 @@ Steer : triennial = **meilleur taux** et **meilleur €/an**. Quin ≈ même cas
 | Ramp cabinet | 25 € | 5 pets payants / 60 j sur un véto assigné |
 | Mix mois | 50 € | ≥ 55 % activations triennial dans le mois |
 
+Détection **automatique** (`SyncCommercialBonusAwards`) ; payout via admin **mark-paid**.
+
 ## Grille véto (pour votre pitch)
 Progressif 7 → 9 → 11 → 12 % × facteur plan (plafond effectif 8 / 12 / 8 %).  
 Sur le triennial au plafond : **~9,4 €** aussi pour le véto.  
@@ -35,3 +39,4 @@ Addons côté véto : Family / Kennel **5 %** HT · Care+ / Horse **0 %** (vous 
 ## Ne pas compter
 - Inscription véto seule (cabinet à 0 payant = normal) → **0 €** de commission
 - Revenu = animal qui passe **payant** ; bonus ramp = 5 pets payants / 60 j
+- Renouvellement d’un abo déjà commissionné → **0 €** supplémentaire

@@ -62,7 +62,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 |----------|--------|
 | **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Vos clients paient moins de 3 €/mois ; vous gagnez sur chaque activation — jusqu’à ~9,4 € sur le triennial. Même plafond si un commercial vous a apporté. » |
 | **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — moins de 3 €/mois. » |
-| **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commissions récurrentes. Steer triennial. » |
+| **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. » |
 
 ### Objections
 

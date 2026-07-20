@@ -26,11 +26,11 @@ Plans animal (one_time / subscription) + **addons foyer en abo annuel récurrent
 
 ## Commissions
 
-Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan/addon), périodes close/mark-paid admin, UI `ProCommissionSheet`.
+Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan/addon), accrual à l’activation (pas au renew), périodes close/mark-paid admin (véto + commercial). SPIFF commercial (`commercial_bonus_awards` : sync auto + mark-paid). UI `ProCommissionSheet` + `/admin/commercial-bonuses`.
 
 ## Commercial / sales
 
-Overview, encode/list vets assignés, CRM prospects, commissions, payout profile, page pitch. Admin : CRUD commercials, assign, prospects globaux.
+Overview, encode/list vets assignés, CRM prospects, commissions, payout profile, page pitch. Admin : CRUD commercials, assign, prospects globaux, payouts commissions, SPIFF bonuses.
 
 ## Care & Horse
 
@@ -38,4 +38,4 @@ Rappels care (+ seed horse pack), contacts professionnels, compétitions ; house
 
 ## Admin plateforme
 
-Métriques, users, payments, commissions véto & commercial. Simulation 10 ans = **backlog** ([16](16-ADMIN-SIMULATION-10ANS.md)).
+Métriques, users, payments, commissions véto & commercial, SPIFF commercial. Simulation 10 ans = **backlog** ([16](16-ADMIN-SIMULATION-10ANS.md)).

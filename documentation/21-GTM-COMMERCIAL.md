@@ -18,10 +18,11 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 ## Scripts courts
 - **Client** : « Suivi prescrit par votre véto, sans boîtier — moins de 3 €/mois. »
 - **Véto** : « Vous gagnez sur chaque activation ; plafond ~9,4 € sur le triennial ; pas de perte si un commercial vous a apporté. »
-- **Commercial** : « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commissions récurrentes. »
+- **Commercial** : « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. »
 
-## SPIFF (suivi admin manuel V1)
-- Ramp 25 € · Mix mois 50 € · Palier véto 50 €
+## SPIFF
+- Ramp 25 € · Mix mois 50 € : détection auto + mark-paid admin
+- Palier véto 50 € : affichage / payout hors système
 
 ## Interdits
 - Compter une commission (ou un « deal gagné ») dès l’inscription du véto — un cabinet commence à **0** payant ; revenu = animal payant

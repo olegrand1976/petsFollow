@@ -13,7 +13,7 @@ Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par an
 |--------|----------|
 | Véto | Suivi entre consultations + commission sur activations |
 | Client | App simple, relevé au doigt, lien direct avec son véto |
-| Commercial | Commissions récurrentes + SPIFF ramp / mix |
+| Commercial | Commission sur chaque nouvelle activation + SPIFF ramp / mix |
 
 ## Offre cœur (TTC)
 
