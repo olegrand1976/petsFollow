@@ -35,6 +35,16 @@ func doAuthJSON(t *testing.T, h http.Handler, method, path, token string, body a
 	return rec.Code, envelope
 }
 
+func prospectListItems(t *testing.T, env map[string]any) []any {
+	t.Helper()
+	data, ok := env["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected prospect page object, got %#v", env["data"])
+	}
+	items, _ := data["items"].([]any)
+	return items
+}
+
 func loginToken(t *testing.T, h http.Handler, email, password string) string {
 	t.Helper()
 	code, env := doJSON(t, h, http.MethodPost, "/api/v1/auth/login", map[string]any{
@@ -171,8 +181,7 @@ func TestCommercialRBACIsolation(t *testing.T) {
 	if code != http.StatusOK {
 		t.Fatalf("list %d %#v", code, env)
 	}
-	list, _ := env["data"].([]any)
-	for _, item := range list {
+	for _, item := range prospectListItems(t, env) {
 		m, _ := item.(map[string]any)
 		if m["practiceName"] == "Only C1" {
 			t.Fatal("commercial 2 must not see commercial 1 prospect")
@@ -223,7 +232,7 @@ func TestVetReferralProspect(t *testing.T) {
 		t.Fatalf("list %d %#v", code, env)
 	}
 	found := false
-	for _, item := range env["data"].([]any) {
+	for _, item := range prospectListItems(t, env) {
 		m := item.(map[string]any)
 		if m["practiceName"] == "Cabinet Recommandé" && m["source"] == "vet_referral" {
 			found = true
@@ -231,6 +240,68 @@ func TestVetReferralProspect(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("commercial should see vet referral, got %#v", env)
+	}
+}
+
+func TestCommercialDirectoryProspectsPagination(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	commEmail := uniqueEmail("dir-comm")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Dir Comm",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create commercial %d %#v", code, env)
+	}
+	commTok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
+
+	marker := "BCE-DIR-" + uuid.NewString()[:8]
+	for i := 0; i < 3; i++ {
+		_, err := api.pool.Exec(ctx, `
+			INSERT INTO sales.prospects (
+				id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone,
+				city, notes, source, status
+			) VALUES ($1, NULL, $2, '', '', '', $3, $4, 'directory', 'new')`,
+			uuid.NewString(),
+			"Cabinet "+marker+" "+string(rune('A'+i)),
+			"City"+string(rune('A'+i)),
+			marker+" notes",
+		)
+		if err != nil {
+			t.Fatalf("insert directory prospect: %v", err)
+		}
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/commercial/prospects?source=directory&q="+marker+"&limit=2&offset=0", commTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list directory %d %#v", code, env)
+	}
+	page := dataMap(t, env)
+	total, _ := page["total"].(float64)
+	if int(total) != 3 {
+		t.Fatalf("expected total 3, got %#v", page)
+	}
+	items := prospectListItems(t, env)
+	if len(items) != 2 {
+		t.Fatalf("expected page size 2, got %#v", items)
+	}
+	for _, item := range items {
+		m := item.(map[string]any)
+		if m["source"] != "directory" {
+			t.Fatalf("expected directory source, got %#v", m)
+		}
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/commercial/prospects?source=directory&q="+marker+"&limit=2&offset=2", commTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list page 2 %d %#v", code, env)
+	}
+	items = prospectListItems(t, env)
+	if len(items) != 1 {
+		t.Fatalf("expected remaining 1, got %#v", items)
 	}
 }
 

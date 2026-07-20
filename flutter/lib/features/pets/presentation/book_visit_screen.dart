@@ -123,7 +123,6 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
   }
 
   Future<void> _pickManualSlot() async {
-    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final date = await showDatePicker(
       context: context,

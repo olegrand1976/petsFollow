@@ -19,9 +19,9 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Veterinarians",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Payouts",
+    "commercialCommissions": "My payments",
     "commercialSettings": "Payout profile",
-    "commercialPitch": "Pitch",
+    "commercialPitch": "Sales aid",
     "products": "Products",
     "calendar": "Calendar",
     "managerDashboard": "Team dashboard",
@@ -1324,7 +1324,7 @@
     },
     "vets": {
       "title": "Assigned veterinarians",
-      "subtitle": "Create a vet account automatically assigned to you.",
+      "subtitle": "Pick an action, then create an account. Assigned vets stay listed below.",
       "encode": "Create vet",
       "save": "Create account",
       "empty": "No assigned veterinarians",
@@ -1338,7 +1338,10 @@
       "address": "Address",
       "clients": "Clients",
       "encodeFailed": "Creation failed",
-      "prospectId": "Prospect ID (conversion)"
+      "prospectId": "Prospect ID (conversion)",
+      "cardTitle": "Veterinarian",
+      "cardDesc": "Create a vet account assigned to you.",
+      "backToCards": "Choose another action"
     },
     "clients": {
       "create": "Create client account",
@@ -1350,11 +1353,13 @@
       "password": "Temporary password",
       "submit": "Create client",
       "success": "Client account created",
-      "error": "Creation failed"
+      "error": "Creation failed",
+      "cardTitle": "Client",
+      "cardDesc": "Create a client account linked to one of your vets."
     },
     "prospects": {
       "title": "Prospect sheets",
-      "subtitle": "Sales CRM — track prospective practices.",
+      "subtitle": "BCE directory and CRM sheets — search, filters and pagination.",
       "create": "New sheet",
       "save": "Save",
       "empty": "No prospects",
@@ -1388,7 +1393,13 @@
         "done": "Done",
         "no_show": "No-show",
         "cancelled": "Cancelled"
-      }
+      },
+      "search": "Search",
+      "searchPlaceholder": "Practice, city, contact, BCE number…",
+      "sourceAll": "All sources",
+      "totalCount": "{from}–{to} of {total}",
+      "prev": "Previous",
+      "next": "Next"
     },
     "commissions": {
       "title": "My commissions",
@@ -1422,7 +1433,13 @@
       "rateHeart": "Core rate (triennial)",
       "gainsTitle": "Indicative earnings & bonuses",
       "sheetTitle": "Commissioning sheet",
-      "pitchLink": "Open full pitch"
+      "pitchLink": "Open full pitch",
+      "paymentsTitle": "My payments",
+      "paymentsSubtitle": "Amounts due and payout history.",
+      "detailsTitle": "Commission details",
+      "pendingPayouts": "Pending payouts",
+      "paidPayouts": "Paid payouts",
+      "monthDue": "Due this month"
     },
     "settings": {
       "title": "Payout profile",
@@ -1434,8 +1451,8 @@
       "saved": "Profile saved"
     },
     "pitch": {
-      "title": "petsFollow overview",
-      "subtitle": "Web vet app + Flutter mobile app and commission scheme.",
+      "title": "Sales aid",
+      "subtitle": "Pick an audience, then present the offer and pricing.",
       "webTitle": "Pro Web app (vet)",
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
@@ -1454,7 +1471,14 @@
         "Messages and care reminders"
       ],
       "commercialFlat": "Sales: 8% / 12% / 8% ex-VAT by plan (annual / triennial / quinquennial); ~€9.4 on the €95 TTC triennial plan.",
-      "productsLink": "Open full product grid (presentation support)"
+      "productsLink": "Open full product grid (presentation support)",
+      "cardVetTitle": "Veterinarian",
+      "cardVetDesc": "Clinic pitch: Pro app, client pricing and vet payouts.",
+      "cardClientTitle": "Client",
+      "cardClientDesc": "Owner pitch: mobile app, plans and household add-ons.",
+      "backToCards": "Back to audiences",
+      "benefitsTitle": "Included benefits",
+      "vetRetributionTitle": "Veterinarian payouts"
     }
   },
   "commissionSheet": {

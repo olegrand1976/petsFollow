@@ -118,23 +118,19 @@ const googleBtnRef = ref<HTMLElement | null>(null)
 async function redirectAfterLogin() {
   await syncFromUser()
   const me: any = await $fetch('/api/me')
-  const role = me.data?.role || me.role
+  const role = me.data?.role || me.role || parseJwtRole(useCookie('pf_token').value)
   const profileComplete = me.data?.profileComplete ?? me.profileComplete
   const mustChangePassword = me.data?.mustChangePassword ?? me.mustChangePassword
   if (mustChangePassword === true) {
     await navigateTo('/change-password')
     return
   }
-  if (role === 'admin') await navigateTo('/admin')
-  else if (role === 'commercial_manager') await navigateTo('/commercial-manager')
-  else if (role === 'commercial') await navigateTo('/commercial')
-  else if (role === 'vet') {
-    if (profileComplete === false) await navigateTo('/onboarding')
-    else await navigateTo('/dashboard')
-  } else {
+  if (!isProRole(role)) {
     clearAuthTokens()
     error.value = t('auth.login.proOnly')
+    return
   }
+  await navigateTo(homePathForRole(role, { profileComplete }))
 }
 
 async function handleAuthResult(res: unknown) {

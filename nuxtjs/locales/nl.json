@@ -19,9 +19,9 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Dierenartsen",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Vergoedingen",
+    "commercialCommissions": "Mijn betalingen",
     "commercialSettings": "Betalingsprofiel",
-    "commercialPitch": "Presentatie",
+    "commercialPitch": "Verkoophulp",
     "products": "Producten",
     "calendar": "Agenda",
     "managerDashboard": "Teamdashboard",
@@ -1324,7 +1324,7 @@
     },
     "vets": {
       "title": "Toegewezen dierenartsen",
-      "subtitle": "Maak een dierenartsaccount dat automatisch aan u wordt toegewezen.",
+      "subtitle": "Kies een actie en maak een account. Toegewezen dierenartsen blijven zichtbaar.",
       "encode": "Dierenarts aanmaken",
       "save": "Account maken",
       "empty": "Geen toegewezen dierenartsen",
@@ -1338,7 +1338,10 @@
       "address": "Adres",
       "clients": "Cliënten",
       "encodeFailed": "Aanmaken mislukt",
-      "prospectId": "Prospect-ID (conversie)"
+      "prospectId": "Prospect-ID (conversie)",
+      "cardTitle": "Dierenarts",
+      "cardDesc": "Een dierenartsaccount aanmaken dat aan u is toegewezen.",
+      "backToCards": "Andere actie kiezen"
     },
     "clients": {
       "create": "Klantaccount aanmaken",
@@ -1350,11 +1353,13 @@
       "password": "Tijdelijk wachtwoord",
       "submit": "Klant aanmaken",
       "success": "Klantaccount aangemaakt",
-      "error": "Aanmaken mislukt"
+      "error": "Aanmaken mislukt",
+      "cardTitle": "Cliënt",
+      "cardDesc": "Een cliëntaccount aanmaken gekoppeld aan een van uw dierenartsen."
     },
     "prospects": {
       "title": "Prospectfiches",
-      "subtitle": "Commerciële CRM — opvolging van prospectpraktijken.",
+      "subtitle": "BCE-gids en CRM-fiches — zoeken, filters en paginering.",
       "create": "Nieuwe fiche",
       "save": "Opslaan",
       "empty": "Geen prospects",
@@ -1388,7 +1393,13 @@
         "done": "Gedaan",
         "no_show": "No-show",
         "cancelled": "Geannuleerd"
-      }
+      },
+      "search": "Zoeken",
+      "searchPlaceholder": "Praktijk, stad, contact, BCE-nummer…",
+      "sourceAll": "Alle bronnen",
+      "totalCount": "{from}–{to} van {total}",
+      "prev": "Vorige",
+      "next": "Volgende"
     },
     "commissions": {
       "title": "Mijn commissies",
@@ -1422,7 +1433,13 @@
       "rateHeart": "Kerntarief (triennial)",
       "gainsTitle": "Indicatieve verdiensten & bonussen",
       "sheetTitle": "Commissiefiche",
-      "pitchLink": "Volledige pitch openen"
+      "pitchLink": "Volledige pitch openen",
+      "paymentsTitle": "Mijn betalingen",
+      "paymentsSubtitle": "Te ontvangen bedragen en uitbetalingsgeschiedenis.",
+      "detailsTitle": "Commissiedetails",
+      "pendingPayouts": "Openstaande uitbetalingen",
+      "paidPayouts": "Betaalde uitbetalingen",
+      "monthDue": "Te ontvangen deze maand"
     },
     "settings": {
       "title": "Betalingsprofiel",
@@ -1434,8 +1451,8 @@
       "saved": "Profiel opgeslagen"
     },
     "pitch": {
-      "title": "petsFollow overzicht",
-      "subtitle": "Web-app dierenarts + Flutter-app en commissieregeling.",
+      "title": "Verkoophulp",
+      "subtitle": "Kies een publiek en presenteer het aanbod en de tarieven.",
       "webTitle": "Pro Web-app (dierenarts)",
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
@@ -1454,7 +1471,14 @@
         "Berichten en zorgherinneringen"
       ],
       "commercialFlat": "Commercial: 8% / 12% / 8% excl. btw per plan (annual / triennial / quinquennial); ~€9,4 op het triennial abonnement van €95 incl. btw.",
-      "productsLink": "Volledige productgrid openen (presentatie)"
+      "productsLink": "Volledige productgrid openen (presentatie)",
+      "cardVetTitle": "Dierenarts",
+      "cardVetDesc": "Pitch praktijk: Pro-app, klanttarieven en dierenartsvergoeding.",
+      "cardClientTitle": "Cliënt",
+      "cardClientDesc": "Pitch eigenaar: mobiele app, plannen en gezin-addons.",
+      "backToCards": "Terug naar doelgroepen",
+      "benefitsTitle": "Inbegrepen voordelen",
+      "vetRetributionTitle": "Vergoeding dierenarts"
     }
   },
   "commissionSheet": {

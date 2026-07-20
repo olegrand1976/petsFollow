@@ -19,9 +19,9 @@
     "commercialDashboard": "Panel",
     "commercialVets": "Veterinarios",
     "commercialProspects": "Prospectos",
-    "commercialCommissions": "Retribuciones",
+    "commercialCommissions": "Mis pagos",
     "commercialSettings": "Perfil de pago",
-    "commercialPitch": "Pitch",
+    "commercialPitch": "Ayuda de venta",
     "products": "Productos",
     "calendar": "Calendario",
     "managerDashboard": "Panel del equipo",
@@ -1324,7 +1324,7 @@
     },
     "vets": {
       "title": "Veterinarios asignados",
-      "subtitle": "Cree una cuenta de veterinario asignada automáticamente a usted.",
+      "subtitle": "Elija una acción y cree una cuenta. Los vets asignados siguen visibles.",
       "encode": "Crear veterinario",
       "save": "Crear cuenta",
       "empty": "Sin veterinarios asignados",
@@ -1338,7 +1338,10 @@
       "address": "Dirección",
       "clients": "Clientes",
       "encodeFailed": "Creación fallida",
-      "prospectId": "ID prospecto (conversión)"
+      "prospectId": "ID prospecto (conversión)",
+      "cardTitle": "Veterinario",
+      "cardDesc": "Crear una cuenta vet asignada a usted.",
+      "backToCards": "Elegir otra acción"
     },
     "clients": {
       "create": "Crear cuenta de cliente",
@@ -1350,11 +1353,13 @@
       "password": "Contraseña temporal",
       "submit": "Crear cliente",
       "success": "Cuenta de cliente creada",
-      "error": "Creación fallida"
+      "error": "Creación fallida",
+      "cardTitle": "Cliente",
+      "cardDesc": "Crear una cuenta cliente vinculada a uno de sus vets."
     },
     "prospects": {
       "title": "Fichas de prospectos",
-      "subtitle": "CRM comercial — seguimiento de clínicas potenciales.",
+      "subtitle": "Directorio BCE y fichas CRM — búsqueda, filtros y paginación.",
       "create": "Nueva ficha",
       "save": "Guardar",
       "empty": "Sin prospectos",
@@ -1388,7 +1393,13 @@
         "done": "Realizado",
         "no_show": "No presentado",
         "cancelled": "Cancelado"
-      }
+      },
+      "search": "Buscar",
+      "searchPlaceholder": "Clínica, ciudad, contacto, n.º BCE…",
+      "sourceAll": "Todas las fuentes",
+      "totalCount": "{from}–{to} de {total}",
+      "prev": "Anterior",
+      "next": "Siguiente"
     },
     "commissions": {
       "title": "Mis comisiones",
@@ -1422,7 +1433,13 @@
       "rateHeart": "Tasa núcleo (trienal)",
       "gainsTitle": "Ganancias indicativas y bonos",
       "sheetTitle": "Ficha de comisionamiento",
-      "pitchLink": "Ver presentación completa"
+      "pitchLink": "Ver presentación completa",
+      "paymentsTitle": "Mis pagos",
+      "paymentsSubtitle": "Importes a cobrar e historial de pagos.",
+      "detailsTitle": "Detalle de comisiones",
+      "pendingPayouts": "Pagos pendientes",
+      "paidPayouts": "Pagos realizados",
+      "monthDue": "A cobrar este mes"
     },
     "settings": {
       "title": "Perfil de pago",
@@ -1434,8 +1451,8 @@
       "saved": "Perfil guardado"
     },
     "pitch": {
-      "title": "Visión general de petsFollow",
-      "subtitle": "App web vet + app móvil Flutter y esquema de comisiones.",
+      "title": "Ayuda de venta",
+      "subtitle": "Elija la audiencia y presente la oferta y las tarifas.",
       "webTitle": "App web Pro (vet)",
       "mobileTitle": "App móvil Flutter (clientes)",
       "commissionTitle": "Comisionamiento",
@@ -1454,7 +1471,14 @@
         "Mensajes y recordatorios de cuidados"
       ],
       "commercialFlat": "Comercial: 8 % / 12 % / 8 % sin IVA según plan (annual / triennial / quinquennial); ~9,4 € sobre el plan trienal de 95 € IVA incluido.",
-      "productsLink": "Abrir la tabla completa de productos (soporte de presentación)"
+      "productsLink": "Abrir la tabla completa de productos (soporte de presentación)",
+      "cardVetTitle": "Veterinario",
+      "cardVetDesc": "Pitch clínica: app Pro, tarifas clientes y retribución vet.",
+      "cardClientTitle": "Cliente",
+      "cardClientDesc": "Pitch propietario: app móvil, planes y addons del hogar.",
+      "backToCards": "Volver a audiencias",
+      "benefitsTitle": "Beneficios incluidos",
+      "vetRetributionTitle": "Retribución veterinaria"
     }
   },
   "commissionSheet": {

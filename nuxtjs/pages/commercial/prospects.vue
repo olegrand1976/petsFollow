@@ -6,8 +6,16 @@
     />
 
     <ProCard class="pro-mb-lg" data-testid="commercial-prospect-form">
-      <h3 class="pro-mb-md">{{ $t('commercial.prospects.create') }}</h3>
-      <form class="pro-form" @submit.prevent="createProspect">
+      <button
+        type="button"
+        class="pf-collapse-toggle"
+        data-testid="prospect-create-toggle"
+        @click="showCreate = !showCreate"
+      >
+        <strong>{{ $t('commercial.prospects.create') }}</strong>
+        <span>{{ showCreate ? '−' : '+' }}</span>
+      </button>
+      <form v-if="showCreate" class="pro-form pro-mt-md" @submit.prevent="createProspect">
         <ProInput v-model="form.practiceName" test-id="prospect-practice" :label="$t('commercial.prospects.practiceName')" required />
         <ProInput v-model="form.contactName" test-id="prospect-contact" :label="$t('commercial.prospects.contactName')" />
         <ProInput v-model="form.contactEmail" test-id="prospect-email" type="email" :label="$t('commercial.prospects.contactEmail')" />
@@ -23,30 +31,53 @@
     <ProCard>
       <ProListToolbar>
         <template #filters>
+          <ProInput
+            v-model="q"
+            test-id="prospect-search"
+            :label="$t('commercial.prospects.search')"
+            :placeholder="$t('commercial.prospects.searchPlaceholder')"
+          />
+          <select v-model="sourceFilter" class="pro-select" data-testid="prospect-source-filter">
+            <option value="">{{ $t('commercial.prospects.sourceAll') }}</option>
+            <option value="directory">{{ $t('commercial.prospects.source.directory') }}</option>
+            <option value="commercial">{{ $t('commercial.prospects.source.commercial') }}</option>
+            <option value="vet_referral">{{ $t('commercial.prospects.source.vet_referral') }}</option>
+          </select>
           <select v-model="statusFilter" class="pro-select" data-testid="prospect-status-filter">
             <option value="">{{ $t('commercial.prospects.statusAll') }}</option>
             <option v-for="s in statuses" :key="s" :value="s">{{ $t(`commercial.prospects.status.${s}`) }}</option>
           </select>
         </template>
       </ProListToolbar>
-      <ProTable :empty="!filtered.length" :empty-title="$t('commercial.prospects.empty')">
+
+      <p class="pro-hint pro-mb-md" data-testid="prospect-total">
+        {{ $t('commercial.prospects.totalCount', { total, from: rangeFrom, to: rangeTo }) }}
+      </p>
+
+      <ProTable :empty="!prospects.length" :empty-title="$t('commercial.prospects.empty')">
         <thead>
           <tr>
             <th>{{ $t('commercial.prospects.practiceName') }}</th>
+            <th>{{ $t('commercial.prospects.city') }}</th>
             <th>{{ $t('commercial.prospects.contactName') }}</th>
+            <th>{{ $t('commercial.prospects.contactEmail') }}</th>
+            <th>{{ $t('commercial.prospects.contactPhone') }}</th>
             <th>{{ $t('commercial.prospects.sourceLabel') }}</th>
             <th>{{ $t('commercial.prospects.statusLabel') }}</th>
             <th>{{ $t('commercial.prospects.appointmentAt') }}</th>
             <th>{{ $t('commercial.prospects.appointmentOutcome') }}</th>
             <th>{{ $t('commercial.prospects.daysInStatus') }}</th>
-            <th>{{ $t('commercial.prospects.city') }}</th>
+            <th>{{ $t('commercial.prospects.notes') }}</th>
             <th />
           </tr>
         </thead>
         <tbody>
-          <tr v-for="p in filtered" :key="p.id" :data-testid="`prospect-row-${p.id}`">
+          <tr v-for="p in prospects" :key="p.id" :data-testid="`prospect-row-${p.id}`">
             <td>{{ p.practiceName }}</td>
-            <td>{{ p.contactName }}</td>
+            <td>{{ p.city }}</td>
+            <td>{{ p.contactName || '—' }}</td>
+            <td>{{ p.contactEmail }}</td>
+            <td>{{ p.contactPhone }}</td>
             <td>{{ $t(`commercial.prospects.source.${p.source || 'commercial'}`) }}</td>
             <td>
               <select
@@ -84,7 +115,9 @@
               </select>
             </td>
             <td>{{ p.daysInStatus }}</td>
-            <td>{{ p.city }}</td>
+            <td>
+              <span class="pf-notes" :title="p.notes || ''">{{ truncate(p.notes) }}</span>
+            </td>
             <td>
               <ProButton
                 v-if="p.source !== 'directory'"
@@ -98,6 +131,25 @@
           </tr>
         </tbody>
       </ProTable>
+
+      <div class="pf-pager" data-testid="prospect-pager">
+        <ProButton
+          variant="secondary"
+          test-id="prospect-prev"
+          :disabled="offset <= 0 || loading"
+          @click="prevPage"
+        >
+          {{ $t('commercial.prospects.prev') }}
+        </ProButton>
+        <ProButton
+          variant="secondary"
+          test-id="prospect-next"
+          :disabled="!hasNext || loading"
+          @click="nextPage"
+        >
+          {{ $t('commercial.prospects.next') }}
+        </ProButton>
+      </div>
     </ProCard>
   </div>
 </template>
@@ -107,8 +159,18 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const statuses = ['new', 'contacted', 'qualified', 'converted', 'lost'] as const
 const outcomes = ['scheduled', 'done', 'no_show', 'cancelled'] as const
+const pageSize = 50
 const prospects = ref<any[]>([])
+const total = ref(0)
+const offset = ref(0)
+const q = ref('')
+const sourceFilter = ref('directory')
 const statusFilter = ref('')
+const showCreate = ref(false)
+const loading = ref(false)
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+let loadSeq = 0
+
 const form = reactive({
   practiceName: '',
   contactName: '',
@@ -119,9 +181,14 @@ const form = reactive({
   appointmentAt: '',
 })
 
-const filtered = computed(() =>
-  statusFilter.value ? prospects.value.filter((p) => p.status === statusFilter.value) : prospects.value,
-)
+const rangeFrom = computed(() => (total.value === 0 ? 0 : offset.value + 1))
+const rangeTo = computed(() => Math.min(offset.value + prospects.value.length, total.value))
+const hasNext = computed(() => offset.value + pageSize < total.value)
+
+function truncate(notes?: string) {
+  if (!notes) return '—'
+  return notes.length > 48 ? `${notes.slice(0, 48)}…` : notes
+}
 
 function toLocalInput(iso?: string) {
   if (!iso) return ''
@@ -132,9 +199,40 @@ function toLocalInput(iso?: string) {
 }
 
 async function load() {
-  const res: any = await $fetch('/api/commercial/prospects')
-  prospects.value = res.data ?? res ?? []
+  const seq = ++loadSeq
+  loading.value = true
+  try {
+    const res: any = await $fetch('/api/commercial/prospects', {
+      query: {
+        q: q.value || undefined,
+        source: sourceFilter.value || undefined,
+        status: statusFilter.value || undefined,
+        limit: pageSize,
+        offset: offset.value,
+      },
+    })
+    if (seq !== loadSeq) return
+    const data = res.data ?? res
+    prospects.value = data.items ?? (Array.isArray(data) ? data : [])
+    total.value = Number(data.total ?? prospects.value.length)
+  } finally {
+    if (seq === loadSeq) loading.value = false
+  }
 }
+
+function scheduleReload() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    offset.value = 0
+    load()
+  }, 300)
+}
+
+watch([sourceFilter, statusFilter], () => {
+  offset.value = 0
+  load()
+})
+watch(q, scheduleReload)
 
 async function createProspect() {
   const body: Record<string, unknown> = { ...form }
@@ -145,7 +243,14 @@ async function createProspect() {
   }
   await $fetch('/api/commercial/prospects', { method: 'POST', body })
   Object.assign(form, { practiceName: '', contactName: '', contactEmail: '', contactPhone: '', city: '', notes: '', appointmentAt: '' })
-  await load()
+  showCreate.value = false
+  offset.value = 0
+  if (sourceFilter.value === 'commercial') {
+    await load()
+  } else {
+    // watch(sourceFilter) will reload once
+    sourceFilter.value = 'commercial'
+  }
 }
 
 async function patch(id: string, body: Record<string, unknown>) {
@@ -170,5 +275,49 @@ async function remove(id: string) {
   await load()
 }
 
+function prevPage() {
+  offset.value = Math.max(0, offset.value - pageSize)
+  load()
+}
+
+function nextPage() {
+  if (!hasNext.value) return
+  offset.value += pageSize
+  load()
+}
+
 onMounted(load)
 </script>
+
+<style scoped>
+.pf-collapse-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.pro-mt-md { margin-top: 1rem; }
+.pro-mb-md { margin-bottom: 0.75rem; }
+.pf-notes {
+  display: inline-block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.pf-pager {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+</style>

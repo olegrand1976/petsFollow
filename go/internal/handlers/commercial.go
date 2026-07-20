@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -191,17 +192,31 @@ func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	status := r.URL.Query().Get("status")
+	q := r.URL.Query()
+	status := q.Get("status")
 	if status != "" && !store.ValidProspectStatus(status) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 		return
 	}
-	prospects, err := a.store.ListProspects(r.Context(), id.UserID, status)
+	source := q.Get("source")
+	if source != "" && !store.ValidProspectSource(source) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_source")
+		return
+	}
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	offset, _ := strconv.Atoi(q.Get("offset"))
+	page, err := a.store.ListProspects(r.Context(), id.UserID, store.ProspectListFilter{
+		Status: status,
+		Source: source,
+		Q:      q.Get("q"),
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, prospects)
+	httpx.WriteData(w, http.StatusOK, page)
 }
 
 func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {

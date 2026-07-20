@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -296,18 +297,66 @@ func (s *Store) DeleteProspect(ctx context.Context, commercialUserID, id string)
 	return nil
 }
 
-func (s *Store) ListProspects(ctx context.Context, commercialUserID, statusFilter string) ([]Prospect, error) {
+// ProspectListFilter controls commercial CRM list (pagination + search).
+type ProspectListFilter struct {
+	Status string
+	Source string
+	Q      string
+	Limit  int
+	Offset int
+}
+
+// ProspectListPage is a paginated prospect list.
+type ProspectListPage struct {
+	Items []Prospect `json:"items"`
+	Total int        `json:"total"`
+}
+
+func (s *Store) ListProspects(ctx context.Context, commercialUserID string, f ProspectListFilter) (ProspectListPage, error) {
+	if f.Limit <= 0 {
+		f.Limit = 50
+	}
+	if f.Limit > 100 {
+		f.Limit = 100
+	}
+	if f.Offset < 0 {
+		f.Offset = 0
+	}
+	q := strings.TrimSpace(f.Q)
+	like := "%" + q + "%"
+
+	var total int
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int
+		FROM sales.prospects
+		WHERE (commercial_user_id=$1 OR source='directory')
+		  AND ($2='' OR status=$2)
+		  AND ($3='' OR source=$3)
+		  AND ($4='' OR practice_name ILIKE $5 OR city ILIKE $5 OR contact_name ILIKE $5 OR notes ILIKE $5)`,
+		commercialUserID, f.Status, f.Source, q, like,
+	).Scan(&total); err != nil {
+		return ProspectListPage{}, err
+	}
+
 	rows, err := s.pool.Query(ctx, `
 		SELECT `+prospectSelectCols+`
 		FROM sales.prospects
 		WHERE (commercial_user_id=$1 OR source='directory')
 		  AND ($2='' OR status=$2)
-		ORDER BY created_at DESC`, commercialUserID, statusFilter)
+		  AND ($3='' OR source=$3)
+		  AND ($4='' OR practice_name ILIKE $5 OR city ILIKE $5 OR contact_name ILIKE $5 OR notes ILIKE $5)
+		ORDER BY practice_name ASC, created_at DESC
+		LIMIT $6 OFFSET $7`,
+		commercialUserID, f.Status, f.Source, q, like, f.Limit, f.Offset)
 	if err != nil {
-		return nil, err
+		return ProspectListPage{}, err
 	}
 	defer rows.Close()
-	return scanProspects(rows)
+	items, err := scanProspects(rows)
+	if err != nil {
+		return ProspectListPage{}, err
+	}
+	return ProspectListPage{Items: items, Total: total}, nil
 }
 
 func (s *Store) ListAllProspects(ctx context.Context, statusFilter string) ([]Prospect, error) {

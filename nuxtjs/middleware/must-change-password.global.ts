@@ -14,10 +14,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo('/change-password')
     }
     if (me.mustChangePassword !== true && to.path === '/change-password') {
-      if (me.role === 'admin') return navigateTo('/admin')
-      if (me.role === 'commercial_manager') return navigateTo('/commercial-manager')
-      if (me.role === 'commercial') return navigateTo('/commercial')
-      return navigateTo('/dashboard')
+      return navigateTo(homePathForRole(me.role))
     }
   } catch {
     /* ignore */

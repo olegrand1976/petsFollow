@@ -31,6 +31,32 @@ export function parseJwtRole(token: string | null | undefined): string | null {
   }
 }
 
+/** Force de vente : commercial + responsable commercial (profil étendu). */
+export function isSalesForceRole(role: string | null | undefined): boolean {
+  return role === 'commercial' || role === 'commercial_manager'
+}
+
+/** Rôles autorisés sur la face Pro (Nuxt). */
+export function isProRole(role: string | null | undefined): boolean {
+  return role === 'admin' || role === 'vet' || isSalesForceRole(role)
+}
+
+/** Home post-login / post-change-password pour un rôle Pro. */
+export function homePathForRole(role: string | null | undefined, opts?: { profileComplete?: boolean | null }): string {
+  switch (role) {
+    case 'admin':
+      return '/admin'
+    case 'commercial_manager':
+      return '/commercial-manager'
+    case 'commercial':
+      return '/commercial'
+    case 'vet':
+      return opts?.profileComplete === false ? '/onboarding' : '/dashboard'
+    default:
+      return '/login'
+  }
+}
+
 export function unwrapAuthData(res: unknown): AuthResponse {
   const data = (res as { data?: AuthResponse })?.data ?? res
   return data as AuthResponse

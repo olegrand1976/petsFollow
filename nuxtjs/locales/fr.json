@@ -20,9 +20,9 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Vétérinaires",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Rétributions",
+    "commercialCommissions": "Mes paiements",
     "commercialSettings": "Profil paiement",
-    "commercialPitch": "Présentation",
+    "commercialPitch": "Aide de vente",
     "products": "Produits",
     "managerDashboard": "Dashboard équipe",
     "managerFollowups": "Suivi",
@@ -188,7 +188,7 @@
     },
     "vets": {
       "title": "Vétérinaires assignés",
-      "subtitle": "Encoder une fiche véto qui vous est automatiquement assignée.",
+      "subtitle": "Choisissez une action, puis encodez un compte. La liste des vétos assignés reste visible.",
       "encode": "Encoder un véto",
       "save": "Créer le compte",
       "empty": "Aucun vétérinaire assigné",
@@ -202,7 +202,10 @@
       "address": "Adresse",
       "clients": "Clients",
       "encodeFailed": "Création impossible",
-      "prospectId": "ID prospect (conversion)"
+      "prospectId": "ID prospect (conversion)",
+      "cardTitle": "Vétérinaire",
+      "cardDesc": "Encoder un compte véto qui vous est assigné.",
+      "backToCards": "Choisir une autre action"
     },
     "clients": {
       "create": "Créer un compte client",
@@ -214,11 +217,13 @@
       "password": "Mot de passe temporaire",
       "submit": "Créer le client",
       "success": "Compte client créé",
-      "error": "Création impossible"
+      "error": "Création impossible",
+      "cardTitle": "Client",
+      "cardDesc": "Créer un compte client lié à un de vos vétos."
     },
     "prospects": {
       "title": "Fiches de prospection",
-      "subtitle": "CRM commercial — suivi des cabinets prospects.",
+      "subtitle": "Annuaire BCE et fiches CRM — recherche, filtres et pagination.",
       "create": "Nouvelle fiche",
       "save": "Enregistrer",
       "empty": "Aucun prospect",
@@ -252,7 +257,13 @@
         "done": "Tenu",
         "no_show": "No-show",
         "cancelled": "Annulé"
-      }
+      },
+      "search": "Recherche",
+      "searchPlaceholder": "Cabinet, ville, contact, n° BCE…",
+      "sourceAll": "Toutes les sources",
+      "totalCount": "{from}–{to} sur {total}",
+      "prev": "Précédent",
+      "next": "Suivant"
     },
     "commissions": {
       "title": "Mes commissions",
@@ -286,7 +297,13 @@
         "open": "Ouvert",
         "closed": "Clôturé",
         "paid": "Payé"
-      }
+      },
+      "paymentsTitle": "Mes paiements",
+      "paymentsSubtitle": "Montants à toucher et historique des versements.",
+      "detailsTitle": "Détail commissionnement",
+      "pendingPayouts": "Versements en attente",
+      "paidPayouts": "Versements payés",
+      "monthDue": "À toucher ce mois"
     },
     "settings": {
       "title": "Profil paiement",
@@ -298,8 +315,8 @@
       "saved": "Profil enregistré"
     },
     "pitch": {
-      "title": "Présentation petsFollow",
-      "subtitle": "Schéma App Web véto + App Mobile Flutter et rétribution.",
+      "title": "Aide de vente",
+      "subtitle": "Choisissez l’audience, puis présentez l’offre et les tarifs.",
       "webTitle": "App Web Pro (véto)",
       "mobileTitle": "App Mobile Flutter (clients)",
       "commissionTitle": "Commissionnement",
@@ -318,7 +335,14 @@
         "Messages et rappels de soins"
       ],
       "commercialFlat": "Commercial : 8 % / 12 % / 8 % HTVA selon le plan (annual / triennial / quinquennial) ; ~9,4 € sur le triennial 95 € TTC.",
-      "productsLink": "Voir la grille produits complète (support présentation)"
+      "productsLink": "Voir la grille produits complète (support présentation)",
+      "cardVetTitle": "Vétérinaire",
+      "cardVetDesc": "Pitch cabinet : app Pro, tarifs clients et rétribution véto.",
+      "cardClientTitle": "Client",
+      "cardClientDesc": "Pitch propriétaire : app mobile, plans et options foyer.",
+      "backToCards": "Retour aux audiences",
+      "benefitsTitle": "Bénéfices inclus",
+      "vetRetributionTitle": "Rétribution vétérinaire"
     }
   },
   "settings": {

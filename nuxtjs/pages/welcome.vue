@@ -91,16 +91,8 @@ async function goPrimary() {
       await navigateTo('/onboarding')
       return
     }
-    if (data.role === 'admin') {
-      await navigateTo('/admin')
-      return
-    }
-    if (data.role === 'commercial_manager') {
-      await navigateTo('/commercial-manager')
-      return
-    }
-    if (data.role === 'commercial') {
-      await navigateTo('/commercial')
+    if (isProRole(data.role)) {
+      await navigateTo(homePathForRole(data.role, { profileComplete: data.profileComplete }))
       return
     }
     await navigateTo('/dashboard')

@@ -5,8 +5,36 @@
       :subtitle="$t('commercial.vets.subtitle')"
     />
 
-    <ProCard class="pro-mb-lg" data-testid="commercial-vet-form">
-      <h3 class="pro-mb-md">{{ $t('commercial.vets.encode') }}</h3>
+    <div v-if="!panel" class="pf-audience-grid" data-testid="commercial-vets-cards">
+      <button
+        type="button"
+        class="pro-card pro-card--interactive pf-audience-card"
+        data-testid="commercial-card-vet"
+        @click="panel = 'vet'"
+      >
+        <ProIcon name="medical_services" :size="36" />
+        <strong>{{ $t('commercial.vets.cardTitle') }}</strong>
+        <span>{{ $t('commercial.vets.cardDesc') }}</span>
+      </button>
+      <button
+        type="button"
+        class="pro-card pro-card--interactive pf-audience-card"
+        data-testid="commercial-card-client"
+        @click="panel = 'client'"
+      >
+        <ProIcon name="person" :size="36" />
+        <strong>{{ $t('commercial.clients.cardTitle') }}</strong>
+        <span>{{ $t('commercial.clients.cardDesc') }}</span>
+      </button>
+    </div>
+
+    <ProCard v-else-if="panel === 'vet'" class="pro-mb-lg" data-testid="commercial-vet-form">
+      <div class="pf-form-toolbar">
+        <h3>{{ $t('commercial.vets.encode') }}</h3>
+        <ProButton variant="ghost" test-id="commercial-back-cards" @click="panel = null">
+          {{ $t('commercial.vets.backToCards') }}
+        </ProButton>
+      </div>
       <form class="pro-form" @submit.prevent="submitVet">
         <ProInput v-model="form.fullName" test-id="encode-vet-name" :label="$t('commercial.vets.fullName')" required />
         <ProInput v-model="form.practiceName" test-id="encode-vet-practice" :label="$t('commercial.vets.practiceName')" required />
@@ -22,8 +50,13 @@
       </form>
     </ProCard>
 
-    <ProCard class="pro-mb-lg" data-testid="commercial-client-form">
-      <h3 class="pro-mb-md">{{ $t('commercial.clients.create') }}</h3>
+    <ProCard v-else class="pro-mb-lg" data-testid="commercial-client-form">
+      <div class="pf-form-toolbar">
+        <h3>{{ $t('commercial.clients.create') }}</h3>
+        <ProButton variant="ghost" test-id="commercial-back-cards" @click="panel = null">
+          {{ $t('commercial.vets.backToCards') }}
+        </ProButton>
+      </div>
       <p class="pro-hint pro-mb-md">{{ $t('commercial.clients.hint') }}</p>
       <form class="pro-form" @submit.prevent="submitClient">
         <div class="pro-field">
@@ -71,6 +104,7 @@
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { t } = useI18n()
+const panel = ref<null | 'vet' | 'client'>(null)
 const vets = ref<any[]>([])
 const saving = ref(false)
 const formError = ref('')
@@ -131,3 +165,41 @@ async function submitClient() {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.pf-audience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.pf-audience-card {
+  display: grid;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+.pf-audience-card strong {
+  font-size: 1.05rem;
+}
+.pf-audience-card span {
+  color: var(--pf-vet-muted, #64748b);
+  font-size: 0.9rem;
+}
+.pf-form-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.pf-form-toolbar h3 {
+  margin: 0;
+}
+@media (max-width: 700px) {
+  .pf-audience-grid { grid-template-columns: 1fr; }
+}
+</style>
