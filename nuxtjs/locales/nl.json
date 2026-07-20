@@ -767,17 +767,17 @@
       "plans": {
         "price": "€35 / €95 / €145",
         "title": "Abonnementen per dier",
-        "text": "Annual, Triennial (aanbevolen) of Quinquennial — hartmetingen, berichten en zorgherinneringen."
+        "text": "Annual, Triennial (aanbevolen) of Quinquennial — metingen 15/30/60 s, berichten, timeline en herinneringen."
       },
       "family": {
-        "price": "€39 / jaar",
-        "title": "Familiepakket",
-        "text": "Gezinsweergave vanaf 2 dieren, −10% op volgende abonnementen — elk dier blijft individueel geabonneerd."
+        "price": "€39 · €119 / jaar",
+        "title": "Family en Kennel",
+        "text": "Family vanaf 2 dieren (−10%, geen plafond). Kennel vanaf 6 (−15%, snelle encoding) — onderling exclusief."
       },
       "careHorse": {
         "price": "€19 · €39",
         "title": "Care+ en Horse",
-        "text": "Care+ voor medicatie en uitgebreid zorgboek; Horse voor paardenopvolging (hoefsmid, contacten, wedstrijden)."
+        "text": "Care+ voor medicatie en persoonlijke herinneringen; Horse voor paardenopvolging (hoefsmid, contacten, wedstrijden)."
       }
     },
     "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
@@ -794,14 +794,15 @@
     "includedTitle": "Inbegrepen in elk dierabonnement",
     "includedLead": "Ongeacht het plan (1, 3 of 5 jaar) krijgt de eigenaar:",
     "included": [
-      "Begeleide hartmetingen via de mobiele app",
+      "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app (zonder hardware)",
       "Sessies verzonden naar en gevalideerd door de praktijk",
-      "Veilige berichten met de dierenarts",
-      "Gedeeld patiëntendossier (geschiedenis metingen en gesprekken)",
-      "Standaard zorgherinneringen (vaccin, ontworming, controle, gebit)"
+      "Veilige berichten eigenaar ↔ dierenarts + pushmeldingen",
+      "Timeline / gedeeld patiëntendossier (goedgekeurde metingen en gesprekken)",
+      "Standaard zorgherinneringen (vaccin, ontworming, controle, gebit)",
+      "Talen FR / NL / EN / ES"
     ],
     "plansTitle": "Abonnementen per dier",
-    "plansLead": "Één abonnement per opgevolgd dier. Indicatieve prijzen — eenmalig of Stripe-abonnement.",
+    "plansLead": "Één abonnement per opgevolgd dier. Prijzen incl. btw — Annual / Triennial eenmalig of Stripe-abonnement; Quinquennial alleen eenmalig.",
     "recommended": "Aanbevolen",
     "plansTip": "Presentatietip: start met Triennial (€95 / 3 jaar ≈ €2,6/maand) — beste balans prijs / engagement voor het gezin.",
     "plans": {
@@ -822,7 +823,7 @@
         "period": "voor 3 jaar",
         "monthly": "≈ €2,6 / maand",
         "benefits": [
-          "Kernaanbod — 9% korting t.o.v. 3× Annual",
+          "Kernaanbod — −10% t.o.v. 3× Annual",
           "Continue opvolging gedurende 3 jaar",
           "Sterkste prijsargument voor het gezin"
         ]
@@ -833,7 +834,7 @@
         "period": "voor 5 jaar (eenmalig)",
         "monthly": "≈ €2,4 / maand",
         "benefits": [
-          "Lange termijn — 17% korting t.o.v. 5× Annual",
+          "Lange termijn — −17% t.o.v. 5× Annual",
           "Ideaal voor chronische / senior dieren",
           "Eenmalige betaling — geen Stripe auto-verlenging"
         ]
@@ -841,7 +842,7 @@
     },
     "addonsTitle": "Huishoudopties (eigenaarsaccount)",
     "addonsLead": "Add-ons zijn jaarlijkse abonnementen (elk jaar vernieuwd) — ze verrijken de ervaring voor dieren in het huishouden volgens de regels hieronder.",
-    "addonsTip": "Family vervangt nooit een dierabonnement. Kennel vereist ≥ 6 dieren. Horse alleen met minstens één paard.",
+    "addonsTip": "Family vervangt nooit een dierabonnement. Family en Kennel zijn exclusief (Kennel = upgrade). Kennel vanaf 6 dieren. Horse alleen met ≥ 1 paard.",
     "addons": {
       "family": {
         "name": "Family",
@@ -851,7 +852,8 @@
         "benefits": [
           "Gezinsweergave herinneringen",
           "−10% op dierabonnementen vanaf 2e betalend",
-          "Vanaf 6 dieren: Kennel aanbevolen"
+          "Geen plafond op aantal dieren",
+          "Exclusief met Kennel — vanaf 6 dieren, Kennel-upgrade aanbevolen"
         ]
       },
       "carePlus": {
@@ -885,7 +887,8 @@
         "benefits": [
           "Snelle multi-dier encoding",
           "Roster, nest-tags, export",
-          "−15% op dierabonnementen vanaf 2e betalend"
+          "−15% op dierabonnementen vanaf 2e betalend",
+          "Exclusief met Family (Kennel-aankoop = upgrade, Family geannuleerd)"
         ]
       }
     },
@@ -909,7 +912,7 @@
       "family": {
         "name": "Family",
         "price": "39 € / jaar",
-        "role": "Huishoud-addon vanaf 2 (−10%)"
+        "role": "Huishoud-addon vanaf 2 (−10%, geen plafond, exclusief Kennel)"
       },
       "carePlus": {
         "name": "Care+",
@@ -924,7 +927,7 @@
       "kennel": {
         "name": "Kennel",
         "price": "119 € / jaar",
-        "role": "Kennel-addon vanaf 6 (−15%)"
+        "role": "Kennel-addon vanaf 6 (−15%, exclusief Family)"
       }
     },
     "footer": "petsFollow — voorgeschreven door de dierenarts, zonder hardware"

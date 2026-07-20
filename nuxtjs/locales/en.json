@@ -767,17 +767,17 @@
       "plans": {
         "price": "€35 / €95 / €145",
         "title": "Per-pet subscriptions",
-        "text": "Annual, Triennial (recommended) or Quinquennial — heart-rate checks, messaging and care reminders."
+        "text": "Annual, Triennial (recommended) or Quinquennial — 15/30/60 s checks, messaging, timeline and reminders."
       },
       "family": {
-        "price": "€39 / year",
-        "title": "Family pack",
-        "text": "Household care view from 2 pets, −10% on further plans — each pet still needs its own subscription."
+        "price": "€39 · €119 / year",
+        "title": "Family and Kennel",
+        "text": "Family from 2 pets (−10%, no pet cap). Kennel from 6 (−15%, quick encode) — mutually exclusive."
       },
       "careHorse": {
         "price": "€19 · €39",
         "title": "Care+ and Horse",
-        "text": "Care+ for medication and an enriched care book; Horse for equine follow-up (farrier, contacts, competitions)."
+        "text": "Care+ for medication and custom reminders; Horse for equine follow-up (farrier, contacts, competitions)."
       }
     },
     "footer": "© {year} petsFollow — Veterinary cardiac monitoring"
@@ -794,14 +794,15 @@
     "includedTitle": "Included in every pet subscription",
     "includedLead": "Whatever the plan (1, 3 or 5 years), owners get:",
     "included": [
-      "Guided heart-rate checks from the mobile app",
+      "Guided heart-rate checks 15 / 30 / 60 s from the mobile app (no hardware)",
       "Sessions sent to and validated by the practice",
-      "Secure messaging with the veterinarian",
-      "Shared patient record (history of checks and conversations)",
-      "Standard care reminders (vaccine, deworming, check-up, dental)"
+      "Secure client ↔ vet messaging + push notifications",
+      "Timeline / shared patient record (validated checks and conversations)",
+      "Standard care reminders (vaccine, deworming, check-up, dental)",
+      "Languages FR / NL / EN / ES"
     ],
     "plansTitle": "Per-pet subscriptions",
-    "plansLead": "One subscription per monitored pet. Indicative prices — one-time or Stripe subscription renewal.",
+    "plansLead": "One subscription per monitored pet. Prices TTC — Annual / Triennial as one-time or Stripe subscription; Quinquennial one-time only.",
     "recommended": "Recommended",
     "plansTip": "Presentation tip: lead with Triennial (€95 / 3 years ≈ €2.6/month) — best price / commitment balance for households.",
     "plans": {
@@ -822,7 +823,7 @@
         "period": "for 3 years",
         "monthly": "≈ €2.6 / month",
         "benefits": [
-          "Core offer — 9% off vs 3× Annual",
+          "Core offer — −10% vs 3× Annual",
           "Continuous monitoring for 3 years",
           "Strongest household price argument"
         ]
@@ -833,7 +834,7 @@
         "period": "for 5 years (one-time)",
         "monthly": "≈ €2.4 / month",
         "benefits": [
-          "Long-term — 17% off vs 5× Annual",
+          "Long-term — −17% vs 5× Annual",
           "Ideal for chronic / senior pets",
           "One-time payment — no Stripe auto-renew"
         ]
@@ -841,7 +842,7 @@
     },
     "addonsTitle": "Household options (owner account)",
     "addonsLead": "Addons are annual recurring subscriptions (renewed each year) — they enrich the experience for pets in the household under the rules below.",
-    "addonsTip": "Family never replaces a pet subscription. Kennel requires ≥ 6 pets. Horse only if the household has a horse.",
+    "addonsTip": "Family never replaces a pet subscription. Family and Kennel are exclusive (Kennel = upgrade). Kennel from 6 pets. Horse only if the household has ≥ 1 horse.",
     "addons": {
       "family": {
         "name": "Family",
@@ -851,7 +852,8 @@
         "benefits": [
           "Household upcoming-care view",
           "−10% on pet plans from the 2nd paying pet",
-          "From 6 pets: Kennel recommended"
+          "No pet count cap",
+          "Exclusive with Kennel — from 6 pets, Kennel upgrade recommended"
         ]
       },
       "carePlus": {
@@ -885,7 +887,8 @@
         "benefits": [
           "Quick multi-pet encode",
           "Roster, litter tags, export",
-          "−15% on pet plans from the 2nd paying pet"
+          "−15% on pet plans from the 2nd paying pet",
+          "Exclusive with Family (Kennel purchase = upgrade, Family cancelled)"
         ]
       }
     },
@@ -909,7 +912,7 @@
       "family": {
         "name": "Family",
         "price": "€39 / year",
-        "role": "Household addon from 2 pets (−10%)"
+        "role": "Household addon from 2 (−10%, no cap, exclusive Kennel)"
       },
       "carePlus": {
         "name": "Care+",
@@ -924,7 +927,7 @@
       "kennel": {
         "name": "Kennel",
         "price": "€119 / year",
-        "role": "Breeding addon from 6 (−15%)"
+        "role": "Breeding addon from 6 (−15%, exclusive Family)"
       }
     },
     "footer": "petsFollow — vet-prescribed monitoring, no hardware"

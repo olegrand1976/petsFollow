@@ -947,17 +947,17 @@
       "plans": {
         "price": "35 / 95 / 145 €",
         "title": "Abonnements par animal",
-        "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés cardiaques, messagerie et rappels de soins."
+        "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés 15/30/60 s, messagerie, timeline et rappels."
       },
       "family": {
-        "price": "39 € / an",
-        "title": "Pack Famille",
-        "text": "Vue foyer des rappels dès 2 animaux, −10 % sur les abos suivants — chaque animal reste abonné individuellement."
+        "price": "39 € · 119 € / an",
+        "title": "Family et Kennel",
+        "text": "Family dès 2 animaux (−10 %, sans plafond). Kennel dès 6 (−15 %, encodage rapide) — exclusifs l’un de l’autre."
       },
       "careHorse": {
         "price": "19 € · 39 €",
         "title": "Care+ et Horse",
-        "text": "Care+ pour médicaments et carnet enrichi ; Horse pour le suivi équine (maréchal, contacts, compétitions)."
+        "text": "Care+ pour médicaments et rappels perso ; Horse pour le suivi équine (maréchal, contacts, compétitions)."
       }
     },
     "footer": "© {year} petsFollow — Suivi cardiaque vétérinaire"
@@ -974,14 +974,15 @@
     "includedTitle": "Inclus dans chaque abonnement animal",
     "includedLead": "Quel que soit le plan choisi (1, 3 ou 5 ans), le propriétaire dispose de :",
     "included": [
-      "Relevés de fréquence cardiaque guidés depuis l'app mobile",
+      "Relevés cardiaques guidés 15 / 30 / 60 s depuis l'app mobile (sans hardware)",
       "Envoi et validation des sessions par le cabinet",
-      "Messagerie sécurisée avec le vétérinaire",
-      "Dossier patient partagé (historique relevés et échanges)",
-      "Rappels de soins standards (vaccin, vermifuge, contrôle, dentaire)"
+      "Messagerie sécurisée client ↔ vétérinaire + notifications push",
+      "Timeline / dossier patient partagé (relevés validés et échanges)",
+      "Rappels de soins standards (vaccin, vermifuge, contrôle, dentaire)",
+      "Langues FR / NL / EN / ES"
     ],
     "plansTitle": "Abonnements par animal",
-    "plansLead": "Un abonnement par animal suivi. Prix TTC indicatifs — renouvellement possible en paiement unique ou abonnement Stripe.",
+    "plansLead": "Un abonnement par animal suivi. Prix TTC — Annual / Triennial en paiement unique ou abonnement Stripe ; Quinquennial en paiement unique uniquement.",
     "recommended": "Recommandé",
     "plansTip": "Conseil présentation : privilégiez le Triennial (95 € / 3 ans ≈ 2,6 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
     "plans": {
@@ -1002,7 +1003,7 @@
         "period": "pour 3 ans",
         "monthly": "≈ 2,6 € / mois",
         "benefits": [
-          "Cœur d'offre — −9 % vs 3× Annual",
+          "Cœur d'offre — −10 % vs 3× Annual",
           "Suivi continu sur 3 ans",
           "Meilleur argument prix pour le foyer"
         ]
@@ -1021,7 +1022,7 @@
     },
     "addonsTitle": "Options foyer (compte propriétaire)",
     "addonsLead": "Addons en abonnement annuel récurrent (renouvelé chaque année) — ils enrichissent l'expérience de tous les animaux du foyer selon les règles ci-dessous.",
-    "addonsTip": "Family ne remplace jamais l'abonnement animal. Kennel dès 6 animaux. Horse uniquement si le foyer a au moins un cheval.",
+    "addonsTip": "Family ne remplace jamais l'abonnement animal. Family et Kennel sont exclusifs (Kennel = upgrade). Kennel dès 6 animaux. Horse uniquement si le foyer a ≥ 1 cheval.",
     "addons": {
       "family": {
         "name": "Family",
@@ -1031,7 +1032,8 @@
         "benefits": [
           "Vue foyer : prochains rappels de tous les animaux",
           "−10 % sur les abonnements animal dès le 2ᵉ payant",
-          "Dès 6 animaux : offre Kennel recommandée"
+          "Pas de plafond d'animaux",
+          "Exclusif Kennel — dès 6 animaux, upgrade Kennel recommandé"
         ]
       },
       "carePlus": {
@@ -1065,7 +1067,8 @@
         "benefits": [
           "Encodage rapide multi-animaux",
           "Roster, tags portée, export",
-          "−15 % sur les abonnements animal dès le 2ᵉ payant"
+          "−15 % sur les abonnements animal dès le 2ᵉ payant",
+          "Exclusif Family (achat Kennel = upgrade, Family annulé)"
         ]
       }
     },
@@ -1089,7 +1092,7 @@
       "family": {
         "name": "Family",
         "price": "39 € / an",
-        "role": "Addon foyer dès 2 animaux (−10 %)"
+        "role": "Addon foyer dès 2 (−10 %, sans plafond, exclusif Kennel)"
       },
       "carePlus": {
         "name": "Care+",
@@ -1104,7 +1107,7 @@
       "kennel": {
         "name": "Kennel",
         "price": "119 € / an",
-        "role": "Addon élevage dès 6 (−15 %)"
+        "role": "Addon élevage dès 6 (−15 %, exclusif Family)"
       }
     },
     "footer": "petsFollow — suivi prescrit par le vétérinaire, sans hardware"

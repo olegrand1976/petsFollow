@@ -1,0 +1,36 @@
+---
+description: Garder /produits aligné avec toute évolution offre, prix ou addons
+alwaysApply: true
+---
+
+# `/produits` — sync obligatoire avec l’offre
+
+À chaque changement d’**offre**, **prix**, **plans**, **addons**, **bénéfices inclus** ou **positionnement** commercial :
+
+1. Mettre à jour la page publique [`nuxtjs/pages/produits.vue`](nuxtjs/pages/produits.vue) via les clés i18n `products.*` dans **les 4 locales** :
+   - [`nuxtjs/locales/fr.json`](nuxtjs/locales/fr.json)
+   - [`nuxtjs/locales/en.json`](nuxtjs/locales/en.json)
+   - [`nuxtjs/locales/nl.json`](nuxtjs/locales/nl.json)
+   - [`nuxtjs/locales/es.json`](nuxtjs/locales/es.json)
+2. Aligner aussi `index.productHighlights` (landing `#produits`) si la grille visible change.
+3. Sources de vérité (dans cet ordre) :
+   - [`documentation/17-POLITIQUE-TARIFAIRE.md`](documentation/17-POLITIQUE-TARIFAIRE.md)
+   - [`documentation/22-FICHE-PRODUIT-COMMERCIAL.md`](documentation/22-FICHE-PRODUIT-COMMERCIAL.md)
+   - montants code : `go/internal/billing/domain.go`
+
+## Points à vérifier
+
+| Élément | Attendu (réf. actuelle) |
+|---------|-------------------------|
+| Plans TTC | 35 € / an · 95 € / 3 ans · 145 € / 5 ans |
+| Steer | Triennial recommandé (−10 % vs 3× Annual) |
+| Quinquennial | paiement unique uniquement |
+| Addons récurrents | Family 39 · Kennel 119 · Care+ 19 · Horse 39 (€ / an) |
+| Family | ≥2, −10 %, **pas de plafond**, exclusif Kennel |
+| Kennel | ≥6, −15 %, encodage rapide, exclusif Family (upgrade) |
+| Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels, FR/NL/EN/ES |
+
+```text
+# ❌ BAD — docs/billing changés, /produits inchangé
+# ✅ GOOD — même PR/commit : docs + domain.go + products.* (4 locales) + highlights landing
+```
