@@ -49,15 +49,18 @@ const (
 	AddonKennel   AddonCode = "kennel"
 )
 
-// AddonDurationDays is the validity window for a purchased addon.
-const AddonDurationDays = 365
+// AddonDurationDays is 0: lifetime one-time purchase (valid_until NULL at activation).
+const AddonDurationDays = 0
+
+// LegacyAddonRenewDays extends remaining Stripe yearly subscriptions via invoice.paid.
+const LegacyAddonRenewDays = 365
 
 type Addon struct {
 	Code         AddonCode `json:"code"`
 	Label        string    `json:"label"`
 	AmountCents  int       `json:"amountCents"`
 	Currency     string    `json:"currency"`
-	DurationDays int       `json:"durationDays"`
+	DurationDays int       `json:"durationDays"` // 0 = lifetime
 }
 
 func AllAddons() []Addon {
@@ -97,8 +100,9 @@ func GetAddon(code AddonCode) (Addon, error) {
 	return Addon{}, ErrInvalidAddon
 }
 
-func AddonValidUntil(from time.Time, addon Addon) time.Time {
-	return from.Add(time.Duration(addon.DurationDays) * 24 * time.Hour)
+// AddonValidUntil returns the renew window for legacy Stripe addon subscriptions.
+func AddonValidUntil(from time.Time, _ Addon) time.Time {
+	return from.Add(time.Duration(LegacyAddonRenewDays) * 24 * time.Hour)
 }
 
 func AddonPriceIDEnvKey(code AddonCode) string {

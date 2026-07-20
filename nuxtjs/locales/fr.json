@@ -40,7 +40,7 @@
       "registerLink": "S'inscrire gratuitement",
       "forgotLink": "Mot de passe oublié ?",
       "or": "ou",
-      "proOnly": "Accès réservé aux profils Pro (véto / commercial / admin)",
+      "proOnly": "Accès réservé aux profils Pro (véto / commercial / responsable commercial / admin)",
       "invalidResponse": "Réponse d'authentification invalide"
     },
     "forgot": {
@@ -1147,14 +1147,14 @@
         "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés 15/30/60 s, messagerie, timeline et rappels."
       },
       "family": {
-        "price": "39 € · 119 € / an",
+        "price": "39 € · 119 € (paiement unique)",
         "title": "Family et Kennel",
-        "text": "Family dès 2 (−10 % dès le 2ᵉ payant, sans plafond). Kennel dès 6 (−15 %, encodage). Ex. 2× Annual + Family : 105,50 € / an."
+        "text": "Family dès 2 (−10 % dès le 2ᵉ payant, sans plafond). Kennel dès 6 (−15 %, encodage). Paiement unique à vie. Ex. An 1 : 2× Annual + Family = 105,50 € · ensuite 66,50 € / an."
       },
       "careHorse": {
-        "price": "19 € · 39 €",
+        "price": "19 € · 39 € (paiement unique)",
         "title": "Care+ et Horse",
-        "text": "Care+ pour médicaments et rappels perso ; Horse pour le suivi équine (maréchal, contacts, compétitions)."
+        "text": "Care+ pour médicaments et rappels perso ; Horse pour le suivi équine — paiement unique à vie, cumulable avec Family / Kennel."
       }
     },
     "footer": "© {year} petsFollow — Suivi cardiaque vétérinaire"
@@ -1218,40 +1218,43 @@
       }
     },
     "addonsTitle": "Options foyer (compte propriétaire)",
-    "addonsLead": "Les addons s'ajoutent aux abonnements animal (ils ne les remplacent jamais). Abonnement annuel récurrent par compte — avantages partagés par tout le foyer.",
-    "addonsTip": "Mécanique Family / Kennel : 1er animal payant au plein tarif, remise dès le 2ᵉ payant (−10 % / −15 %). Family et Kennel sont exclusifs (Kennel = upgrade). Horse uniquement si le foyer a ≥ 1 cheval.",
+    "addonsLead": "Les addons s'ajoutent aux abonnements animal (ils ne les remplacent jamais). Paiement unique à vie par compte — avantages partagés par tout le foyer.",
+    "addonsTip": "Mécanique Family / Kennel : 1er animal payant au plein tarif, remise dès le 2ᵉ payant (−10 % / −15 %). Family et Kennel sont exclusifs (Kennel = upgrade). Horse uniquement si le foyer a ≥ 1 cheval. Addons = un seul achat, valable à vie.",
     "addons": {
       "family": {
         "name": "Family",
-        "price": "39 € / an",
+        "price": "39 €",
         "tagline": "Forfait foyer — dès 2 animaux, remise −10 %",
         "scope": "Compte",
         "benefits": [
+          "Paiement unique à vie — pas de renouvellement",
           "Vue foyer : prochains rappels de tous les animaux",
           "−10 % sur chaque abonnement animal dès le 2ᵉ payant (1er = plein tarif)",
-          "Pas de plafond d'animaux — Family reste 39 € / an quel que soit le nombre",
-          "Ex. 2× Annual : 35 + 31,50 + 39 = 105,50 € / an",
+          "Pas de plafond d'animaux — Family reste 39 € une fois",
+          "Ex. An 1 (2× Annual) : 35 + 31,50 + 39 = 105,50 € · Ans suivants : 66,50 € / an",
           "Exclusif Kennel — dès 6 animaux, upgrade Kennel recommandé"
         ]
       },
       "carePlus": {
         "name": "Care+",
-        "price": "19 € / an",
+        "price": "19 €",
         "tagline": "Carnet de soins enrichi",
         "scope": "Compte",
         "benefits": [
+          "Paiement unique à vie",
           "Rappels médicaments pour tout le foyer",
           "Rappels personnalisés",
           "En plus des plans animal — aucune remise plans",
-          "Ex. foyer 2 animaux : +19 € / an sur le compte"
+          "Ex. foyer 2 animaux + Family : +19 € une fois sur le compte"
         ]
       },
       "horse": {
         "name": "Horse",
-        "price": "39 € / an",
+        "price": "39 €",
         "tagline": "Pack équine",
         "scope": "Compte",
         "benefits": [
+          "Paiement unique à vie",
           "Rappels maréchal et coproscopie",
           "Carnet maréchal + contacts pro + compétitions",
           "En plus des plans animal — aucune remise plans",
@@ -1260,26 +1263,27 @@
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / an",
+        "price": "119 €",
         "tagline": "Élevage / effectif dès 6 animaux",
         "scope": "Compte",
         "benefits": [
+          "Paiement unique à vie — pas de renouvellement",
           "Encodage rapide multi-animaux, roster, tags portée, export",
           "−15 % sur chaque abonnement animal dès le 2ᵉ payant",
-          "Ex. 6× Annual : 35 + 5×29,75 + 119 = 302,75 € / an",
+          "Ex. An 1 (6× Annual) : 35 + 5×29,75 + 119 = 302,75 € · Ans suivants : 183,75 € / an",
           "Exclusif Family (achat Kennel = upgrade, Family annulé)"
         ]
       }
     },
     "examplesTitle": "Exemples concrets (plan Annual)",
-    "examplesLead": "Les addons ne remplacent jamais l'abonnement animal. Chiffres TTC sur la base Annual 35 € — 1er payant plein tarif, suivants remisés si Family / Kennel actif.",
-    "examplesTip": "Family et Kennel = abonnement annuel récurrent sur le compte (39 € ou 119 €), indépendamment du nombre d'animaux. Care+ et Horse s'ajoutent sans modifier le prix des plans.",
+    "examplesLead": "Les addons ne remplacent jamais l'abonnement animal. Chiffres TTC sur la base Annual 35 € — 1er payant plein tarif, suivants remisés si Family / Kennel actif. Les addons sont un paiement unique à vie (An 1 seulement).",
+    "examplesTip": "Family / Kennel / Care+ / Horse = paiement unique à vie sur le compte. Les années suivantes, seul le coût des abonnements animal reste.",
     "examplesCareHorseTitle": "Care+ et Horse — addons soins",
-    "examplesCareHorseLead": "Compléments compte, sans remise sur les abonnements animal.",
+    "examplesCareHorseLead": "Compléments compte en paiement unique à vie, sans remise sur les abonnements animal.",
     "examplesCareHorseBenefits": [
-      "Care+ 19 € / an : rappels médicaments et personnalisés pour tout le foyer",
-      "Horse 39 € / an : pack équine (maréchal, contacts, compétitions) si ≥ 1 cheval",
-      "Cumulables avec Family ou Kennel"
+      "Care+ 19 € une fois : rappels médicaments et personnalisés pour tout le foyer",
+      "Horse 39 € une fois : pack équine (maréchal, contacts, compétitions) si ≥ 1 cheval",
+      "Cumulables avec Family ou Kennel — valables à vie"
     ],
     "examples": {
       "withoutFamily2": {
@@ -1294,33 +1298,53 @@
       },
       "withFamily2": {
         "title": "Avec Family — 2 animaux",
-        "total": "105,50 € / an",
-        "breakdown": "35 + 31,50 + 39 (Family)",
+        "total": "An 1 : 105,50 € · Ensuite : 66,50 € / an",
+        "breakdown": "An 1 : 35 + 31,50 + 39 (Family une fois) · Ans suivants : 35 + 31,50",
         "benefits": [
           "1er animal : 35 € (plein tarif)",
           "2ᵉ animal : 31,50 € (−10 %)",
-          "Family 39 € : vue foyer + remise pour les suivants",
-          "Avantage principal : confort foyer, pas une économie dès 2"
+          "Family 39 € une fois à vie : vue foyer + remise pour les suivants",
+          "Dès l'An 2 : plus que 66,50 € / an d'abonnements animal"
         ]
       },
       "withFamily4": {
         "title": "Avec Family — 4 animaux",
-        "total": "168,50 € / an",
-        "breakdown": "35 + 3×31,50 + 39 (vs 140 € sans Family)",
+        "total": "An 1 : 168,50 € · Ensuite : 129,50 € / an",
+        "breakdown": "An 1 : 35 + 3×31,50 + 39 · Ans suivants : 35 + 3×31,50 (vs 140 € / an sans Family)",
         "benefits": [
           "1er : 35 € · 3 suivants : 31,50 € chacun",
-          "Family reste 39 € / an — pas de plafond",
+          "Family 39 € une fois — pas de plafond",
           "Chaque nouvel animal payant bénéficie du −10 %"
         ]
       },
       "kennel6": {
         "title": "Avec Kennel — 6 animaux",
-        "total": "302,75 € / an",
-        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "total": "An 1 : 302,75 € · Ensuite : 183,75 € / an",
+        "breakdown": "An 1 : 35 + 5×29,75 + 119 (Kennel une fois) · Ans suivants : 35 + 5×29,75",
         "benefits": [
           "1er : 35 € · 5 suivants : 29,75 € (−15 %)",
           "Encodage rapide, roster, tags portée",
           "Remplace Family s'il était actif (upgrade)"
+        ]
+      },
+      "withFamily2CarePlus": {
+        "title": "Family + Care+ — 2 animaux",
+        "total": "An 1 : 124,50 € · Ensuite : 66,50 € / an",
+        "breakdown": "An 1 : 35 + 31,50 + 39 (Family) + 19 (Care+) · Ans suivants : 66,50 € / an",
+        "benefits": [
+          "Remise Family −10 % sur le 2ᵉ animal",
+          "Care+ 19 € une fois : médicaments & rappels perso",
+          "Dès l'An 2 : uniquement les abonnements animal"
+        ]
+      },
+      "withFamilyHorse": {
+        "title": "Family + Horse — 2 animaux (dont 1 cheval)",
+        "total": "An 1 : 144,50 € · Ensuite : 66,50 € / an",
+        "breakdown": "An 1 : 35 + 31,50 + 39 (Family) + 39 (Horse) · Ans suivants : 66,50 € / an",
+        "benefits": [
+          "Family pour la vue foyer et la remise −10 %",
+          "Horse 39 € une fois : maréchal, copro, compétitions",
+          "Addons à vie — seuls les plans animal se renouvellent"
         ]
       }
     },
@@ -1343,23 +1367,23 @@
       },
       "family": {
         "name": "Family",
-        "price": "39 € / an",
-        "role": "Addon foyer dès 2 (−10 %, sans plafond, exclusif Kennel)"
+        "price": "39 €",
+        "role": "Addon foyer dès 2 (−10 %, sans plafond, exclusif Kennel) — paiement unique à vie"
       },
       "carePlus": {
         "name": "Care+",
-        "price": "19 € / an",
-        "role": "Addon soins / médicaments"
+        "price": "19 €",
+        "role": "Addon soins / médicaments — paiement unique à vie"
       },
       "horse": {
         "name": "Horse",
-        "price": "39 € / an",
-        "role": "Addon pack équine"
+        "price": "39 €",
+        "role": "Addon pack équine — paiement unique à vie"
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / an",
-        "role": "Addon élevage dès 6 (−15 %, exclusif Family)"
+        "price": "119 €",
+        "role": "Addon élevage dès 6 (−15 %, exclusif Family) — paiement unique à vie"
       }
     },
     "footer": "petsFollow — suivi prescrit par le vétérinaire, sans hardware"

@@ -106,6 +106,18 @@ func (s *Store) AssertKennelPurchaseEligible(ctx context.Context, ownerUserID st
 	return CheckKennelPurchasePetCount(n)
 }
 
+// AssertAddonNotAlreadyOwned blocks Care+ / Horse repurchase (lifetime one-time).
+func (s *Store) AssertAddonNotAlreadyOwned(ctx context.Context, ownerUserID, addonCode string) error {
+	ok, err := s.HasActiveOrPendingAddon(ctx, ownerUserID, addonCode)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return ErrAddonAlreadyActive
+	}
+	return nil
+}
+
 func (s *Store) hasPendingAddon(ctx context.Context, ownerUserID, addonCode string) (bool, error) {
 	var exists bool
 	err := s.pool.QueryRow(ctx, `

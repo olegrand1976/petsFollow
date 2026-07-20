@@ -194,7 +194,7 @@
         "preheader": "Herinneringen helpen u niets te vergeten.",
         "greeting": "Hallo {fullName},",
         "intro": "Een goede routine maakt het verschil: activeer meet- en zorgherinneringen (vaccin, ontworming, controle…). Uw dierenarts ziet de geschiedenis in het dossier.",
-        "detail": "Optie Care+ (€19 / jaar): medicatie en gepersonaliseerde herinneringen bij regelmatige behandeling.",
+        "detail": "Optie Care+ (€19, eenmalig voor het leven): medicatie en gepersonaliseerde herinneringen bij regelmatige behandeling.",
         "cta": "Herinneringen bekijken",
         "disclaimer": "Optionele add-ons beheert u in de app."
       },
@@ -234,36 +234,36 @@
         "preheader": "Regelmatige metingen helpen uw dierenarts.",
         "greeting": "Hallo {fullName},",
         "intro": "Al een maand! Regelmatige metingen verrijken het dossier van uw dier en helpen uw dierenarts tussen consultaties.",
-        "detail": "Meerdere dieren? De Family-optie (€39 / jaar) biedt een huishoudoverzicht en −10% vanaf het 2e dier (geen plafond). Exclusief met Kennel.",
+        "detail": "Meerdere dieren? De Family-optie (€39, eenmalig voor het leven) biedt een huishoudoverzicht en −10% vanaf het 2e dier (geen plafond). Exclusief met Kennel.",
         "cta": "Mijn dieren bekijken",
         "disclaimer": "Opties beheert u in de app-instellingen / abonnementen."
       },
       "d45_care_plus": {
         "subject": "Care+: medicatie & gepersonaliseerde herinneringen",
         "tagline": "Optie Care+",
-        "preheader": "€19 / jaar voor fijnere behandelingsopvolging.",
+        "preheader": "€19 eenmalig voor fijnere behandelingsopvolging.",
         "greeting": "Hallo {fullName},",
-        "intro": "Als uw dier een behandeling volgt, voegt Care+ (€19 / jaar) medicatie en gepersonaliseerde herinneringen toe — naast de standaard zorgherinneringen.",
+        "intro": "Als uw dier een behandeling volgt, voegt Care+ (€19, eenmalig voor het leven) medicatie en gepersonaliseerde herinneringen toe — naast de standaard zorgherinneringen.",
         "detail": "",
         "cta": "Care+ ontdekken",
-        "disclaimer": "Jaarlijkse recurrente optie, opzegbaar via het betalingsportaal."
+        "disclaimer": "Eenmalige aankoop voor het leven — één keer per account."
       },
       "d60_horse": {
         "subject": "Horse-pack: hoefsmid, mestonderzoek & wedstrijden",
         "tagline": "Optie Paard",
-        "preheader": "€39 / jaar voor aangepaste paardenopvolging.",
+        "preheader": "€39 eenmalig voor aangepaste paardenopvolging.",
         "greeting": "Hallo {fullName},",
-        "intro": "U volgt een paard: het Horse-pack (€39 / jaar) voegt herinneringen voor hoefsmid en mestonderzoek, professionele contacten en een wedstrijdkalender toe.",
+        "intro": "U volgt een paard: het Horse-pack (€39, eenmalig voor het leven) voegt herinneringen voor hoefsmid en mestonderzoek, professionele contacten en een wedstrijdkalender toe.",
         "detail": "",
         "cta": "Horse-pack ontdekken",
-        "disclaimer": "Jaarlijkse optie voor accounts met minstens één paard."
+        "disclaimer": "Eenmalige aankoop voor het leven — voor accounts met minstens één paard."
       },
       "d75_kennel": {
         "subject": "Kennel: snelle encoding voor fokkers",
         "tagline": "Optie Kennel",
-        "preheader": "€119 / jaar · −15% · vanaf 6 dieren.",
+        "preheader": "€119 eenmalig · −15% · vanaf 6 dieren.",
         "greeting": "Hallo {fullName},",
-        "intro": "Met 6+ dieren versnelt Kennel (€119 / jaar) de encoding (batch) en past −15% toe op dierenabonnementen. Exclusief met Family.",
+        "intro": "Met 6+ dieren versnelt Kennel (€119, eenmalig voor het leven) de encoding (batch) en past −15% toe op dierenabonnementen. Exclusief met Family.",
         "detail": "",
         "cta": "Kennel ontdekken",
         "disclaimer": "Kennel vervangt Family (upgrade)."
@@ -274,7 +274,7 @@
         "preheader": "Uw historiek ondersteunt de voorgeschreven opvolging.",
         "greeting": "Hallo {fullName},",
         "intro": "Drie maanden data: tijdlijn, berichten en metingen vormen een nuttig dossier tussen consultaties.",
-        "detail": "Met 2–5 dieren vereenvoudigt Family (€39 / jaar) het huishoudoverzicht (−10%). Exclusief met Kennel.",
+        "detail": "Met 2–5 dieren vereenvoudigt Family (€39, eenmalig voor het leven) het huishoudoverzicht (−10%). Exclusief met Kennel.",
         "cta": "Tijdlijn openen",
         "disclaimer": "Volg de richtlijnen van uw dierenarts."
       },
@@ -381,9 +381,9 @@
     "annual_onetime_summary": "35 € voor 1 jaar, eenmalige betaling",
     "triennial_onetime_summary": "95 € voor 3 jaar, eenmalige betaling",
     "quinquennial_onetime_summary": "145 € voor 5 jaar, eenmalige betaling",
-    "addon_family_label": "Optie Familie — 39 € / jaar",
-    "addon_care_plus_label": "Optie Care+ — 19 € / jaar",
-    "addon_horse_label": "Optie Paard — 39 € / jaar",
-    "addon_kennel_label": "Optie Kennel — 119 € / jaar"
+    "addon_family_label": "Optie Familie — 39 € (eenmalig)",
+    "addon_care_plus_label": "Optie Care+ — 19 € (eenmalig)",
+    "addon_horse_label": "Optie Paard — 39 € (eenmalig)",
+    "addon_kennel_label": "Optie Kennel — 119 € (eenmalig)"
   }
 }

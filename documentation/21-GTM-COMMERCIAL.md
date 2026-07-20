@@ -12,7 +12,7 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 1. Onboard véto (profil cabinet complet)
 2. Pitch triennial (~2,6 €/mois · ~9,4 € commission chacun @ plafond)
 3. 10 clients prescrits / 30 j
-4. Family / Kennel / Care+ / Horse = **abos annuels récurrents** ; Family dès 2 (−10 %, pas de plafond) ; Kennel dès 6 (−15 %, encodage) — **exclusifs** (Kennel = upgrade Family)
+4. Family / Kennel / Care+ / Horse = **paiement unique à vie** ; Family dès 2 (−10 %, pas de plafond) ; Kennel dès 6 (−15 %, encodage) — **exclusifs** (Kennel = upgrade Family)
 5. Care+ après usage rappels
 
 ## Scripts courts

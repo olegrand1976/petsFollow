@@ -40,7 +40,7 @@
       "registerLink": "Gratis registreren",
       "forgotLink": "Wachtwoord vergeten?",
       "or": "of",
-      "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / admin)",
+      "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / salesmanager / admin)",
       "invalidResponse": "Ongeldig authenticatie-antwoord"
     },
     "forgot": {
@@ -917,14 +917,14 @@
         "text": "Annual, Triennial (aanbevolen) of Quinquennial — metingen 15/30/60 s, berichten, timeline en herinneringen."
       },
       "family": {
-        "price": "€39 · €119 / jaar",
+        "price": "39 € · 119 € (eenmalig)",
         "title": "Family en Kennel",
-        "text": "Family vanaf 2 (−10% vanaf 2e betalend, geen plafond). Kennel vanaf 6 (−15%, snelle encoding). Bv. 2× Annual + Family: 105,50 € / jaar."
+        "text": "Family vanaf 2 (−10% vanaf het 2e betalende dier, geen plafond). Kennel vanaf 6 (−15%, snelle encoding). Eenmalig voor het leven. Bv. Jaar 1: 2× Annual + Family = 105,50 € · daarna 66,50 € / jaar."
       },
       "careHorse": {
-        "price": "€19 · €39",
+        "price": "19 € · 39 € (eenmalig)",
         "title": "Care+ en Horse",
-        "text": "Care+ voor medicatie en persoonlijke herinneringen; Horse voor paardenopvolging (hoefsmid, contacten, wedstrijden)."
+        "text": "Care+ voor medicatie en persoonlijke herinneringen; Horse voor paardenopvolging — eenmalig voor het leven, cumuleerbaar met Family / Kennel."
       }
     },
     "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
@@ -988,68 +988,72 @@
       }
     },
     "addonsTitle": "Huishoudopties (eigenaarsaccount)",
-    "addonsLead": "Add-ons komen bovenop dierabonnementen (ze vervangen ze nooit). Jaarlijks terugkerend abonnement per account — voordelen voor het hele huishouden.",
-    "addonsTip": "Family / Kennel: 1e betalend dier volle prijs, korting vanaf het 2e betalende dier (−10% / −15%). Family en Kennel zijn exclusief (Kennel = upgrade). Horse alleen met ≥ 1 paard.",
+    "addonsLead": "Add-ons komen bovenop dierabonnementen (ze vervangen ze nooit). Eenmalige aankoop voor het leven per account — voordelen voor het hele huishouden.",
+    "addonsTip": "Family / Kennel: 1e betalend dier volle prijs, korting vanaf het 2e (−10% / −15%). Family en Kennel zijn exclusief (Kennel = upgrade). Horse alleen met ≥ 1 paard. Add-ons = één aankoop, geldig voor het leven.",
     "addons": {
       "family": {
         "name": "Family",
-        "price": "39 € / jaar",
-        "tagline": "Huishouden vanaf 2 dieren, −10% op plannen",
+        "price": "39 €",
+        "tagline": "Huishoudpakket — vanaf 2 dieren, −10% korting",
         "scope": "Account",
         "benefits": [
-          "Gezinsweergave: aankomende herinneringen van alle dieren",
-          "−10% op elk dierabonnement vanaf het 2e betalende dier (1e = volle prijs)",
-          "Geen plafond — Family blijft 39 € / jaar ongeacht het aantal",
-          "Bv. 2× Annual: 35 + 31,50 + 39 = 105,50 € / jaar",
-          "Exclusief met Kennel — vanaf 6 dieren, Kennel-upgrade aanbevolen"
+          "Eenmalig voor het leven — geen verlenging",
+          "Huishoudoverzicht: komende herinneringen van alle dieren",
+          "−10% op elk dierenabonnement vanaf het 2e betalende dier (1e = volle prijs)",
+          "Geen plafond — Family blijft 39 € eenmalig",
+          "Bv. Jaar 1 (2× Annual): 35 + 31,50 + 39 = 105,50 € · Volgende jaren: 66,50 € / jaar",
+          "Exclusief met Kennel — vanaf 6 dieren Kennel-upgrade aanbevolen"
         ]
       },
       "carePlus": {
         "name": "Care+",
-        "price": "€19 / jaar",
-        "tagline": "Uitgebreid zorgboek",
+        "price": "19 €",
+        "tagline": "Verrijkt zorgboekje",
         "scope": "Account",
         "benefits": [
+          "Eenmalig voor het leven",
           "Medicatieherinneringen voor het hele huishouden",
-          "Persoonlijke herinneringen",
-          "Bovenop dierplannen — geen korting op plannen",
-          "Bv. huishouden met 2 dieren: +19 € / jaar op het account"
+          "Gepersonaliseerde herinneringen",
+          "Bovenop dierenabonnementen — geen plankorting",
+          "Bv. huishouden 2 dieren + Family: +19 € eenmalig"
         ]
       },
       "horse": {
         "name": "Horse",
-        "price": "€39 / jaar",
-        "tagline": "Paardenpakket",
+        "price": "39 €",
+        "tagline": "Paardenpack",
         "scope": "Account",
         "benefits": [
+          "Eenmalig voor het leven",
           "Herinneringen hoefsmid en mestonderzoek",
-          "Hoefsmitlogboek + pro-contacten + wedstrijden",
-          "Bovenop dierplannen — geen korting op plannen",
-          "Enkel als het huishouden ≥ 1 paard heeft"
+          "Hoefsmidlog + pro-contacten + wedstrijden",
+          "Bovenop dierenabonnementen — geen plankorting",
+          "Alleen als het huishouden ≥ 1 paard heeft"
         ]
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / jaar",
+        "price": "119 €",
         "tagline": "Fokkerij / bestand vanaf 6 dieren",
         "scope": "Account",
         "benefits": [
-          "Snelle multi-dier encoding, roster, nest-tags, export",
-          "−15% op elk dierabonnement vanaf het 2e betalende dier",
-          "Bv. 6× Annual: 35 + 5×29,75 + 119 = 302,75 € / jaar",
-          "Exclusief met Family (Kennel-aankoop = upgrade, Family geannuleerd)"
+          "Eenmalig voor het leven — geen verlenging",
+          "Snelle multi-dier encoding, rooster, nesttags, export",
+          "−15% op elk dierenabonnement vanaf het 2e betalende dier",
+          "Bv. Jaar 1 (6× Annual): 35 + 5×29,75 + 119 = 302,75 € · Volgende jaren: 183,75 € / jaar",
+          "Exclusief met Family (Kennel = upgrade, Family geannuleerd)"
         ]
       }
     },
     "examplesTitle": "Concrete voorbeelden (Annual-plan)",
-    "examplesLead": "Add-ons vervangen nooit een dierabonnement. Bedragen incl. btw op basis van Annual 35 € — 1e betalend dier volle prijs, volgende met korting als Family / Kennel actief is.",
-    "examplesTip": "Family en Kennel = jaarlijks terugkerend accountabonnement (39 € of 119 €), ongeacht het aantal dieren. Care+ en Horse komen erbij zonder de planprijzen te wijzigen.",
+    "examplesLead": "Add-ons vervangen nooit het dierenabonnement. Bedragen incl. btw op basis van Annual 35 € — 1e betalend dier volle prijs, volgende met korting als Family / Kennel actief is. Add-ons zijn een eenmalige aankoop voor het leven (alleen Jaar 1).",
+    "examplesTip": "Family / Kennel / Care+ / Horse = eenmalig voor het leven op het account. In volgende jaren blijven alleen de dierenabonnementen over.",
     "examplesCareHorseTitle": "Care+ en Horse — zorg-add-ons",
-    "examplesCareHorseLead": "Account-add-ons, zonder korting op dierabonnementen.",
+    "examplesCareHorseLead": "Accountaanvullingen als eenmalige aankoop voor het leven, zonder korting op dierenabonnementen.",
     "examplesCareHorseBenefits": [
-      "Care+ 19 € / jaar: medicatie- en persoonlijke herinneringen voor het huishouden",
-      "Horse 39 € / jaar: paardenpakket (hoefsmid, contacten, wedstrijden) bij ≥ 1 paard",
-      "Combineerbaar met Family of Kennel"
+      "Care+ 19 € eenmalig: medicatie- en persoonlijke herinneringen voor het hele huishouden",
+      "Horse 39 € eenmalig: paardenpack (hoefsmid, contacten, wedstrijden) bij ≥ 1 paard",
+      "Cumuleerbaar met Family of Kennel — geldig voor het leven"
     ],
     "examples": {
       "withoutFamily2": {
@@ -1058,39 +1062,59 @@
         "breakdown": "35 + 35 (2× Annual volle prijs)",
         "benefits": [
           "Elk dier heeft een eigen abonnement",
-          "Geen gezamenlijke gezinsweergave",
-          "Geen multi-dierkorting"
+          "Geen unified huishoudoverzicht",
+          "Geen multi-dier korting"
         ]
       },
       "withFamily2": {
         "title": "Met Family — 2 dieren",
-        "total": "105,50 € / jaar",
-        "breakdown": "35 + 31,50 + 39 (Family)",
+        "total": "Jaar 1: 105,50 € · Daarna: 66,50 € / jaar",
+        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family eenmalig) · Volgende jaren: 35 + 31,50",
         "benefits": [
           "1e dier: 35 € (volle prijs)",
           "2e dier: 31,50 € (−10%)",
-          "Family 39 €: gezinsweergave + korting op volgende",
-          "Voordeel: comfort in het huishouden, geen besparing vanaf 2"
+          "Family 39 € eenmalig voor het leven",
+          "Vanaf Jaar 2: nog 66,50 € / jaar aan dierenabonnementen"
         ]
       },
       "withFamily4": {
         "title": "Met Family — 4 dieren",
-        "total": "168,50 € / jaar",
-        "breakdown": "35 + 3×31,50 + 39 (vs 140 € zonder Family)",
+        "total": "Jaar 1: 168,50 € · Daarna: 129,50 € / jaar",
+        "breakdown": "Jaar 1: 35 + 3×31,50 + 39 · Volgende jaren: 35 + 3×31,50 (vs 140 € / jaar zonder Family)",
         "benefits": [
-          "1e: 35 € · volgende 3: 31,50 € elk",
-          "Family blijft 39 € / jaar — geen plafond",
+          "1e: 35 € · 3 volgende: 31,50 € elk",
+          "Family 39 € eenmalig — geen plafond",
           "Elk nieuw betalend dier krijgt −10%"
         ]
       },
       "kennel6": {
         "title": "Met Kennel — 6 dieren",
-        "total": "302,75 € / jaar",
-        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "total": "Jaar 1: 302,75 € · Daarna: 183,75 € / jaar",
+        "breakdown": "Jaar 1: 35 + 5×29,75 + 119 (Kennel eenmalig) · Volgende jaren: 35 + 5×29,75",
         "benefits": [
-          "1e: 35 € · volgende 5: 29,75 € (−15%)",
-          "Snelle encoding, roster, nest-tags",
+          "1e: 35 € · 5 volgende: 29,75 € (−15%)",
+          "Snelle encoding, rooster, nesttags",
           "Vervangt Family indien actief (upgrade)"
+        ]
+      },
+      "withFamily2CarePlus": {
+        "title": "Family + Care+ — 2 dieren",
+        "total": "Jaar 1: 124,50 € · Daarna: 66,50 € / jaar",
+        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family) + 19 (Care+) · Volgende jaren: 66,50 € / jaar",
+        "benefits": [
+          "Family −10% op het 2e dier",
+          "Care+ 19 € eenmalig: medicatie & persoonlijke herinneringen",
+          "Vanaf Jaar 2: alleen dierenabonnementen"
+        ]
+      },
+      "withFamilyHorse": {
+        "title": "Family + Horse — 2 dieren (waarvan 1 paard)",
+        "total": "Jaar 1: 144,50 € · Daarna: 66,50 € / jaar",
+        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family) + 39 (Horse) · Volgende jaren: 66,50 € / jaar",
+        "benefits": [
+          "Family voor huishoudoverzicht en −10%",
+          "Horse 39 € eenmalig: hoefsmid, mestonderzoek, wedstrijden",
+          "Add-ons voor het leven — alleen dierenabonnementen vernieuwen"
         ]
       }
     },
@@ -1113,23 +1137,23 @@
       },
       "family": {
         "name": "Family",
-        "price": "39 € / jaar",
-        "role": "Huishoud-addon vanaf 2 (−10%, geen plafond, exclusief Kennel)"
+        "price": "39 €",
+        "role": "Huishoud-addon vanaf 2 (−10%, geen plafond, exclusief Kennel) — eenmalig voor het leven"
       },
       "carePlus": {
         "name": "Care+",
-        "price": "€19 / jaar",
-        "role": "Addon zorg / medicatie"
+        "price": "19 €",
+        "role": "Zorg-/medicatie-addon — eenmalig voor het leven"
       },
       "horse": {
         "name": "Horse",
-        "price": "€39 / jaar",
-        "role": "Addon paardenpakket"
+        "price": "39 €",
+        "role": "Paardenpack-addon — eenmalig voor het leven"
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / jaar",
-        "role": "Kennel-addon vanaf 6 (−15%, exclusief Family)"
+        "price": "119 €",
+        "role": "Kennel-addon vanaf 6 (−15%, exclusief Family) — eenmalig voor het leven"
       }
     },
     "footer": "petsFollow — voorgeschreven door de dierenarts, zonder hardware"

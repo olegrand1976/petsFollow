@@ -194,7 +194,7 @@
         "preheader": "Reminders help you stay on track.",
         "greeting": "Hello {fullName},",
         "intro": "A good routine makes the difference: enable reading and care reminders (vaccine, deworming, check-up…). Your vet sees the history in the record.",
-        "detail": "Care+ option (€19 / year): medications and custom reminders if your pet has regular treatment.",
+        "detail": "Care+ option (€19, lifetime one-time): medications and custom reminders if your pet has regular treatment.",
         "cta": "View reminders",
         "disclaimer": "Optional add-ons are managed in the app."
       },
@@ -234,36 +234,36 @@
         "preheader": "Regular readings help your vet.",
         "greeting": "Hello {fullName},",
         "intro": "One month already! Regular readings enrich your pet's record and help your vet between visits.",
-        "detail": "Several pets? The Family option (€39 / year) gives a household view and −10% from the 2nd pet (no cap). Exclusive with Kennel.",
+        "detail": "Several pets? The Family option (€39, lifetime one-time) gives a household view and −10% from the 2nd pet (no cap). Exclusive with Kennel.",
         "cta": "View my pets",
         "disclaimer": "Options are managed in the app settings / subscriptions."
       },
       "d45_care_plus": {
         "subject": "Care+: medications & custom reminders",
         "tagline": "Care+ option",
-        "preheader": "€19 / year for finer treatment follow-up.",
+        "preheader": "€19 once for finer treatment follow-up.",
         "greeting": "Hello {fullName},",
-        "intro": "If your pet is on treatment, Care+ (€19 / year) adds medications and custom reminders in the app — on top of standard care reminders.",
+        "intro": "If your pet is on treatment, Care+ (€19, lifetime one-time) adds medications and custom reminders in the app — on top of standard care reminders.",
         "detail": "",
         "cta": "Discover Care+",
-        "disclaimer": "Annual recurring option, cancellable from the payment portal."
+        "disclaimer": "Lifetime one-time purchase — once per account."
       },
       "d60_horse": {
         "subject": "Horse pack: farrier, fecal & competitions",
         "tagline": "Horse option",
-        "preheader": "€39 / year for tailored equine follow-up.",
+        "preheader": "€39 once for tailored equine follow-up.",
         "greeting": "Hello {fullName},",
-        "intro": "You care for a horse: the Horse pack (€39 / year) adds farrier and fecal reminders, professional contacts and a competition calendar.",
+        "intro": "You care for a horse: the Horse pack (€39, lifetime one-time) adds farrier and fecal reminders, professional contacts and a competition calendar.",
         "detail": "",
         "cta": "Discover the Horse pack",
-        "disclaimer": "Annual option for accounts with at least one horse."
+        "disclaimer": "Lifetime one-time purchase — for accounts with at least one horse."
       },
       "d75_kennel": {
         "subject": "Kennel: fast encoding for breeders",
         "tagline": "Kennel option",
-        "preheader": "€119 / year · −15% · from 6 pets.",
+        "preheader": "€119 once · −15% · from 6 pets.",
         "greeting": "Hello {fullName},",
-        "intro": "With 6+ pets, Kennel (€119 / year) speeds up encoding (batch entry) and applies −15% on pet plans. Exclusive with Family.",
+        "intro": "With 6+ pets, Kennel (€119, lifetime one-time) speeds up encoding (batch entry) and applies −15% on pet plans. Exclusive with Family.",
         "detail": "",
         "cta": "Discover Kennel",
         "disclaimer": "Kennel replaces Family (upgrade)."
@@ -274,7 +274,7 @@
         "preheader": "Your history supports prescribed follow-up.",
         "greeting": "Hello {fullName},",
         "intro": "Three months of data: timeline, messages and readings form a useful record between visits.",
-        "detail": "With 2–5 pets, Family (€39 / year) simplifies the household view (−10%). Exclusive with Kennel.",
+        "detail": "With 2–5 pets, Family (€39, lifetime one-time) simplifies the household view (−10%). Exclusive with Kennel.",
         "cta": "Open the timeline",
         "disclaimer": "Keep following your vet's guidance."
       },
@@ -381,9 +381,9 @@
     "annual_onetime_summary": "€35 for 1 year, one-time payment",
     "triennial_onetime_summary": "€95 for 3 years, one-time payment",
     "quinquennial_onetime_summary": "€145 for 5 years, one-time payment",
-    "addon_family_label": "Family add-on — €39 / year",
-    "addon_care_plus_label": "Care+ add-on — €19 / year",
-    "addon_horse_label": "Horse add-on — €39 / year",
-    "addon_kennel_label": "Kennel add-on — €119 / year"
+    "addon_family_label": "Family add-on — €39 (one-time)",
+    "addon_care_plus_label": "Care+ add-on — €19 (one-time)",
+    "addon_horse_label": "Horse add-on — €39 (one-time)",
+    "addon_kennel_label": "Kennel add-on — €119 (one-time)"
   }
 }

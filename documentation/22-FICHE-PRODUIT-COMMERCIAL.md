@@ -37,12 +37,12 @@ Prix **TTC** client. Steer = **triennial**.
 | **Triennial** | **95 € / 3 ans** | **2,6 €** | **Recommandé** |
 | Quinquennial | 145 € / 5 ans | 2,4 € | Engagement long |
 
-| Addon (abo annuel récurrent) | Prix TTC | Pitch |
+| Addon (paiement unique à vie) | Prix TTC | Pitch |
 |-------|----------|-------|
-| Family | **39 € / an** | Dès 2 animaux ; vue foyer ; **−10 %** sur abos suivants ; pas de plafond |
-| Kennel | **119 € / an** | Dès 6 animaux ; encodage rapide ; **−15 %** ; **exclusif** Family (upgrade) |
-| Care+ | **19 € / an** | Médicaments / rappels perso |
-| Horse | **39 € / an** | Pack équine (si ≥1 cheval) |
+| Family | **39 €** | Dès 2 animaux ; vue foyer ; **−10 %** sur abos suivants ; pas de plafond |
+| Kennel | **119 €** | Dès 6 animaux ; encodage rapide ; **−15 %** ; **exclusif** Family (upgrade) |
+| Care+ | **19 €** | Médicaments / rappels perso |
+| Horse | **39 €** | Pack équine (si ≥1 cheval) |
 
 Détail économique → [17](17-POLITIQUE-TARIFAIRE.md).
 

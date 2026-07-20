@@ -1,7 +1,7 @@
 # Stripe billing — petsFollow
 
 Abonnement **par animal** via Stripe Checkout (paiement unique ou abonnement auto-renouvelé).  
-Addons foyer (Family / Kennel / Care+ / Horse) : **abonnement annuel récurrent** uniquement.
+Addons foyer (Family / Kennel / Care+ / Horse) : **paiement unique à vie** (`Checkout` `payment`, `valid_until` NULL).
 
 ## Offres
 
@@ -66,7 +66,7 @@ Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 ### 1. Dashboard Stripe (mode Live)
 
 - [ ] Activer le compte Stripe en mode **Live**
-- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **4 Prices addons récurrents** `year`×1 (Family / Kennel / Care+ / Horse)
+- [ ] Créer **5 Prices** abos (annual / triennial × one_time+sub · quinquennial **one_time only**) + **4 Prices addons one-time** (Family / Kennel / Care+ / Horse)
 - [ ] Noter chaque `price_…` ID pour les variables `STRIPE_PRICE_*`
 - [ ] Activer le **Customer Portal** (Settings → Billing → Customer portal) pour la gestion d'abonnement Flutter
 
@@ -124,24 +124,25 @@ Par défaut, `infra/gcp/lib/deploy-run-args.sh` utilise `BILLING_MOCK_ENABLED="$
 
 | Pack | Code | Prix | Scope |
 |------|------|------|-------|
-| **Family pack** | `family` | 39 € / an | owner (≥2 animaux ; vue foyer ; remise plans **−10 %**) |
-| **Kennel pack** | `kennel` | 119 € / an | owner (≥6 animaux ; batch / `litter_tag` ; remise plans **−15 %**) |
-| **Care+** | `care_plus` | 19 € / an | owner (médicaments / rappels perso ; export & emails = roadmap) |
-| **Horse pack** | `horse` | 39 € / an | owner (pets `horse` : maréchal, contacts, compétitions) |
+| **Family pack** | `family` | 39 € (une fois) | owner (≥2 animaux ; vue foyer ; remise plans **−10 %**) |
+| **Kennel pack** | `kennel` | 119 € (une fois) | owner (≥6 animaux ; batch / `litter_tag` ; remise plans **−15 %**) |
+| **Care+** | `care_plus` | 19 € (une fois) | owner (médicaments / rappels perso ; export & emails = roadmap) |
+| **Horse pack** | `horse` | 39 € (une fois) | owner (pets `horse` : maréchal, contacts, compétitions) |
 
-Mode Stripe : Checkout **`subscription`** (`year`×1) pour les 4 addons. Renouvellement via `invoice.paid` (étend `valid_until`) ; échec → `past_due` (privileges maintenus) ; cancel → `cancelled`.  
-Colonne `billing.addon_entitlements.stripe_subscription_id` (migration `000023`).
+Mode Stripe : Checkout **`payment`** (one-time) pour les 4 addons. Activation → `valid_until` **NULL** (à vie). Pas de renouvellement.  
+Colonne `billing.addon_entitlements.stripe_subscription_id` (migration `000023`) : **legacy** uniquement (anciens abos yearly) ; handlers `invoice.paid` / `subscription.*` restent pour ces lignes.
 
 Cycle de vie :
-- Reject post-paiement (éligibilité Family/Kennel) → cancel Stripe sub + entitlement DB
-- Upgrade Kennel → cancel immédiat sub Family + deactivate DB (pas de revive via `invoice.paid` si `cancelled`)
-- Entitlements one-shot historiques : expirent à `valid_until` ; nouveaux achats = sub
+- Reject post-paiement (éligibilité Family/Kennel/Care+/Horse déjà actif) → entitlement DB cancelled (+ cancel Stripe sub si legacy `subID`)
+- Upgrade Kennel → deactivate Family DB (+ cancel sub Family legacy si présent)
+- Nouveaux achats : `payment` + lifetime ; anti-rachet si addon déjà actif/pending
+- **Ops migration** : pour clients encore en sub addon, cancel Stripe sub + `UPDATE valid_until = NULL` (manuelle)
 
-API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhooks : `checkout.session.completed` (`metadata.kind=addon` + `subscription_data.metadata`) · `invoice.paid` / `payment_failed` · `customer.subscription.updated` / `deleted`.
+API : `GET /billing/addons`, `POST /billing/addons/checkout`, `GET /billing/my-addons` (client). Webhooks : `checkout.session.completed` (`metadata.kind=addon`) · legacy `invoice.paid` / `payment_failed` / `customer.subscription.*` si `stripe_subscription_id` non vide.
 
-Variables Stripe : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_KENNEL`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE` (Prices **récurrents** yearly).
+Variables Stripe : `STRIPE_PRICE_ADDON_FAMILY`, `STRIPE_PRICE_ADDON_KENNEL`, `STRIPE_PRICE_ADDON_CARE_PLUS`, `STRIPE_PRICE_ADDON_HORSE` (Prices **one-time**).
 
-Customer Portal : activer l’annulation des abonnements (gestion addons + pets).
+Customer Portal : surtout pour les abonnements animal (les addons one-time n’ont plus de sub à gérer).
 
 Commissions (assiette **HTVA du montant payé**, TVA BE 21 % ; Prices Stripe = **TTC**) :
 
@@ -171,4 +172,4 @@ Après bascule tarifaire, recréer les Prices Live/Test et mettre à jour les se
 | `petsfollow-stripe-price-addon-care-plus` | `STRIPE_PRICE_ADDON_CARE_PLUS` |
 | `petsfollow-stripe-price-addon-horse` | `STRIPE_PRICE_ADDON_HORSE` |
 
-Montants attendus : 35 / 95 / 145 € (abos) ; 39 / 119 / 19 / 39 € **/ an récurrents** (addons Family / Kennel / Care+ / Horse).
+Montants attendus : 35 / 95 / 145 € (abos) ; 39 / 119 / 19 / 39 € **one-time** (addons Family / Kennel / Care+ / Horse).

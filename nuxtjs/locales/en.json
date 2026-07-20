@@ -40,7 +40,7 @@
       "registerLink": "Sign up for free",
       "forgotLink": "Forgot password?",
       "or": "or",
-      "proOnly": "Access reserved for Pro profiles (vet / sales / admin)",
+      "proOnly": "Access reserved for Pro profiles (vet / sales / sales manager / admin)",
       "invalidResponse": "Invalid authentication response"
     },
     "forgot": {
@@ -917,14 +917,14 @@
         "text": "Annual, Triennial (recommended) or Quinquennial — 15/30/60 s checks, messaging, timeline and reminders."
       },
       "family": {
-        "price": "€39 · €119 / year",
+        "price": "€39 · €119 (one-time)",
         "title": "Family and Kennel",
-        "text": "Family from 2 (−10% from the 2nd paying pet, no cap). Kennel from 6 (−15%, quick encode). Ex. 2× Annual + Family: €105.50 / year."
+        "text": "Family from 2 (−10% from the 2nd paid pet, no cap). Kennel from 6 (−15%, fast encoding). Lifetime one-time purchase. E.g. Year 1: 2× Annual + Family = €105.50 · then €66.50 / year."
       },
       "careHorse": {
-        "price": "€19 · €39",
+        "price": "€19 · €39 (one-time)",
         "title": "Care+ and Horse",
-        "text": "Care+ for medication and custom reminders; Horse for equine follow-up (farrier, contacts, competitions)."
+        "text": "Care+ for meds and custom reminders; Horse for equine follow-up — lifetime one-time, stackable with Family / Kennel."
       }
     },
     "footer": "© {year} petsFollow — Veterinary cardiac monitoring"
@@ -988,41 +988,44 @@
       }
     },
     "addonsTitle": "Household options (owner account)",
-    "addonsLead": "Addons stack on top of pet subscriptions (they never replace them). Annual recurring subscription per account — benefits shared across the household.",
-    "addonsTip": "Family / Kennel mechanics: 1st paying pet at full price, discount from the 2nd paying pet (−10% / −15%). Family and Kennel are exclusive (Kennel = upgrade). Horse only if the household has ≥ 1 horse.",
+    "addonsLead": "Add-ons sit on top of pet plans (they never replace them). Lifetime one-time purchase per account — benefits shared across the household.",
+    "addonsTip": "Family / Kennel mechanics: 1st paid pet at full price, discount from the 2nd (−10% / −15%). Family and Kennel are exclusive (Kennel = upgrade). Horse only if the household has ≥ 1 horse. Add-ons = one purchase, valid for life.",
     "addons": {
       "family": {
         "name": "Family",
-        "price": "€39 / year",
-        "tagline": "Household pack — from 2 pets, −10% on plans",
+        "price": "€39",
+        "tagline": "Household pack — from 2 pets, −10% discount",
         "scope": "Account",
         "benefits": [
-          "Household upcoming-care view for all pets",
-          "−10% on each pet plan from the 2nd paying pet (1st = full price)",
-          "No pet cap — Family stays €39 / year whatever the count",
-          "Ex. 2× Annual: 35 + 31.50 + 39 = €105.50 / year",
+          "Lifetime one-time purchase — no renewal",
+          "Household view: upcoming reminders for all pets",
+          "−10% on each pet plan from the 2nd paid pet (1st = full price)",
+          "No pet cap — Family stays €39 once",
+          "E.g. Year 1 (2× Annual): 35 + 31.50 + 39 = €105.50 · Following years: €66.50 / year",
           "Exclusive with Kennel — from 6 pets, Kennel upgrade recommended"
         ]
       },
       "carePlus": {
         "name": "Care+",
-        "price": "€19 / year",
-        "tagline": "Enriched care book",
+        "price": "€19",
+        "tagline": "Enriched care log",
         "scope": "Account",
         "benefits": [
+          "Lifetime one-time purchase",
           "Medication reminders for the whole household",
           "Custom reminders",
           "On top of pet plans — no plan discount",
-          "Ex. 2-pet household: +€19 / year on the account"
+          "E.g. 2-pet household + Family: +€19 once on the account"
         ]
       },
       "horse": {
         "name": "Horse",
-        "price": "€39 / year",
+        "price": "€39",
         "tagline": "Equine pack",
         "scope": "Account",
         "benefits": [
-          "Farrier and fecal-egg reminders",
+          "Lifetime one-time purchase",
+          "Farrier and fecal reminders",
           "Farrier log + pro contacts + competitions",
           "On top of pet plans — no plan discount",
           "Offered only if the household has ≥ 1 horse"
@@ -1030,26 +1033,27 @@
       },
       "kennel": {
         "name": "Kennel",
-        "price": "€119 / year",
+        "price": "€119",
         "tagline": "Breeding / roster from 6 pets",
         "scope": "Account",
         "benefits": [
-          "Quick multi-pet encode, roster, litter tags, export",
-          "−15% on each pet plan from the 2nd paying pet",
-          "Ex. 6× Annual: 35 + 5×29.75 + 119 = €302.75 / year",
+          "Lifetime one-time purchase — no renewal",
+          "Fast multi-pet encoding, roster, litter tags, export",
+          "−15% on each pet plan from the 2nd paid pet",
+          "E.g. Year 1 (6× Annual): 35 + 5×29.75 + 119 = €302.75 · Following years: €183.75 / year",
           "Exclusive with Family (Kennel purchase = upgrade, Family cancelled)"
         ]
       }
     },
     "examplesTitle": "Concrete examples (Annual plan)",
-    "examplesLead": "Addons never replace a pet subscription. TTC figures based on Annual €35 — 1st paying pet full price, later pets discounted if Family / Kennel is active.",
-    "examplesTip": "Family and Kennel = annual recurring account subscription (€39 or €119), independent of pet count. Care+ and Horse stack without changing plan prices.",
-    "examplesCareHorseTitle": "Care+ and Horse — care addons",
-    "examplesCareHorseLead": "Account add-ons, with no discount on pet subscriptions.",
+    "examplesLead": "Add-ons never replace the pet subscription. Figures incl. VAT based on Annual €35 — 1st paid pet full price, following pets discounted if Family / Kennel is active. Add-ons are a lifetime one-time payment (Year 1 only).",
+    "examplesTip": "Family / Kennel / Care+ / Horse = lifetime one-time on the account. In following years, only pet plan costs remain.",
+    "examplesCareHorseTitle": "Care+ and Horse — care add-ons",
+    "examplesCareHorseLead": "Account complements as a lifetime one-time purchase, with no discount on pet plans.",
     "examplesCareHorseBenefits": [
-      "Care+ €19 / year: medication and custom reminders for the household",
-      "Horse €39 / year: equine pack (farrier, contacts, competitions) if ≥ 1 horse",
-      "Stackable with Family or Kennel"
+      "Care+ €19 once: medication and custom reminders for the whole household",
+      "Horse €39 once: equine pack (farrier, contacts, competitions) if ≥ 1 horse",
+      "Stackable with Family or Kennel — valid for life"
     ],
     "examples": {
       "withoutFamily2": {
@@ -1057,40 +1061,60 @@
         "total": "€70 / year",
         "breakdown": "35 + 35 (2× Annual full price)",
         "benefits": [
-          "Each pet has its own subscription",
-          "No unified household care view",
+          "Each pet has its own plan",
+          "No unified household view",
           "No multi-pet discount"
         ]
       },
       "withFamily2": {
         "title": "With Family — 2 pets",
-        "total": "€105.50 / year",
-        "breakdown": "35 + 31.50 + 39 (Family)",
+        "total": "Year 1: €105.50 · Then: €66.50 / year",
+        "breakdown": "Year 1: 35 + 31.50 + 39 (Family once) · Following years: 35 + 31.50",
         "benefits": [
           "1st pet: €35 (full price)",
           "2nd pet: €31.50 (−10%)",
-          "Family €39: household view + discount on later pets",
-          "Main benefit: household comfort, not savings from 2 pets"
+          "Family €39 once for life: household view + discount for following pets",
+          "From Year 2: only €66.50 / year in pet plans"
         ]
       },
       "withFamily4": {
         "title": "With Family — 4 pets",
-        "total": "€168.50 / year",
-        "breakdown": "35 + 3×31.50 + 39 (vs €140 without Family)",
+        "total": "Year 1: €168.50 · Then: €129.50 / year",
+        "breakdown": "Year 1: 35 + 3×31.50 + 39 · Following years: 35 + 3×31.50 (vs €140 / year without Family)",
         "benefits": [
           "1st: €35 · next 3: €31.50 each",
-          "Family stays €39 / year — no pet cap",
-          "Every new paying pet gets −10%"
+          "Family €39 once — no cap",
+          "Each new paid pet gets −10%"
         ]
       },
       "kennel6": {
         "title": "With Kennel — 6 pets",
-        "total": "€302.75 / year",
-        "breakdown": "35 + 5×29.75 + 119 (Kennel)",
+        "total": "Year 1: €302.75 · Then: €183.75 / year",
+        "breakdown": "Year 1: 35 + 5×29.75 + 119 (Kennel once) · Following years: 35 + 5×29.75",
         "benefits": [
           "1st: €35 · next 5: €29.75 (−15%)",
-          "Quick encode, roster, litter tags",
+          "Fast encoding, roster, litter tags",
           "Replaces Family if it was active (upgrade)"
+        ]
+      },
+      "withFamily2CarePlus": {
+        "title": "Family + Care+ — 2 pets",
+        "total": "Year 1: €124.50 · Then: €66.50 / year",
+        "breakdown": "Year 1: 35 + 31.50 + 39 (Family) + 19 (Care+) · Following years: €66.50 / year",
+        "benefits": [
+          "Family −10% on the 2nd pet",
+          "Care+ €19 once: meds & custom reminders",
+          "From Year 2: pet plans only"
+        ]
+      },
+      "withFamilyHorse": {
+        "title": "Family + Horse — 2 pets (incl. 1 horse)",
+        "total": "Year 1: €144.50 · Then: €66.50 / year",
+        "breakdown": "Year 1: 35 + 31.50 + 39 (Family) + 39 (Horse) · Following years: €66.50 / year",
+        "benefits": [
+          "Family for household view and −10% discount",
+          "Horse €39 once: farrier, fecal, competitions",
+          "Lifetime add-ons — only pet plans renew"
         ]
       }
     },
@@ -1113,23 +1137,23 @@
       },
       "family": {
         "name": "Family",
-        "price": "€39 / year",
-        "role": "Household addon from 2 (−10%, no cap, exclusive Kennel)"
+        "price": "39 €",
+        "role": "Household add-on from 2 (−10%, no cap, exclusive Kennel) — lifetime one-time"
       },
       "carePlus": {
         "name": "Care+",
-        "price": "€19 / year",
-        "role": "Care / medication addon"
+        "price": "19 €",
+        "role": "Care / medication add-on — lifetime one-time"
       },
       "horse": {
         "name": "Horse",
-        "price": "€39 / year",
-        "role": "Equine pack addon"
+        "price": "39 €",
+        "role": "Equine pack add-on — lifetime one-time"
       },
       "kennel": {
         "name": "Kennel",
-        "price": "€119 / year",
-        "role": "Breeding addon from 6 (−15%, exclusive Family)"
+        "price": "119 €",
+        "role": "Kennel add-on from 6 (−15%, exclusive Family) — lifetime one-time"
       }
     },
     "footer": "petsFollow — vet-prescribed monitoring, no hardware"

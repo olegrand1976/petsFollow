@@ -280,7 +280,7 @@ func (s *Service) StartAddonCheckout(ctx context.Context, in StartAddonCheckoutI
 	_ = addon
 	return s.gateway.CreateCheckoutSession(ctx, CheckoutRequest{
 		PriceID:       priceID,
-		Mode:          "subscription",
+		Mode:          "payment",
 		CustomerID:    customerID,
 		CustomerEmail: in.OwnerEmail,
 		SuccessURL:    successURL,
@@ -299,7 +299,7 @@ func (s *Service) MockCompleteAddonCheckout(ctx context.Context, addonID, ownerU
 		"id":             sessionID,
 		"payment_status": "paid",
 		"customer":       "cus_mock_" + ownerUserID,
-		"subscription":   "sub_mock_addon_" + addonID,
+		"subscription":   nil,
 		"payment_intent": "pi_mock_addon_" + addonID,
 		"metadata": map[string]any{
 			"kind":          "addon",
@@ -334,14 +334,13 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 	if addon.Status != "pending" {
 		return nil
 	}
-	addonDef, err := GetAddon(AddonCode(addon.AddonCode))
-	if err != nil {
+	if _, err := GetAddon(AddonCode(addon.AddonCode)); err != nil {
 		return err
 	}
 	customerID, _ := asString(obj["customer"])
 	piID, _ := asString(obj["payment_intent"])
 	sessionID, _ := asString(obj["id"])
-	subID, _ := asString(obj["subscription"])
+	subID, _ := asString(obj["subscription"]) // empty for one-time; kept for legacy rejects
 	code := AddonCode(addon.AddonCode)
 	switch code {
 	case AddonFamily:
@@ -352,12 +351,16 @@ func (s *Service) handleAddonCheckoutCompleted(ctx context.Context, obj map[stri
 		if err := s.store.AssertKennelPurchaseEligible(ctx, addon.OwnerUserID); err != nil {
 			return s.rejectAddonAfterPayment(ctx, addonID, subID, "kennel", err)
 		}
+	case AddonCarePlus, AddonHorse:
+		if err := s.store.AssertAddonNotAlreadyOwned(ctx, addon.OwnerUserID, string(code)); err != nil {
+			return s.rejectAddonAfterPayment(ctx, addonID, subID, string(code), err)
+		}
 	}
-	validUntil := AddonValidUntil(now, addonDef)
 	if addon.OwnerUserID != "" && customerID != "" {
 		_ = s.store.UpsertStripeCustomer(ctx, addon.OwnerUserID, customerID)
 	}
-	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, validUntil, sessionID, piID, subID); err != nil {
+	// Lifetime: valid_until NULL. New checkouts are one-time (no subscription id).
+	if err := s.store.ActivateAddonEntitlement(ctx, addonID, now, nil, sessionID, piID, ""); err != nil {
 		if !errors.Is(err, store.ErrNotFound) {
 			return err
 		}

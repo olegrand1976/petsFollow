@@ -159,7 +159,7 @@ const addons = computed(() =>
 )
 
 const examples = computed(() =>
-  (['withoutFamily2', 'withFamily2', 'withFamily4', 'kennel6'] as const).map((key) => ({
+  (['withoutFamily2', 'withFamily2', 'withFamily4', 'kennel6', 'withFamily2CarePlus', 'withFamilyHorse'] as const).map((key) => ({
     key,
     title: t(`products.examples.${key}.title`),
     total: t(`products.examples.${key}.total`),

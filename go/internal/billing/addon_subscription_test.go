@@ -3,17 +3,30 @@ package billing_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 )
 
-func TestAddonValidUntilIsOneYear(t *testing.T) {
+func TestAddonDurationIsLifetime(t *testing.T) {
 	addon, err := billing.GetAddon(billing.AddonFamily)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if addon.DurationDays != 365 {
-		t.Fatalf("addon duration want 365, got %d", addon.DurationDays)
+	if addon.DurationDays != 0 {
+		t.Fatalf("addon duration want 0 (lifetime), got %d", addon.DurationDays)
+	}
+}
+
+func TestLegacyAddonValidUntilIsOneYear(t *testing.T) {
+	addon, err := billing.GetAddon(billing.AddonFamily)
+	if err != nil {
+		t.Fatal(err)
+	}
+	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	until := billing.AddonValidUntil(from, addon)
+	if until.Sub(from) != 365*24*time.Hour {
+		t.Fatalf("legacy renew want 365d, got %v", until.Sub(from))
 	}
 }
 
@@ -24,10 +37,11 @@ func TestMockGatewayCancelSubscriptionNoop(t *testing.T) {
 	}
 }
 
-func TestMockAddonCheckoutPayloadHasSubscription(t *testing.T) {
+func TestMockAddonCheckoutPayloadIsOneTime(t *testing.T) {
 	body, header, err := billing.BuildTestWebhookPayload("whsec_test", "checkout.session.completed", map[string]any{
-		"id":           "cs_addon",
-		"subscription": "sub_mock_addon_1",
+		"id":             "cs_addon",
+		"subscription":   nil,
+		"payment_intent": "pi_mock_addon_1",
 		"metadata": map[string]any{
 			"kind":     "addon",
 			"addon_id": "a1",

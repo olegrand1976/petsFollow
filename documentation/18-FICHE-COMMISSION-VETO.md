@@ -7,7 +7,7 @@
 - Commission = **% du HTVA** (TVA BE 21 %)
 - Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
-**Déclenchement** : **une fois** à l’activation payante (checkout animal ou addon Family/Kennel). Pas de commission au renouvellement Stripe.
+**Déclenchement** : **une fois** à l’activation payante (checkout animal ou addon Family/Kennel). Pas de commission au renouvellement Stripe (plans). Addons = paiement unique à vie.
 
 ## Grille progressive (base)
 | Clients payants | Taux |

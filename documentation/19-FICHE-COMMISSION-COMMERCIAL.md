@@ -7,7 +7,7 @@
 - Commission = **% du HTVA**
 - Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
 
-**Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal ou addon) du cabinet assigné. Pas de re-commission au renouvellement Stripe.
+**Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal ou addon) du cabinet assigné. Pas de re-commission au renouvellement Stripe (plans). Addons = paiement unique à vie.
 
 ## Votre grille
 | Offre | Taux HT | € indicatif |

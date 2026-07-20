@@ -115,6 +115,15 @@ func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
+	case billing.AddonCarePlus, billing.AddonHorse:
+		if err := a.store.AssertAddonNotAlreadyOwned(r.Context(), id.UserID, string(code)); err != nil {
+			if errors.Is(err, store.ErrAddonAlreadyActive) {
+				writeErr(w, r, http.StatusConflict, "addon_already_active", string(code)+"_already_active")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
 	}
 	addon, _ := billing.GetAddon(code)
 	ent, err := a.store.CreateAddonEntitlement(r.Context(), id.UserID, string(code), addon.AmountCents)

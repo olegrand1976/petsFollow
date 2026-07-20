@@ -40,7 +40,7 @@
       "registerLink": "Regístrese gratis",
       "forgotLink": "¿Ha olvidado la contraseña?",
       "or": "o",
-      "proOnly": "Acceso reservado a perfiles Pro (vet / comercial / admin)",
+      "proOnly": "Acceso reservado a perfiles Pro (vet / comercial / responsable comercial / admin)",
       "invalidResponse": "Respuesta de autenticación no válida"
     },
     "forgot": {
@@ -917,14 +917,14 @@
         "text": "Anual, Trienal (recomendada) o Quinquenal — controles 15/30/60 s, mensajería, timeline y recordatorios."
       },
       "family": {
-        "price": "39 € · 119 € / año",
+        "price": "39 € · 119 € (pago único)",
         "title": "Family y Kennel",
-        "text": "Family desde 2 (−10 % desde la 2.ª de pago, sin tope). Kennel desde 6 (−15 %, alta rápida). Ej. 2× Anual + Family: 105,50 € / año."
+        "text": "Family desde 2 (−10 % desde la 2.ª mascota de pago, sin tope). Kennel desde 6 (−15 %, codificación rápida). Pago único de por vida. Ej. Año 1: 2× Annual + Family = 105,50 € · luego 66,50 € / año."
       },
       "careHorse": {
-        "price": "19 € · 39 €",
-        "title": "Care+ y Caballo",
-        "text": "Care+ para medicación y recordatorios personalizados; Caballo para seguimiento equino (herrador, contactos, competiciones)."
+        "price": "19 € · 39 € (pago único)",
+        "title": "Care+ y Horse",
+        "text": "Care+ para medicamentos y recordatorios personales; Horse para seguimiento equino — pago único de por vida, acumulable con Family / Kennel."
       }
     },
     "footer": "© {year} petsFollow — Seguimiento cardíaco veterinario"
@@ -988,109 +988,133 @@
       }
     },
     "addonsTitle": "Opciones del hogar (cuenta del propietario)",
-    "addonsLead": "Los complementos se suman a las suscripciones de mascota (nunca las sustituyen). Suscripción anual recurrente por cuenta — ventajas compartidas por todo el hogar.",
-    "addonsTip": "Mecánica Family / Kennel: 1.ª mascota de pago a precio completo, descuento desde la 2.ª (−10 % / −15 %). Family y Kennel son excluyentes (Kennel = upgrade). Horse solo si hay ≥ 1 caballo.",
+    "addonsLead": "Los complementos se suman a las suscripciones de mascota (nunca las sustituyen). Pago único de por vida por cuenta — ventajas compartidas por todo el hogar.",
+    "addonsTip": "Mecánica Family / Kennel: 1.ª mascota de pago a precio completo, descuento desde la 2.ª (−10 % / −15 %). Family y Kennel son excluyentes (Kennel = upgrade). Horse solo si hay ≥ 1 caballo. Complementos = una sola compra, válidos de por vida.",
     "addons": {
       "family": {
         "name": "Family",
-        "price": "39 € / año",
-        "tagline": "Hogar desde 2 mascotas, −10% en planes",
+        "price": "39 €",
+        "tagline": "Pack hogar — desde 2 mascotas, −10 %",
         "scope": "Cuenta",
         "benefits": [
+          "Pago único de por vida — sin renovación",
           "Vista del hogar: próximos recordatorios de todas las mascotas",
           "−10 % en cada plan desde la 2.ª mascota de pago (1.ª = precio completo)",
-          "Sin tope — Family sigue en 39 € / año sea cual sea el número",
-          "Ej. 2× Anual: 35 + 31,50 + 39 = 105,50 € / año",
-          "Exclusivo con Kennel — desde 6, upgrade Kennel recomendado"
+          "Sin tope de mascotas — Family sigue siendo 39 € una vez",
+          "Ej. Año 1 (2× Annual): 35 + 31,50 + 39 = 105,50 € · Años siguientes: 66,50 € / año",
+          "Exclusivo Kennel — desde 6 mascotas, upgrade Kennel recomendado"
         ]
       },
       "carePlus": {
         "name": "Care+",
-        "price": "19 € / año",
-        "tagline": "Libreta de cuidados enriquecida",
+        "price": "19 €",
+        "tagline": "Carnet de cuidados enriquecido",
         "scope": "Cuenta",
         "benefits": [
-          "Recordatorios de medicación para todo el hogar",
+          "Pago único de por vida",
+          "Recordatorios de medicamentos para todo el hogar",
           "Recordatorios personalizados",
           "Además de los planes — sin descuento en planes",
-          "Ej. hogar con 2 mascotas: +19 € / año en la cuenta"
+          "Ej. hogar 2 mascotas + Family: +19 € una vez"
         ]
       },
       "horse": {
-        "name": "Caballo",
-        "price": "39 € / año",
+        "name": "Horse",
+        "price": "39 €",
         "tagline": "Pack equino",
         "scope": "Cuenta",
         "benefits": [
-          "Recordatorios de herrador y recuento de huevos fecales",
-          "Registro del herrador + contactos pro + competiciones",
+          "Pago único de por vida",
+          "Recordatorios de herrador y coproscopia",
+          "Carnet de herrador + contactos pro + competiciones",
           "Además de los planes — sin descuento en planes",
           "Solo si el hogar tiene ≥ 1 caballo"
         ]
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / año",
-        "tagline": "Cría / plantel desde 6 mascotas",
+        "price": "119 €",
+        "tagline": "Cría / plantilla desde 6 mascotas",
         "scope": "Cuenta",
         "benefits": [
-          "Alta rápida multi-mascota, roster, tags de camada, export",
+          "Pago único de por vida — sin renovación",
+          "Codificación rápida multi-mascota, roster, tags de camada, exportación",
           "−15 % en cada plan desde la 2.ª mascota de pago",
-          "Ej. 6× Anual: 35 + 5×29,75 + 119 = 302,75 € / año",
-          "Exclusivo con Family (compra Kennel = upgrade, Family cancelado)"
+          "Ej. Año 1 (6× Annual): 35 + 5×29,75 + 119 = 302,75 € · Años siguientes: 183,75 € / año",
+          "Exclusivo Family (compra Kennel = upgrade, Family anulado)"
         ]
       }
     },
-    "examplesTitle": "Ejemplos concretos (plan Anual)",
-    "examplesLead": "Los complementos nunca sustituyen una suscripción de mascota. Importes TTC con Anual 35 € — 1.ª de pago a precio completo, siguientes con descuento si Family / Kennel está activo.",
-    "examplesTip": "Family y Kennel = suscripción anual recurrente de cuenta (39 € o 119 €), independiente del número de mascotas. Care+ y Horse se suman sin cambiar el precio de los planes.",
+    "examplesTitle": "Ejemplos concretos (plan Annual)",
+    "examplesLead": "Los complementos nunca sustituyen la suscripción de mascota. Cifras IVA incl. sobre Annual 35 € — 1.ª de pago a precio completo, siguientes con descuento si Family / Kennel está activo. Los complementos son un pago único de por vida (solo Año 1).",
+    "examplesTip": "Family / Kennel / Care+ / Horse = pago único de por vida en la cuenta. En los años siguientes solo quedan los planes de mascota.",
     "examplesCareHorseTitle": "Care+ y Horse — complementos de cuidados",
-    "examplesCareHorseLead": "Complementos de cuenta, sin descuento en las suscripciones de mascota.",
+    "examplesCareHorseLead": "Complementos de cuenta en pago único de por vida, sin descuento en los planes de mascota.",
     "examplesCareHorseBenefits": [
-      "Care+ 19 € / año: recordatorios de medicación y personalizados para el hogar",
-      "Horse 39 € / año: pack equino (herrador, contactos, competiciones) si ≥ 1 caballo",
-      "Acumulables con Family o Kennel"
+      "Care+ 19 € una vez: recordatorios de medicamentos y personalizados para todo el hogar",
+      "Horse 39 € una vez: pack equino (herrador, contactos, competiciones) si ≥ 1 caballo",
+      "Acumulables con Family o Kennel — válidos de por vida"
     ],
     "examples": {
       "withoutFamily2": {
         "title": "Sin Family — 2 mascotas",
         "total": "70 € / año",
-        "breakdown": "35 + 35 (2× Anual a precio completo)",
+        "breakdown": "35 + 35 (2× Annual precio completo)",
         "benefits": [
-          "Cada mascota tiene su propia suscripción",
+          "Cada mascota tiene su propio plan",
           "Sin vista unificada del hogar",
           "Sin descuento multi-mascota"
         ]
       },
       "withFamily2": {
         "title": "Con Family — 2 mascotas",
-        "total": "105,50 € / año",
-        "breakdown": "35 + 31,50 + 39 (Family)",
+        "total": "Año 1: 105,50 € · Luego: 66,50 € / año",
+        "breakdown": "Año 1: 35 + 31,50 + 39 (Family una vez) · Años siguientes: 35 + 31,50",
         "benefits": [
           "1.ª mascota: 35 € (precio completo)",
-          "2.ª mascota: 31,50 € (−10 %)",
-          "Family 39 €: vista del hogar + descuento en las siguientes",
-          "Ventaja principal: comodidad del hogar, no ahorro desde 2"
+          "2.ª: 31,50 € (−10 %)",
+          "Family 39 € una vez de por vida",
+          "Desde el Año 2: solo 66,50 € / año en planes"
         ]
       },
       "withFamily4": {
         "title": "Con Family — 4 mascotas",
-        "total": "168,50 € / año",
-        "breakdown": "35 + 3×31,50 + 39 (vs 140 € sin Family)",
+        "total": "Año 1: 168,50 € · Luego: 129,50 € / año",
+        "breakdown": "Año 1: 35 + 3×31,50 + 39 · Años siguientes: 35 + 3×31,50 (vs 140 € / año sin Family)",
         "benefits": [
           "1.ª: 35 € · 3 siguientes: 31,50 € cada una",
-          "Family sigue en 39 € / año — sin tope",
+          "Family 39 € una vez — sin tope",
           "Cada nueva mascota de pago obtiene −10 %"
         ]
       },
       "kennel6": {
         "title": "Con Kennel — 6 mascotas",
-        "total": "302,75 € / año",
-        "breakdown": "35 + 5×29,75 + 119 (Kennel)",
+        "total": "Año 1: 302,75 € · Luego: 183,75 € / año",
+        "breakdown": "Año 1: 35 + 5×29,75 + 119 (Kennel una vez) · Años siguientes: 35 + 5×29,75",
         "benefits": [
           "1.ª: 35 € · 5 siguientes: 29,75 € (−15 %)",
-          "Alta rápida, roster, tags de camada",
+          "Codificación rápida, roster, tags de camada",
           "Sustituye Family si estaba activo (upgrade)"
+        ]
+      },
+      "withFamily2CarePlus": {
+        "title": "Family + Care+ — 2 mascotas",
+        "total": "Año 1: 124,50 € · Luego: 66,50 € / año",
+        "breakdown": "Año 1: 35 + 31,50 + 39 (Family) + 19 (Care+) · Años siguientes: 66,50 € / año",
+        "benefits": [
+          "Family −10 % en la 2.ª mascota",
+          "Care+ 19 € una vez: medicamentos y recordatorios personales",
+          "Desde el Año 2: solo planes de mascota"
+        ]
+      },
+      "withFamilyHorse": {
+        "title": "Family + Horse — 2 mascotas (incl. 1 caballo)",
+        "total": "Año 1: 144,50 € · Luego: 66,50 € / año",
+        "breakdown": "Año 1: 35 + 31,50 + 39 (Family) + 39 (Horse) · Años siguientes: 66,50 € / año",
+        "benefits": [
+          "Family para vista del hogar y −10 %",
+          "Horse 39 € una vez: herrador, copro, competiciones",
+          "Complementos de por vida — solo se renuevan los planes"
         ]
       }
     },
@@ -1113,23 +1137,23 @@
       },
       "family": {
         "name": "Family",
-        "price": "39 € / año",
-        "role": "Addon hogar desde 2 (−10 %, sin tope, exclusivo Kennel)"
+        "price": "39 €",
+        "role": "Complemento hogar desde 2 (−10 %, sin tope, exclusivo Kennel) — pago único de por vida"
       },
       "carePlus": {
         "name": "Care+",
-        "price": "19 € / año",
-        "role": "Complemento cuidados / medicación"
+        "price": "19 €",
+        "role": "Complemento cuidados / medicamentos — pago único de por vida"
       },
       "horse": {
         "name": "Caballo",
-        "price": "39 € / año",
-        "role": "Complemento pack equino"
+        "price": "39 €",
+        "role": "Complemento pack equino — pago único de por vida"
       },
       "kennel": {
         "name": "Kennel",
-        "price": "119 € / año",
-        "role": "Addon cría desde 6 (−15 %, exclusivo Family)"
+        "price": "119 €",
+        "role": "Complemento Kennel desde 6 (−15 %, exclusivo Family) — pago único de por vida"
       }
     },
     "footer": "petsFollow — seguimiento prescrito por el veterinario, sin hardware"

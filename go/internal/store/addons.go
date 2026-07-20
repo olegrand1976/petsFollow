@@ -70,7 +70,8 @@ func (s *Store) GetAddonBySubscriptionID(ctx context.Context, subscriptionID str
 }
 
 // ActivateAddonEntitlement activates a pending addon and stores Stripe IDs.
-func (s *Store) ActivateAddonEntitlement(ctx context.Context, id string, validFrom, validUntil time.Time, sessionID, paymentIntent, subscriptionID string) error {
+// validUntil nil means lifetime (no expiry).
+func (s *Store) ActivateAddonEntitlement(ctx context.Context, id string, validFrom time.Time, validUntil *time.Time, sessionID, paymentIntent, subscriptionID string) error {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE billing.addon_entitlements SET
 			status='active', valid_from=$2, valid_until=$3,

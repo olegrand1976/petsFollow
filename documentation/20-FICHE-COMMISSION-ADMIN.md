@@ -9,7 +9,7 @@
 Commissions sur **HTVA** (`DefaultVATRateBps = 2100`). Stripe Prices = TTC.  
 Assiette = **HT du montant payé** (après remise foyer/élevage si applicable).
 
-**Déclenchement** : accrual **une fois** à l’activation payante (checkout animal / addon). Pas de re-commission au renouvellement Stripe.
+**Déclenchement** : accrual **une fois** à l’activation payante (checkout animal / addon). Pas de re-commission au renouvellement Stripe (plans animal). Addons = paiement unique à vie (pas de renew).
 
 ## Véto
 - Tiers : 7 / 9 / 11 / 12 % (1–10 / 11–30 / 31–60 / 61+) — éditables admin (`PUT /admin/commissions/tiers`)

@@ -23,7 +23,7 @@ Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par an
 | **Triennial** | **95 € / 3 ans** (~2,6 €/mois) | **Recommandé** |
 | Quinquennial | 145 € / 5 ans | Engagement long |
 
-Addons (abo annuel récurrent) : Family 39 € (≥2, −10 %) · Kennel 119 € (≥6, −15 %, exclusif Family) · Care+ 19 € · Horse 39 €.
+Addons (paiement unique à vie) : Family 39 € (≥2, −10 %) · Kennel 119 € (≥6, −15 %, exclusif Family) · Care+ 19 € · Horse 39 €.
 
 ## Différenciation
 

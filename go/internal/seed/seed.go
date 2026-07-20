@@ -384,7 +384,6 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 func seedClientActiveAddons(ctx context.Context, tx pgx.Tx, ownerUserID string) error {
 	now := time.Now()
 	from := now.Add(-30 * 24 * time.Hour)
-	until := from.AddDate(0, 0, billing.AddonDurationDays)
 	for _, code := range []billing.AddonCode{billing.AddonCarePlus, billing.AddonKennel, billing.AddonHorse} {
 		addon, err := billing.GetAddon(code)
 		if err != nil {
@@ -392,8 +391,8 @@ func seedClientActiveAddons(ctx context.Context, tx pgx.Tx, ownerUserID string) 
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO billing.addon_entitlements (id, owner_user_id, addon_code, status, amount_cents, currency, valid_from, valid_until)
-			VALUES ($1, $2, $3, 'active', $4, 'eur', $5, $6)`,
-			uuid.NewString(), ownerUserID, string(code), addon.AmountCents, from, until); err != nil {
+			VALUES ($1, $2, $3, 'active', $4, 'eur', $5, NULL)`,
+			uuid.NewString(), ownerUserID, string(code), addon.AmountCents, from); err != nil {
 			return err
 		}
 	}
