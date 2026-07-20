@@ -148,11 +148,20 @@ func payoutHolder(p practiceDef) string {
 	return p.vetName
 }
 
+// protectedSalesRoles are never deleted by seed (staging real accounts + demos).
+var protectedSalesRoles = []string{"admin", "commercial", "commercial_manager"}
+
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	_, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
+	// Detach surviving users from practices before TRUNCATE practice.practices.
+	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL WHERE practice_id IS NOT NULL`); err != nil {
+		return err
+	}
+	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
+	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
+		billing.commercial_bonus_awards,
 		billing.addon_entitlements, sales.prospects,
 		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.commission_settings,
@@ -163,8 +172,20 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets,
+		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
 		practice.client_import_rows, practice.client_import_jobs,
-		practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
+		practice.client_vet_link_requests, practice.invitations, practice.practice_clients, practice.practices CASCADE`); err != nil {
+		return err
+	}
+	// Drop ephemeral smoke commercials (role protected, but email pattern is disposable).
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM identity.users
+		WHERE email LIKE 'smoke-comm+%@petsfollow.test' AND role = 'commercial'`); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `
+		DELETE FROM identity.users
+		WHERE role <> ALL($1::text[])`, protectedSalesRoles)
 	return err
 }
 
@@ -173,28 +194,50 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err != nil {
 		return err
 	}
-	managerID := uuid.NewString()
-	if _, err := tx.Exec(ctx, `
+	var managerID string
+	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
-			payout_iban, payout_bic, payout_account_holder
+			payout_iban, payout_bic, payout_account_holder, must_change_password
 		) VALUES (
 			$1, 'commercial.manager@petsfollow.test', $2, 'Bérénice Manager', 'commercial_manager', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager'
-		)`,
-		managerID, string(hash)); err != nil {
+			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager', false
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial_manager',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			must_change_password = false
+		RETURNING id::text`,
+		uuid.NewString(), string(hash)).Scan(&managerID); err != nil {
 		return err
 	}
-	commercialID := uuid.NewString()
-	if _, err := tx.Exec(ctx, `
+	var commercialID string
+	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
-			payout_iban, payout_bic, payout_account_holder, manager_user_id
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password
 		) VALUES (
 			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3
-		)`,
-		commercialID, string(hash), managerID); err != nil {
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, false
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			-- Keep existing manager (e.g. staging Murgo); only fill when unset.
+			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			must_change_password = false
+		RETURNING id::text`,
+		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
 		return err
 	}
 	// vet.demo is assigned to the demo commercial.
@@ -234,8 +277,14 @@ func seedAdmin(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err = tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL, NOW())`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL, NOW(), false)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'admin',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			must_change_password = false`,
 		uuid.NewString(), string(hash))
 	return err
 }
