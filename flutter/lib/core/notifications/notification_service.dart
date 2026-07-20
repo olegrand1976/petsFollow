@@ -91,9 +91,14 @@ class NotificationService {
     return switch (type) {
       'message' => 'Nouveau message',
       'visit_confirmed' => 'Rendez-vous confirmé',
+      'visit_proposed' => 'Proposition de rendez-vous',
+      'visit_reschedule' => 'Déplacement de rendez-vous',
       _ => 'petsFollow',
     };
   }
+
+  bool _isVisitPush(String type) =>
+      type == 'visit_confirmed' || type == 'visit_proposed' || type == 'visit_reschedule';
 
   Future<void> _showLocalPush({
     required String title,
@@ -101,7 +106,7 @@ class NotificationService {
     required Map<String, dynamic> data,
   }) async {
     final type = data['type']?.toString() ?? '';
-    final channelId = type == 'visit_confirmed' ? 'pf_visits' : 'pf_messages';
+    final channelId = _isVisitPush(type) ? 'pf_visits' : 'pf_messages';
     final id = _localPushId++;
     final details = NotificationDetails(
       android: AndroidNotificationDetails(

@@ -16,7 +16,8 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Auth public | `POST /auth/login`, `/register`, `/confirm-email`, `/forgot-password`, `/reset-password`, `/refresh`, `/auth/google`, `/auth/2fa/verify` |
 | Auth protégé | `GET/POST /auth/2fa/*` |
 | Me | `GET/PATCH /me`, avatar, password, locale, vets, household, discovery, device-tokens |
-| Véto | `/clients`, `/vet/*` (profile, availability, overview, link-requests, prospects, commissions, prefs) |
+| Véto | `/clients`, `/vet/*` (profile, availability messagerie, overview, link-requests, prospects, commissions, prefs) |
+| Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`) |
 | Pets / FC | `/pets`, heartrate sessions, timeline, photo, care-reminders, visits, horse-* |
 | Messaging | `/messaging/threads…` |
 | Billing | `GET /billing/plans`, `/billing/addons`, webhook Stripe, checkout/portal pet, my-addons |

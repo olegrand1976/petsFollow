@@ -127,11 +127,6 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
                   ),
                 ] else if (_slots.isEmpty) ...[
                   Text(l10n.calendarNoSlots),
-                  const SizedBox(height: 16),
-                  OutlinedButton(
-                    onPressed: _booking ? null : _legacyRequest,
-                    child: Text(l10n.requestVisit),
-                  ),
                 ] else ...[
                   Text(l10n.calendarPickSlot),
                   const SizedBox(height: 12),

@@ -44,6 +44,8 @@ class PushNavigation {
       case 'message':
         openMessages(threadId: data['threadId']?.toString());
       case 'visit_confirmed':
+      case 'visit_proposed':
+      case 'visit_reschedule':
         openPetTimeline(data['petId']?.toString() ?? '');
       default:
         return;

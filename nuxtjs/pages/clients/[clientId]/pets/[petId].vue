@@ -146,10 +146,15 @@
     </ProCard>
 
     <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="proposeVisit">
-        <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" />
+      <form class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
+        <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
-        <ProButton type="submit" :disabled="visitBusy">{{ $t('clients.pet.visitPropose') }}</ProButton>
+        <ProButton type="submit" :disabled="visitBusy" variant="secondary">
+          {{ $t('clients.pet.visitPropose') }}
+        </ProButton>
+        <ProButton type="button" :disabled="visitBusy || !visitDraft.scheduledAt" @click="proposeVisit(true)">
+          {{ $t('clients.pet.visitConfirmDirect') }}
+        </ProButton>
       </form>
       <ProEmptyState
         v-if="!visits.length"
@@ -177,24 +182,39 @@
             <td>
               <div class="pro-flex-gap">
                 <ProButton
-                  v-if="v.status === 'requested'"
+                  v-if="v.status === 'requested' && v.pendingActionBy === 'vet'"
                   :disabled="visitBusy"
-                  @click="setVisitStatus(v.id, 'confirmed')"
+                  @click="visitAction(v.id, 'confirm')"
                 >
                   {{ $t('clients.pet.visitConfirm') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'confirmed' || v.status === 'requested'"
+                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   :disabled="visitBusy"
-                  @click="setVisitStatus(v.id, 'done')"
+                  @click="visitAction(v.id, 'accept_reschedule')"
+                >
+                  {{ $t('calendar.acceptReschedule') }}
+                </ProButton>
+                <ProButton
+                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  variant="ghost"
+                  :disabled="visitBusy"
+                  @click="visitAction(v.id, 'reject_reschedule')"
+                >
+                  {{ $t('calendar.rejectReschedule') }}
+                </ProButton>
+                <ProButton
+                  v-if="v.status === 'confirmed'"
+                  :disabled="visitBusy"
+                  @click="visitAction(v.id, 'done')"
                 >
                   {{ $t('clients.pet.visitDone') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'requested' || v.status === 'confirmed'"
+                  v-if="v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending'"
                   variant="ghost"
                   :disabled="visitBusy"
-                  @click="setVisitStatus(v.id, 'cancelled')"
+                  @click="visitAction(v.id, 'cancel')"
                 >
                   {{ $t('clients.pet.visitCancel') }}
                 </ProButton>
@@ -343,17 +363,18 @@ async function postponeCare(id: string, days: number) {
   }
 }
 
-async function proposeVisit() {
+async function proposeVisit(confirmDirect: boolean) {
+  if (!visitDraft.scheduledAt) return
   visitBusy.value = true
   try {
-    const body: Record<string, unknown> = {
-      notes: visitDraft.notes,
-      confirmDirect: true,
-    }
-    if (visitDraft.scheduledAt) {
-      body.scheduledAt = new Date(visitDraft.scheduledAt).toISOString()
-    }
-    await $fetch(`/api/pets/${petId}/visits`, { method: 'POST', body })
+    await $fetch(`/api/pets/${petId}/visits`, {
+      method: 'POST',
+      body: {
+        notes: visitDraft.notes,
+        confirmDirect,
+        scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
+      },
+    })
     visitDraft.notes = ''
     visitDraft.scheduledAt = ''
     await loadCareAndVisits()
@@ -362,10 +383,10 @@ async function proposeVisit() {
   }
 }
 
-async function setVisitStatus(id: string, status: string) {
+async function visitAction(id: string, action: string) {
   visitBusy.value = true
   try {
-    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { status } })
+    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { action } })
     await loadCareAndVisits()
   } finally {
     visitBusy.value = false
