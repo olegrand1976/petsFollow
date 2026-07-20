@@ -76,10 +76,14 @@
             <select v-model="voiceName" class="pro-select" data-testid="training-voice">
               <option v-for="v in voices" :key="v" :value="v">{{ v }}</option>
             </select>
+            <p v-if="scriptsLoaded && !scripts.length" class="pf-error" data-testid="training-no-scripts">
+              {{ $t('training.noScripts') }}
+            </p>
             <ProButton
               class="pro-mt-md"
               test-id="training-call-btn"
-              :disabled="!scriptId || calling"
+              :disabled="!canCall"
+              :loading="calling"
               @click="startCall"
             >
               <ProIcon name="phone_in_talk" :size="20" />
@@ -259,6 +263,7 @@ type Line = { role: string, text: string }
 
 const tab = ref<'call' | 'history' | 'scripts'>('call')
 const scripts = ref<Script[]>([])
+const scriptsLoaded = ref(false)
 const scriptId = ref('')
 const interestLevel = ref('neutre')
 const VOICE_KEY = 'pf_training_voice'
@@ -317,7 +322,7 @@ watch(voiceName, (v) => {
   try { localStorage.setItem(VOICE_KEY, v) } catch { /* ignore */ }
 })
 
-const selectedScript = computed(() => scripts.value.find(s => s.id === scriptId.value))
+const selectedScript = computed(() => scripts.value.find(s => s?.id === scriptId.value))
 const selectedSteps = computed(() => {
   const raw = selectedScript.value?.steps
   return Array.isArray(raw) ? raw : []
@@ -326,6 +331,7 @@ const selectedDialogue = computed(() => {
   const raw = selectedScript.value?.exampleDialogue
   return Array.isArray(raw) ? raw : []
 })
+const canCall = computed(() => !!scriptId.value && !calling.value && scripts.value.length > 0)
 
 const coachScore = computed(() => sim.value?.coachFeedback?.score ?? sim.value?.aiScore ?? '—')
 const coachTips = computed(() => {
@@ -418,10 +424,30 @@ async function uploadRecording(blob: Blob | null) {
   }
 }
 
+function unwrapList(res: any): any[] {
+  const raw = res?.data !== undefined ? res.data : res
+  if (Array.isArray(raw)) return raw.filter(Boolean)
+  if (raw && Array.isArray(raw.items)) return raw.items.filter(Boolean)
+  return []
+}
+
 async function loadScripts() {
-  const res: any = await $fetch('/api/commercial/pitch-scripts')
-  scripts.value = res.data ?? res
-  if (!scriptId.value && scripts.value.length) scriptId.value = scripts.value[0].id
+  scriptsLoaded.value = false
+  try {
+    const res: any = await $fetch('/api/commercial/pitch-scripts')
+    scripts.value = unwrapList(res)
+    if (!scriptId.value && scripts.value.length) {
+      scriptId.value = scripts.value[0].id
+    }
+    if (!scripts.value.length) {
+      error.value = t('training.noScripts')
+    }
+  } catch (e: any) {
+    scripts.value = []
+    error.value = e?.data?.statusMessage || e?.message || t('training.noScripts')
+  } finally {
+    scriptsLoaded.value = true
+  }
 }
 
 async function loadHistory() {

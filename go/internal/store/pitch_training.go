@@ -130,7 +130,7 @@ func (s *Store) ListPitchScriptsForUser(ctx context.Context, userID string) ([]P
 		return nil, err
 	}
 	defer rows.Close()
-	var out []PitchScript
+	out := make([]PitchScript, 0)
 	for rows.Next() {
 		sc, err := scanPitchScript(rows)
 		if err != nil {
@@ -151,7 +151,7 @@ func (s *Store) ListAdminPitchScripts(ctx context.Context) ([]PitchScript, error
 		return nil, err
 	}
 	defer rows.Close()
-	var out []PitchScript
+	out := make([]PitchScript, 0)
 	for rows.Next() {
 		sc, err := scanPitchScript(rows)
 		if err != nil {

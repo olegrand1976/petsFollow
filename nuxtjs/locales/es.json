@@ -1617,6 +1617,7 @@
     "difficultyHint": "Choisissez le niveau d'intérêt du vétérinaire (difficulté).",
     "voice": "Voix",
     "callBtn": "J'appelle le vétérinaire",
+    "noScripts": "Aucun script d'entraînement disponible. Demandez à un admin de créer ou activer un script (Formation IA).",
     "ringing": "Ça sonne…",
     "hangUp": "Raccrocher",
     "listening": "Écoute…",
