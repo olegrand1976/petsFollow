@@ -45,7 +45,7 @@ En parallèle (engagement) :
 flowchart TD
   LoginC[Login commercial] --> Over[Overview]
   Over --> Pros[Prospects CRM]
-  Over --> Encode[Encoder / suivre vétos]
+  Over --> Encode[Inscriptions véto / client lié / client libre]
   Encode --> Act[Activer pets payants]
   Act --> Earn[Commissions ledger]
 ```

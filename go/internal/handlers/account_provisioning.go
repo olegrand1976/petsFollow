@@ -67,10 +67,24 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	in := store.CreateClientInput{
+		Email:    req.Email,
+		Password: req.Password,
+		FullName: req.FullName,
+		Locale:   localeOf(r),
+	}
+
+	// Optional vet link: empty vetUserId → standalone client (no practice).
 	if req.VetUserID == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		clientID, err := a.store.CreateClientStandalone(r.Context(), in)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": clientID, "email": req.Email})
 		return
 	}
+
 	owns, err := a.store.CommercialOwnsVet(r.Context(), id.UserID, req.VetUserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -80,12 +94,7 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_not_assigned")
 		return
 	}
-	clientID, err := a.store.CreateClientForVet(r.Context(), req.VetUserID, store.CreateClientInput{
-		Email:    req.Email,
-		Password: req.Password,
-		FullName: req.FullName,
-		Locale:   localeOf(r),
-	})
+	clientID, err := a.store.CreateClientForVet(r.Context(), req.VetUserID, in)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")

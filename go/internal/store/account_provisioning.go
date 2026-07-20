@@ -85,6 +85,32 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	return clientID, nil
 }
 
+// CreateClientStandalone creates a client with no practice / vet link.
+// The client can later request a vet link from the pets app.
+func (s *Store) CreateClientStandalone(ctx context.Context, in CreateClientInput) (string, error) {
+	in.Email = strings.TrimSpace(strings.ToLower(in.Email))
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	clientID := uuid.NewString()
+	if _, err := s.pool.Exec(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id,
+			email_verified_at, preferred_locale, must_change_password
+		) VALUES ($1, $2, $3, $4, 'client', NULL, NOW(), $5, true)`,
+		clientID, in.Email, string(hash), in.FullName, i18n.NormalizeLocale(in.Locale)); err != nil {
+		return "", err
+	}
+	if in.SkipJourney {
+		_ = s.MarkEmailJourneySkipped(ctx, clientID)
+	} else {
+		_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
+	}
+	return clientID, nil
+}
+
 func (s *Store) CommercialOwnsVet(ctx context.Context, commercialUserID, vetUserID string) (bool, error) {
 	var ok bool
 	err := s.pool.QueryRow(ctx, `

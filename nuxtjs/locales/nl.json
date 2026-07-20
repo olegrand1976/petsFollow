@@ -17,7 +17,7 @@
     "adminCommercials": "Commercials",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
-    "commercialVets": "Dierenartsen",
+    "commercialVets": "Registraties",
     "commercialProspects": "Prospects",
     "commercialCommissions": "Mijn betalingen",
     "commercialSettings": "Betalingsprofiel",
@@ -1325,8 +1325,8 @@
       "directory": "BCE-directory"
     },
     "vets": {
-      "title": "Toegewezen dierenartsen",
-      "subtitle": "Kies een actie en maak een account. Toegewezen dierenartsen blijven zichtbaar.",
+      "title": "Registraties",
+      "subtitle": "Registreer een dierenarts, een gekoppelde cliënt of een cliënt zonder koppeling. Toegewezen dierenartsen blijven zichtbaar.",
       "encode": "Dierenarts aanmaken",
       "save": "Account maken",
       "empty": "Geen toegewezen dierenartsen",
@@ -1346,8 +1346,8 @@
       "backToCards": "Andere actie kiezen"
     },
     "clients": {
-      "create": "Klantaccount aanmaken",
-      "hint": "De klant moet het wachtwoord wijzigen bij de eerste aanmelding.",
+      "create": "Gekoppelde cliënt aanmaken",
+      "hint": "De cliënt is gekoppeld aan een van uw dierenartsen. Wachtwoord wijzigen bij de eerste aanmelding.",
       "vet": "Dierenarts",
       "vetPlaceholder": "Kies een dierenarts",
       "fullName": "Volledige naam",
@@ -1356,8 +1356,13 @@
       "submit": "Klant aanmaken",
       "success": "Klantaccount aangemaakt",
       "error": "Aanmaken mislukt",
-      "cardTitle": "Cliënt",
-      "cardDesc": "Een cliëntaccount aanmaken gekoppeld aan een van uw dierenartsen."
+      "cardTitle": "Gekoppelde cliënt",
+      "cardDesc": "Een cliëntaccount aanmaken gekoppeld aan een van uw dierenartsen.",
+      "standaloneCardTitle": "Cliënt zonder koppeling",
+      "standaloneCardDesc": "Een cliëntaccount aanmaken zonder dierenarts voorlopig.",
+      "standaloneCreate": "Cliënt zonder koppeling aanmaken",
+      "standaloneHint": "Account zonder praktijk: geen dieren en geen commissie tot een dierenartskoppeling is geaccepteerd (aanvraag via de app). Wachtwoord wijzigen bij de eerste aanmelding.",
+      "noVetsYet": "Nog geen toegewezen dierenarts. Maak eerst een dierenarts aan, daarna de gekoppelde cliënt."
     },
     "prospects": {
       "title": "Prospectfiches",

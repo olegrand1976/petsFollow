@@ -144,6 +144,69 @@ func TestCommercialAdminCreateAndEncodeVet(t *testing.T) {
 	}
 }
 
+func TestCommercialCreateClientsLinkedAndStandalone(t *testing.T) {
+	api := newTestAPI(t)
+	adminEmail := "admin.demo@petsfollow.test"
+	var n int
+	_ = api.pool.QueryRow(context.Background(), `SELECT COUNT(*) FROM identity.users WHERE email=$1`, adminEmail).Scan(&n)
+	if n == 0 {
+		hash, _ := bcrypt.GenerateFromPassword([]byte("AdminDemo123!"), bcrypt.DefaultCost)
+		_, err := api.pool.Exec(context.Background(), `
+			INSERT INTO identity.users (id, email, password_hash, full_name, role, email_verified_at)
+			VALUES ($1, $2, $3, 'Admin Ops', 'admin', NOW())`, uuid.NewString(), adminEmail, string(hash))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	adminTok := loginToken(t, api.handler, adminEmail, "AdminDemo123!")
+	commEmail := uniqueEmail("comm-clients")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Comm Clients",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create commercial %d %#v", code, env)
+	}
+	commTok := loginToken(t, api.handler, commEmail, "CommercialDemo123!")
+
+	vetEmail := uniqueEmail("vet-for-client")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", commTok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr Client",
+		"practiceName": "Cabinet Client", "city": "Lyon",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode vet %d %#v", code, env)
+	}
+	vetID, _ := env["data"].(map[string]any)["userId"].(string)
+	if vetID == "" {
+		t.Fatalf("missing vet userId %#v", env)
+	}
+
+	linkedEmail := uniqueEmail("linked-client")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", commTok, map[string]any{
+		"email": linkedEmail, "password": "ClientDemo123!", "fullName": "Linked Client", "vetUserId": vetID,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create linked client %d %#v", code, env)
+	}
+
+	standaloneEmail := uniqueEmail("solo-client")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", commTok, map[string]any{
+		"email": standaloneEmail, "password": "ClientDemo123!", "fullName": "Solo Client",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create standalone client %d %#v", code, env)
+	}
+	var practiceID *string
+	err := api.pool.QueryRow(context.Background(), `
+		SELECT practice_id::text FROM identity.users WHERE email=$1`, standaloneEmail).Scan(&practiceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if practiceID != nil {
+		t.Fatalf("standalone client should have NULL practice_id, got %v", *practiceID)
+	}
+}
+
 func TestCommercialRBACIsolation(t *testing.T) {
 	api := newTestAPI(t)
 	adminEmail := "admin.demo@petsfollow.test"

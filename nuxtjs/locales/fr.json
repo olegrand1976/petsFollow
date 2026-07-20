@@ -18,7 +18,7 @@
     "adminCommercials": "Commerciaux",
     "adminProspects": "Prospects",
     "commercialDashboard": "Dashboard",
-    "commercialVets": "Vétérinaires",
+    "commercialVets": "Inscriptions",
     "commercialProspects": "Prospects",
     "commercialCommissions": "Mes paiements",
     "commercialSettings": "Profil paiement",
@@ -273,8 +273,8 @@
       "directory": "Annuaire BCE"
     },
     "vets": {
-      "title": "Vétérinaires assignés",
-      "subtitle": "Choisissez une action, puis encodez un compte. La liste des vétos assignés reste visible.",
+      "title": "Inscriptions",
+      "subtitle": "Inscrivez un véto, un client lié à un véto, ou un client sans liaison. La liste des vétos assignés reste visible.",
       "encode": "Encoder un véto",
       "save": "Créer le compte",
       "empty": "Aucun vétérinaire assigné",
@@ -294,8 +294,8 @@
       "backToCards": "Choisir une autre action"
     },
     "clients": {
-      "create": "Créer un compte client",
-      "hint": "Le client devra changer son mot de passe à la première connexion.",
+      "create": "Créer un client lié",
+      "hint": "Le client est rattaché à un de vos vétos. Il devra changer son mot de passe à la première connexion.",
       "vet": "Vétérinaire",
       "vetPlaceholder": "Choisir un véto",
       "fullName": "Nom complet",
@@ -304,8 +304,13 @@
       "submit": "Créer le client",
       "success": "Compte client créé",
       "error": "Création impossible",
-      "cardTitle": "Client",
-      "cardDesc": "Créer un compte client lié à un de vos vétos."
+      "cardTitle": "Client lié",
+      "cardDesc": "Créer un compte client rattaché à un de vos vétos.",
+      "standaloneCardTitle": "Client sans liaison",
+      "standaloneCardDesc": "Créer un compte client sans rattacher de véto pour l’instant.",
+      "standaloneCreate": "Créer un client sans liaison",
+      "standaloneHint": "Compte sans cabinet : pas d’animal ni de commission tant qu’une liaison véto n’est pas acceptée (demande depuis l’app). Mot de passe à changer à la première connexion.",
+      "noVetsYet": "Aucun vétérinaire assigné. Encodez d’abord un véto, puis créez le client lié."
     },
     "prospects": {
       "title": "Fiches de prospection",

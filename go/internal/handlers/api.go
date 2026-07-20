@@ -364,6 +364,10 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
+	if strings.TrimSpace(id.PracticeID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
+		return
+	}
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -402,6 +406,10 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	if strings.TrimSpace(id.PracticeID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
 		return
 	}
 	hasKennel, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))

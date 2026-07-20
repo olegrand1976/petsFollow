@@ -20,11 +20,21 @@
         type="button"
         class="pro-card pro-card--interactive pf-audience-card"
         data-testid="commercial-card-client"
-        @click="panel = 'client'"
+        @click="openClientPanel('linked')"
       >
         <ProIcon name="person" :size="36" />
         <strong>{{ $t('commercial.clients.cardTitle') }}</strong>
         <span>{{ $t('commercial.clients.cardDesc') }}</span>
+      </button>
+      <button
+        type="button"
+        class="pro-card pro-card--interactive pf-audience-card"
+        data-testid="commercial-card-client-standalone"
+        @click="openClientPanel('standalone')"
+      >
+        <ProIcon name="link_off" :size="36" />
+        <strong>{{ $t('commercial.clients.standaloneCardTitle') }}</strong>
+        <span>{{ $t('commercial.clients.standaloneCardDesc') }}</span>
       </button>
     </div>
 
@@ -50,16 +60,27 @@
       </form>
     </ProCard>
 
-    <ProCard v-else class="pro-mb-lg" data-testid="commercial-client-form">
+    <ProCard v-else-if="panel === 'client'" class="pro-mb-lg" data-testid="commercial-client-form">
       <div class="pf-form-toolbar">
-        <h3>{{ $t('commercial.clients.create') }}</h3>
+        <h3>
+          {{ clientMode === 'standalone' ? $t('commercial.clients.standaloneCreate') : $t('commercial.clients.create') }}
+        </h3>
         <ProButton variant="ghost" test-id="commercial-back-cards" @click="panel = null">
           {{ $t('commercial.vets.backToCards') }}
         </ProButton>
       </div>
-      <p class="pro-hint pro-mb-md">{{ $t('commercial.clients.hint') }}</p>
-      <form class="pro-form" @submit.prevent="submitClient">
-        <div class="pro-field">
+      <p class="pro-hint pro-mb-md">
+        {{ clientMode === 'standalone' ? $t('commercial.clients.standaloneHint') : $t('commercial.clients.hint') }}
+      </p>
+      <p
+        v-if="clientMode === 'linked' && !vets.length"
+        class="pro-error pro-mb-md"
+        data-testid="create-client-no-vets"
+      >
+        {{ $t('commercial.clients.noVetsYet') }}
+      </p>
+      <form v-else class="pro-form" @submit.prevent="submitClient">
+        <div v-if="clientMode === 'linked'" class="pro-field">
           <label class="pro-label" for="client-vet">{{ $t('commercial.clients.vet') }}</label>
           <select id="client-vet" v-model="clientForm.vetUserId" class="pro-select" required data-testid="create-client-vet">
             <option value="">{{ $t('commercial.clients.vetPlaceholder') }}</option>
@@ -103,8 +124,11 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
+type ClientMode = 'linked' | 'standalone'
+
 const { t } = useI18n()
 const panel = ref<null | 'vet' | 'client'>(null)
+const clientMode = ref<ClientMode>('linked')
 const vets = ref<any[]>([])
 const saving = ref(false)
 const formError = ref('')
@@ -124,6 +148,14 @@ const clientForm = reactive({ vetUserId: '', fullName: '', email: '', password: 
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
+
+function openClientPanel(mode: ClientMode) {
+  clientMode.value = mode
+  clientForm.vetUserId = ''
+  clientMsg.value = ''
+  clientError.value = ''
+  panel.value = 'client'
+}
 
 async function load() {
   const res: any = await $fetch('/api/commercial/vets')
@@ -152,7 +184,15 @@ async function submitClient() {
   clientMsg.value = ''
   clientError.value = ''
   try {
-    await $fetch('/api/commercial/clients', { method: 'POST', body: { ...clientForm } })
+    const body: Record<string, string> = {
+      fullName: clientForm.fullName,
+      email: clientForm.email,
+      password: clientForm.password,
+    }
+    if (clientMode.value === 'linked') {
+      body.vetUserId = clientForm.vetUserId
+    }
+    await $fetch('/api/commercial/clients', { method: 'POST', body })
     clientMsg.value = t('commercial.clients.success')
     Object.assign(clientForm, { vetUserId: '', fullName: '', email: '', password: '' })
     await load()
@@ -169,7 +209,7 @@ onMounted(load)
 <style scoped>
 .pf-audience-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
@@ -199,7 +239,7 @@ onMounted(load)
 .pf-form-toolbar h3 {
   margin: 0;
 }
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .pf-audience-grid { grid-template-columns: 1fr; }
 }
 </style>

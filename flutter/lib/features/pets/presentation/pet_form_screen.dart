@@ -152,7 +152,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
             ? l10n.familyPetLimit
             : raw.contains('family_requires_two_pets')
                 ? l10n.familyRequiresTwoPets
-                : l10n.errorGeneric(raw);
+                : raw.contains('vet_link_required')
+                    ? l10n.noVets
+                    : l10n.errorGeneric(raw);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
         );

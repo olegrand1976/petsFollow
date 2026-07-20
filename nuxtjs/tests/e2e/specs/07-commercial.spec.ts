@@ -11,6 +11,11 @@ test('commercial encode un véto', async ({ page }) => {
   await loginAsCommercial(page)
   await page.goto('/commercial/vets')
   await expect(page.getByTestId('commercial-vets-page')).toBeVisible()
+  await expect(page.getByTestId('commercial-vets-cards')).toBeVisible()
+  await expect(page.getByTestId('commercial-card-vet')).toBeVisible()
+  await expect(page.getByTestId('commercial-card-client')).toBeVisible()
+  await expect(page.getByTestId('commercial-card-client-standalone')).toBeVisible()
+  await page.getByTestId('commercial-card-vet').click()
   await expect(page.getByTestId('commercial-vet-form')).toBeVisible()
   const email = uniqueE2EEmail('pw-vet')
   await fillField(page, 'encode-vet-name', 'Dr E2E')
@@ -20,6 +25,20 @@ test('commercial encode un véto', async ({ page }) => {
   await fillField(page, 'encode-vet-city', 'Lyon')
   await page.getByTestId('encode-vet-submit').click()
   await expect(page.getByTestId('encode-vet-name')).toHaveValue('', { timeout: 15000 })
+})
+
+test('commercial ouvre les formulaires client lié et sans liaison', async ({ page }) => {
+  await loginAsCommercial(page)
+  await page.goto('/commercial/vets')
+  await page.getByTestId('commercial-card-client-standalone').click()
+  await expect(page.getByTestId('commercial-client-form')).toBeVisible()
+  await expect(page.getByTestId('create-client-vet')).toHaveCount(0)
+  await page.getByTestId('commercial-back-cards').click()
+  await page.getByTestId('commercial-card-client').click()
+  await expect(page.getByTestId('commercial-client-form')).toBeVisible()
+  const noVets = page.getByTestId('create-client-no-vets')
+  const vetSelect = page.getByTestId('create-client-vet')
+  await expect(noVets.or(vetSelect)).toBeVisible()
 })
 
 test('commercial voit pitch et commissions', async ({ page }) => {

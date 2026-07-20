@@ -89,7 +89,11 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
     } catch (e) {
       if (!mounted) return;
       final raw = e.toString();
-      final msg = raw.contains('kennel_required') ? l10n.kennelRequired : raw;
+      final msg = raw.contains('vet_link_required')
+          ? l10n.noVets
+          : raw.contains('kennel_required')
+              ? l10n.kennelRequired
+              : raw;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _submitting = false);

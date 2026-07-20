@@ -32,7 +32,8 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan/add
 
 ## Commercial / sales
 
-Overview, encode/list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile, page pitch. Annuaire partagé `source=directory`.  
+Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile, page pitch. Annuaire partagé `source=directory`.  
+Client sans liaison : `practice_id` NULL — pas de pet ni commission tant qu’une liaison véto n’est pas acceptée (`vet_link_required` sur `POST /pets`).  
 **Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; production manager privée (hors tableaux équipe).  
 Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.
 

@@ -17,7 +17,7 @@
     "adminCommercials": "Equipo comercial",
     "adminProspects": "Prospectos",
     "commercialDashboard": "Panel",
-    "commercialVets": "Veterinarios",
+    "commercialVets": "Altas",
     "commercialProspects": "Prospectos",
     "commercialCommissions": "Mis pagos",
     "commercialSettings": "Perfil de pago",
@@ -1325,8 +1325,8 @@
       "directory": "Directorio BCE"
     },
     "vets": {
-      "title": "Veterinarios asignados",
-      "subtitle": "Elija una acción y cree una cuenta. Los vets asignados siguen visibles.",
+      "title": "Altas",
+      "subtitle": "Registre un veterinario, un cliente vinculado o un cliente sin vínculo. Los vets asignados siguen visibles.",
       "encode": "Crear veterinario",
       "save": "Crear cuenta",
       "empty": "Sin veterinarios asignados",
@@ -1346,8 +1346,8 @@
       "backToCards": "Elegir otra acción"
     },
     "clients": {
-      "create": "Crear cuenta de cliente",
-      "hint": "El cliente deberá cambiar su contraseña en el primer inicio de sesión.",
+      "create": "Crear cliente vinculado",
+      "hint": "El cliente queda vinculado a uno de sus vets. Deberá cambiar su contraseña en el primer inicio de sesión.",
       "vet": "Veterinario",
       "vetPlaceholder": "Elegir un veterinario",
       "fullName": "Nombre completo",
@@ -1356,8 +1356,13 @@
       "submit": "Crear cliente",
       "success": "Cuenta de cliente creada",
       "error": "Creación fallida",
-      "cardTitle": "Cliente",
-      "cardDesc": "Crear una cuenta cliente vinculada a uno de sus vets."
+      "cardTitle": "Cliente vinculado",
+      "cardDesc": "Crear una cuenta cliente vinculada a uno de sus vets.",
+      "standaloneCardTitle": "Cliente sin vínculo",
+      "standaloneCardDesc": "Crear una cuenta cliente sin vincular un veterinario por ahora.",
+      "standaloneCreate": "Crear cliente sin vínculo",
+      "standaloneHint": "Cuenta sin clínica: sin mascotas ni comisión hasta que se acepte un vínculo vet (solicitud desde la app). Contraseña a cambiar en el primer inicio de sesión.",
+      "noVetsYet": "Ningún veterinario asignado. Cree primero un veterinario y luego el cliente vinculado."
     },
     "prospects": {
       "title": "Fichas de prospectos",
