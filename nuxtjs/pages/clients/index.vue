@@ -3,6 +3,23 @@
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')">
       <template #actions>
         <ProButton
+          test-id="clients-invitations-open"
+          variant="secondary"
+          class="pro-btn--icon clients-invites-btn"
+          :aria-label="$t('clients.invitations.open')"
+          @click="invitationsOpen = true"
+        >
+          <ProIcon name="mail" :size="22" />
+          <ProBadge
+            v-if="linkRequests.length"
+            variant="danger"
+            class="clients-invites-badge"
+            data-testid="clients-invitations-badge"
+          >
+            {{ linkRequests.length > 99 ? '99+' : linkRequests.length }}
+          </ProBadge>
+        </ProButton>
+        <ProButton
           test-id="create-client-open"
           class="pro-btn--icon"
           :aria-label="$t('clients.create.open')"
@@ -14,6 +31,40 @@
     </ProPageHeader>
     <p v-if="loadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ loadError }}</p>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
+
+    <ProModal v-model:open="invitationsOpen" :title="$t('clients.invitations.title')">
+      <p v-if="inviteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ inviteError }}</p>
+      <ProEmptyState
+        v-if="!linkRequests.length"
+        :title="$t('clients.invitations.emptyTitle')"
+        :description="$t('clients.invitations.emptyDescription')"
+      />
+      <ProTable v-else>
+        <thead>
+          <tr>
+            <th>{{ $t('clients.invitations.columnClient') }}</th>
+            <th>{{ $t('clients.invitations.columnEmail') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="req in linkRequests" :key="req.id" :data-testid="`link-request-${req.id}`">
+            <td>{{ req.clientName }}</td>
+            <td>{{ req.clientEmail }}</td>
+            <td>
+              <div class="pro-flex-gap">
+                <ProButton :disabled="busyInviteId === req.id" @click="acceptLink(req.id)">
+                  {{ $t('clients.invitations.accept') }}
+                </ProButton>
+                <ProButton variant="ghost" :disabled="busyInviteId === req.id" @click="rejectLink(req.id)">
+                  {{ $t('clients.invitations.reject') }}
+                </ProButton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProModal>
 
     <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
       <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
@@ -150,8 +201,10 @@ type ClientRow = {
   petCount: number
 }
 
+const route = useRoute()
 const { t } = useI18n()
 const { compareStrings } = useFormatters()
+const { mapError } = useApiError()
 
 const clients = ref<ClientRow[]>([])
 const query = ref('')
@@ -161,6 +214,11 @@ const sendingId = ref('')
 const appLinkFeedback = ref('')
 const loadError = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
+
+const invitationsOpen = ref(false)
+const linkRequests = ref<any[]>([])
+const busyInviteId = ref('')
+const inviteError = ref('')
 
 function asClientList(raw: unknown): ClientRow[] {
   const list = Array.isArray((raw as any)?.data)
@@ -267,12 +325,64 @@ const kanbanColumns = computed(() => [
   },
 ])
 
-onMounted(() => {
-  void loadClients()
+async function loadLinkRequests() {
+  inviteError.value = ''
+  try {
+    const res: any = await $fetch('/api/vet/link-requests')
+    linkRequests.value = res.data ?? res ?? []
+  } catch (e: any) {
+    linkRequests.value = []
+    inviteError.value = mapError(e)
+  }
+}
+
+async function acceptLink(id: string) {
+  busyInviteId.value = id
+  inviteError.value = ''
+  try {
+    await $fetch(`/api/vet/link-requests/${id}/accept`, { method: 'POST' })
+    await loadLinkRequests()
+  } catch (e: any) {
+    inviteError.value = mapError(e)
+  } finally {
+    busyInviteId.value = ''
+  }
+}
+
+async function rejectLink(id: string) {
+  busyInviteId.value = id
+  inviteError.value = ''
+  try {
+    await $fetch(`/api/vet/link-requests/${id}/reject`, { method: 'POST' })
+    await loadLinkRequests()
+  } catch (e: any) {
+    inviteError.value = mapError(e)
+  } finally {
+    busyInviteId.value = ''
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([loadClients(), loadLinkRequests()])
+  if (route.query.invitations === '1') {
+    invitationsOpen.value = true
+  }
 })
 </script>
 
 <style scoped>
+.clients-invites-btn {
+  position: relative;
+}
+.clients-invites-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  min-width: 1.1rem;
+  justify-content: center;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.65rem;
+}
 .client-avatar {
   margin-right: 0.5rem;
   vertical-align: middle;

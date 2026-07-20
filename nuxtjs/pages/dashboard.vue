@@ -27,14 +27,14 @@
         icon="inbox"
         :value="pendingLinks"
         :label="$t('dashboard.pendingLinks')"
-        to="/requests"
+        to="/clients?invitations=1"
         :variant="pendingLinksRaw > 0 ? 'alert' : 'default'"
       />
       <ProKpi
         icon="event"
         :value="pendingVisits"
         :label="$t('dashboard.pendingVisits')"
-        to="/requests"
+        to="/calendar"
         :variant="pendingVisitsRaw > 0 ? 'alert' : 'default'"
       />
       <ProKpi
@@ -49,7 +49,7 @@
       <ProCard :title="$t('dashboard.quickActions')">
         <div class="pro-flex-gap">
           <ProButton @click="navigateTo('/clients')">{{ $t('dashboard.viewClients') }}</ProButton>
-          <ProButton variant="secondary" @click="navigateTo('/requests')">{{ $t('dashboard.viewRequests') }}</ProButton>
+          <ProButton variant="secondary" @click="navigateTo('/calendar')">{{ $t('dashboard.viewCalendar') }}</ProButton>
           <ProButton variant="secondary" @click="navigateTo('/messages')">{{ $t('dashboard.messaging') }}</ProButton>
           <ProButton variant="ghost" @click="navigateTo('/settings')">{{ $t('nav.settings') }}</ProButton>
         </div>

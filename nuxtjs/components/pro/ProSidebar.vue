@@ -7,7 +7,7 @@
         :to="item.to"
         :exact="item.exact"
         class="pro-sidebar__link"
-        :data-testid="item.to === '/requests' ? 'nav-requests' : undefined"
+        :data-testid="navTestId(item.to)"
       >
         <span class="pro-sidebar__icon" aria-hidden="true">
           <ProIcon :name="iconName(item.icon)" :size="18" />
@@ -17,7 +17,7 @@
           v-if="item.badge && item.badge > 0"
           variant="danger"
           class="pro-sidebar__badge"
-          data-testid="nav-requests-badge"
+          :data-testid="badgeTestId(item.to)"
         >
           {{ item.badge > 99 ? '99+' : item.badge }}
         </ProBadge>
@@ -36,6 +36,7 @@ export type ProNavIcon =
   | 'users'
   | 'payments'
   | 'requests'
+  | 'calendar'
   | 'recommend'
   | 'description'
 
@@ -60,12 +61,27 @@ const icons: Record<ProNavIcon, string> = {
   users: 'person',
   payments: 'payments',
   requests: 'inbox',
+  calendar: 'calendar_month',
   recommend: 'handshake',
   description: 'description',
 }
 
 function iconName(name: ProNavIcon) {
   return icons[name] ?? icons.dashboard
+}
+
+function navTestId(to: string) {
+  if (to === '/calendar') return 'nav-calendar'
+  if (to === '/clients') return 'nav-clients'
+  if (to === '/requests') return 'nav-requests'
+  return undefined
+}
+
+function badgeTestId(to: string) {
+  if (to === '/calendar') return 'nav-calendar-badge'
+  if (to === '/clients') return 'nav-clients-badge'
+  if (to === '/requests') return 'nav-requests-badge'
+  return undefined
 }
 </script>
 

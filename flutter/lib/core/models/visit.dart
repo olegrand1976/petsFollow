@@ -6,6 +6,9 @@ class Visit {
     this.status = 'requested',
     this.notes,
     this.createdAt,
+    this.proposedScheduledAt,
+    this.pendingActionBy,
+    this.durationMinutes,
   });
 
   final String id;
@@ -14,14 +17,20 @@ class Visit {
   final String status;
   final String? notes;
   final DateTime? createdAt;
+  final DateTime? proposedScheduledAt;
+  final String? pendingActionBy;
+  final int? durationMinutes;
 
   bool get isUpcoming {
     if (status == 'done' || status == 'cancelled') return false;
     if (scheduledAt != null) return scheduledAt!.isAfter(DateTime.now());
-    return status == 'requested' || status == 'confirmed';
+    return status == 'requested' || status == 'confirmed' || status == 'reschedule_pending';
   }
 
-  DateTime get displayDate => scheduledAt ?? createdAt ?? DateTime.now();
+  bool get awaitingClient => pendingActionBy == 'client';
+
+  DateTime get displayDate =>
+      proposedScheduledAt ?? scheduledAt ?? createdAt ?? DateTime.now();
 
   factory Visit.fromJson(Map<String, dynamic> json) {
     return Visit(
@@ -35,6 +44,11 @@ class Visit {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
+      proposedScheduledAt: json['proposedScheduledAt'] != null
+          ? DateTime.tryParse(json['proposedScheduledAt'] as String)
+          : null,
+      pendingActionBy: json['pendingActionBy'] as String?,
+      durationMinutes: json['durationMinutes'] as int?,
     );
   }
 }

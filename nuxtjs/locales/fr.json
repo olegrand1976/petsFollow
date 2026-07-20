@@ -5,7 +5,8 @@
     "recommend": "Recommander un cabinet",
     "messages": "Messagerie",
     "requests": "Demandes",
-    "commissions": "Commissions",
+    "calendar": "Calendrier",
+    "commissions": "Rétributions",
     "settings": "Paramètres",
     "adminDashboard": "Tableau de bord",
     "adminUsers": "Inscriptions",
@@ -18,7 +19,7 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Vétérinaires",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Commissions",
+    "commercialCommissions": "Rétributions",
     "commercialSettings": "Profil paiement",
     "commercialPitch": "Présentation",
     "products": "Produits"
@@ -359,7 +360,32 @@
       "subtitle": "Choisissez les événements pour lesquels vous recevez un email.",
       "onMessage": "Nouveau message client",
       "onHeartrate": "Relevé cardiaque validé",
+      "onVisitRequest": "Nouvelle demande de rendez-vous",
       "saved": "Préférences enregistrées."
+    },
+    "calendar": {
+      "title": "Calendrier & réservation",
+      "slotsHint": "Définissez vos plages horaires avant d'activer la réservation client.",
+      "duration": "Durée d'un créneau (minutes)",
+      "addSlot": "Ajouter une plage",
+      "enableBooking": "Activer la réservation via l'application client",
+      "enableHelp": "Si désactivé, les clients ne peuvent pas choisir de créneau sur l'app mobile. Vous conservez l'agenda Pro.",
+      "scheduleIncomplete": "Ajoutez au moins une plage horaire pour activer la réservation.",
+      "save": "Enregistrer le calendrier",
+      "saved": "Calendrier enregistré.",
+      "vacationsTitle": "Vacances / fermetures",
+      "vacationsReminder": "Rappel : indiquez vos vacances pour l'année en cours (ou cochez « aucune vacance »).",
+      "noVacations": "Aucune vacance cette année",
+      "addVacation": "Ajouter",
+      "weekday": {
+        "0": "Dimanche",
+        "1": "Lundi",
+        "2": "Mardi",
+        "3": "Mercredi",
+        "4": "Jeudi",
+        "5": "Vendredi",
+        "6": "Samedi"
+      }
     },
     "password": {
       "title": "Mot de passe",
@@ -376,6 +402,16 @@
   "clients": {
     "title": "Clients",
     "subtitle": "Liste des clients rattachés à votre cabinet.",
+    "invitations": {
+      "open": "Invitations clients",
+      "title": "Invitations en attente",
+      "emptyTitle": "Aucune invitation",
+      "emptyDescription": "Les demandes de liaison client↔cabinet apparaîtront ici.",
+      "columnClient": "Client",
+      "columnEmail": "Email",
+      "accept": "Accepter",
+      "reject": "Refuser"
+    },
     "create": {
       "title": "Créer un compte client",
       "open": "Créer un compte client",
@@ -522,6 +558,7 @@
     "quickActions": "Actions rapides",
     "viewClients": "Voir les clients",
     "viewRequests": "Voir les demandes",
+    "viewCalendar": "Voir le calendrier",
     "messaging": "Messagerie",
     "about": "À propos",
     "aboutText": "petsFollow Pro centralise le suivi cardiaque, les dossiers clients et la messagerie sécurisée pour votre cabinet vétérinaire."
@@ -731,8 +768,41 @@
       }
     }
   },
+  "calendar": {
+    "title": "Calendrier",
+    "subtitle": "Demandes de rendez-vous et agenda du cabinet.",
+    "openSettings": "Horaires & vacances",
+    "bookingDisabledHint": "La réservation client via l'app est désactivée. Activez-la dans Paramètres.",
+    "pendingTitle": "À traiter",
+    "pendingEmptyTitle": "Aucune demande en attente",
+    "pendingEmptyDescription": "Les demandes client et déplacements à valider apparaîtront ici.",
+    "weekTitle": "Semaine",
+    "weekEmptyTitle": "Aucun rendez-vous cette semaine",
+    "weekEmptyDescription": "Les RDV planifiés s'affichent ici.",
+    "prevWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante",
+    "columnClient": "Client",
+    "columnPet": "Animal",
+    "columnWhen": "Quand",
+    "columnStatus": "Statut",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "acceptReschedule": "Accepter le déplacement",
+    "rejectReschedule": "Refuser",
+    "proposeMove": "Proposer un autre horaire",
+    "newSlot": "Nouveau créneau",
+    "sendPropose": "Envoyer au client",
+    "proposed": "proposé",
+    "status": {
+      "requested": "En attente",
+      "confirmed": "Confirmé",
+      "reschedule_pending": "Déplacement en attente",
+      "done": "Terminé",
+      "cancelled": "Annulé"
+    }
+  },
   "commissions": {
-    "title": "Mes commissions",
+    "title": "Mes rétributions",
     "subtitle": "Vos gains et versements en tant que vétérinaire.",
     "kpiClients": "Clients payants",
     "kpiRate": "Taux de base actuel",

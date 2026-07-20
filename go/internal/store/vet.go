@@ -58,7 +58,9 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			(SELECT COUNT(*)::int FROM practice.client_vet_link_requests
 			 WHERE vet_user_id = $2 AND status = 'pending'),
 			(SELECT COUNT(*)::int FROM visits.visits
-			 WHERE practice_id = $1 AND status = 'requested'),
+			 WHERE practice_id = $1
+			   AND pending_action_by = 'vet'
+			   AND status IN ('requested', 'reschedule_pending')),
 			(SELECT COUNT(*)::int FROM care.reminders
 			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW())`,
 		practiceID, vetID).Scan(

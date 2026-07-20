@@ -96,17 +96,18 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	return tx.Commit(ctx)
 }
 
-func (s *Store) UpdateEmailPrefs(ctx context.Context, vetID string, onMessage, onHeartRate bool) error {
+func (s *Store) UpdateEmailPrefs(ctx context.Context, vetID string, onMessage, onHeartRate, onVisitRequest bool) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO notifications.notification_preferences (vet_user_id, email_on_message, email_on_heartrate)
-		VALUES ($1, $2, $3)
+		INSERT INTO notifications.notification_preferences (vet_user_id, email_on_message, email_on_heartrate, email_on_visit_request)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (vet_user_id) DO UPDATE SET
 			email_on_message = EXCLUDED.email_on_message,
-			email_on_heartrate = EXCLUDED.email_on_heartrate`,
-		vetID, onMessage, onHeartRate)
+			email_on_heartrate = EXCLUDED.email_on_heartrate,
+			email_on_visit_request = EXCLUDED.email_on_visit_request`,
+		vetID, onMessage, onHeartRate, onVisitRequest)
 	return err
 }
 
-func (s *Store) GetEmailPrefs(ctx context.Context, vetID string) (onMessage, onHeartRate bool, err error) {
+func (s *Store) GetEmailPrefs(ctx context.Context, vetID string) (VetEmailPrefs, error) {
 	return s.EmailPrefs(ctx, vetID)
 }

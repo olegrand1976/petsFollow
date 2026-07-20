@@ -5,7 +5,7 @@
     "recommend": "Refer a practice",
     "messages": "Messaging",
     "requests": "Requests",
-    "commissions": "Commissions",
+    "commissions": "Payouts",
     "settings": "Settings",
     "adminDashboard": "Dashboard",
     "adminUsers": "Registrations",
@@ -18,10 +18,11 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Veterinarians",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Commissions",
+    "commercialCommissions": "Payouts",
     "commercialSettings": "Payout profile",
     "commercialPitch": "Pitch",
-    "products": "Products"
+    "products": "Products",
+    "calendar": "Calendar"
   },
   "auth": {
     "login": {
@@ -227,7 +228,8 @@
       "subtitle": "Choose which events trigger an email.",
       "onMessage": "New client message",
       "onHeartrate": "Validated heart rate reading",
-      "saved": "Preferences saved."
+      "saved": "Preferences saved.",
+      "onVisitRequest": "New appointment request"
     },
     "password": {
       "title": "Password",
@@ -239,7 +241,31 @@
       "saved": "Password updated.",
       "mismatch": "Passwords do not match."
     },
-    "legalLinks": "Legal information"
+    "legalLinks": "Legal information",
+    "calendar": {
+      "title": "Calendar & booking",
+      "slotsHint": "Define your weekly hours before enabling client booking.",
+      "duration": "Slot duration (minutes)",
+      "addSlot": "Add time range",
+      "enableBooking": "Enable booking via the client app",
+      "enableHelp": "If disabled, clients cannot pick slots in the mobile app. You keep the Pro calendar.",
+      "scheduleIncomplete": "Add at least one time range to enable booking.",
+      "save": "Save calendar",
+      "saved": "Calendar saved.",
+      "vacationsTitle": "Vacations / closures",
+      "vacationsReminder": "Reminder: set vacations for the current year (or check “no vacation”).",
+      "noVacations": "No vacation this year",
+      "addVacation": "Add",
+      "weekday": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      }
+    }
   },
   "clients": {
     "title": "Clients",
@@ -341,6 +367,16 @@
       "careTypeFarrier": "Farrier",
       "careTypeFecalEgg": "Fecal egg count",
       "careTypeCustom": "Custom"
+    },
+    "invitations": {
+      "open": "Client invitations",
+      "title": "Pending invitations",
+      "emptyTitle": "No invitations",
+      "emptyDescription": "Client↔practice link requests will appear here.",
+      "columnClient": "Client",
+      "columnEmail": "Email",
+      "accept": "Accept",
+      "reject": "Reject"
     }
   },
   "recommend": {
@@ -392,7 +428,8 @@
     "viewRequests": "View requests",
     "messaging": "Messaging",
     "about": "About",
-    "aboutText": "petsFollow Pro centralises cardiac monitoring, client records and secure messaging for your veterinary practice."
+    "aboutText": "petsFollow Pro centralises cardiac monitoring, client records and secure messaging for your veterinary practice.",
+    "viewCalendar": "View calendar"
   },
   "messages": {
     "title": "Messaging",
@@ -600,7 +637,7 @@
     }
   },
   "commissions": {
-    "title": "My commissions",
+    "title": "My payouts",
     "subtitle": "Your earnings and payouts as a veterinarian.",
     "kpiClients": "Paying clients",
     "kpiRate": "Current rate",
@@ -1236,5 +1273,38 @@
       "paid": "Paid"
     },
     "discountNote": "Euro amounts are full-price indicatives. Household/kennel discounts (−10% / −15%) reduce the HT base actually collected."
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Appointment requests and practice schedule.",
+    "openSettings": "Hours & vacations",
+    "bookingDisabledHint": "Client booking via the app is disabled. Enable it in Settings.",
+    "pendingTitle": "To review",
+    "pendingEmptyTitle": "No pending requests",
+    "pendingEmptyDescription": "Client requests and reschedules awaiting your action will appear here.",
+    "weekTitle": "Week",
+    "weekEmptyTitle": "No appointments this week",
+    "weekEmptyDescription": "Scheduled appointments appear here.",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "columnClient": "Client",
+    "columnPet": "Pet",
+    "columnWhen": "When",
+    "columnStatus": "Status",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "acceptReschedule": "Accept reschedule",
+    "rejectReschedule": "Decline",
+    "proposeMove": "Propose another time",
+    "newSlot": "New slot",
+    "sendPropose": "Send to client",
+    "proposed": "proposed",
+    "status": {
+      "requested": "Pending",
+      "confirmed": "Confirmed",
+      "reschedule_pending": "Reschedule pending",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    }
   }
 }

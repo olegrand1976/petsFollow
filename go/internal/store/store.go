@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	ErrNotFound   = errors.New("not found")
+	ErrNotFound    = errors.New("not found")
+	ErrValidation  = errors.New("validation")
 	ErrForbidden  = errors.New("forbidden")
 )
 
@@ -575,12 +576,20 @@ func (s *Store) GetVetForClient(ctx context.Context, clientID, practiceID string
 	return vetID, err
 }
 
-func (s *Store) EmailPrefs(ctx context.Context, vetID string) (onMessage, onHeartRate bool, err error) {
-	err = s.pool.QueryRow(ctx, `
-		SELECT email_on_message, email_on_heartrate FROM notifications.notification_preferences WHERE vet_user_id=$1`, vetID).
-		Scan(&onMessage, &onHeartRate)
+type VetEmailPrefs struct {
+	OnMessage      bool
+	OnHeartRate    bool
+	OnVisitRequest bool
+}
+
+func (s *Store) EmailPrefs(ctx context.Context, vetID string) (VetEmailPrefs, error) {
+	var p VetEmailPrefs
+	err := s.pool.QueryRow(ctx, `
+		SELECT email_on_message, email_on_heartrate, COALESCE(email_on_visit_request, TRUE)
+		FROM notifications.notification_preferences WHERE vet_user_id=$1`, vetID).
+		Scan(&p.OnMessage, &p.OnHeartRate, &p.OnVisitRequest)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return true, true, nil
+		return VetEmailPrefs{OnMessage: true, OnHeartRate: true, OnVisitRequest: true}, nil
 	}
-	return onMessage, onHeartRate, err
+	return p, err
 }

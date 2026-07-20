@@ -479,6 +479,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestVisit => 'Demander une visite';
 
   @override
+  String get calendarBookingDisabled =>
+      'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.';
+
+  @override
+  String get calendarNoSlots =>
+      'Aucun créneau disponible sur les 14 prochains jours.';
+
+  @override
+  String get calendarPickSlot => 'Choisissez un créneau :';
+
+  @override
+  String get visitConfirm => 'Confirmer';
+
+  @override
+  String get visitRejectReschedule => 'Refuser le déplacement';
+
+  @override
+  String get visitAcceptReschedule => 'Accepter le nouveau créneau';
+
+  @override
   String get upcomingVisit => 'Visite à venir';
 
   @override
@@ -690,6 +710,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get visitStatusCancelled => 'Annulée';
+
+  @override
+  String get visitStatusReschedulePending => 'Déplacement en attente';
 
   @override
   String get horseHealthTitle => 'Santé équine';

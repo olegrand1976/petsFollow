@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -121,4 +123,69 @@ func (a *API) pushVisitConfirmed(clientUserID, visitID, petID, petName string) {
 		"visitId": visitID,
 		"petId":   petID,
 	})
+}
+
+func (a *API) pushVisitProposed(clientUserID, visitID, petID, petName string) {
+	locale := a.clientLocale(context.Background(), clientUserID)
+	if petName == "" {
+		petName = "…"
+	}
+	vars := map[string]string{"petName": petName}
+	title := i18n.T(locale, "push.visit_proposed_title", nil)
+	body := i18n.T(locale, "push.visit_proposed_body", vars)
+	a.notifyClientPushAsync(clientUserID, pushKindVisits, title, body, map[string]string{
+		"type":    "visit_proposed",
+		"visitId": visitID,
+		"petId":   petID,
+	})
+}
+
+func (a *API) pushVisitReschedule(clientUserID, visitID, petID, petName string) {
+	locale := a.clientLocale(context.Background(), clientUserID)
+	if petName == "" {
+		petName = "…"
+	}
+	vars := map[string]string{"petName": petName}
+	title := i18n.T(locale, "push.visit_reschedule_title", nil)
+	body := i18n.T(locale, "push.visit_reschedule_body", vars)
+	a.notifyClientPushAsync(clientUserID, pushKindVisits, title, body, map[string]string{
+		"type":    "visit_reschedule",
+		"visitId": visitID,
+		"petId":   petID,
+	})
+}
+
+func (a *API) notifyVetsVisitRequest(pet store.Pet, visit store.Visit) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+		defer cancel()
+		vets, err := a.store.ListVetsForVisitAlert(ctx, pet.PracticeID, pet.OwnerUserID)
+		if err != nil || len(vets) == 0 {
+			return
+		}
+		client, _ := a.store.GetUserByID(ctx, pet.OwnerUserID)
+		when := ""
+		loc, _ := time.LoadLocation("Europe/Brussels")
+		if loc == nil {
+			loc = time.Local
+		}
+		if visit.ProposedScheduledAt != nil {
+			when = visit.ProposedScheduledAt.In(loc).Format("02/01/2006 15:04")
+		} else if visit.ScheduledAt != nil {
+			when = visit.ScheduledAt.In(loc).Format("02/01/2006 15:04")
+		}
+		ctaURL := fmt.Sprintf("%s/calendar?visit=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), visit.ID)
+		for _, vet := range vets {
+			prefs, _ := a.store.EmailPrefs(ctx, vet.ID)
+			if !prefs.OnVisitRequest {
+				continue
+			}
+			locale := vet.PreferredLocale
+			if locale == "" {
+				locale = "fr"
+			}
+			_ = a.notifier.SendVisitRequest(vet.Email, locale, client.FullName, pet.Name, when, visit.Notes, ctaURL)
+			_ = a.store.LogNotification(ctx, vet.ID, "visit_request", map[string]any{"visitId": visit.ID, "petId": pet.ID})
+		}
+	}()
 }

@@ -412,9 +412,14 @@ class ApiClient {
     return data.map((v) => Visit.fromJson(Map<String, dynamic>.from(v as Map))).toList();
   }
 
-  Future<Visit> createVisit(String petId, {String? notes}) async {
+  Future<Visit> createVisit(
+    String petId, {
+    String? notes,
+    DateTime? scheduledAt,
+  }) async {
     final res = await dio.post('/api/v1/pets/$petId/visits', data: {
       if (notes != null) 'notes': notes,
+      if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
     });
     return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
   }
@@ -422,6 +427,34 @@ class ApiClient {
   Future<Visit> updateVisit(String id, String status) async {
     final res = await dio.patch('/api/v1/visits/$id', data: {'status': status});
     return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<Visit> visitAction(
+    String id, {
+    required String action,
+    DateTime? proposedScheduledAt,
+  }) async {
+    final res = await dio.patch('/api/v1/visits/$id', data: {
+      'action': action,
+      if (proposedScheduledAt != null)
+        'proposedScheduledAt': proposedScheduledAt.toUtc().toIso8601String(),
+    });
+    return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> getPracticeAvailability(
+    String practiceId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final res = await dio.get(
+      '/api/v1/practices/$practiceId/availability',
+      queryParameters: {
+        'from': from.toUtc().toIso8601String(),
+        'to': to.toUtc().toIso8601String(),
+      },
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map);
   }
 
   Future<DiscoveryProgress> getDiscovery() async {

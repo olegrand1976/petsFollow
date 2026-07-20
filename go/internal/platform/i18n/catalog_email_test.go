@@ -66,10 +66,21 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"emails.app_download_intro",
 		"emails.app_download_cta",
 		"emails.app_download_disclaimer",
+		"emails.visit_request_subject",
+		"emails.visit_request_tagline",
+		"emails.visit_request_preheader",
+		"emails.visit_request_greeting",
+		"emails.visit_request_intro",
+		"emails.visit_request_detail",
+		"emails.visit_request_cta",
+		"emails.visit_request_disclaimer",
 		"emails.footer_powered_by",
 		"emails.footer_visit_llit",
 	}
-	vars := map[string]string{"fullName": "Ada", "bpm": "120", "vetName": "Dr. Vet", "practiceName": "VetPlus"}
+	vars := map[string]string{
+		"fullName": "Ada", "bpm": "120", "vetName": "Dr. Vet", "practiceName": "VetPlus",
+		"clientName": "Ada", "petName": "Rex", "when": "01/01/2026 10:00", "notes": "ok",
+	}
 	for _, loc := range Supported {
 		for _, key := range keys {
 			got := T(loc, key, vars)

@@ -5,7 +5,7 @@
     "recommend": "Recomendar una clínica",
     "messages": "Mensajería",
     "requests": "Solicitudes",
-    "commissions": "Comisiones",
+    "commissions": "Retribuciones",
     "settings": "Ajustes",
     "adminDashboard": "Panel",
     "adminUsers": "Registros",
@@ -18,10 +18,11 @@
     "commercialDashboard": "Panel",
     "commercialVets": "Veterinarios",
     "commercialProspects": "Prospectos",
-    "commercialCommissions": "Comisiones",
+    "commercialCommissions": "Retribuciones",
     "commercialSettings": "Perfil de pago",
     "commercialPitch": "Pitch",
-    "products": "Productos"
+    "products": "Productos",
+    "calendar": "Calendario"
   },
   "auth": {
     "login": {
@@ -227,7 +228,8 @@
       "subtitle": "Elija qué eventos desencadenan un correo.",
       "onMessage": "Nuevo mensaje de cliente",
       "onHeartrate": "Lectura de frecuencia cardíaca validada",
-      "saved": "Preferencias guardadas."
+      "saved": "Preferencias guardadas.",
+      "onVisitRequest": "Nueva solicitud de cita"
     },
     "password": {
       "title": "Contraseña",
@@ -239,7 +241,31 @@
       "saved": "Contraseña actualizada.",
       "mismatch": "Las contraseñas no coinciden."
     },
-    "legalLinks": "Información legal"
+    "legalLinks": "Información legal",
+    "calendar": {
+      "title": "Calendario y reserva",
+      "slotsHint": "Defina sus horarios antes de activar la reserva del cliente.",
+      "duration": "Duración del hueco (minutos)",
+      "addSlot": "Añadir franja",
+      "enableBooking": "Activar reserva vía app del cliente",
+      "enableHelp": "Si está desactivado, los clientes no pueden elegir huecos en la app. Conserva el calendario Pro.",
+      "scheduleIncomplete": "Añada al menos una franja para activar la reserva.",
+      "save": "Guardar calendario",
+      "saved": "Calendario guardado.",
+      "vacationsTitle": "Vacaciones / cierres",
+      "vacationsReminder": "Recordatorio: indique vacaciones del año en curso (o marque “sin vacaciones”).",
+      "noVacations": "Sin vacaciones este año",
+      "addVacation": "Añadir",
+      "weekday": {
+        "0": "Domingo",
+        "1": "Lunes",
+        "2": "Martes",
+        "3": "Miércoles",
+        "4": "Jueves",
+        "5": "Viernes",
+        "6": "Sábado"
+      }
+    }
   },
   "clients": {
     "title": "Clientes",
@@ -341,6 +367,16 @@
       "careTypeFarrier": "Herrador",
       "careTypeFecalEgg": "Coprocultivo / recuento de huevos",
       "careTypeCustom": "Personalizado"
+    },
+    "invitations": {
+      "open": "Invitaciones de clientes",
+      "title": "Invitaciones pendientes",
+      "emptyTitle": "Ninguna invitación",
+      "emptyDescription": "Las solicitudes de vínculo cliente↔clínica aparecerán aquí.",
+      "columnClient": "Cliente",
+      "columnEmail": "Email",
+      "accept": "Aceptar",
+      "reject": "Rechazar"
     }
   },
   "recommend": {
@@ -392,7 +428,8 @@
     "viewRequests": "Ver solicitudes",
     "messaging": "Mensajería",
     "about": "Acerca de",
-    "aboutText": "petsFollow Pro centraliza el seguimiento cardíaco, las fichas de clientes y la mensajería segura para su clínica veterinaria."
+    "aboutText": "petsFollow Pro centraliza el seguimiento cardíaco, las fichas de clientes y la mensajería segura para su clínica veterinaria.",
+    "viewCalendar": "Ver calendario"
   },
   "messages": {
     "title": "Mensajería",
@@ -600,7 +637,7 @@
     }
   },
   "commissions": {
-    "title": "Mis comisiones",
+    "title": "Mis retribuciones",
     "subtitle": "Sus ganancias y pagos como veterinario.",
     "kpiClients": "Clientes de pago",
     "kpiRate": "Tasa actual",
@@ -1236,5 +1273,38 @@
       "paid": "Pagado"
     },
     "discountNote": "Los importes en € son indicativos a precio de catálogo. Los descuentos hogar/criadero (−10 % / −15 %) reducen la base HT realmente cobrada."
+  },
+  "calendar": {
+    "title": "Calendario",
+    "subtitle": "Solicitudes de cita y agenda de la clínica.",
+    "openSettings": "Horarios y vacaciones",
+    "bookingDisabledHint": "La reserva del cliente vía app está desactivada. Actívela en Ajustes.",
+    "pendingTitle": "Por tratar",
+    "pendingEmptyTitle": "Ninguna solicitud pendiente",
+    "pendingEmptyDescription": "Las solicitudes y cambios de horario aparecerán aquí.",
+    "weekTitle": "Semana",
+    "weekEmptyTitle": "Ninguna cita esta semana",
+    "weekEmptyDescription": "Las citas programadas aparecen aquí.",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "columnClient": "Cliente",
+    "columnPet": "Animal",
+    "columnWhen": "Cuándo",
+    "columnStatus": "Estado",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "acceptReschedule": "Aceptar cambio",
+    "rejectReschedule": "Rechazar",
+    "proposeMove": "Proponer otro horario",
+    "newSlot": "Nuevo horario",
+    "sendPropose": "Enviar al cliente",
+    "proposed": "propuesto",
+    "status": {
+      "requested": "Pendiente",
+      "confirmed": "Confirmada",
+      "reschedule_pending": "Cambio pendiente",
+      "done": "Hecha",
+      "cancelled": "Cancelada"
+    }
   }
 }

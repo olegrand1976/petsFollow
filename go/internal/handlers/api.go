@@ -66,6 +66,13 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/vet/link-requests/{id}/accept", a.acceptVetLinkRequest)
 		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
 		pr.Get("/vet/visits", a.listVetVisits)
+		pr.Get("/vet/schedule", a.getVetSchedule)
+		pr.Put("/vet/schedule", a.putVetSchedule)
+		pr.Get("/vet/vacations", a.listVetVacations)
+		pr.Post("/vet/vacations", a.createVetVacation)
+		pr.Delete("/vet/vacations/{id}", a.deleteVetVacation)
+		pr.Get("/vet/calendar", a.getVetCalendar)
+		pr.Get("/practices/{practiceID}/availability", a.getPracticeAvailability)
 		pr.Get("/vet/care-reminders", a.listVetOverdueCare)
 		pr.Get("/me/discovery", a.getDiscovery)
 		pr.Post("/me/discovery/complete", a.completeDiscovery)
@@ -636,8 +643,8 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-	onMsg, onHR, _ := a.store.EmailPrefs(r.Context(), vetID)
-	if onHR {
+	prefs, _ := a.store.EmailPrefs(r.Context(), vetID)
+	if prefs.OnHeartRate {
 		vet, _ := a.store.GetUserByID(r.Context(), vetID)
 		locale := vet.PreferredLocale
 		if locale == "" {
@@ -645,7 +652,6 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = a.notifier.SendHeartrateValidated(vet.Email, locale, *sess.BPM)
 		_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": sess.BPM})
-		_ = onMsg
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
 }
@@ -791,8 +797,8 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id.Role == kernel.RoleClient {
-		onMsg, _, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
-		if onMsg {
+		prefs, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
+		if prefs.OnMessage {
 			vet, _ := a.store.GetUserByID(r.Context(), thread.VetUserID)
 			locale := vet.PreferredLocale
 			if locale == "" {
@@ -850,8 +856,8 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if id.Role == kernel.RoleClient {
-		onMsg, _, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
-		if onMsg {
+		prefs, _ := a.store.EmailPrefs(r.Context(), thread.VetUserID)
+		if prefs.OnMessage {
 			vet, _ := a.store.GetUserByID(r.Context(), thread.VetUserID)
 			locale := vet.PreferredLocale
 			if locale == "" {

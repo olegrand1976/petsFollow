@@ -382,8 +382,10 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 }
 
 type createVisitReq struct {
-	ScheduledAt *string `json:"scheduledAt"`
-	Notes       string  `json:"notes"`
+	ScheduledAt     *string `json:"scheduledAt"`
+	Notes           string  `json:"notes"`
+	ConfirmDirect   bool    `json:"confirmDirect"`
+	DurationMinutes *int    `json:"durationMinutes"`
 }
 
 func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
@@ -412,12 +414,102 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if id.Role == kernel.RoleVet {
 		source = "vet"
 	}
-	visit, err := a.store.CreateVisit(r.Context(), pet.ID, pet.PracticeID, source, req.Notes, scheduledAt)
+
+	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Clients always use cabinet slot duration (ignore client-supplied duration).
+	duration := slotDur
+	if source == "vet" && req.DurationMinutes != nil {
+		duration = *req.DurationMinutes
+	}
+
+	if source == "client" {
+		if scheduledAt != nil {
+			if !enabled {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "calendar_booking_disabled")
+				return
+			}
+			if err := a.validateClientSlot(r, pet.PracticeID, *scheduledAt, duration, ""); err != nil {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", err.Error())
+				return
+			}
+		} else if enabled {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "slot_required")
+			return
+		}
+	}
+
+	in := store.CreateVisitInput{
+		PetID:           pet.ID,
+		PracticeID:      pet.PracticeID,
+		Source:          source,
+		Notes:           req.Notes,
+		ScheduledAt:     scheduledAt,
+		DurationMinutes: &duration,
+		ConfirmDirect:   source == "vet" && req.ConfirmDirect,
+	}
+	if scheduledAt == nil {
+		in.DurationMinutes = nil
+	}
+	var visit store.Visit
+	if source == "client" && scheduledAt != nil {
+		visit, err = a.store.CreateVisitBooked(r.Context(), in)
+		if err != nil {
+			if errors.Is(err, store.ErrValidation) {
+				writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	} else {
+		visit, err = a.store.CreateVisit(r.Context(), in)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	}
+	if source == "client" {
+		a.notifyVetsVisitRequest(pet, visit)
+	}
+	if source == "vet" && !req.ConfirmDirect && visit.Status == "requested" {
+		a.pushVisitProposed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+	}
 	httpx.WriteData(w, http.StatusCreated, visit)
+}
+
+func (a *API) validateClientSlot(r *http.Request, practiceID string, start time.Time, duration int, excludeID string) error {
+	onVac, err := a.store.IsOnVacation(r.Context(), practiceID, start)
+	if err != nil {
+		return errors.New("internal")
+	}
+	if onVac {
+		return errors.New("on_vacation")
+	}
+	overlap, err := a.store.HasVisitOverlap(r.Context(), practiceID, start, duration, excludeID)
+	if err != nil {
+		return errors.New("internal")
+	}
+	if overlap {
+		return errors.New("slot_taken")
+	}
+	slots, err := a.store.ListAvailableSlots(r.Context(), practiceID, start.Add(-time.Minute), start.Add(24*time.Hour))
+	if err != nil {
+		return errors.New("internal")
+	}
+	for _, sl := range slots {
+		if sl.Start.Equal(start.UTC()) || sl.Start.Equal(start) {
+			return nil
+		}
+		// tolerate small clock skew
+		if sl.Start.Sub(start).Abs() < time.Second {
+			return nil
+		}
+	}
+	return errors.New("slot_unavailable")
 }
 
 func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
@@ -427,11 +519,17 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := r.URL.Query().Get("status")
-	if status == "" {
-		status = "requested"
+	if status == "" || status == "pending" {
+		visits, err := a.store.ListPracticePendingVetActions(r.Context(), id.PracticeID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		httpx.WriteData(w, http.StatusOK, visits)
+		return
 	}
 	switch status {
-	case "requested", "confirmed", "done", "cancelled":
+	case "requested", "confirmed", "done", "cancelled", "reschedule_pending":
 	default:
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 		return
@@ -459,7 +557,9 @@ func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateVisitReq struct {
-	Status string `json:"status"`
+	Status              string  `json:"status"`
+	Action              string  `json:"action"`
+	ProposedScheduledAt *string `json:"proposedScheduledAt"`
 }
 
 func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
@@ -469,14 +569,8 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req updateVisitReq
-	if err := httpx.DecodeJSON(r, &req); err != nil || req.Status == "" {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
-	switch req.Status {
-	case "requested", "confirmed", "done", "cancelled":
-	default:
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 		return
 	}
 	visit, err := a.store.GetVisit(r.Context(), chi.URLParam(r, "id"))
@@ -495,12 +589,6 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 			return
 		}
-		switch req.Status {
-		case "cancelled", "requested":
-		default:
-			writeErr(w, r, http.StatusForbidden, "forbidden", "client_cannot_set_status")
-			return
-		}
 	case kernel.RoleVet:
 		if pet.PracticeID != id.PracticeID {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
@@ -510,13 +598,158 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	updated, err := a.store.UpdateVisitStatus(r.Context(), visit.ID, req.Status)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+
+	action := req.Action
+	if action == "" {
+		switch req.Status {
+		case "confirmed":
+			action = "confirm"
+		case "cancelled":
+			action = "cancel"
+		case "done":
+			action = "done"
+		case "requested":
+			action = "reopen"
+		default:
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_action")
+			return
+		}
+	}
+
+	var updated store.Visit
+	switch action {
+	case "confirm":
+		if visit.Status == "reschedule_pending" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "use_accept_reschedule")
+			return
+		}
+		if visit.Status != "requested" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
+		expected := "vet"
+		if id.Role == kernel.RoleClient {
+			expected = "client"
+		}
+		if visit.PendingActionBy == nil || *visit.PendingActionBy != expected {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
+			return
+		}
+		updated, err = a.store.ConfirmVisit(r.Context(), visit.ID)
+		if err == nil {
+			a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+		}
+	case "cancel":
+		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "cancelled")
+	case "done":
+		if id.Role != kernel.RoleVet {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+			return
+		}
+		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "done")
+	case "propose_reschedule":
+		if req.ProposedScheduledAt == nil || *req.ProposedScheduledAt == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "proposed_required")
+			return
+		}
+		proposed, perr := time.Parse(time.RFC3339, *req.ProposedScheduledAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_proposed")
+			return
+		}
+		dur := 30
+		if visit.DurationMinutes != nil {
+			dur = *visit.DurationMinutes
+		} else if _, slotDur, e := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID); e == nil {
+			dur = slotDur
+		}
+		overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, proposed, dur, visit.ID)
+		if oerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if overlap {
+			writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+			return
+		}
+		onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, proposed)
+		if verr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if onVac {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "on_vacation")
+			return
+		}
+		pendingBy := "client"
+		if id.Role == kernel.RoleClient {
+			pendingBy = "vet"
+		}
+		updated, err = a.store.ProposeReschedule(r.Context(), visit.ID, proposed, pendingBy)
+		if err == nil {
+			if pendingBy == "client" {
+				a.pushVisitReschedule(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+			} else {
+				a.notifyVetsVisitRequest(pet, updated)
+			}
+		}
+	case "accept_reschedule":
+		if visit.PendingActionBy == nil {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
+			return
+		}
+		if (id.Role == kernel.RoleClient && *visit.PendingActionBy != "client") ||
+			(id.Role == kernel.RoleVet && *visit.PendingActionBy != "vet") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
+			return
+		}
+		if visit.ProposedScheduledAt != nil {
+			dur := 30
+			if visit.DurationMinutes != nil {
+				dur = *visit.DurationMinutes
+			}
+			overlap, oerr := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *visit.ProposedScheduledAt, dur, visit.ID)
+			if oerr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if overlap {
+				writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+				return
+			}
+		}
+		updated, err = a.store.AcceptReschedule(r.Context(), visit.ID)
+		if err == nil {
+			a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+		}
+	case "reject_reschedule":
+		if visit.PendingActionBy == nil {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
+			return
+		}
+		if (id.Role == kernel.RoleClient && *visit.PendingActionBy != "client") ||
+			(id.Role == kernel.RoleVet && *visit.PendingActionBy != "vet") {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
+			return
+		}
+		updated, err = a.store.RejectReschedule(r.Context(), visit.ID)
+	case "reopen":
+		if id.Role != kernel.RoleClient {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+			return
+		}
+		updated, err = a.store.ReopenVisitAsRequested(r.Context(), visit.ID)
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_action")
 		return
 	}
-	if id.Role == kernel.RoleVet && req.Status == "confirmed" && visit.Status != "confirmed" {
-		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
 	}
 	httpx.WriteData(w, http.StatusOK, updated)
 }

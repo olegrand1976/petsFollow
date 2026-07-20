@@ -5,7 +5,7 @@
     "recommend": "Praktijk aanbevelen",
     "messages": "Berichten",
     "requests": "Aanvragen",
-    "commissions": "Commissies",
+    "commissions": "Vergoedingen",
     "settings": "Instellingen",
     "adminDashboard": "Dashboard",
     "adminUsers": "Registraties",
@@ -18,10 +18,11 @@
     "commercialDashboard": "Dashboard",
     "commercialVets": "Dierenartsen",
     "commercialProspects": "Prospects",
-    "commercialCommissions": "Commissies",
+    "commercialCommissions": "Vergoedingen",
     "commercialSettings": "Betalingsprofiel",
     "commercialPitch": "Presentatie",
-    "products": "Producten"
+    "products": "Producten",
+    "calendar": "Agenda"
   },
   "auth": {
     "login": {
@@ -227,7 +228,8 @@
       "subtitle": "Kies bij welke gebeurtenissen u een e-mail ontvangt.",
       "onMessage": "Nieuw klantbericht",
       "onHeartrate": "Gevalideerde hartslagmeting",
-      "saved": "Voorkeuren opgeslagen."
+      "saved": "Voorkeuren opgeslagen.",
+      "onVisitRequest": "Nieuwe afspraakaanvraag"
     },
     "password": {
       "title": "Wachtwoord",
@@ -239,7 +241,31 @@
       "saved": "Wachtwoord bijgewerkt.",
       "mismatch": "Wachtwoorden komen niet overeen."
     },
-    "legalLinks": "Juridische informatie"
+    "legalLinks": "Juridische informatie",
+    "calendar": {
+      "title": "Agenda & reserveren",
+      "slotsHint": "Stel uw uren in vóór u online reserveren activeert.",
+      "duration": "Duur van een slot (minuten)",
+      "addSlot": "Tijdvak toevoegen",
+      "enableBooking": "Reserveren via de cliënt-app activeren",
+      "enableHelp": "Indien uitgeschakeld kunnen cliënten geen slots kiezen in de app. U behoudt de Pro-agenda.",
+      "scheduleIncomplete": "Voeg minstens één tijdvak toe om reserveren te activeren.",
+      "save": "Agenda opslaan",
+      "saved": "Agenda opgeslagen.",
+      "vacationsTitle": "Vakantie / sluiting",
+      "vacationsReminder": "Herinnering: geef vakantie voor dit jaar in (of vink “geen vakantie” aan).",
+      "noVacations": "Geen vakantie dit jaar",
+      "addVacation": "Toevoegen",
+      "weekday": {
+        "0": "Zondag",
+        "1": "Maandag",
+        "2": "Dinsdag",
+        "3": "Woensdag",
+        "4": "Donderdag",
+        "5": "Vrijdag",
+        "6": "Zaterdag"
+      }
+    }
   },
   "clients": {
     "title": "Klanten",
@@ -341,6 +367,16 @@
       "careTypeFarrier": "Hoefsmid",
       "careTypeFecalEgg": "Mestonderzoek",
       "careTypeCustom": "Aangepast"
+    },
+    "invitations": {
+      "open": "Cliëntuitnodigingen",
+      "title": "Openstaande uitnodigingen",
+      "emptyTitle": "Geen uitnodigingen",
+      "emptyDescription": "Koppelingsaanvragen cliënt↔praktijk verschijnen hier.",
+      "columnClient": "Cliënt",
+      "columnEmail": "E-mail",
+      "accept": "Aanvaarden",
+      "reject": "Weigeren"
     }
   },
   "recommend": {
@@ -392,7 +428,8 @@
     "viewRequests": "Aanvragen bekijken",
     "messaging": "Berichten",
     "about": "Over",
-    "aboutText": "petsFollow Pro centraliseert hartmonitoring, klantdossiers en beveiligde berichten voor uw dierenartsenpraktijk."
+    "aboutText": "petsFollow Pro centraliseert hartmonitoring, klantdossiers en beveiligde berichten voor uw dierenartsenpraktijk.",
+    "viewCalendar": "Agenda bekijken"
   },
   "messages": {
     "title": "Berichten",
@@ -600,7 +637,7 @@
     }
   },
   "commissions": {
-    "title": "Mijn commissies",
+    "title": "Mijn vergoedingen",
     "subtitle": "Uw verdiensten en uitbetalingen als dierenarts.",
     "kpiClients": "Betalende klanten",
     "kpiRate": "Huidig tarief",
@@ -1236,5 +1273,38 @@
       "paid": "Betaald"
     },
     "discountNote": "Eurobedragen zijn indicatief tegen catalogusprijs. Huishoud-/kennelkortingen (−10% / −15%) verlagen de werkelijk geïnde HT-basis."
+  },
+  "calendar": {
+    "title": "Agenda",
+    "subtitle": "Afspraakaanvragen en praktijkplanning.",
+    "openSettings": "Uren & vakantie",
+    "bookingDisabledHint": "Online reserveren via de app is uitgeschakeld. Activeer dit in Instellingen.",
+    "pendingTitle": "Te behandelen",
+    "pendingEmptyTitle": "Geen openstaande aanvragen",
+    "pendingEmptyDescription": "Klantaanvragen en verplaatsingen verschijnen hier.",
+    "weekTitle": "Week",
+    "weekEmptyTitle": "Geen afspraken deze week",
+    "weekEmptyDescription": "Geplande afspraken verschijnen hier.",
+    "prevWeek": "Vorige week",
+    "nextWeek": "Volgende week",
+    "columnClient": "Cliënt",
+    "columnPet": "Dier",
+    "columnWhen": "Wanneer",
+    "columnStatus": "Status",
+    "confirm": "Bevestigen",
+    "cancel": "Annuleren",
+    "acceptReschedule": "Verplaatsing aanvaarden",
+    "rejectReschedule": "Weigeren",
+    "proposeMove": "Ander moment voorstellen",
+    "newSlot": "Nieuw moment",
+    "sendPropose": "Naar cliënt sturen",
+    "proposed": "voorgesteld",
+    "status": {
+      "requested": "In afwachting",
+      "confirmed": "Bevestigd",
+      "reschedule_pending": "Verplaatsing in afwachting",
+      "done": "Afgerond",
+      "cancelled": "Geannuleerd"
+    }
   }
 }

@@ -94,8 +94,9 @@ func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
 }
 
 type emailPrefsReq struct {
-	EmailOnMessage    bool `json:"emailOnMessage"`
-	EmailOnHeartRate  bool `json:"emailOnHeartrate"`
+	EmailOnMessage       bool `json:"emailOnMessage"`
+	EmailOnHeartRate     bool `json:"emailOnHeartrate"`
+	EmailOnVisitRequest  bool `json:"emailOnVisitRequest"`
 }
 
 func (a *API) getVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
@@ -104,14 +105,15 @@ func (a *API) getVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
-	onMsg, onHR, err := a.store.GetEmailPrefs(r.Context(), id.UserID)
+	prefs, err := a.store.GetEmailPrefs(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"emailOnMessage":   onMsg,
-		"emailOnHeartrate": onHR,
+		"emailOnMessage":      prefs.OnMessage,
+		"emailOnHeartrate":    prefs.OnHeartRate,
+		"emailOnVisitRequest": prefs.OnVisitRequest,
 	})
 }
 
@@ -126,12 +128,13 @@ func (a *API) updateVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if err := a.store.UpdateEmailPrefs(r.Context(), id.UserID, req.EmailOnMessage, req.EmailOnHeartRate); err != nil {
+	if err := a.store.UpdateEmailPrefs(r.Context(), id.UserID, req.EmailOnMessage, req.EmailOnHeartRate, req.EmailOnVisitRequest); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"emailOnMessage":   req.EmailOnMessage,
-		"emailOnHeartrate": req.EmailOnHeartRate,
+		"emailOnMessage":      req.EmailOnMessage,
+		"emailOnHeartrate":    req.EmailOnHeartRate,
+		"emailOnVisitRequest": req.EmailOnVisitRequest,
 	})
 }

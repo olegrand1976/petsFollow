@@ -33,40 +33,41 @@ const showNav = computed(() => {
   return !bare.includes(route.path) && !route.path.startsWith('/register')
 })
 const { fetchUser } = useProUser()
-const requestsBadge = ref(0)
+const clientsBadge = ref(0)
+const calendarBadge = ref(0)
 
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
-  { to: '/clients', label: t('nav.clients'), icon: 'clients' },
+  { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
   { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
-  { to: '/requests', label: t('nav.requests'), icon: 'requests', badge: requestsBadge.value },
+  { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
   { to: '/messages', label: t('nav.messages'), icon: 'messages' },
   { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
   { to: '/produits', label: t('nav.products'), icon: 'description' },
   { to: '/settings', label: t('nav.settings'), icon: 'settings' },
 ])
 
-async function loadRequestsBadge() {
+async function loadNavBadges() {
   if (!showNav.value) return
   try {
     const res: any = await $fetch('/api/vet/overview')
     const data = res.data ?? res ?? {}
-    const links = Number(data.pendingLinkRequests ?? 0)
-    const visits = Number(data.pendingVisits ?? 0)
-    requestsBadge.value = links + visits
+    clientsBadge.value = Number(data.pendingLinkRequests ?? 0)
+    calendarBadge.value = Number(data.pendingVisits ?? 0)
   } catch {
-    requestsBadge.value = 0
+    clientsBadge.value = 0
+    calendarBadge.value = 0
   }
 }
 
 onMounted(async () => {
   await fetchUser()
-  await loadRequestsBadge()
+  await loadNavBadges()
 })
 
 watch(() => route.path, (path) => {
-  if (path === '/requests' || path === '/dashboard') {
-    loadRequestsBadge()
+  if (path === '/calendar' || path === '/clients' || path === '/dashboard') {
+    loadNavBadges()
   }
 })
 </script>

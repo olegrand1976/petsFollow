@@ -948,6 +948,42 @@ abstract class AppLocalizations {
   /// **'Demander une visite'**
   String get requestVisit;
 
+  /// No description provided for @calendarBookingDisabled.
+  ///
+  /// In fr, this message translates to:
+  /// **'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.'**
+  String get calendarBookingDisabled;
+
+  /// No description provided for @calendarNoSlots.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun créneau disponible sur les 14 prochains jours.'**
+  String get calendarNoSlots;
+
+  /// No description provided for @calendarPickSlot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un créneau :'**
+  String get calendarPickSlot;
+
+  /// No description provided for @visitConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer'**
+  String get visitConfirm;
+
+  /// No description provided for @visitRejectReschedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le déplacement'**
+  String get visitRejectReschedule;
+
+  /// No description provided for @visitAcceptReschedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter le nouveau créneau'**
+  String get visitAcceptReschedule;
+
   /// No description provided for @upcomingVisit.
   ///
   /// In fr, this message translates to:
@@ -1325,6 +1361,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Annulée'**
   String get visitStatusCancelled;
+
+  /// No description provided for @visitStatusReschedulePending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacement en attente'**
+  String get visitStatusReschedulePending;
 
   /// No description provided for @horseHealthTitle.
   ///

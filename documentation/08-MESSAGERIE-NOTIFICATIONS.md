@@ -15,10 +15,12 @@ Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon lo
 
 Préférences :
 
-- Véto : `GET/PUT /vet/notification-preferences`
+- Véto : `GET/PUT /vet/notification-preferences` (`emailOnMessage`, `emailOnHeartrate`, `emailOnVisitRequest`)
 - Client : `GET/PATCH /me/notification-preferences`
 
 Quand le **client** écrit un message et que le véto a `email_on_message`, un email est envoyé au véto.
+
+Quand le **client** crée une demande de RDV (ou propose un déplacement au véto) et que `email_on_visit_request` est actif : e-mail avec CTA `/calendar?visit={id}`.
 
 ## Push FCM (livré)
 
@@ -29,7 +31,9 @@ Envoi serveur (API Go, package `internal/notifications/fcm`) via Firebase Admin 
 | Événement | Pref client | Payload `data.type` |
 |-----------|-------------|---------------------|
 | Véto envoie un message (texte/média) | `messages` | `message` (+ `threadId`) |
-| Véto confirme un RDV (`PATCH` → `confirmed`) | `visits` | `visit_confirmed` (+ `visitId`, `petId`) |
+| Véto confirme un RDV | `visits` | `visit_confirmed` (+ `visitId`, `petId`) |
+| Véto propose un RDV | `visits` | `visit_proposed` |
+| Véto propose un déplacement | `visits` | `visit_reschedule` |
 
 - Locale des titres/corps : `users.preferred_locale` (clés `push.*` dans `go/internal/platform/i18n/locales/`).
 - Sans credentials ADC / si `FCM_ENABLED=false` : no-op (handlers restent 200).

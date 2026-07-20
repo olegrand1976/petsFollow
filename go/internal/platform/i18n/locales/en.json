@@ -125,6 +125,14 @@
     "app_download_intro": "{vetName} from {practiceName} invites you to download the petsFollow app to monitor your pet's health and stay in touch with the practice.",
     "app_download_cta": "Download the app",
     "app_download_disclaimer": "If you were not expecting this email, you can ignore it.",
+    "visit_request_subject": "New appointment request — {petName}",
+    "visit_request_tagline": "Practice calendar",
+    "visit_request_preheader": "Appointment request for {petName} ({clientName}).",
+    "visit_request_greeting": "Hello,",
+    "visit_request_intro": "{clientName} requested an appointment for {petName}.",
+    "visit_request_detail": "Proposed time: {when}\nNotes: {notes}",
+    "visit_request_cta": "View request",
+    "visit_request_disclaimer": "Sign in to petsFollow Pro to confirm or propose another slot.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visit LL-IT Software & Computer"
   },
@@ -132,7 +140,11 @@
     "new_message_title": "New message",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Appointment confirmed",
-    "visit_confirmed_body": "The appointment for {petName} is confirmed."
+    "visit_confirmed_body": "The appointment for {petName} is confirmed.",
+    "visit_proposed_title": "Appointment proposal",
+    "visit_proposed_body": "Your vet proposed an appointment for {petName}.",
+    "visit_reschedule_title": "Appointment reschedule",
+    "visit_reschedule_body": "A new time slot was proposed for {petName}."
   },
   "billing": {
     "annual_label": "€35 / year",

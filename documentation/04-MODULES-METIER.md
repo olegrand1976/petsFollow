@@ -6,11 +6,13 @@ Login email/MDP, register + confirm email, forgot/reset, refresh JWT, Google OAu
 
 ## Practice (véto)
 
-Profil cabinet (onboarding), durées FC, préférences email, disponibilité messagerie, overview dashboard, visits / care overdue.
+Profil cabinet (onboarding), durées FC, préférences email, disponibilité messagerie, overview dashboard, care overdue.
+
+**Calendrier RDV** : plages horaires + vacances (`/vet/schedule`, `/vet/vacations`), agenda Pro `/calendar`, booking client optionnel (`client_booking_enabled`), replanification bilatérale, e-mail alerte demande.
 
 ## Clients & animaux
 
-Liste clients Pro, dossier animal, photo, timeline, primary practice, invitations / link-requests client↔véto, envoi lien app.
+Liste clients Pro (invitations link-requests dans l’en-tête), dossier animal, photo, timeline, primary practice, envoi lien app.
 
 ## Relevé cardiaque
 

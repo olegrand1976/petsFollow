@@ -125,6 +125,14 @@
     "app_download_intro": "{vetName} van {practiceName} nodigt u uit om de petsFollow-app te downloaden om de gezondheid van uw dier op te volgen en in contact te blijven met de praktijk.",
     "app_download_cta": "App downloaden",
     "app_download_disclaimer": "Als u deze e-mail niet verwachtte, mag u ze negeren.",
+    "visit_request_subject": "Nieuwe afspraakaanvraag — {petName}",
+    "visit_request_tagline": "Praktijkagenda",
+    "visit_request_preheader": "Afspraakaanvraag voor {petName} ({clientName}).",
+    "visit_request_greeting": "Hallo,",
+    "visit_request_intro": "{clientName} vroeg een afspraak voor {petName}.",
+    "visit_request_detail": "Voorgesteld tijdstip: {when}\nNotities: {notes}",
+    "visit_request_cta": "Aanvraag bekijken",
+    "visit_request_disclaimer": "Meld u aan bij petsFollow Pro om te bevestigen of een ander moment voor te stellen.",
     "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
     "footer_visit_llit": "Bezoek LL-IT Software & Computer"
   },
@@ -132,7 +140,11 @@
     "new_message_title": "Nieuw bericht",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Afspraak bevestigd",
-    "visit_confirmed_body": "De afspraak voor {petName} is bevestigd."
+    "visit_confirmed_body": "De afspraak voor {petName} is bevestigd.",
+    "visit_proposed_title": "Afspraakvoorstel",
+    "visit_proposed_body": "Uw dierenarts stelde een afspraak voor {petName} voor.",
+    "visit_reschedule_title": "Afspraak verplaatsen",
+    "visit_reschedule_body": "Er werd een nieuw tijdstip voorgesteld voor {petName}."
   },
   "billing": {
     "annual_label": "35 € / jaar",

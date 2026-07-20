@@ -69,6 +69,62 @@
       </ProButton>
     </ProCard>
 
+    <ProCard id="calendar" :title="$t('settings.calendar.title')" class="pro-settings-card" data-testid="settings-calendar">
+      <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
+        {{ $t('settings.calendar.vacationsReminder') }}
+      </p>
+      <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
+      <div class="pro-field pro-field-spaced">
+        <label class="pro-label" for="slot-duration">{{ $t('settings.calendar.duration') }}</label>
+        <select id="slot-duration" v-model.number="slotDuration" class="pro-select">
+          <option :value="15">15</option>
+          <option :value="30">30</option>
+          <option :value="60">60</option>
+        </select>
+      </div>
+      <div v-for="(slot, idx) in scheduleSlots" :key="idx" class="calendar-slot-row">
+        <select v-model.number="slot.weekday" class="pro-select">
+          <option v-for="d in weekdayOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+        </select>
+        <input v-model="slot.startTime" type="time" class="pro-input" required>
+        <input v-model="slot.endTime" type="time" class="pro-input" required>
+        <ProButton variant="ghost" type="button" @click="scheduleSlots.splice(idx, 1)">×</ProButton>
+      </div>
+      <ProButton variant="secondary" type="button" class="pro-mb-md" @click="addSlot">
+        {{ $t('settings.calendar.addSlot') }}
+      </ProButton>
+      <label class="pro-checkbox-row">
+        <input v-model="clientBookingEnabled" type="checkbox" :disabled="!scheduleSlots.length" data-testid="calendar-booking-toggle">
+        <span>{{ $t('settings.calendar.enableBooking') }}</span>
+      </label>
+      <p class="pro-settings-hint">{{ $t('settings.calendar.enableHelp') }}</p>
+      <p v-if="scheduleError" class="pro-field-error" role="alert">{{ scheduleError }}</p>
+      <p v-if="scheduleSaved" class="text-muted" role="status">{{ $t('settings.calendar.saved') }}</p>
+      <ProButton class="pro-save-btn" :loading="scheduleSaving" data-testid="calendar-schedule-save" @click="saveSchedule">
+        {{ $t('settings.calendar.save') }}
+      </ProButton>
+
+      <hr class="pro-settings-hr">
+      <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.vacationsTitle') }}</h3>
+      <label class="pro-checkbox-row">
+        <input v-model="noVacationsThisYear" type="checkbox">
+        <span>{{ $t('settings.calendar.noVacations') }}</span>
+      </label>
+      <div class="calendar-slot-row">
+        <input v-model="vacStart" type="date" class="pro-input">
+        <input v-model="vacEnd" type="date" class="pro-input">
+        <ProButton variant="secondary" type="button" :disabled="!vacStart || !vacEnd" @click="addVacation">
+          {{ $t('settings.calendar.addVacation') }}
+        </ProButton>
+      </div>
+      <ul class="calendar-vac-list">
+        <li v-for="v in vacations" :key="v.id">
+          <span>{{ v.startsOn }} → {{ v.endsOn }} {{ v.label ? `— ${v.label}` : '' }}</span>
+          <ProButton variant="ghost" type="button" @click="removeVacation(v.id)">×</ProButton>
+        </li>
+      </ul>
+    </ProCard>
+
     <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
       <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
       <label class="pro-checkbox-row">
@@ -78,6 +134,10 @@
       <label class="pro-checkbox-row">
         <input v-model="emailOnHeartrate" type="checkbox">
         <span>{{ $t('settings.notifications.onHeartrate') }}</span>
+      </label>
+      <label class="pro-checkbox-row">
+        <input v-model="emailOnVisitRequest" type="checkbox">
+        <span>{{ $t('settings.notifications.onVisitRequest') }}</span>
       </label>
       <p v-if="notifSaved" class="text-muted" role="status">{{ $t('settings.notifications.saved') }}</p>
       <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
@@ -249,8 +309,41 @@ const selectedDurations = ref<number[]>([60])
 
 const emailOnMessage = ref(true)
 const emailOnHeartrate = ref(true)
+const emailOnVisitRequest = ref(true)
 const notifSaving = ref(false)
 const notifSaved = ref(false)
+
+const scheduleSlots = ref<{ weekday: number; startTime: string; endTime: string }[]>([])
+const slotDuration = ref(30)
+const clientBookingEnabled = ref(false)
+const vacationsConfigured = ref(true)
+const noVacationsThisYear = ref(false)
+const vacations = ref<any[]>([])
+const vacStart = ref('')
+const vacEnd = ref('')
+const scheduleSaving = ref(false)
+const scheduleSaved = ref(false)
+const scheduleError = ref('')
+
+const weekdayOptions = computed(() => [
+  { value: 1, label: t('settings.calendar.weekday.1') },
+  { value: 2, label: t('settings.calendar.weekday.2') },
+  { value: 3, label: t('settings.calendar.weekday.3') },
+  { value: 4, label: t('settings.calendar.weekday.4') },
+  { value: 5, label: t('settings.calendar.weekday.5') },
+  { value: 6, label: t('settings.calendar.weekday.6') },
+  { value: 0, label: t('settings.calendar.weekday.0') },
+])
+
+function addSlot() {
+  scheduleSlots.value.push({ weekday: 1, startTime: '09:00', endTime: '12:00' })
+}
+
+watch(scheduleSlots, (slots) => {
+  if (!slots.length && clientBookingEnabled.value) {
+    clientBookingEnabled.value = false
+  }
+}, { deep: true })
 
 const currentPassword = ref('')
 const newPassword = ref('')
@@ -315,6 +408,25 @@ onMounted(async () => {
     const data = prefs.data ?? prefs
     emailOnMessage.value = data.emailOnMessage !== false
     emailOnHeartrate.value = data.emailOnHeartrate !== false
+    emailOnVisitRequest.value = data.emailOnVisitRequest !== false
+  } catch { /* ignore */ }
+
+  try {
+    const [schedRes, vacRes]: any[] = await Promise.all([
+      $fetch('/api/vet/schedule'),
+      $fetch('/api/vet/vacations'),
+    ])
+    const sched = schedRes.data ?? schedRes
+    scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
+      weekday: s.weekday,
+      startTime: s.startTime,
+      endTime: s.endTime,
+    }))
+    slotDuration.value = sched.slotDurationMinutes || 30
+    clientBookingEnabled.value = !!sched.clientBookingEnabled
+    vacationsConfigured.value = !!sched.vacationsConfiguredForYear
+    noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
+    vacations.value = vacRes.data ?? vacRes ?? []
   } catch { /* ignore */ }
 })
 
@@ -355,11 +467,70 @@ async function saveNotifications() {
   try {
     await $fetch('/api/vet/notification-preferences', {
       method: 'PUT',
-      body: { emailOnMessage: emailOnMessage.value, emailOnHeartrate: emailOnHeartrate.value },
+      body: {
+        emailOnMessage: emailOnMessage.value,
+        emailOnHeartrate: emailOnHeartrate.value,
+        emailOnVisitRequest: emailOnVisitRequest.value,
+      },
     })
     notifSaved.value = true
   } finally {
     notifSaving.value = false
+  }
+}
+
+async function saveSchedule() {
+  scheduleSaving.value = true
+  scheduleSaved.value = false
+  scheduleError.value = ''
+  try {
+    const body: any = {
+      clientBookingEnabled: clientBookingEnabled.value && scheduleSlots.value.length > 0,
+      slotDurationMinutes: slotDuration.value,
+      slots: scheduleSlots.value,
+    }
+    if (noVacationsThisYear.value) {
+      body.vacationsDeclaredYear = new Date().getFullYear()
+    }
+    const res: any = await $fetch('/api/vet/schedule', { method: 'PUT', body })
+    const sched = res.data ?? res
+    clientBookingEnabled.value = !!sched.clientBookingEnabled
+    vacationsConfigured.value = !!sched.vacationsConfiguredForYear
+    scheduleSaved.value = true
+  } catch (e: any) {
+    scheduleError.value = mapError(e)
+    if (String(e?.data?.error?.message || e?.data?.message || '').includes('schedule_incomplete')
+      || e?.data?.error === 'schedule_incomplete') {
+      scheduleError.value = t('settings.calendar.scheduleIncomplete')
+    }
+  } finally {
+    scheduleSaving.value = false
+  }
+}
+
+async function addVacation() {
+  if (!vacStart.value || !vacEnd.value) return
+  try {
+    await $fetch('/api/vet/vacations', {
+      method: 'POST',
+      body: { startsOn: vacStart.value, endsOn: vacEnd.value },
+    })
+    vacStart.value = ''
+    vacEnd.value = ''
+    const vacRes: any = await $fetch('/api/vet/vacations')
+    vacations.value = vacRes.data ?? vacRes ?? []
+    vacationsConfigured.value = true
+  } catch (e: any) {
+    scheduleError.value = mapError(e)
+  }
+}
+
+async function removeVacation(id: string) {
+  try {
+    await $fetch(`/api/vet/vacations/${id}`, { method: 'DELETE' })
+    vacations.value = vacations.value.filter((v) => v.id !== id)
+  } catch (e: any) {
+    scheduleError.value = mapError(e)
   }
 }
 
@@ -463,6 +634,34 @@ async function disable2FA() {
 </script>
 
 <style scoped>
+.calendar-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.calendar-vac-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+.calendar-vac-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--pf-vet-border);
+}
+.pro-settings-hr {
+  border: 0;
+  border-top: 1px solid var(--pf-vet-border);
+  margin: 1.25rem 0;
+}
+.pro-settings-subtitle {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
 .pro-settings-card {
   margin-bottom: 1.5rem;
 }

@@ -478,6 +478,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestVisit => 'Solicitar una visita';
 
   @override
+  String get calendarBookingDisabled =>
+      'La reserva en línea no está disponible para esta clínica. Puede enviar una solicitud sin horario.';
+
+  @override
+  String get calendarNoSlots =>
+      'No hay huecos disponibles en los próximos 14 días.';
+
+  @override
+  String get calendarPickSlot => 'Elija un hueco:';
+
+  @override
+  String get visitConfirm => 'Confirmar';
+
+  @override
+  String get visitRejectReschedule => 'Rechazar cambio';
+
+  @override
+  String get visitAcceptReschedule => 'Aceptar nuevo horario';
+
+  @override
   String get upcomingVisit => 'Próxima visita';
 
   @override
@@ -690,6 +710,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get visitStatusCancelled => 'Cancelada';
+
+  @override
+  String get visitStatusReschedulePending => 'Cambio pendiente';
 
   @override
   String get horseHealthTitle => 'Salud del caballo';

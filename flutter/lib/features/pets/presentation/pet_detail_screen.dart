@@ -10,6 +10,7 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -161,23 +162,33 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   }
 
   Future<void> _requestVisit() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final visit = await ApiClient.instance.createVisit(pet.id);
+    final practiceId = pet.practiceId;
+    if (practiceId == null || practiceId.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('visit'))),
+      );
+      return;
+    }
+    final booked = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookVisitScreen(
+          petId: pet.id,
+          petName: pet.name,
+          practiceId: practiceId,
+        ),
+      ),
+    );
+    if (booked == true && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      final visits = await ApiClient.instance.getVisits(pet.id);
+      if (!mounted) return;
       await NotificationService.instance.scheduleVisits(
-        [visit],
+        visits,
         visitLabel: l10n.upcomingVisit,
         petName: pet.name,
       );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.visitRequested)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric('visit'))),
-        );
-      }
     }
   }
 

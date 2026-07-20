@@ -436,10 +436,22 @@ func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v vis
 		t := time.Now().Add(v.scheduledIn)
 		scheduledAt = &t
 	}
+	var pending *string
+	if status == "requested" {
+		p := "vet"
+		if source == "vet" {
+			p = "client"
+		}
+		pending = &p
+	}
+	var duration any
+	if scheduledAt != nil {
+		duration = 30
+	}
 	_, err := tx.Exec(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source)
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
 	return err
 }
 

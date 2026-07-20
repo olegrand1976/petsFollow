@@ -136,6 +136,39 @@ func (n *Notifier) SendNewMessage(to, locale, messageBody string) error {
 	return n.SendVetAlert(to, subject, body)
 }
 
+func (n *Notifier) SendVisitRequest(to, locale, clientName, petName, when, notes, ctaURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"clientName": clientName,
+		"petName":    petName,
+		"when":       when,
+		"notes":      notes,
+	}
+	if vars["when"] == "" {
+		vars["when"] = "—"
+	}
+	if vars["notes"] == "" {
+		vars["notes"] = "—"
+	}
+	subject := mustT(locale, "emails.visit_request_subject", vars)
+	detail := mustT(locale, "emails.visit_request_detail", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.visit_request_tagline"),
+		Greeting:        mustT(locale, "emails.visit_request_greeting"),
+		Intro:           mustT(locale, "emails.visit_request_intro", vars),
+		Detail:          detail,
+		CTALabel:        mustT(locale, "emails.visit_request_cta"),
+		CTAURL:          ctaURL,
+		Disclaimer:      mustT(locale, "emails.visit_request_disclaimer"),
+		Preheader:       mustT(locale, "emails.visit_request_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practiceName, downloadURL string) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{

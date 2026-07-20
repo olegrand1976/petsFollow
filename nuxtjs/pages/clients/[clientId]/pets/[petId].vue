@@ -346,7 +346,10 @@ async function postponeCare(id: string, days: number) {
 async function proposeVisit() {
   visitBusy.value = true
   try {
-    const body: Record<string, string> = { notes: visitDraft.notes }
+    const body: Record<string, unknown> = {
+      notes: visitDraft.notes,
+      confirmDirect: true,
+    }
     if (visitDraft.scheduledAt) {
       body.scheduledAt = new Date(visitDraft.scheduledAt).toISOString()
     }

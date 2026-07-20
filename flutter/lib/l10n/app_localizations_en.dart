@@ -475,6 +475,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestVisit => 'Request a visit';
 
   @override
+  String get calendarBookingDisabled =>
+      'Online booking is not available for this practice. You can still send a request without a time slot.';
+
+  @override
+  String get calendarNoSlots => 'No slots available in the next 14 days.';
+
+  @override
+  String get calendarPickSlot => 'Pick a slot:';
+
+  @override
+  String get visitConfirm => 'Confirm';
+
+  @override
+  String get visitRejectReschedule => 'Decline reschedule';
+
+  @override
+  String get visitAcceptReschedule => 'Accept new time';
+
+  @override
   String get upcomingVisit => 'Upcoming visit';
 
   @override
@@ -681,6 +700,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get visitStatusCancelled => 'Cancelled';
+
+  @override
+  String get visitStatusReschedulePending => 'Reschedule pending';
 
   @override
   String get horseHealthTitle => 'Horse health';

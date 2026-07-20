@@ -125,6 +125,14 @@
     "app_download_intro": "{vetName} de {practiceName} vous invite à télécharger l'application petsFollow pour suivre la santé de votre animal et rester en contact avec le cabinet.",
     "app_download_cta": "Télécharger l'application",
     "app_download_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer.",
+    "visit_request_subject": "Nouvelle demande de rendez-vous — {petName}",
+    "visit_request_tagline": "Calendrier cabinet",
+    "visit_request_preheader": "Demande de RDV pour {petName} ({clientName}).",
+    "visit_request_greeting": "Bonjour,",
+    "visit_request_intro": "{clientName} a demandé un rendez-vous pour {petName}.",
+    "visit_request_detail": "Date proposée : {when}\nNotes : {notes}",
+    "visit_request_cta": "Voir la demande",
+    "visit_request_disclaimer": "Connectez-vous à petsFollow Pro pour confirmer ou proposer un autre créneau.",
     "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
     "footer_visit_llit": "Visiter le site LL-IT Software & Computer"
   },
@@ -132,7 +140,11 @@
     "new_message_title": "Nouveau message",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Rendez-vous confirmé",
-    "visit_confirmed_body": "Le rendez-vous pour {petName} est confirmé."
+    "visit_confirmed_body": "Le rendez-vous pour {petName} est confirmé.",
+    "visit_proposed_title": "Proposition de rendez-vous",
+    "visit_proposed_body": "Votre vétérinaire propose un rendez-vous pour {petName}.",
+    "visit_reschedule_title": "Déplacement de rendez-vous",
+    "visit_reschedule_body": "Un nouveau créneau est proposé pour {petName}."
   },
   "billing": {
     "annual_label": "35 € / an",

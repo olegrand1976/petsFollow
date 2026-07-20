@@ -475,6 +475,26 @@ class AppLocalizationsNl extends AppLocalizations {
   String get requestVisit => 'Bezoek aanvragen';
 
   @override
+  String get calendarBookingDisabled =>
+      'Online reserveren is niet beschikbaar voor deze praktijk. U kunt nog een aanvraag zonder tijdstip sturen.';
+
+  @override
+  String get calendarNoSlots =>
+      'Geen slots beschikbaar in de komende 14 dagen.';
+
+  @override
+  String get calendarPickSlot => 'Kies een slot:';
+
+  @override
+  String get visitConfirm => 'Bevestigen';
+
+  @override
+  String get visitRejectReschedule => 'Verplaatsing weigeren';
+
+  @override
+  String get visitAcceptReschedule => 'Nieuw moment aanvaarden';
+
+  @override
   String get upcomingVisit => 'Komend bezoek';
 
   @override
@@ -684,6 +704,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get visitStatusCancelled => 'Geannuleerd';
+
+  @override
+  String get visitStatusReschedulePending => 'Verplaatsing in afwachting';
 
   @override
   String get horseHealthTitle => 'Paardengezondheid';

@@ -74,6 +74,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         return l10n.visitStatusDone;
       case 'cancelled':
         return l10n.visitStatusCancelled;
+      case 'reschedule_pending':
+        return l10n.visitStatusReschedulePending;
       default:
         return status;
     }
@@ -142,6 +144,20 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
+  Future<void> _visitAction(Visit visit, String action) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ApiClient.instance.visitAction(visit.id, action: action);
+      await load();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('visit'))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -169,24 +185,51 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                     ...upcoming.map(
                       (v) => Card(
                         margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.event,
-                            color: AppColors.primary,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ListTile(
+                                leading: Icon(
+                                  Icons.event,
+                                  color: AppColors.primary,
+                                ),
+                                title: Text(_visitStatusLabel(l10n, v.status)),
+                                subtitle: Text(
+                                  [
+                                    dateFmt.format(v.displayDate),
+                                    if (v.notes != null && v.notes!.isNotEmpty) v.notes,
+                                  ].join(' · '),
+                                ),
+                              ),
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                children: [
+                                  if (v.status == 'requested' && !v.awaitingClient)
+                                    TextButton(
+                                      onPressed: () => _cancelVisit(v),
+                                      child: Text(l10n.visitCancelAction),
+                                    ),
+                                  if (v.awaitingClient && v.status == 'requested')
+                                    TextButton(
+                                      onPressed: () => _visitAction(v, 'confirm'),
+                                      child: Text(l10n.visitConfirm),
+                                    ),
+                                  if (v.awaitingClient && v.status == 'reschedule_pending') ...[
+                                    TextButton(
+                                      onPressed: () => _visitAction(v, 'accept_reschedule'),
+                                      child: Text(l10n.visitAcceptReschedule),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => _visitAction(v, 'reject_reschedule'),
+                                      child: Text(l10n.visitRejectReschedule),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ),
-                          title: Text(_visitStatusLabel(l10n, v.status)),
-                          subtitle: Text(
-                            [
-                              dateFmt.format(v.displayDate),
-                              if (v.notes != null && v.notes!.isNotEmpty) v.notes,
-                            ].join(' · '),
-                          ),
-                          trailing: v.status == 'requested'
-                              ? TextButton(
-                                  onPressed: () => _cancelVisit(v),
-                                  child: Text(l10n.visitCancelAction),
-                                )
-                              : null,
                         ),
                       ),
                     ),
