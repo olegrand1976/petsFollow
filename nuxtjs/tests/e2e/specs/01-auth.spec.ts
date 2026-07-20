@@ -7,6 +7,7 @@ import {
   logout,
   registerVet,
   requestPasswordReset,
+  submitPasswordReset,
   uniqueE2EEmail,
 } from '../helpers/auth'
 
@@ -102,10 +103,8 @@ test.describe('auth — forgot / reset password', () => {
     const { resetPath } = await requestPasswordReset(page, email)
     expect(resetPath).toBeTruthy()
 
-    await page.goto(resetPath!)
-    await fillField(page, 'reset-password', newPassword)
-    await fillField(page, 'reset-password-confirm', newPassword)
-    await page.getByTestId('reset-submit').click()
+    const { status } = await submitPasswordReset(page, resetPath!, newPassword)
+    expect(status === 200 || status === 204).toBeTruthy()
     await expect(page.getByTestId('reset-done')).toBeVisible({ timeout: 10000 })
 
     await login(page, email, newPassword)
@@ -120,10 +119,8 @@ test.describe('auth — forgot / reset password', () => {
   })
 
   test('reset token invalide', async ({ page }) => {
-    await page.goto('/reset-password?token=invalid-token')
-    await fillField(page, 'reset-password', 'Whatever12!')
-    await fillField(page, 'reset-password-confirm', 'Whatever12!')
-    await page.getByTestId('reset-submit').click()
+    const { status } = await submitPasswordReset(page, '/reset-password?token=invalid-token', 'Whatever12!')
+    expect(status === 400 || status === 404 || status === 422).toBeTruthy()
     await expect(page.locator('[data-testid="reset-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
   })
 })

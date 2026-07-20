@@ -145,6 +145,27 @@ export async function requestPasswordReset(
   return { resetPath }
 }
 
+/** Remplit et soumet le formulaire reset (avec attente d’hydratation). */
+export async function submitPasswordReset(
+  page: Page,
+  resetPath: string,
+  password: string,
+): Promise<{ status?: number }> {
+  await page.goto(resetPath, { waitUntil: 'networkidle' })
+  await waitForAuthForm(page, 'reset-form')
+  await fillField(page, 'reset-password', password)
+  await fillField(page, 'reset-password-confirm', password)
+
+  const responsePromise = page.waitForResponse(
+    (r) => r.url().includes('/api/auth/reset-password') && r.request().method() === 'POST',
+    { timeout: 15000 },
+  ).catch(() => null)
+
+  await page.getByTestId('reset-submit').click()
+  const res = await responsePromise
+  return { status: res?.status() }
+}
+
 export function uniqueE2EEmail(prefix = 'e2e') {
   return `${prefix}+${Date.now()}@petsfollow.test`
 }
