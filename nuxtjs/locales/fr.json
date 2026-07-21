@@ -75,6 +75,8 @@
     "errorStart": "Impossible de démarrer l'appel (GEMINI_API_KEY ?)",
     "errorTurn": "Erreur pendant l'échange",
     "noSpeechApi": "Reconnaissance vocale indisponible — utilisez le champ texte.",
+    "liveListening": "En direct — le véto vous entend, parlez naturellement",
+    "degradedMode": "Mode dégradé : échange tour par tour (voix temps réel indisponible)",
     "managerTitle": "Formation équipe",
     "managerSubtitle": "Suivi des entraînements de vos commerciaux.",
     "goTrain": "S'entraîner",

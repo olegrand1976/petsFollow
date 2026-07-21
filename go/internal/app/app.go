@@ -117,7 +117,8 @@ func isPitchLongRequest(path string) bool {
 	}
 	return strings.HasSuffix(path, "/turn") ||
 		strings.HasSuffix(path, "/finalize") ||
-		strings.HasSuffix(path, "/audio")
+		strings.HasSuffix(path, "/audio") ||
+		strings.HasSuffix(path, "/live")
 }
 
 func (a *Application) Handler() http.Handler { return a.router }

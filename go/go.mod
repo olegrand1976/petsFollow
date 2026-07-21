@@ -5,6 +5,7 @@ go 1.21
 require (
 	cloud.google.com/go/storage v1.49.0
 	firebase.google.com/go/v4 v4.15.2
+	github.com/coder/websocket v1.8.12
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -13,6 +14,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/stripe/stripe-go/v81 v81.4.0
+	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/crypto v0.31.0
 	google.golang.org/api v0.215.0
 )
@@ -55,7 +57,6 @@ require (
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
-	github.com/xuri/excelize/v2 v2.9.0 // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.29.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect

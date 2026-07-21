@@ -45,6 +45,9 @@ func (a *API) registerPitchTrainingRoutes(r chi.Router) {
 		pr.Get("/admin/pitch-feedback", a.adminListPitchFeedback)
 	})
 
+	// WebSocket Gemini Live — auth via ?token= (no Authorization header on browser WS).
+	r.Get("/commercial/pitch-sims/{id}/live", a.commercialPitchSimLive)
+
 	r.Post("/internal/pitch-analyzer/run", a.internalRunPitchAnalyzer)
 }
 

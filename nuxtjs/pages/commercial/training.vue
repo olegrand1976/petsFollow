@@ -107,6 +107,13 @@
                 {{ $t('training.hangUp') }}
               </ProButton>
             </div>
+            <div v-if="liveMode" class="pf-live-indicator" data-testid="training-live">
+              <span class="pf-live-dot" />
+              {{ $t('training.liveListening') }}
+            </div>
+            <p v-else class="pf-degraded" data-testid="training-degraded">
+              {{ $t('training.degradedMode') }}
+            </p>
             <div class="pf-transcript" data-testid="training-transcript">
               <p v-for="(line, i) in transcript" :key="i" :class="'pf-line pf-line--' + line.role">
                 <strong>{{ line.role === 'vet' ? $t('training.roleVet') : $t('training.roleCommercial') }}</strong>
@@ -115,6 +122,7 @@
             </div>
             <div class="pf-mic-row">
               <ProButton
+                v-if="!liveMode"
                 :variant="listening ? 'primary' : 'secondary'"
                 test-id="training-mic"
                 :disabled="busyTurn"
@@ -129,9 +137,9 @@
                   class="pro-input"
                   :placeholder="$t('training.typePlaceholder')"
                   data-testid="training-text-input"
-                  :disabled="busyTurn"
+                  :disabled="!liveMode && busyTurn"
                 >
-                <ProButton type="submit" :disabled="busyTurn || !typedLine.trim()" test-id="training-send">
+                <ProButton type="submit" :disabled="(!liveMode && busyTurn) || !typedLine.trim()" test-id="training-send">
                   {{ $t('training.send') }}
                 </ProButton>
               </form>
@@ -291,6 +299,8 @@ const difficulties = [
 ]
 
 const phase = ref<'idle' | 'ringing' | 'in_call' | 'analyzing' | 'done'>('idle')
+const liveMode = ref(false)
+const live = usePitchLive()
 const calling = ref(false)
 const busyTurn = ref(false)
 const listening = ref(false)
@@ -362,11 +372,12 @@ function speak(text: string) {
   window.speechSynthesis.speak(u)
 }
 
-async function startRecording() {
+async function startRecording(stream?: MediaStream | null) {
   await stopRecordingAsync(false)
   recordChunks = []
   try {
-    recordStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    // Mode live : flux mixé micro + véto fourni par usePitchLive.
+    recordStream = stream ?? await navigator.mediaDevices.getUserMedia({ audio: true })
     const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
       ? 'audio/webm;codecs=opus'
       : 'audio/webm'
@@ -485,12 +496,33 @@ async function startCall() {
     })
     const data = res.data ?? res
     simId.value = data.simulation.id
-    transcript.value = [{ role: 'vet', text: data.vetOpening || 'Allo ?' }]
-    await new Promise(r => setTimeout(r, 2500))
+    transcript.value = []
+    // Connexion Gemini Live pendant la sonnerie ; fallback tour-par-tour si échec.
+    const ringDelay = new Promise(r => setTimeout(r, 2500))
+    const liveOk = await live.connect(simId.value, {
+      onReady: () => {},
+      onTranscript: appendTranscriptDelta,
+      onInterrupted: () => {},
+      onEnded: onLiveEnded,
+      // Coupure réseau en plein appel : on clôture proprement (coach sur le transcript serveur).
+      onClosed: () => {
+        if (liveMode.value && phase.value === 'in_call') {
+          stopTimer()
+          void finalizeCall('manual')
+        }
+      },
+    })
+    await ringDelay
+    liveMode.value = liveOk
     phase.value = 'in_call'
     remainingSec.value = data.maxSeconds || 480
-    await startRecording()
-    speak(data.vetOpening || 'Allo ?')
+    if (liveOk) {
+      await startRecording(live.mixedStream())
+    } else {
+      transcript.value = [{ role: 'vet', text: data.vetOpening || 'Allo ?' }]
+      await startRecording()
+      speak(data.vetOpening || 'Allo ?')
+    }
     startTimer()
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || t('training.errorStart')
@@ -498,6 +530,22 @@ async function startCall() {
   } finally {
     calling.value = false
   }
+}
+
+function appendTranscriptDelta(role: 'vet' | 'commercial', textDelta: string) {
+  const last = transcript.value[transcript.value.length - 1]
+  if (last && last.role === role) {
+    last.text += textDelta
+  } else {
+    transcript.value.push({ role, text: textDelta })
+  }
+}
+
+function onLiveEnded(outcome: string) {
+  // Fin décidée côté serveur (rendez-vous, raccrochage véto ou timeout 8 min).
+  if (phase.value !== 'in_call') return
+  stopTimer()
+  void finalizeCall(outcome)
 }
 
 function startTimer() {
@@ -523,7 +571,14 @@ function stopTimer() {
 }
 
 async function sendTurn(text: string) {
-  if (!text.trim() || busyTurn.value || !simId.value) return
+  if (!text.trim() || !simId.value) return
+  if (liveMode.value) {
+    // Ligne tapée en mode live : le serveur l'ajoute au transcript et la transmet à Gemini.
+    appendTranscriptDelta('commercial', text.trim())
+    live.sendText(text.trim())
+    return
+  }
+  if (busyTurn.value) return
   busyTurn.value = true
   transcript.value.push({ role: 'commercial', text: text.trim() })
   try {
@@ -577,6 +632,9 @@ function toggleListen() {
 
 async function hangUp(outcome: string) {
   stopTimer()
+  if (liveMode.value) {
+    live.end()
+  }
   await finalizeCall(outcome)
 }
 
@@ -585,6 +643,7 @@ async function finalizeCall(outcome: string) {
   phase.value = 'analyzing'
   stopTimer()
   const blob = await stopRecordingAsync(true)
+  live.stop()
   try {
     await uploadRecording(blob)
     const res: any = await $fetch(`/api/commercial/pitch-sims/${simId.value}/finalize`, {
@@ -592,7 +651,8 @@ async function finalizeCall(outcome: string) {
       body: {
         outcome,
         durationSec: 8 * 60 - remainingSec.value,
-        transcript: transcript.value,
+        // En mode live, le transcript serveur (Gemini) fait foi.
+        ...(liveMode.value ? {} : { transcript: transcript.value }),
       },
     })
     const data = res.data ?? res
@@ -636,6 +696,8 @@ async function submitFeedback(skip: boolean) {
 }
 
 function resetCall() {
+  live.stop()
+  liveMode.value = false
   phase.value = 'idle'
   simId.value = ''
   sim.value = null
@@ -660,6 +722,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   stopTimer()
+  live.stop()
   void stopRecordingAsync(false)
 })
 </script>
@@ -711,6 +774,34 @@ onBeforeUnmount(() => {
 .pro-mb-lg { margin-bottom: 1.25rem; }
 .pf-ringing { text-align: center; padding: 2rem 1rem; display: grid; gap: 0.75rem; justify-items: center; }
 .pf-call-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
+.pf-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+  margin-bottom: 0.5rem;
+}
+.pf-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pf-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pf-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.pf-degraded {
+  font-size: 0.85rem;
+  color: var(--pf-vet-alert, #b45309);
+  background: #fef3c7;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  margin-bottom: 0.5rem;
+}
 .pf-countdown { font-variant-numeric: tabular-nums; font-size: 1.25rem; }
 .pf-transcript {
   max-height: 280px;
