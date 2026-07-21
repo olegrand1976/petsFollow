@@ -485,6 +485,9 @@ async function startCall() {
   error.value = ''
   calling.value = true
   phase.value = 'ringing'
+  // Synchrone dans le geste clic — sinon AudioContext reste suspended après $fetch.
+  const ringtoneCtx = unlockPhoneAudio()
+  const ringP = playPhoneRingtone(2500, ringtoneCtx)
   try {
     const res: any = await $fetch('/api/commercial/pitch-sims', {
       method: 'POST',
@@ -497,7 +500,7 @@ async function startCall() {
     const data = res.data ?? res
     simId.value = data.simulation.id
     transcript.value = []
-    // WS + setup pendant la sonnerie ; Allo uniquement après.
+    // WS pendant / juste après la sonnerie ; Allo uniquement quand elle est finie.
     liveSegmentClosed = false
     const liveOkP = live.connect(simId.value, {
       onReady: () => {},
@@ -512,7 +515,7 @@ async function startCall() {
         }
       },
     })
-    await playPhoneRingtone(2500)
+    await ringP
     const liveOk = await liveOkP
     liveMode.value = liveOk
     phase.value = 'in_call'
@@ -531,6 +534,8 @@ async function startCall() {
     phase.value = 'idle'
   } finally {
     calling.value = false
+    await ringP.catch(() => {})
+    void ringtoneCtx?.close().catch(() => {})
   }
 }
 

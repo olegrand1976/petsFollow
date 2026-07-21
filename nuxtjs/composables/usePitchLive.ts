@@ -76,17 +76,59 @@ function readCookie(name: string): string {
   return m ? decodeURIComponent(m[1]) : ''
 }
 
+type BrowserAudioContext = typeof AudioContext
+
+function getAudioContextCtor(): BrowserAudioContext | null {
+  if (typeof window === 'undefined') return null
+  return window.AudioContext || (window as unknown as { webkitAudioContext?: BrowserAudioContext }).webkitAudioContext || null
+}
+
+/**
+ * À appeler de façon synchrone dans le handler du clic « Appeler ».
+ * Débloque l'AudioContext avant tout await ($fetch / WS), sinon la sonnerie est muette (autoplay policy).
+ */
+export function unlockPhoneAudio(): AudioContext | null {
+  const Ctor = getAudioContextCtor()
+  if (!Ctor) return null
+  const ctx = new Ctor()
+  // Buffer silencieux : certains navigateurs n'autorisent le son qu'après un start() dans le geste user.
+  try {
+    const buf = ctx.createBuffer(1, 1, ctx.sampleRate || 22050)
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.connect(ctx.destination)
+    src.start(0)
+  } catch {
+    /* ignore */
+  }
+  void ctx.resume()
+  return ctx
+}
+
 /** Sonnerie téléphone réaliste (~2,5 s) via oscillateurs Web Audio. */
-export async function playPhoneRingtone(durationMs = 2500): Promise<void> {
+export async function playPhoneRingtone(durationMs = 2500, existingCtx?: AudioContext | null): Promise<void> {
   if (typeof window === 'undefined') {
     await new Promise(r => setTimeout(r, durationMs))
     return
   }
-  const ctx = new AudioContext()
+  const owned = !existingCtx
+  const Ctor = getAudioContextCtor()
+  const ctx = existingCtx ?? (Ctor ? new Ctor() : null)
+  if (!ctx) {
+    await new Promise(r => setTimeout(r, durationMs))
+    return
+  }
   try {
-    await ctx.resume()
+    if (ctx.state === 'suspended') {
+      await ctx.resume()
+    }
+    if (ctx.state !== 'running') {
+      // Toujours attendre la durée visuelle même si l'audio reste bloqué.
+      await new Promise(r => setTimeout(r, durationMs))
+      return
+    }
     const master = ctx.createGain()
-    master.gain.value = 0.22
+    master.gain.value = 0.35
     master.connect(ctx.destination)
     const t0 = ctx.currentTime
     // Deux doublets type sonnerie européenne (440/480 Hz).
@@ -103,8 +145,8 @@ export async function playPhoneRingtone(durationMs = 2500): Promise<void> {
         osc.type = 'sine'
         osc.frequency.value = freq
         g.gain.setValueAtTime(0, t0 + start)
-        g.gain.linearRampToValueAtTime(0.35, t0 + start + 0.02)
-        g.gain.setValueAtTime(0.35, t0 + end - 0.04)
+        g.gain.linearRampToValueAtTime(0.45, t0 + start + 0.02)
+        g.gain.setValueAtTime(0.45, t0 + end - 0.04)
         g.gain.linearRampToValueAtTime(0, t0 + end)
         osc.connect(g)
         g.connect(master)
@@ -114,7 +156,9 @@ export async function playPhoneRingtone(durationMs = 2500): Promise<void> {
     }
     await new Promise(r => setTimeout(r, durationMs))
   } finally {
-    void ctx.close().catch(() => {})
+    if (owned) {
+      void ctx.close().catch(() => {})
+    }
   }
 }
 
