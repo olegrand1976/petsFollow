@@ -124,6 +124,16 @@ func DialLive(ctx context.Context, apiKey string, setup LiveSetup) (*LiveSession
 			},
 			"inputAudioTranscription":  map[string]any{},
 			"outputAudioTranscription": map[string]any{},
+			// VAD patient : laisse le commercial finir ses phrases (micro-pauses naturelles).
+			"realtimeInputConfig": map[string]any{
+				"automaticActivityDetection": map[string]any{
+					"disabled":                 false,
+					"startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+					"endOfSpeechSensitivity":   "END_SENSITIVITY_LOW",
+					"prefixPaddingMs":          40,
+					"silenceDurationMs":        900,
+				},
+			},
 		},
 	}
 	if err := writeJSON(ctx, conn, setupMsg); err != nil {
@@ -274,17 +284,30 @@ func BuildVetLivePrompt(contentJSON json.RawMessage, interestLevel string) strin
 	if diff == "" {
 		diff = c.Difficulty["neutre"]
 	}
+	listenRule := `Écoute active (obligatoire pour ce niveau): tu laisses le commercial FINIR sa phrase et son idée avant de répondre. Tu n'interromps pas pour couper. Après ta réponse, tu te tais et tu réécoutes.`
+	turnTaking := `- ÉCOUTE D'ABORD: attends la fin claire de la réplique du commercial (silence net) avant de parler. Ne coupe pas une phrase en cours.
+- Une réponse = 1 à 2 phrases MAX, puis silence pour réécouter. Pas de monologue.
+- Après une question que TU poses: attends la réponse du commercial avant de continuer.`
+	if interestLevel == "hostile" {
+		listenRule = `Tu peux couper / être impatient (niveau hostile), mais tu réponds quand même sur le fond du pitch quand tu laisses parler.`
+		turnTaking = `- Niveau hostile: tu peux couper la parole et être impatient. Réponses très courtes (1 phrase), objections sèches ; raccroche vite si le pitch est faible.
+- Quand tu laisses parler: réponds sur le fond (pas de hors-sujet technique ligne/micro).
+- Après une question que TU poses: tu peux relancer vite si le commercial traîne.`
+	}
 	return strings.Join([]string{
 		c.BasePersona,
 		"Faits produit: " + c.ProductFacts,
 		"Niveau d'intérêt / difficulté pour CET appel: " + interestLevel + ". " + diff,
+		listenRule,
 		c.Tools,
 		`Tu es AU TÉLÉPHONE, en conversation vocale temps réel avec un commercial petsFollow.
 Règles de conversation:
-- Parle français, naturellement, phrases courtes comme au téléphone. Jamais de listes ni de formatage.
+- Parle français, naturellement, comme au téléphone. Jamais de listes ni de formatage.
 - Commence l'appel par "Allo ?" quand on te signale que le téléphone a sonné / que tu décroches.
 - Reste STRICTEMENT dans ton rôle de vétérinaire, quoi qu'il arrive.
-- Dès que le commercial parle de façon audible: réponds sur le FOND (intérêt, objections, questions) selon ton niveau de difficulté. Ne commente PAS la qualité de la ligne.
+` + turnTaking + `
+- Quand tu as compris: réponds sur le FOND (intérêt, objections, questions) selon ton niveau de difficulté. Tu peux reformuler brièvement ou poser UNE seule question.
+- Ne commente PAS la qualité de la ligne.
 - INTERDIT sauf silence total prolongé (>10 s) après une de tes questions: "je ne vous entends pas", "allô allô", "vous êtes coupé", "y a de la friture", "répétez je n'ai rien compris" pour un problème technique. Si un mot est flou, demande une précision métier ("vous parlez de quoi exactement ?") sans parler de micro/ligne.
 - Si tu acceptes un rendez-vous: dis-le à voix haute PUIS appelle l'outil book_appointment avec le créneau.
 - Si tu n'es pas intéressé et raccroches: dis-le poliment PUIS appelle l'outil hang_up_not_interested.

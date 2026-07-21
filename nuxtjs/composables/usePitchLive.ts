@@ -259,43 +259,66 @@ export function usePitchLive() {
     return true
   }
 
-  /** Après la sonnerie : déclenche l'Allo serveur et ouvre le micro. */
+  /** Après la sonnerie : ouvre le micro/lecture puis déclenche l'Allo (évite de dropper l'audio). */
   async function startOpening() {
     if (!ready || ws?.readyState !== WebSocket.OPEN) return
-    ws.send(JSON.stringify({ type: 'start_opening' }))
-    await startCapture()
+    const ok = await startCapture()
+    if (ok && playbackCtx && ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'start_opening' }))
+    }
   }
 
-  async function startCapture() {
-    if (!micStream || captureStarted) return
+  async function startCapture(): Promise<boolean> {
+    if (!micStream) return false
+    if (captureStarted && playbackCtx) return true
+    // Échec partiel précédent : autorise un retry propre.
+    if (captureStarted && !playbackCtx) {
+      captureStarted = false
+    }
     captureStarted = true
-    captureCtx = new AudioContext({ sampleRate: CAPTURE_RATE })
-    const blobUrl = URL.createObjectURL(new Blob([workletSource], { type: 'application/javascript' }))
     try {
-      await captureCtx.audioWorklet.addModule(blobUrl)
-    } finally {
-      URL.revokeObjectURL(blobUrl)
-    }
-    const src = captureCtx.createMediaStreamSource(micStream)
-    workletNode = new AudioWorkletNode(captureCtx, 'pf-pcm-capture')
-    workletNode.port.onmessage = (e: MessageEvent<Int16Array>) => {
-      if (ws?.readyState === WebSocket.OPEN) {
-        ws.send(e.data.buffer)
+      captureCtx = new AudioContext({ sampleRate: CAPTURE_RATE })
+      const blobUrl = URL.createObjectURL(new Blob([workletSource], { type: 'application/javascript' }))
+      try {
+        await captureCtx.audioWorklet.addModule(blobUrl)
+      } finally {
+        URL.revokeObjectURL(blobUrl)
       }
-    }
-    // Keep-alive : certains navigateurs n'exécutent process() que si branché à destination.
-    silentGain = captureCtx.createGain()
-    silentGain.gain.value = 0
-    src.connect(workletNode)
-    workletNode.connect(silentGain)
-    silentGain.connect(captureCtx.destination)
+      const src = captureCtx.createMediaStreamSource(micStream)
+      workletNode = new AudioWorkletNode(captureCtx, 'pf-pcm-capture')
+      workletNode.port.onmessage = (e: MessageEvent<Int16Array>) => {
+        if (ws?.readyState === WebSocket.OPEN) {
+          ws.send(e.data.buffer)
+        }
+      }
+      // Keep-alive : certains navigateurs n'exécutent process() que si branché à destination.
+      silentGain = captureCtx.createGain()
+      silentGain.gain.value = 0
+      src.connect(workletNode)
+      workletNode.connect(silentGain)
+      silentGain.connect(captureCtx.destination)
 
-    playbackCtx = new AudioContext({ sampleRate: PLAYBACK_RATE })
-    mixDest = playbackCtx.createMediaStreamDestination()
-    playbackCtx.createMediaStreamSource(micStream).connect(mixDest)
-    nextPlayTime = 0
-    void captureCtx.resume().catch(() => {})
-    void playbackCtx.resume().catch(() => {})
+      playbackCtx = new AudioContext({ sampleRate: PLAYBACK_RATE })
+      mixDest = playbackCtx.createMediaStreamDestination()
+      playbackCtx.createMediaStreamSource(micStream).connect(mixDest)
+      nextPlayTime = 0
+      await Promise.all([
+        captureCtx.resume().catch(() => {}),
+        playbackCtx.resume().catch(() => {}),
+      ])
+      return true
+    } catch {
+      captureStarted = false
+      try { workletNode?.port.close() } catch { /* ignore */ }
+      workletNode = null
+      silentGain = null
+      void captureCtx?.close().catch(() => {})
+      captureCtx = null
+      void playbackCtx?.close().catch(() => {})
+      playbackCtx = null
+      mixDest = null
+      return false
+    }
   }
 
   function playPcm(pcm: Int16Array) {
