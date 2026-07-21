@@ -497,14 +497,14 @@ async function startCall() {
     const data = res.data ?? res
     simId.value = data.simulation.id
     transcript.value = []
-    // Connexion Gemini Live pendant la sonnerie ; fallback tour-par-tour si échec.
-    const ringDelay = new Promise(r => setTimeout(r, 2500))
-    const liveOk = await live.connect(simId.value, {
+    // WS + setup pendant la sonnerie ; Allo uniquement après.
+    liveSegmentClosed = false
+    const liveOkP = live.connect(simId.value, {
       onReady: () => {},
-      onTranscript: appendTranscriptDelta,
+      onTranscript: applyLiveTranscript,
       onInterrupted: () => {},
+      onTurnComplete: () => { liveSegmentClosed = true },
       onEnded: onLiveEnded,
-      // Coupure réseau en plein appel : on clôture proprement (coach sur le transcript serveur).
       onClosed: () => {
         if (liveMode.value && phase.value === 'in_call') {
           stopTimer()
@@ -512,11 +512,13 @@ async function startCall() {
         }
       },
     })
-    await ringDelay
+    await playPhoneRingtone(2500)
+    const liveOk = await liveOkP
     liveMode.value = liveOk
     phase.value = 'in_call'
     remainingSec.value = data.maxSeconds || 480
     if (liveOk) {
+      await live.startOpening()
       await startRecording(live.mixedStream())
     } else {
       transcript.value = [{ role: 'vet', text: data.vetOpening || 'Allo ?' }]
@@ -532,13 +534,16 @@ async function startCall() {
   }
 }
 
-function appendTranscriptDelta(role: 'vet' | 'commercial', textDelta: string) {
+/** Serveur envoie le texte complet du segment courant (déjà fusionné). */
+let liveSegmentClosed = false
+function applyLiveTranscript(role: 'vet' | 'commercial', text: string) {
   const last = transcript.value[transcript.value.length - 1]
-  if (last && last.role === role) {
-    last.text += textDelta
-  } else {
-    transcript.value.push({ role, text: textDelta })
+  if (!liveSegmentClosed && last && last.role === role) {
+    last.text = mergeTranscriptChunk(last.text, text)
+    return
   }
+  liveSegmentClosed = false
+  transcript.value.push({ role, text })
 }
 
 function onLiveEnded(outcome: string) {
@@ -574,7 +579,7 @@ async function sendTurn(text: string) {
   if (!text.trim() || !simId.value) return
   if (liveMode.value) {
     // Ligne tapée en mode live : le serveur l'ajoute au transcript et la transmet à Gemini.
-    appendTranscriptDelta('commercial', text.trim())
+    applyLiveTranscript('commercial', text.trim())
     live.sendText(text.trim())
     return
   }

@@ -20,7 +20,7 @@ import (
 
 // liveCtl is a JSON control message sent to the browser alongside binary audio frames.
 type liveCtl struct {
-	Type            string `json:"type"` // ready | transcript | interrupted | ended | error
+	Type            string `json:"type"` // ready | transcript | interrupted | turn_complete | ended | error
 	Role            string `json:"role,omitempty"`
 	Text            string `json:"text,omitempty"`
 	Outcome         string `json:"outcome,omitempty"`
@@ -168,10 +168,13 @@ func (s *liveSimSession) run(ctx context.Context, cancel context.CancelFunc) {
 					// Raccrochage manuel : annule le contexte (≠ deadline) → sim reste
 					// in_progress, le client déclenche POST /finalize.
 					return
+				case "start_opening":
+					// Après la sonnerie client : déclenche l'Allo oral du véto.
+					_ = s.live.SendUserText(ctx, "(Le téléphone a sonné. Tu décroches et tu réponds Allo ?)")
 				case "text":
 					// Degraded input: typed line forwarded as a user turn.
 					if strings.TrimSpace(msg.Text) != "" {
-						s.appendDelta("commercial", msg.Text)
+						s.mergeTranscript("commercial", msg.Text)
 						_ = s.live.SendUserText(ctx, msg.Text)
 					}
 				}
@@ -197,21 +200,21 @@ func (s *liveSimSession) run(ctx context.Context, cancel context.CancelFunc) {
 		if ev.SetupComplete && !setupDone {
 			setupDone = true
 			s.setupOK.Store(true)
-			// Trigger the vet's spoken opening before opening the mic gate client-side.
-			_ = s.live.SendUserText(ctx, "(Le téléphone sonne. Tu décroches et tu réponds.)")
+			// Canal prêt : l'Allo attend le message client start_opening (après sonnerie).
 			_ = sendCtl(ctx, s.client, liveCtl{Type: "ready"})
 			continue
 		}
 		if ev.Interrupted {
 			_ = sendCtl(ctx, s.client, liveCtl{Type: "interrupted"})
 		}
+		// Text = texte complet du segment (fusion delta/cumulatif déjà faite).
 		if ev.InputTranscript != "" {
-			s.appendDelta("commercial", ev.InputTranscript)
-			_ = sendCtl(ctx, s.client, liveCtl{Type: "transcript", Role: "commercial", Text: ev.InputTranscript})
+			merged := s.mergeTranscript("commercial", ev.InputTranscript)
+			_ = sendCtl(ctx, s.client, liveCtl{Type: "transcript", Role: "commercial", Text: merged})
 		}
 		if ev.OutputTranscript != "" {
-			s.appendDelta("vet", ev.OutputTranscript)
-			_ = sendCtl(ctx, s.client, liveCtl{Type: "transcript", Role: "vet", Text: ev.OutputTranscript})
+			merged := s.mergeTranscript("vet", ev.OutputTranscript)
+			_ = sendCtl(ctx, s.client, liveCtl{Type: "transcript", Role: "vet", Text: merged})
 		}
 		for _, chunk := range ev.AudioChunks {
 			wctx, wcancel := context.WithTimeout(ctx, 10*time.Second)
@@ -224,6 +227,7 @@ func (s *liveSimSession) run(ctx context.Context, cancel context.CancelFunc) {
 		if ev.TurnComplete {
 			s.flushSegment()
 			s.persistTranscript()
+			_ = sendCtl(ctx, s.client, liveCtl{Type: "turn_complete"})
 		}
 		if len(ev.ToolCalls) > 0 {
 			s.handleToolCalls(ctx, ev.ToolCalls)
@@ -295,14 +299,48 @@ func (s *liveSimSession) handleToolCalls(ctx context.Context, calls []gemini.Liv
 	}
 }
 
-func (s *liveSimSession) appendDelta(role, text string) {
+// mergeTranscript fuses Gemini deltas or cumulative snapshots into the current segment.
+// Returns the full current segment text (for client display replacement).
+func (s *liveSimSession) mergeTranscript(role, incoming string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.curRole != role && s.curText.Len() > 0 {
 		s.flushLocked()
 	}
 	s.curRole = role
-	s.curText.WriteString(text)
+	merged := mergeTranscriptChunk(s.curText.String(), incoming)
+	s.curText.Reset()
+	s.curText.WriteString(merged)
+	return merged
+}
+
+// mergeTranscriptChunk: cumulative snapshot, overlap extension, or spaced fragment.
+func mergeTranscriptChunk(current, incoming string) string {
+	if incoming == "" {
+		return current
+	}
+	if current == "" {
+		return incoming
+	}
+	if strings.HasPrefix(incoming, current) {
+		return incoming
+	}
+	if strings.HasPrefix(current, incoming) {
+		return current
+	}
+	max := len(current)
+	if len(incoming) < max {
+		max = len(incoming)
+	}
+	for n := max; n > 0; n-- {
+		if strings.HasSuffix(current, incoming[:n]) {
+			return current + incoming[n:]
+		}
+	}
+	if !strings.HasSuffix(current, " ") && !strings.HasPrefix(incoming, " ") {
+		return current + " " + incoming
+	}
+	return current + incoming
 }
 
 func (s *liveSimSession) flushSegment() {

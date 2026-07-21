@@ -1,14 +1,16 @@
 /**
  * Client audio full-duplex pour l'entraînement pitch (Gemini Live via WS Go).
- * - Capture micro → AudioWorklet → PCM16 16 kHz mono → frames binaires WS (~100 ms)
+ * - Capture micro → AudioWorklet → downsample PCM16 16 kHz mono → frames binaires WS (~100 ms)
  * - Lecture PCM16 24 kHz reçu en binaire, file programmée + barge-in (flush)
  * - Mix micro + voix véto exposé pour l'enregistrement replay (MediaRecorder)
  */
 
 export type PitchLiveCallbacks = {
   onReady: () => void
-  onTranscript: (role: 'vet' | 'commercial', textDelta: string) => void
+  onTranscript: (role: 'vet' | 'commercial', text: string) => void
   onInterrupted: () => void
+  /** Fin d'un tour modèle : le prochain transcript du même rôle ouvre une nouvelle ligne. */
+  onTurnComplete?: () => void
   onEnded: (outcome: string, appointmentSlot?: string, reason?: string) => void
   onClosed: () => void
 }
@@ -17,35 +19,103 @@ const CAPTURE_RATE = 16000
 const PLAYBACK_RATE = 24000
 const CHUNK_SAMPLES = 1600 // 100 ms à 16 kHz
 
-// Worklet inline : accumule des blocs de 100 ms et poste des Int16Array.
+// Worklet : downsample linéaire vers 16 kHz (sampleRate navigateur souvent 48 kHz).
 const workletSource = `
 class PfPcmCapture extends AudioWorkletProcessor {
   constructor() {
     super()
+    this.targetRate = ${CAPTURE_RATE}
+    this.ratio = sampleRate / this.targetRate
     this.buf = new Int16Array(${CHUNK_SAMPLES})
     this.len = 0
+    this.phase = 0
   }
   process(inputs) {
     const ch = inputs[0] && inputs[0][0]
     if (!ch) return true
-    for (let i = 0; i < ch.length; i++) {
-      const s = Math.max(-1, Math.min(1, ch[i]))
+    while (this.phase < ch.length) {
+      const i0 = Math.floor(this.phase)
+      const i1 = Math.min(i0 + 1, ch.length - 1)
+      const frac = this.phase - i0
+      const f = ch[i0] * (1 - frac) + ch[i1] * frac
+      const s = Math.max(-1, Math.min(1, f))
       this.buf[this.len++] = s < 0 ? s * 0x8000 : s * 0x7fff
       if (this.len === this.buf.length) {
         this.port.postMessage(this.buf.slice(0))
         this.len = 0
       }
+      this.phase += this.ratio
     }
+    this.phase -= ch.length
     return true
   }
 }
 registerProcessor('pf-pcm-capture', PfPcmCapture)
 `
 
+/** Fusionne un fragment Gemini (delta ou snapshot cumulatif) dans le texte courant. */
+export function mergeTranscriptChunk(current: string, incoming: string): string {
+  const next = incoming ?? ''
+  if (!next) return current
+  if (!current) return next
+  if (next.startsWith(current)) return next
+  if (current.startsWith(next)) return current
+  // Extension : current est préfixe d'un début de next (overlap partiel rare).
+  for (let n = Math.min(current.length, next.length); n > 0; n--) {
+    if (current.endsWith(next.slice(0, n))) {
+      return current + next.slice(n)
+    }
+  }
+  const needSpace = !/\s$/.test(current) && !/^\s/.test(next)
+  return current + (needSpace ? ' ' : '') + next
+}
+
 function readCookie(name: string): string {
   if (typeof document === 'undefined') return ''
   const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
   return m ? decodeURIComponent(m[1]) : ''
+}
+
+/** Sonnerie téléphone réaliste (~2,5 s) via oscillateurs Web Audio. */
+export async function playPhoneRingtone(durationMs = 2500): Promise<void> {
+  if (typeof window === 'undefined') {
+    await new Promise(r => setTimeout(r, durationMs))
+    return
+  }
+  const ctx = new AudioContext()
+  try {
+    await ctx.resume()
+    const master = ctx.createGain()
+    master.gain.value = 0.22
+    master.connect(ctx.destination)
+    const t0 = ctx.currentTime
+    // Deux doublets type sonnerie européenne (440/480 Hz).
+    const bursts: Array<[number, number]> = [
+      [0.0, 0.4],
+      [0.5, 0.9],
+      [1.4, 1.8],
+      [1.9, 2.3],
+    ]
+    for (const [start, end] of bursts) {
+      for (const freq of [440, 480]) {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.value = freq
+        g.gain.setValueAtTime(0, t0 + start)
+        g.gain.linearRampToValueAtTime(0.35, t0 + start + 0.02)
+        g.gain.setValueAtTime(0.35, t0 + end - 0.04)
+        g.gain.linearRampToValueAtTime(0, t0 + end)
+        osc.connect(g)
+        g.connect(master)
+        osc.start(t0 + start)
+        osc.stop(t0 + end + 0.01)
+      }
+    }
+    await new Promise(r => setTimeout(r, durationMs))
+  } finally {
+    void ctx.close().catch(() => {})
+  }
 }
 
 export function usePitchLive() {
@@ -57,12 +127,14 @@ export function usePitchLive() {
   let playbackCtx: AudioContext | null = null
   let micStream: MediaStream | null = null
   let workletNode: AudioWorkletNode | null = null
+  let silentGain: GainNode | null = null
   let mixDest: MediaStreamAudioDestinationNode | null = null
   let nextPlayTime = 0
   let activeSources: AudioBufferSourceNode[] = []
   let ready = false
+  let captureStarted = false
 
-  /** Flux mixé micro + véto, disponible après connect() réussi (pour MediaRecorder). */
+  /** Flux mixé micro + véto, disponible après startOpening() (pour MediaRecorder). */
   function mixedStream(): MediaStream | null {
     return mixDest?.stream ?? null
   }
@@ -102,7 +174,7 @@ export function usePitchLive() {
           case 'ready':
             clearTimeout(failTimer)
             ready = true
-            await startCapture()
+            // Micro + Allo différés : le client joue d'abord la sonnerie.
             cb.onReady()
             resolve(true)
             break
@@ -112,6 +184,9 @@ export function usePitchLive() {
           case 'interrupted':
             flushPlayback()
             cb.onInterrupted()
+            break
+          case 'turn_complete':
+            cb.onTurnComplete?.()
             break
           case 'ended':
             cb.onEnded(msg.outcome, msg.appointmentSlot, msg.reason)
@@ -140,8 +215,16 @@ export function usePitchLive() {
     return true
   }
 
+  /** Après la sonnerie : déclenche l'Allo serveur et ouvre le micro. */
+  async function startOpening() {
+    if (!ready || ws?.readyState !== WebSocket.OPEN) return
+    ws.send(JSON.stringify({ type: 'start_opening' }))
+    await startCapture()
+  }
+
   async function startCapture() {
-    if (!micStream) return
+    if (!micStream || captureStarted) return
+    captureStarted = true
     captureCtx = new AudioContext({ sampleRate: CAPTURE_RATE })
     const blobUrl = URL.createObjectURL(new Blob([workletSource], { type: 'application/javascript' }))
     try {
@@ -156,15 +239,17 @@ export function usePitchLive() {
         ws.send(e.data.buffer)
       }
     }
+    // Keep-alive : certains navigateurs n'exécutent process() que si branché à destination.
+    silentGain = captureCtx.createGain()
+    silentGain.gain.value = 0
     src.connect(workletNode)
-    // Worklet sans sortie audible — pas de connexion à destination.
+    workletNode.connect(silentGain)
+    silentGain.connect(captureCtx.destination)
 
-    // Contexte de lecture + mix replay (micro + véto).
     playbackCtx = new AudioContext({ sampleRate: PLAYBACK_RATE })
     mixDest = playbackCtx.createMediaStreamDestination()
     playbackCtx.createMediaStreamSource(micStream).connect(mixDest)
     nextPlayTime = 0
-    // Politique autoplay : reprendre les contextes (créés dans le geste utilisateur).
     void captureCtx.resume().catch(() => {})
     void playbackCtx.resume().catch(() => {})
   }
@@ -188,7 +273,6 @@ export function usePitchLive() {
     }
   }
 
-  /** Barge-in : vide la file de lecture immédiatement. */
   function flushPlayback() {
     for (const s of activeSources) {
       try { s.stop() } catch { /* déjà stoppé */ }
@@ -197,14 +281,12 @@ export function usePitchLive() {
     nextPlayTime = 0
   }
 
-  /** Envoi d'une ligne tapée (entrée dégradée pendant le live). */
   function sendText(text: string) {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'text', text }))
     }
   }
 
-  /** Raccrocher manuellement : informe le serveur puis ferme. */
   function end() {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'end' }))
@@ -214,6 +296,7 @@ export function usePitchLive() {
 
   function stop() {
     ready = false
+    captureStarted = false
     flushPlayback()
     if (ws) {
       ws.onclose = null
@@ -222,8 +305,9 @@ export function usePitchLive() {
       try { ws.close() } catch { /* ignore */ }
       ws = null
     }
-    workletNode?.port.close()
+    try { workletNode?.port.close() } catch { /* ignore */ }
     workletNode = null
+    silentGain = null
     micStream?.getTracks().forEach(t => t.stop())
     micStream = null
     void captureCtx?.close().catch(() => {})
@@ -233,5 +317,5 @@ export function usePitchLive() {
     mixDest = null
   }
 
-  return { connect, mixedStream, sendText, end, stop }
+  return { connect, startOpening, mixedStream, sendText, end, stop }
 }
