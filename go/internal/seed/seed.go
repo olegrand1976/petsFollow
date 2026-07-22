@@ -169,6 +169,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
 		discovery.email_sends, discovery.email_journey, discovery.progress,
+		ops.product_digest_sends, ops.product_digests,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.dossier_events, pets.pets,

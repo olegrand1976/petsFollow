@@ -59,6 +59,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerCommercialRoutes(r)
 	a.registerCommercialManagerRoutes(r)
 	a.registerPitchTrainingRoutes(r)
+	a.registerProductDigestRoutes(r)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))

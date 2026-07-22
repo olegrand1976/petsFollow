@@ -76,11 +76,20 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"emails.visit_request_disclaimer",
 		"emails.footer_powered_by",
 		"emails.footer_visit_llit",
+		"emails.product_digest_subject",
+		"emails.product_digest_tagline",
+		"emails.product_digest_preheader",
+		"emails.product_digest_greeting",
+		"emails.product_digest_intro",
+		"emails.product_digest_intro_with_headline",
+		"emails.product_digest_disclaimer",
+		"emails.product_digest_fallback_name",
 		"emails.journey.unsubscribe",
 	}
 	vars := map[string]string{
 		"fullName": "Ada", "bpm": "120", "vetName": "Dr. Vet", "practiceName": "VetPlus",
 		"clientName": "Ada", "petName": "Rex", "when": "01/01/2026 10:00", "notes": "ok",
+		"date": "22/07/2026", "headline": "Améliorations",
 	}
 	for _, loc := range Supported {
 		for _, key := range keys {

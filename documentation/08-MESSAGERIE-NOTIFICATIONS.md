@@ -15,6 +15,8 @@ Emails transactionnels via notifier Go (confirm email, reset MDP, etc.) selon lo
 
 **Parcours découverte / fidélisation client** (drip 12 mois) : scheduler in-process + tables `discovery.email_*` — détail [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md). Respecte `client_preferences.discovery` / `.billing`. Désabonnement : `GET/POST /api/v1/public/journey/unsubscribe?token=…`.
 
+**Digest produit quotidien** (interne) : synthèse fonctionnelle des évolutions du jour → emails aux rôles `admin` / `commercial` / `commercial_manager` à 18:00 Europe/Brussels. Détail [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md).
+
 Préférences :
 
 - Véto : `GET/PUT /vet/notification-preferences` (`emailOnMessage`, `emailOnHeartrate`, `emailOnVisitRequest`)

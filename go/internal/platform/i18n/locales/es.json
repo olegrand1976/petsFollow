@@ -156,6 +156,14 @@
     "visit_request_disclaimer": "Inicie sesión en petsFollow Pro para confirmar o proponer otro horario.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visitar LL-IT Software & Computer",
+    "product_digest_subject": "petsFollow — Evoluciones del {date}",
+    "product_digest_tagline": "Resumen de producto diario",
+    "product_digest_preheader": "Evoluciones funcionales de la plataforma del {date}.",
+    "product_digest_greeting": "Hola {fullName},",
+    "product_digest_intro": "Aquí tienes el resumen funcional de los cambios de petsFollow del {date}.",
+    "product_digest_intro_with_headline": "Resumen del {date}: {headline}",
+    "product_digest_disclaimer": "Correo interno automático — resumen no técnico generado a partir de las entregas del día.",
+    "product_digest_fallback_name": "equipo",
     "journey": {
       "unsubscribe": "Darse de baja del recorrido de descubrimiento",
       "d0_welcome": {

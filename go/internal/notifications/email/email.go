@@ -194,6 +194,37 @@ func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practi
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendProductDigest sends the daily functional platform changelog to internal staff.
+func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, headline, bodyText string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"fullName": fullName,
+		"date":     dateLabel,
+		"headline": headline,
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = mustT(locale, "emails.product_digest_fallback_name")
+	}
+	subject := mustT(locale, "emails.product_digest_subject", vars)
+	intro := mustT(locale, "emails.product_digest_intro", vars)
+	if headline != "" {
+		intro = mustT(locale, "emails.product_digest_intro_with_headline", vars)
+	}
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.product_digest_tagline"),
+		Greeting:        mustT(locale, "emails.product_digest_greeting", vars),
+		Intro:           intro,
+		Detail:          bodyText,
+		Disclaimer:      mustT(locale, "emails.product_digest_disclaimer"),
+		Preheader:       mustT(locale, "emails.product_digest_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendJourneyStep sends one client discovery/loyalty drip email.
 // vars may include:
 //   "_omitDetail=1" — suppress soft-upsell detail block

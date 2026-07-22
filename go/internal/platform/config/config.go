@@ -53,6 +53,7 @@ type Config struct {
 	GeminiLiteModel                string
 	GeminiLiveModel                string
 	PitchAnalyzerSecret            string
+	ProductDigestSecret            string
 	VertexProject                  string
 	VertexLocation                 string
 }
@@ -106,6 +107,7 @@ func Load() Config {
 		GeminiLiteModel:      envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
 		GeminiLiveModel:      envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
 		PitchAnalyzerSecret:  envOr("PITCH_ANALYZER_SECRET", ""),
+		ProductDigestSecret:  envOr("PRODUCT_DIGEST_SECRET", ""),
 		VertexProject:        envOr("VERTEX_PROJECT", ""),
 		VertexLocation:       envOr("VERTEX_LOCATION", "europe-west9"),
 	}

@@ -156,6 +156,14 @@
     "visit_request_disclaimer": "Meld u aan bij petsFollow Pro om te bevestigen of een ander moment voor te stellen.",
     "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
     "footer_visit_llit": "Bezoek LL-IT Software & Computer",
+    "product_digest_subject": "petsFollow — Updates van {date}",
+    "product_digest_tagline": "Dagelijkse productsamenvatting",
+    "product_digest_preheader": "Functionele platformupdates van {date}.",
+    "product_digest_greeting": "Hallo {fullName},",
+    "product_digest_intro": "Hier is de functionele samenvatting van de petsFollow-wijzigingen van {date}.",
+    "product_digest_intro_with_headline": "Samenvatting van {date}: {headline}",
+    "product_digest_disclaimer": "Interne automatische e-mail — niet-technische samenvatting op basis van de leveringen van vandaag.",
+    "product_digest_fallback_name": "team",
     "journey": {
       "unsubscribe": "Uitschrijven van het ontdekkingstraject",
       "d0_welcome": {

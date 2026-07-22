@@ -156,6 +156,14 @@
     "visit_request_disclaimer": "Connectez-vous à petsFollow Pro pour confirmer ou proposer un autre créneau.",
     "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
     "footer_visit_llit": "Visiter le site LL-IT Software & Computer",
+    "product_digest_subject": "petsFollow — Évolutions du {date}",
+    "product_digest_tagline": "Synthèse produit quotidienne",
+    "product_digest_preheader": "Les évolutions fonctionnelles de la plateforme du {date}.",
+    "product_digest_greeting": "Bonjour {fullName},",
+    "product_digest_intro": "Voici la synthèse fonctionnelle des évolutions petsFollow du {date}.",
+    "product_digest_intro_with_headline": "Voici la synthèse du {date} : {headline}",
+    "product_digest_disclaimer": "Email interne automatique — résumé non technique généré à partir des livraisons du jour.",
+    "product_digest_fallback_name": "équipe",
     "journey": {
       "unsubscribe": "Se désabonner du parcours découverte",
       "d0_welcome": {

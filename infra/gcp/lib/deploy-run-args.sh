@@ -75,6 +75,14 @@ pf_api_secrets() {
     --secret=petsfollow-gemini-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},GEMINI_API_KEY=petsfollow-gemini-api-key:latest"
   fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-product-digest-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},PRODUCT_DIGEST_SECRET=petsfollow-product-digest-secret:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-pitch-analyzer-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},PITCH_ANALYZER_SECRET=petsfollow-pitch-analyzer-secret:latest"
+  fi
   printf '%s' "$secrets"
 }
 

@@ -156,6 +156,14 @@
     "visit_request_disclaimer": "Sign in to petsFollow Pro to confirm or propose another slot.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visit LL-IT Software & Computer",
+    "product_digest_subject": "petsFollow — Updates for {date}",
+    "product_digest_tagline": "Daily product digest",
+    "product_digest_preheader": "Functional platform updates for {date}.",
+    "product_digest_greeting": "Hello {fullName},",
+    "product_digest_intro": "Here is the functional summary of petsFollow changes for {date}.",
+    "product_digest_intro_with_headline": "Summary for {date}: {headline}",
+    "product_digest_disclaimer": "Internal automated email — non-technical summary generated from today's deliveries.",
+    "product_digest_fallback_name": "team",
     "journey": {
       "unsubscribe": "Unsubscribe from the discovery journey",
       "d0_welcome": {
