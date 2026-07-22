@@ -73,6 +73,7 @@ function iconName(name: ProNavIcon) {
 function navTestId(to: string) {
   if (to === '/calendar') return 'nav-calendar'
   if (to === '/clients') return 'nav-clients'
+  if (to === '/messages') return 'nav-messages'
   if (to === '/requests') return 'nav-requests'
   return undefined
 }
@@ -80,6 +81,7 @@ function navTestId(to: string) {
 function badgeTestId(to: string) {
   if (to === '/calendar') return 'nav-calendar-badge'
   if (to === '/clients') return 'nav-clients-badge'
+  if (to === '/messages') return 'nav-messages-badge'
   if (to === '/requests') return 'nav-requests-badge'
   return undefined
 }

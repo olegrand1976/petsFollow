@@ -33,6 +33,7 @@ const showNav = computed(() => {
   return !bare.includes(route.path) && !route.path.startsWith('/register')
 })
 const { fetchUser } = useProUser()
+const { count: messagesBadge } = useProNotifications()
 const clientsBadge = ref(0)
 const calendarBadge = ref(0)
 
@@ -41,7 +42,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
   { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
-  { to: '/messages', label: t('nav.messages'), icon: 'messages' },
+  { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
   { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
   { to: '/produits', label: t('nav.products'), icon: 'description' },
   { to: '/settings', label: t('nav.settings'), icon: 'settings' },
