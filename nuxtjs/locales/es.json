@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Panel",
     "clients": "Clientes",
+    "pets": "Animales",
     "recommend": "Recomendar una clínica",
     "messages": "Mensajería",
     "requests": "Solicitudes",
@@ -167,6 +168,11 @@
     "pet": "mascota",
     "pets": "mascotas",
     "unknownBreed": "Raza desconocida",
+    "species": {
+      "dog": "Perro",
+      "cat": "Gato",
+      "horse": "Caballo"
+    },
     "clientFallback": "Cliente {id}…",
     "breadcrumb": "Ruta de navegación",
     "loading": "Cargando…",
@@ -402,7 +408,20 @@
       "careTypeDental": "Cuidado dental",
       "careTypeFarrier": "Herrador",
       "careTypeFecalEgg": "Coprocultivo / recuento de huevos",
-      "careTypeCustom": "Personalizado"
+      "careTypeCustom": "Personalizado",
+      "openMessages": "Mensajería con el cliente",
+      "documentsTitle": "Documentos",
+      "documentsHint": "PDF, JPEG, PNG o WebP — máx. 10 MB.",
+      "documentsEmptyTitle": "Sin documentos",
+      "documentsEmptyDescription": "Añada informes, radiografías o archivos al expediente.",
+      "documentUpload": "Subir",
+      "documentTitlePlaceholder": "Título (opcional)",
+      "documentName": "Documento",
+      "documentType": "Tipo",
+      "documentUploader": "Subido por",
+      "documentOpen": "Abrir",
+      "documentTypePdf": "PDF",
+      "documentTypeImage": "Imagen"
     },
     "invitations": {
       "open": "Invitaciones de clientes",
@@ -414,6 +433,23 @@
       "accept": "Aceptar",
       "reject": "Rechazar"
     }
+  },
+  "pets": {
+    "title": "Animales seguidos",
+    "subtitle": "Todos los animales de la clínica, con última visita y lectura cardíaca.",
+    "search": "Buscar",
+    "searchPlaceholder": "Nombre, raza, cliente…",
+    "speciesFilter": "Tipo",
+    "speciesAll": "Todos",
+    "emptyTitle": "Sin animales",
+    "emptyDescription": "Los animales de sus clientes aparecerán aquí.",
+    "columnName": "Animal",
+    "columnSpecies": "Tipo",
+    "columnBreed": "Raza",
+    "columnBirthDate": "Fecha de nacimiento",
+    "columnLastVisit": "Última visita",
+    "columnLastHeartRate": "Última lectura",
+    "columnOwner": "Cliente"
   },
   "recommend": {
     "title": "Recomendar una clínica",

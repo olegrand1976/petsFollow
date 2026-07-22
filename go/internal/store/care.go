@@ -130,7 +130,8 @@ func (s *Store) ListCareReminders(ctx context.Context, petID string) ([]CareRemi
 }
 
 func scanCareReminders(rows pgx.Rows) ([]CareReminder, error) {
-	var out []CareReminder
+	// Non-nil empty slice so JSON encodes [] (not null / omitted with omitempty).
+	out := make([]CareReminder, 0)
 	for rows.Next() {
 		var r CareReminder
 		if err := rows.Scan(&r.ID, &r.PetID, &r.PracticeID, &r.Type, &r.Title, &r.DueAt, &r.Status,

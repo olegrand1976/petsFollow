@@ -2,8 +2,10 @@ package media
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -47,6 +49,18 @@ func (s *gcsStore) Upload(ctx context.Context, objectKey string, r io.Reader, si
 		return "", err
 	}
 	return fmt.Sprintf("https://storage.googleapis.com/%s/%s", s.bucket, objectKey), nil
+}
+
+func (s *gcsStore) Delete(ctx context.Context, objectKey string) error {
+	objectKey = strings.TrimSpace(objectKey)
+	if objectKey == "" {
+		return nil
+	}
+	err := s.client.Bucket(s.bucket).Object(objectKey).Delete(ctx)
+	if err != nil && errors.Is(err, storage.ErrObjectNotExist) {
+		return nil
+	}
+	return err
 }
 
 func newObjectID() string {

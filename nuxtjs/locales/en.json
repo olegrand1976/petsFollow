@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clients",
+    "pets": "Pets",
     "recommend": "Refer a practice",
     "messages": "Messaging",
     "requests": "Requests",
@@ -167,6 +168,11 @@
     "pet": "pet",
     "pets": "pets",
     "unknownBreed": "Unknown breed",
+    "species": {
+      "dog": "Dog",
+      "cat": "Cat",
+      "horse": "Horse"
+    },
     "clientFallback": "Client {id}…",
     "breadcrumb": "Breadcrumb",
     "loading": "Loading…",
@@ -402,7 +408,20 @@
       "careTypeDental": "Dental care",
       "careTypeFarrier": "Farrier",
       "careTypeFecalEgg": "Fecal egg count",
-      "careTypeCustom": "Custom"
+      "careTypeCustom": "Custom",
+      "openMessages": "Client messaging",
+      "documentsTitle": "Documents",
+      "documentsHint": "PDF, JPEG, PNG or WebP — 10 MB max.",
+      "documentsEmptyTitle": "No documents",
+      "documentsEmptyDescription": "Add reports, X-rays or attachments to the record.",
+      "documentUpload": "Upload",
+      "documentTitlePlaceholder": "Title (optional)",
+      "documentName": "Document",
+      "documentType": "Type",
+      "documentUploader": "Uploaded by",
+      "documentOpen": "Open",
+      "documentTypePdf": "PDF",
+      "documentTypeImage": "Image"
     },
     "invitations": {
       "open": "Client invitations",
@@ -414,6 +433,23 @@
       "accept": "Accept",
       "reject": "Reject"
     }
+  },
+  "pets": {
+    "title": "Monitored pets",
+    "subtitle": "All practice pets, with last visit and heart rate reading.",
+    "search": "Search",
+    "searchPlaceholder": "Name, breed, client…",
+    "speciesFilter": "Type",
+    "speciesAll": "All",
+    "emptyTitle": "No pets",
+    "emptyDescription": "Pets belonging to your clients will appear here.",
+    "columnName": "Pet",
+    "columnSpecies": "Type",
+    "columnBreed": "Breed",
+    "columnBirthDate": "Date of birth",
+    "columnLastVisit": "Last visit",
+    "columnLastHeartRate": "Last reading",
+    "columnOwner": "Client"
   },
   "recommend": {
     "title": "Refer a practice",

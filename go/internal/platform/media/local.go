@@ -54,3 +54,16 @@ func (s *localStore) Upload(ctx context.Context, objectKey string, r io.Reader, 
 	}
 	return fmt.Sprintf("%s/%s", s.publicBase, objectKey), nil
 }
+
+func (s *localStore) Delete(ctx context.Context, objectKey string) error {
+	_ = ctx
+	objectKey = strings.TrimSpace(objectKey)
+	if objectKey == "" || strings.Contains(objectKey, "..") {
+		return nil
+	}
+	full := filepath.Join(s.root, filepath.FromSlash(objectKey))
+	if err := os.Remove(full); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}

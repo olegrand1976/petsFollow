@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clients",
+    "pets": "Animaux",
     "recommend": "Recommander un cabinet",
     "messages": "Messagerie",
     "requests": "Demandes",
@@ -274,6 +275,11 @@
     "pet": "animal",
     "pets": "animaux",
     "unknownBreed": "Race inconnue",
+    "species": {
+      "dog": "Chien",
+      "cat": "Chat",
+      "horse": "Cheval"
+    },
     "clientFallback": "Client {id}…",
     "breadcrumb": "Fil d'Ariane",
     "loading": "Chargement…",
@@ -697,8 +703,38 @@
       "careTypeDental": "Soins dentaires",
       "careTypeFarrier": "Maréchal-ferrant",
       "careTypeFecalEgg": "Coproscopie",
-      "careTypeCustom": "Personnalisé"
+      "careTypeCustom": "Personnalisé",
+      "openMessages": "Messagerie client",
+      "documentsTitle": "Documents",
+      "documentsHint": "PDF, JPEG, PNG ou WebP — 10 Mo max.",
+      "documentsEmptyTitle": "Aucun document",
+      "documentsEmptyDescription": "Ajoutez des comptes-rendus, radios ou pièces jointes au dossier.",
+      "documentUpload": "Ajouter",
+      "documentTitlePlaceholder": "Titre (optionnel)",
+      "documentName": "Document",
+      "documentType": "Type",
+      "documentUploader": "Ajouté par",
+      "documentOpen": "Ouvrir",
+      "documentTypePdf": "PDF",
+      "documentTypeImage": "Image"
     }
+  },
+  "pets": {
+    "title": "Animaux suivis",
+    "subtitle": "Tous les animaux du cabinet, avec dernière visite et relevé cardiaque.",
+    "search": "Recherche",
+    "searchPlaceholder": "Nom, race, client…",
+    "speciesFilter": "Type",
+    "speciesAll": "Tous",
+    "emptyTitle": "Aucun animal",
+    "emptyDescription": "Les animaux de vos clients apparaîtront ici.",
+    "columnName": "Animal",
+    "columnSpecies": "Type",
+    "columnBreed": "Race",
+    "columnBirthDate": "Naissance",
+    "columnLastVisit": "Dernière visite",
+    "columnLastHeartRate": "Dernier relevé",
+    "columnOwner": "Client"
   },
   "recommend": {
     "title": "Recommander un cabinet",

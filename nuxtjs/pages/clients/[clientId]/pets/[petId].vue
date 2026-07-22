@@ -1,6 +1,8 @@
 <template>
   <div data-testid="pet-detail-page">
     <nav class="pro-breadcrumb" :aria-label="$t('common.breadcrumb')">
+      <NuxtLink to="/pets">{{ $t('nav.pets') }}</NuxtLink>
+      <span class="pro-breadcrumb-sep">/</span>
       <NuxtLink to="/clients">{{ $t('nav.clients') }}</NuxtLink>
       <span class="pro-breadcrumb-sep">/</span>
       <NuxtLink :to="`/clients/${clientId}`">{{ $t('common.profile') }}</NuxtLink>
@@ -14,10 +16,21 @@
       <template #actions>
         <div class="pro-pet-header-actions">
           <ProBadge v-if="isPrimaryPractice" variant="success">{{ $t('clients.pet.primaryBadge') }}</ProBadge>
+          <ProButton
+            variant="secondary"
+            test-id="pet-open-messages"
+            :disabled="messagingBusy"
+            @click="openMessaging"
+          >
+            <ProIcon name="chat" :size="18" />
+            {{ $t('clients.pet.openMessages') }}
+          </ProButton>
           <ProAvatar :src="pet?.photoUrl" :name="pet?.name || ''" size="lg" />
         </div>
       </template>
     </ProPageHeader>
+    <p v-if="pageError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ pageError }}</p>
+    <p v-if="messagingError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ messagingError }}</p>
 
     <ProCard :title="$t('clients.pet.photoTitle')" class="pro-settings-card">
       <ProAvatarUpload
@@ -225,6 +238,68 @@
       </ProTable>
     </ProCard>
 
+    <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
+      <form class="pro-pet-inline-form" @submit.prevent="uploadDocument">
+        <input
+          ref="docInputEl"
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          class="pro-input"
+          data-testid="pet-document-input"
+          @change="onDocFile"
+        />
+        <input
+          v-model="docTitle"
+          class="pro-input"
+          :placeholder="$t('clients.pet.documentTitlePlaceholder')"
+          data-testid="pet-document-title"
+        />
+        <ProButton type="submit" :disabled="docBusy || !docFile" data-testid="pet-document-upload">
+          {{ $t('clients.pet.documentUpload') }}
+        </ProButton>
+      </form>
+      <p v-if="docError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ docError }}</p>
+      <p class="pro-hint">{{ $t('clients.pet.documentsHint') }}</p>
+      <ProEmptyState
+        v-if="!documents.length"
+        :title="$t('clients.pet.documentsEmptyTitle')"
+        :description="$t('clients.pet.documentsEmptyDescription')"
+      />
+      <ProTable v-else>
+        <thead>
+          <tr>
+            <th>{{ $t('clients.pet.documentName') }}</th>
+            <th>{{ $t('clients.pet.documentType') }}</th>
+            <th>{{ $t('clients.pet.columnDate') }}</th>
+            <th>{{ $t('clients.pet.documentUploader') }}</th>
+            <th>{{ $t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in documents" :key="d.id">
+            <td>
+              <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer">
+                {{ d.title || d.fileName }}
+              </a>
+            </td>
+            <td>{{ documentKindLabel(d.contentType) }}</td>
+            <td>{{ formatDate(d.createdAt) }}</td>
+            <td>{{ d.uploaderName || $t('common.dash') }}</td>
+            <td>
+              <div class="pro-flex-gap">
+                <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer" class="pro-link-btn">
+                  {{ $t('clients.pet.documentOpen') }}
+                </a>
+                <ProButton variant="ghost" :disabled="docBusy" @click="deleteDocument(d.id)">
+                  {{ $t('common.delete') }}
+                </ProButton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+
     <ProCard :title="$t('clients.pet.timelineTitle')">
       <ul v-if="timeline.length" class="pro-timeline">
         <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
@@ -257,15 +332,26 @@ const sessions = ref<any[]>([])
 const timeline = ref<any[]>([])
 const careReminders = ref<any[]>([])
 const visits = ref<any[]>([])
+const documents = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
 const careBusy = ref(false)
 const visitBusy = ref(false)
+const messagingBusy = ref(false)
+const messagingError = ref('')
+const pageError = ref('')
+const docBusy = ref(false)
+const docError = ref('')
+const docTitle = ref('')
+const docFile = ref<File | null>(null)
+const docInputEl = ref<HTMLInputElement | null>(null)
 const careDraft = reactive({ title: '', type: 'vaccination' })
 const visitDraft = reactive({ scheduledAt: '', notes: '' })
 
 const { formatDate } = useFormatters()
 const { t } = useI18n()
+const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
+const router = useRouter()
 
 function careTypeLabel(type: string) {
   switch (type) {
@@ -327,6 +413,75 @@ async function loadCareAndVisits() {
   ])
   careReminders.value = careRes.data ?? careRes ?? []
   visits.value = visitsRes.data ?? visitsRes ?? []
+}
+
+async function loadDocuments() {
+  const res: any = await $fetch(`/api/pets/${petId}/documents`)
+  documents.value = res.data ?? res ?? []
+}
+
+function documentKindLabel(contentType: string) {
+  if (contentType?.includes('pdf')) return t('clients.pet.documentTypePdf')
+  if (contentType?.startsWith('image/')) return t('clients.pet.documentTypeImage')
+  return contentType || t('common.dash')
+}
+
+function onDocFile(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  docFile.value = input.files?.[0] ?? null
+  docError.value = ''
+}
+
+async function uploadDocument() {
+  if (!docFile.value) return
+  docBusy.value = true
+  docError.value = ''
+  try {
+    const fd = new FormData()
+    fd.append('file', docFile.value)
+    if (docTitle.value.trim()) fd.append('title', docTitle.value.trim())
+    await $fetch(`/api/pets/${petId}/documents`, { method: 'POST', body: fd })
+    docTitle.value = ''
+    docFile.value = null
+    if (docInputEl.value) docInputEl.value.value = ''
+    await loadDocuments()
+  } catch (e: any) {
+    docError.value = mapError(e)
+  } finally {
+    docBusy.value = false
+  }
+}
+
+async function deleteDocument(id: string) {
+  docBusy.value = true
+  docError.value = ''
+  try {
+    await $fetch(`/api/pets/documents/${id}`, { method: 'DELETE' })
+    await loadDocuments()
+  } catch (e: any) {
+    docError.value = mapError(e)
+  } finally {
+    docBusy.value = false
+  }
+}
+
+async function openMessaging() {
+  const ownerId = pet.value?.ownerUserId || clientId
+  if (!ownerId) return
+  messagingBusy.value = true
+  messagingError.value = ''
+  try {
+    const res: any = await $fetch('/api/messaging/threads', {
+      method: 'POST',
+      body: { clientUserId: ownerId },
+    })
+    const thread = res.data ?? res
+    await router.push({ path: '/messages', query: { thread: thread.id } })
+  } catch (e: any) {
+    messagingError.value = mapError(e)
+  } finally {
+    messagingBusy.value = false
+  }
 }
 
 async function createCare() {
@@ -394,18 +549,35 @@ async function visitAction(id: string, action: string) {
 }
 
 onMounted(async () => {
-  await fetchUser()
-  const petRes: any = await $fetch(`/api/pets/${petId}`)
-  pet.value = petRes.data ?? petRes
-  petPhotoUrl.value = pet.value?.photoUrl || ''
+  pageError.value = ''
+  try {
+    await fetchUser()
+    const petRes: any = await $fetch(`/api/pets/${petId}`)
+    pet.value = petRes.data ?? petRes
+    petPhotoUrl.value = pet.value?.photoUrl || ''
 
-  const sessionsRes: any = await $fetch(`/api/pets/${petId}/heartrate`)
-  sessions.value = sessionsRes.data ?? sessionsRes ?? []
+    const [sessionsRes, timelineRes]: any[] = await Promise.all([
+      $fetch(`/api/pets/${petId}/heartrate`),
+      $fetch(`/api/pets/${petId}/timeline`),
+    ])
+    sessions.value = sessionsRes.data ?? sessionsRes ?? []
+    timeline.value = timelineRes.data ?? timelineRes ?? []
+  } catch (e: any) {
+    pageError.value = mapError(e)
+    return
+  }
 
-  const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
-  timeline.value = timelineRes.data ?? timelineRes ?? []
+  try {
+    await loadCareAndVisits()
+  } catch (e: any) {
+    pageError.value = mapError(e)
+  }
 
-  await loadCareAndVisits()
+  try {
+    await loadDocuments()
+  } catch (e: any) {
+    docError.value = mapError(e)
+  }
 })
 </script>
 

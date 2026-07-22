@@ -145,6 +145,9 @@ func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if reminders == nil {
+		reminders = []store.CareReminder{}
+	}
 	httpx.WriteData(w, http.StatusOK, reminders)
 }
 

@@ -39,6 +39,7 @@ const { clientsBadge, calendarBadge, refresh: refreshNavBadges } = useNavBadges(
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
   { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
+  { to: '/pets', label: t('nav.pets'), icon: 'pets' },
   { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
   { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },

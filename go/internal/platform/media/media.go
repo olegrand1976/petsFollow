@@ -14,6 +14,7 @@ import (
 
 const (
 	MaxUploadBytes       = 2 << 20  // 2 MiB — avatars / pet photos
+	MaxDocumentBytes     = 10 << 20 // 10 MiB — pet dossier PDF / images
 	MaxMessageMediaBytes = 25 << 20 // 25 MiB — chat image / video
 	MaxPitchAudioBytes   = 20 << 20 // 20 MiB — pitch simulation recordings
 	AbsoluteMaxBytes     = MaxMessageMediaBytes
@@ -51,9 +52,17 @@ var allowedPitchAudioTypes = map[string]string{
 	"video/webm":       ".webm",
 }
 
+var allowedDocumentTypes = map[string]string{
+	"application/pdf": ".pdf",
+	"image/jpeg":      ".jpg",
+	"image/png":       ".png",
+	"image/webp":      ".webp",
+}
+
 // Store uploads binaries and returns a publicly reachable URL.
 type Store interface {
 	Upload(ctx context.Context, objectKey string, r io.Reader, size int64, contentType string) (publicURL string, err error)
+	Delete(ctx context.Context, objectKey string) error
 }
 
 type Bundle struct {
@@ -106,6 +115,29 @@ func ExtForPitchAudio(contentType string) (string, error) {
 		return "", ErrInvalidType
 	}
 	return ext, nil
+}
+
+func ExtForDocument(contentType string) (string, error) {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	ext, ok := allowedDocumentTypes[ct]
+	if !ok {
+		return "", ErrInvalidType
+	}
+	return ext, nil
+}
+
+func NormalizeDocumentType(contentType, filename string) (string, error) {
+	ct := inferContentType(contentType, filename)
+	if ct == "" || ct == "application/octet-stream" {
+		switch strings.ToLower(path.Ext(filename)) {
+		case ".pdf":
+			ct = "application/pdf"
+		}
+	}
+	if _, err := ExtForDocument(ct); err != nil {
+		return "", err
+	}
+	return ct, nil
 }
 
 func NormalizePitchAudioType(contentType, filename string) (string, error) {
@@ -170,6 +202,8 @@ func inferContentType(contentType, filename string) string {
 			ct = "video/quicktime"
 		case ".webm":
 			ct = "video/webm"
+		case ".pdf":
+			ct = "application/pdf"
 		}
 	}
 	return ct

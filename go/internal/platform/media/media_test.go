@@ -42,6 +42,12 @@ func TestLocalUploadAndServe(t *testing.T) {
 	if !bytes.Equal(body, png) {
 		t.Fatal("body mismatch")
 	}
+	if err := st.Delete(nil, key); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(key))); !os.IsNotExist(err) {
+		t.Fatalf("expected file removed, got %v", err)
+	}
 }
 
 func TestNormalizeContentType(t *testing.T) {

@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Klanten",
+    "pets": "Dieren",
     "recommend": "Praktijk aanbevelen",
     "messages": "Berichten",
     "requests": "Aanvragen",
@@ -167,6 +168,11 @@
     "pet": "dier",
     "pets": "dieren",
     "unknownBreed": "Onbekend ras",
+    "species": {
+      "dog": "Hond",
+      "cat": "Kat",
+      "horse": "Paard"
+    },
     "clientFallback": "Klant {id}…",
     "breadcrumb": "Broodkruimelpad",
     "loading": "Laden…",
@@ -402,7 +408,20 @@
       "careTypeDental": "Tandverzorging",
       "careTypeFarrier": "Hoefsmid",
       "careTypeFecalEgg": "Mestonderzoek",
-      "careTypeCustom": "Aangepast"
+      "careTypeCustom": "Aangepast",
+      "openMessages": "Berichten met cliënt",
+      "documentsTitle": "Documenten",
+      "documentsHint": "PDF, JPEG, PNG of WebP — max. 10 MB.",
+      "documentsEmptyTitle": "Geen documenten",
+      "documentsEmptyDescription": "Voeg verslagen, foto’s of bijlagen toe aan het dossier.",
+      "documentUpload": "Uploaden",
+      "documentTitlePlaceholder": "Titel (optioneel)",
+      "documentName": "Document",
+      "documentType": "Type",
+      "documentUploader": "Geüpload door",
+      "documentOpen": "Openen",
+      "documentTypePdf": "PDF",
+      "documentTypeImage": "Afbeelding"
     },
     "invitations": {
       "open": "Cliëntuitnodigingen",
@@ -414,6 +433,23 @@
       "accept": "Aanvaarden",
       "reject": "Weigeren"
     }
+  },
+  "pets": {
+    "title": "Opgevolgde dieren",
+    "subtitle": "Alle dieren van de praktijk, met laatste bezoek en hartmeting.",
+    "search": "Zoeken",
+    "searchPlaceholder": "Naam, ras, cliënt…",
+    "speciesFilter": "Type",
+    "speciesAll": "Alle",
+    "emptyTitle": "Geen dieren",
+    "emptyDescription": "Dieren van uw cliënten verschijnen hier.",
+    "columnName": "Dier",
+    "columnSpecies": "Type",
+    "columnBreed": "Ras",
+    "columnBirthDate": "Geboortedatum",
+    "columnLastVisit": "Laatste bezoek",
+    "columnLastHeartRate": "Laatste meting",
+    "columnOwner": "Cliënt"
   },
   "recommend": {
     "title": "Praktijk aanbevelen",

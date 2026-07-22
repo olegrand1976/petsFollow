@@ -30,6 +30,7 @@
 export type ProNavIcon =
   | 'dashboard'
   | 'clients'
+  | 'pets'
   | 'messages'
   | 'settings'
   | 'admin'
@@ -55,6 +56,7 @@ defineProps<{
 const icons: Record<ProNavIcon, string> = {
   dashboard: 'dashboard',
   clients: 'group',
+  pets: 'pets',
   messages: 'chat',
   settings: 'settings',
   admin: 'admin_panel_settings',
@@ -73,6 +75,7 @@ function iconName(name: ProNavIcon) {
 function navTestId(to: string) {
   if (to === '/calendar') return 'nav-calendar'
   if (to === '/clients') return 'nav-clients'
+  if (to === '/pets') return 'nav-pets'
   if (to === '/messages') return 'nav-messages'
   if (to === '/requests') return 'nav-requests'
   return undefined
