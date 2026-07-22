@@ -6,6 +6,23 @@ test('page calendrier accessible', async ({ page }) => {
   await page.goto('/calendar')
   await expect(page.getByTestId('calendar-page')).toBeVisible()
   await expect(page.getByRole('heading', { name: /calendrier|calendar|agenda/i })).toBeVisible()
+  await expect(page.getByTestId('calendar-grid')).toBeVisible()
+})
+
+test('bascule semaine / mois et aujourd’hui', async ({ page }) => {
+  await loginAsVet(page)
+  await page.goto('/calendar')
+  await expect(page.getByTestId('calendar-grid')).toBeVisible()
+
+  await page.getByTestId('calendar-view-month').click()
+  await expect(page.getByTestId('calendar-view-month')).toHaveClass(/pro-view-toggle__btn--active/)
+  await expect(page.getByTestId('calendar-grid')).toBeVisible()
+
+  await page.getByTestId('calendar-view-week').click()
+  await expect(page.getByTestId('calendar-view-week')).toHaveClass(/pro-view-toggle__btn--active/)
+
+  await page.getByTestId('calendar-today').click()
+  await expect(page.getByTestId('calendar-grid')).toBeVisible()
 })
 
 test('nav calendrier accessible depuis le dashboard', async ({ page }) => {

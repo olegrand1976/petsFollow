@@ -80,52 +80,123 @@
       </ProTable>
     </ProCard>
 
-    <ProCard :title="$t('calendar.weekTitle')">
-      <div class="calendar-nav pro-mb-md">
-        <ProButton variant="ghost" @click="shiftWeek(-1)">{{ $t('calendar.prevWeek') }}</ProButton>
-        <strong>{{ weekLabel }}</strong>
-        <ProButton variant="ghost" @click="shiftWeek(1)">{{ $t('calendar.nextWeek') }}</ProButton>
+    <ProCard :title="agendaTitle">
+      <div class="calendar-toolbar pro-mb-md">
+        <div class="pro-view-toggle" role="group" :aria-label="$t('calendar.viewToggleAria')">
+          <button
+            type="button"
+            class="pro-view-toggle__btn"
+            :class="{ 'pro-view-toggle__btn--active': viewMode === 'week' }"
+            data-testid="calendar-view-week"
+            @click="setView('week')"
+          >
+            {{ $t('calendar.viewWeek') }}
+          </button>
+          <button
+            type="button"
+            class="pro-view-toggle__btn"
+            :class="{ 'pro-view-toggle__btn--active': viewMode === 'month' }"
+            data-testid="calendar-view-month"
+            @click="setView('month')"
+          >
+            {{ $t('calendar.viewMonth') }}
+          </button>
+        </div>
+        <div class="calendar-nav">
+          <ProButton variant="ghost" data-testid="calendar-prev" @click="shiftPeriod(-1)">
+            {{ viewMode === 'week' ? $t('calendar.prevWeek') : $t('calendar.prevMonth') }}
+          </ProButton>
+          <ProButton variant="secondary" data-testid="calendar-today" @click="goToday">
+            {{ $t('calendar.today') }}
+          </ProButton>
+          <strong class="calendar-nav__label">{{ periodLabel }}</strong>
+          <ProButton variant="ghost" data-testid="calendar-next" @click="shiftPeriod(1)">
+            {{ viewMode === 'week' ? $t('calendar.nextWeek') : $t('calendar.nextMonth') }}
+          </ProButton>
+        </div>
       </div>
-      <ProEmptyState
-        v-if="!weekVisits.length"
-        :title="$t('calendar.weekEmptyTitle')"
-        :description="$t('calendar.weekEmptyDescription')"
+
+      <ProCalendarWeekGrid
+        v-if="viewMode === 'week'"
+        :week-start="weekStart"
+        :visits="visits"
+        :vacations="vacations"
+        :focus-visit-id="focusVisitId"
+        @select-visit="openVisitDetail"
       />
-      <ul v-else class="calendar-list">
-        <li
-          v-for="v in weekVisits"
-          :id="`visit-${v.id}`"
-          :key="v.id"
-          class="calendar-list__item"
-          :class="{ 'calendar-row--focus': focusVisitId === v.id }"
-        >
-          <div>
-            <strong>{{ formatWhen(v) }}</strong>
-            <span class="text-muted"> — {{ v.clientName }} / {{ v.petName }}</span>
-            <ProBadge :variant="statusVariant(v.status)" class="calendar-list__badge">
-              {{ statusLabel(v.status) }}
-            </ProBadge>
-          </div>
-          <div class="pro-flex-gap">
-            <ProButton
-              v-if="v.status === 'requested'"
-              :disabled="busyId === v.id"
-              @click="act(v.id, 'confirm')"
-            >
-              {{ $t('calendar.confirm') }}
-            </ProButton>
-            <ProButton
-              v-if="v.status === 'confirmed'"
-              variant="secondary"
-              :disabled="busyId === v.id"
-              @click="openReschedule(v)"
-            >
-              {{ $t('calendar.proposeMove') }}
-            </ProButton>
-          </div>
-        </li>
-      </ul>
+      <ProCalendarMonthGrid
+        v-else
+        :month-start="monthStart"
+        :visits="visits"
+        :vacations="vacations"
+        :focus-visit-id="focusVisitId"
+        @select-visit="openVisitDetail"
+        @select-day="zoomToDay"
+      />
     </ProCard>
+
+    <ProModal v-model:open="detailOpen" :title="$t('calendar.visitDetail')">
+      <div v-if="selectedVisit" class="visit-detail">
+        <p>
+          <strong>{{ $t('calendar.columnClient') }} :</strong>
+          <NuxtLink v-if="selectedVisit.clientId" :to="`/clients/${selectedVisit.clientId}`">
+            {{ selectedVisit.clientName }}
+          </NuxtLink>
+          <span v-else>{{ selectedVisit.clientName }}</span>
+        </p>
+        <p>
+          <strong>{{ $t('calendar.columnPet') }} :</strong> {{ selectedVisit.petName }}
+        </p>
+        <p>
+          <strong>{{ $t('calendar.columnWhen') }} :</strong> {{ formatWhen(selectedVisit) }}
+        </p>
+        <p>
+          <strong>{{ $t('calendar.columnStatus') }} :</strong>
+          <ProBadge :variant="statusVariant(selectedVisit.status)">
+            {{ statusLabel(selectedVisit.status) }}
+          </ProBadge>
+        </p>
+        <div class="pro-flex-gap create-client-actions">
+          <ProButton
+            v-if="selectedVisit.status === 'requested'"
+            :disabled="busyId === selectedVisit.id"
+            @click="actFromDetail('confirm')"
+          >
+            {{ $t('calendar.confirm') }}
+          </ProButton>
+          <ProButton
+            v-if="selectedVisit.status === 'reschedule_pending'"
+            :disabled="busyId === selectedVisit.id"
+            @click="actFromDetail('accept_reschedule')"
+          >
+            {{ $t('calendar.acceptReschedule') }}
+          </ProButton>
+          <ProButton
+            v-if="selectedVisit.status === 'reschedule_pending'"
+            variant="ghost"
+            :disabled="busyId === selectedVisit.id"
+            @click="actFromDetail('reject_reschedule')"
+          >
+            {{ $t('calendar.rejectReschedule') }}
+          </ProButton>
+          <ProButton
+            v-if="selectedVisit.status === 'confirmed'"
+            variant="secondary"
+            :disabled="busyId === selectedVisit.id"
+            @click="openReschedule(selectedVisit)"
+          >
+            {{ $t('calendar.proposeMove') }}
+          </ProButton>
+          <ProButton
+            variant="ghost"
+            :disabled="busyId === selectedVisit.id"
+            @click="actFromDetail('cancel')"
+          >
+            {{ $t('calendar.cancel') }}
+          </ProButton>
+        </div>
+      </div>
+    </ProModal>
 
     <ProModal v-model:open="rescheduleOpen" :title="$t('calendar.proposeMove')">
       <form class="pro-form" @submit.prevent="submitReschedule">
@@ -149,71 +220,103 @@
 </template>
 
 <script setup lang="ts">
+import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
+
 definePageMeta({ middleware: 'vet-only' })
+
+type CalendarViewMode = 'week' | 'month'
 
 const route = useRoute()
 const { t } = useI18n()
-const { formatDate } = useFormatters()
+const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
+const {
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  monthGridRange,
+  visitDisplayAt,
+  statusVariant,
+} = useCalendarGrid()
 
-const pending = ref<any[]>([])
-const weekVisits = ref<any[]>([])
+const pending = ref<CalendarVisit[]>([])
+const visits = ref<CalendarVisit[]>([])
+const vacations = ref<CalendarVacation[]>([])
 const clientBookingEnabled = ref(false)
 const actionError = ref('')
 const busyId = ref('')
 const focusVisitId = ref('')
-const weekStart = ref(startOfWeek(new Date()))
+const anchorDate = ref(startOfDay(new Date()))
 
+const viewMode = ref<CalendarViewMode>('week')
+if (import.meta.client) {
+  const saved = localStorage.getItem('pf-calendar-view')
+  if (saved === 'week' || saved === 'month') viewMode.value = saved
+}
+
+const detailOpen = ref(false)
+const selectedVisit = ref<CalendarVisit | null>(null)
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
 
-const weekLabel = computed(() => {
-  const end = new Date(weekStart.value)
-  end.setDate(end.getDate() + 6)
-  return `${formatDate(weekStart.value.toISOString())} – ${formatDate(end.toISOString())}`
+const weekStart = computed(() => startOfWeek(anchorDate.value))
+const monthStart = computed(() => startOfMonth(anchorDate.value))
+
+const agendaTitle = computed(() =>
+  viewMode.value === 'week' ? t('calendar.weekTitle') : t('calendar.monthTitle'),
+)
+
+const periodLabel = computed(() => {
+  if (viewMode.value === 'week') {
+    const end = new Date(weekStart.value)
+    end.setDate(end.getDate() + 6)
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+    return `${weekStart.value.toLocaleDateString(dateLocale(), opts)} – ${end.toLocaleDateString(dateLocale(), opts)}`
+  }
+  return monthStart.value.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })
 })
 
-function startOfWeek(d: Date) {
-  const x = new Date(d)
-  const day = x.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  x.setDate(x.getDate() + diff)
-  x.setHours(0, 0, 0, 0)
-  return x
-}
-
-function shiftWeek(delta: number) {
-  const n = new Date(weekStart.value)
-  n.setDate(n.getDate() + delta * 7)
-  weekStart.value = n
+function setView(mode: CalendarViewMode) {
+  viewMode.value = mode
+  if (import.meta.client) localStorage.setItem('pf-calendar-view', mode)
   load()
 }
 
-function formatWhen(v: any) {
+function shiftPeriod(delta: number) {
+  if (viewMode.value === 'week') {
+    const n = new Date(anchorDate.value)
+    n.setDate(n.getDate() + delta * 7)
+    anchorDate.value = startOfDay(n)
+  } else {
+    // Évite le débordement JS (31 jan + 1 mois → mars)
+    const m = monthStart.value
+    anchorDate.value = startOfDay(new Date(m.getFullYear(), m.getMonth() + delta, 1))
+  }
+  load()
+}
+
+function goToday() {
+  anchorDate.value = startOfDay(new Date())
+  load()
+}
+
+function zoomToDay(day: Date) {
+  anchorDate.value = startOfDay(day)
+  setView('week')
+}
+
+function formatWhen(v: CalendarVisit) {
   if (v.proposedScheduledAt) {
     return `${formatDate(v.proposedScheduledAt)} (${t('calendar.proposed')})`
   }
   if (v.scheduledAt) return formatDate(v.scheduledAt)
-  return formatDate(v.createdAt)
+  if (v.createdAt) return `${formatDate(v.createdAt)} (${t('calendar.unscheduled')})`
+  return t('calendar.unscheduled')
 }
 
 function statusLabel(status: string) {
   return t(`calendar.status.${status}` as any) || status
-}
-
-function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
-  switch (status) {
-    case 'confirmed':
-      return 'success'
-    case 'requested':
-    case 'reschedule_pending':
-      return 'warning'
-    case 'cancelled':
-      return 'danger'
-    default:
-      return 'neutral'
-  }
 }
 
 function toLocalRFC3339(d: Date) {
@@ -227,23 +330,29 @@ function toLocalRFC3339(d: Date) {
     + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${oh}:${om}`
 }
 
+function rangeForView() {
+  if (viewMode.value === 'week') {
+    const from = weekStart.value
+    const to = new Date(from)
+    to.setDate(to.getDate() + 7)
+    return { from, to }
+  }
+  const { gridStart, gridEnd } = monthGridRange(monthStart.value)
+  return { from: gridStart, to: gridEnd }
+}
+
 async function load() {
   actionError.value = ''
-  const from = toLocalRFC3339(weekStart.value)
-  const toDate = new Date(weekStart.value)
-  toDate.setDate(toDate.getDate() + 7)
-  const to = toLocalRFC3339(toDate)
+  const { from, to } = rangeForView()
   try {
     const [calRes, schedRes]: any[] = await Promise.all([
-      $fetch(`/api/vet/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
+      $fetch(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`),
       $fetch('/api/vet/schedule'),
     ])
     const cal = calRes.data ?? calRes
     pending.value = cal.pending ?? []
-    const pendingIds = new Set((pending.value || []).map((v: any) => v.id))
-    weekVisits.value = (cal.visits ?? []).filter(
-      (v: any) => (v.scheduledAt || v.proposedScheduledAt) && !pendingIds.has(v.id),
-    )
+    visits.value = cal.visits ?? []
+    vacations.value = cal.vacations ?? []
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {
@@ -256,6 +365,7 @@ async function act(id: string, action: string) {
   actionError.value = ''
   try {
     await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { action } })
+    detailOpen.value = false
     await load()
   } catch (e: any) {
     actionError.value = mapError(e)
@@ -264,10 +374,22 @@ async function act(id: string, action: string) {
   }
 }
 
-function openReschedule(v: any) {
+async function actFromDetail(action: string) {
+  if (!selectedVisit.value) return
+  await act(selectedVisit.value.id, action)
+}
+
+function openVisitDetail(v: CalendarVisit) {
+  selectedVisit.value = v
+  focusVisitId.value = v.id
+  detailOpen.value = true
+}
+
+function openReschedule(v: CalendarVisit) {
   rescheduleVisitId.value = v.id
   rescheduleAt.value = ''
   rescheduleOpen.value = true
+  detailOpen.value = false
 }
 
 async function submitReschedule() {
@@ -288,58 +410,107 @@ async function submitReschedule() {
   }
 }
 
-function focusVisit(id: string) {
-  focusVisitId.value = id
+async function findVisitById(id: string): Promise<CalendarVisit | null> {
+  const local = pending.value.find((v) => v.id === id) || visits.value.find((v) => v.id === id)
+  if (local) return local
+  const statuses = ['confirmed', 'requested', 'reschedule_pending'] as const
+  try {
+    const results = await Promise.all(
+      statuses.map((status) =>
+        $fetch(`/api/vet/visits?status=${encodeURIComponent(status)}`).catch(() => null),
+      ),
+    )
+    for (const res of results) {
+      const list = ((res as any)?.data ?? res ?? []) as CalendarVisit[]
+      const found = list.find((v) => v.id === id)
+      if (found) return found
+    }
+  } catch {
+    /* ignore lookup errors */
+  }
+  return null
+}
+
+function revealVisit(v: CalendarVisit) {
+  const at = visitDisplayAt(v)
+  if (at) {
+    const day = startOfDay(at)
+    const { from, to } = rangeForView()
+    if (day < from || day >= to) {
+      anchorDate.value = day
+      load().then(() => {
+        const fresh = visits.value.find((x) => x.id === v.id) || v
+        openVisitDetail(fresh)
+        nextTick(() => {
+          document.getElementById(`calendar-chip-${v.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        })
+      })
+      return
+    }
+  }
+  openVisitDetail(v)
   nextTick(() => {
-    document.getElementById(`visit-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    document.getElementById(`calendar-chip-${v.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
+}
+
+async function focusVisit(id: string) {
+  focusVisitId.value = id
+  const inPending = pending.value.find((v) => v.id === id)
+  if (inPending) {
+    nextTick(() => {
+      document.getElementById(`visit-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+    return
+  }
+  const v = await findVisitById(id)
+  if (v) revealVisit(v)
 }
 
 onMounted(async () => {
   await load()
   if (typeof route.query.visit === 'string' && route.query.visit) {
-    focusVisit(route.query.visit)
+    await focusVisit(route.query.visit)
   }
 })
 
 watch(
   () => route.query.visit,
   (visit) => {
-    if (typeof visit === 'string' && visit) focusVisit(visit)
+    if (typeof visit === 'string' && visit) void focusVisit(visit)
   },
 )
 </script>
 
 <style scoped>
+.calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 .calendar-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
 }
-.calendar-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.calendar-list__item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--pf-vet-border);
-}
-.calendar-list__badge {
-  margin-left: 0.5rem;
+.calendar-nav__label {
+  min-width: 10rem;
+  text-align: center;
 }
 .calendar-row--focus {
   background: color-mix(in srgb, var(--pf-vet-accent) 12%, transparent);
 }
 .create-client-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: flex-end;
   margin-top: 1rem;
+}
+.visit-detail p {
+  margin: 0.4rem 0;
 }
 </style>
