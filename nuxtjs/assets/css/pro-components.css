@@ -608,6 +608,7 @@ a.pro-kpi-card:focus-visible {
 }
 
 .pro-login-form-panel {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -764,7 +765,7 @@ a.pro-kpi-card:focus-visible {
 
 .pro-locale-select {
   width: auto;
-  min-width: 8.5rem;
+  min-width: 9.5rem;
   min-height: 38px;
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
@@ -773,11 +774,14 @@ a.pro-kpi-card:focus-visible {
 }
 
 .pro-auth-locale {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 1;
   display: flex;
   justify-content: flex-end;
-  width: 100%;
-  max-width: 28rem;
-  margin: 0 auto 0.75rem;
+  width: auto;
+  margin: 0;
 }
 
 .pro-landing__nav-link {
