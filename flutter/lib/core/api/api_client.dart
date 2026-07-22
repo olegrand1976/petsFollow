@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
@@ -18,6 +20,12 @@ class ApiClient {
   static const _tokenKey = 'pf_token';
 
   String? token;
+
+  /// Fired after a 401 clears the local session (AuthGate rebuilds → login).
+  void Function()? onSessionInvalidated;
+
+  bool _handlingUnauthorized = false;
+
   final dio = Dio(BaseOptions(
     baseUrl: const String.fromEnvironment('API_BASE', defaultValue: 'http://10.0.2.2:8291'),
     headers: {'Content-Type': 'application/json'},
@@ -37,7 +45,40 @@ class ApiClient {
         }
         handler.next(options);
       },
+      onError: (error, handler) {
+        if (error.response?.statusCode == 401 &&
+            token != null &&
+            !_isPublicAuthPath(error.requestOptions.path)) {
+          // Clear token sync so AuthGate sees token == null immediately.
+          unawaited(_invalidateSessionFromUnauthorized());
+        }
+        handler.next(error);
+      },
     ));
+  }
+
+  static bool _isPublicAuthPath(String path) {
+    return path.contains('/api/v1/auth/');
+  }
+
+  /// Clears session after an authenticated 401. Safe to call multiple times.
+  Future<void> _invalidateSessionFromUnauthorized() async {
+    if (_handlingUnauthorized || token == null) return;
+    _handlingUnauthorized = true;
+    token = null;
+    onSessionInvalidated?.call();
+    try {
+      final sp = await SharedPreferences.getInstance();
+      // Abort cleanup if the user already signed in again.
+      if (token != null) return;
+      await sp.remove(_tokenKey);
+      NotificationService.instance.resetSession();
+      await DiscoveryController.instance.clearLocal();
+      if (token != null) return;
+      await GoogleAuth.signOut();
+    } finally {
+      _handlingUnauthorized = false;
+    }
   }
 
   Future<void> restoreSession() async {

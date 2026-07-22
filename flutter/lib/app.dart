@@ -71,16 +71,33 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
+    ApiClient.instance.onSessionInvalidated = _onSessionInvalidated;
     PaymentDeepLink.instance.onPaymentSuccess = () {
       if (mounted) setState(() => _petsRefreshTick++);
     };
     _bootstrap();
   }
 
+  @override
+  void dispose() {
+    if (ApiClient.instance.onSessionInvalidated == _onSessionInvalidated) {
+      ApiClient.instance.onSessionInvalidated = null;
+    }
+    super.dispose();
+  }
+
+  void _onSessionInvalidated() {
+    if (!mounted) return;
+    setState(() {
+      _mustChangePassword = false;
+    });
+  }
+
   Future<void> _bootstrap() async {
     await ApiClient.instance.restoreSession();
     if (ApiClient.instance.token != null) {
       await NotificationService.instance.init();
+      // 401 on /me → interceptor clears token + notifies → login.
       _mustChangePassword = await ApiClient.instance.mustChangePassword();
     }
     if (mounted) setState(() => _ready = true);
