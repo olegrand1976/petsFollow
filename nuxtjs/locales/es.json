@@ -1301,6 +1301,10 @@
     "no_entitlement": "Sin derecho de acceso",
     "invalid_confirm_link": "Enlace de confirmación no válido.",
     "conflict": "Conflicto",
+    "slot_taken": "Este horario ya está ocupado",
+    "on_vacation": "La clínica está cerrada en esta fecha",
+    "invalid_proposed": "Fecha u hora propuesta no válida",
+    "proposed_required": "Indique un nuevo horario",
     "email_already_exists": "Ya existe una cuenta con este correo",
     "google_account_mismatch": "Esta cuenta de Google ya está vinculada a otro usuario",
     "2fa_already_enabled": "2FA ya activado",
@@ -1571,6 +1575,7 @@
     "proposeMove": "Proponer otro horario",
     "newSlot": "Nuevo horario",
     "sendPropose": "Enviar al cliente",
+    "proposeSent": "Nuevo horario enviado al cliente.",
     "proposed": "propuesto",
     "status": {
       "requested": "Pendiente",

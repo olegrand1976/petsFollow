@@ -11,6 +11,7 @@
     <p v-if="!clientBookingEnabled" class="pro-inline-feedback" role="status">
       {{ $t('calendar.bookingDisabledHint') }}
     </p>
+    <p v-if="actionSuccess" class="pro-inline-feedback" role="status">{{ actionSuccess }}</p>
     <p v-if="actionError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ actionError }}</p>
 
     <ProCard :title="$t('calendar.pendingTitle')" class="pro-mb-lg">
@@ -206,11 +207,18 @@
           :label="$t('calendar.newSlot')"
           required
         />
+        <p v-if="rescheduleError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">
+          {{ rescheduleError }}
+        </p>
         <div class="create-client-actions">
-          <ProButton variant="secondary" type="button" @click="rescheduleOpen = false">
+          <ProButton variant="secondary" type="button" @click="closeReschedule">
             {{ $t('common.cancel') }}
           </ProButton>
-          <ProButton type="submit" :disabled="busyId === rescheduleVisitId">
+          <ProButton
+            type="submit"
+            :loading="busyId === rescheduleVisitId"
+            :disabled="busyId === rescheduleVisitId"
+          >
             {{ $t('calendar.sendPropose') }}
           </ProButton>
         </div>
@@ -244,6 +252,7 @@ const visits = ref<CalendarVisit[]>([])
 const vacations = ref<CalendarVacation[]>([])
 const clientBookingEnabled = ref(false)
 const actionError = ref('')
+const actionSuccess = ref('')
 const busyId = ref('')
 const focusVisitId = ref('')
 const anchorDate = ref(startOfDay(new Date()))
@@ -259,6 +268,7 @@ const selectedVisit = ref<CalendarVisit | null>(null)
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
+const rescheduleError = ref('')
 
 const weekStart = computed(() => startOfWeek(anchorDate.value))
 const monthStart = computed(() => startOfMonth(anchorDate.value))
@@ -356,6 +366,7 @@ async function load() {
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {
+    actionSuccess.value = ''
     actionError.value = mapError(e)
   }
 }
@@ -388,23 +399,39 @@ function openVisitDetail(v: CalendarVisit) {
 function openReschedule(v: CalendarVisit) {
   rescheduleVisitId.value = v.id
   rescheduleAt.value = ''
+  rescheduleError.value = ''
+  actionSuccess.value = ''
   rescheduleOpen.value = true
   detailOpen.value = false
 }
 
+function closeReschedule() {
+  rescheduleOpen.value = false
+  rescheduleError.value = ''
+}
+
 async function submitReschedule() {
   if (!rescheduleAt.value) return
-  const iso = new Date(rescheduleAt.value).toISOString()
   busyId.value = rescheduleVisitId.value
+  rescheduleError.value = ''
+  actionSuccess.value = ''
   try {
+    const at = new Date(rescheduleAt.value)
+    if (Number.isNaN(at.getTime())) {
+      rescheduleError.value = t('errors.invalid_proposed')
+      return
+    }
+    const iso = at.toISOString()
     await $fetch(`/api/visits/${rescheduleVisitId.value}`, {
       method: 'PATCH',
       body: { action: 'propose_reschedule', proposedScheduledAt: iso },
     })
     rescheduleOpen.value = false
+    rescheduleError.value = ''
     await load()
+    actionSuccess.value = t('calendar.proposeSent')
   } catch (e: any) {
-    actionError.value = mapError(e)
+    rescheduleError.value = mapError(e)
   } finally {
     busyId.value = ''
   }
@@ -512,5 +539,10 @@ watch(
 }
 .visit-detail p {
   margin: 0.4rem 0;
+}
+.pro-inline-feedback--error {
+  background: color-mix(in srgb, var(--pf-vet-alert) 10%, var(--pf-vet-surface));
+  border-color: color-mix(in srgb, var(--pf-vet-alert) 35%, transparent);
+  color: var(--pf-vet-alert);
 }
 </style>

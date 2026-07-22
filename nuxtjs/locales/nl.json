@@ -1301,6 +1301,10 @@
     "no_entitlement": "Geen toegangsrecht",
     "invalid_confirm_link": "Ongeldige bevestigingslink.",
     "conflict": "Conflict",
+    "slot_taken": "Dit tijdslot is al bezet",
+    "on_vacation": "De praktijk is gesloten op deze datum",
+    "invalid_proposed": "Ongeldige voorgestelde datum of tijd",
+    "proposed_required": "Kies een nieuw tijdslot",
     "email_already_exists": "Er bestaat al een account met dit e-mailadres",
     "google_account_mismatch": "Dit Google-account is al gekoppeld aan een andere gebruiker",
     "2fa_already_enabled": "2FA al ingeschakeld",
@@ -1571,6 +1575,7 @@
     "proposeMove": "Ander moment voorstellen",
     "newSlot": "Nieuw moment",
     "sendPropose": "Naar cliënt sturen",
+    "proposeSent": "Nieuw tijdslot naar de cliënt gestuurd.",
     "proposed": "voorgesteld",
     "status": {
       "requested": "In afwachting",

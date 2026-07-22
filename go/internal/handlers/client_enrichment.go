@@ -446,14 +446,14 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		} else if onVac {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "on_vacation")
+			writeErr(w, r, http.StatusBadRequest, "on_vacation", "on_vacation")
 			return
 		}
 		if overlap, err := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *scheduledAt, duration, ""); err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		} else if overlap {
-			writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
 			return
 		}
 	}
@@ -475,7 +475,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		visit, err = a.store.CreateVisitBooked(r.Context(), in)
 		if err != nil {
 			if errors.Is(err, store.ErrValidation) {
-				writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
 				return
 			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -677,12 +677,12 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if req.ProposedScheduledAt == nil || *req.ProposedScheduledAt == "" {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "proposed_required")
+			writeErr(w, r, http.StatusBadRequest, "proposed_required", "proposed_required")
 			return
 		}
 		proposed, perr := time.Parse(time.RFC3339, *req.ProposedScheduledAt)
 		if perr != nil {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_proposed")
+			writeErr(w, r, http.StatusBadRequest, "invalid_proposed", "invalid_proposed")
 			return
 		}
 		dur := 30
@@ -697,7 +697,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if overlap {
-			writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
 			return
 		}
 		onVac, verr := a.store.IsOnVacation(r.Context(), pet.PracticeID, proposed)
@@ -706,7 +706,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if onVac {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "on_vacation")
+			writeErr(w, r, http.StatusBadRequest, "on_vacation", "on_vacation")
 			return
 		}
 		pendingBy := "client"
@@ -742,7 +742,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if overlap {
-				writeErr(w, r, http.StatusConflict, "conflict", "slot_taken")
+				writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
 				return
 			}
 		}

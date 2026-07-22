@@ -1301,6 +1301,10 @@
     "no_entitlement": "No access entitlement",
     "invalid_confirm_link": "Invalid confirmation link.",
     "conflict": "Conflict",
+    "slot_taken": "This time slot is already taken",
+    "on_vacation": "The practice is closed on this date",
+    "invalid_proposed": "Invalid proposed date or time",
+    "proposed_required": "Please choose a new time slot",
     "email_already_exists": "An account already exists with this email",
     "google_account_mismatch": "This Google account is already linked to another user",
     "2fa_already_enabled": "2FA already enabled",
@@ -1571,6 +1575,7 @@
     "proposeMove": "Propose another time",
     "newSlot": "New slot",
     "sendPropose": "Send to client",
+    "proposeSent": "New time slot sent to the client.",
     "proposed": "proposed",
     "status": {
       "requested": "Pending",
