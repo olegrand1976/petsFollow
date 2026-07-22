@@ -67,7 +67,10 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
         try {
           final reminders = await ApiClient.instance.getCareReminders(pet.id);
           map[pet.id] = reminders.where((r) => !r.isDone).toList();
-          await NotificationService.instance.scheduleCareReminders(reminders, petName: pet.name);
+          // Local notification failures must not wipe the care list.
+          try {
+            await NotificationService.instance.scheduleCareReminders(reminders, petName: pet.name);
+          } catch (_) {}
         } catch (_) {
           map[pet.id] = [];
         }
@@ -106,12 +109,14 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context)!;
     try {
       await ApiClient.instance.markCareReminderDone(reminder.id);
-      await NotificationService.instance.cancelCareReminder(reminder.id);
+      try {
+        await NotificationService.instance.cancelCareReminder(reminder.id);
+      } catch (_) {}
       await load();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric('care'))),
+          SnackBar(content: Text(mapApiError(e, l10n))),
         );
       }
     }
@@ -136,10 +141,10 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
     try {
       await ApiClient.instance.postponeCareReminder(reminder.id, days);
       await load();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric('care'))),
+          SnackBar(content: Text(mapApiError(e, l10n))),
         );
       }
     }
@@ -291,11 +296,12 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       await load();
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().contains('care_plus')
+      final raw = e.toString();
+      final msg = raw.contains('care_plus')
           ? l10n.carePlusRequired
-          : e.toString().contains('horse_pack')
+          : raw.contains('horse_pack')
               ? l10n.horsePackRequired
-              : l10n.errorGeneric('care');
+              : mapApiError(e, l10n);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }

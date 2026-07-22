@@ -185,21 +185,31 @@ class NotificationService {
   }
 
   Future<void> cancelCareReminder(String reminderId) async {
-    await ReminderController.instance.init();
-    await ReminderController.instance.plugin.cancel(_stableNotifId('care', reminderId));
+    try {
+      await ReminderController.instance.init();
+      await ReminderController.instance.plugin.cancel(_stableNotifId('care', reminderId));
+    } catch (_) {}
   }
 
   Future<void> scheduleCareReminders(List<CareReminder> reminders, {String? petName}) async {
-    await ReminderController.instance.init();
-    final prefs = await loadPrefs();
-    if (!prefs.care) return;
-    final plugin = ReminderController.instance.plugin;
-    for (final r in reminders) {
-      final id = _stableNotifId('care', r.id);
-      await plugin.cancel(id);
-      if (r.isDone || r.dueAt.isBefore(DateTime.now())) continue;
-      final title = petName != null ? '$petName — ${r.title}' : r.title;
-      await _scheduleAt(id, r.dueAt, title, r.title, 'pf_care');
+    try {
+      await ReminderController.instance.init();
+      final prefs = await loadPrefs();
+      if (!prefs.care) return;
+      final plugin = ReminderController.instance.plugin;
+      for (final r in reminders) {
+        final id = _stableNotifId('care', r.id);
+        try {
+          await plugin.cancel(id);
+          if (r.isDone || r.dueAt.isBefore(DateTime.now())) continue;
+          final title = petName != null ? '$petName — ${r.title}' : r.title;
+          await _scheduleAt(id, r.dueAt, title, r.title, 'pf_care');
+        } catch (_) {
+          // Skip one reminder; keep scheduling the rest.
+        }
+      }
+    } catch (_) {
+      // Local notifications must never break care list loading.
     }
   }
 

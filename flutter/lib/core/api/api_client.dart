@@ -207,9 +207,19 @@ class ApiClient {
     }
   }
 
+  static List<dynamic> _asList(dynamic raw) {
+    if (raw is List) return raw;
+    return const [];
+  }
+
+  static Map<String, dynamic> _asMap(dynamic raw) {
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    throw StateError('expected map in API data envelope');
+  }
+
   Future<List<dynamic>> getPets() async {
     final res = await dio.get('/api/v1/pets');
-    return res.data['data'] as List<dynamic>;
+    return _asList(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> createPet(Map<String, dynamic> body) async {
@@ -390,10 +400,11 @@ class ApiClient {
 
   Future<List<VetLink>> getMyVets({String? primaryPracticeId}) async {
     final res = await dio.get('/api/v1/me/vets');
-    final data = res.data['data'] as List<dynamic>;
+    final data = _asList(res.data is Map ? res.data['data'] : null);
     return data
+        .whereType<Map>()
         .map((v) => VetLink.fromJson(
-              Map<String, dynamic>.from(v as Map),
+              Map<String, dynamic>.from(v),
               primaryPracticeId: primaryPracticeId,
             ))
         .toList();
@@ -414,8 +425,11 @@ class ApiClient {
 
   Future<List<CareReminder>> getCareReminders(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/care-reminders');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((r) => CareReminder.fromJson(Map<String, dynamic>.from(r as Map))).toList();
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((r) => CareReminder.fromJson(Map<String, dynamic>.from(r)))
+        .toList();
   }
 
   Future<CareReminder> createCareReminder(
@@ -423,6 +437,7 @@ class ApiClient {
     String? title,
     String? type,
     int? dueDays,
+    String? dueAt,
     String? notes,
     int? recurrenceDays,
   }) async {
@@ -430,26 +445,30 @@ class ApiClient {
       if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
       if (type != null && type.isNotEmpty) 'type': type,
       if (dueDays != null) 'dueDays': dueDays,
+      if (dueAt != null && dueAt.isNotEmpty) 'dueAt': dueAt,
       if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
       if (recurrenceDays != null) 'recurrenceDays': recurrenceDays,
     });
-    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+    return CareReminder.fromJson(_asMap(res.data is Map ? res.data['data'] : null));
   }
 
   Future<CareReminder> markCareReminderDone(String id) async {
     final res = await dio.post('/api/v1/care-reminders/$id/done');
-    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+    return CareReminder.fromJson(_asMap(res.data is Map ? res.data['data'] : null));
   }
 
   Future<CareReminder> postponeCareReminder(String id, int days) async {
     final res = await dio.post('/api/v1/care-reminders/$id/postpone', data: {'days': days});
-    return CareReminder.fromJson(res.data['data'] as Map<String, dynamic>);
+    return CareReminder.fromJson(_asMap(res.data is Map ? res.data['data'] : null));
   }
 
   Future<List<Visit>> getVisits(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/visits');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((v) => Visit.fromJson(Map<String, dynamic>.from(v as Map))).toList();
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((v) => Visit.fromJson(Map<String, dynamic>.from(v)))
+        .toList();
   }
 
   Future<Visit> createVisit(
