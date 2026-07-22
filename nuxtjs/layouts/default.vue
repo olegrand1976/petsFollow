@@ -34,8 +34,7 @@ const showNav = computed(() => {
 })
 const { fetchUser } = useProUser()
 const { count: messagesBadge } = useProNotifications()
-const clientsBadge = ref(0)
-const calendarBadge = ref(0)
+const { clientsBadge, calendarBadge, refresh: refreshNavBadges } = useNavBadges()
 
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
@@ -50,15 +49,7 @@ const navItems = computed<ProNavItem[]>(() => [
 
 async function loadNavBadges() {
   if (!showNav.value) return
-  try {
-    const res: any = await $fetch('/api/vet/overview')
-    const data = res.data ?? res ?? {}
-    clientsBadge.value = Number(data.pendingLinkRequests ?? 0)
-    calendarBadge.value = Number(data.pendingVisits ?? 0)
-  } catch {
-    clientsBadge.value = 0
-    calendarBadge.value = 0
-  }
+  await refreshNavBadges()
 }
 
 onMounted(async () => {

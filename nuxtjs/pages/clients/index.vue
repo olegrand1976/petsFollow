@@ -205,6 +205,7 @@ const route = useRoute()
 const { t } = useI18n()
 const { compareStrings } = useFormatters()
 const { mapError } = useApiError()
+const { refresh: refreshNavBadges } = useNavBadges()
 
 const clients = ref<ClientRow[]>([])
 const query = ref('')
@@ -341,7 +342,7 @@ async function acceptLink(id: string) {
   inviteError.value = ''
   try {
     await $fetch(`/api/vet/link-requests/${id}/accept`, { method: 'POST' })
-    await loadLinkRequests()
+    await Promise.all([loadLinkRequests(), loadClients(), refreshNavBadges()])
   } catch (e: any) {
     inviteError.value = mapError(e)
   } finally {
@@ -354,7 +355,7 @@ async function rejectLink(id: string) {
   inviteError.value = ''
   try {
     await $fetch(`/api/vet/link-requests/${id}/reject`, { method: 'POST' })
-    await loadLinkRequests()
+    await Promise.all([loadLinkRequests(), refreshNavBadges()])
   } catch (e: any) {
     inviteError.value = mapError(e)
   } finally {
