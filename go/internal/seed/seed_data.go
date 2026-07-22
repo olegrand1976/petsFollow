@@ -32,6 +32,7 @@ type heartRateDef struct {
 	duration int
 	bpm      int
 	isAlert  bool
+	unread   bool // validated but vet_seen_at NULL — sidebar / list "nouveau"
 	age      time.Duration
 }
 
@@ -179,7 +180,7 @@ var demoPractices = []practiceDef{
 							{senderRole: "client", body: "Bella a fait son relevé ce matin, tout semble normal.", age: -5 * time.Hour, read: false},
 						},
 						heartRates: []heartRateDef{
-							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, age: -5 * time.Hour},
+							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, unread: true, age: -5 * time.Hour},
 						},
 						visits: []visitDef{
 							{status: "requested", notes: "Contrôle Bella — vaccination", source: "client", scheduledIn: 8 * 24 * time.Hour},
@@ -261,7 +262,7 @@ var demoPractices = []practiceDef{
 							{senderRole: "client", body: "Alerte sur le dernier relevé de Chouchou, pouvez-vous regarder ?", age: -3 * time.Hour, read: false},
 						},
 						heartRates: []heartRateDef{
-							{status: kernel.SessionValidated, tapCount: 180, duration: 60, bpm: 180, isAlert: true, age: -3 * time.Hour},
+							{status: kernel.SessionValidated, tapCount: 180, duration: 60, bpm: 180, isAlert: true, unread: true, age: -3 * time.Hour},
 							{status: kernel.SessionValidated, tapCount: 130, duration: 60, bpm: 130, age: -5 * 24 * time.Hour},
 						},
 						dossierEvents: []dossierEventDef{

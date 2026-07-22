@@ -366,6 +366,10 @@
       "columnDuration": "Duración",
       "columnStatus": "Estado",
       "chartTitle": "Tendencia BPM (últimas 30 lecturas)",
+      "chartLegend": "Leyenda",
+      "chartLegendOk": "Normal",
+      "chartLegendAlert": "Alerta",
+      "newReading": "Nuevo",
       "filterAll": "Todas",
       "filterAlerts": "Solo alertas",
       "recentAlertBanner": "La última lectura está marcada — se recomienda revisión clínica.",
@@ -449,7 +453,9 @@
     "columnBirthDate": "Fecha de nacimiento",
     "columnLastVisit": "Última visita",
     "columnLastHeartRate": "Última lectura",
-    "columnOwner": "Cliente"
+    "columnOwner": "Cliente",
+    "unreadBadge": "Nuevo",
+    "unreadCount": "{n} nuevos"
   },
   "recommend": {
     "title": "Recomendar una clínica",

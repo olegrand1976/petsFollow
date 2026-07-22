@@ -366,6 +366,10 @@
       "columnDuration": "Duration",
       "columnStatus": "Status",
       "chartTitle": "BPM trend (last 30 readings)",
+      "chartLegend": "Legend",
+      "chartLegendOk": "Normal",
+      "chartLegendAlert": "Alert",
+      "newReading": "New",
       "filterAll": "All",
       "filterAlerts": "Alerts only",
       "recentAlertBanner": "The latest reading is flagged — clinical review recommended.",
@@ -449,7 +453,9 @@
     "columnBirthDate": "Date of birth",
     "columnLastVisit": "Last visit",
     "columnLastHeartRate": "Last reading",
-    "columnOwner": "Client"
+    "columnOwner": "Client",
+    "unreadBadge": "New",
+    "unreadCount": "{n} new"
   },
   "recommend": {
     "title": "Refer a practice",

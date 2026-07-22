@@ -33,6 +33,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   String? sessionId;
   Map<String, dynamic>? result;
   DateTime? lastTap;
+  bool _sending = false;
 
   /// Practice-configured durations, ascending. Never invent options the vet did not enable.
   List<int> get _practiceDurations {
@@ -124,11 +125,13 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   }
 
   Future<void> validate() async {
-    if (sessionId == null) return;
+    if (sessionId == null || _sending) return;
+    setState(() => _sending = true);
     try {
       await ApiClient.instance.validateHeartRate(sessionId!);
     } catch (_) {
       if (!mounted) return;
+      setState(() => _sending = false);
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
@@ -293,8 +296,22 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                         style: const TextStyle(color: Colors.orangeAccent)),
                   const SizedBox(height: 24),
                   FilledButton(
-                      onPressed: validate, child: Text(l10n.validateAndSend)),
-                  TextButton(onPressed: restart, child: Text(l10n.restart)),
+                    onPressed: _sending ? null : validate,
+                    child: _sending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(l10n.validateAndSend),
+                  ),
+                  TextButton(
+                    onPressed: _sending ? null : restart,
+                    child: Text(l10n.restart),
+                  ),
                 ],
               ),
           },

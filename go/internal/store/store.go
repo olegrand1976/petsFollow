@@ -71,6 +71,16 @@ type HeartRateSession struct {
 	StartedAt   time.Time            `json:"startedAt"`
 	EndedAt     *time.Time           `json:"endedAt,omitempty"`
 	ValidatedAt *time.Time           `json:"validatedAt,omitempty"`
+	VetSeenAt   *time.Time           `json:"vetSeenAt,omitempty"`
+	IsNew       bool                 `json:"isNew"`
+}
+
+const heartRateSelectCols = `
+	id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec,
+	bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at`
+
+func decorateHeartRateSession(sess *HeartRateSession) {
+	sess.IsNew = sess.Status == kernel.SessionValidated && sess.VetSeenAt == nil
 }
 
 type Thread struct {
@@ -289,14 +299,18 @@ func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]P
 func (s *Store) GetHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
 	var sess HeartRateSession
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at
+		SELECT `+heartRateSelectCols+`
 		FROM heartrate.sessions WHERE id=$1 AND owner_user_id=$2`,
 		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
 func (s *Store) StartHeartRateSession(ctx context.Context, petID, ownerID, practiceID string, durationSec int) (HeartRateSession, error) {
@@ -318,27 +332,35 @@ func (s *Store) CompleteHeartRateSession(ctx context.Context, sessionID, ownerID
 	err := s.pool.QueryRow(ctx, `
 		UPDATE heartrate.sessions SET status=$2, tap_count=$3, bpm=$4, is_alert=$5, ended_at=NOW()
 		WHERE id=$1 AND owner_user_id=$6 AND status='in_progress'
-		RETURNING id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at`,
+		RETURNING `+heartRateSelectCols,
 		sessionID, kernel.SessionPendingValidation, tapCount, bpmVal, isAlert, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
 func (s *Store) ValidateHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
 	var sess HeartRateSession
 	err := s.pool.QueryRow(ctx, `
-		UPDATE heartrate.sessions SET status='validated', validated_at=NOW()
+		UPDATE heartrate.sessions SET status='validated', validated_at=NOW(), vet_seen_at=NULL
 		WHERE id=$1 AND owner_user_id=$2 AND status='pending_validation'
-		RETURNING id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at`,
+		RETURNING `+heartRateSelectCols,
 		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
 func (s *Store) CancelHeartRateSession(ctx context.Context, sessionID, ownerID string) error {
@@ -355,7 +377,7 @@ func (s *Store) CancelHeartRateSession(ctx context.Context, sessionID, ownerID s
 }
 
 func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView bool) ([]HeartRateSession, error) {
-	q := `SELECT id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at
+	q := `SELECT ` + heartRateSelectCols + `
 		FROM heartrate.sessions WHERE pet_id=$1`
 	if vetView {
 		q += ` AND status='validated'`
@@ -371,12 +393,28 @@ func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView
 	var out []HeartRateSession
 	for rows.Next() {
 		var sess HeartRateSession
-		if err := rows.Scan(&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt); err != nil {
+		if err := rows.Scan(&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt); err != nil {
 			return nil, err
 		}
+		decorateHeartRateSession(&sess)
 		out = append(out, sess)
 	}
 	return out, rows.Err()
+}
+
+// MarkPetHeartRateSessionsSeen sets vet_seen_at for all validated unread sessions of a pet in a practice.
+func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practiceID string) (int64, error) {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE heartrate.sessions
+		SET vet_seen_at = NOW()
+		WHERE pet_id = $1
+		  AND practice_id = $2
+		  AND status = 'validated'
+		  AND vet_seen_at IS NULL`, petID, practiceID)
+	if err != nil {
+		return 0, err
+	}
+	return ct.RowsAffected(), nil
 }
 
 func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vetID string) (Thread, error) {

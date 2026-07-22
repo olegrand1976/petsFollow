@@ -661,6 +661,10 @@
       "columnDuration": "Durée",
       "columnStatus": "Statut",
       "chartTitle": "Tendance BPM (30 derniers relevés)",
+      "chartLegend": "Légende",
+      "chartLegendOk": "Normal",
+      "chartLegendAlert": "Alerte",
+      "newReading": "Nouveau",
       "filterAll": "Tous",
       "filterAlerts": "Alertes seulement",
       "recentAlertBanner": "Le dernier relevé est en alerte — contrôle clinique recommandé.",
@@ -734,7 +738,9 @@
     "columnBirthDate": "Naissance",
     "columnLastVisit": "Dernière visite",
     "columnLastHeartRate": "Dernier relevé",
-    "columnOwner": "Client"
+    "columnOwner": "Client",
+    "unreadBadge": "Nouveau",
+    "unreadCount": "{n} nouveaux"
   },
   "recommend": {
     "title": "Recommander un cabinet",

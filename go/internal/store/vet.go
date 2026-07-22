@@ -26,6 +26,7 @@ type VetOverview struct {
 	PendingLinkRequests  int `json:"pendingLinkRequests"`
 	PendingVisits        int `json:"pendingVisits"`
 	OverdueCareCount     int `json:"overdueCareCount"`
+	UnreadHeartrate      int `json:"unreadHeartrate"`
 }
 
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
@@ -62,10 +63,13 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			   AND pending_action_by = 'vet'
 			   AND status IN ('requested', 'reschedule_pending')),
 			(SELECT COUNT(*)::int FROM care.reminders
-			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW())`,
+			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW()),
+			(SELECT COUNT(*)::int FROM heartrate.sessions
+			 WHERE practice_id = $1 AND status = 'validated' AND vet_seen_at IS NULL)`,
 		practiceID, vetID).Scan(
 		&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d,
 		&o.PendingLinkRequests, &o.PendingVisits, &o.OverdueCareCount,
+		&o.UnreadHeartrate,
 	)
 	return o, err
 }

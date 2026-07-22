@@ -121,6 +121,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/pets/{petID}/timeline", a.petTimeline)
 		pr.Post("/pets/{petID}/heartrate/sessions", a.startHeartRate)
 		pr.Get("/pets/{petID}/heartrate/sessions", a.listHeartRate)
+		pr.Post("/pets/{petID}/heartrate/sessions/seen", a.markPetHeartRateSeen)
 		pr.Patch("/heartrate/sessions/{sessionID}", a.completeHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/validate", a.validateHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/cancel", a.cancelHeartRate)
@@ -696,14 +697,63 @@ func (a *API) cancelHeartRate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
-	id, _ := authx.FromContext(r.Context())
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	pet, err := a.store.GetPet(r.Context(), petID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	switch id.Role {
+	case kernel.RoleClient:
+		if pet.OwnerUserID != id.UserID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return
+		}
+	case kernel.RoleVet:
+		if pet.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			return
+		}
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
 	vetView := id.Role == kernel.RoleVet
-	sessions, err := a.store.ListHeartRateSessions(r.Context(), chi.URLParam(r, "petID"), vetView)
+	sessions, err := a.store.ListHeartRateSessions(r.Context(), petID, vetView)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, sessions)
+}
+
+func (a *API) markPetHeartRateSeen(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	pet, err := a.store.GetPet(r.Context(), petID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	if pet.PracticeID != id.PracticeID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+		return
+	}
+	n, err := a.store.MarkPetHeartRateSessionsSeen(r.Context(), petID, id.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"marked": n})
 }
 
 func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {

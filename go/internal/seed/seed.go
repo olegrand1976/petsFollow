@@ -526,13 +526,16 @@ func insertMessage(ctx context.Context, tx pgx.Tx, threadID, senderID string, ms
 
 func insertHeartRate(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID string, hr heartRateDef) error {
 	startedAt := time.Now().Add(hr.age)
-	var endedAt, validatedAt *time.Time
+	var endedAt, validatedAt, vetSeenAt *time.Time
 	switch hr.status {
 	case kernel.SessionValidated, kernel.SessionPendingValidation:
 		end := startedAt.Add(time.Duration(hr.duration) * time.Second)
 		endedAt = &end
 		if hr.status == kernel.SessionValidated {
 			validatedAt = &end
+			if !hr.unread {
+				vetSeenAt = &end
+			}
 		}
 	case kernel.SessionInProgress:
 		// no ended_at
@@ -543,9 +546,9 @@ func insertHeartRate(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID 
 		return fmt.Errorf("unknown session status: %s", hr.status)
 	}
 	_, err := tx.Exec(ctx, `
-		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-		uuid.NewString(), petID, ownerID, practiceID, hr.status, hr.tapCount, hr.duration, hr.bpm, hr.isAlert, startedAt, endedAt, validatedAt)
+		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		uuid.NewString(), petID, ownerID, practiceID, hr.status, hr.tapCount, hr.duration, hr.bpm, hr.isAlert, startedAt, endedAt, validatedAt, vetSeenAt)
 	return err
 }
 

@@ -51,7 +51,14 @@
             <td>
               <div class="pets-name-cell">
                 <ProAvatar :src="p.photoUrl" :name="p.name" />
-                {{ p.name }}
+                <span>{{ p.name }}</span>
+                <ProBadge
+                  v-if="(p.unreadHeartrateCount ?? 0) > 0"
+                  variant="danger"
+                  data-testid="pet-unread-badge"
+                >
+                  {{ unreadLabel(p.unreadHeartrateCount ?? 0) }}
+                </ProBadge>
               </div>
             </td>
             <td>{{ speciesLabel(p.species) }}</td>
@@ -93,20 +100,31 @@ type VetPet = {
   lastVisitAt?: string
   lastHeartRateAt?: string
   lastHeartRateBpm?: number
+  unreadHeartrateCount?: number
 }
 
 const { t, te } = useI18n()
 const { formatDate } = useFormatters()
 const { mapError } = useApiError()
+const { petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
 const pets = ref<VetPet[]>([])
 const loadError = ref('')
 const query = ref('')
 const speciesFilter = ref('all')
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 function speciesLabel(species: string) {
   const key = `common.species.${species}`
   return te(key) ? t(key) : species
+}
+
+function unreadLabel(count: number) {
+  return count > 1 ? t('pets.unreadCount', { n: count }) : t('pets.unreadBadge')
+}
+
+function syncPetsBadgeFromList() {
+  petsBadge.value = pets.value.reduce((sum, p) => sum + (p.unreadHeartrateCount ?? 0), 0)
 }
 
 function formatBirthDate(value?: string) {
@@ -130,13 +148,25 @@ const filtered = computed(() => {
   })
 })
 
-onMounted(async () => {
+async function loadPets(silent = false) {
   try {
     const res: any = await $fetch('/api/vet/pets')
     pets.value = res.data ?? res ?? []
+    syncPetsBadgeFromList()
   } catch (e: any) {
-    loadError.value = mapError(e)
+    if (!silent) loadError.value = mapError(e)
   }
+}
+
+onMounted(async () => {
+  await loadPets()
+  await refreshNavBadges()
+  syncPetsBadgeFromList()
+  pollTimer = setInterval(() => loadPets(true), 8000)
+})
+
+onBeforeUnmount(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 

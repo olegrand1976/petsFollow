@@ -7,18 +7,19 @@ import (
 
 // VetPetListItem is a practice-scoped pet row for the Pro animals list.
 type VetPetListItem struct {
-	ID               string     `json:"id"`
-	PracticeID       string     `json:"practiceId"`
-	OwnerUserID      string     `json:"ownerUserId"`
-	OwnerName        string     `json:"ownerName"`
-	Name             string     `json:"name"`
-	Species          string     `json:"species"`
-	Breed            string     `json:"breed"`
-	BirthDate        *time.Time `json:"birthDate,omitempty"`
-	PhotoURL         string     `json:"photoUrl,omitempty"`
-	LastVisitAt      *time.Time `json:"lastVisitAt,omitempty"`
-	LastHeartRateAt  *time.Time `json:"lastHeartRateAt,omitempty"`
-	LastHeartRateBpm *int       `json:"lastHeartRateBpm,omitempty"`
+	ID                   string     `json:"id"`
+	PracticeID           string     `json:"practiceId"`
+	OwnerUserID          string     `json:"ownerUserId"`
+	OwnerName            string     `json:"ownerName"`
+	Name                 string     `json:"name"`
+	Species              string     `json:"species"`
+	Breed                string     `json:"breed"`
+	BirthDate            *time.Time `json:"birthDate,omitempty"`
+	PhotoURL             string     `json:"photoUrl,omitempty"`
+	LastVisitAt          *time.Time `json:"lastVisitAt,omitempty"`
+	LastHeartRateAt      *time.Time `json:"lastHeartRateAt,omitempty"`
+	LastHeartRateBpm     *int       `json:"lastHeartRateBpm,omitempty"`
+	UnreadHeartrateCount int        `json:"unreadHeartrateCount"`
 }
 
 func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]VetPetListItem, error) {
@@ -35,7 +36,8 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			COALESCE(p.photo_url, ''),
 			lv.last_visit_at,
 			lhs.last_hr_at,
-			lhs.last_hr_bpm
+			lhs.last_hr_bpm,
+			COALESCE(ur.unread_count, 0)
 		FROM pets.pets p
 		JOIN identity.users u ON u.id = p.owner_user_id
 		LEFT JOIN LATERAL (
@@ -54,6 +56,13 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			ORDER BY s.started_at DESC
 			LIMIT 1
 		) lhs ON TRUE
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*)::int AS unread_count
+			FROM heartrate.sessions s
+			WHERE s.pet_id = p.id
+			  AND s.status = 'validated'
+			  AND s.vet_seen_at IS NULL
+		) ur ON TRUE
 		WHERE p.practice_id = $1
 		ORDER BY p.name`, practiceID)
 	if err != nil {
@@ -77,6 +86,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 			&item.LastVisitAt,
 			&item.LastHeartRateAt,
 			&item.LastHeartRateBpm,
+			&item.UnreadHeartrateCount,
 		); err != nil {
 			return nil, err
 		}

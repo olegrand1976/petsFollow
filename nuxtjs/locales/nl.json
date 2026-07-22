@@ -366,6 +366,10 @@
       "columnDuration": "Duur",
       "columnStatus": "Status",
       "chartTitle": "BPM-trend (laatste 30 metingen)",
+      "chartLegend": "Legenda",
+      "chartLegendOk": "Normaal",
+      "chartLegendAlert": "Waarschuwing",
+      "newReading": "Nieuw",
       "filterAll": "Alle",
       "filterAlerts": "Alleen waarschuwingen",
       "recentAlertBanner": "De laatste meting is gemarkeerd — klinische controle aanbevolen.",
@@ -449,7 +453,9 @@
     "columnBirthDate": "Geboortedatum",
     "columnLastVisit": "Laatste bezoek",
     "columnLastHeartRate": "Laatste meting",
-    "columnOwner": "Cliënt"
+    "columnOwner": "Cliënt",
+    "unreadBadge": "Nieuw",
+    "unreadCount": "{n} nieuwe"
   },
   "recommend": {
     "title": "Praktijk aanbevelen",

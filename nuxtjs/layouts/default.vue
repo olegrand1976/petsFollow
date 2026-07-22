@@ -34,12 +34,12 @@ const showNav = computed(() => {
 })
 const { fetchUser } = useProUser()
 const { count: messagesBadge } = useProNotifications()
-const { clientsBadge, calendarBadge, refresh: refreshNavBadges } = useNavBadges()
+const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
   { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
-  { to: '/pets', label: t('nav.pets'), icon: 'pets' },
+  { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
   { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
   { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
@@ -59,7 +59,7 @@ onMounted(async () => {
 })
 
 watch(() => route.path, (path) => {
-  if (path === '/calendar' || path === '/clients' || path === '/dashboard') {
+  if (path === '/calendar' || path === '/clients' || path === '/dashboard' || path === '/pets') {
     loadNavBadges()
   }
 })

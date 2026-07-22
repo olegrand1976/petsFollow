@@ -96,7 +96,18 @@
             :key="s.id"
             :class="{ 'pro-table-row--alert': s.isAlert }"
           >
-            <td>{{ formatDate(s.startedAt) }}</td>
+            <td>
+              <span class="pro-pet-reading-date">
+                {{ formatDate(s.startedAt) }}
+                <ProBadge
+                  v-if="isReadingNew(s)"
+                  variant="danger"
+                  data-testid="reading-new-badge"
+                >
+                  {{ $t('clients.pet.newReading') }}
+                </ProBadge>
+              </span>
+            </td>
             <td><code>{{ s.bpm }}</code></td>
             <td>{{ s.durationSec }}s</td>
             <td>
@@ -334,6 +345,7 @@ const careReminders = ref<any[]>([])
 const visits = ref<any[]>([])
 const documents = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
+const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
 const messagingBusy = ref(false)
@@ -346,13 +358,41 @@ const docFile = ref<File | null>(null)
 const docInputEl = ref<HTMLInputElement | null>(null)
 const careDraft = reactive({ title: '', type: 'vaccination' })
 const visitDraft = reactive({ scheduledAt: '', notes: '' })
+let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
 const { formatDate } = useFormatters()
 const { t } = useI18n()
 const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
+const { refresh: refreshNavBadges } = useNavBadges()
 const router = useRouter()
 
+function isReadingNew(s: { id: string, isNew?: boolean }) {
+  return highlightedNewIds.value.has(s.id) || !!s.isNew
+}
+
+async function loadSessions(markSeenAfter = false) {
+  const sessionsRes: any = await $fetch(`/api/pets/${petId}/heartrate`)
+  const list = sessionsRes.data ?? sessionsRes ?? []
+  const next = new Set(highlightedNewIds.value)
+  let hadNew = false
+  for (const s of list) {
+    if (s.isNew) {
+      next.add(s.id)
+      hadNew = true
+    }
+  }
+  highlightedNewIds.value = next
+  sessions.value = list
+  if (markSeenAfter && hadNew) {
+    try {
+      await $fetch(`/api/pets/${petId}/heartrate/seen`, { method: 'POST' })
+      await refreshNavBadges()
+    } catch {
+      // Non-blocking: unread badges may stay until next visit.
+    }
+  }
+}
 function careTypeLabel(type: string) {
   switch (type) {
     case 'vaccination':
@@ -393,8 +433,13 @@ const filteredSessions = computed(() => {
 
 const recentAlert = computed(() => sessions.value.length > 0 && !!sessions.value[0]?.isAlert)
 
-const chartSessions = computed(() => [...sessions.value].slice(0, 30).reverse())
-const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number).filter(v => v != null))
+const chartSessions = computed(() =>
+  [...sessions.value]
+    .filter(s => s.bpm != null)
+    .slice(0, 30)
+    .reverse(),
+)
+const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number))
 const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
 
 function onPetPhotoUploaded(data: any) {
@@ -556,12 +601,12 @@ onMounted(async () => {
     pet.value = petRes.data ?? petRes
     petPhotoUrl.value = pet.value?.photoUrl || ''
 
-    const [sessionsRes, timelineRes]: any[] = await Promise.all([
-      $fetch(`/api/pets/${petId}/heartrate`),
-      $fetch(`/api/pets/${petId}/timeline`),
-    ])
-    sessions.value = sessionsRes.data ?? sessionsRes ?? []
+    const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []
+    await loadSessions(true)
+    sessionsPollTimer = setInterval(() => {
+      loadSessions(true).catch(() => {})
+    }, 8000)
   } catch (e: any) {
     pageError.value = mapError(e)
     return
@@ -579,6 +624,10 @@ onMounted(async () => {
     docError.value = mapError(e)
   }
 })
+
+onBeforeUnmount(() => {
+  if (sessionsPollTimer) clearInterval(sessionsPollTimer)
+})
 </script>
 
 <style scoped>
@@ -595,6 +644,13 @@ onMounted(async () => {
 
 .pro-pet-filter {
   margin-bottom: 1rem;
+}
+
+.pro-pet-reading-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .pro-table-row--alert {

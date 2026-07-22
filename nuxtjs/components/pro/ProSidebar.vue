@@ -84,6 +84,7 @@ function navTestId(to: string) {
 function badgeTestId(to: string) {
   if (to === '/calendar') return 'nav-calendar-badge'
   if (to === '/clients') return 'nav-clients-badge'
+  if (to === '/pets') return 'nav-pets-badge'
   if (to === '/messages') return 'nav-messages-badge'
   if (to === '/requests') return 'nav-requests-badge'
   return undefined
