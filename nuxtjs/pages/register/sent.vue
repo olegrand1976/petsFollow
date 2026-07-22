@@ -6,6 +6,9 @@
       <p>{{ $t('auth.registerSent.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <div class="pro-login-form">
         <PetsFollowLogo variant="default" />
         <h1>{{ $t('auth.registerSent.title') }}</h1>

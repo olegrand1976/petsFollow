@@ -172,7 +172,35 @@
     "loading": "Cargando…",
     "actions": "Acciones",
     "cancel": "Cancelar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "codes": {
+      "role": {
+        "client": "Cliente",
+        "vet": "Veterinario",
+        "admin": "Admin",
+        "commercial": "Comercial",
+        "commercial_manager": "Responsable comercial"
+      },
+      "payment": {
+        "active": "Activo",
+        "pending": "Pendiente",
+        "none": "Ninguno",
+        "paid": "Pagado",
+        "succeeded": "Correcto",
+        "processing": "En proceso",
+        "failed": "Fallido",
+        "past_due": "Vencido"
+      },
+      "plan": {
+        "annual": "Annual",
+        "triennial": "Triennial",
+        "quinquennial": "Quinquennial"
+      },
+      "billingMode": {
+        "subscription": "Suscripción",
+        "one_time": "Pago único"
+      }
+    }
   },
   "settings": {
     "title": "Ajustes",
@@ -522,7 +550,8 @@
       "commercialRole": "Rol",
       "roleCommercialManager": "Responsable comercial",
       "commercialManager": "Responsable",
-      "commercialManagerNone": "Ninguno (sin asignar)"
+      "commercialManagerNone": "Ninguno (sin asignar)",
+      "paymentNone": "Ninguno"
     },
     "payments": {
       "title": "Pagos recibidos",
@@ -1231,7 +1260,8 @@
       "title": "Aviso legal",
       "link": "Aviso legal",
       "body": "Editor: petsFollow. Contacto: support{'@'}petsfollow.test. Alojamiento: infraestructura cloud conforme al RGPD."
-    }
+    },
+    "navAria": "Legal"
   },
   "errors": {
     "bad_request": "Solicitud no válida",
@@ -1723,6 +1753,11 @@
       "too_easy": "Demasiado fácil",
       "ok": "Adecuada",
       "too_hard": "Demasiado difícil"
-    }
+    },
+    "badgeOn": "ON",
+    "badgeOff": "OFF",
+    "badgeCurrent": "actual",
+    "feedbackCount": "{count} comentarios",
+    "feedbackMeta": "vet {vet}/5 · coach {coach}/5 · {felt}"
   }
 }

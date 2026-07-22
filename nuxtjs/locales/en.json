@@ -172,7 +172,35 @@
     "loading": "Loading…",
     "actions": "Actions",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "codes": {
+      "role": {
+        "client": "Client",
+        "vet": "Veterinarian",
+        "admin": "Admin",
+        "commercial": "Sales",
+        "commercial_manager": "Sales manager"
+      },
+      "payment": {
+        "active": "Active",
+        "pending": "Pending",
+        "none": "None",
+        "paid": "Paid",
+        "succeeded": "Succeeded",
+        "processing": "Processing",
+        "failed": "Failed",
+        "past_due": "Past due"
+      },
+      "plan": {
+        "annual": "Annual",
+        "triennial": "Triennial",
+        "quinquennial": "Quinquennial"
+      },
+      "billingMode": {
+        "subscription": "Subscription",
+        "one_time": "One-time"
+      }
+    }
   },
   "settings": {
     "title": "Settings",
@@ -522,7 +550,8 @@
       "commercialRole": "Role",
       "roleCommercialManager": "Sales manager",
       "commercialManager": "Manager",
-      "commercialManagerNone": "None (unassigned)"
+      "commercialManagerNone": "None (unassigned)",
+      "paymentNone": "None"
     },
     "payments": {
       "title": "Payments received",
@@ -1231,7 +1260,8 @@
       "title": "Legal notice",
       "link": "Legal notice",
       "body": "Publisher: petsFollow. Contact: support{'@'}petsfollow.test. Hosting: GDPR-compliant cloud infrastructure."
-    }
+    },
+    "navAria": "Legal"
   },
   "errors": {
     "bad_request": "Invalid request",
@@ -1723,6 +1753,11 @@
       "too_easy": "Too easy",
       "ok": "About right",
       "too_hard": "Too hard"
-    }
+    },
+    "badgeOn": "ON",
+    "badgeOff": "OFF",
+    "badgeCurrent": "current",
+    "feedbackCount": "{count} feedbacks",
+    "feedbackMeta": "vet {vet}/5 · coach {coach}/5 · {felt}"
   }
 }

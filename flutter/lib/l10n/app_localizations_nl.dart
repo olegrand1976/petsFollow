@@ -216,6 +216,36 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageEs => 'Español';
 
   @override
+  String get planAnnualLabel => '35 € / jaar';
+
+  @override
+  String get planTriennialLabel => '95 € / 3 jaar';
+
+  @override
+  String get planQuinquennialLabel => '145 € / 5 jaar';
+
+  @override
+  String get pushNewMessage => 'Nieuw bericht';
+
+  @override
+  String get pushVisitConfirmed => 'Afspraak bevestigd';
+
+  @override
+  String get pushVisitProposed => 'Afspraakvoorstel';
+
+  @override
+  String get pushVisitReschedule => 'Afspraak verplaatst';
+
+  @override
+  String get notifChannelMessages => 'Berichten';
+
+  @override
+  String get notifChannelVisits => 'Bezoeken';
+
+  @override
+  String get notifChannelCare => 'Zorgen';
+
+  @override
   String get paymentResume => 'Betaling hervatten';
 
   @override

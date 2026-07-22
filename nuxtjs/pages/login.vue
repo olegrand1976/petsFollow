@@ -6,6 +6,9 @@
       <p>{{ $t('auth.login.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <form
         v-if="step === 'credentials'"
         class="pro-login-form"

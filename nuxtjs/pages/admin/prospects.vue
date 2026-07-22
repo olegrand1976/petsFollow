@@ -18,8 +18,8 @@
           <tr v-for="p in rows" :key="p.id">
             <td>{{ p.practiceName }}</td>
             <td>{{ p.contactName }}</td>
-            <td><ProBadge variant="neutral">{{ p.source || 'commercial' }}</ProBadge></td>
-            <td><ProBadge variant="neutral">{{ p.status }}</ProBadge></td>
+            <td><ProBadge variant="neutral">{{ p.source ? prospectSourceLabel(p.source) : prospectSourceLabel('commercial') }}</ProBadge></td>
+            <td><ProBadge variant="neutral">{{ prospectStatusLabel(p.status) }}</ProBadge></td>
             <td>{{ p.commercialName || p.commercialEmail }}</td>
             <td>{{ p.daysInStatus }}</td>
             <td>{{ p.city }}</td>
@@ -32,6 +32,8 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
+
+const { prospectStatusLabel, prospectSourceLabel } = useCodeLabels()
 
 const rows = ref<any[]>([])
 

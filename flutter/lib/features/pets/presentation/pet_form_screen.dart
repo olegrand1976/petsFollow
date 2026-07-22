@@ -225,9 +225,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
-            {'code': 'annual', 'label': '35 € / an'},
-            {'code': 'triennial', 'label': '95 € / 3 ans', 'recommended': true},
-            {'code': 'quinquennial', 'label': '145 € / 5 ans'},
+            {'code': 'annual', 'label': l10n.planAnnualLabel},
+            {'code': 'triennial', 'label': l10n.planTriennialLabel, 'recommended': true},
+            {'code': 'quinquennial', 'label': l10n.planQuinquennialLabel},
           ];
     final initial =
         (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
@@ -367,9 +367,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
                       : l10n.planOneTime(
                           displayPlans.firstWhere(
                                 (p) => p['code'] == 'quinquennial',
-                                orElse: () => {'label': '145 € / 5 ans'},
+                                orElse: () => {'label': l10n.planQuinquennialLabel},
                               )['label'] as String? ??
-                              '145 € / 5 ans',
+                              l10n.planQuinquennialLabel,
                         ),
                 ),
                 value: autoRenew && _subscriptionAllowed,

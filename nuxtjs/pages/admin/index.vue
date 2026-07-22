@@ -29,7 +29,7 @@
             :key="plan"
             class="pro-bar-row"
           >
-            <span>{{ plan }}</span>
+            <span>{{ planLabel(String(plan)) }}</span>
             <div class="pro-bar-track">
               <div
                 class="pro-bar-fill"
@@ -47,7 +47,7 @@
             :key="mode"
             class="pro-bar-row"
           >
-            <span>{{ mode }}</span>
+            <span>{{ billingModeLabel(String(mode)) }}</span>
             <div class="pro-bar-track">
               <div
                 class="pro-bar-fill"
@@ -66,6 +66,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { formatCurrency } = useFormatters()
+const { planLabel, billingModeLabel } = useCodeLabels()
 
 const metrics = ref<any>(null)
 

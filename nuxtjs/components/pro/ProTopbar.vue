@@ -10,6 +10,7 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <ProLocaleSelect persist />
       <button
         type="button"
         class="pro-topbar__icon-btn"

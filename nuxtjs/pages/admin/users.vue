@@ -98,10 +98,10 @@
           <tr v-for="u in filtered" :key="u.id">
             <td>{{ u.email }}</td>
             <td>{{ u.fullName }}</td>
-            <td><ProBadge variant="neutral">{{ u.role }}</ProBadge></td>
+            <td><ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge></td>
             <td>{{ u.createdAt?.substring(0, 10) }}</td>
             <td>{{ u.petCount }}</td>
-            <td><ProBadge :variant="paymentVariant(u.paymentLabel)">{{ u.paymentLabel }}</ProBadge></td>
+            <td><ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge></td>
           </tr>
         </tbody>
       </ProTable>
@@ -119,8 +119,8 @@
             <strong>{{ u.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ u.email }}</p>
             <div class="pro-flex-gap">
-              <ProBadge variant="neutral">{{ u.role }}</ProBadge>
-              <ProBadge :variant="paymentVariant(u.paymentLabel)">{{ u.paymentLabel }}</ProBadge>
+              <ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge>
+              <ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge>
             </div>
           </article>
         </ProKanbanColumn>
@@ -149,6 +149,7 @@ type AdminUser = {
 }
 
 const { t } = useI18n()
+const { roleLabel, paymentLabel } = useCodeLabels()
 
 const roleFilter = ref('')
 const paymentFilter = ref<'all' | 'active' | 'pending' | 'past'>('all')
@@ -170,18 +171,18 @@ const vetOptions = ref<{ userId: string; fullName: string; practiceName: string 
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
-  if (l.includes('actif') || l.includes('payé') || l.includes('active') || l.includes('paid')) return 'success'
-  if (l.includes('attente') || l.includes('pending')) return 'warning'
-  if (l.includes('impayé') || l.includes('past')) return 'danger'
+  if (l === 'active' || l === 'paid' || l === 'succeeded') return 'success'
+  if (l === 'pending' || l === 'processing') return 'warning'
+  if (l === 'past_due' || l === 'failed') return 'danger'
   return 'neutral'
 }
 
 function matchesPayment(label: string) {
   const l = (label || '').toLowerCase()
   if (paymentFilter.value === 'all') return true
-  if (paymentFilter.value === 'active') return l.includes('actif') || l.includes('payé') || l.includes('active') || l.includes('paid')
-  if (paymentFilter.value === 'pending') return l.includes('attente') || l.includes('pending')
-  if (paymentFilter.value === 'past') return l.includes('impayé') || l.includes('past')
+  if (paymentFilter.value === 'active') return l === 'active'
+  if (paymentFilter.value === 'pending') return l === 'pending'
+  if (paymentFilter.value === 'past') return l === 'none' || l === 'past_due'
   return true
 }
 

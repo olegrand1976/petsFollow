@@ -2,7 +2,10 @@
   <div class="pro-welcome">
     <header class="pro-welcome__header">
       <PetsFollowLogo variant="default" />
-      <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
+      <div class="pro-welcome__header-actions">
+        <ProLocaleSelect />
+        <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
+      </div>
     </header>
 
     <section class="pro-welcome__hero">

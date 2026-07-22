@@ -16,7 +16,9 @@
         <div>
           <strong>{{ s.title }}</strong>
           <span class="text-muted"> — {{ s.slug }}</span>
-          <ProBadge :variant="s.isActive ? 'success' : 'default'">{{ s.isActive ? 'ON' : 'OFF' }}</ProBadge>
+          <ProBadge :variant="s.isActive ? 'success' : 'default'">
+            {{ s.isActive ? $t('training.badgeOn') : $t('training.badgeOff') }}
+          </ProBadge>
         </div>
       </div>
     </ProCard>
@@ -25,8 +27,8 @@
       <div v-for="v in versions" :key="v.id" class="pf-row">
         <div>
           <strong>v{{ v.version }}</strong>
-          <ProBadge v-if="v.isCurrent" variant="success">current</ProBadge>
-          <span class="text-muted"> — {{ v.source }} — {{ new Date(v.createdAt).toLocaleString() }}</span>
+          <ProBadge v-if="v.isCurrent" variant="success">{{ $t('training.badgeCurrent') }}</ProBadge>
+          <span class="text-muted"> — {{ v.source }} — {{ formatDate(v.createdAt) }}</span>
           <p class="pro-hint">{{ v.changelog }}</p>
         </div>
         <ProButton v-if="!v.isCurrent" variant="secondary" @click="restore(v.id)">
@@ -40,13 +42,13 @@
       <div v-for="r in runs" :key="r.id" class="pf-row">
         <div>
           <strong>{{ r.status }}</strong>
-          <span class="text-muted"> — {{ r.feedbackCount }} retours — {{ new Date(r.startedAt).toLocaleString() }}</span>
+          <span class="text-muted"> — {{ $t('training.feedbackCount', { count: r.feedbackCount }) }} — {{ formatDate(r.startedAt) }}</span>
         </div>
       </div>
       <h3 class="pro-mt-md">{{ $t('training.feedbacks') }}</h3>
       <div v-for="f in feedbacks" :key="f.id" class="pf-row">
         <div>
-          véto {{ f.vetRealism }}/5 · coach {{ f.coachUsefulness }}/5 · {{ f.difficultyFelt }}
+          {{ $t('training.feedbackMeta', { vet: f.vetRealism, coach: f.coachUsefulness, felt: f.difficultyFelt }) }}
           <p class="pro-hint">{{ f.comment || '—' }}</p>
         </div>
       </div>
@@ -56,6 +58,8 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
+
+const { formatDate } = useFormatters()
 
 const tab = ref<'scripts' | 'vet' | 'coach' | 'analyzer'>('scripts')
 const tabs = ['scripts', 'vet', 'coach', 'analyzer'] as const
@@ -91,15 +95,13 @@ onMounted(load)
 </script>
 
 <style scoped>
-.pf-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.pf-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .pf-row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--pf-vet-border);
 }
-.pro-mb-lg { margin-bottom: 1.25rem; }
-.pro-mt-md { margin-top: 1rem; }
-.pro-hint { color: var(--pf-vet-muted, #64748b); font-size: 0.9rem; margin: 0.25rem 0 0; }
 </style>

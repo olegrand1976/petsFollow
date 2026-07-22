@@ -4,7 +4,6 @@ import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/media_url.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
-import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
@@ -65,15 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _changeLocale(String code) async {
-    try {
-      await ApiClient.instance.updateLocale(code);
-    } catch (_) {
-      await LocaleController.instance.setLocale(code);
-    }
-    if (mounted) setState(() {});
-  }
-
   List<int> _durationsForPet(Map<String, dynamic> pet) {
     final raw = pet['heartrateDurationsSec'] as List<dynamic>?;
     if (raw == null || raw.isEmpty) return [60];
@@ -100,17 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (_) => SettingsMenuScreen(onLogout: widget.onLogout),
               ),
             ),
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.language),
-            tooltip: l10n.language,
-            onSelected: _changeLocale,
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'fr', child: Text(l10n.languageFr)),
-              PopupMenuItem(value: 'nl', child: Text(l10n.languageNl)),
-              PopupMenuItem(value: 'en', child: Text(l10n.languageEn)),
-              PopupMenuItem(value: 'es', child: Text(l10n.languageEs)),
-            ],
           ),
         ],
       ),

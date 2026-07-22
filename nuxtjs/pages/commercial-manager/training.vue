@@ -23,7 +23,7 @@
         <tbody>
           <tr v-for="h in list" :key="h.id">
             <td>{{ h.userId?.slice(0, 8) || '—' }}</td>
-            <td>{{ new Date(h.createdAt).toLocaleString() }}</td>
+            <td>{{ formatDate(h.createdAt) }}</td>
             <td>{{ $t(`training.difficulty.${h.interestLevel}.label`) }}</td>
             <td>{{ $t(`training.outcome.${h.outcome}`) }}</td>
             <td>{{ h.userScore ?? h.aiScore ?? '—' }}</td>
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial-manager', middleware: 'commercial-manager-only' })
 
+const { formatDate } = useFormatters()
 const list = ref<any[]>([])
 
 onMounted(async () => {

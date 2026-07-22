@@ -6,6 +6,9 @@
       <p>{{ $t('auth.forgot.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <form
         v-if="!sent"
         class="pro-login-form"

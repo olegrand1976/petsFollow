@@ -4,11 +4,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
@@ -49,14 +51,15 @@ class NotificationService {
     final android = ReminderController.instance.plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return;
+    final l10n = lookupAppLocalizations(LocaleController.instance.locale);
     await android.createNotificationChannel(
-      const AndroidNotificationChannel('pf_messages', 'Messages', importance: Importance.high),
+      AndroidNotificationChannel('pf_messages', l10n.notifChannelMessages, importance: Importance.high),
     );
     await android.createNotificationChannel(
-      const AndroidNotificationChannel('pf_visits', 'Visites', importance: Importance.high),
+      AndroidNotificationChannel('pf_visits', l10n.notifChannelVisits, importance: Importance.high),
     );
     await android.createNotificationChannel(
-      const AndroidNotificationChannel('pf_care', 'Soins', importance: Importance.defaultImportance),
+      AndroidNotificationChannel('pf_care', l10n.notifChannelCare, importance: Importance.defaultImportance),
     );
   }
 
@@ -88,11 +91,12 @@ class NotificationService {
   }
 
   String _fallbackTitle(String type) {
+    final l10n = lookupAppLocalizations(LocaleController.instance.locale);
     return switch (type) {
-      'message' => 'Nouveau message',
-      'visit_confirmed' => 'Rendez-vous confirmé',
-      'visit_proposed' => 'Proposition de rendez-vous',
-      'visit_reschedule' => 'Déplacement de rendez-vous',
+      'message' => l10n.pushNewMessage,
+      'visit_confirmed' => l10n.pushVisitConfirmed,
+      'visit_proposed' => l10n.pushVisitProposed,
+      'visit_reschedule' => l10n.pushVisitReschedule,
       _ => 'petsFollow',
     };
   }

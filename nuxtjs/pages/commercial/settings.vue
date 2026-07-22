@@ -4,6 +4,11 @@
       :title="$t('commercial.settings.title')"
       :subtitle="$t('commercial.settings.subtitle')"
     />
+    <ProCard class="pro-mb-lg">
+      <h3 class="pro-mb-md">{{ $t('settings.language.title') }}</h3>
+      <p class="pro-hint pro-mb-md">{{ $t('settings.language.subtitle') }}</p>
+      <ProLocaleSelect persist />
+    </ProCard>
     <ProCard>
       <form class="pro-form" @submit.prevent="save">
         <div class="pro-field">

@@ -1,6 +1,6 @@
 <template>
   <div class="pro-app">
-    <ProTopbar home-link="/commercial" :show-notifications="false" />
+    <ProTopbar home-link="/commercial" settings-link="/commercial/settings" :show-notifications="false" />
     <div class="pro-app-shell">
       <ProSidebar :items="navItems" />
       <div class="pro-app-body">

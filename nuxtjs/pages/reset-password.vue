@@ -6,6 +6,9 @@
       <p>{{ done ? $t('auth.reset.brandDoneText') : $t('auth.reset.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <form
         v-if="!done"
         class="pro-login-form"

@@ -486,6 +486,66 @@ abstract class AppLocalizations {
   /// **'Español'**
   String get languageEs;
 
+  /// No description provided for @planAnnualLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'35 € / an'**
+  String get planAnnualLabel;
+
+  /// No description provided for @planTriennialLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'95 € / 3 ans'**
+  String get planTriennialLabel;
+
+  /// No description provided for @planQuinquennialLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'145 € / 5 ans'**
+  String get planQuinquennialLabel;
+
+  /// No description provided for @pushNewMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau message'**
+  String get pushNewMessage;
+
+  /// No description provided for @pushVisitConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous confirmé'**
+  String get pushVisitConfirmed;
+
+  /// No description provided for @pushVisitProposed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition de rendez-vous'**
+  String get pushVisitProposed;
+
+  /// No description provided for @pushVisitReschedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacement de rendez-vous'**
+  String get pushVisitReschedule;
+
+  /// No description provided for @notifChannelMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get notifChannelMessages;
+
+  /// No description provided for @notifChannelVisits.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visites'**
+  String get notifChannelVisits;
+
+  /// No description provided for @notifChannelCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins'**
+  String get notifChannelCare;
+
   /// No description provided for @paymentResume.
   ///
   /// In fr, this message translates to:

@@ -172,7 +172,35 @@
     "loading": "Laden…",
     "actions": "Acties",
     "cancel": "Annuleren",
-    "delete": "Verwijderen"
+    "delete": "Verwijderen",
+    "codes": {
+      "role": {
+        "client": "Cliënt",
+        "vet": "Dierenarts",
+        "admin": "Admin",
+        "commercial": "Commercieel",
+        "commercial_manager": "Commercieel verantwoordelijke"
+      },
+      "payment": {
+        "active": "Actief",
+        "pending": "In behandeling",
+        "none": "Geen",
+        "paid": "Betaald",
+        "succeeded": "Geslaagd",
+        "processing": "Bezig",
+        "failed": "Mislukt",
+        "past_due": "Achterstallig"
+      },
+      "plan": {
+        "annual": "Annual",
+        "triennial": "Triennial",
+        "quinquennial": "Quinquennial"
+      },
+      "billingMode": {
+        "subscription": "Abonnement",
+        "one_time": "Eenmalige betaling"
+      }
+    }
   },
   "settings": {
     "title": "Instellingen",
@@ -522,7 +550,8 @@
       "commercialRole": "Rol",
       "roleCommercialManager": "Salesmanager",
       "commercialManager": "Manager",
-      "commercialManagerNone": "Geen (niet toegewezen)"
+      "commercialManagerNone": "Geen (niet toegewezen)",
+      "paymentNone": "Geen"
     },
     "payments": {
       "title": "Ontvangen betalingen",
@@ -1231,7 +1260,8 @@
       "title": "Juridische vermeldingen",
       "link": "Juridische vermeldingen",
       "body": "Uitgever: petsFollow. Contact: support{'@'}petsfollow.test."
-    }
+    },
+    "navAria": "Juridisch"
   },
   "errors": {
     "bad_request": "Ongeldig verzoek",
@@ -1723,6 +1753,11 @@
       "too_easy": "Te gemakkelijk",
       "ok": "Gepast",
       "too_hard": "Te moeilijk"
-    }
+    },
+    "badgeOn": "AAN",
+    "badgeOff": "UIT",
+    "badgeCurrent": "huidig",
+    "feedbackCount": "{count} feedbacks",
+    "feedbackMeta": "dierenarts {vet}/5 · coach {coach}/5 · {felt}"
   }
 }

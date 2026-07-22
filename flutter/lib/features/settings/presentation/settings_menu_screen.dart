@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/features/education/presentation/how_to_measure_screen.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
@@ -28,6 +29,38 @@ class SettingsMenuScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           ),
+        ),
+        ListenableBuilder(
+          listenable: LocaleController.instance,
+          builder: (context, _) {
+            final code = LocaleController.instance.languageCode;
+            return ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(l10n.language),
+              trailing: DropdownButton<String>(
+                value: code,
+                underline: const SizedBox.shrink(),
+                items: [
+                  DropdownMenuItem(value: 'fr', child: Text(l10n.languageFr)),
+                  DropdownMenuItem(value: 'nl', child: Text(l10n.languageNl)),
+                  DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
+                  DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
+                ],
+                onChanged: (next) async {
+                  if (next == null || next == code) return;
+                  try {
+                    if (ApiClient.instance.token != null) {
+                      await ApiClient.instance.updateLocale(next);
+                    } else {
+                      await LocaleController.instance.setLocale(next);
+                    }
+                  } catch (_) {
+                    await LocaleController.instance.setLocale(next);
+                  }
+                },
+              ),
+            );
+          },
         ),
         ListTile(
           leading: const Icon(Icons.play_circle_outline),

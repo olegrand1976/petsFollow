@@ -217,6 +217,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEs => 'Español';
 
   @override
+  String get planAnnualLabel => '€35 / year';
+
+  @override
+  String get planTriennialLabel => '€95 / 3 years';
+
+  @override
+  String get planQuinquennialLabel => '€145 / 5 years';
+
+  @override
+  String get pushNewMessage => 'New message';
+
+  @override
+  String get pushVisitConfirmed => 'Appointment confirmed';
+
+  @override
+  String get pushVisitProposed => 'Appointment proposal';
+
+  @override
+  String get pushVisitReschedule => 'Appointment reschedule';
+
+  @override
+  String get notifChannelMessages => 'Messages';
+
+  @override
+  String get notifChannelVisits => 'Visits';
+
+  @override
+  String get notifChannelCare => 'Care';
+
+  @override
   String get paymentResume => 'Resume payment';
 
   @override

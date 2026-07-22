@@ -226,7 +226,7 @@
           </thead>
           <tbody>
             <tr v-for="h in history" :key="h.id">
-              <td>{{ new Date(h.createdAt).toLocaleString() }}</td>
+              <td>{{ formatDate(h.createdAt) }}</td>
               <td>{{ $t(`training.difficulty.${h.interestLevel}.label`) }}</td>
               <td>{{ $t(`training.outcome.${h.outcome}`) }}</td>
               <td>{{ h.userScore ?? h.aiScore ?? '—' }}</td>
@@ -265,7 +265,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { formatDate, dateLocale } = useFormatters()
 
 type Script = {
   id: string
@@ -373,10 +374,12 @@ function speak(text: string) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
   const profile = voiceProfiles[voiceName.value] || voiceProfiles.Charon
   const u = new SpeechSynthesisUtterance(text)
-  u.lang = 'fr-FR'
+  const lang = dateLocale()
+  u.lang = lang
   u.pitch = profile.pitch
   u.rate = profile.rate
-  const voicesList = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr'))
+  const prefix = String(locale.value || 'fr')
+  const voicesList = window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(prefix))
   if (voicesList.length) {
     u.voice = voicesList[profile.voiceIndex % voicesList.length]
   }

@@ -58,13 +58,14 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial-manager', middleware: 'commercial-manager-only' })
 
+const { formatDate } = useFormatters()
 const upcoming = ref<any[]>([])
 const stale = ref<any[]>([])
 
 function formatDt(v?: string) {
   if (!v) return '—'
   try {
-    return new Date(v).toLocaleString()
+    return formatDate(v)
   } catch {
     return v
   }

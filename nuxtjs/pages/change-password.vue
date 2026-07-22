@@ -6,6 +6,9 @@
       <p>{{ $t('auth.forceChange.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <form
         class="pro-login-form"
         data-testid="force-change-password-form"

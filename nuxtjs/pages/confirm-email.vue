@@ -7,6 +7,9 @@
       <p v-else-if="error">{{ $t('auth.confirmEmail.brandInvalidLink') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <div class="pro-login-form">
         <PetsFollowLogo variant="default" />
         <div v-if="loading" class="text-muted">{{ $t('auth.confirmEmail.loading') }}</div>

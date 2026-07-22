@@ -99,11 +99,26 @@
       "analyzer": "Analyseur & retours"
     },
     "difficulty": {
-      "hostile": { "label": "Très difficile", "desc": "Hostile, raccroche vite" },
-      "sceptique": { "label": "Difficile", "desc": "Beaucoup d'objections" },
-      "neutre": { "label": "Standard", "desc": "Poli mais non convaincu" },
-      "interesse": { "label": "Facile", "desc": "Curieux, ouvert" },
-      "chaud": { "label": "Très facile", "desc": "Déjà positif" }
+      "hostile": {
+        "label": "Très difficile",
+        "desc": "Hostile, raccroche vite"
+      },
+      "sceptique": {
+        "label": "Difficile",
+        "desc": "Beaucoup d'objections"
+      },
+      "neutre": {
+        "label": "Standard",
+        "desc": "Poli mais non convaincu"
+      },
+      "interesse": {
+        "label": "Facile",
+        "desc": "Curieux, ouvert"
+      },
+      "chaud": {
+        "label": "Très facile",
+        "desc": "Déjà positif"
+      }
     },
     "outcome": {
       "appointment": "RDV pris",
@@ -116,7 +131,12 @@
       "too_easy": "Trop facile",
       "ok": "Adaptée",
       "too_hard": "Trop difficile"
-    }
+    },
+    "badgeOn": "ON",
+    "badgeOff": "OFF",
+    "badgeCurrent": "actuel",
+    "feedbackCount": "{count} retours",
+    "feedbackMeta": "véto {vet}/5 · coach {coach}/5 · {felt}"
   },
   "auth": {
     "login": {
@@ -259,7 +279,35 @@
     "loading": "Chargement…",
     "actions": "Actions",
     "cancel": "Annuler",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "codes": {
+      "role": {
+        "client": "Client",
+        "vet": "Vétérinaire",
+        "admin": "Admin",
+        "commercial": "Commercial",
+        "commercial_manager": "Responsable commercial"
+      },
+      "payment": {
+        "active": "Actif",
+        "pending": "En attente",
+        "none": "Aucun",
+        "paid": "Payé",
+        "succeeded": "Réussi",
+        "processing": "En cours",
+        "failed": "Échoué",
+        "past_due": "Impayé"
+      },
+      "plan": {
+        "annual": "Annual",
+        "triennial": "Triennial",
+        "quinquennial": "Quinquennial"
+      },
+      "billingMode": {
+        "subscription": "Abonnement",
+        "one_time": "Paiement unique"
+      }
+    }
   },
   "commercial": {
     "dashboard": {
@@ -787,7 +835,8 @@
       "commercialRole": "Rôle",
       "roleCommercialManager": "Responsable commercial",
       "commercialManager": "Responsable",
-      "commercialManagerNone": "Aucun (non rattaché)"
+      "commercialManagerNone": "Aucun (non rattaché)",
+      "paymentNone": "Aucun"
     },
     "commercials": {
       "title": "Commerciaux",
@@ -1589,7 +1638,8 @@
       "title": "Mentions légales",
       "link": "Mentions légales",
       "body": "Éditeur : petsFollow. Contact : support{'@'}petsfollow.test. Hébergement : infrastructure cloud conforme RGPD."
-    }
+    },
+    "navAria": "Mentions légales"
   },
   "errors": {
     "bad_request": "Requête invalide",
