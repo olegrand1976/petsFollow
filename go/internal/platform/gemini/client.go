@@ -11,7 +11,10 @@ import (
 	"time"
 )
 
-const defaultModel = "gemini-3.5-flash"
+const (
+	defaultModel     = "gemini-3.6-flash"
+	defaultLiteModel = "gemini-3.5-flash-lite"
+)
 
 type Mapper interface {
 	Configured() bool
@@ -20,7 +23,8 @@ type Mapper interface {
 
 type Client struct {
 	APIKey     string
-	Model      string
+	Model      string // pitch turn/stream/coach (agentic)
+	LiteModel  string // import mapping + analyzer (high throughput)
 	HTTPClient *http.Client
 }
 
@@ -33,13 +37,17 @@ type MappingSuggestion struct {
 	Raw        json.RawMessage `json:"-"`
 }
 
-func New(apiKey, model string) *Client {
+func New(apiKey, model, liteModel string) *Client {
 	if model == "" {
 		model = defaultModel
 	}
+	if liteModel == "" {
+		liteModel = defaultLiteModel
+	}
 	return &Client{
-		APIKey: apiKey,
-		Model:  model,
+		APIKey:    apiKey,
+		Model:     model,
+		LiteModel: liteModel,
 		HTTPClient: &http.Client{
 			Timeout: 90 * time.Second,
 		},
@@ -48,6 +56,16 @@ func New(apiKey, model string) *Client {
 
 func (c *Client) Configured() bool {
 	return c != nil && strings.TrimSpace(c.APIKey) != ""
+}
+
+func (c *Client) effectiveLite() string {
+	if c == nil {
+		return defaultLiteModel
+	}
+	if strings.TrimSpace(c.LiteModel) != "" {
+		return c.LiteModel
+	}
+	return defaultLiteModel
 }
 
 func (c *Client) SuggestColumnMapping(ctx context.Context, headers []string, sampleRows []map[string]string) (*MappingSuggestion, error) {
@@ -88,7 +106,7 @@ Input:
 
 	url := fmt.Sprintf(
 		"https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-		c.Model, c.APIKey,
+		c.effectiveLite(), c.APIKey,
 	)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
 	if err != nil {

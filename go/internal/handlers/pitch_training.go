@@ -47,6 +47,8 @@ func (a *API) registerPitchTrainingRoutes(r chi.Router) {
 
 	// WebSocket Gemini Live — auth via ?token= (no Authorization header on browser WS).
 	r.Get("/commercial/pitch-sims/{id}/live", a.commercialPitchSimLive)
+	// WebSocket text stream fallback (token deltas).
+	r.Get("/commercial/pitch-sims/{id}/stream", a.commercialPitchSimStream)
 
 	r.Post("/internal/pitch-analyzer/run", a.internalRunPitchAnalyzer)
 }
@@ -118,10 +120,10 @@ func (a *API) commercialPatchPitchScript(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var body struct {
-		Title               string          `json:"title"`
-		Steps               json.RawMessage `json:"steps"`
-		ExampleDialogue     json.RawMessage `json:"exampleDialogue"`
-		CoachHints          string          `json:"coachHints"`
+		Title           string          `json:"title"`
+		Steps           json.RawMessage `json:"steps"`
+		ExampleDialogue json.RawMessage `json:"exampleDialogue"`
+		CoachHints      string          `json:"coachHints"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_json")
@@ -300,28 +302,8 @@ func (a *API) commercialPitchSimTurn(w http.ResponseWriter, r *http.Request) {
 	tr, _ := json.Marshal(history)
 	sim.TranscriptJSON = tr
 
-	ended := false
-	outcome := "in_progress"
-	slot := ""
-	switch turn.Action {
-	case "book_appointment":
-		ended = true
-		outcome = "appointment"
-		slot = turn.AppointmentSlot
-		if slot == "" {
-			slot = "Créneau démo proposé"
-		}
-	case "hang_up_not_interested":
-		ended = true
-		outcome = "hangup"
-	}
+	ended, outcome, slot := applyVetTurnOutcome(&sim, turn)
 	if ended {
-		now := time.Now().UTC()
-		sim.Outcome = outcome
-		sim.AppointmentSlot = slot
-		sim.EndedAt = &now
-		sim.DurationSec = int(now.Sub(sim.CreatedAt).Seconds())
-		sim.TranscriptJSON = tr
 		if err := a.store.FinalizePitchSimulation(r.Context(), sim); err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return

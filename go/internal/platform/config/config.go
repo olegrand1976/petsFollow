@@ -7,76 +7,77 @@ import (
 )
 
 type Config struct {
-	HTTPAddr         string
-	DatabaseURL      string
-	RedisAddr        string
-	RedisKeyPrefix   string
-	JWTSigningKey    string
-	JWTAccessTTL     time.Duration
-	JWTRefreshTTL    time.Duration
-	LogLevel         string
-	MigrateOnBoot    bool
-	DevSeedEnabled   bool
-	SMTPHost         string
-	SMTPPort         int
-	SMTPFrom         string
-	HeartRateMinBPM  int
-	HeartRateMaxBPM  int
-	HeartRateSeconds int
-	StripeSecretKey  string
-	StripeWebhookSecret string
-	StripePriceAnnualOnetime      string
-	StripePriceTriennialOnetime     string
-	StripePriceQuinquennialOnetime  string
-	StripePriceAnnualSub            string
-	StripePriceTriennialSub         string
-	StripePriceQuinquennialSub      string
-	StripePriceAddonFamily          string
-	StripePriceAddonKennel          string
-	StripePriceAddonCarePlus        string
-	StripePriceAddonHorse           string
-	StripeSuccessURL                string
-	StripeCancelURL                 string
-	APIPublicURL                    string
-	ProPublicSiteURL                string
-	BillingMockEnabled              bool
-	GoogleOAuthClientID             string
-	GCSMediaBucket                  string
-	MediaLocalDir                   string
-	LLITWebsiteURL                  string
-	PetsAppDownloadURL              string
-	FCMEnabled                      bool
-	JourneyEmailEnabled             bool
-	JourneyEmailInterval            time.Duration
-	GeminiAPIKey                    string
-	GeminiModel                     string
-	GeminiLiveModel                 string
-	PitchAnalyzerSecret             string
-	VertexProject                   string
-	VertexLocation                  string
+	HTTPAddr                       string
+	DatabaseURL                    string
+	RedisAddr                      string
+	RedisKeyPrefix                 string
+	JWTSigningKey                  string
+	JWTAccessTTL                   time.Duration
+	JWTRefreshTTL                  time.Duration
+	LogLevel                       string
+	MigrateOnBoot                  bool
+	DevSeedEnabled                 bool
+	SMTPHost                       string
+	SMTPPort                       int
+	SMTPFrom                       string
+	HeartRateMinBPM                int
+	HeartRateMaxBPM                int
+	HeartRateSeconds               int
+	StripeSecretKey                string
+	StripeWebhookSecret            string
+	StripePriceAnnualOnetime       string
+	StripePriceTriennialOnetime    string
+	StripePriceQuinquennialOnetime string
+	StripePriceAnnualSub           string
+	StripePriceTriennialSub        string
+	StripePriceQuinquennialSub     string
+	StripePriceAddonFamily         string
+	StripePriceAddonKennel         string
+	StripePriceAddonCarePlus       string
+	StripePriceAddonHorse          string
+	StripeSuccessURL               string
+	StripeCancelURL                string
+	APIPublicURL                   string
+	ProPublicSiteURL               string
+	BillingMockEnabled             bool
+	GoogleOAuthClientID            string
+	GCSMediaBucket                 string
+	MediaLocalDir                  string
+	LLITWebsiteURL                 string
+	PetsAppDownloadURL             string
+	FCMEnabled                     bool
+	JourneyEmailEnabled            bool
+	JourneyEmailInterval           time.Duration
+	GeminiAPIKey                   string
+	GeminiModel                    string
+	GeminiLiteModel                string
+	GeminiLiveModel                string
+	PitchAnalyzerSecret            string
+	VertexProject                  string
+	VertexLocation                 string
 }
 
 func Load() Config {
 	return Config{
-		HTTPAddr:         envOr("HTTP_ADDR", ":8080"),
-		DatabaseURL:      envOr("DATABASE_URL", "postgres://petsfollow:petsfollow@localhost:5437/petsfollow?sslmode=disable"),
-		RedisAddr:        envOr("REDIS_ADDR", "localhost:6382"),
-		RedisKeyPrefix:   envOr("REDIS_KEY_PREFIX", "petsfollow:"),
-		JWTSigningKey:    envOr("JWT_SIGNING_KEY", "dev-change-me"),
-		JWTAccessTTL:     envDuration("JWT_ACCESS_TTL", 15*time.Minute),
-		JWTRefreshTTL:    envDuration("JWT_REFRESH_TTL", 7*24*time.Hour),
-		LogLevel:         envOr("LOG_LEVEL", "info"),
-		MigrateOnBoot:    envBool("MIGRATE_ON_BOOT"),
-		DevSeedEnabled:   envBool("DEV_SEED_ENABLED"),
-		SMTPHost:         envOr("SMTP_HOST", "localhost"),
-		SMTPPort:         envInt("SMTP_PORT", 1027),
-		SMTPFrom:         envOr("SMTP_FROM", "petsFollow <noreply@petsfollow.test>"),
-		HeartRateMinBPM:  envInt("HEARTRATE_MIN_BPM", 60),
-		HeartRateMaxBPM:  envInt("HEARTRATE_MAX_BPM", 140),
-		HeartRateSeconds: envInt("HEARTRATE_DURATION_SEC", 60),
-		StripeSecretKey:  envOr("STRIPE_SECRET_KEY", ""),
-		StripeWebhookSecret: envOr("STRIPE_WEBHOOK_SECRET", "whsec_test"),
-		StripePriceAnnualOnetime:     envOr("STRIPE_PRICE_ANNUAL_ONETIME", ""),
+		HTTPAddr:                       envOr("HTTP_ADDR", ":8080"),
+		DatabaseURL:                    envOr("DATABASE_URL", "postgres://petsfollow:petsfollow@localhost:5437/petsfollow?sslmode=disable"),
+		RedisAddr:                      envOr("REDIS_ADDR", "localhost:6382"),
+		RedisKeyPrefix:                 envOr("REDIS_KEY_PREFIX", "petsfollow:"),
+		JWTSigningKey:                  envOr("JWT_SIGNING_KEY", "dev-change-me"),
+		JWTAccessTTL:                   envDuration("JWT_ACCESS_TTL", 15*time.Minute),
+		JWTRefreshTTL:                  envDuration("JWT_REFRESH_TTL", 7*24*time.Hour),
+		LogLevel:                       envOr("LOG_LEVEL", "info"),
+		MigrateOnBoot:                  envBool("MIGRATE_ON_BOOT"),
+		DevSeedEnabled:                 envBool("DEV_SEED_ENABLED"),
+		SMTPHost:                       envOr("SMTP_HOST", "localhost"),
+		SMTPPort:                       envInt("SMTP_PORT", 1027),
+		SMTPFrom:                       envOr("SMTP_FROM", "petsFollow <noreply@petsfollow.test>"),
+		HeartRateMinBPM:                envInt("HEARTRATE_MIN_BPM", 60),
+		HeartRateMaxBPM:                envInt("HEARTRATE_MAX_BPM", 140),
+		HeartRateSeconds:               envInt("HEARTRATE_DURATION_SEC", 60),
+		StripeSecretKey:                envOr("STRIPE_SECRET_KEY", ""),
+		StripeWebhookSecret:            envOr("STRIPE_WEBHOOK_SECRET", "whsec_test"),
+		StripePriceAnnualOnetime:       envOr("STRIPE_PRICE_ANNUAL_ONETIME", ""),
 		StripePriceTriennialOnetime:    envOr("STRIPE_PRICE_TRIENNIAL_ONETIME", ""),
 		StripePriceQuinquennialOnetime: envOr("STRIPE_PRICE_QUINQUENNIAL_ONETIME", ""),
 		StripePriceAnnualSub:           envOr("STRIPE_PRICE_ANNUAL_SUB", ""),
@@ -97,11 +98,12 @@ func Load() Config {
 		LLITWebsiteURL:                 envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
 		PetsAppDownloadURL:             envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
 		// FCM enabled by default; ADC (GOOGLE_APPLICATION_CREDENTIALS / Cloud Run SA) required to actually send.
-		FCMEnabled: envBoolDefault("FCM_ENABLED", true),
+		FCMEnabled:           envBoolDefault("FCM_ENABLED", true),
 		JourneyEmailEnabled:  envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
 		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
 		GeminiAPIKey:         envOr("GEMINI_API_KEY", ""),
-		GeminiModel:          envOr("GEMINI_MODEL", "gemini-3.5-flash"),
+		GeminiModel:          envOr("GEMINI_MODEL", "gemini-3.6-flash"),
+		GeminiLiteModel:      envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
 		GeminiLiveModel:      envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
 		PitchAnalyzerSecret:  envOr("PITCH_ANALYZER_SECRET", ""),
 		VertexProject:        envOr("VERTEX_PROJECT", ""),

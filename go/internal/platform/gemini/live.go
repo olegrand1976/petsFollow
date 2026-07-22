@@ -298,6 +298,7 @@ func BuildVetLivePrompt(contentJSON json.RawMessage, interestLevel string) strin
 		c.BasePersona,
 		"Faits produit: " + c.ProductFacts,
 		"Niveau d'intérêt / difficulté pour CET appel: " + interestLevel + ". " + diff,
+		SpinPedagogyBlock(),
 		listenRule,
 		c.Tools,
 		`Tu es AU TÉLÉPHONE, en conversation vocale temps réel avec un commercial petsFollow.

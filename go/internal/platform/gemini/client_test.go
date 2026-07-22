@@ -2,6 +2,19 @@ package gemini
 
 import "testing"
 
+func TestNewDefaultsTo36AndFlashLite(t *testing.T) {
+	c := New("key", "", "")
+	if c.Model != "gemini-3.6-flash" {
+		t.Fatalf("Model=%q", c.Model)
+	}
+	if c.LiteModel != "gemini-3.5-flash-lite" {
+		t.Fatalf("LiteModel=%q", c.LiteModel)
+	}
+	if c.effectiveLite() != "gemini-3.5-flash-lite" {
+		t.Fatalf("effectiveLite=%q", c.effectiveLite())
+	}
+}
+
 func TestParseSuggestion(t *testing.T) {
 	raw := `{"email":"Courriel","fullName":"Nom","locale":null,"ignored":["Tel"],"confidence":0.9}`
 	sug, err := ParseSuggestion(raw)

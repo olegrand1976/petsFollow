@@ -122,6 +122,14 @@
             </div>
             <div class="pf-mic-row">
               <ProButton
+                v-if="!liveMode && streamMode && busyTurn"
+                variant="secondary"
+                test-id="training-interrupt"
+                @click="interruptStream"
+              >
+                {{ $t('training.interrupt') }}
+              </ProButton>
+              <ProButton
                 v-if="!liveMode"
                 :variant="listening ? 'primary' : 'secondary'"
                 test-id="training-mic"
@@ -267,7 +275,7 @@ type Script = {
   steps?: any
   exampleDialogue?: any
 }
-type Line = { role: string, text: string }
+type Line = { role: string, text: string, streaming?: boolean }
 
 const tab = ref<'call' | 'history' | 'scripts'>('call')
 const scripts = ref<Script[]>([])
@@ -300,7 +308,11 @@ const difficulties = [
 
 const phase = ref<'idle' | 'ringing' | 'in_call' | 'analyzing' | 'done'>('idle')
 const liveMode = ref(false)
+const streamMode = ref(false)
+/** Évite que onClosed WS finalise en « manual » pendant un hangUp volontaire. */
+const intentionalEnd = ref(false)
 const live = usePitchLive()
+const textStream = usePitchTextStream()
 const calling = ref(false)
 const busyTurn = ref(false)
 const listening = ref(false)
@@ -509,6 +521,7 @@ async function startCall() {
       onTurnComplete: () => { liveSegmentClosed = true },
       onEnded: onLiveEnded,
       onClosed: () => {
+        if (intentionalEnd.value) return
         if (liveMode.value && phase.value === 'in_call') {
           stopTimer()
           void finalizeCall('manual')
@@ -518,6 +531,8 @@ async function startCall() {
     await ringP
     const liveOk = await liveOkP
     liveMode.value = liveOk
+    streamMode.value = false
+    intentionalEnd.value = false
     phase.value = 'in_call'
     remainingSec.value = data.maxSeconds || 480
     if (liveOk) {
@@ -527,6 +542,31 @@ async function startCall() {
       transcript.value = [{ role: 'vet', text: data.vetOpening || 'Allo ?' }]
       await startRecording()
       speak(data.vetOpening || 'Allo ?')
+      streamMode.value = await textStream.connect(simId.value, {
+        onReady: () => {},
+        onDelta: applyStreamDelta,
+        onTurnComplete: onStreamTurnComplete,
+        onInterrupted: () => {
+          busyTurn.value = false
+          try { window.speechSynthesis?.cancel() } catch { /* ignore */ }
+        },
+        onEnded: (outcome) => {
+          if (intentionalEnd.value) return
+          stopTimer()
+          void finalizeCall(outcome)
+        },
+        onClosed: () => {
+          if (intentionalEnd.value) return
+          if (streamMode.value && phase.value === 'in_call') {
+            stopTimer()
+            void finalizeCall('manual')
+          }
+        },
+        onError: () => {
+          error.value = t('training.errorTurn')
+          busyTurn.value = false
+        },
+      })
     }
     startTimer()
   } catch (e: any) {
@@ -558,6 +598,44 @@ function onLiveEnded(outcome: string) {
   void finalizeCall(outcome)
 }
 
+function applyStreamDelta(delta: string) {
+  busyTurn.value = true
+  const last = transcript.value[transcript.value.length - 1]
+  if (last && last.role === 'vet' && last.streaming) {
+    last.text += delta
+    return
+  }
+  transcript.value.push({ role: 'vet', text: delta, streaming: true })
+}
+
+function onStreamTurnComplete(payload: {
+  reply: string
+  ended: boolean
+  outcome: string
+  interrupted?: boolean
+}) {
+  busyTurn.value = false
+  const last = transcript.value[transcript.value.length - 1]
+  if (last && last.role === 'vet') {
+    last.text = payload.reply || last.text
+    delete last.streaming
+  } else if (payload.reply) {
+    transcript.value.push({ role: 'vet', text: payload.reply })
+  }
+  if (payload.reply && !payload.interrupted) {
+    speak(payload.reply)
+  }
+  if (payload.ended && !payload.interrupted) {
+    void finalizeCall(payload.outcome)
+  }
+}
+
+function interruptStream() {
+  textStream.interrupt()
+  busyTurn.value = false
+  try { window.speechSynthesis?.cancel() } catch { /* ignore */ }
+}
+
 function startTimer() {
   stopTimer()
   timer = setInterval(() => {
@@ -586,6 +664,13 @@ async function sendTurn(text: string) {
     // Ligne tapée en mode live : le serveur l'ajoute au transcript et la transmet à Gemini.
     applyLiveTranscript('commercial', text.trim())
     live.sendText(text.trim())
+    return
+  }
+  if (streamMode.value) {
+    if (busyTurn.value) return
+    transcript.value.push({ role: 'commercial', text: text.trim() })
+    busyTurn.value = true
+    textStream.sendUser(text.trim())
     return
   }
   if (busyTurn.value) return
@@ -642,8 +727,11 @@ function toggleListen() {
 
 async function hangUp(outcome: string) {
   stopTimer()
+  intentionalEnd.value = true
   if (liveMode.value) {
     live.end()
+  } else if (streamMode.value) {
+    textStream.end()
   }
   await finalizeCall(outcome)
 }
@@ -654,6 +742,7 @@ async function finalizeCall(outcome: string) {
   stopTimer()
   const blob = await stopRecordingAsync(true)
   live.stop()
+  textStream.stop()
   try {
     await uploadRecording(blob)
     const res: any = await $fetch(`/api/commercial/pitch-sims/${simId.value}/finalize`, {
@@ -707,7 +796,10 @@ async function submitFeedback(skip: boolean) {
 
 function resetCall() {
   live.stop()
+  textStream.stop()
   liveMode.value = false
+  streamMode.value = false
+  intentionalEnd.value = false
   phase.value = 'idle'
   simId.value = ''
   sim.value = null

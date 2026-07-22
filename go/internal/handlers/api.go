@@ -38,7 +38,7 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	}
 	var g *gemini.Client
 	if cfg.GeminiAPIKey != "" {
-		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel)
+		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
 	}
 	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g}
 }
@@ -440,7 +440,7 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		}
 		p := store.Pet{
 			Name: name, Species: species, Breed: strings.TrimSpace(req.Breed),
-			LitterTag: strings.TrimSpace(req.LitterTag),
+			LitterTag:   strings.TrimSpace(req.LitterTag),
 			OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
 		}
 		if req.BirthDate != nil {

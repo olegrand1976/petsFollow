@@ -50,7 +50,8 @@ PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
-GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.5-flash}"
+GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
+GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
 EOF
 }
