@@ -131,6 +131,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get startMeasurement => 'METING STARTEN';
 
   @override
+  String get choosePetForMeasurement => 'Kies een huisdier';
+
+  @override
   String get chooseDuration => 'Meetduur';
 
   @override

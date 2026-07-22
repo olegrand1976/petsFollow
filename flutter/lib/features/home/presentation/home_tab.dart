@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
@@ -191,8 +192,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                       Text(l10n.startMeasurement, style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       _ProminentFcCta(
-                        pet: activePet,
-                        onMeasure: () => _startMeasurement(activePet),
+                        onMeasure: _pickPetThenMeasure,
                       ),
                       const SizedBox(height: 12),
                       _UpsellBanner(
@@ -251,6 +251,70 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
               label: Text(l10n.newPet),
             ),
     );
+  }
+
+  Future<void> _pickPetThenMeasure() async {
+    final activePets = pets.where((p) => p.isActive).toList();
+    if (activePets.isEmpty || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    String? selectedPetId;
+
+    final pet = await showModalBottomSheet<Pet>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModal) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: systemBottomInset(ctx) + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.choosePetForMeasurement,
+                    style: Theme.of(ctx).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  ...activePets.map(
+                    (p) => ListTile(
+                      selected: selectedPetId == p.id,
+                      leading: Icon(
+                        selectedPetId == p.id
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                      ),
+                      title: Text(p.name),
+                      subtitle: Text(_speciesLabel(l10n, p.species)),
+                      onTap: () => setModal(() => selectedPetId = p.id),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: selectedPetId == null
+                        ? null
+                        : () {
+                            final chosen = activePets.firstWhere(
+                              (p) => p.id == selectedPetId,
+                            );
+                            Navigator.pop(ctx, chosen);
+                          },
+                    child: Text(l10n.startMeasurement),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (pet == null || !mounted) return;
+    await _startMeasurement(pet);
   }
 
   Future<void> _startMeasurement(Pet pet) async {
@@ -680,9 +744,8 @@ class _EmptyPetsState extends StatelessWidget {
 }
 
 class _ProminentFcCta extends StatelessWidget {
-  const _ProminentFcCta({required this.pet, required this.onMeasure});
+  const _ProminentFcCta({required this.onMeasure});
 
-  final Pet pet;
   final VoidCallback onMeasure;
 
   @override
@@ -725,7 +788,7 @@ class _ProminentFcCta extends StatelessWidget {
                             ),
                       ),
                       Text(
-                        pet.name,
+                        l10n.choosePetForMeasurement,
                         style: TextStyle(color: AppColors.bg.withValues(alpha: 0.85)),
                       ),
                     ],

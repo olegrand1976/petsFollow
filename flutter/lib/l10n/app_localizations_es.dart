@@ -133,6 +133,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get startMeasurement => 'EMPEZAR MEDICIÓN';
 
   @override
+  String get choosePetForMeasurement => 'Elegir un animal';
+
+  @override
   String get chooseDuration => 'Duración de la medición';
 
   @override

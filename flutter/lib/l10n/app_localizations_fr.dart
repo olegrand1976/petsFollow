@@ -132,6 +132,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startMeasurement => 'DÉMARRER LA MESURE';
 
   @override
+  String get choosePetForMeasurement => 'Choisir un animal';
+
+  @override
   String get chooseDuration => 'Durée de la mesure';
 
   @override

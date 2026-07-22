@@ -336,6 +336,12 @@ abstract class AppLocalizations {
   /// **'DÉMARRER LA MESURE'**
   String get startMeasurement;
 
+  /// No description provided for @choosePetForMeasurement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un animal'**
+  String get choosePetForMeasurement;
+
   /// No description provided for @chooseDuration.
   ///
   /// In fr, this message translates to:

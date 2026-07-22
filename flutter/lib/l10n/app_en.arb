@@ -40,6 +40,7 @@
   "@greeting": { "placeholders": { "name": { "type": "String" } } },
   "latestValues": "Latest values",
   "startMeasurement": "START MEASUREMENT",
+  "choosePetForMeasurement": "Choose a pet",
   "chooseDuration": "Measurement duration",
   "durationSeconds": "{seconds} s",
   "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },

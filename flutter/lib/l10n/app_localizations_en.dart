@@ -132,6 +132,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startMeasurement => 'START MEASUREMENT';
 
   @override
+  String get choosePetForMeasurement => 'Choose a pet';
+
+  @override
   String get chooseDuration => 'Measurement duration';
 
   @override
