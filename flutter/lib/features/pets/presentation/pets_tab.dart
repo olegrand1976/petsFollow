@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
@@ -19,6 +21,8 @@ class PetsTab extends StatefulWidget {
 class _PetsTabState extends State<PetsTab> {
   List<Pet> pets = [];
   bool loading = true;
+  String? loadError;
+  bool _hasLoadedOnce = false;
   bool hasKennel = false;
 
   @override
@@ -28,6 +32,14 @@ class _PetsTabState extends State<PetsTab> {
   }
 
   Future<void> load() async {
+    final l10n = AppLocalizations.of(context)!;
+    final keepStale = _hasLoadedOnce;
+    if (!keepStale && mounted) {
+      setState(() {
+        loading = true;
+        loadError = null;
+      });
+    }
     try {
       final data = await ApiClient.instance.getPets();
       final ents = await AddonEntitlements.load();
@@ -36,10 +48,22 @@ class _PetsTabState extends State<PetsTab> {
           pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
           hasKennel = ents?.hasKennel ?? false;
           loading = false;
+          loadError = null;
+          _hasLoadedOnce = true;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => loading = false);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = mapApiError(e, l10n);
+      if (keepStale) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        setState(() {
+          loading = false;
+          loadError = msg;
+        });
+      }
     }
   }
 
@@ -64,7 +88,9 @@ class _PetsTabState extends State<PetsTab> {
       title: Text(l10n.navPets),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : pets.isEmpty
+          : loadError != null
+              ? LoadErrorView(message: loadError!, onRetry: load)
+              : pets.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),

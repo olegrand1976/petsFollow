@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class MyVetsScreen extends StatefulWidget {
@@ -14,6 +17,8 @@ class MyVetsScreen extends StatefulWidget {
 class _MyVetsScreenState extends State<MyVetsScreen> {
   List<VetLink> vets = [];
   bool loading = true;
+  String? loadError;
+  bool _hasLoadedOnce = false;
   final emailCtrl = TextEditingController();
   bool inviting = false;
 
@@ -30,12 +35,37 @@ class _MyVetsScreenState extends State<MyVetsScreen> {
   }
 
   Future<void> load() async {
-    setState(() => loading = true);
+    final l10n = AppLocalizations.of(context)!;
+    final keepStale = _hasLoadedOnce;
+    if (!keepStale && mounted) {
+      setState(() {
+        loading = true;
+        loadError = null;
+      });
+    }
     try {
       final data = await ApiClient.instance.getMyVets();
-      if (mounted) setState(() => vets = data);
-    } catch (_) {}
-    if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() {
+          vets = data;
+          loading = false;
+          loadError = null;
+          _hasLoadedOnce = true;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = mapApiError(e, l10n);
+      if (keepStale) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        setState(() {
+          loading = false;
+          loadError = msg;
+        });
+      }
+    }
   }
 
   Future<void> invite() async {
@@ -81,10 +111,12 @@ class _MyVetsScreenState extends State<MyVetsScreen> {
       appBar: AppBar(title: Text(l10n.myVets)),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : loadError != null
+              ? LoadErrorView(message: loadError!, onRetry: load)
+              : RefreshIndicator(
               onRefresh: load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: scrollPaddingWithSystemBottom(context, all: 16),
                 children: [
                   TextField(
                     controller: emailCtrl,

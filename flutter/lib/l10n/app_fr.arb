@@ -89,6 +89,8 @@
   "paymentPending": "Paiement en attente — vous pourrez reprendre plus tard",
   "errorGeneric": "Erreur: {message}",
   "@errorGeneric": { "placeholders": { "message": { "type": "String" } } },
+  "errorNetwork": "Connexion impossible. Vérifiez votre réseau et réessayez.",
+  "retryAction": "Réessayer",
   "errorMediaTooLarge": "Fichier trop volumineux (25 Mo max)",
   "errorInvalidMediaType": "Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)",
   "errorPaymentRequired": "Abonnement requis pour envoyer des médias",

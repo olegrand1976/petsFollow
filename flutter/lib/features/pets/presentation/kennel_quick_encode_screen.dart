@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class KennelQuickEncodeScreen extends StatefulWidget {
@@ -128,7 +129,7 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
                   ),
                 )
               : ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: scrollPaddingWithSystemBottom(context, all: 16),
                   children: [
                     for (var i = 0; i < _rows.length; i++) ...[
                       if (i > 0) const SizedBox(height: 16),

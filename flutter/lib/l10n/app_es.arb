@@ -87,6 +87,8 @@
   "paymentConfirmed": "Pago confirmado — mascota activa",
   "paymentPending": "Pago pendiente — puede reanudarlo más tarde",
   "errorGeneric": "Error: {message}",
+  "errorNetwork": "No se puede conectar. Compruebe su red e inténtelo de nuevo.",
+  "retryAction": "Reintentar",
   "errorMediaTooLarge": "Archivo demasiado grande (máx. 25 MB)",
   "errorInvalidMediaType": "Formato no admitido (JPEG, PNG, WebP, MP4, MOV, WebM)",
   "errorPaymentRequired": "Se requiere una suscripción para enviar medios",

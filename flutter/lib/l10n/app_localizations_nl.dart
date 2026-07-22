@@ -284,6 +284,13 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get errorNetwork =>
+      'Geen verbinding. Controleer uw netwerk en probeer opnieuw.';
+
+  @override
+  String get retryAction => 'Opnieuw proberen';
+
+  @override
   String get errorMediaTooLarge => 'Bestand te groot (max. 25 MB)';
 
   @override

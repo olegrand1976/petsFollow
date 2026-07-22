@@ -284,6 +284,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get errorNetwork =>
+      'Unable to connect. Check your network and try again.';
+
+  @override
+  String get retryAction => 'Retry';
+
+  @override
   String get errorMediaTooLarge => 'File too large (25 MB max)';
 
   @override

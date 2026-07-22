@@ -343,7 +343,6 @@ class _HorsePackUpsellState extends State<_HorsePackUpsell> {
               try {
                 final url = await ApiClient.instance.startAddonCheckout(
                   addonCode: _horse!.code,
-                  petId: widget.petId,
                 );
                 await openExternalUrl(url);
                 await widget.onPurchased?.call();

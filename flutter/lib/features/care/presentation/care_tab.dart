@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -21,6 +24,8 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   List<Pet> pets = [];
   Map<String, List<CareReminder>> remindersByPet = {};
   bool loading = true;
+  String? loadError;
+  bool _hasLoadedOnce = false;
   AddonEntitlements entitlements = AddonEntitlements.empty();
   bool entitlementsKnown = false;
 
@@ -45,7 +50,14 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   }
 
   Future<void> load() async {
-    setState(() => loading = true);
+    final l10n = AppLocalizations.of(context)!;
+    final keepStale = _hasLoadedOnce;
+    if (!keepStale && mounted) {
+      setState(() {
+        loading = true;
+        loadError = null;
+      });
+    }
     try {
       final ents = await AddonEntitlements.load();
       final data = await ApiClient.instance.getPets();
@@ -71,10 +83,22 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
           pets = loadedPets;
           remindersByPet = map;
           loading = false;
+          loadError = null;
+          _hasLoadedOnce = true;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => loading = false);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = mapApiError(e, l10n);
+      if (keepStale) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        setState(() {
+          loading = false;
+          loadError = msg;
+        });
+      }
     }
   }
 
@@ -164,7 +188,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + systemBottomInset(ctx) + 16,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -342,7 +366,9 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
             ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : loadError != null
+              ? LoadErrorView(message: loadError!, onRetry: load)
+              : RefreshIndicator(
               onRefresh: load,
               child: pets.isEmpty
                   ? ListView(

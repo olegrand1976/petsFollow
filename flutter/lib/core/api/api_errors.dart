@@ -3,6 +3,12 @@ import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 String mapApiError(Object e, AppLocalizations l10n) {
   if (e is DioException) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      return l10n.errorNetwork;
+    }
     final data = e.response?.data;
     if (data is Map) {
       final err = data['error'];
@@ -23,11 +29,6 @@ String mapApiError(Object e, AppLocalizations l10n) {
             if (message != null && message.isNotEmpty) return message;
         }
       }
-    }
-    if (e.type == DioExceptionType.sendTimeout ||
-        e.type == DioExceptionType.receiveTimeout ||
-        e.type == DioExceptionType.connectionTimeout) {
-      return l10n.errorMediaTooLarge;
     }
   }
   return l10n.errorGeneric(e.toString());

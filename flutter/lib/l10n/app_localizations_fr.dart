@@ -286,6 +286,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get errorNetwork =>
+      'Connexion impossible. Vérifiez votre réseau et réessayez.';
+
+  @override
+  String get retryAction => 'Réessayer';
+
+  @override
   String get errorMediaTooLarge => 'Fichier trop volumineux (25 Mo max)';
 
   @override

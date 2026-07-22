@@ -612,6 +612,18 @@ abstract class AppLocalizations {
   /// **'Erreur: {message}'**
   String errorGeneric(String message);
 
+  /// No description provided for @errorNetwork.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion impossible. Vérifiez votre réseau et réessayez.'**
+  String get errorNetwork;
+
+  /// No description provided for @retryAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get retryAction;
+
   /// No description provided for @errorMediaTooLarge.
   ///
   /// In fr, this message translates to:

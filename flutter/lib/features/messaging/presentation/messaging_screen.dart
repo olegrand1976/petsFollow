@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class MessagingScreen extends StatefulWidget {
@@ -42,7 +43,9 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     PushNavigation.instance.messageRefreshTick.addListener(_onPushRefresh);
-    PushNavigation.instance.onOpenMessageThread = _openThreadFromPush;
+    if (widget.embedded) {
+      PushNavigation.instance.onOpenMessageThread = _openThreadFromPush;
+    }
     initThreads().then((_) {
       if (widget.active) _startPolling();
     });
@@ -74,7 +77,8 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     _stopPolling();
     WidgetsBinding.instance.removeObserver(this);
     PushNavigation.instance.messageRefreshTick.removeListener(_onPushRefresh);
-    if (PushNavigation.instance.onOpenMessageThread == _openThreadFromPush) {
+    if (widget.embedded &&
+        PushNavigation.instance.onOpenMessageThread == _openThreadFromPush) {
       PushNavigation.instance.onOpenMessageThread = null;
     }
     draft.dispose();
@@ -108,6 +112,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
   Future<void> initThreads() async {
     if (mounted) setState(() => loading = true);
     await _fetchThreadsAndMessages(showErrors: true);
+    if (threadId != null) await _markThreadReadIfNeeded(threadId!);
     if (mounted) setState(() => loading = false);
   }
 
@@ -175,6 +180,37 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
   Future<void> selectThread(String id) async {
     setState(() => threadId = id);
     await loadMessages();
+    await _markThreadReadIfNeeded(id);
+  }
+
+  Future<void> _markThreadReadIfNeeded(String id) async {
+    final thread = threads.where((t) => t.id == id).firstOrNull;
+    if (thread == null || thread.unreadCount <= 0) return;
+    try {
+      await ApiClient.instance.markThreadRead(id);
+      _clearLocalUnread(id);
+    } catch (_) {}
+  }
+
+  void _clearLocalUnread(String id) {
+    if (!mounted) return;
+    setState(() {
+      threads = threads
+          .map((t) => t.id == id
+              ? MessageThread(
+                  id: t.id,
+                  practiceId: t.practiceId,
+                  clientUserId: t.clientUserId,
+                  vetUserId: t.vetUserId,
+                  petId: t.petId,
+                  practiceName: t.practiceName,
+                  vetName: t.vetName,
+                  lastMessagePreview: t.lastMessagePreview,
+                  unreadCount: 0,
+                )
+              : t)
+          .toList();
+    });
   }
 
   Future<void> loadMessages() async {
@@ -364,7 +400,12 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                       ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.fromLTRB(
+                  8,
+                  8,
+                  8,
+                  8 + (widget.embedded ? 0 : systemBottomInset(context)),
+                ),
                 child: Row(
                   children: [
                     IconButton(

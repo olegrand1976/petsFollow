@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
@@ -29,6 +31,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   late Pet pet;
   List<VetLink> vets = [];
   bool loadingVets = true;
+  String? vetsLoadError;
 
   @override
   void initState() {
@@ -61,11 +64,30 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   }
 
   Future<void> _loadVets() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (mounted) {
+      setState(() {
+        loadingVets = true;
+        vetsLoadError = null;
+      });
+    }
     try {
       final data = await ApiClient.instance.getMyVets(primaryPracticeId: pet.practiceId);
-      if (mounted) setState(() => vets = data);
-    } catch (_) {}
-    if (mounted) setState(() => loadingVets = false);
+      if (mounted) {
+        setState(() {
+          vets = data;
+          loadingVets = false;
+          vetsLoadError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          loadingVets = false;
+          vetsLoadError = mapApiError(e, l10n);
+        });
+      }
+    }
   }
 
   String _speciesLabel(AppLocalizations l10n, String species) {
@@ -202,7 +224,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     return Scaffold(
       appBar: AppBar(title: Text(pet.name)),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: scrollPaddingWithSystemBottom(context, all: 20),
         children: [
           Center(
             child: Column(
@@ -301,6 +323,15 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
           ),
           if (loadingVets)
             const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+          else if (vetsLoadError != null)
+            ListTile(
+              leading: const Icon(Icons.cloud_off_outlined, color: AppColors.textMuted),
+              title: Text(vetsLoadError!),
+              trailing: TextButton(
+                onPressed: _loadVets,
+                child: Text(l10n.retryAction),
+              ),
+            )
           else if (vets.isEmpty)
             ListTile(
               leading: const Icon(Icons.local_hospital_outlined),
@@ -389,7 +420,7 @@ class _UpsellHintState extends State<_UpsellHint> {
 
   Future<void> _buy(BuildContext context, String code) async {
     try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: code, petId: widget.petId);
+      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
       await openExternalUrl(url);
       await _load();
       await widget.onPurchased?.call();

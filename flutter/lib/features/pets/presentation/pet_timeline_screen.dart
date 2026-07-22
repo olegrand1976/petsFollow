@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -23,6 +26,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   List<Visit> visits = [];
   List<({DateTime date, int bpm, bool isAlert})> chartPoints = [];
   bool loading = true;
+  String? loadError;
+  bool _hasLoadedOnce = false;
 
   @override
   void initState() {
@@ -32,6 +37,13 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
 
   Future<void> load() async {
     final l10n = AppLocalizations.of(context)!;
+    final keepStale = _hasLoadedOnce;
+    if (!keepStale && mounted) {
+      setState(() {
+        loading = true;
+        loadError = null;
+      });
+    }
     try {
       final data = await ApiClient.instance.getTimeline(widget.petId);
       final sessions = await ApiClient.instance.getHeartRateSessions(widget.petId);
@@ -58,10 +70,22 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
               .reversed
               .toList();
           loading = false;
+          loadError = null;
+          _hasLoadedOnce = true;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => loading = false);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = mapApiError(e, l10n);
+      if (keepStale) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        setState(() {
+          loading = false;
+          loadError = msg;
+        });
+      }
     }
   }
 
@@ -194,10 +218,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       appBar: AppBar(title: Text(l10n.history)),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : loadError != null
+              ? LoadErrorView(message: loadError!, onRetry: load)
+              : RefreshIndicator(
               onRefresh: load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: scrollPaddingWithSystemBottom(context, all: 16),
                 children: [
                   if (chartPoints.isNotEmpty) ...[
                     Text(l10n.latestValues, style: Theme.of(context).textTheme.titleMedium),

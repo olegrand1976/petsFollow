@@ -215,10 +215,9 @@ class ApiClient {
     return const [];
   }
 
-  Future<String> startAddonCheckout({required String addonCode, String? petId}) async {
+  Future<String> startAddonCheckout({required String addonCode}) async {
     final res = await dio.post('/api/v1/billing/addons/checkout', data: {
       'addonCode': addonCode,
-      if (petId != null && petId.isNotEmpty) 'petId': petId,
     });
     return res.data['data']['checkoutUrl'] as String;
   }
@@ -491,5 +490,9 @@ class ApiClient {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
     final data = res.data['data'] as List<dynamic>;
     return data.map((m) => ChatMessage.fromJson(Map<String, dynamic>.from(m as Map))).toList();
+  }
+
+  Future<void> markThreadRead(String threadId) async {
+    await dio.post('/api/v1/messaging/threads/$threadId/read');
   }
 }

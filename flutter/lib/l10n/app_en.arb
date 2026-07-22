@@ -87,6 +87,8 @@
   "paymentConfirmed": "Payment confirmed — pet active",
   "paymentPending": "Payment pending — you can resume later",
   "errorGeneric": "Error: {message}",
+  "errorNetwork": "Unable to connect. Check your network and try again.",
+  "retryAction": "Retry",
   "errorMediaTooLarge": "File too large (25 MB max)",
   "errorInvalidMediaType": "Unsupported format (JPEG, PNG, WebP, MP4, MOV, WebM)",
   "errorPaymentRequired": "Subscription required to send media",

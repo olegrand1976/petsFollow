@@ -87,6 +87,8 @@
   "paymentConfirmed": "Betaling bevestigd — huisdier actief",
   "paymentPending": "Betaling in behandeling — u kunt later verdergaan",
   "errorGeneric": "Fout: {message}",
+  "errorNetwork": "Geen verbinding. Controleer uw netwerk en probeer opnieuw.",
+  "retryAction": "Opnieuw proberen",
   "errorMediaTooLarge": "Bestand te groot (max. 25 MB)",
   "errorInvalidMediaType": "Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)",
   "errorPaymentRequired": "Abonnement vereist om media te versturen",

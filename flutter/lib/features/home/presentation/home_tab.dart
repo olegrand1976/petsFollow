@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
@@ -7,6 +8,7 @@ import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
@@ -28,6 +30,8 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   List<Pet> pets = [];
   String? userName;
   bool loading = true;
+  String? loadError;
+  bool _hasLoadedOnce = false;
   bool? hasVets;
   DiscoveryProgress? discoveryProgress;
   int householdEpoch = 0;
@@ -53,6 +57,14 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   }
 
   Future<void> load() async {
+    final l10n = AppLocalizations.of(context)!;
+    final keepStale = _hasLoadedOnce;
+    if (!keepStale && mounted) {
+      setState(() {
+        loading = true;
+        loadError = null;
+      });
+    }
     try {
       final me = await ApiClient.instance.getMe();
       userName = me['fullName'] as String?;
@@ -73,13 +85,21 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         setState(() {
           pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
           loading = false;
+          loadError = null;
+          _hasLoadedOnce = true;
           householdEpoch++;
         });
       }
-    } catch (_) {
-      if (mounted) {
+    } catch (e) {
+      if (!mounted) return;
+      final msg = mapApiError(e, l10n);
+      if (keepStale) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      } else {
         setState(() {
           loading = false;
+          loadError = msg;
           householdEpoch++;
         });
       }
@@ -132,7 +152,9 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       title: const PetsAppBarLogo(),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : loadError != null
+              ? LoadErrorView(message: loadError!, onRetry: load)
+              : RefreshIndicator(
               onRefresh: load,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),

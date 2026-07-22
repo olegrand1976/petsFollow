@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class BookVisitScreen extends StatefulWidget {
@@ -62,11 +64,11 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
         _slots = slots;
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = AppLocalizations.of(context)!.errorGeneric('calendar');
+        _error = mapApiError(e, AppLocalizations.of(context)!);
       });
     }
   }
@@ -93,10 +95,10 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
         ),
       );
       Navigator.pop(context, true);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric('visit'))),
+        SnackBar(content: Text(mapApiError(e, l10n))),
       );
     } finally {
       if (mounted) setState(() => _booking = false);
@@ -112,10 +114,10 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.visitRequested)));
       Navigator.pop(context, true);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric('visit'))),
+        SnackBar(content: Text(mapApiError(e, l10n))),
       );
     } finally {
       if (mounted) setState(() => _booking = false);
@@ -148,7 +150,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(20),
+              padding: scrollPaddingWithSystemBottom(context, all: 20),
               children: [
                 Text(
                   widget.petName,

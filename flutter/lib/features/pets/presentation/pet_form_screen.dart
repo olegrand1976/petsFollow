@@ -208,7 +208,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (go != true || !mounted) return;
     try {
       final url = await ApiClient.instance
-          .startAddonCheckout(addonCode: 'horse', petId: petId);
+          .startAddonCheckout(addonCode: 'horse');
       await openExternalUrl(url);
     } catch (_) {
       if (mounted) {
