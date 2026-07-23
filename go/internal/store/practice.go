@@ -133,7 +133,7 @@ func (s *Store) GetPracticeHeartRateDurations(ctx context.Context, practiceID st
 	return int32SliceToInts(durations), nil
 }
 
-func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool) error {
+func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -146,25 +146,25 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 		return err
 	}
 
-	durations := p.HeartRateDurationsSec
-	if len(durations) == 0 {
-		durations = []int{60}
-	}
 	q := `
 		UPDATE practice.practices
 		SET name = $2, phone = $3, contact_email = $4, address_line1 = $5, address_line2 = $6,
-			city = $7, postal_code = $8, website = $9, heartrate_durations_sec = $10,
-			company_legal_name = $11, vat_number = $12, company_number = $13, legal_form = $14,
-			billing_same_as_practice = $15, billing_address_line1 = $16, billing_address_line2 = $17,
-			billing_postal_code = $18, billing_city = $19,
-			payout_iban = $20, payout_bic = $21, payout_account_holder = $22`
+			city = $7, postal_code = $8, website = $9,
+			company_legal_name = $10, vat_number = $11, company_number = $12, legal_form = $13,
+			billing_same_as_practice = $14, billing_address_line1 = $15, billing_address_line2 = $16,
+			billing_postal_code = $17, billing_city = $18,
+			payout_iban = $19, payout_bic = $20, payout_account_holder = $21`
 	args := []any{
 		practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2,
-		p.City, p.PostalCode, p.Website, durations,
+		p.City, p.PostalCode, p.Website,
 		p.CompanyLegalName, p.VATNumber, p.CompanyNumber, p.LegalForm,
 		p.BillingSameAsPractice, p.BillingAddressLine1, p.BillingAddressLine2,
 		p.BillingPostalCode, p.BillingCity,
 		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
+	}
+	if heartRateDurationsSec != nil {
+		q += `, heartrate_durations_sec = $22`
+		args = append(args, *heartRateDurationsSec)
 	}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`

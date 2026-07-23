@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -1167,8 +1169,21 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
+	defer r.Body.Close()
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
 	var req store.PracticeProfile
-	if err := httpx.DecodeJSON(r, &req); err != nil {
+	if err := json.Unmarshal(raw, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	var durationsProbe struct {
+		HeartRateDurationsSec *[]int `json:"heartrateDurationsSec"`
+	}
+	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
@@ -1204,9 +1219,13 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	if !req.BillingSameAsPractice && req.BillingAddressLine1 == "" {
 		req.BillingSameAsPractice = true
 	}
-	req.HeartRateDurationsSec = kernel.NormalizeHeartRateDurations(req.HeartRateDurationsSec)
+	var durationsUpdate *[]int
+	if durationsProbe.HeartRateDurationsSec != nil {
+		normalized := kernel.NormalizeHeartRateDurations(*durationsProbe.HeartRateDurationsSec)
+		durationsUpdate = &normalized
+	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

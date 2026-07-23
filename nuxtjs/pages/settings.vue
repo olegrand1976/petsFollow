@@ -27,7 +27,7 @@
         <template #actions>
           <p v-if="profileSaved" class="text-muted" role="status">{{ $t('settings.profileSaved') }}</p>
           <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
-          <ProButton type="submit" :loading="profileSaving" class="pro-save-btn">
+          <ProButton type="submit" :loading="profileSaving" :disabled="!profileLoaded" class="pro-save-btn">
             {{ $t('settings.saveProfile') }}
           </ProButton>
         </template>
@@ -274,6 +274,7 @@ const avatarUrl = ref('')
 const avatarSaved = ref(false)
 
 const profile = ref<PracticeProfileForm>(emptyPracticeProfileForm())
+const profileLoaded = ref(false)
 const profileSaving = ref(false)
 const profileSaved = ref(false)
 const profileError = ref('')
@@ -365,14 +366,21 @@ onMounted(async () => {
 
   try {
     const res: any = await $fetch('/api/vet/profile')
-    profile.value = mapFromApi(res.data ?? res)
-    selectedDurations.value = (res.data ?? res).heartrateDurationsSec ?? [60]
-  } catch { /* ignore */ }
+    const data = res.data ?? res
+    profile.value = mapFromApi(data)
+    const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
+    selectedDurations.value = durations.length ? durations : [60]
+    profileLoaded.value = true
+  } catch (e: any) {
+    profileError.value = mapError(e) || t('settings.profileLoadFailed')
+  }
 
-  const avail: any = await $fetch('/api/vet/availability')
-  const data = avail.data ?? avail
-  status.value = data.status ?? status.value
-  autoReply.value = data.autoReply || autoReply.value
+  try {
+    const avail: any = await $fetch('/api/vet/availability')
+    const data = avail.data ?? avail
+    status.value = data.status ?? status.value
+    autoReply.value = data.autoReply || autoReply.value
+  } catch { /* ignore */ }
 
   const preferred = user.value?.preferredLocale as AppLocale | undefined
   if (preferred && supportedLocales.includes(preferred)) {
@@ -408,7 +416,9 @@ onMounted(async () => {
     vacationsConfigured.value = !!sched.vacationsConfiguredForYear
     noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
     vacations.value = vacRes.data ?? vacRes ?? []
-  } catch { /* ignore */ }
+  } catch (e: any) {
+    scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
+  }
 })
 
 async function savePassword() {
@@ -524,15 +534,22 @@ async function saveProfile() {
   profileSaving.value = true
   profileSaved.value = false
   profileError.value = ''
-  if (!selectedDurations.value.length) {
+  if (!profileLoaded.value) {
+    profileError.value = t('settings.profileLoadFailed')
+    profileSaving.value = false
+    return
+  }
+  const durations = selectedDurations.value.map(Number).filter((n) => [15, 30, 60].includes(n))
+  if (!durations.length) {
     profileError.value = t('settings.heartrate.hint')
     profileSaving.value = false
     return
   }
+  selectedDurations.value = durations
   try {
     await $fetch('/api/vet/profile', {
       method: 'PUT',
-      body: { ...profile.value, heartrateDurationsSec: selectedDurations.value },
+      body: { ...profile.value, heartrateDurationsSec: durations },
     })
     profileSaved.value = true
     await useProUser().fetchUser(true)

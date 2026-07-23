@@ -204,11 +204,11 @@ function validateCurrent(): boolean {
         return false
       }
       return true
-    case 'options':
-      if (heartrateDurationsSec.value.length === 0) {
-        heartrateDurationsSec.value = [60]
-      }
+    case 'options': {
+      const durations = heartrateDurationsSec.value.map(Number).filter((n) => [15, 30, 60].includes(n))
+      heartrateDurationsSec.value = durations.length ? durations : [60]
       return true
+    }
     default: {
       const _exhaustive: never = currentKey.value
       return _exhaustive
@@ -229,7 +229,7 @@ async function onSubmit() {
       method: 'PUT',
       body: {
         ...profile.value,
-        heartrateDurationsSec: heartrateDurationsSec.value,
+        heartrateDurationsSec: heartrateDurationsSec.value.map(Number).filter((n) => [15, 30, 60].includes(n)),
       },
     })
     await fetchUser(true)
@@ -247,9 +247,8 @@ onMounted(async () => {
     const res: any = await $fetch('/api/vet/profile')
     const data = res.data ?? res
     profile.value = mapFromApi(data)
-    heartrateDurationsSec.value = data.heartrateDurationsSec?.length
-      ? data.heartrateDurationsSec
-      : [60]
+    const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
+    heartrateDurationsSec.value = durations.length ? durations : [60]
   } catch {
     profile.value.vetFullName = me?.fullName || ''
     profile.value.contactEmail = me?.email || ''
