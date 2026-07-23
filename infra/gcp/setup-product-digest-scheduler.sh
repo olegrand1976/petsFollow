@@ -37,9 +37,9 @@ DIGEST_SECRET="$(gcloud secrets versions access latest \
 # Ensure Cloud Run API has the secret mounted.
 echo "→ Reminder: redeploy API with PRODUCT_DIGEST_SECRET=${SECRET_NAME}:latest if not yet wired."
 
-# Scheduler needs App Engine app or explicit location for some projects;
-# use cloud-scheduler in the Run region.
-LOCATION="${GCP_SCHEDULER_LOCATION:-${GCP_RUN_REGION}}"
+# Cloud Scheduler is not available in every Run region (e.g. europe-west9).
+# Default to europe-west1 (same as other petsFollow/LL-IT jobs).
+LOCATION="${GCP_SCHEDULER_LOCATION:-europe-west1}"
 
 HEADERS="Content-Type=application/json,X-Product-Digest-Secret=${DIGEST_SECRET}"
 
