@@ -54,7 +54,9 @@ async function loadNavBadges() {
 }
 
 onMounted(async () => {
-  await fetchUser()
+  try {
+    await fetchUser()
+  } catch { /* 401 handled by middleware */ }
   await loadNavBadges()
 })
 

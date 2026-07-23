@@ -139,7 +139,9 @@ const practiceName = computed(() => user.value?.practiceName?.trim() || '')
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
-  await fetchUser()
+  try {
+    await fetchUser()
+  } catch { /* 401 handled by middleware */ }
   if (props.showNotifications) {
     await refreshNotif()
     startPolling()

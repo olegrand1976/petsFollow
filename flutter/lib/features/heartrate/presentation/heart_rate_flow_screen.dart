@@ -122,14 +122,15 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
       setState(() {
         phase = HeartRatePhase.review;
         result = data;
+        _completing = false;
       });
     } catch (_) {
+      _completing = false;
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
       );
-      _completing = false;
     }
   }
 
@@ -218,6 +219,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
       phase = HeartRatePhase.ready;
       sessionId = null;
       result = null;
+      _completing = false;
+      _sending = false;
     });
   }
 
@@ -227,9 +230,9 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     if (phase == HeartRatePhase.running) {
       timer?.cancel();
     }
-    // Skip cancel while complete is in-flight or after validate cleared sessionId.
+    // Cancel unfinished sessions (running or review abandoned without validate).
     final id = sessionId;
-    if (id != null && !_completing && phase != HeartRatePhase.review) {
+    if (id != null && !_completing) {
       unawaited(() async {
         try {
           await ApiClient.instance.cancelHeartRate(id);

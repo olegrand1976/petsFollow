@@ -31,5 +31,6 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/produits', label: t('nav.products'), icon: 'description' },
 ])
 
-onMounted(() => fetchUser())
+onMounted(() => { void fetchUser().catch(() => {}) })
+
 </script>

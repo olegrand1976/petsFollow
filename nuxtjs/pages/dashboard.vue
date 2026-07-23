@@ -81,9 +81,11 @@ const { fetchUser } = useProUser()
 const hasUnread = computed(() => unreadRaw.value > 0)
 
 onMounted(async () => {
-  const me = await fetchUser()
-  const name = me?.fullName
-  if (name) welcomeTitle.value = t('dashboard.welcome', { name: name.split(' ')[0] })
+  try {
+    const me = await fetchUser()
+    const name = me?.fullName
+    if (name) welcomeTitle.value = t('dashboard.welcome', { name: name.split(' ')[0] })
+  } catch { /* ignore */ }
   try {
     const res: any = await $fetch('/api/vet/overview')
     const data = res.data ?? res

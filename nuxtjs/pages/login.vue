@@ -122,21 +122,25 @@ const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
   await syncFromUser()
-  const { fetchUser } = useProUser()
-  const me = await fetchUser(true)
-  const role = me?.role || parseJwtRole(useCookie('pf_token').value)
-  const profileComplete = me?.profileComplete
-  const mustChangePassword = me?.mustChangePassword
-  if (mustChangePassword === true) {
-    await navigateTo('/change-password')
-    return
+  try {
+    const { fetchUser } = useProUser()
+    const me = await fetchUser(true)
+    const role = me?.role || parseJwtRole(useCookie('pf_token').value)
+    const profileComplete = me?.profileComplete
+    const mustChangePassword = me?.mustChangePassword
+    if (mustChangePassword === true) {
+      await navigateTo('/change-password')
+      return
+    }
+    if (!isProRole(role)) {
+      clearAuthTokens()
+      error.value = t('auth.login.proOnly')
+      return
+    }
+    await navigateTo(homePathForRole(role, { profileComplete }))
+  } catch (e: any) {
+    error.value = mapError(e) || t('auth.login.invalidResponse')
   }
-  if (!isProRole(role)) {
-    clearAuthTokens()
-    error.value = t('auth.login.proOnly')
-    return
-  }
-  await navigateTo(homePathForRole(role, { profileComplete }))
 }
 
 async function handleAuthResult(res: unknown) {

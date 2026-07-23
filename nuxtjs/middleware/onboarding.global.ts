@@ -12,9 +12,16 @@ const SKIP_PATHS = new Set([
   '/onboarding',
 ])
 
+function isUnauthorized(e: unknown): boolean {
+  const err = e as { statusCode?: number, status?: number, response?: { status?: number } }
+  const status = err?.statusCode ?? err?.status ?? err?.response?.status
+  return status === 401 || status === 403
+}
+
 export default defineNuxtRouteMiddleware(async (to) => {
   const token = useCookie('pf_token')
-  if (!token.value) return
+  const refresh = useCookie('pf_refresh')
+  if (!token.value && !refresh.value) return
   if (
     SKIP_PATHS.has(to.path)
     || to.path.startsWith('/register')
@@ -29,10 +36,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   try {
     const { fetchUser } = useProUser()
     const me = await fetchUser()
-    if (!me) {
-      clearAuthTokens()
-      return navigateTo('/login')
-    }
+    if (!me) return
     if (me.mustChangePassword === true) {
       // Force-change takes priority over onboarding.
       return
@@ -40,8 +44,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (me.role === 'vet' && me.profileComplete === false && to.path !== '/onboarding') {
       return navigateTo('/onboarding')
     }
-  } catch {
-    clearAuthTokens()
-    return navigateTo('/login')
+  } catch (e) {
+    if (isUnauthorized(e)) {
+      clearAuthTokens()
+      return navigateTo('/login')
+    }
   }
 })

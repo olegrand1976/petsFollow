@@ -23,7 +23,7 @@ export function useLocaleSync() {
     await $fetch('/api/me/locale', { method: 'PATCH', body: { locale: newLocale } })
     await setLocale(newLocale)
     localeCookie.value = newLocale
-    await useProUser().fetchUser(true)
+    await useProUser().fetchUser(true).catch(() => {})
   }
 
   async function switchLocale(newLocale: AppLocale) {

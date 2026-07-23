@@ -242,7 +242,10 @@ async function onSubmit() {
 }
 
 onMounted(async () => {
-  const me = await fetchUser()
+  let me: Awaited<ReturnType<typeof fetchUser>> = null
+  try {
+    me = await fetchUser()
+  } catch { /* ignore */ }
   try {
     const res: any = await $fetch('/api/vet/profile')
     const data = res.data ?? res

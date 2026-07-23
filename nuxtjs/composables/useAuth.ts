@@ -88,8 +88,9 @@ export function persistAuthTokens(pair: AuthTokens) {
 }
 
 export function clearAuthTokens() {
-  const access = useCookie('pf_token')
-  const refresh = useCookie('pf_refresh')
+  const opts = authCookieOpts()
+  const access = useCookie('pf_token', opts)
+  const refresh = useCookie('pf_refresh', opts)
   access.value = null
   refresh.value = null
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.

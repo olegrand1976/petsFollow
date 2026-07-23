@@ -23,6 +23,7 @@
       </template>
     </ProPageHeader>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
+    <p v-if="petsLoadError" class="pro-field-error" role="alert">{{ petsLoadError }}</p>
     <ProCard v-if="client" :title="$t('clients.detail.identity')">
       <p><strong>{{ client.fullName }}</strong></p>
       <p class="text-muted">{{ client.email }}</p>
@@ -93,11 +94,13 @@ type ClientRow = {
 }
 
 const { t } = useI18n()
+const { mapError } = useApiError()
 
 const route = useRoute()
 const clientId = route.params.clientId as string
 const client = ref<ClientRow | null>(null)
 const pets = ref<any[]>([])
+const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
 
@@ -132,8 +135,10 @@ onMounted(async () => {
   try {
     const petsRes: any = await $fetch(`/api/clients/${clientId}/pets`)
     pets.value = petsRes.data ?? petsRes ?? []
-  } catch {
+    petsLoadError.value = ''
+  } catch (e: any) {
     pets.value = []
+    petsLoadError.value = mapError(e) || t('clients.loadError')
   }
 })
 </script>

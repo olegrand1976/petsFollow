@@ -33,5 +33,6 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over' },
 ])
 
-onMounted(() => fetchUser())
+onMounted(() => { void fetchUser().catch(() => {}) })
+
 </script>

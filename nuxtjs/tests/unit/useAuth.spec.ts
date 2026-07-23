@@ -98,6 +98,46 @@ describe('useAuth helpers', () => {
     expect(useState('pro-user').value).toBeNull()
   })
 
+  it('clearAuthTokens réutilise les opts secure/path (prod)', () => {
+    const optsSeen: unknown[] = []
+    vi.stubGlobal('useCookie', (name: string, opts?: unknown) => {
+      if (opts) optsSeen.push(opts)
+      if (!cookieStore.has(name)) cookieStore.set(name, null)
+      return {
+        get value() {
+          return cookieStore.get(name) ?? null
+        },
+        set value(v: string | null) {
+          cookieStore.set(name, v)
+        },
+      }
+    })
+    const prev = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
+    try {
+      persistAuthTokens(tokens)
+      clearAuthTokens()
+      expect(optsSeen.length).toBeGreaterThanOrEqual(4)
+      for (const o of optsSeen) {
+        expect(o).toMatchObject({ secure: true, path: '/', sameSite: 'lax' })
+      }
+    } finally {
+      process.env.NODE_ENV = prev
+      // restore default stub from file top — re-run beforeEach pattern
+      vi.stubGlobal('useCookie', (name: string, _opts?: unknown) => {
+        if (!cookieStore.has(name)) cookieStore.set(name, null)
+        return {
+          get value() {
+            return cookieStore.get(name) ?? null
+          },
+          set value(v: string | null) {
+            cookieStore.set(name, v)
+          },
+        }
+      })
+    }
+  })
+
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
     expect(isProRole('admin')).toBe(true)
     expect(isProRole('vet')).toBe(true)

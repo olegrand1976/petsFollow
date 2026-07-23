@@ -237,7 +237,9 @@ function stopPoll() {
 }
 
 onMounted(async () => {
-  await fetchUser()
+  try {
+    await fetchUser()
+  } catch { /* ignore */ }
   await loadThreads()
   await openThreadFromQuery()
   if (import.meta.client) {

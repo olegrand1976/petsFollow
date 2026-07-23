@@ -60,9 +60,13 @@ const error = ref('')
 const loading = ref(false)
 
 async function redirectAfterChange() {
-  const me = await fetchUser(true)
-  const role = me?.role || parseJwtRole(useCookie('pf_token').value)
-  await navigateTo(homePathForRole(role, { profileComplete: me?.profileComplete }))
+  try {
+    const me = await fetchUser(true)
+    const role = me?.role || parseJwtRole(useCookie('pf_token').value)
+    await navigateTo(homePathForRole(role, { profileComplete: me?.profileComplete }))
+  } catch {
+    await navigateTo('/login')
+  }
 }
 
 async function submit() {

@@ -28,9 +28,14 @@ export function useProUser() {
       const data = res.data ?? res
       userState.value = data
       return data as ProUser
-    } catch {
-      userState.value = null
-      return null
+    } catch (e: any) {
+      const status = e?.statusCode ?? e?.status ?? e?.response?.status
+      if (status === 401 || status === 403) {
+        userState.value = null
+        throw e
+      }
+      // Transient (5xx/network): keep cached profile when available.
+      return userState.value
     } finally {
       loadingState.value = false
     }

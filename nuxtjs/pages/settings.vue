@@ -351,7 +351,7 @@ const passwordError = ref('')
 function onAvatarUploaded(data: any) {
   avatarUrl.value = data?.avatarUrl || avatarUrl.value
   avatarSaved.value = true
-  fetchUser(true)
+  fetchUser(true).catch(() => {})
 }
 
 function mapFromApi(data: any): PracticeProfileForm {
