@@ -27,6 +27,9 @@ Index des documents de référence du projet.
 | 23 | [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md) | Drip découverte / fidélisation client |
 | 24 | [24-IMPORT-CLIENTS-ADMIN.md](24-IMPORT-CLIENTS-ADMIN.md) | Import CSV/XLS clients admin + Gemini |
 | 25 | [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md) | Funnel téléphone → RDV démo véto |
+| 25b | [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md) | Digest produit quotidien admin/commercial |
+| 26 | [26-PLAY-STORE.md](26-PLAY-STORE.md) | Publication Play Store |
+| 27 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) | **Spec** pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) — non implémenté |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.

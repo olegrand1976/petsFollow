@@ -41,6 +41,10 @@ Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects 
 
 Rappels care (+ seed horse pack), contacts professionnels, compétitions ; household Family (≥2, pas de plafond) / Kennel (≥6, `litter_tag`, batch).
 
+## Pharmacie cabinet (Belgique) — spec
+
+Dictionnaire CNK/AFMPS, stocks multi-dépôts FEFO, DAF + PDF, workers VAMReg / invoices.connect — **spécification** [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) (**non livré**). Distinct de Care+ (rappels côté client).
+
 ## Admin plateforme
 
 Métriques, users, payments, commissions véto & commercial, SPIFF commercial. Simulation 10 ans = **backlog** ([16](16-ADMIN-SIMULATION-10ANS.md)).

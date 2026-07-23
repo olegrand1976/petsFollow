@@ -32,6 +32,7 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 | Refresh silencieux clients | — |
 | Simulation admin 10 ans | [16](16-ADMIN-SIMULATION-10ANS.md) **non livré** |
 | Care+ export / emails avancés | Roadmap addon |
+| Pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) | [27](27-PHARMACIE-BELGIQUE.md) **spec / non livré** |
 
 ## Go-to-market
 
