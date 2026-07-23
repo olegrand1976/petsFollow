@@ -444,22 +444,28 @@ abstract class AppLocalizations {
   /// **'Mentions légales'**
   String get legalNoticeTitle;
 
+  /// No description provided for @legalOpenOnline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la version en ligne'**
+  String get legalOpenOnline;
+
   /// No description provided for @legalTermsBody.
   ///
   /// In fr, this message translates to:
-  /// **'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux de mesurer la fréquence cardiaque, de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi. L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Conditions générales d\'utilisation — petsFollow\n\nL\'application petsFollow permet aux propriétaires d\'animaux de mesurer la fréquence cardiaque, de consulter l\'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l\'abonnement choisi (paiement via Stripe). L\'utilisateur s\'engage à utiliser l\'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d\'actualisation : juillet 2026'**
   String get legalTermsBody;
 
   /// No description provided for @legalPrivacyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : prénom, email, données animal (nom, espèce, race), relevés cardiaques, messages au vétérinaire.\n\nFinalités : gestion du compte, suivi santé, communication avec le cabinet vétérinaire.\n\nConservation : jusqu\'à suppression du compte ou 3 ans d\'inactivité.\n\nVous pouvez exercer vos droits (accès, rectification, suppression) via les paramètres de l\'application.\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, notifications, facturation.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ou 3 ans d\'inactivité.\n\nDroits RGPD (accès, rectification, suppression) : Profil → Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
   String get legalPrivacyBody;
 
   /// No description provided for @legalNoticeBody.
   ///
   /// In fr, this message translates to:
-  /// **'Mentions légales — petsFollow\n\nÉditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD.\n\nDirecteur de publication : petsFollow.\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@ll-it-sc.be\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d\'actualisation : juillet 2026'**
   String get legalNoticeBody;
 
   /// No description provided for @language.

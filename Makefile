@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-android-dist
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -23,6 +23,7 @@ help:
 	@echo "  make gcp-deploy     Cloud Build staging"
 	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
 	@echo "  make firebase-android-dist   APK → Firebase App Distribution (groupe petsfollow-testers)"
+	@echo "  make play-android-bundle     AAB signé → Google Play (nécessite key.properties)"
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
@@ -101,5 +102,8 @@ firebase-flutter-setup:
 
 firebase-android-dist:
 	bash infra/firebase/distribute-android.sh
+
+play-android-bundle:
+	bash infra/play/build-play-bundle.sh
 
 gcp-smoke: smoke-staging

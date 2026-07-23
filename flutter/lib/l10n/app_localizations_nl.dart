@@ -192,16 +192,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get legalNoticeTitle => 'Juridische vermeldingen';
 
   @override
+  String get legalOpenOnline => 'Onlineversie bekijken';
+
+  @override
   String get legalTermsBody =>
-      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app laat eigenaars de hartslag meten, de geschiedenis bekijken en communiceren met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement.\n\nLaatst bijgewerkt: juli 2026';
+      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app laat eigenaars de hartslag meten, de geschiedenis bekijken en communiceren met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement (betalingen via Stripe).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/terms\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: voornaam, e-mail, huisdiergegevens, hartslagmetingen, berichten aan de dierenarts.\n\nDoeleinden: accountbeheer, gezondheidsmonitoring, communicatie met de praktijk.\n\nBewaring: tot verwijdering van het account of 3 jaar inactiviteit.\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, hartmonitoring, dierenartsberichten, notificaties, facturatie.\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account of 3 jaar inactiviteit.\n\nAVG-rechten: Profiel → Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
-      'Juridische vermeldingen — petsFollow\n\nUitgever: petsFollow\nContact: support@petsfollow.test\n\nLaatst bijgewerkt: juli 2026';
+      'Juridische vermeldingen — petsFollow\n\nUitgever: LL-IT-SC / petsFollow\nContact: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (AVG-conform).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/mentions\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get language => 'Taal';

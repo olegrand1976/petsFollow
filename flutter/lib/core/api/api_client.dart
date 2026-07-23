@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
@@ -14,10 +15,21 @@ import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
-  ApiClient._();
+  ApiClient._() {
+    if (kReleaseMode && !_apiBase.startsWith('https://')) {
+      throw StateError(
+        'API_BASE must be an https:// URL in release builds (got: "$_apiBase"). '
+        'Pass --dart-define=API_BASE=https://…',
+      );
+    }
+  }
   static final instance = ApiClient._();
 
   static const _tokenKey = 'pf_token';
+  static const _apiBase = String.fromEnvironment(
+    'API_BASE',
+    defaultValue: 'http://10.0.2.2:8291',
+  );
 
   String? token;
 
@@ -27,7 +39,7 @@ class ApiClient {
   bool _handlingUnauthorized = false;
 
   final dio = Dio(BaseOptions(
-    baseUrl: const String.fromEnvironment('API_BASE', defaultValue: 'http://10.0.2.2:8291'),
+    baseUrl: _apiBase,
     headers: {'Content-Type': 'application/json'},
   ));
 

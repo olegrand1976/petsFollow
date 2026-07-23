@@ -1293,17 +1293,17 @@
     "terms": {
       "title": "Condiciones de uso",
       "link": "Condiciones",
-      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite medir la frecuencia cardíaca, consultar el historial y comunicarse con la clínica."
+      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite medir la frecuencia cardíaca, consultar el historial y comunicarse con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Política de privacidad",
       "link": "Privacidad",
-      "body": "petsFollow trata datos personales (nombre, correo, lecturas, mensajes) para prestar el seguimiento cardíaco. Los datos se conservan durante la vida de la cuenta. Contacte con support{'@'}petsfollow.test para solicitudes RGPD."
+      "body": "petsFollow trata datos personales para el seguimiento cardíaco animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, facturación. Socios: Google (Sign-In, FCM), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta o 3 años de inactividad. Derechos RGPD: ajustes de la app (Perfil → Eliminar cuenta) o support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Aviso legal",
       "link": "Aviso legal",
-      "body": "Editor: petsFollow. Contacto: support{'@'}petsfollow.test. Alojamiento: infraestructura cloud conforme al RGPD."
+      "body": "Editor: LL-IT-SC / petsFollow. Contacto: support{'@'}ll-it-sc.be. Alojamiento: Google Cloud Platform (conforme al RGPD)."
     },
     "navAria": "Legal"
   },

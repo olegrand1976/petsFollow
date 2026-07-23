@@ -1293,17 +1293,17 @@
     "terms": {
       "title": "Gebruiksvoorwaarden",
       "link": "Voorwaarden",
-      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars."
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens (naam, e-mail, metingen, berichten) voor cardiologische monitoring. Gegevens worden bewaard zolang het account actief is. Neem contact op via support{'@'}petsfollow.test voor AVG-verzoeken."
+      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, facturatie. Partners: Google (Sign-In, FCM), Stripe, Google Cloud Platform. Bewaring: levensduur van het account of 3 jaar inactiviteit. AVG-rechten: app-instellingen (Profiel → Account verwijderen) of support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
       "link": "Juridische vermeldingen",
-      "body": "Uitgever: petsFollow. Contact: support{'@'}petsfollow.test."
+      "body": "Uitgever: LL-IT-SC / petsFollow. Contact: support{'@'}ll-it-sc.be. Hosting: Google Cloud Platform (AVG-conform)."
     },
     "navAria": "Juridisch"
   },

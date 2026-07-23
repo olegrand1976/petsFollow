@@ -1293,17 +1293,17 @@
     "terms": {
       "title": "Terms of use",
       "link": "Terms",
-      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables heart rate measurement, history review and communication with the practice."
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables heart rate measurement, history review and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data (name, email, readings, messages) to provide cardiac monitoring. Data is retained for the lifetime of the account. Contact support{'@'}petsfollow.test for GDPR requests."
+      "body": "petsFollow processes personal data to provide animal cardiac monitoring: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, billing. Partners: Google (Sign-In, FCM), Stripe, Google Cloud Platform hosting. Retention: account lifetime or 3 years of inactivity. GDPR rights: mobile app settings (Profile → Delete account), or support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Legal notice",
       "link": "Legal notice",
-      "body": "Publisher: petsFollow. Contact: support{'@'}petsfollow.test. Hosting: GDPR-compliant cloud infrastructure."
+      "body": "Publisher: LL-IT-SC / petsFollow. Contact: support{'@'}ll-it-sc.be. Hosting: Google Cloud Platform (GDPR-compliant)."
     },
     "navAria": "Legal"
   },

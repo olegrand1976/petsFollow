@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
@@ -18,8 +19,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final email = TextEditingController(text: 'client.demo@petsfollow.test');
-  final password = TextEditingController(text: 'ClientDemo123!');
+  // Prefill demo credentials only in debug — never ship them in Play release builds.
+  final email = TextEditingController(
+    text: kDebugMode ? 'client.demo@petsfollow.test' : '',
+  );
+  final password = TextEditingController(
+    text: kDebugMode ? 'ClientDemo123!' : '',
+  );
   String? error;
   bool _busy = false;
 

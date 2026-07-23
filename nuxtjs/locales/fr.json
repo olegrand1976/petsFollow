@@ -1671,17 +1671,17 @@
     "terms": {
       "title": "Conditions générales d'utilisation",
       "link": "CGU",
-      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires. L'application permet de mesurer la fréquence cardiaque, consulter l'historique et communiquer avec le cabinet. L'utilisateur s'engage à utiliser le service conformément à sa destination."
+      "body": "Les présentes conditions régissent l'utilisation de petsFollow Pro par les vétérinaires et de l'application mobile par les propriétaires. L'application permet de mesurer la fréquence cardiaque, consulter l'historique et communiquer avec le cabinet. Les paiements d'abonnement et d'addons sont traités par Stripe. L'utilisateur s'engage à utiliser le service conformément à sa destination. Contact : support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Politique de confidentialité",
       "link": "Confidentialité",
-      "body": "petsFollow traite les données personnelles (nom, email, relevés, messages) pour fournir le service de suivi cardiaque. Les données sont conservées pendant la durée d'utilisation du compte. Vous pouvez exercer vos droits RGPD en contactant support{'@'}petsfollow.test."
+      "body": "petsFollow traite des données personnelles pour fournir le suivi cardiaque animal : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias avec le cabinet, jetons de notification (Firebase Cloud Messaging), données de paiement traitées par Stripe. Finalités : compte, suivi, messagerie, notifications, facturation. Partenaires : Google (Sign-In, FCM), Stripe, hébergement Google Cloud Platform. Conservation : durée du compte ou 3 ans d'inactivité. Droits RGPD (accès, rectification, suppression) : paramètres de l'app mobile (Profil → Supprimer le compte), ou support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Mentions légales",
       "link": "Mentions légales",
-      "body": "Éditeur : petsFollow. Contact : support{'@'}petsfollow.test. Hébergement : infrastructure cloud conforme RGPD."
+      "body": "Éditeur : LL-IT-SC / petsFollow. Contact : support{'@'}ll-it-sc.be. Hébergement : Google Cloud Platform (conformité RGPD). Directeur de publication : petsFollow."
     },
     "navAria": "Mentions légales"
   },

@@ -50,3 +50,25 @@ make firebase-android-dist
 
 Console : https://console.firebase.google.com/project/premedica-prod-2025/appdistribution  
 App Android Tester pour installer les builds invités.
+
+## Google Play (Android App Bundle)
+
+Prérequis :
+
+1. Générer un upload keystore (une seule fois) :
+   ```bash
+   keytool -genkey -v -keystore flutter/android/upload-keystore.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+2. Copier `flutter/android/key.properties.example` → `flutter/android/key.properties` et renseigner mots de passe / alias (`storeFile=upload-keystore.jks` par défaut, relatif à `flutter/android/`).
+3. Enregistrer les SHA-1/256 (upload + Play App Signing) dans Firebase / Google Cloud OAuth Android.
+
+Build AAB :
+
+```bash
+make play-android-bundle
+# → flutter/build/app/outputs/bundle/release/app-release.aab
+```
+
+Privacy policy (Play Console) : https://petsfollow.ll-it-sc.be/legal/privacy  
+Checklist complète : [`documentation/26-PLAY-STORE.md`](../documentation/26-PLAY-STORE.md)
