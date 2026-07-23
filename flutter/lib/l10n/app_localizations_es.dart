@@ -701,6 +701,57 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get careReferenceModeDone => 'Ya realizado';
+
+  @override
+  String get careReferenceModeFirst => 'Primera vez';
+
+  @override
+  String get careLastDateLabel => 'Fecha de referencia';
+
+  @override
+  String get careLastDateDone => 'Fecha del último cuidado';
+
+  @override
+  String get careLastDateFirst => 'Fecha de inicio del ciclo';
+
+  @override
+  String get careRecurrenceLabel => 'Recurrencia';
+
+  @override
+  String get careRecurrenceNone => 'Ninguna (vencimiento único)';
+
+  @override
+  String careRecurrenceDays(int days) {
+    return 'Cada $days días';
+  }
+
+  @override
+  String get careDueDateLabel => 'Vencimiento';
+
+  @override
+  String get careDueDateComputed => 'Vencimiento calculado';
+
+  @override
+  String get careTooltipDoneWithRecurrence =>
+      'Ya realizado: el vencimiento = fecha del último cuidado + recurrencia.';
+
+  @override
+  String get careTooltipFirstWithRecurrence =>
+      'Primera planificación: indique la fecha de inicio del ciclo. Vencimiento = esa fecha + recurrencia.';
+
+  @override
+  String get careTooltipNoRecurrence =>
+      'Sin recurrencia: la fecha introducida es el único vencimiento.';
+
+  @override
+  String get careTooltipDueExplained =>
+      'Vencimiento = fecha de referencia + recurrencia (si está definida).';
+
+  @override
+  String get carePickDate => 'Elegir una fecha';
+
+  @override
   String discoveryDayBadge(int day) {
     return 'D$day';
   }

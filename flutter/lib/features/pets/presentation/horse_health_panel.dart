@@ -191,9 +191,14 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
               ...horseReminders.map(
                 (r) => _HorseCareCard(
                   label: _careTypeLabel(l10n, r),
-                  dueLabel: r.isOverdue
-                      ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
-                      : dateFmt.format(r.dueAt),
+                  dueLabel: () {
+                    final due = r.isOverdue
+                        ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
+                        : dateFmt.format(r.dueAt);
+                    return r.hasRecurrence
+                        ? '$due · ${l10n.careRecurrenceDays(r.recurrenceDays!)}'
+                        : due;
+                  }(),
                   isOverdue: r.isOverdue,
                   highlighted: true,
                 ),
@@ -204,9 +209,14 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
             ...otherReminders.map(
               (r) => _HorseCareCard(
                 label: _careTypeLabel(l10n, r),
-                dueLabel: r.isOverdue
-                    ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
-                    : dateFmt.format(r.dueAt),
+                dueLabel: () {
+                  final due = r.isOverdue
+                      ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
+                      : dateFmt.format(r.dueAt);
+                  return r.hasRecurrence
+                      ? '$due · ${l10n.careRecurrenceDays(r.recurrenceDays!)}'
+                      : due;
+                }(),
                 isOverdue: r.isOverdue,
                 highlighted: false,
               ),

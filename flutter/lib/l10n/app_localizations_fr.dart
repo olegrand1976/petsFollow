@@ -702,6 +702,57 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get careReferenceModeDone => 'Déjà effectué';
+
+  @override
+  String get careReferenceModeFirst => 'Première fois';
+
+  @override
+  String get careLastDateLabel => 'Dernière date';
+
+  @override
+  String get careLastDateDone => 'Date du dernier soin';
+
+  @override
+  String get careLastDateFirst => 'Date de départ du cycle';
+
+  @override
+  String get careRecurrenceLabel => 'Récurrence';
+
+  @override
+  String get careRecurrenceNone => 'Aucune (échéance unique)';
+
+  @override
+  String careRecurrenceDays(int days) {
+    return 'Tous les $days jours';
+  }
+
+  @override
+  String get careDueDateLabel => 'Échéance';
+
+  @override
+  String get careDueDateComputed => 'Échéance calculée';
+
+  @override
+  String get careTooltipDoneWithRecurrence =>
+      'Soin déjà fait : l’échéance = date du dernier soin + récurrence.';
+
+  @override
+  String get careTooltipFirstWithRecurrence =>
+      'Première planification : indiquez la date de départ du cycle. L’échéance = cette date + récurrence.';
+
+  @override
+  String get careTooltipNoRecurrence =>
+      'Sans récurrence : la date saisie est l’échéance unique.';
+
+  @override
+  String get careTooltipDueExplained =>
+      'Échéance = dernière date + récurrence (si définie).';
+
+  @override
+  String get carePickDate => 'Choisir une date';
+
+  @override
   String discoveryDayBadge(int day) {
     return 'J$day';
   }

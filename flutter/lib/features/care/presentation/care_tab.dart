@@ -153,10 +153,20 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   Future<void> _showCreateSheet() async {
     if (pets.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat.yMMMd(locale);
     var selectedPetId = pets.first.id;
     var selectedType = 'vaccination';
-    var dueDays = 30;
+    var alreadyDone = false;
+    var referenceDate = DateTime.now();
+    // 0 = no recurrence (due = reference date); otherwise due = reference + days.
+    var recurrenceDays = 30;
     final titleCtrl = TextEditingController();
+
+    String modeTooltip() {
+      if (recurrenceDays <= 0) return l10n.careTooltipNoRecurrence;
+      return alreadyDone ? l10n.careTooltipDoneWithRecurrence : l10n.careTooltipFirstWithRecurrence;
+    }
 
     final created = await showModalBottomSheet<bool>(
       context: context,
@@ -174,8 +184,6 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
               MapEntry('deworming', l10n.careTypeDeworming),
               MapEntry('vet_check', l10n.careTypeVetCheck),
               MapEntry('dental', l10n.careTypeDental),
-              // If entitlements unknown (API fail), keep Care+/Horse types visible;
-              // create path lets the API enforce access.
               if (!entitlementsKnown || entitlements.hasCarePlus) ...[
                 MapEntry('medication', l10n.careTypeMedication),
                 MapEntry('custom', l10n.careTypeCustom),
@@ -188,6 +196,12 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
             final typeValue = types.any((e) => e.key == selectedType)
                 ? selectedType
                 : types.first.key;
+            final dueAt = CareReminder.computeDueAt(
+              referenceDate,
+              recurrenceDays > 0 ? recurrenceDays : null,
+            );
+            final lastDateLabel =
+                alreadyDone ? l10n.careLastDateDone : l10n.careLastDateFirst;
             return Padding(
               padding: EdgeInsets.only(
                 left: 16,
@@ -235,16 +249,86 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                       controller: titleCtrl,
                       decoration: InputDecoration(hintText: l10n.careTypeCustom),
                     ),
+                    const SizedBox(height: 16),
+                    SegmentedButton<bool>(
+                      segments: [
+                        ButtonSegment(
+                          value: true,
+                          label: Text(l10n.careReferenceModeDone),
+                          icon: const Icon(Icons.check_circle_outline, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: false,
+                          label: Text(l10n.careReferenceModeFirst),
+                          icon: const Icon(Icons.flag_outlined, size: 18),
+                        ),
+                      ],
+                      selected: {alreadyDone},
+                      onSelectionChanged: (s) => setModal(() => alreadyDone = s.first),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(modeTooltip(), style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        )),
                     const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Row(
+                        children: [
+                          Expanded(child: Text(lastDateLabel)),
+                          Tooltip(
+                            message: modeTooltip(),
+                            child: Icon(Icons.info_outline, size: 18, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(dateFmt.format(referenceDate)),
+                      trailing: TextButton(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: ctx,
+                            initialDate: referenceDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                            helpText: l10n.carePickDate,
+                          );
+                          if (picked != null) setModal(() => referenceDate = picked);
+                        },
+                        child: Text(l10n.carePickDate),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     DropdownButtonFormField<int>(
-                      value: dueDays,
-                      decoration: InputDecoration(labelText: l10n.careDueInDays(dueDays)),
-                      items: const [7, 14, 30, 90]
-                          .map((d) => DropdownMenuItem(value: d, child: Text(l10n.careDueInDays(d))))
-                          .toList(),
+                      value: recurrenceDays,
+                      decoration: InputDecoration(
+                        labelText: l10n.careRecurrenceLabel,
+                        suffixIcon: Tooltip(
+                          message: l10n.careTooltipDueExplained,
+                          child: const Icon(Icons.info_outline),
+                        ),
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 0, child: Text(l10n.careRecurrenceNone)),
+                        for (final d in const [7, 14, 30, 90, 180, 365])
+                          DropdownMenuItem(value: d, child: Text(l10n.careRecurrenceDays(d))),
+                      ],
                       onChanged: (v) {
-                        if (v != null) setModal(() => dueDays = v);
+                        if (v != null) setModal(() => recurrenceDays = v);
                       },
+                    ),
+                    const SizedBox(height: 12),
+                    InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: l10n.careDueDateComputed,
+                        suffixIcon: Tooltip(
+                          message: modeTooltip(),
+                          child: const Icon(Icons.info_outline),
+                        ),
+                      ),
+                      child: Text(
+                        dateFmt.format(dueAt),
+                        style: Theme.of(ctx).textTheme.titleMedium,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
@@ -276,7 +360,6 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
 
     final needsCarePlus = selectedType == 'custom' || selectedType == 'medication';
     final needsHorse = selectedType == 'farrier' || selectedType == 'fecal_egg';
-    // Only gate locally when entitlements were loaded successfully (fail-closed on API error).
     if (entitlementsKnown && needsCarePlus && !entitlements.hasCarePlus) {
       await _offerAddonCheckout(context, 'care_plus', l10n.carePlusRequired);
       return;
@@ -286,12 +369,18 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       return;
     }
 
+    final dueAt = CareReminder.computeDueAt(
+      referenceDate,
+      recurrenceDays > 0 ? recurrenceDays : null,
+    );
+
     try {
       await ApiClient.instance.createCareReminder(
         selectedPetId,
         title: title.isEmpty ? null : title,
         type: selectedType,
-        dueDays: dueDays,
+        dueAt: dueAt.toUtc().toIso8601String(),
+        recurrenceDays: recurrenceDays > 0 ? recurrenceDays : null,
       );
       await load();
     } catch (e) {
@@ -407,14 +496,19 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                               )
                             else
                               ...reminders.map(
-                                (r) => Card(
+                                (r) {
+                                  final dueLabel = r.isOverdue
+                                      ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
+                                      : dateFmt.format(r.dueAt);
+                                  final subtitle = r.hasRecurrence
+                                      ? '$dueLabel · ${l10n.careRecurrenceDays(r.recurrenceDays!)}'
+                                      : dueLabel;
+                                  return Card(
                                   margin: const EdgeInsets.only(bottom: 8),
                                   child: ListTile(
                                     title: Text(_careTitle(l10n, r)),
                                     subtitle: Text(
-                                      r.isOverdue
-                                          ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
-                                          : dateFmt.format(r.dueAt),
+                                      subtitle,
                                       style: TextStyle(
                                         color: r.isOverdue ? AppColors.alert : AppColors.textMuted,
                                       ),
@@ -435,7 +529,8 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                                       ],
                                     ),
                                   ),
-                                ),
+                                );
+                                },
                               ),
                             const SizedBox(height: 8),
                           ],

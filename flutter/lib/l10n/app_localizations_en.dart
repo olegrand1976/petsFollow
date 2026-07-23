@@ -692,6 +692,57 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get careReferenceModeDone => 'Already done';
+
+  @override
+  String get careReferenceModeFirst => 'First time';
+
+  @override
+  String get careLastDateLabel => 'Reference date';
+
+  @override
+  String get careLastDateDone => 'Date of last care';
+
+  @override
+  String get careLastDateFirst => 'Cycle start date';
+
+  @override
+  String get careRecurrenceLabel => 'Recurrence';
+
+  @override
+  String get careRecurrenceNone => 'None (one-off due date)';
+
+  @override
+  String careRecurrenceDays(int days) {
+    return 'Every $days days';
+  }
+
+  @override
+  String get careDueDateLabel => 'Due date';
+
+  @override
+  String get careDueDateComputed => 'Computed due date';
+
+  @override
+  String get careTooltipDoneWithRecurrence =>
+      'Already done: due date = last care date + recurrence.';
+
+  @override
+  String get careTooltipFirstWithRecurrence =>
+      'First schedule: enter the cycle start date. Due date = that date + recurrence.';
+
+  @override
+  String get careTooltipNoRecurrence =>
+      'No recurrence: the date you enter is the single due date.';
+
+  @override
+  String get careTooltipDueExplained =>
+      'Due date = reference date + recurrence (when set).';
+
+  @override
+  String get carePickDate => 'Pick a date';
+
+  @override
   String discoveryDayBadge(int day) {
     return 'D$day';
   }

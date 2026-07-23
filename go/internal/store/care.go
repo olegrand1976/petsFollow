@@ -190,7 +190,10 @@ func (s *Store) MarkCareReminderDone(ctx context.Context, id, ownerUserID string
 	if errors.Is(err, pgx.ErrNoRows) {
 		return CareReminder{}, ErrNotFound
 	}
-	return r, err
+	if err != nil {
+		return CareReminder{}, err
+	}
+	return s.rollForwardCareReminder(ctx, r)
 }
 
 func (s *Store) MarkCareReminderDoneByPractice(ctx context.Context, id, practiceID string) (CareReminder, error) {
@@ -205,7 +208,33 @@ func (s *Store) MarkCareReminderDoneByPractice(ctx context.Context, id, practice
 	if errors.Is(err, pgx.ErrNoRows) {
 		return CareReminder{}, ErrNotFound
 	}
-	return r, err
+	if err != nil {
+		return CareReminder{}, err
+	}
+	return s.rollForwardCareReminder(ctx, r)
+}
+
+// rollForwardCareReminder creates the next pending occurrence when recurrence is set.
+// Returns the new pending reminder (preferred for clients) or the completed one.
+func (s *Store) rollForwardCareReminder(ctx context.Context, done CareReminder) (CareReminder, error) {
+	if done.RecurrenceDays == nil || *done.RecurrenceDays <= 0 {
+		return done, nil
+	}
+	nextDue := time.Now().AddDate(0, 0, *done.RecurrenceDays)
+	next, err := s.CreateCareReminderFull(
+		ctx,
+		done.PetID,
+		done.PracticeID,
+		done.Type,
+		done.Title,
+		nextDue,
+		done.Notes,
+		done.RecurrenceDays,
+	)
+	if err != nil {
+		return done, err
+	}
+	return next, nil
 }
 
 func (s *Store) PostponeCareReminder(ctx context.Context, id, ownerUserID string, days int) (CareReminder, error) {

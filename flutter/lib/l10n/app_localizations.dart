@@ -1350,6 +1350,96 @@ abstract class AppLocalizations {
   /// **'Échéance dans {days} jours'**
   String careDueInDays(int days);
 
+  /// No description provided for @careReferenceModeDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà effectué'**
+  String get careReferenceModeDone;
+
+  /// No description provided for @careReferenceModeFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Première fois'**
+  String get careReferenceModeFirst;
+
+  /// No description provided for @careLastDateLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière date'**
+  String get careLastDateLabel;
+
+  /// No description provided for @careLastDateDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date du dernier soin'**
+  String get careLastDateDone;
+
+  /// No description provided for @careLastDateFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ du cycle'**
+  String get careLastDateFirst;
+
+  /// No description provided for @careRecurrenceLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récurrence'**
+  String get careRecurrenceLabel;
+
+  /// No description provided for @careRecurrenceNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune (échéance unique)'**
+  String get careRecurrenceNone;
+
+  /// No description provided for @careRecurrenceDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les {days} jours'**
+  String careRecurrenceDays(int days);
+
+  /// No description provided for @careDueDateLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échéance'**
+  String get careDueDateLabel;
+
+  /// No description provided for @careDueDateComputed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échéance calculée'**
+  String get careDueDateComputed;
+
+  /// No description provided for @careTooltipDoneWithRecurrence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soin déjà fait : l’échéance = date du dernier soin + récurrence.'**
+  String get careTooltipDoneWithRecurrence;
+
+  /// No description provided for @careTooltipFirstWithRecurrence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Première planification : indiquez la date de départ du cycle. L’échéance = cette date + récurrence.'**
+  String get careTooltipFirstWithRecurrence;
+
+  /// No description provided for @careTooltipNoRecurrence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans récurrence : la date saisie est l’échéance unique.'**
+  String get careTooltipNoRecurrence;
+
+  /// No description provided for @careTooltipDueExplained.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échéance = dernière date + récurrence (si définie).'**
+  String get careTooltipDueExplained;
+
+  /// No description provided for @carePickDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une date'**
+  String get carePickDate;
+
   /// No description provided for @discoveryDayBadge.
   ///
   /// In fr, this message translates to:

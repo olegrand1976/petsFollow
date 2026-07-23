@@ -696,6 +696,57 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get careReferenceModeDone => 'Al uitgevoerd';
+
+  @override
+  String get careReferenceModeFirst => 'Eerste keer';
+
+  @override
+  String get careLastDateLabel => 'Referentiedatum';
+
+  @override
+  String get careLastDateDone => 'Datum van laatste zorg';
+
+  @override
+  String get careLastDateFirst => 'Startdatum van de cyclus';
+
+  @override
+  String get careRecurrenceLabel => 'Herhaling';
+
+  @override
+  String get careRecurrenceNone => 'Geen (eenmalige deadline)';
+
+  @override
+  String careRecurrenceDays(int days) {
+    return 'Elke $days dagen';
+  }
+
+  @override
+  String get careDueDateLabel => 'Deadline';
+
+  @override
+  String get careDueDateComputed => 'Berekende deadline';
+
+  @override
+  String get careTooltipDoneWithRecurrence =>
+      'Al uitgevoerd: deadline = datum van laatste zorg + herhaling.';
+
+  @override
+  String get careTooltipFirstWithRecurrence =>
+      'Eerste planning: geef de startdatum van de cyclus. Deadline = die datum + herhaling.';
+
+  @override
+  String get careTooltipNoRecurrence =>
+      'Zonder herhaling: de ingevoerde datum is de enige deadline.';
+
+  @override
+  String get careTooltipDueExplained =>
+      'Deadline = referentiedatum + herhaling (indien ingesteld).';
+
+  @override
+  String get carePickDate => 'Kies een datum';
+
+  @override
   String discoveryDayBadge(int day) {
     return 'D$day';
   }
