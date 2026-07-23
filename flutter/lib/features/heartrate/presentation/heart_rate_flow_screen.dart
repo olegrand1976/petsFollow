@@ -4,6 +4,8 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 enum HeartRatePhase { ready, running, review }
@@ -230,10 +232,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     final durations = _practiceDurations;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.heartRate)),
-      body: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      body: Padding(
+          padding: scrollPaddingWithSystemBottom(context, all: 24),
           child: switch (phase) {
             HeartRatePhase.ready => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +293,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                   Text(l10n.beatsLabel(taps)),
                   if (result?['isAlert'] == true)
                     Text(l10n.thresholdAlert,
-                        style: const TextStyle(color: Colors.orangeAccent)),
+                        style: const TextStyle(color: AppColors.alert)),
                   const SizedBox(height: 24),
                   FilledButton(
                     onPressed: _sending ? null : validate,
@@ -303,7 +303,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.bg,
                             ),
                           )
                         : Text(l10n.validateAndSend),
@@ -315,7 +315,6 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                 ],
               ),
           },
-        ),
       ),
     );
   }

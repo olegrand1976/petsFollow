@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -99,8 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: scrollPaddingWithSystemBottom(context, all: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -124,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 12),
-                  Text(error!, style: const TextStyle(color: Colors.redAccent)),
+                  Text(error!, style: const TextStyle(color: AppColors.alert)),
                 ],
                 const SizedBox(height: 24),
                 FilledButton(

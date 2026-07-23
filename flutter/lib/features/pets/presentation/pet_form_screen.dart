@@ -6,6 +6,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetFormScreen extends StatefulWidget {
@@ -234,10 +235,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+          padding: scrollPaddingWithSystemBottom(context, all: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -391,7 +390,6 @@ class _PetFormScreenState extends State<PetFormScreen> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

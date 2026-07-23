@@ -157,7 +157,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold),
                 ),
                 const SizedBox(height: 12),
-                if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.alert)),
                 if (!_enabled) ...[
                   Text(
                     widget.isReschedule

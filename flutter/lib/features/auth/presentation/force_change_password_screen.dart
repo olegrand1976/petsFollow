@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -58,8 +60,9 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: scrollPaddingWithSystemBottom(context, all: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -93,8 +96,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 12),
-                  Text(error!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  Text(error!, style: const TextStyle(color: AppColors.alert)),
                 ],
                 const SizedBox(height: 24),
                 FilledButton(

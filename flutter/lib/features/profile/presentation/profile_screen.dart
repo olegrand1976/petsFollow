@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -154,10 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .toUpperCase();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myData)),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+      body: ListView(
+          padding: scrollPaddingWithSystemBottom(context, all: 20),
           children: [
             Center(
               child: Column(
@@ -213,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (error != null) ...[
               const SizedBox(height: 12),
               Text(l10n.errorGeneric(error!),
-                  style: const TextStyle(color: Colors.redAccent)),
+                  style: const TextStyle(color: AppColors.alert)),
             ],
             const SizedBox(height: 24),
             FilledButton(
@@ -223,11 +223,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: TextButton(
                 onPressed: _deleteAccount,
                 child: Text(l10n.deleteAccount,
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: const TextStyle(color: AppColors.alert)),
               ),
             ),
           ],
-        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class ReminderSettingsScreen extends StatefulWidget {
@@ -59,31 +60,25 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
     }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.reminders)),
-      body: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.remindersHint, style: const TextStyle(height: 1.4)),
-              const SizedBox(height: 20),
-              SwitchListTile(
-                title: Text(l10n.remindersEnabled),
-                value: enabled,
-                onChanged: (v) => setState(() => enabled = v),
-              ),
-              ListTile(
-                title: Text(l10n.remindersTime),
-                subtitle: Text(time.format(context)),
-                trailing: const Icon(Icons.schedule),
-                onTap: enabled ? _pickTime : null,
-              ),
-              const SizedBox(height: 24),
-              FilledButton(onPressed: _save, child: Text(l10n.save)),
-            ],
+      body: ListView(
+        padding: scrollPaddingWithSystemBottom(context, all: 20),
+        children: [
+          Text(l10n.remindersHint, style: const TextStyle(height: 1.4)),
+          const SizedBox(height: 20),
+          SwitchListTile(
+            title: Text(l10n.remindersEnabled),
+            value: enabled,
+            onChanged: (v) => setState(() => enabled = v),
           ),
-        ),
+          ListTile(
+            title: Text(l10n.remindersTime),
+            subtitle: Text(time.format(context)),
+            trailing: const Icon(Icons.schedule),
+            onTap: enabled ? _pickTime : null,
+          ),
+          const SizedBox(height: 24),
+          FilledButton(onPressed: _save, child: Text(l10n.save)),
+        ],
       ),
     );
   }

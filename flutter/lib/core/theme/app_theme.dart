@@ -13,7 +13,7 @@ abstract final class AppTheme {
   static const loginGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.bg, Color(0xFF1B2838), AppColors.surfaceElevated],
+    colors: [AppColors.bg, AppColors.surface, AppColors.surfaceElevated],
   );
 
   static const double radiusLg = 28;

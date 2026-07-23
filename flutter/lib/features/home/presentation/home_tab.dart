@@ -270,7 +270,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: systemBottomInset(ctx) + 16,
+                bottom: composerBottomPadding(ctx, embedded: false, base: 16),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -451,7 +451,7 @@ class _AddFirstVetCardState extends State<_AddFirstVetCard> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.bg),
                   )
                 : const Icon(Icons.person_add_alt_1),
             label: Text(l10n.homeAddFirstVetCta),

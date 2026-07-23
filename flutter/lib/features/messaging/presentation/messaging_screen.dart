@@ -404,7 +404,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                   8,
                   8,
                   8,
-                  8 + (widget.embedded ? 0 : systemBottomInset(context)),
+                  composerBottomPadding(context, embedded: widget.embedded),
                 ),
                 child: Row(
                   children: [

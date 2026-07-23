@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/features/education/presentation/how_to_measure_screen.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
@@ -116,8 +117,8 @@ class SettingsMenuScreen extends StatelessWidget {
         ),
         const Divider(),
         ListTile(
-          leading: const Icon(Icons.logout, color: Colors.redAccent),
-          title: Text(l10n.logout, style: const TextStyle(color: Colors.redAccent)),
+          leading: const Icon(Icons.logout, color: AppColors.alert),
+          title: Text(l10n.logout, style: const TextStyle(color: AppColors.alert)),
           onTap: () async {
             await ApiClient.instance.logout();
             onLogout();

@@ -193,7 +193,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + systemBottomInset(ctx) + 16,
+                bottom: composerBottomPadding(ctx, embedded: false, base: 16),
               ),
               child: SingleChildScrollView(
                 child: Column(

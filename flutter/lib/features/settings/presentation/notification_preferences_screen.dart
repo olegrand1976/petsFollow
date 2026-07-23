@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class NotificationPreferencesScreen extends StatefulWidget {
@@ -84,10 +85,8 @@ class _NotificationPreferencesScreenState
     }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationPreferences)),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: ListView(
+          padding: scrollPaddingWithSystemBottom(context, all: 16),
           children: [
             Text(l10n.notificationPrefsHint,
                 style: TextStyle(color: AppColors.textMuted, height: 1.4)),
@@ -127,7 +126,6 @@ class _NotificationPreferencesScreenState
                   : Text(l10n.save),
             ),
           ],
-        ),
       ),
     );
   }
