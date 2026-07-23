@@ -1,11 +1,11 @@
-import { apiBase, apiHeaders } from '~/server/utils/api'
+import { proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   if (event.method === 'GET') {
-    return $fetch(`${apiBase()}/api/v1/vet/availability`, { headers: apiHeaders(event) })
+    return proxyApi(event, '/api/v1/vet/availability')
   }
-  const body = await readBody(event)
-  return $fetch(`${apiBase()}/api/v1/vet/availability`, {
-    method: 'PUT', headers: apiHeaders(event), body,
+  return proxyApi(event, '/api/v1/vet/availability', {
+    method: 'PUT',
+    body: await readBody(event),
   })
 })

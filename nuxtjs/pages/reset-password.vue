@@ -10,7 +10,7 @@
         <ProLocaleSelect />
       </div>
       <form
-        v-if="!done"
+        v-if="!done && token"
         class="pro-login-form"
         data-testid="reset-form"
         method="post"
@@ -47,6 +47,15 @@
           <NuxtLink to="/login">{{ $t('auth.reset.backToLogin') }}</NuxtLink>
         </p>
       </form>
+
+      <div v-else-if="!done && !token" class="pro-login-form" data-testid="reset-invalid">
+        <PetsFollowLogo variant="default" />
+        <h1>{{ $t('auth.reset.title') }}</h1>
+        <p class="pro-field-error" role="alert">{{ $t('auth.reset.invalidLink') }}</p>
+        <p class="pro-login-form__footer">
+          <NuxtLink to="/login">{{ $t('auth.reset.backToLogin') }}</NuxtLink>
+        </p>
+      </div>
 
       <div v-else class="pro-login-form" data-testid="reset-done">
         <PetsFollowLogo variant="default" />

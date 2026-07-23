@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/media_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -33,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final me = await ApiClient.instance.getMe();
       fullName.text = me['fullName'] as String? ?? '';
       email.text = me['email'] as String? ?? '';
-      avatarUrl = me['avatarUrl'] as String?;
+      avatarUrl = resolveMediaUrl(me['avatarUrl'] as String?);
     } catch (_) {
       error = 'load';
     } finally {
@@ -53,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final me = await ApiClient.instance.uploadAvatar(file.path);
       if (mounted) {
-        setState(() => avatarUrl = me['avatarUrl'] as String?);
+        setState(() => avatarUrl = resolveMediaUrl(me['avatarUrl'] as String?));
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.photoUpdated)));
@@ -101,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => error = 'password');
     } finally {
       if (mounted) setState(() => saving = false);
@@ -127,9 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (ok != true) return;
     try {
       await ApiClient.instance.deleteAccount();
-      await ApiClient.instance.logout();
       if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
     } catch (_) {
+      if (!mounted) return;
       setState(() => error = 'delete');
     }
   }
@@ -183,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: fullName,
-              decoration: InputDecoration(labelText: l10n.firstName),
+              decoration: InputDecoration(labelText: l10n.fullName),
             ),
             const SizedBox(height: 12),
             TextField(

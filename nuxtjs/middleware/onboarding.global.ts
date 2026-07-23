@@ -5,6 +5,9 @@ const SKIP_PATHS = new Set([
   '/register',
   '/register/sent',
   '/confirm-email',
+  '/forgot-password',
+  '/reset-password',
+  '/change-password',
   '/welcome',
   '/onboarding',
 ])
@@ -15,6 +18,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (
     SKIP_PATHS.has(to.path)
     || to.path.startsWith('/register')
+    || to.path.startsWith('/legal')
     || to.path.startsWith('/admin')
     || to.path.startsWith('/commercial')
     || to.path.startsWith('/commercial-manager')
@@ -23,12 +27,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   try {
-    const res: any = await $fetch('/api/me')
-    const me = res.data ?? res
+    const { fetchUser } = useProUser()
+    const me = await fetchUser()
+    if (!me) {
+      clearAuthTokens()
+      return navigateTo('/login')
+    }
+    if (me.mustChangePassword === true) {
+      // Force-change takes priority over onboarding.
+      return
+    }
     if (me.role === 'vet' && me.profileComplete === false && to.path !== '/onboarding') {
       return navigateTo('/onboarding')
     }
   } catch {
-    /* ignore */
+    clearAuthTokens()
+    return navigateTo('/login')
   }
 })

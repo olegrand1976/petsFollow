@@ -33,6 +33,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginWithGoogle => 'Continue with Google';
 
   @override
+  String get twoFaTitle => '2FA verification';
+
+  @override
+  String get twoFaSubtitle =>
+      'Enter the 6-digit code from your authenticator app.';
+
+  @override
+  String get twoFaCode => 'Authenticator code';
+
+  @override
+  String get twoFaSubmit => 'Verify';
+
+  @override
+  String get twoFaBack => 'Back to sign in';
+
+  @override
+  String get twoFaInvalid => 'Invalid or expired 2FA code';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get forgotPasswordTitle => 'Forgot password';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Enter your account email. If an account exists, a reset link will be sent.';
+
+  @override
+  String get forgotPasswordSubmit => 'Send link';
+
+  @override
+  String get forgotPasswordBack => 'Back to sign in';
+
+  @override
+  String get forgotPasswordFailed => 'Could not send email';
+
+  @override
+  String get forgotPasswordSentTitle => 'Email sent';
+
+  @override
+  String forgotPasswordSent(String email) {
+    return 'If an account exists for $email, a link has been sent. Open it in your browser to choose a new password.';
+  }
+
+  @override
+  String get emailRequired => 'Enter a valid email address';
+
+  @override
+  String get resetPasswordTitle => 'New password';
+
+  @override
+  String get resetPasswordSubtitle => 'At least 8 characters.';
+
+  @override
+  String get resetPasswordToken => 'Reset token';
+
+  @override
+  String get resetPasswordSubmit => 'Save';
+
+  @override
+  String get resetPasswordBackToLogin => 'Go to sign in';
+
+  @override
+  String get resetPasswordInvalidLink => 'Invalid reset link';
+
+  @override
+  String get resetPasswordFailed => 'Could not reset password';
+
+  @override
+  String get resetPasswordDoneTitle => 'Password updated';
+
+  @override
+  String get resetPasswordDoneSubtitle => 'You can now sign in.';
+
+  @override
+  String get fullName => 'Full name';
+
+  @override
   String get googleNotConfigured => 'Google sign-in is not configured';
 
   @override

@@ -585,9 +585,12 @@ async function proposeVisit(confirmDirect: boolean) {
 
 async function visitAction(id: string, action: string) {
   visitBusy.value = true
+  pageError.value = ''
   try {
     await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { action } })
     await loadCareAndVisits()
+  } catch (e: any) {
+    pageError.value = mapError(e)
   } finally {
     visitBusy.value = false
   }

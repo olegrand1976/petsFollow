@@ -22,27 +22,30 @@ export function apiHeaders(event: H3Event) {
   return { ...authHeaders(event), ...localeHeaders(event) }
 }
 
+function authCookieOpts() {
+  return {
+    maxAge: AUTH_COOKIE_MAX_AGE,
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+  }
+}
+
 export function setAuthCookies(
   event: H3Event,
   pair: { accessToken: string, refreshToken?: string },
 ) {
-  setCookie(event, 'pf_token', pair.accessToken, {
-    maxAge: AUTH_COOKIE_MAX_AGE,
-    path: '/',
-    sameSite: 'lax',
-  })
+  const opts = authCookieOpts()
+  setCookie(event, 'pf_token', pair.accessToken, opts)
   if (pair.refreshToken) {
-    setCookie(event, 'pf_refresh', pair.refreshToken, {
-      maxAge: AUTH_COOKIE_MAX_AGE,
-      path: '/',
-      sameSite: 'lax',
-    })
+    setCookie(event, 'pf_refresh', pair.refreshToken, opts)
   }
 }
 
 export function clearAuthCookies(event: H3Event) {
-  deleteCookie(event, 'pf_token', { path: '/' })
-  deleteCookie(event, 'pf_refresh', { path: '/' })
+  const opts = { path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production' }
+  deleteCookie(event, 'pf_token', opts)
+  deleteCookie(event, 'pf_refresh', opts)
 }
 
 type TokenPair = { accessToken: string, refreshToken?: string, expiresIn?: number }

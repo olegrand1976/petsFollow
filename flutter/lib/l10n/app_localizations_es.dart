@@ -33,6 +33,85 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginWithGoogle => 'Continuar con Google';
 
   @override
+  String get twoFaTitle => 'Verificación 2FA';
+
+  @override
+  String get twoFaSubtitle =>
+      'Introduzca el código de 6 dígitos de su aplicación de autenticación.';
+
+  @override
+  String get twoFaCode => 'Código autenticador';
+
+  @override
+  String get twoFaSubmit => 'Validar';
+
+  @override
+  String get twoFaBack => 'Volver al inicio de sesión';
+
+  @override
+  String get twoFaInvalid => 'Código 2FA inválido o caducado';
+
+  @override
+  String get forgotPassword => '¿Olvidó su contraseña?';
+
+  @override
+  String get forgotPasswordTitle => 'Contraseña olvidada';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Indique el correo de su cuenta. Si existe una cuenta, se enviará un enlace de restablecimiento.';
+
+  @override
+  String get forgotPasswordSubmit => 'Enviar enlace';
+
+  @override
+  String get forgotPasswordBack => 'Volver al inicio de sesión';
+
+  @override
+  String get forgotPasswordFailed => 'No se pudo enviar';
+
+  @override
+  String get forgotPasswordSentTitle => 'Correo enviado';
+
+  @override
+  String forgotPasswordSent(String email) {
+    return 'Si existe una cuenta para $email, se ha enviado un enlace. Ábralo en el navegador para elegir una nueva contraseña.';
+  }
+
+  @override
+  String get emailRequired => 'Introduzca un correo electrónico válido';
+
+  @override
+  String get resetPasswordTitle => 'Nueva contraseña';
+
+  @override
+  String get resetPasswordSubtitle => 'Mínimo 8 caracteres.';
+
+  @override
+  String get resetPasswordToken => 'Token de restablecimiento';
+
+  @override
+  String get resetPasswordSubmit => 'Guardar';
+
+  @override
+  String get resetPasswordBackToLogin => 'Ir al inicio de sesión';
+
+  @override
+  String get resetPasswordInvalidLink => 'Enlace de restablecimiento inválido';
+
+  @override
+  String get resetPasswordFailed => 'No se pudo restablecer la contraseña';
+
+  @override
+  String get resetPasswordDoneTitle => 'Contraseña actualizada';
+
+  @override
+  String get resetPasswordDoneSubtitle => 'Ya puede iniciar sesión.';
+
+  @override
+  String get fullName => 'Nombre completo';
+
+  @override
   String get googleNotConfigured =>
       'Inicio de sesión con Google no configurado';
 

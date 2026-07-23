@@ -40,6 +40,10 @@ export type ProNavIcon =
   | 'calendar'
   | 'recommend'
   | 'description'
+  | 'phone_in_talk'
+  | 'record_voice_over'
+  | 'event'
+  | 'campaign'
 
 export type ProNavItem = {
   to: string
@@ -66,6 +70,10 @@ const icons: Record<ProNavIcon, string> = {
   calendar: 'calendar_month',
   recommend: 'handshake',
   description: 'description',
+  phone_in_talk: 'phone_in_talk',
+  record_voice_over: 'record_voice_over',
+  event: 'event',
+  campaign: 'campaign',
 }
 
 function iconName(name: ProNavIcon) {

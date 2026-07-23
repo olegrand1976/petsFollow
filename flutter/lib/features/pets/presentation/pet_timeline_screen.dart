@@ -63,7 +63,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
               .where((s) => s['bpm'] != null)
               .map((s) => (
                     date: DateTime.parse(s['startedAt'] as String),
-                    bpm: s['bpm'] as int,
+                    bpm: (s['bpm'] as num).toInt(),
                     isAlert: s['isAlert'] as bool? ?? false,
                   ))
               .toList()

@@ -1,12 +1,7 @@
-import { parseJwtRole } from '~/composables/useAuth'
-
-export default defineNuxtRouteMiddleware(() => {
-  const token = useCookie('pf_token')
-  const role = parseJwtRole(token.value)
+export default defineNuxtRouteMiddleware(async () => {
+  const role = await resolveProRole()
   if (role !== 'commercial_manager') {
-    if (role === 'admin') return navigateTo('/admin')
-    if (role === 'commercial') return navigateTo('/commercial')
-    if (role === 'vet') return navigateTo('/dashboard')
+    if (isProRole(role)) return navigateTo(homePathForRole(role))
     return navigateTo('/login')
   }
 })

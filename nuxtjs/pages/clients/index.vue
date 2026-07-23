@@ -235,9 +235,9 @@ async function loadClients() {
   try {
     const res: any = await $fetch('/api/clients')
     clients.value = asClientList(res)
-  } catch {
+  } catch (e: any) {
     clients.value = []
-    loadError.value = t('clients.emptyDescription')
+    loadError.value = mapError(e) || t('clients.loadError')
   }
 }
 

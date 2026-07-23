@@ -64,6 +64,7 @@
         />
       </div>
       <p v-if="saved" class="text-muted" role="status">{{ $t('settings.availabilitySaved') }}</p>
+      <p v-if="availabilityError" class="pro-field-error" role="alert">{{ availabilityError }}</p>
       <ProButton class="pro-save-btn" :loading="saving" @click="save">
         {{ $t('settings.saveAvailability') }}
       </ProButton>
@@ -140,6 +141,7 @@
         <span>{{ $t('settings.notifications.onVisitRequest') }}</span>
       </label>
       <p v-if="notifSaved" class="text-muted" role="status">{{ $t('settings.notifications.saved') }}</p>
+      <p v-if="notifError" class="pro-field-error" role="alert">{{ notifError }}</p>
       <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
         {{ $t('common.save') }}
       </ProButton>
@@ -283,6 +285,8 @@ const status = ref('available')
 const autoReply = ref('')
 const saving = ref(false)
 const saved = ref(false)
+const availabilityError = ref('')
+const notifError = ref('')
 
 const selectedLocale = ref<AppLocale>('fr')
 const localeSaving = ref(false)
@@ -455,6 +459,7 @@ async function savePassword() {
 async function saveNotifications() {
   notifSaving.value = true
   notifSaved.value = false
+  notifError.value = ''
   try {
     await $fetch('/api/vet/notification-preferences', {
       method: 'PUT',
@@ -465,6 +470,8 @@ async function saveNotifications() {
       },
     })
     notifSaved.value = true
+  } catch (e: any) {
+    notifError.value = mapError(e)
   } finally {
     notifSaving.value = false
   }
@@ -563,12 +570,15 @@ async function saveProfile() {
 async function save() {
   saving.value = true
   saved.value = false
+  availabilityError.value = ''
   try {
     await $fetch('/api/vet/availability', {
       method: 'PUT',
       body: { status: status.value, autoReply: autoReply.value },
     })
     saved.value = true
+  } catch (e: any) {
+    availabilityError.value = mapError(e)
   } finally {
     saving.value = false
   }

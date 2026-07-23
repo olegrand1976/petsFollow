@@ -122,10 +122,11 @@ const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
   await syncFromUser()
-  const me: any = await $fetch('/api/me')
-  const role = me.data?.role || me.role || parseJwtRole(useCookie('pf_token').value)
-  const profileComplete = me.data?.profileComplete ?? me.profileComplete
-  const mustChangePassword = me.data?.mustChangePassword ?? me.mustChangePassword
+  const { fetchUser } = useProUser()
+  const me = await fetchUser(true)
+  const role = me?.role || parseJwtRole(useCookie('pf_token').value)
+  const profileComplete = me?.profileComplete
+  const mustChangePassword = me?.mustChangePassword
   if (mustChangePassword === true) {
     await navigateTo('/change-password')
     return
@@ -213,7 +214,7 @@ async function handleGoogleCredential(idToken: string) {
   }
 }
 
-onMounted(async () => {
+async function mountGoogleButton() {
   if (!googleEnabled.value || !googleBtnRef.value) return
   try {
     await mountGoogleSignInButton(
@@ -223,6 +224,15 @@ onMounted(async () => {
     )
   } catch {
     /* Google indisponible */
+  }
+}
+
+onMounted(() => { void mountGoogleButton() })
+
+watch(step, async (s) => {
+  if (s === 'credentials') {
+    await nextTick()
+    await mountGoogleButton()
   }
 })
 </script>

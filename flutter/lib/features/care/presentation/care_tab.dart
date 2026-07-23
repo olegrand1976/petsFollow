@@ -184,11 +184,11 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
               MapEntry('deworming', l10n.careTypeDeworming),
               MapEntry('vet_check', l10n.careTypeVetCheck),
               MapEntry('dental', l10n.careTypeDental),
-              if (!entitlementsKnown || entitlements.hasCarePlus) ...[
+              if (entitlementsKnown && entitlements.hasCarePlus) ...[
                 MapEntry('medication', l10n.careTypeMedication),
                 MapEntry('custom', l10n.careTypeCustom),
               ],
-              if (selectedIsHorse && (!entitlementsKnown || entitlements.hasHorse)) ...[
+              if (selectedIsHorse && entitlementsKnown && entitlements.hasHorse) ...[
                 MapEntry('farrier', l10n.careTypeFarrier),
                 MapEntry('fecal_egg', l10n.careTypeFecalEgg),
               ],
@@ -360,11 +360,11 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
 
     final needsCarePlus = selectedType == 'custom' || selectedType == 'medication';
     final needsHorse = selectedType == 'farrier' || selectedType == 'fecal_egg';
-    if (entitlementsKnown && needsCarePlus && !entitlements.hasCarePlus) {
+    if (needsCarePlus && (!entitlementsKnown || !entitlements.hasCarePlus)) {
       await _offerAddonCheckout(context, 'care_plus', l10n.carePlusRequired);
       return;
     }
-    if (entitlementsKnown && needsHorse && !entitlements.hasHorse) {
+    if (needsHorse && (!entitlementsKnown || !entitlements.hasHorse)) {
       await _offerAddonCheckout(context, 'horse', l10n.horsePackRequired);
       return;
     }

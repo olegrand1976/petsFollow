@@ -335,6 +335,7 @@
     "sortPets": "Meeste dieren",
     "emptyTitle": "Geen klanten",
     "emptyDescription": "Klanten verschijnen hier zodra ze aan uw praktijk zijn gekoppeld.",
+    "loadError": "Klanten laden mislukt.",
     "columnClient": "Klant",
     "columnEmail": "E-mail",
     "columnPets": "Dieren",
@@ -1592,8 +1593,8 @@
       "triennial": "Triennial (€95 TTC)",
       "quinquennial": "Quinquennial (€145 TTC)",
       "family": "Family (39 € TTC)",
-      "care_plus": "Care+",
-      "horse": "Horse",
+      "care_plus": "Care+ (19 € TTC)",
+      "horse": "Horse (39 € TTC)",
       "kennel": "Kennel (119 € TTC)"
     },
     "bonusTitles": {

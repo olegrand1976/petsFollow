@@ -25,13 +25,13 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     LocaleController.instance.addListener(_onLocaleChanged);
     LocaleController.instance.load();
     NotificationService.instance.init();
-    PaymentDeepLink.instance.start();
+    AppDeepLink.instance.start();
   }
 
   @override
   void dispose() {
     LocaleController.instance.removeListener(_onLocaleChanged);
-    PaymentDeepLink.instance.dispose();
+    AppDeepLink.instance.dispose();
     super.dispose();
   }
 
@@ -72,7 +72,7 @@ class _AuthGateState extends State<AuthGate> {
   void initState() {
     super.initState();
     ApiClient.instance.onSessionInvalidated = _onSessionInvalidated;
-    PaymentDeepLink.instance.onPaymentSuccess = () {
+    AppDeepLink.instance.onPaymentSuccess = () {
       if (mounted) setState(() => _petsRefreshTick++);
     };
     _bootstrap();
@@ -88,6 +88,7 @@ class _AuthGateState extends State<AuthGate> {
 
   void _onSessionInvalidated() {
     if (!mounted) return;
+    PushNavigation.instance.navigatorKey.currentState?.popUntil((r) => r.isFirst);
     setState(() {
       _mustChangePassword = false;
     });

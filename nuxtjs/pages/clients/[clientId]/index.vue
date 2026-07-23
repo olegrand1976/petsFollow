@@ -129,8 +129,12 @@ onMounted(async () => {
   } catch {
     client.value = null
   }
-  const petsRes: any = await $fetch(`/api/clients/${clientId}/pets`)
-  pets.value = petsRes.data ?? petsRes ?? []
+  try {
+    const petsRes: any = await $fetch(`/api/clients/${clientId}/pets`)
+    pets.value = petsRes.data ?? petsRes ?? []
+  } catch {
+    pets.value = []
+  }
 })
 </script>
 

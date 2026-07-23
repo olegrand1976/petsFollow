@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -20,6 +21,7 @@ class NotificationService {
   bool _fcmRegistered = false;
   bool _handlersBound = false;
   int _localPushId = 900000;
+  StreamSubscription<String>? _tokenRefreshSub;
 
   Future<void> init() async {
     await ReminderController.instance.init(
@@ -40,6 +42,8 @@ class NotificationService {
   /// Call on logout so the next account can re-register its FCM token.
   void resetSession() {
     _fcmRegistered = false;
+    unawaited(_tokenRefreshSub?.cancel());
+    _tokenRefreshSub = null;
   }
 
   Future<void> onLogin() async {
@@ -130,11 +134,21 @@ class NotificationService {
     );
   }
 
+  Future<void> _requestNotificationPermission() async {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = ReminderController.instance.plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      await android?.requestNotificationsPermission();
+    }
+  }
+
   Future<void> _registerFcmToken() async {
     if (_fcmRegistered || ApiClient.instance.token == null) return;
     try {
       final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission();
+      await _requestNotificationPermission();
       final token = await messaging.getToken();
       if (token == null) return;
       final platform = switch (defaultTargetPlatform) {
@@ -144,7 +158,8 @@ class NotificationService {
       };
       await ApiClient.instance.putDeviceToken(token, platform);
       _fcmRegistered = true;
-      messaging.onTokenRefresh.listen((newToken) async {
+      await _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = messaging.onTokenRefresh.listen((newToken) async {
         if (ApiClient.instance.token == null) return;
         try {
           await ApiClient.instance.putDeviceToken(newToken, platform);

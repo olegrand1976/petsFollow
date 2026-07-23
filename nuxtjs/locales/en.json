@@ -335,6 +335,7 @@
     "sortPets": "Most pets",
     "emptyTitle": "No clients",
     "emptyDescription": "Clients will appear here once linked to your practice.",
+    "loadError": "Unable to load clients.",
     "columnClient": "Client",
     "columnEmail": "Email",
     "columnPets": "Pets",
@@ -1592,8 +1593,8 @@
       "triennial": "Triennial (€95 TTC)",
       "quinquennial": "Quinquennial (€145 TTC)",
       "family": "Family (€39 TTC)",
-      "care_plus": "Care+",
-      "horse": "Horse",
+      "care_plus": "Care+ (€19 TTC)",
+      "horse": "Horse (€39 TTC)",
       "kennel": "Kennel (€119 TTC)"
     },
     "bonusTitles": {

@@ -33,6 +33,86 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginWithGoogle => 'Continuer avec Google';
 
   @override
+  String get twoFaTitle => 'Vérification 2FA';
+
+  @override
+  String get twoFaSubtitle =>
+      'Saisissez le code à 6 chiffres de votre application d\'authentification.';
+
+  @override
+  String get twoFaCode => 'Code authenticator';
+
+  @override
+  String get twoFaSubmit => 'Valider';
+
+  @override
+  String get twoFaBack => 'Retour à la connexion';
+
+  @override
+  String get twoFaInvalid => 'Code 2FA invalide ou expiré';
+
+  @override
+  String get forgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get forgotPasswordTitle => 'Mot de passe oublié';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Indiquez l\'email de votre compte. Si un compte existe, un lien de réinitialisation sera envoyé.';
+
+  @override
+  String get forgotPasswordSubmit => 'Envoyer le lien';
+
+  @override
+  String get forgotPasswordBack => 'Retour à la connexion';
+
+  @override
+  String get forgotPasswordFailed => 'Envoi impossible';
+
+  @override
+  String get forgotPasswordSentTitle => 'Email envoyé';
+
+  @override
+  String forgotPasswordSent(String email) {
+    return 'Si un compte existe pour $email, un lien a été envoyé. Ouvrez-le dans votre navigateur pour choisir un nouveau mot de passe.';
+  }
+
+  @override
+  String get emailRequired => 'Saisissez une adresse email valide';
+
+  @override
+  String get resetPasswordTitle => 'Nouveau mot de passe';
+
+  @override
+  String get resetPasswordSubtitle => 'Minimum 8 caractères.';
+
+  @override
+  String get resetPasswordToken => 'Jeton de réinitialisation';
+
+  @override
+  String get resetPasswordSubmit => 'Enregistrer';
+
+  @override
+  String get resetPasswordBackToLogin => 'Aller à la connexion';
+
+  @override
+  String get resetPasswordInvalidLink => 'Lien de réinitialisation invalide';
+
+  @override
+  String get resetPasswordFailed => 'Réinitialisation impossible';
+
+  @override
+  String get resetPasswordDoneTitle => 'Mot de passe mis à jour';
+
+  @override
+  String get resetPasswordDoneSubtitle =>
+      'Vous pouvez maintenant vous connecter.';
+
+  @override
+  String get fullName => 'Nom complet';
+
+  @override
   String get googleNotConfigured => 'Connexion Google non configurée';
 
   @override

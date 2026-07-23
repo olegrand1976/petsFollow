@@ -67,9 +67,20 @@ export function extractAccessToken(res: AuthResponse): string | null {
   return res.accessToken ?? null
 }
 
+function authCookieOpts() {
+  return {
+    maxAge: AUTH_COOKIE_MAX_AGE,
+    sameSite: 'lax' as const,
+    // Align with server/utils/api.ts (NODE_ENV === 'production').
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  }
+}
+
 export function persistAuthTokens(pair: AuthTokens) {
-  const access = useCookie('pf_token', { maxAge: AUTH_COOKIE_MAX_AGE, sameSite: 'lax' })
-  const refresh = useCookie('pf_refresh', { maxAge: AUTH_COOKIE_MAX_AGE, sameSite: 'lax' })
+  const opts = authCookieOpts()
+  const access = useCookie('pf_token', opts)
+  const refresh = useCookie('pf_refresh', opts)
   access.value = pair.accessToken
   if (pair.refreshToken) {
     refresh.value = pair.refreshToken
@@ -81,4 +92,6 @@ export function clearAuthTokens() {
   const refresh = useCookie('pf_refresh')
   access.value = null
   refresh.value = null
+  // Avoid stale Pro profile after logout / non-Pro reject / re-login.
+  useState('pro-user').value = null
 }

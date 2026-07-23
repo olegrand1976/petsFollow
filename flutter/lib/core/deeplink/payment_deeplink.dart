@@ -1,20 +1,26 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
+import 'package:petsfollow_mobile/features/auth/presentation/reset_password_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
-/// Handles Stripe return deep links (`petsfollow://payment/success|cancel`).
-class PaymentDeepLink {
-  PaymentDeepLink._();
-  static final instance = PaymentDeepLink._();
+/// App deep links: `petsfollow://payment/…`, `petsfollow://reset-password?token=`.
+///
+/// Password-reset emails point at the Pro web URL (`/reset-password?token=`).
+/// The custom-scheme reset link is kept for manual/testing and future App Links.
+class AppDeepLink {
+  AppDeepLink._();
+  static final instance = AppDeepLink._();
 
   StreamSubscription<Uri>? _sub;
   final _appLinks = AppLinks();
   VoidCallback? onPaymentSuccess;
   VoidCallback? onPaymentCancel;
+
+  String? _lastHandledKey;
+  DateTime? _lastHandledAt;
 
   Future<void> start() async {
     try {
@@ -23,11 +29,11 @@ class PaymentDeepLink {
         _handle(initial);
       }
     } catch (e) {
-      debugPrint('payment deeplink initial: $e');
+      debugPrint('app deeplink initial: $e');
     }
     await _sub?.cancel();
     _sub = _appLinks.uriLinkStream.listen(_handle, onError: (Object e) {
-      debugPrint('payment deeplink stream: $e');
+      debugPrint('app deeplink stream: $e');
     });
   }
 
@@ -38,9 +44,22 @@ class PaymentDeepLink {
 
   void _handle(Uri uri) {
     if (uri.scheme != 'petsfollow') return;
-    final path = uri.host.isNotEmpty
+
+    final key = uri.toString();
+    final now = DateTime.now();
+    if (_lastHandledKey == key &&
+        _lastHandledAt != null &&
+        now.difference(_lastHandledAt!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastHandledKey = key;
+    _lastHandledAt = now;
+
+    var path = uri.host.isNotEmpty
         ? '${uri.host}${uri.path}'
         : uri.path.replaceFirst(RegExp(r'^/+'), '');
+    path = path.replaceFirst(RegExp(r'/+$'), '');
+
     if (path == 'payment/success' || path.endsWith('payment/success')) {
       onPaymentSuccess?.call();
       _snack((l10n) => l10n.paymentSuccessSnack);
@@ -49,7 +68,29 @@ class PaymentDeepLink {
     if (path == 'payment/cancel' || path.endsWith('payment/cancel')) {
       onPaymentCancel?.call();
       _snack((l10n) => l10n.paymentCancelSnack);
+      return;
     }
+    if (path == 'reset-password' || path.endsWith('reset-password')) {
+      final token = uri.queryParameters['token'] ?? '';
+      if (token.isEmpty) return;
+      _openResetPassword(token);
+    }
+  }
+
+  void _openResetPassword(String token, [int attempt = 0]) {
+    final nav = PushNavigation.instance.navigatorKey.currentState;
+    if (nav == null) {
+      if (attempt >= 12) return;
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        _openResetPassword(token, attempt + 1);
+      });
+      return;
+    }
+    nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ResetPasswordScreen(initialToken: token),
+      ),
+    );
   }
 
   void _snack(String Function(AppLocalizations l10n) message) {
@@ -60,3 +101,6 @@ class PaymentDeepLink {
     ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(SnackBar(content: Text(message(l10n))));
   }
 }
+
+/// @Deprecated('Use AppDeepLink') — kept as typedef for any external refs.
+typedef PaymentDeepLink = AppDeepLink;

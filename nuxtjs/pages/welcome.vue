@@ -98,8 +98,10 @@ async function goPrimary() {
       await navigateTo(homePathForRole(data.role, { profileComplete: data.profileComplete }))
       return
     }
-    await navigateTo('/dashboard')
+    clearAuthTokens()
+    await navigateTo('/login')
   } catch {
+    clearAuthTokens()
     await navigateTo('/login')
   }
 }

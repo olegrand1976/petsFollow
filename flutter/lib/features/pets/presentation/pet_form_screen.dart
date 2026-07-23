@@ -137,10 +137,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
           );
+        } else if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.paymentPending)),
+          );
         }
       }
       if (!mounted || petId == null) return;
-      await _waitForPayment(petId);
       if (selectedSpecies == 'horse' && mounted) {
         await _maybeOfferHorsePack(petId);
       }
@@ -162,27 +166,6 @@ class _PetFormScreenState extends State<PetFormScreen> {
       }
     } finally {
       if (mounted) setState(() => loading = false);
-    }
-  }
-
-  Future<void> _waitForPayment(String petId) async {
-    final l10n = AppLocalizations.of(context)!;
-    for (var i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(seconds: 2));
-      final pet = await ApiClient.instance.getPet(petId);
-      if (pet['paymentStatus'] == 'active') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.paymentConfirmed)),
-          );
-        }
-        return;
-      }
-    }
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.paymentPending)),
-      );
     }
   }
 

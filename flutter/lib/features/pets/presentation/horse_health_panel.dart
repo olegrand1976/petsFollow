@@ -106,60 +106,70 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
     final l10n = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController();
     final roleCtrl = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.horseAddContact),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameCtrl, decoration: InputDecoration(labelText: l10n.horseContactName)),
-            TextField(controller: roleCtrl, decoration: InputDecoration(labelText: l10n.horseContactRole)),
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.horseAddContact),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameCtrl, decoration: InputDecoration(labelText: l10n.horseContactName)),
+              TextField(controller: roleCtrl, decoration: InputDecoration(labelText: l10n.horseContactRole)),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.save)),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.save)),
-        ],
-      ),
-    );
-    if (ok != true || nameCtrl.text.trim().isEmpty) return;
-    await ApiClient.instance.createHorseContact(
-      widget.petId,
-      fullName: nameCtrl.text.trim(),
-      role: roleCtrl.text.trim(),
-    );
-    await _load();
+      );
+      if (ok != true || nameCtrl.text.trim().isEmpty) return;
+      await ApiClient.instance.createHorseContact(
+        widget.petId,
+        fullName: nameCtrl.text.trim(),
+        role: roleCtrl.text.trim(),
+      );
+      await _load();
+    } finally {
+      nameCtrl.dispose();
+      roleCtrl.dispose();
+    }
   }
 
   Future<void> _addCompetition() async {
     final l10n = AppLocalizations.of(context)!;
     final titleCtrl = TextEditingController();
     final dateCtrl = TextEditingController(text: DateFormat('yyyy-MM-dd').format(DateTime.now()));
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.horseAddCompetition),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: titleCtrl, decoration: InputDecoration(labelText: l10n.horseCompetitionTitle)),
-            TextField(controller: dateCtrl, decoration: InputDecoration(labelText: l10n.horseCompetitionDate)),
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.horseAddCompetition),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: InputDecoration(labelText: l10n.horseCompetitionTitle)),
+              TextField(controller: dateCtrl, decoration: InputDecoration(labelText: l10n.horseCompetitionDate)),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.save)),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.save)),
-        ],
-      ),
-    );
-    if (ok != true || titleCtrl.text.trim().isEmpty) return;
-    await ApiClient.instance.createHorseCompetition(
-      widget.petId,
-      title: titleCtrl.text.trim(),
-      eventDate: dateCtrl.text.trim(),
-    );
-    await _load();
+      );
+      if (ok != true || titleCtrl.text.trim().isEmpty) return;
+      await ApiClient.instance.createHorseCompetition(
+        widget.petId,
+        title: titleCtrl.text.trim(),
+        eventDate: dateCtrl.text.trim(),
+      );
+      await _load();
+    } finally {
+      titleCtrl.dispose();
+      dateCtrl.dispose();
+    }
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
+import 'package:petsfollow_mobile/features/auth/presentation/forgot_password_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,8 +27,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final password = TextEditingController(
     text: kDebugMode ? 'ClientDemo123!' : '',
   );
+  final totpCode = TextEditingController();
   String? error;
   bool _busy = false;
+  String? _mfaToken;
+
+  bool get _awaiting2FA => _mfaToken != null;
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    totpCode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _finishLogin(Map<String, dynamic> data) async {
+    if (data['requires2FA'] == true &&
+        (data['mfaToken'] as String?)?.isNotEmpty == true) {
+      setState(() {
+        _mfaToken = data['mfaToken'] as String;
+        totpCode.clear();
+        error = null;
+      });
+      return;
+    }
+    await NotificationService.instance.init();
+    widget.onLoggedIn();
+  }
 
   Future<void> submit() async {
     final l10n = AppLocalizations.of(context)!;
@@ -36,14 +63,41 @@ class _LoginScreenState extends State<LoginScreen> {
       _busy = true;
     });
     try {
-      await ApiClient.instance.login(email.text, password.text);
-      await NotificationService.instance.init();
-      widget.onLoggedIn();
+      final data = await ApiClient.instance.login(email.text, password.text);
+      if (!mounted) return;
+      await _finishLogin(data);
     } catch (_) {
       if (mounted) setState(() => error = l10n.loginFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> submit2FA() async {
+    final l10n = AppLocalizations.of(context)!;
+    final token = _mfaToken;
+    if (token == null) return;
+    setState(() {
+      error = null;
+      _busy = true;
+    });
+    try {
+      final data = await ApiClient.instance.verify2FA(token, totpCode.text.trim());
+      if (!mounted) return;
+      await _finishLogin(data);
+    } catch (_) {
+      if (mounted) setState(() => error = l10n.twoFaInvalid);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void reset2FA() {
+    setState(() {
+      _mfaToken = null;
+      totpCode.clear();
+      error = null;
+    });
   }
 
   Future<void> submitGoogle() async {
@@ -62,9 +116,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => _busy = false);
         return;
       }
-      await ApiClient.instance.loginWithGoogle(idToken);
-      await NotificationService.instance.init();
-      widget.onLoggedIn();
+      final data = await ApiClient.instance.loginWithGoogle(idToken);
+      if (!mounted) return;
+      await _finishLogin(data);
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() => error = _googleErrorMessage(l10n, e));
@@ -110,60 +164,123 @@ class _LoginScreenState extends State<LoginScreen> {
           bottom: false,
           child: SingleChildScrollView(
             padding: scrollPaddingWithSystemBottom(context, all: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 48),
-                const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
-                const SizedBox(height: 24),
-                const Center(child: PetsLogo(height: 36)),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.appTagline,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 40),
-                TextField(controller: email, decoration: InputDecoration(labelText: l10n.email)),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: password,
-                  obscureText: true,
-                  decoration: InputDecoration(labelText: l10n.password),
-                ),
-                if (error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(error!, style: const TextStyle(color: AppColors.alert)),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _busy ? null : submit,
-                  child: Text(l10n.login),
-                ),
-                if (GoogleAuth.isConfigured) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(l10n.loginOr, style: Theme.of(context).textTheme.bodySmall),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : submitGoogle,
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
-                    label: Text(l10n.loginWithGoogle),
-                  ),
-                ],
-              ],
-            ),
+            child: _awaiting2FA ? _build2FA(l10n) : _buildCredentials(l10n),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCredentials(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 48),
+        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
+        const SizedBox(height: 24),
+        const Center(child: PetsLogo(height: 36)),
+        const SizedBox(height: 8),
+        Text(
+          l10n.appTagline,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        const SizedBox(height: 40),
+        TextField(controller: email, decoration: InputDecoration(labelText: l10n.email)),
+        const SizedBox(height: 12),
+        TextField(
+          controller: password,
+          obscureText: true,
+          decoration: InputDecoration(labelText: l10n.password),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _busy
+                ? null
+                : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ForgotPasswordScreen(),
+                      ),
+                    );
+                  },
+            child: Text(l10n.forgotPassword),
+          ),
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 4),
+          Text(error!, style: const TextStyle(color: AppColors.alert)),
+        ],
+        const SizedBox(height: 16),
+        FilledButton(
+          onPressed: _busy ? null : submit,
+          child: Text(l10n.login),
+        ),
+        if (GoogleAuth.isConfigured) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Expanded(child: Divider()),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(l10n.loginOr, style: Theme.of(context).textTheme.bodySmall),
+              ),
+              const Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : submitGoogle,
+            icon: const Icon(Icons.g_mobiledata, size: 28),
+            label: Text(l10n.loginWithGoogle),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _build2FA(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 48),
+        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
+        const SizedBox(height: 24),
+        Text(
+          l10n.twoFaTitle,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.twoFaSubtitle,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 32),
+        TextField(
+          controller: totpCode,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          autofillHints: const [AutofillHints.oneTimeCode],
+          decoration: InputDecoration(labelText: l10n.twoFaCode, counterText: ''),
+          onSubmitted: (_) => _busy ? null : submit2FA(),
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 12),
+          Text(error!, style: const TextStyle(color: AppColors.alert)),
+        ],
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: _busy ? null : submit2FA,
+          child: Text(l10n.twoFaSubmit),
+        ),
+        TextButton(
+          onPressed: _busy ? null : reset2FA,
+          child: Text(l10n.twoFaBack),
+        ),
+      ],
     );
   }
 }

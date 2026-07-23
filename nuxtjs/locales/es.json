@@ -335,6 +335,7 @@
     "sortPets": "Más mascotas",
     "emptyTitle": "Sin clientes",
     "emptyDescription": "Los clientes aparecerán aquí cuando estén vinculados a su clínica.",
+    "loadError": "No se pudieron cargar los clientes.",
     "columnClient": "Cliente",
     "columnEmail": "Correo",
     "columnPets": "Mascotas",
@@ -1592,8 +1593,8 @@
       "triennial": "Triennial (95 € TTC)",
       "quinquennial": "Quinquennial (145 € TTC)",
       "family": "Family (39 € TTC)",
-      "care_plus": "Care+",
-      "horse": "Horse",
+      "care_plus": "Care+ (19 € TTC)",
+      "horse": "Horse (39 € TTC)",
       "kennel": "Kennel (119 € TTC)"
     },
     "bonusTitles": {

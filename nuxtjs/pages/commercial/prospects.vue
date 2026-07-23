@@ -5,6 +5,8 @@
       :subtitle="$t('commercial.prospects.subtitle')"
     />
 
+    <p v-if="actionError" class="pro-field-error pro-mb-md" role="alert">{{ actionError }}</p>
+
     <ProCard class="pro-mb-lg" data-testid="commercial-prospect-form">
       <button
         type="button"
@@ -157,6 +159,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
+const { mapError } = useApiError()
 const statuses = ['new', 'contacted', 'qualified', 'converted', 'lost'] as const
 const outcomes = ['scheduled', 'done', 'no_show', 'cancelled'] as const
 const pageSize = 50
@@ -168,6 +171,7 @@ const sourceFilter = ref('directory')
 const statusFilter = ref('')
 const showCreate = ref(false)
 const loading = ref(false)
+const actionError = ref('')
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
 
@@ -235,27 +239,37 @@ watch([sourceFilter, statusFilter], () => {
 watch(q, scheduleReload)
 
 async function createProspect() {
+  actionError.value = ''
   const body: Record<string, unknown> = { ...form }
   delete body.appointmentAt
   if (form.appointmentAt) {
     body.appointmentAt = new Date(form.appointmentAt).toISOString()
     body.appointmentOutcome = 'scheduled'
   }
-  await $fetch('/api/commercial/prospects', { method: 'POST', body })
-  Object.assign(form, { practiceName: '', contactName: '', contactEmail: '', contactPhone: '', city: '', notes: '', appointmentAt: '' })
-  showCreate.value = false
-  offset.value = 0
-  if (sourceFilter.value === 'commercial') {
-    await load()
-  } else {
-    // watch(sourceFilter) will reload once
-    sourceFilter.value = 'commercial'
+  try {
+    await $fetch('/api/commercial/prospects', { method: 'POST', body })
+    Object.assign(form, { practiceName: '', contactName: '', contactEmail: '', contactPhone: '', city: '', notes: '', appointmentAt: '' })
+    showCreate.value = false
+    offset.value = 0
+    if (sourceFilter.value === 'commercial') {
+      await load()
+    } else {
+      // watch(sourceFilter) will reload once
+      sourceFilter.value = 'commercial'
+    }
+  } catch (e: any) {
+    actionError.value = mapError(e)
   }
 }
 
 async function patch(id: string, body: Record<string, unknown>) {
-  await $fetch(`/api/commercial/prospects/${id}`, { method: 'PATCH', body })
-  await load()
+  actionError.value = ''
+  try {
+    await $fetch(`/api/commercial/prospects/${id}`, { method: 'PATCH', body })
+    await load()
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  }
 }
 
 async function updateStatus(id: string, status: string) {
@@ -271,8 +285,13 @@ async function onAppt(id: string, value: string) {
 }
 
 async function remove(id: string) {
-  await $fetch(`/api/commercial/prospects/${id}`, { method: 'DELETE' })
-  await load()
+  actionError.value = ''
+  try {
+    await $fetch(`/api/commercial/prospects/${id}`, { method: 'DELETE' })
+    await load()
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  }
 }
 
 function prevPage() {

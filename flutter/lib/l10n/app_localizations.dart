@@ -150,6 +150,156 @@ abstract class AppLocalizations {
   /// **'Continuer avec Google'**
   String get loginWithGoogle;
 
+  /// No description provided for @twoFaTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification 2FA'**
+  String get twoFaTitle;
+
+  /// No description provided for @twoFaSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code à 6 chiffres de votre application d\'authentification.'**
+  String get twoFaSubtitle;
+
+  /// No description provided for @twoFaCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code authenticator'**
+  String get twoFaCode;
+
+  /// No description provided for @twoFaSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get twoFaSubmit;
+
+  /// No description provided for @twoFaBack.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à la connexion'**
+  String get twoFaBack;
+
+  /// No description provided for @twoFaInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code 2FA invalide ou expiré'**
+  String get twoFaInvalid;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe oublié ?'**
+  String get forgotPassword;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe oublié'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l\'email de votre compte. Si un compte existe, un lien de réinitialisation sera envoyé.'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @forgotPasswordSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le lien'**
+  String get forgotPasswordSubmit;
+
+  /// No description provided for @forgotPasswordBack.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à la connexion'**
+  String get forgotPasswordBack;
+
+  /// No description provided for @forgotPasswordFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi impossible'**
+  String get forgotPasswordFailed;
+
+  /// No description provided for @forgotPasswordSentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email envoyé'**
+  String get forgotPasswordSentTitle;
+
+  /// No description provided for @forgotPasswordSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si un compte existe pour {email}, un lien a été envoyé. Ouvrez-le dans votre navigateur pour choisir un nouveau mot de passe.'**
+  String forgotPasswordSent(String email);
+
+  /// No description provided for @emailRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez une adresse email valide'**
+  String get emailRequired;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau mot de passe'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Minimum 8 caractères.'**
+  String get resetPasswordSubtitle;
+
+  /// No description provided for @resetPasswordToken.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jeton de réinitialisation'**
+  String get resetPasswordToken;
+
+  /// No description provided for @resetPasswordSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get resetPasswordSubmit;
+
+  /// No description provided for @resetPasswordBackToLogin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aller à la connexion'**
+  String get resetPasswordBackToLogin;
+
+  /// No description provided for @resetPasswordInvalidLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien de réinitialisation invalide'**
+  String get resetPasswordInvalidLink;
+
+  /// No description provided for @resetPasswordFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réinitialisation impossible'**
+  String get resetPasswordFailed;
+
+  /// No description provided for @resetPasswordDoneTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe mis à jour'**
+  String get resetPasswordDoneTitle;
+
+  /// No description provided for @resetPasswordDoneSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez maintenant vous connecter.'**
+  String get resetPasswordDoneSubtitle;
+
+  /// No description provided for @fullName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom complet'**
+  String get fullName;
+
   /// No description provided for @googleNotConfigured.
   ///
   /// In fr, this message translates to:

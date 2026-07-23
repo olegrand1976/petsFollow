@@ -94,7 +94,7 @@ class Pet {
       ),
       heartrateDurationsSec: rawDurations == null || rawDurations.isEmpty
           ? const [60]
-          : rawDurations.map((e) => e as int).toList(),
+          : rawDurations.map((e) => (e as num).toInt()).toList(),
     );
   }
 }

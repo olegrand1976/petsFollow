@@ -33,6 +33,85 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loginWithGoogle => 'Doorgaan met Google';
 
   @override
+  String get twoFaTitle => '2FA-verificatie';
+
+  @override
+  String get twoFaSubtitle =>
+      'Voer de 6-cijferige code van uw authenticator-app in.';
+
+  @override
+  String get twoFaCode => 'Authenticatorcode';
+
+  @override
+  String get twoFaSubmit => 'Bevestigen';
+
+  @override
+  String get twoFaBack => 'Terug naar inloggen';
+
+  @override
+  String get twoFaInvalid => 'Ongeldige of verlopen 2FA-code';
+
+  @override
+  String get forgotPassword => 'Wachtwoord vergeten?';
+
+  @override
+  String get forgotPasswordTitle => 'Wachtwoord vergeten';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Geef het e-mailadres van uw account op. Als er een account bestaat, wordt een resetlink verzonden.';
+
+  @override
+  String get forgotPasswordSubmit => 'Link versturen';
+
+  @override
+  String get forgotPasswordBack => 'Terug naar inloggen';
+
+  @override
+  String get forgotPasswordFailed => 'Verzenden mislukt';
+
+  @override
+  String get forgotPasswordSentTitle => 'E-mail verzonden';
+
+  @override
+  String forgotPasswordSent(String email) {
+    return 'Als er een account bestaat voor $email, is er een link verzonden. Open deze in uw browser om een nieuw wachtwoord te kiezen.';
+  }
+
+  @override
+  String get emailRequired => 'Voer een geldig e-mailadres in';
+
+  @override
+  String get resetPasswordTitle => 'Nieuw wachtwoord';
+
+  @override
+  String get resetPasswordSubtitle => 'Minimaal 8 tekens.';
+
+  @override
+  String get resetPasswordToken => 'Resettoken';
+
+  @override
+  String get resetPasswordSubmit => 'Opslaan';
+
+  @override
+  String get resetPasswordBackToLogin => 'Naar inloggen';
+
+  @override
+  String get resetPasswordInvalidLink => 'Ongeldige resetlink';
+
+  @override
+  String get resetPasswordFailed => 'Wachtwoord resetten mislukt';
+
+  @override
+  String get resetPasswordDoneTitle => 'Wachtwoord bijgewerkt';
+
+  @override
+  String get resetPasswordDoneSubtitle => 'U kunt nu inloggen.';
+
+  @override
+  String get fullName => 'Volledige naam';
+
+  @override
   String get googleNotConfigured => 'Google-aanmelding is niet geconfigureerd';
 
   @override

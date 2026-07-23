@@ -14,6 +14,7 @@ import {
 } from '../../composables/useAuth'
 
 const cookieStore = new Map<string, string | null>()
+const stateStore = new Map<string, { value: unknown }>()
 
 vi.stubGlobal('useCookie', (name: string, _opts?: unknown) => {
   if (!cookieStore.has(name)) cookieStore.set(name, null)
@@ -25,6 +26,13 @@ vi.stubGlobal('useCookie', (name: string, _opts?: unknown) => {
       cookieStore.set(name, v)
     },
   }
+})
+
+vi.stubGlobal('useState', (key: string, init?: () => unknown) => {
+  if (!stateStore.has(key)) {
+    stateStore.set(key, { value: init ? init() : null })
+  }
+  return stateStore.get(key)!
 })
 
 describe('useAuth helpers', () => {
@@ -42,6 +50,7 @@ describe('useAuth helpers', () => {
 
   beforeEach(() => {
     cookieStore.clear()
+    stateStore.clear()
   })
 
   it('unwrapAuthData lit data enveloppé ou brut', () => {
@@ -82,9 +91,11 @@ describe('useAuth helpers', () => {
     persistAuthTokens(tokens)
     expect(cookieStore.get('pf_token')).toBe('access.jwt')
     expect(cookieStore.get('pf_refresh')).toBe('refresh.jwt')
+    useState('pro-user').value = { role: 'vet' }
     clearAuthTokens()
     expect(cookieStore.get('pf_token')).toBeNull()
     expect(cookieStore.get('pf_refresh')).toBeNull()
+    expect(useState('pro-user').value).toBeNull()
   })
 
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {

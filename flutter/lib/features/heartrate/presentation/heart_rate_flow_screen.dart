@@ -36,6 +36,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   Map<String, dynamic>? result;
   DateTime? lastTap;
   bool _sending = false;
+  bool _completing = false;
 
   /// Practice-configured durations, ascending. Never invent options the vet did not enable.
   List<int> get _practiceDurations {
@@ -102,17 +103,22 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
 
   void onTap() {
     final now = DateTime.now();
-    if (lastTap != null && now.difference(lastTap!).inMilliseconds < 150)
+    if (lastTap != null && now.difference(lastTap!).inMilliseconds < 150) {
       return;
+    }
     lastTap = now;
     setState(() => taps++);
   }
 
   Future<void> finish() async {
-    if (sessionId == null) return;
+    if (sessionId == null || _completing) return;
+    _completing = true;
+    timer?.cancel();
     try {
       final data = await ApiClient.instance.completeHeartRate(sessionId!, taps);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         phase = HeartRatePhase.review;
         result = data;
@@ -123,6 +129,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
       );
+      _completing = false;
     }
   }
 
@@ -131,6 +138,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     setState(() => _sending = true);
     try {
       await ApiClient.instance.validateHeartRate(sessionId!);
+      // Clear before pop/dispose so we don't cancel an already-validated session.
+      sessionId = null;
     } catch (_) {
       if (!mounted) return;
       setState(() => _sending = false);
@@ -214,9 +223,13 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
 
   @override
   void dispose() {
-    timer?.cancel();
+    // Avoid racing the periodic tick after leave; only needed while measuring.
+    if (phase == HeartRatePhase.running) {
+      timer?.cancel();
+    }
+    // Skip cancel while complete is in-flight or after validate cleared sessionId.
     final id = sessionId;
-    if (id != null) {
+    if (id != null && !_completing && phase != HeartRatePhase.review) {
       unawaited(() async {
         try {
           await ApiClient.instance.cancelHeartRate(id);

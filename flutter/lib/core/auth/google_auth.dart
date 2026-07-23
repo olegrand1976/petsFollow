@@ -8,7 +8,7 @@ class GoogleAuth {
 
   static const serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com',
+    defaultValue: '',
   );
 
   static final GoogleSignIn _signIn = GoogleSignIn(

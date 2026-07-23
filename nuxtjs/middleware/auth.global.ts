@@ -13,7 +13,9 @@ const PUBLIC_PATHS = new Set([
   '/legal/mentions',
 ])
 
-export default defineNuxtRouteMiddleware((to) => {
+const AUTH_ENTRY_PATHS = new Set(['/', '/login', '/register', '/register/sent'])
+
+export default defineNuxtRouteMiddleware(async (to) => {
   const token = useCookie('pf_token')
   const refresh = useCookie('pf_refresh')
   const hasSession = !!(token.value || refresh.value)
@@ -22,10 +24,21 @@ export default defineNuxtRouteMiddleware((to) => {
     || to.path.startsWith('/legal/')
 
   if (isPublic) {
-    if (hasSession && to.path === '/') {
-      const role = parseJwtRole(token.value)
+    if (hasSession && AUTH_ENTRY_PATHS.has(to.path)) {
+      let role = parseJwtRole(token.value)
+      if (!role && refresh.value) {
+        try {
+          const { fetchUser } = useProUser()
+          const me = await fetchUser(true)
+          role = me?.role ?? null
+        } catch {
+          role = null
+        }
+      }
       if (isProRole(role)) return navigateTo(homePathForRole(role))
-      return navigateTo('/dashboard')
+      clearAuthTokens()
+      if (to.path === '/login' || to.path === '/register') return
+      return navigateTo('/login')
     }
     return
   }

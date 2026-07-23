@@ -39,7 +39,7 @@ class DiscoveryController {
     if (ApiClient.instance.token != null) {
       try {
         final me = await ApiClient.instance.getMe();
-        bindUser(me['id'] as String? ?? me['userId'] as String?);
+        bindUser(me['userId'] as String? ?? me['id'] as String?);
       } catch (_) {}
     }
     final local = await _loadLocal();

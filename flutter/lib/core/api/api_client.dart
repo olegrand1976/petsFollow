@@ -26,10 +26,16 @@ class ApiClient {
   static final instance = ApiClient._();
 
   static const _tokenKey = 'pf_token';
-  static const _apiBase = String.fromEnvironment(
-    'API_BASE',
-    defaultValue: 'http://10.0.2.2:8291',
-  );
+  static const _apiBaseDefined = String.fromEnvironment('API_BASE');
+
+  /// Platform-aware local default (Android emu vs iOS sim). Override with `--dart-define=API_BASE=…`.
+  static String get _apiBase {
+    if (_apiBaseDefined.isNotEmpty) return _apiBaseDefined;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8291';
+    }
+    return 'http://localhost:8291';
+  }
 
   String? token;
 
@@ -37,8 +43,9 @@ class ApiClient {
   void Function()? onSessionInvalidated;
 
   bool _handlingUnauthorized = false;
+  int _authGeneration = 0;
 
-  final dio = Dio(BaseOptions(
+  late final dio = Dio(BaseOptions(
     baseUrl: _apiBase,
     headers: {'Content-Type': 'application/json'},
   ));
@@ -77,16 +84,21 @@ class ApiClient {
   Future<void> _invalidateSessionFromUnauthorized() async {
     if (_handlingUnauthorized || token == null) return;
     _handlingUnauthorized = true;
+    final generation = ++_authGeneration;
     token = null;
     onSessionInvalidated?.call();
     try {
       final sp = await SharedPreferences.getInstance();
-      // Abort cleanup if the user already signed in again.
-      if (token != null) return;
+      // Abort if a new login started after we cleared.
+      if (_authGeneration != generation || token != null) return;
       await sp.remove(_tokenKey);
+      if (_authGeneration != generation || token != null) {
+        if (token != null) await _persistToken(token);
+        return;
+      }
       NotificationService.instance.resetSession();
       await DiscoveryController.instance.clearLocal();
-      if (token != null) return;
+      if (_authGeneration != generation || token != null) return;
       await GoogleAuth.signOut();
     } finally {
       _handlingUnauthorized = false;
@@ -122,7 +134,9 @@ class ApiClient {
       'email': email,
       'password': password,
     });
-    return _completeLogin(res.data['data'] as Map<String, dynamic>);
+    final data = res.data['data'] as Map<String, dynamic>;
+    if (_isMfaChallenge(data)) return data;
+    return _completeLogin(data);
   }
 
   /// Google Sign-In for pets clients. [idToken] must be issued for the same
@@ -132,7 +146,34 @@ class ApiClient {
       'idToken': idToken,
       'audience': 'client',
     });
+    final data = res.data['data'] as Map<String, dynamic>;
+    if (_isMfaChallenge(data)) return data;
+    return _completeLogin(data);
+  }
+
+  /// Completes MFA after [login] / [loginWithGoogle] returned `requires2FA`.
+  Future<Map<String, dynamic>> verify2FA(String mfaToken, String code) async {
+    final res = await dio.post('/api/v1/auth/2fa/verify', data: {
+      'mfaToken': mfaToken,
+      'code': code,
+    });
     return _completeLogin(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> forgotPassword(String email) async {
+    await dio.post('/api/v1/auth/forgot-password', data: {'email': email});
+  }
+
+  Future<void> resetPassword(String token, String password) async {
+    await dio.post('/api/v1/auth/reset-password', data: {
+      'token': token,
+      'password': password,
+    });
+  }
+
+  static bool _isMfaChallenge(Map<String, dynamic> data) {
+    return data['requires2FA'] == true &&
+        (data['mfaToken'] as String?)?.isNotEmpty == true;
   }
 
   Future<Map<String, dynamic>> _completeLogin(Map<String, dynamic> data) async {
@@ -143,6 +184,7 @@ class ApiClient {
         message: 'mfa_required_or_missing_token',
       );
     }
+    _authGeneration++;
     await _persistToken(token);
     loadToken();
     await syncLocaleFromMe();
@@ -379,11 +421,6 @@ class ApiClient {
     return res.data['data'] as List<dynamic>;
   }
 
-  Future<List<dynamic>> getThreads() async {
-    final res = await dio.get('/api/v1/messaging/threads');
-    return res.data['data'] as List<dynamic>;
-  }
-
   Future<List<dynamic>> getMessages(String threadId) async {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
     return res.data['data'] as List<dynamic>;
@@ -552,11 +589,15 @@ class ApiClient {
     return NotificationPrefs.fromJson(res.data['data'] as Map<String, dynamic>);
   }
 
+  /// Typed messaging threads (single wrapper for `/messaging/threads`).
   Future<List<MessageThread>> getMessageThreads() async {
     final res = await dio.get('/api/v1/messaging/threads');
     final data = res.data['data'] as List<dynamic>;
     return data.map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t as Map))).toList();
   }
+
+  /// Alias of [getMessageThreads] — prefer this or [getMessageThreads], not a raw duplicate.
+  Future<List<MessageThread>> getThreads() => getMessageThreads();
 
   Future<List<ChatMessage>> getChatMessages(String threadId) async {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
