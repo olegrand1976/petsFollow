@@ -10,5 +10,6 @@ test('liste clients avec recherche', async ({ page }) => {
 
   const search = page.getByPlaceholder(/nom ou email|name or email|naam of e-mail/i)
   await search.fill('Sophie')
-  await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible()
+  // Timeout large : premier chargement de la page en dev (compilation Vite) sous suite complète.
+  await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })
 })

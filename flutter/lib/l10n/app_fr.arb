@@ -110,6 +110,8 @@
   "proLightSpecialtyFarrier": "Maréchal-ferrant",
   "proLightSpecialtyPhysio": "Physio / ostéo",
   "proLightSpecialtyBehaviorist": "Comportementaliste",
+  "proLightSpecialtyGroomer": "Toiletteur",
+  "proLightSpecialtyBreeder": "Éleveur",
   "proLightSpecialtyVetLight": "Véto light",
   "proLightReportHintFarrier": "CR ferrage : pieds, fer, observations…",
   "proLightEmptyFarrier": "Aucun cheval / intervention partagée",
@@ -138,8 +140,20 @@
   "deleteAccount": "Supprimer le compte",
   "deleteAccountConfirm": "Cette action est irréversible. Tous vos animaux et données seront supprimés.",
   "exportMyData": "Exporter mes données",
+  "registerConsentPrefix": "J'accepte les ",
+  "registerConsentMiddle": " et la ",
+  "registerConsentRequired": "Vous devez accepter les conditions et la politique de confidentialité.",
+  "pushPermissionTitle": "Notifications",
+  "pushPermissionBody": "petsFollow souhaite vous envoyer des notifications : messages de votre vétérinaire, confirmations de rendez-vous et rappels de soins. Vous pouvez les désactiver à tout moment dans les réglages de l'app ou du téléphone.",
+  "pushPermissionContinue": "Continuer",
   "exportDataSaved": "Export enregistré : {path}",
-  "@exportDataSaved": {"placeholders": {"path": {"type": "String"}}},
+  "@exportDataSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "profileSaved": "Profil enregistré",
   "changePhoto": "Changer la photo",
   "addPhoto": "Ajouter une photo",
@@ -182,7 +196,7 @@
   "legalNoticeTitle": "Mentions légales",
   "legalOpenOnline": "Voir la version en ligne",
   "legalTermsBody": "Conditions générales d'utilisation — petsFollow\n\nL'application petsFollow permet aux propriétaires d'animaux de mesurer la fréquence cardiaque, de consulter l'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l'abonnement choisi (paiement via Stripe). L'utilisateur s'engage à utiliser l'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d'actualisation : juillet 2026",
-  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, notifications, facturation.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu'à suppression du compte ou 3 ans d'inactivité.\n\nDroits RGPD (accès, rectification, suppression) : Profil → Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d'actualisation : juillet 2026",
+  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d'actualisation : juillet 2026",
   "legalNoticeBody": "Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@ll-it-sc.be\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d'actualisation : juillet 2026",
   "language": "Langue",
   "languageFr": "Français",
@@ -218,6 +232,7 @@
     }
   },
   "newPet": "Nouvel animal",
+  "editPet": "Modifier l'animal",
   "petName": "Nom",
   "species": "Espèce",
   "breed": "Race",
@@ -366,10 +381,6 @@
   "reviewAskTitle": "Vous aimez petsFollow ?",
   "reviewAskYes": "Oui, noter l'app",
   "reviewAskNo": "Plus tard",
-  "carePlusUpsell": "Care+ — médicaments et rappels personnalisés",
-  "carePlusRequired": "Care+ est requis pour les médicaments et rappels personnalisés.",
-  "horsePackRequired": "Le Pack Cheval est requis pour les rappels maréchal, contacts et compétitions.",
-  "activateAddon": "Activer",
   "careTypeMedication": "Médicament",
   "horseAddContact": "Ajouter un contact",
   "horseAddCompetition": "Ajouter une compétition",
@@ -377,7 +388,6 @@
   "horseContactRole": "Rôle",
   "horseCompetitionTitle": "Événement",
   "horseCompetitionDate": "Date (AAAA-MM-JJ)",
-  "familyPackHint": "Pack Famille — vue foyer des rappels, −10 % dès le 2ᵉ abonnement animal payant",
   "familyHouseholdTitle": "Foyer Famille — {count} animaux",
   "@familyHouseholdTitle": {
     "placeholders": {

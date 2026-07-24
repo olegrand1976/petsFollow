@@ -257,6 +257,25 @@ func ObjectKey(kind, entityID, ext string) string {
 	return fmt.Sprintf("%s/%s/%s%s", kind, entityID, newObjectID(), ext)
 }
 
+// ObjectKeyFromURL retrouve la clé d'objet depuis une URL publique construite par PublicURL
+// (GCS ou /media/ local). Retourne "" si l'URL ne pointe pas vers notre stockage.
+func ObjectKeyFromURL(cfg config.Config, raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if cfg.GCSMediaBucket != "" {
+		prefix := fmt.Sprintf("https://storage.googleapis.com/%s/", cfg.GCSMediaBucket)
+		if strings.HasPrefix(raw, prefix) {
+			return strings.TrimPrefix(raw, prefix)
+		}
+	}
+	if i := strings.Index(raw, "/media/"); i >= 0 {
+		return raw[i+len("/media/"):]
+	}
+	return ""
+}
+
 // PublicURL builds a reachable URL for an object key (empty key → "").
 // Sensitive PHI keys (visit-reports/) never get a public URL.
 func PublicURL(cfg config.Config, objectKey string) string {

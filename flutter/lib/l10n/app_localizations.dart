@@ -722,6 +722,18 @@ abstract class AppLocalizations {
   /// **'Comportementaliste'**
   String get proLightSpecialtyBehaviorist;
 
+  /// No description provided for @proLightSpecialtyGroomer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toiletteur'**
+  String get proLightSpecialtyGroomer;
+
+  /// No description provided for @proLightSpecialtyBreeder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éleveur'**
+  String get proLightSpecialtyBreeder;
+
   /// No description provided for @proLightSpecialtyVetLight.
   ///
   /// In fr, this message translates to:
@@ -883,6 +895,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette action est irréversible. Tous vos animaux et données seront supprimés.'**
   String get deleteAccountConfirm;
+
+  /// No description provided for @exportMyData.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter mes données'**
+  String get exportMyData;
+
+  /// No description provided for @registerConsentPrefix.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte les '**
+  String get registerConsentPrefix;
+
+  /// No description provided for @registerConsentMiddle.
+  ///
+  /// In fr, this message translates to:
+  /// **' et la '**
+  String get registerConsentMiddle;
+
+  /// No description provided for @registerConsentRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devez accepter les conditions et la politique de confidentialité.'**
+  String get registerConsentRequired;
+
+  /// No description provided for @pushPermissionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get pushPermissionTitle;
+
+  /// No description provided for @pushPermissionBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'petsFollow souhaite vous envoyer des notifications : messages de votre vétérinaire, confirmations de rendez-vous et rappels de soins. Vous pouvez les désactiver à tout moment dans les réglages de l\'app ou du téléphone.'**
+  String get pushPermissionBody;
+
+  /// No description provided for @pushPermissionContinue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get pushPermissionContinue;
+
+  /// No description provided for @exportDataSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export enregistré : {path}'**
+  String exportDataSaved(String path);
 
   /// No description provided for @profileSaved.
   ///
@@ -1055,7 +1115,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalPrivacyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, notifications, facturation.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ou 3 ans d\'inactivité.\n\nDroits RGPD (accès, rectification, suppression) : Profil → Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
   String get legalPrivacyBody;
 
   /// No description provided for @legalNoticeBody.
@@ -1225,6 +1285,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Nouvel animal'**
   String get newPet;
+
+  /// No description provided for @editPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'animal'**
+  String get editPet;
 
   /// No description provided for @petName.
   ///
@@ -1778,30 +1844,6 @@ abstract class AppLocalizations {
   /// **'Plus tard'**
   String get reviewAskNo;
 
-  /// No description provided for @carePlusUpsell.
-  ///
-  /// In fr, this message translates to:
-  /// **'Care+ — médicaments et rappels personnalisés'**
-  String get carePlusUpsell;
-
-  /// No description provided for @carePlusRequired.
-  ///
-  /// In fr, this message translates to:
-  /// **'Care+ est requis pour les médicaments et rappels personnalisés.'**
-  String get carePlusRequired;
-
-  /// No description provided for @horsePackRequired.
-  ///
-  /// In fr, this message translates to:
-  /// **'Le Pack Cheval est requis pour les rappels maréchal, contacts et compétitions.'**
-  String get horsePackRequired;
-
-  /// No description provided for @activateAddon.
-  ///
-  /// In fr, this message translates to:
-  /// **'Activer'**
-  String get activateAddon;
-
   /// No description provided for @careTypeMedication.
   ///
   /// In fr, this message translates to:
@@ -1843,12 +1885,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Date (AAAA-MM-JJ)'**
   String get horseCompetitionDate;
-
-  /// No description provided for @familyPackHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pack Famille — vue foyer des rappels, −10 % dès le 2ᵉ abonnement animal payant'**
-  String get familyPackHint;
 
   /// No description provided for @familyHouseholdTitle.
   ///

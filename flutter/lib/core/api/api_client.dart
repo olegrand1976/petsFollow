@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
@@ -36,6 +37,11 @@ class ApiClient {
 
   static const _tokenKey = 'pf_token';
   static const _apiBaseDefined = String.fromEnvironment('API_BASE');
+
+  /// JWT en Keystore/Keychain — jamais en SharedPreferences (lisible sur device rooté/backup).
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   /// Platform-aware local default (Android emu vs iOS sim). Override with `--dart-define=API_BASE=…`.
   static String get _apiBase {
@@ -103,10 +109,9 @@ class ApiClient {
     userSpecialty = null;
     onSessionInvalidated?.call();
     try {
-      final sp = await SharedPreferences.getInstance();
       // Abort if a new login started after we cleared.
       if (_authGeneration != generation || token != null) return;
-      await sp.remove(_tokenKey);
+      await _persistToken(null);
       if (_authGeneration != generation || token != null) {
         if (token != null) await _persistToken(token);
         return;
@@ -121,8 +126,7 @@ class ApiClient {
   }
 
   Future<void> restoreSession() async {
-    final sp = await SharedPreferences.getInstance();
-    token = sp.getString(_tokenKey);
+    token = await _readPersistedToken();
     loadToken();
     if (token != null) {
       try {
@@ -136,13 +140,40 @@ class ApiClient {
     }
   }
 
-  Future<void> _persistToken(String? value) async {
-    final sp = await SharedPreferences.getInstance();
-    if (value == null) {
-      await sp.remove(_tokenKey);
-    } else {
-      await sp.setString(_tokenKey, value);
+  Future<String?> _readPersistedToken() async {
+    try {
+      final secure = await _secureStorage.read(key: _tokenKey);
+      if (secure != null) return secure;
+    } catch (_) {
+      // Keystore indisponible : on retombe sur la migration legacy.
     }
+    // Migration one-shot depuis SharedPreferences (stockage historique en clair).
+    final sp = await SharedPreferences.getInstance();
+    final legacy = sp.getString(_tokenKey);
+    if (legacy != null) {
+      try {
+        await _secureStorage.write(key: _tokenKey, value: legacy);
+        await sp.remove(_tokenKey);
+      } catch (_) {
+        // Réessaiera au prochain démarrage.
+      }
+    }
+    return legacy;
+  }
+
+  Future<void> _persistToken(String? value) async {
+    if (value == null) {
+      try {
+        await _secureStorage.delete(key: _tokenKey);
+      } catch (_) {}
+    } else {
+      try {
+        await _secureStorage.write(key: _tokenKey, value: value);
+      } catch (_) {}
+    }
+    // Purge systématique de l'ancien emplacement en clair.
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove(_tokenKey);
   }
 
   Future<void> logout() async {
@@ -173,6 +204,7 @@ class ApiClient {
     required String fullName,
     String? locale,
     String? inviteCode,
+    bool consent = false,
   }) async {
     final code = inviteCode ?? await InviteCodeStore.instance.peek();
     await dio.post(
@@ -181,6 +213,7 @@ class ApiClient {
         'email': email,
         'password': password,
         'fullName': fullName,
+        'consent': consent,
         if (code != null && code.isNotEmpty) 'inviteCode': code,
       },
       options: Options(
@@ -478,6 +511,12 @@ class ApiClient {
     await logout();
   }
 
+  /// Portabilité RGPD : export JSON brut des données du compte.
+  Future<Map<String, dynamic>> exportMyData() async {
+    final res = await dio.get('/api/v1/me/export');
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
   Future<void> updateLocale(String locale) async {
     await dio.patch('/api/v1/me/locale', data: {'locale': locale});
     await LocaleController.instance.setLocale(locale);
@@ -516,6 +555,10 @@ class ApiClient {
   }
 
   /// Kennel privilege: create several pets in one call (`POST /pets/batch`).
+  Future<void> updatePet(String petId, Map<String, dynamic> body) async {
+    await dio.put('/api/v1/pets/$petId', data: body);
+  }
+
   Future<Map<String, dynamic>> createPetsBatch(List<Map<String, dynamic>> pets) async {
     final res = await dio.post('/api/v1/pets/batch', data: {'pets': pets});
     return Map<String, dynamic>.from(res.data['data'] as Map);
@@ -541,27 +584,7 @@ class ApiClient {
     return res.data['data']['plans'] as List<dynamic>;
   }
 
-  Future<List<dynamic>> getBillingAddons() async {
-    final res = await dio.get('/api/v1/billing/addons');
-    return res.data['data']['addons'] as List<dynamic>;
-  }
-
-  Future<List<dynamic>> getMyAddons() async {
-    final res = await dio.get('/api/v1/billing/my-addons');
-    final data = res.data['data'];
-    if (data is List) return data;
-    if (data is Map && data['addons'] is List) return data['addons'] as List<dynamic>;
-    return const [];
-  }
-
-  Future<String> startAddonCheckout({required String addonCode}) async {
-    final res = await dio.post('/api/v1/billing/addons/checkout', data: {
-      'addonCode': addonCode,
-    });
-    return res.data['data']['checkoutUrl'] as String;
-  }
-
-  /// Family privilege: household digest (requires active Family addon).
+  /// Household digest (all clients — pack derived from pet count).
   Future<Map<String, dynamic>> getHousehold() async {
     final res = await dio.get('/api/v1/me/household');
     return Map<String, dynamic>.from(res.data['data'] as Map);

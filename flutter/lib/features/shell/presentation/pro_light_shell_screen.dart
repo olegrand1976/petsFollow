@@ -32,6 +32,10 @@ String proLightSpecialtyLabel(AppLocalizations l10n, String specialty) {
       return l10n.proLightSpecialtyPhysio;
     case 'behaviorist':
       return l10n.proLightSpecialtyBehaviorist;
+    case 'groomer':
+      return l10n.proLightSpecialtyGroomer;
+    case 'breeder':
+      return l10n.proLightSpecialtyBreeder;
     case 'vet_light':
       return l10n.proLightSpecialtyVetLight;
     default:

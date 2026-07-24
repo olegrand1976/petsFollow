@@ -1,13 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import {
   extractAccessToken,
+  isAuthSuccess,
   isMFAChallenge,
   isProRole,
   isSalesForceRole,
+  hasSessionCookie,
   homePathForRole,
   parseJwtRole,
   unwrapAuthData,
-  persistAuthTokens,
   clearAuthTokens,
   type AuthMFAChallenge,
   type AuthTokens,
@@ -87,55 +88,32 @@ describe('useAuth helpers', () => {
     expect(parseJwtRole(`hdr.${payload}.sig`)).toBe('commercial')
   })
 
-  it('persistAuthTokens / clearAuthTokens gèrent pf_token et pf_refresh', () => {
-    persistAuthTokens(tokens)
-    expect(cookieStore.get('pf_token')).toBe('access.jwt')
-    expect(cookieStore.get('pf_refresh')).toBe('refresh.jwt')
-    useState('pro-user').value = { role: 'vet' }
-    clearAuthTokens()
-    expect(cookieStore.get('pf_token')).toBeNull()
-    expect(cookieStore.get('pf_refresh')).toBeNull()
-    expect(useState('pro-user').value).toBeNull()
+  it('isAuthSuccess accepte le flag BFF ou les tokens legacy, refuse le MFA', () => {
+    expect(isAuthSuccess({ authenticated: true })).toBe(true)
+    expect(isAuthSuccess(tokens)).toBe(true)
+    expect(isAuthSuccess({})).toBe(false)
+    expect(isAuthSuccess(mfa)).toBe(false)
   })
 
-  it('clearAuthTokens réutilise les opts secure/path (prod)', () => {
-    const optsSeen: unknown[] = []
-    vi.stubGlobal('useCookie', (name: string, opts?: unknown) => {
-      if (opts) optsSeen.push(opts)
-      if (!cookieStore.has(name)) cookieStore.set(name, null)
-      return {
-        get value() {
-          return cookieStore.get(name) ?? null
-        },
-        set value(v: string | null) {
-          cookieStore.set(name, v)
-        },
-      }
-    })
-    const prev = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
-    try {
-      persistAuthTokens(tokens)
-      clearAuthTokens()
-      expect(optsSeen.length).toBeGreaterThanOrEqual(4)
-      for (const o of optsSeen) {
-        expect(o).toMatchObject({ secure: true, path: '/', sameSite: 'lax' })
-      }
-    } finally {
-      process.env.NODE_ENV = prev
-      // restore default stub from file top — re-run beforeEach pattern
-      vi.stubGlobal('useCookie', (name: string, _opts?: unknown) => {
-        if (!cookieStore.has(name)) cookieStore.set(name, null)
-        return {
-          get value() {
-            return cookieStore.get(name) ?? null
-          },
-          set value(v: string | null) {
-            cookieStore.set(name, v)
-          },
-        }
-      })
-    }
+  it('hasSessionCookie détecte pf_token / pf_refresh / pf_session', () => {
+    expect(hasSessionCookie()).toBe(false)
+    cookieStore.set('pf_session', '1')
+    expect(hasSessionCookie()).toBe(true)
+    cookieStore.set('pf_session', null)
+    cookieStore.set('pf_token', 'jwt')
+    expect(hasSessionCookie()).toBe(true)
+  })
+
+  it('clearAuthTokens purge les cookies visibles et le profil Pro', async () => {
+    cookieStore.set('pf_token', 'access.jwt')
+    cookieStore.set('pf_refresh', 'refresh.jwt')
+    cookieStore.set('pf_session', '1')
+    useState('pro-user').value = { role: 'vet' }
+    await clearAuthTokens()
+    expect(cookieStore.get('pf_token')).toBeNull()
+    expect(cookieStore.get('pf_refresh')).toBeNull()
+    expect(cookieStore.get('pf_session')).toBeNull()
+    expect(useState('pro-user').value).toBeNull()
   })
 
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {

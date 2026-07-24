@@ -7,11 +7,11 @@ Roadmap produit : self-inscription client, rôle `care_pro` + specialties, ACL p
 | Rôle / specialty | Surface principale | Notes |
 |------------------|--------------------|-------|
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
-| `vet` | Nuxt Pro (full) | Flutter refuse / message « utilisez Pro web » |
+| `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs |
 | `admin` / commercial* | Nuxt Pro | Inchangé |
 
-Specialties P0 : `vet_light`, `farrier`. P1 : `physio`, `behaviorist` (labels + prompts CR). P2 : `groomer`, `breeder`. Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
+Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 5 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 
 ## ACL
 

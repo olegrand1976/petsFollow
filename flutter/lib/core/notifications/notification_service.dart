@@ -12,11 +12,17 @@ import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/notifications/reminder_controller.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   NotificationService._();
   static final instance = NotificationService._();
+
+  /// Défini par la racine de l'app : écran d'information RGPD affiché une
+  /// seule fois avant la demande de permission push de l'OS.
+  Future<void> Function()? explainPushPermission;
+  static const _pushPromptShownKey = 'pf_push_prompt_shown';
 
   bool _fcmRegistered = false;
   bool _handlersBound = false;
@@ -135,6 +141,14 @@ class NotificationService {
   }
 
   Future<void> _requestNotificationPermission() async {
+    // Consentement éclairé (RGPD) : informer avant le prompt système, une fois.
+    try {
+      final sp = await SharedPreferences.getInstance();
+      if (!(sp.getBool(_pushPromptShownKey) ?? false)) {
+        await explainPushPermission?.call();
+        await sp.setBool(_pushPromptShownKey, true);
+      }
+    } catch (_) {}
     final messaging = FirebaseMessaging.instance;
     await messaging.requestPermission();
     if (defaultTargetPlatform == TargetPlatform.android) {

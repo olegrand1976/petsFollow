@@ -19,9 +19,7 @@ function isUnauthorized(e: unknown): boolean {
 }
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const token = useCookie('pf_token')
-  const refresh = useCookie('pf_refresh')
-  if (!token.value && !refresh.value) return
+  if (!hasSessionCookie()) return
   if (
     SKIP_PATHS.has(to.path)
     || to.path.startsWith('/register')
@@ -47,7 +45,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   } catch (e) {
     if (isUnauthorized(e)) {
-      clearAuthTokens()
+      await clearAuthTokens()
       return navigateTo('/login')
     }
   }

@@ -93,7 +93,7 @@ curl -sf "$API/api/v1/pets/$PET_ID/timeline" -H "Authorization: Bearer $CLIENT_T
 # Auth register → confirm → forgot → reset (emails uniques)
 AUTH_EMAIL="smoke+$(date +%s)@petsfollow.test"
 REG=$(curl -sf -X POST "$API/api/v1/auth/register" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass123!\",\"fullName\":\"Smoke Vet\",\"practiceName\":\"Smoke Practice\"}")
+  -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass123!\",\"fullName\":\"Smoke Vet\",\"practiceName\":\"Smoke Practice\",\"consent\":true}")
 CONFIRM_PATH=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
 CONFIRM_TOKEN=${CONFIRM_PATH#*token=}
 curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
@@ -110,7 +110,7 @@ curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
 # Register client + confirm
 CLIENT_REG_EMAIL="smoke-client+$(date +%s)@petsfollow.test"
 CLIENT_REG=$(curl -sf -X POST "$API/api/v1/auth/register-client" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\",\"fullName\":\"Smoke Client\"}")
+  -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\",\"fullName\":\"Smoke Client\",\"consent\":true}")
 CLIENT_CONFIRM_PATH=$(echo "$CLIENT_REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
 CLIENT_CONFIRM_TOKEN=${CLIENT_CONFIRM_PATH#*token=}
 curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \

@@ -12,6 +12,7 @@ import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flo
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_edit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -238,7 +239,26 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     final primaryVet = vets.where((v) => v.isPrimary).firstOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: Text(pet.name)),
+      appBar: AppBar(
+        title: Text(pet.name),
+        actions: [
+          if (pet.isOwner)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.editPet,
+              onPressed: () async {
+                final changed = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => PetEditScreen(pet: pet)),
+                );
+                if (changed == true) {
+                  await _reloadPet();
+                  widget.onUpdated?.call();
+                }
+              },
+            ),
+        ],
+      ),
       body: ListView(
         padding: scrollPaddingWithSystemBottom(context, all: 20),
         children: [

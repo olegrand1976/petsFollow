@@ -732,8 +732,7 @@ func (a *API) adminListPitchFeedback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) internalRunPitchAnalyzer(w http.ResponseWriter, r *http.Request) {
-	secret := a.cfg.PitchAnalyzerSecret
-	if secret == "" || r.Header.Get("X-Pitch-Analyzer-Secret") != secret {
+	if !secretHeaderOK(r, "X-Pitch-Analyzer-Secret", a.cfg.PitchAnalyzerSecret) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}

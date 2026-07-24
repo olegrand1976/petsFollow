@@ -10,7 +10,7 @@ alwaysApply: false
 
 - Nuxt 3, CSS tokens via `make brand-sync`
 - Face **light** uniquement (ne pas importer le dark Flutter)
-- Icônes UI : **Material Symbols Outlined** (Google Fonts) via `ProIcon` — pas de SVG maison ni d’emojis
+- Icônes UI : **Material Symbols Outlined** (auto-hébergée, RGPD — pas de CDN Google Fonts) via `ProIcon` — pas de SVG maison ni d’emojis
 
 ## Tokens CSS
 
@@ -41,7 +41,7 @@ ProApp
 ## Icônes
 
 - Composant : `ProIcon` (`name` = ligature Material, ex. `light_mode`, `notifications`, `dashboard`)
-- Police chargée dans `nuxt.config.ts` (Material Symbols Outlined)
+- Police auto-hébergée via `nuxtjs/assets/css/fonts.css` + `public/fonts/` (pas de CDN Google Fonts)
 - Exceptions : logo brand (`PetsFollowLogo` / emblème SVG), graphiques dataviz (`ProBpmChart`)
 
 ## Composants Pro

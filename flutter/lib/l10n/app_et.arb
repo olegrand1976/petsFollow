@@ -96,6 +96,8 @@
   "proLightSpecialtyFarrier": "Rautaja",
   "proLightSpecialtyPhysio": "Füsioteraapia",
   "proLightSpecialtyBehaviorist": "Käitumisspetsialist",
+  "proLightSpecialtyGroomer": "Trimmija",
+  "proLightSpecialtyBreeder": "Kasvataja",
   "proLightSpecialtyVetLight": "Vet light",
   "proLightReportHintFarrier": "Rautamise märkmed…",
   "proLightEmptyFarrier": "Jagatud hobust / visiiti pole",
@@ -137,6 +139,21 @@
   "passwordChangeFailed": "Parooli muutmine ebaõnnestus",
   "deleteAccount": "Kustuta konto",
   "deleteAccountConfirm": "Seda toimingut ei saa tagasi võtta. Kõik teie lemmikloomad ja andmed kustutatakse.",
+  "exportMyData": "Ekspordi minu andmed",
+  "registerConsentPrefix": "Nõustun dokumentidega ",
+  "registerConsentMiddle": " ja ",
+  "registerConsentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga.",
+  "pushPermissionTitle": "Teavitused",
+  "pushPermissionBody": "petsFollow soovib teile saata teavitusi: loomaarsti sõnumid, visiitide kinnitused ja hooldusmeeldetuletused. Saate need igal ajal välja lülitada rakenduse või telefoni seadetes.",
+  "pushPermissionContinue": "Jätka",
+  "exportDataSaved": "Eksport salvestatud: {path}",
+  "@exportDataSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "profileSaved": "Profiil salvestatud",
   "changePhoto": "Muuda fotot",
   "addPhoto": "Lisa foto",
@@ -179,7 +196,7 @@
   "legalNoticeTitle": "Juriidiline teave",
   "legalOpenOnline": "Vaata veebiversiooni",
   "legalTermsBody": "Kasutustingimused — petsFollow\n\nPetsFollowi rakendus võimaldab lemmikloomaomanikel mõõta südame löögisagedust, vaadata ajalugu ja suhelda oma loomaarstiga.\n\nTeenuseid osutatakse valitud tellimuse alusel (maksed Stripe'i kaudu). Kasutajad peavad rakendust kasutama ettenähtud otstarbel.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/terms\n\nViimati uuendatud: juuli 2026",
-  "legalPrivacyBody": "Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, teavituste märgid (FCM), Stripe'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, südame jälgimine, loomaarsti sõnumid, teavitused, arveldus.\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni või 3 aastat tegevusetust.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine): Profiil → Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026",
+  "legalPrivacyBody": "Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, südame jälgimine, loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026",
   "legalNoticeBody": "Juriidiline teave — petsFollow\n\nVäljaandja: LL-IT-SC / petsFollow\nKontakt: support@ll-it-sc.be\n\nMajutus: Google Cloud Platform (GDPR-ga kooskõlas).\n\nVäljaande juht: petsFollow.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/mentions\n\nViimati uuendatud: juuli 2026",
   "language": "Keel",
   "languageFr": "Français",
@@ -208,6 +225,7 @@
   "badgePendingPayment": "Makse ootel",
   "badgeExpiresOn": "aegub {date}",
   "newPet": "Uus lemmikloom",
+  "editPet": "Muuda lemmiklooma",
   "petName": "Nimi",
   "species": "Liik",
   "breed": "Tõug",
@@ -300,8 +318,6 @@
   "reviewAskTitle": "Meeldib petsFollow?",
   "reviewAskYes": "Jah, hinda rakendust",
   "reviewAskNo": "Hiljem",
-  "carePlusUpsell": "Care+ — ravimid ja isikupärastatud meeldetuletused",
-  "familyPackHint": "Family pakett — majapidamise hoolduse vaade, −10% alates 2. tasulisest lemmiklooma plaanist",
   "familyHouseholdTitle": "Family majapidamine — {count} lemmiklooma",
   "@familyHouseholdTitle": {
     "placeholders": {
@@ -418,9 +434,6 @@
   "horseContactsSoon": "Aktiveerige Horse pakett professionaalsete kontaktide haldamiseks.",
   "horseCompetitionsSoon": "Aktiveerige Horse pakett võistluskalendri jaoks.",
   "horsePackUpsell": "Horse pakett — sepp, väljaheidete munade loendus, kontaktid ja võistlused",
-  "carePlusRequired": "Care+ on vajalik ravimite ja kohandatud meeldetuletuste jaoks.",
-  "horsePackRequired": "Horse pakett on vajalik sepa meeldetuletuste, kontaktide ja võistluste jaoks.",
-  "activateAddon": "Aktiveeri",
   "careTypeMedication": "Ravim",
   "horseAddContact": "Lisa kontakt",
   "horseAddCompetition": "Lisa võistlus",

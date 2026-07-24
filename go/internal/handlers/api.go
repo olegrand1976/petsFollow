@@ -47,17 +47,22 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
-	r.Post("/auth/login", a.login)
-	r.Post("/auth/register", a.register)
-	r.Post("/auth/register-client", a.registerClient)
-	r.Post("/auth/register-care-pro", a.registerCarePro)
-	r.Post("/auth/confirm-email", a.confirmEmail)
-	r.Post("/auth/forgot-password", a.forgotPassword)
-	r.Post("/auth/reset-password", a.resetPassword)
+	// Anti brute-force / spam sur les endpoints auth publics (par IP).
+	authRL := httpx.NewRateLimiter(a.cfg.AuthRateLimitPerMin, time.Minute)
+	r.Group(func(ar chi.Router) {
+		ar.Use(authRL.Middleware)
+		ar.Post("/auth/login", a.login)
+		ar.Post("/auth/register", a.register)
+		ar.Post("/auth/register-client", a.registerClient)
+		ar.Post("/auth/register-care-pro", a.registerCarePro)
+		ar.Post("/auth/confirm-email", a.confirmEmail)
+		ar.Post("/auth/forgot-password", a.forgotPassword)
+		ar.Post("/auth/reset-password", a.resetPassword)
+	})
 	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
 	a.registerAppInviteRoutes(r)
-	a.registerAuthRoutes(r)
+	a.registerAuthRoutes(r, authRL.Middleware)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerCommissionRoutes(r)
@@ -65,6 +70,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerCommercialManagerRoutes(r)
 	a.registerPitchTrainingRoutes(r)
 	a.registerProductDigestRoutes(r)
+	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -74,6 +80,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/me/avatar", a.uploadMyAvatar)
 		pr.Patch("/me/password", a.changeMePassword)
 		pr.Delete("/me", a.deleteMe)
+		pr.Get("/me/export", a.exportMe)
 		pr.Patch("/me/locale", a.updateMeLocale)
 		pr.Get("/me/vets", a.listMyVets)
 		pr.Post("/me/vets/invite", a.inviteVet)
@@ -225,11 +232,18 @@ func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Compte Pro anonymisé (RGPD) : refuser le refresh malgré un JWT encore valide.
+	if store.IsTombstoneEmail(u.Email) {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
+		return
+	}
 	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Le refresh compte comme activité (rétention 3 ans).
+	a.store.TouchLastLogin(r.Context(), u.ID)
 	httpx.WriteData(w, http.StatusOK, pair)
 }
 
@@ -544,10 +558,19 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
 	}
+	// Champs omis : conserver les valeurs existantes (édition partielle mobile).
+	if strings.TrimSpace(req.PhotoURL) == "" {
+		p.PhotoURL = existing.PhotoURL
+	}
+	if req.WeightKg == nil {
+		p.WeightKg = existing.WeightKg
+	}
 	if req.BirthDate != nil {
 		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
 			p.BirthDate = &t
 		}
+	} else {
+		p.BirthDate = existing.BirthDate
 	}
 	if err := a.store.UpdatePet(r.Context(), p); err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
@@ -1033,6 +1056,8 @@ type registerReq struct {
 	Password     string `json:"password"`
 	FullName     string `json:"fullName"`
 	PracticeName string `json:"practiceName"`
+	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
+	Consent bool `json:"consent"`
 }
 
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
@@ -1050,6 +1075,10 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return
 	}
+	if !req.Consent {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
+		return
+	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
 		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
 		return
@@ -1061,6 +1090,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	result, err := a.store.RegisterVet(r.Context(), store.RegisterVetInput{
 		Email: req.Email, Password: req.Password, FullName: req.FullName, PracticeName: req.PracticeName,
 		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
+		TermsAccepted: req.Consent,
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -1068,10 +1098,14 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", a.cfg.ProPublicSiteURL, result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
-	httpx.WriteData(w, http.StatusCreated, map[string]any{
-		"message":     t(r, "success.confirm_email_sent", nil),
-		"confirmPath": "/confirm-email?token=" + result.Token,
-	})
+	out := map[string]any{
+		"message": t(r, "success.confirm_email_sent", nil),
+	}
+	// Dev/demo only: never expose the confirmation token outside seeded environments.
+	if a.cfg.DevSeedEnabled {
+		out["confirmPath"] = "/confirm-email?token=" + result.Token
+	}
+	httpx.WriteData(w, http.StatusCreated, out)
 }
 
 type confirmEmailReq struct {
@@ -1134,7 +1168,10 @@ func (a *API) forgotPassword(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		resetURL := fmt.Sprintf("%s/reset-password?token=%s", a.cfg.ProPublicSiteURL, result.Token)
 		_ = a.notifier.SendPasswordReset(result.Email, result.Locale, result.FullName, resetURL)
-		out["resetPath"] = "/reset-password?token=" + result.Token
+		// Dev/demo only: never expose the reset token outside seeded environments.
+		if a.cfg.DevSeedEnabled {
+			out["resetPath"] = "/reset-password?token=" + result.Token
+		}
 	}
 	// Always 200 — do not reveal whether the email exists.
 	httpx.WriteData(w, http.StatusOK, out)

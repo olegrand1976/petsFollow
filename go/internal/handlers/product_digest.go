@@ -19,8 +19,7 @@ func (a *API) registerProductDigestRoutes(r chi.Router) {
 }
 
 func (a *API) productDigestAuthorized(r *http.Request) bool {
-	secret := a.cfg.ProductDigestSecret
-	return secret != "" && r.Header.Get("X-Product-Digest-Secret") == secret
+	return secretHeaderOK(r, "X-Product-Digest-Secret", a.cfg.ProductDigestSecret)
 }
 
 func brusselsDate(t time.Time) time.Time {

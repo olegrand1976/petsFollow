@@ -88,7 +88,7 @@ func BuildTestWebhookPayload(secret, eventType string, data map[string]any) ([]b
 
 func verifyStripeSignature(payload []byte, signatureHeader, secret string) bool {
 	if signatureHeader == "" {
-		return secret == "whsec_test"
+		return false
 	}
 	var timestamp, sigV1 string
 	for _, part := range strings.Split(signatureHeader, ",") {

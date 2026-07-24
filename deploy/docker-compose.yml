@@ -60,6 +60,7 @@ services:
       HTTP_ADDR: ":8080"
       MIGRATE_ON_BOOT: "true"
       DEV_SEED_ENABLED: "true"
+      BILLING_MOCK_ENABLED: "${BILLING_MOCK_ENABLED:-true}"
     ports:
       - "${PETSFOLLOW_API_PORT:-8291}:8080"
     depends_on:

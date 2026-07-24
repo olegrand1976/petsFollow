@@ -329,6 +329,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proLightSpecialtyBehaviorist => 'Behaviorist';
 
   @override
+  String get proLightSpecialtyGroomer => 'Groomer';
+
+  @override
+  String get proLightSpecialtyBreeder => 'Breeder';
+
+  @override
   String get proLightSpecialtyVetLight => 'Vet light';
 
   @override
@@ -413,6 +419,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountConfirm =>
       'This action cannot be undone. All your pets and data will be deleted.';
+
+  @override
+  String get exportMyData => 'Export my data';
+
+  @override
+  String get registerConsentPrefix => 'I accept the ';
+
+  @override
+  String get registerConsentMiddle => ' and the ';
+
+  @override
+  String get registerConsentRequired =>
+      'You must accept the terms and the privacy policy.';
+
+  @override
+  String get pushPermissionTitle => 'Notifications';
+
+  @override
+  String get pushPermissionBody =>
+      'petsFollow would like to send you notifications: messages from your vet, appointment confirmations and care reminders. You can disable them at any time in the app or phone settings.';
+
+  @override
+  String get pushPermissionContinue => 'Continue';
+
+  @override
+  String exportDataSaved(String path) {
+    return 'Export saved: $path';
+  }
 
   @override
   String get profileSaved => 'Profile saved';
@@ -510,7 +544,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, cardiac monitoring, vet messaging, notifications, billing.\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion or 3 years of inactivity.\n\nGDPR rights (access, rectification, deletion): Profile → Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
+      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, cardiac monitoring, vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google).\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
 
   @override
   String get legalNoticeBody =>
@@ -598,6 +632,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newPet => 'New pet';
+
+  @override
+  String get editPet => 'Edit pet';
 
   @override
   String get petName => 'Name';
@@ -905,20 +942,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewAskNo => 'Later';
 
   @override
-  String get carePlusUpsell => 'Care+ — medications and personalized reminders';
-
-  @override
-  String get carePlusRequired =>
-      'Care+ is required for medications and custom reminders.';
-
-  @override
-  String get horsePackRequired =>
-      'The Horse pack is required for farrier reminders, contacts and competitions.';
-
-  @override
-  String get activateAddon => 'Activate';
-
-  @override
   String get careTypeMedication => 'Medication';
 
   @override
@@ -938,10 +961,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horseCompetitionDate => 'Date (YYYY-MM-DD)';
-
-  @override
-  String get familyPackHint =>
-      'Family pack — household care view, −10% from the 2nd paying pet plan';
 
   @override
   String familyHouseholdTitle(int count) {

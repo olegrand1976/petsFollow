@@ -52,7 +52,7 @@ seed: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api seed
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} go run ./cmd/petsfollow-api
 
 nuxtjs-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0

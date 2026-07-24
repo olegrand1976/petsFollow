@@ -110,6 +110,8 @@
   "proLightSpecialtyFarrier": "Farrier",
   "proLightSpecialtyPhysio": "Physio / osteo",
   "proLightSpecialtyBehaviorist": "Behaviorist",
+  "proLightSpecialtyGroomer": "Groomer",
+  "proLightSpecialtyBreeder": "Breeder",
   "proLightSpecialtyVetLight": "Vet light",
   "proLightReportHintFarrier": "Shoeing notes: hooves, shoe, observations…",
   "proLightEmptyFarrier": "No shared horse / visit yet",
@@ -137,6 +139,21 @@
   "passwordChangeFailed": "Could not change password",
   "deleteAccount": "Delete account",
   "deleteAccountConfirm": "This action cannot be undone. All your pets and data will be deleted.",
+  "exportMyData": "Export my data",
+  "registerConsentPrefix": "I accept the ",
+  "registerConsentMiddle": " and the ",
+  "registerConsentRequired": "You must accept the terms and the privacy policy.",
+  "pushPermissionTitle": "Notifications",
+  "pushPermissionBody": "petsFollow would like to send you notifications: messages from your vet, appointment confirmations and care reminders. You can disable them at any time in the app or phone settings.",
+  "pushPermissionContinue": "Continue",
+  "exportDataSaved": "Export saved: {path}",
+  "@exportDataSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "profileSaved": "Profile saved",
   "changePhoto": "Change photo",
   "addPhoto": "Add a photo",
@@ -179,7 +196,7 @@
   "legalNoticeTitle": "Legal notice",
   "legalOpenOnline": "View online version",
   "legalTermsBody": "Terms of use — petsFollow\n\nThe petsFollow app lets pet owners measure heart rate, view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription (payments via Stripe). Users must use the app as intended.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/terms\n\nLast updated: July 2026",
-  "legalPrivacyBody": "Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, cardiac monitoring, vet messaging, notifications, billing.\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion or 3 years of inactivity.\n\nGDPR rights (access, rectification, deletion): Profile → Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026",
+  "legalPrivacyBody": "Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, cardiac monitoring, vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google).\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026",
   "legalNoticeBody": "Legal notice — petsFollow\n\nPublisher: LL-IT-SC / petsFollow\nContact: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (GDPR-compliant).\n\nPublication director: petsFollow.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/mentions\n\nLast updated: July 2026",
   "language": "Language",
   "languageFr": "Français",
@@ -208,6 +225,7 @@
   "badgePendingPayment": "Payment pending",
   "badgeExpiresOn": "expires {date}",
   "newPet": "New pet",
+  "editPet": "Edit pet",
   "petName": "Name",
   "species": "Species",
   "breed": "Breed",
@@ -300,8 +318,6 @@
   "reviewAskTitle": "Enjoying petsFollow?",
   "reviewAskYes": "Yes, rate the app",
   "reviewAskNo": "Later",
-  "carePlusUpsell": "Care+ — medications and personalized reminders",
-  "familyPackHint": "Family pack — household care view, −10% from the 2nd paying pet plan",
   "familyHouseholdTitle": "Family household — {count} pets",
   "@familyHouseholdTitle": {
     "placeholders": {
@@ -418,9 +434,6 @@
   "horseContactsSoon": "Activate the Horse pack to manage professional contacts.",
   "horseCompetitionsSoon": "Activate the Horse pack for the competition calendar.",
   "horsePackUpsell": "Horse pack — farrier, fecal egg count, contacts and competitions",
-  "carePlusRequired": "Care+ is required for medications and custom reminders.",
-  "horsePackRequired": "The Horse pack is required for farrier reminders, contacts and competitions.",
-  "activateAddon": "Activate",
   "careTypeMedication": "Medication",
   "horseAddContact": "Add a contact",
   "horseAddCompetition": "Add a competition",

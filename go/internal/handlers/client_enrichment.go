@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -144,7 +143,6 @@ func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	hasKennel, _ := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))
 	pets, err := a.store.ListPetsByOwner(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -158,8 +156,10 @@ func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 	if upcoming == nil {
 		upcoming = []store.HouseholdCareItem{}
 	}
+	// Le pack découle du nombre d'animaux (addons plus vendus — cf. politique tarifaire),
+	// plus de dépendance à l'addon kennel legacy.
 	pack := "standard"
-	if hasKennel {
+	if len(pets) >= store.KennelMinPets {
 		pack = "kennel"
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{

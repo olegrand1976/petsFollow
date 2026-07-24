@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { extractAccessToken, isMFAChallenge, unwrapAuthData, persistAuthTokens, clearAuthTokens } from '~/composables/useAuth'
+import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
@@ -133,7 +133,7 @@ async function redirectAfterLogin() {
       return
     }
     if (!isProRole(role)) {
-      clearAuthTokens()
+      await clearAuthTokens()
       error.value = t('auth.login.proOnly')
       return
     }
@@ -151,11 +151,11 @@ async function handleAuthResult(res: unknown) {
     totpCode.value = ''
     return
   }
-  if (!extractAccessToken(data)) {
+  if (!isAuthSuccess(data)) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  persistAuthTokens(data)
+  // Cookies httpOnly posés par la BFF — rien à persister côté client.
   await redirectAfterLogin()
 }
 

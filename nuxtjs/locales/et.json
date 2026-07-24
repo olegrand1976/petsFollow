@@ -117,7 +117,9 @@
       "submit": "Loo minu konto",
       "alreadyRegistered": "Juba registreerunud?",
       "loginLink": "Logi sisse",
-      "failed": "Registreerimine ebaõnnestus"
+      "failed": "Registreerimine ebaõnnestus",
+      "consent": "Nõustun {terms} ja {privacy} tingimustega.",
+      "consentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga."
     },
     "registerSent": {
       "brandTitle": "Kontrollige oma postkasti",
@@ -173,7 +175,8 @@
     "species": {
       "dog": "Koer",
       "cat": "Kass",
-      "horse": "Hobune"
+      "horse": "Hobune",
+      "other": "Muu"
     },
     "clientFallback": "Klient {id}…",
     "breadcrumb": "Jäljerida",
@@ -289,6 +292,18 @@
       "mismatch": "Paroolid ei ühti."
     },
     "legalLinks": "Õigusteave",
+    "privacy": {
+      "title": "Andmed ja privaatsus",
+      "exportHint": "Laadige alla oma andmete koopia JSON-vormingus (GDPR — õigus andmete ülekantavusele).",
+      "exportButton": "Ekspordi minu andmed"
+    },
+    "deleteAccount": {
+      "title": "Kustuta minu konto",
+      "hint": "Teie isikuandmed kustutatakse jäädavalt (GDPR — õigus kustutamisele). Seda toimingut ei saa tagasi võtta.",
+      "button": "Kustuta minu konto",
+      "confirmText": "Kinnitage oma konto lõplik kustutamine.",
+      "confirm": "Kustuta jäädavalt"
+    },
     "calendar": {
       "title": "Kalender ja broneerimine",
       "slotsHint": "Määrake nädalased tööajad enne kliendi broneerimise lubamist.",
@@ -584,6 +599,35 @@
     "sending": "Saatmine…"
   },
   "admin": {
+    "stripeCatalog": {
+      "title": "Stripe'i kataloog",
+      "subtitle": "Stripe'ist sünkroonitud tooted ja hinnad.",
+      "importHint": "Importige Stripe'i CSV-ekspordid: kõigepealt tooted, seejärel hinnad.",
+      "importProducts": "Impordi tooted",
+      "importPrices": "Impordi hinnad",
+      "file": "CSV-fail",
+      "uploadSubmit": "Impordi",
+      "uploadFailed": "Import ebaõnnestus",
+      "importResult": "{inserted} loodud · {updated} uuendatud · {skipped} vahele jäetud",
+      "productsTitle": "Tooted",
+      "pricesTitle": "Hinnad",
+      "emptyProducts": "Ühtegi toodet pole imporditud.",
+      "emptyPrices": "Ühtegi hinda pole imporditud.",
+      "colProductId": "Toote ID",
+      "colName": "Nimi",
+      "colTaxCode": "Maksukood",
+      "colPlanSlug": "Plaani slug",
+      "colActive": "Olek",
+      "colPriceId": "Hinna ID",
+      "colProduct": "Toode",
+      "colPlan": "Plaan",
+      "colMode": "Režiim",
+      "colAmount": "Summa",
+      "colInterval": "Intervall",
+      "active": "Aktiivne",
+      "inactive": "Mitteaktiivne",
+      "oneTime": "Ühekordne makse"
+    },
     "dashboard": {
       "title": "Admini töölaud",
       "subtitle": "Müügi-, turundus- ja arveldus-KPI-d.",
@@ -728,8 +772,7 @@
       "sheetTitle": "Komisjonimudel (ülevaade)",
       "planRatesHint": "Ärimäärad on plaani järgi fikseeritud (ilma käibemaksuta): 8% igakuine · 8% aastane · 12% kolmeaastane — lisasid pole. Siin ei muudeta (vt ülalolevat lehte).",
       "profileRatesTitle": "Tasumäärad profiili järgi",
-      "profileRatesHint": "Care_pro määrad (vaikimisi 0 %). Valmis tulevaseks väljamakseks.",
-      "profileRatesLedgerStub": "Tähelepanu: care_pro ledger pole veel ühendatud — määr > 0 % salvestatakse, kuid komisjoniridu veel ei teki.",
+      "profileRatesHint": "Care_pro määrad (vaikimisi 0%). Määr üle 0% loob komisjoniread lemmiklooma plaani aktiveerimisel; loomaarst / müük jäävad oma senistele skaaladele.",
       "profileKey": "Võti",
       "profileLabel": "Profiil",
       "profileRate": "Määr",
@@ -1359,7 +1402,7 @@
     "privacy": {
       "title": "Privaatsuspoliitika",
       "link": "Privaatsus",
-      "body": "petsFollow töötleb isikuandmeid loomade südame jälgimise teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, arveldus. Partnerid: Google (Sign-In, FCM), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal või 3 aastat passiivsust. GDPR-õigused: mobiilirakenduse seaded (Profiil → Kustuta konto) või support{'@'}ll-it-sc.be."
+      "body": "petsFollow töötleb isikuandmeid loomade südame jälgimise teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Õigusteave",

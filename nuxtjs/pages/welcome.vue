@@ -57,7 +57,8 @@ definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const token = useCookie('pf_token')
-const isAuthenticated = computed(() => !!token.value)
+const session = useCookie('pf_session')
+const isAuthenticated = computed(() => !!(token.value || session.value))
 
 const steps = [
   { key: 'profile' },
@@ -98,10 +99,10 @@ async function goPrimary() {
       await navigateTo(homePathForRole(data.role, { profileComplete: data.profileComplete }))
       return
     }
-    clearAuthTokens()
+    await clearAuthTokens()
     await navigateTo('/login')
   } catch {
-    clearAuthTokens()
+    await clearAuthTokens()
     await navigateTo('/login')
   }
 }

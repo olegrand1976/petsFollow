@@ -19,6 +19,8 @@ type registerClientReq struct {
 	Password   string `json:"password"`
 	FullName   string `json:"fullName"`
 	InviteCode string `json:"inviteCode,omitempty"`
+	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
+	Consent bool `json:"consent"`
 }
 
 type registerCareProReq struct {
@@ -43,6 +45,10 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return
 	}
+	if !req.Consent {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
+		return
+	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
 		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
 		return
@@ -53,6 +59,7 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 	locale := localeOf(r)
 	result, err := a.store.RegisterClient(r.Context(), store.RegisterClientInput{
 		Email: req.Email, Password: req.Password, FullName: req.FullName, PreferredLocale: locale,
+		TermsAccepted: req.Consent,
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -61,10 +68,14 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 	a.tryClaimInvite(r, result.UserID, req.InviteCode)
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
-	httpx.WriteData(w, http.StatusCreated, map[string]any{
-		"message":     t(r, "success.confirm_email_sent", nil),
-		"confirmPath": "/confirm-email?token=" + result.Token,
-	})
+	out := map[string]any{
+		"message": t(r, "success.confirm_email_sent", nil),
+	}
+	// Dev/demo only: never expose the confirmation token outside seeded environments.
+	if a.cfg.DevSeedEnabled {
+		out["confirmPath"] = "/confirm-email?token=" + result.Token
+	}
+	httpx.WriteData(w, http.StatusCreated, out)
 }
 
 func (a *API) registerCarePro(w http.ResponseWriter, r *http.Request) {
@@ -105,10 +116,14 @@ func (a *API) registerCarePro(w http.ResponseWriter, r *http.Request) {
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
-	httpx.WriteData(w, http.StatusCreated, map[string]any{
-		"message":     t(r, "success.confirm_email_sent", nil),
-		"confirmPath": "/confirm-email?token=" + result.Token,
-	})
+	out := map[string]any{
+		"message": t(r, "success.confirm_email_sent", nil),
+	}
+	// Dev/demo only: never expose the confirmation token outside seeded environments.
+	if a.cfg.DevSeedEnabled {
+		out["confirmPath"] = "/confirm-email?token=" + result.Token
+	}
+	httpx.WriteData(w, http.StatusCreated, out)
 }
 
 func (a *API) linkExistingVetClient(w http.ResponseWriter, r *http.Request) {

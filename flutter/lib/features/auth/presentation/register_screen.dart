@@ -10,6 +10,8 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
+import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
+import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? info;
   String? success;
   bool _busy = false;
+  bool consent = false;
 
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -57,6 +60,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => error = l10n.passwordMismatch);
       return;
     }
+    if (!consent) {
+      setState(() => error = l10n.registerConsentRequired);
+      return;
+    }
     setState(() {
       error = null;
       info = null;
@@ -69,6 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: pass,
         fullName: name,
         locale: LocaleController.instance.locale.languageCode,
+        consent: consent,
       );
       if (!mounted) return;
       setState(() => success = l10n.registerSuccess);
@@ -115,6 +123,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _busy = false;
       });
     }
+  }
+
+  void _openLegal(LegalDocumentType type) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LegalDocumentScreen(type: type)),
+    );
+  }
+
+  Widget _buildConsentRow(AppLocalizations l10n) {
+    final linkStyle = TextStyle(
+      color: AppColors.accent,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.accent,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: consent,
+          onChanged: _busy ? null : (v) => setState(() => consent = v ?? false),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Wrap(
+              children: [
+                Text(l10n.registerConsentPrefix),
+                GestureDetector(
+                  onTap: () => _openLegal(LegalDocumentType.terms),
+                  child: Text(l10n.legalTermsTitle, style: linkStyle),
+                ),
+                Text(l10n.registerConsentMiddle),
+                GestureDetector(
+                  onTap: () => _openLegal(LegalDocumentType.privacy),
+                  child: Text(l10n.legalPrivacyTitle, style: linkStyle),
+                ),
+                const Text('.'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void tapApple() {
@@ -183,6 +234,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onSubmitted: (_) => submit(),
                     decoration: InputDecoration(labelText: l10n.confirmNewPassword),
                   ),
+                  const SizedBox(height: 8),
+                  _buildConsentRow(l10n),
                   if (info != null) ...[
                     const SizedBox(height: 12),
                     Text(info!, style: const TextStyle(color: AppColors.accent)),

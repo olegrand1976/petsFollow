@@ -95,7 +95,11 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	u, _ := a.store.GetUserByID(r.Context(), owner.UserID)
+	u, err := a.store.GetUserByID(r.Context(), owner.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
 		PetID:       pet.ID,
 		OwnerUserID: owner.UserID,
@@ -134,8 +138,16 @@ func (a *API) resumePetCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body createPetBilling
-	_ = httpx.DecodeJSON(r, &body)
-	u, _ := a.store.GetUserByID(r.Context(), id.UserID)
+	// Corps optionnel (successUrl/cancelUrl) : seul un JSON malformé est rejeté.
+	if derr := httpx.DecodeJSON(r, &body); derr != nil && derr != io.EOF {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
 		PetID:       pet.ID,
 		OwnerUserID: id.UserID,
@@ -172,7 +184,11 @@ func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ReturnURL string `json:"returnUrl"`
 	}
-	_ = httpx.DecodeJSON(r, &body)
+	// Corps optionnel (returnUrl) : seul un JSON malformé est rejeté.
+	if derr := httpx.DecodeJSON(r, &body); derr != nil && derr != io.EOF {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
 	portal, err := a.billing.CreatePortalSession(r.Context(), id.UserID, body.ReturnURL)
 	if err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
@@ -183,18 +199,30 @@ func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) getPetEntitlement(w http.ResponseWriter, r *http.Request) {
 	petID := chi.URLParam(r, "petID")
-	id, _ := authx.FromContext(r.Context())
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
-	if id.Role == kernel.RoleClient && pet.OwnerUserID != id.UserID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-		return
-	}
-	if id.Role == kernel.RoleVet && pet.PracticeID != id.PracticeID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+	// Deny-by-default : seuls le propriétaire et un véto du cabinet lisent l'entitlement.
+	switch id.Role {
+	case kernel.RoleClient:
+		if pet.OwnerUserID != id.UserID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return
+		}
+	case kernel.RoleVet:
+		if pet.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			return
+		}
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
 	ent, err := a.store.GetEntitlementByPetID(r.Context(), petID)

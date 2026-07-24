@@ -1,0 +1,40 @@
+---
+description: Garde-fous sécurité (auth, secrets, headers) et RGPD à respecter sur toute modification
+alwaysApply: true
+---
+
+# Sécurité & RGPD — invariants petsFollow
+
+## Tokens & auth
+
+- **Jamais** de JWT accessible au JS client. Nuxt : cookies **httpOnly** (`pf_token`, `pf_refresh`) posés par la BFF (`nuxtjs/server/utils/api.ts` — `setAuthCookies`/`absorbAuthTokens`) ; seul le marqueur `pf_session` est lisible. Flutter : `flutter_secure_storage` uniquement.
+- Tout nouvel endpoint auth **public** (login-like, register-like) doit passer par le rate limiter `authRL.Middleware` (`go/internal/handlers/api.go`).
+- Register (vet ou client) exige `"consent": true` → horodaté dans `identity.users.terms_accepted_at`. Tout nouveau flow d'inscription doit inclure le consentement (UI + API + tests).
+
+```go
+// ❌ BAD — nouvel endpoint interne avec comparaison naïve
+if r.Header.Get("X-My-Secret") != cfg.MySecret { ... }
+
+// ✅ GOOD — temps constant via le helper existant
+if !secretHeaderOK(r, "X-My-Secret", cfg.MySecret) { ... } // handlers/retention.go
+```
+
+## Headers & ressources externes
+
+- CSP générée par `buildCsp()` dans `nuxtjs/nuxt.config.ts` : toute nouvelle ressource externe (script, font, connect) doit y être ajoutée explicitement — ne pas élargir avec `*`.
+- Pas de CDN Google Fonts : fonts auto-hébergées (`nuxtjs/assets/css/fonts.css` + `public/fonts/`).
+- Origines CORS Go : allowlist `CORS_ALLOWED_ORIGINS` — ne pas remettre de wildcard.
+
+## RGPD — données utilisateur
+
+Toute nouvelle table/colonne contenant des données personnelles doit être couverte par :
+
+1. **Export** : `ExportUserData` (`go/internal/store/user_export.go`) — ajouter l'agrégat JSON.
+2. **Suppression/anonymisation** : purge client + tombstone pro (`go/internal/handlers/retention.go`, `store/user_profile.go`).
+3. **Rétention** : purge 3 ans d'inactivité (`internal/retention/run`) si applicable.
+
+## Dev vs prod
+
+- `confirmPath`/`resetPath` en réponse API : uniquement derrière `DEV_SEED_ENABLED` (e2e/smoke en dépendent).
+- `JWT_SIGNING_KEY` par défaut = fail-fast hors dev ; ne pas contourner.
+- `BILLING_MOCK_ENABLED` opt-in explicite ; la signature webhook Stripe se vérifie toujours, même en mock.

@@ -24,6 +24,7 @@
               <option value="dog">{{ $t('common.species.dog') }}</option>
               <option value="cat">{{ $t('common.species.cat') }}</option>
               <option value="horse">{{ $t('common.species.horse') }}</option>
+              <option value="other">{{ $t('common.species.other') }}</option>
             </select>
           </div>
         </template>

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -91,28 +92,36 @@ func (s *Store) UpsertProfileCommissionRates(ctx context.Context, rates []Profil
 	return tx.Commit(ctx)
 }
 
-// AccrueCareProForPetActivation prepares care_pro commission accrual.
-// No-op while all specialty rates are 0%; ready to write ledger when rates > 0.
+// AccrueCareProForPetActivation écrit une ligne de ledger `care_pro` par
+// professionnel lié au foyer (taux admin par spécialité, base HT du plan).
+// Idempotent via l'index partiel (entitlement_id, vet_user_id) WHERE source_kind='care_pro'.
 func (s *Store) AccrueCareProForPetActivation(ctx context.Context, petID string) error {
-	var ownerID string
-	err := s.pool.QueryRow(ctx, `SELECT owner_user_id::text FROM pets.pets WHERE id=$1`, petID).Scan(&ownerID)
-	if errors.Is(err, pgx.ErrNoRows) {
+	ent, err := s.GetEntitlementByPetID(ctx, petID)
+	if errors.Is(err, ErrNotFound) {
 		return nil
 	}
 	if err != nil {
 		return err
+	}
+	if ent.Status != "active" && ent.Status != "past_due" && ent.Status != "cancelled" {
+		return nil
 	}
 
 	rows, err := s.pool.Query(ctx, `
 		SELECT u.id::text, COALESCE(u.professional_specialty,'')
 		FROM practice.client_access ca
 		JOIN identity.users u ON u.id = ca.grantee_user_id
-		WHERE ca.client_user_id = $1 AND u.role = 'care_pro'`, ownerID)
+		WHERE ca.client_user_id = $1 AND u.role = 'care_pro'`, ent.OwnerUserID)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
+	type accrual struct {
+		careProID string
+		rateBps   int
+	}
+	var accruals []accrual
 	for rows.Next() {
 		var careProID, specialty string
 		if err := rows.Scan(&careProID, &specialty); err != nil {
@@ -121,8 +130,7 @@ func (s *Store) AccrueCareProForPetActivation(ctx context.Context, petID string)
 		if specialty == "" {
 			continue
 		}
-		key := "care_pro." + specialty
-		rate, err := s.GetProfileCommissionRate(ctx, key)
+		rate, err := s.GetProfileCommissionRate(ctx, "care_pro."+specialty)
 		if errors.Is(err, ErrNotFound) {
 			continue
 		}
@@ -130,11 +138,34 @@ func (s *Store) AccrueCareProForPetActivation(ctx context.Context, petID string)
 			return err
 		}
 		if rate.RateBps <= 0 {
-			// Prepared ground: skip ledger until admin sets a non-zero rate.
 			continue
 		}
-		// Future: insert care_pro commission ledger line (rate.RateBps of HT).
-		_ = careProID
+		accruals = append(accruals, accrual{careProID: careProID, rateBps: rate.RateBps})
 	}
-	return rows.Err()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if len(accruals) == 0 {
+		return nil
+	}
+
+	period, err := s.ResolveOpenPeriodYM(ctx, PeriodYM(time.Now()))
+	if err != nil {
+		return err
+	}
+	baseHT := HTVACents(ent.AmountCents)
+	for _, a := range accruals {
+		commission := CommercialCommissionCents(baseHT, a.rateBps)
+		if _, err := s.pool.Exec(ctx, `
+			INSERT INTO billing.commission_ledger (
+				id, vet_user_id, client_user_id, pet_id, entitlement_id,
+				base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at, source_kind
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),'care_pro')
+			ON CONFLICT (entitlement_id, vet_user_id) WHERE source_kind='care_pro' DO NOTHING`,
+			uuid.NewString(), a.careProID, ent.OwnerUserID, petID, ent.ID,
+			baseHT, a.rateBps, commission, period); err != nil {
+			return err
+		}
+	}
+	return nil
 }

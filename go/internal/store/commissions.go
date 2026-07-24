@@ -297,7 +297,10 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 
 	var exists bool
 	if err := tx.QueryRow(ctx, `
-		SELECT EXISTS(SELECT 1 FROM billing.commission_ledger WHERE entitlement_id=$1)`, ent.ID).Scan(&exists); err != nil {
+		SELECT EXISTS(
+			SELECT 1 FROM billing.commission_ledger
+			WHERE entitlement_id=$1 AND COALESCE(source_kind,'pet_plan')='pet_plan'
+		)`, ent.ID).Scan(&exists); err != nil {
 		return err
 	}
 	if exists {
@@ -367,7 +370,7 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 			id, vet_user_id, client_user_id, pet_id, entitlement_id,
 			base_amount_cents, rate_bps, commission_cents, period_ym, accrued_at
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
-		ON CONFLICT (entitlement_id) DO NOTHING`,
+		ON CONFLICT (entitlement_id) WHERE source_kind='pet_plan' DO NOTHING`,
 		uuid.NewString(), vetUserID, ent.OwnerUserID, petID, ent.ID,
 		baseHT, rateBps, commission, period); err != nil {
 		return err

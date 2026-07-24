@@ -92,12 +92,8 @@ onMounted(async () => {
     const data = res.data ?? res
     confirmed.value = true
     confirmedEmail.value = data.email || ''
-    if (data.accessToken) {
-      persistAuthTokens({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        expiresIn: data.expiresIn,
-      })
+    if (data.authenticated || data.accessToken) {
+      // Cookies httpOnly posés par la BFF.
       sessionReady.value = true
     }
   } catch (e: any) {

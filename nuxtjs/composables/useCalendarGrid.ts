@@ -1,6 +1,7 @@
 export type CalendarVisit = {
   id: string
   status: string
+  pendingActionBy?: string
   clientId?: string
   clientName?: string
   petName?: string

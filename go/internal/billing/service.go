@@ -24,16 +24,54 @@ type Service struct {
 
 func NewService(st *store.Store, cfg config.Config) *Service {
 	var gw Gateway
-	if LiveEnabled(cfg.StripeSecretKey, cfg.BillingMockEnabled) {
+	switch {
+	case LiveEnabled(cfg.StripeSecretKey, cfg.BillingMockEnabled):
 		gw = NewLiveGateway(cfg.StripeSecretKey, cfg.StripeWebhookSecret)
-	} else {
+	case cfg.BillingMockEnabled:
 		gw = NewMockGateway(cfg.StripeWebhookSecret, cfg.APIPublicURL)
+	default:
+		// Ni Stripe live ni mock explicite : fail-fast plutôt qu'un mock silencieux en prod.
+		gw = disabledGateway{}
 	}
 	return &Service{store: st, gateway: gw, cfg: cfg}
 }
 
+// disabledGateway refuse toute opération billing quand aucun gateway n'est configuré
+// (pas de clé Stripe et BILLING_MOCK_ENABLED absent).
+type disabledGateway struct{}
+
+var errBillingNotConfigured = errors.New("billing gateway not configured (set STRIPE_SECRET_KEY or BILLING_MOCK_ENABLED=true)")
+
+func (disabledGateway) CreateCheckoutSession(context.Context, CheckoutRequest) (CheckoutSession, error) {
+	return CheckoutSession{}, errBillingNotConfigured
+}
+
+func (disabledGateway) CreatePortalSession(context.Context, string, string) (PortalSession, error) {
+	return PortalSession{}, errBillingNotConfigured
+}
+
+func (disabledGateway) CancelSubscription(context.Context, string) error {
+	return errBillingNotConfigured
+}
+
+func (disabledGateway) VerifyWebhook([]byte, string) (StripeEvent, error) {
+	return StripeEvent{}, errBillingNotConfigured
+}
+
 func NewServiceWithGateway(st *store.Store, cfg config.Config, gw Gateway) *Service {
 	return &Service{store: st, gateway: gw, cfg: cfg}
+}
+
+// CancelUserSubscriptions annule (best-effort) les abonnements Stripe listés — effacement RGPD.
+func (s *Service) CancelUserSubscriptions(ctx context.Context, subscriptionIDs []string) {
+	for _, id := range subscriptionIDs {
+		if id == "" {
+			continue
+		}
+		if err := s.gateway.CancelSubscription(ctx, id); err != nil {
+			fmt.Printf("account deletion: cancel Stripe subscription %s failed: %v\n", id, err)
+		}
+	}
 }
 
 func (s *Service) notifyOwnerPastDue(ctx context.Context, ownerUserID string) {

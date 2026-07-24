@@ -2,9 +2,12 @@
 export const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
 
 export type AuthTokens = {
-  accessToken: string
+  /** Absent quand la BFF a absorbé les tokens en cookies httpOnly. */
+  accessToken?: string
   refreshToken?: string
   expiresIn?: number
+  /** Posé par la BFF quand les cookies httpOnly ont été établis. */
+  authenticated?: boolean
 }
 
 export type AuthMFAChallenge = {
@@ -67,9 +70,14 @@ export function extractAccessToken(res: AuthResponse): string | null {
   return res.accessToken ?? null
 }
 
+/** Succès auth : cookies httpOnly posés par la BFF (`authenticated`) ou tokens legacy. */
+export function isAuthSuccess(res: AuthResponse): boolean {
+  if (isMFAChallenge(res)) return false
+  return res.authenticated === true || !!res.accessToken
+}
+
 function authCookieOpts() {
   return {
-    maxAge: AUTH_COOKIE_MAX_AGE,
     sameSite: 'lax' as const,
     // Align with server/utils/api.ts (NODE_ENV === 'production').
     secure: process.env.NODE_ENV === 'production',
@@ -77,22 +85,42 @@ function authCookieOpts() {
   }
 }
 
-export function persistAuthTokens(pair: AuthTokens) {
-  const opts = authCookieOpts()
-  const access = useCookie('pf_token', opts)
-  const refresh = useCookie('pf_refresh', opts)
-  access.value = pair.accessToken
-  if (pair.refreshToken) {
-    refresh.value = pair.refreshToken
+/**
+ * Session présente ? Les JWT sont httpOnly : côté client seul le marqueur
+ * `pf_session` est visible ; côté SSR les cookies de requête restent lisibles.
+ */
+export function hasSessionCookie(): boolean {
+  return !!(
+    useCookie('pf_token').value
+    || useCookie('pf_refresh').value
+    || useCookie('pf_session').value
+  )
+}
+
+/** Token d'accès (TTL court) pour les WebSockets — les cookies étant httpOnly. */
+export async function fetchWsToken(): Promise<string> {
+  try {
+    const res: any = await $fetch('/api/auth/ws-token')
+    const data = res?.data ?? res
+    return (data?.token as string) || ''
+  } catch {
+    return ''
   }
 }
 
-export function clearAuthTokens() {
+export async function clearAuthTokens() {
   const opts = authCookieOpts()
-  const access = useCookie('pf_token', opts)
-  const refresh = useCookie('pf_refresh', opts)
-  access.value = null
-  refresh.value = null
+  // Efficace en SSR ; côté client les cookies httpOnly ne sont supprimables que par la BFF.
+  useCookie('pf_token', opts).value = null
+  useCookie('pf_refresh', opts).value = null
+  useCookie('pf_session', opts).value = null
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.
   useState('pro-user').value = null
+  if (import.meta.client) {
+    try {
+      await $fetch('/api/auth/logout', { method: 'POST' })
+    } catch {
+      // best effort — le marqueur pf_session est déjà purgé.
+    }
+  }
 }

@@ -252,7 +252,7 @@ func (a *API) adminListProfileCommissionRates(w http.ResponseWriter, r *http.Req
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"profileRates": rates,
-		"ledgerWired":  false, // AccrueCareProForPetActivation is prepared but no ledger yet
+		"ledgerWired":  true, // AccrueCareProForPetActivation écrit des lignes source_kind='care_pro'
 		"vetPlanRates": store.SubscriptionPlanRates(),
 		"commercialPlanRates": map[string]int{
 			"monthly":   store.CommercialRateMonthlyBps,

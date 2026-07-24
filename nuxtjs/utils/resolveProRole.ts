@@ -7,8 +7,7 @@ export async function resolveProRole(): Promise<string | null> {
   const fromJwt = parseJwtRole(token.value)
   if (fromJwt) return fromJwt
 
-  const refresh = useCookie('pf_refresh')
-  if (!token.value && !refresh.value) return null
+  if (!hasSessionCookie()) return null
 
   try {
     const { fetchUser } = useProUser()

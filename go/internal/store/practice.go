@@ -66,6 +66,8 @@ type RegisterVetInput struct {
 	PracticeName     string
 	PreferredLocale  string
 	AutoReplyDefault string
+	// TermsAccepted horodate le consentement CGU/privacy (RGPD art. 7).
+	TermsAccepted bool
 }
 
 type RegisterVetResult struct {
@@ -233,9 +235,9 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 		return RegisterVetResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale)
-		VALUES ($1, $2, $3, $4, 'vet', $5, $6)`,
-		userID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale, terms_accepted_at)
+		VALUES ($1, $2, $3, $4, 'vet', $5, $6, CASE WHEN $7 THEN NOW() END)`,
+		userID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.PreferredLocale), in.TermsAccepted); err != nil {
 		return RegisterVetResult{}, err
 	}
 	autoReply := in.AutoReplyDefault

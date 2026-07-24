@@ -4,6 +4,7 @@
     "invalid_json": "Ongeldige JSON",
     "fields_required": "Alle velden zijn verplicht",
     "password_too_short": "Wachtwoord te kort (minimaal 8 tekens)",
+    "consent_required": "U moet de algemene voorwaarden en het privacybeleid accepteren",
     "image_too_large": "Bestand te groot (limiet overschreden)",
     "invalid_image_type": "Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Bestand verplicht",

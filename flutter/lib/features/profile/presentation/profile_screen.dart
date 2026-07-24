@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/media_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -104,6 +108,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => error = 'password');
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  /// Portabilité RGPD : export JSON écrit dans les documents de l'app.
+  Future<void> _exportData() async {
+    setState(() {
+      saving = true;
+      error = null;
+    });
+    try {
+      final data = await ApiClient.instance.exportMyData();
+      final dir = await getApplicationDocumentsDirectory();
+      final stamp = DateTime.now().toIso8601String().substring(0, 10);
+      final file = File('${dir.path}/petsfollow-export-$stamp.json');
+      await file.writeAsString(const JsonEncoder.withIndent('  ').convert(data));
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.exportDataSaved(file.path))));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => error = 'export');
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -220,6 +249,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             FilledButton(
                 onPressed: saving ? null : _save, child: Text(l10n.save)),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: saving ? null : _exportData,
+              icon: const Icon(Icons.download_outlined),
+              label: Text(l10n.exportMyData),
+            ),
             const SizedBox(height: 32),
             Center(
               child: TextButton(

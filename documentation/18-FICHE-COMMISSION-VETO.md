@@ -9,7 +9,11 @@
 
 **Déclenchement** : **une fois** à l’activation payante (checkout animal). Pas de commission au renouvellement Stripe.
 
-**Attribution** : le véto rétribué est celui lié via `practice.practice_clients` (dernier lien cabinet du owner). Les invitations app (QR / email `/invite/{code}` sur `/clients`) auto-rattachent le nouveau client au véto émetteur à l’inscription ou au claim deep link.
+**Attribution** : le véto rétribué est celui lié via `practice.practice_clients` (dernier lien cabinet du owner). Les invitations app (QR / email `/invite/{code}`) auto-rattachent le nouveau client au véto émetteur à l’inscription ou au claim deep link.
+
+**Care pro** : taux configurables dans Admin → Rétributions (`billing.profile_commission_rates`, clés `care_pro.*`). Défaut **0 %** — pas de ligne tant que le taux reste à 0. Dès qu'un taux > 0 est défini, l'activation d'un plan animal écrit une ligne `source_kind='care_pro'` dans `billing.commission_ledger` (base HT × taux, une ligne par care_pro lié au foyer, période ouverte) — les payouts suivent le circuit runs/lines existant. Claim QR care_pro → grant `client_access` (`write_notes`).
+
+**Commercial** : QR invite enregistre `practice.commercial_referrals` ; la commission commercial reste basée sur le véto assigné (inchangé).
 
 ## Grille progressive (base)
 | Clients payants | Taux |

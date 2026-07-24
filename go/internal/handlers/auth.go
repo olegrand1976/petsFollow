@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/pquerna/otp/totp"
@@ -19,9 +21,13 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
-func (a *API) registerAuthRoutes(r chi.Router) {
-	r.Post("/auth/google", a.googleLogin)
-	r.Post("/auth/2fa/verify", a.verify2FA)
+func (a *API) registerAuthRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	// Mêmes limites que login/register : google (idToken) et 2FA (code à 6 chiffres brute-forçable).
+	r.Group(func(ar chi.Router) {
+		ar.Use(rateLimit)
+		ar.Post("/auth/google", a.googleLogin)
+		ar.Post("/auth/2fa/verify", a.verify2FA)
+	})
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -206,7 +212,41 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.store.TouchLastLogin(r.Context(), u.ID)
 	httpx.WriteData(w, http.StatusOK, pair)
+}
+
+// totpReplayGuard — anti-replay : un code TOTP accepté ne peut pas être rejoué
+// dans sa fenêtre de validité (~90 s avec skew ±1). En mémoire, par instance.
+type totpReplayGuard struct {
+	mu   sync.Mutex
+	last map[string]totpUse
+}
+
+type totpUse struct {
+	code string
+	at   time.Time
+}
+
+var totpGuard = totpReplayGuard{last: make(map[string]totpUse)}
+
+// checkAndRemember retourne false si le même code vient d'être consommé pour cet utilisateur.
+func (g *totpReplayGuard) checkAndRemember(userID, code string) bool {
+	const replayWindow = 2 * time.Minute
+	now := time.Now()
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if use, ok := g.last[userID]; ok && use.code == code && now.Sub(use.at) < replayWindow {
+		return false
+	}
+	// GC opportuniste.
+	for k, use := range g.last {
+		if now.Sub(use.at) >= replayWindow {
+			delete(g.last, k)
+		}
+	}
+	g.last[userID] = totpUse{code: code, at: now}
+	return true
 }
 
 type verify2FAReq struct {
@@ -230,7 +270,7 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) {
+	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
@@ -239,6 +279,7 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.store.TouchLastLogin(r.Context(), id.UserID)
 	httpx.WriteData(w, http.StatusOK, pair)
 }
 
@@ -363,7 +404,7 @@ func (a *API) twoFactorDisable(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) {
+	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}

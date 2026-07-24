@@ -70,12 +70,6 @@ export function mergeTranscriptChunk(current: string, incoming: string): string 
   return current + (needSpace ? ' ' : '') + next
 }
 
-function readCookie(name: string): string {
-  if (typeof document === 'undefined') return ''
-  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
-  return m ? decodeURIComponent(m[1]) : ''
-}
-
 type BrowserAudioContext = typeof AudioContext
 
 function getAudioContextCtor(): BrowserAudioContext | null {
@@ -184,7 +178,8 @@ export function usePitchLive() {
   }
 
   async function connect(simId: string, cb: PitchLiveCallbacks): Promise<boolean> {
-    const token = readCookie('pf_token')
+    // Cookies auth httpOnly : le token WS (TTL court) est fourni par la BFF.
+    const token = await fetchWsToken()
     if (!token) return false
     const wsUrl = apiBase.replace(/^http/, 'ws')
       + `/api/v1/commercial/pitch-sims/${simId}/live?token=${encodeURIComponent(token)}`

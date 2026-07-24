@@ -56,10 +56,10 @@ export function useProUser() {
       .toUpperCase()
   }
 
-  function logout() {
-    clearAuthTokens()
+  async function logout() {
+    await clearAuthTokens()
     userState.value = null
-    navigateTo('/login')
+    await navigateTo('/login')
   }
 
   return { user, loading, fetchUser, initials, logout }

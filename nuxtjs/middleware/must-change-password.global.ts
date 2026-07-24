@@ -20,9 +20,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (to.path === '/' || SKIP_PREFIXES.some((p) => to.path === p || to.path.startsWith(`${p}/`))) {
     return
   }
-  const token = useCookie('pf_token')
-  const refresh = useCookie('pf_refresh')
-  if (!token.value && !refresh.value) return
+  if (!hasSessionCookie()) return
 
   try {
     const { fetchUser } = useProUser()
@@ -36,7 +34,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   } catch (e) {
     if (isUnauthorized(e)) {
-      clearAuthTokens()
+      await clearAuthTokens()
       return navigateTo('/login')
     }
     // 5xx / network: do not force logout.

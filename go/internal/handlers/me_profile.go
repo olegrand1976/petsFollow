@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
@@ -78,11 +80,21 @@ func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
-		return
+	switch id.Role {
+	case kernel.RoleClient:
+		a.deleteClientMe(w, r, id.UserID)
+	case kernel.RoleVet, kernel.RoleCommercial, kernel.RoleCommercialManager, kernel.RoleCarePro:
+		a.deleteProMe(w, r, id.UserID)
+	default:
+		// admin : pas d'auto-suppression (dernier accès plateforme).
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 	}
-	if err := a.store.DeleteClientAccount(r.Context(), id.UserID); err != nil {
+}
+
+// deleteClientMe — effacement RGPD complet : DB, puis purge best-effort des
+// médias (GCS/local) et annulation des abonnements Stripe.
+func (a *API) deleteClientMe(w http.ResponseWriter, r *http.Request, userID string) {
+	if err := a.purgeClientAccount(r.Context(), userID); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "user_not_found")
 			return
@@ -91,6 +103,53 @@ func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+// deleteProMe — anonymisation du compte Pro + purge de l'avatar.
+func (a *API) deleteProMe(w http.ResponseWriter, r *http.Request, userID string) {
+	if err := a.anonymizeProAccount(r.Context(), userID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "user_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+// exportMe — portabilité RGPD (art. 20) : export JSON des données du compte.
+func (a *API) exportMe(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	data, err := a.store.ExportUserData(r.Context(), id.UserID, id.Role == kernel.RoleClient)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "user_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	w.Header().Set("Content-Disposition", `attachment; filename="petsfollow-export.json"`)
+	httpx.WriteData(w, http.StatusOK, data)
+}
+
+func (a *API) purgeMediaObjects(ctx context.Context, keys []string) {
+	if a.media == nil {
+		return
+	}
+	for _, k := range keys {
+		if k == "" {
+			continue
+		}
+		if err := a.media.Delete(ctx, k); err != nil {
+			fmt.Printf("account deletion: delete media object %s failed: %v\n", k, err)
+		}
+	}
 }
 
 type emailPrefsReq struct {

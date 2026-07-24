@@ -330,6 +330,12 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightSpecialtyBehaviorist => 'Käitumisspetsialist';
 
   @override
+  String get proLightSpecialtyGroomer => 'Trimmija';
+
+  @override
+  String get proLightSpecialtyBreeder => 'Kasvataja';
+
+  @override
   String get proLightSpecialtyVetLight => 'Vet light';
 
   @override
@@ -413,6 +419,34 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get deleteAccountConfirm =>
       'Seda toimingut ei saa tagasi võtta. Kõik teie lemmikloomad ja andmed kustutatakse.';
+
+  @override
+  String get exportMyData => 'Ekspordi minu andmed';
+
+  @override
+  String get registerConsentPrefix => 'Nõustun dokumentidega ';
+
+  @override
+  String get registerConsentMiddle => ' ja ';
+
+  @override
+  String get registerConsentRequired =>
+      'Peate nõustuma tingimuste ja privaatsuspoliitikaga.';
+
+  @override
+  String get pushPermissionTitle => 'Teavitused';
+
+  @override
+  String get pushPermissionBody =>
+      'petsFollow soovib teile saata teavitusi: loomaarsti sõnumid, visiitide kinnitused ja hooldusmeeldetuletused. Saate need igal ajal välja lülitada rakenduse või telefoni seadetes.';
+
+  @override
+  String get pushPermissionContinue => 'Jätka';
+
+  @override
+  String exportDataSaved(String path) {
+    return 'Eksport salvestatud: $path';
+  }
 
   @override
   String get profileSaved => 'Profiil salvestatud';
@@ -511,7 +545,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, südame jälgimine, loomaarsti sõnumid, teavitused, arveldus.\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni või 3 aastat tegevusetust.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine): Profiil → Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, südame jälgimine, loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -599,6 +633,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get newPet => 'Uus lemmikloom';
+
+  @override
+  String get editPet => 'Muuda lemmiklooma';
 
   @override
   String get petName => 'Nimi';
@@ -909,21 +946,6 @@ class AppLocalizationsEt extends AppLocalizations {
   String get reviewAskNo => 'Hiljem';
 
   @override
-  String get carePlusUpsell =>
-      'Care+ — ravimid ja isikupärastatud meeldetuletused';
-
-  @override
-  String get carePlusRequired =>
-      'Care+ on vajalik ravimite ja kohandatud meeldetuletuste jaoks.';
-
-  @override
-  String get horsePackRequired =>
-      'Horse pakett on vajalik sepa meeldetuletuste, kontaktide ja võistluste jaoks.';
-
-  @override
-  String get activateAddon => 'Aktiveeri';
-
-  @override
   String get careTypeMedication => 'Ravim';
 
   @override
@@ -943,10 +965,6 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get horseCompetitionDate => 'Kuupäev (AAAA-KK-PP)';
-
-  @override
-  String get familyPackHint =>
-      'Family pakett — majapidamise hoolduse vaade, −10% alates 2. tasulisest lemmiklooma plaanist';
 
   @override
   String familyHouseholdTitle(int count) {

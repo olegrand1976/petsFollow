@@ -43,9 +43,6 @@
 
     <ProCard :title="$t('admin.commissions.profileRatesTitle')" class="pro-mb" data-testid="admin-profile-rates">
       <p class="text-muted pro-mb-sm">{{ $t('admin.commissions.profileRatesHint') }}</p>
-      <p v-if="!profileLedgerWired" class="pro-hint pro-mb-sm" data-testid="admin-profile-rates-stub">
-        {{ $t('admin.commissions.profileRatesLedgerStub') }}
-      </p>
       <ProTable v-if="profileRates.length">
         <thead>
           <tr>
@@ -190,7 +187,6 @@ const error = ref('')
 const settingsError = ref('')
 const profileRates = ref<{ profileKey: string, label: string, rateBps: number, ratePct: number }[]>([])
 const commercialPlanRates = ref<Record<string, number> | null>(null)
-const profileLedgerWired = ref(true)
 const savingProfileRates = ref(false)
 const profileRatesError = ref('')
 
@@ -257,7 +253,6 @@ async function loadProfileRates() {
       ratePct: (r.rateBps || 0) / 100,
     }))
     commercialPlanRates.value = data.commercialPlanRates || null
-    profileLedgerWired.value = data.ledgerWired === true
   } catch (e: any) {
     profileRatesError.value = mapError(e)
   }

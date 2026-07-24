@@ -117,7 +117,9 @@
       "submit": "Create my account",
       "alreadyRegistered": "Already registered?",
       "loginLink": "Sign in",
-      "failed": "Registration failed"
+      "failed": "Registration failed",
+      "consent": "I accept the {terms} and the {privacy}.",
+      "consentRequired": "You must accept the terms and the privacy policy."
     },
     "registerSent": {
       "brandTitle": "Check your inbox",
@@ -173,7 +175,8 @@
     "species": {
       "dog": "Dog",
       "cat": "Cat",
-      "horse": "Horse"
+      "horse": "Horse",
+      "other": "Other"
     },
     "clientFallback": "Client {id}…",
     "breadcrumb": "Breadcrumb",
@@ -289,6 +292,18 @@
       "mismatch": "Passwords do not match."
     },
     "legalLinks": "Legal information",
+    "privacy": {
+      "title": "Data & privacy",
+      "exportHint": "Download a copy of your data as JSON (GDPR — right to data portability).",
+      "exportButton": "Export my data"
+    },
+    "deleteAccount": {
+      "title": "Delete my account",
+      "hint": "Your personal data will be permanently erased (GDPR — right to erasure). This action cannot be undone.",
+      "button": "Delete my account",
+      "confirmText": "Confirm the permanent deletion of your account.",
+      "confirm": "Delete permanently"
+    },
     "calendar": {
       "title": "Calendar & booking",
       "slotsHint": "Define your weekly hours before enabling client booking.",
@@ -584,6 +599,35 @@
     "sending": "Sending…"
   },
   "admin": {
+    "stripeCatalog": {
+      "title": "Stripe catalog",
+      "subtitle": "Products and prices synced from Stripe.",
+      "importHint": "Import the Stripe CSV exports: products first, then prices.",
+      "importProducts": "Import products",
+      "importPrices": "Import prices",
+      "file": "CSV file",
+      "uploadSubmit": "Import",
+      "uploadFailed": "Import failed",
+      "importResult": "{inserted} created · {updated} updated · {skipped} skipped",
+      "productsTitle": "Products",
+      "pricesTitle": "Prices",
+      "emptyProducts": "No products imported.",
+      "emptyPrices": "No prices imported.",
+      "colProductId": "Product ID",
+      "colName": "Name",
+      "colTaxCode": "Tax code",
+      "colPlanSlug": "Plan slug",
+      "colActive": "Status",
+      "colPriceId": "Price ID",
+      "colProduct": "Product",
+      "colPlan": "Plan",
+      "colMode": "Mode",
+      "colAmount": "Amount",
+      "colInterval": "Interval",
+      "active": "Active",
+      "inactive": "Inactive",
+      "oneTime": "One-time payment"
+    },
     "dashboard": {
       "title": "Admin dashboard",
       "subtitle": "Commercial, marketing and billing KPIs.",
@@ -728,8 +772,7 @@
       "sheetTitle": "Commissioning model (overview)",
       "planRatesHint": "Commercial rates are fixed by plan (ex-VAT): 8% monthly · 8% annual · 12% triennial — no addons. Not editable here (see sheet above).",
       "profileRatesTitle": "Rates by pro profile",
-      "profileRatesHint": "Care_pro rates (default 0%). Ready for future payouts; vet / commercial keep their current grids.",
-      "profileRatesLedgerStub": "Note: the care_pro ledger is not wired yet — a rate above 0% is stored but does not create commission lines yet.",
+      "profileRatesHint": "Care_pro rates (0% by default). A rate above 0% creates commission lines when a pet plan is activated; vet / commercial keep their current grids.",
       "profileKey": "Key",
       "profileLabel": "Profile",
       "profileRate": "Rate",
@@ -1359,7 +1402,7 @@
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data to provide animal cardiac monitoring: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, billing. Partners: Google (Sign-In, FCM), Stripe, Google Cloud Platform hosting. Retention: account lifetime or 3 years of inactivity. GDPR rights: mobile app settings (Profile → Delete account), or support{'@'}ll-it-sc.be."
+      "body": "petsFollow processes personal data to provide animal cardiac monitoring: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Legal notice",

@@ -330,6 +330,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightSpecialtyBehaviorist => 'Gedragstherapeut';
 
   @override
+  String get proLightSpecialtyGroomer => 'Trimmer';
+
+  @override
+  String get proLightSpecialtyBreeder => 'Fokker';
+
+  @override
   String get proLightSpecialtyVetLight => 'Dierenarts light';
 
   @override
@@ -413,6 +419,34 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get deleteAccountConfirm =>
       'Deze actie is onomkeerbaar. Al uw huisdieren en gegevens worden verwijderd.';
+
+  @override
+  String get exportMyData => 'Mijn gegevens exporteren';
+
+  @override
+  String get registerConsentPrefix => 'Ik aanvaard de ';
+
+  @override
+  String get registerConsentMiddle => ' en het ';
+
+  @override
+  String get registerConsentRequired =>
+      'U moet de voorwaarden en het privacybeleid aanvaarden.';
+
+  @override
+  String get pushPermissionTitle => 'Notificaties';
+
+  @override
+  String get pushPermissionBody =>
+      'petsFollow wil u notificaties sturen: berichten van uw dierenarts, afspraakbevestigingen en zorgherinneringen. U kunt ze op elk moment uitschakelen in de app- of telefooninstellingen.';
+
+  @override
+  String get pushPermissionContinue => 'Doorgaan';
+
+  @override
+  String exportDataSaved(String path) {
+    return 'Export opgeslagen: $path';
+  }
 
   @override
   String get profileSaved => 'Profiel opgeslagen';
@@ -510,7 +544,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, hartmonitoring, dierenartsberichten, notificaties, facturatie.\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account of 3 jaar inactiviteit.\n\nAVG-rechten: Profiel → Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, hartmonitoring, dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -598,6 +632,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get newPet => 'Nieuw huisdier';
+
+  @override
+  String get editPet => 'Huisdier bewerken';
 
   @override
   String get petName => 'Naam';
@@ -908,21 +945,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get reviewAskNo => 'Later';
 
   @override
-  String get carePlusUpsell =>
-      'Care+ — medicatie en gepersonaliseerde herinneringen';
-
-  @override
-  String get carePlusRequired =>
-      'Care+ is vereist voor medicatie en aangepaste herinneringen.';
-
-  @override
-  String get horsePackRequired =>
-      'Het paardenpakket is vereist voor hoefsmid, contacten en wedstrijden.';
-
-  @override
-  String get activateAddon => 'Activeren';
-
-  @override
   String get careTypeMedication => 'Medicatie';
 
   @override
@@ -942,10 +964,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get horseCompetitionDate => 'Datum (JJJJ-MM-DD)';
-
-  @override
-  String get familyPackHint =>
-      'Familiepakket — gezinsweergave, −10% vanaf het 2e betalende dierabonnement';
 
   @override
   String familyHouseholdTitle(int count) {

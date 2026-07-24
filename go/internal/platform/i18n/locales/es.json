@@ -4,6 +4,7 @@
     "invalid_json": "JSON no válido",
     "fields_required": "Todos los campos son obligatorios",
     "password_too_short": "Contraseña demasiado corta (mínimo 8 caracteres)",
+    "consent_required": "Debe aceptar los términos y la política de privacidad",
     "image_too_large": "Archivo demasiado grande (límite superado)",
     "invalid_image_type": "Formato no admitido (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Archivo obligatorio",

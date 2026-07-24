@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -31,6 +32,10 @@ type Application struct {
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
+	// Fail-fast : jamais la clé de signature dev par défaut hors environnement dev/demo.
+	if cfg.JWTSigningKey == "" || (cfg.JWTSigningKey == "dev-change-me" && !cfg.DevSeedEnabled) {
+		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret (default dev key refused outside dev)")
+	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -61,7 +66,8 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 
 	r := httpx.NewBaseRouter()
 	r.Use(selectiveTimeout)
-	r.Use(corsMiddleware)
+	r.Use(corsMiddleware(corsAllowedOrigins(cfg)))
+	r.Use(securityHeaders)
 	httpx.MountHealth(r, func(c context.Context) error { return db.Ping(c, pool) })
 	if mediaBundle.LocalHandler != nil && mediaBundle.LocalMount != "" {
 		r.Handle(mediaBundle.LocalMount+"*", mediaBundle.LocalHandler)
@@ -85,15 +91,49 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
+// corsAllowedOrigins : allowlist depuis CORS_ALLOWED_ORIGINS, sinon le site Pro public.
+func corsAllowedOrigins(cfg config.Config) map[string]bool {
+	allowed := map[string]bool{}
+	raw := cfg.CORSAllowedOrigins
+	if strings.TrimSpace(raw) == "" {
+		raw = cfg.ProPublicSiteURL
+	}
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimRight(strings.TrimSpace(o), "/")
+		if o != "" {
+			allowed[o] = true
 		}
+	}
+	return allowed
+}
+
+func corsMiddleware(allowed map[string]bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" && allowed[strings.TrimRight(origin, "/")] {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			}
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "no-referrer")
+		// Ignoré en HTTP local ; effectif derrière TLS (Cloud Run).
+		h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		next.ServeHTTP(w, r)
 	})
 }

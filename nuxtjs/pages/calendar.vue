@@ -50,21 +50,21 @@
             <td>
               <div class="pro-flex-gap">
                 <ProButton
-                  v-if="v.status === 'requested'"
+                  v-if="v.status === 'requested' && v.pendingActionBy === 'vet'"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'confirm')"
                 >
                   {{ $t('calendar.confirm') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'reschedule_pending'"
+                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'accept_reschedule')"
                 >
                   {{ $t('calendar.acceptReschedule') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'reschedule_pending'"
+                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   variant="ghost"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'reject_reschedule')"
@@ -263,21 +263,21 @@
         </div>
         <div class="pro-flex-gap create-client-actions">
           <ProButton
-            v-if="selectedVisit.status === 'requested'"
+            v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('confirm')"
           >
             {{ $t('calendar.confirm') }}
           </ProButton>
           <ProButton
-            v-if="selectedVisit.status === 'reschedule_pending'"
+            v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('accept_reschedule')"
           >
             {{ $t('calendar.acceptReschedule') }}
           </ProButton>
           <ProButton
-            v-if="selectedVisit.status === 'reschedule_pending'"
+            v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
             variant="ghost"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('reject_reschedule')"

@@ -15,7 +15,11 @@ export function authHeaders(event: H3Event) {
 
 export function localeHeaders(event: H3Event) {
   const locale = getCookie(event, 'pf_locale')
-  return locale ? { 'Accept-Language': locale } : {}
+  const headers: Record<string, string> = locale ? { 'Accept-Language': locale } : {}
+  // Rate limit Go par IP réelle : sans ce header, tout le trafic web partagerait l'IP de la BFF.
+  const ip = getRequestIP(event, { xForwardedFor: true })
+  if (ip) headers['X-Forwarded-For'] = ip
+  return headers
 }
 
 export function apiHeaders(event: H3Event) {
@@ -23,6 +27,18 @@ export function apiHeaders(event: H3Event) {
 }
 
 function authCookieOpts() {
+  return {
+    maxAge: AUTH_COOKIE_MAX_AGE,
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    // Anti-XSS : les JWT ne sont jamais lisibles par le JS navigateur.
+    httpOnly: true,
+  }
+}
+
+/** Marqueur de session non-httpOnly (aucune donnée sensible) pour les middlewares côté client. */
+function sessionMarkerOpts() {
   return {
     maxAge: AUTH_COOKIE_MAX_AGE,
     path: '/',
@@ -40,17 +56,34 @@ export function setAuthCookies(
   if (pair.refreshToken) {
     setCookie(event, 'pf_refresh', pair.refreshToken, opts)
   }
+  setCookie(event, 'pf_session', '1', sessionMarkerOpts())
 }
 
 export function clearAuthCookies(event: H3Event) {
   const opts = { path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production' }
   deleteCookie(event, 'pf_token', opts)
   deleteCookie(event, 'pf_refresh', opts)
+  deleteCookie(event, 'pf_session', opts)
+}
+
+/**
+ * Absorbe une réponse auth Go : pose les cookies httpOnly et retire les JWT du body
+ * renvoyé au navigateur. Les challenges MFA (sans accessToken) passent inchangés.
+ */
+export function absorbAuthTokens<T>(event: H3Event, res: T): T {
+  const envelope = res as { data?: Record<string, unknown> } & Record<string, unknown>
+  const data = (envelope?.data ?? envelope) as Record<string, unknown>
+  const accessToken = data?.accessToken as string | undefined
+  if (!accessToken) return res
+  setAuthCookies(event, { accessToken, refreshToken: data.refreshToken as string | undefined })
+  const { accessToken: _a, refreshToken: _r, ...rest } = data
+  const sanitized = { ...rest, authenticated: true }
+  return (envelope?.data ? { ...envelope, data: sanitized } : sanitized) as T
 }
 
 type TokenPair = { accessToken: string, refreshToken?: string, expiresIn?: number }
 
-async function refreshAccessToken(event: H3Event): Promise<TokenPair | null> {
+export async function refreshAccessToken(event: H3Event): Promise<TokenPair | null> {
   const refreshToken = getCookie(event, 'pf_refresh')
   if (!refreshToken) return null
   try {

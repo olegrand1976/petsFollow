@@ -224,7 +224,9 @@
       "submit": "Créer mon compte",
       "alreadyRegistered": "Déjà inscrit ?",
       "loginLink": "Se connecter",
-      "failed": "Inscription impossible"
+      "failed": "Inscription impossible",
+      "consent": "J'accepte les {terms} et la {privacy}.",
+      "consentRequired": "Vous devez accepter les conditions et la politique de confidentialité."
     },
     "registerSent": {
       "brandTitle": "Vérifiez votre boîte mail",
@@ -280,7 +282,8 @@
     "species": {
       "dog": "Chien",
       "cat": "Chat",
-      "horse": "Cheval"
+      "horse": "Cheval",
+      "other": "Autre"
     },
     "clientFallback": "Client {id}…",
     "breadcrumb": "Fil d'Ariane",
@@ -602,7 +605,19 @@
       "saved": "Mot de passe mis à jour.",
       "mismatch": "Les mots de passe ne correspondent pas."
     },
-    "legalLinks": "Informations légales"
+    "legalLinks": "Informations légales",
+    "privacy": {
+      "title": "Données & confidentialité",
+      "exportHint": "Téléchargez une copie de vos données au format JSON (RGPD — droit à la portabilité).",
+      "exportButton": "Exporter mes données"
+    },
+    "deleteAccount": {
+      "title": "Supprimer mon compte",
+      "hint": "Vos données personnelles seront effacées définitivement (RGPD — droit à l'effacement). Cette action est irréversible.",
+      "button": "Supprimer mon compte",
+      "confirmText": "Confirmez la suppression définitive de votre compte.",
+      "confirm": "Supprimer définitivement"
+    }
   },
   "share": {
     "petTitle": "Partager le dossier",
@@ -873,6 +888,35 @@
     "sending": "Envoi…"
   },
   "admin": {
+    "stripeCatalog": {
+      "title": "Catalogue Stripe",
+      "subtitle": "Produits et prix synchronisés depuis Stripe.",
+      "importHint": "Importez les exports CSV Stripe : d'abord les produits, puis les prix.",
+      "importProducts": "Importer les produits",
+      "importPrices": "Importer les prix",
+      "file": "Fichier CSV",
+      "uploadSubmit": "Importer",
+      "uploadFailed": "Import impossible",
+      "importResult": "{inserted} créés · {updated} mis à jour · {skipped} ignorés",
+      "productsTitle": "Produits",
+      "pricesTitle": "Prix",
+      "emptyProducts": "Aucun produit importé.",
+      "emptyPrices": "Aucun prix importé.",
+      "colProductId": "ID produit",
+      "colName": "Nom",
+      "colTaxCode": "Code taxe",
+      "colPlanSlug": "Slug plan",
+      "colActive": "Statut",
+      "colPriceId": "ID prix",
+      "colProduct": "Produit",
+      "colPlan": "Plan",
+      "colMode": "Mode",
+      "colAmount": "Montant",
+      "colInterval": "Intervalle",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "oneTime": "Paiement unique"
+    },
     "dashboard": {
       "title": "Tableau de bord admin",
       "subtitle": "KPIs commercial, marketing et facturation.",
@@ -1052,8 +1096,7 @@
         "paid": "Payé"
       },
       "profileRatesTitle": "Taux par profil pro",
-      "profileRatesHint": "Taux care_pro (0 % par défaut). Prêts pour une future rétribution ; véto / commercial restent sur leurs grilles actuelles.",
-      "profileRatesLedgerStub": "Attention : le ledger care_pro n’est pas encore branché — un taux > 0 % est enregistré mais ne génère pas encore de lignes de commission.",
+      "profileRatesHint": "Taux care_pro (0 % par défaut). Un taux > 0 % génère des lignes de commission à l'activation d'un plan animal ; véto / commercial restent sur leurs grilles actuelles.",
       "profileKey": "Clé",
       "profileLabel": "Profil",
       "profileRate": "Taux",
@@ -1766,7 +1809,7 @@
     "privacy": {
       "title": "Politique de confidentialité",
       "link": "Confidentialité",
-      "body": "petsFollow traite des données personnelles pour fournir le suivi cardiaque animal : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias avec le cabinet, jetons de notification (Firebase Cloud Messaging), données de paiement traitées par Stripe. Finalités : compte, suivi, messagerie, notifications, facturation. Partenaires : Google (Sign-In, FCM), Stripe, hébergement Google Cloud Platform. Conservation : durée du compte ou 3 ans d'inactivité. Droits RGPD (accès, rectification, suppression) : paramètres de l'app mobile (Profil → Supprimer le compte), ou support{'@'}ll-it-sc.be."
+      "body": "petsFollow traite des données personnelles pour fournir le suivi cardiaque animal : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (Firebase Cloud Messaging), données de paiement traitées par Stripe. Finalités : compte, suivi, messagerie, notifications, comptes rendus, facturation. Traitement IA : Google Gemini est utilisé pour l'amélioration des comptes rendus de visite, l'import de fichiers clients et l'entraînement au pitch commercial (audio traité en temps réel, non conservé par Google). Partenaires : Google (Sign-In, FCM, Gemini), Stripe, hébergement Google Cloud Platform. Conservation : durée du compte puis effacement ; comptes inactifs purgés après 3 ans ; enregistrements audio des comptes rendus conservés le temps du dossier. Droits RGPD (accès, rectification, suppression, portabilité) : paramètres (export de vos données, suppression du compte), ou support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Mentions légales",

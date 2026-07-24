@@ -1,8 +1,7 @@
-import { apiBase, localeHeaders, setAuthCookies, clearAuthCookies } from '~/server/utils/api'
+import { apiBase, localeHeaders, absorbAuthTokens, clearAuthCookies } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ refreshToken?: string }>(event).catch(() => ({} as { refreshToken?: string }))
-  const refreshToken = body?.refreshToken || getCookie(event, 'pf_refresh')
+  const refreshToken = getCookie(event, 'pf_refresh')
   if (!refreshToken) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
@@ -17,8 +16,8 @@ export default defineEventHandler(async (event) => {
     if (!pair?.accessToken) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
-    setAuthCookies(event, pair)
-    return res
+    // Pose les cookies httpOnly et retire les JWT du body renvoyé au navigateur.
+    return absorbAuthTokens(event, res)
   } catch (e: any) {
     clearAuthCookies(event)
     throw createError({

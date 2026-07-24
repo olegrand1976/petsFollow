@@ -21,12 +21,6 @@ export type PitchTextStreamCallbacks = {
   onError?: (code: string) => void
 }
 
-function readCookie(name: string): string {
-  if (typeof document === 'undefined') return ''
-  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
-  return m ? decodeURIComponent(m[1]) : ''
-}
-
 export function usePitchTextStream() {
   const apiBase = useRuntimeConfig().public.apiBase as string
 
@@ -36,7 +30,8 @@ export function usePitchTextStream() {
   const streamingReply = ref('')
 
   async function connect(simId: string, cb: PitchTextStreamCallbacks): Promise<boolean> {
-    const token = readCookie('pf_token')
+    // Cookies auth httpOnly : le token WS (TTL court) est fourni par la BFF.
+    const token = await fetchWsToken()
     if (!token) return false
     const wsUrl = apiBase.replace(/^http/, 'ws')
       + `/api/v1/commercial/pitch-sims/${simId}/stream?token=${encodeURIComponent(token)}`

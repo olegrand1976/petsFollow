@@ -15,6 +15,8 @@ type RegisterClientInput struct {
 	Password        string
 	FullName        string
 	PreferredLocale string
+	// TermsAccepted horodate le consentement CGU/privacy (RGPD art. 7).
+	TermsAccepted bool
 }
 
 type RegisterClientResult struct {
@@ -51,9 +53,9 @@ func (s *Store) RegisterClient(ctx context.Context, in RegisterClientInput) (Reg
 	defer tx.Rollback(ctx)
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale)
-		VALUES ($1, $2, $3, $4, 'client', NULL, $5)`,
-		userID, in.Email, string(hash), in.FullName, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale, terms_accepted_at)
+		VALUES ($1, $2, $3, $4, 'client', NULL, $5, CASE WHEN $6 THEN NOW() END)`,
+		userID, in.Email, string(hash), in.FullName, i18n.NormalizeLocale(in.PreferredLocale), in.TermsAccepted); err != nil {
 		return RegisterClientResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `

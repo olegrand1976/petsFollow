@@ -61,6 +61,12 @@ func newTestAPI(t *testing.T) *testAPI {
 		t.Skip("skipping integration test in short mode")
 	}
 	loadDotEnv()
+	// Les tests d'intégration s'appuient sur confirmPath/resetPath (exposés uniquement en env
+	// dev/demo) et sur le gateway billing mock (opt-in explicite).
+	_ = os.Setenv("DEV_SEED_ENABLED", "true")
+	_ = os.Setenv("BILLING_MOCK_ENABLED", "true")
+	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).
+	_ = os.Setenv("AUTH_RATE_LIMIT_PER_MIN", "0")
 	cfg := config.Load()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -135,6 +141,7 @@ func TestAuthRegisterConfirmLoginForgotReset(t *testing.T) {
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
 		"email": email, "password": password, "fullName": "Dr Test", "practiceName": "Cabinet Test",
+		"consent": true,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("register status %d: %#v", code, env)
@@ -240,6 +247,7 @@ func TestAuthRegisterDuplicateEmail(t *testing.T) {
 	email := uniqueEmail("e2e-dup")
 	body := map[string]any{
 		"email": email, "password": "TestPass123!", "fullName": "Dr Dup", "practiceName": "Cabinet Dup",
+		"consent": true,
 	}
 	code, _ := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", body)
 	if code != http.StatusCreated {
@@ -248,6 +256,25 @@ func TestAuthRegisterDuplicateEmail(t *testing.T) {
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", body)
 	if code != http.StatusConflict || errCode(env) != "conflict" {
 		t.Fatalf("expected conflict, got %d %#v", code, env)
+	}
+}
+
+// Le consentement CGU/privacy est requis au register (RGPD art. 7).
+func TestAuthRegisterRequiresConsent(t *testing.T) {
+	api := newTestAPI(t)
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": uniqueEmail("e2e-noconsent"), "password": "TestPass123!",
+		"fullName": "Dr NoConsent", "practiceName": "Cabinet NoConsent",
+	})
+	if code != http.StatusBadRequest || errCode(env) != "bad_request" {
+		t.Fatalf("expected consent_required 400, got %d %#v", code, env)
+	}
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": uniqueEmail("e2e-noconsent-client"), "password": "TestPass123!",
+		"fullName": "Client NoConsent",
+	})
+	if code != http.StatusBadRequest || errCode(env) != "bad_request" {
+		t.Fatalf("expected consent_required 400 (client), got %d %#v", code, env)
 	}
 }
 
@@ -319,6 +346,7 @@ func TestAuthRefresh(t *testing.T) {
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
 		"email": email, "password": password, "fullName": "Dr Refresh", "practiceName": "Cabinet Refresh",
+		"consent": true,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("register status %d: %#v", code, env)

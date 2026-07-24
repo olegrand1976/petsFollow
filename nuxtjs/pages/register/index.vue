@@ -64,6 +64,24 @@
         />
         <p class="pro-field-hint">{{ $t('auth.register.passwordHint') }}</p>
 
+        <label class="pro-consent">
+          <input
+            v-model="consent"
+            type="checkbox"
+            name="consent"
+            required
+            data-testid="register-consent"
+          >
+          <i18n-t keypath="auth.register.consent" tag="span" scope="global">
+            <template #terms>
+              <NuxtLink to="/legal/terms" target="_blank">{{ $t('legal.terms.link') }}</NuxtLink>
+            </template>
+            <template #privacy>
+              <NuxtLink to="/legal/privacy" target="_blank">{{ $t('legal.privacy.link') }}</NuxtLink>
+            </template>
+          </i18n-t>
+        </label>
+
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
 
         <ProButton type="submit" block :loading="loading" test-id="register-submit">
@@ -90,11 +108,16 @@ const practiceName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const consent = ref(false)
 const error = ref('')
 const loading = ref(false)
 
 async function submit() {
   error.value = ''
+  if (!consent.value) {
+    error.value = t('auth.register.consentRequired')
+    return
+  }
   if (password.value !== confirmPassword.value) {
     error.value = t('auth.register.passwordMismatch')
     return
@@ -112,6 +135,7 @@ async function submit() {
         practiceName: practiceName.value,
         email: email.value,
         password: password.value,
+        consent: consent.value,
       },
     })
     const data = res.data ?? res
@@ -128,6 +152,24 @@ async function submit() {
 </script>
 
 <style scoped>
+.pro-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--pf-vet-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.pro-consent input {
+  margin-top: 0.2rem;
+}
+
+.pro-consent a {
+  color: var(--pf-vet-accent);
+  font-weight: 600;
+}
+
 .pro-field-hint {
   font-size: 0.8rem;
   color: var(--pf-vet-text-muted);

@@ -102,6 +102,7 @@ func TestRegisterClientConfirmLogin(t *testing.T) {
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
 		"email": email, "password": password, "fullName": "Smoke Client",
+		"consent": true,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("register-client %d %#v", code, env)

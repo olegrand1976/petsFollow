@@ -117,7 +117,9 @@
       "submit": "Account aanmaken",
       "alreadyRegistered": "Al geregistreerd?",
       "loginLink": "Aanmelden",
-      "failed": "Registratie mislukt"
+      "failed": "Registratie mislukt",
+      "consent": "Ik aanvaard de {terms} en het {privacy}.",
+      "consentRequired": "U moet de voorwaarden en het privacybeleid aanvaarden."
     },
     "registerSent": {
       "brandTitle": "Controleer uw mailbox",
@@ -173,7 +175,8 @@
     "species": {
       "dog": "Hond",
       "cat": "Kat",
-      "horse": "Paard"
+      "horse": "Paard",
+      "other": "Andere"
     },
     "clientFallback": "Klant {id}…",
     "breadcrumb": "Broodkruimelpad",
@@ -289,6 +292,18 @@
       "mismatch": "Wachtwoorden komen niet overeen."
     },
     "legalLinks": "Juridische informatie",
+    "privacy": {
+      "title": "Gegevens & privacy",
+      "exportHint": "Download een kopie van uw gegevens als JSON (AVG — recht op overdraagbaarheid).",
+      "exportButton": "Mijn gegevens exporteren"
+    },
+    "deleteAccount": {
+      "title": "Mijn account verwijderen",
+      "hint": "Uw persoonsgegevens worden definitief gewist (AVG — recht op gegevenswissing). Deze actie is onomkeerbaar.",
+      "button": "Mijn account verwijderen",
+      "confirmText": "Bevestig de definitieve verwijdering van uw account.",
+      "confirm": "Definitief verwijderen"
+    },
     "calendar": {
       "title": "Agenda & reserveren",
       "slotsHint": "Stel uw uren in vóór u online reserveren activeert.",
@@ -584,6 +599,35 @@
     "sending": "Verzenden…"
   },
   "admin": {
+    "stripeCatalog": {
+      "title": "Stripe-catalogus",
+      "subtitle": "Producten en prijzen gesynchroniseerd vanuit Stripe.",
+      "importHint": "Importeer de Stripe CSV-exports: eerst producten, dan prijzen.",
+      "importProducts": "Producten importeren",
+      "importPrices": "Prijzen importeren",
+      "file": "CSV-bestand",
+      "uploadSubmit": "Importeren",
+      "uploadFailed": "Import mislukt",
+      "importResult": "{inserted} aangemaakt · {updated} bijgewerkt · {skipped} overgeslagen",
+      "productsTitle": "Producten",
+      "pricesTitle": "Prijzen",
+      "emptyProducts": "Geen producten geïmporteerd.",
+      "emptyPrices": "Geen prijzen geïmporteerd.",
+      "colProductId": "Product-ID",
+      "colName": "Naam",
+      "colTaxCode": "Belastingcode",
+      "colPlanSlug": "Plan-slug",
+      "colActive": "Status",
+      "colPriceId": "Prijs-ID",
+      "colProduct": "Product",
+      "colPlan": "Plan",
+      "colMode": "Modus",
+      "colAmount": "Bedrag",
+      "colInterval": "Interval",
+      "active": "Actief",
+      "inactive": "Inactief",
+      "oneTime": "Eenmalige betaling"
+    },
     "dashboard": {
       "title": "Admin-dashboard",
       "subtitle": "Commerciële, marketing- en facturatie-KPI's.",
@@ -728,8 +772,7 @@
       "sheetTitle": "Commissiemodel (overzicht)",
       "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% maandelijks · 8% jaarlijks · 12% triennial — geen addons. Hier niet bewerkbaar (zie fiche hierboven).",
       "profileRatesTitle": "Tarieven per pro-profiel",
-      "profileRatesHint": "Care_pro-tarieven (standaard 0 %). Klaar voor latere uitbetalingen.",
-      "profileRatesLedgerStub": "Let op: het care_pro-ledger is nog niet gekoppeld — een tarief > 0 % wordt opgeslagen maar levert nog geen commissielijnen op.",
+      "profileRatesHint": "Care_pro-tarieven (standaard 0 %). Een tarief boven 0 % genereert commissielijnen bij activering van een dierplan; dierenarts / commercieel behouden hun huidige schalen.",
       "profileKey": "Sleutel",
       "profileLabel": "Profiel",
       "profileRate": "Tarief",
@@ -1359,7 +1402,7 @@
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, facturatie. Partners: Google (Sign-In, FCM), Stripe, Google Cloud Platform. Bewaring: levensduur van het account of 3 jaar inactiviteit. AVG-rechten: app-instellingen (Profiel → Account verwijderen) of support{'@'}ll-it-sc.be."
+      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Juridische vermeldingen",

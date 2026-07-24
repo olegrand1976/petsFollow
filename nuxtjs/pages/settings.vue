@@ -257,6 +257,43 @@
         </ProButton>
       </div>
     </ProCard>
+
+    <ProCard :title="$t('settings.privacy.title')" class="pro-settings-card">
+      <p class="pro-settings-hint">{{ $t('settings.privacy.exportHint') }}</p>
+      <ProButton variant="secondary" :loading="exporting" test-id="settings-export-data" @click="exportData">
+        {{ $t('settings.privacy.exportButton') }}
+      </ProButton>
+      <p v-if="exportError" class="pro-field-error" role="alert">{{ exportError }}</p>
+
+      <hr class="pro-settings-hr">
+      <h3 class="pro-settings-subtitle pro-danger-title">{{ $t('settings.deleteAccount.title') }}</h3>
+      <p class="pro-settings-hint">{{ $t('settings.deleteAccount.hint') }}</p>
+      <ProButton
+        v-if="!deleteConfirming"
+        variant="secondary"
+        test-id="settings-delete-account"
+        @click="deleteConfirming = true"
+      >
+        {{ $t('settings.deleteAccount.button') }}
+      </ProButton>
+      <template v-else>
+        <p class="pro-field-error" role="alert">{{ $t('settings.deleteAccount.confirmText') }}</p>
+        <div class="pro-danger-actions">
+          <ProButton
+            variant="secondary"
+            :loading="deleting"
+            test-id="settings-delete-account-confirm"
+            @click="deleteAccount"
+          >
+            {{ $t('settings.deleteAccount.confirm') }}
+          </ProButton>
+          <ProButton variant="ghost" @click="deleteConfirming = false">
+            {{ $t('common.cancel') }}
+          </ProButton>
+        </div>
+        <p v-if="deleteError" class="pro-field-error" role="alert">{{ deleteError }}</p>
+      </template>
+    </ProCard>
   </div>
 </template>
 
@@ -633,6 +670,46 @@ async function confirm2FA() {
   }
 }
 
+const exporting = ref(false)
+const exportError = ref('')
+const deleteConfirming = ref(false)
+const deleting = ref(false)
+const deleteError = ref('')
+
+/** Portabilité RGPD : télécharge l'export JSON des données du compte. */
+async function exportData() {
+  exporting.value = true
+  exportError.value = ''
+  try {
+    const res = await $fetch<Blob>('/api/me/export', { responseType: 'blob' })
+    const url = URL.createObjectURL(res)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `petsfollow-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e: any) {
+    exportError.value = mapError(e)
+  } finally {
+    exporting.value = false
+  }
+}
+
+/** Effacement RGPD : suppression du compte puis retour login. */
+async function deleteAccount() {
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await $fetch('/api/me', { method: 'DELETE' })
+    await clearAuthTokens()
+    await navigateTo('/login')
+  } catch (e: any) {
+    deleteError.value = mapError(e)
+  } finally {
+    deleting.value = false
+  }
+}
+
 async function disable2FA() {
   twoFactorLoading.value = true
   twoFactorError.value = ''
@@ -727,5 +804,15 @@ async function disable2FA() {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   cursor: pointer;
+}
+
+.pro-danger-title {
+  color: var(--pf-vet-alert);
+}
+
+.pro-danger-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 </style>

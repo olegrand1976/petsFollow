@@ -123,6 +123,7 @@ export async function registerVet(
   const confirm = input.passwordConfirm ?? input.password
   await fillField(page, 'register-password', input.password)
   await fillField(page, 'register-password-confirm', confirm)
+  await page.getByTestId('register-consent').check()
 
   const expectApi = confirm === input.password
   const responsePromise = expectApi

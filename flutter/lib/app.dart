@@ -26,8 +26,29 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     super.initState();
     LocaleController.instance.addListener(_onLocaleChanged);
     LocaleController.instance.load();
+    NotificationService.instance.explainPushPermission = _showPushPermissionInfo;
     NotificationService.instance.init();
     AppDeepLink.instance.start();
+  }
+
+  /// Information RGPD avant le prompt système de permission push.
+  Future<void> _showPushPermissionInfo() async {
+    final ctx = PushNavigation.instance.navigatorKey.currentContext;
+    if (ctx == null) return;
+    final l10n = AppLocalizations.of(ctx)!;
+    await showDialog<void>(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(l10n.pushPermissionTitle),
+        content: Text(l10n.pushPermissionBody),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(l10n.pushPermissionContinue),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

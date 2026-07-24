@@ -14,6 +14,7 @@ func TestVetProfileHeartRateDurationsPersistAndOmit(t *testing.T) {
 
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
 		"email": email, "password": password, "fullName": "Dr HR", "practiceName": "Cabinet HR",
+		"consent": true,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("register status %d: %#v", code, env)

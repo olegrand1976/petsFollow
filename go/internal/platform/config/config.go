@@ -59,6 +59,12 @@ type Config struct {
 	VertexLocation                 string
 	// CareProPublicRegister enables POST /auth/register-care-pro (default off — admin creates care_pro).
 	CareProPublicRegister bool
+	// AuthRateLimitPerMin limite les endpoints auth publics par IP/minute (0 = désactivé).
+	AuthRateLimitPerMin int
+	// CORSAllowedOrigins — origines autorisées (séparées par des virgules). Défaut : site Pro public.
+	CORSAllowedOrigins string
+	// RetentionPurgeSecret protège POST /internal/retention/run (purge 3 ans d'inactivité RGPD).
+	RetentionPurgeSecret string
 }
 
 func Load() Config {
@@ -96,7 +102,8 @@ func Load() Config {
 		StripeCancelURL:                envOr("STRIPE_CANCEL_URL", "petsfollow://payment/cancel"),
 		APIPublicURL:                   envOr("PETSFOLLOW_API_PUBLIC_URL", "http://localhost:8291"),
 		ProPublicSiteURL:               envOr("PETSFOLLOW_PUBLIC_SITE_URL", "http://localhost:3002"),
-		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED") || envOr("STRIPE_SECRET_KEY", "") == "",
+		// Mock billing uniquement sur opt-in explicite — jamais inféré de l'absence de clé Stripe.
+		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED"),
 		GoogleOAuthClientID:            envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
 		GCSMediaBucket:                 envOr("GCS_MEDIA_BUCKET", ""),
 		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
@@ -115,6 +122,9 @@ func Load() Config {
 		VertexProject:        envOr("VERTEX_PROJECT", ""),
 		VertexLocation:       envOr("VERTEX_LOCATION", "europe-west9"),
 		CareProPublicRegister: envBool("CARE_PRO_PUBLIC_REGISTER"),
+		AuthRateLimitPerMin:   envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
+		CORSAllowedOrigins:    envOr("CORS_ALLOWED_ORIGINS", ""),
+		RetentionPurgeSecret:  envOr("RETENTION_PURGE_SECRET", ""),
 	}
 }
 
