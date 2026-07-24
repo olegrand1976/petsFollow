@@ -138,6 +138,7 @@
       "title": "Registration confirmed",
       "welcome": "Welcome to petsFollow Pro{emailPart}!",
       "discover": "Discover the app",
+      "openApp": "Open the petsFollow app",
       "login": "Sign in",
       "failedTitle": "Confirmation failed",
       "retry": "Try registering again",

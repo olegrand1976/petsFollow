@@ -69,13 +69,18 @@ class _AuthGateState extends State<AuthGate> {
   bool _ready = false;
   bool _mustChangePassword = false;
   int _petsRefreshTick = 0;
+  int _loginHintTick = 0;
 
   @override
   void initState() {
     super.initState();
     ApiClient.instance.onSessionInvalidated = _onSessionInvalidated;
+    ApiClient.instance.onSessionEstablished = _onAuthChanged;
     AppDeepLink.instance.onPaymentSuccess = () {
       if (mounted) setState(() => _petsRefreshTick++);
+    };
+    AppDeepLink.instance.onLoginHint = () {
+      if (mounted) setState(() => _loginHintTick++);
     };
     _bootstrap();
   }
@@ -84,6 +89,12 @@ class _AuthGateState extends State<AuthGate> {
   void dispose() {
     if (ApiClient.instance.onSessionInvalidated == _onSessionInvalidated) {
       ApiClient.instance.onSessionInvalidated = null;
+    }
+    if (ApiClient.instance.onSessionEstablished == _onAuthChanged) {
+      ApiClient.instance.onSessionEstablished = null;
+    }
+    if (AppDeepLink.instance.onLoginHint != null) {
+      AppDeepLink.instance.onLoginHint = null;
     }
     super.dispose();
   }
@@ -122,7 +133,10 @@ class _AuthGateState extends State<AuthGate> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (ApiClient.instance.token == null) {
-      return LoginScreen(onLoggedIn: _onAuthChanged);
+      return LoginScreen(
+        key: ValueKey('login-$_loginHintTick'),
+        onLoggedIn: _onAuthChanged,
+      );
     }
     if (_mustChangePassword) {
       return ForceChangePasswordScreen(onChanged: _onAuthChanged);

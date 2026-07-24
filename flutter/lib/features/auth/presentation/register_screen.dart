@@ -116,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Text(success!, style: const TextStyle(color: AppColors.accent)),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(email.text.trim()),
                     child: Text(l10n.registerBackToLogin),
                   ),
                 ] else ...[

@@ -138,6 +138,7 @@
       "title": "Registro confirmado",
       "welcome": "¡Bienvenido a petsFollow Pro{emailPart}!",
       "discover": "Descubrir la aplicación",
+      "openApp": "Abrir la app petsFollow",
       "login": "Iniciar sesión",
       "failedTitle": "Confirmación fallida",
       "retry": "Volver a registrarse",

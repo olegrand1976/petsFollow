@@ -245,6 +245,7 @@
       "title": "Inscription confirmée",
       "welcome": "Bienvenue sur petsFollow Pro{emailPart} !",
       "discover": "Découvrir l'application",
+      "openApp": "Ouvrir l'app petsFollow",
       "login": "Se connecter",
       "failedTitle": "Confirmation impossible",
       "retry": "Réessayer l'inscription",

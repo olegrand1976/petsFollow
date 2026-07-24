@@ -19,6 +19,16 @@
           <ProButton block test-id="confirm-email-continue" @click="continueAfterConfirm">
             {{ $t('auth.confirmEmail.discover') }}
           </ProButton>
+          <div class="confirm-email-open-app">
+            <ProButton
+              block
+              variant="secondary"
+              test-id="confirm-email-open-app"
+              @click="openApp"
+            >
+              {{ $t('auth.confirmEmail.openApp') }}
+            </ProButton>
+          </div>
         </template>
         <template v-else>
           <h1 data-testid="confirm-email-failed">{{ $t('auth.confirmEmail.failedTitle') }}</h1>
@@ -49,12 +59,22 @@ const welcomeMessage = computed(() =>
   }),
 )
 
+const appDeepLink = computed(() => {
+  const params = new URLSearchParams({ status: 'ok' })
+  if (confirmedEmail.value) params.set('email', confirmedEmail.value)
+  return `petsfollow://confirm-email?${params.toString()}`
+})
+
 async function continueAfterConfirm() {
   if (sessionReady.value) {
     await navigateTo('/welcome')
     return
   }
   await navigateTo('/login')
+}
+
+function openApp() {
+  window.location.href = appDeepLink.value
 }
 
 onMounted(async () => {
@@ -87,3 +107,9 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.confirm-email-open-app {
+  margin-top: 0.75rem;
+}
+</style>

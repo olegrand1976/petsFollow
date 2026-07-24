@@ -27,6 +27,10 @@ class AppLocalizationsEt extends AppLocalizations {
   String get loginFailed => 'Sisselogimine ebaõnnestus';
 
   @override
+  String get emailNotVerified =>
+      'Kinnitage esmalt oma e-post (registreerimisel saadetud link), seejärel logige uuesti sisse.';
+
+  @override
   String get loginOr => 'või';
 
   @override
@@ -112,21 +116,21 @@ class AppLocalizationsEt extends AppLocalizations {
   String get fullName => 'Täisnimi';
 
   @override
-  String get registerCta => 'Loo konto';
+  String get registerCta => 'Registreeru';
 
   @override
-  String get registerTitle => 'Loo konto';
+  String get registerTitle => 'Registreeru';
 
   @override
   String get registerSubtitle =>
-      'Jälgige oma lemmiklooma tervist. Järgmisena kinnitage e-post.';
+      'Looge konto lemmiklooma tervise jälgimiseks. Saadame kinnitusmeili.';
 
   @override
   String get registerSubmit => 'Registreeru';
 
   @override
   String get registerSuccess =>
-      'Konto loodud. Kontrollige e-posti kinnitamiseks, seejärel logige sisse.';
+      'Konto loodud. Avage kinnitusmeili link ja tulge rakendusse sisse logima.';
 
   @override
   String get registerFailed => 'Registreerimine ebaõnnestus';
@@ -136,6 +140,32 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get registerBackToLogin => 'Tagasi sisselogimise juurde';
+
+  @override
+  String get confirmEmailTitle => 'E-posti kinnitamine';
+
+  @override
+  String get confirmEmailLoading => 'Kinnitamine…';
+
+  @override
+  String get confirmEmailDoneTitle => 'E-post kinnitatud';
+
+  @override
+  String get confirmEmailDoneSubtitle =>
+      'Teie konto on aktiivne. Saate sisse logida.';
+
+  @override
+  String get confirmEmailFailedTitle => 'Kinnitamine ebaõnnestus';
+
+  @override
+  String get confirmEmailFailed => 'Seda e-posti ei saanud kinnitada.';
+
+  @override
+  String get confirmEmailInvalidLink =>
+      'Kehtetu või juba kasutatud kinnituslink.';
+
+  @override
+  String get confirmEmailBackToLogin => 'Tagasi sisselogimise juurde';
 
   @override
   String get vetUseProWeb =>

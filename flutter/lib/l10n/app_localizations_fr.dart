@@ -27,6 +27,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginFailed => 'Connexion impossible';
 
   @override
+  String get emailNotVerified =>
+      'Confirmez d\'abord votre email (lien reçu à l\'inscription), puis reconnectez-vous.';
+
+  @override
   String get loginOr => 'ou';
 
   @override
@@ -113,21 +117,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fullName => 'Nom complet';
 
   @override
-  String get registerCta => 'Créer un compte';
+  String get registerCta => 'S\'inscrire';
 
   @override
-  String get registerTitle => 'Créer un compte';
+  String get registerTitle => 'S\'inscrire';
 
   @override
   String get registerSubtitle =>
-      'Suivez la santé de votre animal. Confirmez ensuite votre email.';
+      'Créez votre compte pour suivre la santé de votre animal. Un email de validation vous sera envoyé.';
 
   @override
   String get registerSubmit => 'S\'inscrire';
 
   @override
   String get registerSuccess =>
-      'Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.';
+      'Compte créé. Ouvrez le lien dans l\'email de validation, puis revenez vous connecter dans l\'app.';
 
   @override
   String get registerFailed => 'Inscription impossible';
@@ -137,6 +141,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get registerBackToLogin => 'Retour à la connexion';
+
+  @override
+  String get confirmEmailTitle => 'Confirmation de l\'email';
+
+  @override
+  String get confirmEmailLoading => 'Confirmation en cours…';
+
+  @override
+  String get confirmEmailDoneTitle => 'Email confirmé';
+
+  @override
+  String get confirmEmailDoneSubtitle =>
+      'Votre compte est activé. Vous pouvez vous connecter.';
+
+  @override
+  String get confirmEmailFailedTitle => 'Confirmation impossible';
+
+  @override
+  String get confirmEmailFailed => 'Impossible de confirmer cet email.';
+
+  @override
+  String get confirmEmailInvalidLink =>
+      'Lien de confirmation invalide ou déjà utilisé.';
+
+  @override
+  String get confirmEmailBackToLogin => 'Retour à la connexion';
 
   @override
   String get vetUseProWeb =>

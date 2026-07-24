@@ -27,6 +27,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginFailed => 'Error al iniciar sesión';
 
   @override
+  String get emailNotVerified =>
+      'Confirme primero su email (enlace enviado al registrarse) y vuelva a iniciar sesión.';
+
+  @override
   String get loginOr => 'o';
 
   @override
@@ -112,21 +116,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fullName => 'Nombre completo';
 
   @override
-  String get registerCta => 'Crear una cuenta';
+  String get registerCta => 'Registrarse';
 
   @override
-  String get registerTitle => 'Crear una cuenta';
+  String get registerTitle => 'Registrarse';
 
   @override
   String get registerSubtitle =>
-      'Sigue la salud de tu animal. Confirma tu email a continuación.';
+      'Crea una cuenta para seguir la salud de tu animal. Recibirás un email de validación.';
 
   @override
   String get registerSubmit => 'Registrarse';
 
   @override
   String get registerSuccess =>
-      'Cuenta creada. Confirma tu email y luego inicia sesión.';
+      'Cuenta creada. Abre el enlace del email de validación y vuelve a iniciar sesión en la app.';
 
   @override
   String get registerFailed => 'No se pudo registrar';
@@ -136,6 +140,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get registerBackToLogin => 'Volver al inicio de sesión';
+
+  @override
+  String get confirmEmailTitle => 'Confirmar email';
+
+  @override
+  String get confirmEmailLoading => 'Confirmando…';
+
+  @override
+  String get confirmEmailDoneTitle => 'Email confirmado';
+
+  @override
+  String get confirmEmailDoneSubtitle =>
+      'Tu cuenta está activa. Puedes iniciar sesión.';
+
+  @override
+  String get confirmEmailFailedTitle => 'Confirmación imposible';
+
+  @override
+  String get confirmEmailFailed => 'No se pudo confirmar este email.';
+
+  @override
+  String get confirmEmailInvalidLink =>
+      'Enlace de confirmación inválido o ya usado.';
+
+  @override
+  String get confirmEmailBackToLogin => 'Volver al inicio de sesión';
 
   @override
   String get vetUseProWeb =>

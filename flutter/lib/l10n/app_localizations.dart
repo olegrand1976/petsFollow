@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Connexion impossible'**
   String get loginFailed;
 
+  /// No description provided for @emailNotVerified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez d\'abord votre email (lien reçu à l\'inscription), puis reconnectez-vous.'**
+  String get emailNotVerified;
+
   /// No description provided for @loginOr.
   ///
   /// In fr, this message translates to:
@@ -305,19 +311,19 @@ abstract class AppLocalizations {
   /// No description provided for @registerCta.
   ///
   /// In fr, this message translates to:
-  /// **'Créer un compte'**
+  /// **'S\'inscrire'**
   String get registerCta;
 
   /// No description provided for @registerTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Créer un compte'**
+  /// **'S\'inscrire'**
   String get registerTitle;
 
   /// No description provided for @registerSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Suivez la santé de votre animal. Confirmez ensuite votre email.'**
+  /// **'Créez votre compte pour suivre la santé de votre animal. Un email de validation vous sera envoyé.'**
   String get registerSubtitle;
 
   /// No description provided for @registerSubmit.
@@ -329,7 +335,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerSuccess.
   ///
   /// In fr, this message translates to:
-  /// **'Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.'**
+  /// **'Compte créé. Ouvrez le lien dans l\'email de validation, puis revenez vous connecter dans l\'app.'**
   String get registerSuccess;
 
   /// No description provided for @registerFailed.
@@ -349,6 +355,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Retour à la connexion'**
   String get registerBackToLogin;
+
+  /// No description provided for @confirmEmailTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation de l\'email'**
+  String get confirmEmailTitle;
+
+  /// No description provided for @confirmEmailLoading.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation en cours…'**
+  String get confirmEmailLoading;
+
+  /// No description provided for @confirmEmailDoneTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email confirmé'**
+  String get confirmEmailDoneTitle;
+
+  /// No description provided for @confirmEmailDoneSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est activé. Vous pouvez vous connecter.'**
+  String get confirmEmailDoneSubtitle;
+
+  /// No description provided for @confirmEmailFailedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation impossible'**
+  String get confirmEmailFailedTitle;
+
+  /// No description provided for @confirmEmailFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de confirmer cet email.'**
+  String get confirmEmailFailed;
+
+  /// No description provided for @confirmEmailInvalidLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien de confirmation invalide ou déjà utilisé.'**
+  String get confirmEmailInvalidLink;
+
+  /// No description provided for @confirmEmailBackToLogin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à la connexion'**
+  String get confirmEmailBackToLogin;
 
   /// No description provided for @vetUseProWeb.
   ///

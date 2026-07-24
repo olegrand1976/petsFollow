@@ -27,6 +27,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loginFailed => 'Inloggen mislukt';
 
   @override
+  String get emailNotVerified =>
+      'Bevestig eerst uw e-mail (link bij registratie), log daarna opnieuw in.';
+
+  @override
   String get loginOr => 'of';
 
   @override
@@ -112,21 +116,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get fullName => 'Volledige naam';
 
   @override
-  String get registerCta => 'Account aanmaken';
+  String get registerCta => 'Registreren';
 
   @override
-  String get registerTitle => 'Account aanmaken';
+  String get registerTitle => 'Registreren';
 
   @override
   String get registerSubtitle =>
-      'Volg de gezondheid van uw dier. Bevestig daarna uw e-mail.';
+      'Maak een account om de gezondheid van uw dier te volgen. U ontvangt een bevestigingsmail.';
 
   @override
   String get registerSubmit => 'Registreren';
 
   @override
   String get registerSuccess =>
-      'Account aangemaakt. Bevestig uw e-mail en log daarna in.';
+      'Account aangemaakt. Open de link in de bevestigingsmail en kom terug om in te loggen.';
 
   @override
   String get registerFailed => 'Registratie mislukt';
@@ -136,6 +140,32 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get registerBackToLogin => 'Terug naar inloggen';
+
+  @override
+  String get confirmEmailTitle => 'E-mail bevestigen';
+
+  @override
+  String get confirmEmailLoading => 'Bevestigen…';
+
+  @override
+  String get confirmEmailDoneTitle => 'E-mail bevestigd';
+
+  @override
+  String get confirmEmailDoneSubtitle =>
+      'Uw account is actief. U kunt inloggen.';
+
+  @override
+  String get confirmEmailFailedTitle => 'Bevestiging mislukt';
+
+  @override
+  String get confirmEmailFailed => 'Deze e-mail kon niet worden bevestigd.';
+
+  @override
+  String get confirmEmailInvalidLink =>
+      'Ongeldige of al gebruikte bevestigingslink.';
+
+  @override
+  String get confirmEmailBackToLogin => 'Terug naar inloggen';
 
   @override
   String get vetUseProWeb =>

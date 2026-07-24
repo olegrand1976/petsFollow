@@ -51,6 +51,9 @@ class ApiClient {
   /// Fired after a 401 clears the local session (AuthGate rebuilds → login).
   void Function()? onSessionInvalidated;
 
+  /// Fired after a successful login / confirm-email session is persisted.
+  void Function()? onSessionEstablished;
+
   bool _handlingUnauthorized = false;
   int _authGeneration = 0;
 
@@ -377,6 +380,12 @@ class ApiClient {
     });
   }
 
+  /// Confirms email via token and establishes a client session (auto-login).
+  Future<Map<String, dynamic>> confirmEmail(String token) async {
+    final res = await dio.post('/api/v1/auth/confirm-email', data: {'token': token});
+    return _completeLogin(res.data['data'] as Map<String, dynamic>);
+  }
+
   static bool _isMfaChallenge(Map<String, dynamic> data) {
     return data['requires2FA'] == true &&
         (data['mfaToken'] as String?)?.isNotEmpty == true;
@@ -406,6 +415,7 @@ class ApiClient {
     }
     await NotificationService.instance.onLogin();
     await _claimPendingInvite();
+    onSessionEstablished?.call();
     return data;
   }
 

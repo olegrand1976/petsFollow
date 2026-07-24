@@ -27,6 +27,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFailed => 'Sign in failed';
 
   @override
+  String get emailNotVerified =>
+      'Confirm your email first (link sent at sign-up), then sign in again.';
+
+  @override
   String get loginOr => 'or';
 
   @override
@@ -112,21 +116,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullName => 'Full name';
 
   @override
-  String get registerCta => 'Create an account';
+  String get registerCta => 'Sign up';
 
   @override
-  String get registerTitle => 'Create an account';
+  String get registerTitle => 'Sign up';
 
   @override
   String get registerSubtitle =>
-      'Monitor your pet\'s health. Confirm your email next.';
+      'Create an account to monitor your pet\'s health. A validation email will be sent.';
 
   @override
   String get registerSubmit => 'Sign up';
 
   @override
   String get registerSuccess =>
-      'Account created. Check your email to confirm, then sign in.';
+      'Account created. Open the link in the validation email, then come back to sign in.';
 
   @override
   String get registerFailed => 'Could not register';
@@ -136,6 +140,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerBackToLogin => 'Back to sign in';
+
+  @override
+  String get confirmEmailTitle => 'Confirm email';
+
+  @override
+  String get confirmEmailLoading => 'Confirming…';
+
+  @override
+  String get confirmEmailDoneTitle => 'Email confirmed';
+
+  @override
+  String get confirmEmailDoneSubtitle =>
+      'Your account is active. You can sign in.';
+
+  @override
+  String get confirmEmailFailedTitle => 'Confirmation failed';
+
+  @override
+  String get confirmEmailFailed => 'Could not confirm this email.';
+
+  @override
+  String get confirmEmailInvalidLink =>
+      'Invalid or already used confirmation link.';
+
+  @override
+  String get confirmEmailBackToLogin => 'Back to sign in';
 
   @override
   String get vetUseProWeb => 'Full vet accounts use the Pro web site.';
