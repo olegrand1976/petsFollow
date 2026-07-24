@@ -121,7 +121,7 @@ steps:
         gcloud run deploy ${_FRONTEND_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=3000 \
-          --memory=512Mi --cpu=1 --concurrency=80 --min-instances=0 --max-instances=10 --timeout=300 \
+          --memory=1Gi --cpu=1 --concurrency=20 --min-instances=0 --max-instances=10 --timeout=300 \
           --env-vars-file="$$ENV_FILE" \
           --quiet
         gcloud run services add-iam-policy-binding ${_FRONTEND_SERVICE} \

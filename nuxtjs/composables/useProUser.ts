@@ -24,7 +24,12 @@ export function useProUser() {
     if (userState.value && !force) return userState.value
     loadingState.value = true
     try {
-      const res: any = await $fetch('/api/me')
+      // SSR: never $fetch our own /api/* via the public URL — on Cloud Run that
+      // re-enters the same instance and deadlocks (concurrency slot) then OOMs.
+      // useRequestFetch = appel Nitro interne (cookies forwardés, refresh BFF OK).
+      const res: any = import.meta.server
+        ? await useRequestFetch()('/api/me')
+        : await $fetch('/api/me')
       const data = res.data ?? res
       userState.value = data
       return data as ProUser

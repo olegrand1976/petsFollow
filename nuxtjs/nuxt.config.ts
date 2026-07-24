@@ -20,7 +20,8 @@ export default defineNuxtConfig({
       fallbackLocale: 'fr',
     },
   },
-  devtools: { enabled: true },
+  // Never force-enable in prod builds (Cloud Run OOM risk with Node 22 + SSR).
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
   css: ['~/assets/css/tokens.css', '~/assets/css/main.css'],
   runtimeConfig: {
     apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291',
