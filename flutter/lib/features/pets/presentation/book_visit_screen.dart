@@ -106,7 +106,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
       }
       if (vets.length == 1) {
         setState(() {
-          _vets = vets!;
+          _vets = vets;
           _selectedVet = vets.first;
           _loadingVets = false;
         });
@@ -114,7 +114,7 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
         return;
       }
       setState(() {
-        _vets = vets!;
+        _vets = vets;
         _loadingVets = false;
       });
     } catch (e) {
