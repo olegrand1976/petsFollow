@@ -1,15 +1,41 @@
 # Politique tarifaire petsFollow
 
 Positionnement : **logiciel de suivi prescrit par le véto**, sans hardware.  
-Monétisation **B2B2C** : Pro gratuit pour le cabinet, client paie.
+Monétisation **double** :
+
+1. **SaaS cabinet Pro Complet** — facturation **externe** (pas de Stripe)  
+2. **B2B2C client** — abonnements animal (Stripe)
+
+**Pro Light** (`care_pro` / `vet_light`) : **gratuit** pour les professionnels.
 
 Objectif : grille **attractive pour véto et commercial**, **concurrentielle** pour le client (~2–3,5 €/mois), et **marge plateforme** après TVA + Stripe + commissions.
 
-**Statut** : politique **en vigueur** (alignée code / seed) — BM Apporteur / Prescripteur + steer triennial.
+**Statut** : politique **en vigueur** (alignée code / seed / pages offre) — BM Apporteur / Prescripteur + steer triennial + SaaS Pro Complet hors ligne.
 
 ---
 
-## 1. Grille
+## 0. Offre professionnelle (cabinet)
+
+| Offre | Surface | Tarif | Paiement |
+|-------|---------|-------|----------|
+| **Pro Complet** | Web SaaS + app clients | **69 € HT / mois** (+ setup **320 € HT** one-shot) | **Facturation externe** (commercial / compta) — **pas** de checkout Stripe cabinet |
+| **Pro Light** | Flutter `care_pro` / `vet_light` | **0 €** | — |
+
+Engagements Pro Complet (facturation externe) :
+
+| Prestation | Tarif HT | Notes |
+|------------|----------|-------|
+| Mise en place & formation | **320 €** | One-shot |
+| Mensuel | **69 € / mois** | Engagement 12 mois |
+| Annuel | **828 € / an** | 12 × 69 |
+| Long terme 3 ans | **745,20 € / an** | −10 % vs annuel (≈ 62,10 €/mois) |
+| Migration données | Sur devis (≥ **350 €**) | Option |
+
+Les commissions partenaires (activations clients) peuvent **compenser** la facture SaaS hors ligne (ordre de grandeur : ~7 activations triennales / mois ≈ couverture du mensuel).
+
+---
+
+## 1. Grille client (app)
 
 Prix **TTC** client / Stripe. Les commissions partenaires se calculent sur le **HTVA** (TVA BE 21 %).
 

@@ -12,12 +12,12 @@
     "adminUsers": "Registreeringud",
     "adminClientImports": "Klientide import",
     "adminPayments": "Maksed",
-    "adminStripeCatalog": "Stripe kataloog",
     "adminCommissions": "Väljamaksed",
     "adminCommercialCommissions": "Müügi palgaarvestus",
     "adminCommercialBonuses": "SPIFF boonused",
     "adminCommercials": "Müügimeeskond",
     "adminProspects": "Potentsiaalsed kliendid",
+    "adminStripeCatalog": "Stripe kataloog",
     "commercialDashboard": "Töölaud",
     "commercialVets": "Registreeringud",
     "commercialProspects": "Potentsiaalsed kliendid",
@@ -481,6 +481,9 @@
       "open": "Allalaadimise QR",
       "title": "Rakenduse allalaadimise QR-kood",
       "hint": "Kuvage see QR ooteruumis või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt teie kabinetiga (tasu).",
+      "hintCarePro": "Jagage seda QR-i või linki. Uus klient annab teile märkmete juurdepääsu oma toimikule.",
+      "hintCommercial": "Jagage seda QR-i või linki. Uued kliendid omistatakse teie müügireferralile.",
+      "fallbackName": "petsFollow",
       "qrAlt": "petsFollow allalaadimise QR-kood",
       "codeLabel": "Kood:",
       "linkLabel": "Kutselink",
@@ -680,35 +683,6 @@
       "columnAmount": "Summa",
       "columnStatus": "Olek"
     },
-    "stripeCatalog": {
-      "title": "Stripe kataloog",
-      "subtitle": "Stripe'i tooted ja hinnad (Dashboard CSV import) checkout'i jaoks.",
-      "importProducts": "Impordi products.csv",
-      "importPrices": "Impordi prices.csv",
-      "importHint": "Impordi esmalt products.csv, seejärel prices.csv (hinnad viitavad product ID-dele).",
-      "file": "CSV fail",
-      "uploadSubmit": "Impordi (insert / update)",
-      "uploadFailed": "Import ebaõnnestus",
-      "importResult": "Import: {inserted} loodud, {updated} uuendatud, {skipped} vahele jäetud",
-      "productsTitle": "Tooted",
-      "pricesTitle": "Hinnad",
-      "emptyProducts": "Tooteid pole",
-      "emptyPrices": "Hindu pole",
-      "colProductId": "Product ID",
-      "colPriceId": "Price ID",
-      "colName": "Nimi",
-      "colProduct": "Toode",
-      "colTaxCode": "Tax code",
-      "colPlanSlug": "plan_slug",
-      "colPlan": "Plaan",
-      "colMode": "Režiim",
-      "colAmount": "Summa",
-      "colInterval": "Intervall",
-      "colActive": "Aktiivne",
-      "oneTime": "one-time",
-      "active": "Aktiivne",
-      "inactive": "Mitteaktiivne"
-    },
     "commissions": {
       "title": "Loomaarsti väljamaksed",
       "subtitle": "Progressiivsed komisjonid (max 12%) — muudetavad määrad. Kuu tsükkel.",
@@ -751,7 +725,15 @@
         "paid": "Makstud"
       },
       "sheetTitle": "Komisjonimudel (ülevaade)",
-      "planRatesHint": "Ärimäärad on plaani järgi fikseeritud (ilma käibemaksuta): 8% igakuine · 8% aastane · 12% kolmeaastane — lisasid pole. Siin ei muudeta (vt ülalolevat lehte)."
+      "planRatesHint": "Ärimäärad on plaani järgi fikseeritud (ilma käibemaksuta): 8% igakuine · 8% aastane · 12% kolmeaastane — lisasid pole. Siin ei muudeta (vt ülalolevat lehte).",
+      "profileRatesTitle": "Tasumäärad profiili järgi",
+      "profileRatesHint": "Care_pro määrad (vaikimisi 0 %). Valmis tulevaseks väljamakseks.",
+      "profileRatesLedgerStub": "Tähelepanu: care_pro ledger pole veel ühendatud — määr > 0 % salvestatakse, kuid komisjoniridu veel ei teki.",
+      "profileKey": "Võti",
+      "profileLabel": "Profiil",
+      "profileRate": "Määr",
+      "saveProfileRates": "Salvesta profiilimäärad",
+      "commercialPlanRatesReadonly": "Commerciali määrad (ainult lugemiseks, plaani järgi):"
     },
     "commercialBonuses": {
       "title": "SPIFF boonused",
@@ -1025,20 +1007,20 @@
   },
   "index": {
     "login": "Logi sisse",
-    "registerCta": "Registreeru tasuta",
-    "badge": "100% tasuta loomaarstidele",
-    "heroTitle": "Südame jälgimine teie patsientidele, lihtsustatult",
-    "heroLead": "petsFollow Pro koondab südame löögisageduse näidud, kliendikaardid ja turvalise sõnumside ühte loomaarsti kabinetidele loodud tööriista.",
-    "heroCta": "Loo minu kabinet — see on tasuta",
+    "registerCta": "Registreeru",
+    "badge": "Pro + Mobile ökosüsteem",
+    "heroTitle": "Patsientide südame jälgimine, lihtsustatult",
+    "heroLead": "petsFollow ühendab teie kliiniku ja omanikud: veebi-SaaS meditsiiniliseks jälgimiseks ning mobiilirakendus klientidele.",
+    "heroCta": "Loo professionaalne konto",
     "heroLogin": "Mul on juba konto",
     "cards": {
       "heartrate": {
-        "title": "Südame löögisageduse näidud",
+        "title": "Südame mõõtmised",
         "text": "BPM jälgimine ja reaalajas hoiatused"
       },
       "messaging": {
         "title": "Turvaline sõnumside",
-        "text": "Otsene suhtlus teie klientidega"
+        "text": "Otsevahetus klientidega"
       },
       "records": {
         "title": "Patsiendikaardid",
@@ -1048,20 +1030,20 @@
     "featuresTitle": "Miks valida petsFollow Pro?",
     "features": {
       "heartrate": {
-        "title": "Juhendatud südame löögisageduse näidud",
-        "text": "Kliendid teevad BPM näite mobiilirakendusest. Teie kinnitate ja jälgite arengut."
+        "title": "Juhendatud südamerütmi mõõtmised",
+        "text": "Kliendid teevad BPM-mõõtmisi mobiilirakendusest. Te kinnitate ja jälgite arengut."
       },
       "alerts": {
         "title": "Nutikad hoiatused",
-        "text": "Saage kohe teavitus tahhükardia või tuvastatud anomaaliate kohta."
+        "text": "Saate kohe teate tahhükardia või anomaalia korral."
       },
       "messaging": {
-        "title": "Sisseehitatud sõnumside",
-        "text": "Suhelge klientidega platvormilt lahkumata. Seadistatav saadavus."
+        "title": "Integreeritud sõnumside",
+        "text": "Suhelge klientidega platvormilt lahkumata. Konfigureeritav saadavus."
       },
-      "free": {
-        "title": "Loomaarstidele tasuta",
-        "text": "Kabineti tellimust pole. petsFollow Pro on veterinaarspetsialistidele tasuta."
+      "partner": {
+        "title": "Partnerimudel",
+        "text": "Pro Light on tasuta. Pro Complet arveldatakse offline — kompenseeritav kliendikomisjonidega."
       },
       "security": {
         "title": "Turvalised andmed",
@@ -1069,22 +1051,47 @@
       },
       "onboarding": {
         "title": "Kiire kasutuselevõtt",
-        "text": "Registreeruge 2 minutiga, seadistage kabineti profiil esimesel juurdepääsul."
+        "text": "Registreerumine 2 minutiga, kliiniku andmed esimesel sisselogimisel."
       }
     },
-    "ctaTitle": "Liituge petsFollow Pro'ga juba täna",
-    "ctaText": "Rakendus on {free}. Teie kliendid maksavad ainult oma lemmikloomade südame jälgimise tellimuse eest.",
-    "ctaFree": "loomaarstidele täiesti tasuta",
+    "ctaTitle": "Liituge petsFollow Pro-ga juba täna",
+    "ctaText": "Kaks pakkumist: tasuta Pro Light välitööks või Pro Complet (veeb + kliendirakendus) kommertsarvetega. Kliendid maksavad oma loomade jälgimise eest.",
     "ctaButton": "Alusta registreerimist",
     "productsLink": "Tooted",
-    "productsTitle": "Millele teie kliendid tellivad",
-    "productsLead": "Kolm lihtsat valikut looma kohta — kõik funktsioonid on aktiivse tellimusega kaasas.",
-    "productsCta": "Vaata valikuid",
+    "productsTitle": "Professionaalne pakkumine — 2 lahendust",
+    "productsLead": "Valige Pro Complet (kliiniku veeb + kliendirakendus) või Pro Light (tasuta pro-mobiilirakendus). Omanikud tellivad seejärel oma loomade jälgimise.",
+    "productsCta": "Loo konto",
+    "solutions": {
+      "proComplete": {
+        "price": "69 € km-ta / kuu",
+        "title": "Pro Complet",
+        "text": "Veebi-SaaS + klientide mobiilirakendus. Kliiniline jälgimine, sõnumside, kaardid ja lojaalsus.",
+        "features": [
+          "Meditsiiniline kaart ja jagatud ajajoon",
+          "Turvaline sõnumside + push",
+          "Meeldetuletused, vastuvõtud ja ravi järgimine",
+          "Partnerikomisjonid (väline arveldus)"
+        ]
+      },
+      "proLight": {
+        "price": "Tasuta",
+        "title": "Pro Light",
+        "text": "Mobiilirakendus care_pro / vet_light jaoks: klientide jälgimine, loomade ajalugu, soovitus-QR, jagatud dokumendid.",
+        "features": [
+          "Välipäevakava ja kliendikaardid",
+          "Loomade ajalugu",
+          "Soovitus-QR-kood",
+          "Jagatud dokumendid ja märkmed"
+        ]
+      }
+    },
+    "clientPlansTitle": "Mida teie kliendid maksavad",
+    "clientPlansLead": "Kolm valemit looma kohta — kõik funktsioonid on kaasatud, kui tellimus on aktiivne.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / kuu",
         "title": "Igakuine",
-        "text": "Paindlikkus — mõõtmised, sõnumid, ajajoon, Care/Horse meeldetuletused, majapidamise vaade. Ilma pika sidumiseta."
+        "text": "Paindlikkus — mõõtmised, sõnumside, ajajoon, Care/Horse meeldetuletused, leibkond. Ilma pika kohustuseta."
       },
       "annual": {
         "price": "35 € / aasta",
@@ -1094,33 +1101,131 @@
       "triennial": {
         "price": "95 € / 3 aastat",
         "title": "Kolmeaastane (soovitatav)",
-        "text": "≈ 2,6 € / kuu — põhivalik, −10% vs 3× aastane."
+        "text": "≈ 2,6 € / kuu — põhitarne, −10 % vs 3× aastane."
       }
     },
     "footer": "© {year} petsFollow — Veterinaarne südame jälgimine"
   },
   "products": {
-    "seoTitle": "petsFollow — Pakkumised",
-    "seoDescription": "petsFollow tellimuste tabel veterinaarkliiniku esitluseks.",
+    "seoTitle": "petsFollow — Professionaalne pakkumine",
+    "seoDescription": "Kaks Pro lahendust: Complet (veeb + kliendi mobiil) ja Light (tasuta pro-äpp). Kliendiplaanid ja partnerimudel.",
     "backHome": "Avaleht",
     "print": "Prindi / PDF",
-    "badge": "Kliiniku esitlusmaterjal",
-    "title": "petsFollow pakkumised",
-    "lead": "Esitlege klientidele loomaarsti määratud südame jälgimist — ilma kaelarihma või seadmeta.",
-    "positioning": "petsFollow Pro on kliinikule tasuta. Ainult omanik maksab oma loomade jälgimise eest. Kõik funktsioonid on aktiivse tellimusega kaasas.",
-    "includedTitle": "Igas looma tellimuses sisaldub",
-    "includedLead": "Sõltumata plaanist (igakuine, aastane või kolmeaastane) on omanikul:",
+    "badge": "Kliiniku esitluse tugi",
+    "title": "petsFollow professionaalne pakkumine",
+    "lead": "Ökosüsteem, mis ühendab kliiniku ja omanikud — ettekirjutatud jälgimine, ilma riistvarata.",
+    "positioning": "Kaks Pro lahendust: Complet (veebi-SaaS + kliendirakendus, kommertsarveldus) ja Light (care_pro / vet_light mobiilirakendus, tasuta). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
+    "solutionsTitle": "Kaks professionaalset lahendust",
+    "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välirakendus.",
+    "solutions": {
+      "proComplete": {
+        "name": "Pro Complet",
+        "badge": "Veeb + kliendi mobiil",
+        "price": "69 € km-ta / kuu",
+        "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
+        "tagline": "Veebiplatvorm kliinikule + mobiilirakendus teie klientidele.",
+        "features": [
+          "Tsentraliseeritud meditsiiniline kaart ja jagatud ajajoon",
+          "Retseptid, meeldetuletused ja vastuvõtutaotlused",
+          "Turvaline sõnumside klient ↔ kliinik + push",
+          "Partneriprogramm (komisjonid aktiveerimiste pealt)",
+          "Väline SaaS-arveldus — ilma kliiniku veebimaksena"
+        ]
+      },
+      "proLight": {
+        "name": "Pro Light",
+        "badge": "Tasuta",
+        "price": "0 €",
+        "tagline": "Flutteri kest care_pro / vet_light — väljäälgimine ilma kliiniku SaaSita.",
+        "features": [
+          "Klientide jälgimine ja välipäevakava",
+          "Loomade kaardid ja ajalugu",
+          "Soovitus-QR-kood",
+          "Jagatud dokumendid ja visiidimärkmed",
+          "Tasuta professionaalidele"
+        ]
+      }
+    },
+    "saasInvoiceNote": "Pro Complet: tellimus ja käivitamine arveldatakse offline (müük / raamatupidamine). Stripe'i kaudu kliiniku SaaS-makseid ei ole.",
+    "webTitle": "PetsFollow veebiplatvorm (kliinik)",
+    "webLead": "Tsentraliseerib ja lihtsustab kliinilisi ning administratiivseid vooge.",
+    "webFeatures": [
+      "Tsentraliseeritud meditsiiniline kaart: patsiendikaardid, ajalugu, analüüsid",
+      "Retseptid ja ravi järgimine: meeldetuletused kliendi telefonis",
+      "Meeldetuletused ja vastuvõtud (vaktsiinid, antiparasiidid, kontrollid)",
+      "Turvaline sõnumside ning post-op / krooniline jälgimine",
+      "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine"
+    ],
+    "mobileTitle": "PetsFollow mobiilirakendus (omanikud)",
+    "mobileLead": "Omaniku igapäevane kaaslane — teie ravi jätkumine kodus.",
+    "mobileFeatures": [
+      "Digitaalne tervisekaart: vaktsiinid, kaal, anamnees, hädaolukorrad",
+      "Ravihoiatused ja nutikad meeldetuletused (push)",
+      "Otselink kliinikuga: uuendused, vastuvõtutaotlused",
+      "Tervisepäevik: kaal, sümptomid, toit, aktiivsus",
+      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s (ilma riistvarata)"
+    ],
+    "benefitsTitle": "Miks võtta kasutusele PetsFollowi ökosüsteem?",
+    "benefitsCabinetTitle": "Teie kliinikule",
+    "benefitsClientsTitle": "Teie klientidele",
+    "benefitsCabinet": [
+      "Aja kokkuhoid järelkontrollidel ja telefonil",
+      "Parem ravi järgimine",
+      "Suurem kliendilojaalsus",
+      "SaaS kompenseeritav partneriprogrammiga"
+    ],
+    "benefitsClients": [
+      "Rahulik meel tänu automaatsetele meeldetuletustele",
+      "Tervisekaart alati taskus",
+      "Tugevam usaldus oma loomaarstiga",
+      "Optimaalne ennetav jälgimine"
+    ],
+    "partnerTitle": "Partnerimudel",
+    "partnerLead": "Rakendust klientidele soovitades teenite komisjone, mis kompenseerivad Pro Complet tellimuse (offline arveldus).",
+    "partnerSteps": [
+      "Omanik tellib loomaplaani (nt 95 € km-ga / 3 aastat — soovitatav).",
+      "Iga aktiveerimine teie kliiniku koodi / QR-iga teenib komisjoni (alus km-ta).",
+      "Komisjonid arvestatakse maha või tasaarveldatakse teie SaaS-arvel (väline arveldus)."
+    ],
+    "partnerTip": "Suurusjärk: umbes 7 kolmeaastast aktiveerimist kuus võib katta Pro Complet kuutellimuse (69 € km-ta).",
+    "saasTitle": "Pro Complet hinnad (km-ta — väline arveldus)",
+    "saasLead": "Kliiniku SaaSile Stripe checkout'i ei ole. Pakkumised ja arved müügimeeskonna kaudu.",
+    "saas": {
+      "setup": {
+        "name": "Käivitamine ja koolitus",
+        "price": "320 € km-ta",
+        "description": "Konto loomine, seadistus, meeskonnakoolitus, käivitamise tugi (one-shot)."
+      },
+      "monthly": {
+        "name": "Igakuine tellimus",
+        "price": "69 € km-ta / kuu",
+        "description": "Täielik Pro Complet juurdepääs. 12 kuu kohustus."
+      },
+      "annual": {
+        "name": "Aastane tellimus",
+        "price": "828 € km-ta / aasta",
+        "description": "Üks aastane arve (12 × 69 €)."
+      },
+      "longTerm": {
+        "name": "3-aastane kohustus",
+        "price": "745,20 € km-ta / aasta",
+        "description": "−10 % vs aastane (ehk 62,10 € km-ta / kuu)."
+      }
+    },
+    "saasMigration": "Andmete migratsioon vanast tarkvarast: hinnapakkumisel (alates 350 € km-ta).",
+    "includedTitle": "Igas loomade tellimuses (kliendid)",
+    "includedLead": "Olenemata plaanist (igakuine, aastane või kolmeaastane) saab omanik:",
     "included": [
-      "Juhendatud südame mõõtmised 15 / 30 / 60 s mobiilirakendusest (ilma riistvarata)",
-      "Sessioonide saatmine ja kinnitamine kliiniku poolt",
-      "Turvaline sõnumivahetus klient ↔ loomaarst + push-teavitused",
-      "Ajajoon / jagatud patsiendi toimik",
-      "Hoolduse meeldetuletused (standard, ravimid, isiklikud) ja hobupakk hobuse korral",
-      "Majapidamise vaade ja mitme looma kiire sisestus",
+      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s mobiilirakendusest (ilma riistvarata)",
+      "Seansid saadetakse kliinikusse ja kinnitatakse seal",
+      "Turvaline sõnumside klient ↔ loomaarst + push-teavitused",
+      "Ajajoon / jagatud patsiendikaart",
+      "Care meeldetuletused (standard, ravimid, isiklik) ja hobuste pakett vajadusel",
+      "Leibkonna vaade ja mitme looma kodeerimine",
       "Keeled FR / NL / EN / ES / ET"
     ],
-    "plansTitle": "Tellimused looma kohta",
-    "plansLead": "Üks tellimus jälgitava looma kohta. Hinnad koos käibemaksuga. Igakuine = ainult Stripe tellimus; aastane ja kolmeaastane = ühekordne või tellimus.",
+    "plansTitle": "Kliendi tellimused looma kohta (km-ga)",
+    "plansLead": "Üks tellimus jälgitava looma kohta. Stripe-makse omaniku poolel. Igakuine = ainult subscription; aastane ja kolmeaastane = one_time või subscription.",
     "recommended": "Soovitatav",
     "plansTip": "Nõuanne: eelistage kolmeaastast (95 € / 3 aastat ≈ 2,6 €/kuu). Igakuine annab paindlikkuse; aastane parima aastahinna.",
     "plans": {
@@ -1130,8 +1235,8 @@
         "period": "kuus",
         "monthly": "paindlikkus",
         "benefits": [
-          "Ilma pika sidumiseta",
-          "Kõik funktsioonid kaasas",
+          "Ilma pika kohustuseta",
+          "Kõik funktsioonid kaasatud",
           "Automaatne igakuine uuendamine"
         ]
       },
@@ -1142,8 +1247,8 @@
         "monthly": "≈ 2,9 € / kuu",
         "benefits": [
           "Parim aastahind vs igakuine",
-          "Kõik funktsioonid kaasas",
-          "Ühe aasta sidumine"
+          "Kõik funktsioonid kaasatud",
+          "Üheaastane kohustus"
         ]
       },
       "triennial": {
@@ -1152,13 +1257,13 @@
         "period": "3 aastaks",
         "monthly": "≈ 2,6 € / kuu",
         "benefits": [
-          "Põhipakkumine — −10% vs 3× aastane",
-          "Pidev jälgimine 3 aasta jooksul",
-          "Parim hinnargument majapidamisele"
+          "Põhitarne — −10 % vs 3× aastane",
+          "Pidev jälgimine 3 aastat",
+          "Tugevaim hinnaväide leibkonnale"
         ]
       }
     },
-    "summaryTitle": "Tabeli kokkuvõte",
+    "summaryTitle": "Kliendivõrgu kokkuvõte",
     "summary": {
       "monthly": {
         "name": "Igakuine",
@@ -1176,7 +1281,7 @@
         "role": "Soovitatav"
       }
     },
-    "footer": "petsFollow — loomaarsti määratud jälgimine, ilma riistvarata"
+    "footer": "petsFollow — loomaarsti ettekirjutatud jälgimine, ilma riistvarata"
   },
   "components": {
     "topbar": {
@@ -1509,6 +1614,10 @@
       "backToCards": "Tagasi sihtrühmade juurde",
       "benefitsTitle": "Kaasatud hüved",
       "vetRetributionTitle": "Veterinaari väljamaksed"
+    },
+    "appInvite": {
+      "open": "Allalaadimise QR",
+      "title": "Rakenduse kutse QR"
     }
   },
   "commissionSheet": {
@@ -1771,11 +1880,17 @@
   },
   "invite": {
     "brandTitle": "Teie loomaarst kutsub teid",
+    "brandTitleCarePro": "Tervishoiutöötaja kutsub teid",
+    "brandTitleCommercial": "petsFollowi kutse",
     "brandText": "Laadige petsFollow alla, et jälgida oma loomade südame tervist.",
     "loading": "Kutse laadimine…",
     "title": "Laadi petsFollowi rakendus alla",
     "subtitle": "Kutse: {vet} — {practice}",
+    "subtitleCarePro": "Kutse: {name}",
+    "subtitleCommercial": "Kutse: {name}",
     "autoLinkHint": "Sellelt lingilt registreerudes seotakse teid automaatselt selle kabinetiga.",
+    "autoLinkHintCarePro": "Sellelt lingilt registreerudes saab see professionaal märkmete juurdepääsu teie toimikule.",
+    "autoLinkHintCommercial": "Sellelt lingilt registreerudes omistatakse teie konto sellele müügireferralile.",
     "download": "Laadi rakendus alla",
     "openApp": "Mul on rakendus juba olemas",
     "failedTitle": "Kutset ei leitud",

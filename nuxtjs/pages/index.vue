@@ -57,6 +57,26 @@
     <section id="produits" class="pro-landing__products">
       <h2>{{ $t('index.productsTitle') }}</h2>
       <p class="pro-landing__products-lead">{{ $t('index.productsLead') }}</p>
+
+      <div class="pro-landing__solutions-grid">
+        <article
+          v-for="sol in solutions"
+          :key="sol.key"
+          class="pro-landing__feature pro-landing__solution"
+          :class="{ 'pro-landing__solution--featured': sol.featured }"
+          :data-testid="`landing-solution-${sol.key}`"
+        >
+          <strong class="pro-landing__products-price">{{ $t(`index.solutions.${sol.key}.price`) }}</strong>
+          <h3>{{ $t(`index.solutions.${sol.key}.title`) }}</h3>
+          <p>{{ $t(`index.solutions.${sol.key}.text`) }}</p>
+          <ul class="pro-landing__solution-list">
+            <li v-for="item in sol.features" :key="item">{{ item }}</li>
+          </ul>
+        </article>
+      </div>
+
+      <h3 class="pro-landing__products-sub">{{ $t('index.clientPlansTitle') }}</h3>
+      <p class="pro-landing__products-lead pro-landing__products-lead--tight">{{ $t('index.clientPlansLead') }}</p>
       <div class="pro-landing__products-grid">
         <article v-for="item in productHighlights" :key="item.key" class="pro-landing__feature">
           <strong class="pro-landing__products-price">{{ $t(`index.productHighlights.${item.key}.price`) }}</strong>
@@ -64,23 +84,18 @@
           <p>{{ $t(`index.productHighlights.${item.key}.text`) }}</p>
         </article>
       </div>
+
       <div class="pro-landing__products-actions">
-        <a href="#produits">
+        <NuxtLink to="/register">
           <ProButton test-id="landing-products-cta">{{ $t('index.productsCta') }}</ProButton>
-        </a>
+        </NuxtLink>
       </div>
     </section>
 
     <section class="pro-landing__cta">
       <div class="pro-landing__cta-inner">
         <h2>{{ $t('index.ctaTitle') }}</h2>
-        <p>
-          <i18n-t keypath="index.ctaText" tag="span">
-            <template #free>
-              <strong>{{ $t('index.ctaFree') }}</strong>
-            </template>
-          </i18n-t>
-        </p>
+        <p>{{ $t('index.ctaText') }}</p>
         <NuxtLink to="/register">
           <ProButton variant="secondary">{{ $t('index.ctaButton') }}</ProButton>
         </NuxtLink>
@@ -100,14 +115,30 @@ definePageMeta({ layout: false })
 
 const year = new Date().getFullYear()
 
+const { tm, rt } = useI18n()
+
+function listFrom(key: string): string[] {
+  const raw = tm(key) as unknown
+  if (!Array.isArray(raw)) return []
+  return raw.map((x) => (typeof x === 'string' ? x : rt(x as any)))
+}
+
 const features = [
   { key: 'heartrate', icon: 'favorite' },
   { key: 'alerts', icon: 'notifications' },
   { key: 'messaging', icon: 'chat' },
-  { key: 'free', icon: 'card_giftcard' },
+  { key: 'partner', icon: 'handshake' },
   { key: 'security', icon: 'lock' },
   { key: 'onboarding', icon: 'bolt' },
 ]
+
+const solutions = computed(() =>
+  (['proComplete', 'proLight'] as const).map((key) => ({
+    key,
+    featured: key === 'proComplete',
+    features: listFrom(`index.solutions.${key}.features`),
+  })),
+)
 
 const productHighlights = [
   { key: 'monthly' },

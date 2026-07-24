@@ -13,12 +13,12 @@
     "adminUsers": "Inscriptions",
     "adminClientImports": "Import clients",
     "adminPayments": "Paiements",
-    "adminStripeCatalog": "Catalogue Stripe",
     "adminCommissions": "Rétributions véto",
     "adminCommercialCommissions": "Paie commerciaux",
     "adminCommercialBonuses": "Bonus SPIFF",
     "adminCommercials": "Commerciaux",
     "adminProspects": "Prospects",
+    "adminStripeCatalog": "Catalogue Stripe",
     "commercialDashboard": "Dashboard",
     "commercialVets": "Inscriptions",
     "commercialProspects": "Prospects",
@@ -494,6 +494,10 @@
       "backToCards": "Retour aux audiences",
       "benefitsTitle": "Bénéfices inclus",
       "vetRetributionTitle": "Rétribution vétérinaire"
+    },
+    "appInvite": {
+      "open": "QR téléchargement",
+      "title": "QR invitation app clients"
     }
   },
   "settings": {
@@ -766,6 +770,9 @@
       "open": "QR téléchargement",
       "title": "QR code téléchargement app",
       "hint": "Affichez ce QR en salle d’attente ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement à votre cabinet (rétribution).",
+      "hintCarePro": "Partagez ce QR ou lien. Un nouveau client qui s’inscrit via ce lien vous accorde un accès notes sur son dossier.",
+      "hintCommercial": "Partagez ce QR ou lien. Les nouveaux clients inscrits via ce lien sont attribués à votre referral commercial.",
+      "fallbackName": "petsFollow",
       "qrAlt": "QR code de téléchargement petsFollow",
       "codeLabel": "Code :",
       "linkLabel": "Lien d’invitation",
@@ -1000,35 +1007,6 @@
       "columnAmount": "Montant",
       "columnStatus": "Statut"
     },
-    "stripeCatalog": {
-      "title": "Catalogue Stripe",
-      "subtitle": "Produits et prix Stripe (import CSV Dashboard) utilisés pour le checkout.",
-      "importProducts": "Importer products.csv",
-      "importPrices": "Importer prices.csv",
-      "importHint": "Importer d’abord products.csv, puis prices.csv (les prix référencent les product IDs).",
-      "file": "Fichier CSV",
-      "uploadSubmit": "Importer (insert / update)",
-      "uploadFailed": "Échec de l’import",
-      "importResult": "Import : {inserted} créés, {updated} mis à jour, {skipped} ignorés",
-      "productsTitle": "Produits",
-      "pricesTitle": "Prix",
-      "emptyProducts": "Aucun produit",
-      "emptyPrices": "Aucun prix",
-      "colProductId": "Product ID",
-      "colPriceId": "Price ID",
-      "colName": "Nom",
-      "colProduct": "Produit",
-      "colTaxCode": "Tax code",
-      "colPlanSlug": "plan_slug",
-      "colPlan": "Plan",
-      "colMode": "Mode",
-      "colAmount": "Montant",
-      "colInterval": "Intervalle",
-      "colActive": "Actif",
-      "oneTime": "one-time",
-      "active": "Actif",
-      "inactive": "Inactif"
-    },
     "commissions": {
       "title": "Rétributions vétos",
       "subtitle": "Modèle Apporteur / Prescripteur — HTVA, taux par plan, cycle mensuel.",
@@ -1071,7 +1049,15 @@
         "missing_info": "Infos manquantes",
         "ready_to_pay": "Prêt à payer",
         "paid": "Payé"
-      }
+      },
+      "profileRatesTitle": "Taux par profil pro",
+      "profileRatesHint": "Taux care_pro (0 % par défaut). Prêts pour une future rétribution ; véto / commercial restent sur leurs grilles actuelles.",
+      "profileRatesLedgerStub": "Attention : le ledger care_pro n’est pas encore branché — un taux > 0 % est enregistré mais ne génère pas encore de lignes de commission.",
+      "profileKey": "Clé",
+      "profileLabel": "Profil",
+      "profileRate": "Taux",
+      "saveProfileRates": "Enregistrer les taux profils",
+      "commercialPlanRatesReadonly": "Taux commercial (lecture seule, par plan) :"
     },
     "commercialBonuses": {
       "title": "Bonus SPIFF",
@@ -1423,11 +1409,11 @@
   },
   "index": {
     "login": "Connexion",
-    "registerCta": "S'inscrire gratuitement",
-    "badge": "100 % gratuit pour les vétérinaires",
+    "registerCta": "S'inscrire",
+    "badge": "Écosystème Pro + Mobile",
     "heroTitle": "Le suivi cardiaque de vos patients, simplifié",
-    "heroLead": "petsFollow Pro centralise relevés cardiaques, dossiers clients et messagerie sécurisée dans un seul outil pensé pour les cabinets vétérinaires.",
-    "heroCta": "Créer mon cabinet — c'est gratuit",
+    "heroLead": "petsFollow interconnecte votre cabinet et vos clients : plateforme Web SaaS pour le suivi médical, application mobile pour les propriétaires.",
+    "heroCta": "Créer mon compte professionnel",
     "heroLogin": "J'ai déjà un compte",
     "cards": {
       "heartrate": {
@@ -1457,9 +1443,9 @@
         "title": "Messagerie intégrée",
         "text": "Communiquez avec vos clients sans quitter la plateforme. Disponibilité configurable."
       },
-      "free": {
-        "title": "Gratuit pour les vétos",
-        "text": "Aucun abonnement cabinet. petsFollow Pro est offert aux professionnels vétérinaires."
+      "partner": {
+        "title": "Modèle partenaire",
+        "text": "Pro Light gratuit. Pro Complet facturé hors ligne — autofinançable via les commissions clients."
       },
       "security": {
         "title": "Données sécurisées",
@@ -1471,13 +1457,38 @@
       }
     },
     "ctaTitle": "Rejoignez petsFollow Pro dès aujourd'hui",
-    "ctaText": "L'application est {free}. Vos clients paient uniquement l'abonnement de suivi cardiaque de leurs animaux.",
-    "ctaFree": "entièrement gratuite pour les vétérinaires",
+    "ctaText": "Deux offres : Pro Light gratuit pour le terrain, ou Pro Complet (Web + app clients) avec facturation commerciale. Vos clients paient le suivi de leurs animaux.",
     "ctaButton": "Commencer l'inscription",
     "productsLink": "Produits",
-    "productsTitle": "Ce que vos clients souscrivent",
-    "productsLead": "Trois formules simples par animal — toutes les fonctionnalités incluses dès l'abonnement actif.",
-    "productsCta": "Voir les formules",
+    "productsTitle": "Offre professionnelle — 2 solutions",
+    "productsLead": "Choisissez Pro Complet (cabinet Web + app clients) ou Pro Light (app mobile pro, gratuite). Les propriétaires souscrivent ensuite au suivi de leurs animaux.",
+    "productsCta": "Créer mon compte",
+    "solutions": {
+      "proComplete": {
+        "price": "69 € HT / mois",
+        "title": "Pro Complet",
+        "text": "Plateforme Web SaaS + application mobile clients. Suivi médical, messagerie, dossiers et fidélisation.",
+        "features": [
+          "Dossier médical & timeline partagée",
+          "Messagerie sécurisée + push",
+          "Rappels, RDV et observance",
+          "Commissions partenaires (facturation externe)"
+        ]
+      },
+      "proLight": {
+        "price": "Gratuit",
+        "title": "Pro Light",
+        "text": "App mobile pour care_pro / vet_light : suivi clients, fiches animaux, QR parrainage, documents partagés.",
+        "features": [
+          "Agenda terrain & fiches clients",
+          "Historique animaux",
+          "QR code de parrainage",
+          "Documents partagés & notes"
+        ]
+      }
+    },
+    "clientPlansTitle": "Ce que paient vos clients",
+    "clientPlansLead": "Trois formules par animal — toutes les fonctionnalités incluses dès l'abonnement actif.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / mois",
@@ -1498,15 +1509,113 @@
     "footer": "© {year} petsFollow — Suivi cardiaque vétérinaire"
   },
   "products": {
-    "seoTitle": "petsFollow — Offres",
-    "seoDescription": "Grille des abonnements petsFollow pour présentation cabinet vétérinaire.",
+    "seoTitle": "petsFollow — Offre professionnelle",
+    "seoDescription": "Deux solutions Pro : Complet (Web + mobile clients) et Light (app pro gratuite). Grille clients et modèle partenaire.",
     "backHome": "Accueil",
     "print": "Imprimer / PDF",
     "badge": "Support de présentation cabinet",
-    "title": "Offres petsFollow",
-    "lead": "Présentez à vos clients un suivi cardiaque prescrit par le vétérinaire, sans collier ni boîtier.",
-    "positioning": "petsFollow Pro est gratuit pour le cabinet. Seul le propriétaire paie le suivi de ses animaux. Toutes les fonctionnalités sont incluses dès l'abonnement actif.",
-    "includedTitle": "Inclus dans chaque abonnement animal",
+    "title": "Offre professionnelle petsFollow",
+    "lead": "L'écosystème qui interconnecte le cabinet et les propriétaires — suivi prescrit, sans hardware.",
+    "positioning": "Deux solutions Pro : Complet (Web SaaS + app clients, facturation commerciale) et Light (app mobile care_pro / vet_light, gratuite). Les propriétaires paient le suivi de leurs animaux (3,50 / 35 / 95 €).",
+    "solutionsTitle": "Deux solutions professionnelles",
+    "solutionsLead": "Adaptez l'outil à votre pratique : cabinet connecté complet, ou app terrain légère.",
+    "solutions": {
+      "proComplete": {
+        "name": "Pro Complet",
+        "badge": "Web + Mobile clients",
+        "price": "69 € HT / mois",
+        "setup": "Mise en place & formation : 320 € HT (one-shot)",
+        "tagline": "Plateforme Web pour le cabinet + application mobile pour vos clients.",
+        "features": [
+          "Dossier médical centralisé et timeline partagée",
+          "Ordonnances, rappels et demandes de RDV",
+          "Messagerie sécurisée client ↔ cabinet + push",
+          "Programme partenaire (commissions sur activations clients)",
+          "Facturation SaaS externe — pas de paiement en ligne"
+        ]
+      },
+      "proLight": {
+        "name": "Pro Light",
+        "badge": "Gratuit",
+        "price": "0 €",
+        "tagline": "Shell Flutter care_pro / vet_light — suivi terrain sans SaaS cabinet.",
+        "features": [
+          "Suivi clients et agenda terrain",
+          "Fiches & historique animaux",
+          "QR code de parrainage",
+          "Documents partagés et notes de visite",
+          "Gratuit pour les professionnels"
+        ]
+      }
+    },
+    "saasInvoiceNote": "Pro Complet : abonnement et mise en place facturés hors ligne (commercial / comptabilité). Aucun paiement SaaS cabinet via Stripe.",
+    "webTitle": "Plateforme Web PetsFollow (cabinet)",
+    "webLead": "Centralise et simplifie les flux du cabinet soignant et administratif.",
+    "webFeatures": [
+      "Dossier médical centralisé : fiches patients, historiques, bilans",
+      "Ordonnances & observance : prescriptions et rappels sur le téléphone du client",
+      "Gestion des rappels & rendez-vous (vaccins, antiparasitaires, contrôles)",
+      "Messagerie & suivi sécurisé post-opératoire ou chronique",
+      "Suivi des activations clients et commissions partenaires"
+    ],
+    "mobileTitle": "Application mobile PetsFollow (propriétaires)",
+    "mobileLead": "Le compagnon quotidien du propriétaire — prolongement de vos soins à domicile.",
+    "mobileFeatures": [
+      "Carnet de santé numérique : vaccins, poids, antécédents, urgences",
+      "Alertes de traitement & rappels intelligents (push)",
+      "Lien direct avec le cabinet : renouvellement, demande de RDV",
+      "Journal de bord : poids, symptômes, alimentation, activités",
+      "Relevés cardiaques guidés 15 / 30 / 60 s (sans hardware)"
+    ],
+    "benefitsTitle": "Pourquoi adopter l'écosystème PetsFollow ?",
+    "benefitsCabinetTitle": "Pour votre cabinet",
+    "benefitsClientsTitle": "Pour vos clients",
+    "benefitsCabinet": [
+      "Gain de temps sur les relances et le téléphone",
+      "Meilleure observance thérapeutique",
+      "Fidélisation accrue de la patientèle",
+      "SaaS autofinançable via le programme partenaire"
+    ],
+    "benefitsClients": [
+      "Sérénité grâce aux rappels automatisés",
+      "Carnet de santé toujours en poche",
+      "Relation de confiance renforcée avec le vétérinaire",
+      "Suivi préventif optimal"
+    ],
+    "partnerTitle": "Modèle partenaire",
+    "partnerLead": "En recommandant l'app à vos clients, vous cumulez des commissions qui compensent l'abonnement Pro Complet (règlement hors ligne).",
+    "partnerSteps": [
+      "Le propriétaire souscrit un plan animal (ex. 95 € TTC / 3 ans — recommandé).",
+      "Chaque activation avec le code / QR de votre cabinet génère une commission (assiette HTVA).",
+      "Les commissions sont déduites ou compensées sur votre facture SaaS (facturation externe)."
+    ],
+    "partnerTip": "Ordre de grandeur : avec environ 7 activations triennales par mois, les commissions partenaires peuvent couvrir l'abonnement mensuel Pro Complet (69 € HT).",
+    "saasTitle": "Tarification Pro Complet (HT — facturation externe)",
+    "saasLead": "Pas de checkout Stripe pour le SaaS cabinet. Devis et factures gérés par l'équipe commerciale.",
+    "saas": {
+      "setup": {
+        "name": "Mise en place & formation",
+        "price": "320 € HT",
+        "description": "Création du compte, configuration, formation équipe, accompagnement démarrage (one-shot)."
+      },
+      "monthly": {
+        "name": "Abonnement mensuel",
+        "price": "69 € HT / mois",
+        "description": "Accès Pro Complet. Engagement 12 mois."
+      },
+      "annual": {
+        "name": "Abonnement annuel",
+        "price": "828 € HT / an",
+        "description": "Facturation annuelle unique (12 × 69 €)."
+      },
+      "longTerm": {
+        "name": "Engagement 3 ans",
+        "price": "745,20 € HT / an",
+        "description": "−10 % vs annuel (soit 62,10 € HT / mois)."
+      }
+    },
+    "saasMigration": "Migration de données depuis un ancien logiciel : sur devis (à partir de 350 € HT).",
+    "includedTitle": "Inclus dans chaque abonnement animal (clients)",
     "includedLead": "Quel que soit le plan (mensuel, annuel ou triennal), le propriétaire dispose de :",
     "included": [
       "Relevés cardiaques guidés 15 / 30 / 60 s depuis l'app mobile (sans hardware)",
@@ -1517,8 +1626,8 @@
       "Vue foyer et encodage multi-animaux",
       "Langues FR / NL / EN / ES / ET"
     ],
-    "plansTitle": "Abonnements par animal",
-    "plansLead": "Un abonnement par animal suivi. Prix TTC. Mensuel = abonnement Stripe uniquement ; annuel et triennal = paiement unique ou abonnement.",
+    "plansTitle": "Abonnements clients par animal (TTC)",
+    "plansLead": "Un abonnement par animal suivi. Paiement Stripe côté propriétaire. Mensuel = subscription only ; annuel et triennal = one_time ou subscription.",
     "recommended": "Recommandé",
     "plansTip": "Conseil : privilégiez le Triennal (95 € / 3 ans ≈ 2,6 €/mois). Le mensuel offre la flexibilité ; l'annuel le meilleur prix à l'année.",
     "plans": {
@@ -1556,7 +1665,7 @@
         ]
       }
     },
-    "summaryTitle": "Récapitulatif grille",
+    "summaryTitle": "Récapitulatif grille clients",
     "summary": {
       "monthly": {
         "name": "Mensuel",
@@ -1771,11 +1880,17 @@
   },
   "invite": {
     "brandTitle": "Votre vétérinaire vous invite",
+    "brandTitleCarePro": "Un professionnel de santé vous invite",
+    "brandTitleCommercial": "Invitation petsFollow",
     "brandText": "Téléchargez petsFollow pour suivre la santé cardiaque de vos animaux.",
     "loading": "Chargement de l’invitation…",
     "title": "Télécharger l’app petsFollow",
     "subtitle": "Invitation de {vet} — {practice}",
+    "subtitleCarePro": "Invitation de {name}",
+    "subtitleCommercial": "Invitation via {name}",
     "autoLinkHint": "En vous inscrivant depuis ce lien, vous serez automatiquement rattaché à ce cabinet.",
+    "autoLinkHintCarePro": "En vous inscrivant depuis ce lien, ce professionnel obtient un accès notes à votre dossier.",
+    "autoLinkHintCommercial": "En vous inscrivant depuis ce lien, votre compte est attribué à ce commercial (referral).",
     "download": "Télécharger l’application",
     "openApp": "J’ai déjà l’app",
     "failedTitle": "Invitation introuvable",

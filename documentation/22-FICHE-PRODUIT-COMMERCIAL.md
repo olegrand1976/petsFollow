@@ -4,17 +4,19 @@
 
 ## En une phrase
 
-Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**. Pro gratuit pour le cabinet ; le client paie (~2–3,5 €/mois).
+Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**.  
+**Pro Complet** (Web + app clients) facturé **hors ligne** ; **Pro Light** gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
 
 ## Pour qui / modèle
 
-| Qui | Rôle | Surface |
-|-----|------|---------|
-| Cabinet véto | Prescripteur (B2B) | Pro web |
-| Propriétaire | Payeur (B2B2C) | App mobile pets |
-| Commercial | Apporteur | Pro web (espace commercial) |
+| Qui | Rôle | Surface | Tarif |
+|-----|------|---------|-------|
+| Cabinet véto | Prescripteur (B2B) | **Pro Complet** (Web SaaS) | **69 € HT/mois** + setup 320 € HT — **facturation externe** |
+| Care pro / vet light | Terrain | **Pro Light** (Flutter) | **Gratuit** |
+| Propriétaire | Payeur (B2B2C) | App mobile pets | 3,50 / 35 / 95 € TTC (Stripe) |
+| Commercial | Apporteur | Pro web (espace commercial) | — |
 
-Monétisation : **cabinet gratuit** → activation clients payants.
+Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (commissions partenaires pouvant compenser le SaaS).
 
 ## Ce que ça fait (vendable aujourd’hui)
 
@@ -54,7 +56,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Vos clients paient moins de 3,5 €/mois ; vous gagnez sur chaque activation — jusqu’à ~9,4 € sur le triennial. Même plafond si un commercial vous a apporté. » |
+| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Pro Complet à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit pour le terrain. Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. » |
 | **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — à partir de ~2,6 €/mois sur 3 ans. » |
 | **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. » |
 

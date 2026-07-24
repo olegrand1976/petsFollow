@@ -12,12 +12,12 @@
     "adminUsers": "Registraties",
     "adminClientImports": "Klanten importeren",
     "adminPayments": "Betalingen",
-    "adminStripeCatalog": "Stripe-catalogus",
     "adminCommissions": "Vergoedingen",
     "adminCommercialCommissions": "Commercials loon",
     "adminCommercialBonuses": "SPIFF-bonussen",
     "adminCommercials": "Commercials",
     "adminProspects": "Prospects",
+    "adminStripeCatalog": "Stripe-catalogus",
     "commercialDashboard": "Dashboard",
     "commercialVets": "Registraties",
     "commercialProspects": "Prospects",
@@ -481,6 +481,9 @@
       "open": "Download-QR",
       "title": "QR-code app-download",
       "hint": "Toon deze QR in de wachtzaal of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch aan uw praktijk gekoppeld (vergoeding).",
+      "hintCarePro": "Deel deze QR of link. Een nieuwe cliënt die zich registreert geeft u notities-toegang tot het dossier.",
+      "hintCommercial": "Deel deze QR of link. Nieuwe cliënten via deze link worden aan uw commerciële referral toegewezen.",
+      "fallbackName": "petsFollow",
       "qrAlt": "petsFollow download-QR-code",
       "codeLabel": "Code:",
       "linkLabel": "Uitnodigingslink",
@@ -680,35 +683,6 @@
       "columnAmount": "Bedrag",
       "columnStatus": "Status"
     },
-    "stripeCatalog": {
-      "title": "Stripe-catalogus",
-      "subtitle": "Stripe-producten en -prijzen (Dashboard CSV-import) voor checkout.",
-      "importProducts": "Importeer products.csv",
-      "importPrices": "Importeer prices.csv",
-      "importHint": "Importeer eerst products.csv, daarna prices.csv (prijzen verwijzen naar product-ID’s).",
-      "file": "CSV-bestand",
-      "uploadSubmit": "Importeren (insert / update)",
-      "uploadFailed": "Import mislukt",
-      "importResult": "Import: {inserted} aangemaakt, {updated} bijgewerkt, {skipped} overgeslagen",
-      "productsTitle": "Producten",
-      "pricesTitle": "Prijzen",
-      "emptyProducts": "Geen producten",
-      "emptyPrices": "Geen prijzen",
-      "colProductId": "Product ID",
-      "colPriceId": "Price ID",
-      "colName": "Naam",
-      "colProduct": "Product",
-      "colTaxCode": "Tax code",
-      "colPlanSlug": "plan_slug",
-      "colPlan": "Plan",
-      "colMode": "Modus",
-      "colAmount": "Bedrag",
-      "colInterval": "Interval",
-      "colActive": "Actief",
-      "oneTime": "one-time",
-      "active": "Actief",
-      "inactive": "Inactief"
-    },
     "commissions": {
       "title": "Vergoedingen dierenartsen",
       "subtitle": "Progressieve commissies (max 12%) — bewerkbare tarieven. Maandelijkse cyclus.",
@@ -751,7 +725,15 @@
         "paid": "Betaald"
       },
       "sheetTitle": "Commissiemodel (overzicht)",
-      "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% maandelijks · 8% jaarlijks · 12% triennial — geen addons. Hier niet bewerkbaar (zie fiche hierboven)."
+      "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% maandelijks · 8% jaarlijks · 12% triennial — geen addons. Hier niet bewerkbaar (zie fiche hierboven).",
+      "profileRatesTitle": "Tarieven per pro-profiel",
+      "profileRatesHint": "Care_pro-tarieven (standaard 0 %). Klaar voor latere uitbetalingen.",
+      "profileRatesLedgerStub": "Let op: het care_pro-ledger is nog niet gekoppeld — een tarief > 0 % wordt opgeslagen maar levert nog geen commissielijnen op.",
+      "profileKey": "Sleutel",
+      "profileLabel": "Profiel",
+      "profileRate": "Tarief",
+      "saveProfileRates": "Profieltarieven opslaan",
+      "commercialPlanRatesReadonly": "Commercial-tarieven (alleen-lezen, per plan):"
     },
     "commercialBonuses": {
       "title": "SPIFF-bonussen",
@@ -1024,67 +1006,92 @@
     "login": "Aanmelden"
   },
   "index": {
-    "login": "Aanmelden",
-    "registerCta": "Gratis registreren",
-    "badge": "100% gratis voor dierenartsen",
+    "login": "Inloggen",
+    "registerCta": "Registreren",
+    "badge": "Pro + Mobile ecosysteem",
     "heroTitle": "Hartmonitoring voor uw patiënten, vereenvoudigd",
-    "heroLead": "petsFollow Pro centraliseert hartslagmetingen, klantdossiers en beveiligde berichten in één tool voor dierenartsenpraktijken.",
-    "heroCta": "Mijn praktijk aanmaken — het is gratis",
+    "heroLead": "petsFollow verbindt uw praktijk en eigenaars: een Web SaaS-platform voor medische opvolging, en een mobiele app voor cliënten.",
+    "heroCta": "Mijn professioneel account aanmaken",
     "heroLogin": "Ik heb al een account",
     "cards": {
       "heartrate": {
-        "title": "Hartslagmetingen",
+        "title": "Hartmetingen",
         "text": "BPM-opvolging en realtime waarschuwingen"
       },
       "messaging": {
-        "title": "Beveiligde berichten",
-        "text": "Directe uitwisselingen met uw klanten"
+        "title": "Veilige berichten",
+        "text": "Directe uitwisseling met uw cliënten"
       },
       "records": {
-        "title": "Patiëntendossiers",
+        "title": "Patiëntdossiers",
         "text": "Volledige geschiedenis per dier"
       }
     },
     "featuresTitle": "Waarom petsFollow Pro kiezen?",
     "features": {
       "heartrate": {
-        "title": "Begeleide hartslagmetingen",
-        "text": "Klanten nemen BPM-metingen via de mobiele app. U valideert en volgt de evolutie."
+        "title": "Begeleide hartmetingen",
+        "text": "Cliënten nemen BPM-metingen via de mobiele app. U valideert en volgt de evolutie."
       },
       "alerts": {
         "title": "Slimme waarschuwingen",
-        "text": "Word onmiddellijk gewaarschuwd bij tachycardie of gedetecteerde anomalieën."
+        "text": "Word meteen verwittigd bij tachycardie of anomalieën."
       },
       "messaging": {
         "title": "Geïntegreerde berichten",
-        "text": "Communiceer met klanten zonder het platform te verlaten. Configureerbare beschikbaarheid."
+        "text": "Communiceer met cliënten zonder het platform te verlaten. Configureerbare beschikbaarheid."
       },
-      "free": {
-        "title": "Gratis voor dierenartsen",
-        "text": "Geen praktijkabonnement. petsFollow Pro is gratis voor dierenartsen."
+      "partner": {
+        "title": "Partnermodel",
+        "text": "Pro Light is gratis. Pro Complet wordt offline gefactureerd — te compenseren via cliëntcommissies."
       },
       "security": {
-        "title": "Beveiligde gegevens",
+        "title": "Veilige gegevens",
         "text": "Conforme hosting, rolbeperkte toegang, versleutelde berichten."
       },
       "onboarding": {
-        "title": "Snelle onboarding",
-        "text": "Registratie in 2 minuten, praktijkprofiel instellen bij eerste toegang."
+        "title": "Snelle start",
+        "text": "Registratie in 2 minuten, praktijkfiche bij eerste toegang."
       }
     },
     "ctaTitle": "Word vandaag lid van petsFollow Pro",
-    "ctaText": "De app is {free}. Uw klanten betalen alleen het hartmonitoring-abonnement voor hun dieren.",
-    "ctaFree": "volledig gratis voor dierenartsen",
+    "ctaText": "Twee aanbiedingen: gratis Pro Light voor het terrein, of Pro Complet (Web + cliëntapp) met commerciële facturatie. Cliënten betalen voor de opvolging van hun dieren.",
     "ctaButton": "Registratie starten",
     "productsLink": "Producten",
-    "productsTitle": "Waarvoor uw cliënten intekenen",
-    "productsLead": "Drie eenvoudige formules per dier — alle functies inbegrepen zodra het abonnement actief is.",
-    "productsCta": "Bekijk de formules",
+    "productsTitle": "Professioneel aanbod — 2 oplossingen",
+    "productsLead": "Kies Pro Complet (praktijk Web + cliëntapp) of Pro Light (gratis pro-mobiele app). Eigenaars schrijven daarna in voor de opvolging van hun dieren.",
+    "productsCta": "Mijn account aanmaken",
+    "solutions": {
+      "proComplete": {
+        "price": "€69 excl. btw / maand",
+        "title": "Pro Complet",
+        "text": "Web SaaS-platform + mobiele app voor cliënten. Medische opvolging, berichten, dossiers en loyaliteit.",
+        "features": [
+          "Medisch dossier & gedeelde timeline",
+          "Veilige berichten + push",
+          "Herinneringen, afspraken & therapietrouw",
+          "Partnercommissies (externe facturatie)"
+        ]
+      },
+      "proLight": {
+        "price": "Gratis",
+        "title": "Pro Light",
+        "text": "Mobiele app voor care_pro / vet_light: cliëntopvolging, diergeschiedenis, doorverwijzings-QR, gedeelde documenten.",
+        "features": [
+          "Agenda op het terrein & cliëntfiches",
+          "Diergeschiedenis",
+          "Doorverwijzings-QR-code",
+          "Gedeelde documenten & notities"
+        ]
+      }
+    },
+    "clientPlansTitle": "Wat uw cliënten betalen",
+    "clientPlansLead": "Drie formules per dier — alle functies inbegrepen zodra het abonnement actief is.",
     "productHighlights": {
       "monthly": {
         "price": "€3,50 / maand",
         "title": "Maandelijks",
-        "text": "Flexibiliteit — metingen, berichten, timeline, Care/Horse-herinneringen, huishoudoverzicht. Geen lange verbintenis."
+        "text": "Flexibiliteit — metingen, berichten, timeline, Care/Horse-herinneringen, huishouden. Geen lange verbintenis."
       },
       "annual": {
         "price": "€35 / jaar",
@@ -1093,36 +1100,134 @@
       },
       "triennial": {
         "price": "€95 / 3 jaar",
-        "title": "Triennial (aanbevolen)",
-        "text": "≈ €2,6 / maand — kernaanbod, −10% t.o.v. 3× jaarlijks."
+        "title": "Driejaarlijks (aanbevolen)",
+        "text": "≈ €2,6 / maand — kerkaanbod, −10 % vs 3× jaarlijks."
       }
     },
     "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
   },
   "products": {
-    "seoTitle": "petsFollow — Aanbiedingen",
-    "seoDescription": "petsFollow-abonnementsraster voor presentatie in de dierenartspraktijk.",
+    "seoTitle": "petsFollow — Professioneel aanbod",
+    "seoDescription": "Twee Pro-oplossingen: Complet (Web + cliëntmobiel) en Light (gratis pro-app). Cliëntplannen en partnermodel.",
     "backHome": "Home",
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
-    "title": "petsFollow-aanbiedingen",
-    "lead": "Presenteer hartopvolging voorgeschreven door de dierenarts — zonder halsband of doosje.",
-    "positioning": "petsFollow Pro is gratis voor de praktijk. Alleen de eigenaar betaalt voor de opvolging van zijn dieren. Alle functies zijn inbegrepen zodra het abonnement actief is.",
-    "includedTitle": "Inbegrepen in elk dierenabonnement",
-    "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of triennial) beschikt de eigenaar over:",
+    "title": "Professioneel aanbod petsFollow",
+    "lead": "Het ecosysteem dat praktijk en eigenaars verbindt — voorgeschreven opvolging, zonder hardware.",
+    "positioning": "Twee Pro-oplossingen: Complet (Web SaaS + cliëntapp, commerciële facturatie) en Light (care_pro / vet_light mobiele app, gratis). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
+    "solutionsTitle": "Twee professionele oplossingen",
+    "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terreinapp.",
+    "solutions": {
+      "proComplete": {
+        "name": "Pro Complet",
+        "badge": "Web + cliëntmobiel",
+        "price": "€69 excl. btw / maand",
+        "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
+        "tagline": "Webplatform voor de praktijk + mobiele app voor uw cliënten.",
+        "features": [
+          "Gecentraliseerd medisch dossier en gedeelde timeline",
+          "Voorschriften, herinneringen en afspraakverzoeken",
+          "Veilige berichten cliënt ↔ praktijk + push",
+          "Partnerprogramma (commissies op cliëntactivaties)",
+          "Externe SaaS-facturatie — geen online praktijkbetaling"
+        ]
+      },
+      "proLight": {
+        "name": "Pro Light",
+        "badge": "Gratis",
+        "price": "€0",
+        "tagline": "Flutter-shell care_pro / vet_light — terreinopvolging zonder praktijk-SaaS.",
+        "features": [
+          "Cliëntopvolging en terreinagenda",
+          "Dierfiches & geschiedenis",
+          "Doorverwijzings-QR-code",
+          "Gedeelde documenten en bezoeknotities",
+          "Gratis voor professionals"
+        ]
+      }
+    },
+    "saasInvoiceNote": "Pro Complet: abonnement en opzet offline gefactureerd (sales / boekhouding). Geen praktijk-SaaS-betaling via Stripe.",
+    "webTitle": "PetsFollow Webplatform (praktijk)",
+    "webLead": "Centraliseert en vereenvoudigt klinische en administratieve stromen.",
+    "webFeatures": [
+      "Gecentraliseerd medisch dossier: patiëntfiches, geschiedenis, labo's",
+      "Voorschriften & therapietrouw: herinneringen op de telefoon van de cliënt",
+      "Herinneringen & afspraken (vaccins, antiparasitica, controles)",
+      "Veilige berichten & post-op / chronische opvolging",
+      "Opvolging van cliëntactivaties en partnercommissies"
+    ],
+    "mobileTitle": "PetsFollow mobiele app (eigenaars)",
+    "mobileLead": "De dagelijkse metgezel van de eigenaar — verlenging van uw zorg thuis.",
+    "mobileFeatures": [
+      "Digitaal gezondheidsboekje: vaccins, gewicht, voorgeschiedenis, noodgevallen",
+      "Behandelingswaarschuwingen & slimme herinneringen (push)",
+      "Directe link met de praktijk: hernieuwingen, afspraakverzoeken",
+      "Gezondheidsdagboek: gewicht, symptomen, voeding, activiteit",
+      "Begeleide hartmetingen 15 / 30 / 60 s (zonder hardware)"
+    ],
+    "benefitsTitle": "Waarom het PetsFollow-ecosysteem adopteren?",
+    "benefitsCabinetTitle": "Voor uw praktijk",
+    "benefitsClientsTitle": "Voor uw cliënten",
+    "benefitsCabinet": [
+      "Tijdwinst op opvolgingen en telefoon",
+      "Betere therapietrouw",
+      "Sterkere cliëntloyaliteit",
+      "SaaS te compenseren via het partnerprogramma"
+    ],
+    "benefitsClients": [
+      "Gemoedsrust dankzij automatische herinneringen",
+      "Gezondheidsboekje altijd op zak",
+      "Sterker vertrouwen met hun dierenarts",
+      "Optimale preventieve opvolging"
+    ],
+    "partnerTitle": "Partnermodel",
+    "partnerLead": "Door de app aan te bevelen verdient u commissies die het Pro Complet-abonnement compenseren (offline verrekening).",
+    "partnerSteps": [
+      "De eigenaar schrijft in op een dierplan (bv. €95 incl. btw / 3 jaar — aanbevolen).",
+      "Elke activatie met uw praktijcode / QR levert een commissie op (grondslag excl. btw).",
+      "Commissies worden afgetrokken of verrekend op uw SaaS-factuur (externe facturatie)."
+    ],
+    "partnerTip": "Vuistregel: ongeveer 7 driejaarlijkse activaties per maand kunnen het maandelijkse Pro Complet-abonnement (€69 excl. btw) dekken.",
+    "saasTitle": "Pro Complet-tarieven (excl. btw — externe facturatie)",
+    "saasLead": "Geen Stripe-checkout voor praktijk-SaaS. Offertes en facturen via het salesteam.",
+    "saas": {
+      "setup": {
+        "name": "Opzet & opleiding",
+        "price": "€320 excl. btw",
+        "description": "Accountaanmaak, configuratie, teamopleiding, go-live (one-shot)."
+      },
+      "monthly": {
+        "name": "Maandelijks abonnement",
+        "price": "€69 excl. btw / maand",
+        "description": "Volledige Pro Complet-toegang. Verbintenis 12 maanden."
+      },
+      "annual": {
+        "name": "Jaarlijks abonnement",
+        "price": "€828 excl. btw / jaar",
+        "description": "Eén jaarlijkse factuur (12 × €69)."
+      },
+      "longTerm": {
+        "name": "Verbintenis 3 jaar",
+        "price": "€745,20 excl. btw / jaar",
+        "description": "−10 % vs jaarlijks (dus €62,10 excl. btw / maand)."
+      }
+    },
+    "saasMigration": "Datamigratie vanuit een vorig systeem: op offerte (vanaf €350 excl. btw).",
+    "includedTitle": "Inbegrepen in elk dierabonnement (cliënten)",
+    "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of driejaarlijks) krijgen eigenaars:",
     "included": [
       "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app (zonder hardware)",
-      "Verzending en validatie van sessies door de praktijk",
-      "Veilige berichten client ↔ dierenarts + pushmeldingen",
-      "Timeline / gedeeld patiëntendossier",
-      "Zorgherinneringen (standaard, medicatie, persoonlijk) en equine pack bij paard",
-      "Huishoudoverzicht en snelle multi-dier encoding",
+      "Sessies verzonden naar en gevalideerd door de praktijk",
+      "Veilige berichten cliënt ↔ dierenarts + pushmeldingen",
+      "Timeline / gedeeld patiëntdossier",
+      "Care-herinneringen (standaard, medicatie, persoonlijk) en equine pack indien paard",
+      "Huishoudenweergave en multi-dier encoding",
       "Talen FR / NL / EN / ES / ET"
     ],
-    "plansTitle": "Abonnementen per dier",
-    "plansLead": "Eén abonnement per gevolgd dier. Prijzen incl. btw. Maandelijks = enkel Stripe-abonnement; jaarlijks en triennial = eenmalig of abonnement.",
+    "plansTitle": "Cliëntabonnementen per dier (incl. btw)",
+    "plansLead": "Eén abonnement per opgevolgd dier. Stripe-betaling aan eigenaarszijde. Maandelijks = enkel subscription; jaarlijks en driejaarlijks = one_time of subscription.",
     "recommended": "Aanbevolen",
-    "plansTip": "Tip: kies bij voorkeur Triennial (€95 / 3 jaar ≈ €2,6/maand). Maandelijks biedt flexibiliteit; jaarlijks de beste prijs per jaar.",
+    "plansTip": "Tip: kies voor Driejaarlijks (€95 / 3 jaar ≈ €2,6/maand). Maandelijks biedt flexibiliteit; jaarlijks de beste jaarprijs.",
     "plans": {
       "monthly": {
         "name": "Maandelijks",
@@ -1147,18 +1252,18 @@
         ]
       },
       "triennial": {
-        "name": "Triennial",
+        "name": "Driejaarlijks",
         "price": "€95",
         "period": "voor 3 jaar",
         "monthly": "≈ €2,6 / maand",
         "benefits": [
-          "Kernaanbod — −10% t.o.v. 3× jaarlijks",
-          "Continue opvolging over 3 jaar",
+          "Kerkaanbod — −10 % vs 3× jaarlijks",
+          "Continue opvolging gedurende 3 jaar",
           "Sterkste prijsargument voor het huishouden"
         ]
       }
     },
-    "summaryTitle": "Samenvatting raster",
+    "summaryTitle": "Samenvatting cliëntgrid",
     "summary": {
       "monthly": {
         "name": "Maandelijks",
@@ -1171,12 +1276,12 @@
         "role": "Beste jaarprijs"
       },
       "triennial": {
-        "name": "Triennial",
+        "name": "Driejaarlijks",
         "price": "€95 / 3 jaar",
         "role": "Aanbevolen"
       }
     },
-    "footer": "petsFollow — opvolging voorgeschreven door de dierenarts, zonder hardware"
+    "footer": "petsFollow — door de dierenarts voorgeschreven opvolging, zonder hardware"
   },
   "components": {
     "topbar": {
@@ -1509,6 +1614,10 @@
       "backToCards": "Terug naar doelgroepen",
       "benefitsTitle": "Inbegrepen voordelen",
       "vetRetributionTitle": "Vergoeding dierenarts"
+    },
+    "appInvite": {
+      "open": "Download-QR",
+      "title": "QR-uitnodiging app"
     }
   },
   "commissionSheet": {
@@ -1771,11 +1880,17 @@
   },
   "invite": {
     "brandTitle": "Uw dierenarts nodigt u uit",
-      "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
+    "brandTitleCarePro": "Een zorgprofessional nodigt u uit",
+    "brandTitleCommercial": "petsFollow-uitnodiging",
+    "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
     "loading": "Uitnodiging laden…",
     "title": "Download de petsFollow-app",
     "subtitle": "Uitnodiging van {vet} — {practice}",
+    "subtitleCarePro": "Uitnodiging van {name}",
+    "subtitleCommercial": "Uitnodiging via {name}",
     "autoLinkHint": "Door u via deze link te registreren, wordt u automatisch aan deze praktijk gekoppeld.",
+    "autoLinkHintCarePro": "Door u via deze link te registreren krijgt deze professional notities-toegang tot uw dossier.",
+    "autoLinkHintCommercial": "Door u via deze link te registreren wordt uw account aan deze commercial-referral toegewezen.",
     "download": "App downloaden",
     "openApp": "Ik heb de app al",
     "failedTitle": "Uitnodiging niet gevonden",
