@@ -6,11 +6,10 @@
       role="img"
       :aria-label="ariaLabel"
     >
-      <!-- Horizontal grid + Y ticks -->
       <g class="pro-bpm-chart-grid">
         <line
           v-for="tick in yTicks"
-          :key="`gy-${tick.value}`"
+          :key="`gy-${tick.value}-${tick.y}`"
           :x1="plotLeft"
           :y1="tick.y"
           :x2="plotRight"
@@ -19,7 +18,6 @@
         />
       </g>
 
-      <!-- Axes -->
       <line
         :x1="plotLeft"
         :y1="plotTop"
@@ -35,7 +33,6 @@
         class="pro-bpm-chart-axis"
       />
 
-      <!-- Y tick labels + axis title -->
       <text
         :x="12"
         :y="(plotTop + plotBottom) / 2"
@@ -48,7 +45,7 @@
       </text>
       <text
         v-for="tick in yTicks"
-        :key="`yl-${tick.value}`"
+        :key="`yl-${tick.value}-${tick.y}`"
         :x="plotLeft - 6"
         :y="tick.y"
         text-anchor="end"
@@ -58,7 +55,6 @@
         {{ tick.value }}
       </text>
 
-      <!-- X tick labels -->
       <text
         v-for="(tick, i) in xTicks"
         :key="`xl-${i}`"
@@ -134,19 +130,17 @@ const minLabelGap = 28
 const plotW = plotRight - plotLeft
 const plotH = plotBottom - plotTop
 
-/** ~1 year in ms — use month/year ticks for long domains. */
-const YEARISH_MS = 300 * 24 * 60 * 60 * 1000
+function parseTime(value: string | undefined): number | null {
+  if (!value) return null
+  const ms = +new Date(value)
+  return Number.isFinite(ms) ? ms : null
+}
 
-function formatAxisDate(value: Date, longSpan: boolean) {
-  if (longSpan) {
-    return new Intl.DateTimeFormat(dateLocale(), {
-      month: '2-digit',
-      year: '2-digit',
-    }).format(value)
-  }
+function formatAxisDate(value: Date, withYear: boolean) {
   return new Intl.DateTimeFormat(dateLocale(), {
     day: '2-digit',
     month: '2-digit',
+    ...(withYear ? { year: '2-digit' as const } : {}),
   }).format(value)
 }
 
@@ -158,20 +152,22 @@ const scale = computed(() => {
   const yMin = Math.floor(Math.min(rawMin, 40) / 10) * 10
   const yRange = Math.max(yMax - yMin, 20)
 
-  const times = (props.dates ?? []).map(d => +new Date(d))
-  const domainStartMs = props.domainStart
-    ? +new Date(props.domainStart)
-    : (times.length ? Math.min(...times) : Date.now())
-  const domainEndMs = props.domainEnd
-    ? +new Date(props.domainEnd)
-    : (times.length ? Math.max(...times) : Date.now())
+  const times = (props.dates ?? [])
+    .map(d => parseTime(d))
+    .filter((t): t is number => t != null)
+  const domainStartMs = parseTime(props.domainStart)
+    ?? (times.length ? Math.min(...times) : Date.now())
+  const domainEndMs = parseTime(props.domainEnd)
+    ?? (times.length ? Math.max(...times) : Date.now())
   const tSpan = Math.max(domainEndMs - domainStartMs, 1)
+  const withYear = new Date(domainStartMs).getFullYear() !== new Date(domainEndMs).getFullYear()
+    || tSpan >= 180 * 24 * 60 * 60 * 1000
 
-  return { yMin, yMax, yRange, domainStartMs, domainEndMs, tSpan }
+  return { yMin, yRange, domainStartMs, domainEndMs, tSpan, withYear }
 })
 
 const yTicks = computed(() => {
-  const { yMin, yMax, yRange } = scale.value
+  const { yMin, yRange } = scale.value
   const steps = 4
   const ticks: { value: number; y: number }[] = []
   for (let i = 0; i <= steps; i++) {
@@ -183,16 +179,14 @@ const yTicks = computed(() => {
 })
 
 const xTicks = computed(() => {
-  const { domainStartMs, tSpan } = scale.value
-  const longSpan = tSpan >= YEARISH_MS
+  const { domainStartMs, tSpan, withYear } = scale.value
   const count = 4
   const ticks: { x: number; label: string }[] = []
   for (let i = 0; i <= count; i++) {
     const t = domainStartMs + (tSpan * i) / count
     const x = plotLeft + (plotW * i) / count
-    ticks.push({ x, label: formatAxisDate(new Date(t), longSpan) })
+    ticks.push({ x, label: formatAxisDate(new Date(t), withYear) })
   }
-  // Avoid duplicate labels when span is tiny
   return ticks.filter((tick, i, arr) => i === 0 || tick.label !== arr[i - 1]?.label)
 })
 
@@ -201,7 +195,7 @@ const plotted = computed(() => {
   if (!vals.length) return []
   const { yMin, yRange, domainStartMs, tSpan } = scale.value
   const points = vals.map((v, i) => {
-    const t = props.dates?.[i] ? +new Date(props.dates[i]!) : domainStartMs
+    const t = parseTime(props.dates?.[i]) ?? domainStartMs
     const ratio = Math.min(1, Math.max(0, (t - domainStartMs) / tSpan))
     return {
       x: plotLeft + ratio * plotW,
@@ -216,14 +210,12 @@ const plotted = computed(() => {
   const lastIdx = points.length - 1
   for (let i = 0; i < points.length; i++) {
     const p = points[i]
-    const force = i === 0 || i === lastIdx || p.alert
+    // Prefer first/last; alerts get color only unless gap allows a label
+    const force = i === 0 || i === lastIdx
     if (force || p.x - lastLabelX >= minLabelGap) {
       p.showLabel = true
       lastLabelX = p.x
     }
-  }
-  if (points.length && !points[lastIdx].showLabel) {
-    points[lastIdx].showLabel = true
   }
   return points
 })

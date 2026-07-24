@@ -54,6 +54,7 @@
           type="button"
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': chartRange === '3m' }"
+          :aria-pressed="chartRange === '3m'"
           data-testid="pet-chart-range-3m"
           @click="chartRange = '3m'"
         >
@@ -63,6 +64,7 @@
           type="button"
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': chartRange === '6m' }"
+          :aria-pressed="chartRange === '6m'"
           data-testid="pet-chart-range-6m"
           @click="chartRange = '6m'"
         >
@@ -72,6 +74,7 @@
           type="button"
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': chartRange === '1y' }"
+          :aria-pressed="chartRange === '1y'"
           data-testid="pet-chart-range-1y"
           @click="chartRange = '1y'"
         >
@@ -536,8 +539,9 @@ const rangeMonths = computed(() =>
 
 const chartDomain = computed(() => {
   const end = new Date()
-  const start = new Date(end)
-  start.setMonth(start.getMonth() - rangeMonths.value)
+  const start = new Date(end.getTime())
+  // Approximate calendar months via 30-day units to avoid setMonth day overflow (31→28).
+  start.setTime(end.getTime() - rangeMonths.value * 30 * 24 * 60 * 60 * 1000)
   return { start: start.toISOString(), end: end.toISOString() }
 })
 
