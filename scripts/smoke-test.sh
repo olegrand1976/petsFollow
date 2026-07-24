@@ -90,33 +90,41 @@ if not found:
 
 curl -sf "$API/api/v1/pets/$PET_ID/timeline" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
 
-# Auth register → confirm → forgot → reset (emails uniques)
+# Auth register → confirm → forgot → reset (emails uniques).
+# confirmPath/resetPath ne sont exposés que si DEV_SEED_ENABLED=true (local/CI) ;
+# sur staging/prod le register doit aboutir SANS fuiter les tokens → flux confirm/reset skippé.
 AUTH_EMAIL="smoke+$(date +%s)@petsfollow.test"
 REG=$(curl -sf -X POST "$API/api/v1/auth/register" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass123!\",\"fullName\":\"Smoke Vet\",\"practiceName\":\"Smoke Practice\",\"consent\":true}")
-CONFIRM_PATH=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
-CONFIRM_TOKEN=${CONFIRM_PATH#*token=}
-curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
-  -d "{\"token\":\"$CONFIRM_TOKEN\"}" >/dev/null
-FORGOT=$(curl -sf -X POST "$API/api/v1/auth/forgot-password" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$AUTH_EMAIL\"}")
-RESET_PATH=$(echo "$FORGOT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['resetPath'])")
-RESET_TOKEN=${RESET_PATH#*token=}
-curl -sf -X POST "$API/api/v1/auth/reset-password" -H 'Content-Type: application/json' \
-  -d "{\"token\":\"$RESET_TOKEN\",\"password\":\"SmokePass456!\"}" >/dev/null
-curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass456!\"}" >/dev/null
+CONFIRM_PATH=$(echo "$REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('confirmPath') or '')")
+if [ -n "$CONFIRM_PATH" ]; then
+  CONFIRM_TOKEN=${CONFIRM_PATH#*token=}
+  curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
+    -d "{\"token\":\"$CONFIRM_TOKEN\"}" >/dev/null
+  FORGOT=$(curl -sf -X POST "$API/api/v1/auth/forgot-password" -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$AUTH_EMAIL\"}")
+  RESET_PATH=$(echo "$FORGOT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['resetPath'])")
+  RESET_TOKEN=${RESET_PATH#*token=}
+  curl -sf -X POST "$API/api/v1/auth/reset-password" -H 'Content-Type: application/json' \
+    -d "{\"token\":\"$RESET_TOKEN\",\"password\":\"SmokePass456!\"}" >/dev/null
+  curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass456!\"}" >/dev/null
+else
+  echo "  (confirmPath masqué — flux confirm/forgot/reset skippé, env non-dev)"
+fi
 
 # Register client + confirm
 CLIENT_REG_EMAIL="smoke-client+$(date +%s)@petsfollow.test"
 CLIENT_REG=$(curl -sf -X POST "$API/api/v1/auth/register-client" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\",\"fullName\":\"Smoke Client\",\"consent\":true}")
-CLIENT_CONFIRM_PATH=$(echo "$CLIENT_REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
-CLIENT_CONFIRM_TOKEN=${CLIENT_CONFIRM_PATH#*token=}
-curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
-  -d "{\"token\":\"$CLIENT_CONFIRM_TOKEN\"}" >/dev/null
-curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\"}" >/dev/null
+CLIENT_CONFIRM_PATH=$(echo "$CLIENT_REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data'].get('confirmPath') or '')")
+if [ -n "$CLIENT_CONFIRM_PATH" ]; then
+  CLIENT_CONFIRM_TOKEN=${CLIENT_CONFIRM_PATH#*token=}
+  curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
+    -d "{\"token\":\"$CLIENT_CONFIRM_TOKEN\"}" >/dev/null
+  curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\"}" >/dev/null
+fi
 
 # Pet shares list (owner) + public media visit-reports blocked
 curl -sf "$API/api/v1/pets/$PET_ID/shares" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
