@@ -16,6 +16,13 @@ import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Payload JSON for HR validate when a non-blank comment is provided.
+Map<String, String>? heartRateCommentPayload(String? comment) {
+  final trimmed = comment?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return {'comment': trimmed};
+}
+
 class ApiClient {
   ApiClient._() {
     if (kReleaseMode && !_apiBase.startsWith('https://')) {
@@ -209,13 +216,17 @@ class ApiClient {
   }
 
   /// Agenda terrain véto : plage calendrier (confirmed + scheduled), pas le pending-only de [listVetVisits].
-  Future<List<dynamic>> listVetTourVisits({int pastDays = 7, int futureDays = 90}) async {
+  /// Cap API `/vet/calendar` : plage ≤ 62 jours (`parseFromTo`).
+  Future<List<dynamic>> listVetTourVisits({int pastDays = 7, int futureDays = 52}) async {
     final now = DateTime.now();
     final from = DateTime(now.year, now.month, now.day).subtract(Duration(days: pastDays));
     final to = DateTime(now.year, now.month, now.day).add(Duration(days: futureDays + 1));
+    // Date-only — évite le décalage minuit local→UTC qui élargit la plage.
+    String ymd(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     final res = await dio.get('/api/v1/vet/calendar', queryParameters: {
-      'from': from.toUtc().toIso8601String(),
-      'to': to.toUtc().toIso8601String(),
+      'from': ymd(from),
+      'to': ymd(to),
     });
     final data = Map<String, dynamic>.from(res.data['data'] as Map);
     final byId = <String, Map<String, dynamic>>{};
@@ -624,10 +635,9 @@ class ApiClient {
     String sessionId, {
     String? comment,
   }) async {
-    final trimmed = comment?.trim();
     final res = await dio.post(
       '/api/v1/heartrate/sessions/$sessionId/validate',
-      data: (trimmed != null && trimmed.isNotEmpty) ? {'comment': trimmed} : null,
+      data: heartRateCommentPayload(comment),
     );
     return res.data['data'] as Map<String, dynamic>;
   }
