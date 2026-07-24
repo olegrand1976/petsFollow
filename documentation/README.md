@@ -18,7 +18,7 @@ Index des documents de référence du projet.
 | 12 | [12-PLAN-PHASES.md](12-PLAN-PHASES.md) | Synthèse (livré / backlog) |
 | 13 | [13-CHARTE-GRAPHIQUE.md](13-CHARTE-GRAPHIQUE.md) | Complet |
 | 14 | [14-POSITIONNEMENT-MARKETING.md](14-POSITIONNEMENT-MARKETING.md) | Synthèse |
-| 15 | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) | À jour (e2e 07–08) |
+| 15 | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) | Manuel web+Flutter (A–I) + auto (Z) |
 | 16 | [16-ADMIN-SIMULATION-10ANS.md](16-ADMIN-SIMULATION-10ANS.md) | **Backlog / non livré** |
 | 17 | [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md) | BM prix + commissions |
 | 18–20 | Fiches commission véto / commercial / admin | One-pagers |
