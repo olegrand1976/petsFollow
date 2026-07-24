@@ -73,6 +73,25 @@ type RegisterVetResult struct {
 	Token  string
 }
 
+// PracticeContact is the minimal public contact info for client booking UX.
+type PracticeContact struct {
+	PracticeID   string
+	PracticeName string
+	Phone        string
+}
+
+func (s *Store) GetPracticeContact(ctx context.Context, practiceID string) (PracticeContact, error) {
+	var c PracticeContact
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, name, COALESCE(phone,'')
+		FROM practice.practices WHERE id = $1`, practiceID,
+	).Scan(&c.PracticeID, &c.PracticeName, &c.Phone)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return PracticeContact{}, ErrNotFound
+	}
+	return c, err
+}
+
 func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID string) (PracticeProfile, error) {
 	var p PracticeProfile
 	var completedAt *time.Time

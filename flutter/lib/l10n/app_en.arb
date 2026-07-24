@@ -22,7 +22,13 @@
   "forgotPasswordFailed": "Could not send email",
   "forgotPasswordSentTitle": "Email sent",
   "forgotPasswordSent": "If an account exists for {email}, a link has been sent. Open it in your browser to choose a new password.",
-  "@forgotPasswordSent": { "placeholders": { "email": { "type": "String" } } },
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "emailRequired": "Enter a valid email address",
   "resetPasswordTitle": "New password",
   "resetPasswordSubtitle": "At least 8 characters.",
@@ -50,6 +56,11 @@
   "proLightPets": "Pets",
   "proLightLoadError": "Could not load",
   "proLightNoVisits": "No appointments",
+  "proLightTourToday": "Today",
+  "proLightTourWeek": "7 days",
+  "proLightTourAll": "All",
+  "proLightNoTourToday": "No appointments today",
+  "proLightNoTourWeek": "No appointments in the next 7 days",
   "proLightNoClients": "No shared clients",
   "proLightNoPets": "No shared pets",
   "proLightAddress": "Address",
@@ -116,13 +127,25 @@
   "photoUpdated": "Photo updated",
   "passwordChanged": "Password changed",
   "greeting": "Hello {name},",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "latestValues": "Latest values",
   "startMeasurement": "START MEASUREMENT",
   "choosePetForMeasurement": "Choose a pet",
   "chooseDuration": "Measurement duration",
   "durationSeconds": "{seconds} s",
-  "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "howToMeasure": "How to measure?",
   "howToMeasureIntro": "Measure your pet's resting heart rate.",
   "howToMeasureStep1": "1. Keep your pet calm, lying down or sitting.",
@@ -241,10 +264,13 @@
   "careOverdue": "Overdue",
   "visitHistory": "Visit history",
   "requestVisit": "Request a visit",
-  "calendarBookingDisabled": "Online booking is not available for this practice. You can still send a request without a time slot.",
+  "calendarBookingDisabled": "Online booking is not available for this practice. Please call the practice to book an appointment.",
   "calendarBookingDisabledReschedule": "Online booking is not available. Propose a date manually.",
   "calendarNoSlots": "No slots available in the next 14 days.",
   "calendarPickSlot": "Pick a slot:",
+  "calendarSelectVet": "Choose a veterinarian:",
+  "calendarCallPractice": "Call the practice",
+  "calendarNoPhone": "No phone number is listed for this practice. Please contact them another way.",
   "visitConfirm": "Confirm",
   "visitProposeReschedule": "Propose another time",
   "visitRescheduleProposed": "Reschedule proposal sent",
@@ -263,13 +289,17 @@
   "familyHouseholdTitle": "Family household — {count} pets",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "kennelHouseholdTitle": "Kennel household — {count} pets",
   "@kennelHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "familyHouseholdNext": "Upcoming household reminders",
@@ -291,12 +321,24 @@
   "notificationPrefDiscovery": "Discovery journey",
   "notificationPrefBilling": "Billing",
   "carePostponeDays": "Postpone by {days} days",
-  "@carePostponeDays": { "placeholders": { "days": { "type": "int" } } },
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "noCareReminders": "No pending care reminders",
   "careAddReminder": "Add a reminder",
   "careSelectPet": "Pet",
   "careDueInDays": "Due in {days} days",
-  "@careDueInDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careReferenceModeDone": "Already done",
   "careReferenceModeFirst": "First time",
   "careLastDateLabel": "Reference date",
@@ -305,7 +347,13 @@
   "careRecurrenceLabel": "Recurrence",
   "careRecurrenceNone": "None (one-off due date)",
   "careRecurrenceDays": "Every {days} days",
-  "@careRecurrenceDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careDueDateLabel": "Due date",
   "careDueDateComputed": "Computed due date",
   "careTooltipDoneWithRecurrence": "Already done: due date = last care date + recurrence.",
@@ -314,7 +362,13 @@
   "careTooltipDueExplained": "Due date = reference date + recurrence (when set).",
   "carePickDate": "Pick a date",
   "discoveryDayBadge": "D{day}",
-  "@discoveryDayBadge": { "placeholders": { "day": { "type": "int" } } },
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "timelineTypeHeartrate": "Heart rate",
   "timelineTypeMessage": "Message",
   "timelineTypeCare": "Care",
@@ -328,7 +382,9 @@
   "vetInviteSentNamed": "Request sent to {practice} — the practice must accept it",
   "@vetInviteSentNamed": {
     "placeholders": {
-      "practice": { "type": "String" }
+      "practice": {
+        "type": "String"
+      }
     }
   },
   "vetNotFound": "No veterinarian found with this email",
@@ -373,5 +429,17 @@
   "attachPhoto": "Photo",
   "attachVideo": "Video",
   "openMedia": "Open",
-  "mediaVideoLabel": "Video"
+  "mediaVideoLabel": "Video",
+  "appInviteTitle": "App invite QR",
+  "appInviteHint": "Show this QR or share the link. A new client who signs up via this link is linked automatically.",
+  "appInviteHintShort": "Download and link invite",
+  "appInviteCodeLabel": "Code:",
+  "appInviteCopy": "Copy link",
+  "appInviteCopied": "Link copied",
+  "appInviteLoadError": "Could not load QR",
+  "appInviteRetry": "Retry",
+  "proLightVetTitle": "Vet field",
+  "commercialFieldTitle": "Sales",
+  "commercialFieldSubtitle": "Client invite QR and Pro web access.",
+  "commercialOpenProWeb": "Open Pro website"
 }

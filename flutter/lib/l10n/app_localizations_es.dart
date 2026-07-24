@@ -164,6 +164,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proLightNoVisits => 'Sin citas';
 
   @override
+  String get proLightTourToday => 'Hoy';
+
+  @override
+  String get proLightTourWeek => '7 días';
+
+  @override
+  String get proLightTourAll => 'Todo';
+
+  @override
+  String get proLightNoTourToday => 'No hay citas hoy';
+
+  @override
+  String get proLightNoTourWeek => 'No hay citas en los próximos 7 días';
+
+  @override
   String get proLightNoClients => 'Sin clientes compartidos';
 
   @override
@@ -782,7 +797,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calendarBookingDisabled =>
-      'La reserva en línea no está disponible para esta clínica. Puede enviar una solicitud sin horario.';
+      'La reserva en línea no está disponible para esta clínica. Llame a la clínica para concertar una cita.';
 
   @override
   String get calendarBookingDisabledReschedule =>
@@ -794,6 +809,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calendarPickSlot => 'Elija un hueco:';
+
+  @override
+  String get calendarSelectVet => 'Elija un veterinario:';
+
+  @override
+  String get calendarCallPractice => 'Llamar a la clínica';
+
+  @override
+  String get calendarNoPhone =>
+      'No hay número de teléfono para esta clínica. Contáctela de otra forma.';
 
   @override
   String get visitConfirm => 'Confirmar';
@@ -1160,4 +1185,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mediaVideoLabel => 'Vídeo';
+
+  @override
+  String get appInviteTitle => 'QR de invitación app';
+
+  @override
+  String get appInviteHint =>
+      'Muestre este QR o comparta el enlace. Un nuevo cliente que se registre con este enlace se vincula automáticamente.';
+
+  @override
+  String get appInviteHintShort => 'Enlace de descarga y vinculación';
+
+  @override
+  String get appInviteCodeLabel => 'Código:';
+
+  @override
+  String get appInviteCopy => 'Copiar enlace';
+
+  @override
+  String get appInviteCopied => 'Enlace copiado';
+
+  @override
+  String get appInviteLoadError => 'No se pudo cargar el QR';
+
+  @override
+  String get appInviteRetry => 'Reintentar';
+
+  @override
+  String get proLightVetTitle => 'Campo véto';
+
+  @override
+  String get commercialFieldTitle => 'Comercial';
+
+  @override
+  String get commercialFieldSubtitle =>
+      'QR de invitación a clientes y acceso al sitio Pro.';
+
+  @override
+  String get commercialOpenProWeb => 'Abrir sitio Pro';
 }

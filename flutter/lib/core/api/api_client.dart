@@ -758,7 +758,7 @@ class ApiClient {
     return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
   }
 
-  Future<Map<String, dynamic>> getPracticeAvailability(
+  Future<PracticeAvailability> getPracticeAvailability(
     String practiceId, {
     required DateTime from,
     required DateTime to,
@@ -770,7 +770,9 @@ class ApiClient {
         'to': to.toUtc().toIso8601String(),
       },
     );
-    return Map<String, dynamic>.from(res.data['data'] as Map);
+    return PracticeAvailability.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
   }
 
   Future<DiscoveryProgress> getDiscovery() async {

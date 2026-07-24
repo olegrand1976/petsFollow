@@ -164,6 +164,21 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightNoVisits => 'Kohtumisi pole';
 
   @override
+  String get proLightTourToday => 'Täna';
+
+  @override
+  String get proLightTourWeek => '7 päeva';
+
+  @override
+  String get proLightTourAll => 'Kõik';
+
+  @override
+  String get proLightNoTourToday => 'Täna kohtumisi pole';
+
+  @override
+  String get proLightNoTourWeek => 'Järgmise 7 päeva jooksul kohtumisi pole';
+
+  @override
   String get proLightNoClients => 'Jagatud kliente pole';
 
   @override
@@ -780,7 +795,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get calendarBookingDisabled =>
-      'Veebibroneering pole selle praktika jaoks saadaval. Saate siiski saata taotluse ilma ajaslottita.';
+      'Veebibroneering pole selle praktika jaoks saadaval. Helistage praktikale aja broneerimiseks.';
 
   @override
   String get calendarBookingDisabledReschedule =>
@@ -791,6 +806,16 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get calendarPickSlot => 'Valige aeg:';
+
+  @override
+  String get calendarSelectVet => 'Valige loomaarst:';
+
+  @override
+  String get calendarCallPractice => 'Helista praktikale';
+
+  @override
+  String get calendarNoPhone =>
+      'Selle praktika telefoninumbrit pole. Võtke ühendust muul viisil.';
 
   @override
   String get visitConfirm => 'Kinnita';
@@ -1155,4 +1180,42 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get mediaVideoLabel => 'Video';
+
+  @override
+  String get appInviteTitle => 'Rakenduse kutse QR';
+
+  @override
+  String get appInviteHint =>
+      'Kuvage see QR või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt.';
+
+  @override
+  String get appInviteHintShort => 'Allalaadimise ja sidumise link';
+
+  @override
+  String get appInviteCodeLabel => 'Kood:';
+
+  @override
+  String get appInviteCopy => 'Kopeeri link';
+
+  @override
+  String get appInviteCopied => 'Link kopeeritud';
+
+  @override
+  String get appInviteLoadError => 'QR-i laadimine ebaõnnestus';
+
+  @override
+  String get appInviteRetry => 'Proovi uuesti';
+
+  @override
+  String get proLightVetTitle => 'Välitöö véto';
+
+  @override
+  String get commercialFieldTitle => 'Müük';
+
+  @override
+  String get commercialFieldSubtitle =>
+      'Kliendi kutse QR ja Pro veebi juurdepääs.';
+
+  @override
+  String get commercialOpenProWeb => 'Ava Pro veebisait';
 }

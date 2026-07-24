@@ -22,7 +22,13 @@
   "forgotPasswordFailed": "No se pudo enviar",
   "forgotPasswordSentTitle": "Correo enviado",
   "forgotPasswordSent": "Si existe una cuenta para {email}, se ha enviado un enlace. Ábralo en el navegador para elegir una nueva contraseña.",
-  "@forgotPasswordSent": { "placeholders": { "email": { "type": "String" } } },
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "emailRequired": "Introduzca un correo electrónico válido",
   "resetPasswordTitle": "Nueva contraseña",
   "resetPasswordSubtitle": "Mínimo 8 caracteres.",
@@ -50,6 +56,11 @@
   "proLightPets": "Animales",
   "proLightLoadError": "No se pudo cargar",
   "proLightNoVisits": "Sin citas",
+  "proLightTourToday": "Hoy",
+  "proLightTourWeek": "7 días",
+  "proLightTourAll": "Todo",
+  "proLightNoTourToday": "No hay citas hoy",
+  "proLightNoTourWeek": "No hay citas en los próximos 7 días",
   "proLightNoClients": "Sin clientes compartidos",
   "proLightNoPets": "Sin animales compartidos",
   "proLightAddress": "Dirección",
@@ -116,13 +127,25 @@
   "photoUpdated": "Foto actualizada",
   "passwordChanged": "Contraseña cambiada",
   "greeting": "Hola {name},",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "latestValues": "Últimos valores",
   "startMeasurement": "EMPEZAR MEDICIÓN",
   "choosePetForMeasurement": "Elegir un animal",
   "chooseDuration": "Duración de la medición",
   "durationSeconds": "{seconds} s",
-  "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "howToMeasure": "¿Cómo medir?",
   "howToMeasureIntro": "Mida la frecuencia cardíaca en reposo de su mascota.",
   "howToMeasureStep1": "1. Mantenga a su mascota tranquila, tumbada o sentada.",
@@ -241,10 +264,13 @@
   "careOverdue": "Atrasado",
   "visitHistory": "Historial de visitas",
   "requestVisit": "Solicitar una visita",
-  "calendarBookingDisabled": "La reserva en línea no está disponible para esta clínica. Puede enviar una solicitud sin horario.",
+  "calendarBookingDisabled": "La reserva en línea no está disponible para esta clínica. Llame a la clínica para concertar una cita.",
   "calendarBookingDisabledReschedule": "La reserva en línea no está disponible. Proponga una fecha manualmente.",
   "calendarNoSlots": "No hay huecos disponibles en los próximos 14 días.",
   "calendarPickSlot": "Elija un hueco:",
+  "calendarSelectVet": "Elija un veterinario:",
+  "calendarCallPractice": "Llamar a la clínica",
+  "calendarNoPhone": "No hay número de teléfono para esta clínica. Contáctela de otra forma.",
   "visitConfirm": "Confirmar",
   "visitProposeReschedule": "Proponer otro horario",
   "visitRescheduleProposed": "Propuesta de cambio enviada",
@@ -263,13 +289,17 @@
   "familyHouseholdTitle": "Hogar Familia — {count} mascotas",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "kennelHouseholdTitle": "Hogar Criadero — {count} mascotas",
   "@kennelHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "familyHouseholdNext": "Próximos recordatorios del hogar",
@@ -291,12 +321,24 @@
   "notificationPrefDiscovery": "Recorrido de descubrimiento",
   "notificationPrefBilling": "Facturación",
   "carePostponeDays": "Aplazar {days} días",
-  "@carePostponeDays": { "placeholders": { "days": { "type": "int" } } },
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "noCareReminders": "Sin recordatorios de cuidados pendientes",
   "careAddReminder": "Añadir un recordatorio",
   "careSelectPet": "Mascota",
   "careDueInDays": "Vence en {days} días",
-  "@careDueInDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careReferenceModeDone": "Ya realizado",
   "careReferenceModeFirst": "Primera vez",
   "careLastDateLabel": "Fecha de referencia",
@@ -305,7 +347,13 @@
   "careRecurrenceLabel": "Recurrencia",
   "careRecurrenceNone": "Ninguna (vencimiento único)",
   "careRecurrenceDays": "Cada {days} días",
-  "@careRecurrenceDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careDueDateLabel": "Vencimiento",
   "careDueDateComputed": "Vencimiento calculado",
   "careTooltipDoneWithRecurrence": "Ya realizado: el vencimiento = fecha del último cuidado + recurrencia.",
@@ -314,7 +362,13 @@
   "careTooltipDueExplained": "Vencimiento = fecha de referencia + recurrencia (si está definida).",
   "carePickDate": "Elegir una fecha",
   "discoveryDayBadge": "D{day}",
-  "@discoveryDayBadge": { "placeholders": { "day": { "type": "int" } } },
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "timelineTypeHeartrate": "Frecuencia cardíaca",
   "timelineTypeMessage": "Mensaje",
   "timelineTypeCare": "Cuidados",
@@ -328,7 +382,9 @@
   "vetInviteSentNamed": "Solicitud enviada a {practice} — la clínica debe aceptarla",
   "@vetInviteSentNamed": {
     "placeholders": {
-      "practice": { "type": "String" }
+      "practice": {
+        "type": "String"
+      }
     }
   },
   "vetNotFound": "No se ha encontrado ningún veterinario con este correo",
@@ -373,5 +429,17 @@
   "attachPhoto": "Foto",
   "attachVideo": "Vídeo",
   "openMedia": "Abrir",
-  "mediaVideoLabel": "Vídeo"
+  "mediaVideoLabel": "Vídeo",
+  "appInviteTitle": "QR de invitación app",
+  "appInviteHint": "Muestre este QR o comparta el enlace. Un nuevo cliente que se registre con este enlace se vincula automáticamente.",
+  "appInviteHintShort": "Enlace de descarga y vinculación",
+  "appInviteCodeLabel": "Código:",
+  "appInviteCopy": "Copiar enlace",
+  "appInviteCopied": "Enlace copiado",
+  "appInviteLoadError": "No se pudo cargar el QR",
+  "appInviteRetry": "Reintentar",
+  "proLightVetTitle": "Campo véto",
+  "commercialFieldTitle": "Comercial",
+  "commercialFieldSubtitle": "QR de invitación a clientes y acceso al sitio Pro.",
+  "commercialOpenProWeb": "Abrir sitio Pro"
 }

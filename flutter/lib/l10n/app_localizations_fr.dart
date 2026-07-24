@@ -165,6 +165,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get proLightNoVisits => 'Aucun rendez-vous';
 
   @override
+  String get proLightTourToday => 'Aujourd\'hui';
+
+  @override
+  String get proLightTourWeek => '7 jours';
+
+  @override
+  String get proLightTourAll => 'Tout';
+
+  @override
+  String get proLightNoTourToday => 'Aucun rendez-vous aujourd\'hui';
+
+  @override
+  String get proLightNoTourWeek => 'Aucun rendez-vous sur 7 jours';
+
+  @override
   String get proLightNoClients => 'Aucun client partagé';
 
   @override
@@ -783,7 +798,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get calendarBookingDisabled =>
-      'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.';
+      'La réservation en ligne n\'est pas disponible pour ce cabinet. Appelez le cabinet pour prendre rendez-vous.';
 
   @override
   String get calendarBookingDisabledReschedule =>
@@ -795,6 +810,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get calendarPickSlot => 'Choisissez un créneau :';
+
+  @override
+  String get calendarSelectVet => 'Choisissez un vétérinaire :';
+
+  @override
+  String get calendarCallPractice => 'Appeler le cabinet';
+
+  @override
+  String get calendarNoPhone =>
+      'Aucun numéro de téléphone n\'est renseigné pour ce cabinet. Contactez-le par un autre moyen.';
 
   @override
   String get visitConfirm => 'Confirmer';
@@ -1160,4 +1185,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mediaVideoLabel => 'Vidéo';
+
+  @override
+  String get appInviteTitle => 'QR invitation app';
+
+  @override
+  String get appInviteHint =>
+      'Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.';
+
+  @override
+  String get appInviteHintShort => 'Lien de téléchargement et rattachement';
+
+  @override
+  String get appInviteCodeLabel => 'Code :';
+
+  @override
+  String get appInviteCopy => 'Copier le lien';
+
+  @override
+  String get appInviteCopied => 'Lien copié';
+
+  @override
+  String get appInviteLoadError => 'Impossible de charger le QR';
+
+  @override
+  String get appInviteRetry => 'Réessayer';
+
+  @override
+  String get proLightVetTitle => 'Terrain véto';
+
+  @override
+  String get commercialFieldTitle => 'Commercial';
+
+  @override
+  String get commercialFieldSubtitle =>
+      'QR invitation clients et accès au site Pro.';
+
+  @override
+  String get commercialOpenProWeb => 'Ouvrir le site Pro';
 }

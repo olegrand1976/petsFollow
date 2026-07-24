@@ -398,6 +398,36 @@ abstract class AppLocalizations {
   /// **'Aucun rendez-vous'**
   String get proLightNoVisits;
 
+  /// No description provided for @proLightTourToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get proLightTourToday;
+
+  /// No description provided for @proLightTourWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'7 jours'**
+  String get proLightTourWeek;
+
+  /// No description provided for @proLightTourAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout'**
+  String get proLightTourAll;
+
+  /// No description provided for @proLightNoTourToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rendez-vous aujourd\'hui'**
+  String get proLightNoTourToday;
+
+  /// No description provided for @proLightNoTourWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rendez-vous sur 7 jours'**
+  String get proLightNoTourWeek;
+
   /// No description provided for @proLightNoClients.
   ///
   /// In fr, this message translates to:
@@ -1535,7 +1565,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarBookingDisabled.
   ///
   /// In fr, this message translates to:
-  /// **'La réservation en ligne n\'est pas disponible pour ce cabinet. Vous pouvez envoyer une demande sans créneau.'**
+  /// **'La réservation en ligne n\'est pas disponible pour ce cabinet. Appelez le cabinet pour prendre rendez-vous.'**
   String get calendarBookingDisabled;
 
   /// No description provided for @calendarBookingDisabledReschedule.
@@ -1555,6 +1585,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Choisissez un créneau :'**
   String get calendarPickSlot;
+
+  /// No description provided for @calendarSelectVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un vétérinaire :'**
+  String get calendarSelectVet;
+
+  /// No description provided for @calendarCallPractice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler le cabinet'**
+  String get calendarCallPractice;
+
+  /// No description provided for @calendarNoPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun numéro de téléphone n\'est renseigné pour ce cabinet. Contactez-le par un autre moyen.'**
+  String get calendarNoPhone;
 
   /// No description provided for @visitConfirm.
   ///
@@ -2215,6 +2263,78 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vidéo'**
   String get mediaVideoLabel;
+
+  /// No description provided for @appInviteTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'QR invitation app'**
+  String get appInviteTitle;
+
+  /// No description provided for @appInviteHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.'**
+  String get appInviteHint;
+
+  /// No description provided for @appInviteHintShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien de téléchargement et rattachement'**
+  String get appInviteHintShort;
+
+  /// No description provided for @appInviteCodeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code :'**
+  String get appInviteCodeLabel;
+
+  /// No description provided for @appInviteCopy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien'**
+  String get appInviteCopy;
+
+  /// No description provided for @appInviteCopied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien copié'**
+  String get appInviteCopied;
+
+  /// No description provided for @appInviteLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le QR'**
+  String get appInviteLoadError;
+
+  /// No description provided for @appInviteRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get appInviteRetry;
+
+  /// No description provided for @proLightVetTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terrain véto'**
+  String get proLightVetTitle;
+
+  /// No description provided for @commercialFieldTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commercial'**
+  String get commercialFieldTitle;
+
+  /// No description provided for @commercialFieldSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'QR invitation clients et accès au site Pro.'**
+  String get commercialFieldSubtitle;
+
+  /// No description provided for @commercialOpenProWeb.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le site Pro'**
+  String get commercialOpenProWeb;
 }
 
 class _AppLocalizationsDelegate

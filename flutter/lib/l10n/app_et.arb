@@ -22,7 +22,13 @@
   "forgotPasswordFailed": "E-kirja saatmine ebaõnnestus",
   "forgotPasswordSentTitle": "E-kiri saadetud",
   "forgotPasswordSent": "Kui kontol {email} on olemas, on link saadetud. Avage see brauseris, et valida uus parool.",
-  "@forgotPasswordSent": { "placeholders": { "email": { "type": "String" } } },
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "emailRequired": "Sisestage kehtiv e-posti aadress",
   "resetPasswordTitle": "Uus parool",
   "resetPasswordSubtitle": "Vähemalt 8 tähemärki.",
@@ -50,6 +56,11 @@
   "proLightPets": "Lemmikloomad",
   "proLightLoadError": "Laadimine ebaõnnestus",
   "proLightNoVisits": "Kohtumisi pole",
+  "proLightTourToday": "Täna",
+  "proLightTourWeek": "7 päeva",
+  "proLightTourAll": "Kõik",
+  "proLightNoTourToday": "Täna kohtumisi pole",
+  "proLightNoTourWeek": "Järgmise 7 päeva jooksul kohtumisi pole",
   "proLightNoClients": "Jagatud kliente pole",
   "proLightNoPets": "Jagatud lemmikloomi pole",
   "proLightAddress": "Aadress",
@@ -116,13 +127,25 @@
   "photoUpdated": "Foto uuendatud",
   "passwordChanged": "Parool muudetud",
   "greeting": "Tere {name},",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "latestValues": "Viimased väärtused",
   "startMeasurement": "ALUSTA MÕÕTMIST",
   "choosePetForMeasurement": "Valige lemmikloom",
   "chooseDuration": "Mõõtmise kestus",
   "durationSeconds": "{seconds} s",
-  "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "howToMeasure": "Kuidas mõõta?",
   "howToMeasureIntro": "Mõõtke oma lemmiklooma puhkeoleku südame löögisagedust.",
   "howToMeasureStep1": "1. Hoidke lemmikloom rahulikuna, lamades või istudes.",
@@ -241,10 +264,13 @@
   "careOverdue": "Tähtaeg ületatud",
   "visitHistory": "Visiitide ajalugu",
   "requestVisit": "Taotle visiiti",
-  "calendarBookingDisabled": "Veebibroneering pole selle praktika jaoks saadaval. Saate siiski saata taotluse ilma ajaslottita.",
+  "calendarBookingDisabled": "Veebibroneering pole selle praktika jaoks saadaval. Helistage praktikale aja broneerimiseks.",
   "calendarBookingDisabledReschedule": "Veebibroneering pole saadaval. Paku kuupäev käsitsi.",
   "calendarNoSlots": "Järgmise 14 päeva jooksul vabu aegu pole.",
   "calendarPickSlot": "Valige aeg:",
+  "calendarSelectVet": "Valige loomaarst:",
+  "calendarCallPractice": "Helista praktikale",
+  "calendarNoPhone": "Selle praktika telefoninumbrit pole. Võtke ühendust muul viisil.",
   "visitConfirm": "Kinnita",
   "visitProposeReschedule": "Paku teist aega",
   "visitRescheduleProposed": "Ümberplaneerimise ettepanek saadetud",
@@ -263,13 +289,17 @@
   "familyHouseholdTitle": "Family majapidamine — {count} lemmiklooma",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "kennelHouseholdTitle": "Kennel majapidamine — {count} lemmiklooma",
   "@kennelHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "familyHouseholdNext": "Eelseisvad majapidamise meeldetuletused",
@@ -291,12 +321,24 @@
   "notificationPrefDiscovery": "Avastamise teekond",
   "notificationPrefBilling": "Arveldus",
   "carePostponeDays": "Lükka edasi {days} päeva",
-  "@carePostponeDays": { "placeholders": { "days": { "type": "int" } } },
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "noCareReminders": "Ootel hoolduse meeldetuletusi pole",
   "careAddReminder": "Lisa meeldetuletus",
   "careSelectPet": "Lemmikloom",
   "careDueInDays": "Tähtaeg {days} päeva pärast",
-  "@careDueInDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careReferenceModeDone": "Juba tehtud",
   "careReferenceModeFirst": "Esimene kord",
   "careLastDateLabel": "Viitekuupäev",
@@ -305,7 +347,13 @@
   "careRecurrenceLabel": "Korduvus",
   "careRecurrenceNone": "Puudub (ühekordne tähtaeg)",
   "careRecurrenceDays": "Iga {days} päeva tagant",
-  "@careRecurrenceDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careDueDateLabel": "Tähtaeg",
   "careDueDateComputed": "Arvutatud tähtaeg",
   "careTooltipDoneWithRecurrence": "Juba tehtud: tähtaeg = viimase hoolduse kuupäev + korduvus.",
@@ -314,7 +362,13 @@
   "careTooltipDueExplained": "Tähtaeg = viitekuupäev + korduvus (kui määratud).",
   "carePickDate": "Valige kuupäev",
   "discoveryDayBadge": "P{day}",
-  "@discoveryDayBadge": { "placeholders": { "day": { "type": "int" } } },
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "timelineTypeHeartrate": "Südame löögisagedus",
   "timelineTypeMessage": "Sõnum",
   "timelineTypeCare": "Hooldus",
@@ -328,7 +382,9 @@
   "vetInviteSentNamed": "Taotlus saadetud praktikale {practice} — praktika peab selle vastu võtma",
   "@vetInviteSentNamed": {
     "placeholders": {
-      "practice": { "type": "String" }
+      "practice": {
+        "type": "String"
+      }
     }
   },
   "vetNotFound": "Selle e-postiga loomaarsti ei leitud",
@@ -373,5 +429,17 @@
   "attachPhoto": "Foto",
   "attachVideo": "Video",
   "openMedia": "Ava",
-  "mediaVideoLabel": "Video"
+  "mediaVideoLabel": "Video",
+  "appInviteTitle": "Rakenduse kutse QR",
+  "appInviteHint": "Kuvage see QR või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt.",
+  "appInviteHintShort": "Allalaadimise ja sidumise link",
+  "appInviteCodeLabel": "Kood:",
+  "appInviteCopy": "Kopeeri link",
+  "appInviteCopied": "Link kopeeritud",
+  "appInviteLoadError": "QR-i laadimine ebaõnnestus",
+  "appInviteRetry": "Proovi uuesti",
+  "proLightVetTitle": "Välitöö véto",
+  "commercialFieldTitle": "Müük",
+  "commercialFieldSubtitle": "Kliendi kutse QR ja Pro veebi juurdepääs.",
+  "commercialOpenProWeb": "Ava Pro veebisait"
 }

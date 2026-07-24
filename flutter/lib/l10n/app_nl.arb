@@ -22,7 +22,13 @@
   "forgotPasswordFailed": "Verzenden mislukt",
   "forgotPasswordSentTitle": "E-mail verzonden",
   "forgotPasswordSent": "Als er een account bestaat voor {email}, is er een link verzonden. Open deze in uw browser om een nieuw wachtwoord te kiezen.",
-  "@forgotPasswordSent": { "placeholders": { "email": { "type": "String" } } },
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "emailRequired": "Voer een geldig e-mailadres in",
   "resetPasswordTitle": "Nieuw wachtwoord",
   "resetPasswordSubtitle": "Minimaal 8 tekens.",
@@ -50,6 +56,11 @@
   "proLightPets": "Dieren",
   "proLightLoadError": "Laden mislukt",
   "proLightNoVisits": "Geen afspraken",
+  "proLightTourToday": "Vandaag",
+  "proLightTourWeek": "7 dagen",
+  "proLightTourAll": "Alles",
+  "proLightNoTourToday": "Geen afspraken vandaag",
+  "proLightNoTourWeek": "Geen afspraken in de komende 7 dagen",
   "proLightNoClients": "Geen gedeelde klanten",
   "proLightNoPets": "Geen gedeelde dieren",
   "proLightAddress": "Adres",
@@ -116,13 +127,25 @@
   "photoUpdated": "Foto bijgewerkt",
   "passwordChanged": "Wachtwoord gewijzigd",
   "greeting": "Hallo {name},",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "latestValues": "Laatste waarden",
   "startMeasurement": "METING STARTEN",
   "choosePetForMeasurement": "Kies een huisdier",
   "chooseDuration": "Meetduur",
   "durationSeconds": "{seconds} s",
-  "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "howToMeasure": "Hoe meten?",
   "howToMeasureIntro": "Meet de hartslag van uw huisdier in rust.",
   "howToMeasureStep1": "1. Houd uw huisdier rustig, liggend of zittend.",
@@ -241,10 +264,13 @@
   "careOverdue": "Te laat",
   "visitHistory": "Bezoekgeschiedenis",
   "requestVisit": "Bezoek aanvragen",
-  "calendarBookingDisabled": "Online reserveren is niet beschikbaar voor deze praktijk. U kunt nog een aanvraag zonder tijdstip sturen.",
+  "calendarBookingDisabled": "Online reserveren is niet beschikbaar voor deze praktijk. Bel de praktijk om een afspraak te maken.",
   "calendarBookingDisabledReschedule": "Online reserveren is niet beschikbaar. Stel handmatig een datum voor.",
   "calendarNoSlots": "Geen slots beschikbaar in de komende 14 dagen.",
   "calendarPickSlot": "Kies een slot:",
+  "calendarSelectVet": "Kies een dierenarts:",
+  "calendarCallPractice": "Bel de praktijk",
+  "calendarNoPhone": "Er is geen telefoonnummer voor deze praktijk. Neem op een andere manier contact op.",
   "visitConfirm": "Bevestigen",
   "visitProposeReschedule": "Ander moment voorstellen",
   "visitRescheduleProposed": "Verplaatsingsvoorstel verzonden",
@@ -273,13 +299,17 @@
   "familyHouseholdTitle": "Familiehuishouden — {count} dieren",
   "@familyHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "kennelHouseholdTitle": "Kennelhuishouden — {count} dieren",
   "@kennelHouseholdTitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "familyHouseholdNext": "Komende gezinsherinneringen",
@@ -301,12 +331,24 @@
   "notificationPrefDiscovery": "Ontdekkingsreis",
   "notificationPrefBilling": "Facturering",
   "carePostponeDays": "Uitstellen met {days} dagen",
-  "@carePostponeDays": { "placeholders": { "days": { "type": "int" } } },
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "noCareReminders": "Geen openstaande zorgherinneringen",
   "careAddReminder": "Herinnering toevoegen",
   "careSelectPet": "Huisdier",
   "careDueInDays": "Vervalt over {days} dagen",
-  "@careDueInDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careReferenceModeDone": "Al uitgevoerd",
   "careReferenceModeFirst": "Eerste keer",
   "careLastDateLabel": "Referentiedatum",
@@ -315,7 +357,13 @@
   "careRecurrenceLabel": "Herhaling",
   "careRecurrenceNone": "Geen (eenmalige deadline)",
   "careRecurrenceDays": "Elke {days} dagen",
-  "@careRecurrenceDays": { "placeholders": { "days": { "type": "int" } } },
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "careDueDateLabel": "Deadline",
   "careDueDateComputed": "Berekende deadline",
   "careTooltipDoneWithRecurrence": "Al uitgevoerd: deadline = datum van laatste zorg + herhaling.",
@@ -324,7 +372,13 @@
   "careTooltipDueExplained": "Deadline = referentiedatum + herhaling (indien ingesteld).",
   "carePickDate": "Kies een datum",
   "discoveryDayBadge": "D{day}",
-  "@discoveryDayBadge": { "placeholders": { "day": { "type": "int" } } },
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "timelineTypeHeartrate": "Hartslag",
   "timelineTypeMessage": "Bericht",
   "timelineTypeCare": "Zorg",
@@ -338,7 +392,9 @@
   "vetInviteSentNamed": "Aanvraag verzonden naar {practice} — de praktijk moet ze aanvaarden",
   "@vetInviteSentNamed": {
     "placeholders": {
-      "practice": { "type": "String" }
+      "practice": {
+        "type": "String"
+      }
     }
   },
   "vetNotFound": "Geen dierenarts gevonden met dit e-mailadres",
@@ -373,5 +429,17 @@
   "attachPhoto": "Foto",
   "attachVideo": "Video",
   "openMedia": "Openen",
-  "mediaVideoLabel": "Video"
+  "mediaVideoLabel": "Video",
+  "appInviteTitle": "App-uitnodiging QR",
+  "appInviteHint": "Toon deze QR of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch gekoppeld.",
+  "appInviteHintShort": "Download- en koppelingslink",
+  "appInviteCodeLabel": "Code:",
+  "appInviteCopy": "Link kopiëren",
+  "appInviteCopied": "Link gekopieerd",
+  "appInviteLoadError": "QR laden mislukt",
+  "appInviteRetry": "Opnieuw",
+  "proLightVetTitle": "Veld véto",
+  "commercialFieldTitle": "Commercial",
+  "commercialFieldSubtitle": "QR-uitnodiging clients en toegang tot de Pro-site.",
+  "commercialOpenProWeb": "Pro-site openen"
 }

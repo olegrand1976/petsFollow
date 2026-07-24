@@ -164,6 +164,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightNoVisits => 'Geen afspraken';
 
   @override
+  String get proLightTourToday => 'Vandaag';
+
+  @override
+  String get proLightTourWeek => '7 dagen';
+
+  @override
+  String get proLightTourAll => 'Alles';
+
+  @override
+  String get proLightNoTourToday => 'Geen afspraken vandaag';
+
+  @override
+  String get proLightNoTourWeek => 'Geen afspraken in de komende 7 dagen';
+
+  @override
   String get proLightNoClients => 'Geen gedeelde klanten';
 
   @override
@@ -778,7 +793,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get calendarBookingDisabled =>
-      'Online reserveren is niet beschikbaar voor deze praktijk. U kunt nog een aanvraag zonder tijdstip sturen.';
+      'Online reserveren is niet beschikbaar voor deze praktijk. Bel de praktijk om een afspraak te maken.';
 
   @override
   String get calendarBookingDisabledReschedule =>
@@ -790,6 +805,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get calendarPickSlot => 'Kies een slot:';
+
+  @override
+  String get calendarSelectVet => 'Kies een dierenarts:';
+
+  @override
+  String get calendarCallPractice => 'Bel de praktijk';
+
+  @override
+  String get calendarNoPhone =>
+      'Er is geen telefoonnummer voor deze praktijk. Neem op een andere manier contact op.';
 
   @override
   String get visitConfirm => 'Bevestigen';
@@ -1152,4 +1177,42 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get mediaVideoLabel => 'Video';
+
+  @override
+  String get appInviteTitle => 'App-uitnodiging QR';
+
+  @override
+  String get appInviteHint =>
+      'Toon deze QR of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch gekoppeld.';
+
+  @override
+  String get appInviteHintShort => 'Download- en koppelingslink';
+
+  @override
+  String get appInviteCodeLabel => 'Code:';
+
+  @override
+  String get appInviteCopy => 'Link kopiëren';
+
+  @override
+  String get appInviteCopied => 'Link gekopieerd';
+
+  @override
+  String get appInviteLoadError => 'QR laden mislukt';
+
+  @override
+  String get appInviteRetry => 'Opnieuw';
+
+  @override
+  String get proLightVetTitle => 'Veld véto';
+
+  @override
+  String get commercialFieldTitle => 'Commercial';
+
+  @override
+  String get commercialFieldSubtitle =>
+      'QR-uitnodiging clients en toegang tot de Pro-site.';
+
+  @override
+  String get commercialOpenProWeb => 'Pro-site openen';
 }

@@ -173,13 +173,24 @@ func (a *API) getPracticeAvailability(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_linked")
 		return
 	}
+	contact, err := a.store.GetPracticeContact(r.Context(), practiceID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	enabled, _, err := a.store.ClientBookingEnabled(r.Context(), practiceID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	base := map[string]any{
+		"practicePhone": contact.Phone,
+		"practiceName":  contact.PracticeName,
+	}
 	if !enabled {
-		httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": false, "slots": []any{}})
+		base["enabled"] = false
+		base["slots"] = []any{}
+		httpx.WriteData(w, http.StatusOK, base)
 		return
 	}
 	from, to, ok := parseFromTo(w, r)
@@ -191,7 +202,9 @@ func (a *API) getPracticeAvailability(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{"enabled": true, "slots": slots})
+	base["enabled"] = true
+	base["slots"] = slots
+	httpx.WriteData(w, http.StatusOK, base)
 }
 
 func parseFromTo(w http.ResponseWriter, r *http.Request) (time.Time, time.Time, bool) {

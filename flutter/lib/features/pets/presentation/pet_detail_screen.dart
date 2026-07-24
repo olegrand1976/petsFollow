@@ -201,6 +201,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     if (filtered.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+      );
+      if (mounted) await _loadVets();
       return;
     }
     final booked = await Navigator.push<bool>(
