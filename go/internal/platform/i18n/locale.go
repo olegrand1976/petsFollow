@@ -7,12 +7,21 @@ import (
 
 type ctxKey struct{}
 
-var Supported = []string{"fr", "nl", "en"}
+var Supported = []string{"fr", "nl", "en", "es", "et"}
 
 func NormalizeLocale(raw string) string {
+	if loc, ok := MatchSupported(raw); ok {
+		return loc
+	}
+	return "fr"
+}
+
+// MatchSupported returns the canonical locale if raw matches a supported
+// language (accepts "es", "ES", "es-ES"). Empty or unknown → ("", false).
+func MatchSupported(raw string) (string, bool) {
 	raw = strings.TrimSpace(strings.ToLower(raw))
 	if raw == "" {
-		return "fr"
+		return "", false
 	}
 	if idx := strings.IndexAny(raw, ",;"); idx >= 0 {
 		raw = raw[:idx]
@@ -23,10 +32,10 @@ func NormalizeLocale(raw string) string {
 	}
 	for _, loc := range Supported {
 		if raw == loc {
-			return loc
+			return loc, true
 		}
 	}
-	return "fr"
+	return "", false
 }
 
 func ParseAcceptLanguage(header string) string {

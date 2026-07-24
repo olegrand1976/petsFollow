@@ -20,21 +20,25 @@ type ThreadSummary struct {
 }
 
 type VetOverview struct {
-	ClientCount      int `json:"clientCount"`
-	UnreadMessages   int `json:"unreadMessages"`
-	RecentSessions7d int `json:"recentSessions7d"`
+	ClientCount          int `json:"clientCount"`
+	UnreadMessages       int `json:"unreadMessages"`
+	RecentSessions7d     int `json:"recentSessions7d"`
+	PendingLinkRequests  int `json:"pendingLinkRequests"`
+	PendingVisits        int `json:"pendingVisits"`
+	OverdueCareCount     int `json:"overdueCareCount"`
+	UnreadHeartrate      int `json:"unreadHeartrate"`
 }
 
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
 	var c ClientSummary
 	err := s.pool.QueryRow(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1 AND pc.client_user_id = $2
-		GROUP BY u.id, u.email, u.full_name`, practiceID, clientID).Scan(
-		&c.UserID, &c.Email, &c.FullName, &c.PetCount)
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url`, practiceID, clientID).Scan(
+		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ClientSummary{}, ErrNotFound
 	}
@@ -51,8 +55,22 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			 WHERE t.vet_user_id = $2 AND m.sender_user_id <> $2 AND m.read_at IS NULL),
 			(SELECT COUNT(*)::int FROM heartrate.sessions
 			 WHERE practice_id = $1 AND status = 'validated'
-			   AND validated_at >= NOW() - INTERVAL '7 days')`,
-		practiceID, vetID).Scan(&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d)
+			   AND validated_at >= NOW() - INTERVAL '7 days'),
+			(SELECT COUNT(*)::int FROM practice.client_vet_link_requests
+			 WHERE vet_user_id = $2 AND status = 'pending'),
+			(SELECT COUNT(*)::int FROM visits.visits
+			 WHERE practice_id = $1
+			   AND pending_action_by = 'vet'
+			   AND status IN ('requested', 'reschedule_pending')),
+			(SELECT COUNT(*)::int FROM care.reminders
+			 WHERE practice_id = $1 AND status = 'pending' AND due_at < NOW()),
+			(SELECT COUNT(*)::int FROM heartrate.sessions
+			 WHERE practice_id = $1 AND status = 'validated' AND vet_seen_at IS NULL)`,
+		practiceID, vetID).Scan(
+		&o.ClientCount, &o.UnreadMessages, &o.RecentSessions7d,
+		&o.PendingLinkRequests, &o.PendingVisits, &o.OverdueCareCount,
+		&o.UnreadHeartrate,
+	)
 	return o, err
 }
 
@@ -61,7 +79,13 @@ func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]
 		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''), u.full_name, u.email,
 			COALESCE((
-				SELECT LEFT(m.body, 120) FROM messaging.messages m
+				SELECT CASE
+					WHEN COALESCE(m.body, '') <> '' THEN LEFT(m.body, 120)
+					WHEN m.media_type = 'video' THEN '[video]'
+					WHEN m.media_type = 'image' THEN '[image]'
+					ELSE ''
+				END
+				FROM messaging.messages m
 				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
 			), ''),
 			COALESCE((

@@ -1,0 +1,5 @@
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+# Path relative to flutter/android/ (same folder as this file).
+storeFile=upload-keystore.jks

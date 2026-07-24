@@ -30,10 +30,10 @@
             <td>{{ p.createdAt?.substring(0, 10) }}</td>
             <td>{{ p.clientEmail }}</td>
             <td>{{ p.petName }}</td>
-            <td>{{ p.planCode }}</td>
-            <td>{{ p.billingMode }}</td>
+            <td>{{ planLabel(p.planCode) }}</td>
+            <td>{{ billingModeLabel(p.billingMode) }}</td>
             <td>{{ formatCurrency(p.amountCents) }}</td>
-            <td><ProBadge :variant="statusVariant(p.status)">{{ p.status }}</ProBadge></td>
+            <td><ProBadge :variant="statusVariant(p.status)">{{ paymentLabel(p.status) }}</ProBadge></td>
           </tr>
         </tbody>
       </ProTable>
@@ -50,6 +50,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { formatCurrency } = useFormatters()
+const { planLabel, billingModeLabel, paymentLabel } = useCodeLabels()
 
 const payments = ref<any[]>([])
 const statusFilter = ref('')

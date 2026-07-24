@@ -3,7 +3,9 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -11,24 +13,32 @@ import (
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
+// MaxHeartRateCommentLen is the max rune length stored on a validated session.
+const MaxHeartRateCommentLen = 500
+
 var (
 	ErrNotFound   = errors.New("not found")
+	ErrValidation = errors.New("validation")
 	ErrForbidden  = errors.New("forbidden")
+	ErrConflict   = errors.New("conflict")
 )
 
 type User struct {
-	ID              string
-	Email           string
-	PasswordHash    string
-	FullName        string
-	Role            kernel.Role
-	PracticeID      string
-	EmailVerifiedAt *time.Time
-	GoogleSub       string
-	AuthProvider    string
-	TOTPSecret        string
-	TOTPEnabled       bool
-	PreferredLocale   string
+	ID                     string
+	Email                  string
+	PasswordHash           string
+	FullName               string
+	Role                   kernel.Role
+	PracticeID             string
+	EmailVerifiedAt        *time.Time
+	GoogleSub              string
+	AuthProvider           string
+	TOTPSecret             string
+	TOTPEnabled            bool
+	PreferredLocale        string
+	AvatarURL              string
+	MustChangePassword     bool
+	ProfessionalSpecialty  string
 }
 
 type Practice struct {
@@ -47,9 +57,12 @@ type Pet struct {
 	WeightKg      *float64  `json:"weightKg,omitempty"`
 	PhotoURL      string    `json:"photoUrl"`
 	PaymentStatus string    `json:"paymentStatus"`
+	LitterTag     string    `json:"litterTag,omitempty"`
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
+	// Permission is set on list responses for care_pro / shared client access (read | write_notes | full).
+	Permission string `json:"permission,omitempty"`
 }
 
 type HeartRateSession struct {
@@ -65,6 +78,40 @@ type HeartRateSession struct {
 	StartedAt   time.Time            `json:"startedAt"`
 	EndedAt     *time.Time           `json:"endedAt,omitempty"`
 	ValidatedAt *time.Time           `json:"validatedAt,omitempty"`
+	VetSeenAt   *time.Time           `json:"vetSeenAt,omitempty"`
+	Comment     *string              `json:"comment,omitempty"`
+	IsNew       bool                 `json:"isNew"`
+}
+
+const heartRateSelectCols = `
+	id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec,
+	bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at, comment`
+
+func heartRateScanDest(sess *HeartRateSession) []any {
+	return []any{
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status,
+		&sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert,
+		&sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt, &sess.Comment,
+	}
+}
+
+// NormalizeHeartRateComment trims, truncates to MaxHeartRateCommentLen, and returns nil when empty.
+func NormalizeHeartRateComment(raw *string) *string {
+	if raw == nil {
+		return nil
+	}
+	s := strings.TrimSpace(*raw)
+	if s == "" {
+		return nil
+	}
+	if utf8.RuneCountInString(s) > MaxHeartRateCommentLen {
+		s = string([]rune(s)[:MaxHeartRateCommentLen])
+	}
+	return &s
+}
+
+func decorateHeartRateSession(sess *HeartRateSession) {
+	sess.IsNew = sess.Status == kernel.SessionValidated && sess.VetSeenAt == nil
 }
 
 type Thread struct {
@@ -80,6 +127,8 @@ type Message struct {
 	ThreadID     string     `json:"threadId"`
 	SenderUserID string     `json:"senderUserId"`
 	Body         string     `json:"body"`
+	MediaURL     string     `json:"mediaUrl,omitempty"`
+	MediaType    string     `json:"mediaType,omitempty"`
 	ReadAt       *time.Time `json:"readAt,omitempty"`
 	CreatedAt    time.Time  `json:"createdAt"`
 }
@@ -103,10 +152,11 @@ type TimelineItem struct {
 }
 
 type ClientSummary struct {
-	UserID   string `json:"userId"`
-	Email    string `json:"email"`
-	FullName string `json:"fullName"`
-	PetCount int    `json:"petCount"`
+	UserID    string `json:"userId"`
+	Email     string `json:"email"`
+	FullName  string `json:"fullName"`
+	AvatarURL string `json:"avatarUrl,omitempty"`
+	PetCount  int    `json:"petCount"`
 }
 
 type Store struct {
@@ -122,7 +172,8 @@ func scanUser(row pgx.Row) (User, error) {
 	var passwordHash *string
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
-		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale,
+		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
+		&u.MustChangePassword, &u.ProfessionalSpecialty,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -133,11 +184,13 @@ func scanUser(row pgx.Row) (User, error) {
 const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
-	COALESCE(preferred_locale,'fr')`
+	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password,
+	COALESCE(professional_specialty,'')`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
 	u, err := scanUser(s.pool.QueryRow(ctx, `
-		SELECT `+userSelectCols+` FROM identity.users WHERE email=$1`, email))
+		SELECT `+userSelectCols+` FROM identity.users WHERE lower(email)=$1`, email))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -155,21 +208,21 @@ func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
 
 func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1
-		GROUP BY u.id, u.email, u.full_name
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url
 		ORDER BY u.full_name`, practiceID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var out []ClientSummary
+	out := make([]ClientSummary, 0)
 	for rows.Next() {
 		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.PetCount); err != nil {
+		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount); err != nil {
 			return nil, err
 		}
 		out = append(out, c)
@@ -183,16 +236,16 @@ func (s *Store) CreatePet(ctx context.Context, p Pet) (Pet, error) {
 		p.PaymentStatus = "pending_payment"
 	}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus).Scan(&p.CreatedAt)
+		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag).Scan(&p.CreatedAt)
 	return p, err
 }
 
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	ct, err := s.pool.Exec(ctx, `
-		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$8`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.OwnerUserID)
+		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$9`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag, p.OwnerUserID)
 	if err != nil {
 		return err
 	}
@@ -206,9 +259,9 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 	var p Pet
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
-		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.CreatedAt)
+		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Pet{}, ErrNotFound
 	}
@@ -226,7 +279,7 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
 		return nil, err
@@ -235,10 +288,77 @@ func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, err
 	return scanPetsWithEntitlements(ctx, s, rows)
 }
 
+// ListPetsAccessibleToClient returns owned pets plus those granted via pet_access or client_access.
+func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID string) ([]Pet, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT p.id::text, COALESCE(p.practice_id::text,''), p.owner_user_id::text, p.name, p.species,
+			COALESCE(p.breed,''), p.birth_date, p.weight_kg, COALESCE(p.photo_url,''),
+			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''), p.created_at,
+			COALESCE((
+				SELECT CASE
+					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
+					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 2 THEN 'write_notes'
+					ELSE 'read'
+				END
+				FROM (
+					SELECT 'full'::text AS permission WHERE p.owner_user_id=$1
+					UNION ALL
+					SELECT pa.permission FROM pets.pet_access pa
+					WHERE pa.pet_id=p.id AND pa.grantee_user_id=$1
+						AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+					UNION ALL
+					SELECT ca.permission FROM practice.client_access ca
+					WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+						AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+				) x
+			), 'read') AS permission
+		FROM pets.pets p
+		WHERE p.owner_user_id=$1
+		OR EXISTS (
+			SELECT 1 FROM pets.pet_access pa
+			WHERE pa.pet_id=p.id AND pa.grantee_user_id=$1
+				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+		)
+		OR EXISTS (
+			SELECT 1 FROM practice.client_access ca
+			WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+				AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+		)
+		ORDER BY p.name`, clientUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Pet
+	for rows.Next() {
+		var p Pet
+		if err := rows.Scan(
+			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
+			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt,
+			&p.Permission,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	if out == nil {
+		out = []Pet{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		if ent, e := s.GetEntitlementByPetID(ctx, out[i].ID); e == nil {
+			out[i].Entitlement = &ent
+		}
+	}
+	return out, nil
+}
+
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {
 		return nil, err
@@ -251,7 +371,7 @@ func scanPets(rows pgx.Rows) ([]Pet, error) {
 	var out []Pet
 	for rows.Next() {
 		var p Pet
-		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, p)
@@ -278,14 +398,17 @@ func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]P
 func (s *Store) GetHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
 	var sess HeartRateSession
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at
+		SELECT `+heartRateSelectCols+`
 		FROM heartrate.sessions WHERE id=$1 AND owner_user_id=$2`,
-		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		sessionID, ownerID).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
 func (s *Store) StartHeartRateSession(ctx context.Context, petID, ownerID, practiceID string, durationSec int) (HeartRateSession, error) {
@@ -307,27 +430,35 @@ func (s *Store) CompleteHeartRateSession(ctx context.Context, sessionID, ownerID
 	err := s.pool.QueryRow(ctx, `
 		UPDATE heartrate.sessions SET status=$2, tap_count=$3, bpm=$4, is_alert=$5, ended_at=NOW()
 		WHERE id=$1 AND owner_user_id=$6 AND status='in_progress'
-		RETURNING id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at`,
-		sessionID, kernel.SessionPendingValidation, tapCount, bpmVal, isAlert, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		RETURNING `+heartRateSelectCols,
+		sessionID, kernel.SessionPendingValidation, tapCount, bpmVal, isAlert, ownerID).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
-func (s *Store) ValidateHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
+func (s *Store) ValidateHeartRateSession(ctx context.Context, sessionID, ownerID string, comment *string) (HeartRateSession, error) {
+	comment = NormalizeHeartRateComment(comment)
 	var sess HeartRateSession
 	err := s.pool.QueryRow(ctx, `
-		UPDATE heartrate.sessions SET status='validated', validated_at=NOW()
+		UPDATE heartrate.sessions
+		SET status='validated', validated_at=NOW(), vet_seen_at=NULL, comment=$3
 		WHERE id=$1 AND owner_user_id=$2 AND status='pending_validation'
-		RETURNING id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at`,
-		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt)
+		RETURNING `+heartRateSelectCols,
+		sessionID, ownerID, comment).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
-	return sess, err
+	if err != nil {
+		return HeartRateSession{}, err
+	}
+	decorateHeartRateSession(&sess)
+	return sess, nil
 }
 
 func (s *Store) CancelHeartRateSession(ctx context.Context, sessionID, ownerID string) error {
@@ -344,7 +475,7 @@ func (s *Store) CancelHeartRateSession(ctx context.Context, sessionID, ownerID s
 }
 
 func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView bool) ([]HeartRateSession, error) {
-	q := `SELECT id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at
+	q := `SELECT ` + heartRateSelectCols + `
 		FROM heartrate.sessions WHERE pet_id=$1`
 	if vetView {
 		q += ` AND status='validated'`
@@ -360,12 +491,28 @@ func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView
 	var out []HeartRateSession
 	for rows.Next() {
 		var sess HeartRateSession
-		if err := rows.Scan(&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt); err != nil {
+		if err := rows.Scan(heartRateScanDest(&sess)...); err != nil {
 			return nil, err
 		}
+		decorateHeartRateSession(&sess)
 		out = append(out, sess)
 	}
 	return out, rows.Err()
+}
+
+// MarkPetHeartRateSessionsSeen sets vet_seen_at for all validated unread sessions of a pet in a practice.
+func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practiceID string) (int64, error) {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE heartrate.sessions
+		SET vet_seen_at = NOW()
+		WHERE pet_id = $1
+		  AND practice_id = $2
+		  AND status = 'validated'
+		  AND vet_seen_at IS NULL`, petID, practiceID)
+	if err != nil {
+		return 0, err
+	}
+	return ct.RowsAffected(), nil
 }
 
 func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vetID string) (Thread, error) {
@@ -388,16 +535,30 @@ func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vet
 }
 
 func (s *Store) AddMessage(ctx context.Context, threadID, senderID, body string) (Message, error) {
-	m := Message{ID: uuid.NewString(), ThreadID: threadID, SenderUserID: senderID, Body: body, CreatedAt: time.Now()}
+	return s.AddMessageMedia(ctx, threadID, senderID, body, "", "")
+}
+
+func (s *Store) AddMessageMedia(ctx context.Context, threadID, senderID, body, mediaURL, mediaType string) (Message, error) {
+	m := Message{
+		ID:           uuid.NewString(),
+		ThreadID:     threadID,
+		SenderUserID: senderID,
+		Body:         body,
+		MediaURL:     mediaURL,
+		MediaType:    mediaType,
+		CreatedAt:    time.Now(),
+	}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO messaging.messages (id, thread_id, sender_user_id, body, created_at)
-		VALUES ($1,$2,$3,$4,$5) RETURNING created_at`, m.ID, m.ThreadID, m.SenderUserID, m.Body, m.CreatedAt).Scan(&m.CreatedAt)
+		INSERT INTO messaging.messages (id, thread_id, sender_user_id, body, media_url, media_type, created_at)
+		VALUES ($1,$2,$3,$4,NULLIF($5,''),NULLIF($6,''),$7) RETURNING created_at`,
+		m.ID, m.ThreadID, m.SenderUserID, m.Body, m.MediaURL, m.MediaType, m.CreatedAt).Scan(&m.CreatedAt)
 	return m, err
 }
 
 func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, thread_id::text, sender_user_id::text, body, read_at, created_at
+		SELECT id::text, thread_id::text, sender_user_id::text, body,
+			COALESCE(media_url,''), COALESCE(media_type,''), read_at, created_at
 		FROM messaging.messages WHERE thread_id=$1 ORDER BY created_at ASC`, threadID)
 	if err != nil {
 		return nil, err
@@ -406,12 +567,36 @@ func (s *Store) ListMessages(ctx context.Context, threadID string) ([]Message, e
 	var out []Message
 	for rows.Next() {
 		var m Message
-		if err := rows.Scan(&m.ID, &m.ThreadID, &m.SenderUserID, &m.Body, &m.ReadAt, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.ThreadID, &m.SenderUserID, &m.Body, &m.MediaURL, &m.MediaType, &m.ReadAt, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)
 	}
 	return out, rows.Err()
+}
+
+// MarkThreadRead sets read_at on messages sent by the other participant.
+func (s *Store) MarkThreadRead(ctx context.Context, threadID, readerUserID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE messaging.messages
+		SET read_at = NOW()
+		WHERE thread_id = $1
+		  AND sender_user_id <> $2
+		  AND read_at IS NULL`, threadID, readerUserID)
+	return err
+}
+
+// MarkAllUnreadForUser marks all unread inbound messages as read for a participant.
+func (s *Store) MarkAllUnreadForUser(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE messaging.messages m
+		SET read_at = NOW()
+		FROM messaging.threads t
+		WHERE m.thread_id = t.id
+		  AND (t.vet_user_id = $1 OR t.client_user_id = $1)
+		  AND m.sender_user_id <> $1
+		  AND m.read_at IS NULL`, userID)
+	return err
 }
 
 func (s *Store) GetVetAvailability(ctx context.Context, vetID string) (kernel.AvailabilityStatus, string, error) {
@@ -465,25 +650,54 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 }
 
 func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]TimelineItem, error) {
+	return s.PetTimelineFiltered(ctx, petID, vetView, true, false)
+}
+
+// PetTimelineFiltered builds the pet timeline.
+// includeMessages: messaging bodies for this pet's thread.
+// redactVisitNotes: replace visit notes with empty body (ACL read-only).
+func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, includeMessages, redactVisitNotes bool) ([]TimelineItem, error) {
 	hrFilter := ""
 	if vetView {
 		hrFilter = " AND status='validated'"
 	} else {
 		hrFilter = " AND status IN ('pending_validation','validated')"
 	}
-	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, 'heartrate', 'Relevé cardiaque', CONCAT('BPM: ', COALESCE(bpm::text,'?')), started_at,
-			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert)
-		FROM heartrate.sessions WHERE pet_id=$1`+hrFilter+`
+	visitBody := "COALESCE(notes,'')"
+	if redactVisitNotes {
+		visitBody = "''"
+	}
+	q := `
+		SELECT id::text, 'heartrate', 'Relevé cardiaque',
+			CASE
+				WHEN comment IS NOT NULL AND btrim(comment) <> ''
+					THEN CONCAT('BPM: ', COALESCE(bpm::text,'?'), ' — ', comment)
+				ELSE CONCAT('BPM: ', COALESCE(bpm::text,'?'))
+			END,
+			started_at,
+			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert, 'comment', comment)
+		FROM heartrate.sessions WHERE pet_id=$1` + hrFilter + `
 		UNION ALL
 		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb
 		FROM pets.dossier_events WHERE pet_id=$1
 		UNION ALL
+		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
+		FROM care.reminders WHERE pet_id=$1 AND status='done'
+		UNION ALL
+		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
+			jsonb_build_object('status', status, 'source', source)
+		FROM visits.visits WHERE pet_id=$1 AND status='done'`
+	if includeMessages {
+		q += `
+		UNION ALL
 		SELECT m.id::text, 'message', 'Message', m.body, m.created_at, '{}'::jsonb
 		FROM messaging.messages m
 		JOIN messaging.threads t ON t.id = m.thread_id
-		WHERE t.pet_id=$1 OR EXISTS (SELECT 1 FROM pets.pets p WHERE p.id=$1 AND p.owner_user_id=t.client_user_id)
-		ORDER BY 4 DESC`, petID)
+		WHERE t.pet_id=$1`
+	}
+	q += `
+		ORDER BY 5 DESC`
+	rows, err := s.pool.Query(ctx, q, petID)
 	if err != nil {
 		return nil, err
 	}
@@ -499,6 +713,9 @@ func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]
 		item.Type = kernel.TimelineType(typeStr)
 		item.Meta = meta
 		out = append(out, item)
+	}
+	if out == nil {
+		out = []TimelineItem{}
 	}
 	return out, rows.Err()
 }
@@ -521,12 +738,20 @@ func (s *Store) GetVetForClient(ctx context.Context, clientID, practiceID string
 	return vetID, err
 }
 
-func (s *Store) EmailPrefs(ctx context.Context, vetID string) (onMessage, onHeartRate bool, err error) {
-	err = s.pool.QueryRow(ctx, `
-		SELECT email_on_message, email_on_heartrate FROM notifications.notification_preferences WHERE vet_user_id=$1`, vetID).
-		Scan(&onMessage, &onHeartRate)
+type VetEmailPrefs struct {
+	OnMessage      bool
+	OnHeartRate    bool
+	OnVisitRequest bool
+}
+
+func (s *Store) EmailPrefs(ctx context.Context, vetID string) (VetEmailPrefs, error) {
+	var p VetEmailPrefs
+	err := s.pool.QueryRow(ctx, `
+		SELECT email_on_message, email_on_heartrate, COALESCE(email_on_visit_request, TRUE)
+		FROM notifications.notification_preferences WHERE vet_user_id=$1`, vetID).
+		Scan(&p.OnMessage, &p.OnHeartRate, &p.OnVisitRequest)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return true, true, nil
+		return VetEmailPrefs{OnMessage: true, OnHeartRate: true, OnVisitRequest: true}, nil
 	}
-	return onMessage, onHeartRate, err
+	return p, err
 }

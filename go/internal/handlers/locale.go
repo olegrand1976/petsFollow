@@ -6,6 +6,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func (a *API) localeFromUserMiddleware(next http.Handler) http.Handler {
@@ -13,6 +14,14 @@ func (a *API) localeFromUserMiddleware(next http.Handler) http.Handler {
 		if id, err := authx.FromContext(r.Context()); err == nil {
 			if locale, err := a.store.GetUserPreferredLocale(r.Context(), id.UserID); err == nil {
 				r = r.WithContext(i18n.WithLocale(r.Context(), locale))
+			}
+			// After seed/redeploy, JWT practice_id can lag behind identity.users.practice_id.
+			// Refresh it so /clients and other practice-scoped routes stay correct without re-login.
+			if id.Role == kernel.RoleVet {
+				if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil && u.PracticeID != "" && u.PracticeID != id.PracticeID {
+					id.PracticeID = u.PracticeID
+					r = r.WithContext(authx.WithIdentity(r.Context(), id))
+				}
 			}
 		}
 		next.ServeHTTP(w, r)
@@ -34,17 +43,9 @@ func (a *API) updateMeLocale(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteErrorLocalized(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	locale := i18n.NormalizeLocale(req.Locale)
-	supported := false
-	for _, loc := range i18n.Supported {
-		if req.Locale == loc {
-			supported = true
-			locale = loc
-			break
-		}
-	}
-	if !supported {
-		httpx.WriteErrorLocalized(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+	locale, ok := i18n.MatchSupported(req.Locale)
+	if !ok {
+		httpx.WriteErrorLocalized(w, r, http.StatusBadRequest, "bad_request", "invalid_locale")
 		return
 	}
 	if err := a.store.UpdateUserLocale(r.Context(), id.UserID, locale); err != nil {

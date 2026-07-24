@@ -5,6 +5,7 @@
     :class="[`pro-btn--${variant}`, { 'pro-btn--block': block }]"
     :disabled="disabled || loading"
     :data-testid="testId"
+    @click="onClick"
   >
     <span v-if="loading" aria-hidden="true">…</span>
     <slot />
@@ -29,4 +30,10 @@ withDefaults(
     loading: false,
   },
 )
+
+const emit = defineEmits<{ click: [MouseEvent] }>()
+
+function onClick(event: MouseEvent) {
+  emit('click', event)
+}
 </script>

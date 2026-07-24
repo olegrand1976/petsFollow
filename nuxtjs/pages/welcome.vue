@@ -2,7 +2,10 @@
   <div class="pro-welcome">
     <header class="pro-welcome__header">
       <PetsFollowLogo variant="default" />
-      <ProButton @click="navigateTo('/login')">{{ $t('welcome.login') }}</ProButton>
+      <div class="pro-welcome__header-actions">
+        <ProLocaleSelect />
+        <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
+      </div>
     </header>
 
     <section class="pro-welcome__hero">
@@ -32,17 +35,17 @@
 
     <section class="pro-welcome__features">
       <div v-for="item in highlights" :key="item.key" class="pro-welcome__highlight">
-        <span aria-hidden="true">{{ item.icon }}</span>
+        <ProIcon :name="item.icon" class="pro-welcome__highlight-icon" :size="32" />
         <h3>{{ $t(`welcome.highlights.${item.key}.title`) }}</h3>
         <p>{{ $t(`welcome.highlights.${item.key}.text`) }}</p>
       </div>
     </section>
 
     <section class="pro-welcome__cta">
-      <h2>{{ $t('welcome.ctaTitle') }}</h2>
-      <p>{{ $t('welcome.ctaText') }}</p>
+      <h2>{{ ctaTitle }}</h2>
+      <p>{{ ctaText }}</p>
       <div class="pro-welcome__cta-actions">
-        <ProButton @click="navigateTo('/login')">{{ $t('welcome.ctaLogin') }}</ProButton>
+        <ProButton @click="goPrimary">{{ primaryLabel }}</ProButton>
         <ProButton variant="ghost" @click="navigateTo('/')">{{ $t('common.backHome') }}</ProButton>
       </div>
     </section>
@@ -52,6 +55,11 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
+const token = useCookie('pf_token')
+const session = useCookie('pf_session')
+const isAuthenticated = computed(() => !!(token.value || session.value))
+
 const steps = [
   { key: 'profile' },
   { key: 'invite' },
@@ -60,8 +68,42 @@ const steps = [
 ]
 
 const highlights = [
-  { key: 'bpm', icon: '❤️' },
-  { key: 'alerts', icon: '🔔' },
-  { key: 'free', icon: '🆓' },
+  { key: 'bpm', icon: 'favorite' },
+  { key: 'alerts', icon: 'notifications' },
+  { key: 'free', icon: 'card_giftcard' },
 ]
+
+const primaryLabel = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaContinue') : t('welcome.ctaLogin'),
+)
+const ctaTitle = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaTitleAuthed') : t('welcome.ctaTitle'),
+)
+const ctaText = computed(() =>
+  isAuthenticated.value ? t('welcome.ctaTextAuthed') : t('welcome.ctaText'),
+)
+
+async function goPrimary() {
+  if (!isAuthenticated.value) {
+    await navigateTo('/login')
+    return
+  }
+  try {
+    const me: any = await $fetch('/api/me')
+    const data = me.data ?? me
+    if (data.role === 'vet' && data.profileComplete !== true) {
+      await navigateTo('/onboarding')
+      return
+    }
+    if (isProRole(data.role)) {
+      await navigateTo(homePathForRole(data.role, { profileComplete: data.profileComplete }))
+      return
+    }
+    await clearAuthTokens()
+    await navigateTo('/login')
+  } catch {
+    await clearAuthTokens()
+    await navigateTo('/login')
+  }
+}
 </script>

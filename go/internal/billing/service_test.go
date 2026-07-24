@@ -61,3 +61,48 @@ func TestPlanSummary(t *testing.T) {
 		t.Fatal("empty summary")
 	}
 }
+
+func TestSupportsBillingModeQuinquennial(t *testing.T) {
+	// Quinquennial is legacy — no longer sold.
+	if billing.SupportsBillingMode(billing.PlanQuinquennial, billing.ModeOneTime) {
+		t.Fatal("quinquennial one_time must be blocked (no longer sold)")
+	}
+	if billing.SupportsBillingMode(billing.PlanQuinquennial, billing.ModeSubscription) {
+		t.Fatal("quinquennial subscription must be blocked")
+	}
+	if !billing.SupportsBillingMode(billing.PlanTriennial, billing.ModeSubscription) {
+		t.Fatal("triennial subscription must be allowed")
+	}
+	if !billing.SupportsBillingMode(billing.PlanMonthly, billing.ModeSubscription) {
+		t.Fatal("monthly subscription must be allowed")
+	}
+	if billing.SupportsBillingMode(billing.PlanMonthly, billing.ModeOneTime) {
+		t.Fatal("monthly one_time must be blocked")
+	}
+}
+
+func TestListPlansOmitsQuinquennialSubscription(t *testing.T) {
+	var svc billing.Service
+	offers := svc.ListPlansForLocale("fr")
+	var hasMonthly, hasAnnual, hasTriennial bool
+	for _, o := range offers {
+		if o.Plan.Code == billing.PlanQuinquennial {
+			t.Fatal("quinquennial must not be listed in sellable offers")
+		}
+		switch o.Plan.Code {
+		case billing.PlanMonthly:
+			hasMonthly = true
+			if o.BillingMode != billing.ModeSubscription {
+				t.Fatal("monthly must be subscription-only")
+			}
+		case billing.PlanAnnual:
+			hasAnnual = true
+		case billing.PlanTriennial:
+			hasTriennial = true
+		}
+	}
+	if !hasMonthly || !hasAnnual || !hasTriennial {
+		t.Fatalf("expected monthly/annual/triennial offers, got monthly=%v annual=%v triennial=%v",
+			hasMonthly, hasAnnual, hasTriennial)
+	}
+}

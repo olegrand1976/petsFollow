@@ -6,6 +6,120 @@
   "password": "Mot de passe",
   "login": "Se connecter",
   "loginFailed": "Connexion impossible",
+  "emailNotVerified": "Confirmez d'abord votre email (lien reçu à l'inscription), puis reconnectez-vous.",
+  "loginOr": "ou",
+  "loginWithGoogle": "Continuer avec Google",
+  "loginWithApple": "Continuer avec Apple",
+  "appleComingSoon": "La connexion avec Apple arrive bientôt.",
+  "twoFaTitle": "Vérification 2FA",
+  "twoFaSubtitle": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+  "twoFaCode": "Code authenticator",
+  "twoFaSubmit": "Valider",
+  "twoFaBack": "Retour à la connexion",
+  "twoFaInvalid": "Code 2FA invalide ou expiré",
+  "forgotPassword": "Mot de passe oublié ?",
+  "forgotPasswordTitle": "Mot de passe oublié",
+  "forgotPasswordSubtitle": "Indiquez l'email de votre compte. Si un compte existe, un lien de réinitialisation sera envoyé.",
+  "forgotPasswordSubmit": "Envoyer le lien",
+  "forgotPasswordBack": "Retour à la connexion",
+  "forgotPasswordFailed": "Envoi impossible",
+  "forgotPasswordSentTitle": "Email envoyé",
+  "forgotPasswordSent": "Si un compte existe pour {email}, un lien a été envoyé. Ouvrez-le dans votre navigateur pour choisir un nouveau mot de passe.",
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "emailRequired": "Saisissez une adresse email valide",
+  "resetPasswordTitle": "Nouveau mot de passe",
+  "resetPasswordSubtitle": "Minimum 8 caractères.",
+  "resetPasswordToken": "Jeton de réinitialisation",
+  "resetPasswordSubmit": "Enregistrer",
+  "resetPasswordBackToLogin": "Aller à la connexion",
+  "resetPasswordInvalidLink": "Lien de réinitialisation invalide",
+  "resetPasswordFailed": "Réinitialisation impossible",
+  "resetPasswordDoneTitle": "Mot de passe mis à jour",
+  "resetPasswordDoneSubtitle": "Vous pouvez maintenant vous connecter.",
+  "fullName": "Nom complet",
+  "registerCta": "S'inscrire",
+  "registerTitle": "S'inscrire",
+  "registerSubtitle": "Créez votre compte pour suivre la santé de votre animal. Un email de validation vous sera envoyé.",
+  "registerSubmit": "S'inscrire",
+  "registerSuccess": "Compte créé. Ouvrez le lien dans l'email de validation, puis revenez vous connecter dans l'app.",
+  "registerFailed": "Inscription impossible",
+  "registerEmailExists": "Cet email est déjà utilisé",
+  "registerBackToLogin": "Retour à la connexion",
+  "confirmEmailTitle": "Confirmation de l'email",
+  "confirmEmailLoading": "Confirmation en cours…",
+  "confirmEmailDoneTitle": "Email confirmé",
+  "confirmEmailDoneSubtitle": "Votre compte est activé. Vous pouvez vous connecter.",
+  "confirmEmailFailedTitle": "Confirmation impossible",
+  "confirmEmailFailed": "Impossible de confirmer cet email.",
+  "confirmEmailInvalidLink": "Lien de confirmation invalide ou déjà utilisé.",
+  "confirmEmailBackToLogin": "Retour à la connexion",
+  "vetUseProWeb": "Le compte vétérinaire complet s'utilise sur le site Pro web.",
+  "unsupportedRoleApp": "Ce compte n'est pas utilisable dans l'app pets. Utilisez le site Pro web.",
+  "proLightTitle": "Pro terrain",
+  "proLightAgenda": "Agenda",
+  "proLightClients": "Clients",
+  "proLightPets": "Animaux",
+  "proLightLoadError": "Chargement impossible",
+  "proLightNoVisits": "Aucun rendez-vous",
+  "proLightTourToday": "Aujourd'hui",
+  "proLightTourWeek": "7 jours",
+  "proLightTourAll": "Tout",
+  "proLightNoTourToday": "Aucun rendez-vous aujourd'hui",
+  "proLightNoTourWeek": "Aucun rendez-vous sur 7 jours",
+  "proLightNoClients": "Aucun client partagé",
+  "proLightNoPets": "Aucun animal partagé",
+  "proLightAddress": "Adresse",
+  "proLightOpenMaps": "Maps",
+  "proLightReportTitle": "Compte rendu",
+  "proLightReportHint": "Notes de visite…",
+  "proLightImproveAi": "Améliorer (IA)",
+  "proLightFinalizeReport": "Finaliser",
+  "proLightReportFinal": "Finalisé",
+  "proLightReportHistoryTitle": "Historique",
+  "proLightReportHistoryTranscript": "Original (transcription)",
+  "proLightReportHistoryImproved": "Version IA",
+  "proLightReportHistorySaved": "Version enregistrée",
+  "proLightReportHistoryEmpty": "Aucune version disponible",
+  "proLightSettings": "Réglages",
+  "proLightSpecialty": "Spécialité",
+  "proLightDocuments": "Documents",
+  "proLightNoDocuments": "Aucun document",
+  "proLightTimeline": "Timeline",
+  "proLightNoTimeline": "Aucun événement",
+  "proLightReminders": "Rappels",
+  "proLightNoReminders": "Aucun rappel",
+  "proLightLitterTag": "Tag / portée",
+  "proLightActionFailed": "Action impossible",
+  "proLightReadOnly": "Accès lecture seule",
+  "petAccessSharedRead": "Partagé · lecture",
+  "petAccessSharedNotes": "Partagé · notes",
+  "petAccessSharedFull": "Partagé · complet",
+  "proLightUseGps": "GPS",
+  "proLightTranscribeAudio": "Fichier audio",
+  "proLightDictationStart": "Dicter",
+  "proLightDictationStop": "Arrêter & transcrire",
+  "proLightAudioConsentTitle": "Consentement audio",
+  "proLightAudioConsentBody": "L'enregistrement sert uniquement à générer le compte rendu. Il est supprimé à la finalisation du CR.",
+  "proLightAudioConsentAccept": "J'accepte",
+  "proLightSpecialtyFarrier": "Maréchal-ferrant",
+  "proLightSpecialtyPhysio": "Physio / ostéo",
+  "proLightSpecialtyBehaviorist": "Comportementaliste",
+  "proLightSpecialtyGroomer": "Toiletteur",
+  "proLightSpecialtyBreeder": "Éleveur",
+  "proLightSpecialtyVetLight": "Véto light",
+  "proLightReportHintFarrier": "CR ferrage : pieds, fer, observations…",
+  "proLightEmptyFarrier": "Aucun cheval / intervention partagée",
+  "proLightMicDenied": "Microphone refusé — autorisez l'accès dans les réglages",
+  "proLightGpsDenied": "Position indisponible",
+  "googleNotConfigured": "Connexion Google non configurée",
+  "googleLoginFailed": "Connexion Google impossible",
+  "googleWrongAudience": "Ce compte Google n'est pas un profil client",
   "myPets": "Mes animaux",
   "myData": "Mes données",
   "settings": "Paramètres",
@@ -15,18 +129,56 @@
   "firstName": "Votre prénom",
   "currentPassword": "Mot de passe actuel",
   "newPassword": "Nouveau mot de passe",
+  "confirmNewPassword": "Confirmer le mot de passe",
   "changePassword": "Changer le mot de passe",
+  "forceChangePasswordTitle": "Changer le mot de passe",
+  "forceChangePasswordSubtitle": "Ce compte a été créé avec un mot de passe temporaire. Choisissez le vôtre pour continuer.",
+  "forceChangePasswordSubmit": "Enregistrer et continuer",
+  "passwordTooShort": "Minimum 8 caractères",
+  "passwordMismatch": "Les mots de passe ne correspondent pas",
+  "passwordChangeFailed": "Impossible de modifier le mot de passe",
   "deleteAccount": "Supprimer le compte",
   "deleteAccountConfirm": "Cette action est irréversible. Tous vos animaux et données seront supprimés.",
+  "exportMyData": "Exporter mes données",
+  "registerConsentPrefix": "J'accepte les ",
+  "registerConsentMiddle": " et la ",
+  "registerConsentRequired": "Vous devez accepter les conditions et la politique de confidentialité.",
+  "pushPermissionTitle": "Notifications",
+  "pushPermissionBody": "petsFollow souhaite vous envoyer des notifications : messages de votre vétérinaire, confirmations de rendez-vous et rappels de soins. Vous pouvez les désactiver à tout moment dans les réglages de l'app ou du téléphone.",
+  "pushPermissionContinue": "Continuer",
+  "exportDataSaved": "Export enregistré : {path}",
+  "@exportDataSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "profileSaved": "Profil enregistré",
+  "changePhoto": "Changer la photo",
+  "addPhoto": "Ajouter une photo",
+  "photoUpdated": "Photo mise à jour",
   "passwordChanged": "Mot de passe modifié",
   "greeting": "Bonjour {name},",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "latestValues": "Dernières valeurs",
   "startMeasurement": "DÉMARRER LA MESURE",
+  "choosePetForMeasurement": "Choisir un animal",
   "chooseDuration": "Durée de la mesure",
   "durationSeconds": "{seconds} s",
-  "@durationSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "howToMeasure": "Comment mesurer ?",
   "howToMeasureIntro": "Mesurer la fréquence cardiaque de votre animal au repos.",
   "howToMeasureStep1": "1. Placez votre animal au calme, allongé ou assis.",
@@ -42,13 +194,27 @@
   "legalTermsTitle": "Conditions générales d'utilisation",
   "legalPrivacyTitle": "Politique de confidentialité",
   "legalNoticeTitle": "Mentions légales",
-  "legalTermsBody": "Conditions générales d'utilisation — petsFollow\n\nL'application petsFollow permet aux propriétaires d'animaux de mesurer la fréquence cardiaque, de consulter l'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l'abonnement choisi. L'utilisateur s'engage à utiliser l'application conformément à sa destination.\n\nDate d'actualisation : juillet 2026",
-  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : prénom, email, données animal (nom, espèce, race), relevés cardiaques, messages au vétérinaire.\n\nFinalités : gestion du compte, suivi santé, communication avec le cabinet vétérinaire.\n\nConservation : jusqu'à suppression du compte ou 3 ans d'inactivité.\n\nVous pouvez exercer vos droits (accès, rectification, suppression) via les paramètres de l'application.\n\nDate d'actualisation : juillet 2026",
-  "legalNoticeBody": "Mentions légales — petsFollow\n\nÉditeur : petsFollow\nContact : support@petsfollow.test\n\nHébergement : infrastructure cloud conforme RGPD.\n\nDirecteur de publication : petsFollow.\n\nDate d'actualisation : juillet 2026",
+  "legalOpenOnline": "Voir la version en ligne",
+  "legalTermsBody": "Conditions générales d'utilisation — petsFollow\n\nL'application petsFollow permet aux propriétaires d'animaux de mesurer la fréquence cardiaque, de consulter l'historique et de communiquer avec leur vétérinaire.\n\nLes services sont fournis dans le cadre de l'abonnement choisi (paiement via Stripe). L'utilisateur s'engage à utiliser l'application conformément à sa destination.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/terms\n\nDate d'actualisation : juillet 2026",
+  "legalPrivacyBody": "Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, suivi cardiaque, messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d'actualisation : juillet 2026",
+  "legalNoticeBody": "Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@ll-it-sc.be\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d'actualisation : juillet 2026",
   "language": "Langue",
   "languageFr": "Français",
   "languageNl": "Nederlands",
   "languageEn": "English",
+  "languageEs": "Español",
+  "languageEt": "Eesti",
+  "planMonthlyLabel": "3,50 € / mois",
+  "planAnnualLabel": "35 € / an",
+  "planTriennialLabel": "95 € / 3 ans",
+  "planQuinquennialLabel": "145 € / 5 ans",
+  "pushNewMessage": "Nouveau message",
+  "pushVisitConfirmed": "Rendez-vous confirmé",
+  "pushVisitProposed": "Proposition de rendez-vous",
+  "pushVisitReschedule": "Déplacement de rendez-vous",
+  "notifChannelMessages": "Messages",
+  "notifChannelVisits": "Visites",
+  "notifChannelCare": "Soins",
   "paymentResume": "Reprendre le paiement",
   "manageSubscription": "Gérer mon abonnement",
   "heartRate": "Relevé cardiaque",
@@ -58,8 +224,15 @@
   "badgeActive": "Actif",
   "badgePendingPayment": "En attente de paiement",
   "badgeExpiresOn": "expire {date}",
-  "@badgeExpiresOn": { "placeholders": { "date": { "type": "String" } } },
+  "@badgeExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "newPet": "Nouvel animal",
+  "editPet": "Modifier l'animal",
   "petName": "Nom",
   "species": "Espèce",
   "breed": "Race",
@@ -71,28 +244,294 @@
   "paymentConfirmed": "Paiement confirmé — animal actif",
   "paymentPending": "Paiement en attente — vous pourrez reprendre plus tard",
   "errorGeneric": "Erreur: {message}",
-  "@errorGeneric": { "placeholders": { "message": { "type": "String" } } },
+  "@errorGeneric": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNetwork": "Connexion impossible. Vérifiez votre réseau et réessayez.",
+  "retryAction": "Réessayer",
+  "errorMediaTooLarge": "Fichier trop volumineux (25 Mo max)",
+  "errorInvalidMediaType": "Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)",
+  "errorPaymentRequired": "Abonnement requis pour envoyer des médias",
+  "errorPhotoUploadFailed": "Animal créé, mais la photo n'a pas pu être envoyée",
+  "errorCouldNotOpenLink": "Impossible d'ouvrir le lien",
+  "planMonthlySub": "3,50 € / mois, renouvelé automatiquement",
   "planAnnualSub": "{price}, renouvelé automatiquement",
-  "@planAnnualSub": { "placeholders": { "price": { "type": "String" } } },
-  "planTriennialSub": "60 € tous les 3 ans, renouvelé automatiquement",
-  "planQuinquennialSub": "75 € tous les 5 ans, renouvelé automatiquement",
+  "@planAnnualSub": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "planTriennialSub": "95 € tous les 3 ans, renouvelé automatiquement",
+  "planQuinquennialSub": "145 € pour 5 ans, paiement unique",
   "planOneTime": "{price}, paiement unique",
-  "@planOneTime": { "placeholders": { "price": { "type": "String" } } },
-  "heartRateInstructions": "Tapotez à chaque battement pendant 60 secondes.",
+  "@planOneTime": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateInstructions": "Tapotez à chaque battement pendant la durée indiquée par votre vétérinaire.",
   "heartRateInstructionsDuration": "Tapotez à chaque battement pendant {seconds} secondes.",
-  "@heartRateInstructionsDuration": { "placeholders": { "seconds": { "type": "int" } } },
+  "@heartRateInstructionsDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateNoDurationConfigured": "Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.",
   "start": "Démarrer",
   "secondsLeft": "{seconds} s",
-  "@secondsLeft": { "placeholders": { "seconds": { "type": "int" } } },
+  "@secondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "beatsCount": "{count} battements",
-  "@beatsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@beatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tapHere": "Tapez ici à chaque battement",
   "bpmLabel": "BPM: {bpm}",
-  "@bpmLabel": { "placeholders": { "bpm": { "type": "String" } } },
+  "@bpmLabel": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
   "beatsLabel": "Battements: {count}",
-  "@beatsLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@beatsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "thresholdAlert": "Alerte seuil",
   "validateAndSend": "Valider et envoyer au véto",
+  "heartRateCommentLabel": "Commentaire (optionnel)",
+  "heartRateCommentHint": "Ex. agité, au repos, après effort…",
   "restart": "Recommencer",
-  "sentToVet": "Relevé envoyé au véto"
+  "sentToVet": "Relevé envoyé au véto",
+  "navHome": "Accueil",
+  "navPets": "Animaux",
+  "navCare": "Soins",
+  "navMessages": "Messages",
+  "navProfile": "Profil",
+  "speciesDog": "Chien",
+  "speciesCat": "Chat",
+  "speciesHorse": "Cheval",
+  "speciesOther": "Autre",
+  "careComingSoon": "Les rappels de soins arrivent bientôt",
+  "emptyPetsTitle": "Aucun animal",
+  "emptyPetsBody": "Ajoutez votre premier animal pour commencer le suivi cardiaque avec votre vétérinaire.",
+  "discoveryTitle": "Découvrir petsFollow",
+  "discoveryMission": "Votre parcours en 7 jours",
+  "discoveryDay0Title": "Jour 0 — Bienvenue",
+  "discoveryDay0Body": "Créez le profil de votre animal et découvrez comment mesurer sa fréquence cardiaque.",
+  "discoveryDay2Title": "Jour 2 — Première mesure",
+  "discoveryDay2Body": "Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.",
+  "discoveryDay4Title": "Jour 4 — Routine",
+  "discoveryDay4Body": "Installez une routine de mesure quotidienne avec les rappels personnalisés.",
+  "discoveryDay6Title": "Jour 6 — Partage véto",
+  "discoveryDay6Body": "Vos relevés sont partagés avec votre vétérinaire pour un suivi optimal.",
+  "myVets": "Mes vétérinaires",
+  "addVetByEmail": "Ajouter un véto par email",
+  "vetEmailHint": "email@cabinet.vet",
+  "noVets": "Aucun vétérinaire lié",
+  "primaryVet": "Vétérinaire principal",
+  "setPrimaryVet": "Définir comme véto principal",
+  "careTitle": "Soins",
+  "careDone": "Fait",
+  "carePostpone": "Reporter",
+  "careOverdue": "En retard",
+  "visitHistory": "Historique des visites",
+  "requestVisit": "Demander une visite",
+  "calendarBookingDisabled": "La réservation en ligne n'est pas disponible pour ce cabinet. Appelez le cabinet pour prendre rendez-vous.",
+  "calendarBookingDisabledReschedule": "La réservation en ligne n'est pas disponible. Proposez une date manuellement.",
+  "calendarNoSlots": "Aucun créneau disponible sur les 14 prochains jours.",
+  "calendarPickSlot": "Choisissez un créneau :",
+  "calendarSelectVet": "Choisissez un vétérinaire :",
+  "calendarCallPractice": "Appeler le cabinet",
+  "calendarNoPhone": "Aucun numéro de téléphone n'est renseigné pour ce cabinet. Contactez-le par un autre moyen.",
+  "visitConfirm": "Confirmer",
+  "visitProposeReschedule": "Proposer un autre créneau",
+  "visitRescheduleProposed": "Proposition de déplacement envoyée",
+  "paymentSuccessSnack": "Paiement reçu — actualisation…",
+  "paymentCancelSnack": "Paiement annulé",
+  "visitRejectReschedule": "Refuser le déplacement",
+  "visitAcceptReschedule": "Accepter le nouveau créneau",
+  "upcomingVisit": "Visite à venir",
+  "notificationHrTitle": "petsFollow",
+  "notificationHrBody": "Il est temps de prendre un relevé cardiaque pour votre animal",
+  "reviewAskTitle": "Vous aimez petsFollow ?",
+  "reviewAskYes": "Oui, noter l'app",
+  "reviewAskNo": "Plus tard",
+  "careTypeMedication": "Médicament",
+  "horseAddContact": "Ajouter un contact",
+  "horseAddCompetition": "Ajouter une compétition",
+  "horseContactName": "Nom",
+  "horseContactRole": "Rôle",
+  "horseCompetitionTitle": "Événement",
+  "horseCompetitionDate": "Date (AAAA-MM-JJ)",
+  "familyHouseholdTitle": "Foyer Famille — {count} animaux",
+  "@familyHouseholdTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kennelHouseholdTitle": "Foyer Élevage — {count} animaux",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "familyHouseholdNext": "Prochains rappels du foyer",
+  "familyPetLimit": "Un pack foyer est déjà actif ou en cours d'achat",
+  "familyRequiresTwoPets": "Le pack Famille nécessite au moins 2 animaux",
+  "kennelPackHint": "Pack Élevage — ≥6 animaux, −15 % sur les abos suivants",
+  "kennelRequiresSixPets": "Le pack Élevage nécessite au moins 6 animaux",
+  "kennelQuickEncodeTitle": "Encodage portée (élevage)",
+  "kennelRequired": "Le pack Élevage est requis pour l'encodage par lot",
+  "litterTag": "Tag portée",
+  "discoveryMarkDone": "Mission accomplie",
+  "notificationPreferences": "Préférences de notifications",
+  "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",
+  "notificationPrefsSaved": "Préférences enregistrées",
+  "notificationPrefHr": "Relevés cardiaques",
+  "notificationPrefCare": "Rappels de soins",
+  "notificationPrefVisits": "Visites",
+  "notificationPrefMessages": "Messages",
+  "notificationPrefDiscovery": "Parcours découverte",
+  "notificationPrefBilling": "Facturation",
+  "carePostponeDays": "Reporter de {days} jours",
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "noCareReminders": "Aucun rappel de soin en cours",
+  "careAddReminder": "Ajouter un rappel",
+  "careSelectPet": "Animal",
+  "careDueInDays": "Échéance dans {days} jours",
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "careReferenceModeDone": "Déjà effectué",
+  "careReferenceModeFirst": "Première fois",
+  "careLastDateLabel": "Dernière date",
+  "careLastDateDone": "Date du dernier soin",
+  "careLastDateFirst": "Date de départ du cycle",
+  "careRecurrenceLabel": "Récurrence",
+  "careRecurrenceNone": "Aucune (échéance unique)",
+  "careRecurrenceDays": "Tous les {days} jours",
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "careDueDateLabel": "Échéance",
+  "careDueDateComputed": "Échéance calculée",
+  "careTooltipDoneWithRecurrence": "Soin déjà fait : l’échéance = date du dernier soin + récurrence.",
+  "careTooltipFirstWithRecurrence": "Première planification : indiquez la date de départ du cycle. L’échéance = cette date + récurrence.",
+  "careTooltipNoRecurrence": "Sans récurrence : la date saisie est l’échéance unique.",
+  "careTooltipDueExplained": "Échéance = dernière date + récurrence (si définie).",
+  "carePickDate": "Choisir une date",
+  "discoveryDayBadge": "J{day}",
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "timelineTypeHeartrate": "Fréquence cardiaque",
+  "timelineTypeMessage": "Message",
+  "timelineTypeCare": "Soin",
+  "timelineTypeVisit": "Visite",
+  "timelineTypeEvent": "Événement",
+  "visitCancelAction": "Annuler la demande",
+  "upcomingVisits": "Prochaines visites",
+  "timelineEmpty": "Aucun événement pour le moment",
+  "noThreads": "Aucune conversation",
+  "vetInviteSent": "Invitation envoyée — le cabinet doit accepter la demande",
+  "vetInviteSentNamed": "Demande envoyée à {practice} — le cabinet doit l’accepter",
+  "@vetInviteSentNamed": {
+    "placeholders": {
+      "practice": {
+        "type": "String"
+      }
+    }
+  },
+  "vetNotFound": "Aucun vétérinaire trouvé avec cet email",
+  "addVetSearchHint": "Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.",
+  "visitRequested": "Demande de visite envoyée",
+  "primaryVetSet": "Vétérinaire principal mis à jour",
+  "visitStatusRequested": "Demandée",
+  "visitStatusConfirmed": "Confirmée",
+  "visitStatusDone": "Terminée",
+  "visitStatusCancelled": "Annulée",
+  "visitStatusReschedulePending": "Déplacement en attente",
+  "horseHealthTitle": "Santé équine",
+  "horseContactsTitle": "Contacts (maréchal, dentiste…)",
+  "horseCompetitionsTitle": "Compétitions",
+  "horseContactsSoon": "Activez le Pack Cheval pour gérer vos contacts professionnels.",
+  "horseCompetitionsSoon": "Activez le Pack Cheval pour le calendrier de compétitions.",
+  "horsePackUpsell": "Pack Cheval — maréchal, coproscopie, contacts et compétitions",
+  "careTypeFarrier": "Maréchal-ferrant",
+  "careTypeFecalEgg": "Coproscopie",
+  "careTypeVaccination": "Vaccination",
+  "careTypeDeworming": "Vermifuge",
+  "careTypeVetCheck": "Contrôle vétérinaire",
+  "careTypeDental": "Soins dentaires",
+  "careTypeCustom": "Rappel personnalisé",
+  "homeAddFirstVetTitle": "Ajoutez votre vétérinaire",
+  "homeAddFirstVetBody": "Liez le cabinet qui suit votre animal pour partager les relevés et échanger.",
+  "homeAddFirstVetCta": "Ajouter un vétérinaire",
+  "photoFrameHint": "Cadrez le museau au centre — aperçu fiche animal",
+  "takePhoto": "Prendre une photo",
+  "chooseFromGallery": "Choisir dans la galerie",
+  "attachMedia": "Joindre une photo ou une vidéo",
+  "attachPhoto": "Photo",
+  "attachVideo": "Vidéo",
+  "openMedia": "Ouvrir",
+  "mediaVideoLabel": "Vidéo",
+  "appInviteTitle": "QR invitation app",
+  "appInviteHint": "Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.",
+  "appInviteHintShort": "Lien de téléchargement et rattachement",
+  "appInviteCodeLabel": "Code :",
+  "appInviteCopy": "Copier le lien",
+  "appInviteCopied": "Lien copié",
+  "appInviteLoadError": "Impossible de charger le QR",
+  "appInviteRetry": "Réessayer",
+  "proLightVetTitle": "Terrain véto",
+  "commercialFieldTitle": "Commercial",
+  "commercialFieldSubtitle": "QR invitation clients et accès au site Pro.",
+  "commercialOpenProWeb": "Ouvrir le site Pro"
 }

@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-deploy gcp-domain gcp-smoke
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -18,8 +18,13 @@ help:
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
 	@echo "  make test-go        tests Go"
+	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
+	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
+	@echo "  make firebase-android-dist   APK → Firebase App Distribution (groupe petsfollow-testers)"
+	@echo "  make play-android-bundle     AAB signé → Google Play (nécessite key.properties)"
+	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -47,7 +52,7 @@ seed: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api seed
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} go run ./cmd/petsfollow-api
 
 nuxtjs-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
@@ -61,6 +66,11 @@ test-flutter:
 test-nuxt:
 	cd nuxtjs && npm install && npm test
 
+# Garde-fou connexion / reset — à lancer avant deploy (DB seedée pour le volet Go).
+test-auth:
+	cd go && GOTOOLCHAIN=local go test ./internal/handlers/ -run 'TestAuth' -count=1
+	cd nuxtjs && npm test -- tests/unit/useAuth.spec.ts
+
 test: test-go
 
 smoke:
@@ -69,13 +79,31 @@ smoke:
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
 
+gcp-github:
+	bash infra/gcp/setup-github-deploy.sh
+
 gcp-setup:
 	bash infra/gcp/setup-gcp.sh
+
+gcp-setup-media:
+	bash infra/gcp/setup-gcs-media.sh
+
+gcp-setup-stripe:
+	bash infra/gcp/setup-stripe-secrets.sh
 
 gcp-deploy:
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
 
 gcp-domain:
 	bash infra/gcp/setup-custom-domain.sh
+
+firebase-flutter-setup:
+	bash infra/firebase/setup-flutter-firebase.sh
+
+firebase-android-dist:
+	bash infra/firebase/distribute-android.sh
+
+play-android-bundle:
+	bash infra/play/build-play-bundle.sh
 
 gcp-smoke: smoke-staging

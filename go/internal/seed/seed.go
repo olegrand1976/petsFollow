@@ -2,6 +2,7 @@ package seed
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,6 +41,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 			return fmt.Errorf("practice %q: %w", practice.name, err)
 		}
 	}
+	if err := seedCommercial(ctx, tx); err != nil {
+		return err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
@@ -47,19 +52,233 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		WHERE email = 'client.marie@petsfollow.test'`); err != nil {
 		return err
 	}
+	st := store.New(pool)
+	if err := st.EnsureDefaultCommissionTiers(ctx); err != nil {
+		return err
+	}
+	if err := st.EnsureCommissionSettings(ctx); err != nil {
+		return err
+	}
+	if err := st.AccrueAllActiveEntitlements(ctx); err != nil {
+		return err
+	}
+	if err := st.AccrueAllCommercialForActiveEntitlements(ctx); err != nil {
+		return err
+	}
+	if err := seedEnrichment(ctx, pool); err != nil {
+		return err
+	}
+	if err := seedDemoSchedules(ctx, pool, st); err != nil {
+		return err
+	}
+	if err := seedCarePros(ctx, pool); err != nil {
+		return err
+	}
+	if err := seedStripeCatalog(ctx, st); err != nil {
+		return err
+	}
+	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
+		return err
+	}
 	logSummary()
 	return nil
 }
+
+func seedDemoSchedules(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	rows, err := pool.Query(ctx, `
+		SELECT id::text FROM practice.practices
+		WHERE profile_completed_at IS NOT NULL
+		ORDER BY name`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	year := time.Now().Year()
+	slots := []store.ScheduleSlot{
+		{Weekday: 1, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 1, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 2, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 2, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 3, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 4, StartTime: "09:00", EndTime: "12:00"},
+		{Weekday: 4, StartTime: "14:00", EndTime: "18:00"},
+		{Weekday: 5, StartTime: "09:00", EndTime: "12:00"},
+	}
+	for rows.Next() {
+		var practiceID string
+		if err := rows.Scan(&practiceID); err != nil {
+			return err
+		}
+		if _, err := st.PutVetSchedule(ctx, practiceID, true, 30, &year, slots); err != nil {
+			return err
+		}
+	}
+	return rows.Err()
+}
+
+func payoutLegalName(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return p.name + " SRL"
+}
+func payoutVAT(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "BE0123456789"
+}
+func payoutCompanyNumber(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "0123.456.789"
+}
+func payoutLegalForm(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return "srl"
+}
+func payoutIBAN(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	// Valid Belgian IBAN (checksum) for demo payouts.
+	return "BE68539007547034"
+}
+func payoutHolder(p practiceDef) string {
+	if p.incompleteProfile {
+		return ""
+	}
+	return p.vetName
+}
+
+// protectedSalesRoles are never deleted by seed (staging real accounts + demos).
+var protectedSalesRoles = []string{"admin", "commercial", "commercial_manager"}
 
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	_, err := tx.Exec(ctx, `TRUNCATE billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
-		identity.email_verification_tokens,
+	// Detach surviving users from practices before TRUNCATE practice.practices.
+	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL WHERE practice_id IS NOT NULL`); err != nil {
+		return err
+	}
+	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
+	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
+		billing.commercial_bonus_awards,
+		billing.addon_entitlements, sales.prospects,
+		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
+		billing.commission_settings,
+		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
+		billing.stripe_prices, billing.stripe_products,
+		identity.email_verification_tokens, identity.password_reset_tokens,
+		notifications.client_preferences, notifications.device_tokens,
+		discovery.email_sends, discovery.email_journey, discovery.progress,
+		ops.product_digest_sends, ops.product_digests,
+		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
-		heartrate.sessions, pets.dossier_events, pets.pets, practice.invitations, practice.practice_clients, practice.practices, identity.users CASCADE`)
+		heartrate.sessions, pets.dossier_events, pets.pets,
+		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
+		practice.client_import_rows, practice.client_import_jobs,
+		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
+		practice.commercial_referrals,
+		practice.practice_clients, practice.practices CASCADE`); err != nil {
+		return err
+	}
+	// Drop ephemeral smoke commercials (role protected, but email pattern is disposable).
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM identity.users
+		WHERE email LIKE 'smoke-comm+%@petsfollow.test' AND role = 'commercial'`); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `
+		DELETE FROM identity.users
+		WHERE role <> ALL($1::text[])`, protectedSalesRoles)
 	return err
+}
+
+func seedCommercial(ctx context.Context, tx pgx.Tx) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordCommercial), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	var managerID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder, must_change_password
+		) VALUES (
+			$1, 'commercial.manager@petsfollow.test', $2, 'Bérénice Manager', 'commercial_manager', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager', false
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial_manager',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			must_change_password = false
+		RETURNING id::text`,
+		uuid.NewString(), string(hash)).Scan(&managerID); err != nil {
+		return err
+	}
+	var commercialID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password
+		) VALUES (
+			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, false
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			-- Keep existing manager (e.g. staging Murgo); only fill when unset.
+			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			must_change_password = false
+		RETURNING id::text`,
+		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
+		return err
+	}
+	// vet.demo is assigned to the demo commercial.
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = $1
+		WHERE email = 'vet.demo@petsfollow.test' AND role = 'vet'`, commercialID); err != nil {
+		return err
+	}
+	return seedProspects(ctx, tx, commercialID)
+}
+
+func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string) error {
+	prospects := []struct {
+		practiceName, contactName, contactEmail, contactPhone, city, notes, status string
+		ageDays                                                                    int
+	}{
+		{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
+		{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
+		{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
+		{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
+		{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
+	}
+	for _, p := range prospects {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO sales.prospects (id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone, city, notes, status, status_changed_at, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW() - make_interval(days => $10), NOW() - make_interval(days => $10))`,
+			uuid.NewString(), commercialID, p.practiceName, p.contactName, p.contactEmail, p.contactPhone, p.city, p.notes, p.status, p.ageDays); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func seedAdmin(ctx context.Context, tx pgx.Tx) error {
@@ -68,8 +287,14 @@ func seedAdmin(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err = tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL, NOW())`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, 'admin.demo@petsfollow.test', $2, 'Admin Ops', 'admin', NULL, NOW(), false)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'admin',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			must_change_password = false`,
 		uuid.NewString(), string(hash))
 	return err
 }
@@ -83,9 +308,17 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 	}
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO practice.practices (id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END)`,
-		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile); err != nil {
+		INSERT INTO practice.practices (
+			id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at,
+			company_legal_name, vat_number, company_number, legal_form, billing_same_as_practice,
+			payout_iban, payout_bic, payout_account_holder
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END,
+			$11, $12, $13, $14, TRUE, $15, $16, $17
+		)`,
+		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile,
+		payoutLegalName(p), payoutVAT(p), payoutCompanyNumber(p), payoutLegalForm(p),
+		payoutIBAN(p), "GEBABEBB", payoutHolder(p)); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -99,6 +332,14 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 			INSERT INTO identity.email_verification_tokens (id, user_id, token, expires_at)
 			VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
 			uuid.NewString(), vetID, demoEmailConfirmToken); err != nil {
+			return err
+		}
+	}
+	if p.seedPasswordReset {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO identity.password_reset_tokens (id, user_id, token, expires_at)
+			VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
+			uuid.NewString(), vetID, demoPasswordResetToken); err != nil {
 			return err
 		}
 	}
@@ -186,6 +427,11 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 			}
 		}
 	}
+	if c.seedDiscovery {
+		if err := insertDiscoveryProgress(ctx, tx, clientID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -217,6 +463,16 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 			return err
 		}
 	}
+	for _, cr := range pet.careReminders {
+		if err := insertCareReminder(ctx, tx, petID, reg.practiceID, cr); err != nil {
+			return err
+		}
+	}
+	for _, v := range pet.visits {
+		if err := insertVisit(ctx, tx, petID, reg.practiceID, v); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -228,7 +484,13 @@ func seedEntitlement(ctx context.Context, tx pgx.Tx, petID, clientID string, pet
 	now := time.Now()
 	var validFrom, validUntil *time.Time
 	if pet.entitlement.AllowsAccess() || pet.entitlement == billing.StatusPending {
-		from := now.Add(-30 * 24 * time.Hour)
+		// Backdate start for multi-month plans; monthly (30d) must not expire at seed time.
+		from := now
+		if plan.DurationDays > 30 {
+			from = now.Add(-30 * 24 * time.Hour)
+		} else if plan.DurationDays > 1 {
+			from = now.Add(-24 * time.Hour)
+		}
 		until := billing.ValidUntil(from, plan)
 		validFrom = &from
 		validUntil = &until
@@ -256,13 +518,16 @@ func insertMessage(ctx context.Context, tx pgx.Tx, threadID, senderID string, ms
 
 func insertHeartRate(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID string, hr heartRateDef) error {
 	startedAt := time.Now().Add(hr.age)
-	var endedAt, validatedAt *time.Time
+	var endedAt, validatedAt, vetSeenAt *time.Time
 	switch hr.status {
 	case kernel.SessionValidated, kernel.SessionPendingValidation:
 		end := startedAt.Add(time.Duration(hr.duration) * time.Second)
 		endedAt = &end
 		if hr.status == kernel.SessionValidated {
 			validatedAt = &end
+			if !hr.unread {
+				vetSeenAt = &end
+			}
 		}
 	case kernel.SessionInProgress:
 		// no ended_at
@@ -273,9 +538,9 @@ func insertHeartRate(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID 
 		return fmt.Errorf("unknown session status: %s", hr.status)
 	}
 	_, err := tx.Exec(ctx, `
-		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-		uuid.NewString(), petID, ownerID, practiceID, hr.status, hr.tapCount, hr.duration, hr.bpm, hr.isAlert, startedAt, endedAt, validatedAt)
+		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		uuid.NewString(), petID, ownerID, practiceID, hr.status, hr.tapCount, hr.duration, hr.bpm, hr.isAlert, startedAt, endedAt, validatedAt, vetSeenAt)
 	return err
 }
 
@@ -288,18 +553,238 @@ func insertDossierEvent(ctx context.Context, tx pgx.Tx, petID, authorID string, 
 	return err
 }
 
+func insertCareReminder(ctx context.Context, tx pgx.Tx, petID, practiceID string, cr careReminderDef) error {
+	status := cr.status
+	if status == "" {
+		status = "pending"
+	}
+	dueAt := time.Now().AddDate(0, 0, cr.dueDays)
+	updatedAt := dueAt
+	if status == "done" {
+		updatedAt = time.Now().AddDate(0, 0, cr.dueDays)
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO care.reminders (id, pet_id, practice_id, type, title, due_at, status, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		uuid.NewString(), petID, practiceID, cr.reminderType, cr.title, dueAt, status, updatedAt)
+	return err
+}
+
+func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v visitDef) error {
+	status := v.status
+	if status == "" {
+		status = "requested"
+	}
+	source := v.source
+	if source == "" {
+		source = "client"
+	}
+	var scheduledAt *time.Time
+	if v.scheduledIn != 0 {
+		t := time.Now().Add(v.scheduledIn)
+		scheduledAt = &t
+	}
+	var pending *string
+	if status == "requested" {
+		p := "vet"
+		if source == "vet" {
+			p = "client"
+		}
+		pending = &p
+	}
+	var duration any
+	if scheduledAt != nil {
+		duration = 30
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
+	return err
+}
+
+func insertDiscoveryProgress(ctx context.Context, tx pgx.Tx, userID string) error {
+	_, err := tx.Exec(ctx, `
+		INSERT INTO discovery.progress (user_id, started_at, completed_cards, streak_days, updated_at)
+		VALUES ($1, NOW() - INTERVAL '2 days', '["day0","day2"]'::jsonb, 2, NOW())`,
+		userID)
+	return err
+}
+
+func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
+	for _, practice := range demoPractices {
+		for _, client := range practice.clients {
+			if client.extraPracticeVet == "" {
+				continue
+			}
+			var clientID, vetID, practiceID string
+			err := pool.QueryRow(ctx, `
+				SELECT u.id::text, v.id::text, v.practice_id::text
+				FROM identity.users u
+				JOIN identity.users v ON v.email = $2 AND v.role = 'vet'
+				WHERE u.email = $1 AND u.role = 'client'`,
+				client.email, client.extraPracticeVet).Scan(&clientID, &vetID, &practiceID)
+			if errors.Is(err, pgx.ErrNoRows) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
+				VALUES ($1, $2, $3, $4)
+				ON CONFLICT (practice_id, client_user_id) DO NOTHING`,
+				uuid.NewString(), practiceID, clientID, vetID); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Pending link request for Pro /requests inbox (client.marie → vet.demo).
+	var marieID, vetDemoID, vetPlusID string
+	err := pool.QueryRow(ctx, `
+		SELECT c.id::text, v.id::text, v.practice_id::text
+		FROM identity.users c
+		JOIN identity.users v ON v.email = 'vet.demo@petsfollow.test' AND v.role = 'vet'
+		WHERE c.email = 'client.marie@petsfollow.test' AND c.role = 'client'`).Scan(&marieID, &vetDemoID, &vetPlusID)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if err == nil {
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
+			VALUES ($1, $2, $3, $4, 'pending')
+			ON CONFLICT (client_user_id, practice_id) DO UPDATE SET
+				vet_user_id = EXCLUDED.vet_user_id,
+				status = 'pending',
+				updated_at = NOW()`,
+			uuid.NewString(), marieID, vetPlusID, vetDemoID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordCarePro), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	type careProSeed struct {
+		email, name, specialty string
+	}
+	pros := []careProSeed{
+		{"farrier.demo@petsfollow.test", "Marc Ferrier", string(kernel.SpecialtyFarrier)},
+		{"vetlight.demo@petsfollow.test", "Dr Léa Light", string(kernel.SpecialtyVetLight)},
+	}
+	var farrierID, vetLightID string
+	for _, p := range pros {
+		var uid string
+		err := pool.QueryRow(ctx, `
+			INSERT INTO identity.users (
+				id, email, password_hash, full_name, role, practice_id,
+				email_verified_at, professional_specialty, preferred_locale
+			) VALUES ($1, $2, $3, $4, 'care_pro', NULL, NOW(), $5, 'fr')
+			ON CONFLICT (email) DO UPDATE SET
+				password_hash = EXCLUDED.password_hash,
+				full_name = EXCLUDED.full_name,
+				role = 'care_pro',
+				professional_specialty = EXCLUDED.professional_specialty,
+				preferred_locale = COALESCE(identity.users.preferred_locale, EXCLUDED.preferred_locale),
+				email_verified_at = COALESCE(identity.users.email_verified_at, NOW())
+			RETURNING id::text`,
+			uuid.NewString(), p.email, string(hash), p.name, p.specialty).Scan(&uid)
+		if err != nil {
+			return fmt.Errorf("care_pro %s: %w", p.email, err)
+		}
+		if p.specialty == string(kernel.SpecialtyFarrier) {
+			farrierID = uid
+		} else {
+			vetLightID = uid
+		}
+	}
+
+	var spiritID, ownerID, practiceID string
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text, p.owner_user_id::text, COALESCE(p.practice_id::text, '')
+		FROM pets.pets p
+		JOIN identity.users u ON u.id = p.owner_user_id
+		WHERE u.email = 'client.demo@petsfollow.test' AND p.name = 'Spirit'
+		LIMIT 1`).Scan(&spiritID, &ownerID, &practiceID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			log.Println("seedCarePros: Spirit introuvable — care_pro créés sans grant ni visite")
+			return nil
+		}
+		return err
+	}
+
+	grant := func(granteeID, perm string) error {
+		_, err := pool.Exec(ctx, `
+			INSERT INTO pets.pet_access (id, pet_id, grantee_user_id, permission, granted_by_user_id)
+			VALUES ($1, $2, $3, $4, $5)
+			ON CONFLICT (pet_id, grantee_user_id) DO UPDATE SET
+				permission = EXCLUDED.permission,
+				granted_by_user_id = EXCLUDED.granted_by_user_id`,
+			uuid.NewString(), spiritID, granteeID, perm, ownerID)
+		return err
+	}
+	if err := grant(farrierID, "write_notes"); err != nil {
+		return err
+	}
+	if err := grant(vetLightID, "write_notes"); err != nil {
+		return err
+	}
+
+	if practiceID == "" {
+		return nil
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM visits.visits
+		WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'`, spiritID).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		_, err = pool.Exec(ctx, `
+			UPDATE visits.visits
+			SET scheduled_at = date_trunc('day', NOW()) + INTERVAL '10 hours'
+			WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'
+			  AND status NOT IN ('done', 'cancelled')`, spiritID)
+		return err
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO visits.visits (
+			id, pet_id, practice_id, scheduled_at, status, notes, source,
+			pending_action_by, duration_minutes, address_text
+		) VALUES (
+			$1, $2, $3, date_trunc('day', NOW()) + INTERVAL '10 hours', 'confirmed',
+			'Ferrage Spirit — démo care_pro', 'vet', NULL, 30, 'Écurie VetPlus Demo'
+		)`,
+		uuid.NewString(), spiritID, practiceID)
+	return err
+}
+
 func logSummary() {
 	log.Println("--- Comptes démo petsFollow ---")
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
+	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
+	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
 	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
 	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
 	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
+	log.Println("  vet.reset@       — token démo reset mot de passe")
 	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
-	log.Println("  client.demo@     — Rex + Bella · client.vide@ sans animal (kanban)")
+	log.Println("  client.demo@     — 6 animaux · mix monthly/annual/triennial")
+	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
+	log.Printf("Care pro: *@petsfollow.test / %s (Flutter pro light)", passwordCarePro)
+	log.Println("  farrier.demo@    — maréchal · write_notes sur Spirit + visite ferrage")
+	log.Println("  vetlight.demo@   — véto light · write_notes sur Spirit")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
+	log.Printf("Reset password: http://localhost:3002/reset-password?token=%s", demoPasswordResetToken)
 }

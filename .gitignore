@@ -4,6 +4,10 @@ node_modules/
 .output/
 dist/
 go/bin/
+go/petsfollow-api
+go/petsfollow-api-*
+data/uploads/
+go/data/uploads/
 *.exe
 .DS_Store
 flutter/.dart_tool/

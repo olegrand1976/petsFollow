@@ -15,6 +15,7 @@ import (
 
 func (a *API) registerBillingRoutes(r chi.Router) {
 	r.Get("/billing/plans", a.listBillingPlans)
+	r.Get("/billing/addons", a.listBillingAddons)
 	r.Post("/billing/webhooks/stripe", a.stripeWebhook)
 	if a.cfg.BillingMockEnabled {
 		r.Get("/billing/dev/mock-complete", a.billingMockComplete)
@@ -25,7 +26,34 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 		pr.Post("/pets/{petID}/billing/checkout", a.resumePetCheckout)
 		pr.Post("/pets/{petID}/billing/portal", a.petBillingPortal)
 		pr.Get("/pets/{petID}/entitlement", a.getPetEntitlement)
+		pr.Get("/billing/my-addons", a.listMyAddons)
+		pr.Post("/billing/addons/checkout", a.startAddonCheckout)
 	})
+}
+
+func (a *API) listBillingAddons(w http.ResponseWriter, r *http.Request) {
+	locale := localeOf(r)
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"addons": billing.AllAddonsForLocale(locale),
+	})
+}
+
+func (a *API) listMyAddons(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	addons, err := a.store.ListOwnerAddons(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, addons)
+}
+
+func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
+	writeErr(w, r, http.StatusGone, "addon_deprecated", "addon_deprecated")
 }
 
 func (a *API) listBillingPlans(w http.ResponseWriter, r *http.Request) {
@@ -57,13 +85,21 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
 		return
 	}
+	if !billing.SupportsBillingMode(planCode, mode) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
 	plan, _ := billing.GetPlan(planCode)
 	_, err = a.store.CreateEntitlement(r.Context(), pet.ID, owner.UserID, string(planCode), string(mode), plan.AmountCents)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	u, _ := a.store.GetUserByID(r.Context(), owner.UserID)
+	u, err := a.store.GetUserByID(r.Context(), owner.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
 		PetID:       pet.ID,
 		OwnerUserID: owner.UserID,
@@ -102,8 +138,16 @@ func (a *API) resumePetCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body createPetBilling
-	_ = httpx.DecodeJSON(r, &body)
-	u, _ := a.store.GetUserByID(r.Context(), id.UserID)
+	// Corps optionnel (successUrl/cancelUrl) : seul un JSON malformé est rejeté.
+	if derr := httpx.DecodeJSON(r, &body); derr != nil && derr != io.EOF {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
 		PetID:       pet.ID,
 		OwnerUserID: id.UserID,
@@ -140,7 +184,11 @@ func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ReturnURL string `json:"returnUrl"`
 	}
-	_ = httpx.DecodeJSON(r, &body)
+	// Corps optionnel (returnUrl) : seul un JSON malformé est rejeté.
+	if derr := httpx.DecodeJSON(r, &body); derr != nil && derr != io.EOF {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
 	portal, err := a.billing.CreatePortalSession(r.Context(), id.UserID, body.ReturnURL)
 	if err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
@@ -151,18 +199,30 @@ func (a *API) petBillingPortal(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) getPetEntitlement(w http.ResponseWriter, r *http.Request) {
 	petID := chi.URLParam(r, "petID")
-	id, _ := authx.FromContext(r.Context())
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
-	if id.Role == kernel.RoleClient && pet.OwnerUserID != id.UserID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-		return
-	}
-	if id.Role == kernel.RoleVet && pet.PracticeID != id.PracticeID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+	// Deny-by-default : seuls le propriétaire et un véto du cabinet lisent l'entitlement.
+	switch id.Role {
+	case kernel.RoleClient:
+		if pet.OwnerUserID != id.UserID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return
+		}
+	case kernel.RoleVet:
+		if pet.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			return
+		}
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
 	ent, err := a.store.GetEntitlementByPetID(r.Context(), petID)
@@ -188,6 +248,21 @@ func (a *API) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	if addonID := q.Get("addon_id"); addonID != "" {
+		ownerUserID := q.Get("owner_user_id")
+		addonCode := q.Get("addon_code")
+		sessionID := defaultStr(q.Get("session_id"), "cs_mock_addon_dev")
+		if ownerUserID == "" || addonCode == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+			return
+		}
+		if err := a.billing.MockCompleteAddonCheckout(r.Context(), addonID, ownerUserID, addonCode, sessionID); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		httpx.WriteData(w, http.StatusOK, map[string]string{"status": "completed", "addonId": addonID})
+		return
+	}
 	petID := q.Get("pet_id")
 	ownerUserID := q.Get("owner_user_id")
 	planCode := defaultStr(q.Get("plan_code"), string(billing.PlanTriennial))

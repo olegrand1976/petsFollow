@@ -22,3 +22,27 @@ func TestIsHeartRateAlert(t *testing.T) {
 		t.Fatal("expected no alert")
 	}
 }
+
+func TestNormalizeHeartRateDurations(t *testing.T) {
+	cases := []struct {
+		in   []int
+		want []int
+	}{
+		{nil, []int{60}},
+		{[]int{}, []int{60}},
+		{[]int{15, 30}, []int{15, 30}},
+		{[]int{60, 15, 15, 99}, []int{15, 60}},
+		{[]int{30, 60, 15}, []int{15, 30, 60}},
+	}
+	for _, tc := range cases {
+		got := NormalizeHeartRateDurations(tc.in)
+		if len(got) != len(tc.want) {
+			t.Fatalf("in %#v: got %#v want %#v", tc.in, got, tc.want)
+		}
+		for i := range got {
+			if got[i] != tc.want[i] {
+				t.Fatalf("in %#v: got %#v want %#v", tc.in, got, tc.want)
+			}
+		}
+	}
+}

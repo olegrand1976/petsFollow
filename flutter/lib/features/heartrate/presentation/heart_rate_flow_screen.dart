@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 enum HeartRatePhase { ready, running, review }
@@ -13,6 +16,8 @@ class HeartRateFlowScreen extends StatefulWidget {
   });
 
   final String petId;
+
+  /// Durations enabled by the pet's primary practice (vet settings).
   final List<int> durationsSec;
 
   @override
@@ -21,151 +26,308 @@ class HeartRateFlowScreen extends StatefulWidget {
 
 class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   HeartRatePhase phase = HeartRatePhase.ready;
-  int selectedDuration = 60;
-  int secondsLeft = 60;
+  late int selectedDuration;
+  int secondsLeft = 0;
   int taps = 0;
   Timer? timer;
   String? sessionId;
   Map<String, dynamic>? result;
   DateTime? lastTap;
+  bool _sending = false;
+  bool _completing = false;
+  final TextEditingController _commentController = TextEditingController();
+
+  /// Practice-configured durations, ascending. Never invent options the vet did not enable.
+  List<int> get _practiceDurations {
+    final raw = widget.durationsSec
+        .where((d) => d == 15 || d == 30 || d == 60)
+        .toSet()
+        .toList()
+      ..sort();
+    return raw;
+  }
 
   @override
   void initState() {
     super.initState();
-    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
-    selectedDuration = durations.first;
+    final durations = _practiceDurations;
+    // Prefer the longest duration the vet enabled (clinical default).
+    selectedDuration = durations.isEmpty ? 60 : durations.last;
+    secondsLeft = selectedDuration;
   }
 
   Future<void> start() async {
-    final sess = await ApiClient.instance.startHeartRate(
-      widget.petId,
-      durationSec: selectedDuration,
-    );
-    setState(() {
-      sessionId = sess['id'] as String?;
-      phase = HeartRatePhase.running;
-      secondsLeft = selectedDuration;
-      taps = 0;
-    });
-    timer?.cancel();
-    timer = Timer.periodic(const Duration(seconds: 1), (t) async {
-      if (secondsLeft <= 1) {
-        t.cancel();
-        await finish();
-      } else {
-        setState(() => secondsLeft--);
-      }
-    });
+    final durations = _practiceDurations;
+    if (durations.isEmpty || !durations.contains(selectedDuration)) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.heartRateNoDurationConfigured)),
+      );
+      return;
+    }
+    try {
+      final sess = await ApiClient.instance.startHeartRate(
+        widget.petId,
+        durationSec: selectedDuration,
+      );
+      if (!mounted) return;
+      setState(() {
+        sessionId = sess['id'] as String?;
+        phase = HeartRatePhase.running;
+        secondsLeft = selectedDuration;
+        taps = 0;
+      });
+      timer?.cancel();
+      timer = Timer.periodic(const Duration(seconds: 1), (t) async {
+        if (!mounted) {
+          t.cancel();
+          return;
+        }
+        if (secondsLeft <= 1) {
+          t.cancel();
+          await finish();
+        } else {
+          setState(() => secondsLeft--);
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+    }
   }
 
   void onTap() {
     final now = DateTime.now();
-    if (lastTap != null && now.difference(lastTap!).inMilliseconds < 150) return;
+    if (lastTap != null && now.difference(lastTap!).inMilliseconds < 150) {
+      return;
+    }
     lastTap = now;
     setState(() => taps++);
   }
 
   Future<void> finish() async {
-    if (sessionId == null) return;
-    final data = await ApiClient.instance.completeHeartRate(sessionId!, taps);
-    setState(() {
-      phase = HeartRatePhase.review;
-      result = data;
-    });
+    if (sessionId == null || _completing) return;
+    _completing = true;
+    timer?.cancel();
+    try {
+      final data = await ApiClient.instance.completeHeartRate(sessionId!, taps);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        phase = HeartRatePhase.review;
+        result = data;
+        _completing = false;
+      });
+    } catch (_) {
+      _completing = false;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+    }
   }
 
   Future<void> validate() async {
-    if (sessionId == null) return;
-    await ApiClient.instance.validateHeartRate(sessionId!);
-    if (mounted) {
+    if (sessionId == null || _sending) return;
+    setState(() => _sending = true);
+    try {
+      final comment = _commentController.text.trim();
+      await ApiClient.instance.validateHeartRate(
+        sessionId!,
+        comment: comment.isEmpty ? null : comment,
+      );
+      // Clear before pop/dispose so we don't cancel an already-validated session.
+      sessionId = null;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _sending = false);
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.sentToVet)));
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.sentToVet)),
+    );
+    await _maybeAskReview(l10n);
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _maybeAskReview(AppLocalizations l10n) async {
+    if (!await InAppReviewHelper.shouldShowDialog()) return;
+    if (!mounted) return;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.reviewAskTitle),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.reviewAskNo)),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.reviewAskYes)),
+        ],
+      ),
+    );
+    await InAppReviewHelper.recordAsked();
+    if (yes == true) {
+      await InAppReviewHelper.openStoreReview();
     }
   }
 
   Future<void> restart() async {
-    if (sessionId != null) {
-      await ApiClient.instance.cancelHeartRate(sessionId!);
+    timer?.cancel();
+    final id = sessionId;
+    if (id != null) {
+      try {
+        await ApiClient.instance.cancelHeartRate(id);
+      } catch (_) {}
     }
+    if (!mounted) return;
     setState(() {
       phase = HeartRatePhase.ready;
       sessionId = null;
       result = null;
+      _completing = false;
+      _sending = false;
+      _commentController.clear();
     });
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    _commentController.dispose();
+    // Avoid racing the periodic tick after leave; only needed while measuring.
+    if (phase == HeartRatePhase.running) {
+      timer?.cancel();
+    }
+    // Cancel unfinished sessions (running or review abandoned without validate).
+    final id = sessionId;
+    if (id != null && !_completing) {
+      unawaited(() async {
+        try {
+          await ApiClient.instance.cancelHeartRate(id);
+        } catch (_) {}
+      }());
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final durations = widget.durationsSec.isEmpty ? [60] : widget.durationsSec;
+    final durations = _practiceDurations;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.heartRate)),
       body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: switch (phase) {
-          HeartRatePhase.ready => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (durations.length > 1) ...[
+          padding: scrollPaddingWithSystemBottom(context, all: 24),
+          child: switch (phase) {
+            HeartRatePhase.ready => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(l10n.chooseDuration),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: durations.map((d) {
-                      return ChoiceChip(
-                        label: Text(l10n.durationSeconds(d)),
-                        selected: selectedDuration == d,
-                        onSelected: (_) => setState(() => selectedDuration = d),
-                      );
-                    }).toList(),
-                  ),
+                  if (durations.isEmpty)
+                    Text(l10n.heartRateNoDurationConfigured)
+                  else
+                    Wrap(
+                      spacing: 8,
+                      children: durations.map((d) {
+                        return ChoiceChip(
+                          label: Text(l10n.durationSeconds(d)),
+                          selected: selectedDuration == d,
+                          onSelected: durations.length == 1
+                              ? null
+                              : (_) => setState(() => selectedDuration = d),
+                        );
+                      }).toList(),
+                    ),
                   const SizedBox(height: 16),
+                  Text(l10n.heartRateInstructionsDuration(selectedDuration)),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: durations.isEmpty ? null : start,
+                    child: Text(l10n.start),
+                  ),
                 ],
-                Text(l10n.heartRateInstructionsDuration(selectedDuration)),
-                const SizedBox(height: 24),
-                FilledButton(onPressed: start, child: Text(l10n.start)),
-              ],
-            ),
-          HeartRatePhase.running => GestureDetector(
-              onTap: onTap,
-              behavior: HitTestBehavior.opaque,
-              child: Center(
+              ),
+            HeartRatePhase.running => GestureDetector(
+                onTap: onTap,
+                behavior: HitTestBehavior.opaque,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.secondsLeft(secondsLeft),
+                          style: Theme.of(context).textTheme.displayLarge),
+                      const SizedBox(height: 16),
+                      Text(l10n.beatsCount(taps),
+                          style: Theme.of(context).textTheme.headlineSmall),
+                      const SizedBox(height: 24),
+                      const Icon(Icons.favorite, size: 96),
+                      Text(l10n.tapHere),
+                    ],
+                  ),
+                ),
+              ),
+            HeartRatePhase.review => SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.secondsLeft(secondsLeft), style: Theme.of(context).textTheme.displayLarge),
+                    Text(
+                      l10n.bpmLabel('${result?['bpm'] ?? '?'}'),
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    Text(l10n.beatsLabel(taps)),
+                    if (result?['isAlert'] == true)
+                      Text(l10n.thresholdAlert,
+                          style: const TextStyle(color: AppColors.alert)),
                     const SizedBox(height: 16),
-                    Text(l10n.beatsCount(taps), style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 24),
-                    const Icon(Icons.favorite, size: 96),
-                    Text(l10n.tapHere),
+                    TextField(
+                      controller: _commentController,
+                      enabled: !_sending,
+                      maxLength: 500,
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        labelText: l10n.heartRateCommentLabel,
+                        hintText: l10n.heartRateCommentHint,
+                        alignLabelWithHint: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _sending ? null : validate,
+                      child: _sending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.bg,
+                              ),
+                            )
+                          : Text(l10n.validateAndSend),
+                    ),
+                    TextButton(
+                      onPressed: _sending ? null : restart,
+                      child: Text(l10n.restart),
+                    ),
                   ],
                 ),
               ),
-            ),
-          HeartRatePhase.review => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.bpmLabel('${result?['bpm'] ?? '?'}'),
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                Text(l10n.beatsLabel(taps)),
-                if (result?['isAlert'] == true)
-                  Text(l10n.thresholdAlert, style: const TextStyle(color: Colors.orangeAccent)),
-                const SizedBox(height: 24),
-                FilledButton(onPressed: validate, child: Text(l10n.validateAndSend)),
-                TextButton(onPressed: restart, child: Text(l10n.restart)),
-              ],
-            ),
-        },
+          },
       ),
     );
   }

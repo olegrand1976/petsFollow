@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:petsfollow_mobile/l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetFormScreen extends StatefulWidget {
   const PetFormScreen({super.key});
@@ -12,17 +17,25 @@ class PetFormScreen extends StatefulWidget {
 
 class _PetFormScreenState extends State<PetFormScreen> {
   final name = TextEditingController();
-  final species = TextEditingController(text: 'dog');
+  String selectedSpecies = 'dog';
   final breed = TextEditingController();
   String selectedPlan = 'triennial';
   bool autoRenew = true;
   bool loading = false;
   List<Map<String, dynamic>> plans = [];
+  XFile? photoFile;
 
   @override
   void initState() {
     super.initState();
     _loadPlans();
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    breed.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPlans() async {
@@ -36,20 +49,57 @@ class _PetFormScreenState extends State<PetFormScreen> {
     }
   }
 
+  Future<void> _pickPhoto() async {
+    final l10n = AppLocalizations.of(context)!;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.takePhoto),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.chooseFromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: source,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+      preferredCameraDevice: CameraDevice.rear,
+    );
+    if (file != null) setState(() => photoFile = file);
+  }
+
+  /// Monthly is subscription-only; annual/triennial allow one-time or auto-renew.
+  bool get _subscriptionForced => selectedPlan == 'monthly';
+
   String _summary(AppLocalizations l10n) {
     final plan = plans.firstWhere(
       (p) => p['code'] == selectedPlan,
       orElse: () => {'label': selectedPlan},
     );
     final label = plan['label'] as String? ?? selectedPlan;
-    if (autoRenew) {
+    if (autoRenew || _subscriptionForced) {
       switch (selectedPlan) {
+        case 'monthly':
+          return l10n.planMonthlySub;
         case 'annual':
           return l10n.planAnnualSub(label);
         case 'triennial':
           return l10n.planTriennialSub;
-        case 'quinquennial':
-          return l10n.planQuinquennialSub;
       }
     }
     return l10n.planOneTime(label);
@@ -58,52 +108,62 @@ class _PetFormScreenState extends State<PetFormScreen> {
   Future<void> save() async {
     setState(() => loading = true);
     try {
+      final renew = autoRenew || _subscriptionForced;
       final res = await ApiClient.instance.createPet({
         'name': name.text,
-        'species': species.text,
+        'species': selectedSpecies,
         'breed': breed.text,
         'plan': selectedPlan,
-        'billingMode': autoRenew ? 'subscription' : 'one_time',
+        'billingMode': renew ? 'subscription' : 'one_time',
       });
       final checkoutUrl = res['checkoutUrl'] as String?;
       final pet = res['pet'] as Map<String, dynamic>? ?? res;
       final petId = pet['id'] as String?;
-      if (checkoutUrl != null && await canLaunchUrl(Uri.parse(checkoutUrl))) {
-        await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
+      if (petId != null && photoFile != null) {
+        try {
+          await ApiClient.instance.uploadPetPhoto(petId, photoFile!.path);
+        } catch (_) {
+          if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorPhotoUploadFailed)),
+            );
+          }
+        }
+      }
+      if (checkoutUrl != null) {
+        final opened = await openExternalUrl(checkoutUrl);
+        if (!opened && mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+          );
+        } else if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.paymentPending)),
+          );
+        }
       }
       if (!mounted || petId == null) return;
-      await _waitForPayment(petId);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        final raw = e.toString();
+        final msg = raw.contains('family_pet_limit')
+            ? l10n.familyPetLimit
+            : raw.contains('family_requires_two_pets')
+                ? l10n.familyRequiresTwoPets
+                : raw.contains('vet_link_required')
+                    ? l10n.noVets
+                    : l10n.errorGeneric(raw);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric(e.toString()))),
+          SnackBar(content: Text(msg)),
         );
       }
     } finally {
       if (mounted) setState(() => loading = false);
-    }
-  }
-
-  Future<void> _waitForPayment(String petId) async {
-    final l10n = AppLocalizations.of(context)!;
-    for (var i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(seconds: 2));
-      final pet = await ApiClient.instance.getPet(petId);
-      if (pet['paymentStatus'] == 'active') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.paymentConfirmed)),
-          );
-        }
-        return;
-      }
-    }
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.paymentPending)),
-      );
     }
   }
 
@@ -113,65 +173,164 @@ class _PetFormScreenState extends State<PetFormScreen> {
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
-            {'code': 'annual', 'label': '25 € / an'},
-            {'code': 'triennial', 'label': '60 € / 3 ans', 'recommended': true},
-            {'code': 'quinquennial', 'label': '75 € / 5 ans'},
+            {'code': 'monthly', 'label': l10n.planMonthlyLabel},
+            {'code': 'annual', 'label': l10n.planAnnualLabel},
+            {'code': 'triennial', 'label': l10n.planTriennialLabel, 'recommended': true},
           ];
+    final initial =
+        (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(controller: name, decoration: InputDecoration(labelText: l10n.petName)),
-            TextField(controller: species, decoration: InputDecoration(labelText: l10n.species)),
-            TextField(controller: breed, decoration: InputDecoration(labelText: l10n.breed)),
-            const SizedBox(height: 24),
-            Text(l10n.choosePlan, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...displayPlans.map((plan) {
-              final code = plan['code'] as String;
-              final recommended = plan['recommended'] == true;
-              return Card(
-                color: selectedPlan == code ? Theme.of(context).colorScheme.primaryContainer : null,
-                child: RadioListTile<String>(
-                  value: code,
-                  groupValue: selectedPlan,
-                  onChanged: (v) => setState(() => selectedPlan = v!),
-                  title: Row(
-                    children: [
-                      Text(plan['label'] as String? ?? code),
-                      if (recommended) ...[
-                        const SizedBox(width: 8),
-                        Chip(
-                          label: Text(l10n.recommended, style: const TextStyle(fontSize: 11)),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          padding: scrollPaddingWithSystemBottom(context, all: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickPhoto,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border:
+                              Border.all(color: AppColors.primary, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ],
-                  ),
+                        child: ClipOval(
+                          child: photoFile != null
+                              ? Image.file(
+                                  File(photoFile!.path),
+                                  fit: BoxFit.cover,
+                                  width: 140,
+                                  height: 140,
+                                )
+                              : ColoredBox(
+                                  color: AppColors.surfaceElevated,
+                                  child: Center(
+                                    child: Text(initial,
+                                        style: const TextStyle(
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.w600)),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.photoFrameHint,
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    ),
+                    TextButton.icon(
+                      onPressed: _pickPhoto,
+                      icon: const Icon(Icons.photo_camera_outlined),
+                      label: Text(
+                          photoFile == null ? l10n.addPhoto : l10n.changePhoto),
+                    ),
+                  ],
                 ),
-              );
-            }),
-            SwitchListTile(
-              title: Text(l10n.autoRenewTitle),
-              subtitle: Text(l10n.autoRenewSubtitle),
-              value: autoRenew,
-              onChanged: (v) => setState(() => autoRenew = v),
-            ),
-            Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: loading ? null : save,
-              child: loading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.continueToPayment),
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: name,
+                  decoration: InputDecoration(labelText: l10n.petName),
+                  onChanged: (_) => setState(() {})),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: selectedSpecies,
+                decoration: InputDecoration(labelText: l10n.species),
+                items: [
+                  DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
+                  DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
+                  DropdownMenuItem(
+                      value: 'horse', child: Text(l10n.speciesHorse)),
+                  DropdownMenuItem(
+                      value: 'other', child: Text(l10n.speciesOther)),
+                ],
+                onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: breed,
+                  decoration: InputDecoration(labelText: l10n.breed)),
+              const SizedBox(height: 24),
+              Text(l10n.choosePlan,
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              ...displayPlans.map((plan) {
+                final code = plan['code'] as String;
+                final recommended = plan['recommended'] == true;
+                return Card(
+                  color: selectedPlan == code
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : null,
+                  child: RadioListTile<String>(
+                    value: code,
+                    groupValue: selectedPlan,
+                    onChanged: (v) => setState(() {
+                      selectedPlan = v!;
+                      if (selectedPlan == 'monthly') {
+                        autoRenew = true;
+                      }
+                    }),
+                    title: Row(
+                      children: [
+                        Text(plan['label'] as String? ?? code),
+                        if (recommended) ...[
+                          const SizedBox(width: 8),
+                          Chip(
+                            label: Text(l10n.recommended,
+                                style: const TextStyle(fontSize: 11)),
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              SwitchListTile(
+                title: Text(l10n.autoRenewTitle),
+                subtitle: Text(
+                  _subscriptionForced
+                      ? l10n.planMonthlySub
+                      : l10n.autoRenewSubtitle,
+                ),
+                value: autoRenew || _subscriptionForced,
+                onChanged: _subscriptionForced
+                    ? null
+                    : (v) => setState(() => autoRenew = v),
+              ),
+              Text(_summary(l10n),
+                  style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: loading ? null : save,
+                child: loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(l10n.continueToPayment),
+              ),
+            ],
+          ),
       ),
     );
   }

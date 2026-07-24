@@ -1,0 +1,94 @@
+name: Product digest ingest
+
+# Collects today's commits and posts them to the API for Gemini functional summarization.
+# Cloud Scheduler (18:00 Europe/Brussels) then triggers /internal/product-digest/run to send emails.
+
+on:
+  schedule:
+    # 16:45 UTC ≈ 17:45/18:45 Brussels (CET/CEST). Prefer before 18:00 Brussels send.
+    - cron: "45 15 * * *"
+  workflow_dispatch:
+    inputs:
+      since_hours:
+        description: "Lookback window in hours"
+        required: false
+        default: "24"
+      date:
+        description: "Digest date YYYY-MM-DD (Brussels), empty = today"
+        required: false
+        default: ""
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build commit payload and ingest
+        env:
+          API_URL: ${{ secrets.PRODUCT_DIGEST_API_URL }}
+          DIGEST_SECRET: ${{ secrets.PRODUCT_DIGEST_SECRET }}
+          SINCE_HOURS: ${{ github.event.inputs.since_hours || '24' }}
+          DIGEST_DATE: ${{ github.event.inputs.date || '' }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${API_URL:-}" || -z "${DIGEST_SECRET:-}" ]]; then
+            echo "Missing PRODUCT_DIGEST_API_URL or PRODUCT_DIGEST_SECRET secrets — skip."
+            exit 0
+          fi
+
+          python3 <<'PY'
+          import json, os, subprocess, urllib.request
+
+          since_hours = os.environ.get("SINCE_HOURS") or "24"
+          digest_date = (os.environ.get("DIGEST_DATE") or "").strip()
+          api = os.environ["API_URL"].rstrip("/")
+          secret = os.environ["DIGEST_SECRET"]
+
+          log = subprocess.check_output(
+              [
+                  "git", "log",
+                  f"--since={since_hours} hours ago",
+                  "--pretty=format:%H%x1f%s%x1f%b%x1f%an%x1e",
+              ],
+              text=True,
+              errors="replace",
+          )
+          commits = []
+          for entry in log.split("\x1e"):
+              entry = entry.strip("\n")
+              if not entry.strip():
+                  continue
+              parts = entry.split("\x1f", 3)
+              if len(parts) < 2:
+                  continue
+              sha, subject = parts[0], parts[1]
+              body = parts[2] if len(parts) > 2 else ""
+              author = parts[3] if len(parts) > 3 else ""
+              commits.append({
+                  "sha": sha[:12],
+                  "subject": subject.strip(),
+                  "body": body.strip()[:800],
+                  "author": author.strip(),
+              })
+
+          payload = {"commits": commits}
+          if digest_date:
+              payload["date"] = digest_date
+
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              f"{api}/api/v1/internal/product-digest/ingest",
+              data=data,
+              headers={
+                  "Content-Type": "application/json",
+                  "X-Product-Digest-Secret": secret,
+              },
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=120) as resp:
+              print(resp.read().decode())
+          print(f"Ingested {len(commits)} commit(s)")
+          PY

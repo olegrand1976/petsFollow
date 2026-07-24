@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
@@ -17,7 +20,190 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/metrics/overview", a.adminMetricsOverview)
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
+		pr.Get("/admin/commercials", a.adminListCommercials)
+		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
+		pr.Post("/admin/commercials", a.adminCreateCommercial)
+		pr.Patch("/admin/commercials/{id}/assign", a.adminAssignVet)
+		pr.Patch("/admin/commercials/{id}/manager", a.adminSetCommercialManager)
+		pr.Get("/admin/vets", a.adminListVets)
+		pr.Post("/admin/vets", a.adminCreateVet)
+		pr.Post("/admin/clients", a.adminCreateClient)
+		pr.Post("/admin/care-pros", a.adminCreateCarePro)
+		pr.Get("/admin/commercials/{id}/commissions", a.adminCommercialCommissions)
+		pr.Get("/admin/prospects", a.adminListProspects)
+		a.registerClientImportRoutes(pr)
+		a.registerStripeCatalogRoutes(pr)
 	})
+}
+
+func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rows, err := a.store.ListAllCommercials(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rows, err := a.store.ListCommercialManagers(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+type createCommercialReq struct {
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	FullName      string `json:"fullName"`
+	ManagerUserID string `json:"managerUserId"`
+	Role          string `json:"role"` // commercial (default) | commercial_manager
+}
+
+func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	var req createCommercialReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" || req.Password == "" || req.FullName == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	if len(req.Password) < 8 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
+		return
+	}
+	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
+		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
+		return
+	} else if !errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	role := strings.TrimSpace(req.Role)
+	if role == "" {
+		role = "commercial"
+	}
+	var userID string
+	var err error
+	switch role {
+	case "commercial_manager":
+		userID, err = a.store.CreateCommercialManagerUser(r.Context(), req.Email, req.Password, req.FullName)
+	case "commercial":
+		userID, err = a.store.CreateCommercialUserWithManager(r.Context(), req.Email, req.Password, req.FullName, strings.TrimSpace(req.ManagerUserID))
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_role")
+		return
+	}
+	if err != nil {
+		if err.Error() == "invalid_manager" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": userID, "email": req.Email, "role": role})
+}
+
+type assignVetReq struct {
+	VetUserID string `json:"vetUserId"`
+}
+
+type setManagerReq struct {
+	ManagerUserID string `json:"managerUserId"`
+}
+
+func (a *API) adminSetCommercialManager(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	commercialID := chi.URLParam(r, "id")
+	var req setManagerReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.SetCommercialManager(r.Context(), commercialID, strings.TrimSpace(req.ManagerUserID)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if err.Error() == "invalid_manager" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_manager")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	commercialID := chi.URLParam(r, "id")
+	var req assignVetReq
+	if err := httpx.DecodeJSON(r, &req); err != nil || req.VetUserID == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	if err := a.store.AssignVetToCommercial(r.Context(), req.VetUserID, commercialID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "assigned", "vetUserId": req.VetUserID, "commercialId": commercialID})
+}
+
+func (a *API) adminCommercialCommissions(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	summary, err := a.store.GetCommercialCommissionSummary(r.Context(), chi.URLParam(r, "id"))
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, summary)
+}
+
+func (a *API) adminListProspects(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	status := r.URL.Query().Get("status")
+	if status != "" && !store.ValidProspectStatus(status) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+		return
+	}
+	rows, err := a.store.ListAllProspects(r.Context(), status)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }
 
 func (a *API) requireAdmin(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {

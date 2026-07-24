@@ -10,6 +10,7 @@ import (
 	billingportal "github.com/stripe/stripe-go/v81/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
+	subapi "github.com/stripe/stripe-go/v81/subscription"
 	"github.com/stripe/stripe-go/v81/webhook"
 )
 
@@ -44,14 +45,50 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		}
 		customerID = c.ID
 	}
+	lineItem := &stripe.CheckoutSessionLineItemParams{Quantity: stripe.Int64(1)}
+	if req.UnitAmountCents > 0 {
+		currency := req.Currency
+		if currency == "" {
+			currency = "eur"
+		}
+		name := req.ProductName
+		if name == "" {
+			name = "petsFollow"
+		}
+		lineItem.PriceData = &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency:   stripe.String(currency),
+			UnitAmount: stripe.Int64(int64(req.UnitAmountCents)),
+			ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+				Name: stripe.String(name),
+			},
+		}
+		if req.Mode == "subscription" {
+			interval := string(stripe.PriceRecurringIntervalYear)
+			if req.Metadata["interval"] == "month" {
+				interval = string(stripe.PriceRecurringIntervalMonth)
+			}
+			recurring := &stripe.CheckoutSessionLineItemPriceDataRecurringParams{
+				Interval: stripe.String(interval),
+			}
+			if n := req.Metadata["interval_count"]; n == "3" {
+				recurring.IntervalCount = stripe.Int64(3)
+			}
+			lineItem.PriceData.Recurring = recurring
+		}
+	} else {
+		lineItem.Price = stripe.String(req.PriceID)
+	}
 	params := &stripe.CheckoutSessionParams{
 		Mode:       stripe.String(req.Mode),
 		SuccessURL: stripe.String(req.SuccessURL),
 		CancelURL:  stripe.String(req.CancelURL),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{Price: stripe.String(req.PriceID), Quantity: stripe.Int64(1)},
-		},
-		Metadata: req.Metadata,
+		LineItems:  []*stripe.CheckoutSessionLineItemParams{lineItem},
+		Metadata:   req.Metadata,
+	}
+	if req.Mode == "subscription" && len(req.Metadata) > 0 {
+		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
+			Metadata: req.Metadata,
+		}
 	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)
@@ -61,6 +98,17 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		return CheckoutSession{}, fmt.Errorf("stripe checkout session: %w", err)
 	}
 	return CheckoutSession{ID: sess.ID, URL: sess.URL}, nil
+}
+
+func (g *LiveGateway) CancelSubscription(_ context.Context, subscriptionID string) error {
+	if subscriptionID == "" {
+		return nil
+	}
+	_, err := subapi.Cancel(subscriptionID, nil)
+	if err != nil {
+		return fmt.Errorf("stripe cancel subscription: %w", err)
+	}
+	return nil
 }
 
 func (g *LiveGateway) CreatePortalSession(_ context.Context, customerID, returnURL string) (PortalSession, error) {

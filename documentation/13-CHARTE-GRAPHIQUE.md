@@ -24,14 +24,16 @@ Variantes composant `PetsFollowLogo` : `default`, `compact` (topbar), `hero` (lo
 └──────────┴─────────────────────────────────────────────┘
 ```
 
-- `ProTopbar` : cloche (threads messagerie), menu profil, déconnexion
-- `ProSidebar` : navigation avec icônes uniquement
+- `ProTopbar` : thème (`light_mode` / `dark_mode`), cloche (`notifications`), menu profil, déconnexion
+- `ProSidebar` : navigation avec icônes Material Symbols via `ProIcon`
+- Icônes UI : **Material Symbols Outlined** (Google Fonts) — composant `ProIcon`
 
 ## Composants Pro (`nuxtjs/components/pro/`)
 
 | Composant | Rôle |
 |-----------|------|
 | `ProTopbar` | Header logo + notifs + profil |
+| `ProIcon` | Icône Material Symbols Outlined |
 | `ProPageHeader` | Titre + sous-titre + actions |
 | `ProListToolbar` | Filtres + bascule vue |
 | `ProViewToggle` | Liste / Kanban |
@@ -44,6 +46,7 @@ Variantes composant `PetsFollowLogo` : `default`, `compact` (topbar), `hero` (lo
 | `ProBadge` | Statuts colorés |
 | `ProEmptyState` | État vide |
 | `ProSidebar` | Nav latérale |
+| `ProCommissionSheet` | Fiche commission (vet / commercial / admin) |
 
 ## Listes (table / kanban)
 
@@ -60,6 +63,7 @@ Variantes composant `PetsFollowLogo` : `default`, `compact` (topbar), `hero` (lo
 
 - UI : **DM Sans** (`--pf-font-sans`)
 - Données BPM / KPI : **IBM Plex Mono** (`--pf-font-mono`)
+- Icônes : **Material Symbols Outlined** (`ProIcon`)
 - Titres : 600–700 ; corps : 400
 
 ### Échelle typographique Pro

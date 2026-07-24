@@ -3,12 +3,14 @@ export type ProUser = {
   userId?: string
   email?: string
   fullName?: string
+  avatarUrl?: string
   role?: string
   practiceId?: string
   practiceName?: string
   emailVerified?: boolean
   profileComplete?: boolean
   preferredLocale?: string
+  mustChangePassword?: boolean
 }
 
 export function useProUser() {
@@ -22,13 +24,23 @@ export function useProUser() {
     if (userState.value && !force) return userState.value
     loadingState.value = true
     try {
-      const res: any = await $fetch('/api/me')
+      // SSR: never $fetch our own /api/* via the public URL — on Cloud Run that
+      // re-enters the same instance and deadlocks (concurrency slot) then OOMs.
+      // useRequestFetch = appel Nitro interne (cookies forwardés, refresh BFF OK).
+      const res: any = import.meta.server
+        ? await useRequestFetch()('/api/me')
+        : await $fetch('/api/me')
       const data = res.data ?? res
       userState.value = data
       return data as ProUser
-    } catch {
-      userState.value = null
-      return null
+    } catch (e: any) {
+      const status = e?.statusCode ?? e?.status ?? e?.response?.status
+      if (status === 401 || status === 403) {
+        userState.value = null
+        throw e
+      }
+      // Transient (5xx/network): keep cached profile when available.
+      return userState.value
     } finally {
       loadingState.value = false
     }
@@ -44,11 +56,10 @@ export function useProUser() {
       .toUpperCase()
   }
 
-  function logout() {
-    const token = useCookie('pf_token')
-    token.value = null
+  async function logout() {
+    await clearAuthTokens()
     userState.value = null
-    navigateTo('/login')
+    await navigateTo('/login')
   }
 
   return { user, loading, fetchUser, initials, logout }

@@ -7,21 +7,31 @@
       <p v-else-if="error">{{ $t('auth.confirmEmail.brandInvalidLink') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <div class="pro-login-form">
         <PetsFollowLogo variant="default" />
         <div v-if="loading" class="text-muted">{{ $t('auth.confirmEmail.loading') }}</div>
         <template v-else-if="confirmed">
-          <h1>{{ $t('auth.confirmEmail.title') }}</h1>
+          <h1 data-testid="confirm-email-success">{{ $t('auth.confirmEmail.title') }}</h1>
           <p class="pro-page-header__subtitle">{{ welcomeMessage }}</p>
-          <ProButton block @click="navigateTo('/welcome')">
+          <ProButton block test-id="confirm-email-continue" @click="continueAfterConfirm">
             {{ $t('auth.confirmEmail.discover') }}
           </ProButton>
-          <ProButton variant="secondary" block class="pro-mt-sm" @click="navigateTo('/login')">
-            {{ $t('auth.confirmEmail.login') }}
-          </ProButton>
+          <div class="confirm-email-open-app">
+            <ProButton
+              block
+              variant="secondary"
+              test-id="confirm-email-open-app"
+              @click="openApp"
+            >
+              {{ $t('auth.confirmEmail.openApp') }}
+            </ProButton>
+          </div>
         </template>
         <template v-else>
-          <h1>{{ $t('auth.confirmEmail.failedTitle') }}</h1>
+          <h1 data-testid="confirm-email-failed">{{ $t('auth.confirmEmail.failedTitle') }}</h1>
           <p class="pro-field-error" role="alert">{{ error }}</p>
           <ProButton block @click="navigateTo('/register')">{{ $t('auth.confirmEmail.retry') }}</ProButton>
         </template>
@@ -40,6 +50,7 @@ const route = useRoute()
 const loading = ref(true)
 const confirmed = ref(false)
 const confirmedEmail = ref('')
+const sessionReady = ref(false)
 const error = ref('')
 
 const welcomeMessage = computed(() =>
@@ -47,6 +58,24 @@ const welcomeMessage = computed(() =>
     emailPart: confirmedEmail.value ? `, ${confirmedEmail.value}` : '',
   }),
 )
+
+const appDeepLink = computed(() => {
+  const params = new URLSearchParams({ status: 'ok' })
+  if (confirmedEmail.value) params.set('email', confirmedEmail.value)
+  return `petsfollow://confirm-email?${params.toString()}`
+})
+
+async function continueAfterConfirm() {
+  if (sessionReady.value) {
+    await navigateTo('/welcome')
+    return
+  }
+  await navigateTo('/login')
+}
+
+function openApp() {
+  window.location.href = appDeepLink.value
+}
 
 onMounted(async () => {
   const token = String(route.query.token || '')
@@ -63,6 +92,10 @@ onMounted(async () => {
     const data = res.data ?? res
     confirmed.value = true
     confirmedEmail.value = data.email || ''
+    if (data.authenticated || data.accessToken) {
+      // Cookies httpOnly posés par la BFF.
+      sessionReady.value = true
+    }
   } catch (e: any) {
     error.value = mapError(e) || t('auth.confirmEmail.expiredLink')
   } finally {
@@ -72,7 +105,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.pro-mt-sm {
+.confirm-email-open-app {
   margin-top: 0.75rem;
 }
 </style>

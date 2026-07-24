@@ -8,12 +8,16 @@ import (
 )
 
 const (
-	passwordVet    = "VetDemo123!"
-	passwordClient = "ClientDemo123!"
-	passwordAdmin  = "AdminDemo123!"
+	passwordVet        = "VetDemo123!"
+	passwordClient     = "ClientDemo123!"
+	passwordAdmin      = "AdminDemo123!"
+	passwordCommercial = "CommercialDemo123!"
+	passwordCarePro    = "CareProDemo123!"
 
 	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
 	demoEmailConfirmToken = "demo-confirm-email"
+	// Token fixe pour /reset-password?token=demo-reset-password (compte vet.reset@)
+	demoPasswordResetToken = "demo-reset-password"
 )
 
 type messageDef struct {
@@ -29,6 +33,7 @@ type heartRateDef struct {
 	duration int
 	bpm      int
 	isAlert  bool
+	unread   bool // validated but vet_seen_at NULL — sidebar / list "nouveau"
 	age      time.Duration
 }
 
@@ -37,6 +42,20 @@ type dossierEventDef struct {
 	eventType  string
 	content    string
 	age        time.Duration
+}
+
+type careReminderDef struct {
+	reminderType string
+	title        string
+	dueDays      int // days from now (negative = past)
+	status       string
+}
+
+type visitDef struct {
+	status      string
+	notes       string
+	source      string
+	scheduledIn time.Duration // from now
 }
 
 type petDef struct {
@@ -51,12 +70,16 @@ type petDef struct {
 	messages      []messageDef
 	heartRates    []heartRateDef
 	dossierEvents []dossierEventDef
+	careReminders []careReminderDef
+	visits        []visitDef
 }
 
 type clientDef struct {
-	email    string
-	fullName string
-	pets     []petDef
+	email            string
+	fullName         string
+	pets             []petDef
+	seedDiscovery    bool
+	extraPracticeVet string // vet email for secondary practice link
 }
 
 type practiceDef struct {
@@ -74,13 +97,14 @@ type practiceDef struct {
 	clients           []clientDef
 	notifyOnMessage   bool
 	notifyOnHeartRate bool
-	incompleteProfile bool // profil cabinet non complété (onboarding)
+	incompleteProfile  bool // profil cabinet non complété (onboarding)
 	pendingEmailVerify bool // email non confirmé + token démo
+	seedPasswordReset  bool // token démo reset password
 }
 
 // Comptes démo — mots de passe : VetDemo123! · ClientDemo123! · AdminDemo123!
 //
-// Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ (profil incomplet) · vet.unverified@ (email non confirmé)
+// Vétos : vet.demo@ · vet.parc@ · vet.lyon@ · vet.onboarding@ · vet.unverified@ · vet.reset@ (reset MDP)
 // Admin : admin.demo@
 // Clients : client.demo@ · client.marie@ · client.paul@ · client.julie@ · client.thomas@ · client.vide@ (sans animal)
 
@@ -100,8 +124,10 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate: true,
 		clients: []clientDef{
 			{
-				email:    "client.demo@petsfollow.test",
-				fullName: "Sophie Demo",
+				email:            "client.demo@petsfollow.test",
+				fullName:         "Sophie Demo",
+				seedDiscovery:    true,
+				extraPracticeVet: "vet.parc@petsfollow.test",
 				pets: []petDef{
 					{
 						name:          "Rex",
@@ -126,6 +152,19 @@ var demoPractices = []practiceDef{
 						dossierEvents: []dossierEventDef{
 							{authorRole: "vet", eventType: "note", content: "Suivi cardiaque post-op. Fréquence stable.", age: -14 * 24 * time.Hour},
 						},
+						careReminders: []careReminderDef{
+							{reminderType: "vaccination", title: "Vaccination", dueDays: 30, status: "pending"},
+							{reminderType: "deworming", title: "Vermifuge", dueDays: 14, status: "pending"},
+							{reminderType: "vet_check", title: "Contrôle vétérinaire", dueDays: -30, status: "done"},
+							{reminderType: "dental", title: "Soins dentaires", dueDays: 200, status: "pending"},
+						},
+						visits: []visitDef{
+							{status: "done", notes: "Consultation annuelle", source: "vet", scheduledIn: -90 * 24 * time.Hour},
+							{status: "done", notes: "Contrôle cardiaque", source: "vet", scheduledIn: -45 * 24 * time.Hour},
+							{status: "done", notes: "Suivi post-op", source: "vet", scheduledIn: -14 * 24 * time.Hour},
+							{status: "requested", notes: "Demande contrôle cardiaque Rex", source: "client", scheduledIn: 2 * 24 * time.Hour},
+							{status: "requested", notes: "Consultation générale Rex", source: "client", scheduledIn: 5 * 24 * time.Hour},
+						},
 					},
 					{
 						name:          "Bella",
@@ -133,16 +172,37 @@ var demoPractices = []practiceDef{
 						breed:         "Européen",
 						weightKg:      4.2,
 						paymentStatus: "active",
-						plan:          billing.PlanAnnual,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Bella a fait son relevé ce matin, tout semble normal.", age: -5 * time.Hour, read: false},
 						},
 						heartRates: []heartRateDef{
-							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, age: -5 * time.Hour},
+							{status: kernel.SessionValidated, tapCount: 120, duration: 60, bpm: 120, unread: true, age: -5 * time.Hour},
+						},
+						visits: []visitDef{
+							{status: "requested", notes: "Contrôle Bella — vaccination", source: "client", scheduledIn: 8 * 24 * time.Hour},
 						},
 					},
+					{
+						name:          "Spirit",
+						species:       "horse",
+						breed:         "Pur-sang",
+						weightKg:      480,
+						paymentStatus: "active",
+						plan:          billing.PlanAnnual,
+						billingMode:   billing.ModeSubscription,
+						entitlement:   billing.StatusActive,
+						careReminders: []careReminderDef{
+							{reminderType: "farrier", title: "Maréchal-ferrant", dueDays: 21, status: "pending"},
+							{reminderType: "fecal_egg", title: "Coproscopie", dueDays: 60, status: "pending"},
+						},
+					},
+					// Multi-pet demo — mix monthly / annual / triennial
+					{name: "Nala", species: "dog", breed: "Labrador", weightKg: 28, paymentStatus: "active", plan: billing.PlanTriennial, billingMode: billing.ModeSubscription, entitlement: billing.StatusActive},
+					{name: "Kira", species: "dog", breed: "Labrador", weightKg: 26, paymentStatus: "active", plan: billing.PlanMonthly, billingMode: billing.ModeSubscription, entitlement: billing.StatusActive},
+					{name: "Oreo", species: "dog", breed: "Labrador", weightKg: 30, paymentStatus: "pending_payment", plan: billing.PlanAnnual, billingMode: billing.ModeSubscription, entitlement: billing.StatusPending},
 				},
 			},
 			{
@@ -194,14 +254,14 @@ var demoPractices = []practiceDef{
 						breed:         "Persan",
 						weightKg:      5.1,
 						paymentStatus: "active",
-						plan:          billing.PlanQuinquennial,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Alerte sur le dernier relevé de Chouchou, pouvez-vous regarder ?", age: -3 * time.Hour, read: false},
 						},
 						heartRates: []heartRateDef{
-							{status: kernel.SessionValidated, tapCount: 180, duration: 60, bpm: 180, isAlert: true, age: -3 * time.Hour},
+							{status: kernel.SessionValidated, tapCount: 180, duration: 60, bpm: 180, isAlert: true, unread: true, age: -3 * time.Hour},
 							{status: kernel.SessionValidated, tapCount: 130, duration: 60, bpm: 130, age: -5 * 24 * time.Hour},
 						},
 						dossierEvents: []dossierEventDef{
@@ -292,8 +352,8 @@ var demoPractices = []practiceDef{
 						breed:         "Siamois",
 						weightKg:      3.5,
 						paymentStatus: "active",
-						plan:          billing.PlanAnnual,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Premier relevé de Luna effectué, merci pour l'accompagnement.", age: -6 * time.Hour, read: true},
@@ -348,5 +408,19 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate:  true,
 		incompleteProfile:  true,
 		pendingEmailVerify: true,
+	},
+	{
+		name:              "Cabinet Reset Demo",
+		vetEmail:          "vet.reset@petsfollow.test",
+		vetName:           "Dr Reset Demo",
+		phone:             "01 00 00 00 00",
+		address:           "1 rue Reset",
+		city:              "Lille",
+		postalCode:        "59000",
+		website:           "",
+		availability:      kernel.AvailabilityAvailable,
+		notifyOnMessage:   true,
+		notifyOnHeartRate: true,
+		seedPasswordReset: true,
 	},
 }
