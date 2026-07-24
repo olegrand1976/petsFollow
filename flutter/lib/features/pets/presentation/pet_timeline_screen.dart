@@ -57,10 +57,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
     try {
       var canWrite = widget.canWriteNotes ?? false;
-      if (widget.canWriteNotes == null) {
+      var resolvedAcl = widget.canWriteNotes != null;
+      if (!resolvedAcl) {
         try {
           final raw = await ApiClient.instance.getPet(widget.petId);
           canWrite = Pet.fromJson(Map<String, dynamic>.from(raw)).canWriteNotes;
+          resolvedAcl = true;
         } catch (_) {
           try {
             final list = await ApiClient.instance.getPets();
@@ -68,18 +70,24 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
               final map = Map<String, dynamic>.from(row as Map);
               if (map['id']?.toString() == widget.petId) {
                 canWrite = Pet.fromJson(map).canWriteNotes;
+                resolvedAcl = true;
                 break;
               }
             }
           } catch (_) {}
         }
       }
+      if (!resolvedAcl && _hasLoadedOnce) {
+        canWrite = _canWriteNotes;
+      }
       final data = await ApiClient.instance.getTimeline(widget.petId);
       final sessions = await ApiClient.instance.getHeartRateSessions(widget.petId);
       final visitData = await ApiClient.instance.getVisits(widget.petId);
       if (mounted) {
         setState(() {
-          _canWriteNotes = canWrite;
+          if (resolvedAcl || _hasLoadedOnce) {
+            _canWriteNotes = canWrite;
+          }
           items = data
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
@@ -100,16 +108,19 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         });
       }
       // Best-effort: never block / fail the timeline UI.
-      if (canWrite) {
-        await NotificationService.instance.scheduleVisits(
-          visitData,
-          visitLabel: l10n.upcomingVisit,
-          petName: widget.petName,
-        );
-      } else {
-        await NotificationService.instance.cancelVisitReminders(
-          visitData.map((v) => v.id),
-        );
+      // Only schedule/cancel when ACL was positively resolved.
+      if (resolvedAcl) {
+        if (canWrite) {
+          await NotificationService.instance.scheduleVisits(
+            visitData,
+            visitLabel: l10n.upcomingVisit,
+            petName: widget.petName,
+          );
+        } else {
+          await NotificationService.instance.cancelVisitReminders(
+            visitData.map((v) => v.id),
+          );
+        }
       }
     } catch (e) {
       if (!mounted) return;

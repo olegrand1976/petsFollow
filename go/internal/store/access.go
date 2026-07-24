@@ -163,6 +163,18 @@ func (s *Store) GrantPetAccess(ctx context.Context, petID, granteeUserID, grante
 	if permission == "" {
 		permission = string(PermWriteNotes)
 	}
+	if !ValidAccessPermission(permission) {
+		return AccessGrant{}, ErrValidation
+	}
+	// Never downgrade an existing grant (e.g. full → write_notes on re-claim).
+	var existing string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT permission FROM pets.pet_access
+		WHERE pet_id=$1 AND grantee_user_id=$2`,
+		petID, granteeUserID).Scan(&existing)
+	if existing != "" {
+		permission = string(maxPermission(AccessPermission(existing), AccessPermission(permission)))
+	}
 	id := uuid.NewString()
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO pets.pet_access (id, pet_id, grantee_user_id, permission, granted_by_user_id, expires_at)
@@ -170,7 +182,13 @@ func (s *Store) GrantPetAccess(ctx context.Context, petID, granteeUserID, grante
 		ON CONFLICT (pet_id, grantee_user_id) DO UPDATE
 			SET permission = EXCLUDED.permission,
 				granted_by_user_id = EXCLUDED.granted_by_user_id,
-				expires_at = EXCLUDED.expires_at`,
+				expires_at = CASE
+					WHEN EXCLUDED.expires_at IS NULL THEN NULL
+					WHEN pets.pet_access.expires_at IS NULL THEN NULL
+					WHEN pets.pet_access.expires_at < NOW() THEN EXCLUDED.expires_at
+					WHEN EXCLUDED.expires_at > pets.pet_access.expires_at THEN EXCLUDED.expires_at
+					ELSE pets.pet_access.expires_at
+				END`,
 		id, petID, granteeUserID, permission, grantedBy, expiresAt)
 	if err != nil {
 		return AccessGrant{}, err
@@ -244,7 +262,13 @@ func (s *Store) GrantClientAccess(ctx context.Context, clientUserID, granteeUser
 		ON CONFLICT (client_user_id, grantee_user_id) DO UPDATE
 			SET permission = EXCLUDED.permission,
 				granted_by_user_id = EXCLUDED.granted_by_user_id,
-				expires_at = COALESCE(practice.client_access.expires_at, EXCLUDED.expires_at)`,
+				expires_at = CASE
+					WHEN EXCLUDED.expires_at IS NULL THEN NULL
+					WHEN practice.client_access.expires_at IS NULL THEN NULL
+					WHEN practice.client_access.expires_at < NOW() THEN EXCLUDED.expires_at
+					WHEN EXCLUDED.expires_at > practice.client_access.expires_at THEN EXCLUDED.expires_at
+					ELSE practice.client_access.expires_at
+				END`,
 		id, clientUserID, granteeUserID, permission, grantedBy, expiresAt)
 	if err != nil {
 		return AccessGrant{}, err

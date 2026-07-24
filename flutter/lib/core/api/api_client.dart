@@ -208,6 +208,29 @@ class ApiClient {
     return data is List ? data : [];
   }
 
+  /// Agenda terrain véto : plage calendrier (confirmed + scheduled), pas le pending-only de [listVetVisits].
+  Future<List<dynamic>> listVetTourVisits({int pastDays = 7, int futureDays = 90}) async {
+    final now = DateTime.now();
+    final from = DateTime(now.year, now.month, now.day).subtract(Duration(days: pastDays));
+    final to = DateTime(now.year, now.month, now.day).add(Duration(days: futureDays + 1));
+    final res = await dio.get('/api/v1/vet/calendar', queryParameters: {
+      'from': from.toUtc().toIso8601String(),
+      'to': to.toUtc().toIso8601String(),
+    });
+    final data = Map<String, dynamic>.from(res.data['data'] as Map);
+    final byId = <String, Map<String, dynamic>>{};
+    for (final raw in [
+      ...(data['visits'] as List? ?? const []),
+      ...(data['pending'] as List? ?? const []),
+    ]) {
+      final m = Map<String, dynamic>.from(raw as Map);
+      final id = m['id']?.toString() ?? '';
+      if (id.isEmpty) continue;
+      byId.putIfAbsent(id, () => m);
+    }
+    return byId.values.toList();
+  }
+
   Future<List<dynamic>> listVetClients() async {
     final res = await dio.get('/api/v1/clients');
     final data = res.data['data'];
@@ -229,7 +252,7 @@ class ApiClient {
       loadProTerrainLists() async {
     if (userRole == 'vet') {
       return (
-        visits: await listVetVisits(),
+        visits: await listVetTourVisits(),
         clients: await listVetClients(),
         pets: await listVetPets(),
       );

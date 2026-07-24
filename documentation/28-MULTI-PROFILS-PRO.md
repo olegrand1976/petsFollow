@@ -58,7 +58,7 @@ Tournées (Vague O) : agenda Flutter pro light — filtres **Aujourd’hui** / *
 
 ## Statut
 
-Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
+Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
 
 ## CR visite + IA
 
