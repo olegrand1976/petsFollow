@@ -93,8 +93,10 @@ test.describe('auth — inscription et confirmation', () => {
       password: 'E2ePass123!',
     })
     expect(status === 200 || status === 201).toBeTruthy()
-    expect(confirmPath).toBeTruthy()
     await expect(page).toHaveURL(/register\/sent/, { timeout: 15000 })
+
+    // confirmPath n'est exposé que si DEV_SEED_ENABLED=true (local/CI) — skip la suite sur staging.
+    test.skip(!confirmPath, 'confirmPath masqué hors dev (DEV_SEED_ENABLED=false)')
 
     await page.goto(confirmPath!)
     await expect(page.getByTestId('confirm-email-success')).toBeVisible({ timeout: 15000 })
@@ -139,7 +141,10 @@ test.describe('auth — forgot / reset password', () => {
     const newPassword = `Reset${Date.now()}!`
 
     const { resetPath } = await requestPasswordReset(page, email)
-    expect(resetPath).toBeTruthy()
+    await expect(page.getByTestId('forgot-sent')).toBeVisible()
+
+    // resetPath n'est exposé que si DEV_SEED_ENABLED=true (local/CI) — skip la suite sur staging.
+    test.skip(!resetPath, 'resetPath masqué hors dev (DEV_SEED_ENABLED=false)')
 
     const { status } = await submitPasswordReset(page, resetPath!, newPassword)
     expect(status === 200 || status === 204).toBeTruthy()
