@@ -1,8 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
+import 'package:petsfollow_mobile/core/auth/google_login_flow.dart';
 import 'package:petsfollow_mobile/core/auth/pending_login_hint.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -80,19 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
     widget.onLoggedIn();
   }
 
-  String? _errorCode(Object e) {
-    if (e is! DioException) return null;
-    final data = e.response?.data;
-    if (data is Map) {
-      final err = data['error'];
-      if (err is Map) {
-        return (err['code'] ?? err['msgKey'] ?? err['message'])?.toString();
-      }
-      return data['code']?.toString();
-    }
-    return null;
-  }
-
   Future<void> submit() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -106,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await _finishLogin(data);
     } catch (e) {
       if (!mounted) return;
-      final code = _errorCode(e);
+      final code = apiErrorCode(e);
       setState(() {
         error = code == 'email_not_verified' ? l10n.emailNotVerified : l10n.loginFailed;
       });
@@ -154,44 +142,28 @@ class _LoginScreenState extends State<LoginScreen> {
       _busy = true;
     });
     try {
-      final idToken = await GoogleAuth.signInForIdToken();
-      if (idToken == null) {
-        if (mounted) setState(() => _busy = false);
-        return;
-      }
-      final data = await ApiClient.instance.loginWithGoogle(idToken);
+      final data = await GoogleLoginFlow.signIn();
       if (!mounted) return;
-      await _finishLogin(data);
-    } on DioException catch (e) {
+      if (data != null) await _finishLogin(data);
+    } catch (e) {
       if (!mounted) return;
-      setState(() => error = _googleErrorMessage(l10n, e));
-    } catch (_) {
-      if (mounted) setState(() => error = l10n.googleLoginFailed);
+      setState(() => error = GoogleLoginFlow.errorMessage(l10n, e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  String _googleErrorMessage(AppLocalizations l10n, DioException e) {
-    final code = _errorCode(e);
-    switch (code) {
-      case 'not_configured':
-        return l10n.googleNotConfigured;
-      case 'google_client_only':
-      case 'google_pro_only':
-        return l10n.googleWrongAudience;
-      case 'email_not_verified':
-        return l10n.emailNotVerified;
-      default:
-        return l10n.googleLoginFailed;
-    }
-  }
-
   Future<void> _openRegister() async {
-    final result = await Navigator.of(context).push<String>(
+    final result = await Navigator.of(context).push<Object>(
       MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );
-    if (!mounted || result == null || result.isEmpty) return;
+    if (!mounted || result == null) return;
+    if (result is Map<String, dynamic>) {
+      // Inscription via Google : session déjà ouverte (ou 2FA à finaliser).
+      await _finishLogin(result);
+      return;
+    }
+    if (result is! String || result.isEmpty) return;
     setState(() {
       email.text = result;
       info = AppLocalizations.of(context)!.registerSuccess;

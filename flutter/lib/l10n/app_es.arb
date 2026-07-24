@@ -9,6 +9,8 @@
   "emailNotVerified": "Confirme primero su email (enlace enviado al registrarse) y vuelva a iniciar sesión.",
   "loginOr": "o",
   "loginWithGoogle": "Continuar con Google",
+  "loginWithApple": "Continuar con Apple",
+  "appleComingSoon": "El inicio de sesión con Apple llegará pronto.",
   "twoFaTitle": "Verificación 2FA",
   "twoFaSubtitle": "Introduzca el código de 6 dígitos de su aplicación de autenticación.",
   "twoFaCode": "Código autenticador",

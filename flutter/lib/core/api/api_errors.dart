@@ -33,3 +33,19 @@ String mapApiError(Object e, AppLocalizations l10n) {
   }
   return l10n.errorGeneric(e.toString());
 }
+
+/// Extrait le code d'erreur métier brut d'une réponse API enveloppée
+/// `{ error: { code | msgKey | message } }` (ou `{ code }` à plat),
+/// pour les écrans qui mappent eux-mêmes les codes vers leurs messages.
+String? apiErrorCode(Object e) {
+  if (e is! DioException) return null;
+  final data = e.response?.data;
+  if (data is Map) {
+    final err = data['error'];
+    if (err is Map) {
+      return (err['code'] ?? err['msgKey'] ?? err['message'])?.toString();
+    }
+    return data['code']?.toString();
+  }
+  return null;
+}

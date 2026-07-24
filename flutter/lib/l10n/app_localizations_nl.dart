@@ -37,6 +37,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loginWithGoogle => 'Doorgaan met Google';
 
   @override
+  String get loginWithApple => 'Doorgaan met Apple';
+
+  @override
+  String get appleComingSoon => 'Inloggen met Apple komt binnenkort.';
+
+  @override
   String get twoFaTitle => '2FA-verificatie';
 
   @override

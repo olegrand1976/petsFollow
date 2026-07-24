@@ -37,6 +37,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loginWithGoogle => 'Continuer avec Google';
 
   @override
+  String get loginWithApple => 'Continuer avec Apple';
+
+  @override
+  String get appleComingSoon => 'La connexion avec Apple arrive bientôt.';
+
+  @override
   String get twoFaTitle => 'Vérification 2FA';
 
   @override

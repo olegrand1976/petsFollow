@@ -9,6 +9,8 @@
   "emailNotVerified": "Bevestig eerst uw e-mail (link bij registratie), log daarna opnieuw in.",
   "loginOr": "of",
   "loginWithGoogle": "Doorgaan met Google",
+  "loginWithApple": "Doorgaan met Apple",
+  "appleComingSoon": "Inloggen met Apple komt binnenkort.",
   "twoFaTitle": "2FA-verificatie",
   "twoFaSubtitle": "Voer de 6-cijferige code van uw authenticator-app in.",
   "twoFaCode": "Authenticatorcode",

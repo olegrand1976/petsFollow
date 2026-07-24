@@ -9,6 +9,8 @@
   "emailNotVerified": "Confirm your email first (link sent at sign-up), then sign in again.",
   "loginOr": "or",
   "loginWithGoogle": "Continue with Google",
+  "loginWithApple": "Continue with Apple",
+  "appleComingSoon": "Sign in with Apple is coming soon.",
   "twoFaTitle": "2FA verification",
   "twoFaSubtitle": "Enter the 6-digit code from your authenticator app.",
   "twoFaCode": "Authenticator code",

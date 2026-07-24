@@ -9,6 +9,8 @@
   "emailNotVerified": "Kinnitage esmalt oma e-post (registreerimisel saadetud link), seejärel logige uuesti sisse.",
   "loginOr": "või",
   "loginWithGoogle": "Jätka Google'iga",
+  "loginWithApple": "Jätka Apple'iga",
+  "appleComingSoon": "Apple'iga sisselogimine on peagi saadaval.",
   "twoFaTitle": "2FA kinnitus",
   "twoFaSubtitle": "Sisestage autentimisrakendusest 6-kohaline kood.",
   "twoFaCode": "Autentimiskood",

@@ -37,6 +37,12 @@ class AppLocalizationsEt extends AppLocalizations {
   String get loginWithGoogle => 'Jätka Google\'iga';
 
   @override
+  String get loginWithApple => 'Jätka Apple\'iga';
+
+  @override
+  String get appleComingSoon => 'Apple\'iga sisselogimine on peagi saadaval.';
+
+  @override
   String get twoFaTitle => '2FA kinnitus';
 
   @override

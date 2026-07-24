@@ -158,6 +158,18 @@ abstract class AppLocalizations {
   /// **'Continuer avec Google'**
   String get loginWithGoogle;
 
+  /// No description provided for @loginWithApple.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec Apple'**
+  String get loginWithApple;
+
+  /// No description provided for @appleComingSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'La connexion avec Apple arrive bientôt.'**
+  String get appleComingSoon;
+
   /// No description provided for @twoFaTitle.
   ///
   /// In fr, this message translates to:

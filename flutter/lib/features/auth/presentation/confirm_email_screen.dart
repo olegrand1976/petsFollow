@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
@@ -58,7 +59,7 @@ class _ConfirmEmailScreenState extends State<ConfirmEmailScreen> {
       });
     } on DioException catch (e) {
       if (!mounted) return;
-      final code = _errorCode(e);
+      final code = apiErrorCode(e);
       setState(() {
         _loading = false;
         _error = code == 'not_found' || code == 'invalid_confirm_link'
@@ -72,18 +73,6 @@ class _ConfirmEmailScreenState extends State<ConfirmEmailScreen> {
         _error = l10n.confirmEmailFailed;
       });
     }
-  }
-
-  String? _errorCode(DioException e) {
-    final data = e.response?.data;
-    if (data is Map) {
-      final err = data['error'];
-      if (err is Map) {
-        return (err['code'] ?? err['msgKey'] ?? err['message'])?.toString();
-      }
-      return data['code']?.toString();
-    }
-    return null;
   }
 
   @override

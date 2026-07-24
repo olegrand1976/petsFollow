@@ -37,6 +37,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginWithGoogle => 'Continue with Google';
 
   @override
+  String get loginWithApple => 'Continue with Apple';
+
+  @override
+  String get appleComingSoon => 'Sign in with Apple is coming soon.';
+
+  @override
   String get twoFaTitle => '2FA verification';
 
   @override
