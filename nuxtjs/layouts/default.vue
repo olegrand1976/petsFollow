@@ -40,11 +40,11 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
   { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
   { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
-  { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
   { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
-  { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
   { to: '/produits', label: t('nav.products'), icon: 'description' },
+  { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
+  { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
   { to: '/settings', label: t('nav.settings'), icon: 'settings' },
 ])
 
