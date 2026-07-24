@@ -732,16 +732,15 @@ class _VisitsTab extends StatefulWidget {
 class _VisitsTabState extends State<_VisitsTab> {
   _TourFilter _filter = _TourFilter.today;
 
-  /// Aligné Nuxt `visitDisplayAt` / modèle `Visit.displayDate` (sans fallback createdAt).
+  /// Aligné Nuxt `visitDisplayAt` / `Visit.displayDate`.
   DateTime? _parseDisplayAt(Map<String, dynamic> v) {
-    final proposed = v['proposedScheduledAt']?.toString();
-    if (proposed != null && proposed.isNotEmpty) {
-      final at = DateTime.tryParse(proposed)?.toLocal();
+    for (final key in ['proposedScheduledAt', 'scheduledAt', 'createdAt']) {
+      final raw = v[key]?.toString();
+      if (raw == null || raw.isEmpty) continue;
+      final at = DateTime.tryParse(raw)?.toLocal();
       if (at != null) return at;
     }
-    final raw = v['scheduledAt']?.toString();
-    if (raw == null || raw.isEmpty) return null;
-    return DateTime.tryParse(raw)?.toLocal();
+    return null;
   }
 
   bool _isOpenTourStatus(Map<String, dynamic> v) {

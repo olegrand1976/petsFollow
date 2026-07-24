@@ -124,3 +124,159 @@ func TestCareProCannotAccessAdmin(t *testing.T) {
 		t.Fatalf("care_pro admin access: got %d %#v", code, env)
 	}
 }
+
+func TestCareProClearCoordsAndMarkDone(t *testing.T) {
+	api := newTestAPI(t)
+	farrierTok := loginToken(t, api.handler, "farrier.demo@petsfollow.test", "CareProDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/care-pro/pets", farrierTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v (make seed?)", code, env)
+	}
+	var spiritID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		if p["name"] == "Spirit" {
+			spiritID, _ = p["id"].(string)
+			break
+		}
+	}
+	if spiritID == "" {
+		t.Skip("Spirit not granted to farrier")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+spiritID+"/visits", vetTok, map[string]any{
+		"scheduledAt":     "2099-07-01T10:00:00Z",
+		"notes":           "care_pro clearCoords/done probe",
+		"durationMinutes": 30,
+		"confirmDirect":   true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("vet create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	if visitID == "" {
+		t.Fatalf("no visit id %#v", env)
+	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"status": "cancelled",
+		})
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/location", farrierTok, map[string]any{
+		"addressText": "Écurie test clearCoords",
+		"lat":         50.85,
+		"lng":         4.35,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("set location %d %#v", code, env)
+	}
+	loc := dataMap(t, env)
+	if loc["lat"] == nil || loc["lng"] == nil {
+		t.Fatalf("expected lat/lng after set, got %#v", loc)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/location", farrierTok, map[string]any{
+		"addressText": "Écurie test sans GPS",
+		"clearCoords": true,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("clearCoords %d %#v", code, env)
+	}
+	cleared := dataMap(t, env)
+	if cleared["lat"] != nil || cleared["lng"] != nil {
+		t.Fatalf("expected null lat/lng after clearCoords, got %#v", cleared)
+	}
+	if addr, _ := cleared["addressText"].(string); addr != "Écurie test sans GPS" {
+		t.Fatalf("addressText=%v", cleared["addressText"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, farrierTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("mark done %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "done" {
+		t.Fatalf("status=%v want done", dataMap(t, env)["status"])
+	}
+}
+
+func TestCareProReadOnlyCannotClearCoords(t *testing.T) {
+	api := newTestAPI(t)
+	farrierTok := loginToken(t, api.handler, "farrier.demo@petsfollow.test", "CareProDemo123!")
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("owner pets %d %#v", code, env)
+	}
+	var petID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		if p["name"] != "Spirit" {
+			petID, _ = p["id"].(string)
+			if petID != "" {
+				break
+			}
+		}
+	}
+	if petID == "" {
+		t.Skip("no non-Spirit pet")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":     "2099-06-01T10:00:00Z",
+		"notes":           "read-only location probe",
+		"durationMinutes": 30,
+		"confirmDirect":   true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	if visitID == "" {
+		t.Fatalf("no visit id %#v", env)
+	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"status": "cancelled",
+		})
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/shares", ownerTok, map[string]any{
+		"email":      "farrier.demo@petsfollow.test",
+		"permission": "read",
+	})
+	if code != http.StatusCreated && code != http.StatusOK && code != http.StatusConflict {
+		t.Fatalf("share read %d %#v", code, env)
+	}
+	if code == http.StatusCreated || code == http.StatusOK {
+		grant := dataMap(t, env)
+		granteeID, _ := grant["granteeUserId"].(string)
+		if granteeID != "" {
+			t.Cleanup(func() {
+				_, _ = doAuthJSON(t, api.handler, http.MethodDelete,
+					"/api/v1/pets/"+petID+"/shares/"+granteeID, ownerTok, nil)
+			})
+		}
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/location", farrierTok, map[string]any{
+		"addressText": "should fail",
+		"clearCoords": true,
+	})
+	if code != http.StatusForbidden {
+		t.Fatalf("read-only clearCoords: got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, farrierTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusForbidden {
+		t.Fatalf("read-only mark done: got %d %#v", code, env)
+	}
+}
