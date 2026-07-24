@@ -224,10 +224,58 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightReadOnly => 'Alleen-lezen toegang';
 
   @override
+  String get petAccessSharedRead => 'Gedeeld · lezen';
+
+  @override
+  String get petAccessSharedNotes => 'Gedeeld · notities';
+
+  @override
+  String get petAccessSharedFull => 'Gedeeld · volledig';
+
+  @override
   String get proLightUseGps => 'GPS';
 
   @override
-  String get proLightTranscribeAudio => 'Audio → tekst';
+  String get proLightTranscribeAudio => 'Audiobestand';
+
+  @override
+  String get proLightDictationStart => 'Dicteren';
+
+  @override
+  String get proLightDictationStop => 'Stop & transcriberen';
+
+  @override
+  String get proLightAudioConsentTitle => 'Audiotoestemming';
+
+  @override
+  String get proLightAudioConsentBody =>
+      'De opname dient alleen om het verslag te maken. Ze wordt verwijderd bij finalisatie.';
+
+  @override
+  String get proLightAudioConsentAccept => 'Ik ga akkoord';
+
+  @override
+  String get proLightSpecialtyFarrier => 'Hoefsmid';
+
+  @override
+  String get proLightSpecialtyPhysio => 'Fysio / osteo';
+
+  @override
+  String get proLightSpecialtyBehaviorist => 'Gedragstherapeut';
+
+  @override
+  String get proLightSpecialtyVetLight => 'Dierenarts light';
+
+  @override
+  String get proLightReportHintFarrier =>
+      'Beslagverslag: hoeven, ijzer, observaties…';
+
+  @override
+  String get proLightEmptyFarrier => 'Geen gedeeld paard / bezoek';
+
+  @override
+  String get proLightMicDenied =>
+      'Microfoon geweigerd — geef toegang in de instellingen';
 
   @override
   String get proLightGpsDenied => 'Locatie niet beschikbaar';
@@ -237,10 +285,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get googleLoginFailed => 'Google-aanmelding mislukt';
-
-  @override
-  String get googleClientNotFound =>
-      'Geen klantaccount voor dit e-mailadres. Vraag uw dierenarts om een uitnodiging';
 
   @override
   String get googleWrongAudience => 'Dit Google-account is geen klantprofiel';
@@ -425,6 +469,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get planMonthlyLabel => '3,50 € / maand';
+
+  @override
   String get planAnnualLabel => '35 € / jaar';
 
   @override
@@ -545,6 +592,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get errorCouldNotOpenLink => 'Link kon niet worden geopend';
+
+  @override
+  String get planMonthlySub => '3,50 € / maand, automatisch verlengd';
 
   @override
   String planAnnualSub(String price) {

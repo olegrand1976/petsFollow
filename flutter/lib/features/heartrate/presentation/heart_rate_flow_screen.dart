@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
-import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
@@ -152,32 +150,8 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     }
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    var showCarePlus = false;
-    try {
-      final ents = await AddonEntitlements.load();
-      // Fail-closed: only upsell when entitlements loaded and Care+ is missing.
-      showCarePlus = ents != null && !ents.hasCarePlus;
-    } catch (_) {}
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(showCarePlus
-            ? '${l10n.sentToVet}\n${l10n.carePlusUpsell}'
-            : l10n.sentToVet),
-        action: showCarePlus
-            ? SnackBarAction(
-                label: l10n.activateAddon,
-                onPressed: () async {
-                  try {
-                    final url = await ApiClient.instance
-                        .startAddonCheckout(addonCode: 'care_plus');
-                    await openExternalUrl(url);
-                  } catch (_) {}
-                },
-              )
-            : null,
-        duration: Duration(seconds: showCarePlus ? 6 : 3),
-      ),
+      SnackBar(content: Text(l10n.sentToVet)),
     );
     await _maybeAskReview(l10n);
     if (mounted) Navigator.pop(context);

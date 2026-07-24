@@ -219,20 +219,7 @@ func (r *Runner) send(ctx context.Context, seg store.JourneyClientSegment, stepK
 	vars := map[string]string{
 		"fullName": name,
 	}
-	// Soft upsells live in the detail block — omit when not contextual.
 	switch stepKey {
-	case "d4_routine":
-		if seg.ActiveAddons["care_plus"] {
-			vars["_omitDetail"] = "1"
-		}
-	case "d30_habit":
-		if !FamilySoftEligible(seg) {
-			vars["_omitDetail"] = "1"
-		}
-	case "d90_quarter":
-		if !QuarterFamilySoftEligible(seg) {
-			vars["_omitDetail"] = "1"
-		}
 	case "d330_prerenew":
 		if AnnualNearRenewal(seg, time.Now().UTC()) {
 			vars["_introNear"] = "1"

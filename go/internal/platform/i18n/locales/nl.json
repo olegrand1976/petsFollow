@@ -48,7 +48,6 @@
     "admin_only": "Alleen voor beheerders",
     "google_pro_only": "Google alleen voor Pro-profielen",
     "google_client_only": "Dit Google-account is een Pro-profiel — gebruik de webapp",
-    "google_client_not_found": "Geen petsFollow-klantaccount voor dit e-mailadres. Vraag uw dierenarts om een uitnodiging",
     "not_your_pet": "Dit is niet uw huisdier",
     "wrong_practice": "Verkeerde praktijk",
     "not_participant": "U bent geen deelnemer",
@@ -188,9 +187,9 @@
         "preheader": "Uw petsFollow-traject start vandaag.",
         "greeting": "Hallo {fullName},",
         "intro": "Uw dierenarts schreef petsFollow voor: hartopvolging zonder apparaat, rechtstreeks op uw telefoon. Download de app om te starten.",
-        "detail": "Wat u kunt doen:\n• Hartmetingen 15 / 30 / 60 s\n• Beveiligde berichten met de praktijk\n• Tijdlijn en zorgherinneringen\n• Minder dan €3 / maand per dier",
         "cta": "App downloaden",
-        "disclaimer": "U kunt deze e-mails uitschakelen via de link onderaan."
+        "disclaimer": "U kunt deze e-mails uitschakelen via de link onderaan.",
+        "detail": "Wat u kunt doen:\n• Hartmetingen 15 / 30 / 60 s\n• Beveiligde berichten met de praktijk\n• Tijdlijn en zorgherinneringen\n• Vanaf ~€2,6 / maand per dier (3-jarenplan)"
       },
       "d1_activate": {
         "subject": "Activeer de opvolging van uw dier",
@@ -198,7 +197,7 @@
         "preheader": "Maak het profiel van uw dier en kies een plan.",
         "greeting": "Hallo {fullName},",
         "intro": "Om de voorgeschreven opvolging te activeren, maakt u het dierenprofiel aan en kiest u een plan. Wij raden het 3-jarenplan (€95) aan — ongeveer €2,6 / maand.",
-        "detail": "Plannen incl. btw:\n• €35 / jaar\n• €95 / 3 jaar (aanbevolen)\n• €145 / 5 jaar (eenmalig)",
+        "detail": "Plannen incl. btw:\n• €3,50 / maand (abonnement)\n• €35 / jaar\n• €95 / 3 jaar (aanbevolen)",
         "cta": "App openen",
         "disclaimer": "Zonder betaling blijft de hartopvolging in afwachting."
       },
@@ -218,9 +217,9 @@
         "preheader": "Herinneringen helpen u niets te vergeten.",
         "greeting": "Hallo {fullName},",
         "intro": "Een goede routine maakt het verschil: activeer meet- en zorgherinneringen (vaccin, ontworming, controle…). Uw dierenarts ziet de geschiedenis in het dossier.",
-        "detail": "Optie Care+ (€19, eenmalig voor het leven): medicatie en gepersonaliseerde herinneringen bij regelmatige behandeling.",
+        "detail": "Met een actief dierenabonnement zijn zorgherinneringen (medicatie, vaccins…) inbegrepen — activeer ze in het tabblad Zorg.",
         "cta": "Herinneringen bekijken",
-        "disclaimer": "Optionele add-ons beheert u in de app."
+        "disclaimer": "Herinneringen beheert u in de app."
       },
       "d6_vet_link": {
         "subject": "Uw dierenarts is één bericht verwijderd",
@@ -258,39 +257,9 @@
         "preheader": "Regelmatige metingen helpen uw dierenarts.",
         "greeting": "Hallo {fullName},",
         "intro": "Al een maand! Regelmatige metingen verrijken het dossier van uw dier en helpen uw dierenarts tussen consultaties.",
-        "detail": "Meerdere dieren? De Family-optie (€39, eenmalig voor het leven) biedt een huishoudoverzicht en −10% vanaf het 2e dier (geen plafond). Exclusief met Kennel.",
+        "detail": "Meerdere dieren? Huishoudoverzicht en snelle encoding zijn inbegrepen zodra een dier een actief abonnement heeft.",
         "cta": "Mijn dieren bekijken",
-        "disclaimer": "Opties beheert u in de app-instellingen / abonnementen."
-      },
-      "d45_care_plus": {
-        "subject": "Care+: medicatie & gepersonaliseerde herinneringen",
-        "tagline": "Optie Care+",
-        "preheader": "€19 eenmalig voor fijnere behandelingsopvolging.",
-        "greeting": "Hallo {fullName},",
-        "intro": "Als uw dier een behandeling volgt, voegt Care+ (€19, eenmalig voor het leven) medicatie en gepersonaliseerde herinneringen toe — naast de standaard zorgherinneringen.",
-        "detail": "",
-        "cta": "Care+ ontdekken",
-        "disclaimer": "Eenmalige aankoop voor het leven — één keer per account."
-      },
-      "d60_horse": {
-        "subject": "Horse-pack: hoefsmid, mestonderzoek & wedstrijden",
-        "tagline": "Optie Paard",
-        "preheader": "€39 eenmalig voor aangepaste paardenopvolging.",
-        "greeting": "Hallo {fullName},",
-        "intro": "U volgt een paard: het Horse-pack (€39, eenmalig voor het leven) voegt herinneringen voor hoefsmid en mestonderzoek, professionele contacten en een wedstrijdkalender toe.",
-        "detail": "",
-        "cta": "Horse-pack ontdekken",
-        "disclaimer": "Eenmalige aankoop voor het leven — voor accounts met minstens één paard."
-      },
-      "d75_kennel": {
-        "subject": "Kennel: snelle encoding voor fokkers",
-        "tagline": "Optie Kennel",
-        "preheader": "€119 eenmalig · −15% · vanaf 6 dieren.",
-        "greeting": "Hallo {fullName},",
-        "intro": "Met 6+ dieren versnelt Kennel (€119, eenmalig voor het leven) de encoding (batch) en past −15% toe op dierenabonnementen. Exclusief met Family.",
-        "detail": "",
-        "cta": "Kennel ontdekken",
-        "disclaimer": "Kennel vervangt Family (upgrade)."
+        "disclaimer": "Abonnementen beheert u in de app-instellingen."
       },
       "d90_quarter": {
         "subject": "3 maanden petsFollow — de tijdlijn telt",
@@ -298,7 +267,7 @@
         "preheader": "Uw historiek ondersteunt de voorgeschreven opvolging.",
         "greeting": "Hallo {fullName},",
         "intro": "Drie maanden data: tijdlijn, berichten en metingen vormen een nuttig dossier tussen consultaties.",
-        "detail": "Met 2–5 dieren vereenvoudigt Family (€39, eenmalig voor het leven) het huishoudoverzicht (−10%). Exclusief met Kennel.",
+        "detail": "Tip: bekijk de tijdlijn vóór een bezoek — uw dierenarts waardeert een duidelijke historiek.",
         "cta": "Tijdlijn openen",
         "disclaimer": "Volg de richtlijnen van uw dierenarts."
       },
@@ -338,7 +307,7 @@
         "preheader": "Denk aan verlenging of het 3-jarenplan.",
         "greeting": "Hallo {fullName},",
         "intro": "De komende weken: controleer de einddatum van uw dierenabonnement. Het 3-jarenplan (€95) blijft de beste balans duur / prijs voor duurzame voorgeschreven opvolging.",
-        "detail": "€35 / jaar · €95 / 3 jaar · €145 / 5 jaar",
+        "detail": "€3,50 / maand · €35 / jaar · €95 / 3 jaar (aanbevolen)",
         "cta": "Abonnement beheren",
         "disclaimer": "Het betalingsportaal is beschikbaar via het dierenprofiel.",
         "intro_near": "Uw jaarabonnement nadert de einddatum. Controleer de datum en overweeg het 3-jarenplan (€95) voor een rustige voorgeschreven opvolging — ongeveer €2,6 / maand."
@@ -396,9 +365,11 @@
     "visit_reschedule_body": "Er werd een nieuw tijdstip voorgesteld voor {petName}."
   },
   "billing": {
+    "monthly_label": "3,50 € / maand",
     "annual_label": "35 € / jaar",
     "triennial_label": "95 € / 3 jaar",
     "quinquennial_label": "145 € / 5 jaar",
+    "monthly_sub_summary": "3,50 € / maand, automatisch verlengd",
     "annual_sub_summary": "35 € / jaar, automatisch verlengd",
     "triennial_sub_summary": "95 € elke 3 jaar, automatisch verlengd",
     "quinquennial_sub_summary": "145 € voor 5 jaar, eenmalige betaling",

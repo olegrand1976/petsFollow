@@ -1,6 +1,5 @@
 const PUBLIC_PATHS = new Set([
   '/',
-  '/produits',
   '/login',
   '/register',
   '/register/sent',

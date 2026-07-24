@@ -201,7 +201,8 @@
       "plan": {
         "annual": "Annual",
         "triennial": "Triennial",
-        "quinquennial": "Quinquennial"
+        "quinquennial": "Quinquennial",
+        "monthly": "Monthly"
       },
       "billingMode": {
         "subscription": "Subscription",
@@ -396,7 +397,13 @@
       "columnBpm": "BPM",
       "columnDuration": "Duration",
       "columnStatus": "Status",
-      "chartTitle": "BPM trend (last 30 readings)",
+      "chartTitle": "BPM trend",
+      "chartRangeLabel": "Period",
+      "chartRange3m": "3 months",
+      "chartRange6m": "6 months",
+      "chartRange1y": "1 year",
+      "chartEmptyPeriod": "No readings in this period",
+      "chartAxisBpm": "BPM",
       "chartLegend": "Legend",
       "chartLegendOk": "Normal",
       "chartLegendAlert": "Alert",
@@ -702,7 +709,7 @@
         "paid": "Paid"
       },
       "sheetTitle": "Commissioning model (overview)",
-      "planRatesHint": "Commercial rates are fixed by plan (ex-VAT): 8% annual · 12% triennial · 8% quinquennial · 10% addons — not editable here (see sheet above)."
+      "planRatesHint": "Commercial rates are fixed by plan (ex-VAT): 8% monthly · 8% annual · 12% triennial — no addons. Not editable here (see sheet above)."
     },
     "commercialBonuses": {
       "title": "SPIFF bonuses",
@@ -728,7 +735,7 @@
       "kpiTotal": "Period total",
       "kpiStatus": "Status",
       "kpiRate": "Sales rate",
-      "kpiRatePlans": "8 / 12 / 8%",
+      "kpiRatePlans": "8 / 8 / 12%",
       "periodTitle": "Monthly recap",
       "period": "Month",
       "close": "Close (to pay)",
@@ -1029,59 +1036,71 @@
     "ctaButton": "Start registration",
     "productsLink": "Products",
     "productsTitle": "What your clients subscribe to",
-    "productsLead": "A clear grid to present vet-prescribed monitoring — no wearable, from about €2 / month per pet.",
-    "productsCta": "See all offers (presentation support)",
+    "productsLead": "Three simple plans per pet — all features included once the subscription is active.",
+    "productsCta": "See the plans",
     "productHighlights": {
-      "plans": {
-        "price": "€35 / €95 / €145",
-        "title": "Per-pet subscriptions",
-        "text": "Annual, Triennial (recommended) or Quinquennial — 15/30/60 s checks, messaging, timeline and reminders."
+      "monthly": {
+        "price": "€3.50 / month",
+        "title": "Monthly",
+        "text": "Flexibility — checks, messaging, timeline, Care/Horse reminders, household view. No long commitment."
       },
-      "family": {
-        "price": "€39 · €119 (one-time)",
-        "title": "Family and Kennel",
-        "text": "Family from 2 (−10% from the 2nd paid pet, no cap). Kennel from 6 (−15%, fast encoding). Lifetime one-time purchase. E.g. Year 1: 2× Annual + Family = €105.50 · then €66.50 / year."
+      "annual": {
+        "price": "€35 / year",
+        "title": "Annual",
+        "text": "≈ €2.9 / month — same full monitoring, better price than monthly."
       },
-      "careHorse": {
-        "price": "€19 · €39 (one-time)",
-        "title": "Care+ and Horse",
-        "text": "Care+ for meds and custom reminders; Horse for equine follow-up — lifetime one-time, stackable with Family / Kennel."
+      "triennial": {
+        "price": "€95 / 3 years",
+        "title": "Triennial (recommended)",
+        "text": "≈ €2.6 / month — core offer, −10% vs 3× annual."
       }
     },
     "footer": "© {year} petsFollow — Veterinary cardiac monitoring"
   },
   "products": {
-    "seoTitle": "petsFollow — Offers & products",
-    "seoDescription": "petsFollow subscription and addon grid for veterinary practice presentations.",
+    "seoTitle": "petsFollow — Offers",
+    "seoDescription": "petsFollow subscription grid for veterinary practice presentations.",
     "backHome": "Home",
     "print": "Print / PDF",
     "badge": "Practice presentation support",
     "title": "petsFollow offers",
-    "lead": "Present vet-prescribed cardiac monitoring to clients — no collar or device, simple pricing for the household.",
-    "positioning": "petsFollow Pro is free for the practice. Only pet owners pay for monitoring (per-pet plan + household options).",
+    "lead": "Present vet-prescribed cardiac monitoring to your clients — no collar or device.",
+    "positioning": "petsFollow Pro is free for the practice. Only the owner pays for their pets' monitoring. All features are included once the subscription is active.",
     "includedTitle": "Included in every pet subscription",
-    "includedLead": "Whatever the plan (1, 3 or 5 years), owners get:",
+    "includedLead": "Whatever the plan (monthly, annual or triennial), owners get:",
     "included": [
       "Guided heart-rate checks 15 / 30 / 60 s from the mobile app (no hardware)",
       "Sessions sent to and validated by the practice",
       "Secure client ↔ vet messaging + push notifications",
-      "Timeline / shared patient record (validated checks and conversations)",
-      "Standard care reminders (vaccine, deworming, check-up, dental)",
+      "Timeline / shared patient record",
+      "Care reminders (standard, meds, custom) and equine pack if horse",
+      "Household view and multi-pet encoding",
       "Languages FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Per-pet subscriptions",
-    "plansLead": "One subscription per monitored pet. Prices TTC — Annual / Triennial as one-time or Stripe subscription; Quinquennial one-time only.",
+    "plansLead": "One subscription per monitored pet. Prices TTC. Monthly = Stripe subscription only; annual and triennial = one-time or subscription.",
     "recommended": "Recommended",
-    "plansTip": "Presentation tip: lead with Triennial (€95 / 3 years ≈ €2.6/month) — best price / commitment balance for households.",
+    "plansTip": "Tip: lead with Triennial (€95 / 3 years ≈ €2.6/month). Monthly offers flexibility; annual the best yearly price.",
     "plans": {
+      "monthly": {
+        "name": "Monthly",
+        "price": "€3.50",
+        "period": "per month",
+        "monthly": "flexibility",
+        "benefits": [
+          "No long commitment",
+          "All features included",
+          "Automatic monthly renewal"
+        ]
+      },
       "annual": {
         "name": "Annual",
         "price": "€35",
         "period": "per year",
         "monthly": "≈ €2.9 / month",
         "benefits": [
-          "Entry plan — ideal to start one pet",
-          "All core pet monitoring benefits included",
+          "Best yearly price vs monthly",
+          "All features included",
           "One-year commitment"
         ]
       },
@@ -1091,190 +1110,28 @@
         "period": "for 3 years",
         "monthly": "≈ €2.6 / month",
         "benefits": [
-          "Core offer — −10% vs 3× Annual",
+          "Core offer — −10% vs 3× annual",
           "Continuous monitoring for 3 years",
           "Strongest household price argument"
         ]
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "€145",
-        "period": "for 5 years (one-time)",
-        "monthly": "≈ €2.4 / month",
-        "benefits": [
-          "Long-term — −17% vs 5× Annual",
-          "Ideal for chronic / senior pets",
-          "One-time payment — no Stripe auto-renew"
-        ]
       }
     },
-    "addonsTitle": "Household options (owner account)",
-    "addonsLead": "Add-ons sit on top of pet plans (they never replace them). Lifetime one-time purchase per account — benefits shared across the household.",
-    "addonsTip": "Family / Kennel mechanics: 1st paid pet at full price, discount from the 2nd (−10% / −15%). Family and Kennel are exclusive (Kennel = upgrade). Horse only if the household has ≥ 1 horse. Add-ons = one purchase, valid for life.",
-    "addons": {
-      "family": {
-        "name": "Family",
-        "price": "€39",
-        "tagline": "Household pack — from 2 pets, −10% discount",
-        "scope": "Account",
-        "benefits": [
-          "Lifetime one-time purchase — no renewal",
-          "Household view: upcoming reminders for all pets",
-          "−10% on each pet plan from the 2nd paid pet (1st = full price)",
-          "No pet cap — Family stays €39 once",
-          "E.g. Year 1 (2× Annual): 35 + 31.50 + 39 = €105.50 · Following years: €66.50 / year",
-          "Exclusive with Kennel — from 6 pets, Kennel upgrade recommended"
-        ]
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "€19",
-        "tagline": "Enriched care log",
-        "scope": "Account",
-        "benefits": [
-          "Lifetime one-time purchase",
-          "Medication reminders for the whole household",
-          "Custom reminders",
-          "On top of pet plans — no plan discount",
-          "E.g. 2-pet household + Family: +€19 once on the account"
-        ]
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "€39",
-        "tagline": "Equine pack",
-        "scope": "Account",
-        "benefits": [
-          "Lifetime one-time purchase",
-          "Farrier and fecal reminders",
-          "Farrier log + pro contacts + competitions",
-          "On top of pet plans — no plan discount",
-          "Offered only if the household has ≥ 1 horse"
-        ]
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "€119",
-        "tagline": "Breeding / roster from 6 pets",
-        "scope": "Account",
-        "benefits": [
-          "Lifetime one-time purchase — no renewal",
-          "Fast multi-pet encoding, roster, litter tags, export",
-          "−15% on each pet plan from the 2nd paid pet",
-          "E.g. Year 1 (6× Annual): 35 + 5×29.75 + 119 = €302.75 · Following years: €183.75 / year",
-          "Exclusive with Family (Kennel purchase = upgrade, Family cancelled)"
-        ]
-      }
-    },
-    "examplesTitle": "Concrete examples (Annual plan)",
-    "examplesLead": "Add-ons never replace the pet subscription. Figures incl. VAT based on Annual €35 — 1st paid pet full price, following pets discounted if Family / Kennel is active. Add-ons are a lifetime one-time payment (Year 1 only).",
-    "examplesTip": "Family / Kennel / Care+ / Horse = lifetime one-time on the account. In following years, only pet plan costs remain.",
-    "examplesCareHorseTitle": "Care+ and Horse — care add-ons",
-    "examplesCareHorseLead": "Account complements as a lifetime one-time purchase, with no discount on pet plans.",
-    "examplesCareHorseBenefits": [
-      "Care+ €19 once: medication and custom reminders for the whole household",
-      "Horse €39 once: equine pack (farrier, contacts, competitions) if ≥ 1 horse",
-      "Stackable with Family or Kennel — valid for life"
-    ],
-    "examples": {
-      "withoutFamily2": {
-        "title": "Without Family — 2 pets",
-        "total": "€70 / year",
-        "breakdown": "35 + 35 (2× Annual full price)",
-        "benefits": [
-          "Each pet has its own plan",
-          "No unified household view",
-          "No multi-pet discount"
-        ]
-      },
-      "withFamily2": {
-        "title": "With Family — 2 pets",
-        "total": "Year 1: €105.50 · Then: €66.50 / year",
-        "breakdown": "Year 1: 35 + 31.50 + 39 (Family once) · Following years: 35 + 31.50",
-        "benefits": [
-          "1st pet: €35 (full price)",
-          "2nd pet: €31.50 (−10%)",
-          "Family €39 once for life: household view + discount for following pets",
-          "From Year 2: only €66.50 / year in pet plans"
-        ]
-      },
-      "withFamily4": {
-        "title": "With Family — 4 pets",
-        "total": "Year 1: €168.50 · Then: €129.50 / year",
-        "breakdown": "Year 1: 35 + 3×31.50 + 39 · Following years: 35 + 3×31.50 (vs €140 / year without Family)",
-        "benefits": [
-          "1st: €35 · next 3: €31.50 each",
-          "Family €39 once — no cap",
-          "Each new paid pet gets −10%"
-        ]
-      },
-      "kennel6": {
-        "title": "With Kennel — 6 pets",
-        "total": "Year 1: €302.75 · Then: €183.75 / year",
-        "breakdown": "Year 1: 35 + 5×29.75 + 119 (Kennel once) · Following years: 35 + 5×29.75",
-        "benefits": [
-          "1st: €35 · next 5: €29.75 (−15%)",
-          "Fast encoding, roster, litter tags",
-          "Replaces Family if it was active (upgrade)"
-        ]
-      },
-      "withFamily2CarePlus": {
-        "title": "Family + Care+ — 2 pets",
-        "total": "Year 1: €124.50 · Then: €66.50 / year",
-        "breakdown": "Year 1: 35 + 31.50 + 39 (Family) + 19 (Care+) · Following years: €66.50 / year",
-        "benefits": [
-          "Family −10% on the 2nd pet",
-          "Care+ €19 once: meds & custom reminders",
-          "From Year 2: pet plans only"
-        ]
-      },
-      "withFamilyHorse": {
-        "title": "Family + Horse — 2 pets (incl. 1 horse)",
-        "total": "Year 1: €144.50 · Then: €66.50 / year",
-        "breakdown": "Year 1: 35 + 31.50 + 39 (Family) + 39 (Horse) · Following years: €66.50 / year",
-        "benefits": [
-          "Family for household view and −10% discount",
-          "Horse €39 once: farrier, fecal, competitions",
-          "Lifetime add-ons — only pet plans renew"
-        ]
-      }
-    },
-    "summaryTitle": "Price grid summary",
+    "summaryTitle": "Grid summary",
     "summary": {
+      "monthly": {
+        "name": "Monthly",
+        "price": "€3.50 / month",
+        "role": "Flexibility"
+      },
       "annual": {
         "name": "Annual",
         "price": "€35 / year",
-        "role": "Pet subscription — entry"
+        "role": "Best yearly price"
       },
       "triennial": {
         "name": "Triennial",
         "price": "€95 / 3 years",
-        "role": "Pet subscription — recommended"
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "€145 / 5 years",
-        "role": "5-year access — one-time payment"
-      },
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "role": "Household add-on from 2 (−10%, no cap, exclusive Kennel) — lifetime one-time"
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "role": "Care / medication add-on — lifetime one-time"
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "role": "Equine pack add-on — lifetime one-time"
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "role": "Kennel add-on from 6 (−15%, exclusive Family) — lifetime one-time"
+        "role": "Recommended"
       }
     },
     "footer": "petsFollow — vet-prescribed monitoring, no hardware"
@@ -1534,7 +1391,7 @@
     },
     "commissions": {
       "title": "My commissions",
-      "subtitle": "Plan-based rates on ex-VAT (8 / 12 / 8%) — push triennial.",
+      "subtitle": "Plan-based rates on ex-VAT (8 / 8 / 12%) — push triennial.",
       "rate": "Rate",
       "month": "Month",
       "lifetime": "Lifetime",
@@ -1587,8 +1444,8 @@
       "webTitle": "Pro Web app (vet)",
       "mobileTitle": "Flutter mobile app (clients)",
       "commissionTitle": "Commissioning",
-      "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (annual / triennial / quinquennial).",
-      "addons": "Addons Family / Kennel: 10% sales + 5% vet. Care+ / Horse: 10% sales, 0% vet.",
+      "vetGrid": "Vet: 7% → 12% ex-VAT by paying-client volume, with plan factor (monthly / annual / triennial).",
+      "addons": "No addons — commissions on plans only (8% monthly / 8% annual / 12% triennial).",
       "webFeatures": [
         "Operational dashboard clients / messages / HR",
         "Patient file and messaging",
@@ -1596,17 +1453,17 @@
         "Practice onboarding and settings"
       ],
       "mobileFeatures": [
-        "Pets and heart-rate tracking",
-        "Stripe subscriptions per pet",
-        "Family / Kennel / Care+ / Horse addons with real privileges",
+        "Pets and cardiac monitoring",
+        "Stripe subscriptions per pet (monthly / annual / triennial)",
+        "All features included once the subscription is active",
         "Messages and care reminders"
       ],
-      "commercialFlat": "Sales: 8% / 12% / 8% ex-VAT by plan (annual / triennial / quinquennial); ~€9.4 on the €95 TTC triennial plan.",
+      "commercialFlat": "Sales: 8% / 8% / 12% ex-VAT by plan (monthly / annual / triennial); ~€9.4 on the €95 TTC triennial plan.",
       "productsLink": "Open full product grid (presentation support)",
       "cardVetTitle": "Veterinarian",
       "cardVetDesc": "Clinic pitch: Pro app, client pricing and vet payouts.",
       "cardClientTitle": "Client",
-      "cardClientDesc": "Owner pitch: mobile app, plans and household add-ons.",
+      "cardClientDesc": "Owner pitch: mobile app and pet plans (monthly, annual, triennial).",
       "backToCards": "Back to audiences",
       "benefitsTitle": "Included benefits",
       "vetRetributionTitle": "Veterinarian payouts"
@@ -1627,20 +1484,21 @@
     "colCommRate": "Sales rate",
     "colCommEuros": "Sales €",
     "vetBaseExplain": "Base rate by number of paying clients linked to your practice:",
-    "vetMaxExplain": "That base rate is then scaled by plan (100% on Triennial, 67% on Annual and Quinquennial), and capped at 12%. The table shows the maximum at the 61+ client tier — your actual rate may be lower on an earlier tier.",
-    "vetAddonNote": "Family and Kennel: 5% ex-VAT for the vet. Care+ and Horse: 0% vet (10% sales only).",
+    "vetMaxExplain": "This base rate is then multiplied by a plan factor (100% on Triennial, 67% on Monthly and Annual), then capped at 12%. The table shows the maximum at the 61+ clients tier — your actual rate may be lower on earlier tiers.",
+    "vetAddonNote": "Add-ons (Family / Kennel / Care+ / Horse) are no longer sold — legacy only.",
     "coSellNote": "Vets are not penalised when you are assigned — win-win co-selling.",
     "adminGuardrails": "Guardrails: net margin ≥ 55% of TTC · core net/year ≥ €17 · max partner take rate 24% HT.",
     "tier": "{min}–{max} clients → {pct}% (base)",
     "tierOpen": "{min}+ clients → {pct}% (base)",
     "plans": {
-      "annual": "Annual (€35 TTC)",
-      "triennial": "Triennial (€95 TTC)",
-      "quinquennial": "Quinquennial (€145 TTC)",
-      "family": "Family (€39 TTC)",
-      "care_plus": "Care+ (€19 TTC)",
-      "horse": "Horse (€39 TTC)",
-      "kennel": "Kennel (€119 TTC)"
+      "monthly": "Monthly (€3.50 incl. VAT)",
+      "annual": "Annual (€35 incl. VAT)",
+      "triennial": "Triennial (€95 incl. VAT)",
+      "quinquennial": "Quinquennial (€145 incl. VAT) — legacy",
+      "family": "Family (€39 incl. VAT) — legacy",
+      "care_plus": "Care+ (€19 incl. VAT) — legacy",
+      "horse": "Horse (€39 incl. VAT) — legacy",
+      "kennel": "Kennel (€119 incl. VAT) — legacy"
     },
     "bonusTitles": {
       "vet_tier_31": "31-client tier bonus",
@@ -1658,7 +1516,7 @@
       "earned": "Earned",
       "paid": "Paid"
     },
-    "discountNote": "Euro amounts are full-price indicatives. Household/kennel discounts (−10% / −15%) reduce the HT base actually collected."
+    "discountNote": "Indicative € amounts use full catalogue pricing (household discounts removed)."
   },
   "calendar": {
     "title": "Calendar",
@@ -1693,6 +1551,15 @@
     "improveReport": "Improve (AI)",
     "reportSaved": "Report saved",
     "reportImproved": "Report improved",
+    "finalizeReport": "Finalize report",
+    "reportFinal": "Report finalized (read-only)",
+    "reportFinalized": "Report finalized",
+    "transcribeAudio": "Audio → text",
+    "audioConsent": "Audio is only used to draft the report and is deleted on finalize.",
+    "audioConsentTitle": "Audio consent",
+    "audioConsentAccept": "I agree",
+    "reportTranscribed": "Transcription complete",
+    "placeBadge": "Place",
     "unscheduled": "unscheduled",
     "columnClient": "Client",
     "columnPet": "Pet",

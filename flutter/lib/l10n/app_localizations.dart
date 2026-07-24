@@ -518,6 +518,24 @@ abstract class AppLocalizations {
   /// **'Accès lecture seule'**
   String get proLightReadOnly;
 
+  /// No description provided for @petAccessSharedRead.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagé · lecture'**
+  String get petAccessSharedRead;
+
+  /// No description provided for @petAccessSharedNotes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagé · notes'**
+  String get petAccessSharedNotes;
+
+  /// No description provided for @petAccessSharedFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagé · complet'**
+  String get petAccessSharedFull;
+
   /// No description provided for @proLightUseGps.
   ///
   /// In fr, this message translates to:
@@ -527,8 +545,80 @@ abstract class AppLocalizations {
   /// No description provided for @proLightTranscribeAudio.
   ///
   /// In fr, this message translates to:
-  /// **'Audio → texte'**
+  /// **'Fichier audio'**
   String get proLightTranscribeAudio;
+
+  /// No description provided for @proLightDictationStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dicter'**
+  String get proLightDictationStart;
+
+  /// No description provided for @proLightDictationStop.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrêter & transcrire'**
+  String get proLightDictationStop;
+
+  /// No description provided for @proLightAudioConsentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consentement audio'**
+  String get proLightAudioConsentTitle;
+
+  /// No description provided for @proLightAudioConsentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'enregistrement sert uniquement à générer le compte rendu. Il est supprimé à la finalisation du CR.'**
+  String get proLightAudioConsentBody;
+
+  /// No description provided for @proLightAudioConsentAccept.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte'**
+  String get proLightAudioConsentAccept;
+
+  /// No description provided for @proLightSpecialtyFarrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maréchal-ferrant'**
+  String get proLightSpecialtyFarrier;
+
+  /// No description provided for @proLightSpecialtyPhysio.
+  ///
+  /// In fr, this message translates to:
+  /// **'Physio / ostéo'**
+  String get proLightSpecialtyPhysio;
+
+  /// No description provided for @proLightSpecialtyBehaviorist.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comportementaliste'**
+  String get proLightSpecialtyBehaviorist;
+
+  /// No description provided for @proLightSpecialtyVetLight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Véto light'**
+  String get proLightSpecialtyVetLight;
+
+  /// No description provided for @proLightReportHintFarrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'CR ferrage : pieds, fer, observations…'**
+  String get proLightReportHintFarrier;
+
+  /// No description provided for @proLightEmptyFarrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun cheval / intervention partagée'**
+  String get proLightEmptyFarrier;
+
+  /// No description provided for @proLightMicDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Microphone refusé — autorisez l\'accès dans les réglages'**
+  String get proLightMicDenied;
 
   /// No description provided for @proLightGpsDenied.
   ///
@@ -547,12 +637,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Connexion Google impossible'**
   String get googleLoginFailed;
-
-  /// No description provided for @googleClientNotFound.
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun compte client pour cet email. Demandez une invitation à votre vétérinaire'**
-  String get googleClientNotFound;
 
   /// No description provided for @googleWrongAudience.
   ///
@@ -890,6 +974,12 @@ abstract class AppLocalizations {
   /// **'Eesti'**
   String get languageEt;
 
+  /// No description provided for @planMonthlyLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'3,50 € / mois'**
+  String get planMonthlyLabel;
+
   /// No description provided for @planAnnualLabel.
   ///
   /// In fr, this message translates to:
@@ -1117,6 +1207,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Impossible d\'ouvrir le lien'**
   String get errorCouldNotOpenLink;
+
+  /// No description provided for @planMonthlySub.
+  ///
+  /// In fr, this message translates to:
+  /// **'3,50 € / mois, renouvelé automatiquement'**
+  String get planMonthlySub;
 
   /// No description provided for @planAnnualSub.
   ///

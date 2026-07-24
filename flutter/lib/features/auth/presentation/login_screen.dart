@@ -144,8 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
     switch (code) {
       case 'not_configured':
         return l10n.googleNotConfigured;
-      case 'google_client_not_found':
-        return l10n.googleClientNotFound;
       case 'google_client_only':
       case 'google_pro_only':
         return l10n.googleWrongAudience;

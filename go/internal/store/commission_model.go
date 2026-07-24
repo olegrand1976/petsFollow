@@ -28,28 +28,18 @@ type BonusRule struct {
 	PeriodYM    string `json:"periodYm,omitempty"`
 }
 
-// catalogTTC mirrors go/internal/billing/domain.go plan/addon amounts (avoid import cycle).
+// catalogTTC mirrors go/internal/billing/domain.go sellable plan amounts (avoid import cycle).
 var catalogSubscriptions = []struct {
 	code string
 	ttc  int
 	rec  bool
 }{
+	{"monthly", 350, false},
 	{"annual", 3500, false},
 	{"triennial", 9500, true},
-	{"quinquennial", 14500, false},
 }
 
-var catalogAddons = []struct {
-	code string
-	ttc  int
-}{
-	{"family", 3900},
-	{"kennel", 11900},
-	{"care_plus", 1900},
-	{"horse", 3900},
-}
-
-// SubscriptionPlanRates returns indicative rates for annual / triennial / quinquennial.
+// SubscriptionPlanRates returns indicative rates for monthly / annual / triennial.
 func SubscriptionPlanRates() []PlanRateInfo {
 	out := make([]PlanRateInfo, 0, len(catalogSubscriptions))
 	for _, p := range catalogSubscriptions {
@@ -70,24 +60,10 @@ func SubscriptionPlanRates() []PlanRateInfo {
 	return out
 }
 
-// AddonPlanRates returns indicative commercial (+ vet when applicable) rates for addons.
+// AddonPlanRates returns an empty sellable catalog (addons no longer sold).
+// Legacy rates remain available via CommercialRateBpsForAddon / VetRateBpsForAddon.
 func AddonPlanRates() []PlanRateInfo {
-	out := make([]PlanRateInfo, 0, len(catalogAddons))
-	for _, a := range catalogAddons {
-		ht := HTVACents(a.ttc)
-		commBps := CommercialRateBpsForAddon(a.code)
-		vetBps := VetRateBpsForAddon(a.code)
-		out = append(out, PlanRateInfo{
-			Code:              a.code,
-			TTCCents:          a.ttc,
-			HTVACents:         ht,
-			VetRateBpsMax:     vetBps,
-			VetCentsMax:       CommercialCommissionCents(ht, vetBps),
-			CommercialRateBps: commBps,
-			CommercialCents:   CommercialCommissionCents(ht, commBps),
-		})
-	}
-	return out
+	return nil
 }
 
 // DefaultBonusRules returns static SPIFF definitions (progress filled by callers).

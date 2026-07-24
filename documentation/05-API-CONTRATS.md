@@ -21,7 +21,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`) |
 | Pets / FC | `/pets`, heartrate sessions, timeline, photo, care-reminders, visits, horse-* |
 | Messaging | `/messaging/threads…` |
-| Billing | `GET /billing/plans`, `/billing/addons`, webhook Stripe, checkout/portal pet, my-addons |
+| Billing | `GET /billing/plans` (monthly / annual / triennial), webhook Stripe, checkout/portal pet ; `/billing/addons` + `my-addons` = **legacy** (plus vendus, entitlements existants) |
 | Commercial | `/commercial/overview`, `/vets`, `/prospects`, `/commissions`, `GET/PATCH /commercial/me/payout-profile` (aussi accessible `commercial_manager` pour portefeuille perso) |
 | Commercial manager | `/commercial-manager/overview`, `/team`, `/team/{id}/overview`, `/prospects`, `PATCH /prospects/{id}`, `/followups` |
 | Admin | `/admin/metrics/overview`, `/users`, `/payments`, `/commercials` (+ `role` / `managerUserId`, `PATCH …/manager`), `/prospects`, `/vets`, `/clients` |

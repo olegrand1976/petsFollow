@@ -27,14 +27,15 @@ type Config struct {
 	StripeWebhookSecret            string
 	StripePriceAnnualOnetime       string
 	StripePriceTriennialOnetime    string
-	StripePriceQuinquennialOnetime string
+	StripePriceQuinquennialOnetime string // legacy
+	StripePriceMonthlySub          string
 	StripePriceAnnualSub           string
 	StripePriceTriennialSub        string
-	StripePriceQuinquennialSub     string
-	StripePriceAddonFamily         string
-	StripePriceAddonKennel         string
-	StripePriceAddonCarePlus       string
-	StripePriceAddonHorse          string
+	StripePriceQuinquennialSub     string // legacy unused
+	StripePriceAddonFamily         string // legacy
+	StripePriceAddonKennel         string // legacy
+	StripePriceAddonCarePlus       string // legacy
+	StripePriceAddonHorse          string // legacy
 	StripeSuccessURL               string
 	StripeCancelURL                string
 	APIPublicURL                   string
@@ -83,6 +84,7 @@ func Load() Config {
 		StripePriceAnnualOnetime:       envOr("STRIPE_PRICE_ANNUAL_ONETIME", ""),
 		StripePriceTriennialOnetime:    envOr("STRIPE_PRICE_TRIENNIAL_ONETIME", ""),
 		StripePriceQuinquennialOnetime: envOr("STRIPE_PRICE_QUINQUENNIAL_ONETIME", ""),
+		StripePriceMonthlySub:          envOr("STRIPE_PRICE_MONTHLY_SUB", ""),
 		StripePriceAnnualSub:           envOr("STRIPE_PRICE_ANNUAL_SUB", ""),
 		StripePriceTriennialSub:        envOr("STRIPE_PRICE_TRIENNIAL_SUB", ""),
 		StripePriceQuinquennialSub:     envOr("STRIPE_PRICE_QUINQUENNIAL_SUB", ""),

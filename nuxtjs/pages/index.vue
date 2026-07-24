@@ -4,7 +4,7 @@
       <PetsFollowLogo variant="default" />
       <nav class="pro-landing__nav">
         <ProLocaleSelect />
-        <NuxtLink to="/produits" class="pro-landing__nav-link">{{ $t('index.productsLink') }}</NuxtLink>
+        <a href="#produits" class="pro-landing__nav-link">{{ $t('index.productsLink') }}</a>
         <NuxtLink to="/login" class="pro-landing__nav-link">{{ $t('index.login') }}</NuxtLink>
         <NuxtLink to="/register">
           <ProButton test-id="landing-cta">{{ $t('index.registerCta') }}</ProButton>
@@ -65,9 +65,9 @@
         </article>
       </div>
       <div class="pro-landing__products-actions">
-        <NuxtLink to="/produits">
+        <a href="#produits">
           <ProButton test-id="landing-products-cta">{{ $t('index.productsCta') }}</ProButton>
-        </NuxtLink>
+        </a>
       </div>
     </section>
 
@@ -110,8 +110,8 @@ const features = [
 ]
 
 const productHighlights = [
-  { key: 'plans' },
-  { key: 'family' },
-  { key: 'careHorse' },
+  { key: 'monthly' },
+  { key: 'annual' },
+  { key: 'triennial' },
 ]
 </script>

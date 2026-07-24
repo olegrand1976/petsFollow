@@ -48,7 +48,6 @@
     "admin_only": "Admins only",
     "google_pro_only": "Google reserved for Pro profiles",
     "google_client_only": "This Google account is a Pro profile — use the web app",
-    "google_client_not_found": "No petsFollow client account for this email. Ask your vet for an invite",
     "not_your_pet": "Not your pet",
     "wrong_practice": "Wrong practice",
     "not_participant": "Not a participant",
@@ -188,7 +187,7 @@
         "preheader": "Your petsFollow journey starts today.",
         "greeting": "Hello {fullName},",
         "intro": "Your vet prescribed petsFollow: cardiac monitoring without a device, right on your phone. Download the app to get started.",
-        "detail": "What you can do:\n• Heart readings 15 / 30 / 60 s\n• Secure messaging with your practice\n• Timeline and care reminders\n• Under €3 / month per pet",
+        "detail": "What you can do:\n• Heart readings 15 / 30 / 60 s\n• Secure messaging with your practice\n• Timeline and care reminders\n• From ~€2.6 / month per pet (3-year plan)",
         "cta": "Download the app",
         "disclaimer": "You can turn off these emails using the link at the bottom."
       },
@@ -198,7 +197,7 @@
         "preheader": "Create your pet profile and choose a plan.",
         "greeting": "Hello {fullName},",
         "intro": "To activate prescribed monitoring, create your pet's profile and choose a plan. We recommend the 3-year plan (€95) — about €2.6 / month.",
-        "detail": "Plans incl. VAT:\n• €35 / year\n• €95 / 3 years (recommended)\n• €145 / 5 years (one-time)",
+        "detail": "Plans incl. VAT:\n• €3.50 / month (subscription)\n• €35 / year\n• €95 / 3 years (recommended)",
         "cta": "Open the app",
         "disclaimer": "Without payment, heart monitoring stays pending."
       },
@@ -218,9 +217,9 @@
         "preheader": "Reminders help you stay on track.",
         "greeting": "Hello {fullName},",
         "intro": "A good routine makes the difference: enable reading and care reminders (vaccine, deworming, check-up…). Your vet sees the history in the record.",
-        "detail": "Care+ option (€19, lifetime one-time): medications and custom reminders if your pet has regular treatment.",
+        "detail": "With an active pet plan, care reminders (medications, vaccines…) are included — enable them in the Care tab.",
         "cta": "View reminders",
-        "disclaimer": "Optional add-ons are managed in the app."
+        "disclaimer": "Reminders are managed in the app."
       },
       "d6_vet_link": {
         "subject": "Your vet is one message away",
@@ -258,39 +257,9 @@
         "preheader": "Regular readings help your vet.",
         "greeting": "Hello {fullName},",
         "intro": "One month already! Regular readings enrich your pet's record and help your vet between visits.",
-        "detail": "Several pets? The Family option (€39, lifetime one-time) gives a household view and −10% from the 2nd pet (no cap). Exclusive with Kennel.",
+        "detail": "Several pets? Household view and fast encoding are included once a pet has an active plan.",
         "cta": "View my pets",
-        "disclaimer": "Options are managed in the app settings / subscriptions."
-      },
-      "d45_care_plus": {
-        "subject": "Care+: medications & custom reminders",
-        "tagline": "Care+ option",
-        "preheader": "€19 once for finer treatment follow-up.",
-        "greeting": "Hello {fullName},",
-        "intro": "If your pet is on treatment, Care+ (€19, lifetime one-time) adds medications and custom reminders in the app — on top of standard care reminders.",
-        "detail": "",
-        "cta": "Discover Care+",
-        "disclaimer": "Lifetime one-time purchase — once per account."
-      },
-      "d60_horse": {
-        "subject": "Horse pack: farrier, fecal & competitions",
-        "tagline": "Horse option",
-        "preheader": "€39 once for tailored equine follow-up.",
-        "greeting": "Hello {fullName},",
-        "intro": "You care for a horse: the Horse pack (€39, lifetime one-time) adds farrier and fecal reminders, professional contacts and a competition calendar.",
-        "detail": "",
-        "cta": "Discover the Horse pack",
-        "disclaimer": "Lifetime one-time purchase — for accounts with at least one horse."
-      },
-      "d75_kennel": {
-        "subject": "Kennel: fast encoding for breeders",
-        "tagline": "Kennel option",
-        "preheader": "€119 once · −15% · from 6 pets.",
-        "greeting": "Hello {fullName},",
-        "intro": "With 6+ pets, Kennel (€119, lifetime one-time) speeds up encoding (batch entry) and applies −15% on pet plans. Exclusive with Family.",
-        "detail": "",
-        "cta": "Discover Kennel",
-        "disclaimer": "Kennel replaces Family (upgrade)."
+        "disclaimer": "Subscriptions are managed in the app settings."
       },
       "d90_quarter": {
         "subject": "3 months with petsFollow — timeline matters",
@@ -298,7 +267,7 @@
         "preheader": "Your history supports prescribed follow-up.",
         "greeting": "Hello {fullName},",
         "intro": "Three months of data: timeline, messages and readings form a useful record between visits.",
-        "detail": "With 2–5 pets, Family (€39, lifetime one-time) simplifies the household view (−10%). Exclusive with Kennel.",
+        "detail": "Tip: review the timeline before a visit — your vet values a clear history.",
         "cta": "Open the timeline",
         "disclaimer": "Keep following your vet's guidance."
       },
@@ -338,7 +307,7 @@
         "preheader": "Consider renewal or the 3-year plan.",
         "greeting": "Hello {fullName},",
         "intro": "In the coming weeks, check your pet plan end date. The 3-year plan (€95) remains the best duration / price balance for lasting prescribed follow-up.",
-        "detail": "€35 / year · €95 / 3 years · €145 / 5 years",
+        "detail": "€3.50 / month · €35 / year · €95 / 3 years (recommended)",
         "cta": "Manage my subscription",
         "disclaimer": "The payment portal is available from the pet profile.",
         "intro_near": "Your annual plan is nearing renewal. Check the end date and consider the 3-year plan (€95) for lasting prescribed follow-up — about €2.6 / month."
@@ -396,9 +365,11 @@
     "visit_reschedule_body": "A new time slot was proposed for {petName}."
   },
   "billing": {
+    "monthly_label": "€3.50 / month",
     "annual_label": "€35 / year",
     "triennial_label": "€95 / 3 years",
     "quinquennial_label": "€145 / 5 years",
+    "monthly_sub_summary": "€3.50 / month, auto-renewed",
     "annual_sub_summary": "€35 / year, auto-renewed",
     "triennial_sub_summary": "€95 every 3 years, auto-renewed",
     "quinquennial_sub_summary": "€145 for 5 years, one-time payment",

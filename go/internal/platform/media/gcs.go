@@ -34,7 +34,13 @@ func (s *gcsStore) Upload(ctx context.Context, objectKey string, r io.Reader, si
 	}
 	w := s.client.Bucket(s.bucket).Object(objectKey).NewWriter(ctx)
 	w.ContentType = contentType
-	w.CacheControl = "public, max-age=86400"
+	sensitive := IsSensitiveObjectKey(objectKey)
+	if sensitive {
+		// PHI: no public URL returned; rely on auth Open + UUID keys (GCP forbids IAM conditions on allUsers).
+		w.CacheControl = "private, no-store"
+	} else {
+		w.CacheControl = "public, max-age=86400"
+	}
 	limited := io.LimitReader(r, AbsoluteMaxBytes+1)
 	n, err := io.Copy(w, limited)
 	if err != nil {
@@ -47,6 +53,10 @@ func (s *gcsStore) Upload(ctx context.Context, objectKey string, r io.Reader, si
 	}
 	if err := w.Close(); err != nil {
 		return "", err
+	}
+	if sensitive {
+		// No public URL — serve via authenticated API Open only.
+		return "", nil
 	}
 	return fmt.Sprintf("https://storage.googleapis.com/%s/%s", s.bucket, objectKey), nil
 }
@@ -61,6 +71,27 @@ func (s *gcsStore) Delete(ctx context.Context, objectKey string) error {
 		return nil
 	}
 	return err
+}
+
+func (s *gcsStore) Open(ctx context.Context, objectKey string) (io.ReadCloser, string, error) {
+	objectKey = strings.TrimSpace(objectKey)
+	if objectKey == "" {
+		return nil, "", storage.ErrObjectNotExist
+	}
+	obj := s.client.Bucket(s.bucket).Object(objectKey)
+	attrs, err := obj.Attrs(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+	r, err := obj.NewReader(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+	ct := attrs.ContentType
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	return r, ct, nil
 }
 
 func newObjectID() string {

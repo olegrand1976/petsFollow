@@ -192,24 +192,49 @@
             rows="6"
             data-testid="visit-report-body"
             :placeholder="$t('calendar.reportHint')"
+            :disabled="reportBusy || reportStatus === 'final'"
           />
           <div class="pro-flex-gap" style="margin-top: 0.5rem">
             <ProButton
               variant="secondary"
-              :disabled="reportBusy"
+              :disabled="reportBusy || reportStatus === 'final'"
               test-id="visit-report-save"
               @click="saveVisitReport"
             >
               {{ $t('calendar.saveReport') }}
             </ProButton>
             <ProButton
-              :disabled="reportBusy"
+              :disabled="reportBusy || reportStatus === 'final'"
               test-id="visit-report-improve"
               @click="improveVisitReport"
             >
               {{ $t('calendar.improveReport') }}
             </ProButton>
+            <ProButton
+              variant="secondary"
+              :disabled="reportBusy || reportStatus === 'final' || !reportBody.trim()"
+              test-id="visit-report-finalize"
+              @click="finalizeVisitReport"
+            >
+              {{ $t('calendar.finalizeReport') }}
+            </ProButton>
+            <label
+              v-if="reportStatus !== 'final'"
+              class="pro-link-btn"
+              style="cursor: pointer"
+            >
+              <input
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
+                style="display: none"
+                data-testid="visit-report-audio"
+                :disabled="reportBusy"
+                @change="onReportAudioSelected"
+              >
+              {{ $t('calendar.transcribeAudio') }}
+            </label>
           </div>
+          <p v-if="reportStatus === 'final'" class="pro-hint">{{ $t('calendar.reportFinal') }}</p>
           <p v-if="reportMsg" class="pro-hint">{{ reportMsg }}</p>
         </div>
         <div class="pro-flex-gap create-client-actions">
@@ -279,6 +304,17 @@
         </div>
       </form>
     </ProModal>
+    <ProModal v-model:open="audioConsentOpen" :title="$t('calendar.audioConsentTitle')">
+      <p class="pro-hint">{{ $t('calendar.audioConsent') }}</p>
+      <template #footer>
+        <ProButton variant="ghost" test-id="audio-consent-cancel" @click="cancelAudioConsent">
+          {{ $t('calendar.cancel') }}
+        </ProButton>
+        <ProButton test-id="audio-consent-accept" @click="acceptAudioConsent">
+          {{ $t('calendar.audioConsentAccept') }}
+        </ProButton>
+      </template>
+    </ProModal>
   </div>
 </template>
 
@@ -322,8 +358,11 @@ const detailOpen = ref(false)
 const selectedVisit = ref<CalendarVisit | null>(null)
 const visitAddress = ref('')
 const reportBody = ref('')
+const reportStatus = ref('')
 const reportBusy = ref(false)
 const reportMsg = ref('')
+const audioConsentOpen = ref(false)
+const pendingAudioFile = ref<File | null>(null)
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
@@ -464,6 +503,7 @@ function openVisitDetail(v: CalendarVisit) {
   selectedVisit.value = v
   visitAddress.value = v.addressText || ''
   reportBody.value = ''
+  reportStatus.value = ''
   reportMsg.value = ''
   focusVisitId.value = v.id
   detailOpen.value = true
@@ -475,8 +515,10 @@ async function loadVisitReport(visitId: string) {
     const res: any = await $fetch(`/api/visits/${visitId}/report`)
     const data = res.data ?? res
     reportBody.value = data.bodyText || data.transcriptText || ''
+    reportStatus.value = data.status || ''
   } catch {
     reportBody.value = ''
+    reportStatus.value = ''
   }
 }
 
@@ -490,7 +532,12 @@ async function saveVisitAddress() {
       body: { addressText: visitAddress.value.trim() },
     })
     const data = res.data ?? res
-    selectedVisit.value = { ...selectedVisit.value, addressText: data.addressText || visitAddress.value }
+    selectedVisit.value = {
+      ...selectedVisit.value,
+      addressText: data.addressText || visitAddress.value,
+      lat: data.lat ?? selectedVisit.value.lat,
+      lng: data.lng ?? selectedVisit.value.lng,
+    }
     reportMsg.value = t('calendar.addressSaved')
     await load()
   } catch (e: any) {
@@ -501,7 +548,7 @@ async function saveVisitAddress() {
 }
 
 async function saveVisitReport() {
-  if (!selectedVisit.value) return
+  if (!selectedVisit.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -518,7 +565,7 @@ async function saveVisitReport() {
 }
 
 async function improveVisitReport() {
-  if (!selectedVisit.value) return
+  if (!selectedVisit.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -532,6 +579,68 @@ async function improveVisitReport() {
     const data = res.data ?? res
     reportBody.value = data.bodyText || data.improvedText || reportBody.value
     reportMsg.value = t('calendar.reportImproved')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    reportBusy.value = false
+  }
+}
+
+async function finalizeVisitReport() {
+  if (!selectedVisit.value || reportStatus.value === 'final') return
+  reportBusy.value = true
+  reportMsg.value = ''
+  try {
+    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
+      method: 'PUT',
+      body: { bodyText: reportBody.value },
+    })
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/finalize`, {
+      method: 'POST',
+    })
+    const data = res.data ?? res
+    reportStatus.value = data.status || 'final'
+    reportBody.value = data.bodyText || reportBody.value
+    reportMsg.value = t('calendar.reportFinalized')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    reportBusy.value = false
+  }
+}
+
+async function onReportAudioSelected(ev: Event) {
+  if (!selectedVisit.value || reportStatus.value === 'final') return
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  pendingAudioFile.value = file
+  audioConsentOpen.value = true
+}
+
+function cancelAudioConsent() {
+  pendingAudioFile.value = null
+  audioConsentOpen.value = false
+}
+
+async function acceptAudioConsent() {
+  const file = pendingAudioFile.value
+  pendingAudioFile.value = null
+  audioConsentOpen.value = false
+  if (!file || !selectedVisit.value || reportStatus.value === 'final') return
+  reportBusy.value = true
+  reportMsg.value = ''
+  try {
+    const form = new FormData()
+    form.append('audio', file, file.name)
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/transcribe`, {
+      method: 'POST',
+      body: form,
+    })
+    const data = res.data ?? res
+    reportBody.value = data.bodyText || data.transcriptText || reportBody.value
+    reportMsg.value = t('calendar.reportTranscribed')
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {

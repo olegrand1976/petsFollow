@@ -12,6 +12,7 @@ const (
 	passwordClient     = "ClientDemo123!"
 	passwordAdmin      = "AdminDemo123!"
 	passwordCommercial = "CommercialDemo123!"
+	passwordCarePro    = "CareProDemo123!"
 
 	// Token fixe pour /confirm-email?token=demo-confirm-email (compte vet.unverified@)
 	demoEmailConfirmToken = "demo-confirm-email"
@@ -74,12 +75,11 @@ type petDef struct {
 }
 
 type clientDef struct {
-	email              string
-	fullName           string
-	pets               []petDef
-	seedDiscovery      bool
-	seedActiveAddons   bool   // care_plus + family + horse (compte démo « full »)
-	extraPracticeVet   string // vet email for secondary practice link
+	email            string
+	fullName         string
+	pets             []petDef
+	seedDiscovery    bool
+	extraPracticeVet string // vet email for secondary practice link
 }
 
 type practiceDef struct {
@@ -127,7 +127,6 @@ var demoPractices = []practiceDef{
 				email:            "client.demo@petsfollow.test",
 				fullName:         "Sophie Demo",
 				seedDiscovery:    true,
-				seedActiveAddons: true,
 				extraPracticeVet: "vet.parc@petsfollow.test",
 				pets: []petDef{
 					{
@@ -173,8 +172,8 @@ var demoPractices = []practiceDef{
 						breed:         "Européen",
 						weightKg:      4.2,
 						paymentStatus: "active",
-						plan:          billing.PlanAnnual,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Bella a fait son relevé ce matin, tout semble normal.", age: -5 * time.Hour, read: false},
@@ -193,17 +192,17 @@ var demoPractices = []practiceDef{
 						weightKg:      480,
 						paymentStatus: "active",
 						plan:          billing.PlanAnnual,
-						billingMode:   billing.ModeOneTime,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						careReminders: []careReminderDef{
 							{reminderType: "farrier", title: "Maréchal-ferrant", dueDays: 21, status: "pending"},
 							{reminderType: "fecal_egg", title: "Coproscopie", dueDays: 60, status: "pending"},
 						},
 					},
-					// Kennel demo (≥6) — portées Nala
+					// Multi-pet demo — mix monthly / annual / triennial
 					{name: "Nala", species: "dog", breed: "Labrador", weightKg: 28, paymentStatus: "active", plan: billing.PlanTriennial, billingMode: billing.ModeSubscription, entitlement: billing.StatusActive},
-					{name: "Kira", species: "dog", breed: "Labrador", weightKg: 26, paymentStatus: "active", plan: billing.PlanAnnual, billingMode: billing.ModeOneTime, entitlement: billing.StatusActive},
-					{name: "Oreo", species: "dog", breed: "Labrador", weightKg: 30, paymentStatus: "pending_payment", plan: billing.PlanAnnual, billingMode: billing.ModeOneTime, entitlement: billing.StatusPending},
+					{name: "Kira", species: "dog", breed: "Labrador", weightKg: 26, paymentStatus: "active", plan: billing.PlanMonthly, billingMode: billing.ModeSubscription, entitlement: billing.StatusActive},
+					{name: "Oreo", species: "dog", breed: "Labrador", weightKg: 30, paymentStatus: "pending_payment", plan: billing.PlanAnnual, billingMode: billing.ModeSubscription, entitlement: billing.StatusPending},
 				},
 			},
 			{
@@ -255,8 +254,8 @@ var demoPractices = []practiceDef{
 						breed:         "Persan",
 						weightKg:      5.1,
 						paymentStatus: "active",
-						plan:          billing.PlanQuinquennial,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Alerte sur le dernier relevé de Chouchou, pouvez-vous regarder ?", age: -3 * time.Hour, read: false},
@@ -353,8 +352,8 @@ var demoPractices = []practiceDef{
 						breed:         "Siamois",
 						weightKg:      3.5,
 						paymentStatus: "active",
-						plan:          billing.PlanAnnual,
-						billingMode:   billing.ModeOneTime,
+						plan:          billing.PlanMonthly,
+						billingMode:   billing.ModeSubscription,
 						entitlement:   billing.StatusActive,
 						messages: []messageDef{
 							{senderRole: "client", body: "Premier relevé de Luna effectué, merci pour l'accompagnement.", age: -6 * time.Hour, read: true},

@@ -63,8 +63,12 @@ func (g *LiveGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 			},
 		}
 		if req.Mode == "subscription" {
+			interval := string(stripe.PriceRecurringIntervalYear)
+			if req.Metadata["interval"] == "month" {
+				interval = string(stripe.PriceRecurringIntervalMonth)
+			}
 			recurring := &stripe.CheckoutSessionLineItemPriceDataRecurringParams{
-				Interval: stripe.String(string(stripe.PriceRecurringIntervalYear)),
+				Interval: stripe.String(interval),
 			}
 			if n := req.Metadata["interval_count"]; n == "3" {
 				recurring.IntervalCount = stripe.Int64(3)

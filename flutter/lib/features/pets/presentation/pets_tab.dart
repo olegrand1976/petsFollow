@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
@@ -23,7 +22,6 @@ class _PetsTabState extends State<PetsTab> {
   bool loading = true;
   String? loadError;
   bool _hasLoadedOnce = false;
-  bool hasKennel = false;
 
   @override
   void initState() {
@@ -42,11 +40,9 @@ class _PetsTabState extends State<PetsTab> {
     }
     try {
       final data = await ApiClient.instance.getPets();
-      final ents = await AddonEntitlements.load();
       if (mounted) {
         setState(() {
           pets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
-          hasKennel = ents?.hasKennel ?? false;
           loading = false;
           loadError = null;
           _hasLoadedOnce = true;
@@ -125,10 +121,19 @@ class _PetsTabState extends State<PetsTab> {
                                 : Text(pet.name.isNotEmpty ? pet.name[0].toUpperCase() : '?'),
                           ),
                           title: Text(pet.name),
-                          subtitle: Text('${_speciesLabel(l10n, pet.species)} · ${pet.breed}'),
-                          trailing: pet.isActive
-                              ? Icon(Icons.check_circle, color: AppColors.primary)
-                              : Icon(Icons.schedule, color: AppColors.alert),
+                          subtitle: Text(
+                            pet.isSharedAccess
+                                ? '${_speciesLabel(l10n, pet.species)} · ${pet.sharedAccessLabel(l10n)}'
+                                : '${_speciesLabel(l10n, pet.species)} · ${pet.breed}',
+                          ),
+                          trailing: pet.isSharedAccess
+                              ? Icon(
+                                  pet.canWriteNotes ? Icons.edit_note_outlined : Icons.visibility_outlined,
+                                  color: AppColors.textMuted,
+                                )
+                              : pet.isActive
+                                  ? Icon(Icons.check_circle, color: AppColors.primary)
+                                  : Icon(Icons.schedule, color: AppColors.alert),
                           onTap: () async {
                             await Navigator.push(
                               context,
@@ -147,7 +152,7 @@ class _PetsTabState extends State<PetsTab> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (hasKennel) ...[
+          if (pets.any((p) => p.isOwner)) ...[
             FloatingActionButton.extended(
               heroTag: 'kennel-encode',
               onPressed: () async {

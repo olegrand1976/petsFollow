@@ -86,6 +86,9 @@ class ApiClient {
     _handlingUnauthorized = true;
     final generation = ++_authGeneration;
     token = null;
+    userId = null;
+    userRole = null;
+    userSpecialty = null;
     onSessionInvalidated?.call();
     try {
       final sp = await SharedPreferences.getInstance();
@@ -112,6 +115,7 @@ class ApiClient {
     if (token != null) {
       try {
         final me = await getMe();
+        userId = me['userId'] as String? ?? me['id'] as String?;
         userRole = me['role'] as String?;
         userSpecialty = me['professionalSpecialty'] as String?;
       } catch (_) {
@@ -131,6 +135,7 @@ class ApiClient {
 
   Future<void> logout() async {
     token = null;
+    userId = null;
     userRole = null;
     userSpecialty = null;
     await _persistToken(null);
@@ -251,6 +256,7 @@ class ApiClient {
     return Map<String, dynamic>.from(res.data['data'] as Map);
   }
 
+  String? userId;
   String? userRole;
   String? userSpecialty;
 
@@ -305,10 +311,14 @@ class ApiClient {
     await syncLocaleFromMe();
     try {
       final me = await getMe();
+      userId = me['userId'] as String? ?? me['id'] as String?;
       userRole = me['role'] as String?;
       userSpecialty = me['professionalSpecialty'] as String?;
-      DiscoveryController.instance.bindUser(me['userId'] as String? ?? me['id'] as String?);
-    } catch (_) {}
+      DiscoveryController.instance.bindUser(userId);
+    } catch (_) {
+      // Keep token but force safe ACL defaults (Pet.isOwner → false without userId).
+      userId = null;
+    }
     await NotificationService.instance.onLogin();
     return data;
   }

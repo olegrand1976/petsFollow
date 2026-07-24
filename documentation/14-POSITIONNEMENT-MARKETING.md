@@ -3,7 +3,7 @@
 ## Promesse
 
 **Suivi cardiaque prescrit par le vétérinaire, sans boîtier.**  
-Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par animal (~2–3 €/mois).
+Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois).
 
 ## Modèle
 
@@ -19,17 +19,17 @@ Le cabinet utilise Pro gratuitement ; le propriétaire paie un abonnement par an
 
 | Plan | Prix | Message |
 |------|------|---------|
+| Monthly | 3,50 € / mois | Flex (abo only) |
 | Annual | 35 € / an | Entrée |
 | **Triennial** | **95 € / 3 ans** (~2,6 €/mois) | **Recommandé** |
-| Quinquennial | 145 € / 5 ans | Engagement long |
 
-Addons (paiement unique à vie) : Family 39 € (≥2, −10 %) · Kennel 119 € (≥6, −15 %, exclusif Family) · Care+ 19 € · Horse 39 €.
+Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal actif (plus d’addons à vendre). Quinquennial hors vente.
 
 ## Différenciation
 
 - Pas de hardware
 - Prescription véto (pas un gadget grand public isolé)
-- Dual-face Pro + pets, 4 langues
+- Dual-face Pro + pets, 5 langues
 - Alignement économique véto + commercial (pas de pénalité co-selling)
 
 ## Matériel commercial

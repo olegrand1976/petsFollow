@@ -11,7 +11,7 @@ Roadmap produit : self-inscription client, rôle `care_pro` + specialties, ACL p
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs |
 | `admin` / commercial* | Nuxt Pro | Inchangé |
 
-Specialties P0 : `vet_light`, `farrier`. P1 : `physio`, `behaviorist`. P2 : `groomer`, `breeder`. Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
+Specialties P0 : `vet_light`, `farrier`. P1 : `physio`, `behaviorist` (labels + prompts CR). P2 : `groomer`, `breeder`. Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 
 ## ACL
 
@@ -20,7 +20,8 @@ Tables `practice.client_access` et `pets.pet_access` :
 - `grantee_user_id`, `permission` (`read` | `write_notes` | `full`), `granted_by_user_id`, `expires_at` optionnel
 - Les liens `practice_clients` restent un grant métier (cabinet) ; l’ACL couvre collègue / pro externe / co-owner
 - Family billing ≠ multi-comptes (foyer tarifaire distinct de `client_access`)
-- Timeline (`GET /pets/{id}/timeline`) : sans `write_notes`, pas de messages messagerie ; notes de visite masquées (meta statut conservée)
+- Timeline (`GET /pets/{id}/timeline`) : sans `write_notes`, notes de visite masquées ; messages messagerie seulement avec `full` (owner / véto cabinet inclus via ACL)
+- `GET /pets` (client) : animaux **owned** + grants `pet_access` / `client_access` (champ `permission`)
 
 ## Auth
 
@@ -51,20 +52,32 @@ Tabs : Agenda · Clients · (drill-down animal / docs / CR) · Settings.
 ## Agenda GPS
 
 Colonnes visite : `address_text`, `lat`, `lng` — ouverture Maps côté mobile / lien calendrier web.
+`PATCH /visits/{id}` (confirm / cancel / done / notes) : seuil **`write_notes`** pour client grantee et `care_pro` (aligné CR / GPS). `confirmDirect` à la création exige `full` hors véto cabinet.
 
 ## CR visite + IA
 
 Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle).
 
-Flux : dictée → upload → transcription Gemini → édition → « améliorer » (sections type SOAP).
+Flux : dictée → upload → transcription Gemini → édition → « améliorer » (sections type SOAP / specialty).
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
-
-RGPD : consentement + rétention audio à définir avant prod ; durée de rétention audio recommandée ≤ 30 jours après finalisation du CR.
+Audio CR : **pas** servi via `/media/` public (`visit-reports/` bloqué en local via `DenySensitivePrefixes`) ; stream auth `GET /visits/{id}/report/audio` (refusé si CR `final`) ; **suppression à la finalisation** (Clear DB seulement après Delete média OK). Sur GCS, pas d’URL publique retournée pour ce prefix (GCP refuse une condition IAM sur `allUsers`).
+Consentement UI avant upload micro/fichier (Flutter + Nuxt).
+Ops : `make gcp-setup-media` — IAM SA + allUsers pour avatars. Protection PHI = pas d’URL publique à l’upload + stream auth + purge finalize (+ UUID dans la clé).
 
 ## Billing
 
 B2B2C inchangé (client paie l’animal). Pros light gratuits au MVP. Partage d’un dossier : animal avec entitlement actif côté owner.
 
+## Polish (vague M / N)
+
+- `GET /pets` inclut grants `pet_access` / `client_access` (UI Flutter labels selon permission)
+- Google client : create-if-absent ; plus d’erreur `google_client_not_found`
+- Race email unique Google : récupération via `23505` + link
+- DEFAULT SQL ACL = `write_notes` (aligné Grant API) — migr. `000042`
+- Seed : `farrier.demo@` / `vetlight.demo@` (`CareProDemo123!`) + grant Spirit
+- Tests : permissions ACL, `IsSensitiveObjectKey`, shares intégration, smoke register-client + media 403
+
 ## Migrations
 
-`000039_multi_profiles_pro` — rôle `care_pro`, specialty, ACL, GPS visites, `visit_reports`.
+`000039_multi_profiles_pro` — rôle `care_pro`, specialty, ACL, GPS visites, `visit_reports`.  
+`000042_access_permission_default` — DEFAULT permission `write_notes`.

@@ -18,16 +18,24 @@ func TestParseAddonCode(t *testing.T) {
 }
 
 func TestAllAddonsPrices(t *testing.T) {
-	addons := billing.AllAddons()
-	if len(addons) != 4 {
-		t.Fatalf("expected 4 addons, got %d", len(addons))
+	if n := len(billing.AllAddons()); n != 0 {
+		t.Fatalf("sellable addon catalog must be empty, got %d", n)
 	}
-	byCode := map[billing.AddonCode]int{}
-	for _, a := range addons {
-		byCode[a.Code] = a.AmountCents
+	// Legacy defs still resolve for grandfathered entitlements / webhooks.
+	for _, code := range []billing.AddonCode{
+		billing.AddonFamily, billing.AddonKennel, billing.AddonCarePlus, billing.AddonHorse,
+	} {
+		if _, err := billing.GetAddon(code); err != nil {
+			t.Fatalf("GetAddon(%s) legacy: %v", code, err)
+		}
 	}
-	if byCode[billing.AddonFamily] != 3900 || byCode[billing.AddonKennel] != 11900 ||
-		byCode[billing.AddonCarePlus] != 1900 || byCode[billing.AddonHorse] != 3900 {
-		t.Fatalf("unexpected addon prices: %#v", byCode)
+	family, _ := billing.GetAddon(billing.AddonFamily)
+	kennel, _ := billing.GetAddon(billing.AddonKennel)
+	care, _ := billing.GetAddon(billing.AddonCarePlus)
+	horse, _ := billing.GetAddon(billing.AddonHorse)
+	if family.AmountCents != 3900 || kennel.AmountCents != 11900 ||
+		care.AmountCents != 1900 || horse.AmountCents != 3900 {
+		t.Fatalf("unexpected legacy addon prices: family=%d kennel=%d care=%d horse=%d",
+			family.AmountCents, kennel.AmountCents, care.AmountCents, horse.AmountCents)
 	}
 }

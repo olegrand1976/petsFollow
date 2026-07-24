@@ -5,21 +5,18 @@
 ## Assiette
 - Prix client / Stripe = **TTC**
 - Commission = **% du HTVA**
-- Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
+- Assiette = **HT du montant payé**
 
-**Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal ou addon) du cabinet assigné. Pas de re-commission au renouvellement Stripe (plans). Addons = paiement unique à vie.
+**Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal) du cabinet assigné. Pas de re-commission au renouvellement Stripe.
 
 ## Votre grille
 | Offre | Taux HT | € indicatif |
 |-------|---------|-------------|
-| Annual 35 € | 8 % | ~2,3 € |
+| Monthly 3,50 € | **8 %** | ~0,23 € |
+| Annual 35 € | **8 %** | ~2,3 € |
 | **Triennial 95 €** | **12 %** | **~9,4 €** |
-| Quinquennial 145 € | 8 % | ~9,6 € |
-| Family 39 € | 10 % | ~3,2 € |
-| **Kennel 119 €** | **10 %** | **~9,8 €** |
-| Care+ / Horse | 10 % | ~1,6 / 3,2 € |
 
-Steer : triennial = **meilleur taux** et **meilleur €/an**. Quin ≈ même cash one-shot, moins bon annualisé.
+Steer : triennial = **meilleur taux** et **meilleur €**. Pas de commission addon (plus vendus).
 
 ## Bonus SPIFF
 | Bonus | Montant | Condition |
@@ -30,11 +27,9 @@ Steer : triennial = **meilleur taux** et **meilleur €/an**. Quin ≈ même cas
 Détection **automatique** (`SyncCommercialBonusAwards`) ; payout via admin **mark-paid**.
 
 ## Grille véto (pour votre pitch)
-Progressif 7 → 9 → 11 → 12 % × facteur plan (plafond effectif 8 / 12 / 8 %).  
+Progressif 7 → 9 → 11 → 12 % × facteur plan (plafond effectif 8 / 8 / 12 %).  
 Sur le triennial au plafond : **~9,4 €** aussi pour le véto.  
 **Le véto n’est pas pénalisé** si vous êtes assigné.
-
-Addons côté véto : Family / Kennel **5 %** HT · Care+ / Horse **0 %** (vous gardez **10 %** sur tous les addons).
 
 ## Ne pas compter
 - Inscription véto seule (cabinet à 0 payant = normal) → **0 €** de commission

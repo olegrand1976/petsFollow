@@ -24,11 +24,11 @@ Threads client↔véto, messages texte + media, read/read-all, mode indisponible
 
 ## Billing
 
-Plans animal (one_time / subscription) + **addons foyer en paiement unique à vie** (Family / Kennel / Care+ / Horse), Checkout Stripe (ou mock), entitlements + `past_due` (legacy sub), Customer Portal, webhooks — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
+Plans animal vendables : **monthly 3,50 €** (`subscription` only) · **annual 35 €** · **triennial 95 €** (recommandé) ; Checkout Stripe (ou mock), entitlements + `past_due`, Customer Portal, webhooks. Quinquennial + addons Family / Kennel / Care+ / Horse = **hors vente / legacy** (features Care/Horse/foyer/kennel incluses dès entitlement animal actif) — [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md), [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md).
 
 ## Commissions
 
-Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan/addon), accrual à l’activation (pas au renew), périodes close/mark-paid admin (véto + commercial). SPIFF commercial (`commercial_bonus_awards` : sync auto + mark-paid). UI `ProCommissionSheet` + `/admin/commercial-bonuses`.
+Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; addons legacy si encore en base), accrual à l’activation (pas au renew), périodes close/mark-paid admin (véto + commercial). SPIFF commercial (`commercial_bonus_awards` : sync auto + mark-paid). UI `ProCommissionSheet` + `/admin/commercial-bonuses`.
 
 ## Commercial / sales
 
@@ -39,11 +39,11 @@ Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects 
 
 ## Care & Horse
 
-Rappels care (+ seed horse pack), contacts professionnels, compétitions ; household Family (≥2, pas de plafond) / Kennel (≥6, `litter_tag`, batch).
+Rappels care (+ seed horse pack), contacts professionnels, compétitions ; foyer / kennel (`litter_tag`, batch) — **inclus** avec entitlement animal actif (plus d’upsell addon).
 
 ## Pharmacie cabinet (Belgique) — spec
 
-Dictionnaire CNK/AFMPS, stocks multi-dépôts FEFO, DAF + PDF, workers VAMReg / invoices.connect — **spécification** [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) (**non livré**). Distinct de Care+ (rappels côté client).
+Dictionnaire CNK/AFMPS, stocks multi-dépôts FEFO, DAF + PDF, workers VAMReg / invoices.connect — **spécification** [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) (**non livré**). Distinct des rappels Care côté client.
 
 ## Admin plateforme
 

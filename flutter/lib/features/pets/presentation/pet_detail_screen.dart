@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
@@ -245,27 +244,32 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                       : Text(initial, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: _changePhoto,
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(l10n.changePhoto),
-                ),
+                if (pet.isOwner)
+                  TextButton.icon(
+                    onPressed: _changePhoto,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: Text(l10n.changePhoto),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      pet.sharedAccessLabel(l10n),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    ),
+                  ),
                 const SizedBox(height: 4),
                 Text(species, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold)),
                 Text(pet.breed, style: TextStyle(color: AppColors.textMuted)),
               ],
             ),
           ),
-          if (pet.species == 'horse') ...[
+          if (pet.isOwner && pet.species == 'horse') ...[
             const SizedBox(height: 24),
             HorseHealthPanel(petId: pet.id, petName: pet.name),
           ],
-          if (pet.isActive) ...[
-            const SizedBox(height: 16),
-            _UpsellHint(l10n: l10n, petId: pet.id, onPurchased: _reloadPet),
-          ],
           const SizedBox(height: 24),
-          if (pet.isActive)
+          if (pet.isOwner && pet.isActive)
             FilledButton.icon(
               onPressed: () {
                 Navigator.push(
@@ -302,165 +306,87 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               MaterialPageRoute(builder: (_) => PetTimelineScreen(petId: pet.id, petName: pet.name)),
             ),
           ),
-          _ActionTile(
-            icon: Icons.event_available,
-            label: l10n.requestVisit,
-            onTap: _requestVisit,
-          ),
-          _ActionTile(
-            icon: Icons.chat,
-            label: l10n.vetMessaging,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MessagingScreen()),
+          if (pet.isOwner) ...[
+            _ActionTile(
+              icon: Icons.event_available,
+              label: l10n.requestVisit,
+              onTap: _requestVisit,
             ),
-          ),
-          const Divider(height: 32),
-          Row(
-            children: [
-              Expanded(child: Text(l10n.myVets, style: Theme.of(context).textTheme.titleSmall)),
-              TextButton(
-                onPressed: () async {
-                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
-                  _loadVets();
-                },
-                child: Text(l10n.addVetByEmail),
+            _ActionTile(
+              icon: Icons.chat,
+              label: l10n.vetMessaging,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MessagingScreen()),
               ),
-            ],
-          ),
-          if (loadingVets)
-            const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
-          else if (vetsLoadError != null)
-            ListTile(
-              leading: const Icon(Icons.cloud_off_outlined, color: AppColors.textMuted),
-              title: Text(vetsLoadError!),
-              trailing: TextButton(
-                onPressed: _loadVets,
-                child: Text(l10n.retryAction),
-              ),
-            )
-          else if (vets.isEmpty)
-            ListTile(
-              leading: const Icon(Icons.local_hospital_outlined),
-              title: Text(l10n.noVets),
-              subtitle: Text(l10n.addVetByEmail),
-            )
-          else
-            ...vets.map(
-              (v) => ListTile(
-                leading: Icon(
-                  v.isPrimary ? Icons.star : Icons.star_outline,
-                  color: AppColors.gold,
+            ),
+            const Divider(height: 32),
+            Row(
+              children: [
+                Expanded(child: Text(l10n.myVets, style: Theme.of(context).textTheme.titleSmall)),
+                TextButton(
+                  onPressed: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
+                    _loadVets();
+                  },
+                  child: Text(l10n.addVetByEmail),
                 ),
-                title: Text(v.practiceName),
-                subtitle: Text('${v.vetFullName} · ${v.vetEmail}'),
-                trailing: v.isPrimary
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.star_outline),
-                        tooltip: l10n.setPrimaryVet,
-                        onPressed: () => _setPrimaryVet(v),
-                      ),
+              ],
+            ),
+            if (loadingVets)
+              const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+            else if (vetsLoadError != null)
+              ListTile(
+                leading: const Icon(Icons.cloud_off_outlined, color: AppColors.textMuted),
+                title: Text(vetsLoadError!),
+                trailing: TextButton(
+                  onPressed: _loadVets,
+                  child: Text(l10n.retryAction),
+                ),
+              )
+            else if (vets.isEmpty)
+              ListTile(
+                leading: const Icon(Icons.local_hospital_outlined),
+                title: Text(l10n.noVets),
+                subtitle: Text(l10n.addVetByEmail),
+              )
+            else
+              ...vets.map(
+                (v) => ListTile(
+                  leading: Icon(
+                    v.isPrimary ? Icons.star : Icons.star_outline,
+                    color: AppColors.gold,
+                  ),
+                  title: Text(v.practiceName),
+                  subtitle: Text('${v.vetFullName} · ${v.vetEmail}'),
+                  trailing: v.isPrimary
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.star_outline),
+                          tooltip: l10n.setPrimaryVet,
+                          onPressed: () => _setPrimaryVet(v),
+                        ),
+                ),
               ),
-            ),
-          if (vets.length > 1)
-            OutlinedButton.icon(
-              onPressed: _pickPrimaryVet,
-              icon: const Icon(Icons.swap_horiz),
-              label: Text(primaryVet != null ? l10n.primaryVet : l10n.setPrimaryVet),
-            ),
-          if (pet.isActive && pet.entitlement?.isSubscription == true)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  final url = await ApiClient.instance.billingPortal(pet.id);
-                  await openExternalUrl(url);
-                },
-                icon: const Icon(Icons.settings),
-                label: Text(l10n.manageSubscription),
+            if (vets.length > 1)
+              OutlinedButton.icon(
+                onPressed: _pickPrimaryVet,
+                icon: const Icon(Icons.swap_horiz),
+                label: Text(primaryVet != null ? l10n.primaryVet : l10n.setPrimaryVet),
               ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UpsellHint extends StatefulWidget {
-  const _UpsellHint({required this.l10n, required this.petId, this.onPurchased});
-
-  final AppLocalizations l10n;
-  final String petId;
-  final Future<void> Function()? onPurchased;
-
-  @override
-  State<_UpsellHint> createState() => _UpsellHintState();
-}
-
-class _UpsellHintState extends State<_UpsellHint> {
-  BillingAddon? _carePlus;
-  // Fail-closed: hide upsell until entitlements confirm Care+ is missing.
-  bool _hasCarePlus = true;
-  bool _ready = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final catalog = await BillingAddon.fetchCatalog();
-      final ents = await AddonEntitlements.load();
-      if (!mounted) return;
-      setState(() {
-        _carePlus = BillingAddon.byCode(catalog, 'care_plus');
-        _hasCarePlus = ents == null ? true : ents.hasCarePlus;
-        _ready = true;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _ready = true);
-    }
-  }
-
-  Future<void> _buy(BuildContext context, String code) async {
-    try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
-      await openExternalUrl(url);
-      await _load();
-      await widget.onPurchased?.call();
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.l10n.paymentResume)));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_ready || _hasCarePlus || _carePlus == null) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => _buy(context, _carePlus!.code),
-            child: Text(
-              _carePlus!.label.isNotEmpty
-                  ? _carePlus!.label
-                  : widget.l10n.carePlusUpsell.split('—').first.trim(),
-            ),
-          ),
+            if (pet.isActive && pet.entitlement?.isSubscription == true)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final url = await ApiClient.instance.billingPortal(pet.id);
+                    await openExternalUrl(url);
+                  },
+                  icon: const Icon(Icons.settings),
+                  label: Text(l10n.manageSubscription),
+                ),
+              ),
+          ],
         ],
       ),
     );

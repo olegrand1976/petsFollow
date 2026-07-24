@@ -146,9 +146,12 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 		return store.User{}, err
 	}
 
-	// Unknown email: Pro can auto-register a vet; clients must already exist (invite flow).
+	// Unknown email: Pro can auto-register a vet; clients can create-if-absent via Google.
 	if audience == "client" {
-		return store.User{}, errGoogleClientNotFound
+		locale := localeOf(r)
+		return a.store.RegisterGoogleClient(ctx, store.RegisterGoogleClientInput{
+			Email: email, FullName: fullName, GoogleSub: googleSub, PreferredLocale: locale,
+		})
 	}
 
 	practiceName := fmt.Sprintf("Cabinet %s", strings.Split(fullName, " ")[0])
@@ -162,7 +165,6 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 var (
 	errGoogleProOnly         = errors.New("google pro only")
 	errGoogleClientOnly      = errors.New("google client only")
-	errGoogleClientNotFound  = errors.New("google client not found")
 	errGoogleAccountMismatch = errors.New("google account mismatch")
 )
 
@@ -172,10 +174,10 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 		writeErr(w, r, http.StatusForbidden, "google_pro_only", "google_pro_only")
 	case errors.Is(err, errGoogleClientOnly):
 		writeErr(w, r, http.StatusForbidden, "google_client_only", "google_client_only")
-	case errors.Is(err, errGoogleClientNotFound):
-		writeErr(w, r, http.StatusNotFound, "google_client_not_found", "google_client_not_found")
 	case errors.Is(err, errGoogleAccountMismatch):
 		writeErr(w, r, http.StatusConflict, "google_account_mismatch", "google_account_mismatch")
+	case errors.Is(err, store.ErrConflict):
+		writeErr(w, r, http.StatusConflict, "conflict", "google_account_mismatch")
 	default:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	}

@@ -4,7 +4,7 @@
 
 ## En une phrase
 
-Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**. Pro gratuit pour le cabinet ; le client paie (~2–3 €/mois).
+Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**. Pro gratuit pour le cabinet ; le client paie (~2–3,5 €/mois).
 
 ## Pour qui / modèle
 
@@ -22,6 +22,7 @@ Monétisation : **cabinet gratuit** → activation clients payants.
 - Relevé cardiaque **15 / 30 / 60 s** (tap, sans hardware)
 - Messagerie client ↔ véto (+ mode indisponible)
 - Timeline historique (messages, relevés validés)
+- Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
 - Langues **FR / NL / EN / ES / ET**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
@@ -29,20 +30,13 @@ Ne pas promettre : hardware, WebSocket temps réel (refresh via ouverture app / 
 
 ## Offre à pitcher
 
-Prix **TTC** client. Steer = **triennial**.
+Prix **TTC** client. Steer = **triennial**. Pas d’addons à vendre ; pas de plan 5 ans.
 
 | Plan | Prix TTC | ≈ / mois | Message |
 |------|----------|----------|---------|
+| Monthly | 3,50 € / mois | 3,5 € | Flex (abo Stripe only) |
 | Annual | 35 € / an | 2,9 € | Entrée |
 | **Triennial** | **95 € / 3 ans** | **2,6 €** | **Recommandé** |
-| Quinquennial | 145 € / 5 ans | 2,4 € | Engagement long |
-
-| Addon (paiement unique à vie) | Prix TTC | Pitch |
-|-------|----------|-------|
-| Family | **39 €** | Dès 2 animaux ; vue foyer ; **−10 %** sur abos suivants ; pas de plafond |
-| Kennel | **119 €** | Dès 6 animaux ; encodage rapide ; **−15 %** ; **exclusif** Family (upgrade) |
-| Care+ | **19 €** | Médicaments / rappels perso |
-| Horse | **39 €** | Pack équine (si ≥1 cheval) |
 
 Détail économique → [17](17-POLITIQUE-TARIFAIRE.md).
 
@@ -60,17 +54,18 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Vos clients paient moins de 3 €/mois ; vous gagnez sur chaque activation — jusqu’à ~9,4 € sur le triennial. Même plafond si un commercial vous a apporté. » |
-| **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — moins de 3 €/mois. » |
+| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Vos clients paient moins de 3,5 €/mois ; vous gagnez sur chaque activation — jusqu’à ~9,4 € sur le triennial. Même plafond si un commercial vous a apporté. » |
+| **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — à partir de ~2,6 €/mois sur 3 ans. » |
 | **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. » |
 
 ### Objections
 
 | Objection | Réponse |
 |-----------|---------|
-| « Encore un abonnement » | Sans boîtier, prescrit par le véto, **&lt; 3 €/mois** (triennial ~2,6 €). |
+| « Encore un abonnement » | Sans boîtier, prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €). |
 | « Je perds s’il y a un commercial » | **Non** — même plafond véto avec ou sans commercial. |
 | « Il faut un appareil ? » | **Non** — relevé au doigt dans l’app (durée définie par le cabinet). |
+| « Et Family / Care+ ? » | **Inclus** dès qu’un animal est payant — plus d’addons à acheter. |
 
 ## Démo terrain
 
@@ -89,10 +84,10 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 
 | Interdit | Pourquoi |
 |----------|----------|
-| **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant** (abonnement client). Tant qu’il n’y a pas d’activation → **0 €**. Le bonus ramp (25 €) exige **5 pets payants / 60 j**, pas juste un compte créé. |
+| **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. Le bonus ramp (25 €) exige **5 pets payants / 60 j**. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
-| **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Le véto n’est **pas pénalisé** si vous êtes assigné ; même plafond (~9,4 € sur le triennial). |
-| **Promettre un boîtier ou du chat temps réel type WebSocket** | Vendable = app + Pro (relevé, messagerie, timeline, addons, push FCM messages/RDV). Hardware et WebSocket = **pas livré**. |
+| **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Même plafond (~9,4 € sur le triennial). |
+| **Promettre un boîtier, du chat WebSocket, ou vendre des addons** | Vendable = app + Pro (relevé, messagerie, timeline, Care/Horse/foyer inclus, push FCM). Hardware, WebSocket, addons payants = **pas à pitcher**. |
 
 ## Liens
 

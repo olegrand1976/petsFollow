@@ -24,11 +24,11 @@
 | i18n FR / NL / EN / ES / ET (UI + erreurs API) | Livré |
 | Google OAuth + 2FA TOTP (optionnel) | Livré |
 | Admin plateforme (métriques, users, payments, commercials) | Livré |
-| Stripe billing par animal + addons Family / Care+ / Horse | Livré |
+| Stripe billing par animal (monthly / annual / triennial ; quinquennial + addons = legacy hors vente) | Livré |
 | Commissions véto + commercial (ledger, fiches UI `ProCommissionSheet`) | Livré |
 | Espace commercial (overview, vets, prospects, commissions, pitch) | Livré |
 | Link-requests client → véto (`/requests`) | Livré |
-| Horse pack (contacts, compétitions) + care reminders | Livré |
+| Care reminders + Horse pack (inclus entitlement animal actif ; plus vendus en addon) | Livré |
 | Médias (avatars / photos / messages) local + GCS staging | Livré |
 | Préférences email véto, durées FC configurables, changement MDP | Livré |
 | Reset mot de passe email (forgot/reset) | Livré |
@@ -39,7 +39,7 @@
 - WebSocket temps réel
 - Refresh token silencieux côté clients
 - Simulation prospection admin 10 ans → [16](16-ADMIN-SIMULATION-10ANS.md) (**non livré**)
-- Export / emails Care+ avancés
+- Export / emails Care avancés (features incluses — plus de roadmap « addon Care+ »)
 - Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (phase 4)
 
 ## Comptes seed

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -97,7 +98,7 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, report)
+		httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 		return
 	}
 	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
@@ -111,7 +112,7 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, report)
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
 func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +144,51 @@ func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, report)
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
+}
+
+func (a *API) getVisitReportAudio(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	visitID := chi.URLParam(r, "visitID")
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if !a.canAccessVisitReport(w, r, id, visit, store.PermWriteNotes, true) {
+		return
+	}
+	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if report.Status == "final" {
+		writeErr(w, r, http.StatusGone, "gone", "report_finalized")
+		return
+	}
+	key := strings.TrimSpace(report.AudioObjectKey)
+	if key == "" || a.media == nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	rc, ct, err := a.media.Open(r.Context(), key)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	defer rc.Close()
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Cache-Control", "private, no-store")
+	_, _ = io.Copy(w, rc)
 }
 
 func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
@@ -170,6 +215,11 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 		return
 	}
+	// RGPD: purge audio before finalize so a failed Delete can still be retried via finalize.
+	if err := a.purgeVisitReportAudio(r.Context(), report); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "audio_purge_failed")
+		return
+	}
 	report, err = a.store.FinalizeVisitReport(r.Context(), report.ID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -179,7 +229,9 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, report)
+	report.AudioURL = ""
+	report.AudioObjectKey = ""
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
 func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
@@ -220,6 +272,22 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	system := `Tu es un assistant vétérinaire. Reformule le compte-rendu de visite en français clair,
 structuré en sections SOAP (Subjectif, Objectif, Analyse, Plan). Garde les faits médicaux; n'invente pas.`
+	if id.Role == kernel.RoleCarePro {
+		u, uerr := a.store.GetUserByID(r.Context(), id.UserID)
+		if uerr == nil {
+			switch kernel.ProfessionalSpecialty(u.ProfessionalSpecialty) {
+			case kernel.SpecialtyFarrier:
+				system = `Tu es un assistant pour maréchal-ferrant. Reformule le compte-rendu de ferrage/intervention
+en français clair (état des pieds, fer/type, observations, recommandations). N'invente pas.`
+			case kernel.SpecialtyPhysio:
+				system = `Tu es un assistant en physiothérapie animale. Reformule le CR de séance
+(motif, examen, techniques, exercices, plan). N'invente pas.`
+			case kernel.SpecialtyBehaviorist:
+				system = `Tu es un assistant comportementaliste animalier. Reformule le CR
+(contexte, comportements observés, analyse, plan d'accompagnement). N'invente pas.`
+			}
+		}
+	}
 	improved, err := a.gemini.GenerateText(r.Context(), system, source, 0.3)
 	if err != nil {
 		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
@@ -234,7 +302,7 @@ structuré en sections SOAP (Subjectif, Objectif, Analyse, Plan). Garde les fait
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, report)
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
 func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
@@ -304,8 +372,11 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, url, objectKey)
+	// Do not expose public /media URL for PHI audio — store key only; stream via authenticated GET.
+	_ = url
+	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, "", objectKey)
 	if err != nil {
+		_ = a.media.Delete(r.Context(), objectKey)
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 			return
@@ -321,17 +392,20 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 		userPrompt := "Transcris cet enregistrement de visite."
 		out, gerr := a.gemini.GenerateTextWithMedia(r.Context(), system, userPrompt, ct, data, 0.2)
 		if gerr != nil {
+			_ = a.purgeVisitReportAudio(r.Context(), report)
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
 		}
 		transcript = strings.TrimSpace(out)
 		if transcript == "" {
+			_ = a.purgeVisitReportAudio(r.Context(), report)
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
 		}
 	}
 	report, err = a.store.UpdateVisitReportTranscript(r.Context(), report.ID, transcript)
 	if err != nil {
+		_ = a.purgeVisitReportAudio(r.Context(), report)
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 			return
@@ -339,7 +413,7 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, report)
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
 func (a *API) canManageVisit(w http.ResponseWriter, r *http.Request, id authx.Identity, visit store.Visit) bool {
@@ -413,4 +487,26 @@ func normalizeAudioMIME(ct string) string {
 	default:
 		return ""
 	}
+}
+
+// redactVisitReportAudio hides public audio URLs from API clients (PHI).
+func redactVisitReportAudio(r store.VisitReport) store.VisitReport {
+	r.AudioURL = ""
+	r.AudioObjectKey = ""
+	return r
+}
+
+func (a *API) purgeVisitReportAudio(ctx context.Context, report store.VisitReport) error {
+	key := strings.TrimSpace(report.AudioObjectKey)
+	if key != "" && a.media != nil {
+		if err := a.media.Delete(ctx, key); err != nil {
+			return err
+		}
+	}
+	if report.ID != "" {
+		if err := a.store.ClearVisitReportAudio(ctx, report.ID); err != nil && !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+	}
+	return nil
 }

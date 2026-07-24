@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
-import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -26,8 +24,6 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   bool loading = true;
   String? loadError;
   bool _hasLoadedOnce = false;
-  AddonEntitlements entitlements = AddonEntitlements.empty();
-  bool entitlementsKnown = false;
 
   @override
   void initState() {
@@ -59,7 +55,6 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       });
     }
     try {
-      final ents = await AddonEntitlements.load();
       final data = await ApiClient.instance.getPets();
       final loadedPets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
       final map = <String, List<CareReminder>>{};
@@ -77,12 +72,6 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       }
       if (mounted) {
         setState(() {
-          if (ents != null) {
-            entitlements = ents;
-            entitlementsKnown = true;
-          } else {
-            entitlementsKnown = false;
-          }
           pets = loadedPets;
           remindersByPet = map;
           loading = false;
@@ -151,11 +140,12 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   }
 
   Future<void> _showCreateSheet() async {
-    if (pets.isEmpty || !mounted) return;
+    final writable = pets.where((p) => p.canWriteNotes).toList();
+    if (writable.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat.yMMMd(locale);
-    var selectedPetId = pets.first.id;
+    var selectedPetId = writable.first.id;
     var selectedType = 'vaccination';
     var alreadyDone = false;
     var referenceDate = DateTime.now();
@@ -174,9 +164,9 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModal) {
-            final selectedPet = pets.firstWhere(
+            final selectedPet = writable.firstWhere(
               (p) => p.id == selectedPetId,
-              orElse: () => pets.first,
+              orElse: () => writable.first,
             );
             final selectedIsHorse = selectedPet.species == 'horse';
             final types = <MapEntry<String, String>>[
@@ -184,11 +174,9 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
               MapEntry('deworming', l10n.careTypeDeworming),
               MapEntry('vet_check', l10n.careTypeVetCheck),
               MapEntry('dental', l10n.careTypeDental),
-              if (entitlementsKnown && entitlements.hasCarePlus) ...[
-                MapEntry('medication', l10n.careTypeMedication),
-                MapEntry('custom', l10n.careTypeCustom),
-              ],
-              if (selectedIsHorse && entitlementsKnown && entitlements.hasHorse) ...[
+              MapEntry('medication', l10n.careTypeMedication),
+              MapEntry('custom', l10n.careTypeCustom),
+              if (selectedIsHorse) ...[
                 MapEntry('farrier', l10n.careTypeFarrier),
                 MapEntry('fecal_egg', l10n.careTypeFecalEgg),
               ],
@@ -219,14 +207,14 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                     DropdownButtonFormField<String>(
                       value: selectedPet.id,
                       decoration: InputDecoration(labelText: l10n.careSelectPet),
-                      items: pets
+                      items: writable
                           .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))
                           .toList(),
                       onChanged: (v) {
                         if (v == null) return;
                         setModal(() {
                           selectedPetId = v;
-                          final pet = pets.firstWhere((p) => p.id == v);
+                          final pet = writable.firstWhere((p) => p.id == v);
                           if (pet.species != 'horse' &&
                               (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
                             selectedType = 'vaccination';
@@ -348,25 +336,14 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
     titleCtrl.dispose();
     if (created != true) return;
 
-    final pet = pets.firstWhere(
+    final pet = writable.firstWhere(
       (p) => p.id == selectedPetId,
-      orElse: () => pets.first,
+      orElse: () => writable.first,
     );
     selectedPetId = pet.id;
     if (pet.species != 'horse' &&
         (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
       selectedType = 'vaccination';
-    }
-
-    final needsCarePlus = selectedType == 'custom' || selectedType == 'medication';
-    final needsHorse = selectedType == 'farrier' || selectedType == 'fecal_egg';
-    if (needsCarePlus && (!entitlementsKnown || !entitlements.hasCarePlus)) {
-      await _offerAddonCheckout(context, 'care_plus', l10n.carePlusRequired);
-      return;
-    }
-    if (needsHorse && (!entitlementsKnown || !entitlements.hasHorse)) {
-      await _offerAddonCheckout(context, 'horse', l10n.horsePackRequired);
-      return;
     }
 
     final dueAt = CareReminder.computeDueAt(
@@ -385,39 +362,9 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       await load();
     } catch (e) {
       if (!mounted) return;
-      final raw = e.toString();
-      final msg = raw.contains('care_plus')
-          ? l10n.carePlusRequired
-          : raw.contains('horse_pack')
-              ? l10n.horsePackRequired
-              : mapApiError(e, l10n);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    }
-  }
-
-  Future<void> _offerAddonCheckout(BuildContext context, String code, String message) async {
-    final l10n = AppLocalizations.of(context)!;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        content: Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.activateAddon)),
-        ],
-      ),
-    );
-    if (go != true || !context.mounted) return;
-    try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
-      await openExternalUrl(url);
-      await load();
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.paymentResume)),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
     }
   }
 
@@ -452,13 +399,13 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
 
     return PetsTabScaffold(
       title: Text(l10n.careTitle),
-      floatingActionButton: pets.isEmpty
-          ? null
-          : FloatingActionButton(
+      floatingActionButton: pets.any((p) => p.canWriteNotes)
+          ? FloatingActionButton(
               onPressed: _showCreateSheet,
               tooltip: l10n.careAddReminder,
               child: const Icon(Icons.add),
-            ),
+            )
+          : null,
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : loadError != null
@@ -513,21 +460,23 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                                         color: r.isOverdue ? AppColors.alert : AppColors.textMuted,
                                       ),
                                     ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.check_circle_outline),
-                                          tooltip: l10n.careDone,
-                                          onPressed: () => markDone(r),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.schedule),
-                                          tooltip: l10n.carePostpone,
-                                          onPressed: () => postpone(r),
-                                        ),
-                                      ],
-                                    ),
+                                    trailing: pet.canWriteNotes
+                                        ? Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.check_circle_outline),
+                                                tooltip: l10n.careDone,
+                                                onPressed: () => markDone(r),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.schedule),
+                                                tooltip: l10n.carePostpone,
+                                                onPressed: () => postpone(r),
+                                              ),
+                                            ],
+                                          )
+                                        : null,
                                   ),
                                 );
                                 },

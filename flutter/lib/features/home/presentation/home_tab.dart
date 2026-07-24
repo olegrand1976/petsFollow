@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
@@ -141,7 +140,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     final greeting = userName != null && userName!.isNotEmpty
         ? l10n.greeting(userName!.split(' ').first)
         : l10n.myPets;
-    final activePet = pets.where((p) => p.isActive).firstOrNull;
+    final activePet = pets.where((p) => p.isOwner && p.isActive).firstOrNull;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
     final mission = DiscoveryController.instance.missionCardForToday(
@@ -195,13 +194,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         onMeasure: _pickPetThenMeasure,
                       ),
                       const SizedBox(height: 12),
-                      _UpsellBanner(
-                        key: ValueKey('upsell-$householdEpoch'),
-                        l10n: l10n,
-                        hasHorse: pets.any((p) => p.species == 'horse'),
-                        petCount: pets.length,
-                        onPurchased: load,
-                      ),
+                      _KennelEncodeButton(l10n: l10n, onDone: load),
                       const SizedBox(height: 12),
                     ],
                     _FamilyHouseholdCard(
@@ -217,7 +210,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         speciesLabel: _speciesLabel(l10n, pet.species),
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
-                        onMeasure: pet.isActive ? () => _startMeasurement(pet) : null,
+                        onMeasure: pet.isOwner && pet.isActive ? () => _startMeasurement(pet) : null,
                         onResumePayment:
                             pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),
@@ -254,7 +247,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   }
 
   Future<void> _pickPetThenMeasure() async {
-    final activePets = pets.where((p) => p.isActive).toList();
+    final activePets = pets.where((p) => p.isOwner && p.isActive).toList();
     if (activePets.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     String? selectedPetId;
@@ -482,11 +475,6 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
 
   Future<void> _load() async {
     try {
-      final ents = await AddonEntitlements.load();
-      if (ents == null || (!ents.hasFamily && !ents.hasKennel)) {
-        if (mounted) setState(() => _data = null);
-        return;
-      }
       final data = await ApiClient.instance.getHousehold();
       if (!mounted) return;
       setState(() => _data = data);
@@ -542,168 +530,24 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
   }
 }
 
-class _UpsellBanner extends StatefulWidget {
-  const _UpsellBanner({
-    super.key,
-    required this.l10n,
-    required this.hasHorse,
-    required this.petCount,
-    this.onPurchased,
-  });
+class _KennelEncodeButton extends StatelessWidget {
+  const _KennelEncodeButton({required this.l10n, this.onDone});
 
   final AppLocalizations l10n;
-  final bool hasHorse;
-  final int petCount;
-  final Future<void> Function()? onPurchased;
-
-  @override
-  State<_UpsellBanner> createState() => _UpsellBannerState();
-}
-
-class _UpsellBannerState extends State<_UpsellBanner> {
-  BillingAddon? _carePlus;
-  BillingAddon? _horse;
-  BillingAddon? _family;
-  BillingAddon? _kennel;
-  // Fail-closed defaults: hide upsells until entitlements are confirmed missing.
-  bool _hasCarePlus = true;
-  bool _hasHorsePack = true;
-  bool _hasFamily = true;
-  bool _hasKennel = true;
-  bool _ready = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final catalog = await BillingAddon.fetchCatalog();
-      final ents = await AddonEntitlements.load();
-      if (!mounted) return;
-      setState(() {
-        _carePlus = BillingAddon.byCode(catalog, 'care_plus');
-        _horse = BillingAddon.byCode(catalog, 'horse');
-        _family = BillingAddon.byCode(catalog, 'family');
-        _kennel = BillingAddon.byCode(catalog, 'kennel');
-        if (ents == null) {
-          // API failure: keep fail-closed (no upsell flash).
-          _hasCarePlus = true;
-          _hasHorsePack = true;
-          _hasFamily = true;
-          _hasKennel = true;
-        } else {
-          _hasCarePlus = ents.hasCarePlus;
-          _hasHorsePack = ents.hasHorse;
-          _hasFamily = ents.hasFamily;
-          _hasKennel = ents.hasKennel;
-        }
-        _ready = true;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _ready = true);
-    }
-  }
-
-  Future<void> _buy(BuildContext context, String code) async {
-    try {
-      final url = await ApiClient.instance.startAddonCheckout(addonCode: code);
-      await openExternalUrl(url);
-      await _load();
-      await widget.onPurchased?.call();
-    } catch (e) {
-      if (!context.mounted) return;
-      final raw = e.toString();
-      final msg = raw.contains('kennel_requires_six_pets')
-          ? widget.l10n.kennelRequiresSixPets
-          : raw.contains('family_requires_two_pets')
-              ? widget.l10n.familyRequiresTwoPets
-              : (raw.contains('household_exclusive') ||
-                      raw.contains('addon_already_active') ||
-                      raw.contains('family_pet_limit'))
-                  ? widget.l10n.familyPetLimit
-                  : widget.l10n.paymentResume;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg)),
-      );
-    }
-  }
+  final Future<void> Function()? onDone;
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) return const SizedBox.shrink();
-    final showCare = !_hasCarePlus && _carePlus != null;
-    final showHorse = widget.hasHorse && !_hasHorsePack && _horse != null;
-    // Prefer Kennel over Family when ≥6 pets.
-    final showKennel = widget.petCount >= 6 && !_hasKennel && _kennel != null;
-    final showFamily =
-        widget.petCount >= 2 && !_hasFamily && !_hasKennel && !showKennel && _family != null;
-    if (!showCare && !showHorse && !showFamily && !showKennel && !_hasKennel) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showCare) ...[
-            Text(widget.l10n.carePlusUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _buy(context, 'care_plus'),
-              child: Text(_carePlus!.label.isNotEmpty ? _carePlus!.label : widget.l10n.activateAddon),
-            ),
-          ],
-          if (showCare && (showHorse || showFamily || showKennel)) const SizedBox(height: 12),
-          if (showKennel) ...[
-            Text(widget.l10n.kennelPackHint, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _buy(context, 'kennel'),
-              child: Text(_kennel!.label.isNotEmpty ? _kennel!.label : widget.l10n.activateAddon),
-            ),
-          ],
-          if (showFamily) ...[
-            Text(widget.l10n.familyPackHint, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _buy(context, 'family'),
-              child: Text(_family!.label.isNotEmpty ? _family!.label : widget.l10n.activateAddon),
-            ),
-          ],
-          if ((showFamily || showKennel) && showHorse) const SizedBox(height: 12),
-          if (showHorse) ...[
-            Text(widget.l10n.horsePackUpsell, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _buy(context, 'horse'),
-              child: Text(_horse!.label.isNotEmpty ? _horse!.label : widget.l10n.activateAddon),
-            ),
-          ],
-          if (_hasKennel) ...[
-            if (showCare || showHorse || showFamily || showKennel) const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
-                );
-                await widget.onPurchased?.call();
-              },
-              icon: const Icon(Icons.pets_outlined, size: 18),
-              label: Text(widget.l10n.kennelQuickEncodeTitle),
-            ),
-          ],
-        ],
-      ),
+    return OutlinedButton.icon(
+      onPressed: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
+        );
+        await onDone?.call();
+      },
+      icon: const Icon(Icons.pets_outlined, size: 18),
+      label: Text(l10n.kennelQuickEncodeTitle),
     );
   }
 }
@@ -898,6 +742,9 @@ class _PaymentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ent = pet.entitlement;
+    if (pet.isSharedAccess) {
+      return _BadgeChip(label: pet.sharedAccessLabel(l10n), color: AppColors.textMuted);
+    }
     if (pet.needsResumePayment) {
       return _BadgeChip(label: l10n.badgePendingPayment, color: AppColors.alert);
     }

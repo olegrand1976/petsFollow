@@ -71,6 +71,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedDemoSchedules(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedCarePros(ctx, pool); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
@@ -423,29 +426,6 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 			return err
 		}
 	}
-	if c.seedActiveAddons {
-		if err := seedClientActiveAddons(ctx, tx, clientID); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func seedClientActiveAddons(ctx context.Context, tx pgx.Tx, ownerUserID string) error {
-	now := time.Now()
-	from := now.Add(-30 * 24 * time.Hour)
-	for _, code := range []billing.AddonCode{billing.AddonCarePlus, billing.AddonKennel, billing.AddonHorse} {
-		addon, err := billing.GetAddon(code)
-		if err != nil {
-			return err
-		}
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO billing.addon_entitlements (id, owner_user_id, addon_code, status, amount_cents, currency, valid_from, valid_until)
-			VALUES ($1, $2, $3, 'active', $4, 'eur', $5, NULL)`,
-			uuid.NewString(), ownerUserID, string(code), addon.AmountCents, from); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -673,6 +653,101 @@ func seedEnrichment(ctx context.Context, pool *pgxpool.Pool) error {
 	return nil
 }
 
+func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordCarePro), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	type careProSeed struct {
+		email, name, specialty string
+	}
+	pros := []careProSeed{
+		{"farrier.demo@petsfollow.test", "Marc Ferrier", string(kernel.SpecialtyFarrier)},
+		{"vetlight.demo@petsfollow.test", "Dr Léa Light", string(kernel.SpecialtyVetLight)},
+	}
+	var farrierID, vetLightID string
+	for _, p := range pros {
+		var uid string
+		err := pool.QueryRow(ctx, `
+			INSERT INTO identity.users (
+				id, email, password_hash, full_name, role, practice_id,
+				email_verified_at, professional_specialty, preferred_locale
+			) VALUES ($1, $2, $3, $4, 'care_pro', NULL, NOW(), $5, 'fr')
+			ON CONFLICT (email) DO UPDATE SET
+				password_hash = EXCLUDED.password_hash,
+				full_name = EXCLUDED.full_name,
+				role = 'care_pro',
+				professional_specialty = EXCLUDED.professional_specialty,
+				preferred_locale = COALESCE(identity.users.preferred_locale, EXCLUDED.preferred_locale),
+				email_verified_at = COALESCE(identity.users.email_verified_at, NOW())
+			RETURNING id::text`,
+			uuid.NewString(), p.email, string(hash), p.name, p.specialty).Scan(&uid)
+		if err != nil {
+			return fmt.Errorf("care_pro %s: %w", p.email, err)
+		}
+		if p.specialty == string(kernel.SpecialtyFarrier) {
+			farrierID = uid
+		} else {
+			vetLightID = uid
+		}
+	}
+
+	var spiritID, ownerID, practiceID string
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text, p.owner_user_id::text, COALESCE(p.practice_id::text, '')
+		FROM pets.pets p
+		JOIN identity.users u ON u.id = p.owner_user_id
+		WHERE u.email = 'client.demo@petsfollow.test' AND p.name = 'Spirit'
+		LIMIT 1`).Scan(&spiritID, &ownerID, &practiceID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			log.Println("seedCarePros: Spirit introuvable — care_pro créés sans grant ni visite")
+			return nil
+		}
+		return err
+	}
+
+	grant := func(granteeID, perm string) error {
+		_, err := pool.Exec(ctx, `
+			INSERT INTO pets.pet_access (id, pet_id, grantee_user_id, permission, granted_by_user_id)
+			VALUES ($1, $2, $3, $4, $5)
+			ON CONFLICT (pet_id, grantee_user_id) DO UPDATE SET
+				permission = EXCLUDED.permission,
+				granted_by_user_id = EXCLUDED.granted_by_user_id`,
+			uuid.NewString(), spiritID, granteeID, perm, ownerID)
+		return err
+	}
+	if err := grant(farrierID, "write_notes"); err != nil {
+		return err
+	}
+	if err := grant(vetLightID, "write_notes"); err != nil {
+		return err
+	}
+
+	if practiceID == "" {
+		return nil
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM visits.visits
+		WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'`, spiritID).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO visits.visits (
+			id, pet_id, practice_id, scheduled_at, status, notes, source,
+			pending_action_by, duration_minutes, address_text
+		) VALUES (
+			$1, $2, $3, NOW() + INTERVAL '2 days', 'confirmed',
+			'Ferrage Spirit — démo care_pro', 'vet', NULL, 30, 'Écurie VetPlus Demo'
+		)`,
+		uuid.NewString(), spiritID, practiceID)
+	return err
+}
+
 func logSummary() {
 	log.Println("--- Comptes démo petsFollow ---")
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
@@ -686,10 +761,13 @@ func logSummary() {
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
 	log.Println("  vet.reset@       — token démo reset mot de passe")
 	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
-	log.Println("  client.demo@     — 6 animaux · addons Care+/Kennel/Horse actifs")
+	log.Println("  client.demo@     — 6 animaux · mix monthly/annual/triennial")
 	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
+	log.Printf("Care pro: *@petsfollow.test / %s (Flutter pro light)", passwordCarePro)
+	log.Println("  farrier.demo@    — maréchal · write_notes sur Spirit + visite ferrage")
+	log.Println("  vetlight.demo@   — véto light · write_notes sur Spirit")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
 	log.Printf("Reset password: http://localhost:3002/reset-password?token=%s", demoPasswordResetToken)
 }

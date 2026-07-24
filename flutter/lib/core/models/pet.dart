@@ -1,4 +1,6 @@
+import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/media_url.dart';
+import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetEntitlement {
   const PetEntitlement({
@@ -52,6 +54,8 @@ class Pet {
     this.photoUrl,
     this.paymentStatus = 'pending_payment',
     this.practiceId,
+    this.ownerUserId,
+    this.permission,
     this.entitlement,
     this.heartrateDurationsSec = const [60],
   });
@@ -63,8 +67,46 @@ class Pet {
   final String? photoUrl;
   final String paymentStatus;
   final String? practiceId;
+  final String? ownerUserId;
+  /// ACL from list: read | write_notes | full (owner always full when listed).
+  final String? permission;
   final PetEntitlement? entitlement;
   final List<int> heartrateDurationsSec;
+
+  /// True when the logged-in client owns this pet (billing / HR / edit).
+  bool get isOwner {
+    final uid = ApiClient.instance.userId;
+    if (uid == null || uid.isEmpty) {
+      // Session incomplete — never infer ownership from permission (shared `full` ≠ owner).
+      return false;
+    }
+    if (ownerUserId == null || ownerUserId!.isEmpty) {
+      // Legacy payload without ownerUserId: owned only if no ACL grant marker.
+      return permission == null || permission!.isEmpty;
+    }
+    return ownerUserId == uid;
+  }
+
+  bool get isSharedAccess => !isOwner;
+
+  /// Notes / care mutations (matches API `write_notes`+).
+  bool get canWriteNotes {
+    if (isOwner) return true;
+    final p = permission;
+    return p == 'write_notes' || p == 'full';
+  }
+
+  /// Label for shared pets (owner returns empty — caller shows payment badge instead).
+  String sharedAccessLabel(AppLocalizations l10n) {
+    switch (permission) {
+      case 'full':
+        return l10n.petAccessSharedFull;
+      case 'write_notes':
+        return l10n.petAccessSharedNotes;
+      default:
+        return l10n.petAccessSharedRead;
+    }
+  }
 
   /// Premium access aligned with Go `HasActiveEntitlement` when entitlement is present.
   bool get isActive {
@@ -77,7 +119,7 @@ class Pet {
 
   /// Resume checkout only when payment is pending and entitlement does not grant access.
   bool get needsResumePayment =>
-      paymentStatus == 'pending_payment' && !isActive;
+      isOwner && paymentStatus == 'pending_payment' && !isActive;
 
   factory Pet.fromJson(Map<String, dynamic> json) {
     final rawDurations = json['heartrateDurationsSec'] as List<dynamic>?;
@@ -89,6 +131,8 @@ class Pet {
       photoUrl: resolveMediaUrl(json['photoUrl'] as String?),
       paymentStatus: json['paymentStatus'] as String? ?? 'pending_payment',
       practiceId: json['practiceId'] as String?,
+      ownerUserId: json['ownerUserId'] as String?,
+      permission: json['permission'] as String?,
       entitlement: PetEntitlement.fromJson(
         json['entitlement'] as Map<String, dynamic>?,
       ),

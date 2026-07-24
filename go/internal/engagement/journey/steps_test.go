@@ -15,34 +15,6 @@ func TestNeedsFirstMeasureSkip(t *testing.T) {
 	}
 }
 
-func TestNeedsKennelUpsell(t *testing.T) {
-	ok, reason := needsKennelUpsell(store.JourneyClientSegment{PetCount: 5}, time.Now())
-	if ok || reason != "lt_6_pets" {
-		t.Fatalf("lt6: ok=%v reason=%q", ok, reason)
-	}
-	ok, reason = needsKennelUpsell(store.JourneyClientSegment{
-		PetCount: 6, ActiveAddons: map[string]bool{"kennel": true},
-	}, time.Now())
-	if ok || reason != "has_kennel" {
-		t.Fatalf("has kennel: ok=%v reason=%q", ok, reason)
-	}
-	ok, _ = needsKennelUpsell(store.JourneyClientSegment{PetCount: 6, ActiveAddons: map[string]bool{}}, time.Now())
-	if !ok {
-		t.Fatal("expected kennel upsell")
-	}
-}
-
-func TestNeedsHorseUpsell(t *testing.T) {
-	ok, reason := needsHorseUpsell(store.JourneyClientSegment{HorseCount: 0}, time.Now())
-	if ok || reason != "no_horse" {
-		t.Fatalf("got ok=%v reason=%q", ok, reason)
-	}
-	ok, _ = needsHorseUpsell(store.JourneyClientSegment{HorseCount: 1, ActiveAddons: map[string]bool{}}, time.Now())
-	if !ok {
-		t.Fatal("expected horse upsell")
-	}
-}
-
 func TestNeedsInactiveHRBeforeD14(t *testing.T) {
 	ok, reason := needsInactiveHR(store.JourneyClientSegment{JourneyDays: 10}, time.Now())
 	if ok || reason != "before_d14" {
@@ -73,8 +45,14 @@ func TestAllStepKeysUnique(t *testing.T) {
 		}
 		seen[k] = true
 	}
-	if len(seen) < 20 {
-		t.Fatalf("expected >=20 steps, got %d", len(seen))
+	// 14 timed + 3 event; addon upsells (d45/d60/d75) removed.
+	if len(seen) < 17 {
+		t.Fatalf("expected >=17 steps, got %d", len(seen))
+	}
+	for _, banned := range []string{"d45_care_plus", "d60_horse", "d75_kennel"} {
+		if seen[banned] {
+			t.Fatalf("upsell step %s should be removed", banned)
+		}
 	}
 }
 
@@ -82,30 +60,6 @@ func TestAppendUTM(t *testing.T) {
 	got := appendUTM("https://example.com/app", "d2_first_measure")
 	if !strings.Contains(got, "utm_content=d2_first_measure") {
 		t.Fatalf("unexpected utm url: %s", got)
-	}
-}
-
-func TestFamilySoftEligible(t *testing.T) {
-	if !FamilySoftEligible(store.JourneyClientSegment{PetCount: 2, ActiveAddons: map[string]bool{}}) {
-		t.Fatal("expected family soft for 2 pets")
-	}
-	if FamilySoftEligible(store.JourneyClientSegment{PetCount: 2, ActiveAddons: map[string]bool{"kennel": true}}) {
-		t.Fatal("kennel excludes family soft")
-	}
-	if FamilySoftEligible(store.JourneyClientSegment{PetCount: 0, ActiveAddons: map[string]bool{}}) {
-		t.Fatal("no pets → no family soft")
-	}
-}
-
-func TestQuarterFamilySoftEligible(t *testing.T) {
-	if !QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 3, ActiveAddons: map[string]bool{}}) {
-		t.Fatal("expected quarter family soft")
-	}
-	if QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 6, ActiveAddons: map[string]bool{}}) {
-		t.Fatal("6 pets is kennel territory, not family soft")
-	}
-	if QuarterFamilySoftEligible(store.JourneyClientSegment{PetCount: 3, ActiveAddons: map[string]bool{"family": true}}) {
-		t.Fatal("already family")
 	}
 }
 

@@ -48,7 +48,6 @@
     "admin_only": "Solo administradores",
     "google_pro_only": "Google reservado para perfiles Pro",
     "google_client_only": "Esta cuenta de Google es un perfil Pro — use la app web",
-    "google_client_not_found": "No hay cuenta de cliente petsFollow para este correo. Pida una invitación a su veterinario",
     "not_your_pet": "No es su mascota",
     "wrong_practice": "Clínica incorrecta",
     "not_participant": "No es participante",
@@ -188,7 +187,7 @@
         "preheader": "Su recorrido petsFollow empieza hoy.",
         "greeting": "Hola {fullName},",
         "intro": "Su veterinario le ha prescrito petsFollow: seguimiento cardíaco sin dispositivo, en su teléfono. Descargue la app para empezar.",
-        "detail": "Qué podrá hacer:\n• Lecturas cardíacas 15 / 30 / 60 s\n• Mensajería segura con la clínica\n• Timeline y recordatorios de cuidados\n• Menos de 3 € / mes por animal",
+        "detail": "Qué podrá hacer:\n• Lecturas cardíacas 15 / 30 / 60 s\n• Mensajería segura con la clínica\n• Timeline y recordatorios de cuidados\n• Desde ~2,6 € / mes por animal (plan 3 años)",
         "cta": "Descargar la aplicación",
         "disclaimer": "Puede desactivar estos correos con el enlace al final."
       },
@@ -198,7 +197,7 @@
         "preheader": "Cree el perfil de su animal y elija un plan.",
         "greeting": "Hola {fullName},",
         "intro": "Para activar el seguimiento prescrito, cree el perfil de su animal y elija un plan. Recomendamos el plan de 3 años (95 €) — unos 2,6 € / mes.",
-        "detail": "Planes IVA incl.:\n• 35 € / año\n• 95 € / 3 años (recomendado)\n• 145 € / 5 años (pago único)",
+        "detail": "Planes IVA incl.:\n• 3,50 € / mes (suscripción)\n• 35 € / año\n• 95 € / 3 años (recomendado)",
         "cta": "Abrir la aplicación",
         "disclaimer": "Sin pago, el seguimiento cardíaco queda pendiente."
       },
@@ -218,9 +217,9 @@
         "preheader": "Los recordatorios le ayudan a no olvidar nada.",
         "greeting": "Hola {fullName},",
         "intro": "Una buena rutina marca la diferencia: active recordatorios de lecturas y cuidados (vacuna, desparasitación, control…). Su veterinario ve el historial en el expediente.",
-        "detail": "Opción Care+ (19 €, pago único de por vida): medicamentos y recordatorios personalizados si su animal tiene tratamiento regular.",
+        "detail": "Con un plan animal activo, los recordatorios de cuidados (medicamentos, vacunas…) están incluidos — actívelos en la pestaña Cuidados.",
         "cta": "Ver recordatorios",
-        "disclaimer": "Los complementos opcionales se gestionan en la app."
+        "disclaimer": "Los recordatorios se gestionan en la app."
       },
       "d6_vet_link": {
         "subject": "Su veterinario está a un mensaje",
@@ -258,39 +257,9 @@
         "preheader": "Las lecturas regulares ayudan a su veterinario.",
         "greeting": "Hola {fullName},",
         "intro": "¡Ya un mes! Las lecturas regulares enriquecen el expediente de su animal y ayudan a su veterinario entre consultas.",
-        "detail": "¿Varios animales? La opción Familia (39 €, pago único de por vida) ofrece vista del hogar y −10 % desde el 2.º animal (sin tope). Exclusiva con Kennel.",
+        "detail": "¿Varios animales? La vista del hogar y la codificación rápida están incluidas cuando un animal tiene un plan activo.",
         "cta": "Ver mis animales",
-        "disclaimer": "Las opciones se gestionan en Ajustes / suscripciones de la app."
-      },
-      "d45_care_plus": {
-        "subject": "Care+: medicamentos y recordatorios personalizados",
-        "tagline": "Opción Care+",
-        "preheader": "19 € una vez para un seguimiento de tratamientos más fino.",
-        "greeting": "Hola {fullName},",
-        "intro": "Si su animal sigue un tratamiento, Care+ (19 €, pago único de por vida) añade medicamentos y recordatorios personalizados — además de los recordatorios de cuidados estándar.",
-        "detail": "",
-        "cta": "Descubrir Care+",
-        "disclaimer": "Pago único de por vida — una sola compra por cuenta."
-      },
-      "d60_horse": {
-        "subject": "Pack Caballo: herrador, cópro y competiciones",
-        "tagline": "Opción Caballo",
-        "preheader": "39 € una vez para un seguimiento equino adaptado.",
-        "greeting": "Hola {fullName},",
-        "intro": "Cuida un caballo: el pack Caballo (39 €, pago único de por vida) añade recordatorios de herrador y coproscopia, contactos profesionales y calendario de competiciones.",
-        "detail": "",
-        "cta": "Descubrir el pack Caballo",
-        "disclaimer": "Pago único de por vida — para cuentas con al menos un caballo."
-      },
-      "d75_kennel": {
-        "subject": "Kennel: codificación rápida para criaderos",
-        "tagline": "Opción Kennel",
-        "preheader": "119 € una vez · −15 % · desde 6 animales.",
-        "greeting": "Hola {fullName},",
-        "intro": "Con 6+ animales, Kennel (119 €, pago único de por vida) acelera la codificación (lote) y aplica −15 % en los planes por animal. Exclusivo con Familia.",
-        "detail": "",
-        "cta": "Descubrir Kennel",
-        "disclaimer": "Kennel sustituye a Familia (upgrade)."
+        "disclaimer": "Las suscripciones se gestionan en Ajustes de la app."
       },
       "d90_quarter": {
         "subject": "3 meses con petsFollow — la timeline cuenta",
@@ -298,7 +267,7 @@
         "preheader": "Su historial apoya el seguimiento prescrito.",
         "greeting": "Hola {fullName},",
         "intro": "Tres meses de datos: timeline, mensajes y lecturas forman un expediente útil entre consultas.",
-        "detail": "Con 2–5 animales, Familia (39 €, pago único de por vida) simplifica la vista del hogar (−10 %). Exclusiva con Kennel.",
+        "detail": "Consejo: revise la timeline antes de una visita — su veterinario valora un historial claro.",
         "cta": "Abrir la timeline",
         "disclaimer": "Siga las indicaciones de su veterinario."
       },
@@ -338,7 +307,7 @@
         "preheader": "Piense en la renovación o el plan de 3 años.",
         "greeting": "Hola {fullName},",
         "intro": "En las próximas semanas, revise la fecha de fin de su plan por animal. El plan de 3 años (95 €) sigue siendo el mejor equilibrio duración / precio para un seguimiento prescrito duradero.",
-        "detail": "35 € / año · 95 € / 3 años · 145 € / 5 años",
+        "detail": "3,50 € / mes · 35 € / año · 95 € / 3 años (recomendado)",
         "cta": "Gestionar mi suscripción",
         "disclaimer": "El portal de pago está disponible desde la ficha del animal.",
         "intro_near": "Su plan anual está cerca del vencimiento. Revise la fecha de fin y valore el plan de 3 años (95 €) para un seguimiento prescrito más tranquilo — unos 2,6 € / mes."
@@ -396,9 +365,11 @@
     "visit_reschedule_body": "Se ha propuesto un nuevo horario para {petName}."
   },
   "billing": {
+    "monthly_label": "3,50 € / mes",
     "annual_label": "35 € / año",
     "triennial_label": "95 € / 3 años",
     "quinquennial_label": "145 € / 5 años",
+    "monthly_sub_summary": "3,50 € / mes, renovación automática",
     "annual_sub_summary": "35 € / año, renovación automática",
     "triennial_sub_summary": "95 € cada 3 años, renovación automática",
     "quinquennial_sub_summary": "145 € por 5 años, pago único",

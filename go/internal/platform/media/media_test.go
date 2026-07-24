@@ -72,3 +72,70 @@ func TestNormalizeMessageMediaType(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestDenySensitivePrefixes(t *testing.T) {
+	okHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	h := DenySensitivePrefixes(okHandler, "visit-reports/")
+	for _, path := range []string{
+		"/media/visit-reports/v1/a.m4a",
+		"/media/visit-reports",
+		"/media/visit-reports/",
+		"/media/./visit-reports/v1/a.m4a",
+		"/media/foo/../visit-reports/v1/a.m4a",
+		"/media/Visit-Reports/v1/a.m4a",
+	} {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		if rec.Code != http.StatusForbidden {
+			t.Fatalf("%s: want 403 got %d", path, rec.Code)
+		}
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/media/avatars/u1/x.png", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("avatar should pass, got %d", rec.Code)
+	}
+}
+
+func TestIsSensitiveObjectKey(t *testing.T) {
+	yes := []string{
+		"visit-reports",
+		"visit-reports/",
+		"visit-reports/v1/a.m4a",
+		"Visit-Reports/x",
+		"/visit-reports/x",
+		"./visit-reports/x",
+	}
+	for _, k := range yes {
+		if !IsSensitiveObjectKey(k) {
+			t.Fatalf("expected sensitive: %q", k)
+		}
+	}
+	no := []string{"avatars/u1.png", "pets/p1.jpg", "visit-report/x", ""}
+	for _, k := range no {
+		if IsSensitiveObjectKey(k) {
+			t.Fatalf("expected not sensitive: %q", k)
+		}
+	}
+}
+
+func TestSensitiveUploadNoPublicURL(t *testing.T) {
+	root := t.TempDir()
+	st, _, err := newLocal(root, "http://localhost:8291")
+	if err != nil {
+		t.Fatal(err)
+	}
+	data := []byte("audio-bytes")
+	url, err := st.Upload(nil, "visit-reports/v1/clip.m4a", bytes.NewReader(data), int64(len(data)), "audio/mp4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if url != "" {
+		t.Fatalf("expected empty public URL for PHI, got %q", url)
+	}
+	if !IsSensitiveObjectKey("visit-reports/v1/clip.m4a") {
+		t.Fatal("expected sensitive")
+	}
+}

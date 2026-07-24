@@ -39,7 +39,7 @@
         </tbody>
       </ProTable>
       <p
-        v-if="audience === 'vet' || audience === 'admin'"
+        v-if="(audience === 'vet' || audience === 'admin') && vetAddonRows.length"
         class="pf-commission-sheet__addon-note"
         role="note"
         data-testid="vet-addon-commission-note"

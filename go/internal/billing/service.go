@@ -145,8 +145,12 @@ func (s *Service) StartCheckout(ctx context.Context, in StartCheckoutInput) (Che
 		req.ProductName = plan.Label
 		req.Currency = plan.Currency
 		req.PriceID = ""
-		if in.PlanCode == PlanTriennial && mode == ModeSubscription {
-			meta["interval_count"] = "3"
+		if mode == ModeSubscription {
+			if in.PlanCode == PlanMonthly {
+				meta["interval"] = "month"
+			} else if in.PlanCode == PlanTriennial {
+				meta["interval_count"] = "3"
+			}
 		}
 	}
 
@@ -256,42 +260,7 @@ type StartAddonCheckoutInput struct {
 }
 
 func (s *Service) StartAddonCheckout(ctx context.Context, in StartAddonCheckoutInput) (CheckoutSession, error) {
-	addon, err := GetAddon(in.AddonCode)
-	if err != nil {
-		return CheckoutSession{}, err
-	}
-	priceID := s.addonPriceID(in.AddonCode)
-	if priceID == "" && !s.cfg.BillingMockEnabled {
-		return CheckoutSession{}, fmt.Errorf("missing stripe price for addon %s", in.AddonCode)
-	}
-	if priceID == "" {
-		priceID = fmt.Sprintf("price_mock_addon_%s", in.AddonCode)
-	}
-
-	customerID, _ := s.store.GetStripeCustomerID(ctx, in.OwnerUserID)
-	successURL := in.SuccessURL
-	if successURL == "" {
-		successURL = s.cfg.StripeSuccessURL
-	}
-	cancelURL := in.CancelURL
-	if cancelURL == "" {
-		cancelURL = s.cfg.StripeCancelURL
-	}
-	_ = addon
-	return s.gateway.CreateCheckoutSession(ctx, CheckoutRequest{
-		PriceID:       priceID,
-		Mode:          "payment",
-		CustomerID:    customerID,
-		CustomerEmail: in.OwnerEmail,
-		SuccessURL:    successURL,
-		CancelURL:     cancelURL,
-		Metadata: map[string]string{
-			"kind":          "addon",
-			"addon_id":      in.AddonID,
-			"addon_code":    string(in.AddonCode),
-			"owner_user_id": in.OwnerUserID,
-		},
-	})
+	return CheckoutSession{}, ErrAddonDeprecated
 }
 
 func (s *Service) MockCompleteAddonCheckout(ctx context.Context, addonID, ownerUserID, addonCode, sessionID string) error {
@@ -441,8 +410,8 @@ func (s *Service) handleCheckoutCompleted(ctx context.Context, event StripeEvent
 	}
 	petID := meta["pet_id"]
 	ownerUserID := meta["owner_user_id"]
-	planCode, _ := ParsePlanCode(meta["plan_code"])
-	_ , _ = ParseBillingMode(meta["billing_mode"])
+	planCode, _ := ParseAnyPlanCode(meta["plan_code"])
+	_, _ = ParseBillingMode(meta["billing_mode"])
 	if petID == "" {
 		return fmt.Errorf("missing pet_id in checkout metadata")
 	}
@@ -614,6 +583,8 @@ func (s *Service) PetHasPremiumAccess(ctx context.Context, petID string) (bool, 
 
 func (s *Service) priceID(plan PlanCode, mode BillingMode) string {
 	switch {
+	case plan == PlanMonthly && mode == ModeSubscription:
+		return s.cfg.StripePriceMonthlySub
 	case plan == PlanAnnual && mode == ModeOneTime:
 		return s.cfg.StripePriceAnnualOnetime
 	case plan == PlanTriennial && mode == ModeOneTime:

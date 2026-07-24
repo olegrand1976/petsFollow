@@ -69,17 +69,6 @@
         <p class="pro-hint">{{ $t('products.plansTip') }}</p>
       </ProCard>
 
-      <ProCard :title="$t('products.addonsTitle')" class="pro-mb-lg">
-        <p class="pro-hint">{{ $t('products.addonsLead') }}</p>
-        <div class="pf-plan-grid">
-          <div v-for="code in addonCodes" :key="code" class="pf-plan-item">
-            <strong>{{ $t(`products.addons.${code}.name`) }}</strong>
-            <span class="pf-plan-price">{{ $t(`products.addons.${code}.price`) }}</span>
-            <span class="text-muted">{{ $t(`products.addons.${code}.tagline`) }}</span>
-          </div>
-        </div>
-      </ProCard>
-
       <ProCard
         v-if="audience === 'vet'"
         :title="$t('commercial.pitch.vetRetributionTitle')"
@@ -111,8 +100,7 @@ const planRates = ref<any[]>([])
 const addonRates = ref<any[]>([])
 const bonuses = ref<any[]>([])
 
-const planCodes = ['annual', 'triennial', 'quinquennial'] as const
-const addonCodes = ['family', 'carePlus', 'kennel', 'horse'] as const
+const planCodes = ['monthly', 'annual', 'triennial'] as const
 
 function mapList(key: string): string[] {
   const raw = tm(key) as string[]

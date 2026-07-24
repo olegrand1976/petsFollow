@@ -57,7 +57,7 @@ type Pet struct {
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
-	// Permission is set for care_pro list responses (read | write_notes | full).
+	// Permission is set on list responses for care_pro / shared client access (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 }
 
@@ -258,6 +258,73 @@ func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, err
 	}
 	defer rows.Close()
 	return scanPetsWithEntitlements(ctx, s, rows)
+}
+
+// ListPetsAccessibleToClient returns owned pets plus those granted via pet_access or client_access.
+func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID string) ([]Pet, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT p.id::text, COALESCE(p.practice_id::text,''), p.owner_user_id::text, p.name, p.species,
+			COALESCE(p.breed,''), p.birth_date, p.weight_kg, COALESCE(p.photo_url,''),
+			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''), p.created_at,
+			COALESCE((
+				SELECT CASE
+					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
+					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 2 THEN 'write_notes'
+					ELSE 'read'
+				END
+				FROM (
+					SELECT 'full'::text AS permission WHERE p.owner_user_id=$1
+					UNION ALL
+					SELECT pa.permission FROM pets.pet_access pa
+					WHERE pa.pet_id=p.id AND pa.grantee_user_id=$1
+						AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+					UNION ALL
+					SELECT ca.permission FROM practice.client_access ca
+					WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+						AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+				) x
+			), 'read') AS permission
+		FROM pets.pets p
+		WHERE p.owner_user_id=$1
+		OR EXISTS (
+			SELECT 1 FROM pets.pet_access pa
+			WHERE pa.pet_id=p.id AND pa.grantee_user_id=$1
+				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+		)
+		OR EXISTS (
+			SELECT 1 FROM practice.client_access ca
+			WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+				AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+		)
+		ORDER BY p.name`, clientUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Pet
+	for rows.Next() {
+		var p Pet
+		if err := rows.Scan(
+			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
+			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt,
+			&p.Permission,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	if out == nil {
+		out = []Pet{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		if ent, e := s.GetEntitlementByPetID(ctx, out[i].ID); e == nil {
+			out[i].Entitlement = &ent
+		}
+	}
+	return out, nil
 }
 
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {

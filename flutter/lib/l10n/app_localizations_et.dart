@@ -224,10 +224,57 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightReadOnly => 'Ainult lugemisõigus';
 
   @override
+  String get petAccessSharedRead => 'Jagatud · lugemine';
+
+  @override
+  String get petAccessSharedNotes => 'Jagatud · märkmed';
+
+  @override
+  String get petAccessSharedFull => 'Jagatud · täielik';
+
+  @override
   String get proLightUseGps => 'GPS';
 
   @override
-  String get proLightTranscribeAudio => 'Audio → tekst';
+  String get proLightTranscribeAudio => 'Helifail';
+
+  @override
+  String get proLightDictationStart => 'Dikteeri';
+
+  @override
+  String get proLightDictationStop => 'Peata ja transkribeeri';
+
+  @override
+  String get proLightAudioConsentTitle => 'Helisalvestuse nõusolek';
+
+  @override
+  String get proLightAudioConsentBody =>
+      'Salvestist kasutatakse ainult visiidi aruande koostamiseks. See kustutatakse aruande lõpetamisel.';
+
+  @override
+  String get proLightAudioConsentAccept => 'Nõustun';
+
+  @override
+  String get proLightSpecialtyFarrier => 'Rautaja';
+
+  @override
+  String get proLightSpecialtyPhysio => 'Füsioteraapia';
+
+  @override
+  String get proLightSpecialtyBehaviorist => 'Käitumisspetsialist';
+
+  @override
+  String get proLightSpecialtyVetLight => 'Vet light';
+
+  @override
+  String get proLightReportHintFarrier => 'Rautamise märkmed…';
+
+  @override
+  String get proLightEmptyFarrier => 'Jagatud hobust / visiiti pole';
+
+  @override
+  String get proLightMicDenied =>
+      'Mikrofon keelatud — lubage juurdepääs seadetes';
 
   @override
   String get proLightGpsDenied => 'Asukoht pole saadaval';
@@ -238,10 +285,6 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get googleLoginFailed => 'Google\'iga sisselogimine ebaõnnestus';
-
-  @override
-  String get googleClientNotFound =>
-      'Selle e-posti jaoks pole kliendikontot. Paluge loomaarstilt kutset';
 
   @override
   String get googleWrongAudience => 'See Google\'i konto ei ole kliendiprofiil';
@@ -427,6 +470,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get planMonthlyLabel => '€3,50 / kuu';
+
+  @override
   String get planAnnualLabel => '35 € / aasta';
 
   @override
@@ -546,6 +592,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get errorCouldNotOpenLink => 'Linki ei õnnestunud avada';
+
+  @override
+  String get planMonthlySub => '€3,50 / kuu, automaatselt uuendatud';
 
   @override
   String planAnnualSub(String price) {

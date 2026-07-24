@@ -13,8 +13,11 @@ func TestApplyVetPlanFactor(t *testing.T) {
 	if got := store.ApplyVetPlanFactor(1200, "annual"); got != 804 {
 		t.Fatalf("annual max = 804 (8%%), got %d", got)
 	}
+	if got := store.ApplyVetPlanFactor(1200, "monthly"); got != 804 {
+		t.Fatalf("monthly max = 804 (8%%), got %d", got)
+	}
 	if got := store.ApplyVetPlanFactor(1200, "quinquennial"); got != 804 {
-		t.Fatalf("quinquennial max = 804, got %d", got)
+		t.Fatalf("quinquennial legacy max = 804, got %d", got)
 	}
 	if got := store.ApplyVetPlanFactor(700, "triennial"); got != 700 {
 		t.Fatalf("triennial entry = 700, got %d", got)
@@ -22,9 +25,15 @@ func TestApplyVetPlanFactor(t *testing.T) {
 	if got := store.ApplyVetPlanFactor(700, "annual"); got != 469 {
 		t.Fatalf("annual entry = 469, got %d", got)
 	}
+	if got := store.ApplyVetPlanFactor(700, "monthly"); got != 469 {
+		t.Fatalf("monthly entry = 469, got %d", got)
+	}
 }
 
 func TestCommercialRateBpsForPlan(t *testing.T) {
+	if got := store.CommercialRateBpsForPlan("monthly"); got != 800 {
+		t.Fatalf("monthly = 800, got %d", got)
+	}
 	if got := store.CommercialRateBpsForPlan("annual"); got != 800 {
 		t.Fatalf("annual = 800, got %d", got)
 	}
@@ -32,13 +41,13 @@ func TestCommercialRateBpsForPlan(t *testing.T) {
 		t.Fatalf("triennial = 1200, got %d", got)
 	}
 	if got := store.CommercialRateBpsForPlan("quinquennial"); got != 800 {
-		t.Fatalf("quinquennial = 800, got %d", got)
+		t.Fatalf("quinquennial legacy = 800, got %d", got)
 	}
 	if got := store.CommercialRateBpsForAddon("family"); got != 1000 {
-		t.Fatalf("addon = 1000, got %d", got)
+		t.Fatalf("addon legacy = 1000, got %d", got)
 	}
 	if got := store.CommercialRateBpsForAddon("kennel"); got != 1000 {
-		t.Fatalf("kennel commercial = 1000, got %d", got)
+		t.Fatalf("kennel commercial legacy = 1000, got %d", got)
 	}
 	if got := store.VetRateBpsForAddon("family"); got != 500 {
 		t.Fatalf("family vet = 500, got %d", got)

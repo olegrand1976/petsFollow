@@ -201,7 +201,8 @@
       "plan": {
         "annual": "Aastane",
         "triennial": "Kolmeaastane",
-        "quinquennial": "Viieaastane"
+        "quinquennial": "Viieaastane",
+        "monthly": "Igakuine"
       },
       "billingMode": {
         "subscription": "Tellimus",
@@ -396,7 +397,13 @@
       "columnBpm": "BPM",
       "columnDuration": "Kestus",
       "columnStatus": "Olek",
-      "chartTitle": "BPM trend (viimased 30 mõõtmist)",
+      "chartTitle": "BPM trend",
+      "chartRangeLabel": "Periood",
+      "chartRange3m": "3 kuud",
+      "chartRange6m": "6 kuud",
+      "chartRange1y": "1 aasta",
+      "chartEmptyPeriod": "Sellel perioodil mõõtmisi pole",
+      "chartAxisBpm": "BPM",
       "chartLegend": "Legend",
       "chartLegendOk": "Normaalne",
       "chartLegendAlert": "Hoiatus",
@@ -702,7 +709,7 @@
         "paid": "Makstud"
       },
       "sheetTitle": "Komisjonimudel (ülevaade)",
-      "planRatesHint": "Ärimäärad on plaani järgi fikseeritud (ilma käibemaksuta): 8% aastane · 12% kolmeaastane · 8% viieaastane · 10% lisad — siin ei muudeta (vt ülalolevat lehte)."
+      "planRatesHint": "Ärimäärad on plaani järgi fikseeritud (ilma käibemaksuta): 8% igakuine · 8% aastane · 12% kolmeaastane — lisasid pole. Siin ei muudeta (vt ülalolevat lehte)."
     },
     "commercialBonuses": {
       "title": "SPIFF boonused",
@@ -728,7 +735,7 @@
       "kpiTotal": "Perioodi kogusumma",
       "kpiStatus": "Olek",
       "kpiRate": "Müügi määr",
-      "kpiRatePlans": "8 / 12 / 8%",
+      "kpiRatePlans": "8 / 8 / 12%",
       "periodTitle": "Kuu kokkuvõte",
       "period": "Kuu",
       "close": "Sulge (maksmisele)",
@@ -1029,252 +1036,102 @@
     "ctaButton": "Alusta registreerimist",
     "productsLink": "Tooted",
     "productsTitle": "Millele teie kliendid tellivad",
-    "productsLead": "Selge tabel loomaarsti määratud jälgimise esitlemiseks — ilma kantava seadmeta, alates umbes €2 / kuu looma kohta.",
-    "productsCta": "Vaata kõiki pakkumisi (esitlustugi)",
+    "productsLead": "Kolm lihtsat valikut looma kohta — kõik funktsioonid on aktiivse tellimusega kaasas.",
+    "productsCta": "Vaata valikuid",
     "productHighlights": {
-      "plans": {
-        "price": "€35 / €95 / €145",
-        "title": "Tellimused looma kohta",
-        "text": "Aastane, kolmeaastane (soovitatud) või viieaastane — 15/30/60 s kontrollid, sõnumside, ajajoon ja meeldetuletused."
+      "monthly": {
+        "price": "3,50 € / kuu",
+        "title": "Igakuine",
+        "text": "Paindlikkus — mõõtmised, sõnumid, ajajoon, Care/Horse meeldetuletused, majapidamise vaade. Ilma pika sidumiseta."
       },
-      "family": {
-        "price": "€39 · €119 (ühekordne)",
-        "title": "Family ja Kennel",
-        "text": "Family alates 2 (−10% alates 2. makstud loomast, limiidita). Kennel alates 6 (−15%, kiire sisestus). Eluaegne ühekordne ost. Nt 1. aasta: 2× aastane + Family = €105.50 · seejärel €66.50 / aasta."
+      "annual": {
+        "price": "35 € / aasta",
+        "title": "Aastane",
+        "text": "≈ 2,9 € / kuu — sama täielik jälgimine, parem hind kui igakuine."
       },
-      "careHorse": {
-        "price": "€19 · €39 (ühekordne)",
-        "title": "Care+ ja Horse",
-        "text": "Care+ ravimite ja kohandatud meeldetuletuste jaoks; Horse hobuste jälgimiseks — eluaegne ühekordne, kombineeritav Family / Kennel'iga."
+      "triennial": {
+        "price": "95 € / 3 aastat",
+        "title": "Kolmeaastane (soovitatav)",
+        "text": "≈ 2,6 € / kuu — põhivalik, −10% vs 3× aastane."
       }
     },
     "footer": "© {year} petsFollow — Veterinaarne südame jälgimine"
   },
   "products": {
-    "seoTitle": "petsFollow — Pakkumised ja tooted",
-    "seoDescription": "petsFollow tellimuste ja lisade tabel loomaarsti kabineti esitlusteks.",
+    "seoTitle": "petsFollow — Pakkumised",
+    "seoDescription": "petsFollow tellimuste tabel veterinaarkliiniku esitluseks.",
     "backHome": "Avaleht",
     "print": "Prindi / PDF",
-    "badge": "Kabineti esitlustugi",
+    "badge": "Kliiniku esitlusmaterjal",
     "title": "petsFollow pakkumised",
-    "lead": "Esitage klientidele loomaarsti määratud südame jälgimist — ilma kaelarihma või seadmeta, lihtne hinnastus majapidamisele.",
-    "positioning": "petsFollow Pro on kabinetile tasuta. Ainult loomaomanikud maksavad jälgimise eest (plaan looma kohta + majapidamise valikud).",
-    "includedTitle": "Iga looma tellimusse kuulub",
-    "includedLead": "Sõltumata plaanist (1, 3 või 5 aastat) saavad omanikud:",
+    "lead": "Esitlege klientidele loomaarsti määratud südame jälgimist — ilma kaelarihma või seadmeta.",
+    "positioning": "petsFollow Pro on kliinikule tasuta. Ainult omanik maksab oma loomade jälgimise eest. Kõik funktsioonid on aktiivse tellimusega kaasas.",
+    "includedTitle": "Igas looma tellimuses sisaldub",
+    "includedLead": "Sõltumata plaanist (igakuine, aastane või kolmeaastane) on omanikul:",
     "included": [
-      "Juhendatud südame löögisageduse kontrollid 15 / 30 / 60 s mobiilirakendusest (ilma riistvarata)",
-      "Seansid saadetakse kabinetile ja kinnitatakse seal",
-      "Turvaline klient ↔ loomaarst sõnumside + push-teavitused",
-      "Ajajoon / jagatud patsiendikaart (kinnitatud kontrollid ja vestlused)",
-      "Standardsed hooldusmeeldetuletused (vaktsiin, ussirohi, kontroll, hambad)",
+      "Juhendatud südame mõõtmised 15 / 30 / 60 s mobiilirakendusest (ilma riistvarata)",
+      "Sessioonide saatmine ja kinnitamine kliiniku poolt",
+      "Turvaline sõnumivahetus klient ↔ loomaarst + push-teavitused",
+      "Ajajoon / jagatud patsiendi toimik",
+      "Hoolduse meeldetuletused (standard, ravimid, isiklikud) ja hobupakk hobuse korral",
+      "Majapidamise vaade ja mitme looma kiire sisestus",
       "Keeled FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Tellimused looma kohta",
-    "plansLead": "Üks tellimus jälgitava looma kohta. Hinnad TTC — aastane / kolmeaastane ühekordse maksena või Stripe'i tellimusena; viieaastane ainult ühekordne.",
-    "recommended": "Soovitatud",
-    "plansTip": "Esitlusnõuanne: alustage kolmeaastasega (€95 / 3 aastat ≈ €2.6/kuu) — parim hinna / kohustuse tasakaal majapidamistele.",
+    "plansLead": "Üks tellimus jälgitava looma kohta. Hinnad koos käibemaksuga. Igakuine = ainult Stripe tellimus; aastane ja kolmeaastane = ühekordne või tellimus.",
+    "recommended": "Soovitatav",
+    "plansTip": "Nõuanne: eelistage kolmeaastast (95 € / 3 aastat ≈ 2,6 €/kuu). Igakuine annab paindlikkuse; aastane parima aastahinna.",
     "plans": {
+      "monthly": {
+        "name": "Igakuine",
+        "price": "3,50 €",
+        "period": "kuus",
+        "monthly": "paindlikkus",
+        "benefits": [
+          "Ilma pika sidumiseta",
+          "Kõik funktsioonid kaasas",
+          "Automaatne igakuine uuendamine"
+        ]
+      },
       "annual": {
         "name": "Aastane",
-        "price": "€35",
+        "price": "35 €",
         "period": "aastas",
-        "monthly": "≈ €2.9 / kuu",
+        "monthly": "≈ 2,9 € / kuu",
         "benefits": [
-          "Sisenemisplaan — ideaalne ühe loomaga alustamiseks",
-          "Kõik peamised looma jälgimise eelised on kaasatud",
-          "Üheaastane kohustus"
+          "Parim aastahind vs igakuine",
+          "Kõik funktsioonid kaasas",
+          "Ühe aasta sidumine"
         ]
       },
       "triennial": {
         "name": "Kolmeaastane",
-        "price": "€95",
+        "price": "95 €",
         "period": "3 aastaks",
-        "monthly": "≈ €2.6 / kuu",
+        "monthly": "≈ 2,6 € / kuu",
         "benefits": [
           "Põhipakkumine — −10% vs 3× aastane",
-          "Pidev jälgimine 3 aastat",
-          "Tugevaim hinnaargument majapidamisele"
-        ]
-      },
-      "quinquennial": {
-        "name": "Viieaastane",
-        "price": "€145",
-        "period": "5 aastaks (ühekordne)",
-        "monthly": "≈ €2.4 / kuu",
-        "benefits": [
-          "Pikaajaline — −17% vs 5× aastane",
-          "Ideaalne kroonilistele / eakatele loomadele",
-          "Ühekordne makse — Stripe'i automaatset uuendamist pole"
+          "Pidev jälgimine 3 aasta jooksul",
+          "Parim hinnargument majapidamisele"
         ]
       }
     },
-    "addonsTitle": "Majapidamise valikud (omaniku konto)",
-    "addonsLead": "Lisad on looma plaanide peal (ei asenda neid kunagi). Eluaegne ühekordne ost konto kohta — eelised jagatakse kogu majapidamisele.",
-    "addonsTip": "Family / Kennel mehhanism: 1. makstud loom täishinnaga, soodustus alates 2. (−10% / −15%). Family ja Kennel on eksklusiivsed (Kennel = uuendus). Horse ainult kui majapidamisel on ≥ 1 hobune. Lisad = üks ost, kehtib eluajaks.",
-    "addons": {
-      "family": {
-        "name": "Family",
-        "price": "€39",
-        "tagline": "Majapidamise pakett — alates 2 loomast, −10% soodustus",
-        "scope": "Konto",
-        "benefits": [
-          "Eluaegne ühekordne ost — uuendamist pole",
-          "Majapidamise vaade: eelseisvad meeldetuletused kõigile loomadele",
-          "−10% igal looma plaanil alates 2. makstud loomast (1. = täishind)",
-          "Loomade limiiti pole — Family jääb €39 ühekordselt",
-          "Nt 1. aasta (2× aastane): 35 + 31.50 + 39 = €105.50 · Järgmised aastad: €66.50 / aasta",
-          "Eksklusiivne Kennel'iga — alates 6 loomast soovitatakse Kennel uuendust"
-        ]
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "€19",
-        "tagline": "Rikastatud hoolduspäevik",
-        "scope": "Konto",
-        "benefits": [
-          "Eluaegne ühekordne ost",
-          "Ravimimeeldetuletused kogu majapidamisele",
-          "Kohandatud meeldetuletused",
-          "Looma plaanide peal — plaani soodustust pole",
-          "Nt 2-loomaga majapidamine + Family: +€19 ühekordselt kontole"
-        ]
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "€39",
-        "tagline": "Hobuste pakett",
-        "scope": "Konto",
-        "benefits": [
-          "Eluaegne ühekordne ost",
-          "Sepa ja väljaheidete meeldetuletused",
-          "Sepa päevik + pro kontaktid + võistlused",
-          "Looma plaanide peal — plaani soodustust pole",
-          "Pakutakse ainult kui majapidamisel on ≥ 1 hobune"
-        ]
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "€119",
-        "tagline": "Aretus / nimekiri alates 6 loomast",
-        "scope": "Konto",
-        "benefits": [
-          "Eluaegne ühekordne ost — uuendamist pole",
-          "Kiire mitme looma sisestus, nimekiri, pesakonna sildid, eksport",
-          "−15% igal looma plaanil alates 2. makstud loomast",
-          "Nt 1. aasta (6× aastane): 35 + 5×29.75 + 119 = €302.75 · Järgmised aastad: €183.75 / aasta",
-          "Eksklusiivne Family'ga (Kennel ost = uuendus, Family tühistatakse)"
-        ]
-      }
-    },
-    "examplesTitle": "Konkreetsed näited (aastane plaan)",
-    "examplesLead": "Lisad ei asenda kunagi looma tellimust. Summad koos käibemaksuga aastase €35 põhjal — 1. makstud loom täishinnaga, järgmised soodustusega kui Family / Kennel on aktiivne. Lisad on eluaegne ühekordne makse (ainult 1. aastal).",
-    "examplesTip": "Family / Kennel / Care+ / Horse = eluaegne ühekordne kontol. Järgmistel aastatel jäävad ainult looma plaanide kulud.",
-    "examplesCareHorseTitle": "Care+ ja Horse — hoolduslisad",
-    "examplesCareHorseLead": "Konto täiendused eluaegse ühekordse ostuna, ilma sooduseta looma plaanidele.",
-    "examplesCareHorseBenefits": [
-      "Care+ €19 ühekordselt: ravimi- ja kohandatud meeldetuletused kogu majapidamisele",
-      "Horse €39 ühekordselt: hobuste pakett (sepp, kontaktid, võistlused) kui ≥ 1 hobune",
-      "Kombineeritav Family või Kennel'iga — kehtib eluajaks"
-    ],
-    "examples": {
-      "withoutFamily2": {
-        "title": "Ilma Family'ta — 2 looma",
-        "total": "€70 / aasta",
-        "breakdown": "35 + 35 (2× aastane täishind)",
-        "benefits": [
-          "Igal loomal on oma plaan",
-          "Ühtset majapidamise vaadet pole",
-          "Mitme looma soodustust pole"
-        ]
-      },
-      "withFamily2": {
-        "title": "Family'ga — 2 looma",
-        "total": "1. aasta: €105.50 · Seejärel: €66.50 / aasta",
-        "breakdown": "1. aasta: 35 + 31.50 + 39 (Family ühekordselt) · Järgmised aastad: 35 + 31.50",
-        "benefits": [
-          "1. loom: €35 (täishind)",
-          "2. loom: €31.50 (−10%)",
-          "Family €39 ühekordselt eluajaks: majapidamise vaade + soodustus järgmistele loomadele",
-          "Alates 2. aastast: ainult €66.50 / aasta looma plaanides"
-        ]
-      },
-      "withFamily4": {
-        "title": "Family'ga — 4 looma",
-        "total": "1. aasta: €168.50 · Seejärel: €129.50 / aasta",
-        "breakdown": "1. aasta: 35 + 3×31.50 + 39 · Järgmised aastad: 35 + 3×31.50 (vs €140 / aasta ilma Family'ta)",
-        "benefits": [
-          "1.: €35 · järgmised 3: €31.50 igaüks",
-          "Family €39 ühekordselt — limiidita",
-          "Iga uus makstud loom saab −10%"
-        ]
-      },
-      "kennel6": {
-        "title": "Kennel'iga — 6 looma",
-        "total": "1. aasta: €302.75 · Seejärel: €183.75 / aasta",
-        "breakdown": "1. aasta: 35 + 5×29.75 + 119 (Kennel ühekordselt) · Järgmised aastad: 35 + 5×29.75",
-        "benefits": [
-          "1.: €35 · järgmised 5: €29.75 (−15%)",
-          "Kiire sisestus, nimekiri, pesakonna sildid",
-          "Asendab Family't kui see oli aktiivne (uuendus)"
-        ]
-      },
-      "withFamily2CarePlus": {
-        "title": "Family + Care+ — 2 looma",
-        "total": "1. aasta: €124.50 · Seejärel: €66.50 / aasta",
-        "breakdown": "1. aasta: 35 + 31.50 + 39 (Family) + 19 (Care+) · Järgmised aastad: €66.50 / aasta",
-        "benefits": [
-          "Family −10% 2. loomale",
-          "Care+ €19 ühekordselt: ravimid ja kohandatud meeldetuletused",
-          "Alates 2. aastast: ainult looma plaanid"
-        ]
-      },
-      "withFamilyHorse": {
-        "title": "Family + Horse — 2 looma (sh 1 hobune)",
-        "total": "1. aasta: €144.50 · Seejärel: €66.50 / aasta",
-        "breakdown": "1. aasta: 35 + 31.50 + 39 (Family) + 39 (Horse) · Järgmised aastad: €66.50 / aasta",
-        "benefits": [
-          "Family majapidamise vaateks ja −10% sooduseks",
-          "Horse €39 ühekordselt: sepp, väljaheited, võistlused",
-          "Eluaegsed lisad — uuenevad ainult looma plaanid"
-        ]
-      }
-    },
-    "summaryTitle": "Hinnatabeli kokkuvõte",
+    "summaryTitle": "Tabeli kokkuvõte",
     "summary": {
+      "monthly": {
+        "name": "Igakuine",
+        "price": "3,50 € / kuu",
+        "role": "Paindlikkus"
+      },
       "annual": {
         "name": "Aastane",
-        "price": "€35 / aasta",
-        "role": "Looma tellimus — sisenemine"
+        "price": "35 € / aasta",
+        "role": "Parim aastahind"
       },
       "triennial": {
         "name": "Kolmeaastane",
-        "price": "€95 / 3 aastat",
-        "role": "Looma tellimus — soovitatud"
-      },
-      "quinquennial": {
-        "name": "Viieaastane",
-        "price": "€145 / 5 aastat",
-        "role": "5-aastane juurdepääs — ühekordne makse"
-      },
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "role": "Majapidamise lisa alates 2 (−10%, limiidita, eksklusiivne Kennel) — eluaegne ühekordne"
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "role": "Hoolduse / ravimi lisa — eluaegne ühekordne"
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "role": "Hobuste paketi lisa — eluaegne ühekordne"
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "role": "Kennel lisa alates 6 (−15%, eksklusiivne Family) — eluaegne ühekordne"
+        "price": "95 € / 3 aastat",
+        "role": "Soovitatav"
       }
     },
     "footer": "petsFollow — loomaarsti määratud jälgimine, ilma riistvarata"
@@ -1534,7 +1391,7 @@
     },
     "commissions": {
       "title": "Minu komisjonid",
-      "subtitle": "Plaanipõhised määrad käibemaksuta (8 / 12 / 8%) — soovita kolme aastat.",
+      "subtitle": "Plaanipõhised määrad käibemaksuta (8 / 8 / 12%) — soovita kolme aastat.",
       "rate": "Määr",
       "month": "Kuu",
       "lifetime": "Kogu aeg",
@@ -1587,8 +1444,8 @@
       "webTitle": "Pro veebirakendus (veterinaar)",
       "mobileTitle": "Flutteri mobiilirakendus (kliendid)",
       "commissionTitle": "Komisjonid",
-      "vetGrid": "Veterinaar: 7% → 12% käibemaksuta vastavalt maksvate klientide mahule, plaani teguriga (aastane / kolmeaastane / viieaastane).",
-      "addons": "Lisandmoodulid Family / Kennel: 10% müük + 5% veterinaar. Care+ / Horse: 10% müük, 0% veterinaar.",
+      "vetGrid": "Loomaarst: 7% → 12% käibemaksuta maksevate klientide mahu järgi, plaani teguriga (igakuine / aastane / kolmeaastane).",
+      "addons": "Lisasid pole — komisjon ainult plaanidelt (8% igakuine / 8% aastane / 12% kolmeaastane).",
       "webFeatures": [
         "Töölaud kliendid / sõnumid / südame löögisagedus",
         "Patsienditoimik ja sõnumid",
@@ -1596,17 +1453,17 @@
         "Kabineti onboarding ja seaded"
       ],
       "mobileFeatures": [
-        "Lemmikloomad ja südame löögisageduse jälgimine",
-        "Stripe’i tellimused lemmiklooma kohta",
-        "Family / Kennel / Care+ / Horse lisandmoodulid reaalseid privileege",
-        "Sõnumid ja hooldusmeeldetuletused"
+        "Loomad ja südame jälgimine",
+        "Stripe tellimused looma kohta (igakuine / aastane / kolmeaastane)",
+        "Kõik funktsioonid aktiivse tellimusega kaasas",
+        "Sõnumid ja hoolduse meeldetuletused"
       ],
-      "commercialFlat": "Müük: 8% / 12% / 8% käibemaksuta plaani järgi (aastane / kolmeaastane / viieaastane); ~€9.4 kolmeaastase €95 TTC plaani pealt.",
+      "commercialFlat": "Müük: 8% / 8% / 12% käibemaksuta plaani järgi (igakuine / aastane / kolmeaastane); ~€9.4 kolmeaastase €95 TTC plaani pealt.",
       "productsLink": "Ava täielik tootevõrk (esitlustugi)",
       "cardVetTitle": "Veterinaar",
       "cardVetDesc": "Kliiniku pitch: Pro-rakendus, kliendi hinnad ja veterinaari väljamaksed.",
       "cardClientTitle": "Klient",
-      "cardClientDesc": "Omaniku pitch: mobiilirakendus, plaanid ja majapidamise lisandmoodulid.",
+      "cardClientDesc": "Omaniku pitch: mobiilirakendus ja looma plaanid (kuine, aastane, kolmeaastane).",
       "backToCards": "Tagasi sihtrühmade juurde",
       "benefitsTitle": "Kaasatud hüved",
       "vetRetributionTitle": "Veterinaari väljamaksed"
@@ -1627,20 +1484,21 @@
     "colCommRate": "Müügi määr",
     "colCommEuros": "Müük €",
     "vetBaseExplain": "Baasmäär vastavalt sinu kabinetiga seotud maksvate klientide arvule:",
-    "vetMaxExplain": "See baasmäär skaleeritakse seejärel plaani järgi (100% kolmeaastasel, 67% aastasel ja viieaastasel) ning piiratakse 12%-ga. Tabel näitab maksimumi 61+ kliendi tasemel — sinu tegelik määr võib varasemal tasemel olla madalam.",
-    "vetAddonNote": "Family ja Kennel: 5% käibemaksuta veterinaarile. Care+ ja Horse: 0% veterinaar (ainult 10% müük).",
+    "vetMaxExplain": "Baasmäära korrutatakse plaani teguriga (100% Triennial, 67% Monthly ja Annual), seejärel piiratakse 12%-ni. Tabel näitab maksimumi 61+ kliendi tasemel — tegelik määr võib olla madalam varasematel tasemetel.",
+    "vetAddonNote": "Lisad (Family / Kennel / Care+ / Horse) ei ole enam müügil — ainult legacy.",
     "coSellNote": "Veterinaare ei karistata, kui oled määratud — win-win ühismüük.",
     "adminGuardrails": "Piirangud: netomarginaal ≥ 55% TTC-st · põhinet/aasta ≥ €17 · partnerite maksimaalne take rate 24% HT.",
     "tier": "{min}–{max} klienti → {pct}% (baas)",
     "tierOpen": "{min}+ klienti → {pct}% (baas)",
     "plans": {
-      "annual": "Aastane (€35 TTC)",
-      "triennial": "Kolmeaastane (€95 TTC)",
-      "quinquennial": "Viieaastane (€145 TTC)",
-      "family": "Family (€39 TTC)",
-      "care_plus": "Care+ (€19 TTC)",
-      "horse": "Horse (€39 TTC)",
-      "kennel": "Kennel (€119 TTC)"
+      "monthly": "Kuine (€3,50 koos käibemaksuga)",
+      "annual": "Aastane (€35 koos käibemaksuga)",
+      "triennial": "Kolmeaastane (€95 koos käibemaksuga)",
+      "quinquennial": "Quinquennial (€145 koos käibemaksuga) — legacy",
+      "family": "Family (€39 koos käibemaksuga) — legacy",
+      "care_plus": "Care+ (€19 koos käibemaksuga) — legacy",
+      "horse": "Horse (€39 koos käibemaksuga) — legacy",
+      "kennel": "Kennel (€119 koos käibemaksuga) — legacy"
     },
     "bonusTitles": {
       "vet_tier_31": "31 kliendi taseme boonus",
@@ -1658,7 +1516,7 @@
       "earned": "Teenitud",
       "paid": "Makstud"
     },
-    "discountNote": "Euromäärad on täishinna orienteeruvad. Majapidamise/Kenneli soodustused (−10% / −15%) vähendavad tegelikult kogutud HT baasi."
+    "discountNote": "Näitlikud € summad on täishinnaga (kodu-/kennelallahindlusi enam ei ole)."
   },
   "calendar": {
     "title": "Kalender",
@@ -1693,6 +1551,15 @@
     "improveReport": "Paranda (AI)",
     "reportSaved": "Raport salvestatud",
     "reportImproved": "Raport parandatud",
+    "finalizeReport": "Lõpeta raport",
+    "reportFinal": "Raport lõplik (ainult lugemine)",
+    "reportFinalized": "Raport lõpetatud",
+    "transcribeAudio": "Audio → tekst",
+    "audioConsent": "Heli kasutatakse ainult aruande koostamiseks ja kustutatakse lõpetamisel.",
+    "audioConsentTitle": "Helisalvestuse nõusolek",
+    "audioConsentAccept": "Nõustun",
+    "reportTranscribed": "Transkriptsioon valmis",
+    "placeBadge": "Asukoht",
     "unscheduled": "planeerimata",
     "columnClient": "Klient",
     "columnPet": "Lemmikloom",

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -27,15 +26,6 @@ func (a *API) requireHorsePackOwner(w http.ResponseWriter, r *http.Request, petI
 	}
 	if species != "horse" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "horse_pet_required")
-		return "", false
-	}
-	has, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonHorse))
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return "", false
-	}
-	if !has {
-		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "horse_pack_required")
 		return "", false
 	}
 	return id.UserID, true

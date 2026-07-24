@@ -69,12 +69,14 @@ func (s *Store) AdminMetricsOverview(ctx context.Context, from, to time.Time) (A
 		return m, err
 	}
 
+	// MRR: monthly as-is; annual / multi-year normalized to a monthly slice.
 	err = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(
 			CASE plan_code
-				WHEN 'annual' THEN amount_cents
-				WHEN 'triennial' THEN amount_cents / 3
-				WHEN 'quinquennial' THEN amount_cents / 5
+				WHEN 'monthly' THEN amount_cents
+				WHEN 'annual' THEN amount_cents / 12
+				WHEN 'triennial' THEN amount_cents / 36
+				WHEN 'quinquennial' THEN amount_cents / 60
 				ELSE 0
 			END
 		) FILTER (WHERE billing_mode='subscription' AND status='active'), 0)::int

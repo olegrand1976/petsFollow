@@ -48,7 +48,6 @@
     "admin_only": "Ainult administraatoritele",
     "google_pro_only": "Google on reserveeritud Pro profiilidele",
     "google_client_only": "See Google'i konto on Pro profiil — kasutage veebirakendust",
-    "google_client_not_found": "Selle e-posti jaoks pole petsFollow kliendikontot. Paluge loomaarstilt kutset",
     "not_your_pet": "See ei ole teie loom",
     "wrong_practice": "Vale kabinet",
     "not_participant": "Pole osaleja",
@@ -188,7 +187,7 @@
         "preheader": "Teie petsFollow teekond algab täna.",
         "greeting": "Tere {fullName},",
         "intro": "Teie loomaarst määras petsFollow'i: südame jälgimine ilma seadmeta, otse telefonis. Alustamiseks laadige rakendus alla.",
-        "detail": "Mida saate teha:\n• Südame mõõtmised 15 / 30 / 60 s\n• Turvaline sõnumivahetus kabinetiga\n• Ajajoon ja hooldusmeeldetuletused\n• Alla €3 / kuu looma kohta",
+        "detail": "Mida saate teha:\n• Südame mõõtmised 15 / 30 / 60 s\n• Turvaline sõnumivahetus kabinetiga\n• Ajajoon ja hooldusmeeldetuletused\n• Alates ~€2,6 / kuu looma kohta (3-aastane plaan)",
         "cta": "Laadi rakendus alla",
         "disclaimer": "Saate need e-kirjad välja lülitada alumise lingi abil."
       },
@@ -198,7 +197,7 @@
         "preheader": "Looge looma profiil ja valige plaan.",
         "greeting": "Tere {fullName},",
         "intro": "Määratud jälgimise aktiveerimiseks looge looma profiil ja valige plaan. Soovitame 3-aastast plaani (€95) — umbes €2,6 / kuu.",
-        "detail": "Plaanid koos käibemaksuga:\n• €35 / aasta\n• €95 / 3 aastat (soovitatav)\n• €145 / 5 aastat (ühekordne)",
+        "detail": "Plaanid koos käibemaksuga:\n• €3,50 / kuu (tellimus)\n• €35 / aasta\n• €95 / 3 aastat (soovitatav)",
         "cta": "Ava rakendus",
         "disclaimer": "Ilma makseta jääb südame jälgimine ootele."
       },
@@ -218,9 +217,9 @@
         "preheader": "Meeldetuletused aitavad kursil püsida.",
         "greeting": "Tere {fullName},",
         "intro": "Hea rutiin teeb vahet: lubage mõõtmise ja hoolduse meeldetuletused (vaktsiin, ussiroht, kontroll…). Teie loomaarst näeb ajalugu kaardil.",
-        "detail": "Care+ valik (€19, ühekordne eluaegne): ravimid ja kohandatud meeldetuletused, kui loom saab regulaarset ravi.",
+        "detail": "Aktiivse looma plaaniga on hooldusmeeldetuletused (ravimid, vaktsiinid…) kaasas — lubage need Care vahekaardil.",
         "cta": "Vaata meeldetuletusi",
-        "disclaimer": "Valikulisi lisasid hallatakse rakenduses."
+        "disclaimer": "Meeldetuletusi hallatakse rakenduses."
       },
       "d6_vet_link": {
         "subject": "Teie loomaarst on ühe sõnumi kaugusel",
@@ -258,39 +257,9 @@
         "preheader": "Regulaarsed mõõtmised aitavad loomaarsti.",
         "greeting": "Tere {fullName},",
         "intro": "Juba kuu aega! Regulaarsed mõõtmised rikastavad looma kaarti ja aitavad loomaarsti visiitide vahel.",
-        "detail": "Mitu looma? Family valik (€39, ühekordne eluaegne) annab majapidamise vaate ja −10% alates 2. loomast (ilma ülempiirita). Välistav Kenneliga.",
+        "detail": "Mitu looma? Majapidamise vaade ja kiire sisestus on kaasas, kui loomal on aktiivne plaan.",
         "cta": "Vaata minu loomi",
-        "disclaimer": "Valikuid hallatakse rakenduse seadetes / tellimustes."
-      },
-      "d45_care_plus": {
-        "subject": "Care+: ravimid ja kohandatud meeldetuletused",
-        "tagline": "Care+ valik",
-        "preheader": "€19 üks kord peenema ravi jälgimiseks.",
-        "greeting": "Tere {fullName},",
-        "intro": "Kui teie loom on ravil, lisab Care+ (€19, ühekordne eluaegne) rakendusse ravimid ja kohandatud meeldetuletused — lisaks tavalistele hooldusmeeldetuletustele.",
-        "detail": "",
-        "cta": "Avasta Care+",
-        "disclaimer": "Ühekordne eluaegne ost — üks kord konto kohta."
-      },
-      "d60_horse": {
-        "subject": "Horse pakett: sepp, väljaheited ja võistlused",
-        "tagline": "Horse valik",
-        "preheader": "€39 üks kord kohandatud hobuse jälgimiseks.",
-        "greeting": "Tere {fullName},",
-        "intro": "Hoolitsete hobuse eest: Horse pakett (€39, ühekordne eluaegne) lisab sepa ja väljaheidete meeldetuletused, professionaalsed kontaktid ja võistluskalendri.",
-        "detail": "",
-        "cta": "Avasta Horse pakett",
-        "disclaimer": "Ühekordne eluaegne ost — kontodele, millel on vähemalt üks hobune."
-      },
-      "d75_kennel": {
-        "subject": "Kennel: kiire sisestus aretajatele",
-        "tagline": "Kennel valik",
-        "preheader": "€119 üks kord · −15% · alates 6 loomast.",
-        "greeting": "Tere {fullName},",
-        "intro": "6+ loomaga kiirendab Kennel (€119, ühekordne eluaegne) sisestust (partiisisestus) ja rakendab −15% looma plaanidele. Välistav Family'ga.",
-        "detail": "",
-        "cta": "Avasta Kennel",
-        "disclaimer": "Kennel asendab Family't (uuendus)."
+        "disclaimer": "Tellimusi hallatakse rakenduse seadetes."
       },
       "d90_quarter": {
         "subject": "3 kuud petsFollow'iga — ajajoon loeb",
@@ -298,7 +267,7 @@
         "preheader": "Teie ajalugu toetab määratud jälgimist.",
         "greeting": "Tere {fullName},",
         "intro": "Kolm kuud andmeid: ajajoon, sõnumid ja mõõtmised moodustavad kasuliku kirje visiitide vahel.",
-        "detail": "2–5 loomaga lihtsustab Family (€39, ühekordne eluaegne) majapidamise vaadet (−10%). Välistav Kenneliga.",
+        "detail": "Nipp: vaadake ajajoont enne visiiti — teie loomaarst hindab selget ajalugu.",
         "cta": "Ava ajajoon",
         "disclaimer": "Jätkake loomaarsti juhiste järgimist."
       },
@@ -338,7 +307,7 @@
         "preheader": "Kaaluge uuendamist või 3-aastast plaani.",
         "greeting": "Tere {fullName},",
         "intro": "Järgmiste nädalate jooksul kontrollige looma plaani lõppkuupäeva. 3-aastane plaan (€95) jääb kestuse / hinna parimaks tasakaaluks pikaajaliseks määratud jälgimiseks.",
-        "detail": "€35 / aasta · €95 / 3 aastat · €145 / 5 aastat",
+        "detail": "€3,50 / kuu · €35 / aasta · €95 / 3 aastat (soovitatav)",
         "cta": "Halda minu tellimust",
         "disclaimer": "Makseportaal on saadaval looma profiilist.",
         "intro_near": "Teie aastaplaan läheneb uuendamisele. Kontrollige lõppkuupäeva ja kaaluge 3-aastast plaani (€95) pikaajaliseks määratud jälgimiseks — umbes €2,6 / kuu."
@@ -396,9 +365,11 @@
     "visit_reschedule_body": "Loomale {petName} pakuti uut ajavahemikku."
   },
   "billing": {
+    "monthly_label": "€3,50 / kuu",
     "annual_label": "€35 / aasta",
     "triennial_label": "€95 / 3 aastat",
     "quinquennial_label": "€145 / 5 aastat",
+    "monthly_sub_summary": "€3,50 / kuu, automaatselt uuendatav",
     "annual_sub_summary": "€35 / aasta, automaatselt uuendatav",
     "triennial_sub_summary": "€95 iga 3 aasta järel, automaatselt uuendatav",
     "quinquennial_sub_summary": "€145 5 aastaks, ühekordne makse",

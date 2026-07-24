@@ -1,18 +1,19 @@
 ---
-description: Garder /produits aligné avec toute évolution offre, prix ou addons
+description: Garder / et /produits alignés avec toute évolution offre ou prix
 alwaysApply: true
 ---
 
-# `/produits` — sync obligatoire avec l’offre
+# Offre — sync landing `/` + `/produits` (shell Pro)
 
-À chaque changement d’**offre**, **prix**, **plans**, **addons**, **bénéfices inclus** ou **positionnement** commercial :
+À chaque changement d’**offre**, **prix**, **plans**, **bénéfices inclus** ou **positionnement** commercial :
 
-1. Mettre à jour la page publique [`nuxtjs/pages/produits.vue`](nuxtjs/pages/produits.vue) via les clés i18n `products.*` dans **les 4 locales** :
+1. Mettre à jour la page Pro [`nuxtjs/pages/produits.vue`](nuxtjs/pages/produits.vue) (shell authentifié, pas full-page) via les clés i18n `products.*` dans **les 5 locales** :
    - [`nuxtjs/locales/fr.json`](nuxtjs/locales/fr.json)
    - [`nuxtjs/locales/en.json`](nuxtjs/locales/en.json)
    - [`nuxtjs/locales/nl.json`](nuxtjs/locales/nl.json)
    - [`nuxtjs/locales/es.json`](nuxtjs/locales/es.json)
-2. Aligner aussi `index.productHighlights` (landing `#produits`) si la grille visible change.
+   - [`nuxtjs/locales/et.json`](nuxtjs/locales/et.json)
+2. Aligner `index.productHighlights` (landing `#produits` sur [`nuxtjs/pages/index.vue`](nuxtjs/pages/index.vue)).
 3. Sources de vérité (dans cet ordre) :
    - [`documentation/17-POLITIQUE-TARIFAIRE.md`](documentation/17-POLITIQUE-TARIFAIRE.md)
    - [`documentation/22-FICHE-PRODUIT-COMMERCIAL.md`](documentation/22-FICHE-PRODUIT-COMMERCIAL.md)
@@ -22,15 +23,13 @@ alwaysApply: true
 
 | Élément | Attendu (réf. actuelle) |
 |---------|-------------------------|
-| Plans TTC | 35 € / an · 95 € / 3 ans · 145 € / 5 ans |
+| Plans TTC | **3,50 € / mois** · **35 € / an** · **95 € / 3 ans** |
 | Steer | Triennial recommandé (−10 % vs 3× Annual) |
-| Quinquennial | paiement unique uniquement |
-| Addons (paiement unique à vie) | Family 39 · Kennel 119 · Care+ 19 · Horse 39 € |
-| Family | ≥2, −10 %, **pas de plafond**, exclusif Kennel |
-| Kennel | ≥6, −15 %, encodage rapide, exclusif Family (upgrade) |
-| Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels, FR/NL/EN/ES/ET |
+| Mensuel | abonnement Stripe only ; flexibilité (≈ 42 €/an > annuel) |
+| Addons | **plus vendus** — toutes features ouvertes dès entitlement animal actif |
+| Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels Care/Horse, foyer, FR/NL/EN/ES/ET |
 
 ```text
-# ❌ BAD — docs/billing changés, /produits inchangé
-# ✅ GOOD — même PR/commit : docs + domain.go + products.* (4 locales) + highlights landing
+# ❌ BAD — docs/billing changés, / ou /produits inchangés
+# ✅ GOOD — même PR/commit : docs + domain.go + products.* (5 locales) + highlights landing
 ```

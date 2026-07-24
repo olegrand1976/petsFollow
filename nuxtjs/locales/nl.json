@@ -199,9 +199,10 @@
         "past_due": "Achterstallig"
       },
       "plan": {
-        "annual": "Annual",
+        "annual": "Jaarlijks",
         "triennial": "Triennial",
-        "quinquennial": "Quinquennial"
+        "quinquennial": "Quinquennial",
+        "monthly": "Maandelijks"
       },
       "billingMode": {
         "subscription": "Abonnement",
@@ -396,7 +397,13 @@
       "columnBpm": "BPM",
       "columnDuration": "Duur",
       "columnStatus": "Status",
-      "chartTitle": "BPM-trend (laatste 30 metingen)",
+      "chartTitle": "BPM-trend",
+      "chartRangeLabel": "Periode",
+      "chartRange3m": "3 maanden",
+      "chartRange6m": "6 maanden",
+      "chartRange1y": "1 jaar",
+      "chartEmptyPeriod": "Geen metingen in deze periode",
+      "chartAxisBpm": "BPM",
       "chartLegend": "Legenda",
       "chartLegendOk": "Normaal",
       "chartLegendAlert": "Waarschuwing",
@@ -702,7 +709,7 @@
         "paid": "Betaald"
       },
       "sheetTitle": "Commissiemodel (overzicht)",
-      "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% annual · 12% triennial · 8% quinquennial · 10% addons — hier niet bewerkbaar (zie fiche hierboven)."
+      "planRatesHint": "Commercial-tarieven vast per plan (excl. btw): 8% maandelijks · 8% jaarlijks · 12% triennial — geen addons. Hier niet bewerkbaar (zie fiche hierboven)."
     },
     "commercialBonuses": {
       "title": "SPIFF-bonussen",
@@ -728,7 +735,7 @@
       "kpiTotal": "Totaal periode",
       "kpiStatus": "Status",
       "kpiRate": "Commercialtarief",
-      "kpiRatePlans": "8 / 12 / 8%",
+      "kpiRatePlans": "8 / 8 / 12%",
       "periodTitle": "Maandelijks overzicht",
       "period": "Maand",
       "close": "Afsluiten (te betalen)",
@@ -1029,59 +1036,71 @@
     "ctaButton": "Registratie starten",
     "productsLink": "Producten",
     "productsTitle": "Waarvoor uw cliënten intekenen",
-    "productsLead": "Duidelijke grid om voorgeschreven monitoring voor te stellen — zonder sensor, vanaf ongeveer €2 / maand per dier.",
-    "productsCta": "Alle aanbiedingen bekijken (presentatie)",
+    "productsLead": "Drie eenvoudige formules per dier — alle functies inbegrepen zodra het abonnement actief is.",
+    "productsCta": "Bekijk de formules",
     "productHighlights": {
-      "plans": {
-        "price": "€35 / €95 / €145",
-        "title": "Abonnementen per dier",
-        "text": "Annual, Triennial (aanbevolen) of Quinquennial — metingen 15/30/60 s, berichten, timeline en herinneringen."
+      "monthly": {
+        "price": "€3,50 / maand",
+        "title": "Maandelijks",
+        "text": "Flexibiliteit — metingen, berichten, timeline, Care/Horse-herinneringen, huishoudoverzicht. Geen lange verbintenis."
       },
-      "family": {
-        "price": "39 € · 119 € (eenmalig)",
-        "title": "Family en Kennel",
-        "text": "Family vanaf 2 (−10% vanaf het 2e betalende dier, geen plafond). Kennel vanaf 6 (−15%, snelle encoding). Eenmalig voor het leven. Bv. Jaar 1: 2× Annual + Family = 105,50 € · daarna 66,50 € / jaar."
+      "annual": {
+        "price": "€35 / jaar",
+        "title": "Jaarlijks",
+        "text": "≈ €2,9 / maand — dezelfde volledige opvolging, betere prijs dan maandelijks."
       },
-      "careHorse": {
-        "price": "19 € · 39 € (eenmalig)",
-        "title": "Care+ en Horse",
-        "text": "Care+ voor medicatie en persoonlijke herinneringen; Horse voor paardenopvolging — eenmalig voor het leven, cumuleerbaar met Family / Kennel."
+      "triennial": {
+        "price": "€95 / 3 jaar",
+        "title": "Triennial (aanbevolen)",
+        "text": "≈ €2,6 / maand — kernaanbod, −10% t.o.v. 3× jaarlijks."
       }
     },
     "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
   },
   "products": {
-    "seoTitle": "petsFollow — Aanbiedingen & producten",
-    "seoDescription": "petsFollow abonnementen- en add-onraster voor presentaties in de dierenartspraktijk.",
+    "seoTitle": "petsFollow — Aanbiedingen",
+    "seoDescription": "petsFollow-abonnementsraster voor presentatie in de dierenartspraktijk.",
     "backHome": "Home",
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
     "title": "petsFollow-aanbiedingen",
-    "lead": "Stel cliënten een door de dierenarts voorgeschreven hartopvolging voor — zonder halsband of apparaat, met transparante prijzen.",
-    "positioning": "petsFollow Pro is gratis voor de praktijk. Alleen de eigenaar betaalt de opvolging (abonnement per dier + huishoudopties).",
-    "includedTitle": "Inbegrepen in elk dierabonnement",
-    "includedLead": "Ongeacht het plan (1, 3 of 5 jaar) krijgt de eigenaar:",
+    "lead": "Presenteer hartopvolging voorgeschreven door de dierenarts — zonder halsband of doosje.",
+    "positioning": "petsFollow Pro is gratis voor de praktijk. Alleen de eigenaar betaalt voor de opvolging van zijn dieren. Alle functies zijn inbegrepen zodra het abonnement actief is.",
+    "includedTitle": "Inbegrepen in elk dierenabonnement",
+    "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of triennial) beschikt de eigenaar over:",
     "included": [
       "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app (zonder hardware)",
-      "Sessies verzonden naar en gevalideerd door de praktijk",
-      "Veilige berichten eigenaar ↔ dierenarts + pushmeldingen",
-      "Timeline / gedeeld patiëntendossier (goedgekeurde metingen en gesprekken)",
-      "Standaard zorgherinneringen (vaccin, ontworming, controle, gebit)",
+      "Verzending en validatie van sessies door de praktijk",
+      "Veilige berichten client ↔ dierenarts + pushmeldingen",
+      "Timeline / gedeeld patiëntendossier",
+      "Zorgherinneringen (standaard, medicatie, persoonlijk) en equine pack bij paard",
+      "Huishoudoverzicht en snelle multi-dier encoding",
       "Talen FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Abonnementen per dier",
-    "plansLead": "Één abonnement per opgevolgd dier. Prijzen incl. btw — Annual / Triennial eenmalig of Stripe-abonnement; Quinquennial alleen eenmalig.",
+    "plansLead": "Eén abonnement per gevolgd dier. Prijzen incl. btw. Maandelijks = enkel Stripe-abonnement; jaarlijks en triennial = eenmalig of abonnement.",
     "recommended": "Aanbevolen",
-    "plansTip": "Presentatietip: start met Triennial (€95 / 3 jaar ≈ €2,6/maand) — beste balans prijs / engagement voor het gezin.",
+    "plansTip": "Tip: kies bij voorkeur Triennial (€95 / 3 jaar ≈ €2,6/maand). Maandelijks biedt flexibiliteit; jaarlijks de beste prijs per jaar.",
     "plans": {
+      "monthly": {
+        "name": "Maandelijks",
+        "price": "€3,50",
+        "period": "per maand",
+        "monthly": "flexibiliteit",
+        "benefits": [
+          "Geen lange verbintenis",
+          "Alle functies inbegrepen",
+          "Automatische maandelijkse vernieuwing"
+        ]
+      },
       "annual": {
-        "name": "Annual",
+        "name": "Jaarlijks",
         "price": "€35",
         "period": "per jaar",
         "monthly": "≈ €2,9 / maand",
         "benefits": [
-          "Instapplan — ideaal om één dier te starten",
-          "Alle kernvoordelen van dieropvolging inbegrepen",
+          "Beste jaarprijs vs maandelijks",
+          "Alle functies inbegrepen",
           "Verbintenis van één jaar"
         ]
       },
@@ -1091,193 +1110,31 @@
         "period": "voor 3 jaar",
         "monthly": "≈ €2,6 / maand",
         "benefits": [
-          "Kernaanbod — −10% t.o.v. 3× Annual",
-          "Continue opvolging gedurende 3 jaar",
-          "Sterkste prijsargument voor het gezin"
-        ]
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "€145",
-        "period": "voor 5 jaar (eenmalig)",
-        "monthly": "≈ €2,4 / maand",
-        "benefits": [
-          "Lange termijn — −17% t.o.v. 5× Annual",
-          "Ideaal voor chronische / senior dieren",
-          "Eenmalige betaling — geen Stripe auto-verlenging"
+          "Kernaanbod — −10% t.o.v. 3× jaarlijks",
+          "Continue opvolging over 3 jaar",
+          "Sterkste prijsargument voor het huishouden"
         ]
       }
     },
-    "addonsTitle": "Huishoudopties (eigenaarsaccount)",
-    "addonsLead": "Add-ons komen bovenop dierabonnementen (ze vervangen ze nooit). Eenmalige aankoop voor het leven per account — voordelen voor het hele huishouden.",
-    "addonsTip": "Family / Kennel: 1e betalend dier volle prijs, korting vanaf het 2e (−10% / −15%). Family en Kennel zijn exclusief (Kennel = upgrade). Horse alleen met ≥ 1 paard. Add-ons = één aankoop, geldig voor het leven.",
-    "addons": {
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "tagline": "Huishoudpakket — vanaf 2 dieren, −10% korting",
-        "scope": "Account",
-        "benefits": [
-          "Eenmalig voor het leven — geen verlenging",
-          "Huishoudoverzicht: komende herinneringen van alle dieren",
-          "−10% op elk dierenabonnement vanaf het 2e betalende dier (1e = volle prijs)",
-          "Geen plafond — Family blijft 39 € eenmalig",
-          "Bv. Jaar 1 (2× Annual): 35 + 31,50 + 39 = 105,50 € · Volgende jaren: 66,50 € / jaar",
-          "Exclusief met Kennel — vanaf 6 dieren Kennel-upgrade aanbevolen"
-        ]
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "tagline": "Verrijkt zorgboekje",
-        "scope": "Account",
-        "benefits": [
-          "Eenmalig voor het leven",
-          "Medicatieherinneringen voor het hele huishouden",
-          "Gepersonaliseerde herinneringen",
-          "Bovenop dierenabonnementen — geen plankorting",
-          "Bv. huishouden 2 dieren + Family: +19 € eenmalig"
-        ]
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "tagline": "Paardenpack",
-        "scope": "Account",
-        "benefits": [
-          "Eenmalig voor het leven",
-          "Herinneringen hoefsmid en mestonderzoek",
-          "Hoefsmidlog + pro-contacten + wedstrijden",
-          "Bovenop dierenabonnementen — geen plankorting",
-          "Alleen als het huishouden ≥ 1 paard heeft"
-        ]
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "tagline": "Fokkerij / bestand vanaf 6 dieren",
-        "scope": "Account",
-        "benefits": [
-          "Eenmalig voor het leven — geen verlenging",
-          "Snelle multi-dier encoding, rooster, nesttags, export",
-          "−15% op elk dierenabonnement vanaf het 2e betalende dier",
-          "Bv. Jaar 1 (6× Annual): 35 + 5×29,75 + 119 = 302,75 € · Volgende jaren: 183,75 € / jaar",
-          "Exclusief met Family (Kennel = upgrade, Family geannuleerd)"
-        ]
-      }
-    },
-    "examplesTitle": "Concrete voorbeelden (Annual-plan)",
-    "examplesLead": "Add-ons vervangen nooit het dierenabonnement. Bedragen incl. btw op basis van Annual 35 € — 1e betalend dier volle prijs, volgende met korting als Family / Kennel actief is. Add-ons zijn een eenmalige aankoop voor het leven (alleen Jaar 1).",
-    "examplesTip": "Family / Kennel / Care+ / Horse = eenmalig voor het leven op het account. In volgende jaren blijven alleen de dierenabonnementen over.",
-    "examplesCareHorseTitle": "Care+ en Horse — zorg-add-ons",
-    "examplesCareHorseLead": "Accountaanvullingen als eenmalige aankoop voor het leven, zonder korting op dierenabonnementen.",
-    "examplesCareHorseBenefits": [
-      "Care+ 19 € eenmalig: medicatie- en persoonlijke herinneringen voor het hele huishouden",
-      "Horse 39 € eenmalig: paardenpack (hoefsmid, contacten, wedstrijden) bij ≥ 1 paard",
-      "Cumuleerbaar met Family of Kennel — geldig voor het leven"
-    ],
-    "examples": {
-      "withoutFamily2": {
-        "title": "Zonder Family — 2 dieren",
-        "total": "70 € / jaar",
-        "breakdown": "35 + 35 (2× Annual volle prijs)",
-        "benefits": [
-          "Elk dier heeft een eigen abonnement",
-          "Geen unified huishoudoverzicht",
-          "Geen multi-dier korting"
-        ]
-      },
-      "withFamily2": {
-        "title": "Met Family — 2 dieren",
-        "total": "Jaar 1: 105,50 € · Daarna: 66,50 € / jaar",
-        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family eenmalig) · Volgende jaren: 35 + 31,50",
-        "benefits": [
-          "1e dier: 35 € (volle prijs)",
-          "2e dier: 31,50 € (−10%)",
-          "Family 39 € eenmalig voor het leven",
-          "Vanaf Jaar 2: nog 66,50 € / jaar aan dierenabonnementen"
-        ]
-      },
-      "withFamily4": {
-        "title": "Met Family — 4 dieren",
-        "total": "Jaar 1: 168,50 € · Daarna: 129,50 € / jaar",
-        "breakdown": "Jaar 1: 35 + 3×31,50 + 39 · Volgende jaren: 35 + 3×31,50 (vs 140 € / jaar zonder Family)",
-        "benefits": [
-          "1e: 35 € · 3 volgende: 31,50 € elk",
-          "Family 39 € eenmalig — geen plafond",
-          "Elk nieuw betalend dier krijgt −10%"
-        ]
-      },
-      "kennel6": {
-        "title": "Met Kennel — 6 dieren",
-        "total": "Jaar 1: 302,75 € · Daarna: 183,75 € / jaar",
-        "breakdown": "Jaar 1: 35 + 5×29,75 + 119 (Kennel eenmalig) · Volgende jaren: 35 + 5×29,75",
-        "benefits": [
-          "1e: 35 € · 5 volgende: 29,75 € (−15%)",
-          "Snelle encoding, rooster, nesttags",
-          "Vervangt Family indien actief (upgrade)"
-        ]
-      },
-      "withFamily2CarePlus": {
-        "title": "Family + Care+ — 2 dieren",
-        "total": "Jaar 1: 124,50 € · Daarna: 66,50 € / jaar",
-        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family) + 19 (Care+) · Volgende jaren: 66,50 € / jaar",
-        "benefits": [
-          "Family −10% op het 2e dier",
-          "Care+ 19 € eenmalig: medicatie & persoonlijke herinneringen",
-          "Vanaf Jaar 2: alleen dierenabonnementen"
-        ]
-      },
-      "withFamilyHorse": {
-        "title": "Family + Horse — 2 dieren (waarvan 1 paard)",
-        "total": "Jaar 1: 144,50 € · Daarna: 66,50 € / jaar",
-        "breakdown": "Jaar 1: 35 + 31,50 + 39 (Family) + 39 (Horse) · Volgende jaren: 66,50 € / jaar",
-        "benefits": [
-          "Family voor huishoudoverzicht en −10%",
-          "Horse 39 € eenmalig: hoefsmid, mestonderzoek, wedstrijden",
-          "Add-ons voor het leven — alleen dierenabonnementen vernieuwen"
-        ]
-      }
-    },
-    "summaryTitle": "Overzicht prijzen",
+    "summaryTitle": "Samenvatting raster",
     "summary": {
+      "monthly": {
+        "name": "Maandelijks",
+        "price": "€3,50 / maand",
+        "role": "Flexibiliteit"
+      },
       "annual": {
-        "name": "Annual",
+        "name": "Jaarlijks",
         "price": "€35 / jaar",
-        "role": "Dierabonnement — instap"
+        "role": "Beste jaarprijs"
       },
       "triennial": {
         "name": "Triennial",
         "price": "€95 / 3 jaar",
-        "role": "Dierabonnement — aanbevolen"
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "€145 / 5 jaar",
-        "role": "5 jaar toegang — eenmalige betaling"
-      },
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "role": "Huishoud-addon vanaf 2 (−10%, geen plafond, exclusief Kennel) — eenmalig voor het leven"
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "role": "Zorg-/medicatie-addon — eenmalig voor het leven"
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "role": "Paardenpack-addon — eenmalig voor het leven"
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "role": "Kennel-addon vanaf 6 (−15%, exclusief Family) — eenmalig voor het leven"
+        "role": "Aanbevolen"
       }
     },
-    "footer": "petsFollow — voorgeschreven door de dierenarts, zonder hardware"
+    "footer": "petsFollow — opvolging voorgeschreven door de dierenarts, zonder hardware"
   },
   "components": {
     "topbar": {
@@ -1534,7 +1391,7 @@
     },
     "commissions": {
       "title": "Mijn commissies",
-      "subtitle": "Tarieven per plan excl. btw (8 / 12 / 8%) — push triennial.",
+      "subtitle": "Tarieven per plan excl. btw (8 / 8 / 12%) — push triennial.",
       "rate": "Tarief",
       "month": "Maand",
       "lifetime": "Lifetime",
@@ -1587,8 +1444,8 @@
       "webTitle": "Pro Web-app (dierenarts)",
       "mobileTitle": "Flutter mobiele app (cliënten)",
       "commissionTitle": "Commissies",
-      "vetGrid": "Dierenarts: 7% → 12% excl. btw volgens volume betalende cliënten, met planfactor (annual / triennial / quinquennial).",
-      "addons": "Addons Family / Kennel: 10% commercial + 5% dierenarts. Care+ / Horse: 10% commercial, 0% dierenarts.",
+      "vetGrid": "Dierenarts: 7% → 12% excl. btw volgens volume betalende cliënten, met planfactor (maandelijks / jaarlijks / triennial).",
+      "addons": "Geen addons — commissie enkel op plannen (8% maandelijks / 8% jaarlijks / 12% triennial).",
       "webFeatures": [
         "Operationeel dashboard cliënten / berichten / HR",
         "Patiëntdossier en messaging",
@@ -1596,17 +1453,17 @@
         "Praktijk-onboarding en instellingen"
       ],
       "mobileFeatures": [
-        "Dieren en hartslagopvolging",
-        "Stripe-abonnementen per dier",
-        "Family / Kennel / Care+ / Horse addons met echte privileges",
+        "Dieren en hartopvolging",
+        "Stripe-abonnementen per dier (maandelijks / jaarlijks / triennial)",
+        "Alle functies inbegrepen zodra het abonnement actief is",
         "Berichten en zorgherinneringen"
       ],
-      "commercialFlat": "Commercial: 8% / 12% / 8% excl. btw per plan (annual / triennial / quinquennial); ~€9,4 op het triennial abonnement van €95 incl. btw.",
+      "commercialFlat": "Commercial: 8% / 8% / 12% excl. btw per plan (maandelijks / jaarlijks / triennial); ~€9,4 op het triennial abonnement van €95 incl. btw.",
       "productsLink": "Volledige productgrid openen (presentatie)",
       "cardVetTitle": "Dierenarts",
       "cardVetDesc": "Pitch praktijk: Pro-app, klanttarieven en dierenartsvergoeding.",
       "cardClientTitle": "Cliënt",
-      "cardClientDesc": "Pitch eigenaar: mobiele app, plannen en gezin-addons.",
+      "cardClientDesc": "Pitch eigenaar: mobiele app en dierenabonnementen (maandelijks, jaarlijks, driejaarlijks).",
       "backToCards": "Terug naar doelgroepen",
       "benefitsTitle": "Inbegrepen voordelen",
       "vetRetributionTitle": "Vergoeding dierenarts"
@@ -1627,20 +1484,21 @@
     "colCommRate": "Commercialtarief",
     "colCommEuros": "€ commercial",
     "vetBaseExplain": "Basistarief volgens het aantal betalende klanten gekoppeld aan uw praktijk:",
-    "vetMaxExplain": "Dat basistarief wordt daarna vermenigvuldigd met een planfactor (100% op Triennial, 67% op Annual en Quinquennial), met een plafond van 12%. De tabel toont het maximum op schaal 61+ klanten — uw werkelijke tarief kan lager liggen op een eerdere schaal.",
-    "vetAddonNote": "Family en Kennel: 5% excl. btw voor de dierenarts. Care+ en Horse: 0% dierenarts (alleen 10% commercial).",
+    "vetMaxExplain": "Dit basistarief wordt vermenigvuldigd met een planfactor (100% op Triennial, 67% op Monthly en Annual), daarna begrensd op 12%. De tabel toont het maximum bij 61+ klanten — uw reële tarief kan lager zijn op eerdere schijven.",
+    "vetAddonNote": "Add-ons (Family / Kennel / Care+ / Horse) worden niet meer verkocht — alleen legacy.",
     "coSellNote": "De dierenarts wordt niet benadeeld als u toegewezen bent — win-win co-selling.",
     "adminGuardrails": "Grenzen: nettowinst ≥ 55% van incl. btw · netto/jaar kern ≥ €17 · max. partner take rate 24% excl. btw.",
     "tier": "{min}–{max} klanten → {pct}% (basis)",
     "tierOpen": "{min}+ klanten → {pct}% (basis)",
     "plans": {
-      "annual": "Annual (€35 TTC)",
-      "triennial": "Triennial (€95 TTC)",
-      "quinquennial": "Quinquennial (€145 TTC)",
-      "family": "Family (39 € TTC)",
-      "care_plus": "Care+ (19 € TTC)",
-      "horse": "Horse (39 € TTC)",
-      "kennel": "Kennel (119 € TTC)"
+      "monthly": "Maandelijks (3,50 € incl. btw)",
+      "annual": "Jaarlijks (35 € incl. btw)",
+      "triennial": "Driejaarlijks (95 € incl. btw)",
+      "quinquennial": "Quinquennial (145 € incl. btw) — legacy",
+      "family": "Family (39 € incl. btw) — legacy",
+      "care_plus": "Care+ (19 € incl. btw) — legacy",
+      "horse": "Horse (39 € incl. btw) — legacy",
+      "kennel": "Kennel (119 € incl. btw) — legacy"
     },
     "bonusTitles": {
       "vet_tier_31": "31-client tier bonus",
@@ -1658,7 +1516,7 @@
       "earned": "Behaald",
       "paid": "Betaald"
     },
-    "discountNote": "Eurobedragen zijn indicatief tegen catalogusprijs. Huishoud-/kennelkortingen (−10% / −15%) verlagen de werkelijk geïnde HT-basis."
+    "discountNote": "Indicatieve €-bedragen zijn catalogusprijzen (geen huis-/kennelkortingen meer)."
   },
   "calendar": {
     "title": "Agenda",
@@ -1693,6 +1551,15 @@
     "improveReport": "Verbeteren (IA)",
     "reportSaved": "Verslag opgeslagen",
     "reportImproved": "Verslag verbeterd",
+    "finalizeReport": "Verslag finaliseren",
+    "reportFinal": "Verslag gefinaliseerd (alleen-lezen)",
+    "reportFinalized": "Verslag gefinaliseerd",
+    "transcribeAudio": "Audio → tekst",
+    "audioConsent": "Audio dient alleen om het verslag te maken en wordt bij finalisatie verwijderd.",
+    "audioConsentTitle": "Audiotoestemming",
+    "audioConsentAccept": "Ik ga akkoord",
+    "reportTranscribed": "Transcriptie voltooid",
+    "placeBadge": "Locatie",
     "unscheduled": "te plannen",
     "columnClient": "Cliënt",
     "columnPet": "Dier",

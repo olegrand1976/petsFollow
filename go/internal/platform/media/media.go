@@ -60,9 +60,11 @@ var allowedDocumentTypes = map[string]string{
 }
 
 // Store uploads binaries and returns a publicly reachable URL.
+// Sensitive prefixes (e.g. visit-reports/) should not be served via public /media/; use Open + authenticated API.
 type Store interface {
 	Upload(ctx context.Context, objectKey string, r io.Reader, size int64, contentType string) (publicURL string, err error)
 	Delete(ctx context.Context, objectKey string) error
+	Open(ctx context.Context, objectKey string) (rc io.ReadCloser, contentType string, err error)
 }
 
 type Bundle struct {
@@ -85,9 +87,37 @@ func New(cfg config.Config) (*Bundle, error) {
 	}
 	return &Bundle{
 		Store:        st,
-		LocalHandler: handler,
+		LocalHandler: DenySensitivePrefixes(handler, "visit-reports/"),
 		LocalMount:   "/media/",
 	}, nil
+}
+
+// DenySensitivePrefixes blocks public FileServer access to object-key prefixes (PHI).
+func DenySensitivePrefixes(next http.Handler, prefixes ...string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := strings.TrimPrefix(r.URL.Path, "/media/")
+		p = path.Clean("/" + p)
+		p = strings.TrimPrefix(p, "/")
+		if p == "." {
+			p = ""
+		}
+		for _, pref := range prefixes {
+			if IsSensitiveObjectKey(p) || strings.HasPrefix(p, pref) {
+				http.Error(w, "forbidden", http.StatusForbidden)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// IsSensitiveObjectKey reports PHI object keys that must not be publicly readable.
+func IsSensitiveObjectKey(objectKey string) bool {
+	objectKey = strings.TrimSpace(objectKey)
+	objectKey = path.Clean("/" + objectKey)
+	objectKey = strings.TrimPrefix(objectKey, "/")
+	objectKey = strings.ToLower(objectKey)
+	return objectKey == "visit-reports" || strings.HasPrefix(objectKey, "visit-reports/")
 }
 
 func ExtForContentType(contentType string) (string, error) {
@@ -228,9 +258,10 @@ func ObjectKey(kind, entityID, ext string) string {
 }
 
 // PublicURL builds a reachable URL for an object key (empty key → "").
+// Sensitive PHI keys (visit-reports/) never get a public URL.
 func PublicURL(cfg config.Config, objectKey string) string {
 	objectKey = strings.TrimSpace(objectKey)
-	if objectKey == "" {
+	if objectKey == "" || IsSensitiveObjectKey(objectKey) {
 		return ""
 	}
 	if cfg.GCSMediaBucket != "" {

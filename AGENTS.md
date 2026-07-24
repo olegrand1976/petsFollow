@@ -24,7 +24,7 @@ Après modification des tokens brand : `make brand-sync`.
 
 ## Comptes démo
 
-Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin : `AdminDemo123!` · commercial : `CommercialDemo123!`
+Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin : `AdminDemo123!` · commercial : `CommercialDemo123!` · care_pro : `CareProDemo123!`
 
 | Rôle | Email | Cabinet |
 |------|-------|---------|
@@ -34,6 +34,8 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
 | Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
 | Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
+| Care pro (farrier) | `farrier.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) |
+| Care pro (vet_light) | `vetlight.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) |
 | Commercial manager | `commercial.manager@petsfollow.test` | Responsable commercial (équipe) |
 | Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné, rattaché manager) |
 
@@ -49,7 +51,7 @@ Entraînement pitch IA (commercial) : `/commercial/training` — nécessite `GEM
 Confirmation email démo : `/confirm-email?token=demo-confirm-email` 
 Reset mot de passe démo : `/reset-password?token=demo-reset-password` (`vet.reset@petsfollow.test`)
 
-Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; staging = bucket GCS `petsfollow-media` (`make gcp-setup-media`, env `GCS_MEDIA_BUCKET`).
+Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; staging = bucket GCS `petsfollow-media` (`make gcp-setup-media`, env `GCS_MEDIA_BUCKET`). PHI CR (`visit-reports/`) : pas d’URL publique (stream auth) — GCP refuse une IAM conditionnelle sur `allUsers`.
 
 Relancer les données : `make seed`
 
@@ -96,7 +98,9 @@ Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_
 
 Sans ces variables, la connexion email/mot de passe fonctionne normalement ; le bouton Google est masqué.
 
-**Flutter pets** : Google Sign-In avec `audience=client` — lie un compte client existant (invitation véto). Ne crée pas de compte. Un email Pro → erreur `google_client_only`.
+**Flutter pets** : Google Sign-In avec `audience=client` — lie un compte client existant **ou crée** un compte client si l’email est inconnu (create-if-absent). Un email Pro → erreur `google_client_only`. Self-signup email : `POST /auth/register-client` (écran inscription Flutter).
+
+**Flutter care_pro** : même app, shell pro light (`ProLightShell`) après login `role=care_pro` + `professionalSpecialty`. Création via admin (`POST /admin/care-pros`) ; register public off par défaut (`CARE_PRO_PUBLIC_REGISTER`).
 
 **2FA** : activation dans Paramètres (`/settings`) — TOTP via application authenticator.
 

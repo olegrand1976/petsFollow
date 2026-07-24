@@ -6,7 +6,6 @@ const SKIP_PREFIXES = [
   '/forgot-password',
   '/reset-password',
   '/welcome',
-  '/produits',
   '/legal',
 ]
 

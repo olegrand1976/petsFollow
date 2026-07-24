@@ -5,9 +5,9 @@
 ## Assiette
 - Prix client / Stripe = **TTC**
 - Commission = **% du HTVA** (TVA BE 21 %)
-- Assiette = **HT du montant payé** (après remise Family −10 % / Kennel −15 % si applicable)
+- Assiette = **HT du montant payé**
 
-**Déclenchement** : **une fois** à l’activation payante (checkout animal ou addon Family/Kennel). Pas de commission au renouvellement Stripe (plans). Addons = paiement unique à vie.
+**Déclenchement** : **une fois** à l’activation payante (checkout animal). Pas de commission au renouvellement Stripe.
 
 ## Grille progressive (base)
 | Clients payants | Taux |
@@ -17,31 +17,23 @@
 | 31–60 | 11 % |
 | 61+ | 12 % |
 
-× facteur plan : **triennial ×1** · annual / quinquennial **×0,67**  
+× facteur plan : **triennial ×1** · monthly / annual **×0,67**  
 → plafonds effectifs **12 % / 8 % / 8 %**
 
 ## € indicatifs (plafond)
 | Plan TTC | € max approx. |
 |----------|---------------|
+| Monthly 3,50 € | ~0,23 € |
 | Annual 35 € | ~2,3 € |
 | **Triennial 95 €** | **~9,4 €** |
-| Quinquennial 145 € | ~9,6 € |
 
 ## Bonus
 - **50 €** one-shot au 1er passage de **31** clients payants  
   Affichage / progression dans Pro — **payout hors système** (pas d’award ledger).
 
-## Addons (assiette = HT payé)
-| Addon | Taux HT | € indicatif |
-|-------|---------|-------------|
-| Family 39 € | **5 %** | ~1,6 € |
-| Kennel 119 € | **5 %** | ~4,9 € |
-| Care+ / Horse | **0 %** | — |
-
-Accrual : `AccrueVetForAddon` → ledger `source_kind=addon`.
-
 ## Message
-Poussez le **triennial** — meilleur taux dès le 1er client. Même plafond avec ou sans commercial assigné.
+Poussez le **triennial** — meilleur taux dès le 1er client. Même plafond avec ou sans commercial assigné.  
+Pas de commission addon (addons plus vendus ; features incluses avec l’entitlement animal).
 
 ## Versements
 - Les paiements des commissions sont effectués **en début de chaque mois**.

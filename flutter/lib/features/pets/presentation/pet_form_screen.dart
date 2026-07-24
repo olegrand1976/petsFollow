@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:petsfollow_mobile/core/api/billing_addon.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
@@ -84,15 +83,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (file != null) setState(() => photoFile = file);
   }
 
+  /// Monthly is subscription-only; annual/triennial allow one-time or auto-renew.
+  bool get _subscriptionForced => selectedPlan == 'monthly';
+
   String _summary(AppLocalizations l10n) {
     final plan = plans.firstWhere(
       (p) => p['code'] == selectedPlan,
       orElse: () => {'label': selectedPlan},
     );
     final label = plan['label'] as String? ?? selectedPlan;
-    // Quinquennial is Stripe one-time only (max recurring interval = 3 years).
-    if (autoRenew && selectedPlan != 'quinquennial') {
+    if (autoRenew || _subscriptionForced) {
       switch (selectedPlan) {
+        case 'monthly':
+          return l10n.planMonthlySub;
         case 'annual':
           return l10n.planAnnualSub(label);
         case 'triennial':
@@ -102,12 +105,10 @@ class _PetFormScreenState extends State<PetFormScreen> {
     return l10n.planOneTime(label);
   }
 
-  bool get _subscriptionAllowed => selectedPlan != 'quinquennial';
-
   Future<void> save() async {
     setState(() => loading = true);
     try {
-      final renew = autoRenew && _subscriptionAllowed;
+      final renew = autoRenew || _subscriptionForced;
       final res = await ApiClient.instance.createPet({
         'name': name.text,
         'species': selectedSpecies,
@@ -145,9 +146,6 @@ class _PetFormScreenState extends State<PetFormScreen> {
         }
       }
       if (!mounted || petId == null) return;
-      if (selectedSpecies == 'horse' && mounted) {
-        await _maybeOfferHorsePack(petId);
-      }
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -169,49 +167,15 @@ class _PetFormScreenState extends State<PetFormScreen> {
     }
   }
 
-  Future<void> _maybeOfferHorsePack(String petId) async {
-    final l10n = AppLocalizations.of(context)!;
-    final ents = await AddonEntitlements.load();
-    // Fail-closed: skip upsell if entitlements unknown or horse pack already active.
-    if (ents == null || ents.hasHorse || !mounted) return;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.horseHealthTitle),
-        content: Text(l10n.horsePackUpsell),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cancel)),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.activateAddon)),
-        ],
-      ),
-    );
-    if (go != true || !mounted) return;
-    try {
-      final url = await ApiClient.instance
-          .startAddonCheckout(addonCode: 'horse');
-      await openExternalUrl(url);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.paymentResume)),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
+            {'code': 'monthly', 'label': l10n.planMonthlyLabel},
             {'code': 'annual', 'label': l10n.planAnnualLabel},
             {'code': 'triennial', 'label': l10n.planTriennialLabel, 'recommended': true},
-            {'code': 'quinquennial', 'label': l10n.planQuinquennialLabel},
           ];
     final initial =
         (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
@@ -318,8 +282,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
                     groupValue: selectedPlan,
                     onChanged: (v) => setState(() {
                       selectedPlan = v!;
-                      if (selectedPlan == 'quinquennial') {
-                        autoRenew = false;
+                      if (selectedPlan == 'monthly') {
+                        autoRenew = true;
                       }
                     }),
                     title: Row(
@@ -344,20 +308,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
               SwitchListTile(
                 title: Text(l10n.autoRenewTitle),
                 subtitle: Text(
-                  _subscriptionAllowed
-                      ? l10n.autoRenewSubtitle
-                      : l10n.planOneTime(
-                          displayPlans.firstWhere(
-                                (p) => p['code'] == 'quinquennial',
-                                orElse: () => {'label': l10n.planQuinquennialLabel},
-                              )['label'] as String? ??
-                              l10n.planQuinquennialLabel,
-                        ),
+                  _subscriptionForced
+                      ? l10n.planMonthlySub
+                      : l10n.autoRenewSubtitle,
                 ),
-                value: autoRenew && _subscriptionAllowed,
-                onChanged: _subscriptionAllowed
-                    ? (v) => setState(() => autoRenew = v)
-                    : null,
+                value: autoRenew || _subscriptionForced,
+                onChanged: _subscriptionForced
+                    ? null
+                    : (v) => setState(() => autoRenew = v),
               ),
               Text(_summary(l10n),
                   style: Theme.of(context).textTheme.bodyMedium),

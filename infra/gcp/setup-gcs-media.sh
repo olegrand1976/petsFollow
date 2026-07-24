@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Crée le bucket GCS médias (avatars / photos animaux) + IAM.
 # Usage: ./infra/gcp/setup-gcs-media.sh
+#
+# Note GCP : les conditions IAM sur allUsers sont refusées
+# (PublicResourceAllowConditionCheck). La protection PHI visit-reports/
+# repose donc sur l’app : Upload sans URL publique + stream auth + clés UUID.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,13 +36,18 @@ gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
   --role="roles/storage.objectAdmin" \
   --quiet >/dev/null
 
-echo "→ IAM objectViewer public (avatars / photos)"
+# Avatars / photos : lecture publique (URLs storage.googleapis.com).
+# GCP interdit une condition allUsers qui exclurait visit-reports/ —
+# les objets PHI n’exposent pas d’URL publique (media.Upload → "").
+echo "→ IAM objectViewer public (allUsers) pour médias non-PHI"
 gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
   --member="allUsers" \
   --role="roles/storage.objectViewer" \
-  --quiet >/dev/null
+  --quiet >/dev/null 2>&1 || true
 
 echo ""
 echo "Configurer Cloud Run API :"
 echo "  GCS_MEDIA_BUCKET=${BUCKET}"
-echo "Done."
+echo "Done. PHI visit-reports : pas d’URL publique (API Open auth uniquement)."
+echo "Avertissement : un objet visit-reports/* reste lisible si son chemin UUID est connu"
+echo "  (UBLA + allUsers). Mitigation : clés aléatoires + pas d’URL retournée + purge finalize."

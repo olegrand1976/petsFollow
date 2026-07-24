@@ -12,6 +12,9 @@ func TestSubscriptionCatalogMatchesBillingDomain(t *testing.T) {
 	for _, r := range store.SubscriptionPlanRates() {
 		byCode[r.Code] = r
 	}
+	if len(byCode) != 3 {
+		t.Fatalf("want 3 sellable plans in commission catalog, got %d", len(byCode))
+	}
 	for _, p := range billing.AllPlans() {
 		got, ok := byCode[string(p.Code)]
 		if !ok {
@@ -24,21 +27,18 @@ func TestSubscriptionCatalogMatchesBillingDomain(t *testing.T) {
 			t.Fatalf("%s recommended mismatch", p.Code)
 		}
 	}
+	if _, ok := byCode["quinquennial"]; ok {
+		t.Fatal("quinquennial must not appear in sellable commission catalog")
+	}
 }
 
 func TestAddonCatalogMatchesBillingDomain(t *testing.T) {
-	byCode := map[string]store.PlanRateInfo{}
-	for _, r := range store.AddonPlanRates() {
-		byCode[r.Code] = r
+	rates := store.AddonPlanRates()
+	if len(rates) != 0 {
+		t.Fatalf("addon commission catalog must be empty, got %d", len(rates))
 	}
-	for _, a := range billing.AllAddons() {
-		got, ok := byCode[string(a.Code)]
-		if !ok {
-			t.Fatalf("missing addon %s in commission catalog", a.Code)
-		}
-		if got.TTCCents != a.AmountCents {
-			t.Fatalf("%s TTC catalog=%d domain=%d", a.Code, got.TTCCents, a.AmountCents)
-		}
+	if n := len(billing.AllAddons()); n != 0 {
+		t.Fatalf("AllAddons must be empty, got %d", n)
 	}
 }
 
@@ -55,8 +55,8 @@ func TestIndicativeTriennialCommissions(t *testing.T) {
 		// HTVA(3500)=2892; 8%=231
 		t.Fatalf("8%% of HTVA(3500)=231, got %d", got)
 	}
-	if got := store.CommissionFromTTCCents(14500, 800); got != 958 {
-		// HTVA(14500)=11983; 8%=958
-		t.Fatalf("8%% of HTVA(14500)=958, got %d", got)
+	if got := store.CommissionFromTTCCents(350, 800); got != 23 {
+		// HTVA(350)=289; 8%=23
+		t.Fatalf("8%% of HTVA(350)=23, got %d", got)
 	}
 }

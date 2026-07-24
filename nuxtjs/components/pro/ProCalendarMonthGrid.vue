@@ -39,6 +39,7 @@
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }}</span>
+          <span v-if="v.addressText" class="cal-chip__place" :title="v.addressText">{{ $t('calendar.placeBadge') }}</span>
         </button>
         <button
           v-if="cell.overflow > 0"
@@ -179,6 +180,14 @@ function chipTime(v: CalendarVisit) {
   cursor: pointer;
   padding: 0.1rem 0;
   text-align: left;
+}
+.cal-chip__place {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--pf-vet-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

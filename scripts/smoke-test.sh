@@ -73,6 +73,22 @@ curl -sf -X POST "$API/api/v1/auth/reset-password" -H 'Content-Type: application
 curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"SmokePass456!\"}" >/dev/null
 
+# Register client + confirm
+CLIENT_REG_EMAIL="smoke-client+$(date +%s)@petsfollow.test"
+CLIENT_REG=$(curl -sf -X POST "$API/api/v1/auth/register-client" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\",\"fullName\":\"Smoke Client\"}")
+CLIENT_CONFIRM_PATH=$(echo "$CLIENT_REG" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['confirmPath'])")
+CLIENT_CONFIRM_TOKEN=${CLIENT_CONFIRM_PATH#*token=}
+curl -sf -X POST "$API/api/v1/auth/confirm-email" -H 'Content-Type: application/json' \
+  -d "{\"token\":\"$CLIENT_CONFIRM_TOKEN\"}" >/dev/null
+curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$CLIENT_REG_EMAIL\",\"password\":\"ClientPass123!\"}" >/dev/null
+
+# Pet shares list (owner) + public media visit-reports blocked
+curl -sf "$API/api/v1/pets/$PET_ID/shares" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
+MEDIA_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$API/media/visit-reports/smoke-forbidden.m4a")
+test "$MEDIA_CODE" = "403"
+
 COMM=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"commercial.demo@petsfollow.test","password":"CommercialDemo123!"}')
 COMM_TOKEN=$(echo "$COMM" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
@@ -93,4 +109,4 @@ BAD=$(curl -s -o /tmp/pf-smoke-bad-login.json -w '%{http_code}' -X POST "$API/ap
   -d '{"email":"vet.demo@petsfollow.test","password":"WrongPass999!"}')
 test "$BAD" = "401"
 
-echo "OK — smoke MVP + billing + auth reset + commercial + manager passed"
+echo "OK — smoke MVP + billing + auth reset + register-client + shares/media + commercial + manager passed"

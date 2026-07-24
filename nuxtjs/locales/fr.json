@@ -306,9 +306,10 @@
         "past_due": "Impayé"
       },
       "plan": {
-        "annual": "Annual",
-        "triennial": "Triennial",
-        "quinquennial": "Quinquennial"
+        "annual": "Annuel",
+        "triennial": "Triennal",
+        "quinquennial": "Quinquennial",
+        "monthly": "Mensuel"
       },
       "billingMode": {
         "subscription": "Abonnement",
@@ -416,7 +417,7 @@
     },
     "commissions": {
       "title": "Mes commissions",
-      "subtitle": "Taux par plan sur HTVA (8 / 12 / 8 %) — poussez le triennial.",
+      "subtitle": "Taux par plan sur HTVA (8 / 8 / 12 %) — poussez le triennal.",
       "rate": "Taux",
       "rateHeart": "Taux cœur (triennial)",
       "month": "Mois",
@@ -469,8 +470,8 @@
       "webTitle": "App Web Pro (véto)",
       "mobileTitle": "App Mobile Flutter (clients)",
       "commissionTitle": "Commissionnement",
-      "vetGrid": "Véto : 7 % → 12 % HTVA selon le volume, avec facteur plan (annual / triennial / quinquennial).",
-      "addons": "Addons Family / Kennel : 10 % commercial + 5 % véto. Care+ / Horse : 10 % commercial, 0 % véto.",
+      "vetGrid": "Véto : 7 % → 12 % HTVA selon le volume, avec facteur plan (mensuel / annuel / triennal).",
+      "addons": "Pas d'addons — commissionnement uniquement sur les plans (8 % mensuel / 8 % annuel / 12 % triennal).",
       "webFeatures": [
         "Dashboard opérationnel clients / messages / FC",
         "Dossier patient et messagerie",
@@ -479,16 +480,16 @@
       ],
       "mobileFeatures": [
         "Animaux et suivi cardiaque",
-        "Abonnements Stripe par animal",
-        "Addons Family / Kennel / Care+ / Horse avec privilèges réels",
+        "Abonnements Stripe par animal (mensuel / annuel / triennal)",
+        "Toutes les fonctionnalités incluses dès l'abonnement actif",
         "Messages et rappels de soins"
       ],
-      "commercialFlat": "Commercial : 8 % / 12 % / 8 % HTVA selon le plan (annual / triennial / quinquennial) ; ~9,4 € sur le triennial 95 € TTC.",
+      "commercialFlat": "Commercial : 8 % / 8 % / 12 % HTVA selon le plan (mensuel / annuel / triennal) ; ~9,4 € sur le triennal 95 € TTC.",
       "productsLink": "Voir la grille produits complète (support présentation)",
       "cardVetTitle": "Vétérinaire",
       "cardVetDesc": "Pitch cabinet : app Pro, tarifs clients et rétribution véto.",
       "cardClientTitle": "Client",
-      "cardClientDesc": "Pitch propriétaire : app mobile, plans et options foyer.",
+      "cardClientDesc": "Pitch propriétaire : app mobile et abonnements animal (mensuel, annuel, triennal).",
       "backToCards": "Retour aux audiences",
       "benefitsTitle": "Bénéfices inclus",
       "vetRetributionTitle": "Rétribution vétérinaire"
@@ -691,7 +692,13 @@
       "columnBpm": "BPM",
       "columnDuration": "Durée",
       "columnStatus": "Statut",
-      "chartTitle": "Tendance BPM (30 derniers relevés)",
+      "chartTitle": "Tendance BPM",
+      "chartRangeLabel": "Période",
+      "chartRange3m": "3 mois",
+      "chartRange6m": "6 mois",
+      "chartRange1y": "1 an",
+      "chartEmptyPeriod": "Aucun relevé sur cette période",
+      "chartAxisBpm": "BPM",
       "chartLegend": "Légende",
       "chartLegendOk": "Normal",
       "chartLegendAlert": "Alerte",
@@ -987,7 +994,7 @@
       "kpiDue": "Total à verser",
       "kpiStatus": "Statut run",
       "sheetTitle": "Modèle de commissionnement (vue d’ensemble)",
-      "planRatesHint": "Taux commercial figés (HTVA) : 8 % annual · 12 % triennial · 8 % quinquennial · 10 % addons (Family/Kennel/Care+/Horse). Véto : 5 % Family/Kennel, 0 % Care+/Horse — non éditables ici.",
+      "planRatesHint": "Taux commercial figés (HTVA) : 8 % mensuel · 8 % annuel · 12 % triennal — pas d'addons. Non éditables ici.",
       "tiersTitle": "Grille de taux véto (éditable)",
       "tierLine": "{min}{max} clients → {pct} %",
       "saveTiers": "Enregistrer la grille véto",
@@ -1048,7 +1055,7 @@
       "kpiTotal": "Total période",
       "kpiStatus": "Statut",
       "kpiRate": "Taux commercial",
-      "kpiRatePlans": "8 / 12 / 8 %",
+      "kpiRatePlans": "8 / 8 / 12 %",
       "periodTitle": "Récapitulatif mensuel",
       "period": "Mois",
       "close": "Clôturer (à payer)",
@@ -1176,6 +1183,15 @@
     "improveReport": "Améliorer (IA)",
     "reportSaved": "Compte rendu enregistré",
     "reportImproved": "Compte rendu amélioré",
+    "finalizeReport": "Finaliser le CR",
+    "reportFinal": "Compte rendu finalisé (lecture seule)",
+    "reportFinalized": "Compte rendu finalisé",
+    "transcribeAudio": "Audio → texte",
+    "audioConsent": "L'audio sert uniquement à générer le CR et sera supprimé à la finalisation.",
+    "audioConsentTitle": "Consentement audio",
+    "audioConsentAccept": "J'accepte",
+    "reportTranscribed": "Transcription terminée",
+    "placeBadge": "Lieu",
     "unscheduled": "à planifier",
     "columnClient": "Client",
     "columnPet": "Animal",
@@ -1251,20 +1267,21 @@
     "colCommRate": "Taux commercial",
     "colCommEuros": "€ commercial",
     "vetBaseExplain": "Taux de base selon le nombre de clients payants liés à votre cabinet :",
-    "vetMaxExplain": "Ce taux de base est ensuite multiplié par un facteur selon le plan (100 % sur Triennial, 67 % sur Annual et Quinquennial), puis plafonné à 12 %. Le tableau indique le maximum au palier 61+ clients — votre taux réel peut être inférieur si vous êtes encore sur un palier plus bas.",
-    "vetAddonNote": "Family et Kennel : 5 % HT pour le véto. Care+ et Horse : 0 % véto (10 % commercial uniquement).",
+    "vetMaxExplain": "Ce taux de base est ensuite multiplié par un facteur selon le plan (100 % sur Triennal, 67 % sur Mensuel et Annuel), puis plafonné à 12 %. Le tableau indique le maximum au palier 61+ clients — votre taux réel peut être inférieur si vous êtes encore sur un palier plus bas.",
+    "vetAddonNote": "Les addons (Family / Kennel / Care+ / Horse) ne sont plus vendus — historique uniquement.",
     "coSellNote": "Le véto n’est pas pénalisé si vous êtes assigné — co-selling gagnant-gagnant.",
     "adminGuardrails": "Garde-fous : marge nette ≥ 55 % du TTC · net/an cœur ≥ 17 € · take rate max cœur 24 % HT.",
     "tier": "{min}–{max} clients → {pct} % (base)",
     "tierOpen": "{min}+ clients → {pct} % (base)",
     "plans": {
-      "annual": "Annual (35 € TTC)",
-      "triennial": "Triennial (95 € TTC)",
-      "quinquennial": "Quinquennial (145 € TTC)",
-      "family": "Family (39 € TTC)",
-      "care_plus": "Care+ (19 € TTC)",
-      "horse": "Horse (39 € TTC)",
-      "kennel": "Kennel (119 € TTC)"
+      "monthly": "Mensuel (3,50 € TTC)",
+      "annual": "Annuel (35 € TTC)",
+      "triennial": "Triennal (95 € TTC)",
+      "quinquennial": "Quinquennial (145 € TTC) — legacy",
+      "family": "Family (39 € TTC) — legacy",
+      "care_plus": "Care+ (19 € TTC) — legacy",
+      "horse": "Horse (39 € TTC) — legacy",
+      "kennel": "Kennel (119 € TTC) — legacy"
     },
     "bonusTitles": {
       "vet_tier_31": "Bonus palier 31 clients",
@@ -1282,7 +1299,7 @@
       "earned": "Obtenu",
       "paid": "Payé"
     },
-    "discountNote": "Les € indicatifs sont au plein tarif. Les remises foyer/élevage (−10 % / −15 %) réduisent l’assiette HT réellement encaissée."
+    "discountNote": "Les € indicatifs sont au plein tarif catalogue (plus de remises foyer/élevage)."
   },
   "onboarding": {
     "title": "Configuration du cabinet",
@@ -1417,252 +1434,102 @@
     "ctaButton": "Commencer l'inscription",
     "productsLink": "Produits",
     "productsTitle": "Ce que vos clients souscrivent",
-    "productsLead": "Grille claire pour présenter le suivi prescrit par le cabinet — sans boîtier, à partir d'environ 2 € / mois par animal.",
-    "productsCta": "Voir toutes les offres (support présentation)",
+    "productsLead": "Trois formules simples par animal — toutes les fonctionnalités incluses dès l'abonnement actif.",
+    "productsCta": "Voir les formules",
     "productHighlights": {
-      "plans": {
-        "price": "35 / 95 / 145 €",
-        "title": "Abonnements par animal",
-        "text": "Annual, Triennial (recommandé) ou Quinquennial — relevés 15/30/60 s, messagerie, timeline et rappels."
+      "monthly": {
+        "price": "3,50 € / mois",
+        "title": "Mensuel",
+        "text": "Flexibilité — relevés, messagerie, timeline, rappels Care/Horse, vue foyer. Sans engagement long."
       },
-      "family": {
-        "price": "39 € · 119 € (paiement unique)",
-        "title": "Family et Kennel",
-        "text": "Family dès 2 (−10 % dès le 2ᵉ payant, sans plafond). Kennel dès 6 (−15 %, encodage). Paiement unique à vie. Ex. An 1 : 2× Annual + Family = 105,50 € · ensuite 66,50 € / an."
+      "annual": {
+        "price": "35 € / an",
+        "title": "Annuel",
+        "text": "≈ 2,9 € / mois — même suivi complet, meilleur prix que le mensuel."
       },
-      "careHorse": {
-        "price": "19 € · 39 € (paiement unique)",
-        "title": "Care+ et Horse",
-        "text": "Care+ pour médicaments et rappels perso ; Horse pour le suivi équine — paiement unique à vie, cumulable avec Family / Kennel."
+      "triennial": {
+        "price": "95 € / 3 ans",
+        "title": "Triennal (recommandé)",
+        "text": "≈ 2,6 € / mois — cœur d'offre, −10 % vs 3× annuel."
       }
     },
     "footer": "© {year} petsFollow — Suivi cardiaque vétérinaire"
   },
   "products": {
-    "seoTitle": "petsFollow — Offres & produits",
-    "seoDescription": "Grille des abonnements et options petsFollow pour présentation cabinet vétérinaire.",
+    "seoTitle": "petsFollow — Offres",
+    "seoDescription": "Grille des abonnements petsFollow pour présentation cabinet vétérinaire.",
     "backHome": "Accueil",
     "print": "Imprimer / PDF",
     "badge": "Support de présentation cabinet",
     "title": "Offres petsFollow",
-    "lead": "Présentez à vos clients un suivi cardiaque prescrit par le vétérinaire, sans collier ni boîtier — simple, transparent, adapté au foyer.",
-    "positioning": "petsFollow Pro est gratuit pour le cabinet. Seul le propriétaire paie le suivi de ses animaux (abonnement par animal + options foyer).",
+    "lead": "Présentez à vos clients un suivi cardiaque prescrit par le vétérinaire, sans collier ni boîtier.",
+    "positioning": "petsFollow Pro est gratuit pour le cabinet. Seul le propriétaire paie le suivi de ses animaux. Toutes les fonctionnalités sont incluses dès l'abonnement actif.",
     "includedTitle": "Inclus dans chaque abonnement animal",
-    "includedLead": "Quel que soit le plan choisi (1, 3 ou 5 ans), le propriétaire dispose de :",
+    "includedLead": "Quel que soit le plan (mensuel, annuel ou triennal), le propriétaire dispose de :",
     "included": [
       "Relevés cardiaques guidés 15 / 30 / 60 s depuis l'app mobile (sans hardware)",
       "Envoi et validation des sessions par le cabinet",
       "Messagerie sécurisée client ↔ vétérinaire + notifications push",
-      "Timeline / dossier patient partagé (relevés validés et échanges)",
-      "Rappels de soins standards (vaccin, vermifuge, contrôle, dentaire)",
+      "Timeline / dossier patient partagé",
+      "Rappels de soins (standards, médicaments, perso) et pack équine si cheval",
+      "Vue foyer et encodage multi-animaux",
       "Langues FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Abonnements par animal",
-    "plansLead": "Un abonnement par animal suivi. Prix TTC — Annual / Triennial en paiement unique ou abonnement Stripe ; Quinquennial en paiement unique uniquement.",
+    "plansLead": "Un abonnement par animal suivi. Prix TTC. Mensuel = abonnement Stripe uniquement ; annuel et triennal = paiement unique ou abonnement.",
     "recommended": "Recommandé",
-    "plansTip": "Conseil présentation : privilégiez le Triennial (95 € / 3 ans ≈ 2,6 €/mois) — meilleur équilibre prix / engagement pour le foyer.",
+    "plansTip": "Conseil : privilégiez le Triennal (95 € / 3 ans ≈ 2,6 €/mois). Le mensuel offre la flexibilité ; l'annuel le meilleur prix à l'année.",
     "plans": {
+      "monthly": {
+        "name": "Mensuel",
+        "price": "3,50 €",
+        "period": "par mois",
+        "monthly": "flexibilité",
+        "benefits": [
+          "Sans engagement long",
+          "Toutes les fonctionnalités incluses",
+          "Renouvellement automatique mensuel"
+        ]
+      },
       "annual": {
-        "name": "Annual",
+        "name": "Annuel",
         "price": "35 €",
         "period": "par an",
         "monthly": "≈ 2,9 € / mois",
         "benefits": [
-          "Entrée de gamme — idéal pour démarrer un animal",
-          "Tous les bénéfices du suivi animal inclus",
+          "Meilleur prix à l'année vs mensuel",
+          "Toutes les fonctionnalités incluses",
           "Engagement d'un an"
         ]
       },
       "triennial": {
-        "name": "Triennial",
+        "name": "Triennal",
         "price": "95 €",
         "period": "pour 3 ans",
         "monthly": "≈ 2,6 € / mois",
         "benefits": [
-          "Cœur d'offre — −10 % vs 3× Annual",
+          "Cœur d'offre — −10 % vs 3× annuel",
           "Suivi continu sur 3 ans",
           "Meilleur argument prix pour le foyer"
-        ]
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "145 €",
-        "period": "pour 5 ans (paiement unique)",
-        "monthly": "≈ 2,4 € / mois",
-        "benefits": [
-          "Engagement long terme — −17 % vs 5× Annual",
-          "Idéal animaux chroniques / seniors",
-          "Paiement unique — pas de renouvellement auto Stripe"
-        ]
-      }
-    },
-    "addonsTitle": "Options foyer (compte propriétaire)",
-    "addonsLead": "Les addons s'ajoutent aux abonnements animal (ils ne les remplacent jamais). Paiement unique à vie par compte — avantages partagés par tout le foyer.",
-    "addonsTip": "Mécanique Family / Kennel : 1er animal payant au plein tarif, remise dès le 2ᵉ payant (−10 % / −15 %). Family et Kennel sont exclusifs (Kennel = upgrade). Horse uniquement si le foyer a ≥ 1 cheval. Addons = un seul achat, valable à vie.",
-    "addons": {
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "tagline": "Forfait foyer — dès 2 animaux, remise −10 %",
-        "scope": "Compte",
-        "benefits": [
-          "Paiement unique à vie — pas de renouvellement",
-          "Vue foyer : prochains rappels de tous les animaux",
-          "−10 % sur chaque abonnement animal dès le 2ᵉ payant (1er = plein tarif)",
-          "Pas de plafond d'animaux — Family reste 39 € une fois",
-          "Ex. An 1 (2× Annual) : 35 + 31,50 + 39 = 105,50 € · Ans suivants : 66,50 € / an",
-          "Exclusif Kennel — dès 6 animaux, upgrade Kennel recommandé"
-        ]
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "tagline": "Carnet de soins enrichi",
-        "scope": "Compte",
-        "benefits": [
-          "Paiement unique à vie",
-          "Rappels médicaments pour tout le foyer",
-          "Rappels personnalisés",
-          "En plus des plans animal — aucune remise plans",
-          "Ex. foyer 2 animaux + Family : +19 € une fois sur le compte"
-        ]
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "tagline": "Pack équine",
-        "scope": "Compte",
-        "benefits": [
-          "Paiement unique à vie",
-          "Rappels maréchal et coproscopie",
-          "Carnet maréchal + contacts pro + compétitions",
-          "En plus des plans animal — aucune remise plans",
-          "Proposé uniquement si le foyer a ≥ 1 cheval"
-        ]
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "tagline": "Élevage / effectif dès 6 animaux",
-        "scope": "Compte",
-        "benefits": [
-          "Paiement unique à vie — pas de renouvellement",
-          "Encodage rapide multi-animaux, roster, tags portée, export",
-          "−15 % sur chaque abonnement animal dès le 2ᵉ payant",
-          "Ex. An 1 (6× Annual) : 35 + 5×29,75 + 119 = 302,75 € · Ans suivants : 183,75 € / an",
-          "Exclusif Family (achat Kennel = upgrade, Family annulé)"
-        ]
-      }
-    },
-    "examplesTitle": "Exemples concrets (plan Annual)",
-    "examplesLead": "Les addons ne remplacent jamais l'abonnement animal. Chiffres TTC sur la base Annual 35 € — 1er payant plein tarif, suivants remisés si Family / Kennel actif. Les addons sont un paiement unique à vie (An 1 seulement).",
-    "examplesTip": "Family / Kennel / Care+ / Horse = paiement unique à vie sur le compte. Les années suivantes, seul le coût des abonnements animal reste.",
-    "examplesCareHorseTitle": "Care+ et Horse — addons soins",
-    "examplesCareHorseLead": "Compléments compte en paiement unique à vie, sans remise sur les abonnements animal.",
-    "examplesCareHorseBenefits": [
-      "Care+ 19 € une fois : rappels médicaments et personnalisés pour tout le foyer",
-      "Horse 39 € une fois : pack équine (maréchal, contacts, compétitions) si ≥ 1 cheval",
-      "Cumulables avec Family ou Kennel — valables à vie"
-    ],
-    "examples": {
-      "withoutFamily2": {
-        "title": "Sans Family — 2 animaux",
-        "total": "70 € / an",
-        "breakdown": "35 + 35 (2× Annual plein tarif)",
-        "benefits": [
-          "Chaque animal a son propre abonnement",
-          "Pas de vue foyer unifiée",
-          "Pas de remise multi-animaux"
-        ]
-      },
-      "withFamily2": {
-        "title": "Avec Family — 2 animaux",
-        "total": "An 1 : 105,50 € · Ensuite : 66,50 € / an",
-        "breakdown": "An 1 : 35 + 31,50 + 39 (Family une fois) · Ans suivants : 35 + 31,50",
-        "benefits": [
-          "1er animal : 35 € (plein tarif)",
-          "2ᵉ animal : 31,50 € (−10 %)",
-          "Family 39 € une fois à vie : vue foyer + remise pour les suivants",
-          "Dès l'An 2 : plus que 66,50 € / an d'abonnements animal"
-        ]
-      },
-      "withFamily4": {
-        "title": "Avec Family — 4 animaux",
-        "total": "An 1 : 168,50 € · Ensuite : 129,50 € / an",
-        "breakdown": "An 1 : 35 + 3×31,50 + 39 · Ans suivants : 35 + 3×31,50 (vs 140 € / an sans Family)",
-        "benefits": [
-          "1er : 35 € · 3 suivants : 31,50 € chacun",
-          "Family 39 € une fois — pas de plafond",
-          "Chaque nouvel animal payant bénéficie du −10 %"
-        ]
-      },
-      "kennel6": {
-        "title": "Avec Kennel — 6 animaux",
-        "total": "An 1 : 302,75 € · Ensuite : 183,75 € / an",
-        "breakdown": "An 1 : 35 + 5×29,75 + 119 (Kennel une fois) · Ans suivants : 35 + 5×29,75",
-        "benefits": [
-          "1er : 35 € · 5 suivants : 29,75 € (−15 %)",
-          "Encodage rapide, roster, tags portée",
-          "Remplace Family s'il était actif (upgrade)"
-        ]
-      },
-      "withFamily2CarePlus": {
-        "title": "Family + Care+ — 2 animaux",
-        "total": "An 1 : 124,50 € · Ensuite : 66,50 € / an",
-        "breakdown": "An 1 : 35 + 31,50 + 39 (Family) + 19 (Care+) · Ans suivants : 66,50 € / an",
-        "benefits": [
-          "Remise Family −10 % sur le 2ᵉ animal",
-          "Care+ 19 € une fois : médicaments & rappels perso",
-          "Dès l'An 2 : uniquement les abonnements animal"
-        ]
-      },
-      "withFamilyHorse": {
-        "title": "Family + Horse — 2 animaux (dont 1 cheval)",
-        "total": "An 1 : 144,50 € · Ensuite : 66,50 € / an",
-        "breakdown": "An 1 : 35 + 31,50 + 39 (Family) + 39 (Horse) · Ans suivants : 66,50 € / an",
-        "benefits": [
-          "Family pour la vue foyer et la remise −10 %",
-          "Horse 39 € une fois : maréchal, copro, compétitions",
-          "Addons à vie — seuls les plans animal se renouvellent"
         ]
       }
     },
     "summaryTitle": "Récapitulatif grille",
     "summary": {
+      "monthly": {
+        "name": "Mensuel",
+        "price": "3,50 € / mois",
+        "role": "Flexibilité"
+      },
       "annual": {
-        "name": "Annual",
+        "name": "Annuel",
         "price": "35 € / an",
-        "role": "Abonnement animal — entrée"
+        "role": "Meilleur prix annuel"
       },
       "triennial": {
-        "name": "Triennial",
+        "name": "Triennal",
         "price": "95 € / 3 ans",
-        "role": "Abonnement animal — recommandé"
-      },
-      "quinquennial": {
-        "name": "Quinquennial",
-        "price": "145 € / 5 ans",
-        "role": "Accès 5 ans — paiement unique"
-      },
-      "family": {
-        "name": "Family",
-        "price": "39 €",
-        "role": "Addon foyer dès 2 (−10 %, sans plafond, exclusif Kennel) — paiement unique à vie"
-      },
-      "carePlus": {
-        "name": "Care+",
-        "price": "19 €",
-        "role": "Addon soins / médicaments — paiement unique à vie"
-      },
-      "horse": {
-        "name": "Horse",
-        "price": "39 €",
-        "role": "Addon pack équine — paiement unique à vie"
-      },
-      "kennel": {
-        "name": "Kennel",
-        "price": "119 €",
-        "role": "Addon élevage dès 6 (−15 %, exclusif Family) — paiement unique à vie"
+        "role": "Recommandé"
       }
     },
     "footer": "petsFollow — suivi prescrit par le vétérinaire, sans hardware"

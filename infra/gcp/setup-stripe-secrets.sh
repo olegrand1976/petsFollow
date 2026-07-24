@@ -29,6 +29,7 @@ declare -A STRIPE_SECRETS=(
   [petsfollow-stripe-price-annual-onetime]=STRIPE_PRICE_ANNUAL_ONETIME
   [petsfollow-stripe-price-triennial-onetime]=STRIPE_PRICE_TRIENNIAL_ONETIME
   [petsfollow-stripe-price-quinquennial-onetime]=STRIPE_PRICE_QUINQUENNIAL_ONETIME
+  [petsfollow-stripe-price-monthly-sub]=STRIPE_PRICE_MONTHLY_SUB
   [petsfollow-stripe-price-annual-sub]=STRIPE_PRICE_ANNUAL_SUB
   [petsfollow-stripe-price-triennial-sub]=STRIPE_PRICE_TRIENNIAL_SUB
 )
@@ -92,7 +93,7 @@ done
 cat <<EOF
 
 Prochaines étapes (Dashboard Stripe → mode Live) :
-  1. Créer les 6 Products/Prices (annual / triennial / quinquennial × one_time + subscription)
+  1. Créer les Prices : monthly SUB (3,50 €/mois) · annual ONETIME+SUB · triennial ONETIME+SUB
   2. Copier les price_… IDs dans les secrets petsfollow-stripe-price-*
   3. Webhook endpoint : \${PUBLIC_API_URL}/api/v1/billing/webhook
      Événements : checkout.session.completed, invoice.paid, invoice.payment_failed,

@@ -146,6 +146,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)
+		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
 		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)
 		pr.Post("/visits/{visitID}/report/transcribe", a.transcribeVisitReport)
@@ -360,7 +361,11 @@ func (a *API) listMyPets(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	pets, err := a.store.ListPetsByOwner(r.Context(), id.UserID)
+	if id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	pets, err := a.store.ListPetsAccessibleToClient(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -421,9 +426,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if created.Species == "horse" {
-		if has, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonHorse)); err == nil && has {
-			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-		}
+		_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
 	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
 		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
@@ -438,15 +441,6 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(id.PracticeID) == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
-		return
-	}
-	hasKennel, err := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if !hasKennel {
-		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "kennel_required")
 		return
 	}
 	var body petsBatchReq
@@ -482,6 +476,9 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, pet.PracticeID, pet.Species)
+		if pet.Species == "horse" {
+			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
+		}
 		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
 		if err != nil {
 			planCode = billing.PlanTriennial
@@ -555,6 +552,13 @@ func (a *API) getPet(w http.ResponseWriter, r *http.Request) {
 	pet, ok := a.requirePetAccess(w, r, chi.URLParam(r, "petID"), id, store.PermRead)
 	if !ok {
 		return
+	}
+	if id.Role == kernel.RoleClient {
+		if pet.OwnerUserID == id.UserID {
+			pet.Permission = string(store.PermFull)
+		} else if perm, e := a.store.EffectivePetPermission(r.Context(), pet, id.UserID); e == nil {
+			pet.Permission = string(perm)
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, pet)
 }

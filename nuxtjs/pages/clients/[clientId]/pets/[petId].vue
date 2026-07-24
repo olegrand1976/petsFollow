@@ -48,12 +48,48 @@
       <span>{{ $t('clients.pet.recentAlertBanner') }}</span>
     </div>
 
-    <ProCard v-if="chartValues.length" :title="$t('clients.pet.chartTitle')">
+    <ProCard v-if="hasChartData" :title="$t('clients.pet.chartTitle')">
+      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': chartRange === '3m' }"
+          data-testid="pet-chart-range-3m"
+          @click="chartRange = '3m'"
+        >
+          {{ $t('clients.pet.chartRange3m') }}
+        </button>
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': chartRange === '6m' }"
+          data-testid="pet-chart-range-6m"
+          @click="chartRange = '6m'"
+        >
+          {{ $t('clients.pet.chartRange6m') }}
+        </button>
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': chartRange === '1y' }"
+          data-testid="pet-chart-range-1y"
+          @click="chartRange = '1y'"
+        >
+          {{ $t('clients.pet.chartRange1y') }}
+        </button>
+      </div>
       <ProBpmChart
+        v-if="chartValues.length"
         :values="chartValues"
         :alerts="chartAlerts"
+        :dates="chartDates"
+        :domain-start="chartDomain.start"
+        :domain-end="chartDomain.end"
         :aria-label="$t('clients.pet.chartTitle')"
       />
+      <p v-else class="text-muted" data-testid="pet-chart-empty-period">
+        {{ $t('clients.pet.chartEmptyPeriod') }}
+      </p>
     </ProCard>
 
     <ProCard :title="$t('clients.pet.heartrateTitle')">
@@ -397,6 +433,7 @@ const careReminders = ref<any[]>([])
 const visits = ref<any[]>([])
 const documents = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
+const chartRange = ref<'3m' | '6m' | '1y'>('3m')
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
@@ -493,14 +530,30 @@ const filteredSessions = computed(() => {
 
 const recentAlert = computed(() => sessions.value.length > 0 && !!sessions.value[0]?.isAlert)
 
-const chartSessions = computed(() =>
-  [...sessions.value]
-    .filter(s => s.bpm != null)
-    .slice(0, 30)
-    .reverse(),
+const rangeMonths = computed(() =>
+  chartRange.value === '3m' ? 3 : chartRange.value === '6m' ? 6 : 12,
 )
+
+const chartDomain = computed(() => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setMonth(start.getMonth() - rangeMonths.value)
+  return { start: start.toISOString(), end: end.toISOString() }
+})
+
+const hasChartData = computed(() =>
+  sessions.value.some(s => s.bpm != null && s.startedAt),
+)
+
+const chartSessions = computed(() => {
+  const cutoff = new Date(chartDomain.value.start)
+  return [...sessions.value]
+    .filter(s => s.bpm != null && s.startedAt && new Date(s.startedAt) >= cutoff)
+    .sort((a, b) => +new Date(a.startedAt) - +new Date(b.startedAt))
+})
 const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number))
 const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
+const chartDates = computed(() => chartSessions.value.map(s => s.startedAt as string))
 
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }

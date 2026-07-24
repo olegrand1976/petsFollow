@@ -137,20 +137,11 @@ func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, reminders)
 }
 
-// getHousehold returns the Family/Kennel household digest (privilege gated).
+// getHousehold returns the household digest (all clients — no addon gate).
 func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
-		return
-	}
-	has, err := a.store.HasHouseholdAddon(r.Context(), id.UserID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if !has {
-		writeErr(w, r, http.StatusPaymentRequired, "addon_required", "household_required")
 		return
 	}
 	hasKennel, _ := a.store.HasActiveAddon(r.Context(), id.UserID, string(billing.AddonKennel))
@@ -167,10 +158,14 @@ func (a *API) getHousehold(w http.ResponseWriter, r *http.Request) {
 	if upcoming == nil {
 		upcoming = []store.HouseholdCareItem{}
 	}
+	pack := "standard"
+	if hasKennel {
+		pack = "kennel"
+	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"familyMinPets":     store.FamilyMinPets,
 		"kennelMinPets":     store.KennelMinPets,
-		"pack":              map[bool]string{true: "kennel", false: "family"}[hasKennel],
+		"pack":              pack,
 		"petCount":          len(pets),
 		"pets":              pets,
 		"upcomingReminders": upcoming,
@@ -213,34 +208,10 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerID := pet.OwnerUserID
-	needsCarePlus := reminderType == "custom" || reminderType == "medication"
 	needsHorse := reminderType == "farrier" || reminderType == "fecal_egg"
-	if needsCarePlus {
-		okAddon, err := a.store.HasActiveAddon(r.Context(), ownerID, string(billing.AddonCarePlus))
-		if err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if !okAddon {
-			writeErr(w, r, http.StatusPaymentRequired, "addon_required", "care_plus_required")
-			return
-		}
-	}
-	if needsHorse {
-		if pet.Species != "horse" {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "horse_pet_required")
-			return
-		}
-		okAddon, err := a.store.HasActiveAddon(r.Context(), ownerID, string(billing.AddonHorse))
-		if err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if !okAddon {
-			writeErr(w, r, http.StatusPaymentRequired, "addon_required", "horse_pack_required")
-			return
-		}
+	if needsHorse && pet.Species != "horse" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "horse_pet_required")
+		return
 	}
 
 	title := strings.TrimSpace(req.Title)
@@ -278,11 +249,7 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 	}
 	var updated store.CareReminder
 	switch id.Role {
-	case kernel.RoleClient:
-		updated, err = a.store.MarkCareReminderDone(r.Context(), chi.URLParam(r, "id"), id.UserID)
-	case kernel.RoleVet:
-		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
-	case kernel.RoleCarePro:
+	case kernel.RoleClient, kernel.RoleCarePro:
 		rem, rerr := a.store.GetCareReminder(r.Context(), chi.URLParam(r, "id"))
 		if rerr != nil {
 			if errors.Is(rerr, store.ErrNotFound) {
@@ -296,6 +263,8 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		updated, err = a.store.MarkCareReminderDoneByID(r.Context(), rem.ID)
+	case kernel.RoleVet:
+		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
@@ -332,11 +301,7 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 	}
 	var updated store.CareReminder
 	switch id.Role {
-	case kernel.RoleClient:
-		updated, err = a.store.PostponeCareReminder(r.Context(), chi.URLParam(r, "id"), id.UserID, req.Days)
-	case kernel.RoleVet:
-		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
-	case kernel.RoleCarePro:
+	case kernel.RoleClient, kernel.RoleCarePro:
 		rem, rerr := a.store.GetCareReminder(r.Context(), chi.URLParam(r, "id"))
 		if rerr != nil {
 			if errors.Is(rerr, store.ErrNotFound) {
@@ -350,6 +315,8 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		updated, err = a.store.PostponeCareReminderByID(r.Context(), rem.ID, req.Days)
+	case kernel.RoleVet:
+		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
@@ -630,7 +597,12 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 	}
 	switch id.Role {
 	case kernel.RoleClient:
-		if pet.OwnerUserID != id.UserID {
+		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
+		if aerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !ok {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 			return
 		}
@@ -647,13 +619,13 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case kernel.RoleCarePro:
-		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
 		if aerr != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
 		if !ok {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "full_permission_required")
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 			return
 		}
 	default:

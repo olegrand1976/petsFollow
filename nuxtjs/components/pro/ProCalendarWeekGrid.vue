@@ -45,6 +45,7 @@
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
+          <span v-if="v.addressText" class="cal-chip__place">{{ v.addressText }}</span>
         </button>
         <p v-if="!cell.visits.length" class="cal-week__empty">—</p>
       </div>
@@ -184,6 +185,14 @@ function chipTime(v: CalendarVisit) {
   margin: 0 0 0.25rem;
   font-weight: 600;
   font-size: 0.85rem;
+}
+.cal-chip__place {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--pf-vet-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

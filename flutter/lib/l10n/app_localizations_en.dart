@@ -223,10 +223,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proLightReadOnly => 'Read-only access';
 
   @override
+  String get petAccessSharedRead => 'Shared · read';
+
+  @override
+  String get petAccessSharedNotes => 'Shared · notes';
+
+  @override
+  String get petAccessSharedFull => 'Shared · full';
+
+  @override
   String get proLightUseGps => 'GPS';
 
   @override
-  String get proLightTranscribeAudio => 'Audio → text';
+  String get proLightTranscribeAudio => 'Audio file';
+
+  @override
+  String get proLightDictationStart => 'Dictate';
+
+  @override
+  String get proLightDictationStop => 'Stop & transcribe';
+
+  @override
+  String get proLightAudioConsentTitle => 'Audio consent';
+
+  @override
+  String get proLightAudioConsentBody =>
+      'The recording is only used to draft the visit report. It is deleted when the report is finalized.';
+
+  @override
+  String get proLightAudioConsentAccept => 'I agree';
+
+  @override
+  String get proLightSpecialtyFarrier => 'Farrier';
+
+  @override
+  String get proLightSpecialtyPhysio => 'Physio / osteo';
+
+  @override
+  String get proLightSpecialtyBehaviorist => 'Behaviorist';
+
+  @override
+  String get proLightSpecialtyVetLight => 'Vet light';
+
+  @override
+  String get proLightReportHintFarrier =>
+      'Shoeing notes: hooves, shoe, observations…';
+
+  @override
+  String get proLightEmptyFarrier => 'No shared horse / visit yet';
+
+  @override
+  String get proLightMicDenied =>
+      'Microphone denied — enable access in settings';
 
   @override
   String get proLightGpsDenied => 'Location unavailable';
@@ -236,10 +284,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleLoginFailed => 'Google sign-in failed';
-
-  @override
-  String get googleClientNotFound =>
-      'No client account for this email. Ask your vet for an invite';
 
   @override
   String get googleWrongAudience =>
@@ -425,6 +469,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get planMonthlyLabel => '€3.50 / month';
+
+  @override
   String get planAnnualLabel => '€35 / year';
 
   @override
@@ -544,6 +591,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorCouldNotOpenLink => 'Could not open the link';
+
+  @override
+  String get planMonthlySub => '€3.50 / month, auto-renewed';
 
   @override
   String planAnnualSub(String price) {

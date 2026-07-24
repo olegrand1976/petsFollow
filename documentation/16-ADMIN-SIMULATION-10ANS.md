@@ -7,7 +7,7 @@ Plan d’implémentation (hors correctifs flux API). Décisions figées faute de
 | Choix | Décision |
 |-------|----------|
 | **1A** | Page dédiée `/admin/simulation`, calcul **100 % navigateur** (pas d’API / pas de persistance) |
-| **2B** | Revenus abonnements (35 / 95 / 145 €) **+** addons Family / Kennel / Care+ / Horse (paiement unique à vie, CA one-shot) + option affichage commission commercial (plans 8/12/8 %, addons 10 %) |
+| **2B** | Revenus abonnements **3 plans** (3,50 €/mois · 35 €/an · 95 €/3 ans) + option affichage commission commercial (grille plan). *Ancien mix quinquennial + attach rates addons = obsolète (hors vente).* |
 
 ## Objectif
 
@@ -32,18 +32,17 @@ Permettre à un admin de projeter sur **10 ans** :
 | Croissance cabinets (% / an) | 0 |
 | Clients payants / cabinet (an 1) | 40 |
 | Animaux moyens / client | 1.5 |
-| Mix annual / triennial / quinquennial (%) | 25 / 60 / 15 |
+| Mix monthly / annual / triennial (%) | 15 / 25 / 60 |
 | Taux de renouvellement en fin de période (%) | 80 |
-| Attach rate Family / Kennel / Care+ / Horse (% clients) | 10 / 3 / 15 / 5 |
-| Afficher commission commercial (grille plan + 10 % addons) | off |
+| Afficher commission commercial (grille plan) | off |
 
-Tarifs figés alignés billing Go : annual 3500 · triennial 9500 · quinquennial 14500 ct ; addons Family 3900 · Kennel 11900 · Care+ 1900 · Horse 3900 ct (paiement unique à vie — pas de MRR addon).
+Tarifs figés alignés billing Go : monthly 350 ct/mois · annual 3500 · triennial 9500 ct. Quinquennial + addons Family / Kennel / Care+ / Horse = **hors vente** — ne plus modéliser d’attach rate addon.
 
 ## Moteur
 
 - Fichier pur TS : [`nuxtjs/utils/prospectionSimulation.ts`](../nuxtjs/utils/prospectionSimulation.ts) (+ test Vitest)
-- Modèle cohortes : chaque année N, nouveaux pets × mix plans → cash N ; renouvellements aux échéances 1/3/5 ans selon plan, avec attrition
-- Sorties par année : `newRevenue`, `renewalRevenue`, `addonRevenue`, `total`, `cumulativeRenewals`, `cumulativeTotal`
+- Modèle cohortes : chaque année N, nouveaux pets × mix plans → cash N ; renouvellements aux échéances 1 mois / 1 an / 3 ans selon plan, avec attrition
+- Sorties par année : `newRevenue`, `renewalRevenue`, `total`, `cumulativeRenewals`, `cumulativeTotal` (plus de `addonRevenue`)
 - KPI : CA 10 ans, part renouvellements, animaux actifs fin an 10
 
 ## Hors scope

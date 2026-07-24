@@ -39,44 +39,26 @@ class BillingAddon {
   }
 }
 
-/// Active addon entitlements for the logged-in owner.
+/// Former paid addons (Care+/Horse/Family/Kennel) are unlocked for all owners.
 ///
-/// [load] returns `null` on API failure so callers can fail-closed
-/// (hide upsells) instead of treating the error as "no addons".
+/// Feature getters always return `true` so UI never gates on addon purchase.
+/// [load] still probes `/billing/my-addons` for callers that need API health.
 class AddonEntitlements {
-  AddonEntitlements(this._activeCodes);
+  const AddonEntitlements();
 
-  factory AddonEntitlements.empty() => AddonEntitlements({});
+  factory AddonEntitlements.empty() => const AddonEntitlements();
 
-  final Set<String> _activeCodes;
+  bool get hasCarePlus => true;
+  bool get hasHorse => true;
+  bool get hasFamily => true;
+  bool get hasKennel => true;
+  bool has(String code) => true;
 
-  bool get hasCarePlus => _activeCodes.contains('care_plus');
-  bool get hasHorse => _activeCodes.contains('horse');
-  bool get hasFamily => _activeCodes.contains('family');
-  bool get hasKennel => _activeCodes.contains('kennel');
-  bool has(String code) => _activeCodes.contains(code);
-
-  /// Returns active entitlements, or `null` if the request failed.
-  /// Matches Go `HasActiveAddon`: status `active`/`past_due` and `validUntil` null or in the future.
+  /// Returns entitlements, or `null` if the request failed.
   static Future<AddonEntitlements?> load() async {
     try {
-      final raw = await ApiClient.instance.getMyAddons();
-      final codes = <String>{};
-      final now = DateTime.now();
-      for (final item in raw) {
-        if (item is! Map) continue;
-        final m = Map<String, dynamic>.from(item);
-        final status = m['status'] as String? ?? '';
-        final code = m['addonCode'] as String? ?? m['code'] as String? ?? '';
-        if ((status != 'active' && status != 'past_due') || code.isEmpty) continue;
-        final untilRaw = m['validUntil'] as String?;
-        if (untilRaw != null) {
-          final until = DateTime.tryParse(untilRaw);
-          if (until != null && now.isAfter(until)) continue;
-        }
-        codes.add(code);
-      }
-      return AddonEntitlements(codes);
+      await ApiClient.instance.getMyAddons();
+      return const AddonEntitlements();
     } catch (_) {
       return null;
     }

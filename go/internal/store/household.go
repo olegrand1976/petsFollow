@@ -162,29 +162,10 @@ func (s *Store) CountOtherActivePetEntitlements(ctx context.Context, ownerUserID
 	return n, err
 }
 
-// ResolvePetCheckoutAmount returns catalogue TTC and discounted TTC for checkout.
+// ResolvePetCheckoutAmount returns catalogue TTC (household discounts removed).
 func (s *Store) ResolvePetCheckoutAmount(ctx context.Context, ownerUserID, petID string, catalogueCents int) (payCents int, discountBps int, err error) {
-	hasKennel, err := s.HasActiveAddon(ctx, ownerUserID, kennelAddonCode)
-	if err != nil {
-		return 0, 0, err
-	}
-	hasFamily := false
-	if !hasKennel {
-		hasFamily, err = s.HasActiveAddon(ctx, ownerUserID, familyAddonCode)
-		if err != nil {
-			return 0, 0, err
-		}
-	}
-	discountBps = HouseholdDiscountBps(hasFamily, hasKennel)
-	if discountBps == 0 {
-		return catalogueCents, 0, nil
-	}
-	others, err := s.CountOtherActivePetEntitlements(ctx, ownerUserID, petID)
-	if err != nil {
-		return 0, 0, err
-	}
-	if others < 1 {
-		return catalogueCents, 0, nil
-	}
-	return ApplyDiscountCents(catalogueCents, discountBps), discountBps, nil
+	_ = ctx
+	_ = ownerUserID
+	_ = petID
+	return catalogueCents, 0, nil
 }

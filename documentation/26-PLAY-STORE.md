@@ -69,7 +69,7 @@ Google peut exiger un **Closed testing** (≥ 12 testeurs, ≥ 14 jours) avant P
 |-------|-----------------|
 | Nom | petsFollow |
 | Description courte | Suivi cardiaque de votre animal avec votre vétérinaire |
-| Description longue | Relevés FC, messagerie cabinet, rappels de soins, plans & addons… |
+| Description longue | Relevés FC, messagerie cabinet, rappels de soins, abonnement animal (mensuel / annuel / triennal)… |
 | Icône 512×512 | Exporter depuis `brand/` |
 | Feature graphic 1024×500 | Visuel marketing |
 | Screenshots téléphone | ≥ 2 (login, home, relevé, soins, messagerie) |
@@ -106,7 +106,7 @@ Déclarer la **collecte** (et le partage avec sous-traitants le cas échéant) :
 | Messages | Oui | Cabinet | Messagerie |
 | Santé / FC (animal) | Oui | Cabinet | Suivi cardiaque |
 | Identifiants appareil / FCM | Oui | Google FCM | Notifications |
-| Infos paiement | Via Stripe | Stripe | Abonnements / addons |
+| Infos paiement | Via Stripe | Stripe | Abonnements animal (plans) |
 | Advertising ID | **Non** | — | — |
 
 Préciser : chiffrement en transit (HTTPS), suppression possible (in-app + email support), conservation (compte / 3 ans inactivité).
@@ -137,7 +137,7 @@ Justifier comme fonctionnalités **cœur** (pas one-time).
 
 ## 8. Déclarations financières
 
-Paiements **Stripe Checkout** (hors Google Play Billing) pour abonnements animaux / addons.  
+Paiements **Stripe Checkout** (hors Google Play Billing) pour abonnements animaux (monthly / annual / triennial).  
 Dans App content : déclarer les achats numériques / abonnements selon le questionnaire Play (paiements externes / liens).
 
 ---

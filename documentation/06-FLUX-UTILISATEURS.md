@@ -30,18 +30,20 @@ flowchart TD
 ```mermaid
 flowchart TD
   Reg[Register ou Login / Google] --> Confirm[Confirm email si self-signup]
-  Confirm --> Pets[Créer animal + plan]
+  Confirm --> Pets[Créer animal + plan monthly/annual/triennial]
   Pets --> Pay[Stripe Checkout]
   Pay --> Active[Entitlement active]
-  Active --> HR[Relevé cardiaque]
+  Active --> HR[Relevé cardiaque premium]
   Active --> Thread[Messagerie véto]
-  Active --> Addons[Addons Family Care+ Horse]
+  Active --> Care[Care Horse foyer kennel inclus]
 ```
+
+Paiement plan → entitlement actif : Care / Horse / foyer / kennel inclus. Premium FC + messagerie restent conditionnés au paiement. Addons Family / Kennel / Care+ / Horse = legacy hors vente (pas d’étape upsell).
 
 En parallèle (engagement) :
 
 - **Discovery in-app** (accueil Flutter) : missions J0 / J2 / J4 / J6
-- **Parcours email 12 mois** : drip éducatif + upsells (voir [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md)) — opt-out via pref `discovery`
+- **Parcours email 12 mois** : drip éducatif (voir [23-PARCOURS-EMAIL-CLIENT.md](23-PARCOURS-EMAIL-CLIENT.md)) — opt-out via pref `discovery`
 
 ## Parcours commercial
 

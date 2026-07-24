@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -53,106 +52,8 @@ func (a *API) listMyAddons(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, addons)
 }
 
-type addonCheckoutReq struct {
-	Addon      string `json:"addon"`
-	AddonCode  string `json:"addonCode"`
-	SuccessURL string `json:"successUrl"`
-	CancelURL  string `json:"cancelUrl"`
-}
-
 func (a *API) startAddonCheckout(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleClient {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
-		return
-	}
-	var body addonCheckoutReq
-	if err := httpx.DecodeJSON(r, &body); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
-	rawCode := body.Addon
-	if rawCode == "" {
-		rawCode = body.AddonCode
-	}
-	code, err := billing.ParseAddonCode(rawCode)
-	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_addon")
-		return
-	}
-	switch code {
-	case billing.AddonFamily:
-		if err := a.store.AssertFamilyPurchaseEligible(r.Context(), id.UserID); err != nil {
-			if errors.Is(err, store.ErrFamilyRequiresTwoPets) {
-				writeErr(w, r, http.StatusBadRequest, "family_limit", "family_requires_two_pets")
-				return
-			}
-			if errors.Is(err, store.ErrHouseholdExclusive) {
-				writeErr(w, r, http.StatusConflict, "household_exclusive", "kennel_active")
-				return
-			}
-			if errors.Is(err, store.ErrAddonAlreadyActive) {
-				writeErr(w, r, http.StatusConflict, "addon_already_active", "family_already_active")
-				return
-			}
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-	case billing.AddonKennel:
-		if err := a.store.AssertKennelPurchaseEligible(r.Context(), id.UserID); err != nil {
-			if errors.Is(err, store.ErrKennelRequiresSixPets) {
-				writeErr(w, r, http.StatusBadRequest, "kennel_limit", "kennel_requires_six_pets")
-				return
-			}
-			if errors.Is(err, store.ErrHouseholdExclusive) {
-				writeErr(w, r, http.StatusConflict, "household_exclusive", "family_pending")
-				return
-			}
-			if errors.Is(err, store.ErrAddonAlreadyActive) {
-				writeErr(w, r, http.StatusConflict, "addon_already_active", "kennel_already_active")
-				return
-			}
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-	case billing.AddonCarePlus, billing.AddonHorse:
-		if err := a.store.AssertAddonNotAlreadyOwned(r.Context(), id.UserID, string(code)); err != nil {
-			if errors.Is(err, store.ErrAddonAlreadyActive) {
-				writeErr(w, r, http.StatusConflict, "addon_already_active", string(code)+"_already_active")
-				return
-			}
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-	}
-	addon, _ := billing.GetAddon(code)
-	ent, err := a.store.CreateAddonEntitlement(r.Context(), id.UserID, string(code), addon.AmountCents)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	u, err := a.store.GetUserByID(r.Context(), id.UserID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	sess, err := a.billing.StartAddonCheckout(r.Context(), billing.StartAddonCheckoutInput{
-		AddonID:     ent.ID,
-		OwnerUserID: id.UserID,
-		OwnerEmail:  u.Email,
-		AddonCode:   code,
-		SuccessURL:  body.SuccessURL,
-		CancelURL:   body.CancelURL,
-	})
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	httpx.WriteData(w, http.StatusCreated, map[string]any{
-		"addonId":     ent.ID,
-		"checkoutUrl": sess.URL,
-		"sessionId":   sess.ID,
-	})
+	writeErr(w, r, http.StatusGone, "addon_deprecated", "addon_deprecated")
 }
 
 func (a *API) listBillingPlans(w http.ResponseWriter, r *http.Request) {
@@ -181,6 +82,10 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 	}
 	mode, err := billing.ParseBillingMode(defaultStr(b.BillingMode, string(billing.ModeSubscription)))
 	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
+	if !billing.SupportsBillingMode(planCode, mode) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
 		return
 	}

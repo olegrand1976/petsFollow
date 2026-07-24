@@ -97,6 +97,21 @@ func (s *Store) UpdateVisitReportAudio(ctx context.Context, reportID, audioURL, 
 	return r, err
 }
 
+// ClearVisitReportAudio wipes audio fields (after delete from media store). Allowed on draft or final.
+func (s *Store) ClearVisitReportAudio(ctx context.Context, reportID string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visit_reports
+		SET audio_url='', audio_object_key='', updated_at=NOW()
+		WHERE id=$1`, reportID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) UpdateVisitReportTranscript(ctx context.Context, reportID, transcript string) (VisitReport, error) {
 	var r VisitReport
 	err := s.pool.QueryRow(ctx, `
