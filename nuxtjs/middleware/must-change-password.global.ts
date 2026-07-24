@@ -7,6 +7,7 @@ const SKIP_PREFIXES = [
   '/reset-password',
   '/welcome',
   '/legal',
+  '/invite',
 ]
 
 function isUnauthorized(e: unknown): boolean {

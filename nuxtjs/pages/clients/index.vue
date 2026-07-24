@@ -3,6 +3,15 @@
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')">
       <template #actions>
         <ProButton
+          test-id="clients-app-invite-open"
+          variant="secondary"
+          class="pro-btn--icon"
+          :aria-label="$t('clients.appInvite.open')"
+          @click="appInviteOpen = true"
+        >
+          <ProIcon name="qr_code_2" :size="22" />
+        </ProButton>
+        <ProButton
           test-id="clients-invitations-open"
           variant="secondary"
           class="pro-btn--icon clients-invites-btn"
@@ -31,6 +40,8 @@
     </ProPageHeader>
     <p v-if="loadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ loadError }}</p>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
+
+    <ProAppInviteModal v-model:open="appInviteOpen" />
 
     <ProModal v-model:open="invitationsOpen" size="lg" :title="$t('clients.invitations.title')">
       <p v-if="inviteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ inviteError }}</p>
@@ -238,6 +249,7 @@ const loadError = ref('')
 const { viewMode } = useListView('pf-clients-view', 'table')
 
 const invitationsOpen = ref(false)
+const appInviteOpen = ref(false)
 const linkRequests = ref<any[]>([])
 const busyInviteId = ref('')
 const inviteError = ref('')

@@ -26,6 +26,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     SKIP_PATHS.has(to.path)
     || to.path.startsWith('/register')
     || to.path.startsWith('/legal')
+    || to.path.startsWith('/invite')
     || to.path.startsWith('/admin')
     || to.path.startsWith('/commercial')
     || to.path.startsWith('/commercial-manager')

@@ -11,6 +11,15 @@
     >
       <template #actions>
         <ProButton
+          variant="secondary"
+          class="pro-btn--icon"
+          test-id="client-app-invite-open"
+          :aria-label="$t('clients.appInvite.open')"
+          @click="appInviteOpen = true"
+        >
+          <ProIcon name="qr_code_2" :size="22" />
+        </ProButton>
+        <ProButton
           v-if="client"
           :disabled="sendingAppLink"
           :loading="sendingAppLink"
@@ -24,11 +33,12 @@
     </ProPageHeader>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
     <p v-if="petsLoadError" class="pro-field-error" role="alert">{{ petsLoadError }}</p>
+    <ProAppInviteModal v-model:open="appInviteOpen" />
     <ProCard v-if="client" :title="$t('clients.detail.identity')">
       <p><strong>{{ client.fullName }}</strong></p>
       <p class="text-muted">{{ client.email }}</p>
       <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
-      <div class="pro-mt-md">
+      <div class="pro-mt-md client-app-actions">
         <ProButton
           variant="secondary"
           :disabled="sendingAppLink"
@@ -37,6 +47,10 @@
         >
           <ProIcon name="mail" />
           {{ $t('clients.detail.sendAppLink') }}
+        </ProButton>
+        <ProButton variant="secondary" test-id="client-detail-app-invite" @click="appInviteOpen = true">
+          <ProIcon name="qr_code_2" />
+          {{ $t('clients.appInvite.open') }}
         </ProButton>
         <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
       </div>
@@ -146,6 +160,7 @@ const pets = ref<any[]>([])
 const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
+const appInviteOpen = ref(false)
 const clientShares = ref<any[]>([])
 const shareEmail = ref('')
 const sharePermission = ref('write_notes')
@@ -272,5 +287,14 @@ onMounted(async () => {
 }
 .pro-mt-md {
   margin-top: 1rem;
+}
+.client-app-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.client-app-actions .pro-hint {
+  flex-basis: 100%;
 }
 </style>

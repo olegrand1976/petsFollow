@@ -384,7 +384,7 @@
       "columnSpecies": "Liik",
       "columnBreed": "Tõug",
       "sendAppLink": "Saada rakenduse allalaadimislink",
-      "sendAppLinkHint": "Kliendi aadressile saadetakse e-kiri petsFollow allalaadimislingiga.",
+      "sendAppLinkHint": "Kliendi aadressile saadetakse e-kiri teie kutselingiga (allalaadimine + sidumine).",
       "sendAppLinkSuccess": "Link saadetud aadressile {email}.",
       "sendAppLinkError": "Lingi saatmine ebaõnnestus."
     },
@@ -474,6 +474,17 @@
       "columnEmail": "E-post",
       "accept": "Nõustu",
       "reject": "Keeldu"
+    },
+    "appInvite": {
+      "open": "Allalaadimise QR",
+      "title": "Rakenduse allalaadimise QR-kood",
+      "hint": "Kuvage see QR ooteruumis või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt teie kabinetiga (tasu).",
+      "qrAlt": "petsFollow allalaadimise QR-kood",
+      "codeLabel": "Kood:",
+      "linkLabel": "Kutselink",
+      "copy": "Kopeeri link",
+      "copied": "Link kopeeritud",
+      "copyError": "Linki ei õnnestunud kopeerida."
     }
   },
   "pets": {
@@ -1726,5 +1737,17 @@
     "badgeCurrent": "praegune",
     "feedbackCount": "{count} tagasisidet",
     "feedbackMeta": "veterinaar {vet}/5 · coach {coach}/5 · {felt}"
+  },
+  "invite": {
+    "brandTitle": "Teie loomaarst kutsub teid",
+    "brandText": "Laadige petsFollow alla, et jälgida oma loomade südame tervist.",
+    "loading": "Kutse laadimine…",
+    "title": "Laadi petsFollowi rakendus alla",
+    "subtitle": "Kutse: {vet} — {practice}",
+    "autoLinkHint": "Sellelt lingilt registreerudes seotakse teid automaatselt selle kabinetiga.",
+    "download": "Laadi rakendus alla",
+    "openApp": "Mul on rakendus juba olemas",
+    "failedTitle": "Kutset ei leitud",
+    "invalid": "See kutselink ei kehti enam."
   }
 }

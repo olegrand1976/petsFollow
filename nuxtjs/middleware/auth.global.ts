@@ -21,6 +21,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isPublic = PUBLIC_PATHS.has(to.path)
     || to.path.startsWith('/register')
     || to.path.startsWith('/legal/')
+    || to.path.startsWith('/invite/')
 
   if (isPublic) {
     if (hasSession && AUTH_ENTRY_PATHS.has(to.path)) {

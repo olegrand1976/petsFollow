@@ -15,9 +15,10 @@ import (
 )
 
 type registerClientReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"fullName"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	FullName   string `json:"fullName"`
+	InviteCode string `json:"inviteCode,omitempty"`
 }
 
 type registerCareProReq struct {
@@ -57,6 +58,7 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.tryClaimInvite(r, result.UserID, req.InviteCode)
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
 	httpx.WriteData(w, http.StatusCreated, map[string]any{

@@ -384,7 +384,7 @@
       "columnSpecies": "Species",
       "columnBreed": "Breed",
       "sendAppLink": "Send app download link",
-      "sendAppLinkHint": "An email with the petsFollow download link is sent to the client's address.",
+      "sendAppLinkHint": "An email with your invite link (download + practice link) is sent to the client’s address.",
       "sendAppLinkSuccess": "Link sent to {email}.",
       "sendAppLinkError": "Could not send the link right now."
     },
@@ -474,6 +474,17 @@
       "columnEmail": "Email",
       "accept": "Accept",
       "reject": "Reject"
+    },
+    "appInvite": {
+      "open": "Download QR",
+      "title": "App download QR code",
+      "hint": "Display this QR in your waiting room or share the link. A new client who signs up via this link is automatically linked to your practice (commission).",
+      "qrAlt": "petsFollow download QR code",
+      "codeLabel": "Code:",
+      "linkLabel": "Invite link",
+      "copy": "Copy link",
+      "copied": "Link copied",
+      "copyError": "Could not copy the link."
     }
   },
   "pets": {
@@ -1726,5 +1737,17 @@
     "badgeCurrent": "current",
     "feedbackCount": "{count} feedbacks",
     "feedbackMeta": "vet {vet}/5 · coach {coach}/5 · {felt}"
+  },
+  "invite": {
+    "brandTitle": "Your vet invites you",
+    "brandText": "Download petsFollow to track your pets’ heart health.",
+    "loading": "Loading invitation…",
+    "title": "Download the petsFollow app",
+    "subtitle": "Invite from {vet} — {practice}",
+    "autoLinkHint": "By signing up from this link, you will be automatically linked to this practice.",
+    "download": "Download the app",
+    "openApp": "I already have the app",
+    "failedTitle": "Invite not found",
+    "invalid": "This invite link is no longer valid."
   }
 }

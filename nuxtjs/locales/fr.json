@@ -679,7 +679,7 @@
       "columnSpecies": "Espèce",
       "columnBreed": "Race",
       "sendAppLink": "Envoyer le lien de l'app",
-      "sendAppLinkHint": "Un email avec le lien de téléchargement petsFollow est envoyé à l'adresse du client.",
+      "sendAppLinkHint": "Un email avec votre lien d’invitation (téléchargement + rattachement) est envoyé à l’adresse du client.",
       "sendAppLinkSuccess": "Lien envoyé à {email}.",
       "sendAppLinkError": "Impossible d'envoyer le lien pour le moment."
     },
@@ -759,6 +759,17 @@
       "documentOpen": "Ouvrir",
       "documentTypePdf": "PDF",
       "documentTypeImage": "Image"
+    },
+    "appInvite": {
+      "open": "QR téléchargement",
+      "title": "QR code téléchargement app",
+      "hint": "Affichez ce QR en salle d’attente ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement à votre cabinet (rétribution).",
+      "qrAlt": "QR code de téléchargement petsFollow",
+      "codeLabel": "Code :",
+      "linkLabel": "Lien d’invitation",
+      "copy": "Copier le lien",
+      "copied": "Lien copié",
+      "copyError": "Impossible de copier le lien."
     }
   },
   "pets": {
@@ -1726,5 +1737,17 @@
       "subtitle": "Vue CRM de l'équipe et de l'annuaire partagé.",
       "allCommercials": "Tous les commerciaux"
     }
+  },
+  "invite": {
+    "brandTitle": "Votre vétérinaire vous invite",
+    "brandText": "Téléchargez petsFollow pour suivre la santé cardiaque de vos animaux.",
+    "loading": "Chargement de l’invitation…",
+    "title": "Télécharger l’app petsFollow",
+    "subtitle": "Invitation de {vet} — {practice}",
+    "autoLinkHint": "En vous inscrivant depuis ce lien, vous serez automatiquement rattaché à ce cabinet.",
+    "download": "Télécharger l’application",
+    "openApp": "J’ai déjà l’app",
+    "failedTitle": "Invitation introuvable",
+    "invalid": "Ce lien d’invitation n’est plus valide."
   }
 }

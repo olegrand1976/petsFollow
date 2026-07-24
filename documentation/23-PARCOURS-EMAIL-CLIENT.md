@@ -29,7 +29,7 @@ Env :
 1. `CreateClientForVet` → `EnrollEmailJourney` (anchor = maintenant)
 2. Boot API → `BackfillEmailJourneys` (clients existants, **anchor = NOW()** pour éviter un rattrapage massif d’emails dus)
 3. Seed → backfill après enrichment
-4. `SendAppDownloadInvite` → marque `d0_welcome` en `skipped` (évite doublon)
+4. `SendAppDownloadInvite` → marque `d0_welcome` en `skipped` (évite doublon) ; CTA = landing `/invite/{code}` (parrainage véto), pas l’URL store brute
 
 ## Calendrier (offset depuis `anchor_at`)
 

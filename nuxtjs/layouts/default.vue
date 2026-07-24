@@ -30,7 +30,9 @@ const showNav = computed(() => {
     '/welcome',
     '/',
   ]
-  return !bare.includes(route.path) && !route.path.startsWith('/register')
+  return !bare.includes(route.path)
+    && !route.path.startsWith('/register')
+    && !route.path.startsWith('/invite')
 })
 const { fetchUser } = useProUser()
 const { count: messagesBadge } = useProNotifications()

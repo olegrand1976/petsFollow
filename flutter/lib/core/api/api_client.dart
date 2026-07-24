@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
+import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
@@ -160,13 +161,16 @@ class ApiClient {
     required String password,
     required String fullName,
     String? locale,
+    String? inviteCode,
   }) async {
+    final code = inviteCode ?? await InviteCodeStore.instance.peek();
     await dio.post(
       '/api/v1/auth/register-client',
       data: {
         'email': email,
         'password': password,
         'fullName': fullName,
+        if (code != null && code.isNotEmpty) 'inviteCode': code,
       },
       options: Options(
         headers: {
@@ -174,6 +178,9 @@ class ApiClient {
         },
       ),
     );
+    if (code != null && code.isNotEmpty) {
+      await InviteCodeStore.instance.save(null);
+    }
   }
 
   Future<List<dynamic>> listCareProVisits() async {
@@ -263,9 +270,11 @@ class ApiClient {
   /// Google Sign-In for pets clients. [idToken] must be issued for the same
   /// Web client ID as API `GOOGLE_OAUTH_CLIENT_ID`.
   Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final inviteCode = await InviteCodeStore.instance.peek();
     final res = await dio.post('/api/v1/auth/google', data: {
       'idToken': idToken,
       'audience': 'client',
+      if (inviteCode != null && inviteCode.isNotEmpty) 'inviteCode': inviteCode,
     });
     final data = res.data['data'] as Map<String, dynamic>;
     if (_isMfaChallenge(data)) return data;
@@ -320,7 +329,19 @@ class ApiClient {
       userId = null;
     }
     await NotificationService.instance.onLogin();
+    await _claimPendingInvite();
     return data;
+  }
+
+  Future<void> _claimPendingInvite() async {
+    final code = await InviteCodeStore.instance.peek();
+    if (code == null || code.isEmpty) return;
+    try {
+      await claimVetInvite(code);
+      await InviteCodeStore.instance.save(null);
+    } catch (e) {
+      debugPrint('claim invite failed: $e');
+    }
   }
 
   Future<Map<String, dynamic>> getMe() async {
@@ -593,6 +614,17 @@ class ApiClient {
       return Map<String, dynamic>.from(data);
     }
     return {'found': false, 'status': 'not_found'};
+  }
+
+  Future<Map<String, dynamic>> claimVetInvite(String code) async {
+    final res = await dio.post('/api/v1/me/vets/claim-invite', data: {
+      'code': code.trim().toUpperCase(),
+    });
+    final data = res.data['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'status': 'linked'};
   }
 
   Future<void> setPetPrimaryPractice(String petId, String practiceId) async {

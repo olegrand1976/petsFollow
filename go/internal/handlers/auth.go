@@ -34,8 +34,9 @@ func (a *API) registerAuthRoutes(r chi.Router) {
 }
 
 type googleLoginReq struct {
-	IDToken  string `json:"idToken"`
-	Audience string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
+	IDToken    string `json:"idToken"`
+	Audience   string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
+	InviteCode string `json:"inviteCode,omitempty"`
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +82,9 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.writeGoogleAuthError(w, r, err)
 		return
+	}
+	if normalizeGoogleAudience(req.Audience) == "client" {
+		a.tryClaimInvite(r, u.ID, req.InviteCode)
 	}
 	a.issueLoginResponse(w, r, u)
 }

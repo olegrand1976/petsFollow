@@ -9,6 +9,8 @@
 
 **Déclenchement** : **une fois** à l’activation payante (checkout animal). Pas de commission au renouvellement Stripe.
 
+**Attribution** : le véto rétribué est celui lié via `practice.practice_clients` (dernier lien cabinet du owner). Les invitations app (QR / email `/invite/{code}` sur `/clients`) auto-rattachent le nouveau client au véto émetteur à l’inscription ou au claim deep link.
+
 ## Grille progressive (base)
 | Clients payants | Taux |
 |-----------------|------|

@@ -56,6 +56,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/reset-password", a.resetPassword)
 	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
+	a.registerAppInviteRoutes(r)
 	a.registerAuthRoutes(r)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
@@ -284,11 +285,21 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
-	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
-	if downloadURL == "" {
+	if strings.TrimSpace(a.cfg.PetsAppDownloadURL) == "" && strings.TrimSpace(a.cfg.ProPublicSiteURL) == "" {
 		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "app_download_url_missing")
 		return
 	}
+	invite, err := a.store.EnsureVetAppInviteCode(r.Context(), id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	// Referral landing (QR/email) so new installs can auto-link to this vet.
+	downloadURL := a.appInviteWebURL(invite.Code)
 	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -308,9 +319,11 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	practiceName := ""
-	if profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID); err == nil {
-		practiceName = profile.PracticeName
+	practiceName := invite.PracticeName
+	if practiceName == "" {
+		if profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID); err == nil {
+			practiceName = profile.PracticeName
+		}
 	}
 	if practiceName == "" {
 		practiceName = "petsFollow"

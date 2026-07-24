@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/reset_password_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
-/// App deep links: `petsfollow://payment/…`, `petsfollow://reset-password?token=`.
+/// App deep links: `petsfollow://payment/…`, `petsfollow://reset-password?token=`,
+/// `petsfollow://invite?code=`.
 ///
 /// Password-reset emails point at the Pro web URL (`/reset-password?token=`).
 /// The custom-scheme reset link is kept for manual/testing and future App Links.
@@ -74,6 +77,24 @@ class AppDeepLink {
       final token = uri.queryParameters['token'] ?? '';
       if (token.isEmpty) return;
       _openResetPassword(token);
+      return;
+    }
+    if (path == 'invite' || path.endsWith('invite')) {
+      final code = uri.queryParameters['code'] ?? '';
+      if (code.trim().isEmpty) return;
+      unawaited(_persistAndMaybeClaim(code));
+    }
+  }
+
+  Future<void> _persistAndMaybeClaim(String code) async {
+    await InviteCodeStore.instance.save(code);
+    final token = ApiClient.instance.token;
+    if (token == null || token.isEmpty) return;
+    try {
+      await ApiClient.instance.claimVetInvite(code);
+      await InviteCodeStore.instance.save(null);
+    } catch (e) {
+      debugPrint('deeplink claim invite: $e');
     }
   }
 

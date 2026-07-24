@@ -384,7 +384,7 @@
       "columnSpecies": "Soort",
       "columnBreed": "Ras",
       "sendAppLink": "App-downloadlink sturen",
-      "sendAppLinkHint": "Er wordt een e-mail met de petsFollow-downloadlink naar het adres van de klant gestuurd.",
+      "sendAppLinkHint": "Er wordt een e-mail met uw uitnodigingslink (download + koppeling) naar het adres van de cliënt gestuurd.",
       "sendAppLinkSuccess": "Link verzonden naar {email}.",
       "sendAppLinkError": "De link kon nu niet worden verzonden."
     },
@@ -474,6 +474,17 @@
       "columnEmail": "E-mail",
       "accept": "Aanvaarden",
       "reject": "Weigeren"
+    },
+    "appInvite": {
+      "open": "Download-QR",
+      "title": "QR-code app-download",
+      "hint": "Toon deze QR in de wachtzaal of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch aan uw praktijk gekoppeld (vergoeding).",
+      "qrAlt": "petsFollow download-QR-code",
+      "codeLabel": "Code:",
+      "linkLabel": "Uitnodigingslink",
+      "copy": "Link kopiëren",
+      "copied": "Link gekopieerd",
+      "copyError": "Link kopiëren mislukt."
     }
   },
   "pets": {
@@ -1726,5 +1737,17 @@
     "badgeCurrent": "huidig",
     "feedbackCount": "{count} feedbacks",
     "feedbackMeta": "dierenarts {vet}/5 · coach {coach}/5 · {felt}"
+  },
+  "invite": {
+    "brandTitle": "Uw dierenarts nodigt u uit",
+    "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
+    "loading": "Uitnodiging laden…",
+    "title": "Download de petsFollow-app",
+    "subtitle": "Uitnodiging van {vet} — {practice}",
+    "autoLinkHint": "Door u via deze link te registreren, wordt u automatisch aan deze praktijk gekoppeld.",
+    "download": "App downloaden",
+    "openApp": "Ik heb de app al",
+    "failedTitle": "Uitnodiging niet gevonden",
+    "invalid": "Deze uitnodigingslink is niet meer geldig."
   }
 }
