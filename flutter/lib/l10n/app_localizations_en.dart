@@ -112,6 +112,126 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullName => 'Full name';
 
   @override
+  String get registerCta => 'Create an account';
+
+  @override
+  String get registerTitle => 'Create an account';
+
+  @override
+  String get registerSubtitle =>
+      'Monitor your pet\'s health. Confirm your email next.';
+
+  @override
+  String get registerSubmit => 'Sign up';
+
+  @override
+  String get registerSuccess =>
+      'Account created. Check your email to confirm, then sign in.';
+
+  @override
+  String get registerFailed => 'Could not register';
+
+  @override
+  String get registerEmailExists => 'This email is already in use';
+
+  @override
+  String get registerBackToLogin => 'Back to sign in';
+
+  @override
+  String get vetUseProWeb => 'Full vet accounts use the Pro web site.';
+
+  @override
+  String get unsupportedRoleApp =>
+      'This account cannot be used in the pets app. Use the Pro web site.';
+
+  @override
+  String get proLightTitle => 'Field pro';
+
+  @override
+  String get proLightAgenda => 'Agenda';
+
+  @override
+  String get proLightClients => 'Clients';
+
+  @override
+  String get proLightPets => 'Pets';
+
+  @override
+  String get proLightLoadError => 'Could not load';
+
+  @override
+  String get proLightNoVisits => 'No appointments';
+
+  @override
+  String get proLightNoClients => 'No shared clients';
+
+  @override
+  String get proLightNoPets => 'No shared pets';
+
+  @override
+  String get proLightAddress => 'Address';
+
+  @override
+  String get proLightOpenMaps => 'Maps';
+
+  @override
+  String get proLightReportTitle => 'Visit report';
+
+  @override
+  String get proLightReportHint => 'Visit notes…';
+
+  @override
+  String get proLightImproveAi => 'Improve (AI)';
+
+  @override
+  String get proLightFinalizeReport => 'Finalize';
+
+  @override
+  String get proLightReportFinal => 'Finalized';
+
+  @override
+  String get proLightSettings => 'Settings';
+
+  @override
+  String get proLightSpecialty => 'Specialty';
+
+  @override
+  String get proLightDocuments => 'Documents';
+
+  @override
+  String get proLightNoDocuments => 'No documents';
+
+  @override
+  String get proLightTimeline => 'Timeline';
+
+  @override
+  String get proLightNoTimeline => 'No events';
+
+  @override
+  String get proLightReminders => 'Reminders';
+
+  @override
+  String get proLightNoReminders => 'No reminders';
+
+  @override
+  String get proLightLitterTag => 'Litter / tag';
+
+  @override
+  String get proLightActionFailed => 'Action failed';
+
+  @override
+  String get proLightReadOnly => 'Read-only access';
+
+  @override
+  String get proLightUseGps => 'GPS';
+
+  @override
+  String get proLightTranscribeAudio => 'Audio → text';
+
+  @override
+  String get proLightGpsDenied => 'Location unavailable';
+
+  @override
   String get googleNotConfigured => 'Google sign-in is not configured';
 
   @override
@@ -300,6 +420,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageEs => 'Español';
+
+  @override
+  String get languageEt => 'Eesti';
 
   @override
   String get planAnnualLabel => '€35 / year';

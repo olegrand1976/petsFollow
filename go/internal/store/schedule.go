@@ -195,7 +195,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
-			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id

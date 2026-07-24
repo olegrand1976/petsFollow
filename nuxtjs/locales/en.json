@@ -183,6 +183,7 @@
       "role": {
         "client": "Client",
         "vet": "Veterinarian",
+        "care_pro": "Field pro",
         "admin": "Admin",
         "commercial": "Sales",
         "commercial_manager": "Sales manager"
@@ -253,6 +254,7 @@
       "nl": "Nederlands",
       "en": "English",
       "es": "Español",
+      "et": "Eesti",
       "saved": "Language saved."
     },
     "heartrate": {
@@ -310,6 +312,26 @@
       }
     }
   },
+  "share": {
+    "petTitle": "Share pet record",
+    "petHint": "Grant read or notes access to a practice colleague or a pro by email.",
+    "clientTitle": "Share client profile",
+    "clientHint": "Grant access to contact details and the pet list.",
+    "colleaguePlaceholder": "Practice colleague…",
+    "email": "Recipient email",
+    "add": "Share",
+    "revoke": "Revoke",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnPermission": "Permission",
+    "permRead": "Read",
+    "permWriteNotes": "Notes / report",
+    "permFull": "Full (visits, docs)",
+    "columnExpires": "Expires",
+    "expiresNever": "No expiry",
+    "expiresDays": "{n} days",
+    "fieldsRequired": "Pick a colleague or enter an email."
+  },
   "clients": {
     "title": "Clients",
     "subtitle": "Clients linked to your practice.",
@@ -322,7 +344,13 @@
       "password": "Temporary password",
       "submit": "Create account",
       "success": "Client account created",
-      "error": "Creation failed"
+      "error": "Creation failed",
+      "existsError": "An account already exists with this email",
+      "existsHint": "Known client: {name}. Link them to your practice?",
+      "alreadyLinked": "This client is already linked to this practice.",
+      "linkExisting": "Link to practice",
+      "linkSuccess": "Client linked to practice",
+      "linkError": "Could not link client"
     },
     "search": "Search",
     "searchPlaceholder": "Name or email…",
@@ -557,6 +585,7 @@
       "roleAll": "All",
       "roleClient": "Clients",
       "roleVet": "Vets",
+      "roleCarePro": "Field pros",
       "roleAdmin": "Admins",
       "payment": "Payment",
       "paymentAll": "All",
@@ -592,6 +621,22 @@
       "clientPassword": "Temporary password",
       "clientCreated": "Client account created",
       "clientFailed": "Creation failed",
+      "createCarePro": "Create field pro",
+      "createCareProHint": "Vet light, farrier, physio… Mobile pro-light access. Password must be changed on first login.",
+      "careProName": "Full name",
+      "careProEmail": "Email",
+      "careProPassword": "Temporary password",
+      "careProSpecialty": "Specialty",
+      "careProCreated": "Field pro account created",
+      "careProFailed": "Creation failed",
+      "specialty": {
+        "vet_light": "Vet light",
+        "farrier": "Farrier",
+        "physio": "Physio / osteo",
+        "behaviorist": "Behaviorist",
+        "groomer": "Groomer / boarding",
+        "breeder": "Breeder"
+      },
       "commercialRole": "Role",
       "roleCommercialManager": "Sales manager",
       "commercialManager": "Manager",
@@ -1022,7 +1067,7 @@
       "Secure client ↔ vet messaging + push notifications",
       "Timeline / shared patient record (validated checks and conversations)",
       "Standard care reminders (vaccine, deworming, check-up, dental)",
-      "Languages FR / NL / EN / ES"
+      "Languages FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Per-pet subscriptions",
     "plansLead": "One subscription per monitored pet. Prices TTC — Annual / Triennial as one-time or Stripe subscription; Quinquennial one-time only.",
@@ -1638,6 +1683,16 @@
     "moreCount": "+{n}",
     "vacation": "Closed",
     "visitDetail": "Appointment details",
+    "address": "Address / location",
+    "saveAddress": "Save address",
+    "addressSaved": "Address saved",
+    "openMaps": "Open in Maps",
+    "reportTitle": "Visit report",
+    "reportHint": "Visit notes…",
+    "saveReport": "Save report",
+    "improveReport": "Improve (AI)",
+    "reportSaved": "Report saved",
+    "reportImproved": "Report improved",
     "unscheduled": "unscheduled",
     "columnClient": "Client",
     "columnPet": "Pet",

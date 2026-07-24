@@ -95,23 +95,21 @@ func (a *API) requirePetOwner(w http.ResponseWriter, r *http.Request, petID, use
 }
 
 func (a *API) requirePetOwnerOrPractice(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+	return a.requirePetAccess(w, r, petID, id, store.PermRead)
+}
+
+func (a *API) requirePetAccess(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity, need store.AccessPermission) (store.Pet, bool) {
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return store.Pet{}, false
 	}
-	switch id.Role {
-	case kernel.RoleClient:
-		if pet.OwnerUserID != id.UserID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-			return store.Pet{}, false
-		}
-	case kernel.RoleVet:
-		if pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-			return store.Pet{}, false
-		}
-	default:
+	ok, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, need)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return store.Pet{}, false
+	}
+	if !ok {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return store.Pet{}, false
 	}
@@ -125,19 +123,7 @@ func (a *API) listCareReminders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	switch id.Role {
-	case kernel.RoleClient:
-		if _, ok := a.requirePetOwner(w, r, petID, id.UserID); !ok {
-			return
-		}
-	case kernel.RoleVet:
-		pet, err := a.store.GetPet(r.Context(), petID)
-		if err != nil || pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-			return
-		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+	if _, ok := a.requirePetAccess(w, r, petID, id, store.PermRead); !ok {
 		return
 	}
 	reminders, err := a.store.ListCareReminders(r.Context(), petID)
@@ -207,7 +193,7 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetOwnerOrPractice(w, r, petID, id)
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
 	if !ok {
 		return
 	}
@@ -228,9 +214,6 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ownerID := pet.OwnerUserID
-	if id.Role == kernel.RoleClient {
-		ownerID = id.UserID
-	}
 	needsCarePlus := reminderType == "custom" || reminderType == "medication"
 	needsHorse := reminderType == "farrier" || reminderType == "fecal_egg"
 	if needsCarePlus {
@@ -299,6 +282,20 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 		updated, err = a.store.MarkCareReminderDone(r.Context(), chi.URLParam(r, "id"), id.UserID)
 	case kernel.RoleVet:
 		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
+	case kernel.RoleCarePro:
+		rem, rerr := a.store.GetCareReminder(r.Context(), chi.URLParam(r, "id"))
+		if rerr != nil {
+			if errors.Is(rerr, store.ErrNotFound) {
+				writeErr(w, r, http.StatusNotFound, "not_found", "reminder_not_found")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
+			return
+		}
+		updated, err = a.store.MarkCareReminderDoneByID(r.Context(), rem.ID)
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
@@ -339,6 +336,20 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 		updated, err = a.store.PostponeCareReminder(r.Context(), chi.URLParam(r, "id"), id.UserID, req.Days)
 	case kernel.RoleVet:
 		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
+	case kernel.RoleCarePro:
+		rem, rerr := a.store.GetCareReminder(r.Context(), chi.URLParam(r, "id"))
+		if rerr != nil {
+			if errors.Is(rerr, store.ErrNotFound) {
+				writeErr(w, r, http.StatusNotFound, "not_found", "reminder_not_found")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
+			return
+		}
+		updated, err = a.store.PostponeCareReminderByID(r.Context(), rem.ID, req.Days)
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
@@ -361,25 +372,24 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	switch id.Role {
-	case kernel.RoleClient:
-		if _, ok := a.requirePetOwner(w, r, petID, id.UserID); !ok {
-			return
-		}
-	case kernel.RoleVet:
-		pet, err := a.store.GetPet(r.Context(), petID)
-		if err != nil || pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-			return
-		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermRead)
+	if !ok {
 		return
 	}
 	visits, err := a.store.ListVisits(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
+	}
+	canNotes, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !canNotes {
+		for i := range visits {
+			visits[i].Notes = ""
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, visits)
 }
@@ -398,7 +408,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetOwnerOrPractice(w, r, petID, id)
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
 	if !ok {
 		return
 	}
@@ -414,8 +424,24 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	source := "client"
-	if id.Role == kernel.RoleVet {
+	if id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro {
 		source = "vet"
+	}
+
+	confirmDirect := source == "vet" && req.ConfirmDirect
+	if confirmDirect {
+		practiceVet := id.Role == kernel.RoleVet && id.PracticeID != "" && pet.PracticeID == id.PracticeID
+		if !practiceVet {
+			fullOK, ferr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+			if ferr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if !fullOK {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "full_permission_required")
+				return
+			}
+		}
 	}
 
 	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID)
@@ -468,7 +494,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		Notes:           req.Notes,
 		ScheduledAt:     scheduledAt,
 		DurationMinutes: &duration,
-		ConfirmDirect:   source == "vet" && req.ConfirmDirect,
+		ConfirmDirect:   confirmDirect,
 	}
 	if scheduledAt == nil {
 		in.DurationMinutes = nil
@@ -494,7 +520,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if source == "client" {
 		a.notifyVetsVisitRequest(pet, visit)
 	}
-	if source == "vet" && !req.ConfirmDirect && visit.Status == "requested" {
+	if source == "vet" && !confirmDirect && visit.Status == "requested" {
 		a.pushVisitProposed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 	}
 	httpx.WriteData(w, http.StatusCreated, visit)
@@ -610,13 +636,32 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	case kernel.RoleVet:
 		if pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+			ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+			if aerr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if !ok {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+				return
+			}
+		}
+	case kernel.RoleCarePro:
+		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+		if aerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !ok {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "full_permission_required")
 			return
 		}
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
+
+	actsAsVet := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
 
 	action := req.Action
 	if action == "" {
@@ -665,7 +710,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "cancelled")
 	case "done":
-		if id.Role != kernel.RoleVet {
+		if !actsAsVet {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 			return
 		}
@@ -730,7 +775,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if (id.Role == kernel.RoleClient && *visit.PendingActionBy != "client") ||
-			(id.Role == kernel.RoleVet && *visit.PendingActionBy != "vet") {
+			(actsAsVet && *visit.PendingActionBy != "vet") {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
 			return
 		}
@@ -759,7 +804,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if (id.Role == kernel.RoleClient && *visit.PendingActionBy != "client") ||
-			(id.Role == kernel.RoleVet && *visit.PendingActionBy != "vet") {
+			(actsAsVet && *visit.PendingActionBy != "vet") {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
 			return
 		}

@@ -157,6 +157,61 @@
             {{ statusLabel(selectedVisit.status) }}
           </ProBadge>
         </p>
+        <div class="pro-field pro-mb-md">
+          <ProInput
+            v-model="visitAddress"
+            :label="$t('calendar.address')"
+            test-id="visit-address"
+          />
+          <div class="pro-flex-gap" style="margin-top: 0.5rem">
+            <ProButton
+              variant="secondary"
+              :disabled="reportBusy || !selectedVisit.id"
+              test-id="visit-save-address"
+              @click="saveVisitAddress"
+            >
+              {{ $t('calendar.saveAddress') }}
+            </ProButton>
+            <a
+              v-if="mapsUrl"
+              :href="mapsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="pro-link-btn"
+            >
+              {{ $t('calendar.openMaps') }}
+            </a>
+          </div>
+        </div>
+        <div class="pro-field pro-mb-md">
+          <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
+          <textarea
+            id="visit-report-body"
+            v-model="reportBody"
+            class="pro-input"
+            rows="6"
+            data-testid="visit-report-body"
+            :placeholder="$t('calendar.reportHint')"
+          />
+          <div class="pro-flex-gap" style="margin-top: 0.5rem">
+            <ProButton
+              variant="secondary"
+              :disabled="reportBusy"
+              test-id="visit-report-save"
+              @click="saveVisitReport"
+            >
+              {{ $t('calendar.saveReport') }}
+            </ProButton>
+            <ProButton
+              :disabled="reportBusy"
+              test-id="visit-report-improve"
+              @click="improveVisitReport"
+            >
+              {{ $t('calendar.improveReport') }}
+            </ProButton>
+          </div>
+          <p v-if="reportMsg" class="pro-hint">{{ reportMsg }}</p>
+        </div>
         <div class="pro-flex-gap create-client-actions">
           <ProButton
             v-if="selectedVisit.status === 'requested'"
@@ -265,10 +320,25 @@ if (import.meta.client) {
 
 const detailOpen = ref(false)
 const selectedVisit = ref<CalendarVisit | null>(null)
+const visitAddress = ref('')
+const reportBody = ref('')
+const reportBusy = ref(false)
+const reportMsg = ref('')
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
 const rescheduleError = ref('')
+
+const mapsUrl = computed(() => {
+  const v = selectedVisit.value
+  if (!v) return ''
+  if (v.lat != null && v.lng != null) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`
+  }
+  const addr = (visitAddress.value || v.addressText || '').trim()
+  if (!addr) return ''
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`
+})
 
 const weekStart = computed(() => startOfWeek(anchorDate.value))
 const monthStart = computed(() => startOfMonth(anchorDate.value))
@@ -392,8 +462,81 @@ async function actFromDetail(action: string) {
 
 function openVisitDetail(v: CalendarVisit) {
   selectedVisit.value = v
+  visitAddress.value = v.addressText || ''
+  reportBody.value = ''
+  reportMsg.value = ''
   focusVisitId.value = v.id
   detailOpen.value = true
+  void loadVisitReport(v.id)
+}
+
+async function loadVisitReport(visitId: string) {
+  try {
+    const res: any = await $fetch(`/api/visits/${visitId}/report`)
+    const data = res.data ?? res
+    reportBody.value = data.bodyText || data.transcriptText || ''
+  } catch {
+    reportBody.value = ''
+  }
+}
+
+async function saveVisitAddress() {
+  if (!selectedVisit.value) return
+  reportBusy.value = true
+  reportMsg.value = ''
+  try {
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/location`, {
+      method: 'PATCH',
+      body: { addressText: visitAddress.value.trim() },
+    })
+    const data = res.data ?? res
+    selectedVisit.value = { ...selectedVisit.value, addressText: data.addressText || visitAddress.value }
+    reportMsg.value = t('calendar.addressSaved')
+    await load()
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    reportBusy.value = false
+  }
+}
+
+async function saveVisitReport() {
+  if (!selectedVisit.value) return
+  reportBusy.value = true
+  reportMsg.value = ''
+  try {
+    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
+      method: 'PUT',
+      body: { bodyText: reportBody.value },
+    })
+    reportMsg.value = t('calendar.reportSaved')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    reportBusy.value = false
+  }
+}
+
+async function improveVisitReport() {
+  if (!selectedVisit.value) return
+  reportBusy.value = true
+  reportMsg.value = ''
+  try {
+    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
+      method: 'PUT',
+      body: { bodyText: reportBody.value },
+    })
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/improve`, {
+      method: 'POST',
+    })
+    const data = res.data ?? res
+    reportBody.value = data.bodyText || data.improvedText || reportBody.value
+    reportMsg.value = t('calendar.reportImproved')
+  } catch (e: any) {
+    reportMsg.value = mapError(e)
+  } finally {
+    reportBusy.value = false
+  }
 }
 
 function openReschedule(v: CalendarVisit) {

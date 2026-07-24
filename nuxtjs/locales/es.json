@@ -183,6 +183,7 @@
       "role": {
         "client": "Cliente",
         "vet": "Veterinario",
+        "care_pro": "Pro terreno",
         "admin": "Admin",
         "commercial": "Comercial",
         "commercial_manager": "Responsable comercial"
@@ -253,6 +254,7 @@
       "nl": "Nederlands",
       "en": "English",
       "es": "Español",
+      "et": "Eesti",
       "saved": "Idioma guardado."
     },
     "heartrate": {
@@ -310,6 +312,26 @@
       }
     }
   },
+  "share": {
+    "petTitle": "Compartir expediente",
+    "petHint": "Acceso de lectura o notas para un colega o un profesional por correo.",
+    "clientTitle": "Compartir ficha de cliente",
+    "clientHint": "Dar acceso a los contactos y a la lista de animales.",
+    "colleaguePlaceholder": "Colega de la clínica…",
+    "email": "Correo del destinatario",
+    "add": "Compartir",
+    "revoke": "Revocar",
+    "columnName": "Nombre",
+    "columnEmail": "Correo",
+    "columnPermission": "Permiso",
+    "permRead": "Lectura",
+    "permWriteNotes": "Notas / informe",
+    "permFull": "Completo (citas, docs)",
+    "columnExpires": "Caduca",
+    "expiresNever": "Sin caducidad",
+    "expiresDays": "{n} días",
+    "fieldsRequired": "Elija un colega o introduzca un correo."
+  },
   "clients": {
     "title": "Clientes",
     "subtitle": "Clientes vinculados a su clínica.",
@@ -322,7 +344,13 @@
       "password": "Contraseña temporal",
       "submit": "Crear cuenta",
       "success": "Cuenta de cliente creada",
-      "error": "Creación fallida"
+      "error": "Creación fallida",
+      "existsError": "Ya existe una cuenta con este correo",
+      "existsHint": "Cliente conocido: {name}. ¿Vincularlo a su clínica?",
+      "alreadyLinked": "Este cliente ya está vinculado a esta clínica.",
+      "linkExisting": "Vincular a la clínica",
+      "linkSuccess": "Cliente vinculado a la clínica",
+      "linkError": "No se pudo vincular"
     },
     "search": "Buscar",
     "searchPlaceholder": "Nombre o correo…",
@@ -557,6 +585,7 @@
       "roleAll": "Todos",
       "roleClient": "Clientes",
       "roleVet": "Veterinarios",
+      "roleCarePro": "Pros terreno",
       "roleAdmin": "Admins",
       "payment": "Pago",
       "paymentAll": "Todos",
@@ -592,6 +621,22 @@
       "clientPassword": "Contraseña temporal",
       "clientCreated": "Cuenta cliente creada",
       "clientFailed": "Creación fallida",
+      "createCarePro": "Crear pro terreno",
+      "createCareProHint": "Vet light, herrador, fisio… Acceso app móvil pro light. Debe cambiar la contraseña en el primer acceso.",
+      "careProName": "Nombre completo",
+      "careProEmail": "Correo",
+      "careProPassword": "Contraseña temporal",
+      "careProSpecialty": "Especialidad",
+      "careProCreated": "Cuenta pro terreno creada",
+      "careProFailed": "Creación fallida",
+      "specialty": {
+        "vet_light": "Vet light",
+        "farrier": "Herrador",
+        "physio": "Fisio / osteo",
+        "behaviorist": "Etólogo",
+        "groomer": "Peluquería / pensión",
+        "breeder": "Criador"
+      },
       "commercialRole": "Rol",
       "roleCommercialManager": "Responsable comercial",
       "commercialManager": "Responsable",
@@ -1022,7 +1067,7 @@
       "Mensajería segura cliente ↔ veterinario + notificaciones push",
       "Timeline / ficha de paciente compartida (controles validados e intercambios)",
       "Recordatorios de cuidados estándar (vacuna, desparasitación, revisión, dental)",
-      "Idiomas FR / NL / EN / ES"
+      "Idiomas FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Suscripciones por mascota",
     "plansLead": "Una suscripción por mascota monitorizada. Precios TTC — Anual / Trienal en pago único o suscripción Stripe; Quinquenal solo pago único.",
@@ -1638,6 +1683,16 @@
     "moreCount": "+{n}",
     "vacation": "Cierre",
     "visitDetail": "Detalle de la cita",
+    "address": "Dirección / lugar",
+    "saveAddress": "Guardar dirección",
+    "addressSaved": "Dirección guardada",
+    "openMaps": "Abrir en Maps",
+    "reportTitle": "Informe de visita",
+    "reportHint": "Notas de visita…",
+    "saveReport": "Guardar informe",
+    "improveReport": "Mejorar (IA)",
+    "reportSaved": "Informe guardado",
+    "reportImproved": "Informe mejorado",
     "unscheduled": "por planificar",
     "columnClient": "Cliente",
     "columnPet": "Animal",

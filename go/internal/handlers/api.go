@@ -49,6 +49,8 @@ func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
 	r.Post("/auth/login", a.login)
 	r.Post("/auth/register", a.register)
+	r.Post("/auth/register-client", a.registerClient)
+	r.Post("/auth/register-care-pro", a.registerCarePro)
 	r.Post("/auth/confirm-email", a.confirmEmail)
 	r.Post("/auth/forgot-password", a.forgotPassword)
 	r.Post("/auth/reset-password", a.resetPassword)
@@ -94,10 +96,18 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/me/household", a.getHousehold)
 		pr.Get("/clients", a.listClients)
 		pr.Post("/vet/clients", a.createVetClient)
+		pr.Post("/vet/clients/{clientID}/link", a.linkExistingVetClient)
+		pr.Get("/vet/colleagues", a.listPracticeColleagues)
 		pr.Get("/clients/{clientID}", a.getClient)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
+		pr.Get("/clients/{clientID}/shares", a.listClientShares)
+		pr.Post("/clients/{clientID}/shares", a.createClientShare)
+		pr.Delete("/clients/{clientID}/shares/{granteeID}", a.deleteClientShare)
 		pr.Get("/vet/pets", a.listVetPets)
+		pr.Get("/care-pro/clients", a.listCareProClients)
+		pr.Get("/care-pro/pets", a.listCareProPets)
+		pr.Get("/care-pro/visits", a.listCareProVisits)
 		pr.Get("/pets", a.listMyPets)
 		pr.Post("/pets", a.createPet)
 		pr.Post("/pets/batch", a.createPetsBatch)
@@ -119,6 +129,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/pets/{petID}/documents", a.listPetDocuments)
 		pr.Post("/pets/{petID}/documents", a.uploadPetDocument)
 		pr.Delete("/pets/documents/{documentID}", a.deletePetDocument)
+		pr.Get("/pets/{petID}/shares", a.listPetShares)
+		pr.Post("/pets/{petID}/shares", a.createPetShare)
+		pr.Delete("/pets/{petID}/shares/{granteeID}", a.deletePetShare)
 		pr.Get("/pets/{petID}", a.getPet)
 		pr.Get("/pets/{petID}/timeline", a.petTimeline)
 		pr.Post("/pets/{petID}/heartrate/sessions", a.startHeartRate)
@@ -130,6 +143,12 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/care-reminders/{id}/done", a.markCareReminderDone)
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
+		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
+		pr.Get("/visits/{visitID}/report", a.getVisitReport)
+		pr.Put("/visits/{visitID}/report", a.putVisitReport)
+		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
+		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)
+		pr.Post("/visits/{visitID}/report/transcribe", a.transcribeVisitReport)
 		pr.Get("/messaging/threads", a.listThreads)
 		pr.Post("/messaging/threads", a.ensureThread)
 		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
@@ -173,7 +192,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
-	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
+	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
@@ -528,18 +547,13 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getPet(w http.ResponseWriter, r *http.Request) {
-	pet, err := a.store.GetPet(r.Context(), chi.URLParam(r, "petID"))
+	id, err := authx.FromContext(r.Context())
 	if err != nil {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	id, _ := authx.FromContext(r.Context())
-	if id.Role == kernel.RoleClient && pet.OwnerUserID != id.UserID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-		return
-	}
-	if id.Role == kernel.RoleVet && pet.PracticeID != id.PracticeID {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+	pet, ok := a.requirePetAccess(w, r, chi.URLParam(r, "petID"), id, store.PermRead)
+	if !ok {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, pet)
@@ -552,28 +566,26 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, err := a.store.GetPet(r.Context(), petID)
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermRead)
+	if !ok {
+		return
+	}
+	vetView := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
+	ident := store.IdentityOf(id.UserID, id.Role, id.PracticeID)
+	canNotes, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermWriteNotes)
 	if err != nil {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	switch id.Role {
-	case kernel.RoleClient:
-		if pet.OwnerUserID != id.UserID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-			return
-		}
-	case kernel.RoleVet:
-		if pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-			return
-		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+	canFull, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermFull)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	vetView := id.Role == kernel.RoleVet
-	items, err := a.store.PetTimeline(r.Context(), petID, vetView)
+	// Messages: full (or owner/practice vet — CanAccessPet grants any level) only; write_notes alone is not enough.
+	includeMessages := canFull
+	redactVisitNotes := !canNotes
+	items, err := a.store.PetTimelineFiltered(r.Context(), petID, vetView, includeMessages, redactVisitNotes)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -705,27 +717,10 @@ func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, err := a.store.GetPet(r.Context(), petID)
-	if err != nil {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+	if _, ok := a.requirePetAccess(w, r, petID, id, store.PermRead); !ok {
 		return
 	}
-	switch id.Role {
-	case kernel.RoleClient:
-		if pet.OwnerUserID != id.UserID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
-			return
-		}
-	case kernel.RoleVet:
-		if pet.PracticeID != id.PracticeID {
-			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-			return
-		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return
-	}
-	vetView := id.Role == kernel.RoleVet
+	vetView := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
 	sessions, err := a.store.ListHeartRateSessions(r.Context(), petID, vetView)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -764,7 +759,8 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if id.Role == kernel.RoleVet {
+	switch id.Role {
+	case kernel.RoleVet:
 		threads, err := a.store.ListThreadSummariesForVet(r.Context(), id.UserID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -772,18 +768,23 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		}
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
-	}
-	vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+	case kernel.RoleClient:
+		vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		t, err := a.store.GetOrCreateThread(r.Context(), id.PracticeID, id.UserID, vetID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		httpx.WriteData(w, http.StatusOK, []store.Thread{t})
+		return
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	t, err := a.store.GetOrCreateThread(r.Context(), id.PracticeID, id.UserID, vetID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, []store.Thread{t})
 }
 
 func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {

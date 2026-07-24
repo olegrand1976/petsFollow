@@ -25,6 +25,11 @@ type Visit struct {
 	DurationMinutes     *int       `json:"durationMinutes,omitempty"`
 	ProposedScheduledAt *time.Time `json:"proposedScheduledAt,omitempty"`
 	PendingActionBy     *string    `json:"pendingActionBy,omitempty"`
+	AddressText         string     `json:"addressText,omitempty"`
+	Lat                 *float64   `json:"lat,omitempty"`
+	Lng                 *float64   `json:"lng,omitempty"`
+	// Permission is set for care_pro list responses (read | write_notes | full).
+	Permission string `json:"permission,omitempty"`
 }
 
 type CreateVisitInput struct {
@@ -42,7 +47,8 @@ func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			'', '', '',
-			duration_minutes, proposed_scheduled_at, pending_action_by
+			duration_minutes, proposed_scheduled_at, pending_action_by,
+			COALESCE(address_text,''), lat, lng
 		FROM visits.visits WHERE pet_id = $1
 		ORDER BY COALESCE(scheduled_at, created_at) DESC`, petID)
 	if err != nil {
@@ -57,7 +63,8 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
-			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -76,7 +83,8 @@ func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID st
 		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
-			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -100,6 +108,7 @@ func scanVisitsFull(rows pgx.Rows) ([]Visit, error) {
 			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng,
 		); err != nil {
 			return nil, err
 		}
@@ -208,10 +217,34 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by
+			duration_minutes, proposed_scheduled_at, pending_action_by,
+			COALESCE(address_text,''), lat, lng
 		FROM visits.visits WHERE id = $1`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+		&v.AddressText, &v.Lat, &v.Lng)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Visit{}, ErrNotFound
+	}
+	return v, err
+}
+
+// UpdateVisitLocation sets address; lat/lng are only overwritten when non-nil (preserve GPS when address-only PATCH).
+func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string, lat, lng *float64) (Visit, error) {
+	var v Visit
+	err := s.pool.QueryRow(ctx, `
+		UPDATE visits.visits
+		SET address_text = $2,
+			lat = COALESCE($3, lat),
+			lng = COALESCE($4, lng)
+		WHERE id = $1
+		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+			duration_minutes, proposed_scheduled_at, pending_action_by,
+			COALESCE(address_text,''), lat, lng`,
+		id, addressText, lat, lng,
+	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+		&v.AddressText, &v.Lat, &v.Lng)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}

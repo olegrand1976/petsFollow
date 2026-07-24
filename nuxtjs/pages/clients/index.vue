@@ -68,7 +68,7 @@
 
     <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
       <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
-      <form class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
+      <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
         <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
         <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
@@ -83,6 +83,27 @@
           </ProButton>
         </div>
       </form>
+      <div v-else class="pro-form" data-testid="vet-link-existing-client">
+        <p class="pro-hint">
+          {{ $t('clients.create.existsHint', { name: linkCandidate.displayName || linkCandidate.email }) }}
+        </p>
+        <p v-if="linkCandidate.alreadyLinked" class="pro-error">{{ $t('clients.create.alreadyLinked') }}</p>
+        <p v-if="clientError" class="pro-error">{{ clientError }}</p>
+        <p v-if="clientMsg" class="pro-hint">{{ clientMsg }}</p>
+        <div class="create-client-actions">
+          <ProButton variant="secondary" type="button" @click="linkCandidate = null">
+            {{ $t('common.cancel') }}
+          </ProButton>
+          <ProButton
+            v-if="linkCandidate.linkable && !linkCandidate.alreadyLinked"
+            test-id="link-existing-client"
+            :disabled="clientSaving"
+            @click="linkExistingClient"
+          >
+            {{ $t('clients.create.linkExisting') }}
+          </ProButton>
+        </div>
+      </div>
     </ProModal>
 
     <ProCard>
@@ -246,10 +267,18 @@ const clientForm = reactive({ fullName: '', email: '', password: '' })
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
+const linkCandidate = ref<{
+  userId?: string
+  displayName?: string
+  email?: string
+  linkable?: boolean
+  alreadyLinked?: boolean
+} | null>(null)
 
 function openCreateModal() {
   clientMsg.value = ''
   clientError.value = ''
+  linkCandidate.value = null
   createOpen.value = true
 }
 
@@ -257,13 +286,44 @@ async function createClient() {
   clientSaving.value = true
   clientMsg.value = ''
   clientError.value = ''
+  linkCandidate.value = null
   try {
     await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
     clientMsg.value = t('clients.create.success')
     Object.assign(clientForm, { fullName: '', email: '', password: '' })
     await loadClients()
+  } catch (e: any) {
+    const details = e?.data?.error?.details || e?.data?.details
+    if (e?.statusCode === 409 || e?.status === 409 || details?.exists) {
+      linkCandidate.value = {
+        userId: details?.userId,
+        displayName: details?.displayName,
+        email: details?.email || clientForm.email,
+        linkable: details?.linkable !== false && details?.role === 'client',
+        alreadyLinked: !!details?.alreadyLinked,
+      }
+      clientError.value = t('clients.create.existsError')
+    } else {
+      clientError.value = t('clients.create.error')
+    }
+  } finally {
+    clientSaving.value = false
+  }
+}
+
+async function linkExistingClient() {
+  if (!linkCandidate.value?.userId) return
+  clientSaving.value = true
+  clientError.value = ''
+  clientMsg.value = ''
+  try {
+    await $fetch(`/api/vet/clients/${linkCandidate.value.userId}/link`, { method: 'POST' })
+    clientMsg.value = t('clients.create.linkSuccess')
+    linkCandidate.value = null
+    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    await loadClients()
   } catch {
-    clientError.value = t('clients.create.error')
+    clientError.value = t('clients.create.linkError')
   } finally {
     clientSaving.value = false
   }

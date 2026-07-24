@@ -302,6 +302,9 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"preferredLocale":    u.PreferredLocale,
 		"mustChangePassword": u.MustChangePassword,
 	}
+	if u.ProfessionalSpecialty != "" {
+		out["professionalSpecialty"] = u.ProfessionalSpecialty
+	}
 	if u.PracticeID != "" {
 		out["practiceId"] = u.PracticeID
 		var practiceName string

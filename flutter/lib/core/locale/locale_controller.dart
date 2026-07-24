@@ -8,7 +8,7 @@ class LocaleController extends ChangeNotifier {
   static final instance = LocaleController._();
 
   static const _prefKey = 'pf_locale';
-  static const supportedCodes = ['fr', 'nl', 'en', 'es'];
+  static const supportedCodes = ['fr', 'nl', 'en', 'es', 'et'];
   Locale _locale = const Locale('fr');
 
   Locale get locale => _locale;

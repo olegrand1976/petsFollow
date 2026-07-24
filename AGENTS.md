@@ -72,9 +72,9 @@ make smoke
 
 Prérequis e2e auth : `make up-infra && make migrate && make seed`, API et `make nuxtjs-dev` démarrés.
 
-## Langues (FR / NL / EN / ES)
+## Langues (FR / NL / EN / ES / ET)
 
-Locales supportées : `fr` (défaut), `nl`, `en`, `es`.
+Locales supportées : `fr` (défaut), `nl`, `en`, `es`, `et`.
 
 | Face | Mécanisme | Persistance |
 |------|-----------|-------------|
@@ -84,7 +84,7 @@ Locales supportées : `fr` (défaut), `nl`, `en`, `es`.
 
 Compte démo NL : `client.marie@petsfollow.test` (`preferred_locale = nl`).
 
-Après migration : `make migrate` (000005_user_locale, 000018_locale_es).
+Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_locale_et).
 
 ## Google OAuth + 2FA (optionnel)
 

@@ -136,6 +136,53 @@ func (a *API) adminCreateClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": clientID, "email": req.Email})
 }
 
+type createCareProAdminReq struct {
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FullName  string `json:"fullName"`
+	Specialty string `json:"specialty"`
+}
+
+func (a *API) adminCreateCarePro(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	var req createCareProAdminReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	specialty := kernel.ProfessionalSpecialty(strings.TrimSpace(req.Specialty))
+	if req.Email == "" || req.Password == "" || req.FullName == "" || !kernel.ValidSpecialty(specialty) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	if len(req.Password) < 8 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
+		return
+	}
+	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
+		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
+		return
+	} else if !errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	userID, err := a.store.CreateCareProAsAdmin(r.Context(), req.Email, req.Password, req.FullName, specialty, localeOf(r))
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, map[string]string{
+		"userId": userID, "email": req.Email, "role": "care_pro", "specialty": string(specialty),
+	})
+}
+
 func (a *API) adminCreateVet(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
@@ -209,7 +256,13 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
-		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
+		details := map[string]any{"exists": true, "email": req.Email}
+		if id, idErr := authx.FromContext(r.Context()); idErr == nil && id.Role == kernel.RoleVet {
+			if d, lerr := a.store.LookupClientConflict(r.Context(), req.Email, id.UserID); lerr == nil {
+				details = d
+			}
+		}
+		writeErrDetails(w, r, http.StatusConflict, "conflict", "email_already_exists", details)
 		return req, false
 	} else if !errors.Is(err, store.ErrNotFound) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

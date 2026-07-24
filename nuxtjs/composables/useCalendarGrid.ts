@@ -8,6 +8,9 @@ export type CalendarVisit = {
   proposedScheduledAt?: string
   createdAt?: string
   durationMinutes?: number
+  addressText?: string
+  lat?: number
+  lng?: number
 }
 
 export type CalendarVacation = {

@@ -214,6 +214,24 @@ func (s *Store) MarkCareReminderDoneByPractice(ctx context.Context, id, practice
 	return s.rollForwardCareReminder(ctx, r)
 }
 
+// MarkCareReminderDoneByID marks a reminder done after the handler has verified ACL.
+func (s *Store) MarkCareReminderDoneByID(ctx context.Context, id string) (CareReminder, error) {
+	var r CareReminder
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.reminders
+		SET status = 'done', updated_at = NOW()
+		WHERE id = $1 AND status = 'pending'
+		RETURNING `+careReminderSelect, id,
+	).Scan(scanCareReminderRow(&r)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return CareReminder{}, ErrNotFound
+	}
+	if err != nil {
+		return CareReminder{}, err
+	}
+	return s.rollForwardCareReminder(ctx, r)
+}
+
 // rollForwardCareReminder creates the next pending occurrence when recurrence is set.
 // Returns the new pending reminder (preferred for clients) or the completed one.
 func (s *Store) rollForwardCareReminder(ctx context.Context, done CareReminder) (CareReminder, error) {
@@ -261,6 +279,21 @@ func (s *Store) PostponeCareReminderByPractice(ctx context.Context, id, practice
 		WHERE id = $1 AND practice_id = $2 AND status = 'pending'
 		RETURNING `+careReminderSelect,
 		id, practiceID, days,
+	).Scan(scanCareReminderRow(&r)...)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return CareReminder{}, ErrNotFound
+	}
+	return r, err
+}
+
+// PostponeCareReminderByID postpones after the handler has verified ACL.
+func (s *Store) PostponeCareReminderByID(ctx context.Context, id string, days int) (CareReminder, error) {
+	var r CareReminder
+	err := s.pool.QueryRow(ctx, `
+		UPDATE care.reminders
+		SET due_at = due_at + ($2 || ' days')::interval, updated_at = NOW()
+		WHERE id = $1 AND status = 'pending'
+		RETURNING `+careReminderSelect, id, days,
 	).Scan(scanCareReminderRow(&r)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return CareReminder{}, ErrNotFound

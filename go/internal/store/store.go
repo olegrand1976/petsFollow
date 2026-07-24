@@ -20,20 +20,21 @@ var (
 )
 
 type User struct {
-	ID                 string
-	Email              string
-	PasswordHash       string
-	FullName           string
-	Role               kernel.Role
-	PracticeID         string
-	EmailVerifiedAt    *time.Time
-	GoogleSub          string
-	AuthProvider       string
-	TOTPSecret         string
-	TOTPEnabled        bool
-	PreferredLocale    string
-	AvatarURL          string
-	MustChangePassword bool
+	ID                     string
+	Email                  string
+	PasswordHash           string
+	FullName               string
+	Role                   kernel.Role
+	PracticeID             string
+	EmailVerifiedAt        *time.Time
+	GoogleSub              string
+	AuthProvider           string
+	TOTPSecret             string
+	TOTPEnabled            bool
+	PreferredLocale        string
+	AvatarURL              string
+	MustChangePassword     bool
+	ProfessionalSpecialty  string
 }
 
 type Practice struct {
@@ -56,6 +57,8 @@ type Pet struct {
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
+	// Permission is set for care_pro list responses (read | write_notes | full).
+	Permission string `json:"permission,omitempty"`
 }
 
 type HeartRateSession struct {
@@ -142,7 +145,7 @@ func scanUser(row pgx.Row) (User, error) {
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
 		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
-		&u.MustChangePassword,
+		&u.MustChangePassword, &u.ProfessionalSpecialty,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -153,7 +156,8 @@ func scanUser(row pgx.Row) (User, error) {
 const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
-	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password`
+	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password,
+	COALESCE(professional_specialty,'')`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
@@ -552,32 +556,48 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 }
 
 func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]TimelineItem, error) {
+	return s.PetTimelineFiltered(ctx, petID, vetView, true, false)
+}
+
+// PetTimelineFiltered builds the pet timeline.
+// includeMessages: messaging bodies for this pet's thread.
+// redactVisitNotes: replace visit notes with empty body (ACL read-only).
+func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, includeMessages, redactVisitNotes bool) ([]TimelineItem, error) {
 	hrFilter := ""
 	if vetView {
 		hrFilter = " AND status='validated'"
 	} else {
 		hrFilter = " AND status IN ('pending_validation','validated')"
 	}
-	rows, err := s.pool.Query(ctx, `
+	visitBody := "COALESCE(notes,'')"
+	if redactVisitNotes {
+		visitBody = "''"
+	}
+	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque', CONCAT('BPM: ', COALESCE(bpm::text,'?')), started_at,
 			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert)
-		FROM heartrate.sessions WHERE pet_id=$1`+hrFilter+`
+		FROM heartrate.sessions WHERE pet_id=$1` + hrFilter + `
 		UNION ALL
 		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb
 		FROM pets.dossier_events WHERE pet_id=$1
 		UNION ALL
-		SELECT m.id::text, 'message', 'Message', m.body, m.created_at, '{}'::jsonb
-		FROM messaging.messages m
-		JOIN messaging.threads t ON t.id = m.thread_id
-		WHERE t.pet_id=$1 OR EXISTS (SELECT 1 FROM pets.pets p WHERE p.id=$1 AND p.owner_user_id=t.client_user_id)
-		UNION ALL
 		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
 		FROM care.reminders WHERE pet_id=$1 AND status='done'
 		UNION ALL
-		SELECT id::text, 'visit', 'Visite', COALESCE(notes,''), COALESCE(scheduled_at, created_at),
+		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
 			jsonb_build_object('status', status, 'source', source)
-		FROM visits.visits WHERE pet_id=$1 AND status='done'
-		ORDER BY 4 DESC`, petID)
+		FROM visits.visits WHERE pet_id=$1 AND status='done'`
+	if includeMessages {
+		q += `
+		UNION ALL
+		SELECT m.id::text, 'message', 'Message', m.body, m.created_at, '{}'::jsonb
+		FROM messaging.messages m
+		JOIN messaging.threads t ON t.id = m.thread_id
+		WHERE t.pet_id=$1`
+	}
+	q += `
+		ORDER BY 5 DESC`
+	rows, err := s.pool.Query(ctx, q, petID)
 	if err != nil {
 		return nil, err
 	}
@@ -593,6 +613,9 @@ func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]
 		item.Type = kernel.TimelineType(typeStr)
 		item.Meta = meta
 		out = append(out, item)
+	}
+	if out == nil {
+		out = []TimelineItem{}
 	}
 	return out, rows.Err()
 }

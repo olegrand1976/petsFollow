@@ -41,6 +41,49 @@
         <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
       </div>
     </ProCard>
+    <ProCard :title="$t('share.clientTitle')" data-testid="client-shares-card">
+      <p class="pro-hint pro-mb-md">{{ $t('share.clientHint') }}</p>
+      <form class="pro-pet-inline-form" @submit.prevent="addClientShare">
+        <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" required />
+        <select v-model="sharePermission" class="pro-input" data-testid="client-share-permission">
+          <option value="read">{{ $t('share.permRead') }}</option>
+          <option value="write_notes">{{ $t('share.permWriteNotes') }}</option>
+          <option value="full">{{ $t('share.permFull') }}</option>
+        </select>
+        <select v-model="shareExpiresDays" class="pro-input" data-testid="client-share-expires">
+          <option value="">{{ $t('share.expiresNever') }}</option>
+          <option value="7">{{ $t('share.expiresDays', { n: 7 }) }}</option>
+          <option value="30">{{ $t('share.expiresDays', { n: 30 }) }}</option>
+          <option value="90">{{ $t('share.expiresDays', { n: 90 }) }}</option>
+        </select>
+        <ProButton type="submit" :disabled="shareBusy">{{ $t('share.add') }}</ProButton>
+      </form>
+      <p v-if="shareError" class="pro-error">{{ shareError }}</p>
+      <ProTable v-if="clientShares.length">
+        <thead>
+          <tr>
+            <th>{{ $t('share.columnName') }}</th>
+            <th>{{ $t('share.columnEmail') }}</th>
+            <th>{{ $t('share.columnPermission') }}</th>
+            <th>{{ $t('share.columnExpires') }}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in clientShares" :key="s.id">
+            <td>{{ s.granteeName }}</td>
+            <td>{{ s.granteeEmail }}</td>
+            <td>{{ s.permission }}</td>
+            <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
+            <td>
+              <ProButton variant="ghost" :disabled="shareBusy" @click="revokeClientShare(s.granteeUserId)">
+                {{ $t('share.revoke') }}
+              </ProButton>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
     <ProCard :title="$t('clients.detail.petsTitle')">
       <ProTable
         :empty="!pets.length"
@@ -103,12 +146,72 @@ const pets = ref<any[]>([])
 const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
+const clientShares = ref<any[]>([])
+const shareEmail = ref('')
+const sharePermission = ref('write_notes')
+const shareExpiresDays = ref('')
+const shareBusy = ref(false)
+const shareError = ref('')
 
 function petLabel(count: number) {
   return count > 1 ? t('common.pets') : t('common.pet')
 }
 
 const clientSubtitle = computed(() => client.value?.email || t('clients.detail.subtitle'))
+
+async function loadClientShares() {
+  const res: any = await $fetch(`/api/clients/${clientId}/shares`)
+  clientShares.value = res.data ?? res ?? []
+}
+
+function formatShareDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString()
+  } catch {
+    return iso
+  }
+}
+
+async function addClientShare() {
+  if (!shareEmail.value.trim()) return
+  shareBusy.value = true
+  shareError.value = ''
+  try {
+    const body: Record<string, string> = {
+      email: shareEmail.value.trim(),
+      permission: sharePermission.value || 'write_notes',
+    }
+    if (shareExpiresDays.value) {
+      const d = new Date()
+      d.setDate(d.getDate() + Number(shareExpiresDays.value))
+      body.expiresAt = d.toISOString()
+    }
+    await $fetch(`/api/clients/${clientId}/shares`, {
+      method: 'POST',
+      body,
+    })
+    shareEmail.value = ''
+    sharePermission.value = 'write_notes'
+    shareExpiresDays.value = ''
+    await loadClientShares()
+  } catch (e: any) {
+    shareError.value = mapError(e)
+  } finally {
+    shareBusy.value = false
+  }
+}
+
+async function revokeClientShare(granteeUserId: string) {
+  shareBusy.value = true
+  try {
+    await $fetch(`/api/clients/${clientId}/shares/${granteeUserId}`, { method: 'DELETE' })
+    await loadClientShares()
+  } catch (e: any) {
+    shareError.value = mapError(e)
+  } finally {
+    shareBusy.value = false
+  }
+}
 
 async function sendAppLink() {
   if (!client.value || sendingAppLink.value) return
@@ -139,6 +242,11 @@ onMounted(async () => {
   } catch (e: any) {
     pets.value = []
     petsLoadError.value = mapError(e) || t('clients.loadError')
+  }
+  try {
+    await loadClientShares()
+  } catch {
+    clientShares.value = []
   }
 })
 </script>

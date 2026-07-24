@@ -12,7 +12,7 @@ Parcours drip **12 mois** envoyé aux propriétaires (clients), **en parallèle*
 | Prefs | `notifications.client_preferences.discovery` (éducatif/upsell) · `.billing` (paiement) |
 | Opt-out | Lien footer → `GET/POST /api/v1/public/journey/unsubscribe?token=…` (coupe **discovery** seulement ; billing inchangé) |
 | CTA | `PETS_APP_DOWNLOAD_URL` + UTM `utm_campaign=client_journey` |
-| i18n | `emails.journey.*` (FR / NL / EN / ES) |
+| i18n | `emails.journey.*` (FR / NL / EN / ES / ET) |
 | Hook Stripe | `billing.Hooks.OnOwnerPastDue` → `Runner.TriggerPastDue` (immédiat) + scan horaire (filet) |
 
 Env :

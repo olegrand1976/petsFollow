@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>petsFollow utilise votre position pour enregistrer l'adresse de visite sur le terrain.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>petsFollow a besoin d'accéder à vos photos pour l'avatar, la fiche animal et l'envoi au vétérinaire.</string>
 	<key>NSCameraUsageDescription</key>

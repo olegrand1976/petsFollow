@@ -28,7 +28,7 @@ alwaysApply: true
 | Addons (paiement unique à vie) | Family 39 · Kennel 119 · Care+ 19 · Horse 39 € |
 | Family | ≥2, −10 %, **pas de plafond**, exclusif Kennel |
 | Kennel | ≥6, −15 %, encodage rapide, exclusif Family (upgrade) |
-| Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels, FR/NL/EN/ES |
+| Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels, FR/NL/EN/ES/ET |
 
 ```text
 # ❌ BAD — docs/billing changés, /produits inchangé

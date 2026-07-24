@@ -84,7 +84,7 @@ Return ONLY valid JSON (no markdown) with this shape:
 Rules:
 - email: column that looks like an email address
 - fullName: client display name (may be split first/last — prefer the best single column for full name)
-- locale: language/locale if present (fr/nl/en/es), else null
+- locale: language/locale if present (fr/nl/en/es/et), else null
 - Use exact header strings from the input headers list
 - confidence between 0 and 1
 Input:

@@ -51,7 +51,7 @@ func firstNonEmpty(m map[string]string, prefer string) string {
 	if v := strings.TrimSpace(m[prefer]); v != "" {
 		return v
 	}
-	for _, loc := range []string{"fr", "en", "nl", "es"} {
+	for _, loc := range i18n.Supported {
 		if v := strings.TrimSpace(m[loc]); v != "" {
 			return v
 		}

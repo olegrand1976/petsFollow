@@ -2,9 +2,11 @@
 
 ## Personas
 
-- **Dr Martin** — véto libéral, dashboard Pro web
-- **Sophie** — propriétaire chien senior, app mobile pets
+- **Dr Martin** — véto libéral, dashboard Pro web (+ mode terrain *vet_light* mobile)
+- **Sophie** — propriétaire chien senior, app mobile pets (self-inscription possible)
 - **Léa** — commerciale / apporteuse, espace Pro commercial
+- **Marc** — maréchal-ferrant (`care_pro` / `farrier`), agenda terrain + CR ferrage
+- Autres care pro : physio, comportementaliste, toiletteur, éleveur — voir [28](28-MULTI-PROFILS-PRO.md)
 
 ## Périmètre cœur (MVP)
 
@@ -19,7 +21,7 @@
 | Extension | Statut |
 |-----------|--------|
 | Inscription véto + confirmation email + onboarding profil cabinet | Livré |
-| i18n FR / NL / EN / ES (UI + erreurs API) | Livré |
+| i18n FR / NL / EN / ES / ET (UI + erreurs API) | Livré |
 | Google OAuth + 2FA TOTP (optionnel) | Livré |
 | Admin plateforme (métriques, users, payments, commercials) | Livré |
 | Stripe billing par animal + addons Family / Care+ / Horse | Livré |
@@ -38,6 +40,7 @@
 - Refresh token silencieux côté clients
 - Simulation prospection admin 10 ans → [16](16-ADMIN-SIMULATION-10ANS.md) (**non livré**)
 - Export / emails Care+ avancés
+- Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (phase 4)
 
 ## Comptes seed
 

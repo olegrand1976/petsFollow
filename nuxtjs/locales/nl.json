@@ -183,6 +183,7 @@
       "role": {
         "client": "Cliënt",
         "vet": "Dierenarts",
+        "care_pro": "Veld-pro",
         "admin": "Admin",
         "commercial": "Commercieel",
         "commercial_manager": "Commercieel verantwoordelijke"
@@ -253,6 +254,7 @@
       "nl": "Nederlands",
       "en": "English",
       "es": "Español",
+      "et": "Eesti",
       "saved": "Taal opgeslagen."
     },
     "heartrate": {
@@ -310,6 +312,26 @@
       }
     }
   },
+  "share": {
+    "petTitle": "Dossier delen",
+    "petHint": "Lees- of notitierecht voor een collega of een pro via e-mail.",
+    "clientTitle": "Klantfiche delen",
+    "clientHint": "Toegang tot contactgegevens en dierenlijst geven.",
+    "colleaguePlaceholder": "Collega van de praktijk…",
+    "email": "E-mail ontvanger",
+    "add": "Delen",
+    "revoke": "Intrekken",
+    "columnName": "Naam",
+    "columnEmail": "E-mail",
+    "columnPermission": "Recht",
+    "permRead": "Lezen",
+    "permWriteNotes": "Notities / verslag",
+    "permFull": "Volledig (afspraken, docs)",
+    "columnExpires": "Vervalt",
+    "expiresNever": "Geen vervaldatum",
+    "expiresDays": "{n} dagen",
+    "fieldsRequired": "Kies een collega of vul een e-mail in."
+  },
   "clients": {
     "title": "Klanten",
     "subtitle": "Klanten gekoppeld aan uw praktijk.",
@@ -322,7 +344,13 @@
       "password": "Tijdelijk wachtwoord",
       "submit": "Account aanmaken",
       "success": "Klantaccount aangemaakt",
-      "error": "Aanmaken mislukt"
+      "error": "Aanmaken mislukt",
+      "existsError": "Er bestaat al een account met dit e-mailadres",
+      "existsHint": "Bekende klant: {name}. Koppelen aan uw praktijk?",
+      "alreadyLinked": "Deze klant is al gekoppeld aan deze praktijk.",
+      "linkExisting": "Koppelen aan praktijk",
+      "linkSuccess": "Klant gekoppeld aan praktijk",
+      "linkError": "Koppelen mislukt"
     },
     "search": "Zoeken",
     "searchPlaceholder": "Naam of e-mail…",
@@ -557,6 +585,7 @@
       "roleAll": "Alle",
       "roleClient": "Klanten",
       "roleVet": "Dierenartsen",
+      "roleCarePro": "Veld-pro's",
       "roleAdmin": "Admins",
       "payment": "Betaling",
       "paymentAll": "Alle",
@@ -592,6 +621,22 @@
       "clientPassword": "Tijdelijk wachtwoord",
       "clientCreated": "Cliëntaccount aangemaakt",
       "clientFailed": "Aanmaken mislukt",
+      "createCarePro": "Veld-pro aanmaken",
+      "createCareProHint": "Vet light, hoefsmid, physio… Toegang tot de mobiele pro-light app. Wachtwoord wijzigen bij eerste login.",
+      "careProName": "Volledige naam",
+      "careProEmail": "E-mail",
+      "careProPassword": "Tijdelijk wachtwoord",
+      "careProSpecialty": "Specialiteit",
+      "careProCreated": "Veld-pro account aangemaakt",
+      "careProFailed": "Aanmaken mislukt",
+      "specialty": {
+        "vet_light": "Vet light",
+        "farrier": "Hoefsmid",
+        "physio": "Physio / osteo",
+        "behaviorist": "Gedragstherapeut",
+        "groomer": "Trimsalon / pension",
+        "breeder": "Fokker"
+      },
       "commercialRole": "Rol",
       "roleCommercialManager": "Salesmanager",
       "commercialManager": "Manager",
@@ -1022,7 +1067,7 @@
       "Veilige berichten eigenaar ↔ dierenarts + pushmeldingen",
       "Timeline / gedeeld patiëntendossier (goedgekeurde metingen en gesprekken)",
       "Standaard zorgherinneringen (vaccin, ontworming, controle, gebit)",
-      "Talen FR / NL / EN / ES"
+      "Talen FR / NL / EN / ES / ET"
     ],
     "plansTitle": "Abonnementen per dier",
     "plansLead": "Één abonnement per opgevolgd dier. Prijzen incl. btw — Annual / Triennial eenmalig of Stripe-abonnement; Quinquennial alleen eenmalig.",
@@ -1638,6 +1683,16 @@
     "moreCount": "+{n}",
     "vacation": "Gesloten",
     "visitDetail": "Afspraakdetails",
+    "address": "Adres / locatie",
+    "saveAddress": "Adres opslaan",
+    "addressSaved": "Adres opgeslagen",
+    "openMaps": "Openen in Maps",
+    "reportTitle": "Bezoekverslag",
+    "reportHint": "Bezoeknotities…",
+    "saveReport": "Verslag opslaan",
+    "improveReport": "Verbeteren (IA)",
+    "reportSaved": "Verslag opgeslagen",
+    "reportImproved": "Verslag verbeterd",
     "unscheduled": "te plannen",
     "columnClient": "Cliënt",
     "columnPet": "Dier",

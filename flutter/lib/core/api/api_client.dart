@@ -109,6 +109,15 @@ class ApiClient {
     final sp = await SharedPreferences.getInstance();
     token = sp.getString(_tokenKey);
     loadToken();
+    if (token != null) {
+      try {
+        final me = await getMe();
+        userRole = me['role'] as String?;
+        userSpecialty = me['professionalSpecialty'] as String?;
+      } catch (_) {
+        await logout();
+      }
+    }
   }
 
   Future<void> _persistToken(String? value) async {
@@ -122,6 +131,8 @@ class ApiClient {
 
   Future<void> logout() async {
     token = null;
+    userRole = null;
+    userSpecialty = null;
     await _persistToken(null);
     loadToken();
     NotificationService.instance.resetSession();
@@ -138,6 +149,110 @@ class ApiClient {
     if (_isMfaChallenge(data)) return data;
     return _completeLogin(data);
   }
+
+  Future<void> registerClient({
+    required String email,
+    required String password,
+    required String fullName,
+    String? locale,
+  }) async {
+    await dio.post(
+      '/api/v1/auth/register-client',
+      data: {
+        'email': email,
+        'password': password,
+        'fullName': fullName,
+      },
+      options: Options(
+        headers: {
+          if (locale != null && locale.isNotEmpty) 'Accept-Language': locale,
+        },
+      ),
+    );
+  }
+
+  Future<List<dynamic>> listCareProVisits() async {
+    final res = await dio.get('/api/v1/care-pro/visits');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<List<dynamic>> listCareProClients() async {
+    final res = await dio.get('/api/v1/care-pro/clients');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<List<dynamic>> listCareProPets() async {
+    final res = await dio.get('/api/v1/care-pro/pets');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<Map<String, dynamic>> getVisitReport(String visitId) async {
+    final res = await dio.get('/api/v1/visits/$visitId/report');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> putVisitReport(String visitId, String bodyText) async {
+    final res = await dio.put('/api/v1/visits/$visitId/report', data: {
+      'bodyText': bodyText,
+    });
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> improveVisitReport(String visitId) async {
+    final res = await dio.post('/api/v1/visits/$visitId/report/improve');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> finalizeVisitReport(String visitId) async {
+    final res = await dio.post('/api/v1/visits/$visitId/report/finalize');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<List<dynamic>> listPetDocuments(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/documents');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<Map<String, dynamic>> updateVisitLocation(
+    String visitId,
+    String addressText, {
+    double? lat,
+    double? lng,
+  }) async {
+    final res = await dio.patch('/api/v1/visits/$visitId/location', data: {
+      'addressText': addressText,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+    });
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> transcribeVisitReport(
+    String visitId,
+    String filePath, {
+    String? filename,
+    String? hint,
+  }) async {
+    final form = FormData.fromMap({
+      if (hint != null && hint.trim().isNotEmpty) 'hint': hint.trim(),
+      'audio': await MultipartFile.fromFile(
+        filePath,
+        filename: filename ?? filePath.split('/').last,
+      ),
+    });
+    final res = await dio.post(
+      '/api/v1/visits/$visitId/report/transcribe',
+      data: form,
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  String? userRole;
+  String? userSpecialty;
 
   /// Google Sign-In for pets clients. [idToken] must be issued for the same
   /// Web client ID as API `GOOGLE_OAUTH_CLIENT_ID`.
@@ -190,6 +305,8 @@ class ApiClient {
     await syncLocaleFromMe();
     try {
       final me = await getMe();
+      userRole = me['role'] as String?;
+      userSpecialty = me['professionalSpecialty'] as String?;
       DiscoveryController.instance.bindUser(me['userId'] as String? ?? me['id'] as String?);
     } catch (_) {}
     await NotificationService.instance.onLogin();

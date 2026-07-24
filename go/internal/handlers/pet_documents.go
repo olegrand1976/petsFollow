@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -81,14 +82,22 @@ func (a *API) deletePetDocument(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
 		return
 	}
-	if !a.canAccessPetDocuments(id, pet) {
+	if !a.canAccessPetDocuments(r.Context(), id, pet, store.PermWriteNotes) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	// Vet of practice or original uploader may delete.
-	if id.Role == kernel.RoleClient && doc.UploadedByUserID != id.UserID {
+	practiceVet := id.Role == kernel.RoleVet && id.PracticeID != "" && pet.PracticeID == id.PracticeID
+	ownerClient := id.Role == kernel.RoleClient && pet.OwnerUserID == id.UserID
+	if ownerClient && doc.UploadedByUserID != id.UserID {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
+	}
+	if !practiceVet && !ownerClient {
+		// Shared access (care_pro / external vet / co-owner): deletion requires full.
+		if !a.canAccessPetDocuments(r.Context(), id, pet, store.PermFull) {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "full_permission_required")
+			return
+		}
 	}
 	deleted, err := a.store.DeletePetDocument(r.Context(), doc.ID)
 	if err != nil {
@@ -111,27 +120,20 @@ func (a *API) petAccessForDocuments(w http.ResponseWriter, r *http.Request) (sto
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return store.Pet{}, authx.Identity{}, false
 	}
-	pet, err := a.store.GetPet(r.Context(), chi.URLParam(r, "petID"))
-	if err != nil {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
-		return store.Pet{}, authx.Identity{}, false
+	need := store.PermRead
+	if r.Method == http.MethodPost || r.Method == http.MethodDelete {
+		need = store.PermWriteNotes
 	}
-	if !a.canAccessPetDocuments(id, pet) {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+	pet, ok := a.requirePetAccess(w, r, chi.URLParam(r, "petID"), id, need)
+	if !ok {
 		return store.Pet{}, authx.Identity{}, false
 	}
 	return pet, id, true
 }
 
-func (a *API) canAccessPetDocuments(id authx.Identity, pet store.Pet) bool {
-	switch id.Role {
-	case kernel.RoleClient:
-		return pet.OwnerUserID == id.UserID
-	case kernel.RoleVet:
-		return pet.PracticeID == id.PracticeID
-	default:
-		return false
-	}
+func (a *API) canAccessPetDocuments(ctx context.Context, id authx.Identity, pet store.Pet, need store.AccessPermission) bool {
+	ok, err := a.store.CanAccessPet(ctx, store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, need)
+	return err == nil && ok
 }
 
 func (a *API) uploadDocumentFile(r *http.Request, kind, entityID string) (url, contentType string, size int64, fileName, objectKey string, err error) {

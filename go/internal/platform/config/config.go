@@ -56,6 +56,8 @@ type Config struct {
 	ProductDigestSecret            string
 	VertexProject                  string
 	VertexLocation                 string
+	// CareProPublicRegister enables POST /auth/register-care-pro (default off — admin creates care_pro).
+	CareProPublicRegister bool
 }
 
 func Load() Config {
@@ -110,6 +112,7 @@ func Load() Config {
 		ProductDigestSecret:  envOr("PRODUCT_DIGEST_SECRET", ""),
 		VertexProject:        envOr("VERTEX_PROJECT", ""),
 		VertexLocation:       envOr("VERTEX_LOCATION", "europe-west9"),
+		CareProPublicRegister: envBool("CARE_PRO_PUBLIC_REGISTER"),
 	}
 }
 

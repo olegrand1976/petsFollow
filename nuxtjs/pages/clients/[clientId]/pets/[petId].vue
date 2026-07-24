@@ -249,6 +249,58 @@
       </ProTable>
     </ProCard>
 
+    <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
+      <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
+      <form class="pro-pet-inline-form" @submit.prevent="addPetShare">
+        <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
+          <option value="">{{ $t('share.colleaguePlaceholder') }}</option>
+          <option v-for="c in colleagues" :key="c.userId" :value="c.userId">
+            {{ c.fullName }} ({{ c.email }})
+          </option>
+        </select>
+        <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" test-id="pet-share-email" />
+        <select v-model="sharePermission" class="pro-input" data-testid="pet-share-permission">
+          <option value="read">{{ $t('share.permRead') }}</option>
+          <option value="write_notes">{{ $t('share.permWriteNotes') }}</option>
+          <option value="full">{{ $t('share.permFull') }}</option>
+        </select>
+        <select v-model="shareExpiresDays" class="pro-input" data-testid="pet-share-expires">
+          <option value="">{{ $t('share.expiresNever') }}</option>
+          <option value="7">{{ $t('share.expiresDays', { n: 7 }) }}</option>
+          <option value="30">{{ $t('share.expiresDays', { n: 30 }) }}</option>
+          <option value="90">{{ $t('share.expiresDays', { n: 90 }) }}</option>
+        </select>
+        <ProButton type="submit" :disabled="shareBusy" test-id="pet-share-submit">
+          {{ $t('share.add') }}
+        </ProButton>
+      </form>
+      <p v-if="shareError" class="pro-error">{{ shareError }}</p>
+      <ProTable v-if="petShares.length">
+        <thead>
+          <tr>
+            <th>{{ $t('share.columnName') }}</th>
+            <th>{{ $t('share.columnEmail') }}</th>
+            <th>{{ $t('share.columnPermission') }}</th>
+            <th>{{ $t('share.columnExpires') }}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in petShares" :key="s.id">
+            <td>{{ s.granteeName }}</td>
+            <td>{{ s.granteeEmail }}</td>
+            <td>{{ s.permission }}</td>
+            <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
+            <td>
+              <ProButton variant="ghost" :disabled="shareBusy" @click="revokePetShare(s.granteeUserId)">
+                {{ $t('share.revoke') }}
+              </ProButton>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+
     <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
       <form class="pro-pet-inline-form" @submit.prevent="uploadDocument">
         <input
@@ -356,6 +408,14 @@ const docError = ref('')
 const docTitle = ref('')
 const docFile = ref<File | null>(null)
 const docInputEl = ref<HTMLInputElement | null>(null)
+const petShares = ref<any[]>([])
+const colleagues = ref<{ userId: string; fullName: string; email: string }[]>([])
+const shareColleagueId = ref('')
+const shareEmail = ref('')
+const sharePermission = ref('write_notes')
+const shareExpiresDays = ref('')
+const shareBusy = ref(false)
+const shareError = ref('')
 const careDraft = reactive({ title: '', type: 'vaccination' })
 const visitDraft = reactive({ scheduledAt: '', notes: '' })
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
@@ -463,6 +523,64 @@ async function loadCareAndVisits() {
 async function loadDocuments() {
   const res: any = await $fetch(`/api/pets/${petId}/documents`)
   documents.value = res.data ?? res ?? []
+}
+
+async function loadPetShares() {
+  const [sharesRes, colleaguesRes]: any[] = await Promise.all([
+    $fetch(`/api/pets/${petId}/shares`),
+    $fetch('/api/vet/colleagues').catch(() => ({ data: [] })),
+  ])
+  petShares.value = sharesRes.data ?? sharesRes ?? []
+  colleagues.value = colleaguesRes.data ?? colleaguesRes ?? []
+}
+
+async function addPetShare() {
+  shareBusy.value = true
+  shareError.value = ''
+  try {
+    const body: Record<string, string> = { permission: sharePermission.value || 'write_notes' }
+    if (shareColleagueId.value) body.granteeUserId = shareColleagueId.value
+    else if (shareEmail.value.trim()) body.email = shareEmail.value.trim()
+    else {
+      shareError.value = t('share.fieldsRequired')
+      return
+    }
+    if (shareExpiresDays.value) {
+      const d = new Date()
+      d.setDate(d.getDate() + Number(shareExpiresDays.value))
+      body.expiresAt = d.toISOString()
+    }
+    await $fetch(`/api/pets/${petId}/shares`, { method: 'POST', body })
+    shareColleagueId.value = ''
+    shareEmail.value = ''
+    sharePermission.value = 'write_notes'
+    shareExpiresDays.value = ''
+    await loadPetShares()
+  } catch (e: any) {
+    shareError.value = mapError(e)
+  } finally {
+    shareBusy.value = false
+  }
+}
+
+function formatShareDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString()
+  } catch {
+    return iso
+  }
+}
+
+async function revokePetShare(granteeUserId: string) {
+  shareBusy.value = true
+  try {
+    await $fetch(`/api/pets/${petId}/shares/${granteeUserId}`, { method: 'DELETE' })
+    await loadPetShares()
+  } catch (e: any) {
+    shareError.value = mapError(e)
+  } finally {
+    shareBusy.value = false
+  }
 }
 
 function documentKindLabel(contentType: string) {
@@ -625,6 +743,12 @@ onMounted(async () => {
     await loadDocuments()
   } catch (e: any) {
     docError.value = mapError(e)
+  }
+
+  try {
+    await loadPetShares()
+  } catch {
+    petShares.value = []
   }
 })
 

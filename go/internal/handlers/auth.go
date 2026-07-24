@@ -182,7 +182,7 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 }
 
 func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store.User) {
-	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
+	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}

@@ -113,6 +113,127 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fullName => 'Nom complet';
 
   @override
+  String get registerCta => 'Créer un compte';
+
+  @override
+  String get registerTitle => 'Créer un compte';
+
+  @override
+  String get registerSubtitle =>
+      'Suivez la santé de votre animal. Confirmez ensuite votre email.';
+
+  @override
+  String get registerSubmit => 'S\'inscrire';
+
+  @override
+  String get registerSuccess =>
+      'Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.';
+
+  @override
+  String get registerFailed => 'Inscription impossible';
+
+  @override
+  String get registerEmailExists => 'Cet email est déjà utilisé';
+
+  @override
+  String get registerBackToLogin => 'Retour à la connexion';
+
+  @override
+  String get vetUseProWeb =>
+      'Le compte vétérinaire complet s\'utilise sur le site Pro web.';
+
+  @override
+  String get unsupportedRoleApp =>
+      'Ce compte n\'est pas utilisable dans l\'app pets. Utilisez le site Pro web.';
+
+  @override
+  String get proLightTitle => 'Pro terrain';
+
+  @override
+  String get proLightAgenda => 'Agenda';
+
+  @override
+  String get proLightClients => 'Clients';
+
+  @override
+  String get proLightPets => 'Animaux';
+
+  @override
+  String get proLightLoadError => 'Chargement impossible';
+
+  @override
+  String get proLightNoVisits => 'Aucun rendez-vous';
+
+  @override
+  String get proLightNoClients => 'Aucun client partagé';
+
+  @override
+  String get proLightNoPets => 'Aucun animal partagé';
+
+  @override
+  String get proLightAddress => 'Adresse';
+
+  @override
+  String get proLightOpenMaps => 'Maps';
+
+  @override
+  String get proLightReportTitle => 'Compte rendu';
+
+  @override
+  String get proLightReportHint => 'Notes de visite…';
+
+  @override
+  String get proLightImproveAi => 'Améliorer (IA)';
+
+  @override
+  String get proLightFinalizeReport => 'Finaliser';
+
+  @override
+  String get proLightReportFinal => 'Finalisé';
+
+  @override
+  String get proLightSettings => 'Réglages';
+
+  @override
+  String get proLightSpecialty => 'Spécialité';
+
+  @override
+  String get proLightDocuments => 'Documents';
+
+  @override
+  String get proLightNoDocuments => 'Aucun document';
+
+  @override
+  String get proLightTimeline => 'Timeline';
+
+  @override
+  String get proLightNoTimeline => 'Aucun événement';
+
+  @override
+  String get proLightReminders => 'Rappels';
+
+  @override
+  String get proLightNoReminders => 'Aucun rappel';
+
+  @override
+  String get proLightLitterTag => 'Tag / portée';
+
+  @override
+  String get proLightActionFailed => 'Action impossible';
+
+  @override
+  String get proLightReadOnly => 'Accès lecture seule';
+
+  @override
+  String get proLightUseGps => 'GPS';
+
+  @override
+  String get proLightTranscribeAudio => 'Audio → texte';
+
+  @override
+  String get proLightGpsDenied => 'Position indisponible';
+
+  @override
   String get googleNotConfigured => 'Connexion Google non configurée';
 
   @override
@@ -302,6 +423,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get languageEs => 'Español';
+
+  @override
+  String get languageEt => 'Eesti';
 
   @override
   String get planAnnualLabel => '35 € / an';

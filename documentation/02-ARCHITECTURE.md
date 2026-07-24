@@ -23,7 +23,7 @@ flowchart LR
 - **BFF Nuxt** : `nuxtjs/server/api/` proxy vers l’API ; pages consomment `{ data }` (souvent `res.data ?? res`).
 - **API Go** : handlers (`go/internal/handlers/`), store (`go/internal/store/`), billing (`go/internal/billing/`).
 - **Auth** : JWT access + refresh ; Google OAuth optionnel ; 2FA TOTP.
-- **i18n** : `Accept-Language` + `users.preferred_locale` (FR / NL / EN / ES).
+- **i18n** : `Accept-Language` + `users.preferred_locale` (FR / NL / EN / ES / ET).
 
 ## Infra données
 

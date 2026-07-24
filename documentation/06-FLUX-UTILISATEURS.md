@@ -4,11 +4,14 @@
 
 | Rôle | Surface | Mission |
 |------|---------|---------|
-| `vet` | Pro | Prescrire / suivre / messagerie |
-| `client` | Flutter pets | Animaux, FC, paiement, messages |
+| `vet` | Pro web | Prescrire / suivre / messagerie / partage dossier |
+| `client` | Flutter pets | Self-signup, animaux, FC, paiement, messages |
+| `care_pro` | Flutter pro light | Agenda terrain, fiches, CR (specialty : vet_light, farrier, …) |
 | `commercial` | Pro | Apporter cabinets, prospects, activations |
 | `commercial_manager` | Pro | Piloter l’équipe commerciale (KPI contact / RDV / résultat) + portefeuille perso |
 | `admin` | Pro | Ops plateforme, commissions, commercials |
+
+Détail multi-profils / ACL : [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md).
 
 ## Parcours véto
 
@@ -26,7 +29,8 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  Login[Login / Google] --> Pets[Créer animal + plan]
+  Reg[Register ou Login / Google] --> Confirm[Confirm email si self-signup]
+  Confirm --> Pets[Créer animal + plan]
   Pets --> Pay[Stripe Checkout]
   Pay --> Active[Entitlement active]
   Active --> HR[Relevé cardiaque]

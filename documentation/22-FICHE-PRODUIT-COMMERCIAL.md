@@ -22,7 +22,7 @@ Monétisation : **cabinet gratuit** → activation clients payants.
 - Relevé cardiaque **15 / 30 / 60 s** (tap, sans hardware)
 - Messagerie client ↔ véto (+ mode indisponible)
 - Timeline historique (messages, relevés validés)
-- Langues **FR / NL / EN / ES**
+- Langues **FR / NL / EN / ES / ET**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
 Ne pas promettre : hardware, WebSocket temps réel (refresh via ouverture app / push).

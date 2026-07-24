@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_et.dart';
 import 'app_localizations_fr.dart';
 import 'app_localizations_nl.dart';
 
@@ -98,6 +99,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('es'),
+    Locale('et'),
     Locale('fr'),
     Locale('nl')
   ];
@@ -299,6 +301,240 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Nom complet'**
   String get fullName;
+
+  /// No description provided for @registerCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un compte'**
+  String get registerCta;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un compte'**
+  String get registerTitle;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivez la santé de votre animal. Confirmez ensuite votre email.'**
+  String get registerSubtitle;
+
+  /// No description provided for @registerSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'inscrire'**
+  String get registerSubmit;
+
+  /// No description provided for @registerSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.'**
+  String get registerSuccess;
+
+  /// No description provided for @registerFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription impossible'**
+  String get registerFailed;
+
+  /// No description provided for @registerEmailExists.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet email est déjà utilisé'**
+  String get registerEmailExists;
+
+  /// No description provided for @registerBackToLogin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à la connexion'**
+  String get registerBackToLogin;
+
+  /// No description provided for @vetUseProWeb.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte vétérinaire complet s\'utilise sur le site Pro web.'**
+  String get vetUseProWeb;
+
+  /// No description provided for @unsupportedRoleApp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte n\'est pas utilisable dans l\'app pets. Utilisez le site Pro web.'**
+  String get unsupportedRoleApp;
+
+  /// No description provided for @proLightTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pro terrain'**
+  String get proLightTitle;
+
+  /// No description provided for @proLightAgenda.
+  ///
+  /// In fr, this message translates to:
+  /// **'Agenda'**
+  String get proLightAgenda;
+
+  /// No description provided for @proLightClients.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clients'**
+  String get proLightClients;
+
+  /// No description provided for @proLightPets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animaux'**
+  String get proLightPets;
+
+  /// No description provided for @proLightLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement impossible'**
+  String get proLightLoadError;
+
+  /// No description provided for @proLightNoVisits.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rendez-vous'**
+  String get proLightNoVisits;
+
+  /// No description provided for @proLightNoClients.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun client partagé'**
+  String get proLightNoClients;
+
+  /// No description provided for @proLightNoPets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun animal partagé'**
+  String get proLightNoPets;
+
+  /// No description provided for @proLightAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get proLightAddress;
+
+  /// No description provided for @proLightOpenMaps.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maps'**
+  String get proLightOpenMaps;
+
+  /// No description provided for @proLightReportTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte rendu'**
+  String get proLightReportTitle;
+
+  /// No description provided for @proLightReportHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notes de visite…'**
+  String get proLightReportHint;
+
+  /// No description provided for @proLightImproveAi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Améliorer (IA)'**
+  String get proLightImproveAi;
+
+  /// No description provided for @proLightFinalizeReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Finaliser'**
+  String get proLightFinalizeReport;
+
+  /// No description provided for @proLightReportFinal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Finalisé'**
+  String get proLightReportFinal;
+
+  /// No description provided for @proLightSettings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages'**
+  String get proLightSettings;
+
+  /// No description provided for @proLightSpecialty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Spécialité'**
+  String get proLightSpecialty;
+
+  /// No description provided for @proLightDocuments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents'**
+  String get proLightDocuments;
+
+  /// No description provided for @proLightNoDocuments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun document'**
+  String get proLightNoDocuments;
+
+  /// No description provided for @proLightTimeline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Timeline'**
+  String get proLightTimeline;
+
+  /// No description provided for @proLightNoTimeline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun événement'**
+  String get proLightNoTimeline;
+
+  /// No description provided for @proLightReminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels'**
+  String get proLightReminders;
+
+  /// No description provided for @proLightNoReminders.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun rappel'**
+  String get proLightNoReminders;
+
+  /// No description provided for @proLightLitterTag.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tag / portée'**
+  String get proLightLitterTag;
+
+  /// No description provided for @proLightActionFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Action impossible'**
+  String get proLightActionFailed;
+
+  /// No description provided for @proLightReadOnly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès lecture seule'**
+  String get proLightReadOnly;
+
+  /// No description provided for @proLightUseGps.
+  ///
+  /// In fr, this message translates to:
+  /// **'GPS'**
+  String get proLightUseGps;
+
+  /// No description provided for @proLightTranscribeAudio.
+  ///
+  /// In fr, this message translates to:
+  /// **'Audio → texte'**
+  String get proLightTranscribeAudio;
+
+  /// No description provided for @proLightGpsDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position indisponible'**
+  String get proLightGpsDenied;
 
   /// No description provided for @googleNotConfigured.
   ///
@@ -647,6 +883,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Español'**
   String get languageEs;
+
+  /// No description provided for @languageEt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Eesti'**
+  String get languageEt;
 
   /// No description provided for @planAnnualLabel.
   ///
@@ -1878,7 +2120,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'es', 'fr', 'nl'].contains(locale.languageCode);
+      <String>['en', 'es', 'et', 'fr', 'nl'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -1891,6 +2133,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEn();
     case 'es':
       return AppLocalizationsEs();
+    case 'et':
+      return AppLocalizationsEt();
     case 'fr':
       return AppLocalizationsFr();
     case 'nl':

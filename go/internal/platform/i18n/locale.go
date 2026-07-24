@@ -7,7 +7,7 @@ import (
 
 type ctxKey struct{}
 
-var Supported = []string{"fr", "nl", "en", "es"}
+var Supported = []string{"fr", "nl", "en", "es", "et"}
 
 func NormalizeLocale(raw string) string {
 	if loc, ok := MatchSupported(raw); ok {

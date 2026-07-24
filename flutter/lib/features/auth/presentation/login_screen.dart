@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/forgot_password_screen.dart';
+import 'package:petsfollow_mobile/features/auth/presentation/register_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -206,6 +207,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
             child: Text(l10n.forgotPassword),
+          ),
+        ),
+        Align(
+          alignment: Alignment.center,
+          child: TextButton(
+            onPressed: _busy
+                ? null
+                : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const RegisterScreen(),
+                      ),
+                    );
+                  },
+            child: Text(l10n.registerCta),
           ),
         ),
         if (error != null) ...[

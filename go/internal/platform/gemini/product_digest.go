@@ -49,8 +49,8 @@ Schéma de sortie JSON :
 {
   "empty": false,
   "reason": "",
-  "headline": {"fr":"…","en":"…","nl":"…","es":"…"},
-  "body": {"fr":"• …\n• …","en":"…","nl":"…","es":"…"}
+  "headline": {"fr":"…","en":"…","nl":"…","es":"…","et":"…"},
+  "body": {"fr":"• …\n• …","en":"…","nl":"…","es":"…","et":"…"}
 }`
 	raw, err := c.GenerateJSONLite(ctx, productDigestSystem, user, 0.3)
 	if err != nil {

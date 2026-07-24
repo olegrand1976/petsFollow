@@ -57,6 +57,27 @@
         <ProButton type="submit" test-id="admin-client-submit" :disabled="clSaving">{{ $t('admin.users.createClient') }}</ProButton>
       </form>
     </ProCard>
+    <ProCard class="pro-mb-lg" data-testid="admin-create-care-pro">
+      <h3 class="pro-mb-md">{{ $t('admin.users.createCarePro') }}</h3>
+      <p class="pro-hint pro-mb-md">{{ $t('admin.users.createCareProHint') }}</p>
+      <form class="pro-form" @submit.prevent="createCarePro">
+        <ProInput v-model="cpForm.fullName" test-id="admin-care-pro-name" :label="$t('admin.users.careProName')" required />
+        <ProInput v-model="cpForm.email" test-id="admin-care-pro-email" type="email" :label="$t('admin.users.careProEmail')" required />
+        <ProInput v-model="cpForm.password" test-id="admin-care-pro-password" type="password" :label="$t('admin.users.careProPassword')" required />
+        <div class="pro-field">
+          <label class="pro-label" for="admin-care-pro-specialty">{{ $t('admin.users.careProSpecialty') }}</label>
+          <select id="admin-care-pro-specialty" v-model="cpForm.specialty" class="pro-select" required data-testid="admin-care-pro-specialty">
+            <option v-for="s in careProSpecialties" :key="s" :value="s">
+              {{ $t(`admin.users.specialty.${s}`) }}
+            </option>
+          </select>
+        </div>
+        <p v-if="cpMsg" class="pro-hint" data-testid="admin-care-pro-msg">{{ cpMsg }}</p>
+        <ProButton type="submit" test-id="admin-care-pro-submit" :disabled="cpSaving">
+          {{ $t('admin.users.createCarePro') }}
+        </ProButton>
+      </form>
+    </ProCard>
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
@@ -66,6 +87,7 @@
               <option value="">{{ $t('admin.users.roleAll') }}</option>
               <option value="client">{{ $t('admin.users.roleClient') }}</option>
               <option value="vet">{{ $t('admin.users.roleVet') }}</option>
+              <option value="care_pro">{{ $t('admin.users.roleCarePro') }}</option>
               <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
               <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
               <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
@@ -168,6 +190,17 @@ const clSaving = ref(false)
 const clMsg = ref('')
 const clForm = reactive({ vetUserId: '', fullName: '', email: '', password: '' })
 const vetOptions = ref<{ userId: string; fullName: string; practiceName: string }[]>([])
+const cpSaving = ref(false)
+const cpMsg = ref('')
+const cpForm = reactive({ fullName: '', email: '', password: '', specialty: 'vet_light' })
+const careProSpecialties = [
+  'vet_light',
+  'farrier',
+  'physio',
+  'behaviorist',
+  'groomer',
+  'breeder',
+] as const
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
@@ -194,6 +227,7 @@ const kanbanColumns = computed(() => {
   const roles = [
     { role: 'client', title: t('admin.users.roleClient') },
     { role: 'vet', title: t('admin.users.roleVet') },
+    { role: 'care_pro', title: t('admin.users.roleCarePro') },
     { role: 'commercial', title: t('admin.users.roleCommercial') },
     { role: 'commercial_manager', title: t('admin.users.roleCommercialManager') },
     { role: 'admin', title: t('admin.users.roleAdmin') },
@@ -255,6 +289,21 @@ async function createClient() {
     clMsg.value = t('admin.users.clientFailed')
   } finally {
     clSaving.value = false
+  }
+}
+
+async function createCarePro() {
+  cpSaving.value = true
+  cpMsg.value = ''
+  try {
+    await $fetch('/api/admin/care-pros', { method: 'POST', body: { ...cpForm } })
+    cpMsg.value = t('admin.users.careProCreated')
+    Object.assign(cpForm, { fullName: '', email: '', password: '', specialty: 'vet_light' })
+    await load()
+  } catch {
+    cpMsg.value = t('admin.users.careProFailed')
+  } finally {
+    cpSaving.value = false
   }
 }
 

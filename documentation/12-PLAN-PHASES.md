@@ -34,6 +34,20 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 | Care+ export / emails avancés | Roadmap addon |
 | Pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) | [27](27-PHARMACIE-BELGIQUE.md) **spec / non livré** |
 
+## Phase 4 — Multi-profils & pro santé
+
+Voir [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md).
+
+| Sous-phase | Contenu |
+|------------|---------|
+| A | Self-inscription client Flutter (`/auth/register-client`) |
+| B | Rôle `care_pro` + specialty + ACL `client_access` / `pet_access` |
+| C1 | Création client : 409 enrichi + rattachement cabinet |
+| C2–C3 | Partage dossier animal / fiche client (Nuxt) |
+| D | Shell Flutter pro light (`vet_light`, `farrier`) |
+| E | Agenda GPS (adresse + lat/lng visites) |
+| F | CR visite + transcription / amélioration Gemini |
+
 ## Go-to-market
 
 Playbook commercial : [21-GTM-COMMERCIAL.md](21-GTM-COMMERCIAL.md) · politique tarifaire : [17](17-POLITIQUE-TARIFAIRE.md).

@@ -30,6 +30,7 @@ Index des documents de référence du projet.
 | 25b | [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md) | Digest produit quotidien admin/commercial |
 | 26 | [26-PLAY-STORE.md](26-PLAY-STORE.md) | Publication Play Store |
 | 27 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) | **Spec** pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) — non implémenté |
+| 28 | [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md) | Multi-profils care_pro, ACL partage, pro light, CR IA |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.

@@ -8,15 +8,40 @@ const (
 	RoleAdmin             Role = "admin"
 	RoleCommercial        Role = "commercial"
 	RoleCommercialManager Role = "commercial_manager"
+	RoleCarePro           Role = "care_pro"
+)
+
+type ProfessionalSpecialty string
+
+const (
+	SpecialtyVetLight    ProfessionalSpecialty = "vet_light"
+	SpecialtyFarrier     ProfessionalSpecialty = "farrier"
+	SpecialtyPhysio      ProfessionalSpecialty = "physio"
+	SpecialtyBehaviorist ProfessionalSpecialty = "behaviorist"
+	SpecialtyGroomer     ProfessionalSpecialty = "groomer"
+	SpecialtyBreeder     ProfessionalSpecialty = "breeder"
 )
 
 func ValidRole(role Role) bool {
 	switch role {
-	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager:
+	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager, RoleCarePro:
 		return true
 	default:
 		return false
 	}
+}
+
+func ValidSpecialty(s ProfessionalSpecialty) bool {
+	switch s {
+	case SpecialtyVetLight, SpecialtyFarrier, SpecialtyPhysio, SpecialtyBehaviorist, SpecialtyGroomer, SpecialtyBreeder:
+		return true
+	default:
+		return false
+	}
+}
+
+func IsCarePro(role Role) bool {
+	return role == RoleCarePro
 }
 
 // IsSalesForce reports whether the role belongs to the commercial sales force.
