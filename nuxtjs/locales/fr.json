@@ -1220,6 +1220,11 @@
     "audioConsentTitle": "Consentement audio",
     "audioConsentAccept": "J'accepte",
     "reportTranscribed": "Transcription terminée",
+    "reportHistoryTitle": "Historique du compte rendu",
+    "reportHistoryTranscript": "Original (transcription)",
+    "reportHistoryImproved": "Version IA",
+    "reportHistorySaved": "Version enregistrée",
+    "reportHistoryEmpty": "Aucune version disponible",
     "placeBadge": "Lieu",
     "unscheduled": "à planifier",
     "columnClient": "Client",
@@ -1446,7 +1451,7 @@
       },
       "partner": {
         "title": "Modèle partenaire",
-        "text": "Pro Light gratuit. Pro Complet facturé hors ligne — autofinançable via les commissions clients."
+        "text": "Pro Light gratuit. Pro facturé hors ligne — autofinançable via les commissions clients."
       },
       "security": {
         "title": "Données sécurisées",
@@ -1458,33 +1463,37 @@
       }
     },
     "ctaTitle": "Rejoignez petsFollow Pro dès aujourd'hui",
-    "ctaText": "Deux offres : Pro Light gratuit pour le terrain, ou Pro Complet (Web + app clients) avec facturation commerciale. Vos clients paient le suivi de leurs animaux.",
+    "ctaText": "Deux offres : Pro Light gratuit pour le terrain, ou Pro (Web + app clients) avec facturation commerciale. Vos clients paient le suivi de leurs animaux.",
     "ctaButton": "Commencer l'inscription",
     "productsLink": "Produits",
     "productsTitle": "Offre professionnelle — 2 solutions",
-    "productsLead": "Choisissez Pro Complet (cabinet Web + app clients) ou Pro Light (app mobile pro, gratuite). Les propriétaires souscrivent ensuite au suivi de leurs animaux.",
+    "productsLead": "Choisissez Pro (cabinet Web + app clients) ou Pro Light (app mobile ProLight, gratuite). Les propriétaires souscrivent ensuite au suivi de leurs animaux.",
     "productsCta": "Créer mon compte",
     "solutions": {
       "proComplete": {
         "price": "69 € HT / mois",
-        "title": "Pro Complet",
+        "title": "Pro",
         "text": "Plateforme Web SaaS + application mobile clients. Suivi médical, messagerie, dossiers et fidélisation.",
         "features": [
           "Dossier médical & timeline partagée",
           "Messagerie sécurisée + push",
           "Rappels, RDV et observance",
-          "Commissions partenaires (facturation externe)"
+          "Commissions partenaires (facturation externe)",
+          "Rapports vocaux de consultation",
+          "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés"
         ]
       },
       "proLight": {
         "price": "Gratuit",
         "title": "Pro Light",
-        "text": "App mobile pour care_pro / vet_light : suivi clients, fiches animaux, QR parrainage, documents partagés.",
+        "text": "App mobile ProLight : suivi clients, fiches animaux, QR parrainage, documents partagés. Fonctionne avec ou sans compte Web Pro.",
         "features": [
           "Agenda terrain & fiches clients",
           "Historique animaux",
           "QR code de parrainage",
-          "Documents partagés & notes"
+          "Documents partagés & notes",
+          "Rapports vocaux de consultation",
+          "Amélioration IA des rapports (+ historiques)"
         ]
       }
     },
@@ -1511,18 +1520,18 @@
   },
   "products": {
     "seoTitle": "petsFollow — Offre professionnelle",
-    "seoDescription": "Deux solutions Pro : Complet (Web + mobile clients) et Light (app pro gratuite). Grille clients et modèle partenaire.",
+    "seoDescription": "Deux solutions Pro : Pro (Web + mobile clients) et Pro Light (app ProLight gratuite). Grille clients et modèle partenaire.",
     "backHome": "Accueil",
     "print": "Imprimer / PDF",
     "badge": "Support de présentation cabinet",
     "title": "Offre professionnelle petsFollow",
     "lead": "L'écosystème qui interconnecte le cabinet et les propriétaires — suivi prescrit, sans hardware.",
-    "positioning": "Deux solutions Pro : Complet (Web SaaS + app clients, facturation commerciale) et Light (app mobile care_pro / vet_light, gratuite). Les propriétaires paient le suivi de leurs animaux (3,50 / 35 / 95 €).",
+    "positioning": "Deux solutions : Pro (Web SaaS + app clients, facturation commerciale) et Pro Light (app mobile ProLight, gratuite, avec ou sans compte Web). Les propriétaires paient le suivi de leurs animaux (3,50 / 35 / 95 €).",
     "solutionsTitle": "Deux solutions professionnelles",
     "solutionsLead": "Adaptez l'outil à votre pratique : cabinet connecté complet, ou app terrain légère.",
     "solutions": {
       "proComplete": {
-        "name": "Pro Complet",
+        "name": "Pro",
         "badge": "Web + Mobile clients",
         "price": "69 € HT / mois",
         "setup": "Mise en place & formation : 320 € HT (one-shot)",
@@ -1532,24 +1541,28 @@
           "Ordonnances, rappels et demandes de RDV",
           "Messagerie sécurisée client ↔ cabinet + push",
           "Programme partenaire (commissions sur activations clients)",
-          "Facturation SaaS externe — pas de paiement en ligne"
+          "Facturation SaaS externe — pas de paiement en ligne",
+          "Rapports vocaux de consultation",
+          "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés"
         ]
       },
       "proLight": {
         "name": "Pro Light",
         "badge": "Gratuit",
         "price": "0 €",
-        "tagline": "Shell Flutter care_pro / vet_light — suivi terrain sans SaaS cabinet.",
+        "tagline": "App mobile ProLight — suivi terrain, avec ou sans compte Web Pro.",
         "features": [
           "Suivi clients et agenda terrain",
           "Fiches & historique animaux",
           "QR code de parrainage",
           "Documents partagés et notes de visite",
+          "Rapports vocaux de consultation",
+          "Amélioration IA des rapports (+ historiques)",
           "Gratuit pour les professionnels"
         ]
       }
     },
-    "saasInvoiceNote": "Pro Complet : abonnement et mise en place facturés hors ligne (commercial / comptabilité). Aucun paiement SaaS cabinet via Stripe.",
+    "saasInvoiceNote": "Pro : abonnement et mise en place facturés hors ligne (commercial / comptabilité). Aucun paiement SaaS cabinet via Stripe.",
     "webTitle": "Plateforme Web PetsFollow (cabinet)",
     "webLead": "Centralise et simplifie les flux du cabinet soignant et administratif.",
     "webFeatures": [
@@ -1557,7 +1570,9 @@
       "Ordonnances & observance : prescriptions et rappels sur le téléphone du client",
       "Gestion des rappels & rendez-vous (vaccins, antiparasitaires, contrôles)",
       "Messagerie & suivi sécurisé post-opératoire ou chronique",
-      "Suivi des activations clients et commissions partenaires"
+      "Suivi des activations clients et commissions partenaires",
+      "Rapports vocaux de consultation",
+      "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés"
     ],
     "mobileTitle": "Application mobile PetsFollow (propriétaires)",
     "mobileLead": "Le compagnon quotidien du propriétaire — prolongement de vos soins à domicile.",
@@ -1584,14 +1599,14 @@
       "Suivi préventif optimal"
     ],
     "partnerTitle": "Modèle partenaire",
-    "partnerLead": "En recommandant l'app à vos clients, vous cumulez des commissions qui compensent l'abonnement Pro Complet (règlement hors ligne).",
+    "partnerLead": "En recommandant l'app à vos clients, vous cumulez des commissions qui compensent l'abonnement Pro (règlement hors ligne).",
     "partnerSteps": [
       "Le propriétaire souscrit un plan animal (ex. 95 € TTC / 3 ans — recommandé).",
       "Chaque activation avec le code / QR de votre cabinet génère une commission (assiette HTVA).",
       "Les commissions sont déduites ou compensées sur votre facture SaaS (facturation externe)."
     ],
-    "partnerTip": "Ordre de grandeur : avec environ 7 activations triennales par mois, les commissions partenaires peuvent couvrir l'abonnement mensuel Pro Complet (69 € HT).",
-    "saasTitle": "Tarification Pro Complet (HT — facturation externe)",
+    "partnerTip": "Ordre de grandeur : avec environ 7 activations triennales par mois, les commissions partenaires peuvent couvrir l'abonnement mensuel Pro (69 € HT).",
+    "saasTitle": "Tarification Pro (HT — facturation externe)",
     "saasLead": "Pas de checkout Stripe pour le SaaS cabinet. Devis et factures gérés par l'équipe commerciale.",
     "saas": {
       "setup": {
@@ -1602,7 +1617,7 @@
       "monthly": {
         "name": "Abonnement mensuel",
         "price": "69 € HT / mois",
-        "description": "Accès Pro Complet. Engagement 12 mois."
+        "description": "Accès Pro. Engagement 12 mois."
       },
       "annual": {
         "name": "Abonnement annuel",

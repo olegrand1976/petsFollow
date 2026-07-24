@@ -536,6 +536,36 @@ abstract class AppLocalizations {
   /// **'Finalisé'**
   String get proLightReportFinal;
 
+  /// No description provided for @proLightReportHistoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get proLightReportHistoryTitle;
+
+  /// No description provided for @proLightReportHistoryTranscript.
+  ///
+  /// In fr, this message translates to:
+  /// **'Original (transcription)'**
+  String get proLightReportHistoryTranscript;
+
+  /// No description provided for @proLightReportHistoryImproved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version IA'**
+  String get proLightReportHistoryImproved;
+
+  /// No description provided for @proLightReportHistorySaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version enregistrée'**
+  String get proLightReportHistorySaved;
+
+  /// No description provided for @proLightReportHistoryEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune version disponible'**
+  String get proLightReportHistoryEmpty;
+
   /// No description provided for @proLightSettings.
   ///
   /// In fr, this message translates to:

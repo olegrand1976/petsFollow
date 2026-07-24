@@ -5,14 +5,14 @@
 ## En une phrase
 
 Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**.  
-**Pro Complet** (Web + app clients) facturé **hors ligne** ; **Pro Light** gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
+**Pro** (Web + app clients) facturé **hors ligne** ; **Pro Light** (app mobile **ProLight**) gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
 
 ## Pour qui / modèle
 
 | Qui | Rôle | Surface | Tarif |
 |-----|------|---------|-------|
-| Cabinet véto | Prescripteur (B2B) | **Pro Complet** (Web SaaS) | **69 € HT/mois** + setup 320 € HT — **facturation externe** |
-| Care pro / vet light | Terrain | **Pro Light** (Flutter) | **Gratuit** |
+| Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **69 € HT/mois** + setup 320 € HT — **facturation externe** |
+| Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** |
 | Propriétaire | Payeur (B2B2C) | App mobile pets | 3,50 / 35 / 95 € TTC (Stripe) |
 | Commercial | Apporteur | Pro web (espace commercial) | — |
 
@@ -25,6 +25,7 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 - Messagerie client ↔ véto (+ mode indisponible)
 - Timeline historique (messages, relevés validés)
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
+- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — historiques transcription / IA / version enregistrée
 - Langues **FR / NL / EN / ES / ET**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
@@ -56,7 +57,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Pro Complet à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit pour le terrain. Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. » |
+| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Pro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit pour le terrain (ProLight). Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. » |
 | **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — à partir de ~2,6 €/mois sur 3 ans. » |
 | **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. » |
 

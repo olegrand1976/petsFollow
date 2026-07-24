@@ -85,7 +85,7 @@
       <p class="pf-products-pro__tip">{{ $t('products.partnerTip') }}</p>
     </ProCard>
 
-    <!-- Tarifs SaaS Pro Complet -->
+    <!-- Tarifs SaaS Pro -->
     <ProCard :title="$t('products.saasTitle')" class="pro-mb-lg">
       <p class="pro-hint">{{ $t('products.saasLead') }}</p>
       <div class="pf-products-pro__summary">

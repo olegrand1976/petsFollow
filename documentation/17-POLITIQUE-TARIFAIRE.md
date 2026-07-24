@@ -3,14 +3,14 @@
 Positionnement : **logiciel de suivi prescrit par le véto**, sans hardware.  
 Monétisation **double** :
 
-1. **SaaS cabinet Pro Complet** — facturation **externe** (pas de Stripe)  
+1. **SaaS cabinet Pro** — facturation **externe** (pas de Stripe)  
 2. **B2B2C client** — abonnements animal (Stripe)
 
-**Pro Light** (`care_pro` / `vet_light`) : **gratuit** pour les professionnels.
+**Pro Light** (app mobile **ProLight**, profil pro terrain — avec ou sans compte Web Pro) : **gratuit** pour les professionnels.
 
 Objectif : grille **attractive pour véto et commercial**, **concurrentielle** pour le client (~2–3,5 €/mois), et **marge plateforme** après TVA + Stripe + commissions.
 
-**Statut** : politique **en vigueur** (alignée code / seed / pages offre) — BM Apporteur / Prescripteur + steer triennial + SaaS Pro Complet hors ligne.
+**Statut** : politique **en vigueur** (alignée code / seed / pages offre) — BM Apporteur / Prescripteur + steer triennial + SaaS Pro hors ligne.
 
 ---
 
@@ -18,10 +18,10 @@ Objectif : grille **attractive pour véto et commercial**, **concurrentielle** p
 
 | Offre | Surface | Tarif | Paiement |
 |-------|---------|-------|----------|
-| **Pro Complet** | Web SaaS + app clients | **69 € HT / mois** (+ setup **320 € HT** one-shot) | **Facturation externe** (commercial / compta) — **pas** de checkout Stripe cabinet |
-| **Pro Light** | Flutter `care_pro` / `vet_light` | **0 €** | — |
+| **Pro** | Web SaaS + app clients | **69 € HT / mois** (+ setup **320 € HT** one-shot) | **Facturation externe** (commercial / compta) — **pas** de checkout Stripe cabinet |
+| **Pro Light** | App mobile ProLight (Flutter) | **0 €** | — |
 
-Engagements Pro Complet (facturation externe) :
+Engagements Pro (facturation externe) :
 
 | Prestation | Tarif HT | Notes |
 |------------|----------|-------|

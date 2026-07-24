@@ -168,12 +168,15 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     final canWrite = _canWriteNotes(visit);
     final l10n = AppLocalizations.of(context)!;
     String initialText = '';
+    String transcript = '';
+    String improved = '';
     var status = 'none';
     try {
       final report = await ApiClient.instance.getVisitReport(visitId);
+      transcript = (report['transcriptText'] as String?) ?? '';
+      improved = (report['improvedText'] as String?) ?? '';
       initialText = (report['bodyText'] as String?) ??
-          (report['transcriptText'] as String?) ??
-          '';
+          (transcript.isNotEmpty ? transcript : '');
       status = report['status'] as String? ?? 'draft';
     } catch (_) {
       if (!mounted) return;
@@ -189,6 +192,8 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
       builder: (ctx) => _VisitReportSheet(
         visitId: visitId,
         initialText: initialText,
+        initialTranscript: transcript,
+        initialImproved: improved,
         initialStatus: status,
         canWrite: canWrite,
       ),
@@ -436,12 +441,16 @@ class _VisitReportSheet extends StatefulWidget {
   const _VisitReportSheet({
     required this.visitId,
     required this.initialText,
+    required this.initialTranscript,
+    required this.initialImproved,
     required this.initialStatus,
     required this.canWrite,
   });
 
   final String visitId;
   final String initialText;
+  final String initialTranscript;
+  final String initialImproved;
   final String initialStatus;
   final bool canWrite;
 
@@ -452,6 +461,9 @@ class _VisitReportSheet extends StatefulWidget {
 class _VisitReportSheetState extends State<_VisitReportSheet> {
   late final TextEditingController _controller;
   late String _status;
+  late String _transcript;
+  late String _improved;
+  late String _persistedBody;
   bool _busy = false;
   bool _recording = false;
   final AudioRecorder _recorder = AudioRecorder();
@@ -461,6 +473,31 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
     super.initState();
     _controller = TextEditingController(text: widget.initialText);
     _status = widget.initialStatus;
+    _transcript = widget.initialTranscript;
+    _improved = widget.initialImproved;
+    _persistedBody = widget.initialText;
+  }
+
+  String get _historySaved {
+    final body = _persistedBody.trim();
+    if (body.isEmpty) return '';
+    if (body == _transcript.trim() || body == _improved.trim()) return '';
+    return _persistedBody;
+  }
+
+  void _applyPayload(Map<String, dynamic> data) {
+    final transcript = (data['transcriptText'] as String?) ?? _transcript;
+    final improved = (data['improvedText'] as String?) ?? _improved;
+    final body = (data['bodyText'] as String?) ??
+        (transcript.isNotEmpty ? transcript : _controller.text);
+    final status = data['status'] as String? ?? _status;
+    setState(() {
+      _transcript = transcript;
+      _improved = improved;
+      _status = status;
+      _persistedBody = body;
+      _controller.text = body;
+    });
   }
 
   @override
@@ -495,12 +532,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   }
 
   Future<void> _applyTranscript(Map<String, dynamic> transcribed) async {
-    final text = (transcribed['bodyText'] as String?) ??
-        (transcribed['transcriptText'] as String?) ??
-        '';
-    if (text.isNotEmpty) {
-      _controller.text = text;
-    }
+    _applyPayload(transcribed);
   }
 
   Future<void> _toggleDictation() async {
@@ -583,6 +615,65 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
             readOnly: readOnly || !widget.canWrite,
             decoration: InputDecoration(hintText: hint),
           ),
+          if (_transcript.isNotEmpty ||
+              _improved.isNotEmpty ||
+              _historySaved.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(l10n.proLightReportHistoryTitle),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.proLightReportHistoryTranscript,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _transcript.isEmpty
+                        ? l10n.proLightReportHistoryEmpty
+                        : _transcript,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.proLightReportHistoryImproved,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _improved.isEmpty
+                        ? l10n.proLightReportHistoryEmpty
+                        : _improved,
+                  ),
+                ),
+                if (_historySaved.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l10n.proLightReportHistorySaved,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(_historySaved),
+                  ),
+                ],
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           if (widget.canWrite && !isFinal)
             Wrap(
@@ -593,8 +684,10 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                   onPressed: _busy
                       ? null
                       : () => _run(() async {
-                            await ApiClient.instance
+                            final saved = await ApiClient.instance
                                 .putVisitReport(widget.visitId, _controller.text);
+                            if (!mounted) return;
+                            _applyPayload(saved);
                           }, popOnOk: true),
                   child: Text(l10n.save),
                 ),
@@ -607,8 +700,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                             final improved = await ApiClient.instance
                                 .improveVisitReport(widget.visitId);
                             if (!mounted) return;
-                            _controller.text =
-                                (improved['bodyText'] as String?) ?? _controller.text;
+                            _applyPayload(improved);
                           }),
                   child: Text(l10n.proLightImproveAi),
                 ),
@@ -621,9 +713,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                             final finalized = await ApiClient.instance
                                 .finalizeVisitReport(widget.visitId);
                             if (!mounted) return;
-                            setState(() {
-                              _status = finalized['status'] as String? ?? 'final';
-                            });
+                            _applyPayload(finalized);
                           }, popOnOk: true),
                   child: Text(l10n.proLightFinalizeReport),
                 ),

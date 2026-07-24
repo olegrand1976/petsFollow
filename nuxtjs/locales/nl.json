@@ -1044,7 +1044,7 @@
       },
       "partner": {
         "title": "Partnermodel",
-        "text": "Pro Light is gratis. Pro Complet wordt offline gefactureerd — te compenseren via cliëntcommissies."
+        "text": "Pro Light is gratis. Pro wordt offline gefactureerd — te compenseren via cliëntcommissies."
       },
       "security": {
         "title": "Veilige gegevens",
@@ -1056,33 +1056,37 @@
       }
     },
     "ctaTitle": "Word vandaag lid van petsFollow Pro",
-    "ctaText": "Twee aanbiedingen: gratis Pro Light voor het terrein, of Pro Complet (Web + cliëntapp) met commerciële facturatie. Cliënten betalen voor de opvolging van hun dieren.",
+    "ctaText": "Twee aanbiedingen: gratis Pro Light voor het terrein, of Pro (Web + cliëntapp) met commerciële facturatie. Cliënten betalen voor de opvolging van hun dieren.",
     "ctaButton": "Registratie starten",
     "productsLink": "Producten",
     "productsTitle": "Professioneel aanbod — 2 oplossingen",
-    "productsLead": "Kies Pro Complet (praktijk Web + cliëntapp) of Pro Light (gratis pro-mobiele app). Eigenaars schrijven daarna in voor de opvolging van hun dieren.",
+    "productsLead": "Kies Pro (praktijk Web + cliëntapp) of Pro Light (gratis ProLight-mobiele app). Eigenaars schrijven daarna in voor de opvolging van hun dieren.",
     "productsCta": "Mijn account aanmaken",
     "solutions": {
       "proComplete": {
         "price": "€69 excl. btw / maand",
-        "title": "Pro Complet",
+        "title": "Pro",
         "text": "Web SaaS-platform + mobiele app voor cliënten. Medische opvolging, berichten, dossiers en loyaliteit.",
         "features": [
           "Medisch dossier & gedeelde timeline",
           "Veilige berichten + push",
           "Herinneringen, afspraken & therapietrouw",
-          "Partnercommissies (externe facturatie)"
+          "Partnercommissies (externe facturatie)",
+          "Vocale consultatierapporten",
+          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
         ]
       },
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "Mobiele app voor care_pro / vet_light: cliëntopvolging, diergeschiedenis, doorverwijzings-QR, gedeelde documenten.",
+        "text": "ProLight-mobiele app: cliëntopvolging, diergeschiedenis, doorverwijzings-QR, gedeelde documenten. Werkt met of zonder Web Pro-account.",
         "features": [
           "Agenda op het terrein & cliëntfiches",
           "Diergeschiedenis",
           "Doorverwijzings-QR-code",
-          "Gedeelde documenten & notities"
+          "Gedeelde documenten & notities",
+          "Vocale consultatierapporten",
+          "AI-verbetering van rapporten (+ geschiedenis)"
         ]
       }
     },
@@ -1109,18 +1113,18 @@
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
-    "seoDescription": "Twee Pro-oplossingen: Complet (Web + cliëntmobiel) en Light (gratis pro-app). Cliëntplannen en partnermodel.",
+    "seoDescription": "Twee Pro-oplossingen: Pro (Web + cliëntmobiel) en Pro Light (gratis ProLight-app). Cliëntplannen en partnermodel.",
     "backHome": "Home",
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
     "title": "Professioneel aanbod petsFollow",
     "lead": "Het ecosysteem dat praktijk en eigenaars verbindt — voorgeschreven opvolging, zonder hardware.",
-    "positioning": "Twee Pro-oplossingen: Complet (Web SaaS + cliëntapp, commerciële facturatie) en Light (care_pro / vet_light mobiele app, gratis). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
+    "positioning": "Twee oplossingen: Pro (Web SaaS + cliëntapp, commerciële facturatie) en Pro Light (ProLight-mobiele app, gratis, met of zonder Web-account). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
     "solutionsTitle": "Twee professionele oplossingen",
     "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terreinapp.",
     "solutions": {
       "proComplete": {
-        "name": "Pro Complet",
+        "name": "Pro",
         "badge": "Web + cliëntmobiel",
         "price": "€69 excl. btw / maand",
         "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
@@ -1130,24 +1134,28 @@
           "Voorschriften, herinneringen en afspraakverzoeken",
           "Veilige berichten cliënt ↔ praktijk + push",
           "Partnerprogramma (commissies op cliëntactivaties)",
-          "Externe SaaS-facturatie — geen online praktijkbetaling"
+          "Externe SaaS-facturatie — geen online praktijkbetaling",
+          "Vocale consultatierapporten",
+          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
         ]
       },
       "proLight": {
         "name": "Pro Light",
         "badge": "Gratis",
         "price": "€0",
-        "tagline": "Flutter-shell care_pro / vet_light — terreinopvolging zonder praktijk-SaaS.",
+        "tagline": "ProLight-mobiele app — terreinopvolging, met of zonder Web Pro-account.",
         "features": [
           "Cliëntopvolging en terreinagenda",
           "Dierfiches & geschiedenis",
           "Doorverwijzings-QR-code",
           "Gedeelde documenten en bezoeknotities",
+          "Vocale consultatierapporten",
+          "AI-verbetering van rapporten (+ geschiedenis)",
           "Gratis voor professionals"
         ]
       }
     },
-    "saasInvoiceNote": "Pro Complet: abonnement en opzet offline gefactureerd (sales / boekhouding). Geen praktijk-SaaS-betaling via Stripe.",
+    "saasInvoiceNote": "Pro: abonnement en opzet offline gefactureerd (sales / boekhouding). Geen praktijk-SaaS-betaling via Stripe.",
     "webTitle": "PetsFollow Webplatform (praktijk)",
     "webLead": "Centraliseert en vereenvoudigt klinische en administratieve stromen.",
     "webFeatures": [
@@ -1155,7 +1163,9 @@
       "Voorschriften & therapietrouw: herinneringen op de telefoon van de cliënt",
       "Herinneringen & afspraken (vaccins, antiparasitica, controles)",
       "Veilige berichten & post-op / chronische opvolging",
-      "Opvolging van cliëntactivaties en partnercommissies"
+      "Opvolging van cliëntactivaties en partnercommissies",
+      "Vocale consultatierapporten",
+      "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
     ],
     "mobileTitle": "PetsFollow mobiele app (eigenaars)",
     "mobileLead": "De dagelijkse metgezel van de eigenaar — verlenging van uw zorg thuis.",
@@ -1182,14 +1192,14 @@
       "Optimale preventieve opvolging"
     ],
     "partnerTitle": "Partnermodel",
-    "partnerLead": "Door de app aan te bevelen verdient u commissies die het Pro Complet-abonnement compenseren (offline verrekening).",
+    "partnerLead": "Door de app aan te bevelen verdient u commissies die het Pro-abonnement compenseren (offline verrekening).",
     "partnerSteps": [
       "De eigenaar schrijft in op een dierplan (bv. €95 incl. btw / 3 jaar — aanbevolen).",
       "Elke activatie met uw praktijcode / QR levert een commissie op (grondslag excl. btw).",
       "Commissies worden afgetrokken of verrekend op uw SaaS-factuur (externe facturatie)."
     ],
-    "partnerTip": "Vuistregel: ongeveer 7 driejaarlijkse activaties per maand kunnen het maandelijkse Pro Complet-abonnement (€69 excl. btw) dekken.",
-    "saasTitle": "Pro Complet-tarieven (excl. btw — externe facturatie)",
+    "partnerTip": "Vuistregel: ongeveer 7 driejaarlijkse activaties per maand kunnen het maandelijkse Pro-abonnement (€69 excl. btw) dekken.",
+    "saasTitle": "Pro-tarieven (excl. btw — externe facturatie)",
     "saasLead": "Geen Stripe-checkout voor praktijk-SaaS. Offertes en facturen via het salesteam.",
     "saas": {
       "setup": {
@@ -1200,7 +1210,7 @@
       "monthly": {
         "name": "Maandelijks abonnement",
         "price": "€69 excl. btw / maand",
-        "description": "Volledige Pro Complet-toegang. Verbintenis 12 maanden."
+        "description": "Volledige Pro-toegang. Verbintenis 12 maanden."
       },
       "annual": {
         "name": "Jaarlijks abonnement",
@@ -1711,6 +1721,11 @@
     "audioConsentTitle": "Audiotoestemming",
     "audioConsentAccept": "Ik ga akkoord",
     "reportTranscribed": "Transcriptie voltooid",
+    "reportHistoryTitle": "Geschiedenis van het verslag",
+    "reportHistoryTranscript": "Origineel (transcriptie)",
+    "reportHistoryImproved": "IA-versie",
+    "reportHistorySaved": "Opgeslagen versie",
+    "reportHistoryEmpty": "Geen versie beschikbaar",
     "placeBadge": "Locatie",
     "unscheduled": "te plannen",
     "columnClient": "Cliënt",

@@ -1044,7 +1044,7 @@
       },
       "partner": {
         "title": "Partnerimudel",
-        "text": "Pro Light on tasuta. Pro Complet arveldatakse offline — kompenseeritav kliendikomisjonidega."
+        "text": "Pro Light on tasuta. Pro arveldatakse offline — kompenseeritav kliendikomisjonidega."
       },
       "security": {
         "title": "Turvalised andmed",
@@ -1056,33 +1056,37 @@
       }
     },
     "ctaTitle": "Liituge petsFollow Pro-ga juba täna",
-    "ctaText": "Kaks pakkumist: tasuta Pro Light välitööks või Pro Complet (veeb + kliendirakendus) kommertsarvetega. Kliendid maksavad oma loomade jälgimise eest.",
+    "ctaText": "Kaks pakkumist: tasuta Pro Light välitööks või Pro (veeb + kliendirakendus) kommertsarvetega. Kliendid maksavad oma loomade jälgimise eest.",
     "ctaButton": "Alusta registreerimist",
     "productsLink": "Tooted",
     "productsTitle": "Professionaalne pakkumine — 2 lahendust",
-    "productsLead": "Valige Pro Complet (kliiniku veeb + kliendirakendus) või Pro Light (tasuta pro-mobiilirakendus). Omanikud tellivad seejärel oma loomade jälgimise.",
+    "productsLead": "Valige Pro (kliiniku veeb + kliendirakendus) või Pro Light (tasuta ProLight-mobiilirakendus). Omanikud tellivad seejärel oma loomade jälgimise.",
     "productsCta": "Loo konto",
     "solutions": {
       "proComplete": {
         "price": "69 € km-ta / kuu",
-        "title": "Pro Complet",
+        "title": "Pro",
         "text": "Veebi-SaaS + klientide mobiilirakendus. Kliiniline jälgimine, sõnumside, kaardid ja lojaalsus.",
         "features": [
           "Meditsiiniline kaart ja jagatud ajajoon",
           "Turvaline sõnumside + push",
           "Meeldetuletused, vastuvõtud ja ravi järgimine",
-          "Partnerikomisjonid (väline arveldus)"
+          "Partnerikomisjonid (väline arveldus)",
+          "Häälelised konsultatsiooniraportid",
+          "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib"
         ]
       },
       "proLight": {
         "price": "Tasuta",
         "title": "Pro Light",
-        "text": "Mobiilirakendus care_pro / vet_light jaoks: klientide jälgimine, loomade ajalugu, soovitus-QR, jagatud dokumendid.",
+        "text": "ProLight-mobiilirakendus: klientide jälgimine, loomade ajalugu, soovitus-QR, jagatud dokumendid. Töötab koos Web Pro kontoga või ilma.",
         "features": [
           "Välipäevakava ja kliendikaardid",
           "Loomade ajalugu",
           "Soovitus-QR-kood",
-          "Jagatud dokumendid ja märkmed"
+          "Jagatud dokumendid ja märkmed",
+          "Häälelised konsultatsiooniraportid",
+          "IA raportite täiustamine (+ ajalugu)"
         ]
       }
     },
@@ -1109,18 +1113,18 @@
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
-    "seoDescription": "Kaks Pro lahendust: Complet (veeb + kliendi mobiil) ja Light (tasuta pro-äpp). Kliendiplaanid ja partnerimudel.",
+    "seoDescription": "Kaks Pro lahendust: Pro (veeb + kliendi mobiil) ja Pro Light (tasuta ProLight-äpp). Kliendiplaanid ja partnerimudel.",
     "backHome": "Avaleht",
     "print": "Prindi / PDF",
     "badge": "Kliiniku esitluse tugi",
     "title": "petsFollow professionaalne pakkumine",
     "lead": "Ökosüsteem, mis ühendab kliiniku ja omanikud — ettekirjutatud jälgimine, ilma riistvarata.",
-    "positioning": "Kaks Pro lahendust: Complet (veebi-SaaS + kliendirakendus, kommertsarveldus) ja Light (care_pro / vet_light mobiilirakendus, tasuta). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
+    "positioning": "Kaks lahendust: Pro (veebi-SaaS + kliendirakendus, kommertsarveldus) ja Pro Light (ProLight-mobiilirakendus, tasuta, koos Web kontoga või ilma). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
     "solutionsTitle": "Kaks professionaalset lahendust",
     "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välirakendus.",
     "solutions": {
       "proComplete": {
-        "name": "Pro Complet",
+        "name": "Pro",
         "badge": "Veeb + kliendi mobiil",
         "price": "69 € km-ta / kuu",
         "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
@@ -1130,24 +1134,28 @@
           "Retseptid, meeldetuletused ja vastuvõtutaotlused",
           "Turvaline sõnumside klient ↔ kliinik + push",
           "Partneriprogramm (komisjonid aktiveerimiste pealt)",
-          "Väline SaaS-arveldus — ilma kliiniku veebimaksena"
+          "Väline SaaS-arveldus — ilma kliiniku veebimaksena",
+          "Häälelised konsultatsiooniraportid",
+          "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib"
         ]
       },
       "proLight": {
         "name": "Pro Light",
         "badge": "Tasuta",
         "price": "0 €",
-        "tagline": "Flutteri kest care_pro / vet_light — väljäälgimine ilma kliiniku SaaSita.",
+        "tagline": "ProLight-mobiilirakendus — väljäälgimine, koos Web Pro kontoga või ilma.",
         "features": [
           "Klientide jälgimine ja välipäevakava",
           "Loomade kaardid ja ajalugu",
           "Soovitus-QR-kood",
           "Jagatud dokumendid ja visiidimärkmed",
+          "Häälelised konsultatsiooniraportid",
+          "IA raportite täiustamine (+ ajalugu)",
           "Tasuta professionaalidele"
         ]
       }
     },
-    "saasInvoiceNote": "Pro Complet: tellimus ja käivitamine arveldatakse offline (müük / raamatupidamine). Stripe'i kaudu kliiniku SaaS-makseid ei ole.",
+    "saasInvoiceNote": "Pro: tellimus ja käivitamine arveldatakse offline (müük / raamatupidamine). Stripe'i kaudu kliiniku SaaS-makseid ei ole.",
     "webTitle": "PetsFollow veebiplatvorm (kliinik)",
     "webLead": "Tsentraliseerib ja lihtsustab kliinilisi ning administratiivseid vooge.",
     "webFeatures": [
@@ -1155,7 +1163,9 @@
       "Retseptid ja ravi järgimine: meeldetuletused kliendi telefonis",
       "Meeldetuletused ja vastuvõtud (vaktsiinid, antiparasiidid, kontrollid)",
       "Turvaline sõnumside ning post-op / krooniline jälgimine",
-      "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine"
+      "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine",
+      "Häälelised konsultatsiooniraportid",
+      "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib"
     ],
     "mobileTitle": "PetsFollow mobiilirakendus (omanikud)",
     "mobileLead": "Omaniku igapäevane kaaslane — teie ravi jätkumine kodus.",
@@ -1182,14 +1192,14 @@
       "Optimaalne ennetav jälgimine"
     ],
     "partnerTitle": "Partnerimudel",
-    "partnerLead": "Rakendust klientidele soovitades teenite komisjone, mis kompenseerivad Pro Complet tellimuse (offline arveldus).",
+    "partnerLead": "Rakendust klientidele soovitades teenite komisjone, mis kompenseerivad Pro tellimuse (offline arveldus).",
     "partnerSteps": [
       "Omanik tellib loomaplaani (nt 95 € km-ga / 3 aastat — soovitatav).",
       "Iga aktiveerimine teie kliiniku koodi / QR-iga teenib komisjoni (alus km-ta).",
       "Komisjonid arvestatakse maha või tasaarveldatakse teie SaaS-arvel (väline arveldus)."
     ],
-    "partnerTip": "Suurusjärk: umbes 7 kolmeaastast aktiveerimist kuus võib katta Pro Complet kuutellimuse (69 € km-ta).",
-    "saasTitle": "Pro Complet hinnad (km-ta — väline arveldus)",
+    "partnerTip": "Suurusjärk: umbes 7 kolmeaastast aktiveerimist kuus võib katta Pro kuutellimuse (69 € km-ta).",
+    "saasTitle": "Pro hinnad (km-ta — väline arveldus)",
     "saasLead": "Kliiniku SaaSile Stripe checkout'i ei ole. Pakkumised ja arved müügimeeskonna kaudu.",
     "saas": {
       "setup": {
@@ -1200,7 +1210,7 @@
       "monthly": {
         "name": "Igakuine tellimus",
         "price": "69 € km-ta / kuu",
-        "description": "Täielik Pro Complet juurdepääs. 12 kuu kohustus."
+        "description": "Täielik Pro juurdepääs. 12 kuu kohustus."
       },
       "annual": {
         "name": "Aastane tellimus",
@@ -1711,6 +1721,11 @@
     "audioConsentTitle": "Helisalvestuse nõusolek",
     "audioConsentAccept": "Nõustun",
     "reportTranscribed": "Transkriptsioon valmis",
+    "reportHistoryTitle": "Raporti ajalugu",
+    "reportHistoryTranscript": "Originaal (transkriptsioon)",
+    "reportHistoryImproved": "IA versioon",
+    "reportHistorySaved": "Salvestatud versioon",
+    "reportHistoryEmpty": "Versiooni pole saadaval",
     "placeBadge": "Asukoht",
     "unscheduled": "planeerimata",
     "columnClient": "Klient",

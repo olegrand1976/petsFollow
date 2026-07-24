@@ -1044,7 +1044,7 @@
       },
       "partner": {
         "title": "Modelo partner",
-        "text": "Pro Light gratis. Pro Complet facturado offline — compensable vía comisiones de clientes."
+        "text": "Pro Light gratis. Pro facturado offline — compensable vía comisiones de clientes."
       },
       "security": {
         "title": "Datos seguros",
@@ -1056,33 +1056,37 @@
       }
     },
     "ctaTitle": "Únase a petsFollow Pro hoy",
-    "ctaText": "Dos ofertas: Pro Light gratis para el terreno, o Pro Complet (Web + app clientes) con facturación comercial. Los clientes pagan el seguimiento de sus animales.",
+    "ctaText": "Dos ofertas: Pro Light gratis para el terreno, o Pro (Web + app clientes) con facturación comercial. Los clientes pagan el seguimiento de sus animales.",
     "ctaButton": "Empezar el registro",
     "productsLink": "Productos",
     "productsTitle": "Oferta profesional — 2 soluciones",
-    "productsLead": "Elija Pro Complet (Web clínica + app clientes) o Pro Light (app móvil pro gratuita). Los propietarios se suscriben después al seguimiento de sus animales.",
+    "productsLead": "Elija Pro (Web clínica + app clientes) o Pro Light (app móvil ProLight gratuita). Los propietarios se suscriben después al seguimiento de sus animales.",
     "productsCta": "Crear mi cuenta",
     "solutions": {
       "proComplete": {
         "price": "69 € sin IVA / mes",
-        "title": "Pro Complet",
+        "title": "Pro",
         "text": "Plataforma Web SaaS + app móvil clientes. Seguimiento clínico, mensajería, historiales y fidelización.",
         "features": [
           "Historial médico y timeline compartida",
           "Mensajería segura + push",
           "Recordatorios, citas y adherencia",
-          "Comisiones partner (facturación externa)"
+          "Comisiones partner (facturación externa)",
+          "Informes de consulta por voz",
+          "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados"
         ]
       },
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "App móvil para care_pro / vet_light: seguimiento de clientes, historial de animales, QR de referidos, documentos compartidos.",
+        "text": "App móvil ProLight: seguimiento de clientes, historial de animales, QR de referidos, documentos compartidos. Funciona con o sin cuenta Web Pro.",
         "features": [
           "Agenda de campo y fichas de clientes",
           "Historial de animales",
           "Código QR de referidos",
-          "Documentos compartidos y notas"
+          "Documentos compartidos y notas",
+          "Informes de consulta por voz",
+          "Mejora IA de informes (+ historiales)"
         ]
       }
     },
@@ -1109,18 +1113,18 @@
   },
   "products": {
     "seoTitle": "petsFollow — Oferta profesional",
-    "seoDescription": "Dos soluciones Pro: Complet (Web + móvil clientes) y Light (app pro gratuita). Planes clientes y modelo partner.",
+    "seoDescription": "Dos soluciones Pro: Pro (Web + móvil clientes) y Pro Light (app ProLight gratuita). Planes clientes y modelo partner.",
     "backHome": "Inicio",
     "print": "Imprimir / PDF",
     "badge": "Soporte de presentación clínica",
     "title": "Oferta profesional petsFollow",
     "lead": "El ecosistema que conecta la clínica y los propietarios — seguimiento prescrito, sin hardware.",
-    "positioning": "Dos soluciones Pro: Complet (Web SaaS + app clientes, facturación comercial) y Light (app móvil care_pro / vet_light, gratis). Los propietarios pagan el seguimiento (3,50 / 35 / 95 €).",
+    "positioning": "Dos soluciones: Pro (Web SaaS + app clientes, facturación comercial) y Pro Light (app móvil ProLight, gratis, con o sin cuenta Web). Los propietarios pagan el seguimiento (3,50 / 35 / 95 €).",
     "solutionsTitle": "Dos soluciones profesionales",
     "solutionsLead": "Adapte la herramienta a su práctica: clínica conectada completa, o app de campo ligera.",
     "solutions": {
       "proComplete": {
-        "name": "Pro Complet",
+        "name": "Pro",
         "badge": "Web + móvil clientes",
         "price": "69 € sin IVA / mes",
         "setup": "Puesta en marcha y formación: 320 € sin IVA (one-shot)",
@@ -1130,24 +1134,28 @@
           "Recetas, recordatorios y solicitudes de cita",
           "Mensajería segura cliente ↔ clínica + push",
           "Programa partner (comisiones por activaciones)",
-          "Facturación SaaS externa — sin pago online de clínica"
+          "Facturación SaaS externa — sin pago online de clínica",
+          "Informes de consulta por voz",
+          "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados"
         ]
       },
       "proLight": {
         "name": "Pro Light",
         "badge": "Gratis",
         "price": "0 €",
-        "tagline": "Shell Flutter care_pro / vet_light — seguimiento de campo sin SaaS de clínica.",
+        "tagline": "App móvil ProLight — seguimiento de campo, con o sin cuenta Web Pro.",
         "features": [
           "Seguimiento de clientes y agenda de campo",
           "Fichas e historial de animales",
           "Código QR de referidos",
           "Documentos compartidos y notas de visita",
+          "Informes de consulta por voz",
+          "Mejora IA de informes (+ historiales)",
           "Gratis para profesionales"
         ]
       }
     },
-    "saasInvoiceNote": "Pro Complet: suscripción y puesta en marcha facturados offline (comercial / contabilidad). Sin pago SaaS de clínica vía Stripe.",
+    "saasInvoiceNote": "Pro: suscripción y puesta en marcha facturados offline (comercial / contabilidad). Sin pago SaaS de clínica vía Stripe.",
     "webTitle": "Plataforma Web PetsFollow (clínica)",
     "webLead": "Centraliza y simplifica los flujos clínicos y administrativos.",
     "webFeatures": [
@@ -1155,7 +1163,9 @@
       "Recetas y adherencia: recordatorios en el teléfono del cliente",
       "Recordatorios y citas (vacunas, antiparasitarios, controles)",
       "Mensajería segura y seguimiento postoperatorio / crónico",
-      "Seguimiento de activaciones y comisiones partner"
+      "Seguimiento de activaciones y comisiones partner",
+      "Informes de consulta por voz",
+      "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados"
     ],
     "mobileTitle": "App móvil PetsFollow (propietarios)",
     "mobileLead": "El compañero diario del propietario — extensión de sus cuidados en casa.",
@@ -1182,14 +1192,14 @@
       "Seguimiento preventivo óptimo"
     ],
     "partnerTitle": "Modelo partner",
-    "partnerLead": "Al recomendar la app a sus clientes, acumula comisiones que compensan la suscripción Pro Complet (liquidación offline).",
+    "partnerLead": "Al recomendar la app a sus clientes, acumula comisiones que compensan la suscripción Pro (liquidación offline).",
     "partnerSteps": [
       "El propietario se suscribe a un plan animal (p. ej. 95 € IVA incl. / 3 años — recomendado).",
       "Cada activación con el código / QR de su clínica genera una comisión (base sin IVA).",
       "Las comisiones se deducen o compensan en su factura SaaS (facturación externa)."
     ],
-    "partnerTip": "Orden de magnitud: unas 7 activaciones trienales al mes pueden cubrir la suscripción mensual Pro Complet (69 € sin IVA).",
-    "saasTitle": "Tarifas Pro Complet (sin IVA — facturación externa)",
+    "partnerTip": "Orden de magnitud: unas 7 activaciones trienales al mes pueden cubrir la suscripción mensual Pro (69 € sin IVA).",
+    "saasTitle": "Tarifas Pro (sin IVA — facturación externa)",
     "saasLead": "Sin checkout Stripe para el SaaS de clínica. Presupuestos y facturas por el equipo comercial.",
     "saas": {
       "setup": {
@@ -1200,7 +1210,7 @@
       "monthly": {
         "name": "Suscripción mensual",
         "price": "69 € sin IVA / mes",
-        "description": "Acceso Pro Complet completo. Compromiso 12 meses."
+        "description": "Acceso Pro completo. Compromiso 12 meses."
       },
       "annual": {
         "name": "Suscripción anual",
@@ -1711,6 +1721,11 @@
     "audioConsentTitle": "Consentimiento de audio",
     "audioConsentAccept": "Acepto",
     "reportTranscribed": "Transcripción lista",
+    "reportHistoryTitle": "Historial del informe",
+    "reportHistoryTranscript": "Original (transcripción)",
+    "reportHistoryImproved": "Versión IA",
+    "reportHistorySaved": "Versión guardada",
+    "reportHistoryEmpty": "Ninguna versión disponible",
     "placeBadge": "Lugar",
     "unscheduled": "por planificar",
     "columnClient": "Cliente",

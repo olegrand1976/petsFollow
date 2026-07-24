@@ -236,6 +236,21 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightReportFinal => 'Lõpetatud';
 
   @override
+  String get proLightReportHistoryTitle => 'Ajalugu';
+
+  @override
+  String get proLightReportHistoryTranscript => 'Originaal (transkriptsioon)';
+
+  @override
+  String get proLightReportHistoryImproved => 'IA versioon';
+
+  @override
+  String get proLightReportHistorySaved => 'Salvestatud versioon';
+
+  @override
+  String get proLightReportHistoryEmpty => 'Versiooni pole saadaval';
+
+  @override
   String get proLightSettings => 'Seaded';
 
   @override

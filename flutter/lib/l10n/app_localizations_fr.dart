@@ -237,6 +237,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get proLightReportFinal => 'Finalisé';
 
   @override
+  String get proLightReportHistoryTitle => 'Historique';
+
+  @override
+  String get proLightReportHistoryTranscript => 'Original (transcription)';
+
+  @override
+  String get proLightReportHistoryImproved => 'Version IA';
+
+  @override
+  String get proLightReportHistorySaved => 'Version enregistrée';
+
+  @override
+  String get proLightReportHistoryEmpty => 'Aucune version disponible';
+
+  @override
   String get proLightSettings => 'Réglages';
 
   @override

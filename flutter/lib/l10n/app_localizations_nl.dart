@@ -236,6 +236,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightReportFinal => 'Afgerond';
 
   @override
+  String get proLightReportHistoryTitle => 'Geschiedenis';
+
+  @override
+  String get proLightReportHistoryTranscript => 'Origineel (transcriptie)';
+
+  @override
+  String get proLightReportHistoryImproved => 'IA-versie';
+
+  @override
+  String get proLightReportHistorySaved => 'Opgeslagen versie';
+
+  @override
+  String get proLightReportHistoryEmpty => 'Geen versie beschikbaar';
+
+  @override
   String get proLightSettings => 'Instellingen';
 
   @override

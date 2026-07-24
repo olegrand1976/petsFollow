@@ -3,16 +3,16 @@
 ## Promesse
 
 **Suivi cardiaque prescrit par le vétérinaire, sans boîtier.**  
-**Pro Complet** (Web + app clients) facturé **hors ligne** (69 € HT/mois + setup) ; **Pro Light** gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois).
+**Pro** (Web + app clients) facturé **hors ligne** (69 € HT/mois + setup) ; **Pro Light** (app mobile **ProLight**) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois).
 
 ## Modèle
 
-**B2B2C + SaaS cabinet** : commercial apporte le cabinet → véto prescrit → client paie (Stripe) ; abonnement Pro Complet **facturé en externe** (pas de Stripe cabinet).
+**B2B2C + SaaS cabinet** : commercial apporte le cabinet → véto prescrit → client paie (Stripe) ; abonnement Pro **facturé en externe** (pas de Stripe cabinet).
 
 | Acteur | Bénéfice |
 |--------|----------|
-| Véto (Pro Complet) | Suivi entre consultations + commissions pouvant compenser le SaaS |
-| Care pro / vet light | App terrain **Pro Light** gratuite |
+| Véto (Pro) | Suivi entre consultations + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA (Web) |
+| Pro Light (ProLight) | App mobile terrain gratuite, avec ou sans compte Web Pro ; CR vocaux + amélioration IA |
 | Client | App simple, relevé au doigt, lien direct avec son véto |
 | Commercial | Commission sur chaque nouvelle activation + SPIFF ramp / mix |
 

@@ -65,6 +65,7 @@ Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tou
 Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle).
 
 Flux : dictée → upload → transcription Gemini → édition → « améliorer » (sections type SOAP / specialty).
+Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`) et Flutter Pro Light.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 Audio CR : **pas** servi via `/media/` public (`visit-reports/` bloqué en local via `DenySensitivePrefixes`) ; stream auth `GET /visits/{id}/report/audio` (refusé si CR `final`) ; **suppression à la finalisation** (Clear DB seulement après Delete média OK). Sur GCS, pas d’URL publique retournée pour ce prefix (GCP refuse une condition IAM sur `allUsers`).
 Consentement UI avant upload micro/fichier (Flutter + Nuxt).

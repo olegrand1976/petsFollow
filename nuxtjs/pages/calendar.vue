@@ -239,6 +239,27 @@
           </div>
           <p v-if="reportStatus === 'final'" class="pro-hint">{{ $t('calendar.reportFinal') }}</p>
           <p v-if="reportMsg" class="pro-hint">{{ reportMsg }}</p>
+          <details
+            v-if="reportTranscript || reportImproved || reportHistorySaved"
+            class="visit-report-history"
+            data-testid="visit-report-history"
+          >
+            <summary>{{ $t('calendar.reportHistoryTitle') }}</summary>
+            <div class="visit-report-history__block">
+              <h4>{{ $t('calendar.reportHistoryTranscript') }}</h4>
+              <pre v-if="reportTranscript" class="visit-report-history__text">{{ reportTranscript }}</pre>
+              <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
+            </div>
+            <div class="visit-report-history__block">
+              <h4>{{ $t('calendar.reportHistoryImproved') }}</h4>
+              <pre v-if="reportImproved" class="visit-report-history__text">{{ reportImproved }}</pre>
+              <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
+            </div>
+            <div v-if="reportHistorySaved" class="visit-report-history__block">
+              <h4>{{ $t('calendar.reportHistorySaved') }}</h4>
+              <pre class="visit-report-history__text">{{ reportHistorySaved }}</pre>
+            </div>
+          </details>
         </div>
         <div class="pro-flex-gap create-client-actions">
           <ProButton
@@ -323,6 +344,7 @@
 
 <script setup lang="ts">
 import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
+import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -361,9 +383,16 @@ const detailOpen = ref(false)
 const selectedVisit = ref<CalendarVisit | null>(null)
 const visitAddress = ref('')
 const reportBody = ref('')
+const reportPersistedBody = ref('')
+const reportTranscript = ref('')
+const reportImproved = ref('')
 const reportStatus = ref('')
 const reportBusy = ref(false)
 const reportMsg = ref('')
+
+const reportHistorySaved = computed(() =>
+  persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
+)
 const audioConsentOpen = ref(false)
 const pendingAudioFile = ref<File | null>(null)
 const rescheduleOpen = ref(false)
@@ -512,10 +541,22 @@ async function actFromDetail(action: string) {
   await act(selectedVisit.value.id, action)
 }
 
+function applyReportPayload(data: Record<string, unknown> | null | undefined) {
+  const mapped = mapVisitReportFields(data)
+  reportBody.value = mapped.bodyText
+  reportPersistedBody.value = mapped.bodyText
+  reportTranscript.value = mapped.transcriptText
+  reportImproved.value = mapped.improvedText
+  reportStatus.value = mapped.status
+}
+
 function openVisitDetail(v: CalendarVisit) {
   selectedVisit.value = v
   visitAddress.value = v.addressText || ''
   reportBody.value = ''
+  reportPersistedBody.value = ''
+  reportTranscript.value = ''
+  reportImproved.value = ''
   reportStatus.value = ''
   reportMsg.value = ''
   focusVisitId.value = v.id
@@ -526,12 +567,9 @@ function openVisitDetail(v: CalendarVisit) {
 async function loadVisitReport(visitId: string) {
   try {
     const res: any = await $fetch(`/api/visits/${visitId}/report`)
-    const data = res.data ?? res
-    reportBody.value = data.bodyText || data.transcriptText || ''
-    reportStatus.value = data.status || ''
+    applyReportPayload(res.data ?? res)
   } catch {
-    reportBody.value = ''
-    reportStatus.value = ''
+    applyReportPayload(null)
   }
 }
 
@@ -572,10 +610,11 @@ async function saveVisitReport() {
   reportBusy.value = true
   reportMsg.value = ''
   try {
-    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
+    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
       method: 'PUT',
       body: { bodyText: reportBody.value },
     })
+    applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -596,8 +635,7 @@ async function improveVisitReport() {
     const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/improve`, {
       method: 'POST',
     })
-    const data = res.data ?? res
-    reportBody.value = data.bodyText || data.improvedText || reportBody.value
+    applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportImproved')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -618,9 +656,7 @@ async function finalizeVisitReport() {
     const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/finalize`, {
       method: 'POST',
     })
-    const data = res.data ?? res
-    reportStatus.value = data.status || 'final'
-    reportBody.value = data.bodyText || reportBody.value
+    applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportFinalized')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -659,7 +695,7 @@ async function acceptAudioConsent() {
       body: form,
     })
     const data = res.data ?? res
-    reportBody.value = data.bodyText || data.transcriptText || reportBody.value
+    applyReportPayload(data)
     reportMsg.value = t('calendar.reportTranscribed')
   } catch (e: any) {
     reportMsg.value = mapError(e)
@@ -824,6 +860,35 @@ watch(
 }
 .visit-detail p {
   margin: 0.4rem 0;
+}
+.visit-report-history {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius-md, 8px);
+  background: var(--pf-vet-surface);
+}
+.visit-report-history summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+}
+.visit-report-history__block {
+  margin-top: 0.65rem;
+}
+.visit-report-history__block h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.visit-report-history__text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--pf-vet-text, inherit);
 }
 .pro-inline-feedback--error {
   background: color-mix(in srgb, var(--pf-vet-alert) 10%, var(--pf-vet-surface));

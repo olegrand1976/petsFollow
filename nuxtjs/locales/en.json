@@ -1044,7 +1044,7 @@
       },
       "partner": {
         "title": "Partner model",
-        "text": "Pro Light is free. Pro Complet is invoiced offline — offsettable via client commissions."
+        "text": "Pro Light is free. Pro is invoiced offline — offsettable via client commissions."
       },
       "security": {
         "title": "Secure data",
@@ -1056,33 +1056,37 @@
       }
     },
     "ctaTitle": "Join petsFollow Pro today",
-    "ctaText": "Two offers: free Pro Light for field work, or Pro Complet (Web + client app) with commercial invoicing. Clients pay for their pets' monitoring.",
+    "ctaText": "Two offers: free Pro Light for field work, or Pro (Web + client app) with commercial invoicing. Clients pay for their pets' monitoring.",
     "ctaButton": "Start registration",
     "productsLink": "Products",
     "productsTitle": "Professional offer — 2 solutions",
-    "productsLead": "Choose Pro Complet (practice Web + client app) or Pro Light (free pro mobile app). Owners then subscribe to monitoring for their pets.",
+    "productsLead": "Choose Pro (practice Web + client app) or Pro Light (free ProLight mobile app). Owners then subscribe to monitoring for their pets.",
     "productsCta": "Create my account",
     "solutions": {
       "proComplete": {
         "price": "€69 excl. VAT / month",
-        "title": "Pro Complet",
+        "title": "Pro",
         "text": "Web SaaS platform + client mobile app. Clinical follow-up, messaging, records and loyalty.",
         "features": [
           "Medical record & shared timeline",
           "Secure messaging + push",
           "Reminders, appointments & adherence",
-          "Partner commissions (external invoicing)"
+          "Partner commissions (external invoicing)",
+          "Voice consultation reports",
+          "AI report improvement — structured, editable before saving, histories kept"
         ]
       },
       "proLight": {
         "price": "Free",
         "title": "Pro Light",
-        "text": "Mobile app for care_pro / vet_light: client follow-up, pet history, referral QR, shared documents.",
+        "text": "ProLight mobile app: client follow-up, pet history, referral QR, shared documents. Works with or without a Web Pro account.",
         "features": [
           "Field agenda & client records",
           "Pet history",
           "Referral QR code",
-          "Shared documents & notes"
+          "Shared documents & notes",
+          "Voice consultation reports",
+          "AI report improvement (+ histories)"
         ]
       }
     },
@@ -1109,18 +1113,18 @@
   },
   "products": {
     "seoTitle": "petsFollow — Professional offer",
-    "seoDescription": "Two Pro solutions: Complet (Web + client mobile) and Light (free pro app). Client plans and partner model.",
+    "seoDescription": "Two Pro solutions: Pro (Web + client mobile) and Pro Light (free ProLight app). Client plans and partner model.",
     "backHome": "Home",
     "print": "Print / PDF",
     "badge": "Practice presentation support",
     "title": "petsFollow professional offer",
     "lead": "The ecosystem that connects the practice and pet owners — prescribed monitoring, no hardware.",
-    "positioning": "Two Pro solutions: Complet (Web SaaS + client app, commercial invoicing) and Light (care_pro / vet_light mobile app, free). Owners pay for pet monitoring (€3.50 / €35 / €95).",
+    "positioning": "Two solutions: Pro (Web SaaS + client app, commercial invoicing) and Pro Light (ProLight mobile app, free, with or without a Web account). Owners pay for pet monitoring (€3.50 / €35 / €95).",
     "solutionsTitle": "Two professional solutions",
     "solutionsLead": "Match the tool to your practice: full connected clinic, or lightweight field app.",
     "solutions": {
       "proComplete": {
-        "name": "Pro Complet",
+        "name": "Pro",
         "badge": "Web + client mobile",
         "price": "€69 excl. VAT / month",
         "setup": "Setup & training: €320 excl. VAT (one-shot)",
@@ -1130,24 +1134,28 @@
           "Prescriptions, reminders and appointment requests",
           "Secure client ↔ practice messaging + push",
           "Partner programme (commissions on client activations)",
-          "External SaaS invoicing — no online practice payment"
+          "External SaaS invoicing — no online practice payment",
+          "Voice consultation reports",
+          "AI report improvement — structured, editable before saving, histories kept"
         ]
       },
       "proLight": {
         "name": "Pro Light",
         "badge": "Free",
         "price": "€0",
-        "tagline": "Flutter shell care_pro / vet_light — field follow-up without practice SaaS.",
+        "tagline": "ProLight mobile app — field follow-up, with or without a Web Pro account.",
         "features": [
           "Client follow-up and field agenda",
           "Pet records & history",
           "Referral QR code",
           "Shared documents and visit notes",
+          "Voice consultation reports",
+          "AI report improvement (+ histories)",
           "Free for professionals"
         ]
       }
     },
-    "saasInvoiceNote": "Pro Complet: subscription and setup invoiced offline (sales / accounting). No practice SaaS payment via Stripe.",
+    "saasInvoiceNote": "Pro: subscription and setup invoiced offline (sales / accounting). No practice SaaS payment via Stripe.",
     "webTitle": "PetsFollow Web platform (practice)",
     "webLead": "Centralises and simplifies clinical and admin workflows.",
     "webFeatures": [
@@ -1155,7 +1163,9 @@
       "Prescriptions & adherence: reminders on the client's phone",
       "Reminders & appointments (vaccines, antiparasitics, check-ups)",
       "Secure messaging & post-op / chronic follow-up",
-      "Client activation tracking and partner commissions"
+      "Client activation tracking and partner commissions",
+      "Voice consultation reports",
+      "AI report improvement — structured, editable before saving, histories kept"
     ],
     "mobileTitle": "PetsFollow mobile app (owners)",
     "mobileLead": "The owner's daily companion — extending your care at home.",
@@ -1182,14 +1192,14 @@
       "Optimal preventive monitoring"
     ],
     "partnerTitle": "Partner model",
-    "partnerLead": "By recommending the app to clients, you earn commissions that offset the Pro Complet subscription (settled offline).",
+    "partnerLead": "By recommending the app to clients, you earn commissions that offset the Pro subscription (settled offline).",
     "partnerSteps": [
       "The owner subscribes to a pet plan (e.g. €95 incl. VAT / 3 years — recommended).",
       "Each activation with your practice code / QR earns a commission (excl. VAT base).",
       "Commissions are deducted or offset on your SaaS invoice (external billing)."
     ],
-    "partnerTip": "Rule of thumb: about 7 triennial activations per month can cover the Pro Complet monthly subscription (€69 excl. VAT).",
-    "saasTitle": "Pro Complet pricing (excl. VAT — external invoicing)",
+    "partnerTip": "Rule of thumb: about 7 triennial activations per month can cover the Pro monthly subscription (€69 excl. VAT).",
+    "saasTitle": "Pro pricing (excl. VAT — external invoicing)",
     "saasLead": "No Stripe checkout for practice SaaS. Quotes and invoices handled by the sales team.",
     "saas": {
       "setup": {
@@ -1200,7 +1210,7 @@
       "monthly": {
         "name": "Monthly subscription",
         "price": "€69 excl. VAT / month",
-        "description": "Full Pro Complet access. 12-month commitment."
+        "description": "Full Pro access. 12-month commitment."
       },
       "annual": {
         "name": "Annual subscription",
@@ -1711,6 +1721,11 @@
     "audioConsentTitle": "Audio consent",
     "audioConsentAccept": "I agree",
     "reportTranscribed": "Transcription complete",
+    "reportHistoryTitle": "Report history",
+    "reportHistoryTranscript": "Original (transcript)",
+    "reportHistoryImproved": "AI version",
+    "reportHistorySaved": "Saved version",
+    "reportHistoryEmpty": "No version available",
     "placeBadge": "Place",
     "unscheduled": "unscheduled",
     "columnClient": "Client",
