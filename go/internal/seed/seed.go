@@ -479,7 +479,13 @@ func seedEntitlement(ctx context.Context, tx pgx.Tx, petID, clientID string, pet
 	now := time.Now()
 	var validFrom, validUntil *time.Time
 	if pet.entitlement.AllowsAccess() || pet.entitlement == billing.StatusPending {
-		from := now.Add(-30 * 24 * time.Hour)
+		// Backdate start for multi-month plans; monthly (30d) must not expire at seed time.
+		from := now
+		if plan.DurationDays > 30 {
+			from = now.Add(-30 * 24 * time.Hour)
+		} else if plan.DurationDays > 1 {
+			from = now.Add(-24 * time.Hour)
+		}
 		until := billing.ValidUntil(from, plan)
 		validFrom = &from
 		validUntil = &until
@@ -735,14 +741,19 @@ func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	if n > 0 {
-		return nil
+		_, err = pool.Exec(ctx, `
+			UPDATE visits.visits
+			SET scheduled_at = date_trunc('day', NOW()) + INTERVAL '10 hours'
+			WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'
+			  AND status NOT IN ('done', 'cancelled')`, spiritID)
+		return err
 	}
 	_, err = pool.Exec(ctx, `
 		INSERT INTO visits.visits (
 			id, pet_id, practice_id, scheduled_at, status, notes, source,
 			pending_action_by, duration_minutes, address_text
 		) VALUES (
-			$1, $2, $3, NOW() + INTERVAL '2 days', 'confirmed',
+			$1, $2, $3, date_trunc('day', NOW()) + INTERVAL '10 hours', 'confirmed',
 			'Ferrage Spirit — démo care_pro', 'vet', NULL, 30, 'Écurie VetPlus Demo'
 		)`,
 		uuid.NewString(), spiritID, practiceID)

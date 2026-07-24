@@ -203,6 +203,8 @@
   "beatsLabel": "Lööke: {count}",
   "thresholdAlert": "Lävehoiatus",
   "validateAndSend": "Kinnita ja saada loomaarstile",
+  "heartRateCommentLabel": "Kommentaar (valikuline)",
+  "heartRateCommentHint": "Nt rahutu, puhkeolekus, pärast pingutust…",
   "restart": "Alusta uuesti",
   "sentToVet": "Näit saadetud loomaarstile",
   "navHome": "Avaleht",

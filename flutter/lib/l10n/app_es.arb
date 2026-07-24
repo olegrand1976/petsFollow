@@ -203,6 +203,8 @@
   "beatsLabel": "Latidos: {count}",
   "thresholdAlert": "Alerta de umbral",
   "validateAndSend": "Validar y enviar al veterinario",
+  "heartRateCommentLabel": "Comentario (opcional)",
+  "heartRateCommentHint": "Ej. agitado, en reposo, tras el esfuerzo…",
   "restart": "Empezar de nuevo",
   "sentToVet": "Lectura enviada al veterinario",
   "navHome": "Inicio",

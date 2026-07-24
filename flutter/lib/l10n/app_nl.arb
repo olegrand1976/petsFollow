@@ -203,6 +203,8 @@
   "beatsLabel": "Slagen: {count}",
   "thresholdAlert": "Drempelwaarschuwing",
   "validateAndSend": "Valideren en naar dierenarts sturen",
+  "heartRateCommentLabel": "Opmerking (optioneel)",
+  "heartRateCommentHint": "Bv. onrustig, in rust, na inspanning…",
   "restart": "Opnieuw beginnen",
   "sentToVet": "Meting naar dierenarts gestuurd",
   "navHome": "Home",

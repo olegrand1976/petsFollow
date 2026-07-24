@@ -397,6 +397,7 @@
       "columnBpm": "BPM",
       "columnDuration": "Duur",
       "columnStatus": "Status",
+      "columnComment": "Opmerking",
       "chartTitle": "BPM-trend",
       "chartRangeLabel": "Periode",
       "chartRange3m": "3 maanden",
@@ -1740,7 +1741,7 @@
   },
   "invite": {
     "brandTitle": "Uw dierenarts nodigt u uit",
-    "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
+      "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
     "loading": "Uitnodiging laden…",
     "title": "Download de petsFollow-app",
     "subtitle": "Uitnodiging van {vet} — {practice}",

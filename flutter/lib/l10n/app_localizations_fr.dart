@@ -663,6 +663,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get validateAndSend => 'Valider et envoyer au véto';
 
   @override
+  String get heartRateCommentLabel => 'Commentaire (optionnel)';
+
+  @override
+  String get heartRateCommentHint => 'Ex. agité, au repos, après effort…';
+
+  @override
   String get restart => 'Recommencer';
 
   @override

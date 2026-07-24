@@ -127,6 +127,7 @@
             <th>{{ $t('clients.pet.columnBpm') }}</th>
             <th>{{ $t('clients.pet.columnDuration') }}</th>
             <th>{{ $t('clients.pet.columnStatus') }}</th>
+            <th>{{ $t('clients.pet.columnComment') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -153,6 +154,14 @@
               <ProBadge :variant="s.isAlert ? 'danger' : 'success'">
                 {{ s.isAlert ? $t('clients.pet.alert') : $t('clients.pet.ok') }}
               </ProBadge>
+            </td>
+            <td>
+              <span
+                v-if="s.comment"
+                class="pro-pet-reading-comment"
+                :title="s.comment"
+              >{{ s.comment }}</span>
+              <span v-else class="text-muted">—</span>
             </td>
           </tr>
         </tbody>
@@ -835,6 +844,15 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.pro-pet-reading-comment {
+  display: inline-block;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .pro-table-row--alert {

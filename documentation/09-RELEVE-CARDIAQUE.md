@@ -8,8 +8,10 @@ La durée du relevé (**15 / 30 / 60 s**) est **définie par le vétérinaire** 
 
 1. **Prêt** — durée(s) proposées = `pet.heartrateDurationsSec` (cabinet) ; défaut UI = **plus longue** durée activée
 2. **En cours** — timer = durée choisie, tap à chaque battement
-3. **Résultat** — BPM + alerte seuil
+3. **Résultat** — BPM + alerte seuil + **commentaire optionnel** (max 500 car.)
 4. **Valider et envoyer au véto** ou **Recommencer**
+
+Le commentaire est stocké sur la session et visible côté Pro dans le tableau des relevés validés (et dans le corps de l’entrée timeline associée).
 
 ## Configuration Pro (véto)
 
@@ -27,7 +29,7 @@ Seuls les relevés **validated** sont visibles du véto.
 
 - `POST /api/v1/pets/{id}/heartrate/sessions` — body `{ "durationSec": N }` ; si omis → **max** des durées cabinet
 - `PATCH /api/v1/heartrate/sessions/{id}` (tapCount)
-- `POST /api/v1/heartrate/sessions/{id}/validate`
+- `POST /api/v1/heartrate/sessions/{id}/validate` — body optionnel `{ "comment": "…" }` (trim, max 500 runes)
 - `POST /api/v1/heartrate/sessions/{id}/cancel`
 
 ## BPM

@@ -689,13 +689,22 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, sess)
 }
 
+type validateHRReq struct {
+	Comment *string `json:"comment"`
+}
+
 func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	sess, err := a.store.ValidateHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID)
+	var req validateHRReq
+	if err := httpx.DecodeJSON(r, &req); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	sess, err := a.store.ValidateHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.Comment)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return

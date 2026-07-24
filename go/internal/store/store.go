@@ -5,12 +5,16 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
+
+// MaxHeartRateCommentLen is the max rune length stored on a validated session.
+const MaxHeartRateCommentLen = 500
 
 var (
 	ErrNotFound   = errors.New("not found")
@@ -75,12 +79,36 @@ type HeartRateSession struct {
 	EndedAt     *time.Time           `json:"endedAt,omitempty"`
 	ValidatedAt *time.Time           `json:"validatedAt,omitempty"`
 	VetSeenAt   *time.Time           `json:"vetSeenAt,omitempty"`
+	Comment     *string              `json:"comment,omitempty"`
 	IsNew       bool                 `json:"isNew"`
 }
 
 const heartRateSelectCols = `
 	id::text, pet_id::text, owner_user_id::text, practice_id::text, status, tap_count, duration_sec,
-	bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at`
+	bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at, comment`
+
+func heartRateScanDest(sess *HeartRateSession) []any {
+	return []any{
+		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status,
+		&sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert,
+		&sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt, &sess.Comment,
+	}
+}
+
+// NormalizeHeartRateComment trims, truncates to MaxHeartRateCommentLen, and returns nil when empty.
+func NormalizeHeartRateComment(raw *string) *string {
+	if raw == nil {
+		return nil
+	}
+	s := strings.TrimSpace(*raw)
+	if s == "" {
+		return nil
+	}
+	if utf8.RuneCountInString(s) > MaxHeartRateCommentLen {
+		s = string([]rune(s)[:MaxHeartRateCommentLen])
+	}
+	return &s
+}
 
 func decorateHeartRateSession(sess *HeartRateSession) {
 	sess.IsNew = sess.Status == kernel.SessionValidated && sess.VetSeenAt == nil
@@ -372,8 +400,7 @@ func (s *Store) GetHeartRateSession(ctx context.Context, sessionID, ownerID stri
 	err := s.pool.QueryRow(ctx, `
 		SELECT `+heartRateSelectCols+`
 		FROM heartrate.sessions WHERE id=$1 AND owner_user_id=$2`,
-		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
+		sessionID, ownerID).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
@@ -404,8 +431,7 @@ func (s *Store) CompleteHeartRateSession(ctx context.Context, sessionID, ownerID
 		UPDATE heartrate.sessions SET status=$2, tap_count=$3, bpm=$4, is_alert=$5, ended_at=NOW()
 		WHERE id=$1 AND owner_user_id=$6 AND status='in_progress'
 		RETURNING `+heartRateSelectCols,
-		sessionID, kernel.SessionPendingValidation, tapCount, bpmVal, isAlert, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
+		sessionID, kernel.SessionPendingValidation, tapCount, bpmVal, isAlert, ownerID).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
@@ -416,14 +442,15 @@ func (s *Store) CompleteHeartRateSession(ctx context.Context, sessionID, ownerID
 	return sess, nil
 }
 
-func (s *Store) ValidateHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {
+func (s *Store) ValidateHeartRateSession(ctx context.Context, sessionID, ownerID string, comment *string) (HeartRateSession, error) {
+	comment = NormalizeHeartRateComment(comment)
 	var sess HeartRateSession
 	err := s.pool.QueryRow(ctx, `
-		UPDATE heartrate.sessions SET status='validated', validated_at=NOW(), vet_seen_at=NULL
+		UPDATE heartrate.sessions
+		SET status='validated', validated_at=NOW(), vet_seen_at=NULL, comment=$3
 		WHERE id=$1 AND owner_user_id=$2 AND status='pending_validation'
 		RETURNING `+heartRateSelectCols,
-		sessionID, ownerID).Scan(
-		&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt)
+		sessionID, ownerID, comment).Scan(heartRateScanDest(&sess)...)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return HeartRateSession{}, ErrNotFound
 	}
@@ -464,7 +491,7 @@ func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView
 	var out []HeartRateSession
 	for rows.Next() {
 		var sess HeartRateSession
-		if err := rows.Scan(&sess.ID, &sess.PetID, &sess.OwnerUserID, &sess.PracticeID, &sess.Status, &sess.TapCount, &sess.DurationSec, &sess.BPM, &sess.IsAlert, &sess.StartedAt, &sess.EndedAt, &sess.ValidatedAt, &sess.VetSeenAt); err != nil {
+		if err := rows.Scan(heartRateScanDest(&sess)...); err != nil {
 			return nil, err
 		}
 		decorateHeartRateSession(&sess)
@@ -641,8 +668,14 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		visitBody = "''"
 	}
 	q := `
-		SELECT id::text, 'heartrate', 'Relevé cardiaque', CONCAT('BPM: ', COALESCE(bpm::text,'?')), started_at,
-			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert)
+		SELECT id::text, 'heartrate', 'Relevé cardiaque',
+			CASE
+				WHEN comment IS NOT NULL AND btrim(comment) <> ''
+					THEN CONCAT('BPM: ', COALESCE(bpm::text,'?'), ' — ', comment)
+				ELSE CONCAT('BPM: ', COALESCE(bpm::text,'?'))
+			END,
+			started_at,
+			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert, 'comment', comment)
 		FROM heartrate.sessions WHERE pet_id=$1` + hrFilter + `
 		UNION ALL
 		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb

@@ -397,6 +397,7 @@
       "columnBpm": "BPM",
       "columnDuration": "Kestus",
       "columnStatus": "Olek",
+      "columnComment": "Kommentaar",
       "chartTitle": "BPM trend",
       "chartRangeLabel": "Periood",
       "chartRange3m": "3 kuud",

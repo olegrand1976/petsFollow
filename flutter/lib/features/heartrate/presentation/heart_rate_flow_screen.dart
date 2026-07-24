@@ -35,6 +35,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   DateTime? lastTap;
   bool _sending = false;
   bool _completing = false;
+  final TextEditingController _commentController = TextEditingController();
 
   /// Practice-configured durations, ascending. Never invent options the vet did not enable.
   List<int> get _practiceDurations {
@@ -136,7 +137,11 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     if (sessionId == null || _sending) return;
     setState(() => _sending = true);
     try {
-      await ApiClient.instance.validateHeartRate(sessionId!);
+      final comment = _commentController.text.trim();
+      await ApiClient.instance.validateHeartRate(
+        sessionId!,
+        comment: comment.isEmpty ? null : comment,
+      );
       // Clear before pop/dispose so we don't cancel an already-validated session.
       sessionId = null;
     } catch (_) {
@@ -195,11 +200,13 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
       result = null;
       _completing = false;
       _sending = false;
+      _commentController.clear();
     });
   }
 
   @override
   void dispose() {
+    _commentController.dispose();
     // Avoid racing the periodic tick after leave; only needed while measuring.
     if (phase == HeartRatePhase.running) {
       timer?.cancel();
@@ -273,36 +280,52 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                   ),
                 ),
               ),
-            HeartRatePhase.review => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.bpmLabel('${result?['bpm'] ?? '?'}'),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  Text(l10n.beatsLabel(taps)),
-                  if (result?['isAlert'] == true)
-                    Text(l10n.thresholdAlert,
-                        style: const TextStyle(color: AppColors.alert)),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _sending ? null : validate,
-                    child: _sending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.bg,
-                            ),
-                          )
-                        : Text(l10n.validateAndSend),
-                  ),
-                  TextButton(
-                    onPressed: _sending ? null : restart,
-                    child: Text(l10n.restart),
-                  ),
-                ],
+            HeartRatePhase.review => SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.bpmLabel('${result?['bpm'] ?? '?'}'),
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    Text(l10n.beatsLabel(taps)),
+                    if (result?['isAlert'] == true)
+                      Text(l10n.thresholdAlert,
+                          style: const TextStyle(color: AppColors.alert)),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _commentController,
+                      enabled: !_sending,
+                      maxLength: 500,
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        labelText: l10n.heartRateCommentLabel,
+                        hintText: l10n.heartRateCommentHint,
+                        alignLabelWithHint: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _sending ? null : validate,
+                      child: _sending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.bg,
+                              ),
+                            )
+                          : Text(l10n.validateAndSend),
+                    ),
+                    TextButton(
+                      onPressed: _sending ? null : restart,
+                      child: Text(l10n.restart),
+                    ),
+                  ],
+                ),
               ),
           },
       ),

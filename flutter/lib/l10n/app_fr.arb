@@ -212,6 +212,8 @@
   "@beatsLabel": { "placeholders": { "count": { "type": "int" } } },
   "thresholdAlert": "Alerte seuil",
   "validateAndSend": "Valider et envoyer au véto",
+  "heartRateCommentLabel": "Commentaire (optionnel)",
+  "heartRateCommentHint": "Ex. agité, au repos, après effort…",
   "restart": "Recommencer",
   "sentToVet": "Relevé envoyé au véto",
   "navHome": "Accueil",

@@ -1304,6 +1304,18 @@ abstract class AppLocalizations {
   /// **'Valider et envoyer au véto'**
   String get validateAndSend;
 
+  /// No description provided for @heartRateCommentLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commentaire (optionnel)'**
+  String get heartRateCommentLabel;
+
+  /// No description provided for @heartRateCommentHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. agité, au repos, après effort…'**
+  String get heartRateCommentHint;
+
   /// No description provided for @restart.
   ///
   /// In fr, this message translates to:

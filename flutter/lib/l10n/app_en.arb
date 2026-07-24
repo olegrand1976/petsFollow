@@ -203,6 +203,8 @@
   "beatsLabel": "Beats: {count}",
   "thresholdAlert": "Threshold alert",
   "validateAndSend": "Validate and send to vet",
+  "heartRateCommentLabel": "Comment (optional)",
+  "heartRateCommentHint": "E.g. restless, at rest, after exercise…",
   "restart": "Start over",
   "sentToVet": "Reading sent to vet",
   "navHome": "Home",

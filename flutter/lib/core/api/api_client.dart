@@ -555,8 +555,15 @@ class ApiClient {
     return res.data['data'] as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> validateHeartRate(String sessionId) async {
-    final res = await dio.post('/api/v1/heartrate/sessions/$sessionId/validate');
+  Future<Map<String, dynamic>> validateHeartRate(
+    String sessionId, {
+    String? comment,
+  }) async {
+    final trimmed = comment?.trim();
+    final res = await dio.post(
+      '/api/v1/heartrate/sessions/$sessionId/validate',
+      data: (trimmed != null && trimmed.isNotEmpty) ? {'comment': trimmed} : null,
+    );
     return res.data['data'] as Map<String, dynamic>;
   }
 

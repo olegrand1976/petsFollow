@@ -661,6 +661,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get validateAndSend => 'Validar y enviar al veterinario';
 
   @override
+  String get heartRateCommentLabel => 'Comentario (opcional)';
+
+  @override
+  String get heartRateCommentHint =>
+      'Ej. agitado, en reposo, tras el esfuerzo…';
+
+  @override
   String get restart => 'Empezar de nuevo';
 
   @override

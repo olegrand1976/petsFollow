@@ -658,6 +658,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get validateAndSend => 'Valideren en naar dierenarts sturen';
 
   @override
+  String get heartRateCommentLabel => 'Opmerking (optioneel)';
+
+  @override
+  String get heartRateCommentHint => 'Bv. onrustig, in rust, na inspanning…';
+
+  @override
   String get restart => 'Opnieuw beginnen';
 
   @override

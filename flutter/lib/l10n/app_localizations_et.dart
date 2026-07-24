@@ -659,6 +659,13 @@ class AppLocalizationsEt extends AppLocalizations {
   String get validateAndSend => 'Kinnita ja saada loomaarstile';
 
   @override
+  String get heartRateCommentLabel => 'Kommentaar (valikuline)';
+
+  @override
+  String get heartRateCommentHint =>
+      'Nt rahutu, puhkeolekus, pärast pingutust…';
+
+  @override
   String get restart => 'Alusta uuesti';
 
   @override

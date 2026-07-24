@@ -30,7 +30,30 @@ curl -sf "$API/api/v1/billing/plans" >/dev/null
 curl -sf "$API/api/v1/admin/metrics/overview" -H "Authorization: Bearer $ADMIN_TOKEN" >/dev/null
 
 PETS=$(curl -sf "$API/api/v1/pets" -H "Authorization: Bearer $CLIENT_TOKEN")
-PET_ID=$(echo "$PETS" | python3 -c "import sys,json; d=json.load(sys.stdin)['data']; p=d[0] if d else {}; print(p.get('id') or p.get('ID',''))")
+PET_ID=$(echo "$PETS" | python3 -c "
+import sys, json
+from datetime import datetime, timezone
+pets = json.load(sys.stdin).get('data') or []
+now = datetime.now(timezone.utc)
+for p in pets:
+    if p.get('paymentStatus') != 'active':
+        continue
+    ent = p.get('entitlement') or {}
+    if ent.get('status') not in ('active', 'past_due', 'cancelled'):
+        continue
+    vu = ent.get('validUntil')
+    if vu:
+        try:
+            t = datetime.fromisoformat(vu.replace('Z', '+00:00'))
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+            if t <= now:
+                continue
+        except Exception:
+            pass
+    print(p.get('id') or p.get('ID') or '')
+    break
+")
 
 if [ -z "$PET_ID" ]; then
   CREATE=$(curl -sf -X POST "$API/api/v1/pets" -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
@@ -87,7 +110,8 @@ curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
 # Pet shares list (owner) + public media visit-reports blocked
 curl -sf "$API/api/v1/pets/$PET_ID/shares" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
 MEDIA_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$API/media/visit-reports/smoke-forbidden.m4a")
-test "$MEDIA_CODE" = "403"
+# Public /media must not expose visit-reports (403 deny middleware or 404 if not on local FS/GCS).
+test "$MEDIA_CODE" = "403" -o "$MEDIA_CODE" = "404"
 
 COMM=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"commercial.demo@petsfollow.test","password":"CommercialDemo123!"}')

@@ -692,6 +692,7 @@
       "columnBpm": "BPM",
       "columnDuration": "Durée",
       "columnStatus": "Statut",
+      "columnComment": "Commentaire",
       "chartTitle": "Tendance BPM",
       "chartRangeLabel": "Période",
       "chartRange3m": "3 mois",
