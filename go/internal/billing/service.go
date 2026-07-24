@@ -65,13 +65,13 @@ func (s *Service) ListPlansForLocale(locale string) []PlanOffer {
 }
 
 type StartCheckoutInput struct {
-	PetID         string
-	OwnerUserID   string
-	OwnerEmail    string
-	PlanCode      PlanCode
-	BillingMode   BillingMode
-	SuccessURL    string
-	CancelURL     string
+	PetID       string
+	OwnerUserID string
+	OwnerEmail  string
+	PlanCode    PlanCode
+	BillingMode BillingMode
+	SuccessURL  string
+	CancelURL   string
 }
 
 func (s *Service) StartCheckout(ctx context.Context, in StartCheckoutInput) (CheckoutSession, error) {
@@ -85,7 +85,10 @@ func (s *Service) StartCheckout(ctx context.Context, in StartCheckoutInput) (Che
 	if !SupportsBillingMode(in.PlanCode, mode) {
 		return CheckoutSession{}, fmt.Errorf("%w: %s/%s", ErrInvalidBillingMode, in.PlanCode, mode)
 	}
-	priceID := s.priceID(in.PlanCode, mode)
+	priceID, err := s.priceID(ctx, in.PlanCode, mode)
+	if err != nil {
+		return CheckoutSession{}, err
+	}
 	if priceID == "" && !s.cfg.BillingMockEnabled {
 		return CheckoutSession{}, fmt.Errorf("missing stripe price for %s/%s", in.PlanCode, mode)
 	}
@@ -213,11 +216,11 @@ func (s *Service) HandleWebhook(ctx context.Context, payload []byte, signature s
 
 func (s *Service) MockCompleteCheckout(ctx context.Context, petID, ownerUserID, planCode, billingMode, sessionID string) error {
 	payload, sig, err := BuildTestWebhookPayload(s.cfg.StripeWebhookSecret, "checkout.session.completed", map[string]any{
-		"id":                sessionID,
-		"payment_status":    "paid",
-		"customer":          "cus_mock_" + ownerUserID,
-		"subscription":      nil,
-		"payment_intent":    "pi_mock_" + petID,
+		"id":             sessionID,
+		"payment_status": "paid",
+		"customer":       "cus_mock_" + ownerUserID,
+		"subscription":   nil,
+		"payment_intent": "pi_mock_" + petID,
 		"metadata": map[string]any{
 			"pet_id":        petID,
 			"owner_user_id": ownerUserID,
@@ -581,22 +584,29 @@ func (s *Service) PetHasPremiumAccess(ctx context.Context, petID string) (bool, 
 	return s.store.HasActiveEntitlement(ctx, petID)
 }
 
-func (s *Service) priceID(plan PlanCode, mode BillingMode) string {
+func (s *Service) priceID(ctx context.Context, plan PlanCode, mode BillingMode) (string, error) {
+	id, err := s.store.GetStripePriceID(ctx, string(plan), string(mode))
+	if err != nil {
+		return "", err
+	}
+	if id != "" {
+		return id, nil
+	}
 	switch {
 	case plan == PlanMonthly && mode == ModeSubscription:
-		return s.cfg.StripePriceMonthlySub
+		return s.cfg.StripePriceMonthlySub, nil
 	case plan == PlanAnnual && mode == ModeOneTime:
-		return s.cfg.StripePriceAnnualOnetime
+		return s.cfg.StripePriceAnnualOnetime, nil
 	case plan == PlanTriennial && mode == ModeOneTime:
-		return s.cfg.StripePriceTriennialOnetime
+		return s.cfg.StripePriceTriennialOnetime, nil
 	case plan == PlanQuinquennial && mode == ModeOneTime:
-		return s.cfg.StripePriceQuinquennialOnetime
+		return s.cfg.StripePriceQuinquennialOnetime, nil
 	case plan == PlanAnnual && mode == ModeSubscription:
-		return s.cfg.StripePriceAnnualSub
+		return s.cfg.StripePriceAnnualSub, nil
 	case plan == PlanTriennial && mode == ModeSubscription:
-		return s.cfg.StripePriceTriennialSub
+		return s.cfg.StripePriceTriennialSub, nil
 	default:
-		return ""
+		return "", nil
 	}
 }
 

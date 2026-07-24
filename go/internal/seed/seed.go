@@ -74,6 +74,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedCarePros(ctx, pool); err != nil {
 		return err
 	}
+	if err := seedStripeCatalog(ctx, st); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
@@ -169,6 +172,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		billing.payout_lines, billing.payout_runs, billing.commission_ledger, billing.commission_tiers,
 		billing.commission_settings,
 		billing.stripe_events, billing.pet_entitlements, billing.stripe_customers,
+		billing.stripe_prices, billing.stripe_products,
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
 		discovery.email_sends, discovery.email_journey, discovery.progress,
@@ -257,7 +261,7 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string) error {
 	prospects := []struct {
 		practiceName, contactName, contactEmail, contactPhone, city, notes, status string
-		ageDays                                                                     int
+		ageDays                                                                    int
 	}{
 		{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
 		{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},

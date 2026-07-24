@@ -27,6 +27,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users' },
   { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests' },
   { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments' },
+  { to: '/admin/stripe-catalog', label: t('nav.adminStripeCatalog'), icon: 'payments' },
   { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments' },
   { to: '/admin/commercial-commissions', label: t('nav.adminCommercialCommissions'), icon: 'payments' },
   { to: '/admin/commercial-bonuses', label: t('nav.adminCommercialBonuses'), icon: 'payments' },

@@ -24,6 +24,7 @@ Modes : `one_time` (Checkout `payment`) ou `subscription` (Checkout `subscriptio
 ```env
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+# Fallback si pas de mapping actif en DB (billing.stripe_prices) :
 STRIPE_PRICE_MONTHLY_SUB=price_...
 STRIPE_PRICE_ANNUAL_ONETIME=price_...
 STRIPE_PRICE_TRIENNIAL_ONETIME=price_...
@@ -62,9 +63,31 @@ Sans clé Stripe, `BILLING_MOCK_ENABLED=true` : le `checkoutUrl` pointe vers
 - `GET /admin/metrics/overview` — CA, MRR, conversion
 - `GET /admin/users` — inscriptions
 - `GET /admin/payments` — paiements reçus
+- `GET /admin/stripe-catalog` — catalogue produits/prix Stripe (DB)
+- `POST /admin/stripe-catalog/import` — import CSV Dashboard (`kind=products|prices`, multipart `file`) — upsert
 
 Compte seed : `admin.demo@petsfollow.test` / `AdminDemo123!`
 
+### Catalogue Stripe (DB)
+
+Tables `billing.stripe_products` / `billing.stripe_prices` (migration `000046`, **schéma seul** — pas d’IDs Stripe dans la migration).
+
+Le checkout résout le Price ID ainsi :
+
+1. Price **active** mappée `(plan_code, billing_mode)` en DB
+2. Sinon fallback env `STRIPE_PRICE_*` (Secret Manager)
+3. Erreur DB catalogue → checkout échoue (pas de fallback silencieux)
+
+**Charger le catalogue :**
+
+| Environnement | Méthode |
+|---------------|---------|
+| Local / démo | `make seed` (upsert IDs de référence dans `store.UpsertDefaultStripeCatalog`) |
+| Staging / Live | Admin UI `/admin/stripe-catalog` — import CSV Dashboard (`products.csv` puis `prices.csv`) |
+
+Import admin : montants EU (`3,50`) acceptés ; entier sans décimale = cents (style `unit_amount`). Mapping plan/mode inféré depuis intervalle Stripe ou nom produit.
+
+Montants commerciaux (`domain.go`) restent la source d’offre / commissions ; le Price Stripe détermine le débit hors remise foyer.
 ---
 
 ## Mise en production (checklist)
