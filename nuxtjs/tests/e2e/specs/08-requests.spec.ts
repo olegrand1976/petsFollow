@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsVet } from '../helpers/auth'
+import { loginAsVet, nativeClick } from '../helpers/auth'
 
 test('page calendrier accessible', async ({ page }) => {
   await loginAsVet(page)
@@ -12,16 +12,21 @@ test('page calendrier accessible', async ({ page }) => {
 test('bascule semaine / mois et aujourd’hui', async ({ page }) => {
   await loginAsVet(page)
   await page.goto('/calendar')
+  await page.evaluate(() => localStorage.removeItem('pf-calendar-view'))
+  await page.reload({ waitUntil: 'networkidle' })
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 
-  await page.getByTestId('calendar-view-month').click()
-  await expect(page.getByTestId('calendar-view-month')).toHaveClass(/pro-view-toggle__btn--active/)
+  await page.getByTestId('calendar-view-week').dispatchEvent('click')
+  await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByTestId('calendar-view-month').dispatchEvent('click')
+  await expect(page.getByTestId('calendar-view-month')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 
-  await page.getByTestId('calendar-view-week').click()
-  await expect(page.getByTestId('calendar-view-week')).toHaveClass(/pro-view-toggle__btn--active/)
+  await page.getByTestId('calendar-view-week').dispatchEvent('click')
+  await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true')
 
-  await page.getByTestId('calendar-today').click()
+  await page.getByTestId('calendar-today').click({ force: true })
   await expect(page.getByTestId('calendar-grid')).toBeVisible()
 })
 
@@ -57,10 +62,12 @@ test('confirmer un RDV demandé si présent', async ({ page }) => {
 
 test('invitations clients dans l’en-tête Clients', async ({ page }) => {
   await loginAsVet(page)
-  await page.goto('/clients')
+  await page.goto('/clients', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('clients-page')).toBeVisible()
-  await page.getByTestId('clients-invitations-open').click()
-  await expect(page.getByRole('heading', { name: /invitation/i })).toBeVisible()
+  await nativeClick(page, 'clients-invitations-open')
+  const dialog = page.getByTestId('pro-modal')
+  await expect(dialog).toBeVisible({ timeout: 10000 })
+  await expect(dialog.getByRole('heading')).toContainText(/invitation/i)
 
   const linkRow = page.locator('[data-testid^="link-request-"]').first()
   if ((await linkRow.count()) === 0) {

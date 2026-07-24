@@ -10,7 +10,7 @@
         type="button"
         class="pro-card pro-card--interactive pf-audience-card"
         data-testid="commercial-card-vet"
-        @click="panel = 'vet'"
+        @click="openVetPanel"
       >
         <ProIcon name="medical_services" :size="36" />
         <strong>{{ $t('commercial.vets.cardTitle') }}</strong>
@@ -148,6 +148,11 @@ const clientForm = reactive({ vetUserId: '', fullName: '', email: '', password: 
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
+
+function openVetPanel() {
+  formError.value = ''
+  panel.value = 'vet'
+}
 
 function openClientPanel(mode: ClientMode) {
   clientMode.value = mode

@@ -4,9 +4,9 @@
     <ProCard class="pro-mb-lg" data-testid="admin-create-commercial">
       <h3 class="pro-mb-md">{{ $t('admin.users.createCommercial') }}</h3>
       <form class="pro-form" @submit.prevent="createCommercial">
-        <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" :label="$t('admin.users.commercialName')" required />
-        <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" :label="$t('admin.users.commercialEmail')" required />
-        <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" :label="$t('admin.users.commercialPassword')" required />
+        <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" autocomplete="off" :label="$t('admin.users.commercialName')" required />
+        <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" autocomplete="off" :label="$t('admin.users.commercialEmail')" required />
+        <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" autocomplete="new-password" :label="$t('admin.users.commercialPassword')" required />
         <div class="pro-field">
           <label class="pro-label" for="admin-commercial-role">{{ $t('admin.users.commercialRole') }}</label>
           <select id="admin-commercial-role" v-model="cForm.role" class="pro-select" data-testid="admin-commercial-role">

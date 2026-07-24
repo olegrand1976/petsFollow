@@ -159,6 +159,7 @@
               <span
                 v-if="s.comment"
                 class="pro-pet-reading-comment"
+                data-testid="pet-reading-comment"
                 :title="s.comment"
               >{{ s.comment }}</span>
               <span v-else class="text-muted">—</span>

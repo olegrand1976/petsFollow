@@ -6,7 +6,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -62,12 +61,6 @@ func TestAdminStripeCatalogImportErrors(t *testing.T) {
 	code, env := doAuthMultipart(t, api.handler, "/api/v1/admin/stripe-catalog/import", adminTok, "", "x.csv", "a,b\n")
 	if code != http.StatusBadRequest || errCode(env) != "bad_request" {
 		t.Fatalf("kind_required: got %d %#v", code, env)
-	}
-	if msg, _ := env["error"].(map[string]any)["message"].(string); !strings.Contains(strings.ToLower(msg), "kind") && msg != "errors.kind_required" {
-		// Accept localized or raw key for kind_required.
-		if !strings.Contains(msg, "kind_required") && !strings.Contains(strings.ToLower(msg), "kind") {
-			t.Logf("kind_required message=%q (status OK)", msg)
-		}
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/stripe-catalog/import?kind=products", adminTok, nil)

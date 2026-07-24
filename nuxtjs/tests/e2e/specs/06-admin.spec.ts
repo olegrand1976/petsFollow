@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin, loginAsCommercial, uniqueE2EEmail, fillField } from '../helpers/auth'
+import { loginAsAdmin, loginAsCommercial, uniqueE2EEmail, fillField, nativeClick } from '../helpers/auth'
 
 test('admin accède au tableau de bord', async ({ page }) => {
   await loginAsAdmin(page)
@@ -10,19 +10,22 @@ test('admin accède au tableau de bord', async ({ page }) => {
 
 test('admin crée un commercial', async ({ page }) => {
   await loginAsAdmin(page)
-  await page.goto('/admin/users')
+  await page.goto('/admin/users', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('admin-create-commercial')).toBeVisible()
   const email = uniqueE2EEmail('pw-commercial')
-  await fillField(page, 'admin-commercial-name', 'E2E Commercial')
+  // Remplir le nom en dernier : le fill password peut vider le champ name (autofill navigateur).
   await fillField(page, 'admin-commercial-email', email)
   await fillField(page, 'admin-commercial-password', 'CommercialDemo123!')
-  const [res] = await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/api/admin/commercials') && r.request().method() === 'POST', {
-      timeout: 20000,
-    }),
-    page.getByTestId('admin-commercial-submit').click(),
+  await fillField(page, 'admin-commercial-name', 'E2E Commercial')
+  await expect(page.getByTestId('admin-commercial-name')).toHaveValue('E2E Commercial')
+  await Promise.all([
+    page.waitForResponse(
+      (r) => r.request().method() === 'POST' && /\/api\/admin\/commercials\/?$/.test(new URL(r.url()).pathname),
+      { timeout: 20000 },
+    ),
+    nativeClick(page, 'admin-commercial-submit'),
   ])
-  expect(res.ok()).toBeTruthy()
+  await expect(page.getByTestId('admin-commercial-msg')).toBeVisible({ timeout: 15000 })
 })
 
 test('admin voit commercials et prospects', async ({ page }) => {
@@ -30,6 +33,7 @@ test('admin voit commercials et prospects', async ({ page }) => {
   await page.goto('/admin/commercials')
   await expect(page.getByTestId('admin-commercials-page')).toBeVisible()
   await expect(page.getByTestId('admin-assign-vet')).toBeVisible()
+  await expect(page.getByTestId('admin-assign-vet-select')).toBeVisible()
   await page.goto('/admin/prospects')
   await expect(page.getByTestId('admin-prospects-page')).toBeVisible()
 })

@@ -48,7 +48,19 @@ test.describe('auth — login / logout', () => {
   })
 
   test('login email non vérifié', async ({ page }) => {
-    const { status } = await login(page, 'vet.unverified@petsfollow.test', 'VetDemo123!')
+    // Ne pas dépendre de vet.unverified@ (confirm demo-confirm-email le vérifie).
+    const email = uniqueE2EEmail('unverified-login')
+    const password = 'E2ePass123!'
+    const { status: regStatus } = await registerVet(page, {
+      fullName: 'Dr Unverified Login',
+      practiceName: 'Cabinet Unverified',
+      email,
+      password,
+    })
+    expect(regStatus === 200 || regStatus === 201).toBeTruthy()
+    await expect(page).toHaveURL(/register\/sent/, { timeout: 15000 })
+
+    const { status } = await login(page, email, password)
     expect(status === 403 || status === 401).toBeTruthy()
     await expect(page.getByTestId('login-form')).toBeVisible()
     await expect(page.locator('[data-testid="login-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })

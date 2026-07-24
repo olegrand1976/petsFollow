@@ -55,7 +55,7 @@
             id="assign-vet"
             v-model="assignForm.vetUserId"
             class="pro-select"
-            data-testid="admin-assign-vet"
+            data-testid="admin-assign-vet-select"
             required
           >
             <option value="" disabled>{{ $t('admin.commercials.assignVetPlaceholder') }}</option>

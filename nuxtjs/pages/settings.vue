@@ -191,14 +191,14 @@
           class="pro-toggle-btn"
           :class="{ 'pro-toggle-btn--active': selectedLocale === loc }"
           :data-testid="`settings-locale-${loc}`"
-          @click="selectedLocale = loc"
+          @click="selectLocale(loc)"
         >
           {{ $t(`settings.language.${loc}`) }}
         </button>
       </div>
       <p v-if="localeSaved" class="text-muted" role="status">{{ $t('settings.language.saved') }}</p>
       <p v-if="localeError" class="pro-field-error" role="alert">{{ localeError }}</p>
-      <ProButton class="pro-save-btn" :loading="localeSaving" @click="saveLocale">
+      <ProButton class="pro-save-btn" :loading="localeSaving" test-id="settings-locale-save" @click="saveLocale">
         {{ $t('common.save') }}
       </ProButton>
     </ProCard>
@@ -596,6 +596,12 @@ async function saveLocale() {
   } finally {
     localeSaving.value = false
   }
+}
+
+function selectLocale(loc: AppLocale) {
+  selectedLocale.value = loc
+  localeSaved.value = false
+  localeError.value = ''
 }
 
 async function start2FASetup() {

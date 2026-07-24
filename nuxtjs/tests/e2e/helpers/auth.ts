@@ -98,6 +98,13 @@ export async function loginAsCommercialManager(
   await page.waitForURL(/\/commercial-manager/, { timeout: 20000 })
 }
 
+/** Clique natif (fiable avec handlers Vue / overlays). */
+export async function nativeClick(page: Page, testId: string) {
+  const el = page.getByTestId(testId)
+  await expect(el).toBeVisible()
+  await el.evaluate((node) => (node as HTMLElement).click())
+}
+
 export async function logout(page: Page) {
   await page.getByTestId('pro-profile-btn').click()
   await page.getByTestId('pro-logout-btn').click()

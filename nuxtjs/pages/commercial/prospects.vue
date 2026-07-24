@@ -12,7 +12,7 @@
         type="button"
         class="pf-collapse-toggle"
         data-testid="prospect-create-toggle"
-        @click="showCreate = !showCreate"
+        @click="toggleCreate"
       >
         <strong>{{ $t('commercial.prospects.create') }}</strong>
         <span>{{ showCreate ? '−' : '+' }}</span>
@@ -175,6 +175,9 @@ const actionError = ref('')
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
 
+function toggleCreate() {
+  showCreate.value = !showCreate.value
+}
 const form = reactive({
   practiceName: '',
   contactName: '',

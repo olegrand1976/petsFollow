@@ -75,7 +75,18 @@ curl -sf -X PATCH "$API/api/v1/heartrate/sessions/$SESS_ID" \
   -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
   -d '{"tapCount":60}' >/dev/null
 curl -sf -X POST "$API/api/v1/heartrate/sessions/$SESS_ID/validate" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
+  -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"comment":"smoke hr comment"}' >/dev/null
+
+SESSIONS=$(curl -sf "$API/api/v1/pets/$PET_ID/heartrate/sessions" -H "Authorization: Bearer $CLIENT_TOKEN")
+SESS_ID="$SESS_ID" python3 -c '
+import json, os, sys
+sess_id = os.environ["SESS_ID"]
+rows = json.load(sys.stdin).get("data") or []
+found = any((s.get("id") or s.get("ID")) == sess_id and (s.get("comment") or "") == "smoke hr comment" for s in rows)
+if not found:
+    raise SystemExit("heartrate comment missing after validate")
+' <<<"$SESSIONS"
 
 curl -sf "$API/api/v1/pets/$PET_ID/timeline" -H "Authorization: Bearer $CLIENT_TOKEN" >/dev/null
 

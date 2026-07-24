@@ -88,6 +88,7 @@
             type="button"
             class="pro-view-toggle__btn"
             :class="{ 'pro-view-toggle__btn--active': viewMode === 'week' }"
+            :aria-pressed="viewMode === 'week'"
             data-testid="calendar-view-week"
             @click="setView('week')"
           >
@@ -97,6 +98,7 @@
             type="button"
             class="pro-view-toggle__btn"
             :class="{ 'pro-view-toggle__btn--active': viewMode === 'month' }"
+            :aria-pressed="viewMode === 'month'"
             data-testid="calendar-view-month"
             @click="setView('month')"
           >
@@ -402,7 +404,7 @@ const todayVisitCount = ref(0)
 function setView(mode: CalendarViewMode) {
   viewMode.value = mode
   if (import.meta.client) localStorage.setItem('pf-calendar-view', mode)
-  load()
+  void load()
 }
 
 function shiftPeriod(delta: number) {
