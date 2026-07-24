@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -12,10 +13,17 @@ import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.d
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetTimelineScreen extends StatefulWidget {
-  const PetTimelineScreen({super.key, required this.petId, this.petName});
+  const PetTimelineScreen({
+    super.key,
+    required this.petId,
+    this.petName,
+    this.canWriteNotes,
+  });
 
   final String petId;
   final String? petName;
+  /// When null, resolved from [ApiClient.getPet] on load.
+  final bool? canWriteNotes;
 
   @override
   State<PetTimelineScreen> createState() => _PetTimelineScreenState();
@@ -28,6 +36,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   bool loading = true;
   String? loadError;
   bool _hasLoadedOnce = false;
+  bool _canWriteNotes = false;
 
   @override
   void initState() {
@@ -47,11 +56,30 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       });
     }
     try {
+      var canWrite = widget.canWriteNotes ?? false;
+      if (widget.canWriteNotes == null) {
+        try {
+          final raw = await ApiClient.instance.getPet(widget.petId);
+          canWrite = Pet.fromJson(Map<String, dynamic>.from(raw)).canWriteNotes;
+        } catch (_) {
+          try {
+            final list = await ApiClient.instance.getPets();
+            for (final row in list) {
+              final map = Map<String, dynamic>.from(row as Map);
+              if (map['id']?.toString() == widget.petId) {
+                canWrite = Pet.fromJson(map).canWriteNotes;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+      }
       final data = await ApiClient.instance.getTimeline(widget.petId);
       final sessions = await ApiClient.instance.getHeartRateSessions(widget.petId);
       final visitData = await ApiClient.instance.getVisits(widget.petId);
       if (mounted) {
         setState(() {
+          _canWriteNotes = canWrite;
           items = data
               .map((e) => Map<String, dynamic>.from(e as Map))
               .toList();
@@ -72,11 +100,17 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
         });
       }
       // Best-effort: never block / fail the timeline UI.
-      await NotificationService.instance.scheduleVisits(
-        visitData,
-        visitLabel: l10n.upcomingVisit,
-        petName: widget.petName,
-      );
+      if (canWrite) {
+        await NotificationService.instance.scheduleVisits(
+          visitData,
+          visitLabel: l10n.upcomingVisit,
+          petName: widget.petName,
+        );
+      } else {
+        await NotificationService.instance.cancelVisitReminders(
+          visitData.map((v) => v.id),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       final msg = mapApiError(e, l10n);
@@ -258,37 +292,38 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                   ].join(' · '),
                                 ),
                               ),
-                              Wrap(
-                                alignment: WrapAlignment.end,
-                                children: [
-                                  if (v.status == 'requested' && !v.awaitingClient)
-                                    TextButton(
-                                      onPressed: () => _cancelVisit(v),
-                                      child: Text(l10n.visitCancelAction),
-                                    ),
-                                  if ((v.status == 'requested' || v.status == 'confirmed') &&
-                                      !v.awaitingClient)
-                                    TextButton(
-                                      onPressed: () => _proposeReschedule(v),
-                                      child: Text(l10n.visitProposeReschedule),
-                                    ),
-                                  if (v.awaitingClient && v.status == 'requested')
-                                    TextButton(
-                                      onPressed: () => _visitAction(v, 'confirm'),
-                                      child: Text(l10n.visitConfirm),
-                                    ),
-                                  if (v.awaitingClient && v.status == 'reschedule_pending') ...[
-                                    TextButton(
-                                      onPressed: () => _visitAction(v, 'accept_reschedule'),
-                                      child: Text(l10n.visitAcceptReschedule),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => _visitAction(v, 'reject_reschedule'),
-                                      child: Text(l10n.visitRejectReschedule),
-                                    ),
+                              if (_canWriteNotes)
+                                Wrap(
+                                  alignment: WrapAlignment.end,
+                                  children: [
+                                    if (v.status == 'requested' && !v.awaitingClient)
+                                      TextButton(
+                                        onPressed: () => _cancelVisit(v),
+                                        child: Text(l10n.visitCancelAction),
+                                      ),
+                                    if ((v.status == 'requested' || v.status == 'confirmed') &&
+                                        !v.awaitingClient)
+                                      TextButton(
+                                        onPressed: () => _proposeReschedule(v),
+                                        child: Text(l10n.visitProposeReschedule),
+                                      ),
+                                    if (v.awaitingClient && v.status == 'requested')
+                                      TextButton(
+                                        onPressed: () => _visitAction(v, 'confirm'),
+                                        child: Text(l10n.visitConfirm),
+                                      ),
+                                    if (v.awaitingClient && v.status == 'reschedule_pending') ...[
+                                      TextButton(
+                                        onPressed: () => _visitAction(v, 'accept_reschedule'),
+                                        child: Text(l10n.visitAcceptReschedule),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => _visitAction(v, 'reject_reschedule'),
+                                        child: Text(l10n.visitRejectReschedule),
+                                      ),
+                                    ],
                                   ],
-                                ],
-                              ),
+                                ),
                             ],
                           ),
                         ),

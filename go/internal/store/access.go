@@ -225,6 +225,18 @@ func (s *Store) GrantClientAccess(ctx context.Context, clientUserID, granteeUser
 	if permission == "" {
 		permission = string(PermWriteNotes)
 	}
+	if !ValidAccessPermission(permission) {
+		return AccessGrant{}, ErrValidation
+	}
+	// Never downgrade an existing grant (e.g. full → write_notes on re-claim).
+	var existing string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT permission FROM practice.client_access
+		WHERE client_user_id=$1 AND grantee_user_id=$2`,
+		clientUserID, granteeUserID).Scan(&existing)
+	if existing != "" {
+		permission = string(maxPermission(AccessPermission(existing), AccessPermission(permission)))
+	}
 	id := uuid.NewString()
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.client_access (id, client_user_id, grantee_user_id, permission, granted_by_user_id, expires_at)
@@ -232,7 +244,7 @@ func (s *Store) GrantClientAccess(ctx context.Context, clientUserID, granteeUser
 		ON CONFLICT (client_user_id, grantee_user_id) DO UPDATE
 			SET permission = EXCLUDED.permission,
 				granted_by_user_id = EXCLUDED.granted_by_user_id,
-				expires_at = EXCLUDED.expires_at`,
+				expires_at = COALESCE(practice.client_access.expires_at, EXCLUDED.expires_at)`,
 		id, clientUserID, granteeUserID, permission, grantedBy, expiresAt)
 	if err != nil {
 		return AccessGrant{}, err

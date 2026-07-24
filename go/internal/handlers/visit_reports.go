@@ -22,6 +22,7 @@ type visitLocationReq struct {
 	AddressText string   `json:"addressText"`
 	Lat         *float64 `json:"lat"`
 	Lng         *float64 `json:"lng"`
+	ClearCoords bool     `json:"clearCoords"`
 }
 
 type visitReportBodyReq struct {
@@ -48,7 +49,9 @@ func (a *API) updateVisitLocation(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	updated, err := a.store.UpdateVisitLocation(r.Context(), visitID, strings.TrimSpace(req.AddressText), req.Lat, req.Lng)
+	updated, err := a.store.UpdateVisitLocation(
+		r.Context(), visitID, strings.TrimSpace(req.AddressText), req.Lat, req.Lng, req.ClearCoords,
+	)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

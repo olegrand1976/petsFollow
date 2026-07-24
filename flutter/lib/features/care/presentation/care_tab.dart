@@ -63,8 +63,15 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
           final reminders = await ApiClient.instance.getCareReminders(pet.id);
           map[pet.id] = reminders.where((r) => !r.isDone).toList();
           // Local notification failures must not wipe the care list.
+          // Read-only shared pets: never schedule (cancel leftovers).
           try {
-            await NotificationService.instance.scheduleCareReminders(reminders, petName: pet.name);
+            if (pet.canWriteNotes) {
+              await NotificationService.instance.scheduleCareReminders(reminders, petName: pet.name);
+            } else {
+              for (final r in reminders) {
+                await NotificationService.instance.cancelCareReminder(r.id);
+              }
+            }
           } catch (_) {}
         } catch (_) {
           map[pet.id] = [];

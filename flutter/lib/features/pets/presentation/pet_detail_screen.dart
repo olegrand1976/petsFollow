@@ -184,12 +184,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
 
   Future<void> _requestVisit() async {
     final l10n = AppLocalizations.of(context)!;
-    var practiceId = pet.practiceId;
-    if (practiceId == null || practiceId.isEmpty) {
-      final primary = vets.where((v) => v.isPrimary).firstOrNull ?? vets.firstOrNull;
-      practiceId = primary?.practiceId;
-    }
-    if (practiceId == null || practiceId.isEmpty) {
+    if (vets.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
       await Navigator.push(
@@ -199,13 +194,23 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
       if (mounted) await _loadVets();
       return;
     }
+    final filter = pet.practiceId?.trim();
+    final filtered = (filter != null && filter.isNotEmpty)
+        ? vets.where((v) => v.practiceId == filter).toList()
+        : vets;
+    if (filtered.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
+      return;
+    }
     final booked = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => BookVisitScreen(
           petId: pet.id,
           petName: pet.name,
-          practiceId: practiceId!,
+          practiceIdFilter: filter,
+          initialVets: filtered,
         ),
       ),
     );
@@ -303,7 +308,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             label: l10n.visitHistory,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => PetTimelineScreen(petId: pet.id, petName: pet.name)),
+              MaterialPageRoute(
+                builder: (_) => PetTimelineScreen(
+                  petId: pet.id,
+                  petName: pet.name,
+                  canWriteNotes: pet.canWriteNotes,
+                ),
+              ),
             ),
           ),
           if (pet.isOwner) ...[

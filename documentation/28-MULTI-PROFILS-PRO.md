@@ -52,7 +52,13 @@ Tabs : Agenda · Clients · (drill-down animal / docs / CR) · Settings.
 ## Agenda GPS
 
 Colonnes visite : `address_text`, `lat`, `lng` — ouverture Maps côté mobile / lien calendrier web.
+`PATCH /visits/{id}/location` : `clearCoords` pour invalider lat/lng si l’adresse change sans nouveau GPS.
 `PATCH /visits/{id}` (confirm / cancel / done / notes) : seuil **`write_notes`** pour client grantee et `care_pro` (aligné CR / GPS). `confirmDirect` à la création exige `full` hors véto cabinet.
+Tournées (Vague O) : agenda Flutter pro light — filtres **Aujourd’hui** / **7 jours** / **Tout** (tri ASC sur les fenêtres courtes ; date = `proposedScheduledAt || scheduledAt` ; hors `done`/`cancelled`) ; bouton **Fait** si `confirmed` + `write_notes` ; Nuxt calendrier — badge « Aujourd’hui » via fetch dédié (indépendant de la plage affichée).
+
+## Statut
+
+Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
 
 ## CR visite + IA
 

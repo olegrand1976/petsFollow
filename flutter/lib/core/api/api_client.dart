@@ -10,6 +10,7 @@ import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
+import 'package:petsfollow_mobile/core/models/practice_availability.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -201,6 +202,45 @@ class ApiClient {
     return data is List ? data : [];
   }
 
+  Future<List<dynamic>> listVetVisits() async {
+    final res = await dio.get('/api/v1/vet/visits');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<List<dynamic>> listVetClients() async {
+    final res = await dio.get('/api/v1/clients');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<List<dynamic>> listVetPets() async {
+    final res = await dio.get('/api/v1/vet/pets');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  Future<Map<String, dynamic>> getMyAppInvite() async {
+    final res = await dio.get('/api/v1/me/app-invite');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<({List<dynamic> visits, List<dynamic> clients, List<dynamic> pets})>
+      loadProTerrainLists() async {
+    if (userRole == 'vet') {
+      return (
+        visits: await listVetVisits(),
+        clients: await listVetClients(),
+        pets: await listVetPets(),
+      );
+    }
+    return (
+      visits: await listCareProVisits(),
+      clients: await listCareProClients(),
+      pets: await listCareProPets(),
+    );
+  }
+
   Future<Map<String, dynamic>> getVisitReport(String visitId) async {
     final res = await dio.get('/api/v1/visits/$visitId/report');
     return Map<String, dynamic>.from(res.data['data'] as Map);
@@ -234,11 +274,13 @@ class ApiClient {
     String addressText, {
     double? lat,
     double? lng,
+    bool clearCoords = false,
   }) async {
     final res = await dio.patch('/api/v1/visits/$visitId/location', data: {
       'addressText': addressText,
-      if (lat != null) 'lat': lat,
-      if (lng != null) 'lng': lng,
+      if (clearCoords) 'clearCoords': true,
+      if (!clearCoords && lat != null) 'lat': lat,
+      if (!clearCoords && lng != null) 'lng': lng,
     });
     return Map<String, dynamic>.from(res.data['data'] as Map);
   }

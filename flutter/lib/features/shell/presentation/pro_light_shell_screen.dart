@@ -7,13 +7,14 @@ import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
+import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Terrain shell for care_pro (vet_light, farrier, …).
+/// Terrain shell for care_pro (vet_light, farrier, …) and cabinet `vet`.
 class ProLightShellScreen extends StatefulWidget {
   const ProLightShellScreen({super.key, required this.onLogout});
 
@@ -23,7 +24,7 @@ class ProLightShellScreen extends StatefulWidget {
   State<ProLightShellScreen> createState() => _ProLightShellScreenState();
 }
 
-String _specialtyLabel(AppLocalizations l10n, String specialty) {
+String proLightSpecialtyLabel(AppLocalizations l10n, String specialty) {
   switch (specialty) {
     case 'farrier':
       return l10n.proLightSpecialtyFarrier;
@@ -54,29 +55,36 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   }
 
   bool _canWriteNotes(Map<String, dynamic> row) {
+    if (ApiClient.instance.userRole == 'vet') return true;
     final p = row['permission'] as String? ?? 'read';
     return p == 'write_notes' || p == 'full';
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool silent = false}) async {
     final gen = ++_loadGen;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
-      final visits = await ApiClient.instance.listCareProVisits();
-      final clients = await ApiClient.instance.listCareProClients();
-      final pets = await ApiClient.instance.listCareProPets();
+      final lists = await ApiClient.instance.loadProTerrainLists();
       if (!mounted || gen != _loadGen) return;
       setState(() {
-        _visits = visits;
-        _clients = clients;
-        _pets = pets;
+        _visits = lists.visits;
+        _clients = lists.clients;
+        _pets = lists.pets;
         _loading = false;
+        _error = null;
       });
     } catch (_) {
       if (!mounted || gen != _loadGen) return;
+      if (silent) {
+        // Keep current lists after a successful mutation; toast only.
+        _toast(AppLocalizations.of(context)!.proLightLoadError);
+        return;
+      }
       setState(() {
         _error = AppLocalizations.of(context)!.proLightLoadError;
         _loading = false;
@@ -196,7 +204,13 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final specialty = ApiClient.instance.userSpecialty ?? '';
-    final specialtyLabel = _specialtyLabel(l10n, specialty);
+    final specialtyLabel = proLightSpecialtyLabel(l10n, specialty);
+    final isVet = ApiClient.instance.userRole == 'vet';
+    final title = isVet
+        ? l10n.proLightVetTitle
+        : (specialtyLabel.isEmpty
+            ? l10n.proLightTitle
+            : '${l10n.proLightTitle} · $specialtyLabel');
     return Container(
       decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
       child: Scaffold(
@@ -209,15 +223,24 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  specialtyLabel.isEmpty
-                      ? l10n.proLightTitle
-                      : '${l10n.proLightTitle} · $specialtyLabel',
+                  title,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           actions: [
+            IconButton(
+              tooltip: l10n.appInviteTitle,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AppInviteQrScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.qr_code_2),
+            ),
             IconButton(
               onPressed: _load,
               icon: const Icon(Icons.refresh),
@@ -233,9 +256,14 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                     children: [
                       _VisitsTab(
                         visits: _visits,
-                        emptyLabel: specialty == 'farrier'
+                        emptyAllLabel: specialty == 'farrier'
                             ? l10n.proLightEmptyFarrier
                             : l10n.proLightNoVisits,
+                        emptyTodayLabel: l10n.proLightNoTourToday,
+                        emptyWeekLabel: l10n.proLightNoTourWeek,
+                        tourTodayLabel: l10n.proLightTourToday,
+                        tourWeekLabel: l10n.proLightTourWeek,
+                        tourAllLabel: l10n.proLightTourAll,
                         onMaps: _openMaps,
                         onReport: _openReport,
                         canWriteNotes: _canWriteNotes,
@@ -244,7 +272,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                           if (petId == null || petId.isEmpty) return;
                           _openPet(petId, petName: visit['petName'] as String?);
                         },
-                        onSaveLocation: (visit, address, {lat, lng}) async {
+                        onSaveLocation: (visit, address, {lat, lng, clearCoords = false}) async {
                           final id = visit['id'] as String?;
                           if (id == null) return;
                           try {
@@ -253,8 +281,19 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                               address,
                               lat: lat,
                               lng: lng,
+                              clearCoords: clearCoords,
                             );
-                            await _load();
+                            await _load(silent: true);
+                          } catch (_) {
+                            _toast(l10n.proLightActionFailed);
+                          }
+                        },
+                        onMarkDone: (visit) async {
+                          final id = visit['id'] as String?;
+                          if (id == null) return;
+                          try {
+                            await ApiClient.instance.updateVisit(id, 'done');
+                            await _load(silent: true);
                           } catch (_) {
                             _toast(l10n.proLightActionFailed);
                           }
@@ -266,6 +305,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                         readOnlyLabel: l10n.proLightReadOnly,
                         gpsLabel: l10n.proLightUseGps,
                         gpsDeniedLabel: l10n.proLightGpsDenied,
+                        doneLabel: l10n.careDone,
                       ),
                       _ListTab(
                         empty: l10n.proLightNoClients,
@@ -293,6 +333,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                     ],
                   ),
         bottomNavigationBar: NavigationBar(
+          key: const Key('pro_light_nav'),
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: [
@@ -324,7 +365,7 @@ class _SettingsTab extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: Text(l10n.proLightSpecialty),
-          subtitle: Text(specialty.isEmpty ? '—' : _specialtyLabel(l10n, specialty)),
+          subtitle: Text(specialty.isEmpty ? '—' : proLightSpecialtyLabel(l10n, specialty)),
         ),
         ListTile(
           leading: const Icon(Icons.person_outline),
@@ -333,6 +374,16 @@ class _SettingsTab extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.qr_code_2),
+          title: Text(l10n.appInviteTitle),
+          subtitle: Text(l10n.appInviteHintShort),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AppInviteQrScreen()),
           ),
         ),
         ListenableBuilder(
@@ -619,15 +670,23 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   }
 }
 
-class _VisitsTab extends StatelessWidget {
+enum _TourFilter { today, week, all }
+
+class _VisitsTab extends StatefulWidget {
   const _VisitsTab({
     required this.visits,
-    required this.emptyLabel,
+    required this.emptyAllLabel,
+    required this.emptyTodayLabel,
+    required this.emptyWeekLabel,
+    required this.tourTodayLabel,
+    required this.tourWeekLabel,
+    required this.tourAllLabel,
     required this.onMaps,
     required this.onReport,
     required this.canWriteNotes,
     required this.onOpenPet,
     required this.onSaveLocation,
+    required this.onMarkDone,
     required this.addressLabel,
     required this.mapsLabel,
     required this.reportLabel,
@@ -635,10 +694,16 @@ class _VisitsTab extends StatelessWidget {
     required this.readOnlyLabel,
     required this.gpsLabel,
     required this.gpsDeniedLabel,
+    required this.doneLabel,
   });
 
   final List<dynamic> visits;
-  final String emptyLabel;
+  final String emptyAllLabel;
+  final String emptyTodayLabel;
+  final String emptyWeekLabel;
+  final String tourTodayLabel;
+  final String tourWeekLabel;
+  final String tourAllLabel;
   final Future<void> Function(Map<String, dynamic>) onMaps;
   final Future<void> Function(Map<String, dynamic>) onReport;
   final bool Function(Map<String, dynamic>) canWriteNotes;
@@ -648,7 +713,9 @@ class _VisitsTab extends StatelessWidget {
     String, {
     double? lat,
     double? lng,
+    bool clearCoords,
   }) onSaveLocation;
+  final Future<void> Function(Map<String, dynamic>) onMarkDone;
   final String addressLabel;
   final String mapsLabel;
   final String reportLabel;
@@ -656,141 +723,315 @@ class _VisitsTab extends StatelessWidget {
   final String readOnlyLabel;
   final String gpsLabel;
   final String gpsDeniedLabel;
+  final String doneLabel;
+
+  @override
+  State<_VisitsTab> createState() => _VisitsTabState();
+}
+
+class _VisitsTabState extends State<_VisitsTab> {
+  _TourFilter _filter = _TourFilter.today;
+
+  /// Aligné Nuxt `visitDisplayAt` / modèle `Visit.displayDate` (sans fallback createdAt).
+  DateTime? _parseDisplayAt(Map<String, dynamic> v) {
+    final proposed = v['proposedScheduledAt']?.toString();
+    if (proposed != null && proposed.isNotEmpty) {
+      final at = DateTime.tryParse(proposed)?.toLocal();
+      if (at != null) return at;
+    }
+    final raw = v['scheduledAt']?.toString();
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toLocal();
+  }
+
+  bool _isOpenTourStatus(Map<String, dynamic> v) {
+    final s = v['status']?.toString() ?? '';
+    return s != 'done' && s != 'cancelled';
+  }
+
+  List<Map<String, dynamic>> _filteredVisits() {
+    final now = DateTime.now();
+    final startToday = DateTime(now.year, now.month, now.day);
+    final endToday = startToday.add(const Duration(days: 1));
+    final endWeek = startToday.add(const Duration(days: 7));
+
+    final rows = widget.visits
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+
+    Iterable<Map<String, dynamic>> filtered = rows;
+    if (_filter == _TourFilter.today) {
+      filtered = rows.where((v) {
+        if (!_isOpenTourStatus(v)) return false;
+        final at = _parseDisplayAt(v);
+        return at != null && !at.isBefore(startToday) && at.isBefore(endToday);
+      });
+    } else if (_filter == _TourFilter.week) {
+      filtered = rows.where((v) {
+        if (!_isOpenTourStatus(v)) return false;
+        final at = _parseDisplayAt(v);
+        return at != null && !at.isBefore(startToday) && at.isBefore(endWeek);
+      });
+    }
+
+    final list = filtered.toList();
+    if (_filter != _TourFilter.all) {
+      list.sort((a, b) {
+        final da = _parseDisplayAt(a) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final db = _parseDisplayAt(b) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return da.compareTo(db);
+      });
+    }
+    return list;
+  }
+
+  String _emptyForFilter() {
+    switch (_filter) {
+      case _TourFilter.today:
+        return widget.emptyTodayLabel;
+      case _TourFilter.week:
+        return widget.emptyWeekLabel;
+      case _TourFilter.all:
+        return widget.emptyAllLabel;
+    }
+  }
+
+  String _formatWhen(Map<String, dynamic> v) {
+    final at = _parseDisplayAt(v);
+    if (at == null) {
+      return v['status']?.toString() ?? '';
+    }
+    final hh = at.hour.toString().padLeft(2, '0');
+    final mm = at.minute.toString().padLeft(2, '0');
+    if (_filter == _TourFilter.today) {
+      return '$hh:$mm';
+    }
+    final d = at.day.toString().padLeft(2, '0');
+    final m = at.month.toString().padLeft(2, '0');
+    return '$d/$m $hh:$mm';
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (visits.isEmpty) {
-      return Center(child: Text(emptyLabel));
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: visits.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, i) {
-        final v = Map<String, dynamic>.from(visits[i] as Map);
-        final writable = canWriteNotes(v);
-        final title = [
-          v['petName'],
-          v['clientName'],
-        ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
-        final when = v['scheduledAt']?.toString() ?? v['status']?.toString() ?? '';
-        final address = (v['addressText'] as String?) ?? '';
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
-                  onTap: () => onOpenPet(v),
-                  child: Text(
-                    title.isEmpty ? '—' : title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                Text(when, style: Theme.of(context).textTheme.bodySmall),
-                if (address.isNotEmpty) Text(address),
-                if (!writable)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      readOnlyLabel,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => onOpenPet(v),
-                      icon: const Icon(Icons.pets, size: 18),
-                      label: Text(petLabel),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => onMaps(v),
-                      icon: const Icon(Icons.map_outlined, size: 18),
-                      label: Text(mapsLabel),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => onReport(v),
-                      icon: const Icon(Icons.note_alt_outlined, size: 18),
-                      label: Text(reportLabel),
-                    ),
-                    if (writable)
-                      TextButton.icon(
-                        onPressed: () async {
-                          final ctrl = TextEditingController(text: address);
-                          double? lat;
-                          double? lng;
-                          final ok = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) {
-                              return StatefulBuilder(
-                                builder: (ctx, setDlg) {
-                                  return AlertDialog(
-                                    title: Text(addressLabel),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TextField(controller: ctrl),
-                                        const SizedBox(height: 8),
-                                        TextButton.icon(
-                                          onPressed: () async {
-                                            final pos = await _captureGps(ctx, gpsDeniedLabel);
-                                            if (pos == null) return;
-                                            setDlg(() {
-                                              lat = pos.latitude;
-                                              lng = pos.longitude;
-                                              if (ctrl.text.trim().isEmpty) {
-                                                ctrl.text =
-                                                    '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
-                                              }
-                                            });
-                                          },
-                                          icon: const Icon(Icons.my_location, size: 18),
-                                          label: Text(
-                                            lat != null ? '$gpsLabel ✓' : gpsLabel,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
-                                        child: Text(AppLocalizations.of(ctx)!.cancel),
-                                      ),
-                                      FilledButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
-                                        child: Text(AppLocalizations.of(ctx)!.save),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          );
-                          final text = ctrl.text.trim();
-                          ctrl.dispose();
-                          if (ok == true) {
-                            await onSaveLocation(v, text, lat: lat, lng: lng);
-                          }
-                        },
-                        icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
-                        label: Text(addressLabel),
-                      ),
-                  ],
-                ),
-              ],
+    final filtered = _filteredVisits();
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: SegmentedButton<_TourFilter>(
+            showSelectedIcon: false,
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
+            segments: [
+              ButtonSegment(
+                value: _TourFilter.today,
+                label: FittedBox(fit: BoxFit.scaleDown, child: Text(widget.tourTodayLabel)),
+              ),
+              ButtonSegment(
+                value: _TourFilter.week,
+                label: FittedBox(fit: BoxFit.scaleDown, child: Text(widget.tourWeekLabel)),
+              ),
+              ButtonSegment(
+                value: _TourFilter.all,
+                label: FittedBox(fit: BoxFit.scaleDown, child: Text(widget.tourAllLabel)),
+              ),
+            ],
+            selected: {_filter},
+            onSelectionChanged: (s) {
+              if (s.isEmpty) return;
+              setState(() => _filter = s.first);
+            },
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(child: Text(_emptyForFilter()))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, i) {
+                    final v = filtered[i];
+                    final writable = widget.canWriteNotes(v);
+                    final title = [
+                      v['petName'],
+                      v['clientName'],
+                    ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
+                    final when = _formatWhen(v);
+                    final address = (v['addressText'] as String?) ?? '';
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            InkWell(
+                              onTap: () => widget.onOpenPet(v),
+                              child: Text(
+                                title.isEmpty ? '—' : title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Text(when, style: Theme.of(context).textTheme.bodySmall),
+                            if (address.isNotEmpty) Text(address),
+                            if (!writable)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  widget.readOnlyLabel,
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () => widget.onOpenPet(v),
+                                  icon: const Icon(Icons.pets, size: 18),
+                                  label: Text(widget.petLabel),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => widget.onMaps(v),
+                                  icon: const Icon(Icons.map_outlined, size: 18),
+                                  label: Text(widget.mapsLabel),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => widget.onReport(v),
+                                  icon: const Icon(Icons.note_alt_outlined, size: 18),
+                                  label: Text(widget.reportLabel),
+                                ),
+                                if (writable && (v['status']?.toString() == 'confirmed'))
+                                  TextButton.icon(
+                                    onPressed: () => widget.onMarkDone(v),
+                                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                                    label: Text(widget.doneLabel),
+                                  ),
+                                if (writable)
+                                  TextButton.icon(
+                                    onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
+                                      final originalAddress = address.trim();
+                                      final ctrl = TextEditingController(text: address);
+                                      double? lat =
+                                          (v['lat'] is num) ? (v['lat'] as num).toDouble() : null;
+                                      double? lng =
+                                          (v['lng'] is num) ? (v['lng'] as num).toDouble() : null;
+                                      var coordsClearedByEdit = false;
+                                      var capturing = false;
+                                      final ok = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) {
+                                          return StatefulBuilder(
+                                            builder: (ctx, setDlg) {
+                                              return AlertDialog(
+                                                title: Text(widget.addressLabel),
+                                                content: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    TextField(
+                                                      controller: ctrl,
+                                                      onChanged: (_) {
+                                                        if (lat != null || lng != null) {
+                                                          setDlg(() {
+                                                            lat = null;
+                                                            lng = null;
+                                                            coordsClearedByEdit = true;
+                                                          });
+                                                        }
+                                                      },
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    TextButton.icon(
+                                                      onPressed: capturing
+                                                          ? null
+                                                          : () async {
+                                                              setDlg(() => capturing = true);
+                                                              final pos = await _captureGps();
+                                                              if (!ctx.mounted) return;
+                                                              setDlg(() => capturing = false);
+                                                              if (pos == null) {
+                                                                messenger.showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(widget.gpsDeniedLabel),
+                                                                  ),
+                                                                );
+                                                                return;
+                                                              }
+                                                              setDlg(() {
+                                                                lat = pos.latitude;
+                                                                lng = pos.longitude;
+                                                                coordsClearedByEdit = false;
+                                                                if (ctrl.text.trim().isEmpty) {
+                                                                  ctrl.text =
+                                                                      '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+                                                                }
+                                                              });
+                                                            },
+                                                      icon: capturing
+                                                          ? const SizedBox(
+                                                              width: 18,
+                                                              height: 18,
+                                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                                            )
+                                                          : const Icon(Icons.my_location, size: 18),
+                                                      label: Text(
+                                                        lat != null ? '${widget.gpsLabel} ✓' : widget.gpsLabel,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(ctx, false),
+                                                    child: Text(AppLocalizations.of(ctx)!.cancel),
+                                                  ),
+                                                  FilledButton(
+                                                    onPressed: () => Navigator.pop(ctx, true),
+                                                    child: Text(AppLocalizations.of(ctx)!.save),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
+                                      final text = ctrl.text.trim();
+                                      ctrl.dispose();
+                                      if (ok == true) {
+                                        final clearCoords = coordsClearedByEdit &&
+                                            lat == null &&
+                                            lng == null &&
+                                            text != originalAddress;
+                                        await widget.onSaveLocation(
+                                          v,
+                                          text,
+                                          lat: lat,
+                                          lng: lng,
+                                          clearCoords: clearCoords,
+                                        );
+                                      }
+                                    },
+                                    icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
+                                    label: Text(widget.addressLabel),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }
 
-Future<Position?> _captureGps(BuildContext context, String deniedLabel) async {
+Future<Position?> _captureGps() async {
   try {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -798,26 +1039,17 @@ Future<Position?> _captureGps(BuildContext context, String deniedLabel) async {
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(deniedLabel)));
-      }
       return null;
     }
     final enabled = await Geolocator.isLocationServiceEnabled();
-    if (!enabled) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(deniedLabel)));
-      }
-      return null;
-    }
-    return Geolocator.getCurrentPosition(locationSettings: const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      timeLimit: Duration(seconds: 12),
-    ));
+    if (!enabled) return null;
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 12),
+      ),
+    );
   } catch (_) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(deniedLabel)));
-    }
     return null;
   }
 }

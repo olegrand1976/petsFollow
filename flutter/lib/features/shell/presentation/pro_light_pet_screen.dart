@@ -31,12 +31,14 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool silent = false}) async {
     final gen = ++_loadGen;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final pet = await ApiClient.instance.getPet(widget.petId);
       final timeline = await ApiClient.instance.getTimeline(widget.petId);
@@ -49,9 +51,16 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
         _documents = docs;
         _reminders = reminders;
         _loading = false;
+        _error = null;
       });
     } catch (_) {
       if (!mounted || gen != _loadGen) return;
+      if (silent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.proLightLoadError)),
+        );
+        return;
+      }
       setState(() {
         _error = AppLocalizations.of(context)!.proLightLoadError;
         _loading = false;
@@ -76,7 +85,10 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
       appBar: AppBar(
         title: Text(title),
         actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: () => _load(silent: _pet != null),
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       body: _loading
@@ -84,7 +96,7 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.alert)))
               : RefreshIndicator(
-                  onRefresh: _load,
+                  onRefresh: () => _load(silent: true),
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [

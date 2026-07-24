@@ -228,6 +228,18 @@ class NotificationService {
     }
   }
 
+  Future<void> cancelVisitReminders(Iterable<String> visitIds) async {
+    try {
+      await ReminderController.instance.init();
+      final plugin = ReminderController.instance.plugin;
+      for (final visitId in visitIds) {
+        try {
+          await plugin.cancel(_stableNotifId('visit', visitId));
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   Future<void> scheduleVisits(List<Visit> visits, {required String visitLabel, String? petName}) async {
     try {
       await ReminderController.instance.init();

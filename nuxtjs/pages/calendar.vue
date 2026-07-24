@@ -109,6 +109,7 @@
           </ProButton>
           <ProButton variant="secondary" data-testid="calendar-today" @click="goToday">
             {{ $t('calendar.today') }}
+            <span v-if="todayVisitCount > 0" class="calendar-today-count">{{ todayVisitCount }}</span>
           </ProButton>
           <strong class="calendar-nav__label">{{ periodLabel }}</strong>
           <ProButton variant="ghost" data-testid="calendar-next" @click="shiftPeriod(1)">
@@ -396,6 +397,8 @@ const periodLabel = computed(() => {
   return monthStart.value.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })
 })
 
+const todayVisitCount = ref(0)
+
 function setView(mode: CalendarViewMode) {
   viewMode.value = mode
   if (import.meta.client) localStorage.setItem('pf-calendar-view', mode)
@@ -463,15 +466,23 @@ function rangeForView() {
 async function load() {
   actionError.value = ''
   const { from, to } = rangeForView()
+  const day0 = startOfDay(new Date())
+  const day1 = new Date(day0)
+  day1.setDate(day1.getDate() + 1)
+  const todayFrom = toLocalRFC3339(day0)
+  const todayTo = toLocalRFC3339(day1)
   try {
-    const [calRes, schedRes]: any[] = await Promise.all([
+    const [calRes, schedRes, todayRes]: any[] = await Promise.all([
       $fetch(`/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(from))}&to=${encodeURIComponent(toLocalRFC3339(to))}`),
       $fetch('/api/vet/schedule'),
+      $fetch(`/api/vet/calendar?from=${encodeURIComponent(todayFrom)}&to=${encodeURIComponent(todayTo)}`),
     ])
     const cal = calRes.data ?? calRes
     pending.value = cal.pending ?? []
     visits.value = cal.visits ?? []
     vacations.value = cal.vacations ?? []
+    const todayCal = todayRes.data ?? todayRes
+    todayVisitCount.value = (todayCal.visits ?? []).length
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {
@@ -527,16 +538,23 @@ async function saveVisitAddress() {
   reportBusy.value = true
   reportMsg.value = ''
   try {
+    const nextAddress = visitAddress.value.trim()
+    const prevAddress = (selectedVisit.value.addressText || '').trim()
+    const clearCoords = nextAddress !== prevAddress &&
+      (selectedVisit.value.lat != null || selectedVisit.value.lng != null)
     const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/location`, {
       method: 'PATCH',
-      body: { addressText: visitAddress.value.trim() },
+      body: {
+        addressText: nextAddress,
+        ...(clearCoords ? { clearCoords: true } : {}),
+      },
     })
     const data = res.data ?? res
     selectedVisit.value = {
       ...selectedVisit.value,
-      addressText: data.addressText || visitAddress.value,
-      lat: data.lat ?? selectedVisit.value.lat,
-      lng: data.lng ?? selectedVisit.value.lng,
+      addressText: data.addressText || nextAddress,
+      lat: clearCoords ? (data.lat ?? null) : (data.lat ?? selectedVisit.value.lat),
+      lng: clearCoords ? (data.lng ?? null) : (data.lng ?? selectedVisit.value.lng),
     }
     reportMsg.value = t('calendar.addressSaved')
     await load()
@@ -778,6 +796,19 @@ watch(
 .calendar-nav__label {
   min-width: 10rem;
   text-align: center;
+}
+.calendar-today-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--pf-vet-accent) 18%, transparent);
+  color: var(--pf-vet-accent);
 }
 .calendar-row--focus {
   background: color-mix(in srgb, var(--pf-vet-accent) 12%, transparent);

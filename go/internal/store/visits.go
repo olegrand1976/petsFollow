@@ -229,22 +229,38 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	return v, err
 }
 
-// UpdateVisitLocation sets address; lat/lng are only overwritten when non-nil (preserve GPS when address-only PATCH).
-func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string, lat, lng *float64) (Visit, error) {
+// UpdateVisitLocation sets address. When clearCoords is true, lat/lng are set to NULL.
+// Otherwise lat/lng are only overwritten when non-nil (preserve GPS on address-only PATCH).
+func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string, lat, lng *float64, clearCoords bool) (Visit, error) {
 	var v Visit
-	err := s.pool.QueryRow(ctx, `
-		UPDATE visits.visits
-		SET address_text = $2,
-			lat = COALESCE($3, lat),
-			lng = COALESCE($4, lng)
-		WHERE id = $1
-		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng`,
-		id, addressText, lat, lng,
-	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-		&v.AddressText, &v.Lat, &v.Lng)
+	var err error
+	if clearCoords {
+		err = s.pool.QueryRow(ctx, `
+			UPDATE visits.visits
+			SET address_text = $2, lat = NULL, lng = NULL
+			WHERE id = $1
+			RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+				duration_minutes, proposed_scheduled_at, pending_action_by,
+				COALESCE(address_text,''), lat, lng`,
+			id, addressText,
+		).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			UPDATE visits.visits
+			SET address_text = $2,
+				lat = COALESCE($3, lat),
+				lng = COALESCE($4, lng)
+			WHERE id = $1
+			RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+				duration_minutes, proposed_scheduled_at, pending_action_by,
+				COALESCE(address_text,''), lat, lng`,
+			id, addressText, lat, lng,
+		).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng)
+	}
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}

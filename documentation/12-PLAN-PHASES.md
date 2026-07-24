@@ -51,6 +51,7 @@ Voir [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md).
 | Suite | Auth médias visit-reports, specialties P1, listes pet_access client | **Livré** |
 | M | Polish : dead code Google, tests shares/ACL/media, smoke register-client | **Livré** |
 | N | Seed care_pro, labels shared permission, DEFAULT ACL `write_notes` | **Livré** |
+| O | Tournées du jour (filtre agenda Flutter + compteur Nuxt) | **Livré** |
 
 Ops staging : `make gcp-setup-media` (IAM SA + public avatars). PHI `visit-reports/` : pas d’URL publique app-side (GCP interdit condition allUsers).
 
