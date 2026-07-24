@@ -20,7 +20,8 @@ func (a *API) registerAppInviteRoutes(r chi.Router) {
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
-		pr.Get("/vet/app-invite", a.getVetAppInvite)
+		pr.Get("/me/app-invite", a.getMeAppInvite)
+		pr.Get("/vet/app-invite", a.getVetAppInvite) // alias (vet-only) for Nuxt clients
 		pr.Post("/me/vets/claim-invite", a.claimVetAppInvite)
 	})
 }
@@ -41,21 +42,7 @@ func (a *API) encodeInviteQR(inviteURL string) (string, error) {
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(png), nil
 }
 
-func (a *API) getVetAppInvite(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
-		return
-	}
-	inv, err := a.store.EnsureVetAppInviteCode(r.Context(), id.UserID)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")
-			return
-		}
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
+func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv store.AppInvite) {
 	inviteURL := a.appInviteWebURL(inv.Code)
 	qr, err := a.encodeInviteQR(inviteURL)
 	if err != nil {
@@ -65,18 +52,66 @@ func (a *API) getVetAppInvite(w http.ResponseWriter, r *http.Request) {
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"code":          inv.Code,
+		"role":          inv.Role,
 		"inviteUrl":     inviteURL,
 		"deepLink":      a.appInviteDeepLink(inv.Code),
 		"downloadUrl":   downloadURL,
+		"proSiteUrl":    strings.TrimRight(a.cfg.ProPublicSiteURL, "/"),
 		"qrCodeDataUrl": qr,
 		"practiceName":  inv.PracticeName,
-		"vetFullName":   inv.VetFullName,
+		"displayName":   inv.DisplayName,
+		"specialty":     inv.Specialty,
+		// Compat Nuxt ProAppInviteModal
+		"vetFullName": inv.DisplayName,
 	})
+}
+
+func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	switch id.Role {
+	case kernel.RoleVet, kernel.RoleCarePro, kernel.RoleCommercial, kernel.RoleCommercialManager:
+		// ok
+	default:
+		writeErr(w, r, http.StatusForbidden, "forbidden", "invite_role_denied")
+		return
+	}
+	inv, err := a.store.EnsureAppInviteCode(r.Context(), id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrForbidden) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "invite_unavailable")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	a.writeAppInvitePayload(w, r, inv)
+}
+
+func (a *API) getVetAppInvite(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleVet {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	inv, err := a.store.EnsureAppInviteCode(r.Context(), id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrForbidden) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	a.writeAppInvitePayload(w, r, inv)
 }
 
 func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	inv, err := a.store.GetVetAppInviteByCode(r.Context(), code)
+	inv, err := a.store.GetAppInviteByCode(r.Context(), code)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "invite_not_found")
@@ -88,8 +123,11 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"code":         inv.Code,
+		"role":         inv.Role,
 		"practiceName": inv.PracticeName,
-		"vetFullName":  inv.VetFullName,
+		"displayName":  inv.DisplayName,
+		"vetFullName":  inv.DisplayName, // landing compat
+		"specialty":    inv.Specialty,
 		"downloadUrl":  downloadURL,
 		"deepLink":     a.appInviteDeepLink(inv.Code),
 		"inviteUrl":    a.appInviteWebURL(inv.Code),
@@ -111,7 +149,7 @@ func (a *API) claimVetAppInvite(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "code_required")
 		return
 	}
-	result, err := a.store.ClaimVetAppInvite(r.Context(), id.UserID, req.Code)
+	result, err := a.store.ClaimAppInvite(r.Context(), id.UserID, req.Code)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "invite_not_found")
@@ -133,5 +171,5 @@ func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) {
 	if code == "" || clientUserID == "" {
 		return
 	}
-	_, _ = a.store.ClaimVetAppInvite(r.Context(), clientUserID, code)
+	_, _ = a.store.ClaimAppInvite(r.Context(), clientUserID, code)
 }

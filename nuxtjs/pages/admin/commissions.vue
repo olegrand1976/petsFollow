@@ -41,6 +41,51 @@
       <p v-if="settingsError" class="pro-field-error" role="alert">{{ settingsError }}</p>
     </ProCard>
 
+    <ProCard :title="$t('admin.commissions.profileRatesTitle')" class="pro-mb" data-testid="admin-profile-rates">
+      <p class="text-muted pro-mb-sm">{{ $t('admin.commissions.profileRatesHint') }}</p>
+      <p v-if="!profileLedgerWired" class="pro-hint pro-mb-sm" data-testid="admin-profile-rates-stub">
+        {{ $t('admin.commissions.profileRatesLedgerStub') }}
+      </p>
+      <ProTable v-if="profileRates.length">
+        <thead>
+          <tr>
+            <th>{{ $t('admin.commissions.profileKey') }}</th>
+            <th>{{ $t('admin.commissions.profileLabel') }}</th>
+            <th>{{ $t('admin.commissions.profileRate') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in profileRates" :key="row.profileKey">
+            <td class="pro-mono">{{ row.profileKey }}</td>
+            <td>{{ row.label }}</td>
+            <td>
+              <input
+                v-model.number="row.ratePct"
+                class="pro-input pro-input-narrow"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+              >
+              <span>%</span>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+      <ProButton class="pro-mt-md" :loading="savingProfileRates" test-id="save-profile-rates" @click="saveProfileRates">
+        {{ $t('admin.commissions.saveProfileRates') }}
+      </ProButton>
+      <p v-if="profileRatesError" class="pro-field-error" role="alert">{{ profileRatesError }}</p>
+      <div v-if="commercialPlanRates" class="pro-mt-md text-muted">
+        <p>{{ $t('admin.commissions.commercialPlanRatesReadonly') }}</p>
+        <ul>
+          <li>monthly: {{ (commercialPlanRates.monthly / 100).toFixed(0) }} %</li>
+          <li>annual: {{ (commercialPlanRates.annual / 100).toFixed(0) }} %</li>
+          <li>triennial: {{ (commercialPlanRates.triennial / 100).toFixed(0) }} %</li>
+        </ul>
+      </div>
+    </ProCard>
+
     <ProCard :title="$t('admin.commissions.periodTitle')">
       <div class="pro-list-toolbar__filters pro-field-inline-wrap">
         <div class="pro-field pro-field-inline">
@@ -143,6 +188,11 @@ const markingLineId = ref('')
 const savingTiers = ref(false)
 const error = ref('')
 const settingsError = ref('')
+const profileRates = ref<{ profileKey: string, label: string, rateBps: number, ratePct: number }[]>([])
+const commercialPlanRates = ref<Record<string, number> | null>(null)
+const profileLedgerWired = ref(true)
+const savingProfileRates = ref(false)
+const profileRatesError = ref('')
 
 const runStatusLabel = computed(() => {
   switch (runStatus.value) {
@@ -192,6 +242,52 @@ async function saveTiers() {
     settingsError.value = mapError(e)
   } finally {
     savingTiers.value = false
+  }
+}
+
+async function loadProfileRates() {
+  profileRatesError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/commissions/profile-rates')
+    const data = res.data ?? res
+    profileRates.value = (data.profileRates || []).map((r: any) => ({
+      profileKey: r.profileKey,
+      label: r.label,
+      rateBps: r.rateBps || 0,
+      ratePct: (r.rateBps || 0) / 100,
+    }))
+    commercialPlanRates.value = data.commercialPlanRates || null
+    profileLedgerWired.value = data.ledgerWired === true
+  } catch (e: any) {
+    profileRatesError.value = mapError(e)
+  }
+}
+
+async function saveProfileRates() {
+  savingProfileRates.value = true
+  profileRatesError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/commissions/profile-rates', {
+      method: 'PUT',
+      body: {
+        rates: profileRates.value.map((r) => ({
+          profileKey: r.profileKey,
+          label: r.label,
+          rateBps: Math.round(r.ratePct * 100),
+        })),
+      },
+    })
+    const data = res.data ?? res
+    profileRates.value = (data.profileRates || []).map((r: any) => ({
+      profileKey: r.profileKey,
+      label: r.label,
+      rateBps: r.rateBps || 0,
+      ratePct: (r.rateBps || 0) / 100,
+    }))
+  } catch (e: any) {
+    profileRatesError.value = mapError(e)
+  } finally {
+    savingProfileRates.value = false
   }
 }
 
@@ -295,6 +391,7 @@ async function markLinePaid(vetUserId: string) {
 onMounted(async () => {
   await loadRunsMeta()
   await loadPeriod()
+  await loadProfileRates()
 })
 </script>
 

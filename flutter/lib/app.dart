@@ -8,6 +8,7 @@ import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/force_change_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
+import 'package:petsfollow_mobile/features/shell/presentation/commercial_field_shell_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -126,11 +127,13 @@ class _AuthGateState extends State<AuthGate> {
     if (_mustChangePassword) {
       return ForceChangePasswordScreen(onChanged: _onAuthChanged);
     }
-    if (ApiClient.instance.userRole == 'care_pro') {
+    if (ApiClient.instance.userRole == 'care_pro' ||
+        ApiClient.instance.userRole == 'vet') {
       return ProLightShellScreen(onLogout: _onAuthChanged);
     }
-    if (ApiClient.instance.userRole == 'vet') {
-      return _VetRedirectScreen(onLogout: _onAuthChanged);
+    if (ApiClient.instance.userRole == 'commercial' ||
+        ApiClient.instance.userRole == 'commercial_manager') {
+      return CommercialFieldShellScreen(onLogout: _onAuthChanged);
     }
     if (ApiClient.instance.userRole == 'client') {
       return MainShellScreen(
@@ -139,37 +142,6 @@ class _AuthGateState extends State<AuthGate> {
       );
     }
     return _UnsupportedRoleScreen(onLogout: _onAuthChanged);
-  }
-}
-
-class _VetRedirectScreen extends StatelessWidget {
-  const _VetRedirectScreen({required this.onLogout});
-  final VoidCallback onLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.vetUseProWeb, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () async {
-                  await ApiClient.instance.logout();
-                  onLogout();
-                },
-                child: Text(l10n.logout),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 

@@ -2,8 +2,8 @@
   <div class="pro-login-page" data-testid="app-invite-landing">
     <aside class="pro-login-brand">
       <PetsFollowLogo variant="hero" animated />
-      <h2>{{ $t('invite.brandTitle') }}</h2>
-      <p>{{ $t('invite.brandText') }}</p>
+      <h2>{{ brandTitle }}</h2>
+      <p>{{ brandText }}</p>
     </aside>
     <div class="pro-login-form-panel">
       <div class="pro-auth-locale">
@@ -14,10 +14,8 @@
         <div v-if="loading" class="text-muted">{{ $t('invite.loading') }}</div>
         <template v-else-if="invite">
           <h1 data-testid="app-invite-ok">{{ $t('invite.title') }}</h1>
-          <p class="pro-page-header__subtitle">
-            {{ $t('invite.subtitle', { practice: invite.practiceName, vet: invite.vetFullName }) }}
-          </p>
-          <p class="pro-hint">{{ $t('invite.autoLinkHint') }}</p>
+          <p class="pro-page-header__subtitle">{{ subtitle }}</p>
+          <p class="pro-hint">{{ autoLinkHint }}</p>
           <div class="invite-actions">
             <a
               v-if="invite.downloadUrl"
@@ -51,6 +49,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+type InviteRole = 'vet' | 'care_pro' | 'commercial' | 'commercial_manager'
+
 const { t } = useI18n()
 const { mapError } = useApiError()
 const route = useRoute()
@@ -59,11 +59,85 @@ const loading = ref(true)
 const error = ref('')
 const invite = ref<{
   code: string
+  role: InviteRole
   practiceName: string
-  vetFullName: string
+  displayName: string
   downloadUrl: string
   deepLink: string
 } | null>(null)
+
+function normalizeRole(raw: unknown): InviteRole {
+  switch (raw) {
+    case 'care_pro':
+      return 'care_pro'
+    case 'commercial':
+      return 'commercial'
+    case 'commercial_manager':
+      return 'commercial_manager'
+    case 'vet':
+    default:
+      return 'vet'
+  }
+}
+
+const brandTitle = computed(() => {
+  const role = invite.value?.role ?? 'vet'
+  switch (role) {
+    case 'care_pro':
+      return t('invite.brandTitleCarePro')
+    case 'commercial':
+    case 'commercial_manager':
+      return t('invite.brandTitleCommercial')
+    case 'vet':
+      return t('invite.brandTitle')
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
+})
+
+const brandText = computed(() => t('invite.brandText'))
+
+const subtitle = computed(() => {
+  const inv = invite.value
+  if (!inv) return ''
+  const name = inv.displayName || ''
+  const practice = inv.practiceName || ''
+  switch (inv.role) {
+    case 'care_pro':
+      return t('invite.subtitleCarePro', { name: name || 'petsFollow' })
+    case 'commercial':
+    case 'commercial_manager':
+      return t('invite.subtitleCommercial', { name: name || 'petsFollow' })
+    case 'vet':
+      return t('invite.subtitle', {
+        practice: practice || 'petsFollow',
+        vet: name,
+      })
+    default: {
+      const _exhaustive: never = inv.role
+      return _exhaustive
+    }
+  }
+})
+
+const autoLinkHint = computed(() => {
+  const role = invite.value?.role ?? 'vet'
+  switch (role) {
+    case 'care_pro':
+      return t('invite.autoLinkHintCarePro')
+    case 'commercial':
+    case 'commercial_manager':
+      return t('invite.autoLinkHintCommercial')
+    case 'vet':
+      return t('invite.autoLinkHint')
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
+})
 
 function openApp() {
   const link = invite.value?.deepLink
@@ -83,8 +157,9 @@ onMounted(async () => {
     const data = res.data ?? res
     invite.value = {
       code: data.code,
+      role: normalizeRole(data.role),
       practiceName: data.practiceName || '',
-      vetFullName: data.vetFullName || '',
+      displayName: data.displayName || data.vetFullName || '',
       downloadUrl: data.downloadUrl || '',
       deepLink: data.deepLink || `petsfollow://invite?code=${data.code}`,
     }

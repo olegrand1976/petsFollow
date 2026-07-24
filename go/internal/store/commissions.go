@@ -304,7 +304,10 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		if err := tx.Commit(ctx); err != nil {
 			return err
 		}
-		return s.AccrueCommercialForSubscription(ctx, petID)
+		if err := s.AccrueCommercialForSubscription(ctx, petID); err != nil {
+			return err
+		}
+		return s.AccrueCareProForPetActivation(ctx, petID)
 	}
 
 	var alreadyClient bool
@@ -373,7 +376,10 @@ func (s *Store) AccrueCommissionForPetActivation(ctx context.Context, petID stri
 		return err
 	}
 	// Commercial commission is accrued after the vet ledger is committed.
-	return s.AccrueCommercialForSubscription(ctx, petID)
+	if err := s.AccrueCommercialForSubscription(ctx, petID); err != nil {
+		return err
+	}
+	return s.AccrueCareProForPetActivation(ctx, petID)
 }
 
 func (s *Store) CountVetEligibleClients(ctx context.Context, vetUserID string) (int, error) {

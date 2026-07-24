@@ -2,13 +2,13 @@
   <ProModal :open="open" size="md" :title="title" @update:open="emit('update:open', $event)">
     <div v-if="loading" class="text-muted">{{ $t('common.loading') }}</div>
     <template v-else-if="invite">
-      <p class="pro-hint pro-mb-md">{{ $t('clients.appInvite.hint') }}</p>
+      <p class="pro-hint pro-mb-md">{{ hintText }}</p>
       <div class="app-invite-qr" data-testid="app-invite-qr">
         <img :src="invite.qrCodeDataUrl" :alt="$t('clients.appInvite.qrAlt')" width="200" height="200">
       </div>
       <p class="app-invite-meta">
-        <strong>{{ invite.practiceName }}</strong>
-        <span v-if="invite.vetFullName" class="text-muted"> — {{ invite.vetFullName }}</span>
+        <strong>{{ metaPrimary }}</strong>
+        <span v-if="metaSecondary" class="text-muted"> — {{ metaSecondary }}</span>
       </p>
       <p class="app-invite-code text-muted">{{ $t('clients.appInvite.codeLabel') }} {{ invite.code }}</p>
       <div class="app-invite-actions">
@@ -54,25 +54,54 @@ const copied = ref(false)
 const copyError = ref('')
 const invite = ref<{
   code: string
+  role: string
   inviteUrl: string
   qrCodeDataUrl: string
   practiceName: string
-  vetFullName: string
+  displayName: string
 } | null>(null)
+
+const hintText = computed(() => {
+  switch (invite.value?.role) {
+    case 'care_pro':
+      return t('clients.appInvite.hintCarePro')
+    case 'commercial':
+    case 'commercial_manager':
+      return t('clients.appInvite.hintCommercial')
+    case 'vet':
+    default:
+      return t('clients.appInvite.hint')
+  }
+})
+
+const metaPrimary = computed(() => {
+  const inv = invite.value
+  if (!inv) return ''
+  if (inv.practiceName.trim()) return inv.practiceName
+  return inv.displayName || t('clients.appInvite.fallbackName')
+})
+
+const metaSecondary = computed(() => {
+  const inv = invite.value
+  if (!inv) return ''
+  if (inv.practiceName.trim() && inv.displayName.trim()) return inv.displayName
+  return ''
+})
 
 async function loadInvite() {
   loading.value = true
   error.value = ''
   invite.value = null
   try {
-    const res: any = await $fetch('/api/vet/app-invite')
+    const res: any = await $fetch('/api/me/app-invite')
     const data = res.data ?? res
     invite.value = {
       code: data.code,
+      role: data.role || 'vet',
       inviteUrl: data.inviteUrl,
       qrCodeDataUrl: data.qrCodeDataUrl,
       practiceName: data.practiceName || '',
-      vetFullName: data.vetFullName || '',
+      displayName: data.displayName || data.vetFullName || '',
     }
   } catch (e) {
     error.value = mapError(e)

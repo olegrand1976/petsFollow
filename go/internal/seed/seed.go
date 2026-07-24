@@ -182,7 +182,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		heartrate.sessions, pets.dossier_events, pets.pets,
 		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
 		practice.client_import_rows, practice.client_import_jobs,
-		practice.client_vet_link_requests, practice.invitations, practice.vet_app_invite_codes,
+		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
+		practice.commercial_referrals,
 		practice.practice_clients, practice.practices CASCADE`); err != nil {
 		return err
 	}

@@ -13,23 +13,30 @@ import (
 
 const inviteCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-// VetAppInvite is a durable referral code for a vet (QR / email / deep link).
-type VetAppInvite struct {
+// AppInvite is a durable referral code for vet / care_pro / commercial.
+type AppInvite struct {
 	Code         string `json:"code"`
-	VetUserID    string `json:"vetUserId"`
-	PracticeID   string `json:"practiceId"`
-	PracticeName string `json:"practiceName"`
-	VetFullName  string `json:"vetFullName"`
+	UserID       string `json:"userId"`
+	Role         string `json:"role"`
+	PracticeID   string `json:"practiceId,omitempty"`
+	PracticeName string `json:"practiceName,omitempty"`
+	DisplayName  string `json:"displayName"`
+	Specialty    string `json:"specialty,omitempty"`
 }
 
-// ClaimVetAppInviteResult is returned after auto-linking a client via invite code.
-type ClaimVetAppInviteResult struct {
-	Status       string `json:"status"` // linked | already_linked
-	PracticeName string `json:"practiceName"`
-	VetFullName  string `json:"vetFullName"`
-	PracticeID   string `json:"practiceId"`
-	VetUserID    string `json:"vetUserId"`
+// ClaimAppInviteResult is returned after applying an invite code for a client.
+type ClaimAppInviteResult struct {
+	Status       string `json:"status"` // linked | already_linked | referred | granted
+	Kind         string `json:"kind"`   // vet | care_pro | commercial
+	PracticeName string `json:"practiceName,omitempty"`
+	DisplayName  string `json:"displayName,omitempty"`
+	PracticeID   string `json:"practiceId,omitempty"`
+	InviterID    string `json:"inviterId,omitempty"`
 }
+
+// Backward-compatible aliases used by existing call sites.
+type VetAppInvite = AppInvite
+type ClaimVetAppInviteResult = ClaimAppInviteResult
 
 func NormalizeInviteCode(raw string) string {
 	return strings.ToUpper(strings.TrimSpace(raw))
@@ -46,111 +53,172 @@ func generateInviteCode() (string, error) {
 	return string(b), nil
 }
 
-// EnsureVetAppInviteCode returns the durable invite code for a vet, creating one if needed.
-func (s *Store) EnsureVetAppInviteCode(ctx context.Context, vetUserID string) (VetAppInvite, error) {
-	var inv VetAppInvite
-	err := s.pool.QueryRow(ctx, `
-		SELECT c.code, c.vet_user_id::text, c.practice_id::text, pr.name, u.full_name
-		FROM practice.vet_app_invite_codes c
-		JOIN practice.practices pr ON pr.id = c.practice_id
-		JOIN identity.users u ON u.id = c.vet_user_id
-		WHERE c.vet_user_id = $1`, vetUserID).
-		Scan(&inv.Code, &inv.VetUserID, &inv.PracticeID, &inv.PracticeName, &inv.VetFullName)
+func canIssueAppInvite(role kernel.Role) bool {
+	switch role {
+	case kernel.RoleVet, kernel.RoleCarePro, kernel.RoleCommercial, kernel.RoleCommercialManager:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *Store) scanAppInvite(row pgx.Row) (AppInvite, error) {
+	var inv AppInvite
+	err := row.Scan(&inv.Code, &inv.UserID, &inv.Role, &inv.PracticeID, &inv.PracticeName, &inv.DisplayName, &inv.Specialty)
+	return inv, err
+}
+
+const appInviteSelect = `
+	SELECT c.code, c.user_id::text, c.role, COALESCE(c.practice_id::text,''), COALESCE(pr.name,''), u.full_name,
+		COALESCE(u.professional_specialty,'')
+	FROM practice.app_invite_codes c
+	JOIN identity.users u ON u.id = c.user_id
+	LEFT JOIN practice.practices pr ON pr.id = c.practice_id`
+
+// EnsureAppInviteCode returns the durable invite code for an eligible user.
+func (s *Store) EnsureAppInviteCode(ctx context.Context, userID string) (AppInvite, error) {
+	u, err := s.GetUserByID(ctx, userID)
+	if err != nil {
+		return AppInvite{}, err
+	}
+	if !canIssueAppInvite(u.Role) {
+		return AppInvite{}, ErrForbidden
+	}
+	if u.Role == kernel.RoleVet && u.PracticeID == "" {
+		return AppInvite{}, ErrNotFound
+	}
+
+	inv, err := s.scanAppInvite(s.pool.QueryRow(ctx, appInviteSelect+` WHERE c.user_id = $1`, userID))
 	if err == nil {
+		// Keep practice_id in sync if the vet moved cabinets.
+		if u.Role == kernel.RoleVet && u.PracticeID != "" && inv.PracticeID != u.PracticeID {
+			if _, updErr := s.pool.Exec(ctx, `
+				UPDATE practice.app_invite_codes SET practice_id = $2 WHERE user_id = $1`,
+				userID, u.PracticeID); updErr != nil {
+				return AppInvite{}, updErr
+			}
+			return s.scanAppInvite(s.pool.QueryRow(ctx, appInviteSelect+` WHERE c.user_id = $1`, userID))
+		}
 		return inv, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
-		return VetAppInvite{}, err
+		return AppInvite{}, err
 	}
 
-	var practiceID, vetName, practiceName string
-	err = s.pool.QueryRow(ctx, `
-		SELECT u.practice_id::text, u.full_name, pr.name
-		FROM identity.users u
-		JOIN practice.practices pr ON pr.id = u.practice_id
-		WHERE u.id = $1 AND u.role = 'vet' AND u.practice_id IS NOT NULL`, vetUserID).
-		Scan(&practiceID, &vetName, &practiceName)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return VetAppInvite{}, ErrNotFound
-	}
-	if err != nil {
-		return VetAppInvite{}, err
+	var practicePtr any
+	if u.PracticeID != "" && u.Role == kernel.RoleVet {
+		practicePtr = u.PracticeID
+	} else {
+		practicePtr = nil
 	}
 
 	for attempt := 0; attempt < 8; attempt++ {
 		code, genErr := generateInviteCode()
 		if genErr != nil {
-			return VetAppInvite{}, genErr
+			return AppInvite{}, genErr
 		}
 		_, err = s.pool.Exec(ctx, `
-			INSERT INTO practice.vet_app_invite_codes (vet_user_id, practice_id, code)
-			VALUES ($1, $2, $3)
-			ON CONFLICT (vet_user_id) DO NOTHING`, vetUserID, practiceID, code)
+			INSERT INTO practice.app_invite_codes (user_id, role, practice_id, code)
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (user_id) DO NOTHING`,
+			userID, string(u.Role), practicePtr, code)
 		if err != nil {
 			if isUniqueViolation(err) {
 				continue
 			}
-			return VetAppInvite{}, err
+			return AppInvite{}, err
 		}
-		return s.EnsureVetAppInviteCode(ctx, vetUserID)
+		return s.EnsureAppInviteCode(ctx, userID)
 	}
-	return VetAppInvite{}, ErrConflict
+	return AppInvite{}, ErrConflict
 }
 
-// GetVetAppInviteByCode resolves a public invite code.
-func (s *Store) GetVetAppInviteByCode(ctx context.Context, code string) (VetAppInvite, error) {
-	code = NormalizeInviteCode(code)
-	if code == "" {
-		return VetAppInvite{}, ErrNotFound
-	}
-	var inv VetAppInvite
-	err := s.pool.QueryRow(ctx, `
-		SELECT c.code, c.vet_user_id::text, c.practice_id::text, pr.name, u.full_name
-		FROM practice.vet_app_invite_codes c
-		JOIN practice.practices pr ON pr.id = c.practice_id
-		JOIN identity.users u ON u.id = c.vet_user_id
-		WHERE c.code = $1`, code).
-		Scan(&inv.Code, &inv.VetUserID, &inv.PracticeID, &inv.PracticeName, &inv.VetFullName)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return VetAppInvite{}, ErrNotFound
-	}
+// EnsureVetAppInviteCode is kept for call sites that expect vet-only creation.
+func (s *Store) EnsureVetAppInviteCode(ctx context.Context, vetUserID string) (AppInvite, error) {
+	inv, err := s.EnsureAppInviteCode(ctx, vetUserID)
 	if err != nil {
-		return VetAppInvite{}, err
+		return AppInvite{}, err
+	}
+	if inv.Role != string(kernel.RoleVet) {
+		return AppInvite{}, ErrForbidden
 	}
 	return inv, nil
 }
 
-// ClaimVetAppInvite auto-links a client to the inviting vet's practice (idempotent).
-func (s *Store) ClaimVetAppInvite(ctx context.Context, clientUserID, code string) (ClaimVetAppInviteResult, error) {
-	inv, err := s.GetVetAppInviteByCode(ctx, code)
+// GetAppInviteByCode resolves a public invite code.
+func (s *Store) GetAppInviteByCode(ctx context.Context, code string) (AppInvite, error) {
+	code = NormalizeInviteCode(code)
+	if code == "" {
+		return AppInvite{}, ErrNotFound
+	}
+	inv, err := s.scanAppInvite(s.pool.QueryRow(ctx, appInviteSelect+` WHERE c.code = $1`, code))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AppInvite{}, ErrNotFound
+	}
 	if err != nil {
-		return ClaimVetAppInviteResult{}, err
+		return AppInvite{}, err
+	}
+	return inv, nil
+}
+
+// GetVetAppInviteByCode resolves invite (any role) — public landing uses display fields.
+func (s *Store) GetVetAppInviteByCode(ctx context.Context, code string) (AppInvite, error) {
+	return s.GetAppInviteByCode(ctx, code)
+}
+
+// ClaimAppInvite applies role-specific linking for a client invite code.
+func (s *Store) ClaimAppInvite(ctx context.Context, clientUserID, code string) (ClaimAppInviteResult, error) {
+	inv, err := s.GetAppInviteByCode(ctx, code)
+	if err != nil {
+		return ClaimAppInviteResult{}, err
 	}
 	client, err := s.GetUserByID(ctx, clientUserID)
 	if err != nil {
-		return ClaimVetAppInviteResult{}, err
+		return ClaimAppInviteResult{}, err
 	}
 	if client.Role != kernel.RoleClient {
-		return ClaimVetAppInviteResult{}, ErrValidation
+		return ClaimAppInviteResult{}, ErrValidation
 	}
 
+	switch inv.Role {
+	case string(kernel.RoleVet):
+		return s.claimVetInvite(ctx, clientUserID, inv)
+	case string(kernel.RoleCarePro):
+		return s.claimCareProInvite(ctx, clientUserID, inv)
+	case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+		return s.claimCommercialInvite(ctx, clientUserID, inv)
+	default:
+		return ClaimAppInviteResult{}, ErrValidation
+	}
+}
+
+// ClaimVetAppInvite keeps the previous name for handlers/tryClaim.
+func (s *Store) ClaimVetAppInvite(ctx context.Context, clientUserID, code string) (ClaimAppInviteResult, error) {
+	return s.ClaimAppInvite(ctx, clientUserID, code)
+}
+
+func (s *Store) claimVetInvite(ctx context.Context, clientUserID string, inv AppInvite) (ClaimAppInviteResult, error) {
+	if inv.PracticeID == "" {
+		return ClaimAppInviteResult{}, ErrNotFound
+	}
 	already, err := s.ClientIsMemberOfPractice(ctx, clientUserID, inv.PracticeID)
 	if err != nil {
-		return ClaimVetAppInviteResult{}, err
+		return ClaimAppInviteResult{}, err
 	}
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return ClaimVetAppInviteResult{}, err
+		return ClaimAppInviteResult{}, err
 	}
 	defer tx.Rollback(ctx)
 
+	// First membership wins — do not reassign vet_user_id on re-scan.
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
 		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (practice_id, client_user_id) DO UPDATE SET vet_user_id = EXCLUDED.vet_user_id`,
-		uuid.NewString(), inv.PracticeID, clientUserID, inv.VetUserID); err != nil {
-		return ClaimVetAppInviteResult{}, err
+		ON CONFLICT (practice_id, client_user_id) DO NOTHING`,
+		uuid.NewString(), inv.PracticeID, clientUserID, inv.UserID); err != nil {
+		return ClaimAppInviteResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
@@ -158,8 +226,8 @@ func (s *Store) ClaimVetAppInvite(ctx context.Context, clientUserID, code string
 		WHERE NOT EXISTS (
 			SELECT 1 FROM messaging.threads
 			WHERE practice_id=$2 AND client_user_id=$3 AND vet_user_id=$4 AND pet_id IS NULL
-		)`, uuid.NewString(), inv.PracticeID, clientUserID, inv.VetUserID); err != nil {
-		return ClaimVetAppInviteResult{}, err
+		)`, uuid.NewString(), inv.PracticeID, clientUserID, inv.UserID); err != nil {
+		return ClaimAppInviteResult{}, err
 	}
 	_, _ = tx.Exec(ctx, `
 		UPDATE practice.client_vet_link_requests
@@ -168,18 +236,86 @@ func (s *Store) ClaimVetAppInvite(ctx context.Context, clientUserID, code string
 		clientUserID, inv.PracticeID)
 
 	if err := tx.Commit(ctx); err != nil {
-		return ClaimVetAppInviteResult{}, err
+		return ClaimAppInviteResult{}, err
 	}
 
 	status := "linked"
 	if already {
 		status = "already_linked"
 	}
-	return ClaimVetAppInviteResult{
+	return ClaimAppInviteResult{
 		Status:       status,
+		Kind:         "vet",
 		PracticeName: inv.PracticeName,
-		VetFullName:  inv.VetFullName,
+		DisplayName:  inv.DisplayName,
 		PracticeID:   inv.PracticeID,
-		VetUserID:    inv.VetUserID,
+		InviterID:    inv.UserID,
+	}, nil
+}
+
+func (s *Store) claimCareProInvite(ctx context.Context, clientUserID string, inv AppInvite) (ClaimAppInviteResult, error) {
+	var already bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM practice.client_access
+			WHERE client_user_id=$1 AND grantee_user_id=$2
+				AND (expires_at IS NULL OR expires_at > NOW())
+		)`, clientUserID, inv.UserID).Scan(&already)
+	if err != nil {
+		return ClaimAppInviteResult{}, err
+	}
+	if already {
+		return ClaimAppInviteResult{
+			Status:      "already_linked",
+			Kind:        "care_pro",
+			DisplayName: inv.DisplayName,
+			InviterID:   inv.UserID,
+		}, nil
+	}
+	if _, err := s.GrantClientAccess(ctx, clientUserID, inv.UserID, inv.UserID, string(PermWriteNotes), nil); err != nil {
+		return ClaimAppInviteResult{}, err
+	}
+	return ClaimAppInviteResult{
+		Status:      "granted",
+		Kind:        "care_pro",
+		DisplayName: inv.DisplayName,
+		InviterID:   inv.UserID,
+	}, nil
+}
+
+func (s *Store) claimCommercialInvite(ctx context.Context, clientUserID string, inv AppInvite) (ClaimAppInviteResult, error) {
+	// First referral wins — do not overwrite an existing commercial attribution.
+	var existingCommercial string
+	err := s.pool.QueryRow(ctx, `
+		SELECT commercial_user_id::text FROM practice.commercial_referrals
+		WHERE client_user_id=$1`, clientUserID).Scan(&existingCommercial)
+	if err == nil {
+		status := "already_linked"
+		if existingCommercial == inv.UserID {
+			status = "already_linked"
+		}
+		return ClaimAppInviteResult{
+			Status:      status,
+			Kind:        "commercial",
+			DisplayName: inv.DisplayName,
+			InviterID:   inv.UserID,
+		}, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return ClaimAppInviteResult{}, err
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO practice.commercial_referrals (client_user_id, commercial_user_id, invite_code, updated_at)
+		VALUES ($1, $2, $3, NOW())
+		ON CONFLICT (client_user_id) DO NOTHING`,
+		clientUserID, inv.UserID, inv.Code)
+	if err != nil {
+		return ClaimAppInviteResult{}, err
+	}
+	return ClaimAppInviteResult{
+		Status:      "referred",
+		Kind:        "commercial",
+		DisplayName: inv.DisplayName,
+		InviterID:   inv.UserID,
 	}, nil
 }

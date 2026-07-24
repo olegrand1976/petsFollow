@@ -3,7 +3,19 @@
     <ProPageHeader
       :title="$t('commercial.dashboard.title')"
       :subtitle="$t('commercial.dashboard.subtitle')"
-    />
+    >
+      <template #actions>
+        <ProButton
+          variant="secondary"
+          test-id="commercial-app-invite-open"
+          @click="appInviteOpen = true"
+        >
+          <ProIcon name="qr_code_2" />
+          {{ $t('commercial.appInvite.open') }}
+        </ProButton>
+      </template>
+    </ProPageHeader>
+    <ProAppInviteModal v-model:open="appInviteOpen" :title="$t('commercial.appInvite.title')" />
     <div v-if="overview" class="pro-grid-kpi">
       <ProKpi :value="overview.assignedVets" :label="$t('commercial.dashboard.assignedVets')" />
       <ProKpi :value="overview.prospectsTotal" :label="$t('commercial.dashboard.prospects')" />
@@ -23,6 +35,7 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { formatCurrency } = useFormatters()
 const overview = ref<any>(null)
+const appInviteOpen = ref(false)
 
 onMounted(async () => {
   const res: any = await $fetch('/api/commercial/overview')

@@ -25,6 +25,8 @@ func (a *API) registerCommissionRoutes(r chi.Router) {
 		pr.Put("/admin/commissions/tiers", a.adminPutCommissionTiers)
 		pr.Get("/admin/commissions/settings", a.adminGetCommissionSettings)
 		pr.Put("/admin/commissions/settings", a.adminPutCommissionSettings)
+		pr.Get("/admin/commissions/profile-rates", a.adminListProfileCommissionRates)
+		pr.Put("/admin/commissions/profile-rates", a.adminPutProfileCommissionRates)
 
 		pr.Get("/admin/commercial-commissions/runs", a.adminListCommercialCommissionRuns)
 		pr.Get("/admin/commercial-commissions/periods/{period}", a.adminCommercialCommissionPeriod)
@@ -237,6 +239,56 @@ func (a *API) adminPutCommissionSettings(w http.ResponseWriter, r *http.Request)
 	}
 	// Commercial rates are plan-based constants (see store.CommercialRateBpsForPlan).
 	writeErr(w, r, http.StatusBadRequest, "bad_request", "commercial_rates_are_plan_based")
+}
+
+func (a *API) adminListProfileCommissionRates(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rates, err := a.store.ListProfileCommissionRates(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"profileRates": rates,
+		"ledgerWired":  false, // AccrueCareProForPetActivation is prepared but no ledger yet
+		"vetPlanRates": store.SubscriptionPlanRates(),
+		"commercialPlanRates": map[string]int{
+			"monthly":   store.CommercialRateMonthlyBps,
+			"annual":    store.CommercialRateAnnualBps,
+			"triennial": store.CommercialRateTriennialBps,
+		},
+	})
+}
+
+type putProfileRatesReq struct {
+	Rates []store.ProfileCommissionRate `json:"rates"`
+}
+
+func (a *API) adminPutProfileCommissionRates(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	var req putProfileRatesReq
+	if err := httpx.DecodeJSON(r, &req); err != nil || len(req.Rates) == 0 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "rates_required")
+		return
+	}
+	if err := a.store.UpsertProfileCommissionRates(r.Context(), req.Rates); err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "unknown_profile_key")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	rates, err := a.store.ListProfileCommissionRates(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"profileRates": rates})
 }
 
 func (a *API) adminListCommercialCommissionRuns(w http.ResponseWriter, r *http.Request) {
