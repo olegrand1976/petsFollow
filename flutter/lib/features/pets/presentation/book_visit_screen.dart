@@ -157,8 +157,25 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold),
                 ),
                 const SizedBox(height: 12),
-                if (_error != null) Text(_error!, style: const TextStyle(color: AppColors.alert)),
-                if (!_enabled) ...[
+                if (_error != null) ...[
+                  Text(_error!, style: const TextStyle(color: AppColors.alert)),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: _booking ? null : _load,
+                    child: Text(l10n.retryAction),
+                  ),
+                  const SizedBox(height: 8),
+                  if (widget.isReschedule)
+                    FilledButton(
+                      onPressed: _booking ? null : _pickManualSlot,
+                      child: Text(l10n.visitProposeReschedule),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: _booking ? null : _legacyRequest,
+                      child: Text(l10n.requestVisit),
+                    ),
+                ] else if (!_enabled) ...[
                   Text(
                     widget.isReschedule
                         ? l10n.calendarBookingDisabledReschedule
@@ -177,13 +194,17 @@ class _BookVisitScreenState extends State<BookVisitScreen> {
                     ),
                 ] else if (_slots.isEmpty) ...[
                   Text(l10n.calendarNoSlots),
-                  if (widget.isReschedule) ...[
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                  if (widget.isReschedule)
                     OutlinedButton(
                       onPressed: _booking ? null : _pickManualSlot,
                       child: Text(l10n.visitProposeReschedule),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: _booking ? null : _legacyRequest,
+                      child: Text(l10n.requestVisit),
                     ),
-                  ],
                 ] else ...[
                   Text(l10n.calendarPickSlot),
                   const SizedBox(height: 12),

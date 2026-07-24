@@ -229,16 +229,24 @@ class NotificationService {
   }
 
   Future<void> scheduleVisits(List<Visit> visits, {required String visitLabel, String? petName}) async {
-    await ReminderController.instance.init();
-    final prefs = await loadPrefs();
-    if (!prefs.visits) return;
-    final plugin = ReminderController.instance.plugin;
-    for (final v in visits) {
-      final id = _stableNotifId('visit', v.id);
-      await plugin.cancel(id);
-      if (!v.isUpcoming || v.scheduledAt == null) continue;
-      final title = petName != null ? '$petName — $visitLabel' : visitLabel;
-      await _scheduleAt(id, v.scheduledAt!, title, v.notes ?? '', 'pf_visits');
+    try {
+      await ReminderController.instance.init();
+      final prefs = await loadPrefs();
+      if (!prefs.visits) return;
+      final plugin = ReminderController.instance.plugin;
+      for (final v in visits) {
+        final id = _stableNotifId('visit', v.id);
+        try {
+          await plugin.cancel(id);
+          if (!v.isUpcoming || v.scheduledAt == null) continue;
+          final title = petName != null ? '$petName — $visitLabel' : visitLabel;
+          await _scheduleAt(id, v.scheduledAt!, title, v.notes ?? '', 'pf_visits');
+        } catch (_) {
+          // Skip one visit reminder; keep scheduling the rest.
+        }
+      }
+    } catch (_) {
+      // Local notifications must never break visit/timeline loading.
     }
   }
 

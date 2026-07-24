@@ -32,7 +32,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   @override
   void initState() {
     super.initState();
-    load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) load();
+    });
   }
 
   Future<void> load() async {
@@ -48,11 +50,6 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       final data = await ApiClient.instance.getTimeline(widget.petId);
       final sessions = await ApiClient.instance.getHeartRateSessions(widget.petId);
       final visitData = await ApiClient.instance.getVisits(widget.petId);
-      await NotificationService.instance.scheduleVisits(
-        visitData,
-        visitLabel: l10n.upcomingVisit,
-        petName: widget.petName,
-      );
       if (mounted) {
         setState(() {
           items = data
@@ -74,6 +71,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
           _hasLoadedOnce = true;
         });
       }
+      // Best-effort: never block / fail the timeline UI.
+      await NotificationService.instance.scheduleVisits(
+        visitData,
+        visitLabel: l10n.upcomingVisit,
+        petName: widget.petName,
+      );
     } catch (e) {
       if (!mounted) return;
       final msg = mapApiError(e, l10n);
@@ -215,7 +218,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     final upcoming = visits.where((v) => v.isUpcoming).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.history)),
+      appBar: AppBar(title: Text(l10n.visitHistory)),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : loadError != null

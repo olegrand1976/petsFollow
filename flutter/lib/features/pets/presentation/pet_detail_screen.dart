@@ -184,12 +184,20 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   }
 
   Future<void> _requestVisit() async {
-    final practiceId = pet.practiceId;
+    final l10n = AppLocalizations.of(context)!;
+    var practiceId = pet.practiceId;
     if (practiceId == null || practiceId.isEmpty) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric('visit'))),
+      final primary = vets.where((v) => v.isPrimary).firstOrNull ?? vets.firstOrNull;
+      practiceId = primary?.practiceId;
+    }
+    if (practiceId == null || practiceId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MyVetsScreen()),
       );
+      if (mounted) await _loadVets();
       return;
     }
     final booked = await Navigator.push<bool>(
@@ -198,12 +206,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
         builder: (_) => BookVisitScreen(
           petId: pet.id,
           petName: pet.name,
-          practiceId: practiceId,
+          practiceId: practiceId!,
         ),
       ),
     );
     if (booked == true && mounted) {
-      final l10n = AppLocalizations.of(context)!;
       final visits = await ApiClient.instance.getVisits(pet.id);
       if (!mounted) return;
       await NotificationService.instance.scheduleVisits(
