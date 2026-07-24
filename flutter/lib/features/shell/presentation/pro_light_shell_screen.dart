@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
+import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Terrain shell for care_pro (vet_light, farrier, …).
@@ -19,6 +21,21 @@ class ProLightShellScreen extends StatefulWidget {
 
   @override
   State<ProLightShellScreen> createState() => _ProLightShellScreenState();
+}
+
+String _specialtyLabel(AppLocalizations l10n, String specialty) {
+  switch (specialty) {
+    case 'farrier':
+      return l10n.proLightSpecialtyFarrier;
+    case 'physio':
+      return l10n.proLightSpecialtyPhysio;
+    case 'behaviorist':
+      return l10n.proLightSpecialtyBehaviorist;
+    case 'vet_light':
+      return l10n.proLightSpecialtyVetLight;
+    default:
+      return specialty;
+  }
 }
 
 class _ProLightShellScreenState extends State<ProLightShellScreen> {
@@ -179,6 +196,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final specialty = ApiClient.instance.userSpecialty ?? '';
+    final specialtyLabel = _specialtyLabel(l10n, specialty);
     return Container(
       decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
       child: Scaffold(
@@ -191,9 +209,9 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  specialty.isEmpty
+                  specialtyLabel.isEmpty
                       ? l10n.proLightTitle
-                      : '${l10n.proLightTitle} · $specialty',
+                      : '${l10n.proLightTitle} · $specialtyLabel',
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -215,7 +233,9 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                     children: [
                       _VisitsTab(
                         visits: _visits,
-                        emptyLabel: l10n.proLightNoVisits,
+                        emptyLabel: specialty == 'farrier'
+                            ? l10n.proLightEmptyFarrier
+                            : l10n.proLightNoVisits,
                         onMaps: _openMaps,
                         onReport: _openReport,
                         canWriteNotes: _canWriteNotes,
@@ -304,7 +324,7 @@ class _SettingsTab extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: Text(l10n.proLightSpecialty),
-          subtitle: Text(specialty.isEmpty ? '—' : specialty),
+          subtitle: Text(specialty.isEmpty ? '—' : _specialtyLabel(l10n, specialty)),
         ),
         ListTile(
           leading: const Icon(Icons.person_outline),
@@ -382,6 +402,8 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   late final TextEditingController _controller;
   late String _status;
   bool _busy = false;
+  bool _recording = false;
+  final AudioRecorder _recorder = AudioRecorder();
 
   @override
   void initState() {
@@ -393,7 +415,70 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   @override
   void dispose() {
     _controller.dispose();
+    _recorder.dispose();
     super.dispose();
+  }
+
+  String get _specialty => ApiClient.instance.userSpecialty ?? '';
+
+  Future<bool> _confirmAudioConsent() async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.proLightAudioConsentTitle),
+        content: Text(l10n.proLightAudioConsentBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.proLightAudioConsentAccept),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
+  Future<void> _applyTranscript(Map<String, dynamic> transcribed) async {
+    final text = (transcribed['bodyText'] as String?) ??
+        (transcribed['transcriptText'] as String?) ??
+        '';
+    if (text.isNotEmpty) {
+      _controller.text = text;
+    }
+  }
+
+  Future<void> _toggleDictation() async {
+    if (_recording) {
+      final path = await _recorder.stop();
+      setState(() => _recording = false);
+      if (path == null || path.isEmpty) return;
+      final transcribed = await ApiClient.instance.transcribeVisitReport(
+        widget.visitId,
+        path,
+        filename: 'dictation.m4a',
+      );
+      if (!mounted) return;
+      await _applyTranscript(transcribed);
+      return;
+    }
+    if (!await _confirmAudioConsent()) return;
+    if (!await _recorder.hasPermission()) {
+      throw StateError('mic_denied');
+    }
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/pf_visit_${widget.visitId}_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _recorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc),
+      path: path,
+    );
+    if (!mounted) return;
+    setState(() => _recording = true);
   }
 
   Future<void> _run(Future<void> Function() action, {bool popOnOk = false}) async {
@@ -402,11 +487,13 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
       await action();
       if (!mounted) return;
       if (popOnOk) Navigator.pop(context);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.proLightActionFailed)),
-      );
+      final l10n = AppLocalizations.of(context)!;
+      final msg = e is StateError && e.message == 'mic_denied'
+          ? l10n.proLightMicDenied
+          : l10n.proLightActionFailed;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -417,6 +504,8 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
     final l10n = AppLocalizations.of(context)!;
     final isFinal = _status == 'final';
     final readOnly = !widget.canWrite || isFinal || _busy || _status == 'none' && !widget.canWrite;
+    final hint =
+        _specialty == 'farrier' ? l10n.proLightReportHintFarrier : l10n.proLightReportHint;
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -441,7 +530,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
             controller: _controller,
             maxLines: 8,
             readOnly: readOnly || !widget.canWrite,
-            decoration: InputDecoration(hintText: l10n.proLightReportHint),
+            decoration: InputDecoration(hintText: hint),
           ),
           const SizedBox(height: 12),
           if (widget.canWrite && !isFinal)
@@ -487,11 +576,22 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                           }, popOnOk: true),
                   child: Text(l10n.proLightFinalizeReport),
                 ),
-                OutlinedButton(
+                FilledButton.tonal(
                   onPressed: _busy
                       ? null
                       : () => _run(() async {
-                            final picked = await FilePicker.platform.pickFiles(
+                            await _toggleDictation();
+                          }),
+                  child: Text(
+                    _recording ? l10n.proLightDictationStop : l10n.proLightDictationStart,
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: _busy || _recording
+                      ? null
+                      : () => _run(() async {
+                            if (!await _confirmAudioConsent()) return;
+                            final picked = await FilePicker.pickFiles(
                               type: FileType.custom,
                               allowedExtensions: const ['mp3', 'm4a', 'wav', 'ogg', 'webm'],
                             );
@@ -507,12 +607,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                               filename: file.name,
                             );
                             if (!mounted) return;
-                            final text = (transcribed['bodyText'] as String?) ??
-                                (transcribed['transcriptText'] as String?) ??
-                                '';
-                            if (text.isNotEmpty) {
-                              _controller.text = text;
-                            }
+                            await _applyTranscript(transcribed);
                           }),
                   child: Text(l10n.proLightTranscribeAudio),
                 ),
