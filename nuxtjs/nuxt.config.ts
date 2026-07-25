@@ -30,11 +30,11 @@ export default defineNuxtConfig({
   i18n: {
     restructureDir: false,
     locales: [
-      { code: 'fr', language: 'fr-FR', file: 'fr.json' },
-      { code: 'nl', language: 'nl-NL', file: 'nl.json' },
-      { code: 'en', language: 'en-GB', file: 'en.json' },
-      { code: 'es', language: 'es-ES', file: 'es.json' },
-      { code: 'et', language: 'et-EE', file: 'et.json' },
+      { code: 'fr', language: 'fr-FR', files: ['fr.json', 'pitch-deck/fr.json'] },
+      { code: 'nl', language: 'nl-NL', files: ['nl.json', 'pitch-deck/nl.json'] },
+      { code: 'en', language: 'en-GB', files: ['en.json', 'pitch-deck/en.json'] },
+      { code: 'es', language: 'es-ES', files: ['es.json', 'pitch-deck/es.json'] },
+      { code: 'et', language: 'et-EE', files: ['et.json', 'pitch-deck/et.json'] },
     ],
     defaultLocale: 'fr',
     strategy: 'no_prefix',

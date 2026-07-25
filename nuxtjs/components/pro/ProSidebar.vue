@@ -44,6 +44,8 @@ export type ProNavIcon =
   | 'record_voice_over'
   | 'event'
   | 'campaign'
+  | 'slideshow'
+  | 'analytics'
 
 export type ProNavItem = {
   to: string
@@ -74,6 +76,8 @@ const icons: Record<ProNavIcon, string> = {
   record_voice_over: 'record_voice_over',
   event: 'event',
   campaign: 'campaign',
+  slideshow: 'slideshow',
+  analytics: 'analytics',
 }
 
 function iconName(name: ProNavIcon) {

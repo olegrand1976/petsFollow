@@ -5,6 +5,13 @@
       :subtitle="$t('commercial.pitch.subtitle')"
     />
 
+    <ProCard class="pro-mb-lg" data-testid="pitch-deck-cta">
+      <p class="pro-hint">{{ $t('pitchDeck.ui.openDeckDesc') }}</p>
+      <ProButton test-id="pitch-open-deck" @click="navigateTo('/commercial/pitch-deck')">
+        {{ $t('pitchDeck.ui.openDeck') }}
+      </ProButton>
+    </ProCard>
+
     <ProCard class="pro-mb-lg" data-testid="pitch-competition-cta">
       <p class="pro-hint">{{ $t('competition.subtitle') }}</p>
       <ProButton test-id="pitch-open-competition" @click="navigateTo('/commercial/competition')">
