@@ -351,6 +351,9 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 		if ent, e := s.GetEntitlementByPetID(ctx, out[i].ID); e == nil {
 			out[i].Entitlement = &ent
 		}
+		if durations, e := s.GetPracticeHeartRateDurations(ctx, out[i].PracticeID); e == nil {
+			out[i].HeartrateDurationsSec = durations
+		}
 	}
 	return out, nil
 }
