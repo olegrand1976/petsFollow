@@ -84,7 +84,7 @@ class MockApi {
   }
 
   Response ok(RequestOptions options, Object? data, {int status = 200}) {
-    final payload = data is Map && (data as Map).containsKey('data')
+    final payload = data is Map && data.containsKey('data')
         ? data
         : {'data': data};
     return Response(
