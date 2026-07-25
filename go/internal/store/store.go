@@ -347,13 +347,12 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	durCache := map[string][]int{}
 	for i := range out {
 		if ent, e := s.GetEntitlementByPetID(ctx, out[i].ID); e == nil {
 			out[i].Entitlement = &ent
 		}
-		if durations, e := s.GetPracticeHeartRateDurations(ctx, out[i].PracticeID); e == nil {
-			out[i].HeartrateDurationsSec = durations
-		}
+		attachPracticeHeartRateDurations(ctx, s, &out[i], durCache)
 	}
 	return out, nil
 }
@@ -387,15 +386,32 @@ func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]P
 	if err != nil {
 		return nil, err
 	}
+	durCache := map[string][]int{}
 	for i := range pets {
 		if ent, e := s.GetEntitlementByPetID(ctx, pets[i].ID); e == nil {
 			pets[i].Entitlement = &ent
 		}
-		if durations, e := s.GetPracticeHeartRateDurations(ctx, pets[i].PracticeID); e == nil {
-			pets[i].HeartrateDurationsSec = durations
-		}
+		attachPracticeHeartRateDurations(ctx, s, &pets[i], durCache)
 	}
 	return pets, nil
+}
+
+// attachPracticeHeartRateDurations fills HeartrateDurationsSec, caching by practice ID
+// so list endpoints do one lookup per cabinet rather than per pet.
+func attachPracticeHeartRateDurations(ctx context.Context, s *Store, p *Pet, cache map[string][]int) {
+	if p.PracticeID == "" {
+		return
+	}
+	if d, ok := cache[p.PracticeID]; ok {
+		p.HeartrateDurationsSec = d
+		return
+	}
+	durations, err := s.GetPracticeHeartRateDurations(ctx, p.PracticeID)
+	if err != nil {
+		return
+	}
+	cache[p.PracticeID] = durations
+	p.HeartrateDurationsSec = durations
 }
 
 func (s *Store) GetHeartRateSession(ctx context.Context, sessionID, ownerID string) (HeartRateSession, error) {

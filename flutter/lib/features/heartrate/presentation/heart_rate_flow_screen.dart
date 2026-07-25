@@ -262,6 +262,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                 ],
               ),
             HeartRatePhase.running => GestureDetector(
+                key: const Key('hr_tap_zone'),
                 onTap: onTap,
                 behavior: HitTestBehavior.opaque,
                 child: Center(

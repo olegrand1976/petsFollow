@@ -80,3 +80,130 @@ test('pet detail — chart filtres, shares, commentaire HR', async ({ page }) =>
     timeout: 15000,
   })
 })
+
+test('heartrate — durées cabinet exposées au client + BPM sur 15s', async () => {
+  test.setTimeout(90000)
+  const password = 'TestPass123!'
+  const stamp = Date.now()
+  const vetEmail = `hr-dur-vet-${stamp}@petsfollow.test`
+  const clientEmail = `hr-dur-client-${stamp}@petsfollow.test`
+
+  const reg = await fetch(`${API}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: vetEmail,
+      password,
+      fullName: 'Dr HR Dur',
+      practiceName: 'Cabinet HR Dur',
+      consent: true,
+    }),
+  })
+  if (!reg.ok) throw new Error(`register vet ${reg.status}`)
+  const confirmPath = (await reg.json()).data.confirmPath as string
+  const confirmToken = confirmPath.replace('/confirm-email?token=', '')
+  const confirm = await fetch(`${API}/api/v1/auth/confirm-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: confirmToken }),
+  })
+  if (!confirm.ok) throw new Error(`confirm vet ${confirm.status}`)
+  const vetTok = (await confirm.json()).data.accessToken as string
+  const vetHeaders = {
+    Authorization: `Bearer ${vetTok}`,
+    'Content-Type': 'application/json',
+  }
+
+  const putRes = await fetch(`${API}/api/v1/vet/profile`, {
+    method: 'PUT',
+    headers: vetHeaders,
+    body: JSON.stringify({
+      vetFullName: 'Dr HR Dur',
+      practiceName: 'Cabinet HR Dur',
+      contactEmail: vetEmail,
+      phone: '+32123456789',
+      addressLine1: 'Rue Test 1',
+      city: 'Bruxelles',
+      postalCode: '1000',
+      heartrateDurationsSec: [15, 30],
+    }),
+  })
+  if (!putRes.ok) throw new Error(`put profile ${putRes.status}`)
+
+  const createClient = await fetch(`${API}/api/v1/vet/clients`, {
+    method: 'POST',
+    headers: vetHeaders,
+    body: JSON.stringify({
+      email: clientEmail,
+      password,
+      fullName: 'Client HR Dur',
+    }),
+  })
+  if (!createClient.ok) throw new Error(`create client ${createClient.status}`)
+
+  const clientTok = await apiLogin(clientEmail, password)
+  const clientHeaders = {
+    Authorization: `Bearer ${clientTok}`,
+    'Content-Type': 'application/json',
+  }
+
+  const createPet = await fetch(`${API}/api/v1/pets`, {
+    method: 'POST',
+    headers: clientHeaders,
+    body: JSON.stringify({
+      name: 'HR Dur Pet',
+      species: 'dog',
+      breed: 'test',
+      plan: 'triennial',
+      billingMode: 'subscription',
+    }),
+  })
+  if (!createPet.ok) throw new Error(`create pet ${createPet.status}`)
+  const petPayload = (await createPet.json()).data as {
+    id?: string
+    pet?: { id: string; ownerUserId?: string }
+    ownerUserId?: string
+  }
+  const petId = petPayload.pet?.id ?? petPayload.id
+  let ownerId = petPayload.pet?.ownerUserId ?? petPayload.ownerUserId
+  if (!petId) throw new Error('missing pet id')
+  if (!ownerId) {
+    const me = await fetch(`${API}/api/v1/me`, { headers: clientHeaders })
+    ownerId = (await me.json()).data.userId as string
+  }
+
+  const mockComplete = await fetch(
+    `${API}/api/v1/billing/dev/mock-complete?pet_id=${petId}&owner_user_id=${ownerId}&plan_code=triennial&billing_mode=subscription`,
+    { headers: clientHeaders },
+  )
+  if (!mockComplete.ok) throw new Error(`mock-complete ${mockComplete.status}`)
+
+  const petsRes = await fetch(`${API}/api/v1/pets`, { headers: clientHeaders })
+  if (!petsRes.ok) throw new Error(`list pets ${petsRes.status}`)
+  const pets = (await petsRes.json()).data as Array<{
+    id: string
+    heartrateDurationsSec?: number[]
+  }>
+  const pet = pets.find((p) => p.id === petId)
+  expect(pet?.heartrateDurationsSec).toEqual([15, 30])
+
+  const start = await fetch(`${API}/api/v1/pets/${petId}/heartrate/sessions`, {
+    method: 'POST',
+    headers: clientHeaders,
+    body: JSON.stringify({ durationSec: 15 }),
+  })
+  if (!start.ok) throw new Error(`start hr ${start.status}`)
+  const sess = (await start.json()).data as { id: string; durationSec: number }
+  expect(sess.durationSec).toBe(15)
+
+  const taps = 15
+  const complete = await fetch(`${API}/api/v1/heartrate/sessions/${sess.id}`, {
+    method: 'PATCH',
+    headers: clientHeaders,
+    body: JSON.stringify({ tapCount: taps }),
+  })
+  if (!complete.ok) throw new Error(`complete hr ${complete.status}`)
+  const done = (await complete.json()).data as { bpm: number; tapCount: number }
+  expect(done.tapCount).toBe(taps)
+  expect(done.bpm).toBe(60) // (15 * 60) / 15
+})
