@@ -108,7 +108,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 | CR / IA | Édition structurée des rapports de visite ; historique transcription / IA / version finale |
 | Équipe | Page équipe, partage animal / client (ACL) |
 | Business | Commissions véto, overview dashboard, Care overdue |
-| i18n | FR / NL / EN / ES / ET |
+| i18n | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (VetPro)
 
@@ -173,7 +173,7 @@ Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’a
 | Dossiers | Clients & pets selon droits (read / write_notes / full) |
 | CR | Micro → upload → transcription Gemini → « améliorer » (SOAP / specialty) → finaliser |
 | Sécurité PHI | Audio CR non public ; stream auth ; purge à la finalisation |
-| Langues | FR / NL / EN / ES / ET |
+| Langues | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (VetLight)
 
@@ -220,7 +220,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Timeline | Messages + événements + relevés validés |
 | Cardiaque | Sessions 15/30/60 s → BPM + commentaire → envoi véto (**feature**) |
 | Engagement | Missions discovery in-app + emails éducatifs (opt-out possible) |
-| Langues | FR / NL / EN / ES / ET |
+| Langues | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (Client)
 
@@ -277,7 +277,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 - Trois surfaces logicielles : **Web Pro · mobile ProLight · mobile Client**  
 - Prescription vétérinaire (pas un gadget grand public)  
-- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 5 langues  
+- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 6 langues  
 - Complémentaire du PMS (ne le remplace pas)  
 - VetLight gratuit pour le terrain + CR IA  
 - Alignement économique véto / commercial (pas de pénalité co-selling)  

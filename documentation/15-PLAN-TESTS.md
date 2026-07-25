@@ -139,7 +139,7 @@ Parcours minimum avant toute dist / staging.
 | B3.2 | P1 | Locale Flutter | Settings → autre langue | UI + sync `PATCH /me/locale` |
 | B3.3 | P2 | Client NL seed | Login `client.marie` | UI NL par défaut |
 | B3.4 | P2 | Avatar / profil | Upload photo (Web ou Flutter) | Visible après refresh |
-| B3.5 | P2 | Spot-check i18n | FR/NL/EN/ES/ET sur login + dashboard | Pas de clés brutes `xxx.yyy` |
+| B3.5 | P2 | Spot-check i18n | FR/NL/EN/ES/ET/IT sur login + dashboard | Pas de clés brutes `xxx.yyy` |
 
 ---
 

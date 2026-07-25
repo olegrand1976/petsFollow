@@ -35,7 +35,7 @@
   "emailRequired": "Inserisci un indirizzo email valido",
   "resetPasswordTitle": "Nuova password",
   "resetPasswordSubtitle": "Minimo 8 caratteri.",
-  "resetPasswordToken": "Reimposta gettone",
+  "resetPasswordToken": "Token di reset",
   "resetPasswordSubmit": "Salva",
   "resetPasswordBackToLogin": "Vai al login",
   "resetPasswordInvalidLink": "Collegamento di reimpostazione non valido",
@@ -160,7 +160,7 @@
     }
   },
   "pushPermissionTitle": "Notifiche",
-  "pushPermissionBody": "petFollow vuole inviarti notifiche: messaggi dal tuo veterinario, conferme di appuntamenti e promemoria di cure. Puoi disattivarli in qualsiasi momento nell'app o nelle impostazioni del telefono.",
+  "pushPermissionBody": "petsFollow vuole inviarti notifiche: messaggi dal tuo veterinario, conferme di appuntamenti e promemoria di cure. Puoi disattivarli in qualsiasi momento nell'app o nelle impostazioni del telefono.",
   "pushPermissionContinue": "Continuare",
   "exportDataSaved": "Esportazione salvata: {path}",
   "@exportDataSaved": {
@@ -228,9 +228,9 @@
   "legalPrivacyTitle": "politica sulla riservatezza",
   "legalNoticeTitle": "Avvisi legali",
   "legalOpenOnline": "Visualizza la versione online",
-  "legalTermsBody": "Condizioni generali d'uso — animali domesticiSegui\n\nL'app AnimalsFollow consente ai proprietari di animali domestici di monitorare prescritti (messaggi, promemoria per cura/cavallo, letture del cuore), visualizzare la cronologia e comunicare con il proprio veterinario.\n\nI servizi sono forniti come parte dell'abbonamento scelto (pagamento tramite Stripe). L'utente si impegna a utilizzare l'applicazione in conformità con lo scopo previsto.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nData aggiornata: luglio 2026",
-  "legalPrivacyBody": "Informativa sulla privacy — animali domesticiSegui\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@ll-it-sc.be.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026",
-  "legalNoticeBody": "Note legali — animali domesticiSegui\n\nEditore: LL-IT-SC / animali domesticiSegui\nContatto: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (conformità GDPR).\n\nDirettore della pubblicazione: petFollow.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nData aggiornata: luglio 2026",
+  "legalTermsBody": "Condizioni generali d'uso — petsFollow\n\nL'app petsFollow consente ai proprietari di animali domestici di monitorare prescritti (messaggi, promemoria per cura/cavallo, letture del cuore), visualizzare la cronologia e comunicare con il proprio veterinario.\n\nI servizi sono forniti come parte dell'abbonamento scelto (pagamento tramite Stripe). L'utente si impegna a utilizzare l'applicazione in conformità con lo scopo previsto.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nData aggiornata: luglio 2026",
+  "legalPrivacyBody": "Informativa sulla privacy — petsFollow\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@ll-it-sc.be.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026",
+  "legalNoticeBody": "Note legali — petsFollow\n\nEditore: LL-IT-SC / petsFollow\nContatto: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (conformità GDPR).\n\nDirettore della pubblicazione: petsFollow.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nData aggiornata: luglio 2026",
   "language": "Lingua",
   "languageFr": "francese",
   "languageNl": "Paesi Bassi",
@@ -320,7 +320,7 @@
       }
     }
   },
-  "heartRateNoDurationConfigured": "Per questo armadio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.",
+  "heartRateNoDurationConfigured": "Per questo studio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.",
   "start": "Per iniziare",
   "secondsLeft": "{seconds}s",
   "@secondsLeft": {
@@ -373,7 +373,7 @@
   "careComingSoon": "I promemoria per la cura arriveranno presto",
   "emptyPetsTitle": "Nessun animale",
   "emptyPetsBody": "Aggiungi il tuo primo animale per iniziare il follow-up prescritto dal tuo veterinario.",
-  "discoveryTitle": "Scopri gli animali domesticiSegui",
+  "discoveryTitle": "Scopri petsFollow",
   "discoveryMission": "Il tuo viaggio in 7 giorni",
   "discoveryDay0Title": "Giorno 0 — Benvenuto",
   "discoveryDay0Body": "Crea il profilo del tuo animale domestico ed esplora l'app: messaggi, promemoria e letture (inclusa la frequenza cardiaca).",
@@ -400,7 +400,7 @@
   "calendarNoSlots": "Nessuno spazio disponibile nei prossimi 14 giorni.",
   "calendarPickSlot": "Scegli una nicchia:",
   "calendarSelectVet": "Scegli un veterinario:",
-  "calendarCallPractice": "Chiama l'ufficio",
+  "calendarCallPractice": "Chiama lo studio",
   "calendarNoPhone": "Per questo ufficio non è fornito alcun numero di telefono. Contattalo in un altro modo.",
   "visitConfirm": "Confermare",
   "visitProposeReschedule": "Suggerisci un altro slot",
@@ -412,7 +412,7 @@
   "upcomingVisit": "Prossima visita",
   "notificationHrTitle": "petsFollow",
   "notificationHrBody": "È ora di fare una lettura del cuore per il tuo animale domestico",
-  "reviewAskTitle": "Ti piacciono gli animali domestici Segui?",
+  "reviewAskTitle": "Ti piacciono gli petsFollow?",
   "reviewAskYes": "Sì, valuta l'app",
   "reviewAskNo": "Dopo",
   "careTypeMedication": "Medicinale",
@@ -515,8 +515,8 @@
   "upcomingVisits": "Prossime visite",
   "timelineEmpty": "Nessun evento al momento",
   "noThreads": "Nessuna conversazione",
-  "vetInviteSent": "Invito inviato: l'azienda deve accettare la richiesta",
-  "vetInviteSentNamed": "Richiesta inviata a {practice}: l'azienda deve accettarla",
+  "vetInviteSent": "Invito inviato: lo studio deve accettare la richiesta",
+  "vetInviteSentNamed": "Richiesta inviata a {practice}: lo studio deve accettarla",
   "@vetInviteSentNamed": {
     "placeholders": {
       "practice": {
@@ -525,7 +525,7 @@
     }
   },
   "vetNotFound": "Nessun veterinario trovato con questa email",
-  "addVetSearchHint": "Stiamo cercando questo account veterinario in PetFollow. Se esiste, viene inviata una richiesta di collegamento all'azienda.",
+  "addVetSearchHint": "Cerchiamo questo account veterinario su petsFollow. Se esiste, viene inviata una richiesta di collegamento allo studio.",
   "visitRequested": "Richiesta di visita inviata",
   "primaryVetSet": "Veterinario senior aggiornato",
   "visitStatusRequested": "Richiesto",
@@ -547,7 +547,7 @@
   "careTypeDental": "Cure dentistiche",
   "careTypeCustom": "Promemoria personalizzato",
   "homeAddFirstVetTitle": "Aggiungi il tuo veterinario",
-  "homeAddFirstVetBody": "Collega l'ufficio che segue il tuo animale per condividere letture e discutere.",
+  "homeAddFirstVetBody": "Collega lo studio che segue il tuo animale per condividere letture e discutere.",
   "homeAddFirstVetCta": "Aggiungi un veterinario",
   "photoFrameHint": "Inquadra il muso al centro — anteprima scheda animale",
   "takePhoto": "Scatta una foto",
@@ -629,7 +629,7 @@
   },
   "proLightAudioConsentClientCheck": "Ho ottenuto l'accordo orale da parte del cliente per la registrazione",
   "proLightReportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaci inclusi).",
-  "proLightAiModuleRequired": "Modulo CR AI non attivato o periodo di prova scaduto: contatta il rappresentante di vendita PetFollow.",
+  "proLightAiModuleRequired": "Modulo CR AI non attivato o periodo di prova scaduto: contatta il rappresentante di vendita petsFollow.",
   "proLightAiModuleTrialBanner": "Test CR IA — {days} giorni rimanenti. Detta quindi migliora i tuoi rapporti.",
   "@proLightAiModuleTrialBanner": {
     "placeholders": {
@@ -638,6 +638,6 @@
       }
     }
   },
-  "proLightAiModuleInactiveBanner": "CR IA non attivata per questa azienda. La dettatura AI non sarà disponibile.",
-  "proLightAiModuleVisitScopedBanner": "CR IA disponibile se l'ufficio visite ha il modulo attivato."
+  "proLightAiModuleInactiveBanner": "CR AI non attivata per questo studio. La dettatura AI non sarà disponibile.",
+  "proLightAiModuleVisitScopedBanner": "CR IA disponibile se lo studio visite ha il modulo attivato."
 }

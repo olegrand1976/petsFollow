@@ -49,6 +49,7 @@ class SettingsMenuScreen extends StatelessWidget {
                   DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
                   DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
                   DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
+                  DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
                 ],
                 onChanged: (next) async {
                   if (next == null || next == code) return;

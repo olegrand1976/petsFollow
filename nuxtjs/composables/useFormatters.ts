@@ -9,6 +9,10 @@ export function useFormatters() {
         return 'en-GB'
       case 'es':
         return 'es-ES'
+      case 'et':
+        return 'et-EE'
+      case 'it':
+        return 'it-IT'
       default:
         return 'fr-FR'
     }

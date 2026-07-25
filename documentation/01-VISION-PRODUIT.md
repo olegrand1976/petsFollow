@@ -24,7 +24,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 | Extension | Statut |
 |-----------|--------|
 | Inscription véto + confirmation email + onboarding profil cabinet | Livré |
-| i18n FR / NL / EN / ES / ET (UI + erreurs API) | Livré |
+| i18n FR / NL / EN / ES / ET / IT (UI + erreurs API) | Livré |
 | Google OAuth + 2FA TOTP (optionnel) | Livré |
 | Admin plateforme (métriques, users, payments, commercials) | Livré |
 | Stripe billing par animal (monthly / annual / triennial ; quinquennial + addons = legacy hors vente) | Livré |

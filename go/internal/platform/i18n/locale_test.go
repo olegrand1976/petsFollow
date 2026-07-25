@@ -14,6 +14,9 @@ func TestMatchSupported(t *testing.T) {
 		{"et", "et", true},
 		{"ET", "et", true},
 		{"et-EE", "et", true},
+		{"it", "it", true},
+		{"IT", "it", true},
+		{"it-IT", "it", true},
 		{"fr-FR", "fr", true},
 		{"nl", "nl", true},
 		{"en-GB", "en", true},
@@ -38,5 +41,8 @@ func TestNormalizeLocaleFallsBackToFr(t *testing.T) {
 	}
 	if got := NormalizeLocale("et-EE"); got != "et" {
 		t.Fatalf("NormalizeLocale(et-EE) = %q, want et", got)
+	}
+	if got := NormalizeLocale("it-IT"); got != "it" {
+		t.Fatalf("NormalizeLocale(it-IT) = %q, want it", got)
 	}
 }

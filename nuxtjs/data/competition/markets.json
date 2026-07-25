@@ -1,17 +1,17 @@
 {
   "lastReviewedAt": "2026-07-25",
   "analystNote": {
-    "fr": "Lecture concurrentielle FR / BE / ES au 25/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C logiciel : continuité de soins prescrite via Web Pro · mobile ProLight · mobile Client, Pro à 69 € HT/mois, client 3,50 / 35 / 95 €, Care/Horse inclus, relevés FC en feature, 5 langues.",
-    "en": "Competitive read for FR / BE / ES as of 2026-07-25: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C software: vet-prescribed care continuity via Web Pro · mobile ProLight · mobile Client, Pro at €69 excl. VAT/month, owner plans €3.50 / €35 / €95, Care/Horse included, heart-rate as a feature, 5 languages."
+    "fr": "Lecture concurrentielle FR / BE / ES au 25/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C logiciel : continuité de soins prescrite via Web Pro · mobile ProLight · mobile Client, Pro à 69 € HT/mois, client 3,50 / 35 / 95 €, Care/Horse inclus, relevés FC en feature, 6 langues.",
+    "en": "Competitive read for FR / BE / ES as of 2026-07-25: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C software: vet-prescribed care continuity via Web Pro · mobile ProLight · mobile Client, Pro at €69 excl. VAT/month, owner plans €3.50 / €35 / €95, Care/Horse included, heart-rate as a feature, 6 languages."
   },
   "petsFollowBanner": {
     "fr": {
       "title": "petsFollow — continuité de soins prescrite · Web + mobile",
-      "body": "Pro 69 € HT/mois + setup ; client 3,50 / 35 / 95 € ; Web Pro · ProLight · Client ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET"
+      "body": "Pro 69 € HT/mois + setup ; client 3,50 / 35 / 95 € ; Web Pro · ProLight · Client ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET/IT"
     },
     "en": {
       "title": "petsFollow — vet-prescribed care continuity · Web + mobile",
-      "body": "Pro €69 excl. VAT/month + setup; owner €3.50 / €35 / €95; Web Pro · ProLight · Client; Care/Horse included; B2B2C; FR/NL/EN/ES/ET"
+      "body": "Pro €69 excl. VAT/month + setup; owner €3.50 / €35 / €95; Web Pro · ProLight · Client; Care/Horse included; B2B2C; FR/NL/EN/ES/ET/IT"
     }
   },
   "markets": {
@@ -30,8 +30,8 @@
           "en": "Sticky PMS habits; owner “another app” fatigue; GPS players (Tractive, Invoxia) own “pet monitoring” mindshare. Risk of confusion with pure teleconsultation."
         },
         "petsFollowAngle": {
-          "fr": "Angle cabinet : Web Pro · Pro Light · app client, prescrit par le véto, Pro 69 € HT/mois facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 5 langues.",
-          "en": "Practice angle: Web Pro · Pro Light · owner app, vet-prescribed, Pro €69 excl. VAT/month billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 5 languages."
+          "fr": "Angle cabinet : Web Pro · Pro Light · app client, prescrit par le véto, Pro 69 € HT/mois facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 6 langues.",
+          "en": "Practice angle: Web Pro · Pro Light · owner app, vet-prescribed, Pro €69 excl. VAT/month billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 6 languages."
         }
       },
       "products": [
@@ -391,8 +391,8 @@
           "en": "Strong dependence on IDEXX/Animana ecosystems; long decision cycles; small market so word-of-mouth is critical."
         },
         "petsFollowAngle": {
-          "fr": "5 langues natives (dont NL) ; B2B2C Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; Care/Horse inclus.",
-          "en": "5 native languages (incl. NL); B2B2C without hardware; Pro €69 excl. VAT; owner €3.50/€35/€95; Care/Horse included."
+          "fr": "6 langues natives (dont NL) ; B2B2C Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; Care/Horse inclus.",
+          "en": "6 native languages (incl. NL); B2B2C without hardware; Pro €69 excl. VAT; owner €3.50/€35/€95; Care/Horse included."
         }
       },
       "products": [

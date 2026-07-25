@@ -33,6 +33,8 @@ func BuildVisitReportImprovePrompt(in VisitReportPromptInput) string {
 		lang = "espagnol"
 	case "et":
 		lang = "estonien"
+	case "it":
+		lang = "italien"
 	}
 
 	switch in.Specialty {

@@ -35,6 +35,7 @@ export default defineNuxtConfig({
       { code: 'en', language: 'en-GB', files: ['en.json', 'pitch-deck/en.json'] },
       { code: 'es', language: 'es-ES', files: ['es.json', 'pitch-deck/es.json'] },
       { code: 'et', language: 'et-EE', files: ['et.json', 'pitch-deck/et.json'] },
+      { code: 'it', language: 'it-IT', files: ['it.json', 'pitch-deck/it.json'] },
     ],
     defaultLocale: 'fr',
     strategy: 'no_prefix',

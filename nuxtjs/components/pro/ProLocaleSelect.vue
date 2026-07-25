@@ -22,6 +22,7 @@ const LOCALE_FLAGS: Record<AppLocale, string> = {
   en: '🇬🇧',
   es: '🇪🇸',
   et: '🇪🇪',
+  it: '🇮🇹',
 }
 
 const props = withDefaults(defineProps<{ persist?: boolean }>(), { persist: false })

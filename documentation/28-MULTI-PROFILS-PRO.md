@@ -15,7 +15,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs |
 | `admin` / commercial* | Nuxt Pro | Inchangé |
 
-Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 5 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
+Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 
 ## ACL
 

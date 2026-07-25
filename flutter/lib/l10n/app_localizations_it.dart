@@ -99,7 +99,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get resetPasswordSubtitle => 'Minimo 8 caratteri.';
 
   @override
-  String get resetPasswordToken => 'Reimposta gettone';
+  String get resetPasswordToken => 'Token di reset';
 
   @override
   String get resetPasswordSubmit => 'Salva';
@@ -473,7 +473,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pushPermissionBody =>
-      'petFollow vuole inviarti notifiche: messaggi dal tuo veterinario, conferme di appuntamenti e promemoria di cure. Puoi disattivarli in qualsiasi momento nell\'app o nelle impostazioni del telefono.';
+      'petsFollow vuole inviarti notifiche: messaggi dal tuo veterinario, conferme di appuntamenti e promemoria di cure. Puoi disattivarli in qualsiasi momento nell\'app o nelle impostazioni del telefono.';
 
   @override
   String get pushPermissionContinue => 'Continuare';
@@ -608,15 +608,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Condizioni generali d\'uso — animali domesticiSegui\n\nL\'app AnimalsFollow consente ai proprietari di animali domestici di monitorare prescritti (messaggi, promemoria per cura/cavallo, letture del cuore), visualizzare la cronologia e comunicare con il proprio veterinario.\n\nI servizi sono forniti come parte dell\'abbonamento scelto (pagamento tramite Stripe). L\'utente si impegna a utilizzare l\'applicazione in conformità con lo scopo previsto.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nData aggiornata: luglio 2026';
+      'Condizioni generali d\'uso — petsFollow\n\nL\'app petsFollow consente ai proprietari di animali domestici di monitorare prescritti (messaggi, promemoria per cura/cavallo, letture del cuore), visualizzare la cronologia e comunicare con il proprio veterinario.\n\nI servizi sono forniti come parte dell\'abbonamento scelto (pagamento tramite Stripe). L\'utente si impegna a utilizzare l\'applicazione in conformità con lo scopo previsto.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nData aggiornata: luglio 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Informativa sulla privacy — animali domesticiSegui\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell\'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell\'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@ll-it-sc.be.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026';
+      'Informativa sulla privacy — petsFollow\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell\'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell\'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@ll-it-sc.be.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026';
 
   @override
   String get legalNoticeBody =>
-      'Note legali — animali domesticiSegui\n\nEditore: LL-IT-SC / animali domesticiSegui\nContatto: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (conformità GDPR).\n\nDirettore della pubblicazione: petFollow.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nData aggiornata: luglio 2026';
+      'Note legali — petsFollow\n\nEditore: LL-IT-SC / petsFollow\nContatto: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (conformità GDPR).\n\nDirettore della pubblicazione: petsFollow.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nData aggiornata: luglio 2026';
 
   @override
   String get language => 'Lingua';
@@ -798,7 +798,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get heartRateNoDurationConfigured =>
-      'Per questo armadio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.';
+      'Per questo studio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.';
 
   @override
   String get start => 'Per iniziare';
@@ -883,7 +883,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il tuo primo animale per iniziare il follow-up prescritto dal tuo veterinario.';
 
   @override
-  String get discoveryTitle => 'Scopri gli animali domesticiSegui';
+  String get discoveryTitle => 'Scopri petsFollow';
 
   @override
   String get discoveryMission => 'Il tuo viaggio in 7 giorni';
@@ -971,7 +971,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get calendarSelectVet => 'Scegli un veterinario:';
 
   @override
-  String get calendarCallPractice => 'Chiama l\'ufficio';
+  String get calendarCallPractice => 'Chiama lo studio';
 
   @override
   String get calendarNoPhone =>
@@ -1009,7 +1009,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'È ora di fare una lettura del cuore per il tuo animale domestico';
 
   @override
-  String get reviewAskTitle => 'Ti piacciono gli animali domestici Segui?';
+  String get reviewAskTitle => 'Ti piacciono gli petsFollow?';
 
   @override
   String get reviewAskYes => 'Sì, valuta l\'app';
@@ -1215,11 +1215,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get vetInviteSent =>
-      'Invito inviato: l\'azienda deve accettare la richiesta';
+      'Invito inviato: lo studio deve accettare la richiesta';
 
   @override
   String vetInviteSentNamed(String practice) {
-    return 'Richiesta inviata a $practice: l\'azienda deve accettarla';
+    return 'Richiesta inviata a $practice: lo studio deve accettarla';
   }
 
   @override
@@ -1227,7 +1227,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'Stiamo cercando questo account veterinario in PetFollow. Se esiste, viene inviata una richiesta di collegamento all\'azienda.';
+      'Cerchiamo questo account veterinario su petsFollow. Se esiste, viene inviata una richiesta di collegamento allo studio.';
 
   @override
   String get visitRequested => 'Richiesta di visita inviata';
@@ -1297,7 +1297,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get homeAddFirstVetBody =>
-      'Collega l\'ufficio che segue il tuo animale per condividere letture e discutere.';
+      'Collega lo studio che segue il tuo animale per condividere letture e discutere.';
 
   @override
   String get homeAddFirstVetCta => 'Aggiungi un veterinario';
@@ -1535,7 +1535,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get proLightAiModuleRequired =>
-      'Modulo CR AI non attivato o periodo di prova scaduto: contatta il rappresentante di vendita PetFollow.';
+      'Modulo CR AI non attivato o periodo di prova scaduto: contatta il rappresentante di vendita petsFollow.';
 
   @override
   String proLightAiModuleTrialBanner(int days) {
@@ -1544,9 +1544,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get proLightAiModuleInactiveBanner =>
-      'CR IA non attivata per questa azienda. La dettatura AI non sarà disponibile.';
+      'CR AI non attivata per questo studio. La dettatura AI non sarà disponibile.';
 
   @override
   String get proLightAiModuleVisitScopedBanner =>
-      'CR IA disponibile se l\'ufficio visite ha il modulo attivato.';
+      'CR IA disponibile se lo studio visite ha il modulo attivato.';
 }

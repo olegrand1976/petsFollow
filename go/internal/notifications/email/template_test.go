@@ -110,7 +110,7 @@ func TestAllEmailLocalesResolve(t *testing.T) {
 		"emails.footer_powered_by",
 		"emails.footer_visit_llit",
 	}
-	for _, loc := range []string{"fr", "en", "nl", "es"} {
+	for _, loc := range []string{"fr", "en", "nl", "es", "et", "it"} {
 		for _, key := range keys {
 			got := i18n.T(loc, key, map[string]string{"fullName": "Ada", "bpm": "120", "body": "hi"})
 			if got == key {

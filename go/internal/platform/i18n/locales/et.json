@@ -264,7 +264,7 @@
         "preheader": "Lühike ülevaade sellest, mida petsFollow sisaldab.",
         "greeting": "Tere {fullName},",
         "intro": "On möödunud 14 päeva: mõõtmised, sõnumid, ajajoon ja meeldetuletused on teie looma plaanis. Jätkake mõõtmist vastavalt kabineti soovitustele.",
-        "detail": "Sisaldub: 15/30/60 s mõõtmised · sõnumid + push · ajajoon · meeldetuletused · FR/NL/EN/ES/ET",
+        "detail": "Sisaldub: 15/30/60 s mõõtmised · sõnumid + push · ajajoon · meeldetuletused · FR/NL/EN/ES/ET/IT",
         "cta": "Jätka rakenduses",
         "disclaimer": "Täname, et usaldasite petsFollow'i oma looma hooldusega."
       },
