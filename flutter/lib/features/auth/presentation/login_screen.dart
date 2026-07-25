@@ -12,6 +12,8 @@ import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/forgot_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/register_screen.dart';
+import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
+import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -41,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? info;
   bool _busy = false;
   String? _mfaToken;
+  bool consent = false;
 
   bool get _awaiting2FA => _mfaToken != null;
 
@@ -142,15 +145,119 @@ class _LoginScreenState extends State<LoginScreen> {
       _busy = true;
     });
     try {
-      final data = await GoogleLoginFlow.signIn();
+      // Compte existant : consent ignoré côté API.
+      // Compte inconnu : consent=true requis (checkbox ci-dessous).
+      final data = await GoogleLoginFlow.signIn(consent: consent);
       if (!mounted) return;
       if (data != null) await _finishLogin(data);
+    } on GoogleConsentRequired catch (e) {
+      if (!mounted) return;
+      // Checkbox non cochée + email Google inconnu → forcer l'acceptation.
+      final accepted = await _promptGoogleConsent(l10n);
+      if (!mounted) return;
+      if (accepted != true) {
+        setState(() => error = l10n.registerConsentRequired);
+        return;
+      }
+      setState(() => consent = true);
+      try {
+        final data = await GoogleLoginFlow.complete(e.idToken, consent: true);
+        if (!mounted) return;
+        await _finishLogin(data);
+      } catch (retryErr) {
+        if (!mounted) return;
+        setState(() => error = GoogleLoginFlow.errorMessage(l10n, retryErr));
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => error = GoogleLoginFlow.errorMessage(l10n, e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Compte Google inconnu : demander l'acceptation CGU/privacy (RGPD) avant create-if-absent.
+  Future<bool?> _promptGoogleConsent(AppLocalizations l10n) {
+    final linkStyle = TextStyle(
+      color: AppColors.accent,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.accent,
+    );
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.registerTitle),
+        content: Wrap(
+          children: [
+            Text(l10n.registerConsentPrefix),
+            GestureDetector(
+              onTap: () => _openLegal(LegalDocumentType.terms),
+              child: Text(l10n.legalTermsTitle, style: linkStyle),
+            ),
+            Text(l10n.registerConsentMiddle),
+            GestureDetector(
+              onTap: () => _openLegal(LegalDocumentType.privacy),
+              child: Text(l10n.legalPrivacyTitle, style: linkStyle),
+            ),
+            const Text('.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.proLightAudioConsentAccept),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openLegal(LegalDocumentType type) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LegalDocumentScreen(type: type)),
+    );
+  }
+
+  Widget _buildConsentRow(AppLocalizations l10n) {
+    final linkStyle = TextStyle(
+      color: AppColors.accent,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.accent,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: consent,
+          onChanged: _busy ? null : (v) => setState(() => consent = v ?? false),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Wrap(
+              children: [
+                Text(l10n.registerConsentPrefix),
+                GestureDetector(
+                  onTap: () => _openLegal(LegalDocumentType.terms),
+                  child: Text(l10n.legalTermsTitle, style: linkStyle),
+                ),
+                Text(l10n.registerConsentMiddle),
+                GestureDetector(
+                  onTap: () => _openLegal(LegalDocumentType.privacy),
+                  child: Text(l10n.legalPrivacyTitle, style: linkStyle),
+                ),
+                const Text('.'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _openRegister() async {
@@ -259,6 +366,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          _buildConsentRow(l10n),
+          const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _busy ? null : submitGoogle,
             icon: const Icon(Icons.g_mobiledata, size: 28),

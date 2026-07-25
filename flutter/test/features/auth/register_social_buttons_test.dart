@@ -72,6 +72,22 @@ void main() {
       expect(messageFor('email_not_verified'), l10n.emailNotVerified);
       expect(messageFor('consent_required'), l10n.registerConsentRequired);
       expect(messageFor('anything_else'), l10n.googleLoginFailed);
+      expect(
+        GoogleLoginFlow.errorMessage(l10n, GoogleConsentRequired('tok')),
+        l10n.registerConsentRequired,
+      );
+      expect(
+        GoogleLoginFlow.isConsentRequired(
+          _dioError({
+            'error': {
+              'code': 'bad_request',
+              'message':
+                  'Vous devez accepter les CGU et la politique de confidentialité',
+            },
+          }),
+        ),
+        isTrue,
+      );
     });
 
     test('erreur non Dio → message générique', () {
