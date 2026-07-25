@@ -65,7 +65,7 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if id.Role != kernel.RoleVet && id.Role != kernel.RoleCarePro {
+	if id.Role != kernel.RoleCarePro && !(kernel.IsPracticeStaff(id.Role) && a.allowPracticePerm(r, id, "pets.read")) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
@@ -423,9 +423,23 @@ func (a *API) canManageVisit(w http.ResponseWriter, r *http.Request, id authx.Id
 	return a.canAccessVisitReport(w, r, id, visit, store.PermWriteNotes, true)
 }
 
-// canAccessVisitReport checks role (vet|care_pro) and pet ACL. If writeErrOnFail is false, returns false silently.
+// canAccessVisitReport checks role (care_pro|practice staff) and pet ACL. If writeErrOnFail is false, returns false silently.
 func (a *API) canAccessVisitReport(w http.ResponseWriter, r *http.Request, id authx.Identity, visit store.Visit, need store.AccessPermission, writeErrOnFail bool) bool {
-	if id.Role != kernel.RoleVet && id.Role != kernel.RoleCarePro {
+	switch {
+	case id.Role == kernel.RoleCarePro:
+		// care_pro: pet ACL below
+	case kernel.IsPracticeStaff(id.Role):
+		cap := "pets.read"
+		if need == store.PermWriteNotes || need == store.PermFull {
+			cap = "pets.write_clinical"
+		}
+		if !a.allowPracticePerm(r, id, cap) {
+			if writeErrOnFail {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
+			}
+			return false
+		}
+	default:
 		if writeErrOnFail {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		}

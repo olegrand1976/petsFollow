@@ -63,6 +63,7 @@ func (s *Store) CreateCommercialManagerUser(ctx context.Context, email, password
 	if err != nil {
 		return "", err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return userID, nil
 }
 
@@ -158,6 +159,7 @@ func (s *Store) CreateCommercialUserWithManager(ctx context.Context, email, pass
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return userID, nil
 }
 

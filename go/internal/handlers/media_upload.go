@@ -53,6 +53,10 @@ func (a *API) uploadPetPhoto(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
+	if kernel.IsPracticeStaff(id.Role) && !a.allowPracticePerm(r, id, "pets.write_clinical") {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
+		return
+	}
 	url, err := a.uploadImage(r, "pets", pet.ID)
 	if err != nil {
 		a.writeUploadErr(w, r, err)
@@ -74,7 +78,7 @@ func (a *API) canEditPetPhoto(id authx.Identity, pet store.Pet) bool {
 	switch id.Role {
 	case kernel.RoleClient:
 		return pet.OwnerUserID == id.UserID
-	case kernel.RoleVet:
+	case kernel.RoleVet, kernel.RoleVetAssistant, kernel.RoleSecretary:
 		return pet.PracticeID == id.PracticeID
 	default:
 		return false

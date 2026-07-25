@@ -297,7 +297,9 @@ class ApiClient {
 
   Future<({List<dynamic> visits, List<dynamic> clients, List<dynamic> pets})>
       loadProTerrainLists() async {
-    if (userRole == 'vet') {
+    if (userRole == 'vet' ||
+        userRole == 'vet_assistant' ||
+        userRole == 'secretary') {
       return (
         visits: await listVetTourVisits(),
         clients: await listVetClients(),
@@ -869,6 +871,28 @@ class ApiClient {
   Future<NotificationPrefs> updateNotificationPrefs(NotificationPrefs prefs) async {
     final res = await dio.patch('/api/v1/me/notification-preferences', data: prefs.toJson());
     return NotificationPrefs.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> getFeatureModules() async {
+    final res = await dio.get('/api/v1/me/feature-modules');
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<Map<String, dynamic>> updateFeatureModules(Map<String, dynamic> body) async {
+    final res = await dio.patch('/api/v1/me/feature-modules', data: body);
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<List<Map<String, dynamic>>> getProfiles() async {
+    final res = await dio.get('/api/v1/me/profiles');
+    final data = res.data['data'] as List<dynamic>;
+    return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<Map<String, dynamic>> switchProfile(String profileId) async {
+    final res = await dio.post('/api/v1/me/profiles/switch', data: {'profileId': profileId});
+    final data = Map<String, dynamic>.from(res.data['data'] as Map);
+    return _completeLogin(data);
   }
 
   /// Typed messaging threads (single wrapper for `/messaging/threads`).

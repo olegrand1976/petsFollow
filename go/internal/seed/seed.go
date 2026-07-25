@@ -77,6 +77,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedStripeCatalog(ctx, st); err != nil {
 		return err
 	}
+	if err := seedProfilesTeamModules(ctx, pool, st); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
@@ -162,7 +165,10 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	// Detach surviving users from practices before TRUNCATE practice.practices.
-	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL WHERE practice_id IS NOT NULL`); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL, active_profile_id = NULL WHERE true`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `TRUNCATE practice.team_members, identity.profiles CASCADE`); err != nil {
 		return err
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
@@ -787,4 +793,85 @@ func logSummary() {
 	log.Println("  vetlight.demo@   — véto light · write_notes sur Spirit")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
 	log.Printf("Reset password: http://localhost:3002/reset-password?token=%s", demoPasswordResetToken)
+}
+
+func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	rows, err := pool.Query(ctx, `SELECT id::text FROM identity.users`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return err
+		}
+		if err := st.EnsureUserProfiles(ctx, id); err != nil {
+			return fmt.Errorf("profiles %s: %w", id, err)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	// VetPlus équipe : référence + collègue + assistant + secrétaire
+	var practiceID, vetDemoID string
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text, u.id::text FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.role = 'vet' AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&practiceID, &vetDemoID)
+	if err == nil {
+		_ = st.EnsureReferenceTeamMembership(ctx, practiceID, vetDemoID)
+		type member struct {
+			email, name string
+			role        store.TeamRole
+		}
+		for _, m := range []member{
+			{"vet.colleague@petsfollow.test", "Dr Collègue VetPlus", store.TeamRoleVet},
+			{"vet.assist@petsfollow.test", "Camille Assistante", store.TeamRoleAssistant},
+			{"secretary.demo@petsfollow.test", "Sophie Secrétariat", store.TeamRoleSecretary},
+		} {
+			if _, err2 := st.InviteTeamMember(ctx, practiceID, vetDemoID, store.InviteTeamMemberInput{
+				Email: m.email, FullName: m.name, Password: passwordVet, TeamRole: m.role,
+			}); err2 != nil {
+				log.Printf("seed team member %s: %v", m.email, err2)
+			}
+		}
+	}
+
+	// Modules ON pour client.demo
+	var clientDemoID string
+	if err := pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email='client.demo@petsfollow.test'`).Scan(&clientDemoID); err == nil {
+		_, _ = st.UpdateFeatureModules(ctx, clientDemoID, store.FeatureModules{
+			ModuleCarePlus: true, ModuleHorse: true, ModuleKennel: true, ModuleFamily: true,
+		})
+	}
+
+	// Horse contacts / competitions on Spirit
+	var spiritID string
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text FROM pets.pets p
+		JOIN identity.users u ON u.id = p.owner_user_id
+		WHERE u.email='client.demo@petsfollow.test' AND p.name='Spirit'`).Scan(&spiritID)
+	if err == nil {
+		var ownerID string
+		_ = pool.QueryRow(ctx, `SELECT owner_user_id::text FROM pets.pets WHERE id=$1`, spiritID).Scan(&ownerID)
+		_, _ = pool.Exec(ctx, `
+			INSERT INTO care.professional_contacts (id, pet_id, owner_user_id, role, full_name, phone, notes)
+			SELECT $1, $2, $3, 'farrier', 'Marc Ferrier', '+32470000001', 'Démo seed'
+			WHERE NOT EXISTS (SELECT 1 FROM care.professional_contacts WHERE pet_id=$2 AND full_name='Marc Ferrier')`,
+			uuid.NewString(), spiritID, ownerID)
+		_, _ = pool.Exec(ctx, `
+			INSERT INTO care.competitions (id, pet_id, owner_user_id, event_date, title, location, result)
+			SELECT $1, $2, $3, CURRENT_DATE - 30, 'CSO régional', 'Wavre', 'Clear round'
+			WHERE NOT EXISTS (SELECT 1 FROM care.competitions WHERE pet_id=$2 AND title='CSO régional')`,
+			uuid.NewString(), spiritID, ownerID)
+		_, _ = pool.Exec(ctx, `
+			UPDATE visits.visits SET lat = 50.8503, lng = 4.3517, address_text = COALESCE(NULLIF(address_text,''), 'Écurie démo — Bruxelles')
+			WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'`, spiritID)
+	}
+
+	log.Println("Équipe VetPlus : vet.colleague@ / vet.assist@ / secretary.demo@ (mdp véto)")
+	log.Println("Modules UI ON : client.demo (care+/horse/kennel/family)")
+	return nil
 }

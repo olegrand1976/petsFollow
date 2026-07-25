@@ -179,10 +179,10 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 }
 
 var (
-	errGoogleProOnly         = errors.New("google pro only")
-	errGoogleClientOnly      = errors.New("google client only")
-	errGoogleAccountMismatch = errors.New("google account mismatch")
-	errGoogleConsentRequired = errors.New("google consent required")
+	errGoogleProOnly          = errors.New("google pro only")
+	errGoogleClientOnly       = errors.New("google client only")
+	errGoogleAccountMismatch  = errors.New("google account mismatch")
+	errGoogleConsentRequired  = errors.New("google consent required")
 )
 
 func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
@@ -203,10 +203,21 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 }
 
 func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store.User) {
-	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
+	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro ||
+		u.Role == kernel.RoleVetAssistant || u.Role == kernel.RoleSecretary) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
+	_ = a.store.EnsureUserProfiles(r.Context(), u.ID)
+	active, _ := a.store.GetActiveProfile(r.Context(), u.ID)
+	// Reload user in case switch sync needed — use active profile role for tokens.
+	if active.ID != "" {
+		u2, err := a.store.GetUserByID(r.Context(), u.ID)
+		if err == nil {
+			u = u2
+		}
+	}
+	profileID := active.ID
 	if u.TOTPEnabled {
 		mfa, err := a.tokens.IssueMFA(u.ID, u.Email, u.Role, u.PracticeID)
 		if err != nil {
@@ -216,7 +227,7 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store
 		httpx.WriteData(w, http.StatusOK, mfa)
 		return
 	}
-	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -283,12 +294,22 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
-	pair, err := a.tokens.Issue(id.UserID, id.Email, id.Role, id.PracticeID)
+	// Reload user: MFA token may carry a stale role after profile switch.
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	a.store.TouchLastLogin(r.Context(), id.UserID)
+	profileID := ""
+	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
+		profileID = active.ID
+	}
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	a.store.TouchLastLogin(r.Context(), u.ID)
 	httpx.WriteData(w, http.StatusOK, pair)
 }
 

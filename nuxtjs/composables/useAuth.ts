@@ -39,9 +39,14 @@ export function isSalesForceRole(role: string | null | undefined): boolean {
   return role === 'commercial' || role === 'commercial_manager'
 }
 
+/** Staff cabinet : véto référence / assistant / secrétaire. */
+export function isPracticeStaffRole(role: string | null | undefined): boolean {
+  return role === 'vet' || role === 'vet_assistant' || role === 'secretary'
+}
+
 /** Rôles autorisés sur la face Pro (Nuxt). */
 export function isProRole(role: string | null | undefined): boolean {
-  return role === 'admin' || role === 'vet' || isSalesForceRole(role)
+  return role === 'admin' || isPracticeStaffRole(role) || isSalesForceRole(role)
 }
 
 /** Home post-login / post-change-password pour un rôle Pro. */
@@ -54,6 +59,8 @@ export function homePathForRole(role: string | null | undefined, opts?: { profil
     case 'commercial':
       return '/commercial'
     case 'vet':
+    case 'vet_assistant':
+    case 'secretary':
       return opts?.profileComplete === false ? '/onboarding' : '/dashboard'
     default:
       return '/login'

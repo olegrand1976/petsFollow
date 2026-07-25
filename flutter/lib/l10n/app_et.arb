@@ -470,5 +470,22 @@
   "proLightVetTitle": "Välitöö véto",
   "commercialFieldTitle": "Müük",
   "commercialFieldSubtitle": "Kliendi kutse QR ja Pro veebi juurdepääs.",
-  "commercialOpenProWeb": "Ava Pro veebisait"
+  "commercialOpenProWeb": "Ava Pro veebisait",
+  "featureModules": "Valikud",
+  "featureModulesCatalog": "Discover options",
+  "featureModulesSubtitle": "Enable Care+, Horse, Kennel or Household as needed.",
+  "moduleCarePlus": "Care+",
+  "moduleCarePlusDesc": "Richer care reminders for all your pets.",
+  "moduleHorse": "Horse",
+  "moduleHorseDesc": "Pro contacts and competitions for horses.",
+  "moduleKennel": "Kennel",
+  "moduleKennelDesc": "Quick litter / kennel encoding.",
+  "moduleFamily": "Household",
+  "moduleFamilyDesc": "Household view of your pets.",
+  "moduleActivate": "Enable",
+  "moduleActive": "Active",
+  "switchProfile": "Vaheta profiili",
+  "profilePersonal": "Personal",
+  "profilePro": "Professional",
+  "profileSwitched": "Profile switched"
 }

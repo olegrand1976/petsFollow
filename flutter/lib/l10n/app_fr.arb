@@ -533,5 +533,22 @@
   "proLightVetTitle": "Terrain véto",
   "commercialFieldTitle": "Commercial",
   "commercialFieldSubtitle": "QR invitation clients et accès au site Pro.",
-  "commercialOpenProWeb": "Ouvrir le site Pro"
+  "commercialOpenProWeb": "Ouvrir le site Pro",
+  "featureModules": "Options",
+  "featureModulesCatalog": "Découvrir les options",
+  "featureModulesSubtitle": "Activez Care+, Horse, Kennel ou Foyer selon vos besoins.",
+  "moduleCarePlus": "Care+",
+  "moduleCarePlusDesc": "Rappels de soins enrichis pour tous vos animaux.",
+  "moduleHorse": "Horse",
+  "moduleHorseDesc": "Contacts pros et compétitions pour les chevaux.",
+  "moduleKennel": "Kennel",
+  "moduleKennelDesc": "Encodage rapide d’élevage / portée.",
+  "moduleFamily": "Foyer",
+  "moduleFamilyDesc": "Vue foyer de vos animaux.",
+  "moduleActivate": "Activer",
+  "moduleActive": "Actif",
+  "switchProfile": "Changer de profil",
+  "profilePersonal": "Personnel",
+  "profilePro": "Professionnel",
+  "profileSwitched": "Profil basculé"
 }

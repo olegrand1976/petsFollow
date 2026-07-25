@@ -11,7 +11,6 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
-	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func (a *API) registerCommercialRoutes(r chi.Router) {
@@ -337,9 +336,8 @@ type vetProspectReq struct {
 }
 
 func (a *API) vetCreateProspect(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
 		return
 	}
 	var req vetProspectReq

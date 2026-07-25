@@ -82,6 +82,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Delete("/me", a.deleteMe)
 		pr.Get("/me/export", a.exportMe)
 		pr.Patch("/me/locale", a.updateMeLocale)
+		a.registerProfileRoutes(pr)
 		pr.Get("/me/vets", a.listMyVets)
 		pr.Post("/me/vets/invite", a.inviteVet)
 		pr.Get("/vet/link-requests", a.listVetLinkRequests)
@@ -201,7 +202,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
-	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
+	if (kernel.IsPracticeStaff(u.Role) || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
@@ -237,7 +238,11 @@ func (a *API) refresh(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_token")
 		return
 	}
-	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
+	profileID := ""
+	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
+		profileID = active.ID
+	}
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -262,9 +267,8 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listClients(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.read")
+	if !ok {
 		return
 	}
 	clients, err := a.store.ListClientsByPractice(r.Context(), id.PracticeID)
@@ -276,9 +280,8 @@ func (a *API) listClients(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.read")
+	if !ok {
 		return
 	}
 	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
@@ -295,15 +298,19 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	if err != nil {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	ownerID, ok := a.resolvePracticeInviteOwner(w, r, id)
+	if !ok {
 		return
 	}
 	if strings.TrimSpace(a.cfg.PetsAppDownloadURL) == "" && strings.TrimSpace(a.cfg.ProPublicSiteURL) == "" {
 		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "app_download_url_missing")
 		return
 	}
-	invite, err := a.store.EnsureVetAppInviteCode(r.Context(), id.UserID)
+	invite, err := a.store.EnsureVetAppInviteCode(r.Context(), ownerID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")
@@ -328,7 +335,7 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	vet, err := a.store.GetUserByID(r.Context(), id.UserID)
+	vet, err := a.store.GetUserByID(r.Context(), ownerID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -369,9 +376,8 @@ func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listClientPets(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	if !ok {
 		return
 	}
 	pets, err := a.store.ListPetsByClientForVet(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
@@ -610,7 +616,7 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	vetView := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
+	vetView := id.Role == kernel.RoleCarePro || a.allowPracticePerm(r, id, "pets.read")
 	ident := store.IdentityOf(id.UserID, id.Role, id.PracticeID)
 	canNotes, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermWriteNotes)
 	if err != nil {
@@ -769,7 +775,7 @@ func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requirePetAccess(w, r, petID, id, store.PermRead); !ok {
 		return
 	}
-	vetView := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
+	vetView := id.Role == kernel.RoleCarePro || a.allowPracticePerm(r, id, "pets.read")
 	sessions, err := a.store.ListHeartRateSessions(r.Context(), petID, vetView)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -779,9 +785,8 @@ func (a *API) listHeartRate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) markPetHeartRateSeen(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "heartrate.validate")
+	if !ok {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
@@ -808,16 +813,16 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	switch id.Role {
-	case kernel.RoleVet:
-		threads, err := a.store.ListThreadSummariesForVet(r.Context(), id.UserID)
+	switch {
+	case a.allowPracticePerm(r, id, "messaging"):
+		threads, err := a.store.ListThreadSummariesForPractice(r.Context(), id.PracticeID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
-	case kernel.RoleClient:
+	case id.Role == kernel.RoleClient:
 		vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -836,6 +841,16 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *API) canAccessThread(r *http.Request, id authx.Identity, thread store.Thread) bool {
+	if id.UserID == thread.ClientUserID {
+		return true
+	}
+	if kernel.IsPracticeStaff(id.Role) && id.PracticeID != "" && id.PracticeID == thread.PracticeID {
+		return a.allowPracticePerm(r, id, "messaging")
+	}
+	return id.UserID == thread.VetUserID
+}
+
 func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
 	thread, err := a.store.GetThreadByID(r.Context(), chi.URLParam(r, "threadID"))
 	if err != nil {
@@ -843,7 +858,7 @@ func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
-	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+	if !a.canAccessThread(r, id, thread) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
@@ -866,7 +881,7 @@ func (a *API) markThreadRead(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+	if !a.canAccessThread(r, id, thread) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
@@ -883,7 +898,13 @@ func (a *API) markAllThreadsRead(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if err := a.store.MarkAllUnreadForUser(r.Context(), id.UserID); err != nil {
+	var markErr error
+	if a.allowPracticePerm(r, id, "messaging") && id.PracticeID != "" {
+		markErr = a.store.MarkAllUnreadForPractice(r.Context(), id.PracticeID)
+	} else {
+		markErr = a.store.MarkAllUnreadForUser(r.Context(), id.UserID)
+	}
+	if markErr != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
@@ -901,7 +922,7 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
-	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+	if !a.canAccessThread(r, id, thread) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
@@ -935,7 +956,7 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
 		}
 	}
-	if id.Role == kernel.RoleVet {
+	if kernel.IsPracticeStaff(id.Role) {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, req.Body)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -948,7 +969,7 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := authx.FromContext(r.Context())
-	if id.UserID != thread.ClientUserID && id.UserID != thread.VetUserID {
+	if !a.canAccessThread(r, id, thread) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_participant")
 		return
 	}
@@ -994,7 +1015,7 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 			_ = a.notifier.SendNewMessage(vet.Email, locale, preview)
 		}
 	}
-	if id.Role == kernel.RoleVet {
+	if kernel.IsPracticeStaff(id.Role) {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, preview)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -1006,9 +1027,8 @@ type availReq struct {
 }
 
 func (a *API) setAvailability(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "messaging")
+	if !ok {
 		return
 	}
 	var req availReq
@@ -1024,9 +1044,8 @@ func (a *API) setAvailability(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) vetOverview(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.read")
+	if !ok {
 		return
 	}
 	overview, err := a.store.VetOverview(r.Context(), id.PracticeID, id.UserID)
@@ -1038,9 +1057,8 @@ func (a *API) vetOverview(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getAvailability(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "messaging")
+	if !ok {
 		return
 	}
 	status, autoReply, err := a.store.GetVetAvailability(r.Context(), id.UserID)
@@ -1131,7 +1149,11 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "internal")
 		return
 	}
-	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
+	profileID := ""
+	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
+		profileID = active.ID
+	}
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -1214,9 +1236,8 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "practice.settings")
+	if !ok {
 		return
 	}
 	profile, err := a.store.GetPracticeProfile(r.Context(), id.PracticeID, id.UserID)
@@ -1228,9 +1249,8 @@ func (a *API) getVetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "practice.settings")
+	if !ok {
 		return
 	}
 	defer r.Body.Close()

@@ -3,6 +3,7 @@ import {
   extractAccessToken,
   isAuthSuccess,
   isMFAChallenge,
+  isPracticeStaffRole,
   isProRole,
   isSalesForceRole,
   hasSessionCookie,
@@ -119,9 +120,15 @@ describe('useAuth helpers', () => {
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
     expect(isProRole('admin')).toBe(true)
     expect(isProRole('vet')).toBe(true)
+    expect(isProRole('vet_assistant')).toBe(true)
+    expect(isProRole('secretary')).toBe(true)
     expect(isProRole('commercial')).toBe(true)
     expect(isProRole('commercial_manager')).toBe(true)
     expect(isProRole('client')).toBe(false)
+    expect(isPracticeStaffRole('vet')).toBe(true)
+    expect(isPracticeStaffRole('vet_assistant')).toBe(true)
+    expect(isPracticeStaffRole('secretary')).toBe(true)
+    expect(isPracticeStaffRole('admin')).toBe(false)
     expect(isSalesForceRole('commercial')).toBe(true)
     expect(isSalesForceRole('commercial_manager')).toBe(true)
     expect(isSalesForceRole('vet')).toBe(false)
@@ -132,6 +139,8 @@ describe('useAuth helpers', () => {
     expect(homePathForRole('commercial')).toBe('/commercial')
     expect(homePathForRole('commercial_manager')).toBe('/commercial-manager')
     expect(homePathForRole('vet')).toBe('/dashboard')
+    expect(homePathForRole('vet_assistant')).toBe('/dashboard')
+    expect(homePathForRole('secretary')).toBe('/dashboard')
     expect(homePathForRole('vet', { profileComplete: false })).toBe('/onboarding')
     expect(homePathForRole('vet', { profileComplete: true })).toBe('/dashboard')
     expect(homePathForRole('client')).toBe('/login')

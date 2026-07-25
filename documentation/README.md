@@ -18,7 +18,7 @@ Index des documents de référence du projet.
 | 12 | [12-PLAN-PHASES.md](12-PLAN-PHASES.md) | Synthèse (livré / backlog) |
 | 13 | [13-CHARTE-GRAPHIQUE.md](13-CHARTE-GRAPHIQUE.md) | Complet |
 | 14 | [14-POSITIONNEMENT-MARKETING.md](14-POSITIONNEMENT-MARKETING.md) | Synthèse |
-| 15 | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) | Manuel web+Flutter (A–I) + auto (Z) |
+| 15 | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) | Manuel A–M + auto (Z) |
 | 16 | [16-ADMIN-SIMULATION-10ANS.md](16-ADMIN-SIMULATION-10ANS.md) | **Backlog / non livré** |
 | 17 | [17-POLITIQUE-TARIFAIRE.md](17-POLITIQUE-TARIFAIRE.md) | BM prix + commissions |
 | 18–20 | Fiches commission véto / commercial / admin | One-pagers |
@@ -31,6 +31,7 @@ Index des documents de référence du projet.
 | 26 | [26-PLAY-STORE.md](26-PLAY-STORE.md) | Publication Play Store |
 | 27 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) | **Spec** pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) — non implémenté |
 | 28 | [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md) | Multi-profils care_pro, ACL partage, pro light, CR IA |
+| 29 | [29-ANALYSE-CONCURRENCE.md](29-ANALYSE-CONCURRENCE.md) | Concurrence FR/BE/ES (commerciaux) |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.

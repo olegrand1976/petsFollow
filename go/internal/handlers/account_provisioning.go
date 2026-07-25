@@ -32,9 +32,8 @@ type createVetAdminReq struct {
 }
 
 func (a *API) createVetClient(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
 		return
 	}
 	req, ok := a.decodeCreateClient(w, r)
@@ -257,7 +256,7 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
 		details := map[string]any{"exists": true, "email": req.Email}
-		if id, idErr := authx.FromContext(r.Context()); idErr == nil && id.Role == kernel.RoleVet {
+		if id, idErr := authx.FromContext(r.Context()); idErr == nil && a.allowPracticePerm(r, id, "clients.write") {
 			if d, lerr := a.store.LookupClientConflict(r.Context(), req.Email, id.UserID); lerr == nil {
 				details = d
 			}

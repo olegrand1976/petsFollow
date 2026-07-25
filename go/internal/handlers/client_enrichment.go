@@ -112,6 +112,10 @@ func (a *API) requirePetAccess(w http.ResponseWriter, r *http.Request, petID str
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return store.Pet{}, false
 	}
+	if kernel.IsPracticeStaff(id.Role) && !a.allowPracticePerm(r, id, "pets.read") {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
+		return store.Pet{}, false
+	}
 	return pet, true
 }
 
@@ -192,6 +196,11 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if kernel.IsPracticeStaff(id.Role) {
+		if !a.checkPracticePerm(w, r, id, "care.manage") {
+			return
+		}
+	}
 	var req createCareReminderReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -263,11 +272,11 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		updated, err = a.store.MarkCareReminderDoneByID(r.Context(), rem.ID)
-	case kernel.RoleVet:
-		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
 	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return
+		if !a.checkPracticePerm(w, r, id, "care.manage") {
+			return
+		}
+		updated, err = a.store.MarkCareReminderDoneByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID)
 	}
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -315,11 +324,11 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		updated, err = a.store.PostponeCareReminderByID(r.Context(), rem.ID, req.Days)
-	case kernel.RoleVet:
-		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
 	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return
+		if !a.checkPracticePerm(w, r, id, "care.manage") {
+			return
+		}
+		updated, err = a.store.PostponeCareReminderByPractice(r.Context(), chi.URLParam(r, "id"), id.PracticeID, req.Days)
 	}
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -391,14 +400,14 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	source := "client"
-	if id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro {
+	if id.Role == kernel.RoleCarePro || kernel.IsPracticeStaff(id.Role) {
 		source = "vet"
 	}
 
 	confirmDirect := source == "vet" && req.ConfirmDirect
 	if confirmDirect {
-		practiceVet := id.Role == kernel.RoleVet && id.PracticeID != "" && pet.PracticeID == id.PracticeID
-		if !practiceVet {
+		practiceStaff := a.allowPracticePerm(r, id, "calendar.manage") && id.PracticeID != "" && pet.PracticeID == id.PracticeID
+		if !practiceStaff {
 			fullOK, ferr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
 			if ferr != nil {
 				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -525,9 +534,8 @@ func (a *API) validateClientSlot(r *http.Request, practiceID string, start time.
 }
 
 func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	status := r.URL.Query().Get("status")
@@ -555,9 +563,8 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "care.manage")
+	if !ok {
 		return
 	}
 	items, err := a.store.ListOverdueCareReminders(r.Context(), id.PracticeID)
@@ -606,18 +613,6 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 			return
 		}
-	case kernel.RoleVet:
-		if pet.PracticeID != id.PracticeID {
-			ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
-			if aerr != nil {
-				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-				return
-			}
-			if !ok {
-				writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
-				return
-			}
-		}
 	case kernel.RoleCarePro:
 		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
 		if aerr != nil {
@@ -629,11 +624,23 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return
+		if !a.checkPracticePerm(w, r, id, "calendar.manage") {
+			return
+		}
+		if pet.PracticeID != id.PracticeID {
+			ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+			if aerr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if !ok {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+				return
+			}
+		}
 	}
 
-	actsAsVet := id.Role == kernel.RoleVet || id.Role == kernel.RoleCarePro
+	actsAsVet := id.Role == kernel.RoleCarePro || kernel.IsPracticeStaff(id.Role)
 
 	action := req.Action
 	if action == "" {
@@ -949,9 +956,8 @@ func (a *API) updateClientNotificationPrefs(w http.ResponseWriter, r *http.Reque
 }
 
 func (a *API) listVetLinkRequests(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "shares.manage")
+	if !ok {
 		return
 	}
 	items, err := a.store.ListPendingVetLinkRequests(r.Context(), id.UserID)
@@ -963,9 +969,8 @@ func (a *API) listVetLinkRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) acceptVetLinkRequest(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "shares.manage")
+	if !ok {
 		return
 	}
 	if err := a.store.AcceptVetLinkRequest(r.Context(), chi.URLParam(r, "id"), id.UserID); err != nil {
@@ -984,9 +989,8 @@ func (a *API) acceptVetLinkRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) rejectVetLinkRequest(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "shares.manage")
+	if !ok {
 		return
 	}
 	if err := a.store.RejectVetLinkRequest(r.Context(), chi.URLParam(r, "id"), id.UserID); err != nil {

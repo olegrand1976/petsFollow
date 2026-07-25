@@ -1293,4 +1293,58 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commercialOpenProWeb => 'Ouvrir le site Pro';
+
+  @override
+  String get featureModules => 'Options';
+
+  @override
+  String get featureModulesCatalog => 'Découvrir les options';
+
+  @override
+  String get featureModulesSubtitle =>
+      'Activez Care+, Horse, Kennel ou Foyer selon vos besoins.';
+
+  @override
+  String get moduleCarePlus => 'Care+';
+
+  @override
+  String get moduleCarePlusDesc =>
+      'Rappels de soins enrichis pour tous vos animaux.';
+
+  @override
+  String get moduleHorse => 'Horse';
+
+  @override
+  String get moduleHorseDesc =>
+      'Contacts pros et compétitions pour les chevaux.';
+
+  @override
+  String get moduleKennel => 'Kennel';
+
+  @override
+  String get moduleKennelDesc => 'Encodage rapide d’élevage / portée.';
+
+  @override
+  String get moduleFamily => 'Foyer';
+
+  @override
+  String get moduleFamilyDesc => 'Vue foyer de vos animaux.';
+
+  @override
+  String get moduleActivate => 'Activer';
+
+  @override
+  String get moduleActive => 'Actif';
+
+  @override
+  String get switchProfile => 'Changer de profil';
+
+  @override
+  String get profilePersonal => 'Personnel';
+
+  @override
+  String get profilePro => 'Professionnel';
+
+  @override
+  String get profileSwitched => 'Profil basculé';
 }

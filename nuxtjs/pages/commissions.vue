@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'reference-vet-only'] })
 
 const { t } = useI18n()
 const { formatCurrency } = useFormatters()

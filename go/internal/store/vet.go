@@ -74,8 +74,7 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 	return o, err
 }
 
-func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]ThreadSummary, error) {
-	rows, err := s.pool.Query(ctx, `
+const threadSummarySelect = `
 		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''), u.full_name, u.email,
 			COALESCE((
@@ -90,16 +89,35 @@ func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]
 			), ''),
 			COALESCE((
 				SELECT COUNT(*)::int FROM messaging.messages m
-				WHERE m.thread_id = t.id AND m.sender_user_id <> t.vet_user_id AND m.read_at IS NULL
+				WHERE m.thread_id = t.id AND m.sender_user_id = t.client_user_id AND m.read_at IS NULL
 			), 0)
 		FROM messaging.threads t
-		JOIN identity.users u ON u.id = t.client_user_id
+		JOIN identity.users u ON u.id = t.client_user_id`
+
+func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]ThreadSummary, error) {
+	rows, err := s.pool.Query(ctx, threadSummarySelect+`
 		WHERE t.vet_user_id = $1
 		ORDER BY t.created_at DESC`, vetID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	return scanThreadSummaries(rows)
+}
+
+// ListThreadSummariesForPractice lists all client threads for a shared cabinet.
+func (s *Store) ListThreadSummariesForPractice(ctx context.Context, practiceID string) ([]ThreadSummary, error) {
+	rows, err := s.pool.Query(ctx, threadSummarySelect+`
+		WHERE t.practice_id = $1
+		ORDER BY t.created_at DESC`, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanThreadSummaries(rows)
+}
+
+func scanThreadSummaries(rows pgx.Rows) ([]ThreadSummary, error) {
 	var out []ThreadSummary
 	for rows.Next() {
 		var t ThreadSummary

@@ -1292,4 +1292,56 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commercialOpenProWeb => 'Abrir sitio Pro';
+
+  @override
+  String get featureModules => 'Opciones';
+
+  @override
+  String get featureModulesCatalog => 'Discover options';
+
+  @override
+  String get featureModulesSubtitle =>
+      'Enable Care+, Horse, Kennel or Household as needed.';
+
+  @override
+  String get moduleCarePlus => 'Care+';
+
+  @override
+  String get moduleCarePlusDesc => 'Richer care reminders for all your pets.';
+
+  @override
+  String get moduleHorse => 'Horse';
+
+  @override
+  String get moduleHorseDesc => 'Pro contacts and competitions for horses.';
+
+  @override
+  String get moduleKennel => 'Kennel';
+
+  @override
+  String get moduleKennelDesc => 'Quick litter / kennel encoding.';
+
+  @override
+  String get moduleFamily => 'Household';
+
+  @override
+  String get moduleFamilyDesc => 'Household view of your pets.';
+
+  @override
+  String get moduleActivate => 'Activar';
+
+  @override
+  String get moduleActive => 'Activo';
+
+  @override
+  String get switchProfile => 'Cambiar de perfil';
+
+  @override
+  String get profilePersonal => 'Personal';
+
+  @override
+  String get profilePro => 'Profesional';
+
+  @override
+  String get profileSwitched => 'Profile switched';
 }

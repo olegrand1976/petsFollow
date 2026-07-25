@@ -115,6 +115,7 @@ func (s *Store) CreateCommercialUser(ctx context.Context, email, password, fullN
 	if err != nil {
 		return "", err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return userID, nil
 }
 

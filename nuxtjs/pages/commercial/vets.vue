@@ -118,6 +118,26 @@
         </tbody>
       </ProTable>
     </ProCard>
+
+    <ProCard class="pro-mb-lg" data-testid="commercial-attach-profile">
+      <h3 class="pro-mb-md">Ajouter un profil à un inscrit</h3>
+      <form class="pro-form" @submit.prevent="attachProfile">
+        <ProInput v-model="apForm.userId" label="User ID" required />
+        <div class="pro-field">
+          <label class="pro-label">Rôle</label>
+          <select v-model="apForm.role" class="pro-select">
+            <option value="client">client</option>
+            <option value="care_pro">care_pro</option>
+            <option value="vet_assistant">vet_assistant</option>
+            <option value="secretary">secretary</option>
+          </select>
+        </div>
+        <ProInput v-if="apForm.role === 'care_pro'" v-model="apForm.specialty" label="specialty" />
+        <ProInput v-if="['vet_assistant','secretary'].includes(apForm.role)" v-model="apForm.practiceId" label="practiceId" />
+        <p v-if="apMsg" class="pro-hint">{{ apMsg }}</p>
+        <ProButton type="submit" :disabled="apSaving">Ajouter le profil</ProButton>
+      </form>
+    </ProCard>
   </div>
 </template>
 
@@ -147,6 +167,25 @@ const form = reactive({
 const clientForm = reactive({ vetUserId: '', fullName: '', email: '', password: '' })
 const clientSaving = ref(false)
 const clientMsg = ref('')
+const apSaving = ref(false)
+const apMsg = ref('')
+const apForm = reactive({ userId: '', role: 'client', specialty: 'farrier', practiceId: '' })
+
+async function attachProfile() {
+  apSaving.value = true
+  apMsg.value = ''
+  try {
+    const body: Record<string, string> = { role: apForm.role }
+    if (apForm.role === 'care_pro') body.specialty = apForm.specialty
+    if (['vet_assistant', 'secretary'].includes(apForm.role)) body.practiceId = apForm.practiceId
+    await $fetch(`/api/commercial/users/${apForm.userId}/profiles`, { method: 'POST', body })
+    apMsg.value = 'OK'
+  } catch {
+    apMsg.value = 'Erreur (pas sur soi-même / profil existant)'
+  } finally {
+    apSaving.value = false
+  }
+}
 const clientError = ref('')
 
 function openVetPanel() {

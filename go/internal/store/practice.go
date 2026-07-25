@@ -264,6 +264,8 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 	if err := tx.Commit(ctx); err != nil {
 		return RegisterVetResult{}, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
+	_ = s.EnsureReferenceTeamMembership(ctx, practiceID, userID)
 	return RegisterVetResult{UserID: userID, Token: token}, nil
 }
 
@@ -310,6 +312,9 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 	if err != nil {
 		return nil, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
+	profiles, _ := s.ListProfiles(ctx, userID)
+	active, _ := s.GetActiveProfile(ctx, userID)
 	out := map[string]any{
 		"userId":             u.ID,
 		"email":              u.Email,
@@ -322,6 +327,10 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"twoFactorEnabled":   u.TOTPEnabled,
 		"preferredLocale":    u.PreferredLocale,
 		"mustChangePassword": u.MustChangePassword,
+		"profiles":           profiles,
+	}
+	if active.ID != "" {
+		out["activeProfileId"] = active.ID
 	}
 	if u.ProfessionalSpecialty != "" {
 		out["professionalSpecialty"] = u.ProfessionalSpecialty
@@ -333,6 +342,9 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		out["practiceName"] = practiceName
 		complete, _ := s.IsProfileComplete(ctx, u.PracticeID)
 		out["profileComplete"] = complete
+		if ref, _ := s.IsReferenceVet(ctx, u.PracticeID, userID); ref {
+			out["isReferenceVet"] = true
+		}
 	}
 	return out, nil
 }

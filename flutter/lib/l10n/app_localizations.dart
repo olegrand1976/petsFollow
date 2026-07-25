@@ -2467,6 +2467,108 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ouvrir le site Pro'**
   String get commercialOpenProWeb;
+
+  /// No description provided for @featureModules.
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get featureModules;
+
+  /// No description provided for @featureModulesCatalog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Découvrir les options'**
+  String get featureModulesCatalog;
+
+  /// No description provided for @featureModulesSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez Care+, Horse, Kennel ou Foyer selon vos besoins.'**
+  String get featureModulesSubtitle;
+
+  /// No description provided for @moduleCarePlus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Care+'**
+  String get moduleCarePlus;
+
+  /// No description provided for @moduleCarePlusDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels de soins enrichis pour tous vos animaux.'**
+  String get moduleCarePlusDesc;
+
+  /// No description provided for @moduleHorse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Horse'**
+  String get moduleHorse;
+
+  /// No description provided for @moduleHorseDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacts pros et compétitions pour les chevaux.'**
+  String get moduleHorseDesc;
+
+  /// No description provided for @moduleKennel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Kennel'**
+  String get moduleKennel;
+
+  /// No description provided for @moduleKennelDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Encodage rapide d’élevage / portée.'**
+  String get moduleKennelDesc;
+
+  /// No description provided for @moduleFamily.
+  ///
+  /// In fr, this message translates to:
+  /// **'Foyer'**
+  String get moduleFamily;
+
+  /// No description provided for @moduleFamilyDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vue foyer de vos animaux.'**
+  String get moduleFamilyDesc;
+
+  /// No description provided for @moduleActivate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer'**
+  String get moduleActivate;
+
+  /// No description provided for @moduleActive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif'**
+  String get moduleActive;
+
+  /// No description provided for @switchProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de profil'**
+  String get switchProfile;
+
+  /// No description provided for @profilePersonal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personnel'**
+  String get profilePersonal;
+
+  /// No description provided for @profilePro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel'**
+  String get profilePro;
+
+  /// No description provided for @profileSwitched.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil basculé'**
+  String get profileSwitched;
 }
 
 class _AppLocalizationsDelegate

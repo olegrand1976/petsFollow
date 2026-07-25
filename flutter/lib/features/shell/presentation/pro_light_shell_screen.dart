@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:record/record.dart';
@@ -58,8 +59,16 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     _load();
   }
 
+  bool get _isCabinetStaff {
+    final role = ApiClient.instance.userRole;
+    return role == 'vet' || role == 'vet_assistant' || role == 'secretary';
+  }
+
   bool _canWriteNotes(Map<String, dynamic> row) {
-    if (ApiClient.instance.userRole == 'vet') return true;
+    // Secretary defaults: no pets.write_clinical — hide write UI to avoid 403.
+    final role = ApiClient.instance.userRole;
+    if (role == 'secretary') return false;
+    if (role == 'vet' || role == 'vet_assistant') return true;
     final p = row['permission'] as String? ?? 'read';
     return p == 'write_notes' || p == 'full';
   }
@@ -214,8 +223,8 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     final l10n = AppLocalizations.of(context)!;
     final specialty = ApiClient.instance.userSpecialty ?? '';
     final specialtyLabel = proLightSpecialtyLabel(l10n, specialty);
-    final isVet = ApiClient.instance.userRole == 'vet';
-    final title = isVet
+    final isCabinet = _isCabinetStaff;
+    final title = isCabinet
         ? l10n.proLightVetTitle
         : (specialtyLabel.isEmpty
             ? l10n.proLightTitle
@@ -383,6 +392,15 @@ class _SettingsTab extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.swap_horiz),
+          title: Text(l10n.switchProfile),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SwitchProfileScreen()),
           ),
         ),
         ListTile(

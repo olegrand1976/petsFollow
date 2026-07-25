@@ -72,14 +72,21 @@ func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	switch id.Role {
-	case kernel.RoleVet, kernel.RoleCarePro, kernel.RoleCommercial, kernel.RoleCommercialManager:
-		// ok
+	ownerID := id.UserID
+	switch {
+	case kernel.IsPracticeStaff(id.Role):
+		var ok bool
+		ownerID, ok = a.resolvePracticeInviteOwner(w, r, id)
+		if !ok {
+			return
+		}
+	case id.Role == kernel.RoleCarePro, id.Role == kernel.RoleCommercial, id.Role == kernel.RoleCommercialManager:
+		// ok — self
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "invite_role_denied")
 		return
 	}
-	inv, err := a.store.EnsureAppInviteCode(r.Context(), id.UserID)
+	inv, err := a.store.EnsureAppInviteCode(r.Context(), ownerID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrForbidden) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "invite_unavailable")
@@ -93,11 +100,15 @@ func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) getVetAppInvite(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
+	if err != nil {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 		return
 	}
-	inv, err := a.store.EnsureAppInviteCode(r.Context(), id.UserID)
+	ownerID, ok := a.resolvePracticeInviteOwner(w, r, id)
+	if !ok {
+		return
+	}
+	inv, err := a.store.EnsureAppInviteCode(r.Context(), ownerID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrForbidden) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "vet_not_found")

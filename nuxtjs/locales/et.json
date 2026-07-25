@@ -31,7 +31,9 @@
     "managerDashboard": "Meeskonna töölaud",
     "managerFollowups": "Järeltegevus",
     "managerProspects": "Meeskonna potentsiaalsed kliendid",
-    "managerPortfolio": "Minu portfell"
+    "managerPortfolio": "Minu portfell",
+    "team": "Meeskond",
+    "commercialCompetition": "Konkurents"
   },
   "auth": {
     "login": {
@@ -1954,5 +1956,51 @@
     "openApp": "Mul on rakendus juba olemas",
     "failedTitle": "Kutset ei leitud",
     "invalid": "See kutselink ei kehti enam."
+  },
+  "team": {
+    "title": "Kliiniku meeskond",
+    "subtitle": "Assistants, vets and secretaries — configurable rights.",
+    "inviteTitle": "Invite a member",
+    "email": "Email",
+    "fullName": "Full name",
+    "tempPassword": "Temporary password",
+    "role": "Role",
+    "roleReference": "Reference vet",
+    "roleVet": "Veterinarian",
+    "roleAssistant": "Vet assistant",
+    "roleSecretary": "Secretary",
+    "invite": "Kutsu",
+    "inviteOk": "Member added.",
+    "inviteErr": "Invite failed.",
+    "empty": "No members.",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnRole": "Role",
+    "columnRights": "Rights",
+    "defaults": "Role defaults",
+    "revoke": "Tühista"
+  },
+  "competition": {
+    "title": "Konkurentsianalüüs",
+    "subtitle": "petsFollow positioning by market (FR / BE / ES).",
+    "opportunities": "Opportunities",
+    "threats": "Threats",
+    "angle": "petsFollow angle",
+    "features": "Features",
+    "pricing": "Pricing",
+    "positioning": "Positioning",
+    "reviewed": "Analyst review: {date}",
+    "since": "Since {year} ({years} years)",
+    "market": {
+      "fr": "Prantsusmaa",
+      "be": "Belgia",
+      "es": "Hispaania"
+    },
+    "presence": {
+      "marginal": "Marginal presence",
+      "niche": "Niche",
+      "established": "Established",
+      "dominant": "Dominant"
+    }
   }
 }

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
@@ -14,9 +13,8 @@ type ensureThreadReq struct {
 }
 
 func (a *API) ensureThread(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "messaging")
+	if !ok {
 		return
 	}
 	var req ensureThreadReq

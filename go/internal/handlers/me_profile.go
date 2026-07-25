@@ -83,7 +83,7 @@ func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
 	switch id.Role {
 	case kernel.RoleClient:
 		a.deleteClientMe(w, r, id.UserID)
-	case kernel.RoleVet, kernel.RoleCommercial, kernel.RoleCommercialManager, kernel.RoleCarePro:
+	case kernel.RoleVet, kernel.RoleVetAssistant, kernel.RoleSecretary, kernel.RoleCommercial, kernel.RoleCommercialManager, kernel.RoleCarePro:
 		a.deleteProMe(w, r, id.UserID)
 	default:
 		// admin : pas d'auto-suppression (dernier accès plateforme).
@@ -159,9 +159,8 @@ type emailPrefsReq struct {
 }
 
 func (a *API) getVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "messaging")
+	if !ok {
 		return
 	}
 	prefs, err := a.store.GetEmailPrefs(r.Context(), id.UserID)
@@ -177,9 +176,8 @@ func (a *API) getVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) updateVetEmailPrefs(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "messaging")
+	if !ok {
 		return
 	}
 	var req emailPrefsReq

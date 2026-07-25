@@ -5,6 +5,13 @@
       :subtitle="$t('commercial.pitch.subtitle')"
     />
 
+    <ProCard class="pro-mb-lg" data-testid="pitch-competition-cta">
+      <p class="pro-hint">{{ $t('competition.subtitle') }}</p>
+      <ProButton test-id="pitch-open-competition" @click="navigateTo('/commercial/competition')">
+        {{ $t('competition.title') }}
+      </ProButton>
+    </ProCard>
+
     <div v-if="!audience" class="pf-audience-grid" data-testid="commercial-pitch-cards">
       <button
         type="button"

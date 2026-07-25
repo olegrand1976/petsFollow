@@ -35,6 +35,10 @@ func (a *API) uploadPetDocument(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if kernel.IsPracticeStaff(id.Role) && !a.allowPracticePerm(r, id, "pets.write_clinical") {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
+		return
+	}
 	url, ct, size, fileName, objectKey, err := a.uploadDocumentFile(r, "documents", pet.ID)
 	if err != nil {
 		a.writeUploadErr(w, r, err)
@@ -86,13 +90,13 @@ func (a *API) deletePetDocument(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	practiceVet := id.Role == kernel.RoleVet && id.PracticeID != "" && pet.PracticeID == id.PracticeID
+	practiceStaff := a.allowPracticePerm(r, id, "pets.write_clinical") && id.PracticeID != "" && pet.PracticeID == id.PracticeID
 	ownerClient := id.Role == kernel.RoleClient && pet.OwnerUserID == id.UserID
 	if ownerClient && doc.UploadedByUserID != id.UserID {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 		return
 	}
-	if !practiceVet && !ownerClient {
+	if !practiceStaff && !ownerClient {
 		// Shared access (care_pro / external vet / co-owner): deletion requires full.
 		if !a.canAccessPetDocuments(r.Context(), id, pet, store.PermFull) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "full_permission_required")

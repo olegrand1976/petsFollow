@@ -2,6 +2,10 @@
 
 Roadmap produit : self-inscription client, rôle `care_pro` + specialties, ACL partage, Flutter pro light, agenda GPS, CR visite + IA.
 
+Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscription pro → profil `client` auto ; attach Admin/Commercial hors soi.
+
+Équipe cabinet : `practice.team_members` + `/team` (véto de référence).
+
 ## Surfaces
 
 | Rôle / specialty | Surface principale | Notes |

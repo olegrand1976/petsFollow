@@ -16,6 +16,7 @@ type Identity struct {
 	Email      string      `json:"email"`
 	Role       kernel.Role `json:"role"`
 	PracticeID string      `json:"practiceId,omitempty"`
+	ProfileID  string      `json:"profileId,omitempty"`
 }
 
 type ctxKey struct{}
@@ -54,14 +55,19 @@ type claims struct {
 	Email      string       `json:"email"`
 	Role       kernel.Role  `json:"role"`
 	PracticeID string       `json:"practice_id,omitempty"`
+	ProfileID  string       `json:"profile_id,omitempty"`
 	Typ        string       `json:"typ"`
 	jwt.RegisteredClaims
 }
 
 func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID string) (TokenPair, error) {
+	return t.IssueProfile(userID, email, role, practiceID, "")
+}
+
+func (t *TokenIssuer) IssueProfile(userID, email string, role kernel.Role, practiceID, profileID string) (TokenPair, error) {
 	now := time.Now()
 	accessClaims := claims{
-		Email: email, Role: role, PracticeID: practiceID, Typ: "access",
+		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Typ: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userID, IssuedAt: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(t.accessTTL)), ID: uuid.NewString(),
@@ -72,7 +78,7 @@ func (t *TokenIssuer) Issue(userID, email string, role kernel.Role, practiceID s
 		return TokenPair{}, err
 	}
 	refreshClaims := claims{
-		Email: email, Role: role, PracticeID: practiceID, Typ: "refresh",
+		Email: email, Role: role, PracticeID: practiceID, ProfileID: profileID, Typ: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userID, IssuedAt: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(t.refreshTTL)), ID: uuid.NewString(),
@@ -112,7 +118,7 @@ func (t *TokenIssuer) ParseMFA(tokenStr string) (Identity, error) {
 	if !ok || !token.Valid || c.Typ != "mfa_pending" {
 		return Identity{}, ErrUnauthorized
 	}
-	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID}, nil
+	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID, ProfileID: c.ProfileID}, nil
 }
 
 func (t *TokenIssuer) Parse(tokenStr string) (Identity, error) {
@@ -153,7 +159,7 @@ func (t *TokenIssuer) parseTyped(tokenStr, typ string) (Identity, error) {
 	if !ok || !token.Valid || c.Typ != typ {
 		return Identity{}, ErrUnauthorized
 	}
-	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID}, nil
+	return Identity{UserID: c.Subject, Email: c.Email, Role: c.Role, PracticeID: c.PracticeID, ProfileID: c.ProfileID}, nil
 }
 
 func WithIdentity(ctx context.Context, id Identity) context.Context {

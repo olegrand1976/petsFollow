@@ -17,7 +17,7 @@ func (a *API) localeFromUserMiddleware(next http.Handler) http.Handler {
 			}
 			// After seed/redeploy, JWT practice_id can lag behind identity.users.practice_id.
 			// Refresh it so /clients and other practice-scoped routes stay correct without re-login.
-			if id.Role == kernel.RoleVet {
+			if kernel.IsPracticeStaff(id.Role) {
 				if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil && u.PracticeID != "" && u.PracticeID != id.PracticeID {
 					id.PracticeID = u.PracticeID
 					r = r.WithContext(authx.WithIdentity(r.Context(), id))

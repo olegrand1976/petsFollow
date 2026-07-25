@@ -3,6 +3,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -90,6 +91,18 @@ class _CommercialFieldShellScreenState extends State<CommercialFieldShellScreen>
                 onPressed: _openProWeb,
                 icon: const Icon(Icons.open_in_browser),
                 label: Text(l10n.commercialOpenProWeb),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SwitchProfileScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.swap_horiz),
+                label: Text(l10n.switchProfile),
               ),
               const Spacer(),
               TextButton(

@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class CareTab extends StatefulWidget {
@@ -55,6 +56,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       });
     }
     try {
+      await FeatureModulesController.instance.load();
       final data = await ApiClient.instance.getPets();
       final loadedPets = data.map((p) => Pet.fromJson(Map<String, dynamic>.from(p as Map))).toList();
       final map = <String, List<CareReminder>>{};
@@ -175,7 +177,8 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
               (p) => p.id == selectedPetId,
               orElse: () => writable.first,
             );
-            final selectedIsHorse = selectedPet.species == 'horse';
+            final selectedIsHorse = selectedPet.species == 'horse' &&
+                FeatureModulesController.instance.horse;
             final types = <MapEntry<String, String>>[
               MapEntry('vaccination', l10n.careTypeVaccination),
               MapEntry('deworming', l10n.careTypeDeworming),
@@ -222,7 +225,8 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                         setModal(() {
                           selectedPetId = v;
                           final pet = writable.firstWhere((p) => p.id == v);
-                          if (pet.species != 'horse' &&
+                          if ((pet.species != 'horse' ||
+                                  !FeatureModulesController.instance.horse) &&
                               (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
                             selectedType = 'vaccination';
                           }
@@ -351,7 +355,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       orElse: () => writable.first,
     );
     selectedPetId = pet.id;
-    if (pet.species != 'horse' &&
+    if ((pet.species != 'horse' || !FeatureModulesController.instance.horse) &&
         (selectedType == 'farrier' || selectedType == 'fecal_egg')) {
       selectedType = 'vaccination';
     }

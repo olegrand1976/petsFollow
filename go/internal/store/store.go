@@ -599,6 +599,19 @@ func (s *Store) MarkAllUnreadForUser(ctx context.Context, userID string) error {
 	return err
 }
 
+// MarkAllUnreadForPractice marks unread client messages as read for all practice threads.
+func (s *Store) MarkAllUnreadForPractice(ctx context.Context, practiceID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE messaging.messages m
+		SET read_at = NOW()
+		FROM messaging.threads t
+		WHERE m.thread_id = t.id
+		  AND t.practice_id = $1
+		  AND m.sender_user_id = t.client_user_id
+		  AND m.read_at IS NULL`, practiceID)
+	return err
+}
+
 func (s *Store) GetVetAvailability(ctx context.Context, vetID string) (kernel.AvailabilityStatus, string, error) {
 	var status kernel.AvailabilityStatus
 	var autoReply string

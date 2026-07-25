@@ -6,8 +6,10 @@ import 'package:petsfollow_mobile/features/education/presentation/how_to_measure
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/notification_preferences_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/reminder_settings_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -98,6 +100,33 @@ class SettingsMenuScreen extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const NotificationPreferencesScreen()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.extension_outlined),
+          title: Text(l10n.featureModules),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FeatureModulesScreen()),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.apps_outlined),
+          title: Text(l10n.featureModulesCatalog),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FeatureModulesScreen(catalogOnly: true)),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.swap_horiz),
+          title: Text(l10n.switchProfile),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SwitchProfileScreen()),
           ),
         ),
         const Divider(),

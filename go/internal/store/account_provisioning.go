@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,6 +19,39 @@ type CreateClientInput struct {
 	FullName    string
 	Locale      string
 	SkipJourney bool
+}
+
+// practiceLinkForStaff resolves practice_id for practice staff and the vet_user_id
+// to attach on practice_clients / messaging threads (reference vet when set).
+func (s *Store) practiceLinkForStaff(ctx context.Context, staffUserID string) (practiceID, threadVetID string, err error) {
+	var role kernel.Role
+	err = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(practice_id::text,''), role FROM identity.users WHERE id=$1`, staffUserID,
+	).Scan(&practiceID, &role)
+	if errors.Is(err, pgx.ErrNoRows) || practiceID == "" || !kernel.IsPracticeStaff(role) {
+		return "", "", ErrNotFound
+	}
+	if err != nil {
+		return "", "", err
+	}
+	threadVetID = staffUserID
+	var ref string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(reference_vet_user_id::text,'') FROM practice.practices WHERE id=$1`, practiceID,
+	).Scan(&ref)
+	if ref != "" {
+		threadVetID = ref
+	} else if role != kernel.RoleVet {
+		// Prefer any active vet on the practice for thread ownership.
+		_ = s.pool.QueryRow(ctx, `
+			SELECT id::text FROM identity.users
+			WHERE practice_id=$1 AND role='vet' ORDER BY created_at LIMIT 1`, practiceID,
+		).Scan(&threadVetID)
+		if threadVetID == "" {
+			threadVetID = staffUserID
+		}
+	}
+	return practiceID, threadVetID, nil
 }
 
 type VetOption struct {
@@ -34,13 +68,7 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 		return "", err
 	}
 
-	var practiceID string
-	err = s.pool.QueryRow(ctx, `
-		SELECT COALESCE(practice_id::text,'') FROM identity.users
-		WHERE id=$1 AND role='vet'`, vetUserID).Scan(&practiceID)
-	if errors.Is(err, pgx.ErrNoRows) || practiceID == "" {
-		return "", ErrNotFound
-	}
+	practiceID, threadVetID, err := s.practiceLinkForStaff(ctx, vetUserID)
 	if err != nil {
 		return "", err
 	}
@@ -63,13 +91,13 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
 		VALUES ($1, $2, $3, $4)`,
-		uuid.NewString(), practiceID, clientID, vetUserID); err != nil {
+		uuid.NewString(), practiceID, clientID, threadVetID); err != nil {
 		return "", err
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
 		VALUES ($1, $2, $3, $4, NULL)`,
-		uuid.NewString(), practiceID, clientID, vetUserID); err != nil {
+		uuid.NewString(), practiceID, clientID, threadVetID); err != nil {
 		return "", err
 	}
 	if err := tx.Commit(ctx); err != nil {

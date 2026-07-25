@@ -434,6 +434,54 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 ---
 
+## J — Modules optionnels (ex-addons)
+
+| ID | Pri | Cas | Attendu |
+|----|-----|-----|---------|
+| J1 | P0 | Client nouveau / vide | Modules OFF — pas Kennel / foyer / Horse panel |
+| J2 | P0 | `client.demo` seed | Modules ON — Kennel + foyer + Horse Spirit |
+| J3 | P1 | Settings → Options | Toggles sync `PATCH /me/feature-modules` |
+| J4 | P1 | Catalogue options | Cartes Activer sans paiement |
+| J5 | P2 | Désactiver module | UI se retire après reload |
+
+## K — Multi-profil
+
+| ID | Pri | Cas | Attendu |
+|----|-----|-----|---------|
+| K1 | P0 | Register / seed pro | Profil `client` auto + profil pro |
+| K2 | P0 | Flutter switch | Settings → Changer de profil → shell adapté + nouveaux tokens |
+| K3 | P1 | Admin attach profil | `/admin/users` — pas sur soi-même |
+| K4 | P1 | Commercial attach | `POST /commercial/users/{id}/profiles` |
+| K5 | P2 | farrier pro ↔ personnel | Dual shell |
+
+## L — Équipe cabinet
+
+| ID | Pri | Cas | Attendu |
+|----|-----|-----|---------|
+| L1 | P0 | `/team` référence | Liste + invite (vet.demo) |
+| L2 | P1 | Seed équipe | colleague / assist / secretary |
+| L3 | P1 | Override droits | PATCH permissions |
+| L4 | P1 | Révoquer | Statut revoked |
+| L5 | P2 | Non-référence | Invite refusé |
+
+## M — Concurrence commerciale
+
+| ID | Pri | Cas | Attendu |
+|----|-----|-----|---------|
+| M1 | P0 | Login commercial → `/commercial/competition` | Synthèse + cards |
+| M2 | P0 | Tabs FR / BE / ES | Contenu change |
+| M3 | P1 | Manager accès | Même page |
+| M4 | P2 | Véto accès | Pas dans nav / refus |
+
+### Démo commerciale 15 min
+
+1. `commercial.demo` → `/commercial/competition` (BE) + pitch  
+2. Flutter `client.demo` modules ON → FC + commentaire  
+3. Switch profil `farrier.demo` → Spirit agenda GPS  
+4. Pro `vet.demo` → `/team` + relevé validé  
+
+---
+
 ## Feuille de session (copier-coller)
 
 ```text
@@ -474,6 +522,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `09-pet-detail` | Fiche animal, shares, commentaire relevé HR |
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto |
+| `12-competition` | Concurrence commerciale FR/BE/ES |
 
 Local : `cd nuxtjs && npm run test:e2e` (API + Nuxt sur 8291/3002).
 

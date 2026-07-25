@@ -31,7 +31,9 @@
     "managerDashboard": "Panel del equipo",
     "managerFollowups": "Seguimiento",
     "managerProspects": "Prospectos del equipo",
-    "managerPortfolio": "Mi cartera"
+    "managerPortfolio": "Mi cartera",
+    "team": "Equipo",
+    "commercialCompetition": "Competencia"
   },
   "auth": {
     "login": {
@@ -1954,5 +1956,51 @@
     "openApp": "Ya tengo la app",
     "failedTitle": "Invitación no encontrada",
     "invalid": "Este enlace de invitación ya no es válido."
+  },
+  "team": {
+    "title": "Equipo de la clínica",
+    "subtitle": "Asistentes, veterinarios y secretarias — derechos configurables.",
+    "inviteTitle": "Invitar a un miembro",
+    "email": "Email",
+    "fullName": "Full name",
+    "tempPassword": "Temporary password",
+    "role": "Role",
+    "roleReference": "Veterinario de referencia",
+    "roleVet": "Veterinario",
+    "roleAssistant": "Asistente veterinario",
+    "roleSecretary": "Secretaria",
+    "invite": "Invitar",
+    "inviteOk": "Member added.",
+    "inviteErr": "Invite failed.",
+    "empty": "No members.",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnRole": "Role",
+    "columnRights": "Rights",
+    "defaults": "Role defaults",
+    "revoke": "Revocar"
+  },
+  "competition": {
+    "title": "Análisis de competencia",
+    "subtitle": "Posicionamiento petsFollow por mercado (FR / BE / ES).",
+    "opportunities": "Oportunidades",
+    "threats": "Amenazas",
+    "angle": "petsFollow angle",
+    "features": "Funcionalidades",
+    "pricing": "Precios",
+    "positioning": "Positioning",
+    "reviewed": "Analyst review: {date}",
+    "since": "Since {year} ({years} years)",
+    "market": {
+      "fr": "Francia",
+      "be": "Bélgica",
+      "es": "España"
+    },
+    "presence": {
+      "marginal": "Marginal presence",
+      "niche": "Niche",
+      "established": "Established",
+      "dominant": "Dominant"
+    }
   }
 }

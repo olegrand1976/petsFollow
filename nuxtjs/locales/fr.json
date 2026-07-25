@@ -31,7 +31,9 @@
     "managerDashboard": "Dashboard équipe",
     "managerFollowups": "Suivi",
     "managerProspects": "Prospects équipe",
-    "managerPortfolio": "Mon portefeuille"
+    "managerPortfolio": "Mon portefeuille",
+    "team": "Équipe",
+    "commercialCompetition": "Concurrence"
   },
   "training": {
     "title": "Entraînement IA",
@@ -1954,5 +1956,51 @@
     "openApp": "J’ai déjà l’app",
     "failedTitle": "Invitation introuvable",
     "invalid": "Ce lien d’invitation n’est plus valide."
+  },
+  "team": {
+    "title": "Équipe du cabinet",
+    "subtitle": "Assistants, vétérinaires et secrétaires — droits paramétrables.",
+    "inviteTitle": "Inviter un membre",
+    "email": "Email",
+    "fullName": "Nom complet",
+    "tempPassword": "Mot de passe temporaire",
+    "role": "Rôle",
+    "roleReference": "Véto de référence",
+    "roleVet": "Vétérinaire",
+    "roleAssistant": "Assistant vétérinaire",
+    "roleSecretary": "Secrétaire",
+    "invite": "Inviter",
+    "inviteOk": "Membre ajouté.",
+    "inviteErr": "Impossible d’inviter.",
+    "empty": "Aucun membre.",
+    "columnName": "Nom",
+    "columnEmail": "Email",
+    "columnRole": "Rôle",
+    "columnRights": "Droits",
+    "defaults": "Défauts du rôle",
+    "revoke": "Révoquer"
+  },
+  "competition": {
+    "title": "Analyse concurrence",
+    "subtitle": "Positionnement petsFollow par marché (FR / BE / ES).",
+    "opportunities": "Opportunités",
+    "threats": "Menaces",
+    "angle": "Angle petsFollow",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "positioning": "Positionnement",
+    "reviewed": "Revue analyste : {date}",
+    "since": "Depuis {year} ({years} ans)",
+    "market": {
+      "fr": "France",
+      "be": "Belgique",
+      "es": "Espagne"
+    },
+    "presence": {
+      "marginal": "Présence marginale",
+      "niche": "Niche",
+      "established": "Établi",
+      "dominant": "Dominant"
+    }
   }
 }

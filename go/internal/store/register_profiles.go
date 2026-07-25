@@ -67,6 +67,7 @@ func (s *Store) RegisterClient(ctx context.Context, in RegisterClientInput) (Reg
 	if err := tx.Commit(ctx); err != nil {
 		return RegisterClientResult{}, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	_ = s.EnrollEmailJourney(ctx, userID, time.Now().UTC())
 	return RegisterClientResult{UserID: userID, Token: token}, nil
 }
@@ -106,6 +107,7 @@ func (s *Store) RegisterCarePro(ctx context.Context, in RegisterCareProInput) (R
 	if err := tx.Commit(ctx); err != nil {
 		return RegisterCareProResult{}, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return RegisterCareProResult{UserID: userID, Token: token}, nil
 }
 
@@ -128,5 +130,6 @@ func (s *Store) CreateCareProAsAdmin(ctx context.Context, email, password, fullN
 	if err != nil {
 		return "", err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return userID, nil
 }

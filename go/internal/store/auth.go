@@ -96,6 +96,8 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 	if err := tx.Commit(ctx); err != nil {
 		return User{}, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
+	_ = s.EnsureReferenceTeamMembership(ctx, practiceID, userID)
 	return s.GetUserByID(ctx, userID)
 }
 
@@ -138,6 +140,7 @@ func (s *Store) RegisterGoogleClient(ctx context.Context, in RegisterGoogleClien
 		return User{}, err
 	}
 	_ = s.EnrollEmailJourney(ctx, userID, time.Now().UTC())
+	_ = s.EnsureUserProfiles(ctx, userID)
 	return s.GetUserByID(ctx, userID)
 }
 

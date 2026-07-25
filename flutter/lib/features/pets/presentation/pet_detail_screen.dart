@@ -14,6 +14,7 @@ import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_edit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -39,6 +40,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     WidgetsBinding.instance.addObserver(this);
     pet = widget.pet;
     _loadVets();
+    FeatureModulesController.instance.load().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -294,7 +298,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               ],
             ),
           ),
-          if (pet.isOwner && pet.species == 'horse') ...[
+          if (pet.isOwner &&
+              pet.species == 'horse' &&
+              FeatureModulesController.instance.horse) ...[
             const SizedBox(height: 24),
             HorseHealthPanel(petId: pet.id, petName: pet.name),
           ],

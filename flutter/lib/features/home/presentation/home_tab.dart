@@ -14,6 +14,7 @@ import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flo
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
+import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -69,6 +70,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       final me = await ApiClient.instance.getMe();
       userName = me['fullName'] as String?;
     } catch (_) {}
+    await FeatureModulesController.instance.load();
     try {
       final progress = await DiscoveryController.instance.load();
       discoveryProgress = progress;
@@ -194,14 +196,18 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         onMeasure: _pickPetThenMeasure,
                       ),
                       const SizedBox(height: 12),
-                      _KennelEncodeButton(l10n: l10n, onDone: load),
-                      const SizedBox(height: 12),
+                      if (FeatureModulesController.instance.kennel)
+                        _KennelEncodeButton(l10n: l10n, onDone: load),
+                      if (FeatureModulesController.instance.kennel)
+                        const SizedBox(height: 12),
                     ],
-                    _FamilyHouseholdCard(
-                      key: ValueKey(householdEpoch),
-                      l10n: l10n,
-                    ),
-                    const SizedBox(height: 24),
+                    if (FeatureModulesController.instance.family)
+                      _FamilyHouseholdCard(
+                        key: ValueKey(householdEpoch),
+                        l10n: l10n,
+                      ),
+                    if (FeatureModulesController.instance.family)
+                      const SizedBox(height: 24),
                     Text(l10n.myPets, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 12),
                     ...pets.map(

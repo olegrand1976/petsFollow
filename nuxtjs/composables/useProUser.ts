@@ -11,6 +11,7 @@ export type ProUser = {
   profileComplete?: boolean
   preferredLocale?: string
   mustChangePassword?: boolean
+  isReferenceVet?: boolean
 }
 
 export function useProUser() {

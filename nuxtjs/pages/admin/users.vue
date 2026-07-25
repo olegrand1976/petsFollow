@@ -78,6 +78,26 @@
         </ProButton>
       </form>
     </ProCard>
+    <ProCard class="pro-mb-lg" data-testid="admin-attach-profile">
+      <h3 class="pro-mb-md">{{ $t('admin.users.attachProfile') || 'Ajouter un profil' }}</h3>
+      <form class="pro-form" @submit.prevent="attachProfile">
+        <ProInput v-model="apForm.userId" :label="$t('admin.users.attachUserId') || 'User ID'" required />
+        <div class="pro-field">
+          <label class="pro-label">{{ $t('admin.users.attachRole') || 'Rôle' }}</label>
+          <select v-model="apForm.role" class="pro-select">
+            <option value="client">client</option>
+            <option value="care_pro">care_pro</option>
+            <option value="vet">vet</option>
+            <option value="vet_assistant">vet_assistant</option>
+            <option value="secretary">secretary</option>
+          </select>
+        </div>
+        <ProInput v-if="apForm.role === 'care_pro'" v-model="apForm.specialty" label="specialty" />
+        <ProInput v-if="['vet','vet_assistant','secretary'].includes(apForm.role)" v-model="apForm.practiceId" label="practiceId" />
+        <p v-if="apMsg" class="pro-hint">{{ apMsg }}</p>
+        <ProButton type="submit" :disabled="apSaving">{{ $t('admin.users.attachProfile') || 'Ajouter un profil' }}</ProButton>
+      </form>
+    </ProCard>
     <ProCard>
       <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
@@ -182,6 +202,26 @@ const { viewMode } = useListView('pf-admin-users-view', 'table')
 const cSaving = ref(false)
 const cMsg = ref('')
 const cForm = reactive({ fullName: '', email: '', password: '', role: 'commercial', managerUserId: '' })
+const apSaving = ref(false)
+const apMsg = ref('')
+const apForm = reactive({ userId: '', role: 'client', specialty: 'farrier', practiceId: '' })
+
+async function attachProfile() {
+  apSaving.value = true
+  apMsg.value = ''
+  try {
+    const body: Record<string, string> = { role: apForm.role }
+    if (apForm.role === 'care_pro') body.specialty = apForm.specialty
+    if (['vet', 'vet_assistant', 'secretary'].includes(apForm.role)) body.practiceId = apForm.practiceId
+    await $fetch(`/api/admin/users/${apForm.userId}/profiles`, { method: 'POST', body })
+    apMsg.value = 'OK'
+    apForm.userId = ''
+  } catch {
+    apMsg.value = 'Erreur'
+  } finally {
+    apSaving.value = false
+  }
+}
 const managers = ref<{ userId: string; fullName: string; email: string }[]>([])
 const vSaving = ref(false)
 const vMsg = ref('')

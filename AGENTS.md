@@ -34,8 +34,9 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Véto | `vet.onboarding@petsfollow.test` | Onboarding (profil incomplet) |
 | Véto | `vet.unverified@petsfollow.test` | Email non confirmé |
 | Véto | `vet.reset@petsfollow.test` | Token démo reset MDP |
-| Care pro (farrier) | `farrier.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) |
-| Care pro (vet_light) | `vetlight.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) |
+| Care pro (farrier) | `farrier.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) · dual profil client |
+| Care pro (vet_light) | `vetlight.demo@petsfollow.test` | Flutter pro light — Spirit · dual profil client |
+| Équipe VetPlus | `vet.colleague@` · `vet.assist@` · `secretary.demo@` | MDP `VetDemo123!` — page `/team` |
 | Commercial manager | `commercial.manager@petsfollow.test` | Responsable commercial (équipe) |
 | Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné, rattaché manager) |
 

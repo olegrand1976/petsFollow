@@ -127,9 +127,8 @@ func (a *API) registerCarePro(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) linkExistingVetClient(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
 		return
 	}
 	clientID := chi.URLParam(r, "clientID")
@@ -137,7 +136,7 @@ func (a *API) linkExistingVetClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return
 	}
-	err = a.store.LinkExistingClientToVet(r.Context(), id.UserID, clientID)
+	err := a.store.LinkExistingClientToVet(r.Context(), id.UserID, clientID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
@@ -334,9 +333,8 @@ func (a *API) deleteClientShare(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listPracticeColleagues(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet || id.PracticeID == "" {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	if !ok {
 		return
 	}
 	rows, err := a.store.ListPracticeColleagueVets(r.Context(), id.PracticeID, id.UserID)
@@ -409,14 +407,14 @@ func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, pet
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 			return store.Pet{}, false
 		}
-	case kernel.RoleVet:
+	default:
+		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+			return store.Pet{}, false
+		}
 		if pet.PracticeID != id.PracticeID {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
 			return store.Pet{}, false
 		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return store.Pet{}, false
 	}
 	return pet, true
 }
@@ -428,8 +426,11 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 			writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 			return false
 		}
-	case kernel.RoleVet:
-		// vet must have practice_clients link
+	default:
+		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+			return false
+		}
+		// practice staff must have practice_clients link
 		clients, err := a.store.ListClientsByPractice(r.Context(), id.PracticeID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -446,9 +447,6 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 			writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 			return false
 		}
-	default:
-		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
-		return false
 	}
 	return true
 }

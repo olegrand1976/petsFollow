@@ -87,9 +87,9 @@ func (s *Store) CanAccessPet(ctx context.Context, id kernelIdentity, pet Pet, ne
 			return ok, err
 		}
 		return s.hasClientAccess(ctx, pet.OwnerUserID, id.UserID, need)
-	case kernel.RoleVet:
+	case kernel.RoleVet, kernel.RoleVetAssistant, kernel.RoleSecretary:
 		if id.PracticeID != "" && pet.PracticeID == id.PracticeID {
-			return true, nil
+			return s.HasActivePracticeStaffAccess(ctx, id.PracticeID, id.UserID)
 		}
 		ok, err := s.hasPetAccess(ctx, pet.ID, id.UserID, need)
 		if err != nil || ok {
@@ -334,15 +334,9 @@ func scanAccessGrants(rows pgx.Rows) ([]AccessGrant, error) {
 	return out, rows.Err()
 }
 
-// LinkExistingClientToVet attaches an existing client account to the vet's practice.
+// LinkExistingClientToVet attaches an existing client account to the staff member's practice.
 func (s *Store) LinkExistingClientToVet(ctx context.Context, vetUserID, clientUserID string) error {
-	var practiceID string
-	err := s.pool.QueryRow(ctx, `
-		SELECT COALESCE(practice_id::text,'') FROM identity.users
-		WHERE id=$1 AND role='vet'`, vetUserID).Scan(&practiceID)
-	if errors.Is(err, pgx.ErrNoRows) || practiceID == "" {
-		return ErrNotFound
-	}
+	practiceID, threadVetID, err := s.practiceLinkForStaff(ctx, vetUserID)
 	if err != nil {
 		return err
 	}
@@ -372,7 +366,7 @@ func (s *Store) LinkExistingClientToVet(ctx context.Context, vetUserID, clientUs
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
 		VALUES ($1, $2, $3, $4)`,
-		uuid.NewString(), practiceID, clientUserID, vetUserID); err != nil {
+		uuid.NewString(), practiceID, clientUserID, threadVetID); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -381,7 +375,7 @@ func (s *Store) LinkExistingClientToVet(ctx context.Context, vetUserID, clientUs
 		WHERE NOT EXISTS (
 			SELECT 1 FROM messaging.threads
 			WHERE practice_id=$2 AND client_user_id=$3 AND vet_user_id=$4 AND pet_id IS NULL
-		)`, uuid.NewString(), practiceID, clientUserID, vetUserID); err != nil {
+		)`, uuid.NewString(), practiceID, clientUserID, threadVetID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

@@ -21,9 +21,8 @@ type putScheduleReq struct {
 }
 
 func (a *API) getVetSchedule(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	sched, err := a.store.GetVetSchedule(r.Context(), id.PracticeID)
@@ -35,9 +34,8 @@ func (a *API) getVetSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) putVetSchedule(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	var req putScheduleReq
@@ -69,9 +67,8 @@ func (a *API) putVetSchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) listVetVacations(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	items, err := a.store.ListVacations(r.Context(), id.PracticeID)
@@ -89,9 +86,8 @@ type createVacationReq struct {
 }
 
 func (a *API) createVetVacation(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	var req createVacationReq
@@ -108,9 +104,8 @@ func (a *API) createVetVacation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) deleteVetVacation(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	if err := a.store.DeleteVacation(r.Context(), id.PracticeID, chi.URLParam(r, "id")); err != nil {
@@ -125,9 +120,8 @@ func (a *API) deleteVetVacation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getVetCalendar(w http.ResponseWriter, r *http.Request) {
-	id, err := authx.FromContext(r.Context())
-	if err != nil || id.Role != kernel.RoleVet {
-		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
 		return
 	}
 	from, to, ok := parseFromTo(w, r)

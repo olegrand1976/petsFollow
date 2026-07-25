@@ -34,21 +34,29 @@ const showNav = computed(() => {
     && !route.path.startsWith('/register')
     && !route.path.startsWith('/invite')
 })
-const { fetchUser } = useProUser()
+const { user, fetchUser } = useProUser()
 const { count: messagesBadge } = useProNotifications()
 const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
-const navItems = computed<ProNavItem[]>(() => [
-  { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
-  { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
-  { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
-  { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
-  { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
-  { to: '/produits', label: t('nav.products'), icon: 'description' },
-  { to: '/commissions', label: t('nav.commissions'), icon: 'payments' },
-  { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
-  { to: '/settings', label: t('nav.settings'), icon: 'settings' },
-])
+const navItems = computed<ProNavItem[]>(() => {
+  const items: ProNavItem[] = [
+    { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
+    { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
+    { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
+    { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
+    { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
+    { to: '/produits', label: t('nav.products'), icon: 'description' },
+  ]
+  if (user.value?.isReferenceVet === true) {
+    items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments' })
+  }
+  items.push(
+    { to: '/team', label: t('nav.team'), icon: 'groups' },
+    { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
+    { to: '/settings', label: t('nav.settings'), icon: 'settings' },
+  )
+  return items
+})
 
 async function loadNavBadges() {
   if (!showNav.value) return

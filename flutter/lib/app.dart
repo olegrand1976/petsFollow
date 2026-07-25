@@ -163,7 +163,9 @@ class _AuthGateState extends State<AuthGate> {
       return ForceChangePasswordScreen(onChanged: _onAuthChanged);
     }
     if (ApiClient.instance.userRole == 'care_pro' ||
-        ApiClient.instance.userRole == 'vet') {
+        ApiClient.instance.userRole == 'vet' ||
+        ApiClient.instance.userRole == 'vet_assistant' ||
+        ApiClient.instance.userRole == 'secretary') {
       return ProLightShellScreen(onLogout: _onAuthChanged);
     }
     if (ApiClient.instance.userRole == 'commercial' ||
