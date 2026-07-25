@@ -33,7 +33,8 @@
     "managerProspects": "Prospectos del equipo",
     "managerPortfolio": "Mi cartera",
     "team": "Equipo",
-    "commercialCompetition": "Competencia"
+    "commercialCompetition": "Competencia",
+    "adminBrandAssets": "QR de tiendas"
   },
   "auth": {
     "login": {
@@ -550,7 +551,8 @@
         "pending_payment": "Pago pendiente",
         "expired": "Caducado",
         "cancelled": "Cancelado"
-      }
+      },
+      "visitRequestPreconsult": "Solicitar preconsulta"
     },
     "invitations": {
       "open": "Invitaciones de clientes",
@@ -574,7 +576,12 @@
       "linkLabel": "Enlace de invitación",
       "copy": "Copiar enlace",
       "copied": "Enlace copiado",
-      "copyError": "No se pudo copiar el enlace."
+      "copyError": "No se pudo copiar el enlace.",
+      "refreshPack": "Recalcular pack QR",
+      "qrAndroidAlt": "QR Google Play",
+      "qrIosAlt": "QR App Store",
+      "android": "Android",
+      "ios": "iOS"
     }
   },
   "pets": {
@@ -1008,6 +1015,20 @@
         "created": "Creado",
         "error": "Error"
       }
+    },
+    "brandAssets": {
+      "title": "Assets QR de tiendas",
+      "subtitle": "QR Android/iOS tras la preconsulta y en invitaciones.",
+      "hint": "Suba PNG/WebP. Sin asset, la página de gracias usa el enlace de descarga.",
+      "android": "QR Android (Play Store)",
+      "ios": "QR iOS (App Store)",
+      "missing": "Aún no hay QR.",
+      "file": "Imagen QR",
+      "storeUrl": "URL de la tienda (opcional)",
+      "upload": "Subir",
+      "saveUrl": "Guardar URL",
+      "uploaded": "QR actualizado.",
+      "urlSaved": "URL guardada."
     }
   },
   "commissions": {
@@ -1466,7 +1487,17 @@
       "billingAddressLine2": "Complemento de dirección de facturación",
       "payoutIban": "IBAN",
       "payoutBic": "BIC (opcional)",
-      "payoutAccountHolder": "Titular de la cuenta"
+      "payoutAccountHolder": "Titular de la cuenta",
+      "countryCode": "País de la clínica",
+      "countries": {
+        "BE": "Bélgica",
+        "FR": "Francia",
+        "NL": "Países Bajos",
+        "LU": "Luxemburgo",
+        "DE": "Alemania",
+        "ES": "España",
+        "EE": "Estonia"
+      }
     }
   },
   "legal": {
@@ -1841,7 +1872,7 @@
     "reportFinal": "Informe finalizado (solo lectura)",
     "reportFinalized": "Informe finalizado",
     "transcribeAudio": "Audio → texto",
-    "audioConsent": "El audio solo sirve para redactar el informe y se elimina al finalizar.",
+    "audioConsent": "El audio sirve para redactar el informe. Confirme el consentimiento oral. Se elimina al finalizar.",
     "audioConsentTitle": "Consentimiento de audio",
     "audioConsentAccept": "Acepto",
     "reportTranscribed": "Transcripción lista",
@@ -1915,7 +1946,10 @@
         "medium": "Media",
         "high": "Alta"
       }
-    }
+    },
+    "requestPreconsult": "Solicitar preconsulta",
+    "audioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
+    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación)."
   },
   "manager": {
     "dashboard": {
@@ -2125,5 +2159,34 @@
       "established": "Established",
       "dominant": "Dominant"
     }
+  },
+  "preconsultPublic": {
+    "brandTitle": "Preparar la visita",
+    "brandText": "Algunas preguntas para ayudar a su veterinario.",
+    "loading": "Cargando…",
+    "title": "Preconsulta",
+    "subtitle": "{petName} — {practiceName}",
+    "when": "Cita: {when}",
+    "complaint": "Motivo",
+    "duration": "Desde cuándo",
+    "behavior": "Comportamiento",
+    "appetite": "Apetito",
+    "thirst": "Sed",
+    "elimination": "Heces / orina",
+    "urgency": "Urgencia",
+    "comment": "Comentario (opcional)",
+    "submit": "Enviar",
+    "invalidTitle": "Enlace inválido",
+    "invalid": "Este enlace de preconsulta no es válido o ha caducado.",
+    "thanksTitle": "Gracias",
+    "thanksIntro": "Los datos de {petName} se enviaron correctamente.",
+    "benefitFollow": "Seguimiento del animal entre visitas",
+    "benefitMessages": "Mensajería segura con la clínica",
+    "benefitReminders": "Recordatorios de cuidados y citas",
+    "downloadCta": "Descargar petsFollow",
+    "qrAndroidAlt": "QR Android",
+    "qrIosAlt": "QR iOS",
+    "android": "Android",
+    "ios": "iOS"
   }
 }

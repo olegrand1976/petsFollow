@@ -373,9 +373,17 @@
     "visit_preconsult_preheader": "Vastuvõtt kinnitatud loomale {petName} kuupäeval {when}. Jagage looma seisundit.",
     "visit_preconsult_greeting": "Tere {fullName},",
     "visit_preconsult_intro": "Looma {petName} vastuvõtt kliinikus {practiceName} on kinnitatud.",
-    "visit_preconsult_detail": "Kuupäev: {when}\n\nEnne visiiti avage petsFollowi rakendus, et jagada looma seisundit (sümptomid, isu, kiireloomulisus). Kui rakendust veel pole, laadige see alla alloleva nupu kaudu.",
-    "visit_preconsult_cta": "Ava / laadi rakendus alla",
-    "visit_preconsult_disclaimer": "Kui te seda e-kirja ei oodanud, võite selle ignoreerida."
+    "visit_preconsult_detail": "Kuupäev: {when}\n\nEnne visiiti täitke eelkonsultatsiooni küsimustik (sümptomid, isu, kiireloomulisus) alloleva nupu kaudu — rakenduse kontot pole vaja.",
+    "visit_preconsult_cta": "Täida küsimustik",
+    "visit_preconsult_disclaimer": "Kui te seda e-kirja ei oodanud, võite selle ignoreerida.",
+    "visit_confirmed_affiliate_subject": "Vastuvõtt kinnitatud loomale {petName}",
+    "visit_confirmed_affiliate_tagline": "Kinnitus",
+    "visit_confirmed_affiliate_preheader": "Vastuvõtt kinnitatud loomale {petName} kuupäeval {when}. Jälgige looma petsFollowiga.",
+    "visit_confirmed_affiliate_greeting": "Tere {fullName},",
+    "visit_confirmed_affiliate_intro": "Looma {petName} vastuvõtt kliinikus {practiceName} on kinnitatud.",
+    "visit_confirmed_affiliate_detail": "Kuupäev: {when}\n\nLaadige alla petsFollowi rakendus, et looma jälgida, kliinikuga suhelda ja meeldetuletusi saada — oma loomaarsti kutselingi kaudu.",
+    "visit_confirmed_affiliate_cta": "Liitu petsFollowiga",
+    "visit_confirmed_affiliate_disclaimer": "Kui te seda e-kirja ei oodanud, võite selle ignoreerida."
   },
   "push": {
     "new_message_title": "Uus sõnum",

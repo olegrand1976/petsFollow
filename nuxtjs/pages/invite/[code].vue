@@ -27,6 +27,24 @@
             >
               {{ $t('invite.download') }}
             </a>
+            <div v-if="invite.qrAndroid || invite.qrIos" class="invite-store-qrs" data-testid="invite-store-qrs">
+              <a
+                v-if="invite.qrAndroid?.publicUrl"
+                :href="invite.qrAndroid.storeUrl || invite.downloadUrl || '#'"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img :src="invite.qrAndroid.publicUrl" alt="Android" width="120" height="120">
+              </a>
+              <a
+                v-if="invite.qrIos?.publicUrl"
+                :href="invite.qrIos.storeUrl || invite.downloadUrl || '#'"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img :src="invite.qrIos.publicUrl" alt="iOS" width="120" height="120">
+              </a>
+            </div>
             <ProButton
               block
               variant="secondary"
@@ -64,6 +82,8 @@ const invite = ref<{
   displayName: string
   downloadUrl: string
   deepLink: string
+  qrAndroid?: { publicUrl?: string, storeUrl?: string } | null
+  qrIos?: { publicUrl?: string, storeUrl?: string } | null
 } | null>(null)
 
 function normalizeRole(raw: unknown): InviteRole {
@@ -172,6 +192,8 @@ onMounted(async () => {
       deepLink: preconsult
         ? `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}`
         : (data.deepLink || `petsfollow://invite?code=${data.code}`),
+      qrAndroid: data.qrAndroid || null,
+      qrIos: data.qrIos || null,
     }
     try {
       localStorage.setItem('pf_invite_code', data.code)
@@ -191,5 +213,15 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+.invite-store-qrs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.invite-store-qrs img {
+  border-radius: 0.5rem;
+  background: #fff;
 }
 </style>

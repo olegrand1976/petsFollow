@@ -105,7 +105,7 @@
   "proLightDictationStart": "Dictate",
   "proLightDictationStop": "Stop & transcribe",
   "proLightAudioConsentTitle": "Audio consent",
-  "proLightAudioConsentBody": "The recording is only used to draft the visit report. It is deleted when the report is finalized.",
+  "proLightAudioConsentBody": "The recording is only used to draft the visit report. Confirm the client's oral consent. Audio is deleted when the report is finalized.",
   "proLightAudioConsentAccept": "I agree",
   "proLightSpecialtyFarrier": "Farrier",
   "proLightSpecialtyPhysio": "Physio / osteo",
@@ -562,5 +562,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "proLightAudioConsentClientCheck": "I have obtained the client's oral consent to record",
+  "proLightReportAiProposalBanner": "AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication)."
 }

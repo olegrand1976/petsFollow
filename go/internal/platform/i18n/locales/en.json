@@ -373,9 +373,17 @@
     "visit_preconsult_preheader": "Appointment confirmed for {petName} on {when}. Share your pet's condition.",
     "visit_preconsult_greeting": "Hello {fullName},",
     "visit_preconsult_intro": "The appointment for {petName} at {practiceName} is confirmed.",
-    "visit_preconsult_detail": "Date: {when}\n\nBefore the visit, open the petsFollow app to share your pet's condition (symptoms, appetite, urgency). If you don't have the app yet, download it with the button below.",
-    "visit_preconsult_cta": "Open / download the app",
-    "visit_preconsult_disclaimer": "If you did not expect this email, you can ignore it."
+    "visit_preconsult_detail": "Date: {when}\n\nBefore the visit, complete the pre-consultation questionnaire (symptoms, appetite, urgency) with the button below — no app account required.",
+    "visit_preconsult_cta": "Fill in the questionnaire",
+    "visit_preconsult_disclaimer": "If you did not expect this email, you can ignore it.",
+    "visit_confirmed_affiliate_subject": "Appointment confirmed for {petName}",
+    "visit_confirmed_affiliate_tagline": "Confirmation",
+    "visit_confirmed_affiliate_preheader": "Appointment confirmed for {petName} on {when}. Follow your pet with petsFollow.",
+    "visit_confirmed_affiliate_greeting": "Hello {fullName},",
+    "visit_confirmed_affiliate_intro": "The appointment for {petName} at {practiceName} is confirmed.",
+    "visit_confirmed_affiliate_detail": "Date: {when}\n\nDownload the petsFollow app to follow your pet, message the practice and get reminders — via your vet's invite link.",
+    "visit_confirmed_affiliate_cta": "Join petsFollow",
+    "visit_confirmed_affiliate_disclaimer": "If you did not expect this email, you can ignore it."
   },
   "push": {
     "new_message_title": "New message",

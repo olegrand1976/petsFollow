@@ -21,6 +21,7 @@ type PracticeProfile struct {
 	AddressLine2          string     `json:"addressLine2"`
 	City                  string     `json:"city"`
 	PostalCode            string     `json:"postalCode"`
+	CountryCode           string     `json:"countryCode"`
 	Website               string     `json:"website"`
 	ProfileCompletedAt    *time.Time `json:"profileCompletedAt,omitempty"`
 	VetFullName           string     `json:"vetFullName"`
@@ -82,18 +83,33 @@ type PracticeContact struct {
 	PracticeID   string
 	PracticeName string
 	Phone        string
+	CountryCode  string
 }
 
 func (s *Store) GetPracticeContact(ctx context.Context, practiceID string) (PracticeContact, error) {
 	var c PracticeContact
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, name, COALESCE(phone,'')
+		SELECT id::text, name, COALESCE(phone,''), COALESCE(country_code,'BE')
 		FROM practice.practices WHERE id = $1`, practiceID,
-	).Scan(&c.PracticeID, &c.PracticeName, &c.Phone)
+	).Scan(&c.PracticeID, &c.PracticeName, &c.Phone, &c.CountryCode)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PracticeContact{}, ErrNotFound
 	}
 	return c, err
+}
+
+// NormalizeCountryCode returns a 2-letter ISO code (default BE).
+func NormalizeCountryCode(code string) string {
+	c := strings.ToUpper(strings.TrimSpace(code))
+	if len(c) != 2 {
+		return "BE"
+	}
+	switch c {
+	case "BE", "FR", "NL", "LU", "DE", "ES", "IT", "PT", "AT", "CH", "GB", "IE", "PL", "EE", "US":
+		return c
+	default:
+		return "BE"
+	}
 }
 
 func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID string) (PracticeProfile, error) {
@@ -103,7 +119,7 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 	err := s.pool.QueryRow(ctx, `
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
-			COALESCE(pr.postal_code,''), COALESCE(pr.website,''), pr.profile_completed_at,
+			COALESCE(pr.postal_code,''), COALESCE(pr.country_code,'BE'), COALESCE(pr.website,''), pr.profile_completed_at,
 			u.full_name, u.email, pr.heartrate_durations_sec,
 			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
 			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
@@ -114,7 +130,7 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 		JOIN identity.users u ON u.id = $2 AND u.practice_id = pr.id
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
-		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.Website, &completedAt,
+		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.CountryCode, &p.Website, &completedAt,
 		&p.VetFullName, &p.VetEmail, &durations,
 		&p.CompanyLegalName, &p.VATNumber, &p.CompanyNumber, &p.LegalForm, &p.BillingSameAsPractice,
 		&p.BillingAddressLine1, &p.BillingAddressLine2, &p.BillingPostalCode, &p.BillingCity,
@@ -127,6 +143,7 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 		return PracticeProfile{}, err
 	}
 	p.ProfileCompletedAt = completedAt
+	p.CountryCode = NormalizeCountryCode(p.CountryCode)
 	p.HeartRateDurationsSec = int32SliceToInts(durations)
 	p.PayoutProfileComplete = IsVetPayoutProfileComplete(p)
 	return p, nil
@@ -172,21 +189,21 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	q := `
 		UPDATE practice.practices
 		SET name = $2, phone = $3, contact_email = $4, address_line1 = $5, address_line2 = $6,
-			city = $7, postal_code = $8, website = $9,
-			company_legal_name = $10, vat_number = $11, company_number = $12, legal_form = $13,
-			billing_same_as_practice = $14, billing_address_line1 = $15, billing_address_line2 = $16,
-			billing_postal_code = $17, billing_city = $18,
-			payout_iban = $19, payout_bic = $20, payout_account_holder = $21`
+			city = $7, postal_code = $8, website = $9, country_code = $10,
+			company_legal_name = $11, vat_number = $12, company_number = $13, legal_form = $14,
+			billing_same_as_practice = $15, billing_address_line1 = $16, billing_address_line2 = $17,
+			billing_postal_code = $18, billing_city = $19,
+			payout_iban = $20, payout_bic = $21, payout_account_holder = $22`
 	args := []any{
 		practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2,
-		p.City, p.PostalCode, p.Website,
+		p.City, p.PostalCode, p.Website, NormalizeCountryCode(p.CountryCode),
 		p.CompanyLegalName, p.VATNumber, p.CompanyNumber, p.LegalForm,
 		p.BillingSameAsPractice, p.BillingAddressLine1, p.BillingAddressLine2,
 		p.BillingPostalCode, p.BillingCity,
 		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
 	}
 	if heartRateDurationsSec != nil {
-		q += `, heartrate_durations_sec = $22`
+		q += `, heartrate_durations_sec = $23`
 		args = append(args, *heartRateDurationsSec)
 	}
 	if markComplete {

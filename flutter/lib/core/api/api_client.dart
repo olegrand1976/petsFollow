@@ -369,9 +369,11 @@ class ApiClient {
     String filePath, {
     String? filename,
     String? hint,
+    bool clientAudioConsent = false,
   }) async {
     final form = FormData.fromMap({
       if (hint != null && hint.trim().isNotEmpty) 'hint': hint.trim(),
+      'clientAudioConsent': clientAudioConsent ? 'true' : 'false',
       'audio': await MultipartFile.fromFile(
         filePath,
         filename: filename ?? filePath.split('/').last,

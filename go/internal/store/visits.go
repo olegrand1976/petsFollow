@@ -30,19 +30,23 @@ type Visit struct {
 	Lng                 *float64   `json:"lng,omitempty"`
 	// PreconsultStatus is pending|submitted|skipped when an intake exists.
 	PreconsultStatus string `json:"preconsultStatus,omitempty"`
+	// RequestPreconsult: VetPro opted in to send public preconsult questionnaire.
+	RequestPreconsult bool `json:"requestPreconsult,omitempty"`
 	// Permission is set for care_pro list responses (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 }
 
 type CreateVisitInput struct {
-	PetID           string
-	PracticeID      string
-	Source          string // client | vet
-	Notes           string
-	ScheduledAt     *time.Time
-	DurationMinutes *int
+	PetID             string
+	PracticeID        string
+	Source            string // client | vet
+	Notes             string
+	ScheduledAt       *time.Time
+	DurationMinutes   *int
 	// ConfirmDirect: vet creates already confirmed (skip client approval).
 	ConfirmDirect bool
+	// RequestPreconsult: when confirmed, send public preconsult questionnaire.
+	RequestPreconsult bool
 }
 
 func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
@@ -141,13 +145,13 @@ func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, er
 	}
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending,
+			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false)`,
+		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult)
 	return v, err
 }
 
@@ -199,13 +203,13 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	vet := "vet"
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by)
-		VALUES ($1, $2, $3, $4, 'requested', $5, $6, $7, $8)
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult)
+		VALUES ($1, $2, $3, $4, 'requested', $5, $6, $7, $8, $9)
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, in.Notes, in.Source, in.DurationMinutes, vet,
+			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false)`,
+		id, in.PetID, in.PracticeID, in.ScheduledAt, in.Notes, in.Source, in.DurationMinutes, vet, in.RequestPreconsult,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult)
 	if err != nil {
 		return Visit{}, err
 	}
@@ -220,15 +224,28 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by,
-			COALESCE(address_text,''), lat, lng
+			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false)
 		FROM visits.visits WHERE id = $1`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-		&v.AddressText, &v.Lat, &v.Lng)
+		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}
 	return v, err
+}
+
+// SetVisitRequestPreconsult toggles the opt-in flag (VetPro calendar.manage).
+func (s *Store) SetVisitRequestPreconsult(ctx context.Context, id string, request bool) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits SET request_preconsult = $2 WHERE id = $1`, id, request)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // UpdateVisitLocation sets address. When clearCoords is true, lat/lng are set to NULL.

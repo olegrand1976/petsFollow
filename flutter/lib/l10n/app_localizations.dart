@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @proLightAudioConsentBody.
   ///
   /// In fr, this message translates to:
-  /// **'L\'enregistrement sert uniquement à générer le compte rendu. Il est supprimé à la finalisation du CR.'**
+  /// **'L\'enregistrement sert uniquement à générer le compte rendu. Confirmez l\'accord oral du client. L\'audio est supprimé à la finalisation du CR.'**
   String get proLightAudioConsentBody;
 
   /// No description provided for @proLightAudioConsentAccept.
@@ -2893,6 +2893,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Remplir la pré-consultation'**
   String get preconsultFillCta;
+
+  /// No description provided for @proLightAudioConsentClientCheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai obtenu l\'accord oral du client pour enregistrer'**
+  String get proLightAudioConsentClientCheck;
+
+  /// No description provided for @proLightReportAiProposalBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus).'**
+  String get proLightReportAiProposalBanner;
 }
 
 class _AppLocalizationsDelegate

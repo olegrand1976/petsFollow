@@ -25,6 +25,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     || to.path.startsWith('/register')
     || to.path.startsWith('/legal')
     || to.path.startsWith('/invite')
+    || to.path.startsWith('/preconsult')
     || to.path.startsWith('/admin')
     || to.path.startsWith('/commercial')
     || to.path.startsWith('/commercial-manager')

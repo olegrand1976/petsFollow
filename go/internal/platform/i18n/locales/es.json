@@ -373,9 +373,17 @@
     "visit_preconsult_preheader": "Cita confirmada para {petName} el {when}. Indique el estado de su animal.",
     "visit_preconsult_greeting": "Hola {fullName},",
     "visit_preconsult_intro": "La cita de {petName} en {practiceName} está confirmada.",
-    "visit_preconsult_detail": "Fecha: {when}\n\nAntes de la visita, abra la app petsFollow para indicar el estado de su animal (síntomas, apetito, urgencia). Si aún no tiene la app, descárguela con el botón de abajo.",
-    "visit_preconsult_cta": "Abrir / descargar la app",
-    "visit_preconsult_disclaimer": "Si no esperaba este correo, puede ignorarlo."
+    "visit_preconsult_detail": "Fecha: {when}\n\nAntes de la visita, complete el cuestionario de preconsulta (síntomas, apetito, urgencia) con el botón de abajo — no se necesita cuenta de la app.",
+    "visit_preconsult_cta": "Rellenar el cuestionario",
+    "visit_preconsult_disclaimer": "Si no esperaba este correo, puede ignorarlo.",
+    "visit_confirmed_affiliate_subject": "Cita confirmada para {petName}",
+    "visit_confirmed_affiliate_tagline": "Confirmación",
+    "visit_confirmed_affiliate_preheader": "Cita confirmada para {petName} el {when}. Siga a su animal con petsFollow.",
+    "visit_confirmed_affiliate_greeting": "Hola {fullName},",
+    "visit_confirmed_affiliate_intro": "La cita de {petName} en {practiceName} está confirmada.",
+    "visit_confirmed_affiliate_detail": "Fecha: {when}\n\nDescargue la app petsFollow para seguir a su animal, hablar con la clínica y recibir recordatorios — mediante el enlace de invitación de su veterinario.",
+    "visit_confirmed_affiliate_cta": "Unirse a petsFollow",
+    "visit_confirmed_affiliate_disclaimer": "Si no esperaba este correo, puede ignorarlo."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

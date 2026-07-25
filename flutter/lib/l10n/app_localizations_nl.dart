@@ -315,7 +315,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get proLightAudioConsentBody =>
-      'De opname dient alleen om het verslag te maken. Ze wordt verwijderd bij finalisatie.';
+      'De opname dient alleen om het verslag te maken. Bevestig de mondelinge toestemming van de klant. Audio wordt verwijderd bij finalisatie.';
 
   @override
   String get proLightAudioConsentAccept => 'Ik ga akkoord';
@@ -1510,4 +1510,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get preconsultFillCta => 'Preconsultatie invullen';
+
+  @override
+  String get proLightAudioConsentClientCheck =>
+      'Ik heb mondelinge toestemming van de klant om op te nemen';
+
+  @override
+  String get proLightReportAiProposalBanner =>
+      'AI-voorstel — validatie door de dierenarts verplicht vóór finalisatie (incl. diagnose / medicatie).';
 }

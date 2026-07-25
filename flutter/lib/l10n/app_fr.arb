@@ -105,7 +105,7 @@
   "proLightDictationStart": "Dicter",
   "proLightDictationStop": "Arrêter & transcrire",
   "proLightAudioConsentTitle": "Consentement audio",
-  "proLightAudioConsentBody": "L'enregistrement sert uniquement à générer le compte rendu. Il est supprimé à la finalisation du CR.",
+  "proLightAudioConsentBody": "L'enregistrement sert uniquement à générer le compte rendu. Confirmez l'accord oral du client. L'audio est supprimé à la finalisation du CR.",
   "proLightAudioConsentAccept": "J'accepte",
   "proLightSpecialtyFarrier": "Maréchal-ferrant",
   "proLightSpecialtyPhysio": "Physio / ostéo",
@@ -625,5 +625,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "proLightAudioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
+  "proLightReportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus)."
 }

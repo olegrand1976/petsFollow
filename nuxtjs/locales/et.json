@@ -33,7 +33,8 @@
     "managerProspects": "Meeskonna potentsiaalsed kliendid",
     "managerPortfolio": "Minu portfell",
     "team": "Meeskond",
-    "commercialCompetition": "Konkurents"
+    "commercialCompetition": "Konkurents",
+    "adminBrandAssets": "Poe QR-id"
   },
   "auth": {
     "login": {
@@ -550,7 +551,8 @@
         "pending_payment": "Makse ootel",
         "expired": "Aegunud",
         "cancelled": "Tühistatud"
-      }
+      },
+      "visitRequestPreconsult": "Küsi eelkonsultatsiooni"
     },
     "invitations": {
       "open": "Kliendi kutsed",
@@ -574,7 +576,12 @@
       "linkLabel": "Kutselink",
       "copy": "Kopeeri link",
       "copied": "Link kopeeritud",
-      "copyError": "Linki ei õnnestunud kopeerida."
+      "copyError": "Linki ei õnnestunud kopeerida.",
+      "refreshPack": "Uuenda QR-paketti",
+      "qrAndroidAlt": "Google Play QR",
+      "qrIosAlt": "App Store QR",
+      "android": "Android",
+      "ios": "iOS"
     }
   },
   "pets": {
@@ -1008,6 +1015,20 @@
         "created": "Loodud",
         "error": "Viga"
       }
+    },
+    "brandAssets": {
+      "title": "Poe QR-varad",
+      "subtitle": "Androidi/iOS QR-id pärast eelkonsultatsiooni ja kutsetel.",
+      "hint": "Laadige üles PNG/WebP. Ilma varata kasutab tänuleht allalaadimislinki.",
+      "android": "Androidi QR (Play Store)",
+      "ios": "iOS QR (App Store)",
+      "missing": "QR pole veel üles laaditud.",
+      "file": "QR-pilt",
+      "storeUrl": "Poe URL (valikuline)",
+      "upload": "Laadi üles",
+      "saveUrl": "Salvesta URL",
+      "uploaded": "QR uuendatud.",
+      "urlSaved": "URL salvestatud."
     }
   },
   "commissions": {
@@ -1466,7 +1487,17 @@
       "billingAddressLine2": "Arveldusaadressi rida 2",
       "payoutIban": "IBAN",
       "payoutBic": "BIC (valikuline)",
-      "payoutAccountHolder": "Konto omanik"
+      "payoutAccountHolder": "Konto omanik",
+      "countryCode": "Kliiniku riik",
+      "countries": {
+        "BE": "Belgia",
+        "FR": "Prantsusmaa",
+        "NL": "Madalmaad",
+        "LU": "Luksemburg",
+        "DE": "Saksamaa",
+        "ES": "Hispaania",
+        "EE": "Eesti"
+      }
     }
   },
   "legal": {
@@ -1841,7 +1872,7 @@
     "reportFinal": "Raport lõplik (ainult lugemine)",
     "reportFinalized": "Raport lõpetatud",
     "transcribeAudio": "Audio → tekst",
-    "audioConsent": "Heli kasutatakse ainult aruande koostamiseks ja kustutatakse lõpetamisel.",
+    "audioConsent": "Helifaili kasutatakse aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Kustutatakse lõpetamisel.",
     "audioConsentTitle": "Helisalvestuse nõusolek",
     "audioConsentAccept": "Nõustun",
     "reportTranscribed": "Transkriptsioon valmis",
@@ -1915,7 +1946,10 @@
         "medium": "Keskmine",
         "high": "Kõrge"
       }
-    }
+    },
+    "requestPreconsult": "Küsi eelkonsultatsiooni",
+    "audioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
+    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid)."
   },
   "manager": {
     "dashboard": {
@@ -2125,5 +2159,34 @@
       "established": "Established",
       "dominant": "Dominant"
     }
+  },
+  "preconsultPublic": {
+    "brandTitle": "Valmistage visiit ette",
+    "brandText": "Mõned küsimused loomaarsti abistamiseks.",
+    "loading": "Laadimine…",
+    "title": "Eelkonsultatsioon",
+    "subtitle": "{petName} — {practiceName}",
+    "when": "Vastuvõtt: {when}",
+    "complaint": "Peamine kaebus",
+    "duration": "Alates millal",
+    "behavior": "Käitumine",
+    "appetite": "Isu",
+    "thirst": "Janu",
+    "elimination": "Väljaheide / uriin",
+    "urgency": "Kiireloomulisus",
+    "comment": "Kommentaar (valikuline)",
+    "submit": "Saada",
+    "invalidTitle": "Kehtetu link",
+    "invalid": "See eelkonsultatsiooni link on kehtetu või aegunud.",
+    "thanksTitle": "Aitäh",
+    "thanksIntro": "Andmed loomale {petName} on saadetud.",
+    "benefitFollow": "Looma jälgimine visiitide vahel",
+    "benefitMessages": "Turvaline sõnumivahetus kliinikuga",
+    "benefitReminders": "Hooldus- ja vastuvõtumeeldetuletused",
+    "downloadCta": "Laadi petsFollow alla",
+    "qrAndroidAlt": "Androidi QR",
+    "qrIosAlt": "iOS QR",
+    "android": "Android",
+    "ios": "iOS"
   }
 }

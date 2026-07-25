@@ -105,7 +105,7 @@
   "proLightDictationStart": "Dictar",
   "proLightDictationStop": "Parar y transcribir",
   "proLightAudioConsentTitle": "Consentimiento de audio",
-  "proLightAudioConsentBody": "La grabación solo sirve para redactar el informe. Se elimina al finalizarlo.",
+  "proLightAudioConsentBody": "La grabación solo sirve para redactar el informe. Confirme el consentimiento oral del cliente. El audio se elimina al finalizarlo.",
   "proLightAudioConsentAccept": "Acepto",
   "proLightSpecialtyFarrier": "Herrador",
   "proLightSpecialtyPhysio": "Fisio / osteo",
@@ -562,5 +562,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "proLightAudioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
+  "proLightReportAiProposalBanner": "Propuesta de IA — validación veterinaria obligatoria antes de finalizar (incluye diagnóstico / medicación sugeridos)."
 }

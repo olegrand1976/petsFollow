@@ -105,7 +105,7 @@
   "proLightDictationStart": "Dicteren",
   "proLightDictationStop": "Stop & transcriberen",
   "proLightAudioConsentTitle": "Audiotoestemming",
-  "proLightAudioConsentBody": "De opname dient alleen om het verslag te maken. Ze wordt verwijderd bij finalisatie.",
+  "proLightAudioConsentBody": "De opname dient alleen om het verslag te maken. Bevestig de mondelinge toestemming van de klant. Audio wordt verwijderd bij finalisatie.",
   "proLightAudioConsentAccept": "Ik ga akkoord",
   "proLightSpecialtyFarrier": "Hoefsmid",
   "proLightSpecialtyPhysio": "Fysio / osteo",
@@ -562,5 +562,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "proLightAudioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
+  "proLightReportAiProposalBanner": "AI-voorstel — validatie door de dierenarts verplicht vóór finalisatie (incl. diagnose / medicatie)."
 }

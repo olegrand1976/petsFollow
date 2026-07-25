@@ -407,6 +407,10 @@
       <form class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
+        <label class="pro-checkbox-label" data-testid="visit-request-preconsult">
+          <input v-model="visitDraft.requestPreconsult" type="checkbox" class="pro-checkbox">
+          {{ $t('clients.pet.visitRequestPreconsult') }}
+        </label>
         <ProButton type="submit" :disabled="visitBusy" variant="secondary">
           {{ $t('clients.pet.visitPropose') }}
         </ProButton>
@@ -439,13 +443,22 @@
             </td>
             <td>
               <div class="pro-flex-gap">
-                <ProButton
-                  v-if="v.status === 'requested' && v.pendingActionBy === 'vet'"
-                  :disabled="visitBusy"
-                  @click="visitAction(v.id, 'confirm')"
-                >
-                  {{ $t('clients.pet.visitConfirm') }}
-                </ProButton>
+                <template v-if="v.status === 'requested' && v.pendingActionBy === 'vet'">
+                  <label class="pro-checkbox-label" data-testid="visit-confirm-request-preconsult">
+                    <input
+                      v-model="confirmPreconsultByVisit[v.id]"
+                      type="checkbox"
+                      class="pro-checkbox"
+                    >
+                    {{ $t('clients.pet.visitRequestPreconsult') }}
+                  </label>
+                  <ProButton
+                    :disabled="visitBusy"
+                    @click="visitAction(v.id, 'confirm')"
+                  >
+                    {{ $t('clients.pet.visitConfirm') }}
+                  </ProButton>
+                </template>
                 <ProButton
                   v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   :disabled="visitBusy"
@@ -669,7 +682,8 @@ const shareExpiresDays = ref('')
 const shareBusy = ref(false)
 const shareError = ref('')
 const careDraft = reactive({ title: '', type: 'vaccination' })
-const visitDraft = reactive({ scheduledAt: '', notes: '' })
+const visitDraft = reactive({ scheduledAt: '', notes: '', requestPreconsult: false })
+const confirmPreconsultByVisit = reactive<Record<string, boolean>>({})
 const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
@@ -1086,11 +1100,13 @@ async function proposeVisit(confirmDirect: boolean) {
       body: {
         notes: visitDraft.notes,
         confirmDirect,
+        requestPreconsult: visitDraft.requestPreconsult,
         scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
       },
     })
     visitDraft.notes = ''
     visitDraft.scheduledAt = ''
+    visitDraft.requestPreconsult = false
     await loadCareAndVisits()
   } finally {
     visitBusy.value = false
@@ -1101,7 +1117,14 @@ async function visitAction(id: string, action: string) {
   visitBusy.value = true
   pageError.value = ''
   try {
-    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { action } })
+    const body: Record<string, unknown> = { action }
+    if (action === 'confirm' && confirmPreconsultByVisit[id]) {
+      body.requestPreconsult = true
+    }
+    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body })
+    if (action === 'confirm') {
+      delete confirmPreconsultByVisit[id]
+    }
     await loadCareAndVisits()
   } catch (e: any) {
     pageError.value = mapError(e)

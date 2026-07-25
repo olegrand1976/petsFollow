@@ -91,7 +91,7 @@
   "proLightDictationStart": "Dikteeri",
   "proLightDictationStop": "Peata ja transkribeeri",
   "proLightAudioConsentTitle": "Helisalvestuse nõusolek",
-  "proLightAudioConsentBody": "Salvestist kasutatakse ainult visiidi aruande koostamiseks. See kustutatakse aruande lõpetamisel.",
+  "proLightAudioConsentBody": "Salvestist kasutatakse ainult visiidi aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Helifail kustutatakse aruande lõpetamisel.",
   "proLightAudioConsentAccept": "Nõustun",
   "proLightSpecialtyFarrier": "Rautaja",
   "proLightSpecialtyPhysio": "Füsioteraapia",
@@ -562,5 +562,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "proLightAudioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
+  "proLightReportAiProposalBanner": "Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid)."
 }

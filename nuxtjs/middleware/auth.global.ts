@@ -23,6 +23,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     || to.path.startsWith('/register')
     || to.path.startsWith('/legal/')
     || to.path.startsWith('/invite/')
+    || to.path.startsWith('/preconsult/')
 
   if (isPublic) {
     if (hasSession && AUTH_ENTRY_PATHS.has(to.path)) {

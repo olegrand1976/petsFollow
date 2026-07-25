@@ -375,10 +375,11 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 }
 
 type createVisitReq struct {
-	ScheduledAt     *string `json:"scheduledAt"`
-	Notes           string  `json:"notes"`
-	ConfirmDirect   bool    `json:"confirmDirect"`
-	DurationMinutes *int    `json:"durationMinutes"`
+	ScheduledAt       *string `json:"scheduledAt"`
+	Notes             string  `json:"notes"`
+	ConfirmDirect     bool    `json:"confirmDirect"`
+	DurationMinutes   *int    `json:"durationMinutes"`
+	RequestPreconsult bool    `json:"requestPreconsult"`
 }
 
 func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
@@ -475,6 +476,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		ScheduledAt:     scheduledAt,
 		DurationMinutes: &duration,
 		ConfirmDirect:   confirmDirect,
+	}
+	if req.RequestPreconsult && source == "vet" && a.allowPracticePerm(r, id, "calendar.manage") {
+		in.RequestPreconsult = true
 	}
 	if scheduledAt == nil {
 		in.DurationMinutes = nil
@@ -588,6 +592,7 @@ type updateVisitReq struct {
 	Status              string  `json:"status"`
 	Action              string  `json:"action"`
 	ProposedScheduledAt *string `json:"proposedScheduledAt"`
+	RequestPreconsult   *bool   `json:"requestPreconsult"`
 }
 
 func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
@@ -687,8 +692,17 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
 			return
 		}
+		if req.RequestPreconsult != nil && actsAsVet && a.allowPracticePerm(r, id, "calendar.manage") {
+			if err := a.store.SetVisitRequestPreconsult(r.Context(), visit.ID, *req.RequestPreconsult); err != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+		}
 		updated, err = a.store.ConfirmVisit(r.Context(), visit.ID)
 		if err == nil {
+			if full, gerr := a.store.GetVisit(r.Context(), visit.ID); gerr == nil {
+				updated = full
+			}
 			a.onVisitConfirmed(pet, updated)
 		}
 	case "cancel":
@@ -784,7 +798,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.AcceptReschedule(r.Context(), visit.ID)
 		if err == nil {
-			a.onVisitConfirmed(pet, updated)
+			a.onVisitRescheduleAccepted(pet, updated)
 		}
 	case "reject_reschedule":
 		if visit.PendingActionBy == nil {

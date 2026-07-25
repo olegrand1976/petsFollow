@@ -373,9 +373,17 @@
     "visit_preconsult_preheader": "RDV confirmé pour {petName} le {when}. Indiquez l'état de votre animal.",
     "visit_preconsult_greeting": "Bonjour {fullName},",
     "visit_preconsult_intro": "Le rendez-vous pour {petName} chez {practiceName} est confirmé.",
-    "visit_preconsult_detail": "Date : {when}\n\nAvant la visite, ouvrez l'application petsFollow pour indiquer l'état de votre animal (symptômes, appétit, urgence). Si vous n'avez pas encore l'app, téléchargez-la via le bouton ci-dessous.",
-    "visit_preconsult_cta": "Ouvrir / télécharger l'app",
-    "visit_preconsult_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer."
+    "visit_preconsult_detail": "Date : {when}\n\nAvant la visite, complétez le questionnaire de pré-consultation (symptômes, appétit, urgence) via le bouton ci-dessous — aucun compte app requis.",
+    "visit_preconsult_cta": "Remplir le questionnaire",
+    "visit_preconsult_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer.",
+    "visit_confirmed_affiliate_subject": "Rendez-vous confirmé pour {petName}",
+    "visit_confirmed_affiliate_tagline": "Confirmation",
+    "visit_confirmed_affiliate_preheader": "RDV confirmé pour {petName} le {when}. Suivez votre animal avec petsFollow.",
+    "visit_confirmed_affiliate_greeting": "Bonjour {fullName},",
+    "visit_confirmed_affiliate_intro": "Le rendez-vous pour {petName} chez {practiceName} est confirmé.",
+    "visit_confirmed_affiliate_detail": "Date : {when}\n\nTéléchargez l'app petsFollow pour suivre votre animal, échanger avec le cabinet et recevoir les rappels — via le lien d'invitation de votre vétérinaire.",
+    "visit_confirmed_affiliate_cta": "Rejoindre petsFollow",
+    "visit_confirmed_affiliate_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer."
   },
   "push": {
     "new_message_title": "Nouveau message",

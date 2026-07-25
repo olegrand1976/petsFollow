@@ -19,6 +19,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Settings logout | · | ✓ | · | `settings_logout_test` |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` |
+| Pro Light audio consent checkbox | · | ✓ | · | `pro_light_audio_consent_test` |
 | Commercial logout key | · | ✓ | · | messaging_keys_test |
 | Smoke login→HR→poids | · | · | ✓ | `test/smoke/…` — `accessToken` ; `make test-flutter-smoke` |
 

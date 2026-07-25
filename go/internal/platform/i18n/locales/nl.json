@@ -373,9 +373,17 @@
     "visit_preconsult_preheader": "Afspraak bevestigd voor {petName} op {when}. Deel de toestand van uw dier.",
     "visit_preconsult_greeting": "Hallo {fullName},",
     "visit_preconsult_intro": "De afspraak voor {petName} bij {practiceName} is bevestigd.",
-    "visit_preconsult_detail": "Datum: {when}\n\nOpen vóór het bezoek de petsFollow-app om de toestand van uw dier te delen (symptomen, eetlust, urgentie). Heeft u de app nog niet, download ze via de knop hieronder.",
-    "visit_preconsult_cta": "App openen / downloaden",
-    "visit_preconsult_disclaimer": "Als u deze e-mail niet verwachtte, kunt u ze negeren."
+    "visit_preconsult_detail": "Datum: {when}\n\nVul vóór het bezoek de preconsultatievragenlijst in (symptomen, eetlust, urgentie) via de knop hieronder — geen app-account nodig.",
+    "visit_preconsult_cta": "Vragenlijst invullen",
+    "visit_preconsult_disclaimer": "Als u deze e-mail niet verwachtte, kunt u ze negeren.",
+    "visit_confirmed_affiliate_subject": "Afspraak bevestigd voor {petName}",
+    "visit_confirmed_affiliate_tagline": "Bevestiging",
+    "visit_confirmed_affiliate_preheader": "Afspraak bevestigd voor {petName} op {when}. Volg uw dier met petsFollow.",
+    "visit_confirmed_affiliate_greeting": "Hallo {fullName},",
+    "visit_confirmed_affiliate_intro": "De afspraak voor {petName} bij {practiceName} is bevestigd.",
+    "visit_confirmed_affiliate_detail": "Datum: {when}\n\nDownload de petsFollow-app om uw dier te volgen, met de praktijk te chatten en herinneringen te ontvangen — via de uitnodigingslink van uw dierenarts.",
+    "visit_confirmed_affiliate_cta": "Word lid van petsFollow",
+    "visit_confirmed_affiliate_disclaimer": "Als u deze e-mail niet verwachtte, kunt u ze negeren."
   },
   "push": {
     "new_message_title": "Nieuw bericht",

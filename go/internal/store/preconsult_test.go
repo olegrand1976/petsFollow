@@ -26,4 +26,14 @@ func TestValidatePreconsultAnswers(t *testing.T) {
 	if err := ValidatePreconsultAnswers(bad); err == nil {
 		t.Fatal("expected invalid_duration")
 	}
+	xss := ok
+	xss.ChiefComplaint = "<script>alert(1)</script>"
+	if err := ValidatePreconsultAnswers(xss); err == nil || err.Error() != "html_not_allowed" {
+		t.Fatalf("expected html_not_allowed, got %v", err)
+	}
+	xss = ok
+	xss.Comment = "ok <b>no</b>"
+	if err := ValidatePreconsultAnswers(xss); err == nil || err.Error() != "html_not_allowed" {
+		t.Fatalf("expected html_not_allowed on comment, got %v", err)
+	}
 }

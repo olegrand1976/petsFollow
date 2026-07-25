@@ -59,8 +59,14 @@ var (
 	}
 )
 
+// ContainsHTMLMarkup rejects angle brackets to keep answers plain text (anti-injection).
+func ContainsHTMLMarkup(s string) bool {
+	return strings.ContainsAny(s, "<>")
+}
+
 func ValidatePreconsultAnswers(a PreconsultAnswers) error {
 	a.ChiefComplaint = strings.TrimSpace(a.ChiefComplaint)
+	a.Comment = strings.TrimSpace(a.Comment)
 	if a.ChiefComplaint == "" {
 		return errors.New("chief_complaint_required")
 	}
@@ -69,6 +75,9 @@ func ValidatePreconsultAnswers(a PreconsultAnswers) error {
 	}
 	if a.Comment != "" && utf8.RuneCountInString(a.Comment) > 2000 {
 		return errors.New("comment_too_long")
+	}
+	if ContainsHTMLMarkup(a.ChiefComplaint) || ContainsHTMLMarkup(a.Comment) {
+		return errors.New("html_not_allowed")
 	}
 	if !validPreconsultDuration[a.Duration] {
 		return errors.New("invalid_duration")
@@ -231,4 +240,100 @@ func (s *Store) AttachPreconsultStatuses(ctx context.Context, visits []Visit) er
 		}
 	}
 	return nil
+}
+
+const preconsultTokenTTL = 30 * 24 * time.Hour
+
+// HasPreconsultInviteIssued reports whether a public invite token was already created for this visit.
+func (s *Store) HasPreconsultInviteIssued(ctx context.Context, visitID string) (bool, error) {
+	var n int
+	err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM visits.preconsult_tokens WHERE visit_id = $1`, visitID).Scan(&n)
+	return n > 0, err
+}
+
+// IssuePreconsultToken creates an opaque public token for a visit (replaces unused active tokens).
+func (s *Store) IssuePreconsultToken(ctx context.Context, visitID string) (string, error) {
+	token := strings.ReplaceAll(uuid.NewString()+uuid.NewString(), "-", "")
+	id := uuid.NewString()
+	expires := time.Now().UTC().Add(preconsultTokenTTL)
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM visits.preconsult_tokens WHERE visit_id = $1 AND used_at IS NULL`, visitID)
+	if err != nil {
+		return "", err
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO visits.preconsult_tokens (id, visit_id, token, expires_at)
+		VALUES ($1, $2, $3, $4)`, id, visitID, token, expires)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// ResolvePreconsultToken returns visitID for a valid (non-expired) token.
+func (s *Store) ResolvePreconsultToken(ctx context.Context, token string) (string, error) {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return "", ErrNotFound
+	}
+	var visitID string
+	err := s.pool.QueryRow(ctx, `
+		SELECT visit_id::text FROM visits.preconsult_tokens
+		WHERE token = $1 AND expires_at > NOW()`, token).Scan(&visitID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return visitID, err
+}
+
+// MarkPreconsultTokenUsed stamps used_at when the public form is submitted.
+func (s *Store) MarkPreconsultTokenUsed(ctx context.Context, token string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE visits.preconsult_tokens SET used_at = NOW()
+		WHERE token = $1 AND used_at IS NULL`, token)
+	return err
+}
+
+// PublicPreconsultContext is safe non-PII context for the public form.
+type PublicPreconsultContext struct {
+	VisitID      string             `json:"visitId"`
+	PetName      string             `json:"petName"`
+	PracticeName string             `json:"practiceName"`
+	ScheduledAt  *time.Time         `json:"scheduledAt,omitempty"`
+	Status       string             `json:"status"`
+	Answers      *PreconsultAnswers `json:"answers,omitempty"`
+	InviteURL    string             `json:"inviteUrl,omitempty"`
+	DownloadURL  string             `json:"downloadUrl,omitempty"`
+}
+
+func (s *Store) GetPublicPreconsultContext(ctx context.Context, visitID string) (PublicPreconsultContext, error) {
+	var out PublicPreconsultContext
+	out.VisitID = visitID
+	err := s.pool.QueryRow(ctx, `
+		SELECT p.name, COALESCE(pr.name, ''), v.scheduled_at
+		FROM visits.visits v
+		JOIN pets.pets p ON p.id = v.pet_id
+		LEFT JOIN practice.practices pr ON pr.id = v.practice_id
+		WHERE v.id = $1`, visitID).Scan(&out.PetName, &out.PracticeName, &out.ScheduledAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return PublicPreconsultContext{}, ErrNotFound
+	}
+	if err != nil {
+		return PublicPreconsultContext{}, err
+	}
+	in, err := s.GetPreconsultByVisit(ctx, visitID)
+	if errors.Is(err, ErrNotFound) {
+		out.Status = PreconsultPending
+		return out, nil
+	}
+	if err != nil {
+		return PublicPreconsultContext{}, err
+	}
+	out.Status = in.Status
+	if in.Status == PreconsultSubmitted {
+		ans := in.Answers
+		out.Answers = &ans
+	}
+	return out, nil
 }

@@ -50,6 +50,7 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 		return
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
+	android, ios, _ := a.store.StoreQRAssets(r.Context())
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"code":          inv.Code,
 		"role":          inv.Role,
@@ -58,6 +59,8 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 		"downloadUrl":   downloadURL,
 		"proSiteUrl":    strings.TrimRight(a.cfg.ProPublicSiteURL, "/"),
 		"qrCodeDataUrl": qr,
+		"qrAndroid":     brandAssetPublicDTO(android),
+		"qrIos":         brandAssetPublicDTO(ios),
 		"practiceName":  inv.PracticeName,
 		"displayName":   inv.DisplayName,
 		"specialty":     inv.Specialty,
@@ -132,6 +135,7 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
+	android, ios, _ := a.store.StoreQRAssets(r.Context())
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"code":         inv.Code,
 		"role":         inv.Role,
@@ -142,6 +146,8 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 		"downloadUrl":  downloadURL,
 		"deepLink":     a.appInviteDeepLink(inv.Code),
 		"inviteUrl":    a.appInviteWebURL(inv.Code),
+		"qrAndroid":    brandAssetPublicDTO(android),
+		"qrIos":        brandAssetPublicDTO(ios),
 	})
 }
 

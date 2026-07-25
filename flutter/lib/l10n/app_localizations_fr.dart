@@ -316,7 +316,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get proLightAudioConsentBody =>
-      'L\'enregistrement sert uniquement à générer le compte rendu. Il est supprimé à la finalisation du CR.';
+      'L\'enregistrement sert uniquement à générer le compte rendu. Confirmez l\'accord oral du client. L\'audio est supprimé à la finalisation du CR.';
 
   @override
   String get proLightAudioConsentAccept => 'J\'accepte';
@@ -1519,4 +1519,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get preconsultFillCta => 'Remplir la pré-consultation';
+
+  @override
+  String get proLightAudioConsentClientCheck =>
+      'J\'ai obtenu l\'accord oral du client pour enregistrer';
+
+  @override
+  String get proLightReportAiProposalBanner =>
+      'Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus).';
 }

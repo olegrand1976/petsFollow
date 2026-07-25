@@ -533,22 +533,45 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
 
   Future<bool> _confirmAudioConsent() async {
     final l10n = AppLocalizations.of(context)!;
+    var checked = false;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.proLightAudioConsentTitle),
-        content: Text(l10n.proLightAudioConsentBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.proLightAudioConsentAccept),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            return AlertDialog(
+              title: Text(l10n.proLightAudioConsentTitle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.proLightAudioConsentBody),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    key: const Key('pro_light_audio_consent_checkbox'),
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: checked,
+                    onChanged: (v) => setLocal(() => checked = v ?? false),
+                    title: Text(l10n.proLightAudioConsentClientCheck),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+                ),
+                FilledButton(
+                  key: const Key('pro_light_audio_consent_accept'),
+                  onPressed: checked ? () => Navigator.pop(ctx, true) : null,
+                  child: Text(l10n.proLightAudioConsentAccept),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
     return ok == true;
   }
@@ -566,6 +589,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
         widget.visitId,
         path,
         filename: 'dictation.m4a',
+        clientAudioConsent: true,
       );
       if (!mounted) return;
       await _applyTranscript(transcribed);
@@ -630,6 +654,14 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                     : l10n.proLightReportTitle),
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          if (!isFinal && widget.canWrite) ...[
+            const SizedBox(height: 8),
+            Text(
+              key: const Key('pro_light_report_ai_banner'),
+              l10n.proLightReportAiProposalBanner,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
@@ -771,6 +803,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                               widget.visitId,
                               path,
                               filename: file.name,
+                              clientAudioConsent: true,
                             );
                             if (!mounted) return;
                             await _applyTranscript(transcribed);

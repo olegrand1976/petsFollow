@@ -6,6 +6,16 @@
       <div class="app-invite-qr" data-testid="app-invite-qr">
         <img :src="invite.qrCodeDataUrl" :alt="$t('clients.appInvite.qrAlt')" width="200" height="200">
       </div>
+      <div v-if="invite.qrAndroid || invite.qrIos" class="app-invite-store-qrs" data-testid="app-invite-store-qrs">
+        <figure v-if="invite.qrAndroid?.publicUrl">
+          <img :src="invite.qrAndroid.publicUrl" :alt="$t('clients.appInvite.qrAndroidAlt')" width="96" height="96">
+          <figcaption>{{ $t('clients.appInvite.android') }}</figcaption>
+        </figure>
+        <figure v-if="invite.qrIos?.publicUrl">
+          <img :src="invite.qrIos.publicUrl" :alt="$t('clients.appInvite.qrIosAlt')" width="96" height="96">
+          <figcaption>{{ $t('clients.appInvite.ios') }}</figcaption>
+        </figure>
+      </div>
       <p class="app-invite-meta">
         <strong>{{ metaPrimary }}</strong>
         <span v-if="metaSecondary" class="text-muted"> — {{ metaSecondary }}</span>
@@ -26,6 +36,15 @@
         >
           <ProIcon name="content_copy" />
           {{ copied ? $t('clients.appInvite.copied') : $t('clients.appInvite.copy') }}
+        </ProButton>
+        <ProButton
+          type="button"
+          variant="ghost"
+          test-id="app-invite-refresh-pack"
+          :disabled="loading"
+          @click="loadInvite"
+        >
+          {{ $t('clients.appInvite.refreshPack') }}
         </ProButton>
       </div>
       <p v-if="copyError" class="pro-error">{{ copyError }}</p>
@@ -59,6 +78,8 @@ const invite = ref<{
   qrCodeDataUrl: string
   practiceName: string
   displayName: string
+  qrAndroid?: { publicUrl?: string, storeUrl?: string } | null
+  qrIos?: { publicUrl?: string, storeUrl?: string } | null
 } | null>(null)
 
 const hintText = computed(() => {
@@ -102,6 +123,8 @@ async function loadInvite() {
       qrCodeDataUrl: data.qrCodeDataUrl,
       practiceName: data.practiceName || '',
       displayName: data.displayName || data.vetFullName || '',
+      qrAndroid: data.qrAndroid || null,
+      qrIos: data.qrIos || null,
     }
   } catch (e) {
     error.value = mapError(e)
@@ -137,6 +160,17 @@ watch(() => props.open, (isOpen) => {
   display: flex;
   justify-content: center;
   margin-bottom: 1rem;
+}
+.app-invite-store-qrs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.app-invite-store-qrs figure {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
 }
 .app-invite-qr img {
   border-radius: var(--pf-vet-radius-md, 8px);

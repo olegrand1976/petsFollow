@@ -8,6 +8,7 @@ const SKIP_PREFIXES = [
   '/welcome',
   '/legal',
   '/invite',
+  '/preconsult',
 ]
 
 function isUnauthorized(e: unknown): boolean {

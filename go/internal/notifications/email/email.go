@@ -262,6 +262,43 @@ func (n *Notifier) SendVisitPreconsult(to, locale, clientName, petName, when, pr
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendVisitConfirmedAffiliate confirms the visit and invites the client to affiliate via app invite.
+func (n *Notifier) SendVisitConfirmedAffiliate(to, locale, clientName, petName, when, practiceName, ctaURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"fullName":     clientName,
+		"petName":      petName,
+		"when":         when,
+		"practiceName": practiceName,
+	}
+	if vars["when"] == "" {
+		vars["when"] = "—"
+	}
+	if vars["practiceName"] == "" {
+		vars["practiceName"] = "petsFollow"
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = vars["petName"]
+	}
+	subject := mustT(locale, "emails.visit_confirmed_affiliate_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.visit_confirmed_affiliate_tagline"),
+		Greeting:        mustT(locale, "emails.visit_confirmed_affiliate_greeting", vars),
+		Intro:           mustT(locale, "emails.visit_confirmed_affiliate_intro", vars),
+		Detail:          mustT(locale, "emails.visit_confirmed_affiliate_detail", vars),
+		CTALabel:        mustT(locale, "emails.visit_confirmed_affiliate_cta"),
+		CTAURL:          ctaURL,
+		Disclaimer:      mustT(locale, "emails.visit_confirmed_affiliate_disclaimer"),
+		Preheader:       mustT(locale, "emails.visit_confirmed_affiliate_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendJourneyStep sends one client discovery/loyalty drip email.
 // vars may include:
 //   "_omitDetail=1" — suppress soft-upsell detail block

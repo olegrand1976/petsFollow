@@ -17,6 +17,9 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 	queries := map[string]string{
 		"profile": `SELECT to_jsonb(u) - 'password_hash' - 'totp_secret' - 'google_sub'
 			FROM identity.users u WHERE id = $1`,
+		"visitReportsAuthored": `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(vr) - 'audio_object_key' - 'audio_url') ORDER BY vr.created_at), '[]'::jsonb)
+			FROM visits.visit_reports vr WHERE vr.author_user_id = $1`,
 	}
 	if fullClientExport {
 		queries["pets"] = `SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.created_at), '[]'::jsonb)

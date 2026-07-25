@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
@@ -273,24 +274,21 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return
 	}
-	system := `Tu es un assistant vétérinaire. Reformule le compte-rendu de visite en français clair,
-structuré en sections SOAP (Subjectif, Objectif, Analyse, Plan). Garde les faits médicaux; n'invente pas.`
+	country := "BE"
+	if contact, cerr := a.store.GetPracticeContact(r.Context(), visit.PracticeID); cerr == nil && contact.CountryCode != "" {
+		country = store.NormalizeCountryCode(contact.CountryCode)
+	}
+	localeHint := "fr"
+	if u, uerr := a.store.GetUserByID(r.Context(), id.UserID); uerr == nil && u.PreferredLocale != "" {
+		localeHint = u.PreferredLocale
+	}
+	promptIn := gemini.VisitReportPromptInput{CountryCode: country, LocaleHint: localeHint}
 	if id.Role == kernel.RoleCarePro {
-		u, uerr := a.store.GetUserByID(r.Context(), id.UserID)
-		if uerr == nil {
-			switch kernel.ProfessionalSpecialty(u.ProfessionalSpecialty) {
-			case kernel.SpecialtyFarrier:
-				system = `Tu es un assistant pour maréchal-ferrant. Reformule le compte-rendu de ferrage/intervention
-en français clair (état des pieds, fer/type, observations, recommandations). N'invente pas.`
-			case kernel.SpecialtyPhysio:
-				system = `Tu es un assistant en physiothérapie animale. Reformule le CR de séance
-(motif, examen, techniques, exercices, plan). N'invente pas.`
-			case kernel.SpecialtyBehaviorist:
-				system = `Tu es un assistant comportementaliste animalier. Reformule le CR
-(contexte, comportements observés, analyse, plan d'accompagnement). N'invente pas.`
-			}
+		if u, uerr := a.store.GetUserByID(r.Context(), id.UserID); uerr == nil {
+			promptIn.Specialty = kernel.ProfessionalSpecialty(u.ProfessionalSpecialty)
 		}
 	}
+	system := gemini.BuildVisitReportImprovePrompt(promptIn)
 	improved, err := a.gemini.GenerateText(r.Context(), system, source, 0.3)
 	if err != nil {
 		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
@@ -314,10 +312,6 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if a.gemini == nil || !a.gemini.Configured() {
-		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
-		return
-	}
 	visitID := chi.URLParam(r, "visitID")
 	visit, err := a.store.GetVisit(r.Context(), visitID)
 	if err != nil {
@@ -338,6 +332,25 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := r.ParseMultipartForm(12 << 20); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	consent := strings.EqualFold(strings.TrimSpace(r.FormValue("clientAudioConsent")), "true") ||
+		r.FormValue("clientAudioConsent") == "1"
+	if !consent {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "audio_consent_required")
+		return
+	}
+	if a.gemini == nil || !a.gemini.Configured() {
+		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
+		return
+	}
+	report, err = a.store.MarkVisitReportAudioConsent(r.Context(), report.ID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	file, header, err := r.FormFile("audio")

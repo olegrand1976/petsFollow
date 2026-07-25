@@ -33,7 +33,8 @@
     "managerProspects": "Team prospects",
     "managerPortfolio": "My portfolio",
     "team": "Team",
-    "commercialCompetition": "Competition"
+    "commercialCompetition": "Competition",
+    "adminBrandAssets": "Store QRs"
   },
   "auth": {
     "login": {
@@ -550,7 +551,8 @@
         "pending_payment": "Payment pending",
         "expired": "Expired",
         "cancelled": "Cancelled"
-      }
+      },
+      "visitRequestPreconsult": "Request a pre-consultation"
     },
     "invitations": {
       "open": "Client invitations",
@@ -574,7 +576,12 @@
       "linkLabel": "Invite link",
       "copy": "Copy link",
       "copied": "Link copied",
-      "copyError": "Could not copy the link."
+      "copyError": "Could not copy the link.",
+      "refreshPack": "Refresh QR pack",
+      "qrAndroidAlt": "Google Play QR",
+      "qrIosAlt": "App Store QR",
+      "android": "Android",
+      "ios": "iOS"
     }
   },
   "pets": {
@@ -1008,6 +1015,20 @@
         "created": "Created",
         "error": "Error"
       }
+    },
+    "brandAssets": {
+      "title": "Store QR assets",
+      "subtitle": "Android / iOS QRs shown after pre-consult and on invites.",
+      "hint": "Upload PNG/WebP. If missing, the thanks page falls back to the download link.",
+      "android": "Android QR (Play Store)",
+      "ios": "iOS QR (App Store)",
+      "missing": "No QR uploaded yet.",
+      "file": "QR image",
+      "storeUrl": "Store URL (optional)",
+      "upload": "Upload",
+      "saveUrl": "Save URL",
+      "uploaded": "QR updated.",
+      "urlSaved": "URL saved."
     }
   },
   "commissions": {
@@ -1466,7 +1487,17 @@
       "billingAddressLine2": "Billing address line 2",
       "payoutIban": "IBAN",
       "payoutBic": "BIC (optional)",
-      "payoutAccountHolder": "Account holder"
+      "payoutAccountHolder": "Account holder",
+      "countryCode": "Practice country",
+      "countries": {
+        "BE": "Belgium",
+        "FR": "France",
+        "NL": "Netherlands",
+        "LU": "Luxembourg",
+        "DE": "Germany",
+        "ES": "Spain",
+        "EE": "Estonia"
+      }
     }
   },
   "legal": {
@@ -1841,7 +1872,7 @@
     "reportFinal": "Report finalized (read-only)",
     "reportFinalized": "Report finalized",
     "transcribeAudio": "Audio → text",
-    "audioConsent": "Audio is only used to draft the report and is deleted on finalize.",
+    "audioConsent": "Audio is used to draft the report. Confirm the client's oral consent. Deleted on finalize.",
     "audioConsentTitle": "Audio consent",
     "audioConsentAccept": "I agree",
     "reportTranscribed": "Transcription complete",
@@ -1915,7 +1946,10 @@
         "medium": "Medium",
         "high": "High"
       }
-    }
+    },
+    "requestPreconsult": "Request a pre-consultation",
+    "audioConsentClientCheck": "I have obtained the client's oral consent to record",
+    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication)."
   },
   "manager": {
     "dashboard": {
@@ -2125,5 +2159,34 @@
       "established": "Established",
       "dominant": "Dominant"
     }
+  },
+  "preconsultPublic": {
+    "brandTitle": "Prepare the visit",
+    "brandText": "A few questions to help your vet.",
+    "loading": "Loading…",
+    "title": "Pre-consultation",
+    "subtitle": "{petName} — {practiceName}",
+    "when": "Appointment: {when}",
+    "complaint": "Chief complaint",
+    "duration": "Since when",
+    "behavior": "Behavior",
+    "appetite": "Appetite",
+    "thirst": "Thirst",
+    "elimination": "Stool / urine",
+    "urgency": "Perceived urgency",
+    "comment": "Comment (optional)",
+    "submit": "Submit",
+    "invalidTitle": "Invalid link",
+    "invalid": "This pre-consultation link is invalid or expired.",
+    "thanksTitle": "Thank you",
+    "thanksIntro": "Details for {petName} were sent successfully.",
+    "benefitFollow": "Follow your pet between visits",
+    "benefitMessages": "Secure messaging with the practice",
+    "benefitReminders": "Care and appointment reminders",
+    "downloadCta": "Download petsFollow",
+    "qrAndroidAlt": "Android QR",
+    "qrIosAlt": "iOS QR",
+    "android": "Android",
+    "ios": "iOS"
   }
 }

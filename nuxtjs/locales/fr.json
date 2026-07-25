@@ -33,7 +33,8 @@
     "managerProspects": "Prospects équipe",
     "managerPortfolio": "Mon portefeuille",
     "team": "Équipe",
-    "commercialCompetition": "Concurrence"
+    "commercialCompetition": "Concurrence",
+    "adminBrandAssets": "QR stores"
   },
   "training": {
     "title": "Entraînement IA",
@@ -855,7 +856,8 @@
         "pending_payment": "Paiement en attente",
         "expired": "Expiré",
         "cancelled": "Annulé"
-      }
+      },
+      "visitRequestPreconsult": "Demander une pré-consultation"
     },
     "appInvite": {
       "open": "QR téléchargement",
@@ -869,7 +871,12 @@
       "linkLabel": "Lien d’invitation",
       "copy": "Copier le lien",
       "copied": "Lien copié",
-      "copyError": "Impossible de copier le lien."
+      "copyError": "Impossible de copier le lien.",
+      "refreshPack": "Recalculer le pack QR",
+      "qrAndroidAlt": "QR Google Play",
+      "qrIosAlt": "QR App Store",
+      "android": "Android",
+      "ios": "iOS"
     }
   },
   "pets": {
@@ -1303,6 +1310,20 @@
         "created": "Créé",
         "error": "Erreur"
       }
+    },
+    "brandAssets": {
+      "title": "Assets QR stores",
+      "subtitle": "QR Android / iOS affichés après pré-consultation et sur les invitations.",
+      "hint": "Uploadez des PNG/WebP. Sans asset, la page remerciement dégrade vers le lien de téléchargement.",
+      "android": "QR Android (Play Store)",
+      "ios": "QR iOS (App Store)",
+      "missing": "Aucun QR uploadé.",
+      "file": "Image QR",
+      "storeUrl": "URL store (optionnel)",
+      "upload": "Uploader",
+      "saveUrl": "Enregistrer l’URL",
+      "uploaded": "QR mis à jour.",
+      "urlSaved": "URL enregistrée."
     }
   },
   "calendar": {
@@ -1342,7 +1363,7 @@
     "reportFinal": "Compte rendu finalisé (lecture seule)",
     "reportFinalized": "Compte rendu finalisé",
     "transcribeAudio": "Audio → texte",
-    "audioConsent": "L'audio sert uniquement à générer le CR et sera supprimé à la finalisation.",
+    "audioConsent": "L'audio sert à rédiger le CR. Confirmez l'accord oral du client. Suppression à la finalisation.",
     "audioConsentTitle": "Consentement audio",
     "audioConsentAccept": "J'accepte",
     "reportTranscribed": "Transcription terminée",
@@ -1416,7 +1437,10 @@
         "medium": "Moyenne",
         "high": "Élevée"
       }
-    }
+    },
+    "requestPreconsult": "Demander une pré-consultation",
+    "audioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
+    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés)."
   },
   "commissions": {
     "title": "Mes rétributions",
@@ -1921,7 +1945,17 @@
       "billingAddressLine2": "Complément d'adresse de facturation",
       "payoutIban": "IBAN",
       "payoutBic": "BIC (optionnel)",
-      "payoutAccountHolder": "Titulaire du compte"
+      "payoutAccountHolder": "Titulaire du compte",
+      "countryCode": "Pays du cabinet",
+      "countries": {
+        "BE": "Belgique",
+        "FR": "France",
+        "NL": "Pays-Bas",
+        "LU": "Luxembourg",
+        "DE": "Allemagne",
+        "ES": "Espagne",
+        "EE": "Estonie"
+      }
     }
   },
   "legal": {
@@ -2125,5 +2159,34 @@
       "established": "Établi",
       "dominant": "Dominant"
     }
+  },
+  "preconsultPublic": {
+    "brandTitle": "Préparer la visite",
+    "brandText": "Quelques questions pour aider votre vétérinaire.",
+    "loading": "Chargement…",
+    "title": "Pré-consultation",
+    "subtitle": "État de {petName} — {practiceName}",
+    "when": "Rendez-vous : {when}",
+    "complaint": "Motif / plainte",
+    "duration": "Depuis quand",
+    "behavior": "Comportement",
+    "appetite": "Appétit",
+    "thirst": "Soif",
+    "elimination": "Selles / urines",
+    "urgency": "Urgence ressentie",
+    "comment": "Commentaire (optionnel)",
+    "submit": "Envoyer",
+    "invalidTitle": "Lien invalide",
+    "invalid": "Ce lien de pré-consultation est invalide ou expiré.",
+    "thanksTitle": "Merci",
+    "thanksIntro": "Les informations pour {petName} ont bien été transmises.",
+    "benefitFollow": "Suivi de l’animal entre les visites",
+    "benefitMessages": "Messagerie sécurisée avec le cabinet",
+    "benefitReminders": "Rappels de soins et rendez-vous",
+    "downloadCta": "Télécharger petsFollow",
+    "qrAndroidAlt": "QR Android",
+    "qrIosAlt": "QR iOS",
+    "android": "Android",
+    "ios": "iOS"
   }
 }

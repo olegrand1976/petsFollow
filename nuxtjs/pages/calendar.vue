@@ -235,6 +235,7 @@
         </div>
         <div class="pro-field pro-mb-md">
           <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
+          <p class="pro-hint" data-testid="visit-report-ai-banner">{{ $t('calendar.reportAiProposalBanner') }}</p>
           <textarea
             id="visit-report-body"
             v-model="reportBody"
@@ -309,6 +310,14 @@
           </details>
         </div>
         <div class="pro-flex-gap create-client-actions">
+          <label
+            v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
+            class="pro-checkbox-label"
+            data-testid="calendar-request-preconsult"
+          >
+            <input v-model="requestPreconsult" type="checkbox" class="pro-checkbox">
+            {{ $t('calendar.requestPreconsult') }}
+          </label>
           <ProButton
             v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
             :disabled="busyId === selectedVisit.id"
@@ -377,11 +386,24 @@
     </ProModal>
     <ProModal v-model:open="audioConsentOpen" :title="$t('calendar.audioConsentTitle')">
       <p class="pro-hint">{{ $t('calendar.audioConsent') }}</p>
+      <label class="pro-checkbox-label" data-testid="audio-consent-checkbox-label">
+        <input
+          v-model="audioConsentChecked"
+          type="checkbox"
+          class="pro-checkbox"
+          data-testid="audio-consent-checkbox"
+        >
+        {{ $t('calendar.audioConsentClientCheck') }}
+      </label>
       <template #footer>
         <ProButton variant="ghost" test-id="audio-consent-cancel" @click="cancelAudioConsent">
           {{ $t('calendar.cancel') }}
         </ProButton>
-        <ProButton test-id="audio-consent-accept" @click="acceptAudioConsent">
+        <ProButton
+          test-id="audio-consent-accept"
+          :disabled="!audioConsentChecked"
+          @click="acceptAudioConsent"
+        >
           {{ $t('calendar.audioConsentAccept') }}
         </ProButton>
       </template>
@@ -417,6 +439,7 @@ const clientBookingEnabled = ref(false)
 const actionError = ref('')
 const actionSuccess = ref('')
 const busyId = ref('')
+const requestPreconsult = ref(false)
 const focusVisitId = ref('')
 const anchorDate = ref(startOfDay(new Date()))
 
@@ -487,6 +510,7 @@ function preconsultEnumLabel(kind: 'duration' | 'behavior' | 'scale' | 'urgency'
   return translated === key ? value : translated
 }
 const audioConsentOpen = ref(false)
+const audioConsentChecked = ref(false)
 const pendingAudioFile = ref<File | null>(null)
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
@@ -619,8 +643,13 @@ async function act(id: string, action: string) {
   busyId.value = id
   actionError.value = ''
   try {
-    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body: { action } })
+    const body: Record<string, unknown> = { action }
+    if (action === 'confirm' && requestPreconsult.value) {
+      body.requestPreconsult = true
+    }
+    await $fetch(`/api/visits/${id}`, { method: 'PATCH', body })
     detailOpen.value = false
+    requestPreconsult.value = false
     await load()
   } catch (e: any) {
     actionError.value = mapError(e)
@@ -782,24 +811,29 @@ async function onReportAudioSelected(ev: Event) {
   input.value = ''
   if (!file) return
   pendingAudioFile.value = file
+  audioConsentChecked.value = false
   audioConsentOpen.value = true
 }
 
 function cancelAudioConsent() {
   pendingAudioFile.value = null
+  audioConsentChecked.value = false
   audioConsentOpen.value = false
 }
 
 async function acceptAudioConsent() {
+  if (!audioConsentChecked.value) return
   const file = pendingAudioFile.value
   pendingAudioFile.value = null
   audioConsentOpen.value = false
+  audioConsentChecked.value = false
   if (!file || !selectedVisit.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
     const form = new FormData()
     form.append('audio', file, file.name)
+    form.append('clientAudioConsent', 'true')
     const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/transcribe`, {
       method: 'POST',
       body: form,

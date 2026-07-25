@@ -133,23 +133,194 @@ func (a *API) loadVisitPetForPreconsult(w http.ResponseWriter, r *http.Request, 
 	return visit, pet, true
 }
 
-// onVisitConfirmed creates pending preconsult, pushes FCM, and emails the client when intake is new.
+func (a *API) registerPreconsultPublicRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	r.Group(func(pr chi.Router) {
+		if rateLimit != nil {
+			pr.Use(rateLimit)
+		}
+		pr.Get("/public/preconsult/{token}", a.getPublicPreconsult)
+		pr.Post("/public/preconsult/{token}", a.postPublicPreconsult)
+		pr.Get("/public/brand-assets", a.getPublicBrandAssets)
+	})
+}
+
+func (a *API) getPublicBrandAssets(w http.ResponseWriter, r *http.Request) {
+	android, ios, err := a.store.StoreQRAssets(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"qrAndroid": brandAssetPublicDTO(android),
+		"qrIos":     brandAssetPublicDTO(ios),
+		"downloadUrl": strings.TrimSpace(a.cfg.PetsAppDownloadURL),
+	})
+}
+
+func brandAssetPublicDTO(a store.BrandAsset) map[string]any {
+	if a.Key == "" || a.PublicURL == "" {
+		return nil
+	}
+	return map[string]any{
+		"publicUrl": a.PublicURL,
+		"storeUrl":  a.StoreURL,
+	}
+}
+
+func (a *API) getPublicPreconsult(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	visitID, err := a.store.ResolvePreconsultToken(r.Context(), token)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_token_invalid")
+		return
+	}
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return
+	}
+	if visit.Status == "cancelled" {
+		writeErr(w, r, http.StatusGone, "gone", "visit_cancelled")
+		return
+	}
+	ctxData, err := a.store.GetPublicPreconsultContext(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_not_found")
+		return
+	}
+	a.enrichPublicPreconsultLinks(r.Context(), &ctxData)
+	android, ios, _ := a.store.StoreQRAssets(r.Context())
+	// Never echo PHI answers on the public GET — status alone drives the thank-you UI.
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"visitId":      ctxData.VisitID,
+		"petName":      ctxData.PetName,
+		"practiceName": ctxData.PracticeName,
+		"scheduledAt":  ctxData.ScheduledAt,
+		"status":       ctxData.Status,
+		"inviteUrl":    ctxData.InviteURL,
+		"downloadUrl":  ctxData.DownloadURL,
+		"qrAndroid":    brandAssetPublicDTO(android),
+		"qrIos":        brandAssetPublicDTO(ios),
+	})
+}
+
+type postPublicPreconsultReq struct {
+	Answers store.PreconsultAnswers `json:"answers"`
+}
+
+func (a *API) postPublicPreconsult(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	visitID, err := a.store.ResolvePreconsultToken(r.Context(), token)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_token_invalid")
+		return
+	}
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return
+	}
+	if visit.Status != "confirmed" && visit.Status != "done" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "visit_not_confirmed")
+		return
+	}
+	var req postPublicPreconsultReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	in, err := a.store.SubmitPreconsult(r.Context(), visitID, req.Answers)
+	if err != nil {
+		if code, ok := store.IsPreconsultValidation(err); ok {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "preconsult_already_submitted")
+			return
+		}
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	_ = a.store.MarkPreconsultTokenUsed(r.Context(), token)
+	ctxData, _ := a.store.GetPublicPreconsultContext(r.Context(), visitID)
+	a.enrichPublicPreconsultLinks(r.Context(), &ctxData)
+	android, ios, _ := a.store.StoreQRAssets(r.Context())
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"intake":        in,
+		"petName":      ctxData.PetName,
+		"practiceName": ctxData.PracticeName,
+		"inviteUrl":    ctxData.InviteURL,
+		"downloadUrl":  ctxData.DownloadURL,
+		"qrAndroid":    brandAssetPublicDTO(android),
+		"qrIos":        brandAssetPublicDTO(ios),
+	})
+}
+
+func (a *API) enrichPublicPreconsultLinks(ctx context.Context, out *store.PublicPreconsultContext) {
+	out.DownloadURL = strings.TrimSpace(a.cfg.PetsAppDownloadURL)
+	visit, err := a.store.GetVisit(ctx, out.VisitID)
+	if err != nil {
+		return
+	}
+	pet, err := a.store.GetPet(ctx, visit.PetID)
+	if err != nil {
+		return
+	}
+	if owner := a.resolvePreconsultInviteOwner(ctx, pet.PracticeID, pet.OwnerUserID); owner != "" {
+		if invite, err := a.store.EnsureAppInviteCode(ctx, owner); err == nil {
+			out.InviteURL = a.appInviteWebURL(invite.Code)
+		}
+	}
+}
+
+// onVisitConfirmed pushes FCM; emails affiliation or public preconsult when opted-in.
+// Token/email are issued at most once per visit (idempotent across confirm retries).
 func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		_, created, err := a.store.EnsurePreconsultPending(ctx, visit.ID)
-		if err != nil {
-			log.Printf("preconsult: ensure pending visit %s: %v", visit.ID, err)
+		// Refresh flag in case confirm path set it just before.
+		if full, err := a.store.GetVisit(ctx, visit.ID); err == nil {
+			visit = full
 		}
 		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
-		if created {
-			a.emailVisitPreconsult(ctx, pet, visit)
+		if visit.RequestPreconsult {
+			already, err := a.store.HasPreconsultInviteIssued(ctx, visit.ID)
+			if err != nil {
+				log.Printf("preconsult: check invite visit %s: %v", visit.ID, err)
+				return
+			}
+			if already {
+				return
+			}
+			_, _, err = a.store.EnsurePreconsultPending(ctx, visit.ID)
+			if err != nil {
+				log.Printf("preconsult: ensure pending visit %s: %v", visit.ID, err)
+				return
+			}
+			token, err := a.store.IssuePreconsultToken(ctx, visit.ID)
+			if err != nil {
+				log.Printf("preconsult: issue token visit %s: %v", visit.ID, err)
+				return
+			}
+			a.emailVisitPreconsult(ctx, pet, visit, token)
+			return
 		}
+		a.emailVisitConfirmedAffiliate(ctx, pet, visit)
 	}()
 }
 
-func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit store.Visit) {
+// onVisitRescheduleAccepted notifies via push only — never re-issues preconsult mail/token.
+func (a *API) onVisitRescheduleAccepted(pet store.Pet, visit store.Visit) {
+	go a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+}
+
+func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit store.Visit, token string) {
 	if a.notifier == nil {
 		return
 	}
@@ -169,19 +340,43 @@ func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit sto
 	if clientName == "" {
 		clientName = client.Email
 	}
-	when := ""
-	loc, _ := time.LoadLocation("Europe/Brussels")
-	if loc == nil {
-		loc = time.Local
-	}
-	if visit.ScheduledAt != nil {
-		when = visit.ScheduledAt.In(loc).Format("02/01/2006 15:04")
-	}
+	when := formatVisitWhen(visit)
 	practiceName := ""
-	ctaURL := ""
+	if contact, err := a.store.GetPracticeContact(ctx, pet.PracticeID); err == nil {
+		practiceName = contact.PracticeName
+	}
+	ctaURL := strings.TrimRight(a.cfg.ProPublicSiteURL, "/") + "/preconsult/" + token
+	if err := a.notifier.SendVisitPreconsult(client.Email, locale, clientName, pet.Name, when, practiceName, ctaURL); err != nil {
+		log.Printf("preconsult: email visit %s: %v", visit.ID, err)
+	}
+}
+
+func (a *API) emailVisitConfirmedAffiliate(ctx context.Context, pet store.Pet, visit store.Visit) {
+	if a.notifier == nil {
+		return
+	}
+	prefs, err := a.store.GetClientNotificationPrefs(ctx, pet.OwnerUserID)
+	if err != nil || !prefs.Visits {
+		return
+	}
+	client, err := a.store.GetUserByID(ctx, pet.OwnerUserID)
+	if err != nil || strings.TrimSpace(client.Email) == "" {
+		return
+	}
+	locale := client.PreferredLocale
+	if locale == "" {
+		locale = "fr"
+	}
+	clientName := client.FullName
+	if clientName == "" {
+		clientName = client.Email
+	}
+	when := formatVisitWhen(visit)
+	practiceName := ""
+	ctaURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	if inviteOwner := a.resolvePreconsultInviteOwner(ctx, pet.PracticeID, pet.OwnerUserID); inviteOwner != "" {
 		if invite, err := a.store.EnsureAppInviteCode(ctx, inviteOwner); err == nil {
-			ctaURL = a.appInviteWebURL(invite.Code) + "?preconsult=" + visit.ID
+			ctaURL = a.appInviteWebURL(invite.Code)
 			if invite.PracticeName != "" {
 				practiceName = invite.PracticeName
 			}
@@ -193,12 +388,22 @@ func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit sto
 		}
 	}
 	if ctaURL == "" {
-		// Last resort for clients who already have the app (no practice invite issuer).
-		ctaURL = "petsfollow://preconsult?visitId=" + visit.ID
+		ctaURL = strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
 	}
-	if err := a.notifier.SendVisitPreconsult(client.Email, locale, clientName, pet.Name, when, practiceName, ctaURL); err != nil {
-		log.Printf("preconsult: email visit %s: %v", visit.ID, err)
+	if err := a.notifier.SendVisitConfirmedAffiliate(client.Email, locale, clientName, pet.Name, when, practiceName, ctaURL); err != nil {
+		log.Printf("visit affiliate email visit %s: %v", visit.ID, err)
 	}
+}
+
+func formatVisitWhen(visit store.Visit) string {
+	loc, _ := time.LoadLocation("Europe/Brussels")
+	if loc == nil {
+		loc = time.Local
+	}
+	if visit.ScheduledAt != nil {
+		return visit.ScheduledAt.In(loc).Format("02/01/2006 15:04")
+	}
+	return ""
 }
 
 // resolvePreconsultInviteOwner picks a practice user who can issue an app-invite code.

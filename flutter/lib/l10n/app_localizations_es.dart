@@ -315,7 +315,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get proLightAudioConsentBody =>
-      'La grabación solo sirve para redactar el informe. Se elimina al finalizarlo.';
+      'La grabación solo sirve para redactar el informe. Confirme el consentimiento oral del cliente. El audio se elimina al finalizarlo.';
 
   @override
   String get proLightAudioConsentAccept => 'Acepto';
@@ -1515,4 +1515,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get preconsultFillCta => 'Completar preconsulta';
+
+  @override
+  String get proLightAudioConsentClientCheck =>
+      'He obtenido el consentimiento oral del cliente para grabar';
+
+  @override
+  String get proLightReportAiProposalBanner =>
+      'Propuesta de IA — validación veterinaria obligatoria antes de finalizar (incluye diagnóstico / medicación sugeridos).';
 }

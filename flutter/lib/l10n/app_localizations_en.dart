@@ -314,7 +314,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proLightAudioConsentBody =>
-      'The recording is only used to draft the visit report. It is deleted when the report is finalized.';
+      'The recording is only used to draft the visit report. Confirm the client\'s oral consent. Audio is deleted when the report is finalized.';
 
   @override
   String get proLightAudioConsentAccept => 'I agree';
@@ -1504,4 +1504,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get preconsultFillCta => 'Fill pre-consultation';
+
+  @override
+  String get proLightAudioConsentClientCheck =>
+      'I have obtained the client\'s oral consent to record';
+
+  @override
+  String get proLightReportAiProposalBanner =>
+      'AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication).';
 }

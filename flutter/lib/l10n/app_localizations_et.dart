@@ -315,7 +315,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get proLightAudioConsentBody =>
-      'Salvestist kasutatakse ainult visiidi aruande koostamiseks. See kustutatakse aruande lõpetamisel.';
+      'Salvestist kasutatakse ainult visiidi aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Helifail kustutatakse aruande lõpetamisel.';
 
   @override
   String get proLightAudioConsentAccept => 'Nõustun';
@@ -1512,4 +1512,12 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get preconsultFillCta => 'Täida eelkonsultatsioon';
+
+  @override
+  String get proLightAudioConsentClientCheck =>
+      'Olen saanud kliendilt suulise nõusoleku salvestamiseks';
+
+  @override
+  String get proLightReportAiProposalBanner =>
+      'Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid).';
 }

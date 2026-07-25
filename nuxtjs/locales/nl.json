@@ -33,7 +33,8 @@
     "managerProspects": "Teamprospects",
     "managerPortfolio": "Mijn portefeuille",
     "team": "Team",
-    "commercialCompetition": "Concurrentie"
+    "commercialCompetition": "Concurrentie",
+    "adminBrandAssets": "Store-QR’s"
   },
   "auth": {
     "login": {
@@ -550,7 +551,8 @@
         "pending_payment": "Betaling in afwachting",
         "expired": "Verlopen",
         "cancelled": "Geannuleerd"
-      }
+      },
+      "visitRequestPreconsult": "Preconsultatie vragen"
     },
     "invitations": {
       "open": "Cliëntuitnodigingen",
@@ -574,7 +576,12 @@
       "linkLabel": "Uitnodigingslink",
       "copy": "Link kopiëren",
       "copied": "Link gekopieerd",
-      "copyError": "Link kopiëren mislukt."
+      "copyError": "Link kopiëren mislukt.",
+      "refreshPack": "QR-pakket vernieuwen",
+      "qrAndroidAlt": "Google Play-QR",
+      "qrIosAlt": "App Store-QR",
+      "android": "Android",
+      "ios": "iOS"
     }
   },
   "pets": {
@@ -1008,6 +1015,20 @@
         "created": "Aangemaakt",
         "error": "Fout"
       }
+    },
+    "brandAssets": {
+      "title": "Store-QR-assets",
+      "subtitle": "Android-/iOS-QR’s na preconsultatie en op uitnodigingen.",
+      "hint": "Upload PNG/WebP. Zonder asset valt de bedankpagina terug op de downloadlink.",
+      "android": "Android-QR (Play Store)",
+      "ios": "iOS-QR (App Store)",
+      "missing": "Nog geen QR geüpload.",
+      "file": "QR-afbeelding",
+      "storeUrl": "Store-URL (optioneel)",
+      "upload": "Uploaden",
+      "saveUrl": "URL opslaan",
+      "uploaded": "QR bijgewerkt.",
+      "urlSaved": "URL opgeslagen."
     }
   },
   "commissions": {
@@ -1466,7 +1487,17 @@
       "billingAddressLine2": "Facturatieadres regel 2",
       "payoutIban": "IBAN",
       "payoutBic": "BIC (optioneel)",
-      "payoutAccountHolder": "Rekeninghouder"
+      "payoutAccountHolder": "Rekeninghouder",
+      "countryCode": "Land van de praktijk",
+      "countries": {
+        "BE": "België",
+        "FR": "Frankrijk",
+        "NL": "Nederland",
+        "LU": "Luxemburg",
+        "DE": "Duitsland",
+        "ES": "Spanje",
+        "EE": "Estland"
+      }
     }
   },
   "legal": {
@@ -1841,7 +1872,7 @@
     "reportFinal": "Verslag gefinaliseerd (alleen-lezen)",
     "reportFinalized": "Verslag gefinaliseerd",
     "transcribeAudio": "Audio → tekst",
-    "audioConsent": "Audio dient alleen om het verslag te maken en wordt bij finalisatie verwijderd.",
+    "audioConsent": "Audio dient om het verslag te maken. Bevestig mondelinge toestemming. Wordt verwijderd bij finalisatie.",
     "audioConsentTitle": "Audiotoestemming",
     "audioConsentAccept": "Ik ga akkoord",
     "reportTranscribed": "Transcriptie voltooid",
@@ -1915,7 +1946,10 @@
         "medium": "Gemiddeld",
         "high": "Hoog"
       }
-    }
+    },
+    "requestPreconsult": "Preconsultatie vragen",
+    "audioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
+    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie)."
   },
   "manager": {
     "dashboard": {
@@ -2125,5 +2159,34 @@
       "established": "Established",
       "dominant": "Dominant"
     }
+  },
+  "preconsultPublic": {
+    "brandTitle": "Bezoek voorbereiden",
+    "brandText": "Enkele vragen om uw dierenarts te helpen.",
+    "loading": "Laden…",
+    "title": "Preconsultatie",
+    "subtitle": "{petName} — {practiceName}",
+    "when": "Afspraak: {when}",
+    "complaint": "Hoofdklacht",
+    "duration": "Sinds wanneer",
+    "behavior": "Gedrag",
+    "appetite": "Eetlust",
+    "thirst": "Dorst",
+    "elimination": "Ontlasting / urine",
+    "urgency": "Urgentie",
+    "comment": "Opmerking (optioneel)",
+    "submit": "Verzenden",
+    "invalidTitle": "Ongeldige link",
+    "invalid": "Deze preconsultatielink is ongeldig of verlopen.",
+    "thanksTitle": "Bedankt",
+    "thanksIntro": "De gegevens voor {petName} zijn verzonden.",
+    "benefitFollow": "Volg uw dier tussen bezoeken",
+    "benefitMessages": "Veilige berichten met de praktijk",
+    "benefitReminders": "Zorg- en afspraakherinneringen",
+    "downloadCta": "petsFollow downloaden",
+    "qrAndroidAlt": "Android-QR",
+    "qrIosAlt": "iOS-QR",
+    "android": "Android",
+    "ios": "iOS"
   }
 }

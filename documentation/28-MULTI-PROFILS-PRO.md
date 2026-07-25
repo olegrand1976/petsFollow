@@ -66,13 +66,19 @@ Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tou
 
 ## CR visite + IA
 
-Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle).
+Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle, `client_audio_consent_at`).
 
-Flux : dictée → upload → transcription Gemini → édition → « améliorer » (sections type SOAP / specialty).
+Flux : **accord oral client (checkbox)** → dictée/upload → transcription Gemini → édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
+
+Sections CR vétérinaire (improve) :
+- Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi
+- Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
+- Care_pro : templates specialty (farrier/physio/…) sans section médication véto
+
 Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`) et Flutter Pro Light.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
+`POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.
 Audio CR : **pas** servi via `/media/` public (`visit-reports/` bloqué en local via `DenySensitivePrefixes`) ; stream auth `GET /visits/{id}/report/audio` (refusé si CR `final`) ; **suppression à la finalisation** (Clear DB seulement après Delete média OK). Sur GCS, pas d’URL publique retournée pour ce prefix (GCP refuse une condition IAM sur `allUsers`).
-Consentement UI avant upload micro/fichier (Flutter + Nuxt).
 Ops : `make gcp-setup-media` — IAM SA + allUsers pour avatars. Protection PHI = pas d’URL publique à l’upload + stream auth + purge finalize (+ UUID dans la clé).
 
 ## Billing
@@ -91,4 +97,5 @@ B2B2C inchangé (client paie l’animal). Pros light gratuits au MVP. Partage d�
 ## Migrations
 
 `000039_multi_profiles_pro` — rôle `care_pro`, specialty, ACL, GPS visites, `visit_reports`.  
-`000042_access_permission_default` — DEFAULT permission `write_notes`.
+`000042_access_permission_default` — DEFAULT permission `write_notes`.  
+`000062_cr_country_audio_consent` — `practices.country_code` + `visit_reports.client_audio_consent_at`.

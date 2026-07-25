@@ -51,6 +51,12 @@
         required
       />
     </div>
+    <div class="pro-field">
+      <label class="pro-label" for="country-code">{{ $t('components.profileForm.countryCode') }}</label>
+      <select id="country-code" v-model="model.countryCode" class="pro-select" name="countryCode" data-testid="profile-country-code">
+        <option v-for="c in countryOptions" :key="c" :value="c">{{ c }} — {{ $t(`components.profileForm.countries.${c}`) }}</option>
+      </select>
+    </div>
     <ProInput
       v-model="model.website"
       :label="$t('components.profileForm.website')"
@@ -162,6 +168,7 @@ export type PracticeProfileForm = {
   addressLine2: string
   city: string
   postalCode: string
+  countryCode: string
   website: string
   companyLegalName: string
   vatNumber: string
@@ -187,6 +194,7 @@ export function emptyPracticeProfileForm(): PracticeProfileForm {
     addressLine2: '',
     city: '',
     postalCode: '',
+    countryCode: 'BE',
     website: '',
     companyLegalName: '',
     vatNumber: '',
@@ -214,6 +222,7 @@ export function mapPracticeProfileFromApi(data: any): PracticeProfileForm {
     addressLine2: data?.addressLine2 || '',
     city: data?.city || '',
     postalCode: data?.postalCode || '',
+    countryCode: data?.countryCode || 'BE',
     website: data?.website || '',
     companyLegalName: data?.companyLegalName || '',
     vatNumber: data?.vatNumber || '',
@@ -247,6 +256,7 @@ const heartrateDurationsSec = defineModel<number[]>('heartrateDurationsSec', { d
 defineEmits<{ submit: [] }>()
 
 const durationOptions = [15, 30, 60] as const
+const countryOptions = ['BE', 'FR', 'NL', 'LU', 'DE', 'ES', 'EE'] as const
 </script>
 
 <style scoped>
