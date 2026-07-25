@@ -131,15 +131,15 @@
   },
   "emails": {
     "confirm_registration_subject": "petsFollow Pro — Kinnitage registreerumine",
-    "confirm_registration_tagline": "Veterinaarne südame jälgimine",
+    "confirm_registration_tagline": "Veterinaarse ravi järjepidevus",
     "confirm_registration_preheader": "Aktiveerige oma petsFollow Pro konto ühe klõpsuga.",
     "confirm_registration_greeting": "Tere {fullName},",
-    "confirm_registration_intro": "Tere tulemast petsFollow Pro'sse. Kabinetikonto aktiveerimiseks ja südamepatsientide jälgimise alustamiseks kinnitage oma e-posti aadress.",
+    "confirm_registration_intro": "Tere tulemast petsFollow Pro'sse. Kabinetikonto aktiveerimiseks ja ettekirjutatud patsiendijälgimise alustamiseks kinnitage oma e-posti aadress.",
     "confirm_registration_cta": "Kinnita minu konto",
     "confirm_registration_expiry": "See kinnituslink aegub 48 tunni pärast.",
     "confirm_registration_disclaimer": "Kui te seda registreerumist ei taotlenud, võite selle e-kirja ohutult ignoreerida.",
     "password_reset_subject": "petsFollow Pro — Parooli lähtestamine",
-    "password_reset_tagline": "Veterinaarne südame jälgimine",
+    "password_reset_tagline": "Veterinaarse ravi järjepidevus",
     "password_reset_preheader": "Lähtestage oma petsFollow parool ühe klõpsuga.",
     "password_reset_greeting": "Tere {fullName},",
     "password_reset_intro": "Teie konto jaoks taotleti parooli lähtestamist. Klõpsake alloleval nupul, et valida uus parool.",
@@ -190,7 +190,7 @@
         "tagline": "Lemmiklooma tervise jälgimine",
         "preheader": "Teie petsFollow teekond algab täna.",
         "greeting": "Tere {fullName},",
-        "intro": "Teie loomaarst määras petsFollow'i: südame jälgimine ilma seadmeta, otse telefonis. Alustamiseks laadige rakendus alla.",
+        "intro": "Teie loomaarst määras petsFollow'i: tervisejälgimine mobiilirakenduses — sõnumid, meeldetuletused ja mõõtmised. Alustamiseks laadige rakendus alla.",
         "detail": "Mida saate teha:\n• Südame mõõtmised 15 / 30 / 60 s\n• Turvaline sõnumivahetus kabinetiga\n• Ajajoon ja hooldusmeeldetuletused\n• Alates ~€2,6 / kuu looma kohta (3-aastane plaan)",
         "cta": "Laadi rakendus alla",
         "disclaimer": "Saate need e-kirjad välja lülitada alumise lingi abil."
@@ -203,7 +203,7 @@
         "intro": "Määratud jälgimise aktiveerimiseks looge looma profiil ja valige plaan. Soovitame 3-aastast plaani (€95) — umbes €2,6 / kuu.",
         "detail": "Plaanid koos käibemaksuga:\n• €3,50 / kuu (tellimus)\n• €35 / aasta\n• €95 / 3 aastat (soovitatav)",
         "cta": "Ava rakendus",
-        "disclaimer": "Ilma makseta jääb südame jälgimine ootele."
+        "disclaimer": "Ilma makseta jääb ettekirjutatud jälgimine ootele."
       },
       "d2_first_measure": {
         "subject": "Valmis esimeseks mõõtmiseks?",
@@ -319,9 +319,9 @@
       "d365_anniversary": {
         "subject": "1 aasta petsFollow'iga — aitäh!",
         "tagline": "Aastapäev",
-        "preheader": "Üks aasta määratud jälgimist, ilma seadmeta.",
+        "preheader": "Aasta ettekirjutatud jälgimist rakenduses.",
         "greeting": "Tere {fullName},",
-        "intro": "Palju õnne teekonna aastapäevaks! Täname, et usaldasite petsFollow'i oma looma südame jälgimisega. Kaaluge uuendamist — 3-aastane plaan (€95) on ideaalne rahuliku meelega jätkamiseks.",
+        "intro": "Palju õnne teekonna aastapäevaks! Täname, et usaldasite petsFollow'i oma looma tervisejälgimisega. Kaaluge uuendamist — 3-aastane plaan (€95) on ideaalne rahuliku meelega jätkamiseks.",
         "detail": "",
         "cta": "Jätka jälgimist",
         "disclaimer": "Kogu petsFollow meeskond tänab teid."

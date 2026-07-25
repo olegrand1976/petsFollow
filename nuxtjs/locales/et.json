@@ -39,11 +39,11 @@
     "login": {
       "title": "Pro sisselogimine",
       "subtitle": "Juurdepääs ainult veterinaaridele ja administraatoritele.",
-      "brandTitle": "Südamerütmi jälgimine ja kliendikaardid ühes tööriistas",
+      "brandTitle": "Ravi järjepidevus ja kliendiandmed ühes tööriistas",
       "brandText": "Tere tulemast petsFollow Pro’sse — töökeskkond loomahoolduse spetsialistidele, kerge huumoridoosiga.",
       "submit": "Logi sisse",
       "noAccount": "Teil pole veel kontot?",
-      "registerLink": "Registreeru tasuta",
+      "registerLink": "Loo Pro konto",
       "forgotLink": "Unustasid parooli?",
       "or": "või",
       "proOnly": "Juurdepääs ainult Pro profiilidele (vet / müük / müügijuht / admin)",
@@ -106,9 +106,9 @@
     },
     "register": {
       "title": "Praktika registreerimine",
-      "subtitle": "100% tasuta veterinaaridele.",
-      "brandTitle": "Liitu petsFollow Pro’ga — tasuta veterinaaridele",
-      "brandText": "Looge oma praktika mõne minutiga ja alustage südamepatsientide jälgimist juba täna.",
+      "subtitle": "Veebikeskkond teie kabinetile — tasuta Pro Light mobiil välitööks.",
+      "brandTitle": "Liitu petsFollow Pro-ga",
+      "brandText": "Loo oma kabinet mõne minutiga ja alusta patsientide ettekirjutatud jälgimist juba täna.",
       "fullName": "Teie nimi",
       "practiceName": "Praktika nimi",
       "email": "Professionaalne e-post",
@@ -578,7 +578,7 @@
     "viewRequests": "Vaata päringuid",
     "messaging": "Sõnumid",
     "about": "Teave",
-    "aboutText": "petsFollow Pro koondab südamerütmi jälgimise, kliendikaardid ja turvalise sõnumivahetuse teie veterinaarpraktikale.",
+    "aboutText": "petsFollow Pro koondab ravi järjepidevuse: klienditoimikud, turvaline sõnumside, südame löögisageduse mõõtmised ja välijälgimine teie veterinaarkabinetile.",
     "viewCalendar": "Vaata kalendrit"
   },
   "messages": {
@@ -1007,9 +1007,9 @@
   },
   "welcome": {
     "badge": "Tere tulemast petsFollow Pro'sse",
-    "title": "Teie südamepraktika, valmis alustama",
-    "lead": "petsFollow Pro toetab teid iga päev: südame löögisageduse näidud, hoiatused, sõnumid ja patsiendikaardid — kõik {free}.",
-    "free": "loomaarstidele tasuta",
+    "title": "Teie kabinet on valmis alustama",
+    "lead": "petsFollow Pro toetab teid iga päev: toimikud, sõnumid, Care/Horse, Pro Light välitöö ja mõõtmised — Web + mobiil.",
+    "free": "Web + mobiil",
     "howItWorks": "Kuidas see töötab?",
     "steps": {
       "profile": {
@@ -1021,8 +1021,8 @@
         "text": "Kliendid registreeruvad petsFollow mobiilirakenduses ja liituvad teiega automaatselt."
       },
       "monitor": {
-        "title": "Jälgige südame löögisageduse näite",
-        "text": "Vastuvõtke BPM andmeid, kinnitage seansse ja sekkuge hoiatuse korral."
+        "title": "Jälgige patsientide aktiivsust",
+        "text": "Ajajoon, sõnumid ja kinnitatud mõõtmised — sekkuge vajadusel."
       },
       "communicate": {
         "title": "Suhelge lihtsalt",
@@ -1030,17 +1030,17 @@
       }
     },
     "highlights": {
+      "messaging": {
+        "title": "Sõnumid",
+        "text": "Suhelge omanikega Web Pro kaudu."
+      },
+      "terrain": {
+        "title": "Pro Light väli",
+        "text": "Tasuta mobiilirakendus visiitideks ja aruanneteks."
+      },
       "bpm": {
-        "title": "BPM näidud",
-        "text": "Juhendatud südame jälgimine koertele ja kassidele."
-      },
-      "alerts": {
-        "title": "Hoiatused",
-        "text": "Kohene teavitus, kui tuvastatakse anomaalia."
-      },
-      "free": {
-        "title": "Loomaarstidele tasuta",
-        "text": "Teie kabinetile kulusid pole."
+        "title": "BPM mõõtmised",
+        "text": "Juhendatud funktsioon 15 / 30 / 60 s omaniku äpis."
       }
     },
     "ctaTitle": "Järgmine samm: seadistage kabineti profiil",
@@ -1054,19 +1054,19 @@
   "index": {
     "login": "Logi sisse",
     "registerCta": "Registreeru",
-    "badge": "Pro + Mobile ökosüsteem",
-    "heroTitle": "Patsientide südame jälgimine, lihtsustatult",
-    "heroLead": "petsFollow ühendab teie kliiniku ja omanikud: veebi-SaaS meditsiiniliseks jälgimiseks ning mobiilirakendus klientidele.",
+    "badge": "Web Pro · Pro Light · Kliendi äpp",
+    "heroTitle": "Patsientide ravi järjepidevus, lihtsustatult",
+    "heroLead": "Ettekirjutatud ravi järjepidevus: Web kabinetile, Pro Light mobiil väljale, äpp omanikele.",
     "heroCta": "Loo professionaalne konto",
     "heroLogin": "Mul on juba konto",
     "cards": {
       "heartrate": {
         "title": "Südame mõõtmised",
-        "text": "BPM jälgimine ja reaalajas hoiatused"
+        "text": "Juhendatud BPM omaniku äpist (funktsioon)"
       },
       "messaging": {
         "title": "Turvaline sõnumside",
-        "text": "Otsevahetus klientidega"
+        "text": "Otsevahetus teie klientidega"
       },
       "records": {
         "title": "Patsiendikaardid",
@@ -1154,7 +1154,7 @@
         "text": "≈ 2,6 € / kuu — põhitarne, −10 % vs 3× aastane."
       }
     },
-    "footer": "© {year} petsFollow — Veterinaarne südame jälgimine"
+    "footer": "© {year} petsFollow — Veterinaarse ravi järjepidevus"
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
@@ -1163,7 +1163,7 @@
     "print": "Prindi / PDF",
     "badge": "Kliiniku esitluse tugi",
     "title": "petsFollow professionaalne pakkumine",
-    "lead": "Ökosüsteem, mis ühendab kliiniku ja omanikud — ettekirjutatud jälgimine, ilma riistvarata.",
+    "lead": "Ökosüsteem, mis ühendab kabineti, välja ja omanikud — ettekirjutatud ravi järjepidevus (Web Pro · mobiilne ProLight · mobiilne Client).",
     "positioning": "Kaks lahendust: Pro (veebi-SaaS + kliendirakendus, kommertsarveldus) ja Pro Light (ProLight-mobiilirakendus, tasuta, koos Web kontoga või ilma). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
     "solutionsTitle": "Kaks professionaalset lahendust",
     "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välirakendus.",
@@ -1219,7 +1219,7 @@
       "Ravihoiatused ja nutikad meeldetuletused (push)",
       "Otselink kliinikuga: uuendused, vastuvõtutaotlused",
       "Tervisepäevik: kaal, sümptomid, toit, aktiivsus",
-      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s (ilma riistvarata)"
+      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s"
     ],
     "benefitsTitle": "Miks võtta kasutusele PetsFollowi ökosüsteem?",
     "benefitsCabinetTitle": "Teie kliinikule",
@@ -1272,7 +1272,7 @@
     "includedTitle": "Igas loomade tellimuses (kliendid)",
     "includedLead": "Olenemata plaanist (igakuine, aastane või kolmeaastane) saab omanik:",
     "included": [
-      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s mobiilirakendusest (ilma riistvarata)",
+      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s mobiilirakendusest",
       "Seansid saadetakse kliinikusse ja kinnitatakse seal",
       "Turvaline sõnumside klient ↔ loomaarst + push-teavitused",
       "Ajajoon / jagatud patsiendikaart",
@@ -1337,7 +1337,7 @@
         "role": "Soovitatav"
       }
     },
-    "footer": "petsFollow — loomaarsti ettekirjutatud jälgimine, ilma riistvarata"
+    "footer": "petsFollow — ettekirjutatud ravi järjepidevus · Web + mobiil"
   },
   "components": {
     "topbar": {
@@ -1399,12 +1399,12 @@
     "terms": {
       "title": "Kasutustingimused",
       "link": "Tingimused",
-      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab südame löögisageduse mõõtmist, ajaloo vaatamist ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}ll-it-sc.be."
+      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Privaatsuspoliitika",
       "link": "Privaatsus",
-      "body": "petsFollow töötleb isikuandmeid loomade südame jälgimise teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}ll-it-sc.be."
+      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Õigusteave",
@@ -1656,7 +1656,7 @@
         "Kabineti onboarding ja seaded"
       ],
       "mobileFeatures": [
-        "Loomad ja südame jälgimine",
+        "Loomad, sõnumid ja ettekirjutatud jälgimine",
         "Stripe tellimused looma kohta (igakuine / aastane / kolmeaastane)",
         "Kõik funktsioonid aktiivse tellimusega kaasas",
         "Sõnumid ja hoolduse meeldetuletused"
@@ -1943,7 +1943,7 @@
     "brandTitle": "Teie loomaarst kutsub teid",
     "brandTitleCarePro": "Tervishoiutöötaja kutsub teid",
     "brandTitleCommercial": "petsFollowi kutse",
-    "brandText": "Laadige petsFollow alla, et jälgida oma loomade südame tervist.",
+    "brandText": "Laadige alla petsFollow oma loomade ettekirjutatud tervisejälgimiseks.",
     "loading": "Kutse laadimine…",
     "title": "Laadi petsFollowi rakendus alla",
     "subtitle": "Kutse: {vet} — {practice}",

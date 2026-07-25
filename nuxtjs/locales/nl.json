@@ -39,11 +39,11 @@
     "login": {
       "title": "Pro-aanmelding",
       "subtitle": "Toegang voorbehouden aan dierenartsen, beheerders.",
-      "brandTitle": "Hartmonitoring en klantdossier in één tool",
+      "brandTitle": "Zorgcontinuïteit en cliëntdossiers in één tool",
       "brandText": "Welkom bij petsFollow Pro — de werkruimte voor professionals in de dierenzorg, met een vleugje humor.",
       "submit": "Aanmelden",
       "noAccount": "Nog geen account?",
-      "registerLink": "Gratis registreren",
+      "registerLink": "Pro-account aanmaken",
       "forgotLink": "Wachtwoord vergeten?",
       "or": "of",
       "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / salesmanager / admin)",
@@ -106,9 +106,9 @@
     },
     "register": {
       "title": "Praktijkregistratie",
-      "subtitle": "100% gratis voor dierenartsen.",
-      "brandTitle": "Word lid van petsFollow Pro — gratis voor dierenartsen",
-      "brandText": "Maak uw praktijk in enkele minuten aan en begin vandaag met het opvolgen van uw hartpatiënten.",
+      "subtitle": "Webomgeving voor uw praktijk — gratis Pro Light mobiel voor het veld.",
+      "brandTitle": "Word lid van petsFollow Pro",
+      "brandText": "Maak in enkele minuten uw praktijk aan en start vandaag met voorgeschreven patiëntopvolging.",
       "fullName": "Uw naam",
       "practiceName": "Naam praktijk",
       "email": "Professioneel e-mailadres",
@@ -578,7 +578,7 @@
     "viewRequests": "Aanvragen bekijken",
     "messaging": "Berichten",
     "about": "Over",
-    "aboutText": "petsFollow Pro centraliseert hartmonitoring, klantdossiers en beveiligde berichten voor uw dierenartsenpraktijk.",
+    "aboutText": "petsFollow Pro centraliseert zorgcontinuïteit: cliëntdossiers, beveiligde berichten, hartslagmetingen en veldopvolging voor uw dierenartspraktijk.",
     "viewCalendar": "Agenda bekijken"
   },
   "messages": {
@@ -1007,9 +1007,9 @@
   },
   "welcome": {
     "badge": "Welkom bij petsFollow Pro",
-    "title": "Uw hartpraktijk, klaar om te starten",
-    "lead": "petsFollow Pro ondersteunt u dagelijks: hartslagmetingen, waarschuwingen, berichten en patiëntendossiers — alles {free}.",
-    "free": "gratis voor dierenartsen",
+    "title": "Uw praktijk, klaar om te starten",
+    "lead": "petsFollow Pro ondersteunt u dagelijks: dossiers, berichten, Care/Horse, Pro Light veldwerk en metingen — Web + mobiel.",
+    "free": "Web + mobiel",
     "howItWorks": "Hoe werkt het?",
     "steps": {
       "profile": {
@@ -1021,8 +1021,8 @@
         "text": "Klanten registreren zich via de petsFollow mobiele app en sluiten zich automatisch aan."
       },
       "monitor": {
-        "title": "Volg hartslagmetingen",
-        "text": "Ontvang BPM-gegevens, valideer sessies en grijp in bij een waarschuwing."
+        "title": "Volg patiëntenactiviteit",
+        "text": "Tijdlijn, berichten en gevalideerde metingen — grijp in wanneer nuttig."
       },
       "communicate": {
         "title": "Communiceer eenvoudig",
@@ -1030,17 +1030,17 @@
       }
     },
     "highlights": {
+      "messaging": {
+        "title": "Berichten",
+        "text": "Communiceer met eigenaren via Web Pro."
+      },
+      "terrain": {
+        "title": "Pro Light veld",
+        "text": "Gratis mobiele app voor bezoeken en verslagen."
+      },
       "bpm": {
         "title": "BPM-metingen",
-        "text": "Begeleide hartmonitoring voor honden en katten."
-      },
-      "alerts": {
-        "title": "Waarschuwingen",
-        "text": "Onmiddellijke melding bij een anomalie."
-      },
-      "free": {
-        "title": "Gratis voor dierenartsen",
-        "text": "Geen kosten voor uw praktijk."
+        "text": "Begeleide feature 15 / 30 / 60 s in de eigenaarsapp."
       }
     },
     "ctaTitle": "Volgende stap: stel uw praktijkprofiel in",
@@ -1054,15 +1054,15 @@
   "index": {
     "login": "Inloggen",
     "registerCta": "Registreren",
-    "badge": "Pro + Mobile ecosysteem",
-    "heroTitle": "Hartmonitoring voor uw patiënten, vereenvoudigd",
-    "heroLead": "petsFollow verbindt uw praktijk en eigenaars: een Web SaaS-platform voor medische opvolging, en een mobiele app voor cliënten.",
+    "badge": "Web Pro · Pro Light · Cliënt-app",
+    "heroTitle": "Zorgcontinuïteit voor uw patiënten, vereenvoudigd",
+    "heroLead": "Voorgeschreven zorgcontinuïteit: Web voor de praktijk, Pro Light mobiel voor het veld, een app voor eigenaren.",
     "heroCta": "Mijn professioneel account aanmaken",
     "heroLogin": "Ik heb al een account",
     "cards": {
       "heartrate": {
         "title": "Hartmetingen",
-        "text": "BPM-opvolging en realtime waarschuwingen"
+        "text": "Begeleide BPM vanuit de eigenaarsapp (feature)"
       },
       "messaging": {
         "title": "Veilige berichten",
@@ -1154,7 +1154,7 @@
         "text": "≈ €2,6 / maand — kerkaanbod, −10 % vs 3× jaarlijks."
       }
     },
-    "footer": "© {year} petsFollow — Veterinaire hartmonitoring"
+    "footer": "© {year} petsFollow — Veterinaire zorgcontinuïteit"
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
@@ -1163,7 +1163,7 @@
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
     "title": "Professioneel aanbod petsFollow",
-    "lead": "Het ecosysteem dat praktijk en eigenaars verbindt — voorgeschreven opvolging, zonder hardware.",
+    "lead": "Het ecosysteem dat praktijk, veld en eigenaren verbindt — voorgeschreven zorgcontinuïteit (Web Pro · mobiel ProLight · mobiel Client).",
     "positioning": "Twee oplossingen: Pro (Web SaaS + cliëntapp, commerciële facturatie) en Pro Light (ProLight-mobiele app, gratis, met of zonder Web-account). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
     "solutionsTitle": "Twee professionele oplossingen",
     "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terreinapp.",
@@ -1219,7 +1219,7 @@
       "Behandelingswaarschuwingen & slimme herinneringen (push)",
       "Directe link met de praktijk: hernieuwingen, afspraakverzoeken",
       "Gezondheidsdagboek: gewicht, symptomen, voeding, activiteit",
-      "Begeleide hartmetingen 15 / 30 / 60 s (zonder hardware)"
+      "Begeleide hartmetingen 15 / 30 / 60 s"
     ],
     "benefitsTitle": "Waarom het PetsFollow-ecosysteem adopteren?",
     "benefitsCabinetTitle": "Voor uw praktijk",
@@ -1272,7 +1272,7 @@
     "includedTitle": "Inbegrepen in elk dierabonnement (cliënten)",
     "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of driejaarlijks) krijgen eigenaars:",
     "included": [
-      "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app (zonder hardware)",
+      "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app",
       "Sessies verzonden naar en gevalideerd door de praktijk",
       "Veilige berichten cliënt ↔ dierenarts + pushmeldingen",
       "Timeline / gedeeld patiëntdossier",
@@ -1337,7 +1337,7 @@
         "role": "Aanbevolen"
       }
     },
-    "footer": "petsFollow — door de dierenarts voorgeschreven opvolging, zonder hardware"
+    "footer": "petsFollow — voorgeschreven zorgcontinuïteit · Web + mobiel"
   },
   "components": {
     "topbar": {
@@ -1399,12 +1399,12 @@
     "terms": {
       "title": "Gebruiksvoorwaarden",
       "link": "Voorwaarden",
-      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}ll-it-sc.be."
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, hartslagmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor cardiologische monitoring van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}ll-it-sc.be."
+      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
@@ -1656,7 +1656,7 @@
         "Praktijk-onboarding en instellingen"
       ],
       "mobileFeatures": [
-        "Dieren en hartopvolging",
+        "Dieren, berichten en voorgeschreven opvolging",
         "Stripe-abonnementen per dier (maandelijks / jaarlijks / triennial)",
         "Alle functies inbegrepen zodra het abonnement actief is",
         "Berichten en zorgherinneringen"
@@ -1943,7 +1943,7 @@
     "brandTitle": "Uw dierenarts nodigt u uit",
     "brandTitleCarePro": "Een zorgprofessional nodigt u uit",
     "brandTitleCommercial": "petsFollow-uitnodiging",
-    "brandText": "Download petsFollow om de hartgezondheid van uw dieren te volgen.",
+    "brandText": "Download petsFollow voor voorgeschreven gezondheidsopvolging van uw dieren.",
     "loading": "Uitnodiging laden…",
     "title": "Download de petsFollow-app",
     "subtitle": "Uitnodiging van {vet} — {practice}",

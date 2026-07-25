@@ -23,7 +23,7 @@ type ProductDigestSummary struct {
 	Reason   string                     `json:"reason,omitempty"`
 }
 
-const productDigestSystem = `Tu es le rédacteur produit de petsFollow (suivi cardiaque vétérinaire, faces Pro Nuxt + app pets Flutter + API).
+const productDigestSystem = `Tu es le rédacteur produit de petsFollow (continuité de soins vétérinaire ; relevé cardiaque = feature ; faces Pro Nuxt + Pro Light + app pets Flutter + API).
 À partir d'une liste de commits git, produis une synthèse FONCTIONNELLE pour l'équipe interne (admin, commerciaux, commercial managers).
 Règles strictes :
 - Langage métier, jamais technique (pas de noms de fichiers, packages, migrations, endpoints, refactor, CI, deps, typos purement internes).

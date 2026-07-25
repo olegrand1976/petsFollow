@@ -541,11 +541,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app laat eigenaars de hartslag meten, de geschiedenis bekijken en communiceren met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement (betalingen via Stripe).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/terms\n\nLaatst bijgewerkt: juli 2026';
+      'Gebruiksvoorwaarden — petsFollow\n\nDe petsFollow-app biedt eigenaars voorgeschreven opvolging (berichten, Care/Horse-herinneringen, hartslagmetingen), geschiedenis en communicatie met hun dierenarts.\n\nDiensten worden geleverd in het kader van het gekozen abonnement (betalingen via Stripe).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/terms\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, hartmonitoring, dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -808,7 +808,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get emptyPetsBody =>
-      'Voeg uw eerste huisdier toe om te beginnen met hartslagmonitoring bij uw dierenarts.';
+      'Voeg uw eerste huisdier toe om te beginnen met voorgeschreven opvolging bij uw dierenarts.';
 
   @override
   String get discoveryTitle => 'Ontdek petsFollow';
@@ -821,7 +821,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Maak het profiel van uw huisdier aan en leer hoe u de hartslag meet.';
+      'Maak het profiel van uw huisdier aan en ontdek de app — berichten, herinneringen en metingen (inclusief hartslag).';
 
   @override
   String get discoveryDay2Title => 'Dag 2 — Eerste meting';

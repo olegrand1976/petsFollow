@@ -43,7 +43,7 @@ Chaque étape a **un seul job**. Si le prospect coupe, on descend d’un cran (v
 
 ## Étape 1 — Ouverture (10 s)
 
-> « Bonjour, [Prénom] [Nom] de petsFollow. Est-ce que je parle bien à [Dr. X / la personne qui gère le suivi des patients cardiaques] ? »
+> « Bonjour, [Prénom] [Nom] de petsFollow. Est-ce que je parle bien à [Dr. X / la personne qui gère le suivi des patients entre les consultations] ? »
 
 Si standardiste :
 
@@ -67,11 +67,11 @@ Si standardiste :
 
 Version courte (recommandée) :
 
-> « petsFollow, c’est un suivi cardiaque **prescrit par le véto**, **sans boîtier** : le client relève le rythme dans l’app, vous voyez ça dans votre espace Pro — messagerie et timeline incluses. Le cabinet est **gratuit** ; c’est le propriétaire qui paie, moins de 3 € par mois. »
+> « petsFollow, c’est la **continuité de soins prescrite** : **Web** pour votre cabinet, **mobile ProLight** pour le terrain, **app** pour vos clients — messagerie, rappels, relevés. C’est le propriétaire qui paie le suivi animal, moins de 3,50 € par mois. »
 
 Si besoin d’une seule phrase :
 
-> « On aide les cabinets à suivre le cœur des animaux entre deux consultations, sans matériel à facturer ni à gérer. »
+> « On aide les cabinets à garder le fil avec les propriétaires entre deux consultations — Web pour le cabinet, apps mobiles pour le terrain et les clients. »
 
 **Ne pas** enchaîner sur les commissions, les addons ou le détail des plans au téléphone.
 
@@ -83,7 +83,7 @@ Choisir **une** question selon le profil :
 
 | Profil | Question |
 |--------|----------|
-| Généraliste / cardio | « Aujourd’hui, comment suivez-vous les patients cardiaques entre deux RDV — carnet, téléphone, rien de structuré ? » |
+| Généraliste / cardio | « Aujourd’hui, comment suivez-vous vos patients entre deux RDV — carnet, téléphone, rien de structuré ? » |
 | Cabinet multi-véto | « Est-ce que vous avez déjà un outil de suivi à distance pour vos clients, ou c’est encore du cas par cas ? » |
 | Ouverture rapide | « Est-ce un sujet que vous regardez cette année, ou plutôt plus tard ? » |
 
@@ -137,7 +137,7 @@ Durée totale cible après le « oui » au RDV : **&lt; 30 s**.
 |-----------|----------------|--------|
 | « Envoyez-moi un e-mail » | « Je vous l’envoie — et pour que ce soit utile, on fixe 20 min pour le regarder ensemble. Mardi midi ou jeudi 18h30 ? » | RDV ou date de rappel |
 | « Pas le budget » | « Le Pro est gratuit pour le cabinet ; seuls les clients paient s’ils s’activent. Justement l’intérêt du RDV : voir le modèle sans engagement. » | → Close créneau |
-| « On a déjà une app / un logiciel » | « Souvent complementary — petsFollow est centré suivi cardiaque prescrit, sans boîtier. 20 min suffisent pour voir la différence. » | → Close créneau |
+| « On a déjà une app / un logiciel » | « Souvent complementary — petsFollow ajoute Web Pro + apps mobiles (messages, Care, relevés FC). 20 min suffisent pour voir la différence. » | → Close créneau |
 | « Je dois en parler à mon associé » | « Bien sûr. On peut faire le RDV à deux, ou je vous envoie le créneau et vous invitez [associé]. Mardi ou jeudi ? » | RDV avec les décideurs |
 | « Ce n’est pas le moment » | « Compris. Je vous rappelle en [mois] — je note [date]. Entre-temps je laisse juste un lien de 1 page, OK ? » | Rappel planifié (CRM) |
 | « Combien ça coûte pour le client ? » | « Moins de 3 €/mois selon le plan — le détail, on le voit en 2 minutes en démo. » | → Close créneau (pas de grille complète) |
@@ -151,21 +151,21 @@ Durée totale cible après le « oui » au RDV : **&lt; 30 s**.
 
 ### Standardiste
 
-> « Bonjour, [Nom] de petsFollow. Je souhaite fixer un créneau de 20 minutes avec le Dr [X] concernant le suivi cardiaque à distance des patients. Puis-je avoir son agenda, ou un rappel quand il/elle est libre 2 minutes ? »
+> « Bonjour, [Nom] de petsFollow. Je souhaite fixer un créneau de 20 minutes avec le Dr [X] concernant le suivi prescrit des patients entre les consultations. Puis-je avoir son agenda, ou un rappel quand il/elle est libre 2 minutes ? »
 
 ### Associé / manager cabinet
 
-> « Je cherche la personne qui décide des outils patients. petsFollow = suivi cardiaque prescrit, cabinet gratuit. Je propose 20 minutes — mardi ou jeudi ? »
+> « Je cherche la personne qui décide des outils patients. petsFollow = continuité de soins prescrite — Web + mobile. Je propose 20 minutes — mardi ou jeudi ? »
 
 ### Rappel après e-mail / annuaire
 
-> « Bonjour Dr [X], [Nom] de petsFollow — je vous avais laissé un message sur le suivi cardiaque sans boîtier. Je ne vous retiens pas : mardi 12h45 ou jeudi 18h30 pour une démo de 20 minutes ? »
+> « Bonjour Dr [X], [Nom] de petsFollow — je vous avais laissé un message sur la continuité de soins Web + mobile. Je ne vous retiens pas : mardi 12h45 ou jeudi 18h30 pour une démo de 20 minutes ? »
 
 ---
 
 ## Voicemail (max 25 s)
 
-> « Bonjour Dr [X], [Prénom] [Nom] de petsFollow. Suivi cardiaque prescrit, sans boîtier, Pro gratuit pour le cabinet. Je vous propose 20 minutes mardi ou jeudi — rappelez-moi au [tél] ou répondez à mon e-mail. Merci. »
+> « Bonjour Dr [X], [Prénom] [Nom] de petsFollow. Continuité de soins prescrite — Web cabinet, mobile terrain et client. Je vous propose 20 minutes mardi ou jeudi — rappelez-moi au [tél] ou répondez à mon e-mail. Merci. »
 
 Laisser **un seul** message ; rappeler selon cadence CRM (J+1, J+3, J+7).
 

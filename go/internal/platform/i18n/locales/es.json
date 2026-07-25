@@ -131,15 +131,15 @@
   },
   "emails": {
     "confirm_registration_subject": "petsFollow Pro — Confirme su registro",
-    "confirm_registration_tagline": "Seguimiento cardíaco veterinario",
+    "confirm_registration_tagline": "Continuidad de cuidados veterinarios",
     "confirm_registration_preheader": "Active su cuenta petsFollow Pro en un clic.",
     "confirm_registration_greeting": "Hola {fullName},",
-    "confirm_registration_intro": "Bienvenido a petsFollow Pro. Para activar la cuenta de su clínica y empezar a seguir a sus pacientes cardíacos, confirme su dirección de correo.",
+    "confirm_registration_intro": "Bienvenido a petsFollow Pro. Para activar la cuenta de su clínica y empezar el seguimiento prescrito de sus pacientes, confirme su dirección de correo.",
     "confirm_registration_cta": "Confirmar mi cuenta",
     "confirm_registration_expiry": "Este enlace de confirmación caduca en 48 horas.",
     "confirm_registration_disclaimer": "Si no ha solicitado este registro, puede ignorar este correo sin problema.",
     "password_reset_subject": "petsFollow Pro — Restablecimiento de contraseña",
-    "password_reset_tagline": "Seguimiento cardíaco veterinario",
+    "password_reset_tagline": "Continuidad de cuidados veterinarios",
     "password_reset_preheader": "Restablezca su contraseña de petsFollow en un clic.",
     "password_reset_greeting": "Hola {fullName},",
     "password_reset_intro": "Se ha solicitado un restablecimiento de contraseña para su cuenta. Haga clic en el botón siguiente para elegir una nueva contraseña.",
@@ -190,7 +190,7 @@
         "tagline": "Seguimiento de salud de su animal",
         "preheader": "Su recorrido petsFollow empieza hoy.",
         "greeting": "Hola {fullName},",
-        "intro": "Su veterinario le ha prescrito petsFollow: seguimiento cardíaco sin dispositivo, en su teléfono. Descargue la app para empezar.",
+        "intro": "Su veterinario le ha prescrito petsFollow: seguimiento de salud en la app móvil — mensajes, recordatorios y lecturas. Descargue la app para empezar.",
         "detail": "Qué podrá hacer:\n• Lecturas cardíacas 15 / 30 / 60 s\n• Mensajería segura con la clínica\n• Timeline y recordatorios de cuidados\n• Desde ~2,6 € / mes por animal (plan 3 años)",
         "cta": "Descargar la aplicación",
         "disclaimer": "Puede desactivar estos correos con el enlace al final."
@@ -203,7 +203,7 @@
         "intro": "Para activar el seguimiento prescrito, cree el perfil de su animal y elija un plan. Recomendamos el plan de 3 años (95 €) — unos 2,6 € / mes.",
         "detail": "Planes IVA incl.:\n• 3,50 € / mes (suscripción)\n• 35 € / año\n• 95 € / 3 años (recomendado)",
         "cta": "Abrir la aplicación",
-        "disclaimer": "Sin pago, el seguimiento cardíaco queda pendiente."
+        "disclaimer": "Sin pago, el seguimiento prescrito queda pendiente."
       },
       "d2_first_measure": {
         "subject": "¿Listo para su primera lectura?",
@@ -319,9 +319,9 @@
       "d365_anniversary": {
         "subject": "1 año con petsFollow — ¡gracias!",
         "tagline": "Aniversario",
-        "preheader": "Un año de seguimiento prescrito, sin dispositivo.",
+        "preheader": "Un año de seguimiento prescrito en la app.",
         "greeting": "Hola {fullName},",
-        "intro": "¡Feliz aniversario de recorrido! Gracias por confiar en petsFollow para el seguimiento cardíaco de su animal. Piense en la renovación — el plan de 3 años (95 €) es ideal para continuar con tranquilidad.",
+        "intro": "¡Feliz aniversario de recorrido! Gracias por confiar en petsFollow para el seguimiento de salud de su animal. Piense en la renovación — el plan de 3 años (95 €) es ideal para continuar con tranquilidad.",
         "detail": "",
         "cta": "Continuar mi seguimiento",
         "disclaimer": "Todo el equipo petsFollow le agradece."

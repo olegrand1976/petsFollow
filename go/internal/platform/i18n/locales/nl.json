@@ -131,15 +131,15 @@
   },
   "emails": {
     "confirm_registration_subject": "petsFollow Pro — Bevestig uw registratie",
-    "confirm_registration_tagline": "Veterinaire hartopvolging",
+    "confirm_registration_tagline": "Veterinaire zorgcontinuïteit",
     "confirm_registration_preheader": "Activeer uw petsFollow Pro-account in één klik.",
     "confirm_registration_greeting": "Hallo {fullName},",
-    "confirm_registration_intro": "Welkom bij petsFollow Pro. Activeer uw praktijkaccount en begin met het opvolgen van uw hartpatiënten door uw e-mailadres te bevestigen.",
+    "confirm_registration_intro": "Welkom bij petsFollow Pro. Activeer uw praktijkaccount en begin met voorgeschreven patiëntopvolging door uw e-mailadres te bevestigen.",
     "confirm_registration_cta": "Mijn account bevestigen",
     "confirm_registration_expiry": "Deze bevestigingslink verloopt over 48 uur.",
     "confirm_registration_disclaimer": "Als u deze registratie niet heeft aangevraagd, kunt u deze e-mail veilig negeren.",
     "password_reset_subject": "petsFollow Pro — Wachtwoord resetten",
-    "password_reset_tagline": "Veterinaire hartopvolging",
+    "password_reset_tagline": "Veterinaire zorgcontinuïteit",
     "password_reset_preheader": "Reset uw petsFollow-wachtwoord in één klik.",
     "password_reset_greeting": "Hallo {fullName},",
     "password_reset_intro": "Er is een verzoek tot wachtwoordreset voor uw account. Klik op de knop hieronder om een nieuw wachtwoord te kiezen.",
@@ -190,7 +190,7 @@
         "tagline": "Gezondheidsopvolging van uw dier",
         "preheader": "Uw petsFollow-traject start vandaag.",
         "greeting": "Hallo {fullName},",
-        "intro": "Uw dierenarts schreef petsFollow voor: hartopvolging zonder apparaat, rechtstreeks op uw telefoon. Download de app om te starten.",
+        "intro": "Uw dierenarts schreef petsFollow voor: gezondheidsopvolging in de mobiele app — berichten, herinneringen en metingen. Download de app om te starten.",
         "cta": "App downloaden",
         "disclaimer": "U kunt deze e-mails uitschakelen via de link onderaan.",
         "detail": "Wat u kunt doen:\n• Hartmetingen 15 / 30 / 60 s\n• Beveiligde berichten met de praktijk\n• Tijdlijn en zorgherinneringen\n• Vanaf ~€2,6 / maand per dier (3-jarenplan)"
@@ -203,7 +203,7 @@
         "intro": "Om de voorgeschreven opvolging te activeren, maakt u het dierenprofiel aan en kiest u een plan. Wij raden het 3-jarenplan (€95) aan — ongeveer €2,6 / maand.",
         "detail": "Plannen incl. btw:\n• €3,50 / maand (abonnement)\n• €35 / jaar\n• €95 / 3 jaar (aanbevolen)",
         "cta": "App openen",
-        "disclaimer": "Zonder betaling blijft de hartopvolging in afwachting."
+        "disclaimer": "Zonder betaling blijft de voorgeschreven opvolging in afwachting."
       },
       "d2_first_measure": {
         "subject": "Klaar voor uw eerste meting?",
@@ -319,9 +319,9 @@
       "d365_anniversary": {
         "subject": "1 jaar petsFollow — bedankt!",
         "tagline": "Verjaardag",
-        "preheader": "Eén jaar voorgeschreven opvolging, zonder apparaat.",
+        "preheader": "Een jaar voorgeschreven opvolging in de app.",
         "greeting": "Hallo {fullName},",
-        "intro": "Fijne trajectverjaardag! Bedankt dat u petsFollow vertrouwt voor de hartopvolging van uw dier. Denk aan verlenging — het 3-jarenplan (€95) is ideaal om rustig verder te gaan.",
+        "intro": "Fijne trajectverjaardag! Bedankt dat u petsFollow vertrouwt voor de gezondheidsopvolging van uw dier. Denk aan verlenging — het 3-jarenplan (€95) is ideaal om rustig verder te gaan.",
         "detail": "",
         "cta": "Opvolging verderzetten",
         "disclaimer": "Het hele petsFollow-team bedankt u."

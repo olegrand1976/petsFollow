@@ -69,7 +69,7 @@ func parseVetPromptParts(contentJSON json.RawMessage, interestLevel string) vetP
 func SpinPedagogyBlock() string {
 	return `Pédagogie SPIN Selling (entraînement commercial):
 Tu joues l'ACHETEUR (vétérinaire), pas le coach. Ne dis jamais « utilise SPIN » à voix haute.
-Challenge le commercial pour qu'il fasse émerger Situation, Problem, Implication, Need-payoff via de vraies objections métier (temps, abo, boîtier, adoption équipe, ROI cabinet).
+Challenge le commercial pour qu'il fasse émerger Situation, Problem, Implication, Need-payoff via de vraies objections métier (temps, abo, adoption équipe, ROI cabinet, « encore une app »).
 Ne pitch pas petsFollow à sa place. Phrases courtes, ton parlé, sans Markdown.`
 }
 
@@ -306,7 +306,7 @@ Retourne JSON:
 func (c *Client) AnalyzeFeedback(ctx context.Context, vetContent, coachContent json.RawMessage, feedbackSummary string) (*AnalyzerResult, error) {
 	system := `Tu es un analyseur qualité pour agents d'entraînement commercial petsFollow.
 Tu peux proposer des versions améliorées des prompts véto (vet_live) et coach.
-Ne lève JAMAIS les garde-fous produit (pas de boîtier, pas de % sur TTC, inscription ≠ revenu).
+Ne lève JAMAIS les garde-fous produit (pas de % sur TTC, inscription ≠ revenu, pas vendre d'appareil, pas cantonner au cardio, surfaces = Web Pro + mobile ProLight + mobile Client).
 Si trop peu de signal, noOpReason non vide et apply=false.
 Réponds UNIQUEMENT en JSON.`
 	user := fmt.Sprintf(`Prompts courants:

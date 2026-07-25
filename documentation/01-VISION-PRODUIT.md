@@ -1,5 +1,8 @@
 # Vision produit — petsFollow
 
+**Promesse** : continuité de soins prescrite — Web cabinet · mobile ProLight · mobile particulier.  
+Le relevé cardiaque est un **module** différenciant, pas l’identité produit. Positionnement → [14](14-POSITIONNEMENT-MARKETING.md).
+
 ## Personas
 
 - **Dr Martin** — véto libéral, dashboard Pro web (+ mode terrain *vet_light* mobile)
@@ -8,13 +11,13 @@
 - **Marc** — maréchal-ferrant (`care_pro` / `farrier`), agenda terrain + CR ferrage
 - Autres care pro : physio, comportementaliste, toiletteur, éleveur — voir [28](28-MULTI-PROFILS-PRO.md)
 
-## Périmètre cœur (MVP)
+## Périmètre cœur (continuité)
 
 1. Création animal (client — Flutter)
 2. Suivi clients + animaux (véto — Nuxt Pro)
 3. Messagerie interne + mode indisponible véto
-4. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client)
-5. Timeline historique (messages, relevés validés, événements)
+4. Timeline historique (messages, relevés validés, événements)
+5. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client) — **feature**
 
 ## Livré au-delà du MVP initial
 

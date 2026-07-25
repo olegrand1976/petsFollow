@@ -1,17 +1,17 @@
 {
   "lastReviewedAt": "2026-07-25",
   "analystNote": {
-    "fr": "Lecture concurrentielle FR / BE / ES au 25/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C sans matériel : suivi cardiaque prescrit par le véto, Pro à 69 € HT/mois, client 3,50 / 35 / 95 €, Care/Horse inclus, 5 langues.",
-    "en": "Competitive read for FR / BE / ES as of 2026-07-25: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C without hardware: vet-prescribed heart-rate follow-up, Pro at €69 excl. VAT/month, owner plans €3.50 / €35 / €95, Care/Horse included, 5 languages."
+    "fr": "Lecture concurrentielle FR / BE / ES au 25/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C logiciel : continuité de soins prescrite via Web Pro · mobile ProLight · mobile Client, Pro à 69 € HT/mois, client 3,50 / 35 / 95 €, Care/Horse inclus, relevés FC en feature, 5 langues.",
+    "en": "Competitive read for FR / BE / ES as of 2026-07-25: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C software: vet-prescribed care continuity via Web Pro · mobile ProLight · mobile Client, Pro at €69 excl. VAT/month, owner plans €3.50 / €35 / €95, Care/Horse included, heart-rate as a feature, 5 languages."
   },
   "petsFollowBanner": {
     "fr": {
-      "title": "petsFollow — suivi cardiaque prescrit, sans boîtier",
-      "body": "Pro 69 € HT/mois + setup ; client 3,50 / 35 / 95 € ; sans boîtier ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET"
+      "title": "petsFollow — continuité de soins prescrite · Web + mobile",
+      "body": "Pro 69 € HT/mois + setup ; client 3,50 / 35 / 95 € ; Web Pro · ProLight · Client ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET"
     },
     "en": {
-      "title": "petsFollow — vet-prescribed heart rate, no hardware",
-      "body": "Pro €69 excl. VAT/month + setup; owner €3.50 / €35 / €95; no device; Care/Horse included; B2B2C; FR/NL/EN/ES/ET"
+      "title": "petsFollow — vet-prescribed care continuity · Web + mobile",
+      "body": "Pro €69 excl. VAT/month + setup; owner €3.50 / €35 / €95; Web Pro · ProLight · Client; Care/Horse included; B2B2C; FR/NL/EN/ES/ET"
     }
   },
   "markets": {
@@ -22,16 +22,16 @@
           "en": "France: established PMS + niche telemed; GPS wearables dominate consumer mindshare."
         },
         "opportunities": {
-          "fr": "Peu d’offres couplent prescription véto + suivi cardiaque sans matériel à prix transparent. Les cabinets cherchent un levier différenciant sans CAPEX boîtier. Multilingue utile près des frontières et pour clientèles expatriées.",
-          "en": "Few offers combine vet prescription with heart-rate follow-up, no hardware, and clear pricing. Practices want differentiation without device CAPEX. Multilingual support helps border regions and expat owners."
+          "fr": "Peu d’offres couplent prescription véto + continuité Web/mobile à prix transparent. Les cabinets cherchent un levier différenciant complémentaire du PMS. Multilingue utile près des frontières et pour clientèles expatriées.",
+          "en": "Few offers combine vet prescription with Web/mobile care continuity and clear pricing. Practices want differentiation complementary to the PMS. Multilingual support helps border regions and expat owners."
         },
         "threats": {
           "fr": "Habitudes PMS ancrées ; fatigue « encore une app » côté propriétaire ; concurrence GPS (Tractive, Invoxia) sur la perception « suivi animal ». Risque de confusion avec la téléconsult pure.",
           "en": "Sticky PMS habits; owner “another app” fatigue; GPS players (Tractive, Invoxia) own “pet monitoring” mindshare. Risk of confusion with pure teleconsultation."
         },
         "petsFollowAngle": {
-          "fr": "Angle cabinet : pas de boîtier, prescrit par le véto, Pro 69 € HT/mois facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 5 langues.",
-          "en": "Practice angle: no hardware, vet-prescribed, Pro €69 excl. VAT/month billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 5 languages."
+          "fr": "Angle cabinet : Web Pro · Pro Light · app client, prescrit par le véto, Pro 69 € HT/mois facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 5 langues.",
+          "en": "Practice angle: Web Pro · Pro Light · owner app, vet-prescribed, Pro €69 excl. VAT/month billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 5 languages."
         }
       },
       "products": [
@@ -79,8 +79,8 @@
           ],
           "positioning": {
             "functional": {
-              "fr": "Système de gestion de clinique (PMS) — cœur opérationnel du cabinet, pas un outil de suivi cardiaque prescrit.",
-              "en": "Practice management system — operational core of the clinic, not a prescribed heart-rate follow-up tool."
+              "fr": "Système de gestion de clinique (PMS) — cœur opérationnel du cabinet, pas un outil de continuité de soins prescrite.",
+              "en": "Practice management system — operational core of the clinic, not a prescribed care-continuity tool."
             },
             "pricing": {
               "fr": "Budget SaaS cabinet, souvent opaque ; pas comparable 1:1 au ticket Pro petsFollow.",
@@ -89,16 +89,16 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "petsFollow complète le PMS : suivi cardiaque B2B2C sans boîtier, prix Pro lisible (69 € HT), engagement propriétaire via abonnement animal.",
-              "en": "petsFollow complements the PMS: B2B2C heart-rate follow-up without hardware, clear Pro price (€69 excl. VAT), owner engagement via pet subscription."
+              "fr": "petsFollow complète le PMS : continuité B2B2C Web + mobile, prix Pro lisible (69 € HT), engagement propriétaire via abonnement animal.",
+              "en": "petsFollow complements the PMS: B2B2C care continuity without hardware, clear Pro price (€69 excl. VAT), owner engagement via pet subscription."
             },
             "watchouts": {
               "fr": "Ne pas se positionner en remplacement PMS ; viser l’intégration / coexistence et le parcours prescrit.",
               "en": "Do not position as a PMS replacement; aim for coexistence and the prescribed pathway."
             },
             "talkTrack": {
-              "fr": "« Vous gardez Vetup pour le dossier ; petsFollow ajoute le suivi cardiaque prescrit que vos clients paient eux-mêmes — sans boîtier. »",
-              "en": "“Keep Vetup for records; petsFollow adds vet-prescribed heart-rate follow-up that owners fund themselves — no device.”"
+              "fr": "« Vous gardez Vetup pour le dossier ; petsFollow ajoute la continuité prescrite Web + mobile (messages, Care, relevés FC) que vos clients paient eux-mêmes. »",
+              "en": "“Keep Vetup for records; petsFollow adds vet-prescribed Web + mobile care continuity (messages, Care, heart-rate readings) that owners fund themselves.”"
             }
           }
         },
@@ -146,8 +146,8 @@
           ],
           "positioning": {
             "functional": {
-              "fr": "Accès soignant à distance — épisode de conseil, pas un suivi longitudinal de rythme cardiaque prescrit par le cabinet traitant.",
-              "en": "Remote clinician access — advisory episodes, not longitudinal heart-rate follow-up prescribed by the treating practice."
+              "fr": "Accès soignant à distance — épisode de conseil, pas une continuité de soins longitudinale prescrite par le cabinet traitant.",
+              "en": "Remote clinician access — advisory episodes, not longitudinal care continuity prescribed by the treating practice."
             },
             "pricing": {
               "fr": "Monétisation à l’acte ou pack téléconsult ; logique différente du forfait Pro + abo animal.",
@@ -164,8 +164,8 @@
               "en": "Owners may equate “digital vet” with teleconsult; clarify prescription + monitoring vs one-off advice."
             },
             "talkTrack": {
-              "fr": "« La téléconsult répond à une question ponctuelle ; petsFollow, c’est le suivi cardiaque que vous prescrivez, visible dans votre espace Pro. »",
-              "en": "“Teleconsult answers a one-off question; petsFollow is the heart-rate follow-up you prescribe, visible in your Pro workspace.”"
+              "fr": "« La téléconsult répond à une question ponctuelle ; petsFollow, c’est la continuité que vous prescribez — messages, Care, relevés — visible dans votre espace Pro. »",
+              "en": "“Teleconsult answers a one-off question; petsFollow is the care continuity you prescribe — messages, Care, readings — visible in your Pro workspace.”"
             }
           }
         },
@@ -223,7 +223,7 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "petsFollow : zéro boîtier, relevés de rythme (15/30/60 s) dans un parcours véto, Care/Horse inclus, ticket client bas.",
+              "fr": "petsFollow : apps Web + mobile, relevés de rythme (15/30/60 s) en feature dans un parcours véto, Care/Horse inclus, ticket client bas.",
               "en": "petsFollow: zero device, heart-rate readings (15/30/60 s) in a vet pathway, Care/Horse included, low owner ticket."
             },
             "watchouts": {
@@ -294,7 +294,7 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "Différence canal (B2B2C prescrit) et clinique (rythme cardiaque, timeline véto, messagerie) sans hardware.",
+              "fr": "Différence canal (B2B2C prescrit) et clinique (timeline véto, messagerie, relevés FC en feature) via Web + mobile.",
               "en": "Channel difference (prescribed B2B2C) and clinical focus (heart rate, vet timeline, messaging) without hardware."
             },
             "watchouts": {
@@ -302,8 +302,8 @@
               "en": "Tractive brand may capture the household “monitoring” budget; clearly explain medical prescription."
             },
             "talkTrack": {
-              "fr": "« Tractive rassure sur la localisation ; petsFollow, c’est votre prescription de suivi cardiaque, sans boîtier, dès 3,50 €/mois. »",
-              "en": "“Tractive reassures on location; petsFollow is your prescribed heart-rate follow-up, no device, from €3.50/month.”"
+              "fr": "« Tractive rassure sur la localisation ; petsFollow, c’est votre prescription de suivi Web + mobile (messages, Care, relevés FC), dès 3,50 €/mois. »",
+              "en": "“Tractive reassures on location; petsFollow is your prescribed Web + mobile follow-up (messages, Care, heart-rate), from €3.50/month.”"
             }
           }
         },
@@ -351,8 +351,8 @@
           ],
           "positioning": {
             "functional": {
-              "fr": "Modernisation PMS + engagement propriétaire large — pas centré suivi cardiaque prescrit sans matériel.",
-              "en": "PMS modernization + broad owner engagement — not centered on prescribed heart-rate without hardware."
+              "fr": "Modernisation PMS + engagement propriétaire large — pas centré continuité de soins prescrite sans matériel.",
+              "en": "PMS modernization + broad owner engagement — not centered on prescribed care continuity without hardware."
             },
             "pricing": {
               "fr": "Budget remplacement / migration PMS ; ticket d’entrée élevé vs add-on petsFollow.",
@@ -369,8 +369,8 @@
               "en": "If the practice wants “one app for everything,” all-in-one messaging can slow an add-on sale."
             },
             "talkTrack": {
-              "fr": "« Pas besoin de changer de logiciel : petsFollow ajoute le suivi cardiaque prescrit et l’abonnement client, Care/Horse inclus. »",
-              "en": "“No software switch needed: petsFollow adds prescribed heart-rate follow-up and the owner subscription, Care/Horse included.”"
+              "fr": "« Pas besoin de changer de logiciel : petsFollow ajoute la continuité prescrite et l’abonnement client, Care/Horse inclus. »",
+              "en": "“No software switch needed: petsFollow adds prescribed care continuity and the owner subscription, Care/Horse included.”"
             }
           }
         }
@@ -383,15 +383,15 @@
           "en": "Belgium: Animana/IDEXX is structural; FR/NL bilingualism is critical; GPS wearables are ubiquitous."
         },
         "opportunities": {
-          "fr": "Cabinets multi-sites et frontaliers sensibles au multilinguisme (FR/NL/EN). Peu d’acteurs locaux poussent un suivi cardiaque prescrit sans hardware. Prix Pro transparent vs devis PMS.",
-          "en": "Multi-site and border practices care about multilingual (FR/NL/EN). Few local players push prescribed heart-rate without hardware. Transparent Pro pricing vs PMS quotes."
+          "fr": "Cabinets multi-sites et frontaliers sensibles au multilinguisme (FR/NL/EN). Peu d’acteurs locaux poussent une continuité de soins prescrite Web + mobile. Prix Pro transparent vs devis PMS.",
+          "en": "Multi-site and border practices care about multilingual (FR/NL/EN). Few local players push prescribed care continuity without hardware. Transparent Pro pricing vs PMS quotes."
         },
         "threats": {
           "fr": "Forte dépendance aux écosystèmes IDEXX/Animana ; cycles de décision longs ; marché petit donc bouche-à-oreille critique.",
           "en": "Strong dependence on IDEXX/Animana ecosystems; long decision cycles; small market so word-of-mouth is critical."
         },
         "petsFollowAngle": {
-          "fr": "5 langues natives (dont NL) ; B2B2C sans boîtier ; Pro 69 € HT ; client 3,50/35/95 € ; Care/Horse inclus.",
+          "fr": "5 langues natives (dont NL) ; B2B2C Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; Care/Horse inclus.",
           "en": "5 native languages (incl. NL); B2B2C without hardware; Pro €69 excl. VAT; owner €3.50/€35/€95; Care/Horse included."
         }
       },
@@ -458,8 +458,8 @@
               "en": "Group purchasing and IT validation can lengthen the cycle; prepare a clinical sponsor."
             },
             "talkTrack": {
-              "fr": "« Animana reste votre PMS ; petsFollow ajoute le suivi cardiaque prescrit, en FR et NL, sans boîtier. »",
-              "en": "“Animana stays your PMS; petsFollow adds prescribed heart-rate follow-up in FR and NL, with no device.”"
+              "fr": "« Animana reste votre PMS ; petsFollow ajoute la continuité prescrite Web + mobile, en FR et NL. »",
+              "en": "“Animana stays your PMS; petsFollow adds prescribed Web + mobile care continuity in FR and NL.”"
             }
           }
         },
@@ -574,8 +574,8 @@
           ],
           "positioning": {
             "functional": {
-              "fr": "Modernisation PMS internationale — concurrent de migration, pas de suivi cardiaque dédié.",
-              "en": "International PMS modernization — migration competitor, not dedicated heart-rate follow-up."
+              "fr": "Modernisation PMS internationale — concurrent de migration, pas une continuité de soins propriétaire dédiée.",
+              "en": "International PMS modernization — migration competitor, not dedicated owner care continuity."
             },
             "pricing": {
               "fr": "Projet de plateforme ; budget et change management élevés.",
@@ -592,8 +592,8 @@
               "en": "Practices in a PMS RFP may freeze adjacent purchases."
             },
             "talkTrack": {
-              "fr": "« Pendant que vous évaluez un PMS, vous pouvez déjà offrir un suivi cardiaque prescrit sans boîtier. »",
-              "en": "“While you evaluate a PMS, you can already offer prescribed heart-rate follow-up with no device.”"
+              "fr": "« Pendant que vous évaluez un PMS, vous pouvez déjà offrir une continuité de soins prescrite Web + mobile. »",
+              "en": "“While you evaluate a PMS, you can already offer prescribed Web + mobile care continuity.”"
             }
           }
         },
@@ -659,8 +659,8 @@
               "en": "BE owners often compare “collar apps”; mark the prescribed medical nature."
             },
             "talkTrack": {
-              "fr": "« Le GPS ne remplace pas un suivi cardiaque prescrit ; petsFollow le fait sans boîtier, en français et néerlandais. »",
-              "en": "“GPS doesn’t replace prescribed heart-rate follow-up; petsFollow does it without a device, in French and Dutch.”"
+              "fr": "« Le GPS ne remplace pas une continuité de soins prescrite ; petsFollow le fait en Web + mobile, en français et néerlandais. »",
+              "en": "“GPS doesn’t replace prescribed care continuity; petsFollow does it without a device, in French and Dutch.”"
             }
           }
         },
@@ -726,8 +726,8 @@
               "en": "Prioritize independents / small groups; network HQs have internal roadmaps."
             },
             "talkTrack": {
-              "fr": "« Sans attendre une roadmap réseau : activez un suivi cardiaque prescrit, Care/Horse inclus, facturation Pro simple. »",
-              "en": "“Without waiting on a network roadmap: enable prescribed heart-rate follow-up, Care/Horse included, simple Pro billing.”"
+              "fr": "« Sans attendre une roadmap réseau : activez une continuité de soins prescrite, Care/Horse inclus, facturation Pro simple. »",
+              "en": "“Without waiting on a network roadmap: enable prescribed care continuity, Care/Horse included, simple Pro billing.”"
             }
           }
         }
@@ -748,8 +748,8 @@
           "en": "Uneven purchasing power; low-cost app competition; regional sales cycles (Madrid/Barcelona vs rest)."
         },
         "petsFollowAngle": {
-          "fr": "Locale ES native ; sans boîtier ; Pro 69 € HT ; client 3,50/35/95 € ; B2B2C prescrit ; Care/Horse inclus.",
-          "en": "Native ES locale; no hardware; Pro €69 excl. VAT; owner €3.50/€35/€95; prescribed B2B2C; Care/Horse included."
+          "fr": "Locale ES native ; Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; B2B2C prescrit ; Care/Horse inclus.",
+          "en": "Native ES locale; Web + mobile; Pro €69 excl. VAT; owner €3.50/€35/€95; prescribed B2B2C; Care/Horse included."
         }
       },
       "products": [
@@ -816,7 +816,7 @@
             },
             "talkTrack": {
               "fr": "« Qvet gestiona la clínica ; petsFollow añade el seguimiento cardíaco prescrito, sin collar, desde 3,50 €/mes para el cliente. »",
-              "en": "“Qvet runs the clinic; petsFollow adds prescribed heart-rate follow-up, no collar, from €3.50/month for the owner.”"
+              "en": "“Qvet runs the clinic; petsFollow adds prescribed care continuity, no collar, from €3.50/month for the owner.”"
             }
           }
         },
@@ -883,7 +883,7 @@
             },
             "talkTrack": {
               "fr": "« No sustituimos su PMS : añadimos seguimiento cardíaco B2B2C a 69 € HT/mes. »",
-              "en": "“We don’t replace your PMS: we add B2B2C heart-rate follow-up at €69 excl. VAT/month.”"
+              "en": "“We don’t replace your PMS: we add B2B2C care continuity at €69 excl. VAT/month.”"
             }
           }
         },
@@ -950,7 +950,7 @@
             },
             "talkTrack": {
               "fr": "« El GPS localiza ; petsFollow mide el ritmo bajo su prescripción, sin comprar hardware. »",
-              "en": "“GPS locates; petsFollow measures heart rate under your prescription, with no hardware to buy.”"
+              "en": "“GPS locates; petsFollow adds prescribed Web + mobile follow-up (including heart-rate readings) under your prescription.”"
             }
           }
         },
@@ -1017,7 +1017,7 @@
             },
             "talkTrack": {
               "fr": "« Las apps IoT cuidan el hogar ; petsFollow es el seguimiento cardíaco que usted prescribe. »",
-              "en": "“IoT apps care for the home; petsFollow is the heart-rate follow-up you prescribe.”"
+              "en": "“IoT apps care for the home; petsFollow is the care continuity you prescribe.”"
             }
           }
         },
@@ -1084,7 +1084,7 @@
             },
             "talkTrack": {
               "fr": "« La teleconsulta resuelve una duda ; petsFollow es el monitoreo cardíaco prescrito, visible en su Pro. »",
-              "en": "“Teleconsult answers a doubt; petsFollow is prescribed heart-rate monitoring, visible in your Pro.”"
+              "en": "“Teleconsult answers a doubt; petsFollow is prescribed care continuity, visible in your Pro.”"
             }
           }
         }

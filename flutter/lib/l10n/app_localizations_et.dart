@@ -542,11 +542,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Kasutustingimused — petsFollow\n\nPetsFollowi rakendus võimaldab lemmikloomaomanikel mõõta südame löögisagedust, vaadata ajalugu ja suhelda oma loomaarstiga.\n\nTeenuseid osutatakse valitud tellimuse alusel (maksed Stripe\'i kaudu). Kasutajad peavad rakendust kasutama ettenähtud otstarbel.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/terms\n\nViimati uuendatud: juuli 2026';
+      'Kasutustingimused — petsFollow\n\nPetsFollowi rakendus võimaldab lemmikloomaomanikel ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised), ajaloo vaatamist ja suhtlust loomaarstiga.\n\nTeenuseid osutatakse valitud tellimuse alusel (maksed Stripe\'i kaudu). Kasutajad peavad rakendust kasutama ettenähtud otstarbel.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/terms\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, südame jälgimine, loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -810,7 +810,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get emptyPetsBody =>
-      'Lisage oma esimene lemmikloom, et alustada südame löögisageduse jälgimist koos loomaarstiga.';
+      'Lisage oma esimene lemmikloom, et alustada ettekirjutatud jälgimist koos loomaarstiga.';
 
   @override
   String get discoveryTitle => 'Avastage petsFollow';
@@ -823,7 +823,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Looge oma lemmiklooma profiil ja õppige südame löögisagedust mõõtma.';
+      'Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh südame löögisagedus).';
 
   @override
   String get discoveryDay2Title => 'Päev 2 — Esimene näit';

@@ -11,13 +11,7 @@
     <section class="pro-welcome__hero">
       <span class="pro-landing__badge">{{ $t('welcome.badge') }}</span>
       <h1>{{ $t('welcome.title') }}</h1>
-      <p>
-        <i18n-t keypath="welcome.lead" tag="span">
-          <template #free>
-            <strong>{{ $t('welcome.free') }}</strong>
-          </template>
-        </i18n-t>
-      </p>
+      <p>{{ $t('welcome.lead') }}</p>
     </section>
 
     <section class="pro-welcome__steps">
@@ -63,14 +57,14 @@ const isAuthenticated = computed(() => !!(token.value || session.value))
 const steps = [
   { key: 'profile' },
   { key: 'invite' },
-  { key: 'monitor' },
   { key: 'communicate' },
+  { key: 'monitor' },
 ]
 
 const highlights = [
+  { key: 'messaging', icon: 'chat' },
+  { key: 'terrain', icon: 'map' },
   { key: 'bpm', icon: 'favorite' },
-  { key: 'alerts', icon: 'notifications' },
-  { key: 'free', icon: 'card_giftcard' },
 ]
 
 const primaryLabel = computed(() =>

@@ -540,11 +540,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Terms of use — petsFollow\n\nThe petsFollow app lets pet owners measure heart rate, view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription (payments via Stripe). Users must use the app as intended.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/terms\n\nLast updated: July 2026';
+      'Terms of use — petsFollow\n\nThe petsFollow app lets pet owners follow prescribed care (messaging, Care/Horse reminders, heart-rate readings), view history and communicate with their veterinarian.\n\nServices are provided under the selected subscription (payments via Stripe). Users must use the app as intended.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/terms\n\nLast updated: July 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, cardiac monitoring, vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google).\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
+      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, care continuity (including heart-rate readings), vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google).\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@ll-it-sc.be.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
 
   @override
   String get legalNoticeBody =>
@@ -806,7 +806,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyPetsBody =>
-      'Add your first pet to start heart rate monitoring with your veterinarian.';
+      'Add your first pet to start prescribed follow-up with your veterinarian.';
 
   @override
   String get discoveryTitle => 'Discover petsFollow';
@@ -819,7 +819,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Create your pet\'s profile and learn how to measure heart rate.';
+      'Create your pet\'s profile and explore the app — messaging, reminders and readings (including heart rate).';
 
   @override
   String get discoveryDay2Title => 'Day 2 — First reading';

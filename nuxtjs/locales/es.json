@@ -39,11 +39,11 @@
     "login": {
       "title": "Acceso Pro",
       "subtitle": "Acceso reservado a veterinarios y administradores.",
-      "brandTitle": "Seguimiento cardíaco y fichas de clientes en una sola herramienta",
+      "brandTitle": "Continuidad de cuidados y ficha cliente en una sola herramienta",
       "brandText": "Bienvenido a petsFollow Pro — el espacio de trabajo pensado para los profesionales del cuidado animal, con un toque de buen humor.",
       "submit": "Iniciar sesión",
       "noAccount": "¿Todavía no tiene cuenta?",
-      "registerLink": "Regístrese gratis",
+      "registerLink": "Crear una cuenta Pro",
       "forgotLink": "¿Ha olvidado la contraseña?",
       "or": "o",
       "proOnly": "Acceso reservado a perfiles Pro (vet / comercial / responsable comercial / admin)",
@@ -106,9 +106,9 @@
     },
     "register": {
       "title": "Registro de clínica",
-      "subtitle": "100 % gratis para profesionales veterinarios.",
-      "brandTitle": "Únase a petsFollow Pro — gratis para veterinarios",
-      "brandText": "Cree su clínica en minutos y empiece hoy el seguimiento de sus pacientes cardíacos.",
+      "subtitle": "Espacio Web para su clínica — Pro Light móvil gratuito para el campo.",
+      "brandTitle": "Únase a petsFollow Pro",
+      "brandText": "Cree su clínica en minutos y empiece hoy el seguimiento prescrito de sus pacientes.",
       "fullName": "Su nombre",
       "practiceName": "Nombre de la clínica",
       "email": "Correo profesional",
@@ -578,7 +578,7 @@
     "viewRequests": "Ver solicitudes",
     "messaging": "Mensajería",
     "about": "Acerca de",
-    "aboutText": "petsFollow Pro centraliza el seguimiento cardíaco, las fichas de clientes y la mensajería segura para su clínica veterinaria.",
+    "aboutText": "petsFollow Pro centraliza la continuidad de cuidados: fichas de clientes, mensajería segura, lecturas cardíacas y seguimiento de campo para su clínica.",
     "viewCalendar": "Ver calendario"
   },
   "messages": {
@@ -1007,9 +1007,9 @@
   },
   "welcome": {
     "badge": "Bienvenido a petsFollow Pro",
-    "title": "Su clínica cardíaca, lista para empezar",
-    "lead": "petsFollow Pro le acompaña a diario: lecturas de frecuencia cardíaca, alertas, mensajería y fichas de pacientes — todo {free}.",
-    "free": "gratis para veterinarios",
+    "title": "Su clínica, lista para empezar",
+    "lead": "petsFollow Pro le acompaña a diario: fichas, mensajería, Care/Horse, campo Pro Light y lecturas — Web + móvil.",
+    "free": "Web + móvil",
     "howItWorks": "¿Cómo funciona?",
     "steps": {
       "profile": {
@@ -1021,8 +1021,8 @@
         "text": "Los clientes se registran con la app móvil petsFollow y se vinculan a usted automáticamente."
       },
       "monitor": {
-        "title": "Supervise las lecturas de frecuencia cardíaca",
-        "text": "Reciba datos BPM, valide sesiones e intervenga cuando haya alertas."
+        "title": "Siga la actividad de pacientes",
+        "text": "Timeline, mensajes y lecturas validadas — intervenga cuando sea útil."
       },
       "communicate": {
         "title": "Comunique con facilidad",
@@ -1030,17 +1030,17 @@
       }
     },
     "highlights": {
+      "messaging": {
+        "title": "Mensajería",
+        "text": "Intercambie con los propietarios desde Web Pro."
+      },
+      "terrain": {
+        "title": "Pro Light campo",
+        "text": "App móvil gratuita para visitas e informes."
+      },
       "bpm": {
         "title": "Lecturas BPM",
-        "text": "Seguimiento cardíaco guiado para perros y gatos."
-      },
-      "alerts": {
-        "title": "Alertas",
-        "text": "Notificación inmediata cuando se detecta una anomalía."
-      },
-      "free": {
-        "title": "Gratis para veterinarios",
-        "text": "Sin coste para su clínica."
+        "text": "Función guiada 15 / 30 / 60 s en la app del propietario."
       }
     },
     "ctaTitle": "Siguiente paso: configure el perfil de su clínica",
@@ -1054,15 +1054,15 @@
   "index": {
     "login": "Iniciar sesión",
     "registerCta": "Registrarse",
-    "badge": "Ecosistema Pro + Mobile",
-    "heroTitle": "El seguimiento cardíaco de sus pacientes, simplificado",
-    "heroLead": "petsFollow conecta su clínica y los propietarios: plataforma Web SaaS para el seguimiento clínico, y app móvil para los clientes.",
+    "badge": "Web Pro · Pro Light · App cliente",
+    "heroTitle": "Continuidad de cuidados para sus pacientes, simplificada",
+    "heroLead": "Continuidad de cuidados prescrita: Web para la clínica, Pro Light móvil para el campo, app para propietarios.",
     "heroCta": "Crear mi cuenta profesional",
     "heroLogin": "Ya tengo una cuenta",
     "cards": {
       "heartrate": {
         "title": "Lecturas cardíacas",
-        "text": "Seguimiento BPM y alertas en tiempo real"
+        "text": "BPM guiados desde la app del propietario (función)"
       },
       "messaging": {
         "title": "Mensajería segura",
@@ -1154,7 +1154,7 @@
         "text": "≈ 2,6 € / mes — oferta principal, −10 % vs 3× anual."
       }
     },
-    "footer": "© {year} petsFollow — Seguimiento cardíaco veterinario"
+    "footer": "© {year} petsFollow — Continuidad de cuidados veterinarios"
   },
   "products": {
     "seoTitle": "petsFollow — Oferta profesional",
@@ -1163,7 +1163,7 @@
     "print": "Imprimir / PDF",
     "badge": "Soporte de presentación clínica",
     "title": "Oferta profesional petsFollow",
-    "lead": "El ecosistema que conecta la clínica y los propietarios — seguimiento prescrito, sin hardware.",
+    "lead": "El ecosistema que conecta clínica, campo y propietarios — continuidad de cuidados prescrita (Web Pro · móvil ProLight · móvil Client).",
     "positioning": "Dos soluciones: Pro (Web SaaS + app clientes, facturación comercial) y Pro Light (app móvil ProLight, gratis, con o sin cuenta Web). Los propietarios pagan el seguimiento (3,50 / 35 / 95 €).",
     "solutionsTitle": "Dos soluciones profesionales",
     "solutionsLead": "Adapte la herramienta a su práctica: clínica conectada completa, o app de campo ligera.",
@@ -1219,7 +1219,7 @@
       "Alertas de tratamiento y recordatorios inteligentes (push)",
       "Enlace directo con la clínica: renovaciones, citas",
       "Diario de salud: peso, síntomas, alimentación, actividad",
-      "Lecturas cardíacas guiadas 15 / 30 / 60 s (sin hardware)"
+      "Lecturas cardíacas guiadas 15 / 30 / 60 s"
     ],
     "benefitsTitle": "¿Por qué adoptar el ecosistema PetsFollow?",
     "benefitsCabinetTitle": "Para su clínica",
@@ -1272,7 +1272,7 @@
     "includedTitle": "Incluido en cada suscripción animal (clientes)",
     "includedLead": "Sea cual sea el plan (mensual, anual o trienal), el propietario dispone de:",
     "included": [
-      "Lecturas cardíacas guiadas 15 / 30 / 60 s desde la app (sin hardware)",
+      "Lecturas cardíacas guiadas 15 / 30 / 60 s desde la app",
       "Sesiones enviadas y validadas por la clínica",
       "Mensajería segura cliente ↔ veterinario + notificaciones push",
       "Timeline / historial compartido",
@@ -1337,7 +1337,7 @@
         "role": "Recomendado"
       }
     },
-    "footer": "petsFollow — seguimiento prescrito por el veterinario, sin hardware"
+    "footer": "petsFollow — continuidad de cuidados prescrita · Web + móvil"
   },
   "components": {
     "topbar": {
@@ -1399,12 +1399,12 @@
     "terms": {
       "title": "Condiciones de uso",
       "link": "Condiciones",
-      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite medir la frecuencia cardíaca, consultar el historial y comunicarse con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}ll-it-sc.be."
+      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas cardíacas) y la comunicación con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Política de privacidad",
       "link": "Privacidad",
-      "body": "petsFollow trata datos personales para el seguimiento cardíaco animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o support{'@'}ll-it-sc.be."
+      "body": "petsFollow trata datos personales para la continuidad de cuidados animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Aviso legal",
@@ -1656,7 +1656,7 @@
         "Onboarding y ajustes de la clínica"
       ],
       "mobileFeatures": [
-        "Animales y seguimiento cardíaco",
+        "Animales, mensajería y seguimiento prescrito",
         "Suscripciones Stripe por animal (mensual / anual / trienal)",
         "Todas las funciones incluidas desde la suscripción activa",
         "Mensajes y recordatorios de cuidados"
@@ -1943,7 +1943,7 @@
     "brandTitle": "Su veterinario le invita",
     "brandTitleCarePro": "Un profesional de la salud le invita",
     "brandTitleCommercial": "Invitación petsFollow",
-    "brandText": "Descargue petsFollow para seguir la salud cardíaca de sus animales.",
+    "brandText": "Descargue petsFollow para el seguimiento de salud prescrito de sus animales.",
     "loading": "Cargando invitación…",
     "title": "Descargar la app petsFollow",
     "subtitle": "Invitación de {vet} — {practice}",

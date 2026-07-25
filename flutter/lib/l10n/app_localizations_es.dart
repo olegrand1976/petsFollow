@@ -543,11 +543,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Condiciones de uso — petsFollow\n\nLa app petsFollow permite a los propietarios medir la frecuencia cardíaca, consultar el historial y comunicarse con su veterinario.\n\nLos servicios se prestan según la suscripción seleccionada (pagos vía Stripe).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nÚltima actualización: julio de 2026';
+      'Condiciones de uso — petsFollow\n\nLa app petsFollow permite a los propietarios el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas cardíacas), consultar el historial y comunicarse con su veterinario.\n\nLos servicios se prestan según la suscripción seleccionada (pagos vía Stripe).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nÚltima actualización: julio de 2026';
 
   @override
   String get legalPrivacyBody =>
-      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, seguimiento cardíaco, mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google).\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@ll-it-sc.be.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
+      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, continuidad de cuidados (incluidas lecturas cardíacas), mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google).\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@ll-it-sc.be.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
 
   @override
   String get legalNoticeBody =>
@@ -811,7 +811,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get emptyPetsBody =>
-      'Añada su primera mascota para empezar el seguimiento de frecuencia cardíaca con su veterinario.';
+      'Añada su primera mascota para empezar el seguimiento prescrito con su veterinario.';
 
   @override
   String get discoveryTitle => 'Descubra petsFollow';
@@ -824,7 +824,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discoveryDay0Body =>
-      'Cree el perfil de su mascota y aprenda a medir la frecuencia cardíaca.';
+      'Cree el perfil de su mascota y descubra la app — mensajería, recordatorios y lecturas (incluida la frecuencia cardíaca).';
 
   @override
   String get discoveryDay2Title => 'Día 2 — Primera lectura';

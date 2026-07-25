@@ -2,7 +2,7 @@
 
 ## Projet
 
-Monorepo **petsFollow** : suivi cardiaque vétérinaire dual-face.
+Monorepo **petsFollow** : continuité de soins vétérinaire — **Pro** (Web) · **Pro Light** (mobile terrain) · **app client** (mobile particulier).
 
 | Face | Stack | Port dev |
 |------|-------|----------|

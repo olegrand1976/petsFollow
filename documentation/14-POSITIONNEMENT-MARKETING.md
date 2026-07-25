@@ -2,8 +2,21 @@
 
 ## Promesse
 
-**Suivi cardiaque prescrit par le vétérinaire, sans boîtier.**  
-**Pro** (Web + app clients) facturé **hors ligne** (69 € HT/mois + setup) ; **Pro Light** (app mobile **ProLight**) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois).
+**petsFollow — la continuité de soins prescrite : Web pour le cabinet, mobile pour le terrain (Pro Light) et le particulier.**
+
+### Glossaire (noms figés)
+
+| Nom | Surface | Public |
+|-----|---------|--------|
+| **Pro** (alias deck : VetPro) | App **Web** | Cabinet / vétérinaire |
+| **Pro Light** (alias deck : VetLight) | App **mobile** | Terrain / care pro |
+| **petsFollow** app client (alias : Client) | App **mobile** | Particulier / propriétaire |
+
+Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie — relevés cardiaques, messagerie, Care/Horse et foyer inclus.
+
+**Pro** (app **Web** + apps mobiles) facturé **hors ligne** (69 € HT/mois + setup) ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
+
+Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit.
 
 ## Modèle
 
@@ -11,9 +24,9 @@
 
 | Acteur | Bénéfice |
 |--------|----------|
-| Véto (Pro) | Suivi entre consultations + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA (Web) |
+| Véto (Pro) | Continuité entre consultations + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA (Web) |
 | Pro Light (ProLight) | App mobile terrain gratuite, avec ou sans compte Web Pro ; CR vocaux + amélioration IA |
-| Client | App simple, relevé au doigt, lien direct avec son véto |
+| Client | App mobile simple : suivi prescrit, messages, rappels Care/Horse, relevé FC |
 | Commercial | Commission sur chaque nouvelle activation + SPIFF ramp / mix |
 
 ## Offre cœur (TTC)
@@ -28,9 +41,10 @@ Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal ac
 
 ## Différenciation
 
-- Pas de hardware
+- Trois surfaces logicielles : **Pro (Web) · Pro Light (mobile) · app client (mobile)**
 - Prescription véto (pas un gadget grand public isolé)
-- Dual-face Pro + pets, 5 langues
+- Continuité multi-profil : Pro · Pro Light · Client · Care pro — 5 langues
+- Complémentaire du PMS cabinet (ne le remplace pas)
 - Alignement économique véto + commercial (pas de pénalité co-selling)
 
 ## Matériel commercial
@@ -42,5 +56,7 @@ Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal ac
 
 ## Interdits pitch
 
-Ne pas promettre hardware, WebSocket temps réel, ni % sur TTC — voir interdits dans [22](22-FICHE-PRODUIT-COMMERCIAL.md).  
+Ne pas promettre un appareil à vendre, WebSocket temps réel, ni % sur TTC — voir interdits dans [22](22-FICHE-PRODUIT-COMMERCIAL.md).  
+Ne pas cantonner le pitch à « une app cardiaque » — le FC est un module parmi d’autres.  
+Ne pas centrer le pitch sur « sans boîtier » — parler des **apps** Web + mobile.  
 Push FCM livré (messages véto → client, confirmation RDV) — détail [08](08-MESSAGERIE-NOTIFICATIONS.md).

@@ -1,6 +1,6 @@
 # Politique tarifaire petsFollow
 
-Positionnement : **logiciel de suivi prescrit par le véto**, sans hardware.  
+Positionnement : **continuité de soins prescrite** — Web Pro · mobile ProLight · mobile Client. Le relevé cardiaque est une feature.  
 Monétisation **double** :
 
 1. **SaaS cabinet Pro** — facturation **externe** (pas de Stripe)  

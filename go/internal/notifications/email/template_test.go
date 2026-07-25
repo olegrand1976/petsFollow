@@ -10,7 +10,7 @@ import (
 func TestRenderBrandedEmail_containsBrandingAndCTA(t *testing.T) {
 	html := renderBrandedEmail(brandedEmailContent{
 		Lang:            "fr",
-		Tagline:         "Suivi cardiaque vétérinaire",
+		Tagline:         "Continuité de soins vétérinaire",
 		Greeting:        "Bonjour Dr Test,",
 		Intro:           "Bienvenue sur petsFollow Pro.",
 		CTALabel:        "Confirmer mon compte",

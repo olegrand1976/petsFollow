@@ -4,8 +4,10 @@
 
 ## En une phrase
 
-Logiciel de **suivi cardiaque prescrit par le véto**, **sans boîtier**.  
-**Pro** (Web + app clients) facturé **hors ligne** ; **Pro Light** (app mobile **ProLight**) gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
+**Continuité de soins prescrite** — **Web** pour le cabinet (**Pro**), **mobile** pour le terrain (**ProLight**) et le particulier (**pets**).  
+**Pro** (app Web + apps mobiles) facturé **hors ligne** ; **Pro Light** (app mobile **ProLight**) gratuit ; le client paie le suivi animal (~2–3,5 €/mois).
+
+Le relevé cardiaque (tap, 15 / 30 / 60 s dans l’app) est une **feature** parmi d’autres (messagerie, Care/Horse, CR IA, agenda terrain).
 
 ## Pour qui / modèle
 
@@ -21,15 +23,16 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 ## Ce que ça fait (vendable aujourd’hui)
 
 - Création / suivi des animaux
-- Relevé cardiaque **15 / 30 / 60 s** (tap, sans hardware)
 - Messagerie client ↔ véto (+ mode indisponible)
-- Timeline historique (messages, relevés validés)
+- Timeline historique (messages, relevés validés, événements)
+- Relevé cardiaque **15 / 30 / 60 s** (tap dans l’app) — feature différenciante
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
-- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — historiques transcription / IA / version enregistrée
+- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro)
+- Agenda terrain (Pro Light) + calendrier cabinet (Pro)
 - Langues **FR / NL / EN / ES / ET**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
-Ne pas promettre : hardware, WebSocket temps réel (refresh via ouverture app / push).
+Ne pas promettre : appareil à vendre, WebSocket temps réel (refresh via ouverture app / push), pitch centré « sans boîtier ».
 
 ## Offre à pitcher
 
@@ -57,18 +60,19 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : suivi cardiaque prescrit, sans boîtier. Pro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit pour le terrain (ProLight). Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. » |
-| **Client (via véto)** | « Suivi prescrit par votre véto, sans boîtier — à partir de ~2,6 €/mois sur 3 ans. » |
-| **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. » |
+| **Véto (30 s)** | « petsFollow : continuité de soins prescrite — Web pour le cabinet, mobile ProLight pour le terrain, app pour vos clients. Pro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit. Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. Messagerie, Care/Horse, relevés cardiaques inclus. » |
+| **Client (via véto)** | « Le suivi que votre véto vous prescrit — messages, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. » |
+| **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles. » |
 
 ### Objections
 
 | Objection | Réponse |
 |-----------|---------|
-| « Encore un abonnement » | Sans boîtier, prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €). |
+| « Encore un abonnement » | Prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €), tout dans l’app. |
 | « Je perds s’il y a un commercial » | **Non** — même plafond véto avec ou sans commercial. |
-| « Il faut un appareil ? » | **Non** — relevé au doigt dans l’app (durée définie par le cabinet). |
+| « C’est juste une app cardio ? » | **Non** — messagerie, Care/Horse, foyer, CR terrain + IA ; le FC est une feature parmi d’autres. |
 | « Et Family / Care+ ? » | **Inclus** dès qu’un animal est payant — plus d’addons à acheter. |
+| « On a déjà un PMS » | Complementary — petsFollow ajoute Web Pro + apps mobiles, pas un 2ᵉ PMS. |
 
 ## Démo terrain
 
@@ -90,7 +94,9 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 | **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. Le bonus ramp (25 €) exige **5 pets payants / 60 j**. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
 | **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Même plafond (~9,4 € sur le triennial). |
-| **Promettre un boîtier, du chat WebSocket, ou vendre des addons** | Vendable = app + Pro (relevé, messagerie, timeline, Care/Horse/foyer inclus, push FCM). Hardware, WebSocket, addons payants = **pas à pitcher**. |
+| **Cantonner le pitch au « suivi cardiaque »** | Identité = continuité prescrite (Web + mobiles). Le FC est vendable en démo, pas comme plafond d’offre. |
+| **Centrer le pitch sur « sans boîtier »** | Parler des **apps** : Web Pro · ProLight · Client. Ne pas vendre / promettre un appareil. |
+| **Promettre un appareil, du chat WebSocket, ou vendre des addons** | Vendable = Web Pro + apps mobiles (messagerie, timeline, FC, Care/Horse/foyer inclus, CR IA, push FCM). WebSocket, addons payants = **pas à pitcher**. |
 
 ## Liens
 

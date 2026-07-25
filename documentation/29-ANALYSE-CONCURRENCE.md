@@ -20,8 +20,8 @@ Fichier machine-readable :
 1. **Périmètre** : logiciels et services visibles par un cabinet ou un propriétaire en France, Belgique et Espagne (présence locale ou pan-européenne réelle).
 2. **Sources** : sites publics, grilles affichées, observations terrain commercial, documentation interne tarifaire petsFollow ([17-POLITIQUE-TARIFAIRE](17-POLITIQUE-TARIFAIRE.md), [22-FICHE-PRODUIT-COMMERCIAL](22-FICHE-PRODUIT-COMMERCIAL.md)).
 3. **Prix** : si non publics → `rangeHint` / notes = **« sur devis »**. Pas d’invention de montants cabinet.
-4. **Ton** : factuel, complémentaire vs substitutif quand le concurrent est un PMS ; distinguer clairement **GPS grand public** vs **suivi cardiaque prescrit**.
-5. **Angle petsFollow (récurrent)** : pas de boîtier · prescription véto · B2B2C · Pro **69 € HT/mois** (+ setup) · client **3,50 / 35 / 95 €** · Care/Horse inclus · 5 langues (FR/NL/EN/ES/ET).
+4. **Ton** : factuel, complémentaire vs substitutif quand le concurrent est un PMS ; distinguer clairement **GPS / wellness grand public** vs **continuité de soins prescrite** (FC = feature, pas identité).
+5. **Angle petsFollow (récurrent)** : **Pro (Web) · Pro Light (mobile) · app client (mobile)** · prescription véto · B2B2C · Pro **69 € HT/mois** (+ setup) · client **3,50 / 35 / 95 €** · Care/Horse inclus · relevés FC en feature · 5 langues (FR/NL/EN/ES/ET).
 
 ## Caveats
 

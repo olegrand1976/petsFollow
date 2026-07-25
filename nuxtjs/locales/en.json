@@ -39,11 +39,11 @@
     "login": {
       "title": "Pro login",
       "subtitle": "Access reserved for veterinarians, administrators.",
-      "brandTitle": "Cardiac monitoring and client records in one tool",
+      "brandTitle": "Care continuity and client records in one place",
       "brandText": "Welcome to petsFollow Pro — the workspace designed for animal care professionals, with a touch of good humour.",
       "submit": "Sign in",
       "noAccount": "Don't have an account yet?",
-      "registerLink": "Sign up for free",
+      "registerLink": "Create a Pro account",
       "forgotLink": "Forgot password?",
       "or": "or",
       "proOnly": "Access reserved for Pro profiles (vet / sales / sales manager / admin)",
@@ -106,9 +106,9 @@
     },
     "register": {
       "title": "Practice registration",
-      "subtitle": "100% free for veterinary professionals.",
-      "brandTitle": "Join petsFollow Pro — free for veterinarians",
-      "brandText": "Create your practice in minutes and start monitoring your cardiac patients today.",
+      "subtitle": "Web workspace for your practice — free Pro Light mobile for the field.",
+      "brandTitle": "Join petsFollow Pro",
+      "brandText": "Create your practice in minutes and start prescribed patient follow-up today.",
       "fullName": "Your name",
       "practiceName": "Practice name",
       "email": "Professional email",
@@ -578,7 +578,7 @@
     "viewRequests": "View requests",
     "messaging": "Messaging",
     "about": "About",
-    "aboutText": "petsFollow Pro centralises cardiac monitoring, client records and secure messaging for your veterinary practice.",
+    "aboutText": "petsFollow Pro centralises care continuity: client records, secure messaging, heart-rate readings and field follow-up for your veterinary practice.",
     "viewCalendar": "View calendar"
   },
   "messages": {
@@ -1007,9 +1007,9 @@
   },
   "welcome": {
     "badge": "Welcome to petsFollow Pro",
-    "title": "Your cardiac practice, ready to go",
-    "lead": "petsFollow Pro supports you daily: heart rate readings, alerts, messaging and patient records — all {free}.",
-    "free": "free for veterinarians",
+    "title": "Your practice, ready to go",
+    "lead": "petsFollow Pro supports you daily: records, messaging, Care/Horse, Pro Light field work and readings — Web + mobile.",
+    "free": "Web + mobile",
     "howItWorks": "How does it work?",
     "steps": {
       "profile": {
@@ -1021,8 +1021,8 @@
         "text": "Clients sign up via the petsFollow mobile app and join you automatically."
       },
       "monitor": {
-        "title": "Monitor heart rate readings",
-        "text": "Receive BPM data, validate sessions and intervene when alerted."
+        "title": "Follow patient activity",
+        "text": "Timeline, messages and validated readings — step in when useful."
       },
       "communicate": {
         "title": "Communicate with ease",
@@ -1030,17 +1030,17 @@
       }
     },
     "highlights": {
+      "messaging": {
+        "title": "Messaging",
+        "text": "Chat with owners from Web Pro."
+      },
+      "terrain": {
+        "title": "Pro Light field",
+        "text": "Free mobile app for visits and visit reports."
+      },
       "bpm": {
         "title": "BPM readings",
-        "text": "Guided cardiac monitoring for dogs and cats."
-      },
-      "alerts": {
-        "title": "Alerts",
-        "text": "Immediate notification when an anomaly is detected."
-      },
-      "free": {
-        "title": "Free for vets",
-        "text": "No cost for your practice."
+        "text": "Guided 15 / 30 / 60 s feature in the owner app."
       }
     },
     "ctaTitle": "Next step: set up your practice profile",
@@ -1054,15 +1054,15 @@
   "index": {
     "login": "Sign in",
     "registerCta": "Sign up",
-    "badge": "Pro + Mobile ecosystem",
-    "heroTitle": "Cardiac monitoring for your patients, simplified",
-    "heroLead": "petsFollow connects your practice and pet owners: a Web SaaS platform for clinical follow-up, and a mobile app for clients.",
+    "badge": "Web Pro · Pro Light · Owner app",
+    "heroTitle": "Care continuity for your patients, simplified",
+    "heroLead": "Prescribed care continuity: Web for the practice, Pro Light mobile for the field, an app for owners.",
     "heroCta": "Create my professional account",
     "heroLogin": "I already have an account",
     "cards": {
       "heartrate": {
         "title": "Heart rate readings",
-        "text": "BPM tracking and real-time alerts"
+        "text": "Guided BPM from the owner app (feature)"
       },
       "messaging": {
         "title": "Secure messaging",
@@ -1154,7 +1154,7 @@
         "text": "≈ €2.6 / month — core offer, −10% vs 3× annual."
       }
     },
-    "footer": "© {year} petsFollow — Veterinary cardiac monitoring"
+    "footer": "© {year} petsFollow — Veterinary care continuity"
   },
   "products": {
     "seoTitle": "petsFollow — Professional offer",
@@ -1163,7 +1163,7 @@
     "print": "Print / PDF",
     "badge": "Practice presentation support",
     "title": "petsFollow professional offer",
-    "lead": "The ecosystem that connects the practice and pet owners — prescribed monitoring, no hardware.",
+    "lead": "The ecosystem linking practice, field and owners — prescribed care continuity (Web Pro · mobile ProLight · mobile Client).",
     "positioning": "Two solutions: Pro (Web SaaS + client app, commercial invoicing) and Pro Light (ProLight mobile app, free, with or without a Web account). Owners pay for pet monitoring (€3.50 / €35 / €95).",
     "solutionsTitle": "Two professional solutions",
     "solutionsLead": "Match the tool to your practice: full connected clinic, or lightweight field app.",
@@ -1219,7 +1219,7 @@
       "Treatment alerts & smart reminders (push)",
       "Direct link to the practice: renewals, appointment requests",
       "Health journal: weight, symptoms, diet, activity",
-      "Guided heart-rate checks 15 / 30 / 60 s (no hardware)"
+      "Guided heart-rate checks 15 / 30 / 60 s"
     ],
     "benefitsTitle": "Why adopt the PetsFollow ecosystem?",
     "benefitsCabinetTitle": "For your practice",
@@ -1272,7 +1272,7 @@
     "includedTitle": "Included in every pet subscription (clients)",
     "includedLead": "Whatever the plan (monthly, annual or triennial), owners get:",
     "included": [
-      "Guided heart-rate checks 15 / 30 / 60 s from the mobile app (no hardware)",
+      "Guided heart-rate checks 15 / 30 / 60 s from the mobile app",
       "Sessions sent to and validated by the practice",
       "Secure client ↔ vet messaging + push notifications",
       "Timeline / shared patient record",
@@ -1337,7 +1337,7 @@
         "role": "Recommended"
       }
     },
-    "footer": "petsFollow — vet-prescribed monitoring, no hardware"
+    "footer": "petsFollow — prescribed care continuity · Web + mobile"
   },
   "components": {
     "topbar": {
@@ -1399,12 +1399,12 @@
     "terms": {
       "title": "Terms of use",
       "link": "Terms",
-      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables heart rate measurement, history review and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}ll-it-sc.be."
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, heart-rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}ll-it-sc.be."
     },
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data to provide animal cardiac monitoring: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}ll-it-sc.be."
+      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}ll-it-sc.be."
     },
     "mentions": {
       "title": "Legal notice",
@@ -1656,7 +1656,7 @@
         "Practice onboarding and settings"
       ],
       "mobileFeatures": [
-        "Pets and cardiac monitoring",
+        "Pets, messaging and prescribed follow-up",
         "Stripe subscriptions per pet (monthly / annual / triennial)",
         "All features included once the subscription is active",
         "Messages and care reminders"
@@ -1943,7 +1943,7 @@
     "brandTitle": "Your vet invites you",
     "brandTitleCarePro": "A care professional invites you",
     "brandTitleCommercial": "petsFollow invitation",
-    "brandText": "Download petsFollow to track your pets’ heart health.",
+    "brandText": "Download petsFollow for prescribed health follow-up of your pets.",
     "loading": "Loading invitation…",
     "title": "Download the petsFollow app",
     "subtitle": "Invite from {vet} — {practice}",
