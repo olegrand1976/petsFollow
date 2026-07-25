@@ -138,7 +138,8 @@ test.describe('auth — inscription et confirmation', () => {
     await page.goto('/register', { waitUntil: 'networkidle' })
     await waitForAuthForm(page, 'register-form')
     await expect(page.getByTestId('register-nearby-commercial')).toBeVisible()
-    await page.getByTestId('register-nearby-postal').locator('input').fill('1000')
+    // ProInput pose data-testid sur l'<input> lui-même (pas sur le wrapper).
+    await page.getByTestId('register-nearby-postal').fill('1000')
     await page.getByTestId('register-nearby-postal-btn').click()
     // Seed commercial.demo est à Bruxelles 1000 — résultat attendu en local après seed.
     await expect(
