@@ -32,23 +32,117 @@
     <p v-if="pageError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ pageError }}</p>
     <p v-if="messagingError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ messagingError }}</p>
 
-    <ProCard :title="$t('clients.pet.photoTitle')" class="pro-settings-card">
-      <ProAvatarUpload
-        v-model="petPhotoUrl"
-        :name="pet?.name || ''"
-        :upload-url="`/api/pets/${petId}/photo`"
-        :label="$t('clients.pet.photoChange')"
-        :hint="$t('clients.pet.photoHint')"
-        @uploaded="onPetPhotoUploaded"
+    <div class="pro-grid-kpi" data-testid="pet-kpi-strip">
+      <ProKpi
+        icon="favorite"
+        :value="kpiLastBpm"
+        :label="$t('clients.pet.kpi.lastBpm')"
+        :variant="recentAlert ? 'alert' : 'default'"
       />
-    </ProCard>
+      <ProKpi
+        icon="warning"
+        :value="kpiAlertCount"
+        :label="$t('clients.pet.kpi.alerts')"
+        :variant="kpiAlertCount > 0 ? 'alert' : 'default'"
+      />
+      <ProKpi
+        icon="monitor_weight"
+        :value="kpiLastWeight"
+        :label="$t('clients.pet.kpi.lastWeight')"
+        :trend="kpiWeightDelta || undefined"
+      />
+      <ProKpi
+        icon="medical_services"
+        :value="kpiOverdueCare"
+        :label="$t('clients.pet.kpi.overdueCare')"
+        :variant="kpiOverdueCare > 0 ? 'alert' : 'default'"
+      />
+      <ProKpi
+        icon="event"
+        :value="kpiNextVisit"
+        :label="$t('clients.pet.kpi.nextVisit')"
+      />
+    </div>
 
     <div v-if="recentAlert" class="pro-alert-banner" role="status" data-testid="pet-alert-banner">
       <ProBadge variant="danger">{{ $t('clients.pet.alert') }}</ProBadge>
       <span>{{ $t('clients.pet.recentAlertBanner') }}</span>
     </div>
 
-    <ProCard v-if="hasChartData" :title="$t('clients.pet.chartTitle')">
+    <ProSectionTabs
+      v-model="activeTab"
+      :tabs="petTabs"
+      :aria-label="$t('clients.pet.tabsLabel')"
+    />
+
+    <div
+      v-show="activeTab === 'overview'"
+      role="tabpanel"
+      aria-labelledby="tab-overview"
+      data-testid="pet-tab-overview"
+    >
+      <ProCard :title="$t('clients.pet.photoTitle')" class="pro-settings-card">
+        <ProAvatarUpload
+          v-model="petPhotoUrl"
+          :name="pet?.name || ''"
+          :upload-url="`/api/pets/${petId}/photo`"
+          :label="$t('clients.pet.photoChange')"
+          :hint="$t('clients.pet.photoHint')"
+          @uploaded="onPetPhotoUploaded"
+        />
+      </ProCard>
+      <ProCard v-if="pet" :title="$t('clients.pet.summaryTitle')" class="pro-mb-lg">
+        <dl class="pro-pet-summary">
+          <div>
+            <dt>{{ $t('pets.columnSpecies') }}</dt>
+            <dd>{{ pet.species || $t('common.dash') }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('pets.columnBreed') }}</dt>
+            <dd>{{ pet.breed || $t('common.unknownBreed') }}</dd>
+          </div>
+          <div v-if="pet.weightKg != null">
+            <dt>{{ $t('clients.pet.columnWeight') }}</dt>
+            <dd>{{ pet.weightKg }} kg</dd>
+          </div>
+          <div>
+            <dt>{{ $t('clients.pet.summaryPlan') }}</dt>
+            <dd>{{ petPlanLabel }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('clients.pet.summaryStatus') }}</dt>
+            <dd>
+              <ProBadge :variant="petStatusVariant">{{ petStatusLabel }}</ProBadge>
+            </dd>
+          </div>
+        </dl>
+      </ProCard>
+      <ProCard :title="$t('clients.pet.timelineRecentTitle')">
+        <ul v-if="timelinePreview.length" class="pro-timeline">
+          <li v-for="item in timelinePreview" :key="item.id" class="pro-timeline__item">
+            <div class="pro-timeline__dot" aria-hidden="true" />
+            <div>
+              <strong>{{ timelineItemTitle(item) }}</strong>
+              <p>{{ item.body }}</p>
+              <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
+            </div>
+          </li>
+        </ul>
+        <ProEmptyState
+          v-else
+          :title="$t('clients.pet.timelineEmptyTitle')"
+          :description="$t('clients.pet.timelineEmptyDescription')"
+        />
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'vitals'"
+      role="tabpanel"
+      aria-labelledby="tab-vitals"
+      data-testid="pet-tab-vitals"
+    >
+      <ProCard v-if="hasChartData" :title="$t('clients.pet.chartTitle')">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
         <button
           type="button"
@@ -93,9 +187,9 @@
       <p v-else class="text-muted" data-testid="pet-chart-empty-period">
         {{ $t('clients.pet.chartEmptyPeriod') }}
       </p>
-    </ProCard>
+      </ProCard>
 
-    <ProCard :title="$t('clients.pet.heartrateTitle')">
+      <ProCard :title="$t('clients.pet.heartrateTitle')">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.heartrateTitle')">
         <button
           type="button"
@@ -167,9 +261,100 @@
           </tr>
         </tbody>
       </ProTable>
-    </ProCard>
+      </ProCard>
 
-    <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
+      <ProCard
+      v-if="hasWeightChartData"
+      :title="$t('clients.pet.weightChartTitle')"
+      data-testid="pet-weight-chart-card"
+      >
+      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': weightChartRange === '3m' }"
+          :aria-pressed="weightChartRange === '3m'"
+          data-testid="pet-weight-range-3m"
+          @click="weightChartRange = '3m'"
+        >
+          {{ $t('clients.pet.chartRange3m') }}
+        </button>
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': weightChartRange === '6m' }"
+          :aria-pressed="weightChartRange === '6m'"
+          data-testid="pet-weight-range-6m"
+          @click="weightChartRange = '6m'"
+        >
+          {{ $t('clients.pet.chartRange6m') }}
+        </button>
+        <button
+          type="button"
+          class="pro-toggle-btn"
+          :class="{ 'pro-toggle-btn--active': weightChartRange === '1y' }"
+          :aria-pressed="weightChartRange === '1y'"
+          data-testid="pet-weight-range-1y"
+          @click="weightChartRange = '1y'"
+        >
+          {{ $t('clients.pet.chartRange1y') }}
+        </button>
+      </div>
+      <ProBpmChart
+        v-if="weightChartValues.length"
+        :values="weightChartValues"
+        :dates="weightChartDates"
+        :domain-start="weightChartDomain.start"
+        :domain-end="weightChartDomain.end"
+        :axis-title="$t('clients.pet.weightAxisKg')"
+        auto-y-domain
+        hide-legend
+        :aria-label="$t('clients.pet.weightChartTitle')"
+      />
+      <p v-else class="text-muted">
+        {{ $t('clients.pet.chartEmptyPeriod') }}
+      </p>
+      </ProCard>
+
+      <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card">
+      <ProTable
+        :empty="!weights.length"
+        :empty-title="$t('clients.pet.weightEmptyTitle')"
+        :empty-description="$t('clients.pet.weightEmptyDescription')"
+      >
+        <thead>
+          <tr>
+            <th>{{ $t('clients.pet.columnDate') }}</th>
+            <th>{{ $t('clients.pet.columnWeight') }}</th>
+            <th>{{ $t('clients.pet.columnComment') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="w in weights" :key="w.id">
+            <td>{{ formatDate(w.recordedAt) }}</td>
+            <td><code>{{ w.weightKg }} kg</code></td>
+            <td>
+              <span
+                v-if="w.comment"
+                class="pro-pet-reading-comment"
+                data-testid="pet-weight-comment"
+                :title="w.comment"
+              >{{ w.comment }}</span>
+              <span v-else class="text-muted">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'care'"
+      role="tabpanel"
+      aria-labelledby="tab-care"
+      data-testid="pet-tab-care"
+    >
+      <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
       <form class="pro-pet-inline-form" @submit.prevent="createCare">
         <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
         <select v-model="careDraft.type" class="pro-input" :aria-label="$t('clients.pet.careType')">
@@ -216,9 +401,9 @@
           </tr>
         </tbody>
       </ProTable>
-    </ProCard>
+      </ProCard>
 
-    <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
+      <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
       <form class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
@@ -296,61 +481,16 @@
           </tr>
         </tbody>
       </ProTable>
-    </ProCard>
+      </ProCard>
+    </div>
 
-    <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
-      <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
-      <form class="pro-pet-inline-form" @submit.prevent="addPetShare">
-        <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
-          <option value="">{{ $t('share.colleaguePlaceholder') }}</option>
-          <option v-for="c in colleagues" :key="c.userId" :value="c.userId">
-            {{ c.fullName }} ({{ c.email }})
-          </option>
-        </select>
-        <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" test-id="pet-share-email" />
-        <select v-model="sharePermission" class="pro-input" data-testid="pet-share-permission">
-          <option value="read">{{ $t('share.permRead') }}</option>
-          <option value="write_notes">{{ $t('share.permWriteNotes') }}</option>
-          <option value="full">{{ $t('share.permFull') }}</option>
-        </select>
-        <select v-model="shareExpiresDays" class="pro-input" data-testid="pet-share-expires">
-          <option value="">{{ $t('share.expiresNever') }}</option>
-          <option value="7">{{ $t('share.expiresDays', { n: 7 }) }}</option>
-          <option value="30">{{ $t('share.expiresDays', { n: 30 }) }}</option>
-          <option value="90">{{ $t('share.expiresDays', { n: 90 }) }}</option>
-        </select>
-        <ProButton type="submit" :disabled="shareBusy" test-id="pet-share-submit">
-          {{ $t('share.add') }}
-        </ProButton>
-      </form>
-      <p v-if="shareError" class="pro-error">{{ shareError }}</p>
-      <ProTable v-if="petShares.length">
-        <thead>
-          <tr>
-            <th>{{ $t('share.columnName') }}</th>
-            <th>{{ $t('share.columnEmail') }}</th>
-            <th>{{ $t('share.columnPermission') }}</th>
-            <th>{{ $t('share.columnExpires') }}</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="s in petShares" :key="s.id">
-            <td>{{ s.granteeName }}</td>
-            <td>{{ s.granteeEmail }}</td>
-            <td>{{ s.permission }}</td>
-            <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
-            <td>
-              <ProButton variant="ghost" :disabled="shareBusy" @click="revokePetShare(s.granteeUserId)">
-                {{ $t('share.revoke') }}
-              </ProButton>
-            </td>
-          </tr>
-        </tbody>
-      </ProTable>
-    </ProCard>
-
-    <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
+    <div
+      v-show="activeTab === 'documents'"
+      role="tabpanel"
+      aria-labelledby="tab-documents"
+      data-testid="pet-tab-documents"
+    >
+      <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
       <form class="pro-pet-inline-form" @submit.prevent="uploadDocument">
         <input
           ref="docInputEl"
@@ -410,14 +550,73 @@
           </tr>
         </tbody>
       </ProTable>
-    </ProCard>
+      </ProCard>
+    </div>
 
-    <ProCard :title="$t('clients.pet.timelineTitle')">
+    <div
+      v-show="activeTab === 'sharing'"
+      role="tabpanel"
+      aria-labelledby="tab-sharing"
+      data-testid="pet-tab-sharing"
+    >
+      <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
+      <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
+      <form class="pro-pet-inline-form" @submit.prevent="addPetShare">
+        <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
+          <option value="">{{ $t('share.colleaguePlaceholder') }}</option>
+          <option v-for="c in colleagues" :key="c.userId" :value="c.userId">
+            {{ c.fullName }} ({{ c.email }})
+          </option>
+        </select>
+        <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" test-id="pet-share-email" />
+        <select v-model="sharePermission" class="pro-input" data-testid="pet-share-permission">
+          <option value="read">{{ $t('share.permRead') }}</option>
+          <option value="write_notes">{{ $t('share.permWriteNotes') }}</option>
+          <option value="full">{{ $t('share.permFull') }}</option>
+        </select>
+        <select v-model="shareExpiresDays" class="pro-input" data-testid="pet-share-expires">
+          <option value="">{{ $t('share.expiresNever') }}</option>
+          <option value="7">{{ $t('share.expiresDays', { n: 7 }) }}</option>
+          <option value="30">{{ $t('share.expiresDays', { n: 30 }) }}</option>
+          <option value="90">{{ $t('share.expiresDays', { n: 90 }) }}</option>
+        </select>
+        <ProButton type="submit" :disabled="shareBusy" test-id="pet-share-submit">
+          {{ $t('share.add') }}
+        </ProButton>
+      </form>
+      <p v-if="shareError" class="pro-error">{{ shareError }}</p>
+      <ProTable v-if="petShares.length">
+        <thead>
+          <tr>
+            <th>{{ $t('share.columnName') }}</th>
+            <th>{{ $t('share.columnEmail') }}</th>
+            <th>{{ $t('share.columnPermission') }}</th>
+            <th>{{ $t('share.columnExpires') }}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in petShares" :key="s.id">
+            <td>{{ s.granteeName }}</td>
+            <td>{{ s.granteeEmail }}</td>
+            <td>{{ s.permission }}</td>
+            <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
+            <td>
+              <ProButton variant="ghost" :disabled="shareBusy" @click="revokePetShare(s.granteeUserId)">
+                {{ $t('share.revoke') }}
+              </ProButton>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+      </ProCard>
+    
+      <ProCard :title="$t('clients.pet.timelineTitle')" data-testid="pet-timeline-card">
       <ul v-if="timeline.length" class="pro-timeline">
         <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
           <div class="pro-timeline__dot" aria-hidden="true" />
           <div>
-            <strong>{{ item.title }}</strong>
+            <strong>{{ timelineItemTitle(item) }}</strong>
             <p>{{ item.body }}</p>
             <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
           </div>
@@ -428,7 +627,8 @@
         :title="$t('clients.pet.timelineEmptyTitle')"
         :description="$t('clients.pet.timelineEmptyDescription')"
       />
-    </ProCard>
+      </ProCard>
+    </div>
   </div>
 </template>
 
@@ -441,12 +641,14 @@ const petId = route.params.petId as string
 const pet = ref<any>(null)
 const petPhotoUrl = ref('')
 const sessions = ref<any[]>([])
+const weights = ref<any[]>([])
 const timeline = ref<any[]>([])
 const careReminders = ref<any[]>([])
 const visits = ref<any[]>([])
 const documents = ref<any[]>([])
 const sessionFilter = ref<'all' | 'alerts'>('all')
 const chartRange = ref<'3m' | '6m' | '1y'>('3m')
+const weightChartRange = ref<'3m' | '6m' | '1y'>('3m')
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
@@ -468,6 +670,7 @@ const shareBusy = ref(false)
 const shareError = ref('')
 const careDraft = reactive({ title: '', type: 'vaccination' })
 const visitDraft = reactive({ scheduledAt: '', notes: '' })
+const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
 const { formatDate } = useFormatters()
@@ -476,6 +679,102 @@ const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNavBadges } = useNavBadges()
 const router = useRouter()
+
+const petTabs = computed(() => [
+  { id: 'overview', label: t('clients.pet.tabs.overview') },
+  { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
+  { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
+  { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
+  { id: 'sharing', label: t('clients.pet.tabs.sharing') },
+])
+
+const timelinePreview = computed(() => timeline.value.slice(0, 5))
+
+const petPlanLabel = computed(() => {
+  const code = pet.value?.entitlement?.planCode || pet.value?.planCode
+  if (!code) return t('common.dash')
+  const key = `products.plans.${code}.name`
+  const translated = t(key)
+  return translated !== key ? translated : String(code)
+})
+
+const petStatusLabel = computed(() => {
+  const status = pet.value?.entitlement?.status || pet.value?.paymentStatus || ''
+  if (!status) return t('common.dash')
+  const key = `clients.pet.paymentStatus.${status}`
+  const translated = t(key)
+  return translated !== key ? translated : status
+})
+
+const petStatusVariant = computed(() => {
+  const status = pet.value?.entitlement?.status || pet.value?.paymentStatus || ''
+  if (status === 'active') return 'success'
+  if (status === 'pending' || status === 'pending_payment') return 'warning'
+  if (status === 'expired' || status === 'cancelled') return 'danger'
+  return 'neutral'
+})
+
+const kpiLastBpm = computed(() => {
+  const s = sessions.value[0]
+  return s?.bpm != null ? String(s.bpm) : '—'
+})
+
+const kpiAlertCount = computed(() => {
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
+  return sessions.value.filter(s =>
+    s.isAlert && s.startedAt && +new Date(s.startedAt) >= cutoff,
+  ).length
+})
+
+const sortedWeights = computed(() =>
+  [...weights.value].sort((a, b) => +new Date(b.recordedAt) - +new Date(a.recordedAt)),
+)
+
+const kpiLastWeight = computed(() => {
+  const w = sortedWeights.value[0]
+  return w?.weightKg != null ? `${w.weightKg} kg` : '—'
+})
+
+const kpiWeightDelta = computed(() => {
+  const [latest, prev] = sortedWeights.value
+  if (!latest || !prev || latest.weightKg == null || prev.weightKg == null) return ''
+  const delta = Number(latest.weightKg) - Number(prev.weightKg)
+  if (!Number.isFinite(delta) || delta === 0) return ''
+  const sign = delta > 0 ? '+' : ''
+  return `${sign}${delta.toFixed(1)} kg`
+})
+
+const kpiOverdueCare = computed(() =>
+  careReminders.value.filter(c => isCareOverdue(c)).length,
+)
+
+const kpiNextVisit = computed(() => {
+  const upcoming = visits.value
+    .filter(v =>
+      v.scheduledAt
+      && ['requested', 'confirmed', 'reschedule_pending'].includes(v.status)
+      && +new Date(v.scheduledAt) >= Date.now(),
+    )
+    .sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt))
+  if (!upcoming.length) return '—'
+  return formatDate(upcoming[0].scheduledAt)
+})
+
+function timelineItemTitle(item: { type?: string; title?: string }) {
+  if (item.title?.trim()) return item.title
+  const type = item.type ?? ''
+  const keyByType: Record<string, string> = {
+    heartrate: 'clients.pet.timelineTypeHeartrate',
+    weight: 'clients.pet.timelineTypeWeight',
+    message: 'clients.pet.timelineTypeMessage',
+    care: 'clients.pet.timelineTypeCare',
+    visit: 'clients.pet.timelineTypeVisit',
+    event: 'clients.pet.timelineTypeEvent',
+  }
+  const key = keyByType[type]
+  if (key) return t(key)
+  return type || t('clients.pet.timelineTypeEvent')
+}
 
 function isReadingNew(s: { id: string, isNew?: boolean }) {
   return highlightedNewIds.value.has(s.id) || !!s.isNew
@@ -503,6 +802,12 @@ async function loadSessions(markSeenAfter = false) {
     }
   }
 }
+
+async function loadWeights() {
+  const res: any = await $fetch(`/api/pets/${petId}/weights`)
+  weights.value = res.data ?? res ?? []
+}
+
 function careTypeLabel(type: string) {
   switch (type) {
     case 'vaccination':
@@ -568,6 +873,30 @@ const chartSessions = computed(() => {
 const chartValues = computed(() => chartSessions.value.map(s => s.bpm as number))
 const chartAlerts = computed(() => chartSessions.value.map(s => !!s.isAlert))
 const chartDates = computed(() => chartSessions.value.map(s => s.startedAt as string))
+
+const weightRangeMonths = computed(() =>
+  weightChartRange.value === '3m' ? 3 : weightChartRange.value === '6m' ? 6 : 12,
+)
+
+const weightChartDomain = computed(() => {
+  const end = new Date()
+  const start = new Date(end.getTime())
+  start.setTime(end.getTime() - weightRangeMonths.value * 30 * 24 * 60 * 60 * 1000)
+  return { start: start.toISOString(), end: end.toISOString() }
+})
+
+const hasWeightChartData = computed(() =>
+  weights.value.some(w => w.weightKg != null && w.recordedAt),
+)
+
+const weightChartReadings = computed(() => {
+  const cutoff = new Date(weightChartDomain.value.start)
+  return [...weights.value]
+    .filter(w => w.weightKg != null && w.recordedAt && new Date(w.recordedAt) >= cutoff)
+    .sort((a, b) => +new Date(a.recordedAt) - +new Date(b.recordedAt))
+})
+const weightChartValues = computed(() => weightChartReadings.value.map(w => Number(w.weightKg)))
+const weightChartDates = computed(() => weightChartReadings.value.map(w => w.recordedAt as string))
 
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }
@@ -792,6 +1121,7 @@ onMounted(async () => {
     const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []
     await loadSessions(true)
+    await loadWeights()
     sessionsPollTimer = setInterval(() => {
       loadSessions(true).catch(() => {})
     }, 8000)
@@ -834,6 +1164,22 @@ onBeforeUnmount(() => {
   border-radius: var(--pf-vet-radius);
   border: 1px solid color-mix(in srgb, var(--pf-vet-alert) 35%, transparent);
   background: color-mix(in srgb, var(--pf-vet-alert) 8%, var(--pf-vet-surface));
+}
+
+.pro-pet-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+.pro-pet-summary dt {
+  font-size: 0.8rem;
+  color: var(--pf-vet-muted, #64748b);
+  margin: 0 0 0.25rem;
+}
+.pro-pet-summary dd {
+  margin: 0;
+  font-weight: 600;
 }
 
 .pro-pet-filter {

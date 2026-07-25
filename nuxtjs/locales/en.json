@@ -417,10 +417,50 @@
       "sendAppLink": "Send app download link",
       "sendAppLinkHint": "An email with your invite link (download + practice link) is sent to the client’s address.",
       "sendAppLinkSuccess": "Link sent to {email}.",
-      "sendAppLinkError": "Could not send the link right now."
+      "sendAppLinkError": "Could not send the link right now.",
+      "columnWeight": "Weight",
+      "tabsLabel": "Client profile sections",
+      "tabs": {
+        "pets": "Pets",
+        "sharing": "Sharing",
+        "identity": "Identity"
+      },
+      "kpi": {
+        "pets": "Pets",
+        "unreadHeartrate": "Unread HR",
+        "alertSessions7d": "HR alerts (7d)",
+        "overdueCare": "Overdue care",
+        "pendingVisits": "Pending visits",
+        "shares": "Shares",
+        "upcomingVisit": "Next visit: {date}"
+      },
+      "columnStatus": "Status"
     },
     "pet": {
       "title": "Pet",
+      "tabsLabel": "Pet record sections",
+      "tabs": {
+        "overview": "Overview",
+        "vitals": "HR & weight",
+        "care": "Care & visits",
+        "documents": "Documents",
+        "sharing": "Sharing & timeline"
+      },
+      "kpi": {
+        "lastBpm": "Last HR",
+        "alerts": "HR alerts (7d)",
+        "lastWeight": "Last weight",
+        "overdueCare": "Overdue care",
+        "nextVisit": "Next visit"
+      },
+      "summaryTitle": "Summary",
+      "timelineRecentTitle": "Recent events",
+      "timelineTypeHeartrate": "Heart rate reading",
+      "timelineTypeWeight": "Weight",
+      "timelineTypeMessage": "Message",
+      "timelineTypeCare": "Care",
+      "timelineTypeVisit": "Visit",
+      "timelineTypeEvent": "Event",
       "heartrateTitle": "Validated heart rate readings",
       "heartrateEmptyTitle": "No validated readings",
       "heartrateEmptyDescription": "Validated BPM sessions will appear here.",
@@ -439,6 +479,12 @@
       "chartLegend": "Legend",
       "chartLegendOk": "Normal",
       "chartLegendAlert": "Alert",
+      "weightTitle": "Weight tracking",
+      "weightChartTitle": "Weight trend",
+      "weightAxisKg": "kg",
+      "weightEmptyTitle": "No weight readings",
+      "weightEmptyDescription": "Weights sent by the client will appear here.",
+      "columnWeight": "Weight",
       "newReading": "New",
       "filterAll": "All",
       "filterAlerts": "Alerts only",
@@ -495,7 +541,16 @@
       "documentUploader": "Uploaded by",
       "documentOpen": "Open",
       "documentTypePdf": "PDF",
-      "documentTypeImage": "Image"
+      "documentTypeImage": "Image",
+      "summaryPlan": "Plan",
+      "summaryStatus": "Status",
+      "paymentStatus": {
+        "active": "Active",
+        "pending": "Pending",
+        "pending_payment": "Payment pending",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      }
     },
     "invitations": {
       "open": "Client invitations",

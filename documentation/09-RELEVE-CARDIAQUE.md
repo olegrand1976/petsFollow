@@ -37,3 +37,15 @@ Seuls les relevés **validated** sont visibles du véto.
 `BPM = (tap_count × 60) / duration_sec`
 
 Seuils défaut alerte : 60–140 BPM (`HEARTRATE_MIN_BPM`, `HEARTRATE_MAX_BPM`).
+
+## Accueil Flutter
+
+Actions compactes **par animal** (cœur + poids) sur les cartes Home et la fiche animal — pas de gros CTA global.
+
+## Poids (lié fiche animal)
+
+- Saisie client : dialog kg + commentaire optionnel → `POST /api/v1/pets/{id}/weights` (immédiat, visible sur timeline / fiche Pro — **pas** d’email/push dédié).
+- CTA Flutter : « Enregistrer » / snackbar « Poids enregistré » (pas « envoyé au véto »).
+- Historique : `pets.weight_readings` ; `pets.pets.weight_kg` synchronisé sur le dernier `POST /weights` (un PATCH fiche peut diverger).
+- Pro : chart + tableau sur la fiche pet (`GET /api/v1/pets/{id}/weights`).
+- Timeline : type `weight` (titre localisé côté client/Pro via `type`, pas le title SQL FR).

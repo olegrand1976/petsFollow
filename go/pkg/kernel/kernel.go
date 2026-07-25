@@ -83,6 +83,7 @@ type TimelineType string
 const (
 	TimelineMessage   TimelineType = "message"
 	TimelineHeartRate TimelineType = "heartrate"
+	TimelineWeight    TimelineType = "weight"
 	TimelineEvent     TimelineType = "event"
 	TimelineCare      TimelineType = "care"
 	TimelineVisit     TimelineType = "visit"

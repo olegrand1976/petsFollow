@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -185,7 +186,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		ops.product_digest_sends, ops.product_digests,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
-		heartrate.sessions, pets.dossier_events, pets.pets,
+		heartrate.sessions, pets.weight_readings, pets.dossier_events, pets.pets,
 		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
 		practice.client_import_rows, practice.client_import_jobs,
 		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
@@ -472,6 +473,11 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 			return err
 		}
 	}
+	for _, w := range pet.weights {
+		if err := insertWeightReading(ctx, tx, petID, clientID, reg.practiceID, w); err != nil {
+			return err
+		}
+	}
 	for _, ev := range pet.dossierEvents {
 		authorID := reg.vetID
 		if ev.authorRole == "client" {
@@ -559,6 +565,21 @@ func insertHeartRate(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID 
 		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, tap_count, duration_sec, bpm, is_alert, started_at, ended_at, validated_at, vet_seen_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		uuid.NewString(), petID, ownerID, practiceID, hr.status, hr.tapCount, hr.duration, hr.bpm, hr.isAlert, startedAt, endedAt, validatedAt, vetSeenAt)
+	return err
+}
+
+func insertWeightReading(ctx context.Context, tx pgx.Tx, petID, ownerID, practiceID string, w weightReadingDef) error {
+	recordedAt := time.Now().Add(w.age)
+	var comment *string
+	if strings.TrimSpace(w.comment) != "" {
+		c := strings.TrimSpace(w.comment)
+		comment = &c
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO pets.weight_readings (
+			id, pet_id, owner_user_id, author_user_id, practice_id, weight_kg, comment, recorded_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		uuid.NewString(), petID, ownerID, ownerID, practiceID, w.kg, comment, recordedAt)
 	return err
 }
 

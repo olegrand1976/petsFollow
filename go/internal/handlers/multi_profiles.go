@@ -265,7 +265,12 @@ func (a *API) listClientShares(w http.ResponseWriter, r *http.Request) {
 	if !a.requireClientShareManager(w, r, clientID, id) {
 		return
 	}
-	rows, err := a.store.ListClientAccess(r.Context(), clientID)
+	var rows []store.AccessGrant
+	if id.PracticeID != "" {
+		rows, err = a.store.ListClientAccessForPractice(r.Context(), id.PracticeID, clientID)
+	} else {
+		rows, err = a.store.ListClientAccess(r.Context(), clientID)
+	}
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

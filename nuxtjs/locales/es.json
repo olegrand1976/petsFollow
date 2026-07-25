@@ -417,10 +417,50 @@
       "sendAppLink": "Enviar enlace de descarga de la app",
       "sendAppLinkHint": "Se envía un correo con su enlace de invitación (descarga + vinculación) a la dirección del cliente.",
       "sendAppLinkSuccess": "Enlace enviado a {email}.",
-      "sendAppLinkError": "No se ha podido enviar el enlace en este momento."
+      "sendAppLinkError": "No se ha podido enviar el enlace en este momento.",
+      "columnWeight": "Peso",
+      "tabsLabel": "Secciones de la ficha del cliente",
+      "tabs": {
+        "pets": "Animales",
+        "sharing": "Compartir",
+        "identity": "Identidad"
+      },
+      "kpi": {
+        "pets": "Animales",
+        "unreadHeartrate": "FC sin leer",
+        "alertSessions7d": "Alertas FC (7 d)",
+        "overdueCare": "Cuidados atrasados",
+        "pendingVisits": "Citas pendientes",
+        "shares": "Compartidos",
+        "upcomingVisit": "Próxima cita: {date}"
+      },
+      "columnStatus": "Estado"
     },
     "pet": {
       "title": "Mascota",
+      "tabsLabel": "Secciones del expediente",
+      "tabs": {
+        "overview": "Resumen",
+        "vitals": "FC y peso",
+        "care": "Cuidados y citas",
+        "documents": "Documentos",
+        "sharing": "Compartir y timeline"
+      },
+      "kpi": {
+        "lastBpm": "Última FC",
+        "alerts": "Alertas FC (7 d)",
+        "lastWeight": "Último peso",
+        "overdueCare": "Cuidados atrasados",
+        "nextVisit": "Próxima cita"
+      },
+      "summaryTitle": "Resumen",
+      "timelineRecentTitle": "Últimos eventos",
+      "timelineTypeHeartrate": "Lectura cardíaca",
+      "timelineTypeWeight": "Peso",
+      "timelineTypeMessage": "Mensaje",
+      "timelineTypeCare": "Cuidado",
+      "timelineTypeVisit": "Visita",
+      "timelineTypeEvent": "Evento",
       "heartrateTitle": "Lecturas de frecuencia cardíaca validadas",
       "heartrateEmptyTitle": "Sin lecturas validadas",
       "heartrateEmptyDescription": "Las sesiones BPM validadas aparecerán aquí.",
@@ -439,6 +479,12 @@
       "chartLegend": "Leyenda",
       "chartLegendOk": "Normal",
       "chartLegendAlert": "Alerta",
+      "weightTitle": "Seguimiento del peso",
+      "weightChartTitle": "Tendencia de peso",
+      "weightAxisKg": "kg",
+      "weightEmptyTitle": "Sin lecturas de peso",
+      "weightEmptyDescription": "Los pesos enviados por el cliente aparecerán aquí.",
+      "columnWeight": "Peso",
       "newReading": "Nuevo",
       "filterAll": "Todas",
       "filterAlerts": "Solo alertas",
@@ -495,7 +541,16 @@
       "documentUploader": "Subido por",
       "documentOpen": "Abrir",
       "documentTypePdf": "PDF",
-      "documentTypeImage": "Imagen"
+      "documentTypeImage": "Imagen",
+      "summaryPlan": "Plan",
+      "summaryStatus": "Estado",
+      "paymentStatus": {
+        "active": "Activo",
+        "pending": "Pendiente",
+        "pending_payment": "Pago pendiente",
+        "expired": "Caducado",
+        "cancelled": "Cancelado"
+      }
     },
     "invitations": {
       "open": "Invitaciones de clientes",

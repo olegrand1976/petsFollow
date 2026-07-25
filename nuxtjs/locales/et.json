@@ -417,10 +417,50 @@
       "sendAppLink": "Saada rakenduse allalaadimislink",
       "sendAppLinkHint": "Kliendi aadressile saadetakse e-kiri teie kutselingiga (allalaadimine + sidumine).",
       "sendAppLinkSuccess": "Link saadetud aadressile {email}.",
-      "sendAppLinkError": "Lingi saatmine ebaõnnestus."
+      "sendAppLinkError": "Lingi saatmine ebaõnnestus.",
+      "columnWeight": "Kaal",
+      "tabsLabel": "Kliendi kaardi jaotised",
+      "tabs": {
+        "pets": "Loomad",
+        "sharing": "Jagamine",
+        "identity": "Identiteet"
+      },
+      "kpi": {
+        "pets": "Loomad",
+        "unreadHeartrate": "Lugemata HR",
+        "alertSessions7d": "HR hoiatused (7 p)",
+        "overdueCare": "Hilinenud hooldus",
+        "pendingVisits": "Ootel vastuvõtud",
+        "shares": "Jagamisid",
+        "upcomingVisit": "Järgmine vastuvõtt: {date}"
+      },
+      "columnStatus": "Olek"
     },
     "pet": {
       "title": "Lemmikloom",
+      "tabsLabel": "Looma kaardi jaotised",
+      "tabs": {
+        "overview": "Ülevaade",
+        "vitals": "HR ja kaal",
+        "care": "Hooldus ja vastuvõtud",
+        "documents": "Dokumendid",
+        "sharing": "Jagamine ja ajajoon"
+      },
+      "kpi": {
+        "lastBpm": "Viimane HR",
+        "alerts": "HR hoiatused (7 p)",
+        "lastWeight": "Viimane kaal",
+        "overdueCare": "Hilinenud hooldus",
+        "nextVisit": "Järgmine vastuvõtt"
+      },
+      "summaryTitle": "Kokkuvõte",
+      "timelineRecentTitle": "Viimased sündmused",
+      "timelineTypeHeartrate": "Südame löögisagedus",
+      "timelineTypeWeight": "Kaal",
+      "timelineTypeMessage": "Sõnum",
+      "timelineTypeCare": "Hooldus",
+      "timelineTypeVisit": "Vastuvõtt",
+      "timelineTypeEvent": "Sündmus",
       "heartrateTitle": "Kinnitatud südamerütmi mõõtmised",
       "heartrateEmptyTitle": "Kinnitatud mõõtmisi pole",
       "heartrateEmptyDescription": "Kinnitatud BPM sessioonid ilmuvad siia.",
@@ -439,6 +479,12 @@
       "chartLegend": "Legend",
       "chartLegendOk": "Normaalne",
       "chartLegendAlert": "Hoiatus",
+      "weightTitle": "Kaalu jälgimine",
+      "weightChartTitle": "Kaalu trend",
+      "weightAxisKg": "kg",
+      "weightEmptyTitle": "Kaalumõõtmisi pole",
+      "weightEmptyDescription": "Kliendi saadetud kaalumõõtmised ilmuvad siia.",
+      "columnWeight": "Kaal",
       "newReading": "Uus",
       "filterAll": "Kõik",
       "filterAlerts": "Ainult hoiatused",
@@ -495,7 +541,16 @@
       "documentUploader": "Üles laadinud",
       "documentOpen": "Ava",
       "documentTypePdf": "PDF",
-      "documentTypeImage": "Pilt"
+      "documentTypeImage": "Pilt",
+      "summaryPlan": "Paket",
+      "summaryStatus": "Olek",
+      "paymentStatus": {
+        "active": "Aktiivne",
+        "pending": "Ootel",
+        "pending_payment": "Makse ootel",
+        "expired": "Aegunud",
+        "cancelled": "Tühistatud"
+      }
     },
     "invitations": {
       "open": "Kliendi kutsed",

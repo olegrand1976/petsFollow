@@ -109,6 +109,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/vet/clients/{clientID}/link", a.linkExistingVetClient)
 		pr.Get("/vet/colleagues", a.listPracticeColleagues)
 		pr.Get("/clients/{clientID}", a.getClient)
+		pr.Get("/clients/{clientID}/overview", a.getClientOverview)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
 		pr.Get("/clients/{clientID}/shares", a.listClientShares)
@@ -150,6 +151,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/heartrate/sessions/{sessionID}", a.completeHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/validate", a.validateHeartRate)
 		pr.Post("/heartrate/sessions/{sessionID}/cancel", a.cancelHeartRate)
+		pr.Post("/pets/{petID}/weights", a.createWeightReading)
+		pr.Get("/pets/{petID}/weights", a.listWeightReadings)
 		pr.Post("/care-reminders/{id}/done", a.markCareReminderDone)
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
@@ -297,6 +300,24 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, client)
+}
+
+
+func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "clients.read")
+	if !ok {
+		return
+	}
+	overview, err := a.store.GetClientOverview(r.Context(), id.PracticeID, chi.URLParam(r, "clientID"))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, overview)
 }
 
 func (a *API) sendClientAppLink(w http.ResponseWriter, r *http.Request) {

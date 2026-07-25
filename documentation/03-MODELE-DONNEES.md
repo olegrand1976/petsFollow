@@ -8,7 +8,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 |--------|------|
 | `identity` | Users, tokens email/reset, OAuth/2FA, locale, payout commercial (`payout_iban`…), zone de base commercial (`base_lat`/`base_lng`/`base_city`/`base_postal_code` — `000058`) |
 | `practice` | Cabinets (profil société/banque `000026`), clients liés, invitations, link-requests, `vet_schedule` / vacations (`000024`), import jobs (`000028`) |
-| `pets` | Animaux, dossier events |
+| `pets` | Animaux, dossier events, relevés de poids (`weight_readings` — `000060`) |
 | `heartrate` | Sessions relevé cardiaque |
 | `messaging` | Threads, messages (+ media), dispo véto |
 | `notifications` | Préférences, log, device tokens |
@@ -27,11 +27,12 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Cabinet | `practice.practices`, `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations` |
 | ACL pets | `pets.pet_access` (partage dossier) |
 | Import | `practice.client_import_jobs`, `client_import_rows` (+ grants `000029`) |
-| Animal | `pets.pets`, `pets.dossier_events` |
+| Animal | `pets.pets`, `pets.dossier_events`, `pets.weight_readings` |
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
 | Commissions | `commission_tiers`, `commission_ledger`, `commercial_commission_ledger`, payout runs/lines, `commercial_bonus_awards` |
 | Commercial | `sales.prospects` (+ assignation commercial ↔ véto, `manager_user_id`, source `directory`, RDV / contact timestamps — `000031`) ; `practice.commercial_referrals` (QR / nearby signup) ; zone base commercial `000058` |
 | FC | `heartrate.sessions` |
+| Poids | `pets.weight_readings` (historique) ; `pets.pets.weight_kg` = dernier `POST /weights` (peut diverger si PATCH fiche animal sans lecture) |
 | Msg | `messaging.threads`, `messages`, `vet_availability` |
 | Discovery | `discovery.progress`, `discovery.email_journey`, `discovery.email_sends` |
 

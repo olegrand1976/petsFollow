@@ -289,14 +289,31 @@ func (s *Store) RevokeClientAccess(ctx context.Context, clientUserID, granteeUse
 }
 
 func (s *Store) ListClientAccess(ctx context.Context, clientUserID string) ([]AccessGrant, error) {
-	rows, err := s.pool.Query(ctx, `
+	return s.ListClientAccessForPractice(ctx, "", clientUserID)
+}
+
+// ListClientAccessForPractice lists active client_access grants.
+// When practiceID is non-empty, only grants involving that practice (granter or grantee) are returned.
+func (s *Store) ListClientAccessForPractice(ctx context.Context, practiceID, clientUserID string) ([]AccessGrant, error) {
+	q := `
 		SELECT a.id::text, a.grantee_user_id::text, COALESCE(u.full_name,''), COALESCE(u.email,''),
 			a.permission, a.granted_by_user_id::text, a.expires_at, a.created_at
 		FROM practice.client_access a
 		JOIN identity.users u ON u.id = a.grantee_user_id
 		WHERE a.client_user_id=$1
-			AND (a.expires_at IS NULL OR a.expires_at > NOW())
-		ORDER BY a.created_at DESC`, clientUserID)
+			AND (a.expires_at IS NULL OR a.expires_at > NOW())`
+	args := []any{clientUserID}
+	if practiceID != "" {
+		q += `
+			AND (
+			  a.granted_by_user_id = $1
+			  OR EXISTS (SELECT 1 FROM identity.users g WHERE g.id = a.granted_by_user_id AND g.practice_id = $2)
+			  OR EXISTS (SELECT 1 FROM identity.users g WHERE g.id = a.grantee_user_id AND g.practice_id = $2)
+			)`
+		args = append(args, practiceID)
+	}
+	q += ` ORDER BY a.created_at DESC`
+	rows, err := s.pool.Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}

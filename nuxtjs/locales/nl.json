@@ -417,10 +417,50 @@
       "sendAppLink": "App-downloadlink sturen",
       "sendAppLinkHint": "Er wordt een e-mail met uw uitnodigingslink (download + koppeling) naar het adres van de cliënt gestuurd.",
       "sendAppLinkSuccess": "Link verzonden naar {email}.",
-      "sendAppLinkError": "De link kon nu niet worden verzonden."
+      "sendAppLinkError": "De link kon nu niet worden verzonden.",
+      "columnWeight": "Gewicht",
+      "tabsLabel": "Secties cliëntdossier",
+      "tabs": {
+        "pets": "Dieren",
+        "sharing": "Delen",
+        "identity": "Identiteit"
+      },
+      "kpi": {
+        "pets": "Dieren",
+        "unreadHeartrate": "Ongelezen HF",
+        "alertSessions7d": "HF-alerten (7 d)",
+        "overdueCare": "Achterstallige zorg",
+        "pendingVisits": "Openstaande afspraken",
+        "shares": "Delingen",
+        "upcomingVisit": "Volgende afspraak: {date}"
+      },
+      "columnStatus": "Status"
     },
     "pet": {
       "title": "Dier",
+      "tabsLabel": "Secties dierdossier",
+      "tabs": {
+        "overview": "Overzicht",
+        "vitals": "HF & gewicht",
+        "care": "Zorg & afspraken",
+        "documents": "Documenten",
+        "sharing": "Delen & timeline"
+      },
+      "kpi": {
+        "lastBpm": "Laatste HF",
+        "alerts": "HF-alerten (7 d)",
+        "lastWeight": "Laatste gewicht",
+        "overdueCare": "Achterstallige zorg",
+        "nextVisit": "Volgende afspraak"
+      },
+      "summaryTitle": "Samenvatting",
+      "timelineRecentTitle": "Recente gebeurtenissen",
+      "timelineTypeHeartrate": "Hartslagmeting",
+      "timelineTypeWeight": "Gewicht",
+      "timelineTypeMessage": "Bericht",
+      "timelineTypeCare": "Zorg",
+      "timelineTypeVisit": "Bezoek",
+      "timelineTypeEvent": "Gebeurtenis",
       "heartrateTitle": "Gevalideerde hartslagmetingen",
       "heartrateEmptyTitle": "Geen gevalideerde metingen",
       "heartrateEmptyDescription": "Gevalideerde BPM-sessies verschijnen hier.",
@@ -439,6 +479,12 @@
       "chartLegend": "Legenda",
       "chartLegendOk": "Normaal",
       "chartLegendAlert": "Waarschuwing",
+      "weightTitle": "Gewichtsopvolging",
+      "weightChartTitle": "Gewichtstrend",
+      "weightAxisKg": "kg",
+      "weightEmptyTitle": "Geen gewichtsmetingen",
+      "weightEmptyDescription": "Door de klant gestuurde gewichten verschijnen hier.",
+      "columnWeight": "Gewicht",
       "newReading": "Nieuw",
       "filterAll": "Alle",
       "filterAlerts": "Alleen waarschuwingen",
@@ -495,7 +541,16 @@
       "documentUploader": "Geüpload door",
       "documentOpen": "Openen",
       "documentTypePdf": "PDF",
-      "documentTypeImage": "Afbeelding"
+      "documentTypeImage": "Afbeelding",
+      "summaryPlan": "Formule",
+      "summaryStatus": "Status",
+      "paymentStatus": {
+        "active": "Actief",
+        "pending": "In afwachting",
+        "pending_payment": "Betaling in afwachting",
+        "expired": "Verlopen",
+        "cancelled": "Geannuleerd"
+      }
     },
     "invitations": {
       "open": "Cliëntuitnodigingen",

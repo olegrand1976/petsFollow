@@ -719,13 +719,53 @@
       "columnName": "Nom",
       "columnSpecies": "Espèce",
       "columnBreed": "Race",
+      "columnWeight": "Poids",
       "sendAppLink": "Envoyer le lien de l'app",
       "sendAppLinkHint": "Un email avec votre lien d’invitation (téléchargement + rattachement) est envoyé à l’adresse du client.",
       "sendAppLinkSuccess": "Lien envoyé à {email}.",
-      "sendAppLinkError": "Impossible d'envoyer le lien pour le moment."
+      "sendAppLinkError": "Impossible d'envoyer le lien pour le moment.",
+      "tabsLabel": "Sections de la fiche client",
+      "tabs": {
+        "pets": "Animaux",
+        "sharing": "Partage",
+        "identity": "Identité"
+      },
+      "kpi": {
+        "pets": "Animaux",
+        "unreadHeartrate": "FC non lues",
+        "alertSessions7d": "Alertes FC (7 j)",
+        "overdueCare": "Soins en retard",
+        "pendingVisits": "RDV en attente",
+        "shares": "Partages",
+        "upcomingVisit": "Prochain RDV : {date}"
+      },
+      "columnStatus": "Statut"
     },
     "pet": {
       "title": "Animal",
+      "tabsLabel": "Sections du dossier animal",
+      "tabs": {
+        "overview": "Synthèse",
+        "vitals": "FC & poids",
+        "care": "Soins & RDV",
+        "documents": "Documents",
+        "sharing": "Partage & timeline"
+      },
+      "kpi": {
+        "lastBpm": "Dernière FC",
+        "alerts": "Alertes FC (7 j)",
+        "lastWeight": "Dernier poids",
+        "overdueCare": "Soins en retard",
+        "nextVisit": "Prochain RDV"
+      },
+      "summaryTitle": "Résumé",
+      "timelineRecentTitle": "Derniers événements",
+      "timelineTypeHeartrate": "Relevé cardiaque",
+      "timelineTypeWeight": "Poids",
+      "timelineTypeMessage": "Message",
+      "timelineTypeCare": "Soin",
+      "timelineTypeVisit": "Visite",
+      "timelineTypeEvent": "Événement",
       "heartrateTitle": "Relevés cardiaques validés",
       "heartrateEmptyTitle": "Aucun relevé validé",
       "heartrateEmptyDescription": "Les sessions BPM validées apparaîtront ici.",
@@ -744,6 +784,12 @@
       "chartLegend": "Légende",
       "chartLegendOk": "Normal",
       "chartLegendAlert": "Alerte",
+      "weightTitle": "Suivi du poids",
+      "weightChartTitle": "Tendance poids",
+      "weightAxisKg": "kg",
+      "weightEmptyTitle": "Aucun relevé de poids",
+      "weightEmptyDescription": "Les poids envoyés par le client apparaîtront ici.",
+      "columnWeight": "Poids",
       "newReading": "Nouveau",
       "filterAll": "Tous",
       "filterAlerts": "Alertes seulement",
@@ -800,7 +846,16 @@
       "documentUploader": "Ajouté par",
       "documentOpen": "Ouvrir",
       "documentTypePdf": "PDF",
-      "documentTypeImage": "Image"
+      "documentTypeImage": "Image",
+      "summaryPlan": "Formule",
+      "summaryStatus": "Statut",
+      "paymentStatus": {
+        "active": "Actif",
+        "pending": "En attente",
+        "pending_payment": "Paiement en attente",
+        "expired": "Expiré",
+        "cancelled": "Annulé"
+      }
     },
     "appInvite": {
       "open": "QR téléchargement",

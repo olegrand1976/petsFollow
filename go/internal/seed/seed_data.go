@@ -37,6 +37,12 @@ type heartRateDef struct {
 	age      time.Duration
 }
 
+type weightReadingDef struct {
+	kg      float64
+	comment string
+	age     time.Duration
+}
+
 type dossierEventDef struct {
 	authorRole string // "vet" | "client"
 	eventType  string
@@ -69,6 +75,7 @@ type petDef struct {
 	entitlement   billing.EntitlementStatus
 	messages      []messageDef
 	heartRates    []heartRateDef
+	weights       []weightReadingDef
 	dossierEvents []dossierEventDef
 	careReminders []careReminderDef
 	visits        []visitDef
@@ -148,6 +155,11 @@ var demoPractices = []practiceDef{
 							{status: kernel.SessionValidated, tapCount: 72, duration: 60, bpm: 72, age: -7 * 24 * time.Hour},
 							{status: kernel.SessionValidated, tapCount: 68, duration: 60, bpm: 68, age: -3 * 24 * time.Hour},
 							{status: kernel.SessionPendingValidation, tapCount: 74, duration: 60, bpm: 74, age: -2 * time.Hour},
+						},
+						weights: []weightReadingDef{
+							{kg: 33.2, comment: "Après vacances", age: -60 * 24 * time.Hour},
+							{kg: 32.8, age: -30 * 24 * time.Hour},
+							{kg: 32.5, comment: "Poids de forme", age: -7 * 24 * time.Hour},
 						},
 						dossierEvents: []dossierEventDef{
 							{authorRole: "vet", eventType: "note", content: "Suivi cardiaque post-op. Fréquence stable.", age: -14 * 24 * time.Hour},
@@ -290,6 +302,10 @@ var demoPractices = []practiceDef{
 						heartRates: []heartRateDef{
 							{status: kernel.SessionValidated, tapCount: 95, duration: 60, bpm: 95, age: -4 * 24 * time.Hour},
 							{status: kernel.SessionValidated, tapCount: 78, duration: 60, bpm: 78, age: -1 * 24 * time.Hour},
+						},
+						weights: []weightReadingDef{
+							{kg: 27.5, age: -45 * 24 * time.Hour},
+							{kg: 28.0, comment: "Après régime contrôlé", age: -10 * 24 * time.Hour},
 						},
 					},
 				},

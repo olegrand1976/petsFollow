@@ -81,6 +81,33 @@ test('pet detail — chart filtres, shares, commentaire HR', async ({ page }) =>
   })
 })
 
+test('pet detail — suivi poids chart + tableau', async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  const clientTok = await apiLogin('client.demo@petsfollow.test', 'ClientDemo123!')
+  const kg = 31.4
+  const comment = `e2e weight ${Date.now()}`
+  const create = await fetch(`${API}/api/v1/pets/${petId}/weights`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${clientTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ weightKg: kg, comment }),
+  })
+  if (!create.ok) throw new Error(`create weight ${create.status}`)
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible()
+  await page.getByTestId('section-tab-vitals').click()
+  await expect(page.getByTestId('pet-weight-table-card')).toBeVisible()
+  await expect(page.getByTestId('pet-weight-comment').filter({ hasText: comment })).toBeVisible({
+    timeout: 15000,
+  })
+  await expect(page.getByText(`${kg} kg`).first()).toBeVisible()
+})
+
 test('heartrate — durées cabinet exposées au client + BPM sur 15s', async () => {
   test.setTimeout(90000)
   const password = 'TestPass123!'

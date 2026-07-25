@@ -23,6 +23,8 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 			FROM pets.pets p WHERE p.owner_user_id = $1`
 		queries["heartRateSessions"] = `SELECT COALESCE(jsonb_agg(to_jsonb(h) ORDER BY h.started_at), '[]'::jsonb)
 			FROM heartrate.sessions h JOIN pets.pets p ON p.id = h.pet_id WHERE p.owner_user_id = $1`
+		queries["weightReadings"] = `SELECT COALESCE(jsonb_agg(to_jsonb(w) ORDER BY w.recorded_at), '[]'::jsonb)
+			FROM pets.weight_readings w JOIN pets.pets p ON p.id = w.pet_id WHERE p.owner_user_id = $1`
 		queries["visits"] = `SELECT COALESCE(jsonb_agg(to_jsonb(v) ORDER BY v.created_at), '[]'::jsonb)
 			FROM visits.visits v JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id = $1`
 		queries["preconsultIntakes"] = `SELECT COALESCE(jsonb_agg(to_jsonb(i) ORDER BY i.created_at), '[]'::jsonb)

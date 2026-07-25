@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -29,6 +30,17 @@ type VetOverview struct {
 	UnreadHeartrate      int `json:"unreadHeartrate"`
 }
 
+// ClientOverview aggregates vet-facing KPIs for a single client household.
+type ClientOverview struct {
+	PetCount         int        `json:"petCount"`
+	UnreadHeartrate  int        `json:"unreadHeartrate"`
+	AlertSessions7d  int        `json:"alertSessions7d"`
+	OverdueCareCount int        `json:"overdueCareCount"`
+	PendingVisits    int        `json:"pendingVisits"`
+	UpcomingVisitAt  *time.Time `json:"upcomingVisitAt,omitempty"`
+	ShareCount       int        `json:"shareCount"`
+}
+
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
 	var c ClientSummary
 	err := s.pool.QueryRow(ctx, `
@@ -43,6 +55,71 @@ func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID st
 		return ClientSummary{}, ErrNotFound
 	}
 	return c, err
+}
+
+func (s *Store) GetClientOverview(ctx context.Context, practiceID, clientID string) (ClientOverview, error) {
+	var exists bool
+	if err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM practice.practice_clients
+			WHERE practice_id = $1 AND client_user_id = $2
+		)`, practiceID, clientID).Scan(&exists); err != nil {
+		return ClientOverview{}, err
+	}
+	if !exists {
+		return ClientOverview{}, ErrNotFound
+	}
+
+	var o ClientOverview
+	var upcoming *time.Time
+	err := s.pool.QueryRow(ctx, `
+		SELECT
+			(SELECT COUNT(*)::int FROM pets.pets
+			 WHERE practice_id = $1 AND owner_user_id = $2),
+			(SELECT COUNT(*)::int FROM heartrate.sessions
+			 WHERE practice_id = $1 AND owner_user_id = $2
+			   AND status = 'validated' AND vet_seen_at IS NULL),
+			(SELECT COUNT(*)::int FROM heartrate.sessions
+			 WHERE practice_id = $1 AND owner_user_id = $2
+			   AND status = 'validated' AND is_alert = TRUE
+			   AND validated_at >= NOW() - INTERVAL '7 days'),
+			(SELECT COUNT(*)::int FROM care.reminders c
+			 JOIN pets.pets p ON p.id = c.pet_id
+			 WHERE c.practice_id = $1 AND p.owner_user_id = $2
+			   AND c.status = 'pending' AND c.due_at < NOW()),
+			(SELECT COUNT(*)::int FROM visits.visits v
+			 JOIN pets.pets p ON p.id = v.pet_id
+			 WHERE v.practice_id = $1 AND p.owner_user_id = $2
+			   AND v.pending_action_by = 'vet'
+			   AND v.status IN ('requested', 'reschedule_pending')),
+			(SELECT MIN(v.scheduled_at) FROM visits.visits v
+			 JOIN pets.pets p ON p.id = v.pet_id
+			 WHERE v.practice_id = $1 AND p.owner_user_id = $2
+			   AND v.scheduled_at IS NOT NULL AND v.scheduled_at >= NOW()
+			   AND v.status IN ('requested', 'confirmed', 'reschedule_pending')),
+			(SELECT COUNT(*)::int FROM practice.client_access a
+			 WHERE a.client_user_id = $2
+			   AND (a.expires_at IS NULL OR a.expires_at > NOW())
+			   AND (
+			     a.granted_by_user_id = $2
+			     OR EXISTS (
+			       SELECT 1 FROM identity.users g
+			       WHERE g.id = a.granted_by_user_id AND g.practice_id = $1
+			     )
+			     OR EXISTS (
+			       SELECT 1 FROM identity.users g
+			       WHERE g.id = a.grantee_user_id AND g.practice_id = $1
+			     )
+			   ))`,
+		practiceID, clientID).Scan(
+		&o.PetCount, &o.UnreadHeartrate, &o.AlertSessions7d,
+		&o.OverdueCareCount, &o.PendingVisits, &upcoming, &o.ShareCount,
+	)
+	if err != nil {
+		return ClientOverview{}, err
+	}
+	o.UpcomingVisitAt = upcoming
+	return o, nil
 }
 
 func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetOverview, error) {

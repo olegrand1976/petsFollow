@@ -41,7 +41,7 @@
         class="pro-bpm-chart-axis-title"
         :transform="`rotate(-90 12 ${(plotTop + plotBottom) / 2})`"
       >
-        {{ $t('clients.pet.chartAxisBpm') }}
+        {{ axisTitleLabel }}
       </text>
       <text
         v-for="tick in yTicks"
@@ -93,7 +93,7 @@
         </text>
       </g>
     </svg>
-    <ul class="pro-bpm-chart-legend" :aria-label="$t('clients.pet.chartLegend')">
+    <ul v-if="!hideLegend" class="pro-bpm-chart-legend" :aria-label="$t('clients.pet.chartLegend')">
       <li>
         <span class="pro-bpm-chart-swatch pro-bpm-chart-swatch--ok" aria-hidden="true" />
         {{ $t('clients.pet.chartLegendOk') }}
@@ -107,16 +107,26 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   values: number[]
   alerts?: boolean[]
   dates?: string[]
   domainStart?: string
   domainEnd?: string
   ariaLabel?: string
-}>()
+  axisTitle?: string
+  /** When true, Y domain follows data min/max (weight). Default BPM floor/ceil. */
+  autoYDomain?: boolean
+  hideLegend?: boolean
+}>(), {
+  autoYDomain: false,
+  hideLegend: false,
+})
 
+const { t } = useI18n()
 const { dateLocale } = useFormatters()
+
+const axisTitleLabel = computed(() => props.axisTitle || t('clients.pet.chartAxisBpm'))
 
 const width = 420
 const height = 200
@@ -146,11 +156,22 @@ function formatAxisDate(value: Date, withYear: boolean) {
 
 const scale = computed(() => {
   const vals = props.values
-  const rawMax = vals.length ? Math.max(...vals) : 80
-  const rawMin = vals.length ? Math.min(...vals) : 40
-  const yMax = Math.ceil(Math.max(rawMax, 80) / 10) * 10
-  const yMin = Math.floor(Math.min(rawMin, 40) / 10) * 10
-  const yRange = Math.max(yMax - yMin, 20)
+  const rawMax = vals.length ? Math.max(...vals) : (props.autoYDomain ? 10 : 80)
+  const rawMin = vals.length ? Math.min(...vals) : (props.autoYDomain ? 0 : 40)
+  let yMax: number
+  let yMin: number
+  if (props.autoYDomain) {
+    const pad = Math.max((rawMax - rawMin) * 0.1, 0.5)
+    yMax = Math.ceil((rawMax + pad) * 10) / 10
+    yMin = Math.max(0, Math.floor((rawMin - pad) * 10) / 10)
+    if (yMax === yMin) {
+      yMax = yMin + 1
+    }
+  } else {
+    yMax = Math.ceil(Math.max(rawMax, 80) / 10) * 10
+    yMin = Math.floor(Math.min(rawMin, 40) / 10) * 10
+  }
+  const yRange = Math.max(yMax - yMin, props.autoYDomain ? 0.5 : 20)
 
   const times = (props.dates ?? [])
     .map(d => parseTime(d))
@@ -171,7 +192,11 @@ const yTicks = computed(() => {
   const steps = 4
   const ticks: { value: number; y: number }[] = []
   for (let i = 0; i <= steps; i++) {
-    const value = Math.round(yMin + (yRange * i) / steps)
+    const raw = yMin + (yRange * i) / steps
+    // Weight charts keep one decimal; BPM stays integer ticks.
+    const value = props.autoYDomain
+      ? Math.round(raw * 10) / 10
+      : Math.round(raw)
     const y = plotBottom - ((value - yMin) / yRange) * plotH
     ticks.push({ value, y })
   }

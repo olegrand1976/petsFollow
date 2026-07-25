@@ -710,6 +710,16 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			jsonb_build_object('bpm', bpm, 'status', status, 'is_alert', is_alert, 'comment', comment)
 		FROM heartrate.sessions WHERE pet_id=$1` + hrFilter + `
 		UNION ALL
+		SELECT id::text, 'weight', 'Poids',
+			CASE
+				WHEN comment IS NOT NULL AND btrim(comment) <> ''
+					THEN CONCAT(weight_kg::text, ' kg — ', comment)
+				ELSE CONCAT(weight_kg::text, ' kg')
+			END,
+			recorded_at,
+			jsonb_build_object('weight_kg', weight_kg, 'comment', comment)
+		FROM pets.weight_readings WHERE pet_id=$1
+		UNION ALL
 		SELECT id::text, 'event', event_type, content, created_at, '{}'::jsonb
 		FROM pets.dossier_events WHERE pet_id=$1
 		UNION ALL
