@@ -119,7 +119,7 @@
   "proLightGpsDenied": "Location unavailable",
   "googleNotConfigured": "Google sign-in is not configured",
   "googleLoginFailed": "Google sign-in failed",
-  "googleWrongAudience": "This Google account is not a client profile",
+  "googleWrongAudience": "This Google account is already a Pro profile — use the web app.",
   "myPets": "My pets",
   "myData": "My data",
   "settings": "Settings",

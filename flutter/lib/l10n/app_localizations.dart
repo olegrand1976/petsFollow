@@ -779,7 +779,7 @@ abstract class AppLocalizations {
   /// No description provided for @googleWrongAudience.
   ///
   /// In fr, this message translates to:
-  /// **'Ce compte Google n\'est pas un profil client'**
+  /// **'Ce compte Google est déjà un profil Pro — utilisez l\'application web.'**
   String get googleWrongAudience;
 
   /// No description provided for @myPets.

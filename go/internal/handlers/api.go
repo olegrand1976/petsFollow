@@ -823,8 +823,17 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
 	case id.Role == kernel.RoleClient:
+		// Self-signup Google / register-client : pas encore de cabinet → liste vide.
+		if id.PracticeID == "" {
+			httpx.WriteData(w, http.StatusOK, []store.Thread{})
+			return
+		}
 		vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
 		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				httpx.WriteData(w, http.StatusOK, []store.Thread{})
+				return
+			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}

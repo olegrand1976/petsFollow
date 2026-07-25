@@ -359,7 +359,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleWrongAudience =>
-      'This Google account is not a client profile';
+      'This Google account is already a Pro profile — use the web app.';
 
   @override
   String get myPets => 'My pets';

@@ -119,7 +119,7 @@
   "petAccessSharedFull": "Jagatud · täielik",
   "googleNotConfigured": "Google'iga sisselogimine pole seadistatud",
   "googleLoginFailed": "Google'iga sisselogimine ebaõnnestus",
-  "googleWrongAudience": "See Google'i konto ei ole kliendiprofiil",
+  "googleWrongAudience": "See Google'i konto on juba Pro profiil — kasutage veebirakendust.",
   "myPets": "Minu lemmikloomad",
   "myData": "Minu andmed",
   "settings": "Seaded",

@@ -119,7 +119,7 @@
   "proLightGpsDenied": "Ubicación no disponible",
   "googleNotConfigured": "Inicio de sesión con Google no configurado",
   "googleLoginFailed": "No se pudo iniciar sesión con Google",
-  "googleWrongAudience": "Esta cuenta de Google no es un perfil de cliente",
+  "googleWrongAudience": "Esta cuenta de Google ya es un perfil Pro — use la aplicación web.",
   "myPets": "Mis mascotas",
   "myData": "Mis datos",
   "settings": "Ajustes",

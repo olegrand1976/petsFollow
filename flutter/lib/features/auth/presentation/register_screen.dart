@@ -180,6 +180,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  bool get _hasSocial => _isIOS || GoogleAuth.isConfigured;
+
+  Widget _buildOrDivider(AppLocalizations l10n) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(l10n.loginOr, style: Theme.of(context).textTheme.bodySmall),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+
+  List<Widget> _buildSocialButtons(AppLocalizations l10n) {
+    return [
+      if (_isIOS)
+        // Variante blanche des guidelines Apple : le fond de
+        // l'écran (loginGradient) est sombre.
+        FilledButton.icon(
+          onPressed: _busy ? null : tapApple,
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+          ),
+          icon: const Icon(Icons.apple, size: 24),
+          label: Text(l10n.loginWithApple),
+        ),
+      if (_isIOS && GoogleAuth.isConfigured) const SizedBox(height: 12),
+      if (GoogleAuth.isConfigured)
+        OutlinedButton.icon(
+          onPressed: _busy ? null : submitGoogle,
+          icon: const Icon(Icons.g_mobiledata, size: 28),
+          label: Text(l10n.loginWithGoogle),
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -211,6 +250,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Text(l10n.registerBackToLogin),
                   ),
                 ] else ...[
+                  _buildConsentRow(l10n),
+                  if (_hasSocial) ...[
+                    const SizedBox(height: 16),
+                    ..._buildSocialButtons(l10n),
+                  ],
+                  if (info != null) ...[
+                    const SizedBox(height: 12),
+                    Text(info!, style: const TextStyle(color: AppColors.accent)),
+                  ],
+                  if (error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(error!, style: const TextStyle(color: AppColors.alert)),
+                  ],
+                  if (_hasSocial) ...[
+                    const SizedBox(height: 16),
+                    _buildOrDivider(l10n),
+                    const SizedBox(height: 16),
+                  ] else if (info != null || error != null) ...[
+                    const SizedBox(height: 8),
+                  ],
                   TextField(
                     controller: fullName,
                     textInputAction: TextInputAction.next,
@@ -238,57 +297,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onSubmitted: (_) => submit(),
                     decoration: InputDecoration(labelText: l10n.confirmNewPassword),
                   ),
-                  const SizedBox(height: 8),
-                  _buildConsentRow(l10n),
-                  if (info != null) ...[
-                    const SizedBox(height: 12),
-                    Text(info!, style: const TextStyle(color: AppColors.accent)),
-                  ],
-                  if (error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(error!, style: const TextStyle(color: AppColors.alert)),
-                  ],
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: _busy ? null : submit,
                     child: Text(l10n.registerSubmit),
                   ),
-                  if (_isIOS || GoogleAuth.isConfigured) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            l10n.loginOr,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (_isIOS)
-                    // Variante blanche des guidelines Apple : le fond de
-                    // l'écran (loginGradient) est sombre.
-                    FilledButton.icon(
-                      onPressed: _busy ? null : tapApple,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                      ),
-                      icon: const Icon(Icons.apple, size: 24),
-                      label: Text(l10n.loginWithApple),
-                    ),
-                  if (_isIOS && GoogleAuth.isConfigured) const SizedBox(height: 12),
-                  if (GoogleAuth.isConfigured)
-                    OutlinedButton.icon(
-                      onPressed: _busy ? null : submitGoogle,
-                      icon: const Icon(Icons.g_mobiledata, size: 28),
-                      label: Text(l10n.loginWithGoogle),
-                    ),
                 ],
               ],
             ),

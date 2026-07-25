@@ -359,7 +359,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get googleLoginFailed => 'Google-aanmelding mislukt';
 
   @override
-  String get googleWrongAudience => 'Dit Google-account is geen klantprofiel';
+  String get googleWrongAudience =>
+      'Dit Google-account is al een Pro-profiel — gebruik de webapp.';
 
   @override
   String get myPets => 'Mijn huisdieren';

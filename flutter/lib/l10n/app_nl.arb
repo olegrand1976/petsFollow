@@ -119,7 +119,7 @@
   "proLightGpsDenied": "Locatie niet beschikbaar",
   "googleNotConfigured": "Google-aanmelding is niet geconfigureerd",
   "googleLoginFailed": "Google-aanmelding mislukt",
-  "googleWrongAudience": "Dit Google-account is geen klantprofiel",
+  "googleWrongAudience": "Dit Google-account is al een Pro-profiel — gebruik de webapp.",
   "myPets": "Mijn huisdieren",
   "myData": "Mijn gegevens",
   "settings": "Instellingen",

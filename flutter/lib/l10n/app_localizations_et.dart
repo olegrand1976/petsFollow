@@ -359,7 +359,8 @@ class AppLocalizationsEt extends AppLocalizations {
   String get googleLoginFailed => 'Google\'iga sisselogimine ebaõnnestus';
 
   @override
-  String get googleWrongAudience => 'See Google\'i konto ei ole kliendiprofiil';
+  String get googleWrongAudience =>
+      'See Google\'i konto on juba Pro profiil — kasutage veebirakendust.';
 
   @override
   String get myPets => 'Minu lemmikloomad';

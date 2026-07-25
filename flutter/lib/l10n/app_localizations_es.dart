@@ -361,7 +361,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get googleWrongAudience =>
-      'Esta cuenta de Google no es un perfil de cliente';
+      'Esta cuenta de Google ya es un perfil Pro — use la aplicación web.';
 
   @override
   String get myPets => 'Mis mascotas';

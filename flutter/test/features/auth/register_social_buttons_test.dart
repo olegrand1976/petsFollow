@@ -99,7 +99,7 @@ void main() {
   group('RegisterScreen boutons sociaux', () {
     final l10n = AppLocalizationsFr();
 
-    testWidgets('iOS : bouton Apple visible, tap affiche appleComingSoon',
+    testWidgets('iOS : Apple au-dessus du formulaire, tap affiche appleComingSoon',
         (tester) async {
       // L'invariant du binding exige un reset avant la fin du corps du test.
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
@@ -108,10 +108,17 @@ void main() {
         await tester.pumpAndSettle();
 
         final appleButton = find.text(l10n.loginWithApple);
+        final fullNameField = find.widgetWithText(TextField, l10n.fullName);
         expect(appleButton, findsOneWidget);
         expect(find.text(l10n.loginOr), findsOneWidget);
         // GOOGLE_SERVER_CLIENT_ID absent en test → bouton Google masqué.
         expect(find.text(l10n.loginWithGoogle), findsNothing);
+        // Consent + social au-dessus du champ nom.
+        expect(
+          tester.getTopLeft(appleButton).dy <
+              tester.getTopLeft(fullNameField).dy,
+          isTrue,
+        );
 
         await tester.ensureVisible(appleButton);
         await tester.tap(appleButton);
