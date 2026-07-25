@@ -106,6 +106,19 @@
           <form v-if="aiModule.allowed" class="pro-form pro-mt-md" @submit.prevent="sendFeedback">
             <label class="pro-label" for="ai-nps">{{ $t('dashboard.aiModule.npsLabel') }}</label>
             <input id="ai-nps" v-model.number="nps" class="pro-input" type="number" min="0" max="10" required>
+            <fieldset class="pro-mt-sm">
+              <legend class="pro-label">{{ $t('dashboard.aiModule.frictionTagsLabel') }}</legend>
+              <div class="ai-friction-tags">
+                <label
+                  v-for="tag in frictionTagOptions"
+                  :key="tag"
+                  class="ai-friction-tags__item"
+                >
+                  <input v-model="frictionTags" type="checkbox" :value="tag">
+                  {{ $t(`dashboard.aiModule.frictionTag.${tag}`) }}
+                </label>
+              </div>
+            </fieldset>
             <ProButton type="submit" variant="ghost" :disabled="aiBusy">
               {{ $t('dashboard.aiModule.sendFeedback') }}
             </ProButton>
@@ -142,6 +155,8 @@ const aiBusy = ref(false)
 const aiModule = ref<any>(null)
 const aiRoi = ref<any>(null)
 const nps = ref(9)
+const frictionTags = ref<string[]>([])
+const frictionTagOptions = ['audio', 'quality', 'time', 'ux', 'other'] as const
 const aiMsg = ref('')
 
 async function loadAi() {
@@ -187,9 +202,10 @@ async function sendFeedback() {
   try {
     await $fetch('/api/me/ai-module/feedback', {
       method: 'POST',
-      body: { nps: nps.value, source: 'in_app', comment: '' },
+      body: { nps: nps.value, source: 'in_app', comment: '', frictionTags: frictionTags.value },
     })
     aiMsg.value = t('dashboard.aiModule.feedbackOk')
+    frictionTags.value = []
   } catch (e: any) {
     aiMsg.value = mapError(e)
   } finally {
@@ -228,5 +244,17 @@ onMounted(async () => {
 }
 .ai-roi__hero strong {
   font-size: 1.75rem;
+}
+.ai-friction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.35rem 0 0.75rem;
+}
+.ai-friction-tags__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
 }
 </style>

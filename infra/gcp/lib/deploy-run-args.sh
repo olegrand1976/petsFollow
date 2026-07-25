@@ -86,6 +86,10 @@ pf_api_secrets() {
     --secret=petsfollow-pitch-analyzer-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},PITCH_ANALYZER_SECRET=petsfollow-pitch-analyzer-secret:latest"
   fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-ai-module-friction-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},AI_MODULE_FRICTION_SECRET=petsfollow-ai-module-friction-secret:latest"
+  fi
   printf '%s' "$secrets"
 }
 

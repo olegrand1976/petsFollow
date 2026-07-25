@@ -675,7 +675,15 @@
       "requestSent": "Demande envoyée à votre commercial",
       "feedbackOk": "Merci pour votre retour",
       "disabled": "Module disabled — contact your sales rep",
-      "roiUnavailable": "ROI summary temporarily unavailable"
+      "roiUnavailable": "ROI summary temporarily unavailable",
+      "frictionTagsLabel": "Hõõrdumine (valikuline)",
+      "frictionTag": {
+        "audio": "Audio / mikrofon",
+        "quality": "Teksti kvaliteet",
+        "time": "Aega pole",
+        "ux": "Ebaselge voog",
+        "other": "Muu"
+      }
     }
   },
   "messages": {

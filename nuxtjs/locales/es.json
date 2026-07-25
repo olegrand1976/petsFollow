@@ -675,7 +675,15 @@
       "requestSent": "Demande envoyée à votre commercial",
       "feedbackOk": "Merci pour votre retour",
       "disabled": "Module disabled — contact your sales rep",
-      "roiUnavailable": "ROI summary temporarily unavailable"
+      "roiUnavailable": "ROI summary temporarily unavailable",
+      "frictionTagsLabel": "Fricciones (opcional)",
+      "frictionTag": {
+        "audio": "Audio / micrófono",
+        "quality": "Calidad del texto",
+        "time": "Sin tiempo",
+        "ux": "Flujo poco claro",
+        "other": "Otro"
+      }
     }
   },
   "messages": {

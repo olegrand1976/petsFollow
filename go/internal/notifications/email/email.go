@@ -299,6 +299,42 @@ func (n *Notifier) SendVisitConfirmedAffiliate(to, locale, clientName, petName, 
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendAiCrAdhesionStep sends one VetPro CR IA trial drip email (branded + i18n).
+func (n *Notifier) SendAiCrAdhesionStep(to, locale, fullName, stepKey, ctaURL string, vars map[string]string) error {
+	locale = i18n.NormalizeLocale(locale)
+	if vars == nil {
+		vars = map[string]string{}
+	}
+	if _, ok := vars["fullName"]; !ok {
+		vars["fullName"] = fullName
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = mustT(locale, "emails.ai_cr_adhesion.fallback_name")
+	}
+	prefix := "emails.ai_cr_adhesion." + stepKey + "."
+	subject := mustT(locale, prefix+"subject", vars)
+	detail := mustT(locale, prefix+"detail", vars)
+	if detail == prefix+"detail" {
+		detail = ""
+	}
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow Pro",
+		Tagline:         mustT(locale, prefix+"tagline", vars),
+		Greeting:        mustT(locale, prefix+"greeting", vars),
+		Intro:           mustT(locale, prefix+"intro", vars),
+		Detail:          detail,
+		CTALabel:        mustT(locale, prefix+"cta", vars),
+		CTAURL:          ctaURL,
+		Disclaimer:      mustT(locale, prefix+"disclaimer", vars),
+		Preheader:       mustT(locale, prefix+"preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendJourneyStep sends one client discovery/loyalty drip email.
 // vars may include:
 //   "_omitDetail=1" — suppress soft-upsell detail block

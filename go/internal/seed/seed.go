@@ -269,6 +269,34 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
 		return err
 	}
+	// Second demo commercial (team under same manager; no exclusive vet assignment).
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password,
+			base_lat, base_lng, base_city, base_postal_code
+		) VALUES (
+			$1, 'commercial.demo2@petsfollow.test', $2, 'Alex Vente', 'commercial', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Alex Vente', $3::uuid, false,
+			50.6292, 3.0573, 'Lille', '59000'
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			must_change_password = false,
+			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
+			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
+			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)`,
+		uuid.NewString(), string(hash), managerID); err != nil {
+		return err
+	}
 	// vet.demo is assigned to the demo commercial.
 	if _, err := tx.Exec(ctx, `
 		UPDATE identity.users SET assigned_commercial_id = $1
@@ -820,6 +848,7 @@ func logSummary() {
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
 	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
 	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
+	log.Printf("Commerc: commercial.demo2@petsfollow.test / %s (Alex Vente, rattaché manager)", passwordCommercial)
 	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")

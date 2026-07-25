@@ -1042,7 +1042,15 @@
       "requestSent": "Demande envoyée à votre commercial",
       "feedbackOk": "Merci pour votre retour",
       "disabled": "Module désactivé — contactez votre commercial",
-      "roiUnavailable": "Bilan ROI temporairement indisponible"
+      "roiUnavailable": "Bilan ROI temporairement indisponible",
+      "frictionTagsLabel": "Frictions (optionnel)",
+      "frictionTag": {
+        "audio": "Audio / micro",
+        "quality": "Qualité du texte",
+        "time": "Pas le temps",
+        "ux": "Parcours peu clair",
+        "other": "Autre"
+      }
     }
   },
   "messages": {
