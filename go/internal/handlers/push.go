@@ -119,9 +119,10 @@ func (a *API) pushVisitConfirmed(clientUserID, visitID, petID, petName string) {
 	title := i18n.T(locale, "push.visit_confirmed_title", nil)
 	body := i18n.T(locale, "push.visit_confirmed_body", vars)
 	a.notifyClientPushAsync(clientUserID, pushKindVisits, title, body, map[string]string{
-		"type":    "visit_confirmed",
-		"visitId": visitID,
-		"petId":   petID,
+		"type":       "visit_confirmed",
+		"visitId":    visitID,
+		"petId":      petID,
+		"preconsult": "1",
 	})
 }
 

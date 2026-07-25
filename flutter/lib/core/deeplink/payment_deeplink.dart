@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/auth/pending_login_hint.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
+import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/confirm_email_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/reset_password_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 /// Result of parsing a `petsfollow://confirm-email…` URI (testable, no navigation).
@@ -146,7 +148,39 @@ class AppDeepLink {
       final code = uri.queryParameters['code'] ?? '';
       if (code.trim().isEmpty) return;
       unawaited(_persistAndMaybeClaim(code));
+      return;
     }
+    if (path == 'preconsult' || path.endsWith('preconsult')) {
+      final visitId = uri.queryParameters['visitId'] ?? '';
+      if (visitId.trim().isEmpty) return;
+      unawaited(_openOrPersistPreconsult(visitId.trim()));
+    }
+  }
+
+  Future<void> _openOrPersistPreconsult(String visitId) async {
+    await PreconsultVisitStore.instance.save(visitId);
+    final token = ApiClient.instance.token;
+    if (token == null || token.isEmpty) return;
+    _openPreconsult(visitId);
+  }
+
+  void _openPreconsult(String visitId, [int attempt = 0]) {
+    final nav = PushNavigation.instance.navigatorKey.currentState;
+    if (nav == null) {
+      if (attempt >= 12) return;
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        _openPreconsult(visitId, attempt + 1);
+      });
+      return;
+    }
+    final token = ApiClient.instance.token;
+    if (token == null || token.isEmpty) return;
+    nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => PreconsultScreen(visitId: visitId),
+      ),
+    );
+    unawaited(PreconsultVisitStore.instance.save(null));
   }
 
   Future<void> _persistAndMaybeClaim(String code) async {

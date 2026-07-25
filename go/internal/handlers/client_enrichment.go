@@ -357,6 +357,10 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if err := a.store.AttachPreconsultStatuses(r.Context(), visits); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	canNotes, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermWriteNotes)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -499,6 +503,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if source == "vet" && !confirmDirect && visit.Status == "requested" {
 		a.pushVisitProposed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 	}
+	if visit.Status == "confirmed" {
+		a.onVisitConfirmed(pet, visit)
+	}
 	httpx.WriteData(w, http.StatusCreated, visit)
 }
 
@@ -545,6 +552,7 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
+		_ = a.store.AttachPreconsultStatuses(r.Context(), visits)
 		httpx.WriteData(w, http.StatusOK, visits)
 		return
 	}
@@ -559,6 +567,7 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	_ = a.store.AttachPreconsultStatuses(r.Context(), visits)
 	httpx.WriteData(w, http.StatusOK, visits)
 }
 
@@ -680,7 +689,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.ConfirmVisit(r.Context(), visit.ID)
 		if err == nil {
-			a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+			a.onVisitConfirmed(pet, updated)
 		}
 	case "cancel":
 		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
@@ -775,7 +784,7 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.AcceptReschedule(r.Context(), visit.ID)
 		if err == nil {
-			a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+			a.onVisitConfirmed(pet, updated)
 		}
 	case "reject_reschedule":
 		if visit.PendingActionBy == nil {

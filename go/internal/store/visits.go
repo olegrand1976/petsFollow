@@ -28,6 +28,8 @@ type Visit struct {
 	AddressText         string     `json:"addressText,omitempty"`
 	Lat                 *float64   `json:"lat,omitempty"`
 	Lng                 *float64   `json:"lng,omitempty"`
+	// PreconsultStatus is pending|submitted|skipped when an intake exists.
+	PreconsultStatus string `json:"preconsultStatus,omitempty"`
 	// Permission is set for care_pro list responses (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 }

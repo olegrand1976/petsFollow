@@ -160,6 +160,53 @@
             {{ statusLabel(selectedVisit.status) }}
           </ProBadge>
         </p>
+        <p v-if="selectedVisit.preconsultStatus || preconsult" data-testid="visit-preconsult-status">
+          <strong>{{ $t('calendar.preconsultLabel') }} :</strong>
+          <ProBadge :variant="preconsultBadgeVariant">
+            {{ preconsultStatusLabel }}
+          </ProBadge>
+        </p>
+        <div
+          v-if="preconsult?.status === 'submitted'"
+          class="preconsult-answers"
+          data-testid="visit-preconsult-answers"
+        >
+          <h3 class="pro-section-title">{{ $t('calendar.preconsultAnswers') }}</h3>
+          <dl class="preconsult-dl">
+            <div>
+              <dt>{{ $t('calendar.preconsultComplaint') }}</dt>
+              <dd>{{ preconsult.answers?.chiefComplaint || '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultDuration') }}</dt>
+              <dd>{{ preconsultEnumLabel('duration', preconsult.answers?.duration) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultBehavior') }}</dt>
+              <dd>{{ preconsultEnumLabel('behavior', preconsult.answers?.behavior) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultAppetite') }}</dt>
+              <dd>{{ preconsultEnumLabel('scale', preconsult.answers?.appetite) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultThirst') }}</dt>
+              <dd>{{ preconsultEnumLabel('scale', preconsult.answers?.thirst) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultElimination') }}</dt>
+              <dd>{{ preconsultEnumLabel('scale', preconsult.answers?.elimination) }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('calendar.preconsultUrgency') }}</dt>
+              <dd>{{ preconsultEnumLabel('urgency', preconsult.answers?.urgency) }}</dd>
+            </div>
+            <div v-if="preconsult.answers?.comment">
+              <dt>{{ $t('calendar.preconsultComment') }}</dt>
+              <dd>{{ preconsult.answers.comment }}</dd>
+            </div>
+          </dl>
+        </div>
         <div class="pro-field pro-mb-md">
           <ProInput
             v-model="visitAddress"
@@ -389,10 +436,56 @@ const reportImproved = ref('')
 const reportStatus = ref('')
 const reportBusy = ref(false)
 const reportMsg = ref('')
+const preconsult = ref<{
+  status?: string
+  answers?: {
+    chiefComplaint?: string
+    duration?: string
+    behavior?: string
+    appetite?: string
+    thirst?: string
+    elimination?: string
+    urgency?: string
+    comment?: string
+  }
+} | null>(null)
 
 const reportHistorySaved = computed(() =>
   persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
 )
+
+const preconsultStatusLabel = computed(() => {
+  const st = preconsult.value?.status || selectedVisit.value?.preconsultStatus || ''
+  switch (st) {
+    case 'submitted':
+      return t('calendar.preconsultSubmitted')
+    case 'pending':
+      return t('calendar.preconsultPending')
+    case 'skipped':
+      return t('calendar.preconsultSkipped')
+    default:
+      return t('calendar.preconsultNone')
+  }
+})
+
+const preconsultBadgeVariant = computed(() => {
+  const st = preconsult.value?.status || selectedVisit.value?.preconsultStatus || ''
+  switch (st) {
+    case 'submitted':
+      return 'success'
+    case 'pending':
+      return 'warning'
+    default:
+      return 'neutral'
+  }
+})
+
+function preconsultEnumLabel(kind: 'duration' | 'behavior' | 'scale' | 'urgency', value?: string) {
+  if (!value) return '—'
+  const key = `calendar.preconsultEnums.${kind}.${value}`
+  const translated = t(key)
+  return translated === key ? value : translated
+}
 const audioConsentOpen = ref(false)
 const pendingAudioFile = ref<File | null>(null)
 const rescheduleOpen = ref(false)
@@ -559,9 +652,26 @@ function openVisitDetail(v: CalendarVisit) {
   reportImproved.value = ''
   reportStatus.value = ''
   reportMsg.value = ''
+  preconsult.value = null
   focusVisitId.value = v.id
   detailOpen.value = true
   void loadVisitReport(v.id)
+  void loadVisitPreconsult(v.id)
+}
+
+async function loadVisitPreconsult(visitId: string) {
+  try {
+    const res: any = await $fetch(`/api/visits/${visitId}/preconsult`)
+    preconsult.value = res.data ?? res
+    if (selectedVisit.value?.id === visitId && preconsult.value?.status) {
+      selectedVisit.value = {
+        ...selectedVisit.value,
+        preconsultStatus: preconsult.value.status,
+      }
+    }
+  } catch {
+    preconsult.value = null
+  }
 }
 
 async function loadVisitReport(visitId: string) {
@@ -860,6 +970,26 @@ watch(
 }
 .visit-detail p {
   margin: 0.4rem 0;
+}
+.preconsult-answers {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius-md, 8px);
+  background: var(--pf-vet-surface);
+}
+.preconsult-dl {
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.preconsult-dl dt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pf-vet-muted, #64748b);
+}
+.preconsult-dl dd {
+  margin: 0.15rem 0 0;
 }
 .visit-report-history {
   margin-top: 0.75rem;

@@ -143,6 +143,22 @@
   "registerConsentPrefix": "J'accepte les ",
   "registerConsentMiddle": " et la ",
   "registerConsentRequired": "Vous devez accepter les conditions et la politique de confidentialité.",
+  "nearbyCommercialTitle": "Commercial près de chez vous",
+  "nearbyCommercialHint": "Sans code d'invitation, choisissez un commercial proche (optionnel).",
+  "nearbyCommercialUseLocation": "Utiliser ma position",
+  "nearbyCommercialPostalCode": "Code postal",
+  "nearbyCommercialSearch": "Rechercher",
+  "nearbyCommercialEmpty": "Aucun commercial trouvé à proximité.",
+  "nearbyCommercialSkip": "Ne pas rattacher",
+  "nearbyCommercialGeoDenied": "Position refusée — saisissez un code postal.",
+  "nearbyCommercialDistance": "{km} km",
+  "@nearbyCommercialDistance": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
   "pushPermissionTitle": "Notifications",
   "pushPermissionBody": "petsFollow souhaite vous envoyer des notifications : messages de votre vétérinaire, confirmations de rendez-vous et rappels de soins. Vous pouvez les désactiver à tout moment dans les réglages de l'app ou du téléphone.",
   "pushPermissionContinue": "Continuer",
@@ -550,5 +566,46 @@
   "switchProfile": "Changer de profil",
   "profilePersonal": "Personnel",
   "profilePro": "Professionnel",
-  "profileSwitched": "Profil basculé"
+  "profileSwitched": "Profil basculé",
+  "preconsultTitle": "Pré-consultation",
+  "preconsultTitlePet": "Pré-consultation — {petName}",
+  "preconsultIntro": "Indiquez l'état de votre animal avant la visite. Votre vétérinaire pourra s'y préparer.",
+  "preconsultComplaint": "Motif / plainte principale",
+  "preconsultComplaintRequired": "Indiquez le motif de la visite",
+  "preconsultDuration": "Depuis quand ?",
+  "preconsultDurationToday": "Aujourd'hui",
+  "preconsultDurationFewDays": "Quelques jours",
+  "preconsultDurationWeek": "Environ une semaine",
+  "preconsultDurationWeeks": "Plusieurs semaines",
+  "preconsultDurationMonths": "Plusieurs mois",
+  "preconsultBehavior": "Comportement",
+  "preconsultBehaviorNormal": "Normal",
+  "preconsultBehaviorLethargic": "Apathique",
+  "preconsultBehaviorRestless": "Agité",
+  "preconsultBehaviorAggressive": "Agressif",
+  "preconsultBehaviorAnxious": "Anxieux",
+  "preconsultBehaviorOther": "Autre",
+  "preconsultAppetite": "Appétit",
+  "preconsultThirst": "Soif",
+  "preconsultElimination": "Selles / urines",
+  "preconsultScaleNormal": "Normal",
+  "preconsultScaleDecreased": "Diminué",
+  "preconsultScaleIncreased": "Augmenté",
+  "preconsultUrgency": "Urgence perçue",
+  "preconsultUrgencyLow": "Faible",
+  "preconsultUrgencyMedium": "Moyenne",
+  "preconsultUrgencyHigh": "Élevée",
+  "preconsultComment": "Commentaire (optionnel)",
+  "preconsultUnknown": "Je ne sais pas",
+  "preconsultSubmit": "Envoyer",
+  "preconsultSubmitted": "Pré-consultation envoyée",
+  "preconsultAlreadySubmitted": "Vous avez déjà envoyé cette pré-consultation.",
+  "preconsultFillCta": "Remplir la pré-consultation",
+  "@preconsultTitlePet": {
+    "placeholders": {
+      "petName": {
+        "type": "String"
+      }
+    }
+  }
 }

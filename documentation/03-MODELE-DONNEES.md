@@ -6,7 +6,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 
 | Schéma | Rôle |
 |--------|------|
-| `identity` | Users, tokens email/reset, OAuth/2FA, locale, payout commercial (`payout_iban`…) |
+| `identity` | Users, tokens email/reset, OAuth/2FA, locale, payout commercial (`payout_iban`…), zone de base commercial (`base_lat`/`base_lng`/`base_city`/`base_postal_code` — `000058`) |
 | `practice` | Cabinets (profil société/banque `000026`), clients liés, invitations, link-requests, `vet_schedule` / vacations (`000024`), import jobs (`000028`) |
 | `pets` | Animaux, dossier events |
 | `heartrate` | Sessions relevé cardiaque |
@@ -15,7 +15,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | `billing` | Entitlements pets (+ addons legacy), Stripe, commissions |
 | `sales` | Prospects commerciaux |
 | `care` | Rappels, contacts/compétitions horse |
-| `visits` | Visites (+ reschedule pending, GPS, `visit_reports`) |
+| `visits` | Visites (+ reschedule pending, GPS, `visit_reports`, `preconsult_intakes`) |
 | `discovery` | Onboarding client in-app + parcours email (`email_journey`, `email_sends`) |
 | `pharmacy` | **Spec** — référentiel CNK, stocks FEFO, DAF, jobs audit ([27](27-PHARMACIE-BELGIQUE.md), migrations `000039+` à venir) |
 
@@ -30,7 +30,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Animal | `pets.pets`, `pets.dossier_events` |
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
 | Commissions | `commission_tiers`, `commission_ledger`, `commercial_commission_ledger`, payout runs/lines, `commercial_bonus_awards` |
-| Commercial | `sales.prospects` (+ assignation commercial ↔ véto, `manager_user_id`, source `directory`, RDV / contact timestamps — `000031`) |
+| Commercial | `sales.prospects` (+ assignation commercial ↔ véto, `manager_user_id`, source `directory`, RDV / contact timestamps — `000031`) ; `practice.commercial_referrals` (QR / nearby signup) ; zone base commercial `000058` |
 | FC | `heartrate.sessions` |
 | Msg | `messaging.threads`, `messages`, `vet_availability` |
 | Discovery | `discovery.progress`, `discovery.email_journey`, `discovery.email_sends` |

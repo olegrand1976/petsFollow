@@ -25,6 +25,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Post("/admin/commercials", a.adminCreateCommercial)
 		pr.Patch("/admin/commercials/{id}/assign", a.adminAssignVet)
 		pr.Patch("/admin/commercials/{id}/manager", a.adminSetCommercialManager)
+		pr.Patch("/admin/commercials/{id}/base-location", a.adminPatchCommercialBaseLocation)
 		pr.Get("/admin/vets", a.adminListVets)
 		pr.Post("/admin/vets", a.adminCreateVet)
 		pr.Post("/admin/clients", a.adminCreateClient)
@@ -61,11 +62,15 @@ func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request
 }
 
 type createCommercialReq struct {
-	Email         string `json:"email"`
-	Password      string `json:"password"`
-	FullName      string `json:"fullName"`
-	ManagerUserID string `json:"managerUserId"`
-	Role          string `json:"role"` // commercial (default) | commercial_manager
+	Email          string   `json:"email"`
+	Password       string   `json:"password"`
+	FullName       string   `json:"fullName"`
+	ManagerUserID  string   `json:"managerUserId"`
+	Role           string   `json:"role"` // commercial (default) | commercial_manager
+	BaseLat        *float64 `json:"baseLat"`
+	BaseLng        *float64 `json:"baseLng"`
+	BaseCity       string   `json:"baseCity"`
+	BasePostalCode string   `json:"basePostalCode"`
 }
 
 func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +125,19 @@ func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if req.BaseLat != nil || req.BaseLng != nil || strings.TrimSpace(req.BaseCity) != "" || strings.TrimSpace(req.BasePostalCode) != "" {
+		if err := a.store.UpdateCommercialBaseLocation(r.Context(), userID, store.CommercialBaseLocation{
+			Lat: req.BaseLat, Lng: req.BaseLng,
+			City: req.BaseCity, PostalCode: req.BasePostalCode,
+		}); err != nil {
+			if errors.Is(err, store.ErrValidation) {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_base_location")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	}
 	httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": userID, "email": req.Email, "role": role})
 }
 
@@ -154,6 +172,46 @@ func (a *API) adminSetCommercialManager(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+type baseLocationReq struct {
+	BaseLat        *float64 `json:"baseLat"`
+	BaseLng        *float64 `json:"baseLng"`
+	BaseCity       string   `json:"baseCity"`
+	BasePostalCode string   `json:"basePostalCode"`
+}
+
+func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	commercialID := chi.URLParam(r, "id")
+	var req baseLocationReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.UpdateCommercialBaseLocation(r.Context(), commercialID, store.CommercialBaseLocation{
+		Lat: req.BaseLat, Lng: req.BaseLng,
+		City: req.BaseCity, PostalCode: req.BasePostalCode,
+	}); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_base_location")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	loc, err := a.store.GetCommercialBaseLocation(r.Context(), commercialID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, loc)
 }
 
 func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {

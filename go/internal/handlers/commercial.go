@@ -24,6 +24,7 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Get("/commercial/commissions", a.commercialCommissions)
 		pr.Get("/commercial/me/payout-profile", a.commercialGetPayoutProfile)
 		pr.Patch("/commercial/me/payout-profile", a.commercialPatchPayoutProfile)
+		pr.Patch("/commercial/me/base-location", a.commercialPatchBaseLocation)
 		pr.Get("/commercial/prospects", a.commercialListProspects)
 		pr.Post("/commercial/prospects", a.commercialCreateProspect)
 		pr.Patch("/commercial/prospects/{id}", a.commercialUpdateProspect)
@@ -183,7 +184,51 @@ func (a *API) commercialPatchPayoutProfile(w http.ResponseWriter, r *http.Reques
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, profile)
+	out, err := a.store.GetCommercialPayoutProfile(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
+type baseLocationBody struct {
+	BaseLat        *float64 `json:"baseLat"`
+	BaseLng        *float64 `json:"baseLng"`
+	BaseCity       string   `json:"baseCity"`
+	BasePostalCode string   `json:"basePostalCode"`
+}
+
+func (a *API) commercialPatchBaseLocation(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	var req baseLocationBody
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.UpdateCommercialBaseLocation(r.Context(), id.UserID, store.CommercialBaseLocation{
+		Lat: req.BaseLat, Lng: req.BaseLng,
+		City: req.BaseCity, PostalCode: req.BasePostalCode,
+	}); err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_base_location")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	out, err := a.store.GetCommercialPayoutProfile(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"baseLat": out.BaseLat, "baseLng": out.BaseLng,
+		"baseCity": out.BaseCity, "basePostalCode": out.BasePostalCode,
+	})
 }
 
 func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {

@@ -72,6 +72,42 @@
       </form>
     </ProCard>
 
+    <ProCard class="pro-mb-lg" data-testid="admin-commercial-base-location">
+      <h3 class="pro-mb-md">{{ $t('admin.commercials.baseLocationTitle') }}</h3>
+      <form class="pro-form" @submit.prevent="saveBaseLocation">
+        <div class="pro-field">
+          <label class="pro-label" for="base-commercial">{{ $t('admin.commercials.assignCommercial') }}</label>
+          <select id="base-commercial" v-model="baseForm.commercialId" class="pro-select" required data-testid="admin-base-commercial">
+            <option value="" disabled>{{ $t('admin.commercials.assignCommercialPlaceholder') }}</option>
+            <option v-for="c in rows" :key="c.userId" :value="c.userId">
+              {{ c.fullName }} ({{ c.email }})
+            </option>
+          </select>
+        </div>
+        <div class="pro-field">
+          <label class="pro-label" for="base-city">{{ $t('admin.commercials.baseCity') }}</label>
+          <input id="base-city" v-model="baseForm.city" class="pro-input" data-testid="admin-base-city">
+        </div>
+        <div class="pro-field">
+          <label class="pro-label" for="base-postal">{{ $t('admin.commercials.basePostalCode') }}</label>
+          <input id="base-postal" v-model="baseForm.postalCode" class="pro-input" data-testid="admin-base-postal">
+        </div>
+        <div class="pro-field">
+          <label class="pro-label" for="base-lat">{{ $t('admin.commercials.baseLat') }}</label>
+          <input id="base-lat" v-model="baseForm.lat" class="pro-input" inputmode="decimal" data-testid="admin-base-lat">
+        </div>
+        <div class="pro-field">
+          <label class="pro-label" for="base-lng">{{ $t('admin.commercials.baseLng') }}</label>
+          <input id="base-lng" v-model="baseForm.lng" class="pro-input" inputmode="decimal" data-testid="admin-base-lng">
+        </div>
+        <p v-if="baseMsg" class="pro-hint">{{ baseMsg }}</p>
+        <p v-if="baseError" class="pro-error">{{ baseError }}</p>
+        <ProButton type="submit" test-id="admin-base-submit" :disabled="baseSaving || !baseForm.commercialId">
+          {{ $t('admin.commercials.baseLocationSubmit') }}
+        </ProButton>
+      </form>
+    </ProCard>
+
     <ProCard>
       <ProTable :empty="!rows.length" :empty-title="$t('admin.commercials.empty')">
         <thead>
@@ -112,6 +148,10 @@ const managerForm = reactive({ commercialId: '', managerUserId: '' })
 const managerSaving = ref(false)
 const managerMsg = ref('')
 const managerError = ref('')
+const baseForm = reactive({ commercialId: '', city: '', postalCode: '', lat: '', lng: '' })
+const baseSaving = ref(false)
+const baseMsg = ref('')
+const baseError = ref('')
 
 function formatDue(commercialId: string) {
   const cents = dueByCommercial.value[commercialId]
@@ -176,6 +216,41 @@ async function assignVet() {
     assignError.value = t('admin.commercials.assignFailed')
   } finally {
     assignSaving.value = false
+  }
+}
+
+async function saveBaseLocation() {
+  baseSaving.value = true
+  baseMsg.value = ''
+  baseError.value = ''
+  const latRaw = baseForm.lat.trim()
+  const lngRaw = baseForm.lng.trim()
+  let baseLat: number | null = null
+  let baseLng: number | null = null
+  if (latRaw || lngRaw) {
+    baseLat = Number(latRaw)
+    baseLng = Number(lngRaw)
+    if (!Number.isFinite(baseLat) || !Number.isFinite(baseLng)) {
+      baseError.value = t('admin.commercials.baseLocationFailed')
+      baseSaving.value = false
+      return
+    }
+  }
+  try {
+    await $fetch(`/api/admin/commercials/${baseForm.commercialId}/base-location`, {
+      method: 'PATCH',
+      body: {
+        baseCity: baseForm.city,
+        basePostalCode: baseForm.postalCode,
+        baseLat,
+        baseLng,
+      },
+    })
+    baseMsg.value = t('admin.commercials.baseLocationSuccess')
+  } catch {
+    baseError.value = t('admin.commercials.baseLocationFailed')
+  } finally {
+    baseSaving.value = false
   }
 }
 

@@ -133,6 +133,10 @@ func (a *API) getVetCalendar(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if err := a.store.AttachPreconsultStatuses(r.Context(), visits); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	vacations, err := a.store.ListVacations(r.Context(), id.PracticeID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -140,6 +144,10 @@ func (a *API) getVetCalendar(w http.ResponseWriter, r *http.Request) {
 	}
 	pending, err := a.store.ListPracticePendingVetActions(r.Context(), id.PracticeID)
 	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if err := a.store.AttachPreconsultStatuses(r.Context(), pending); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

@@ -26,6 +26,8 @@ Quand le **client** écrit un message et que le véto a `email_on_message`, un e
 
 Quand le **client** crée une demande de RDV (ou propose un déplacement au véto) et que `email_on_visit_request` est actif : e-mail avec CTA `/calendar?visit={id}`.
 
+Quand un RDV passe à **`confirmed`** (confirm, `ConfirmDirect`, accept reschedule) : création d’un intake pré-consult `pending`, push `visit_confirmed` (+ `preconsult=1`), et **e-mail client** (si pref `visits` et intake nouvellement créé) avec CTA invite app `?preconsult={visitId}` — détail [31-PRECONSULTATION.md](31-PRECONSULTATION.md).
+
 ## Push FCM (livré)
 
 Device tokens : `PUT /me/device-tokens` (enregistrés par l’app Flutter au login).

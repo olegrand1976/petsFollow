@@ -1,0 +1,218 @@
+package handlers
+
+import (
+	"context"
+	"errors"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
+)
+
+func (a *API) getVisitPreconsult(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	visit, pet, ok := a.loadVisitPetForPreconsult(w, r, id, store.PermRead)
+	if !ok {
+		return
+	}
+	in, err := a.store.GetPreconsultByVisit(r.Context(), visit.ID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	in.PetID = pet.ID
+	in.PetName = pet.Name
+	httpx.WriteData(w, http.StatusOK, in)
+}
+
+type putPreconsultReq struct {
+	Answers store.PreconsultAnswers `json:"answers"`
+}
+
+func (a *API) putVisitPreconsult(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	visit, pet, ok := a.loadVisitPetForPreconsult(w, r, id, store.PermWriteNotes)
+	if !ok {
+		return
+	}
+	if pet.OwnerUserID != id.UserID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+		return
+	}
+	if visit.Status != "confirmed" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "visit_not_confirmed")
+		return
+	}
+	var req putPreconsultReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	in, err := a.store.SubmitPreconsult(r.Context(), visit.ID, req.Answers)
+	if err != nil {
+		if code, ok := store.IsPreconsultValidation(err); ok {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "preconsult_already_submitted")
+			return
+		}
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "preconsult_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	in.PetID = pet.ID
+	in.PetName = pet.Name
+	httpx.WriteData(w, http.StatusOK, in)
+}
+
+func (a *API) loadVisitPetForPreconsult(w http.ResponseWriter, r *http.Request, id authx.Identity, minPerm store.AccessPermission) (store.Visit, store.Pet, bool) {
+	visit, err := a.store.GetVisit(r.Context(), chi.URLParam(r, "visitID"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return store.Visit{}, store.Pet{}, false
+	}
+	pet, err := a.store.GetPet(r.Context(), visit.PetID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return store.Visit{}, store.Pet{}, false
+	}
+	switch id.Role {
+	case kernel.RoleClient, kernel.RoleCarePro:
+		ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, minPerm)
+		if aerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return store.Visit{}, store.Pet{}, false
+		}
+		if !ok {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
+			return store.Visit{}, store.Pet{}, false
+		}
+	default:
+		if !a.checkPracticePerm(w, r, id, "calendar.manage") {
+			return store.Visit{}, store.Pet{}, false
+		}
+		if pet.PracticeID != id.PracticeID {
+			ok, aerr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
+			if aerr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return store.Visit{}, store.Pet{}, false
+			}
+			if !ok {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+				return store.Visit{}, store.Pet{}, false
+			}
+		}
+	}
+	return visit, pet, true
+}
+
+// onVisitConfirmed creates pending preconsult, pushes FCM, and emails the client when intake is new.
+func (a *API) onVisitConfirmed(pet store.Pet, visit store.Visit) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		_, created, err := a.store.EnsurePreconsultPending(ctx, visit.ID)
+		if err != nil {
+			log.Printf("preconsult: ensure pending visit %s: %v", visit.ID, err)
+		}
+		a.pushVisitConfirmed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
+		if created {
+			a.emailVisitPreconsult(ctx, pet, visit)
+		}
+	}()
+}
+
+func (a *API) emailVisitPreconsult(ctx context.Context, pet store.Pet, visit store.Visit) {
+	if a.notifier == nil {
+		return
+	}
+	prefs, err := a.store.GetClientNotificationPrefs(ctx, pet.OwnerUserID)
+	if err != nil || !prefs.Visits {
+		return
+	}
+	client, err := a.store.GetUserByID(ctx, pet.OwnerUserID)
+	if err != nil || strings.TrimSpace(client.Email) == "" {
+		return
+	}
+	locale := client.PreferredLocale
+	if locale == "" {
+		locale = "fr"
+	}
+	clientName := client.FullName
+	if clientName == "" {
+		clientName = client.Email
+	}
+	when := ""
+	loc, _ := time.LoadLocation("Europe/Brussels")
+	if loc == nil {
+		loc = time.Local
+	}
+	if visit.ScheduledAt != nil {
+		when = visit.ScheduledAt.In(loc).Format("02/01/2006 15:04")
+	}
+	practiceName := ""
+	ctaURL := ""
+	if inviteOwner := a.resolvePreconsultInviteOwner(ctx, pet.PracticeID, pet.OwnerUserID); inviteOwner != "" {
+		if invite, err := a.store.EnsureAppInviteCode(ctx, inviteOwner); err == nil {
+			ctaURL = a.appInviteWebURL(invite.Code) + "?preconsult=" + visit.ID
+			if invite.PracticeName != "" {
+				practiceName = invite.PracticeName
+			}
+		}
+	}
+	if practiceName == "" {
+		if contact, err := a.store.GetPracticeContact(ctx, pet.PracticeID); err == nil {
+			practiceName = contact.PracticeName
+		}
+	}
+	if ctaURL == "" {
+		// Last resort for clients who already have the app (no practice invite issuer).
+		ctaURL = "petsfollow://preconsult?visitId=" + visit.ID
+	}
+	if err := a.notifier.SendVisitPreconsult(client.Email, locale, clientName, pet.Name, when, practiceName, ctaURL); err != nil {
+		log.Printf("preconsult: email visit %s: %v", visit.ID, err)
+	}
+}
+
+// resolvePreconsultInviteOwner picks a practice user who can issue an app-invite code.
+func (a *API) resolvePreconsultInviteOwner(ctx context.Context, practiceID, clientUserID string) string {
+	if ref, err := a.store.PracticeReferenceVetUserID(ctx, practiceID); err == nil && ref != "" {
+		return ref
+	}
+	vets, err := a.store.ListVetsForVisitAlert(ctx, practiceID, clientUserID)
+	if err == nil {
+		for _, v := range vets {
+			if v.ID != "" {
+				return v.ID
+			}
+		}
+	}
+	return ""
+}

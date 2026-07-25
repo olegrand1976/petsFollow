@@ -435,6 +435,37 @@ class AppLocalizationsEt extends AppLocalizations {
       'Peate nõustuma tingimuste ja privaatsuspoliitikaga.';
 
   @override
+  String get nearbyCommercialTitle => 'Müügiesindaja teie lähedal';
+
+  @override
+  String get nearbyCommercialHint =>
+      'Ilma kutsekoodita saate valida lähedase müügiesindaja (valikuline).';
+
+  @override
+  String get nearbyCommercialUseLocation => 'Kasuta minu asukohta';
+
+  @override
+  String get nearbyCommercialPostalCode => 'Postiindeks';
+
+  @override
+  String get nearbyCommercialSearch => 'Otsi';
+
+  @override
+  String get nearbyCommercialEmpty => 'Lähedalt müügiesindajat ei leitud.';
+
+  @override
+  String get nearbyCommercialSkip => 'Jäta vahele';
+
+  @override
+  String get nearbyCommercialGeoDenied =>
+      'Asukoht keelatud — sisestage postiindeks.';
+
+  @override
+  String nearbyCommercialDistance(String km) {
+    return '$km km';
+  }
+
+  @override
   String get pushPermissionTitle => 'Teavitused';
 
   @override
@@ -1340,4 +1371,110 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get profileSwitched => 'Profile switched';
+
+  @override
+  String get preconsultTitle => 'Eelkonsultatsioon';
+
+  @override
+  String preconsultTitlePet(String petName) {
+    return 'Eelkonsultatsioon — $petName';
+  }
+
+  @override
+  String get preconsultIntro =>
+      'Jagage looma seisundit enne visiiti, et loomaarst saaks valmistuda.';
+
+  @override
+  String get preconsultComplaint => 'Peamine põhjus / kaebus';
+
+  @override
+  String get preconsultComplaintRequired => 'Sisestage visiidi põhjus';
+
+  @override
+  String get preconsultDuration => 'Kui kaua?';
+
+  @override
+  String get preconsultDurationToday => 'Täna';
+
+  @override
+  String get preconsultDurationFewDays => 'Paar päeva';
+
+  @override
+  String get preconsultDurationWeek => 'Umbes nädal';
+
+  @override
+  String get preconsultDurationWeeks => 'Mitu nädalat';
+
+  @override
+  String get preconsultDurationMonths => 'Mitu kuud';
+
+  @override
+  String get preconsultBehavior => 'Käitumine';
+
+  @override
+  String get preconsultBehaviorNormal => 'Normaalne';
+
+  @override
+  String get preconsultBehaviorLethargic => 'Loiuvõitu';
+
+  @override
+  String get preconsultBehaviorRestless => 'Rahutu';
+
+  @override
+  String get preconsultBehaviorAggressive => 'Agressiivne';
+
+  @override
+  String get preconsultBehaviorAnxious => 'Ärev';
+
+  @override
+  String get preconsultBehaviorOther => 'Muu';
+
+  @override
+  String get preconsultAppetite => 'Isu';
+
+  @override
+  String get preconsultThirst => 'Janu';
+
+  @override
+  String get preconsultElimination => 'Väljaheide / uriin';
+
+  @override
+  String get preconsultScaleNormal => 'Normaalne';
+
+  @override
+  String get preconsultScaleDecreased => 'Vähenenud';
+
+  @override
+  String get preconsultScaleIncreased => 'Suurenenud';
+
+  @override
+  String get preconsultUrgency => 'Tajutud kiireloomulisus';
+
+  @override
+  String get preconsultUrgencyLow => 'Madal';
+
+  @override
+  String get preconsultUrgencyMedium => 'Keskmine';
+
+  @override
+  String get preconsultUrgencyHigh => 'Kõrge';
+
+  @override
+  String get preconsultComment => 'Kommentaar (valikuline)';
+
+  @override
+  String get preconsultUnknown => 'Ei tea';
+
+  @override
+  String get preconsultSubmit => 'Saada';
+
+  @override
+  String get preconsultSubmitted => 'Eelkonsultatsioon saadetud';
+
+  @override
+  String get preconsultAlreadySubmitted =>
+      'Olete selle eelkonsultatsiooni juba saatnud.';
+
+  @override
+  String get preconsultFillCta => 'Täida eelkonsultatsioon';
 }

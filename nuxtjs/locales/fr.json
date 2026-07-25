@@ -228,7 +228,19 @@
       "loginLink": "Se connecter",
       "failed": "Inscription impossible",
       "consent": "J'accepte les {terms} et la {privacy}.",
-      "consentRequired": "Vous devez accepter les conditions et la politique de confidentialité."
+      "consentRequired": "Vous devez accepter les conditions et la politique de confidentialité.",
+      "nearbyCommercial": {
+        "title": "Commercial près de chez vous",
+        "hint": "Sans code de parrainage, choisissez un commercial proche (optionnel).",
+        "useLocation": "Utiliser ma position",
+        "postalCode": "Code postal",
+        "searchPostal": "Rechercher par code postal",
+        "empty": "Aucun commercial trouvé à proximité.",
+        "skip": "Ne pas rattacher de commercial",
+        "distance": "{km} km",
+        "geoUnsupported": "Géolocalisation non disponible sur cet appareil.",
+        "geoDenied": "Position refusée — saisissez un code postal."
+      }
     },
     "registerSent": {
       "brandTitle": "Vérifiez votre boîte mail",
@@ -468,6 +480,12 @@
       "iban": "IBAN",
       "bic": "BIC (optionnel)",
       "accountHolder": "Titulaire du compte",
+      "baseLocationTitle": "Zone de base",
+      "baseLocationHint": "Utilisée pour apparaître dans « commerciaux près de chez moi » à l'inscription.",
+      "baseCity": "Ville",
+      "basePostalCode": "Code postal",
+      "baseLat": "Latitude",
+      "baseLng": "Longitude",
       "save": "Enregistrer",
       "saved": "Profil enregistré"
     },
@@ -1023,7 +1041,15 @@
       "assignManagerNone": "Aucun",
       "assignManagerSubmit": "Enregistrer le rattachement",
       "assignManagerSuccess": "Rattachement mis à jour",
-      "assignManagerFailed": "Rattachement impossible"
+      "assignManagerFailed": "Rattachement impossible",
+      "baseLocationTitle": "Zone de base d'un commercial",
+      "baseCity": "Ville",
+      "basePostalCode": "Code postal",
+      "baseLat": "Latitude",
+      "baseLng": "Longitude",
+      "baseLocationSubmit": "Enregistrer la zone",
+      "baseLocationSuccess": "Zone de base enregistrée.",
+      "baseLocationFailed": "Impossible d’enregistrer la zone."
     },
     "prospects": {
       "title": "Prospects marketing",
@@ -1291,6 +1317,50 @@
       "reschedule_pending": "Déplacement en attente",
       "done": "Terminé",
       "cancelled": "Annulé"
+    },
+    "preconsultLabel": "Pré-consultation",
+    "preconsultAnswers": "Réponses client",
+    "preconsultPending": "En attente",
+    "preconsultSubmitted": "Reçue",
+    "preconsultSkipped": "Ignorée",
+    "preconsultNone": "Non demandée",
+    "preconsultComplaint": "Motif",
+    "preconsultDuration": "Depuis quand",
+    "preconsultBehavior": "Comportement",
+    "preconsultAppetite": "Appétit",
+    "preconsultThirst": "Soif",
+    "preconsultElimination": "Selles / urines",
+    "preconsultUrgency": "Urgence",
+    "preconsultComment": "Commentaire",
+    "preconsultEnums": {
+      "duration": {
+        "today": "Aujourd'hui",
+        "few_days": "Quelques jours",
+        "week": "Une semaine",
+        "weeks": "Plusieurs semaines",
+        "months": "Plusieurs mois",
+        "unknown": "Inconnu"
+      },
+      "behavior": {
+        "normal": "Normal",
+        "lethargic": "Apathique",
+        "restless": "Agité",
+        "aggressive": "Agressif",
+        "anxious": "Anxieux",
+        "other": "Autre",
+        "unknown": "Inconnu"
+      },
+      "scale": {
+        "normal": "Normal",
+        "decreased": "Diminué",
+        "increased": "Augmenté",
+        "unknown": "Inconnu"
+      },
+      "urgency": {
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Élevée"
+      }
     }
   },
   "commissions": {

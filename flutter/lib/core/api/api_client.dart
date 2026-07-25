@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
+import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
@@ -15,6 +16,7 @@ import 'package:petsfollow_mobile/core/models/practice_availability.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
+import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Payload JSON for HR validate when a non-blank comment is provided.
@@ -204,6 +206,7 @@ class ApiClient {
     required String fullName,
     String? locale,
     String? inviteCode,
+    String? commercialUserId,
     bool consent = false,
   }) async {
     final code = inviteCode ?? await InviteCodeStore.instance.peek();
@@ -215,6 +218,10 @@ class ApiClient {
         'fullName': fullName,
         'consent': consent,
         if (code != null && code.isNotEmpty) 'inviteCode': code,
+        if ((code == null || code.isEmpty) &&
+            commercialUserId != null &&
+            commercialUserId.isNotEmpty)
+          'commercialUserId': commercialUserId,
       },
       options: Options(
         headers: {
@@ -388,6 +395,7 @@ class ApiClient {
   Future<Map<String, dynamic>> loginWithGoogle(
     String idToken, {
     bool consent = false,
+    String? commercialUserId,
   }) async {
     final inviteCode = await InviteCodeStore.instance.peek();
     final res = await dio.post('/api/v1/auth/google', data: {
@@ -395,10 +403,34 @@ class ApiClient {
       'audience': 'client',
       if (consent) 'consent': true,
       if (inviteCode != null && inviteCode.isNotEmpty) 'inviteCode': inviteCode,
+      if ((inviteCode == null || inviteCode.isEmpty) &&
+          commercialUserId != null &&
+          commercialUserId.isNotEmpty)
+        'commercialUserId': commercialUserId,
     });
     final data = res.data['data'] as Map<String, dynamic>;
     if (_isMfaChallenge(data)) return data;
     return _completeLogin(data);
+  }
+
+  Future<List<Map<String, dynamic>>> listNearbyCommercials({
+    double? lat,
+    double? lng,
+    String? postalCode,
+    int limit = 5,
+  }) async {
+    final res = await dio.get('/api/v1/commercials/nearby', queryParameters: {
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (postalCode != null && postalCode.isNotEmpty) 'postalCode': postalCode,
+      'limit': limit,
+    });
+    final data = res.data['data'];
+    if (data is! List) return [];
+    return data
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   /// Completes MFA after [login] / [loginWithGoogle] returned `requires2FA`.
@@ -456,6 +488,7 @@ class ApiClient {
     }
     await NotificationService.instance.onLogin();
     await _claimPendingInvite();
+    await _openPendingPreconsult();
     onSessionEstablished?.call();
     return data;
   }
@@ -469,6 +502,17 @@ class ApiClient {
     } catch (e) {
       debugPrint('claim invite failed: $e');
     }
+  }
+
+  Future<void> _openPendingPreconsult() async {
+    final visitId = await PreconsultVisitStore.instance.peek();
+    if (visitId == null || visitId.isEmpty) return;
+    // Defer until navigator / shell callbacks are ready.
+    Future<void>.delayed(const Duration(milliseconds: 500), () async {
+      final still = await PreconsultVisitStore.instance.peek();
+      if (still == null || still.isEmpty) return;
+      PushNavigation.instance.openPreconsult(still);
+    });
   }
 
   Future<Map<String, dynamic>> getMe() async {
@@ -800,6 +844,21 @@ class ApiClient {
         .whereType<Map>()
         .map((v) => Visit.fromJson(Map<String, dynamic>.from(v)))
         .toList();
+  }
+
+  Future<Map<String, dynamic>> getPreconsult(String visitId) async {
+    final res = await dio.get('/api/v1/visits/$visitId/preconsult');
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  Future<Map<String, dynamic>> submitPreconsult(
+    String visitId,
+    Map<String, dynamic> answers,
+  ) async {
+    final res = await dio.put('/api/v1/visits/$visitId/preconsult', data: {
+      'answers': answers,
+    });
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Visit> createVisit(

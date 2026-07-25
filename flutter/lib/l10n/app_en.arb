@@ -143,6 +143,22 @@
   "registerConsentPrefix": "I accept the ",
   "registerConsentMiddle": " and the ",
   "registerConsentRequired": "You must accept the terms and the privacy policy.",
+  "nearbyCommercialTitle": "Sales rep near you",
+  "nearbyCommercialHint": "Without an invite code, pick a nearby sales rep (optional).",
+  "nearbyCommercialUseLocation": "Use my location",
+  "nearbyCommercialPostalCode": "Postal code",
+  "nearbyCommercialSearch": "Search",
+  "nearbyCommercialEmpty": "No sales reps found nearby.",
+  "nearbyCommercialSkip": "Skip — no sales rep",
+  "nearbyCommercialGeoDenied": "Location denied — enter a postal code.",
+  "nearbyCommercialDistance": "{km} km",
+  "@nearbyCommercialDistance": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
   "pushPermissionTitle": "Notifications",
   "pushPermissionBody": "petsFollow would like to send you notifications: messages from your vet, appointment confirmations and care reminders. You can disable them at any time in the app or phone settings.",
   "pushPermissionContinue": "Continue",
@@ -487,5 +503,46 @@
   "switchProfile": "Switch profile",
   "profilePersonal": "Personal",
   "profilePro": "Professional",
-  "profileSwitched": "Profile switched"
+  "profileSwitched": "Profile switched",
+  "preconsultTitle": "Pre-consultation",
+  "preconsultTitlePet": "Pre-consultation — {petName}",
+  "preconsultIntro": "Share your pet's condition before the visit so your vet can prepare.",
+  "preconsultComplaint": "Main reason / complaint",
+  "preconsultComplaintRequired": "Please enter the reason for the visit",
+  "preconsultDuration": "For how long?",
+  "preconsultDurationToday": "Today",
+  "preconsultDurationFewDays": "A few days",
+  "preconsultDurationWeek": "About a week",
+  "preconsultDurationWeeks": "Several weeks",
+  "preconsultDurationMonths": "Several months",
+  "preconsultBehavior": "Behavior",
+  "preconsultBehaviorNormal": "Normal",
+  "preconsultBehaviorLethargic": "Lethargic",
+  "preconsultBehaviorRestless": "Restless",
+  "preconsultBehaviorAggressive": "Aggressive",
+  "preconsultBehaviorAnxious": "Anxious",
+  "preconsultBehaviorOther": "Other",
+  "preconsultAppetite": "Appetite",
+  "preconsultThirst": "Thirst",
+  "preconsultElimination": "Stool / urine",
+  "preconsultScaleNormal": "Normal",
+  "preconsultScaleDecreased": "Decreased",
+  "preconsultScaleIncreased": "Increased",
+  "preconsultUrgency": "Perceived urgency",
+  "preconsultUrgencyLow": "Low",
+  "preconsultUrgencyMedium": "Medium",
+  "preconsultUrgencyHigh": "High",
+  "preconsultComment": "Comment (optional)",
+  "preconsultUnknown": "I don't know",
+  "preconsultSubmit": "Submit",
+  "preconsultSubmitted": "Pre-consultation submitted",
+  "preconsultAlreadySubmitted": "You already submitted this pre-consultation.",
+  "preconsultFillCta": "Fill pre-consultation",
+  "@preconsultTitlePet": {
+    "placeholders": {
+      "petName": {
+        "type": "String"
+      }
+    }
+  }
 }

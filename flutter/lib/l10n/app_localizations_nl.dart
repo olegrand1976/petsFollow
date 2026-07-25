@@ -435,6 +435,38 @@ class AppLocalizationsNl extends AppLocalizations {
       'U moet de voorwaarden en het privacybeleid aanvaarden.';
 
   @override
+  String get nearbyCommercialTitle => 'Vertegenwoordiger bij u in de buurt';
+
+  @override
+  String get nearbyCommercialHint =>
+      'Zonder uitnodigingscode kunt u een nabije vertegenwoordiger kiezen (optioneel).';
+
+  @override
+  String get nearbyCommercialUseLocation => 'Mijn locatie gebruiken';
+
+  @override
+  String get nearbyCommercialPostalCode => 'Postcode';
+
+  @override
+  String get nearbyCommercialSearch => 'Zoeken';
+
+  @override
+  String get nearbyCommercialEmpty =>
+      'Geen vertegenwoordiger in de buurt gevonden.';
+
+  @override
+  String get nearbyCommercialSkip => 'Overslaan';
+
+  @override
+  String get nearbyCommercialGeoDenied =>
+      'Locatie geweigerd — voer een postcode in.';
+
+  @override
+  String nearbyCommercialDistance(String km) {
+    return '$km km';
+  }
+
+  @override
   String get pushPermissionTitle => 'Notificaties';
 
   @override
@@ -1337,4 +1369,110 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get profileSwitched => 'Profile switched';
+
+  @override
+  String get preconsultTitle => 'Preconsultatie';
+
+  @override
+  String preconsultTitlePet(String petName) {
+    return 'Preconsultatie — $petName';
+  }
+
+  @override
+  String get preconsultIntro =>
+      'Deel de toestand van uw dier vóór het bezoek zodat uw dierenarts zich kan voorbereiden.';
+
+  @override
+  String get preconsultComplaint => 'Hoofdreden / klacht';
+
+  @override
+  String get preconsultComplaintRequired => 'Geef de reden van het bezoek op';
+
+  @override
+  String get preconsultDuration => 'Sinds wanneer?';
+
+  @override
+  String get preconsultDurationToday => 'Vandaag';
+
+  @override
+  String get preconsultDurationFewDays => 'Enkele dagen';
+
+  @override
+  String get preconsultDurationWeek => 'Ongeveer een week';
+
+  @override
+  String get preconsultDurationWeeks => 'Meerdere weken';
+
+  @override
+  String get preconsultDurationMonths => 'Meerdere maanden';
+
+  @override
+  String get preconsultBehavior => 'Gedrag';
+
+  @override
+  String get preconsultBehaviorNormal => 'Normaal';
+
+  @override
+  String get preconsultBehaviorLethargic => 'Lusteloos';
+
+  @override
+  String get preconsultBehaviorRestless => 'Onrustig';
+
+  @override
+  String get preconsultBehaviorAggressive => 'Agressief';
+
+  @override
+  String get preconsultBehaviorAnxious => 'Angstig';
+
+  @override
+  String get preconsultBehaviorOther => 'Anders';
+
+  @override
+  String get preconsultAppetite => 'Eetlust';
+
+  @override
+  String get preconsultThirst => 'Dorst';
+
+  @override
+  String get preconsultElimination => 'Ontlasting / urine';
+
+  @override
+  String get preconsultScaleNormal => 'Normaal';
+
+  @override
+  String get preconsultScaleDecreased => 'Verminderd';
+
+  @override
+  String get preconsultScaleIncreased => 'Verhoogd';
+
+  @override
+  String get preconsultUrgency => 'Gevoelde urgentie';
+
+  @override
+  String get preconsultUrgencyLow => 'Laag';
+
+  @override
+  String get preconsultUrgencyMedium => 'Gemiddeld';
+
+  @override
+  String get preconsultUrgencyHigh => 'Hoog';
+
+  @override
+  String get preconsultComment => 'Opmerking (optioneel)';
+
+  @override
+  String get preconsultUnknown => 'Ik weet het niet';
+
+  @override
+  String get preconsultSubmit => 'Verzenden';
+
+  @override
+  String get preconsultSubmitted => 'Preconsultatie verzonden';
+
+  @override
+  String get preconsultAlreadySubmitted =>
+      'U heeft deze preconsultatie al verzonden.';
+
+  @override
+  String get preconsultFillCta => 'Preconsultatie invullen';
 }

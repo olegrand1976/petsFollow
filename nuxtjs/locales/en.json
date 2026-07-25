@@ -121,7 +121,19 @@
       "loginLink": "Sign in",
       "failed": "Registration failed",
       "consent": "I accept the {terms} and the {privacy}.",
-      "consentRequired": "You must accept the terms and the privacy policy."
+      "consentRequired": "You must accept the terms and the privacy policy.",
+      "nearbyCommercial": {
+        "title": "Sales rep near you",
+        "hint": "Without a referral code, pick a nearby sales rep (optional).",
+        "useLocation": "Use my location",
+        "postalCode": "Postal code",
+        "searchPostal": "Search by postal code",
+        "empty": "No sales reps found nearby.",
+        "skip": "Skip — no sales rep",
+        "distance": "{km} km",
+        "geoUnsupported": "Geolocation is not available on this device.",
+        "geoDenied": "Location denied — enter a postal code instead."
+      }
     },
     "registerSent": {
       "brandTitle": "Check your inbox",
@@ -851,7 +863,15 @@
       "assignManagerNone": "None",
       "assignManagerSubmit": "Save assignment",
       "assignManagerSuccess": "Assignment updated",
-      "assignManagerFailed": "Assignment failed"
+      "assignManagerFailed": "Assignment failed",
+      "baseLocationTitle": "Sales rep base area",
+      "baseCity": "City",
+      "basePostalCode": "Postal code",
+      "baseLat": "Latitude",
+      "baseLng": "Longitude",
+      "baseLocationSubmit": "Save base area",
+      "baseLocationSuccess": "Base area saved.",
+      "baseLocationFailed": "Could not save base area."
     },
     "prospects": {
       "title": "Marketing prospects",
@@ -1638,6 +1658,12 @@
       "iban": "IBAN",
       "bic": "BIC (optional)",
       "accountHolder": "Account holder",
+      "baseLocationTitle": "Base area",
+      "baseLocationHint": "Used to appear in “sales reps near me” at signup.",
+      "baseCity": "City",
+      "basePostalCode": "Postal code",
+      "baseLat": "Latitude",
+      "baseLng": "Longitude",
       "save": "Save",
       "saved": "Profile saved"
     },
@@ -1790,6 +1816,50 @@
       "reschedule_pending": "Reschedule pending",
       "done": "Done",
       "cancelled": "Cancelled"
+    },
+    "preconsultLabel": "Pre-consultation",
+    "preconsultAnswers": "Client answers",
+    "preconsultPending": "Pending",
+    "preconsultSubmitted": "Received",
+    "preconsultSkipped": "Skipped",
+    "preconsultNone": "Not requested",
+    "preconsultComplaint": "Reason",
+    "preconsultDuration": "Duration",
+    "preconsultBehavior": "Behavior",
+    "preconsultAppetite": "Appetite",
+    "preconsultThirst": "Thirst",
+    "preconsultElimination": "Stool / urine",
+    "preconsultUrgency": "Urgency",
+    "preconsultComment": "Comment",
+    "preconsultEnums": {
+      "duration": {
+        "today": "Today",
+        "few_days": "A few days",
+        "week": "About a week",
+        "weeks": "Several weeks",
+        "months": "Several months",
+        "unknown": "Unknown"
+      },
+      "behavior": {
+        "normal": "Normal",
+        "lethargic": "Lethargic",
+        "restless": "Restless",
+        "aggressive": "Aggressive",
+        "anxious": "Anxious",
+        "other": "Other",
+        "unknown": "Unknown"
+      },
+      "scale": {
+        "normal": "Normal",
+        "decreased": "Decreased",
+        "increased": "Increased",
+        "unknown": "Unknown"
+      },
+      "urgency": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
     }
   },
   "manager": {

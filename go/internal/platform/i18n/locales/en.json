@@ -115,7 +115,18 @@
     "credentials_unavailable": "Credentials unavailable or already downloaded",
     "invalid_multipart": "Invalid multipart form",
     "no_data_rows": "No data rows",
-    "too_many_rows": "Too many rows (max 2000)"
+    "too_many_rows": "Too many rows (max 2000)",
+    "preconsult_not_found": "Pre-consultation not found",
+    "preconsult_already_submitted": "Pre-consultation already submitted",
+    "visit_not_confirmed": "The appointment is not confirmed yet",
+    "chief_complaint_required": "Please enter the reason for the visit",
+    "chief_complaint_too_long": "Reason too long (max 500 characters)",
+    "comment_too_long": "Comment too long (max 2000 characters)",
+    "invalid_behavior": "Invalid behavior",
+    "invalid_appetite": "Invalid appetite",
+    "invalid_thirst": "Invalid thirst",
+    "invalid_elimination": "Invalid stool / urine value",
+    "invalid_urgency": "Invalid urgency"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",
@@ -356,13 +367,21 @@
         "cta": "Take a reading",
         "disclaimer": "Turn off these emails via the unsubscribe link if you prefer."
       }
-    }
+    },
+    "visit_preconsult_subject": "Appointment confirmed — prepare {petName}'s visit",
+    "visit_preconsult_tagline": "Pre-consultation",
+    "visit_preconsult_preheader": "Appointment confirmed for {petName} on {when}. Share your pet's condition.",
+    "visit_preconsult_greeting": "Hello {fullName},",
+    "visit_preconsult_intro": "The appointment for {petName} at {practiceName} is confirmed.",
+    "visit_preconsult_detail": "Date: {when}\n\nBefore the visit, open the petsFollow app to share your pet's condition (symptoms, appetite, urgency). If you don't have the app yet, download it with the button below.",
+    "visit_preconsult_cta": "Open / download the app",
+    "visit_preconsult_disclaimer": "If you did not expect this email, you can ignore it."
   },
   "push": {
     "new_message_title": "New message",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Appointment confirmed",
-    "visit_confirmed_body": "The appointment for {petName} is confirmed.",
+    "visit_confirmed_body": "The appointment for {petName} is confirmed. Share your pet's condition before the visit.",
     "visit_proposed_title": "Appointment proposal",
     "visit_proposed_body": "Your vet proposed an appointment for {petName}.",
     "visit_reschedule_title": "Appointment reschedule",

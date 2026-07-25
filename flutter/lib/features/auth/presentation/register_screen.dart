@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/auth/google_login_flow.dart';
+import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
@@ -26,13 +28,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   final confirm = TextEditingController();
+  final postalCode = TextEditingController();
   String? error;
   String? info;
   String? success;
   bool _busy = false;
   bool consent = false;
+  bool _hasInvite = false;
+  bool _nearbyLoading = false;
+  bool _nearbyEmpty = false;
+  String? _nearbyError;
+  String? _selectedCommercialId;
+  List<Map<String, dynamic>> _nearby = [];
 
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
+
+  @override
+  void initState() {
+    super.initState();
+    InviteCodeStore.instance.peek().then((code) {
+      if (!mounted) return;
+      setState(() => _hasInvite = code != null && code.isNotEmpty);
+    });
+  }
 
   @override
   void dispose() {
@@ -40,6 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     email.dispose();
     password.dispose();
     confirm.dispose();
+    postalCode.dispose();
     super.dispose();
   }
 
@@ -77,6 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         fullName: name,
         locale: LocaleController.instance.locale.languageCode,
         consent: consent,
+        commercialUserId: _hasInvite ? null : _selectedCommercialId,
       );
       if (!mounted) return;
       setState(() => success = l10n.registerSuccess);
@@ -111,7 +131,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _busy = true;
     });
     try {
-      final data = await GoogleLoginFlow.signIn(consent: true);
+      final data = await GoogleLoginFlow.signIn(
+        consent: true,
+        commercialUserId: _hasInvite ? null : _selectedCommercialId,
+      );
       if (!mounted) return;
       if (data != null) {
         // L'utilisateur est connecté (ou en attente de 2FA) : le LoginScreen
@@ -178,6 +201,153 @@ class _RegisterScreenState extends State<RegisterScreen> {
       error = null;
       info = l10n.appleComingSoon;
     });
+  }
+
+  Future<void> _findByGeo() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _nearbyError = null;
+      _nearbyLoading = true;
+      _nearbyEmpty = false;
+    });
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        setState(() {
+          _nearbyLoading = false;
+          _nearbyError = l10n.nearbyCommercialGeoDenied;
+        });
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      final rows = await ApiClient.instance.listNearbyCommercials(
+        lat: pos.latitude,
+        lng: pos.longitude,
+      );
+      if (!mounted) return;
+      setState(() {
+        _nearby = rows;
+        _nearbyEmpty = rows.isEmpty;
+        _nearbyLoading = false;
+        if (!_nearby.any((r) => r['userId'] == _selectedCommercialId)) {
+          _selectedCommercialId = null;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nearbyLoading = false;
+        _nearbyError = l10n.nearbyCommercialGeoDenied;
+      });
+    }
+  }
+
+  Future<void> _findByPostal() async {
+    final code = postalCode.text.trim();
+    if (code.isEmpty) return;
+    setState(() {
+      _nearbyError = null;
+      _nearbyLoading = true;
+      _nearbyEmpty = false;
+    });
+    try {
+      final rows = await ApiClient.instance.listNearbyCommercials(postalCode: code);
+      if (!mounted) return;
+      setState(() {
+        _nearby = rows;
+        _nearbyEmpty = rows.isEmpty;
+        _nearbyLoading = false;
+        if (!_nearby.any((r) => r['userId'] == _selectedCommercialId)) {
+          _selectedCommercialId = null;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nearbyLoading = false;
+        _nearbyError = AppLocalizations.of(context)!.registerFailed;
+      });
+    }
+  }
+
+  Widget _buildNearbySection(AppLocalizations l10n) {
+    if (_hasInvite) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        Text(l10n.nearbyCommercialTitle, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(l10n.nearbyCommercialHint, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: (_busy || _nearbyLoading) ? null : _findByGeo,
+          child: Text(l10n.nearbyCommercialUseLocation),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: postalCode,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: l10n.nearbyCommercialPostalCode),
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: (_busy || _nearbyLoading) ? null : _findByPostal,
+              child: Text(l10n.nearbyCommercialSearch),
+            ),
+          ],
+        ),
+        if (_nearbyLoading) ...[
+          const SizedBox(height: 8),
+          const Center(child: CircularProgressIndicator()),
+        ],
+        if (_nearbyError != null) ...[
+          const SizedBox(height: 8),
+          Text(_nearbyError!, style: const TextStyle(color: AppColors.alert)),
+        ],
+        if (_nearbyEmpty) ...[
+          const SizedBox(height: 8),
+          Text(l10n.nearbyCommercialEmpty),
+        ],
+        ..._nearby.map((row) {
+          final id = row['userId']?.toString() ?? '';
+          final name = row['fullName']?.toString() ?? '';
+          final city = row['city']?.toString() ?? '';
+          final dist = row['distanceKm'];
+          final label = [
+            name,
+            if (city.isNotEmpty) city,
+            if (dist != null) l10n.nearbyCommercialDistance('$dist'),
+          ].join(' — ');
+          final selected = _selectedCommercialId == id;
+          return ListTile(
+            leading: Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? AppColors.accent : null,
+            ),
+            title: Text(label),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            onTap: _busy
+                ? null
+                : () => setState(() => _selectedCommercialId = id),
+          );
+        }),
+        if (_nearby.isNotEmpty)
+          TextButton(
+            onPressed: _busy ? null : () => setState(() => _selectedCommercialId = null),
+            child: Text(l10n.nearbyCommercialSkip),
+          ),
+      ],
+    );
   }
 
   bool get _hasSocial => _isIOS || GoogleAuth.isConfigured;
@@ -297,6 +467,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onSubmitted: (_) => submit(),
                     decoration: InputDecoration(labelText: l10n.confirmNewPassword),
                   ),
+                  _buildNearbySection(l10n),
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: _busy ? null : submit,

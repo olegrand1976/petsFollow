@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
@@ -8,6 +11,7 @@ import 'package:petsfollow_mobile/features/home/presentation/home_tab.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pets_tab.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/settings_menu_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -46,6 +50,24 @@ class _MainShellScreenState extends State<MainShellScreen> {
         ),
       );
     };
+    nav.onOpenPreconsult = (visitId, {petId, petName}) {
+      final navigator = nav.navigatorKey.currentState;
+      if (navigator == null) return;
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => PreconsultScreen(visitId: visitId, petName: petName),
+        ),
+      );
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_flushPendingPreconsult());
+    });
+  }
+
+  Future<void> _flushPendingPreconsult() async {
+    final visitId = await PreconsultVisitStore.instance.peek();
+    if (!mounted || visitId == null || visitId.isEmpty) return;
+    PushNavigation.instance.openPreconsult(visitId);
   }
 
   @override
@@ -53,6 +75,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     final nav = PushNavigation.instance;
     nav.onSelectTab = null;
     nav.onOpenPetTimeline = null;
+    nav.onOpenPreconsult = null;
     super.dispose();
   }
 

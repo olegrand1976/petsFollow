@@ -115,7 +115,18 @@
     "credentials_unavailable": "Volitused pole saadaval või on juba alla laaditud",
     "invalid_multipart": "Vigane multipart-vorm",
     "no_data_rows": "Andmeridu pole",
-    "too_many_rows": "Liiga palju ridu (max 2000)"
+    "too_many_rows": "Liiga palju ridu (max 2000)",
+    "preconsult_not_found": "Eelkonsultatsiooni ei leitud",
+    "preconsult_already_submitted": "Eelkonsultatsioon on juba saadetud",
+    "visit_not_confirmed": "Vastuvõtt ei ole veel kinnitatud",
+    "chief_complaint_required": "Sisestage visiidi põhjus",
+    "chief_complaint_too_long": "Põhjus on liiga pikk (max 500 märki)",
+    "comment_too_long": "Kommentaar on liiga pikk (max 2000 märki)",
+    "invalid_behavior": "Kehtetu käitumine",
+    "invalid_appetite": "Kehtetu isu",
+    "invalid_thirst": "Kehtetu janu",
+    "invalid_elimination": "Kehtetu väljaheide / uriin",
+    "invalid_urgency": "Kehtetu kiireloomulisus"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",
@@ -356,13 +367,21 @@
         "cta": "Tee mõõtmine",
         "disclaimer": "Lülitage need e-kirjad välja lahkumislingi kaudu, kui eelistate."
       }
-    }
+    },
+    "visit_preconsult_subject": "Vastuvõtt kinnitatud — valmistage {petName} visiit ette",
+    "visit_preconsult_tagline": "Eelkonsultatsioon",
+    "visit_preconsult_preheader": "Vastuvõtt kinnitatud loomale {petName} kuupäeval {when}. Jagage looma seisundit.",
+    "visit_preconsult_greeting": "Tere {fullName},",
+    "visit_preconsult_intro": "Looma {petName} vastuvõtt kliinikus {practiceName} on kinnitatud.",
+    "visit_preconsult_detail": "Kuupäev: {when}\n\nEnne visiiti avage petsFollowi rakendus, et jagada looma seisundit (sümptomid, isu, kiireloomulisus). Kui rakendust veel pole, laadige see alla alloleva nupu kaudu.",
+    "visit_preconsult_cta": "Ava / laadi rakendus alla",
+    "visit_preconsult_disclaimer": "Kui te seda e-kirja ei oodanud, võite selle ignoreerida."
   },
   "push": {
     "new_message_title": "Uus sõnum",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Vastuvõtt kinnitatud",
-    "visit_confirmed_body": "Vastuvõtt loomale {petName} on kinnitatud.",
+    "visit_confirmed_body": "Looma {petName} vastuvõtt on kinnitatud. Jagage looma seisundit enne visiiti.",
     "visit_proposed_title": "Vastuvõtu ettepanek",
     "visit_proposed_body": "Teie loomaarst pakkus vastuvõttu loomale {petName}.",
     "visit_reschedule_title": "Vastuvõtu ümberplaneerimine",

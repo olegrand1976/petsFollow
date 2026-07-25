@@ -12,6 +12,7 @@ export type CalendarVisit = {
   addressText?: string
   lat?: number
   lng?: number
+  preconsultStatus?: string
 }
 
 export type CalendarVacation = {

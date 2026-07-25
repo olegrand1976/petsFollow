@@ -18,7 +18,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 | Auth protégé | `GET/POST /auth/2fa/*` |
 | Me | `GET/PATCH /me`, avatar, password, locale, vets, household, discovery, device-tokens |
 | Véto | `/clients`, `/vet/*` (profile, availability messagerie, overview, link-requests, prospects, commissions, prefs) |
-| Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`) |
+| Calendrier RDV | `GET/PUT /vet/schedule`, `GET/POST/DELETE /vet/vacations`, `GET /vet/calendar`, `GET /practices/{id}/availability`, `GET/POST /pets/{id}/visits`, `PATCH /visits/{id}` (`confirm` / `propose_reschedule` / `accept_reschedule` / `reject_reschedule` / `cancel`), `GET/PUT /visits/{id}/preconsult` |
 | Pets / FC | `/pets`, heartrate sessions, timeline, photo, care-reminders, visits, horse-* |
 | Messaging | `/messaging/threads…` |
 | Billing | `GET /billing/plans` (monthly / annual / triennial), webhook Stripe, checkout/portal pet ; `/billing/addons` + `my-addons` = **legacy** (plus vendus, entitlements existants) |

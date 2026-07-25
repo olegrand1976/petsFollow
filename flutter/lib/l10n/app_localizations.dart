@@ -920,6 +920,60 @@ abstract class AppLocalizations {
   /// **'Vous devez accepter les conditions et la politique de confidentialité.'**
   String get registerConsentRequired;
 
+  /// No description provided for @nearbyCommercialTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commercial près de chez vous'**
+  String get nearbyCommercialTitle;
+
+  /// No description provided for @nearbyCommercialHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans code d\'invitation, choisissez un commercial proche (optionnel).'**
+  String get nearbyCommercialHint;
+
+  /// No description provided for @nearbyCommercialUseLocation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position'**
+  String get nearbyCommercialUseLocation;
+
+  /// No description provided for @nearbyCommercialPostalCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code postal'**
+  String get nearbyCommercialPostalCode;
+
+  /// No description provided for @nearbyCommercialSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get nearbyCommercialSearch;
+
+  /// No description provided for @nearbyCommercialEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun commercial trouvé à proximité.'**
+  String get nearbyCommercialEmpty;
+
+  /// No description provided for @nearbyCommercialSkip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne pas rattacher'**
+  String get nearbyCommercialSkip;
+
+  /// No description provided for @nearbyCommercialGeoDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position refusée — saisissez un code postal.'**
+  String get nearbyCommercialGeoDenied;
+
+  /// No description provided for @nearbyCommercialDistance.
+  ///
+  /// In fr, this message translates to:
+  /// **'{km} km'**
+  String nearbyCommercialDistance(String km);
+
   /// No description provided for @pushPermissionTitle.
   ///
   /// In fr, this message translates to:
@@ -2569,6 +2623,210 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Profil basculé'**
   String get profileSwitched;
+
+  /// No description provided for @preconsultTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-consultation'**
+  String get preconsultTitle;
+
+  /// No description provided for @preconsultTitlePet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-consultation — {petName}'**
+  String preconsultTitlePet(String petName);
+
+  /// No description provided for @preconsultIntro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l\'état de votre animal avant la visite. Votre vétérinaire pourra s\'y préparer.'**
+  String get preconsultIntro;
+
+  /// No description provided for @preconsultComplaint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif / plainte principale'**
+  String get preconsultComplaint;
+
+  /// No description provided for @preconsultComplaintRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le motif de la visite'**
+  String get preconsultComplaintRequired;
+
+  /// No description provided for @preconsultDuration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis quand ?'**
+  String get preconsultDuration;
+
+  /// No description provided for @preconsultDurationToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get preconsultDurationToday;
+
+  /// No description provided for @preconsultDurationFewDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelques jours'**
+  String get preconsultDurationFewDays;
+
+  /// No description provided for @preconsultDurationWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Environ une semaine'**
+  String get preconsultDurationWeek;
+
+  /// No description provided for @preconsultDurationWeeks.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plusieurs semaines'**
+  String get preconsultDurationWeeks;
+
+  /// No description provided for @preconsultDurationMonths.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plusieurs mois'**
+  String get preconsultDurationMonths;
+
+  /// No description provided for @preconsultBehavior.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comportement'**
+  String get preconsultBehavior;
+
+  /// No description provided for @preconsultBehaviorNormal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Normal'**
+  String get preconsultBehaviorNormal;
+
+  /// No description provided for @preconsultBehaviorLethargic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Apathique'**
+  String get preconsultBehaviorLethargic;
+
+  /// No description provided for @preconsultBehaviorRestless.
+  ///
+  /// In fr, this message translates to:
+  /// **'Agité'**
+  String get preconsultBehaviorRestless;
+
+  /// No description provided for @preconsultBehaviorAggressive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Agressif'**
+  String get preconsultBehaviorAggressive;
+
+  /// No description provided for @preconsultBehaviorAnxious.
+  ///
+  /// In fr, this message translates to:
+  /// **'Anxieux'**
+  String get preconsultBehaviorAnxious;
+
+  /// No description provided for @preconsultBehaviorOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get preconsultBehaviorOther;
+
+  /// No description provided for @preconsultAppetite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appétit'**
+  String get preconsultAppetite;
+
+  /// No description provided for @preconsultThirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soif'**
+  String get preconsultThirst;
+
+  /// No description provided for @preconsultElimination.
+  ///
+  /// In fr, this message translates to:
+  /// **'Selles / urines'**
+  String get preconsultElimination;
+
+  /// No description provided for @preconsultScaleNormal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Normal'**
+  String get preconsultScaleNormal;
+
+  /// No description provided for @preconsultScaleDecreased.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diminué'**
+  String get preconsultScaleDecreased;
+
+  /// No description provided for @preconsultScaleIncreased.
+  ///
+  /// In fr, this message translates to:
+  /// **'Augmenté'**
+  String get preconsultScaleIncreased;
+
+  /// No description provided for @preconsultUrgency.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence perçue'**
+  String get preconsultUrgency;
+
+  /// No description provided for @preconsultUrgencyLow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faible'**
+  String get preconsultUrgencyLow;
+
+  /// No description provided for @preconsultUrgencyMedium.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyenne'**
+  String get preconsultUrgencyMedium;
+
+  /// No description provided for @preconsultUrgencyHigh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élevée'**
+  String get preconsultUrgencyHigh;
+
+  /// No description provided for @preconsultComment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commentaire (optionnel)'**
+  String get preconsultComment;
+
+  /// No description provided for @preconsultUnknown.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je ne sais pas'**
+  String get preconsultUnknown;
+
+  /// No description provided for @preconsultSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get preconsultSubmit;
+
+  /// No description provided for @preconsultSubmitted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-consultation envoyée'**
+  String get preconsultSubmitted;
+
+  /// No description provided for @preconsultAlreadySubmitted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà envoyé cette pré-consultation.'**
+  String get preconsultAlreadySubmitted;
+
+  /// No description provided for @preconsultFillCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir la pré-consultation'**
+  String get preconsultFillCta;
 }
 
 class _AppLocalizationsDelegate

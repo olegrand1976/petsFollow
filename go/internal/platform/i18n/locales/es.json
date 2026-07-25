@@ -115,7 +115,18 @@
     "credentials_unavailable": "Credenciales no disponibles o ya descargadas",
     "invalid_multipart": "Formulario multipart inválido",
     "no_data_rows": "Sin filas de datos",
-    "too_many_rows": "Demasiadas filas (máx. 2000)"
+    "too_many_rows": "Demasiadas filas (máx. 2000)",
+    "preconsult_not_found": "Preconsulta no encontrada",
+    "preconsult_already_submitted": "Preconsulta ya enviada",
+    "visit_not_confirmed": "La cita aún no está confirmada",
+    "chief_complaint_required": "Indique el motivo de la visita",
+    "chief_complaint_too_long": "Motivo demasiado largo (máx. 500 caracteres)",
+    "comment_too_long": "Comentario demasiado largo (máx. 2000 caracteres)",
+    "invalid_behavior": "Comportamiento no válido",
+    "invalid_appetite": "Apetito no válido",
+    "invalid_thirst": "Sed no válida",
+    "invalid_elimination": "Heces / orina no válidas",
+    "invalid_urgency": "Urgencia no válida"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",
@@ -356,13 +367,21 @@
         "cta": "Hacer una lectura",
         "disclaimer": "Desactive estos correos con el enlace de baja si lo prefiere."
       }
-    }
+    },
+    "visit_preconsult_subject": "Cita confirmada — prepare la visita de {petName}",
+    "visit_preconsult_tagline": "Preconsulta",
+    "visit_preconsult_preheader": "Cita confirmada para {petName} el {when}. Indique el estado de su animal.",
+    "visit_preconsult_greeting": "Hola {fullName},",
+    "visit_preconsult_intro": "La cita de {petName} en {practiceName} está confirmada.",
+    "visit_preconsult_detail": "Fecha: {when}\n\nAntes de la visita, abra la app petsFollow para indicar el estado de su animal (síntomas, apetito, urgencia). Si aún no tiene la app, descárguela con el botón de abajo.",
+    "visit_preconsult_cta": "Abrir / descargar la app",
+    "visit_preconsult_disclaimer": "Si no esperaba este correo, puede ignorarlo."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Cita confirmada",
-    "visit_confirmed_body": "La cita de {petName} está confirmada.",
+    "visit_confirmed_body": "La cita de {petName} está confirmada. Indique el estado de su animal antes de la visita.",
     "visit_proposed_title": "Propuesta de cita",
     "visit_proposed_body": "Su veterinario propone una cita para {petName}.",
     "visit_reschedule_title": "Cambio de cita",

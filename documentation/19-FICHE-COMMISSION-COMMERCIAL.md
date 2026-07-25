@@ -9,6 +9,10 @@
 
 **Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal) du cabinet assigné. Pas de re-commission au renouvellement Stripe.
 
+**Inscription sans QR** : le client ou le véto peut choisir un commercial « près de chez moi » (`GET /commercials/nearby`).  
+- Véto → `assigned_commercial_id` (source principale des commissions).  
+- Client → `commercial_referrals` ; si le véto lié n’a **pas** de commercial assigné, ce referral sert de fallback commission. Un commercial déjà posé sur le véto **gagne toujours**.
+
 ## Votre grille
 | Offre | Taux HT | € indicatif |
 |-------|---------|-------------|

@@ -143,6 +143,22 @@
   "registerConsentPrefix": "Ik aanvaard de ",
   "registerConsentMiddle": " en het ",
   "registerConsentRequired": "U moet de voorwaarden en het privacybeleid aanvaarden.",
+  "nearbyCommercialTitle": "Vertegenwoordiger bij u in de buurt",
+  "nearbyCommercialHint": "Zonder uitnodigingscode kunt u een nabije vertegenwoordiger kiezen (optioneel).",
+  "nearbyCommercialUseLocation": "Mijn locatie gebruiken",
+  "nearbyCommercialPostalCode": "Postcode",
+  "nearbyCommercialSearch": "Zoeken",
+  "nearbyCommercialEmpty": "Geen vertegenwoordiger in de buurt gevonden.",
+  "nearbyCommercialSkip": "Overslaan",
+  "nearbyCommercialGeoDenied": "Locatie geweigerd — voer een postcode in.",
+  "nearbyCommercialDistance": "{km} km",
+  "@nearbyCommercialDistance": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
   "pushPermissionTitle": "Notificaties",
   "pushPermissionBody": "petsFollow wil u notificaties sturen: berichten van uw dierenarts, afspraakbevestigingen en zorgherinneringen. U kunt ze op elk moment uitschakelen in de app- of telefooninstellingen.",
   "pushPermissionContinue": "Doorgaan",
@@ -487,5 +503,46 @@
   "switchProfile": "Profiel wisselen",
   "profilePersonal": "Persoonlijk",
   "profilePro": "Professioneel",
-  "profileSwitched": "Profile switched"
+  "profileSwitched": "Profile switched",
+  "preconsultTitle": "Preconsultatie",
+  "preconsultTitlePet": "Preconsultatie — {petName}",
+  "preconsultIntro": "Deel de toestand van uw dier vóór het bezoek zodat uw dierenarts zich kan voorbereiden.",
+  "preconsultComplaint": "Hoofdreden / klacht",
+  "preconsultComplaintRequired": "Geef de reden van het bezoek op",
+  "preconsultDuration": "Sinds wanneer?",
+  "preconsultDurationToday": "Vandaag",
+  "preconsultDurationFewDays": "Enkele dagen",
+  "preconsultDurationWeek": "Ongeveer een week",
+  "preconsultDurationWeeks": "Meerdere weken",
+  "preconsultDurationMonths": "Meerdere maanden",
+  "preconsultBehavior": "Gedrag",
+  "preconsultBehaviorNormal": "Normaal",
+  "preconsultBehaviorLethargic": "Lusteloos",
+  "preconsultBehaviorRestless": "Onrustig",
+  "preconsultBehaviorAggressive": "Agressief",
+  "preconsultBehaviorAnxious": "Angstig",
+  "preconsultBehaviorOther": "Anders",
+  "preconsultAppetite": "Eetlust",
+  "preconsultThirst": "Dorst",
+  "preconsultElimination": "Ontlasting / urine",
+  "preconsultScaleNormal": "Normaal",
+  "preconsultScaleDecreased": "Verminderd",
+  "preconsultScaleIncreased": "Verhoogd",
+  "preconsultUrgency": "Gevoelde urgentie",
+  "preconsultUrgencyLow": "Laag",
+  "preconsultUrgencyMedium": "Gemiddeld",
+  "preconsultUrgencyHigh": "Hoog",
+  "preconsultComment": "Opmerking (optioneel)",
+  "preconsultUnknown": "Ik weet het niet",
+  "preconsultSubmit": "Verzenden",
+  "preconsultSubmitted": "Preconsultatie verzonden",
+  "preconsultAlreadySubmitted": "U heeft deze preconsultatie al verzonden.",
+  "preconsultFillCta": "Preconsultatie invullen",
+  "@preconsultTitlePet": {
+    "placeholders": {
+      "petName": {
+        "type": "String"
+      }
+    }
+  }
 }

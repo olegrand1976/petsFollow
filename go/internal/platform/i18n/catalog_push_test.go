@@ -26,7 +26,7 @@ func TestAllPushCatalogKeys(t *testing.T) {
 
 func TestPushInterpolation(t *testing.T) {
 	body := T("en", "push.visit_confirmed_body", map[string]string{"petName": "Bella"})
-	if body != "The appointment for Bella is confirmed." {
+	if body != "The appointment for Bella is confirmed. Share your pet's condition before the visit." {
 		t.Fatalf("got %q", body)
 	}
 	msg := T("fr", "push.new_message_body", map[string]string{"preview": "Coucou"})

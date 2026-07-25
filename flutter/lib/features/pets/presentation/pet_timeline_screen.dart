@@ -10,6 +10,7 @@ import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetTimelineScreen extends StatefulWidget {
@@ -307,6 +308,22 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 Wrap(
                                   alignment: WrapAlignment.end,
                                   children: [
+                                    if (v.preconsultPending && _canWriteNotes)
+                                      TextButton(
+                                        onPressed: () async {
+                                          await Navigator.push<void>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PreconsultScreen(
+                                                visitId: v.id,
+                                                petName: widget.petName,
+                                              ),
+                                            ),
+                                          );
+                                          if (mounted) await load();
+                                        },
+                                        child: Text(l10n.preconsultFillCta),
+                                      ),
                                     if (v.status == 'requested' && !v.awaitingClient)
                                       TextButton(
                                         onPressed: () => _cancelVisit(v),

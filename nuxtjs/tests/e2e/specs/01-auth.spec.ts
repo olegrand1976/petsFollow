@@ -133,6 +133,18 @@ test.describe('auth — inscription et confirmation', () => {
     })
     await expect(page.locator('[data-testid="register-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
   })
+
+  test('register nearby commercial par code postal', async ({ page }) => {
+    await page.goto('/register', { waitUntil: 'networkidle' })
+    await waitForAuthForm(page, 'register-form')
+    await expect(page.getByTestId('register-nearby-commercial')).toBeVisible()
+    await page.getByTestId('register-nearby-postal').locator('input').fill('1000')
+    await page.getByTestId('register-nearby-postal-btn').click()
+    // Seed commercial.demo est à Bruxelles 1000 — résultat attendu en local après seed.
+    await expect(
+      page.locator('.nearby-commercial__option').first().or(page.locator('.pro-field-hint')),
+    ).toBeVisible({ timeout: 10000 })
+  })
 })
 
 test.describe('auth — forgot / reset password', () => {

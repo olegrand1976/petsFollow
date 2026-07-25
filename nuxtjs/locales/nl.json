@@ -121,7 +121,19 @@
       "loginLink": "Aanmelden",
       "failed": "Registratie mislukt",
       "consent": "Ik aanvaard de {terms} en het {privacy}.",
-      "consentRequired": "U moet de voorwaarden en het privacybeleid aanvaarden."
+      "consentRequired": "U moet de voorwaarden en het privacybeleid aanvaarden.",
+      "nearbyCommercial": {
+        "title": "Vertegenwoordiger bij u in de buurt",
+        "hint": "Zonder referralcode kunt u een nabije vertegenwoordiger kiezen (optioneel).",
+        "useLocation": "Mijn locatie gebruiken",
+        "postalCode": "Postcode",
+        "searchPostal": "Zoeken op postcode",
+        "empty": "Geen vertegenwoordiger in de buurt gevonden.",
+        "skip": "Overslaan — geen vertegenwoordiger",
+        "distance": "{km} km",
+        "geoUnsupported": "Geolocatie is niet beschikbaar op dit apparaat.",
+        "geoDenied": "Locatie geweigerd — voer een postcode in."
+      }
     },
     "registerSent": {
       "brandTitle": "Controleer uw mailbox",
@@ -851,7 +863,15 @@
       "assignManagerNone": "Geen",
       "assignManagerSubmit": "Toewijzing opslaan",
       "assignManagerSuccess": "Toewijzing bijgewerkt",
-      "assignManagerFailed": "Toewijzing mislukt"
+      "assignManagerFailed": "Toewijzing mislukt",
+      "baseLocationTitle": "Basiszone van een vertegenwoordiger",
+      "baseCity": "Stad",
+      "basePostalCode": "Postcode",
+      "baseLat": "Breedtegraad",
+      "baseLng": "Lengtegraad",
+      "baseLocationSubmit": "Zone opslaan",
+      "baseLocationSuccess": "Basiszone opgeslagen.",
+      "baseLocationFailed": "Zone kon niet worden opgeslagen."
     },
     "prospects": {
       "title": "Marketingprospects",
@@ -1638,6 +1658,12 @@
       "iban": "IBAN",
       "bic": "BIC (optioneel)",
       "accountHolder": "Rekeninghouder",
+      "baseLocationTitle": "Basiszone",
+      "baseLocationHint": "Wordt gebruikt om te verschijnen in “vertegenwoordigers bij mij in de buurt” bij registratie.",
+      "baseCity": "Stad",
+      "basePostalCode": "Postcode",
+      "baseLat": "Breedtegraad",
+      "baseLng": "Lengtegraad",
       "save": "Opslaan",
       "saved": "Profiel opgeslagen"
     },
@@ -1790,6 +1816,50 @@
       "reschedule_pending": "Verplaatsing in afwachting",
       "done": "Afgerond",
       "cancelled": "Geannuleerd"
+    },
+    "preconsultLabel": "Preconsultatie",
+    "preconsultAnswers": "Antwoorden cliënt",
+    "preconsultPending": "In afwachting",
+    "preconsultSubmitted": "Ontvangen",
+    "preconsultSkipped": "Overgeslagen",
+    "preconsultNone": "Niet gevraagd",
+    "preconsultComplaint": "Reden",
+    "preconsultDuration": "Duur",
+    "preconsultBehavior": "Gedrag",
+    "preconsultAppetite": "Eetlust",
+    "preconsultThirst": "Dorst",
+    "preconsultElimination": "Ontlasting / urine",
+    "preconsultUrgency": "Urgentie",
+    "preconsultComment": "Opmerking",
+    "preconsultEnums": {
+      "duration": {
+        "today": "Vandaag",
+        "few_days": "Enkele dagen",
+        "week": "Ongeveer een week",
+        "weeks": "Meerdere weken",
+        "months": "Meerdere maanden",
+        "unknown": "Onbekend"
+      },
+      "behavior": {
+        "normal": "Normaal",
+        "lethargic": "Lusteloos",
+        "restless": "Onrustig",
+        "aggressive": "Agressief",
+        "anxious": "Angstig",
+        "other": "Anders",
+        "unknown": "Onbekend"
+      },
+      "scale": {
+        "normal": "Normaal",
+        "decreased": "Verminderd",
+        "increased": "Verhoogd",
+        "unknown": "Onbekend"
+      },
+      "urgency": {
+        "low": "Laag",
+        "medium": "Gemiddeld",
+        "high": "Hoog"
+      }
     }
   },
   "manager": {

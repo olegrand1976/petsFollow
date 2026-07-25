@@ -616,8 +616,14 @@ func (s *Store) AccrueCommercialForAddon(ctx context.Context, addonID string) er
 	return tx.Commit(ctx)
 }
 
-// resolveVetCommercial finds the vet linked to a client (preferring the given
+// ResolveVetCommercial finds the vet linked to a client (preferring the given
 // practice) and the commercial assigned to that vet.
+// If the vet has no assigned_commercial_id, falls back to the client's
+// commercial_referrals (nearby signup / QR invite) — never overwrites a vet assignment.
+func (s *Store) ResolveVetCommercial(ctx context.Context, clientUserID, practiceID string) (vetUserID, commercialUserID string, err error) {
+	return s.resolveVetCommercial(ctx, clientUserID, practiceID)
+}
+
 func (s *Store) resolveVetCommercial(ctx context.Context, clientUserID, practiceID string) (vetUserID, commercialUserID string, err error) {
 	var commercial *string
 	q := `
@@ -639,8 +645,18 @@ func (s *Store) resolveVetCommercial(ctx context.Context, clientUserID, practice
 	if err != nil {
 		return "", "", err
 	}
-	if commercial != nil {
-		commercialUserID = *commercial
+	if commercial != nil && *commercial != "" {
+		return vetUserID, *commercial, nil
+	}
+	var referral *string
+	err = s.pool.QueryRow(ctx, `
+		SELECT commercial_user_id::text FROM practice.commercial_referrals
+		WHERE client_user_id=$1`, clientUserID).Scan(&referral)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return "", "", err
+	}
+	if referral != nil {
+		commercialUserID = *referral
 	}
 	return vetUserID, commercialUserID, nil
 }
@@ -713,16 +729,22 @@ type CommercialPayoutLine struct {
 }
 
 type CommercialPayoutProfile struct {
-	IBAN          string `json:"iban"`
-	BIC           string `json:"bic"`
-	AccountHolder string `json:"accountHolder"`
+	IBAN           string   `json:"iban"`
+	BIC            string   `json:"bic"`
+	AccountHolder  string   `json:"accountHolder"`
+	BaseLat        *float64 `json:"baseLat,omitempty"`
+	BaseLng        *float64 `json:"baseLng,omitempty"`
+	BaseCity       string   `json:"baseCity"`
+	BasePostalCode string   `json:"basePostalCode"`
 }
 
 func (s *Store) GetCommercialPayoutProfile(ctx context.Context, userID string) (CommercialPayoutProfile, error) {
 	var p CommercialPayoutProfile
 	err := s.pool.QueryRow(ctx, `
-		SELECT COALESCE(payout_iban,''), COALESCE(payout_bic,''), COALESCE(payout_account_holder,'')
-		FROM identity.users WHERE id=$1`, userID).Scan(&p.IBAN, &p.BIC, &p.AccountHolder)
+		SELECT COALESCE(payout_iban,''), COALESCE(payout_bic,''), COALESCE(payout_account_holder,''),
+			base_lat, base_lng, COALESCE(base_city,''), COALESCE(base_postal_code,'')
+		FROM identity.users WHERE id=$1`, userID).Scan(
+		&p.IBAN, &p.BIC, &p.AccountHolder, &p.BaseLat, &p.BaseLng, &p.BaseCity, &p.BasePostalCode)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return CommercialPayoutProfile{}, ErrNotFound
 	}

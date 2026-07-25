@@ -434,6 +434,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'You must accept the terms and the privacy policy.';
 
   @override
+  String get nearbyCommercialTitle => 'Sales rep near you';
+
+  @override
+  String get nearbyCommercialHint =>
+      'Without an invite code, pick a nearby sales rep (optional).';
+
+  @override
+  String get nearbyCommercialUseLocation => 'Use my location';
+
+  @override
+  String get nearbyCommercialPostalCode => 'Postal code';
+
+  @override
+  String get nearbyCommercialSearch => 'Search';
+
+  @override
+  String get nearbyCommercialEmpty => 'No sales reps found nearby.';
+
+  @override
+  String get nearbyCommercialSkip => 'Skip — no sales rep';
+
+  @override
+  String get nearbyCommercialGeoDenied =>
+      'Location denied — enter a postal code.';
+
+  @override
+  String nearbyCommercialDistance(String km) {
+    return '$km km';
+  }
+
+  @override
   String get pushPermissionTitle => 'Notifications';
 
   @override
@@ -1331,4 +1362,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSwitched => 'Profile switched';
+
+  @override
+  String get preconsultTitle => 'Pre-consultation';
+
+  @override
+  String preconsultTitlePet(String petName) {
+    return 'Pre-consultation — $petName';
+  }
+
+  @override
+  String get preconsultIntro =>
+      'Share your pet\'s condition before the visit so your vet can prepare.';
+
+  @override
+  String get preconsultComplaint => 'Main reason / complaint';
+
+  @override
+  String get preconsultComplaintRequired =>
+      'Please enter the reason for the visit';
+
+  @override
+  String get preconsultDuration => 'For how long?';
+
+  @override
+  String get preconsultDurationToday => 'Today';
+
+  @override
+  String get preconsultDurationFewDays => 'A few days';
+
+  @override
+  String get preconsultDurationWeek => 'About a week';
+
+  @override
+  String get preconsultDurationWeeks => 'Several weeks';
+
+  @override
+  String get preconsultDurationMonths => 'Several months';
+
+  @override
+  String get preconsultBehavior => 'Behavior';
+
+  @override
+  String get preconsultBehaviorNormal => 'Normal';
+
+  @override
+  String get preconsultBehaviorLethargic => 'Lethargic';
+
+  @override
+  String get preconsultBehaviorRestless => 'Restless';
+
+  @override
+  String get preconsultBehaviorAggressive => 'Aggressive';
+
+  @override
+  String get preconsultBehaviorAnxious => 'Anxious';
+
+  @override
+  String get preconsultBehaviorOther => 'Other';
+
+  @override
+  String get preconsultAppetite => 'Appetite';
+
+  @override
+  String get preconsultThirst => 'Thirst';
+
+  @override
+  String get preconsultElimination => 'Stool / urine';
+
+  @override
+  String get preconsultScaleNormal => 'Normal';
+
+  @override
+  String get preconsultScaleDecreased => 'Decreased';
+
+  @override
+  String get preconsultScaleIncreased => 'Increased';
+
+  @override
+  String get preconsultUrgency => 'Perceived urgency';
+
+  @override
+  String get preconsultUrgencyLow => 'Low';
+
+  @override
+  String get preconsultUrgencyMedium => 'Medium';
+
+  @override
+  String get preconsultUrgencyHigh => 'High';
+
+  @override
+  String get preconsultComment => 'Comment (optional)';
+
+  @override
+  String get preconsultUnknown => 'I don\'t know';
+
+  @override
+  String get preconsultSubmit => 'Submit';
+
+  @override
+  String get preconsultSubmitted => 'Pre-consultation submitted';
+
+  @override
+  String get preconsultAlreadySubmitted =>
+      'You already submitted this pre-consultation.';
+
+  @override
+  String get preconsultFillCta => 'Fill pre-consultation';
 }

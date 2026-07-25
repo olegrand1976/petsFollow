@@ -143,6 +143,22 @@
   "registerConsentPrefix": "Nõustun dokumentidega ",
   "registerConsentMiddle": " ja ",
   "registerConsentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga.",
+  "nearbyCommercialTitle": "Müügiesindaja teie lähedal",
+  "nearbyCommercialHint": "Ilma kutsekoodita saate valida lähedase müügiesindaja (valikuline).",
+  "nearbyCommercialUseLocation": "Kasuta minu asukohta",
+  "nearbyCommercialPostalCode": "Postiindeks",
+  "nearbyCommercialSearch": "Otsi",
+  "nearbyCommercialEmpty": "Lähedalt müügiesindajat ei leitud.",
+  "nearbyCommercialSkip": "Jäta vahele",
+  "nearbyCommercialGeoDenied": "Asukoht keelatud — sisestage postiindeks.",
+  "nearbyCommercialDistance": "{km} km",
+  "@nearbyCommercialDistance": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
   "pushPermissionTitle": "Teavitused",
   "pushPermissionBody": "petsFollow soovib teile saata teavitusi: loomaarsti sõnumid, visiitide kinnitused ja hooldusmeeldetuletused. Saate need igal ajal välja lülitada rakenduse või telefoni seadetes.",
   "pushPermissionContinue": "Jätka",
@@ -487,5 +503,46 @@
   "switchProfile": "Vaheta profiili",
   "profilePersonal": "Personal",
   "profilePro": "Professional",
-  "profileSwitched": "Profile switched"
+  "profileSwitched": "Profile switched",
+  "preconsultTitle": "Eelkonsultatsioon",
+  "preconsultTitlePet": "Eelkonsultatsioon — {petName}",
+  "preconsultIntro": "Jagage looma seisundit enne visiiti, et loomaarst saaks valmistuda.",
+  "preconsultComplaint": "Peamine põhjus / kaebus",
+  "preconsultComplaintRequired": "Sisestage visiidi põhjus",
+  "preconsultDuration": "Kui kaua?",
+  "preconsultDurationToday": "Täna",
+  "preconsultDurationFewDays": "Paar päeva",
+  "preconsultDurationWeek": "Umbes nädal",
+  "preconsultDurationWeeks": "Mitu nädalat",
+  "preconsultDurationMonths": "Mitu kuud",
+  "preconsultBehavior": "Käitumine",
+  "preconsultBehaviorNormal": "Normaalne",
+  "preconsultBehaviorLethargic": "Loiuvõitu",
+  "preconsultBehaviorRestless": "Rahutu",
+  "preconsultBehaviorAggressive": "Agressiivne",
+  "preconsultBehaviorAnxious": "Ärev",
+  "preconsultBehaviorOther": "Muu",
+  "preconsultAppetite": "Isu",
+  "preconsultThirst": "Janu",
+  "preconsultElimination": "Väljaheide / uriin",
+  "preconsultScaleNormal": "Normaalne",
+  "preconsultScaleDecreased": "Vähenenud",
+  "preconsultScaleIncreased": "Suurenenud",
+  "preconsultUrgency": "Tajutud kiireloomulisus",
+  "preconsultUrgencyLow": "Madal",
+  "preconsultUrgencyMedium": "Keskmine",
+  "preconsultUrgencyHigh": "Kõrge",
+  "preconsultComment": "Kommentaar (valikuline)",
+  "preconsultUnknown": "Ei tea",
+  "preconsultSubmit": "Saada",
+  "preconsultSubmitted": "Eelkonsultatsioon saadetud",
+  "preconsultAlreadySubmitted": "Olete selle eelkonsultatsiooni juba saatnud.",
+  "preconsultFillCta": "Täida eelkonsultatsioon",
+  "@preconsultTitlePet": {
+    "placeholders": {
+      "petName": {
+        "type": "String"
+      }
+    }
+  }
 }

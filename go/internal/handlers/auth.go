@@ -43,7 +43,9 @@ type googleLoginReq struct {
 	IDToken    string `json:"idToken"`
 	Audience   string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
 	InviteCode string `json:"inviteCode,omitempty"`
-	Consent    bool   `json:"consent,omitempty"` // requis pour create-if-absent audience=client (RGPD)
+	// CommercialUserID — optional nearby commercial pick when no invite code (client audience).
+	CommercialUserID string `json:"commercialUserId,omitempty"`
+	Consent          bool   `json:"consent,omitempty"` // requis pour create-if-absent audience=client (RGPD)
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +94,9 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	if normalizeGoogleAudience(req.Audience) == "client" {
 		a.tryClaimInvite(r, u.ID, req.InviteCode)
+		if store.NormalizeInviteCode(req.InviteCode) == "" {
+			a.tryLinkCommercialReferral(r, u.ID, req.CommercialUserID)
+		}
 	}
 	a.issueLoginResponse(w, r, u)
 }

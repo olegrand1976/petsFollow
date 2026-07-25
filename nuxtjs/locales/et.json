@@ -121,7 +121,19 @@
       "loginLink": "Logi sisse",
       "failed": "Registreerimine ebaõnnestus",
       "consent": "Nõustun {terms} ja {privacy} tingimustega.",
-      "consentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga."
+      "consentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga.",
+      "nearbyCommercial": {
+        "title": "Müügiesindaja teie lähedal",
+        "hint": "Ilma soovituskoodita saate valida lähedase müügiesindaja (valikuline).",
+        "useLocation": "Kasuta minu asukohta",
+        "postalCode": "Postiindeks",
+        "searchPostal": "Otsi postiindeksi järgi",
+        "empty": "Lähedalt müügiesindajat ei leitud.",
+        "skip": "Jäta vahele — ilma esindajata",
+        "distance": "{km} km",
+        "geoUnsupported": "Asukoha määramine pole selles seadmes saadaval.",
+        "geoDenied": "Asukoht keelatud — sisestage postiindeks."
+      }
     },
     "registerSent": {
       "brandTitle": "Kontrollige oma postkasti",
@@ -851,7 +863,15 @@
       "assignManagerNone": "Puudub",
       "assignManagerSubmit": "Salvesta määramine",
       "assignManagerSuccess": "Määramine uuendatud",
-      "assignManagerFailed": "Määramine ebaõnnestus"
+      "assignManagerFailed": "Määramine ebaõnnestus",
+      "baseLocationTitle": "Müügiesindaja baaspiirkond",
+      "baseCity": "Linn",
+      "basePostalCode": "Postiindeks",
+      "baseLat": "Laiuskraad",
+      "baseLng": "Pikkuskraad",
+      "baseLocationSubmit": "Salvesta piirkond",
+      "baseLocationSuccess": "Baaspiirkond salvestatud.",
+      "baseLocationFailed": "Piirkonda ei õnnestunud salvestada."
     },
     "prospects": {
       "title": "Turunduse potentsiaalsed kliendid",
@@ -1638,6 +1658,12 @@
       "iban": "IBAN",
       "bic": "BIC (valikuline)",
       "accountHolder": "Kontoomanik",
+      "baseLocationTitle": "Baaspiirkond",
+      "baseLocationHint": "Kasutatakse „lähedased müügiesindajad” kuvamiseks registreerimisel.",
+      "baseCity": "Linn",
+      "basePostalCode": "Postiindeks",
+      "baseLat": "Laiuskraad",
+      "baseLng": "Pikkuskraad",
       "save": "Salvesta",
       "saved": "Profiil salvestatud"
     },
@@ -1790,6 +1816,50 @@
       "reschedule_pending": "Ümberplaneerimine ootel",
       "done": "Tehtud",
       "cancelled": "Tühistatud"
+    },
+    "preconsultLabel": "Eelkonsultatsioon",
+    "preconsultAnswers": "Kliendi vastused",
+    "preconsultPending": "Ootel",
+    "preconsultSubmitted": "Saadud",
+    "preconsultSkipped": "Vahele jäetud",
+    "preconsultNone": "Pole küsitud",
+    "preconsultComplaint": "Põhjus",
+    "preconsultDuration": "Kui kaua",
+    "preconsultBehavior": "Käitumine",
+    "preconsultAppetite": "Isu",
+    "preconsultThirst": "Janu",
+    "preconsultElimination": "Väljaheide / uriin",
+    "preconsultUrgency": "Kiireloomulisus",
+    "preconsultComment": "Kommentaar",
+    "preconsultEnums": {
+      "duration": {
+        "today": "Täna",
+        "few_days": "Paar päeva",
+        "week": "Umbes nädal",
+        "weeks": "Mitu nädalat",
+        "months": "Mitu kuud",
+        "unknown": "Teadmata"
+      },
+      "behavior": {
+        "normal": "Normaalne",
+        "lethargic": "Loiu",
+        "restless": "Rahutu",
+        "aggressive": "Agressiivne",
+        "anxious": "Ärev",
+        "other": "Muu",
+        "unknown": "Teadmata"
+      },
+      "scale": {
+        "normal": "Normaalne",
+        "decreased": "Vähenenud",
+        "increased": "Suurenenud",
+        "unknown": "Teadmata"
+      },
+      "urgency": {
+        "low": "Madal",
+        "medium": "Keskmine",
+        "high": "Kõrge"
+      }
     }
   },
   "manager": {

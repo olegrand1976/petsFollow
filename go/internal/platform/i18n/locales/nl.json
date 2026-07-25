@@ -115,7 +115,18 @@
     "credentials_unavailable": "Inloggegevens niet beschikbaar of al gedownload",
     "invalid_multipart": "Ongeldig multipart-formulier",
     "no_data_rows": "Geen gegevensrijen",
-    "too_many_rows": "Te veel rijen (max 2000)"
+    "too_many_rows": "Te veel rijen (max 2000)",
+    "preconsult_not_found": "Preconsultatie niet gevonden",
+    "preconsult_already_submitted": "Preconsultatie al verzonden",
+    "visit_not_confirmed": "De afspraak is nog niet bevestigd",
+    "chief_complaint_required": "Geef de reden van het bezoek op",
+    "chief_complaint_too_long": "Reden te lang (max. 500 tekens)",
+    "comment_too_long": "Opmerking te lang (max. 2000 tekens)",
+    "invalid_behavior": "Ongeldig gedrag",
+    "invalid_appetite": "Ongeldige eetlust",
+    "invalid_thirst": "Ongeldige dorst",
+    "invalid_elimination": "Ongeldige ontlasting / urine",
+    "invalid_urgency": "Ongeldige urgentie"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",
@@ -356,13 +367,21 @@
         "cta": "Meting doen",
         "disclaimer": "Schakel deze e-mails uit via de uitschrijflink indien gewenst."
       }
-    }
+    },
+    "visit_preconsult_subject": "Afspraak bevestigd — bereid het bezoek van {petName} voor",
+    "visit_preconsult_tagline": "Preconsultatie",
+    "visit_preconsult_preheader": "Afspraak bevestigd voor {petName} op {when}. Deel de toestand van uw dier.",
+    "visit_preconsult_greeting": "Hallo {fullName},",
+    "visit_preconsult_intro": "De afspraak voor {petName} bij {practiceName} is bevestigd.",
+    "visit_preconsult_detail": "Datum: {when}\n\nOpen vóór het bezoek de petsFollow-app om de toestand van uw dier te delen (symptomen, eetlust, urgentie). Heeft u de app nog niet, download ze via de knop hieronder.",
+    "visit_preconsult_cta": "App openen / downloaden",
+    "visit_preconsult_disclaimer": "Als u deze e-mail niet verwachtte, kunt u ze negeren."
   },
   "push": {
     "new_message_title": "Nieuw bericht",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Afspraak bevestigd",
-    "visit_confirmed_body": "De afspraak voor {petName} is bevestigd.",
+    "visit_confirmed_body": "De afspraak voor {petName} is bevestigd. Deel de toestand van uw dier vóór het bezoek.",
     "visit_proposed_title": "Afspraakvoorstel",
     "visit_proposed_body": "Uw dierenarts stelde een afspraak voor {petName} voor.",
     "visit_reschedule_title": "Afspraak verplaatsen",

@@ -20,19 +20,27 @@ abstract final class GoogleLoginFlow {
   ///
   /// [consent] est requis par l'API pour créer un compte client inconnu (RGPD).
   /// Sans consent et email inconnu → [GoogleConsentRequired].
-  static Future<Map<String, dynamic>?> signIn({bool consent = false}) async {
+  static Future<Map<String, dynamic>?> signIn({
+    bool consent = false,
+    String? commercialUserId,
+  }) async {
     final idToken = await GoogleAuth.signInForIdToken();
     if (idToken == null) return null;
-    return complete(idToken, consent: consent);
+    return complete(idToken, consent: consent, commercialUserId: commercialUserId);
   }
 
   /// Finalise le login API avec un [idToken] déjà obtenu.
   static Future<Map<String, dynamic>> complete(
     String idToken, {
     bool consent = false,
+    String? commercialUserId,
   }) async {
     try {
-      return await ApiClient.instance.loginWithGoogle(idToken, consent: consent);
+      return await ApiClient.instance.loginWithGoogle(
+        idToken,
+        consent: consent,
+        commercialUserId: commercialUserId,
+      );
     } catch (e) {
       if (!consent && isConsentRequired(e)) {
         throw GoogleConsentRequired(idToken);

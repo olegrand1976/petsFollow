@@ -184,3 +184,12 @@ func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) {
 	}
 	_, _ = a.store.ClaimAppInvite(r.Context(), clientUserID, code)
 }
+
+// tryLinkCommercialReferral soft-links a nearby commercial pick (invalid IDs ignored).
+func (a *API) tryLinkCommercialReferral(r *http.Request, clientUserID, commercialUserID string) {
+	commercialUserID = strings.TrimSpace(commercialUserID)
+	if commercialUserID == "" || clientUserID == "" {
+		return
+	}
+	_ = a.store.LinkClientCommercialReferral(r.Context(), clientUserID, commercialUserID)
+}

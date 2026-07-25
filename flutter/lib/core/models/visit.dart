@@ -10,6 +10,7 @@ class Visit {
     this.proposedScheduledAt,
     this.pendingActionBy,
     this.durationMinutes,
+    this.preconsultStatus,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class Visit {
   final DateTime? proposedScheduledAt;
   final String? pendingActionBy;
   final int? durationMinutes;
+  final String? preconsultStatus;
 
   bool get isUpcoming {
     if (status == 'done' || status == 'cancelled') return false;
@@ -30,6 +32,9 @@ class Visit {
   }
 
   bool get awaitingClient => pendingActionBy == 'client';
+
+  bool get preconsultPending =>
+      status == 'confirmed' && preconsultStatus == 'pending';
 
   DateTime get displayDate =>
       proposedScheduledAt ?? scheduledAt ?? createdAt ?? DateTime.now();
@@ -52,6 +57,7 @@ class Visit {
           : null,
       pendingActionBy: json['pendingActionBy'] as String?,
       durationMinutes: json['durationMinutes'] as int?,
+      preconsultStatus: json['preconsultStatus'] as String?,
     );
   }
 }

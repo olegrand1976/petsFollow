@@ -140,7 +140,14 @@ const autoLinkHint = computed(() => {
 })
 
 function openApp() {
-  const link = invite.value?.deepLink
+  const inv = invite.value
+  if (!inv) return
+  const preconsult = String(route.query.preconsult || '').trim()
+  if (preconsult) {
+    window.location.href = `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}`
+    return
+  }
+  const link = inv.deepLink
   if (!link) return
   window.location.href = link
 }
@@ -155,16 +162,20 @@ onMounted(async () => {
   try {
     const res: any = await $fetch(`/api/public/app-invite/${encodeURIComponent(code)}`)
     const data = res.data ?? res
+    const preconsult = String(route.query.preconsult || '').trim()
     invite.value = {
       code: data.code,
       role: normalizeRole(data.role),
       practiceName: data.practiceName || '',
       displayName: data.displayName || data.vetFullName || '',
       downloadUrl: data.downloadUrl || '',
-      deepLink: data.deepLink || `petsfollow://invite?code=${data.code}`,
+      deepLink: preconsult
+        ? `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}`
+        : (data.deepLink || `petsfollow://invite?code=${data.code}`),
     }
     try {
       localStorage.setItem('pf_invite_code', data.code)
+      if (preconsult) localStorage.setItem('pf_preconsult_visit', preconsult)
     } catch { /* ignore */ }
   } catch (e) {
     error.value = mapError(e)

@@ -32,7 +32,7 @@ Index des documents de référence du projet.
 | 27 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) | **Spec** pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) — non implémenté |
 | 28 | [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md) | Multi-profils care_pro, ACL partage, pro light, CR IA |
 | 29 | [29-ANALYSE-CONCURRENCE.md](29-ANALYSE-CONCURRENCE.md) | Concurrence FR/BE/ES (commerciaux) |
-| 30 | [30-BRIEF-PRESENTATION-PROFILS.md](30-BRIEF-PRESENTATION-PROFILS.md) | Brief Gemini + débrief commercial — VetPro / VetLight / Client |
+| 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.

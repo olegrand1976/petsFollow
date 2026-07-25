@@ -8,7 +8,7 @@ Login email/MDP, register + confirm email, forgot/reset, refresh JWT, Google OAu
 
 Profil cabinet (onboarding), durées FC, préférences email, disponibilité messagerie, overview dashboard, care overdue.
 
-**Calendrier RDV** : plages horaires + vacances (`/vet/schedule`, `/vet/vacations`), agenda Pro `/calendar`, booking client optionnel (`client_booking_enabled`), replanification bilatérale, e-mail alerte demande.
+**Calendrier RDV** : plages horaires + vacances (`/vet/schedule`, `/vet/vacations`), agenda Pro `/calendar`, booking client optionnel (`client_booking_enabled`), replanification bilatérale, e-mail alerte demande, **pré-consultation** client à la confirmation ([31](31-PRECONSULTATION.md)).
 
 ## Clients & animaux
 
@@ -32,7 +32,9 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; a
 
 ## Commercial / sales
 
-Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile, page pitch. Annuaire partagé `source=directory`.  
+Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile (+ zone de base GPS/CP pour découverte « près de chez moi »), page pitch. Annuaire partagé `source=directory`.
+
+**Inscription sans invite** : `GET /commercials/nearby` (public, rate-limité) → véto `assignedCommercialId` / client `commercialUserId`. Commission : `assigned_commercial_id` véto prioritaire, sinon fallback `commercial_referrals`.  
 Client sans liaison : `practice_id` NULL — pas de pet ni commission tant qu’une liaison véto n’est pas acceptée (`vet_link_required` sur `POST /pets`).  
 **Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; production manager privée (hors tableaux équipe).  
 Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.

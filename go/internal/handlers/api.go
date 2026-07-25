@@ -62,6 +62,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
 	a.registerAppInviteRoutes(r)
+	a.registerCommercialDiscoveryRoutes(r, authRL.Middleware)
 	a.registerAuthRoutes(r, authRL.Middleware)
 	a.registerBillingRoutes(r)
 	a.registerAdminRoutes(r)
@@ -153,6 +154,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
 		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
+		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
+		pr.Put("/visits/{visitID}/preconsult", a.putVisitPreconsult)
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)
 		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
@@ -1085,6 +1088,8 @@ type registerReq struct {
 	PracticeName string `json:"practiceName"`
 	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
 	Consent bool `json:"consent"`
+	// AssignedCommercialID — optional nearby commercial pick (no invite code).
+	AssignedCommercialID string `json:"assignedCommercialId,omitempty"`
 }
 
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
@@ -1106,6 +1111,18 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
 		return
 	}
+	assignedCommercialID := strings.TrimSpace(req.AssignedCommercialID)
+	if assignedCommercialID != "" {
+		ok, err := a.store.IsAssignableCommercial(r.Context(), assignedCommercialID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !ok {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_commercial")
+			return
+		}
+	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
 		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
 		return
@@ -1117,7 +1134,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	result, err := a.store.RegisterVet(r.Context(), store.RegisterVetInput{
 		Email: req.Email, Password: req.Password, FullName: req.FullName, PracticeName: req.PracticeName,
 		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
-		TermsAccepted: req.Consent,
+		TermsAccepted: req.Consent, AssignedCommercialID: assignedCommercialID,
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

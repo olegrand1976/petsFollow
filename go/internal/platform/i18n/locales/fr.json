@@ -115,7 +115,18 @@
     "credentials_unavailable": "Identifiants indisponibles ou déjà téléchargés",
     "invalid_multipart": "Formulaire multipart invalide",
     "no_data_rows": "Aucune ligne de données",
-    "too_many_rows": "Trop de lignes (max 2000)"
+    "too_many_rows": "Trop de lignes (max 2000)",
+    "preconsult_not_found": "Pré-consultation introuvable",
+    "preconsult_already_submitted": "Pré-consultation déjà envoyée",
+    "visit_not_confirmed": "Le rendez-vous n'est pas encore confirmé",
+    "chief_complaint_required": "Indiquez le motif de la visite",
+    "chief_complaint_too_long": "Motif trop long (500 caractères max)",
+    "comment_too_long": "Commentaire trop long (2000 caractères max)",
+    "invalid_behavior": "Comportement invalide",
+    "invalid_appetite": "Appétit invalide",
+    "invalid_thirst": "Soif invalide",
+    "invalid_elimination": "Selles / urines invalides",
+    "invalid_urgency": "Urgence invalide"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",
@@ -356,13 +367,21 @@
         "cta": "Faire un relevé",
         "disclaimer": "Désactivez ces emails via le lien de désabonnement si vous le souhaitez."
       }
-    }
+    },
+    "visit_preconsult_subject": "Rendez-vous confirmé — préparez la visite de {petName}",
+    "visit_preconsult_tagline": "Pré-consultation",
+    "visit_preconsult_preheader": "RDV confirmé pour {petName} le {when}. Indiquez l'état de votre animal.",
+    "visit_preconsult_greeting": "Bonjour {fullName},",
+    "visit_preconsult_intro": "Le rendez-vous pour {petName} chez {practiceName} est confirmé.",
+    "visit_preconsult_detail": "Date : {when}\n\nAvant la visite, ouvrez l'application petsFollow pour indiquer l'état de votre animal (symptômes, appétit, urgence). Si vous n'avez pas encore l'app, téléchargez-la via le bouton ci-dessous.",
+    "visit_preconsult_cta": "Ouvrir / télécharger l'app",
+    "visit_preconsult_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer."
   },
   "push": {
     "new_message_title": "Nouveau message",
     "new_message_body": "{preview}",
     "visit_confirmed_title": "Rendez-vous confirmé",
-    "visit_confirmed_body": "Le rendez-vous pour {petName} est confirmé.",
+    "visit_confirmed_body": "Le rendez-vous pour {petName} est confirmé. Indiquez l'état de votre animal avant la visite.",
     "visit_proposed_title": "Proposition de rendez-vous",
     "visit_proposed_body": "Votre vétérinaire propose un rendez-vous pour {petName}.",
     "visit_reschedule_title": "Déplacement de rendez-vous",

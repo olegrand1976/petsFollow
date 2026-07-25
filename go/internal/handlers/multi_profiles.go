@@ -19,6 +19,8 @@ type registerClientReq struct {
 	Password   string `json:"password"`
 	FullName   string `json:"fullName"`
 	InviteCode string `json:"inviteCode,omitempty"`
+	// CommercialUserID — optional nearby commercial pick when no invite code.
+	CommercialUserID string `json:"commercialUserId,omitempty"`
 	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
 	Consent bool `json:"consent"`
 }
@@ -66,6 +68,10 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.tryClaimInvite(r, result.UserID, req.InviteCode)
+	// Nearby pick only when no invite code (invite wins attribution).
+	if store.NormalizeInviteCode(req.InviteCode) == "" {
+		a.tryLinkCommercialReferral(r, result.UserID, req.CommercialUserID)
+	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
 	out := map[string]any{
