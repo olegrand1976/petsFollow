@@ -43,6 +43,7 @@ type googleLoginReq struct {
 	IDToken    string `json:"idToken"`
 	Audience   string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
 	InviteCode string `json:"inviteCode,omitempty"`
+	Consent    bool   `json:"consent,omitempty"` // requis pour create-if-absent audience=client (RGPD)
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +85,7 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		name = strings.Split(email, "@")[0]
 	}
 
-	u, err := a.resolveGoogleUser(r, email, name, payload.Subject, req.Audience)
+	u, err := a.resolveGoogleUser(r, email, name, payload.Subject, req.Audience, req.Consent)
 	if err != nil {
 		a.writeGoogleAuthError(w, r, err)
 		return
@@ -126,7 +127,7 @@ func (a *API) linkOrMatchGoogle(ctx context.Context, u store.User, googleSub str
 	return u, nil
 }
 
-func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, audienceRaw string) (store.User, error) {
+func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, audienceRaw string, consent bool) (store.User, error) {
 	ctx := r.Context()
 	audience := normalizeGoogleAudience(audienceRaw)
 
@@ -158,9 +159,13 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 
 	// Unknown email: Pro can auto-register a vet; clients can create-if-absent via Google.
 	if audience == "client" {
+		if !consent {
+			return store.User{}, errGoogleConsentRequired
+		}
 		locale := localeOf(r)
 		return a.store.RegisterGoogleClient(ctx, store.RegisterGoogleClientInput{
 			Email: email, FullName: fullName, GoogleSub: googleSub, PreferredLocale: locale,
+			TermsAccepted: true,
 		})
 	}
 
@@ -169,6 +174,7 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, aud
 	return a.store.RegisterGoogleVet(ctx, store.RegisterGoogleVetInput{
 		Email: email, FullName: fullName, GoogleSub: googleSub, PracticeName: practiceName,
 		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
+		TermsAccepted: consent,
 	})
 }
 
@@ -176,6 +182,7 @@ var (
 	errGoogleProOnly         = errors.New("google pro only")
 	errGoogleClientOnly      = errors.New("google client only")
 	errGoogleAccountMismatch = errors.New("google account mismatch")
+	errGoogleConsentRequired = errors.New("google consent required")
 )
 
 func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
@@ -186,6 +193,8 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 		writeErr(w, r, http.StatusForbidden, "google_client_only", "google_client_only")
 	case errors.Is(err, errGoogleAccountMismatch):
 		writeErr(w, r, http.StatusConflict, "google_account_mismatch", "google_account_mismatch")
+	case errors.Is(err, errGoogleConsentRequired):
+		writeErr(w, r, http.StatusBadRequest, "consent_required", "consent_required")
 	case errors.Is(err, store.ErrConflict):
 		writeErr(w, r, http.StatusConflict, "conflict", "google_account_mismatch")
 	default:

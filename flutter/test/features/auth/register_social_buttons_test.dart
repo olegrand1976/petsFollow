@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_login_flow.dart';
@@ -69,6 +70,7 @@ void main() {
       expect(messageFor('google_client_only'), l10n.googleWrongAudience);
       expect(messageFor('google_pro_only'), l10n.googleWrongAudience);
       expect(messageFor('email_not_verified'), l10n.emailNotVerified);
+      expect(messageFor('consent_required'), l10n.registerConsentRequired);
       expect(messageFor('anything_else'), l10n.googleLoginFailed);
     });
 
@@ -76,6 +78,20 @@ void main() {
       expect(
         GoogleLoginFlow.errorMessage(l10n, StateError('x')),
         l10n.googleLoginFailed,
+      );
+    });
+
+    test('PlatformException DEVELOPER_ERROR → googleNotConfigured', () {
+      expect(
+        GoogleLoginFlow.errorMessage(
+          l10n,
+          PlatformException(
+            code: 'sign_in_failed',
+            message: 'com.google.android.gms.common.api.ApiException: 10: ',
+            details: 'Developer_Error',
+          ),
+        ),
+        l10n.googleNotConfigured,
       );
     });
   });

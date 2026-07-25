@@ -101,13 +101,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => error = l10n.googleNotConfigured);
       return;
     }
+    if (!consent) {
+      setState(() => error = l10n.registerConsentRequired);
+      return;
+    }
     setState(() {
       error = null;
       info = null;
       _busy = true;
     });
     try {
-      final data = await GoogleLoginFlow.signIn();
+      final data = await GoogleLoginFlow.signIn(consent: true);
       if (!mounted) return;
       if (data != null) {
         // L'utilisateur est connecté (ou en attente de 2FA) : le LoginScreen

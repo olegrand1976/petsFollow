@@ -381,11 +381,17 @@ class ApiClient {
 
   /// Google Sign-In for pets clients. [idToken] must be issued for the same
   /// Web client ID as API `GOOGLE_OAUTH_CLIENT_ID`.
-  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+  ///
+  /// [consent] must be true to create a new client (create-if-absent).
+  Future<Map<String, dynamic>> loginWithGoogle(
+    String idToken, {
+    bool consent = false,
+  }) async {
     final inviteCode = await InviteCodeStore.instance.peek();
     final res = await dio.post('/api/v1/auth/google', data: {
       'idToken': idToken,
       'audience': 'client',
+      if (consent) 'consent': true,
       if (inviteCode != null && inviteCode.isNotEmpty) 'inviteCode': inviteCode,
     });
     final data = res.data['data'] as Map<String, dynamic>;

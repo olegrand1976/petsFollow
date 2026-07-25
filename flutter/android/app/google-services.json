@@ -58,6 +58,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "237481297060-kj9git6gdlpovs43ivkes7eo3ohivbrb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "be.llitsc.petsfollow_mobile",
+            "certificate_hash": "edb0034ef8e4baf3076b66cb0bd78b1faa46ab02"
+          }
+        },
+        {
           "client_id": "237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com",
           "client_type": 3
         }

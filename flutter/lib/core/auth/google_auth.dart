@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 /// Google Sign-In for pets clients (API Go validates the idToken).
@@ -23,14 +24,21 @@ class GoogleAuth {
     if (!isConfigured) {
       throw StateError('GOOGLE_SERVER_CLIENT_ID not configured');
     }
-    final account = await _signIn.signIn();
-    if (account == null) return null;
-    final auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw StateError('Google idToken missing — check Web client ID / SHA-1');
+    try {
+      final account = await _signIn.signIn();
+      if (account == null) return null;
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw StateError('Google idToken missing — check Web client ID / SHA-1');
+      }
+      return idToken;
+    } on PlatformException catch (e) {
+      // Surface Play Services codes (10 = DEVELOPER_ERROR) in logcat.
+      // ignore: avoid_print
+      print('GoogleAuth PlatformException code=${e.code} message=${e.message} details=${e.details}');
+      rethrow;
     }
-    return idToken;
   }
 
   static Future<void> signOut() async {

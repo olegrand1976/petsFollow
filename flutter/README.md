@@ -27,12 +27,16 @@ Fichiers générés : `lib/firebase_options.dart`, `android/app/google-services.
 ## Lancer en local
 
 ```bash
-# API déjà up (make api-dev)
-cd flutter
-flutter pub get
-flutter run --dart-define=API_BASE=http://10.0.2.2:8291   # émulateur Android
-# flutter run --dart-define=API_BASE=http://localhost:8291  # iOS simulateur / device
+# API déjà up (make api-dev) + GOOGLE_OAUTH_CLIENT_ID dans .env
+make flutter-dev
+# équivalent :
+# cd flutter && flutter run \
+#   --dart-define=API_BASE=http://10.0.2.2:8291 \
+#   --dart-define=GOOGLE_SERVER_CLIENT_ID=237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com
 ```
+
+Sans `GOOGLE_SERVER_CLIENT_ID`, le bouton Google est masqué.  
+Prérequis Android : SHA debug/upload enregistrés (`make firebase-google-signin-android SHA1=…`) — voir [`documentation/26-PLAY-STORE.md`](../documentation/26-PLAY-STORE.md) §7.
 
 Deep links Stripe : `petsfollow://payment/success` · `petsfollow://payment/cancel`
 

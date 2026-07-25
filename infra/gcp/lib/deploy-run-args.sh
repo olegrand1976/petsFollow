@@ -53,6 +53,7 @@ LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
 GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
+GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 EOF
 }
 
@@ -63,6 +64,7 @@ pf_write_frontend_env_file() {
 NUXT_PUBLIC_API_BASE: "${api_url}"
 NUXT_API_BASE: "${api_url}"
 NUXT_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
+NUXT_PUBLIC_GOOGLE_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 HOST: "0.0.0.0"
 NITRO_PORT: "3000"
 NODE_OPTIONS: "--max-old-space-size=768"

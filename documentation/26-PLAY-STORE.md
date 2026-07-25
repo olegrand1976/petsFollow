@@ -129,9 +129,16 @@ Justifier comme fonctionnalités **cœur** (pas one-time).
 
 ## 7. OAuth Google Sign-In
 
-1. Client OAuth **Android** pour `be.llitsc.petsfollow_mobile` avec SHA-1 upload + App Signing.
-2. Régénérer / vérifier `google-services.json` (`make firebase-flutter-setup` si besoin).
-3. Conserver le Web client ID (`GOOGLE_SERVER_CLIENT_ID`) pour `idToken` serveur.
+1. Client OAuth **Android** pour `be.llitsc.petsfollow_mobile` avec SHA-1 upload + App Signing (et SHA debug en local).
+2. Enregistrer les empreintes puis régénérer `google-services.json` :
+   ```bash
+   make firebase-google-signin-android SHA1=ED:B0:… SHA256=7A:67:…
+   ```
+3. Conserver le Web client ID (`GOOGLE_SERVER_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_ID`) pour `idToken` serveur :
+   `237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com`
+4. API locale / Cloud Run : `GOOGLE_OAUTH_CLIENT_ID` = ce Web client ID. Flutter : `make flutter-dev` (dart-define inclus).
+
+Sans client Android (`client_type: 1`) dans `google-services.json`, Play Services renvoie `DEVELOPER_ERROR` (code 10).
 
 ---
 

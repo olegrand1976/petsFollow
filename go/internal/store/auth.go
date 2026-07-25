@@ -19,6 +19,7 @@ type RegisterGoogleVetInput struct {
 	PracticeName     string
 	PreferredLocale  string
 	AutoReplyDefault string
+	TermsAccepted    bool
 }
 
 type RegisterGoogleClientInput struct {
@@ -26,6 +27,7 @@ type RegisterGoogleClientInput struct {
 	FullName        string
 	GoogleSub       string
 	PreferredLocale string
+	TermsAccepted   bool
 }
 
 func (s *Store) GetUserByGoogleSub(ctx context.Context, googleSub string) (User, error) {
@@ -66,10 +68,14 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 		practiceID, in.PracticeName, in.Email); err != nil {
 		return User{}, err
 	}
+	var termsAt *time.Time
+	if in.TermsAccepted {
+		termsAt = &now
+	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, google_sub, auth_provider, preferred_locale)
-		VALUES ($1, $2, NULL, $3, 'vet', $4, $5, $6, 'google', $7)`,
-		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, google_sub, auth_provider, preferred_locale, terms_accepted_at)
+		VALUES ($1, $2, NULL, $3, 'vet', $4, $5, $6, 'google', $7, $8)`,
+		userID, in.Email, in.FullName, practiceID, now, in.GoogleSub, i18n.NormalizeLocale(in.PreferredLocale), termsAt); err != nil {
 		return User{}, err
 	}
 	autoReply := in.AutoReplyDefault
@@ -97,12 +103,16 @@ func (s *Store) RegisterGoogleVet(ctx context.Context, in RegisterGoogleVetInput
 func (s *Store) RegisterGoogleClient(ctx context.Context, in RegisterGoogleClientInput) (User, error) {
 	userID := uuid.NewString()
 	now := time.Now()
+	var termsAt *time.Time
+	if in.TermsAccepted {
+		termsAt = &now
+	}
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id,
-			email_verified_at, google_sub, auth_provider, preferred_locale
-		) VALUES ($1, $2, NULL, $3, 'client', NULL, $4, $5, 'google', $6)`,
-		userID, in.Email, in.FullName, now, in.GoogleSub, i18n.NormalizeLocale(in.PreferredLocale))
+			email_verified_at, google_sub, auth_provider, preferred_locale, terms_accepted_at
+		) VALUES ($1, $2, NULL, $3, 'client', NULL, $4, $5, 'google', $6, $7)`,
+		userID, in.Email, in.FullName, now, in.GoogleSub, i18n.NormalizeLocale(in.PreferredLocale), termsAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			// Concurrent sign-in won the race — return existing client and link google_sub if needed.

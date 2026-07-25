@@ -38,7 +38,7 @@ Mots de passe : `VetDemo123!` · `ClientDemo123!` · `AdminDemo123!` · `Commerc
 
 ## Variables clés
 
-Copier depuis `.env.example`. Billing local : `BILLING_MOCK_ENABLED=true` sans clé Stripe. Google OAuth / 2FA optionnels (`GOOGLE_OAUTH_CLIENT_ID`, `NUXT_PUBLIC_GOOGLE_CLIENT_ID`). Import clients admin : `GEMINI_API_KEY` (mapping colonnes) — voir [24](24-IMPORT-CLIENTS-ADMIN.md).
+Copier depuis `.env.example`. Billing local : `BILLING_MOCK_ENABLED=true` sans clé Stripe. Google OAuth : `GOOGLE_OAUTH_CLIENT_ID` + `NUXT_PUBLIC_GOOGLE_CLIENT_ID` (Web client ID public, déjà renseigné dans `.env.example`). Flutter : `make flutter-dev` (passe `GOOGLE_SERVER_CLIENT_ID`). Import clients admin : `GEMINI_API_KEY` (mapping colonnes) — voir [24](24-IMPORT-CLIENTS-ADMIN.md).
 
 Médias locaux : `./data/uploads` servi sous `/media/`.
 
