@@ -1046,6 +1046,66 @@ abstract class AppLocalizations {
   /// **'DÉMARRER LA MESURE'**
   String get startMeasurement;
 
+  /// No description provided for @heartRateShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cœur'**
+  String get heartRateShort;
+
+  /// No description provided for @weightShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get weightShort;
+
+  /// No description provided for @recordWeightTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le poids'**
+  String get recordWeightTitle;
+
+  /// No description provided for @weightKgLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids (kg)'**
+  String get weightKgLabel;
+
+  /// No description provided for @weightCommentLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commentaire (optionnel)'**
+  String get weightCommentLabel;
+
+  /// No description provided for @weightCommentHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. après balade, à jeun…'**
+  String get weightCommentHint;
+
+  /// No description provided for @weightSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get weightSave;
+
+  /// No description provided for @weightSentToVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids enregistré'**
+  String get weightSentToVet;
+
+  /// No description provided for @weightInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un poids valide (0,01–999,99 kg)'**
+  String get weightInvalid;
+
+  /// No description provided for @weightLastLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier poids : {kg} kg'**
+  String weightLastLabel(String kg);
+
   /// No description provided for @choosePetForMeasurement.
   ///
   /// In fr, this message translates to:
@@ -2191,6 +2251,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Fréquence cardiaque'**
   String get timelineTypeHeartrate;
+
+  /// No description provided for @timelineTypeWeight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get timelineTypeWeight;
 
   /// No description provided for @timelineTypeMessage.
   ///

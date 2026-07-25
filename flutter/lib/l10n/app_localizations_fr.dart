@@ -508,6 +508,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startMeasurement => 'DÉMARRER LA MESURE';
 
   @override
+  String get heartRateShort => 'Cœur';
+
+  @override
+  String get weightShort => 'Poids';
+
+  @override
+  String get recordWeightTitle => 'Enregistrer le poids';
+
+  @override
+  String get weightKgLabel => 'Poids (kg)';
+
+  @override
+  String get weightCommentLabel => 'Commentaire (optionnel)';
+
+  @override
+  String get weightCommentHint => 'Ex. après balade, à jeun…';
+
+  @override
+  String get weightSave => 'Enregistrer';
+
+  @override
+  String get weightSentToVet => 'Poids enregistré';
+
+  @override
+  String get weightInvalid => 'Indiquez un poids valide (0,01–999,99 kg)';
+
+  @override
+  String weightLastLabel(String kg) {
+    return 'Dernier poids : $kg kg';
+  }
+
+  @override
   String get choosePetForMeasurement => 'Choisir un animal';
 
   @override
@@ -1148,6 +1180,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get timelineTypeHeartrate => 'Fréquence cardiaque';
+
+  @override
+  String get timelineTypeWeight => 'Poids';
 
   @override
   String get timelineTypeMessage => 'Message';

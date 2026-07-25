@@ -159,6 +159,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     switch (type) {
       case 'heartrate':
         return Icons.favorite_outline;
+      case 'weight':
+        return Icons.monitor_weight_outlined;
       case 'message':
         return Icons.chat_bubble_outline;
       case 'care':
@@ -176,6 +178,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     switch (type) {
       case 'heartrate':
         return AppColors.alert;
+      case 'weight':
+        return AppColors.brandTeal;
       case 'message':
         return AppColors.primary;
       case 'care':
@@ -191,6 +195,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     switch (type) {
       case 'heartrate':
         return l10n.timelineTypeHeartrate;
+      case 'weight':
+        return l10n.timelineTypeWeight;
       case 'message':
         return l10n.timelineTypeMessage;
       case 'care':
@@ -377,10 +383,9 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                             backgroundColor: _colorForType(type).withValues(alpha: 0.15),
                             child: Icon(_iconForType(type), color: _colorForType(type), size: 20),
                           ),
-                          title: Text(m['title'] as String? ?? _typeLabel(l10n, type)),
+                          title: Text(_typeLabel(l10n, type)),
                           subtitle: Text(
                             [
-                              _typeLabel(l10n, type),
                               if (createdAt != null) dateFmt.format(createdAt.toLocal()),
                               if ((m['body'] as String?)?.isNotEmpty == true) m['body'] as String,
                             ].join(' · '),

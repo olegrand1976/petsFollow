@@ -8,12 +8,12 @@ import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
-import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -142,7 +142,6 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     final greeting = userName != null && userName!.isNotEmpty
         ? l10n.greeting(userName!.split(' ').first)
         : l10n.myPets;
-    final activePet = pets.where((p) => p.isOwner && p.isActive).firstOrNull;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
     final mission = DiscoveryController.instance.missionCardForToday(
@@ -189,17 +188,9 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                       },
                     )
                   else ...[
-                    if (activePet != null) ...[
-                      Text(l10n.startMeasurement, style: Theme.of(context).textTheme.titleMedium),
+                    if (FeatureModulesController.instance.kennel) ...[
+                      _KennelEncodeButton(l10n: l10n, onDone: load),
                       const SizedBox(height: 12),
-                      _ProminentFcCta(
-                        onMeasure: _pickPetThenMeasure,
-                      ),
-                      const SizedBox(height: 12),
-                      if (FeatureModulesController.instance.kennel)
-                        _KennelEncodeButton(l10n: l10n, onDone: load),
-                      if (FeatureModulesController.instance.kennel)
-                        const SizedBox(height: 12),
                     ],
                     if (FeatureModulesController.instance.family)
                       _FamilyHouseholdCard(
@@ -216,7 +207,10 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         speciesLabel: _speciesLabel(l10n, pet.species),
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
-                        onMeasure: pet.isOwner && pet.isActive ? () => _startMeasurement(pet) : null,
+                        onMeasure: pet.isOwner && pet.isActive
+                            ? () => _startMeasurement(pet)
+                            : null,
+                        onWeightRecorded: pet.isOwner && pet.isActive ? load : null,
                         onResumePayment:
                             pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),
@@ -250,70 +244,6 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
               label: Text(l10n.newPet),
             ),
     );
-  }
-
-  Future<void> _pickPetThenMeasure() async {
-    final activePets = pets.where((p) => p.isOwner && p.isActive).toList();
-    if (activePets.isEmpty || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    String? selectedPetId;
-
-    final pet = await showModalBottomSheet<Pet>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModal) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: composerBottomPadding(ctx, embedded: false, base: 16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.choosePetForMeasurement,
-                    style: Theme.of(ctx).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  ...activePets.map(
-                    (p) => ListTile(
-                      selected: selectedPetId == p.id,
-                      leading: Icon(
-                        selectedPetId == p.id
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
-                      ),
-                      title: Text(p.name),
-                      subtitle: Text(_speciesLabel(l10n, p.species)),
-                      onTap: () => setModal(() => selectedPetId = p.id),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: selectedPetId == null
-                        ? null
-                        : () {
-                            final chosen = activePets.firstWhere(
-                              (p) => p.id == selectedPetId,
-                            );
-                            Navigator.pop(ctx, chosen);
-                          },
-                    child: Text(l10n.startMeasurement),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-    if (pet == null || !mounted) return;
-    await _startMeasurement(pet);
   }
 
   Future<void> _startMeasurement(Pet pet) async {
@@ -593,67 +523,6 @@ class _EmptyPetsState extends StatelessWidget {
   }
 }
 
-class _ProminentFcCta extends StatelessWidget {
-  const _ProminentFcCta({required this.onMeasure});
-
-  final VoidCallback onMeasure;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onMeasure,
-          borderRadius: BorderRadius.circular(28),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                const Icon(Icons.favorite, color: AppColors.bg, size: 36),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.heartRate,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.bg,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      Text(
-                        l10n.choosePetForMeasurement,
-                        style: TextStyle(color: AppColors.bg.withValues(alpha: 0.85)),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward, color: AppColors.bg.withValues(alpha: 0.9)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _PetHeroCard extends StatelessWidget {
   const _PetHeroCard({
     required this.pet,
@@ -661,6 +530,7 @@ class _PetHeroCard extends StatelessWidget {
     required this.l10n,
     required this.onTap,
     this.onMeasure,
+    this.onWeightRecorded,
     this.onResumePayment,
   });
 
@@ -669,6 +539,7 @@ class _PetHeroCard extends StatelessWidget {
   final AppLocalizations l10n;
   final VoidCallback onTap;
   final VoidCallback? onMeasure;
+  final VoidCallback? onWeightRecorded;
   final VoidCallback? onResumePayment;
 
   @override
@@ -713,12 +584,10 @@ class _PetHeroCard extends StatelessWidget {
               ),
               if (onMeasure != null) ...[
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: onMeasure,
-                    child: Text(l10n.startMeasurement),
-                  ),
+                PetQuickActions(
+                  petId: pet.id,
+                  onHeartRate: onMeasure!,
+                  onWeightRecorded: onWeightRecorded,
                 ),
               ],
               if (onResumePayment != null) ...[

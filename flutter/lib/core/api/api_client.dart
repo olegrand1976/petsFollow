@@ -731,6 +731,25 @@ class ApiClient {
     await dio.post('/api/v1/heartrate/sessions/$sessionId/cancel');
   }
 
+  Future<Map<String, dynamic>> createWeightReading(
+    String petId, {
+    required double weightKg,
+    String? comment,
+  }) async {
+    final data = <String, dynamic>{'weightKg': weightKg};
+    final trimmed = comment?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      data['comment'] = trimmed;
+    }
+    final res = await dio.post('/api/v1/pets/$petId/weights', data: data);
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<List<dynamic>> getWeightReadings(String petId) async {
+    final res = await dio.get('/api/v1/pets/$petId/weights');
+    return res.data['data'] as List<dynamic>;
+  }
+
   Future<List<dynamic>> getTimeline(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId/timeline');
     return res.data['data'] as List<dynamic>;

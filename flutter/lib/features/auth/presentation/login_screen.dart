@@ -311,9 +311,14 @@ class _LoginScreenState extends State<LoginScreen> {
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 40),
-        TextField(controller: email, decoration: InputDecoration(labelText: l10n.email)),
+        TextField(
+          key: const Key('login_email'),
+          controller: email,
+          decoration: InputDecoration(labelText: l10n.email),
+        ),
         const SizedBox(height: 12),
         TextField(
+          key: const Key('login_password'),
           controller: password,
           obscureText: true,
           decoration: InputDecoration(labelText: l10n.password),
@@ -346,10 +351,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
         if (error != null) ...[
           const SizedBox(height: 4),
-          Text(error!, style: const TextStyle(color: AppColors.alert)),
+          Text(error!, key: const Key('login_error'), style: const TextStyle(color: AppColors.alert)),
         ],
         const SizedBox(height: 16),
         FilledButton(
+          key: const Key('login_submit'),
           onPressed: _busy ? null : submit,
           child: Text(l10n.login),
         ),

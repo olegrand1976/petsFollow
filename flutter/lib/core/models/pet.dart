@@ -58,6 +58,7 @@ class Pet {
     this.permission,
     this.entitlement,
     this.heartrateDurationsSec = const [60],
+    this.weightKg,
   });
 
   final String id;
@@ -72,6 +73,8 @@ class Pet {
   final String? permission;
   final PetEntitlement? entitlement;
   final List<int> heartrateDurationsSec;
+  /// Last recorded weight (kg) from API `weightKg` / `pets.weight_kg`.
+  final double? weightKg;
 
   /// True when the logged-in client owns this pet (billing / HR / edit).
   bool get isOwner {
@@ -139,6 +142,7 @@ class Pet {
       heartrateDurationsSec: rawDurations == null || rawDurations.isEmpty
           ? const [60]
           : rawDurations.map((e) => (e as num).toInt()).toList(),
+      weightKg: (json['weightKg'] as num?)?.toDouble(),
     );
   }
 }

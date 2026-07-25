@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -74,6 +74,10 @@ test-go:
 test-flutter:
 	cd flutter && flutter pub get && flutter test
 
+# Smoke API locale seedée (api-dev :8291). Skip propre si API down.
+test-flutter-smoke:
+	cd flutter && flutter pub get && flutter test test/smoke/ --dart-define=RUN_FLUTTER_SMOKE=true
+
 test-nuxt:
 	cd nuxtjs && npm install && npm test
 
@@ -82,7 +86,7 @@ test-auth:
 	cd go && GOTOOLCHAIN=local go test ./internal/handlers/ -run 'TestAuth' -count=1
 	cd nuxtjs && npm test -- tests/unit/useAuth.spec.ts
 
-test: test-go
+test: test-go test-flutter
 
 smoke:
 	@bash scripts/smoke-test.sh

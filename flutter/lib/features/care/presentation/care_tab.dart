@@ -415,6 +415,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
       title: Text(l10n.careTitle),
       floatingActionButton: pets.any((p) => p.canWriteNotes)
           ? FloatingActionButton(
+              key: const Key('care_add_fab'),
               onPressed: _showCreateSheet,
               tooltip: l10n.careAddReminder,
               child: const Icon(Icons.add),
@@ -479,11 +480,13 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               IconButton(
+                                                key: Key('care_done_${r.id}'),
                                                 icon: const Icon(Icons.check_circle_outline),
                                                 tooltip: l10n.careDone,
                                                 onPressed: () => markDone(r),
                                               ),
                                               IconButton(
+                                                key: Key('care_postpone_${r.id}'),
                                                 icon: const Icon(Icons.schedule),
                                                 tooltip: l10n.carePostpone,
                                                 onPressed: () => postpone(r),

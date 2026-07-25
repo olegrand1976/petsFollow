@@ -268,6 +268,7 @@ class _PreconsultScreenState extends State<PreconsultScreen> {
                 const SizedBox(height: 20),
                 if (!_submitted)
                   FilledButton(
+                    key: const Key('preconsult_submit'),
                     onPressed: _saving ? null : _submit,
                     child: _saving
                         ? const SizedBox(

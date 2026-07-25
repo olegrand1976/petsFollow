@@ -415,6 +415,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                     ),
                     Expanded(
                       child: TextField(
+                        key: const Key('message_draft'),
                         controller: draft,
                         decoration: InputDecoration(
                           hintText: l10n.vetMessaging,
@@ -425,6 +426,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                       ),
                     ),
                     IconButton(
+                      key: const Key('message_send_btn'),
                       onPressed: sending ? null : send,
                       icon: sending
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))

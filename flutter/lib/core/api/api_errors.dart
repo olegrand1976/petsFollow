@@ -22,6 +22,8 @@ String mapApiError(Object e, AppLocalizations l10n) {
             return l10n.errorInvalidMediaType;
           case 'payment_required':
             return l10n.errorPaymentRequired;
+          case 'invalid_weight':
+            return l10n.weightInvalid;
           case 'file_required':
             return l10n.errorInvalidMediaType;
           default:

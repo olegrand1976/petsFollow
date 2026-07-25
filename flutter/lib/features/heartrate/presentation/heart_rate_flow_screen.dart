@@ -256,6 +256,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                   Text(l10n.heartRateInstructionsDuration(selectedDuration)),
                   const SizedBox(height: 24),
                   FilledButton(
+                    key: const Key('hr_start_btn'),
                     onPressed: durations.isEmpty ? null : start,
                     child: Text(l10n.start),
                   ),
@@ -295,6 +296,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                           style: const TextStyle(color: AppColors.alert)),
                     const SizedBox(height: 16),
                     TextField(
+                      key: const Key('hr_comment_field'),
                       controller: _commentController,
                       enabled: !_sending,
                       maxLength: 500,
@@ -309,6 +311,7 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
+                      key: const Key('hr_validate_btn'),
                       onPressed: _sending ? null : validate,
                       child: _sending
                           ? const SizedBox(

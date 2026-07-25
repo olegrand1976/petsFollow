@@ -703,6 +703,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
               runSpacing: 8,
               children: [
                 OutlinedButton(
+                  key: const Key('pro_light_cr_save'),
                   onPressed: _busy
                       ? null
                       : () => _run(() async {
@@ -714,6 +715,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                   child: Text(l10n.save),
                 ),
                 FilledButton(
+                  key: const Key('pro_light_cr_improve'),
                   onPressed: _busy
                       ? null
                       : () => _run(() async {
@@ -727,6 +729,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
                   child: Text(l10n.proLightImproveAi),
                 ),
                 FilledButton.tonal(
+                  key: const Key('pro_light_cr_finalize'),
                   onPressed: _busy
                       ? null
                       : () => _run(() async {

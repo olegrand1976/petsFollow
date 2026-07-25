@@ -508,6 +508,38 @@ class AppLocalizationsNl extends AppLocalizations {
   String get startMeasurement => 'METING STARTEN';
 
   @override
+  String get heartRateShort => 'Hart';
+
+  @override
+  String get weightShort => 'Gewicht';
+
+  @override
+  String get recordWeightTitle => 'Gewicht registreren';
+
+  @override
+  String get weightKgLabel => 'Gewicht (kg)';
+
+  @override
+  String get weightCommentLabel => 'Opmerking (optioneel)';
+
+  @override
+  String get weightCommentHint => 'Bv. na wandeling, nuchter…';
+
+  @override
+  String get weightSave => 'Opslaan';
+
+  @override
+  String get weightSentToVet => 'Gewicht opgeslagen';
+
+  @override
+  String get weightInvalid => 'Geef een geldig gewicht op (0,01–999,99 kg)';
+
+  @override
+  String weightLastLabel(String kg) {
+    return 'Laatste gewicht: $kg kg';
+  }
+
+  @override
   String get choosePetForMeasurement => 'Kies een huisdier';
 
   @override
@@ -1142,6 +1174,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get timelineTypeHeartrate => 'Hartslag';
+
+  @override
+  String get timelineTypeWeight => 'Gewicht';
 
   @override
   String get timelineTypeMessage => 'Bericht';

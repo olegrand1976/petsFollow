@@ -507,6 +507,38 @@ class AppLocalizationsEt extends AppLocalizations {
   String get startMeasurement => 'ALUSTA MÕÕTMIST';
 
   @override
+  String get heartRateShort => 'Süda';
+
+  @override
+  String get weightShort => 'Kaal';
+
+  @override
+  String get recordWeightTitle => 'Salvesta kaal';
+
+  @override
+  String get weightKgLabel => 'Kaal (kg)';
+
+  @override
+  String get weightCommentLabel => 'Kommentaar (valikuline)';
+
+  @override
+  String get weightCommentHint => 'Nt pärast jalutuskäiku, tühja kõhuga…';
+
+  @override
+  String get weightSave => 'Salvesta';
+
+  @override
+  String get weightSentToVet => 'Kaal salvestatud';
+
+  @override
+  String get weightInvalid => 'Sisesta kehtiv kaal (0,01–999,99 kg)';
+
+  @override
+  String weightLastLabel(String kg) {
+    return 'Viimane kaal: $kg kg';
+  }
+
+  @override
   String get choosePetForMeasurement => 'Valige lemmikloom';
 
   @override
@@ -1144,6 +1176,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get timelineTypeHeartrate => 'Südame löögisagedus';
+
+  @override
+  String get timelineTypeWeight => 'Kaal';
 
   @override
   String get timelineTypeMessage => 'Sõnum';

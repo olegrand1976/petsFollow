@@ -13,6 +13,7 @@ import 'package:petsfollow_mobile/features/messaging/presentation/messaging_scre
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_edit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
@@ -295,6 +296,17 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                 const SizedBox(height: 4),
                 Text(species, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold)),
                 Text(pet.breed, style: TextStyle(color: AppColors.textMuted)),
+                if (pet.weightKg != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.weightLastLabel(
+                      pet.weightKg!.toStringAsFixed(
+                        pet.weightKg! == pet.weightKg!.roundToDouble() ? 0 : 2,
+                      ),
+                    ),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  ),
+                ],
               ],
             ),
           ),
@@ -305,9 +317,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             HorseHealthPanel(petId: pet.id, petName: pet.name),
           ],
           const SizedBox(height: 24),
-          if (pet.isOwner && pet.isActive)
-            FilledButton.icon(
-              onPressed: () {
+          if (pet.isOwner && pet.isActive) ...[
+            PetQuickActions(
+              petId: pet.id,
+              onHeartRate: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -318,9 +331,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                   ),
                 );
               },
-              icon: const Icon(Icons.favorite),
-              label: Text(l10n.startMeasurement),
+              onWeightRecorded: _reloadPet,
             ),
+            const SizedBox(height: 8),
+          ],
           if (pet.needsResumePayment) ...[
             FilledButton.icon(
               onPressed: () async {

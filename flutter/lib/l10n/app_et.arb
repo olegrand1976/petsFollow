@@ -185,6 +185,23 @@
   },
   "latestValues": "Viimased väärtused",
   "startMeasurement": "ALUSTA MÕÕTMIST",
+  "heartRateShort": "Süda",
+  "weightShort": "Kaal",
+  "recordWeightTitle": "Salvesta kaal",
+  "weightKgLabel": "Kaal (kg)",
+  "weightCommentLabel": "Kommentaar (valikuline)",
+  "weightCommentHint": "Nt pärast jalutuskäiku, tühja kõhuga…",
+  "weightSave": "Salvesta",
+  "weightSentToVet": "Kaal salvestatud",
+  "weightInvalid": "Sisesta kehtiv kaal (0,01–999,99 kg)",
+  "weightLastLabel": "Viimane kaal: {kg} kg",
+  "@weightLastLabel": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
   "choosePetForMeasurement": "Valige lemmikloom",
   "chooseDuration": "Mõõtmise kestus",
   "durationSeconds": "{seconds} s",
@@ -418,6 +435,7 @@
     }
   },
   "timelineTypeHeartrate": "Südame löögisagedus",
+  "timelineTypeWeight": "Kaal",
   "timelineTypeMessage": "Sõnum",
   "timelineTypeCare": "Hooldus",
   "timelineTypeVisit": "Visiit",

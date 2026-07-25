@@ -185,6 +185,23 @@
   },
   "latestValues": "Dernières valeurs",
   "startMeasurement": "DÉMARRER LA MESURE",
+  "heartRateShort": "Cœur",
+  "weightShort": "Poids",
+  "recordWeightTitle": "Enregistrer le poids",
+  "weightKgLabel": "Poids (kg)",
+  "weightCommentLabel": "Commentaire (optionnel)",
+  "weightCommentHint": "Ex. après balade, à jeun…",
+  "weightSave": "Enregistrer",
+  "weightSentToVet": "Poids enregistré",
+  "weightInvalid": "Indiquez un poids valide (0,01–999,99 kg)",
+  "weightLastLabel": "Dernier poids : {kg} kg",
+  "@weightLastLabel": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
   "choosePetForMeasurement": "Choisir un animal",
   "chooseDuration": "Durée de la mesure",
   "durationSeconds": "{seconds} s",
@@ -488,6 +505,7 @@
     }
   },
   "timelineTypeHeartrate": "Fréquence cardiaque",
+  "timelineTypeWeight": "Poids",
   "timelineTypeMessage": "Message",
   "timelineTypeCare": "Soin",
   "timelineTypeVisit": "Visite",

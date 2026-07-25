@@ -185,6 +185,23 @@
   },
   "latestValues": "Laatste waarden",
   "startMeasurement": "METING STARTEN",
+  "heartRateShort": "Hart",
+  "weightShort": "Gewicht",
+  "recordWeightTitle": "Gewicht registreren",
+  "weightKgLabel": "Gewicht (kg)",
+  "weightCommentLabel": "Opmerking (optioneel)",
+  "weightCommentHint": "Bv. na wandeling, nuchter…",
+  "weightSave": "Opslaan",
+  "weightSentToVet": "Gewicht opgeslagen",
+  "weightInvalid": "Geef een geldig gewicht op (0,01–999,99 kg)",
+  "weightLastLabel": "Laatste gewicht: {kg} kg",
+  "@weightLastLabel": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
   "choosePetForMeasurement": "Kies een huisdier",
   "chooseDuration": "Meetduur",
   "durationSeconds": "{seconds} s",
@@ -425,6 +442,7 @@
     }
   },
   "timelineTypeHeartrate": "Hartslag",
+  "timelineTypeWeight": "Gewicht",
   "timelineTypeMessage": "Bericht",
   "timelineTypeCare": "Zorg",
   "timelineTypeVisit": "Bezoek",

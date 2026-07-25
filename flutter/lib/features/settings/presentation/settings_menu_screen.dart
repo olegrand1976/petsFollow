@@ -147,11 +147,15 @@ class SettingsMenuScreen extends StatelessWidget {
         ),
         const Divider(),
         ListTile(
+          key: const Key('settings_logout'),
           leading: const Icon(Icons.logout, color: AppColors.alert),
           title: Text(l10n.logout, style: const TextStyle(color: AppColors.alert)),
           onTap: () async {
-            await ApiClient.instance.logout();
-            onLogout();
+            try {
+              await ApiClient.instance.logout();
+            } finally {
+              onLogout();
+            }
           },
         ),
       ],

@@ -506,6 +506,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startMeasurement => 'START MEASUREMENT';
 
   @override
+  String get heartRateShort => 'Heart';
+
+  @override
+  String get weightShort => 'Weight';
+
+  @override
+  String get recordWeightTitle => 'Record weight';
+
+  @override
+  String get weightKgLabel => 'Weight (kg)';
+
+  @override
+  String get weightCommentLabel => 'Comment (optional)';
+
+  @override
+  String get weightCommentHint => 'E.g. after a walk, fasting…';
+
+  @override
+  String get weightSave => 'Save';
+
+  @override
+  String get weightSentToVet => 'Weight saved';
+
+  @override
+  String get weightInvalid => 'Enter a valid weight (0.01–999.99 kg)';
+
+  @override
+  String weightLastLabel(String kg) {
+    return 'Last weight: $kg kg';
+  }
+
+  @override
   String get choosePetForMeasurement => 'Choose a pet';
 
   @override
@@ -1136,6 +1168,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timelineTypeHeartrate => 'Heart rate';
+
+  @override
+  String get timelineTypeWeight => 'Weight';
 
   @override
   String get timelineTypeMessage => 'Message';

@@ -106,6 +106,7 @@ class _CommercialFieldShellScreenState extends State<CommercialFieldShellScreen>
               ),
               const Spacer(),
               TextButton(
+                key: const Key('commercial_logout'),
                 onPressed: () async {
                   await ApiClient.instance.logout();
                   widget.onLogout();
