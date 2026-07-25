@@ -93,8 +93,7 @@ Fiches pitch : [18 véto](./18-FICHE-COMMISSION-VETO.md) · [19 commercial](./19
 
 | Bonus | Montant | Condition | Statut technique |
 |-------|---------|-----------|------------------|
-| Ramp cabinet | 25 € | **5 pets payants / 60 j** sur un véto assigné | Détection auto (`SyncCommercialBonusAwards`) + mark-paid admin |
-| Mix triennial | 50 € / mois | ≥ 55 % activations triennial | Idem |
+| Mix triennial | 50 € / mois | ≥ 55 % activations triennial | Détection auto (`SyncCommercialBonusAwards`) + mark-paid admin |
 | Palier véto 31 | 50 € | 1er passage 31 clients payants | Affichage / progression seule — payout hors système |
 
 ---

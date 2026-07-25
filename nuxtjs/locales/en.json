@@ -783,7 +783,7 @@
     },
     "commercialBonuses": {
       "title": "SPIFF bonuses",
-      "subtitle": "Track practice ramp (€25) and triennial mix (€50/month) — manual payout.",
+      "subtitle": "Track triennial mix (€50/month) — manual payout.",
       "filterStatus": "Status",
       "filterCommercial": "Sales rep",
       "filterAll": "All",
@@ -791,7 +791,7 @@
       "colCommercial": "Sales rep",
       "colBonus": "Bonus",
       "colProgress": "Progress",
-      "colDetail": "Practice / period",
+      "colDetail": "Period",
       "colAmount": "Amount",
       "colStatus": "Status",
       "colActions": "Actions",
@@ -1709,12 +1709,10 @@
     },
     "bonusTitles": {
       "vet_tier_31": "31-client tier bonus",
-      "commercial_ramp": "Practice ramp bonus",
       "commercial_mix": "Triennial mix bonus"
     },
     "bonusHints": {
       "vet_tier_31": "€50 one-shot when first reaching 31 paying clients.",
-      "commercial_ramp": "€25 when 5 paid pets activate within 60 days under an assigned vet.",
       "commercial_mix": "€50 / month if ≥ 55% of the month’s activations are triennial."
     },
     "status": {

@@ -70,7 +70,6 @@ func AddonPlanRates() []PlanRateInfo {
 func DefaultBonusRules() []BonusRule {
 	return []BonusRule{
 		{Code: "vet_tier_31", Audience: "vet", AmountCents: 5000, TitleKey: "bonus.vetTier31", Status: "available"},
-		{Code: "commercial_ramp", Audience: "commercial", AmountCents: 2500, TitleKey: "bonus.commercialRamp", Status: "available"},
 		{Code: "commercial_mix", Audience: "commercial", AmountCents: 5000, TitleKey: "bonus.commercialMix", Status: "available"},
 	}
 }

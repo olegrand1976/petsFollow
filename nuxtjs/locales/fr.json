@@ -1107,7 +1107,7 @@
     },
     "commercialBonuses": {
       "title": "Bonus SPIFF",
-      "subtitle": "Suivi Ramp cabinet (25 €) et Mix triennial (50 €/mois) — paiement manuel.",
+      "subtitle": "Suivi Mix triennial (50 €/mois) — paiement manuel.",
       "filterStatus": "Statut",
       "filterCommercial": "Commercial",
       "filterAll": "Tous",
@@ -1115,7 +1115,7 @@
       "colCommercial": "Commercial",
       "colBonus": "Bonus",
       "colProgress": "Progression",
-      "colDetail": "Cabinet / période",
+      "colDetail": "Période",
       "colAmount": "Montant",
       "colStatus": "Statut",
       "colActions": "Actions",
@@ -1364,12 +1364,10 @@
     },
     "bonusTitles": {
       "vet_tier_31": "Bonus palier 31 clients",
-      "commercial_ramp": "Bonus ramp cabinet",
       "commercial_mix": "Bonus mix triennial"
     },
     "bonusHints": {
       "vet_tier_31": "50 € one-shot au 1er passage de 31 clients payants.",
-      "commercial_ramp": "25 € si 5 animaux payants activés sous 60 j sur un véto assigné.",
       "commercial_mix": "50 € / mois si ≥ 55 % des activations du mois sont en triennial."
     },
     "status": {

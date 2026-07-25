@@ -783,7 +783,7 @@
     },
     "commercialBonuses": {
       "title": "SPIFF-bonussen",
-      "subtitle": "Opvolging Ramp praktijk (25 €) en Mix triennial (50 €/maand) — manuele betaling.",
+      "subtitle": "Opvolging Mix triennial (50 €/maand) — manuele betaling.",
       "filterStatus": "Status",
       "filterCommercial": "Commercial",
       "filterAll": "Alle",
@@ -791,7 +791,7 @@
       "colCommercial": "Commercial",
       "colBonus": "Bonus",
       "colProgress": "Voortgang",
-      "colDetail": "Praktijk / periode",
+      "colDetail": "Periode",
       "colAmount": "Bedrag",
       "colStatus": "Status",
       "colActions": "Acties",
@@ -1709,12 +1709,10 @@
     },
     "bonusTitles": {
       "vet_tier_31": "31-client tier bonus",
-      "commercial_ramp": "Practice ramp bonus",
       "commercial_mix": "Triennial mix bonus"
     },
     "bonusHints": {
       "vet_tier_31": "€50 one-shot when first reaching 31 paying clients.",
-      "commercial_ramp": "€25 when 5 paid pets activate within 60 days under an assigned vet.",
       "commercial_mix": "€50 / month if ≥ 55% of the month’s activations are triennial."
     },
     "status": {

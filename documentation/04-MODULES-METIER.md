@@ -28,7 +28,7 @@ Plans animal vendables : **monthly 3,50 €** (`subscription` only) · **annual 
 
 ## Commissions
 
-Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; addons legacy si encore en base), accrual à l’activation (pas au renew), périodes close/mark-paid admin (véto + commercial). SPIFF commercial (`commercial_bonus_awards` : sync auto + mark-paid). UI `ProCommissionSheet` + `/admin/commercial-bonuses`.
+Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; addons legacy si encore en base), accrual à l’activation (pas au renew), périodes close/mark-paid admin (véto + commercial). SPIFF commercial mix only (`commercial_bonus_awards` : sync auto + mark-paid). UI `ProCommissionSheet` + `/admin/commercial-bonuses`.
 
 ## Commercial / sales
 

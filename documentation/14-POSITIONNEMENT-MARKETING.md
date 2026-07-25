@@ -27,7 +27,7 @@ Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité di
 | Véto (Pro) | Continuité entre consultations + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA (Web) |
 | Pro Light (ProLight) | App mobile terrain gratuite, avec ou sans compte Web Pro ; CR vocaux + amélioration IA |
 | Client | App mobile simple : suivi prescrit, messages, rappels Care/Horse, relevé FC |
-| Commercial | Commission sur chaque nouvelle activation + SPIFF ramp / mix |
+| Commercial | Commission sur chaque nouvelle activation + SPIFF mix triennial |
 
 ## Offre cœur (TTC)
 

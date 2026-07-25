@@ -783,7 +783,7 @@
     },
     "commercialBonuses": {
       "title": "Bonos SPIFF",
-      "subtitle": "Seguimiento Ramp clínica (25 €) y Mix triennial (50 €/mes) — pago manual.",
+      "subtitle": "Seguimiento Mix triennial (50 €/mes) — pago manual.",
       "filterStatus": "Estado",
       "filterCommercial": "Comercial",
       "filterAll": "Todos",
@@ -791,7 +791,7 @@
       "colCommercial": "Comercial",
       "colBonus": "Bono",
       "colProgress": "Progreso",
-      "colDetail": "Clínica / periodo",
+      "colDetail": "Periodo",
       "colAmount": "Importe",
       "colStatus": "Estado",
       "colActions": "Acciones",
@@ -1709,12 +1709,10 @@
     },
     "bonusTitles": {
       "vet_tier_31": "Bonus tramo 31 clientes",
-      "commercial_ramp": "Bonus ramp de clínica",
       "commercial_mix": "Bonus mix triennial"
     },
     "bonusHints": {
       "vet_tier_31": "50 € de una sola vez al alcanzar por primera vez 31 clientes de pago.",
-      "commercial_ramp": "25 € si 5 mascotas de pago se activan en 60 días con un vet asignado.",
       "commercial_mix": "50 € / mes si ≥ 55 % de las activaciones del mes son triennial."
     },
     "status": {

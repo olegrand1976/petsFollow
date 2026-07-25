@@ -463,7 +463,7 @@ func TestCommercialFlatSubscriptionAccrual(t *testing.T) {
 	}
 }
 
-func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
+func TestCommercialBonusMixAndMarkPaid(t *testing.T) {
 	api := newTestAPI(t)
 	ctx := context.Background()
 	st := store.New(api.pool)
@@ -512,7 +512,7 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 
 	now := time.Now().UTC()
 	until := now.Add(1095 * 24 * time.Hour)
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 2; i++ {
 		petID := uuid.NewString()
 		if _, err := api.pool.Exec(ctx, `
 			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, payment_status)
@@ -537,23 +537,17 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var rampCount, mixCount int
+	var mixCount int
 	if err := api.pool.QueryRow(ctx, `
-		SELECT
-			COUNT(*) FILTER (WHERE bonus_code='commercial_ramp')::int,
-			COUNT(*) FILTER (WHERE bonus_code='commercial_mix')::int
+		SELECT COUNT(*)::int
 		FROM billing.commercial_bonus_awards
-		WHERE commercial_user_id=$1 AND status='earned'`, commID).Scan(&rampCount, &mixCount); err != nil {
+		WHERE commercial_user_id=$1 AND status='earned' AND bonus_code='commercial_mix'`, commID).Scan(&mixCount); err != nil {
 		t.Fatal(err)
-	}
-	if rampCount != 1 {
-		t.Fatalf("expected 1 ramp award, got %d", rampCount)
 	}
 	if mixCount != 1 {
 		t.Fatalf("expected 1 mix award, got %d", mixCount)
 	}
 
-	// Idempotent sync
 	if err := st.SyncCommercialBonusAwards(ctx, commID); err != nil {
 		t.Fatal(err)
 	}
@@ -562,8 +556,8 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 		SELECT COUNT(*)::int FROM billing.commercial_bonus_awards WHERE commercial_user_id=$1`, commID).Scan(&totalAwards); err != nil {
 		t.Fatal(err)
 	}
-	if totalAwards != 2 {
-		t.Fatalf("expected 2 awards after re-sync, got %d", totalAwards)
+	if totalAwards != 1 {
+		t.Fatalf("expected 1 award after re-sync, got %d", totalAwards)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/commissions", commTok, nil)
@@ -572,27 +566,24 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 	}
 	summary := dataMap(t, env)
 	bonuses, ok := summary["bonuses"].([]any)
-	if !ok || len(bonuses) < 2 {
+	if !ok || len(bonuses) < 1 {
 		t.Fatalf("expected bonuses in summary, got %#v", summary["bonuses"])
 	}
-	foundRamp, foundMix := false, false
+	foundMix := false
 	for _, raw := range bonuses {
 		b := raw.(map[string]any)
-		switch b["code"] {
-		case "commercial_ramp":
-			foundRamp = true
-			if b["status"] != "earned" {
-				t.Fatalf("ramp status want earned, got %#v", b["status"])
-			}
-		case "commercial_mix":
+		if b["code"] == "commercial_mix" {
 			foundMix = true
 			if b["status"] != "earned" {
 				t.Fatalf("mix status want earned, got %#v", b["status"])
 			}
 		}
+		if b["code"] == "commercial_ramp" {
+			t.Fatalf("commercial_ramp must not appear in bonuses %#v", bonuses)
+		}
 	}
-	if !foundRamp || !foundMix {
-		t.Fatalf("missing ramp/mix in bonuses %#v", bonuses)
+	if !foundMix {
+		t.Fatalf("missing mix in bonuses %#v", bonuses)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/commercial-bonuses", adminTok, nil)
@@ -605,14 +596,14 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 		t.Fatalf("expected admin bonus items, got %#v", adminData)
 	}
 
-	var rampAwardID string
+	var mixAwardID string
 	if err := api.pool.QueryRow(ctx, `
 		SELECT id::text FROM billing.commercial_bonus_awards
-		WHERE commercial_user_id=$1 AND bonus_code='commercial_ramp'`, commID).Scan(&rampAwardID); err != nil {
+		WHERE commercial_user_id=$1 AND bonus_code='commercial_mix'`, commID).Scan(&mixAwardID); err != nil {
 		t.Fatal(err)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercial-bonuses/"+rampAwardID+"/mark-paid", adminTok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercial-bonuses/"+mixAwardID+"/mark-paid", adminTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("mark paid %d %#v", code, env)
 	}
@@ -621,7 +612,7 @@ func TestCommercialBonusRampMixAndMarkPaid(t *testing.T) {
 		t.Fatalf("expected paid status, got %#v", paid)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercial-bonuses/"+rampAwardID+"/mark-paid", adminTok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercial-bonuses/"+mixAwardID+"/mark-paid", adminTok, nil)
 	if code != http.StatusConflict {
 		t.Fatalf("second mark-paid want 409, got %d %#v", code, env)
 	}

@@ -375,22 +375,6 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 // commercialBonusProgress fills SPIFF status for commercial (+ vet tier rule for pitch sheets).
 // Call SyncCommercialBonusAwards before this so earned awards are persisted.
 func (s *Store) commercialBonusProgress(ctx context.Context, commercialUserID, month string) ([]BonusRule, error) {
-	var rampBest int
-	var rampVetID, rampVetEmail, rampVetName string
-	_ = s.pool.QueryRow(ctx, `
-		SELECT cnt, vet_user_id, email, full_name FROM (
-			SELECT COUNT(*)::int AS cnt, cl.vet_user_id::text AS vet_user_id,
-				vu.email, vu.full_name
-			FROM billing.commercial_commission_ledger cl
-			JOIN identity.users vu ON vu.id = cl.vet_user_id
-			WHERE cl.commercial_user_id=$1
-			  AND cl.source_type='subscription_pct'
-			  AND cl.accrued_at >= NOW() - INTERVAL '60 days'
-			GROUP BY cl.vet_user_id, vu.email, vu.full_name
-			ORDER BY COUNT(*) DESC
-			LIMIT 1
-		) t`, commercialUserID).Scan(&rampBest, &rampVetID, &rampVetEmail, &rampVetName)
-
 	var triennialN, subN int
 	_ = s.pool.QueryRow(ctx, `
 		SELECT
@@ -406,54 +390,17 @@ func (s *Store) commercialBonusProgress(ctx context.Context, commercialUserID, m
 	if err != nil {
 		return nil, err
 	}
-	var rampAward, mixAward *CommercialBonusAward
+	var mixAward *CommercialBonusAward
 	for i := range awards {
 		a := &awards[i]
-		switch a.BonusCode {
-		case BonusCodeCommercialRamp:
-			if rampAward == nil || awardStatusRank(a.Status) > awardStatusRank(rampAward.Status) {
-				rampAward = a
-			}
-		case BonusCodeCommercialMix:
-			if a.PeriodYM == month {
-				mixAward = a
-			}
+		if a.BonusCode == BonusCodeCommercialMix && a.PeriodYM == month {
+			mixAward = a
 		}
 	}
 
-	out := make([]BonusRule, 0, 3)
+	out := make([]BonusRule, 0, 2)
 	for _, b := range DefaultBonusRules() {
 		switch b.Code {
-		case BonusCodeCommercialRamp:
-			target := commercialRampTargetPets
-			b.Target = &target
-			b.Progress = &rampBest
-			b.VetUserID = rampVetID
-			b.VetEmail = rampVetEmail
-			b.VetFullName = rampVetName
-			switch {
-			case rampAward != nil && rampAward.Status == BonusStatusPaid:
-				b.Status = BonusStatusPaid
-				b.AwardID = rampAward.ID
-				b.Progress = &rampAward.Progress
-				b.VetUserID = rampAward.VetUserID
-				b.VetEmail = rampAward.VetEmail
-				b.VetFullName = rampAward.VetFullName
-			case rampAward != nil:
-				b.Status = BonusStatusEarned
-				b.AwardID = rampAward.ID
-				b.Progress = &rampAward.Progress
-				b.VetUserID = rampAward.VetUserID
-				b.VetEmail = rampAward.VetEmail
-				b.VetFullName = rampAward.VetFullName
-			case rampBest >= commercialRampTargetPets:
-				b.Status = BonusStatusEarned
-			case rampBest > 0:
-				b.Status = "in_progress"
-			default:
-				b.Status = "available"
-			}
-			out = append(out, b)
 		case BonusCodeCommercialMix:
 			target := commercialMixTargetPct
 			b.Target = &target
@@ -486,17 +433,6 @@ func (s *Store) commercialBonusProgress(ctx context.Context, commercialUserID, m
 		}
 	}
 	return out, nil
-}
-
-func awardStatusRank(status string) int {
-	switch status {
-	case BonusStatusPaid:
-		return 2
-	case BonusStatusEarned:
-		return 1
-	default:
-		return 0
-	}
 }
 
 func (s *Store) ResolveOpenCommercialPeriodYM(ctx context.Context, preferred string) (string, error) {

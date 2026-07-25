@@ -21,7 +21,6 @@ Steer : triennial = **meilleur taux** et **meilleur €**. Pas de commission add
 ## Bonus SPIFF
 | Bonus | Montant | Condition |
 |-------|---------|-----------|
-| Ramp cabinet | 25 € | 5 pets payants / 60 j sur un véto assigné |
 | Mix mois | 50 € | ≥ 55 % activations triennial dans le mois |
 
 Détection **automatique** (`SyncCommercialBonusAwards`) ; payout via admin **mark-paid**.
@@ -33,5 +32,5 @@ Sur le triennial au plafond : **~9,4 €** aussi pour le véto.
 
 ## Ne pas compter
 - Inscription véto seule (cabinet à 0 payant = normal) → **0 €** de commission
-- Revenu = animal qui passe **payant** ; bonus ramp = 5 pets payants / 60 j
+- Revenu = animal qui passe **payant** ; SPIFF mix = ≥ 55 % activations triennial / mois
 - Renouvellement d’un abo déjà commissionné → **0 €** supplémentaire

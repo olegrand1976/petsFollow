@@ -52,7 +52,7 @@ Commission indicative triennial (plafond) : **~9,4 €** pour vous **et** pour l
 
 1. **Ouvrir** le cabinet (inscription / assignation)
 2. **Onboard** profil cabinet complet (Pro)
-3. **Activer** pets payants — objectif **5 pets / 60 j** (bonus ramp 25 €)
+3. **Activer** pets payants — commission à chaque activation ; SPIFF mix si ≥ 55 % triennial / mois
 
 Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
@@ -62,7 +62,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 |----------|--------|
 | **Véto (30 s)** | « petsFollow : continuité de soins prescrite — Web pour le cabinet, mobile ProLight pour le terrain, app pour vos clients. Pro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Pro Light gratuit. Vos clients paient ≤ 3,5 €/mois — steer triennial 95 € / 3 ans. Messagerie, Care/Horse, relevés cardiaques inclus. » |
 | **Client (via véto)** | « Le suivi que votre véto vous prescrit — messages, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. » |
-| **Vous (interne)** | « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles. » |
+| **Vous (interne)** | « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles. » |
 
 ### Objections
 
@@ -91,7 +91,7 @@ Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui
 
 | Interdit | Pourquoi |
 |----------|----------|
-| **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. Le bonus ramp (25 €) exige **5 pets payants / 60 j**. |
+| **Compter une commission (ou un « deal gagné ») dès l’inscription du véto** | L’ouverture du cabinet = étape 1. Vous êtes payé quand un **animal passe payant**. Tant qu’il n’y a pas d’activation → **0 €**. SPIFF mix = ≥ 55 % activations triennial / mois. |
 | **Promettre un % calculé sur le prix TTC** | Le client paie en TTC (ex. 95 €). Votre commission = **% du HTVA** uniquement (hors TVA 21 %). Dire « 12 % de 95 € » est faux. |
 | **Dire au véto qu’il gagne moins parce qu’un commercial l’a apporté** | Les grilles sont **indépendantes**. Même plafond (~9,4 € sur le triennial). |
 | **Cantonner le pitch au « suivi cardiaque »** | Identité = continuité prescrite (Web + mobiles). Le FC est vendable en démo, pas comme plafond d’offre. |

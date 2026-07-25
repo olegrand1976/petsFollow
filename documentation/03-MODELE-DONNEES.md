@@ -47,5 +47,5 @@ Migrations utiles : `000019` commissions · `000020` `commercial_bonus_awards` �
 - TVA BE 21 % : calcul HTVA côté store (`vat.go`) pour commissions.
 - Taux / facteurs : `commission_rates.go` + tiers seed migration `000019`.
 - Accrual commission à l’activation checkout ; `invoice.paid` prolonge l’entitlement **sans** re-commission.
-- SPIFF commercial : `commercial_bonuses.go` (`SyncCommercialBonusAwards`) ; palier véto 31 = affichage seul.
+- SPIFF commercial (mix triennial only) : `commercial_bonuses.go` (`SyncCommercialBonusAwards`) ; palier véto 31 = affichage seul.
 - Détail Stripe → [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md).

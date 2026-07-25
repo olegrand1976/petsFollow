@@ -25,7 +25,7 @@ Assiette = **HT du montant payé**.
 
 ## Commercial
 - Plans : **8 / 8 / 12 %** (monthly / annual / triennial) — **constantes code** (pas éditables ; `PUT /admin/commissions/settings` rejette)
-- SPIFF ramp 25 € · mix 50 €/mois : **détection auto** + mark-paid admin (`/admin/commercial-bonuses`)
+- SPIFF mix 50 €/mois : **détection auto** + mark-paid admin (`/admin/commercial-bonuses`)
 - Pas de commission sur inscription véto seule (ni sans commercial assigné)
 - Payouts : miroir `/admin/commercial-commissions/…` + profil IBAN commercial
 

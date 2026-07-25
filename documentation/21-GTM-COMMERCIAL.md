@@ -17,13 +17,13 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 ## Scripts courts
 - **Client** : « Le suivi que votre véto vous prescrit — messages, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois. »
 - **Véto** : « Continuité Web cabinet + mobile terrain + app client. Vous gagnez sur chaque activation ; plafond ~9,4 € sur le triennial ; pas de perte si un commercial vous a apporté. »
-- **Commercial** : « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. »
+- **Commercial** : « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. »
 - **Téléphone → RDV** : funnel complet → [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md)
 
 Promesse canon → [14](14-POSITIONNEMENT-MARKETING.md) · fiche pitch → [22](22-FICHE-PRODUIT-COMMERCIAL.md).
 
 ## SPIFF
-- Ramp 25 € · Mix mois 50 € : détection auto + mark-paid admin
+- Mix mois 50 € (≥ 55 % activations triennial) : détection auto + mark-paid admin
 - Palier véto 50 € : affichage / payout hors système
 
 ## Interdits

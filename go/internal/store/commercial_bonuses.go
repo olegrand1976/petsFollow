@@ -11,16 +11,13 @@ import (
 )
 
 const (
-	BonusCodeCommercialRamp = "commercial_ramp"
-	BonusCodeCommercialMix  = "commercial_mix"
+	BonusCodeCommercialMix = "commercial_mix"
 
 	BonusStatusEarned = "earned"
 	BonusStatusPaid   = "paid"
 
-	commercialRampTargetPets  = 5
-	commercialMixTargetPct    = 55
-	commercialRampAmountCents = 2500
-	commercialMixAmountCents  = 5000
+	commercialMixTargetPct   = 55
+	commercialMixAmountCents = 5000
 )
 
 var (
@@ -64,52 +61,14 @@ type CommercialBonusTrackRow struct {
 	VetFullName        string `json:"vetFullName,omitempty"`
 }
 
-func rampDedupeKey(commercialUserID, vetUserID string) string {
-	return fmt.Sprintf("ramp:%s:%s", commercialUserID, vetUserID)
-}
-
 func mixDedupeKey(commercialUserID, periodYM string) string {
 	return fmt.Sprintf("mix:%s:%s", commercialUserID, periodYM)
 }
 
-// SyncCommercialBonusAwards persists earned Ramp/Mix awards when thresholds are met.
-// Existing paid/earned awards are never deleted when the rolling window slides.
+// SyncCommercialBonusAwards persists earned Mix awards when the monthly threshold is met.
+// Existing paid/earned awards are never deleted when the window slides.
 func (s *Store) SyncCommercialBonusAwards(ctx context.Context, commercialUserID string) error {
 	month := PeriodYM(time.Now())
-
-	rows, err := s.pool.Query(ctx, `
-		SELECT cl.vet_user_id::text, COUNT(*)::int
-		FROM billing.commercial_commission_ledger cl
-		WHERE cl.commercial_user_id=$1
-		  AND cl.source_type='subscription_pct'
-		  AND cl.accrued_at >= NOW() - INTERVAL '60 days'
-		GROUP BY cl.vet_user_id
-		HAVING COUNT(*) >= $2`, commercialUserID, commercialRampTargetPets)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var vetID string
-		var cnt int
-		if err := rows.Scan(&vetID, &cnt); err != nil {
-			return err
-		}
-		if err := s.upsertBonusAward(ctx, CommercialBonusAward{
-			CommercialUserID: commercialUserID,
-			BonusCode:        BonusCodeCommercialRamp,
-			AmountCents:      commercialRampAmountCents,
-			Status:           BonusStatusEarned,
-			VetUserID:        vetID,
-			Progress:         cnt,
-			Target:           commercialRampTargetPets,
-		}, rampDedupeKey(commercialUserID, vetID)); err != nil {
-			return err
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
 
 	var triennialN, subN int
 	if err := s.pool.QueryRow(ctx, `
@@ -262,9 +221,11 @@ func (s *Store) commercialBonusTrackForUser(ctx context.Context, c CommercialRow
 	if err != nil {
 		return nil, err
 	}
-	awardedRampVets := map[string]bool{}
 	mixAwardedForMonth := false
 	for _, a := range awards {
+		if a.BonusCode != BonusCodeCommercialMix {
+			continue
+		}
 		row := CommercialBonusTrackRow{
 			AwardID:            a.ID,
 			CommercialUserID:   c.UserID,
@@ -281,58 +242,9 @@ func (s *Store) commercialBonusTrackForUser(ctx context.Context, c CommercialRow
 			VetFullName:        a.VetFullName,
 		}
 		out = append(out, row)
-		if a.BonusCode == BonusCodeCommercialRamp && a.VetUserID != "" {
-			awardedRampVets[a.VetUserID] = true
-		}
-		if a.BonusCode == BonusCodeCommercialMix && a.PeriodYM == month {
+		if a.PeriodYM == month {
 			mixAwardedForMonth = true
 		}
-	}
-
-	// Live ramp progress for vets without an award yet.
-	rampRows, err := s.pool.Query(ctx, `
-		SELECT cl.vet_user_id::text, vu.email, vu.full_name, COUNT(*)::int
-		FROM billing.commercial_commission_ledger cl
-		JOIN identity.users vu ON vu.id = cl.vet_user_id
-		WHERE cl.commercial_user_id=$1
-		  AND cl.source_type='subscription_pct'
-		  AND cl.accrued_at >= NOW() - INTERVAL '60 days'
-		GROUP BY cl.vet_user_id, vu.email, vu.full_name
-		HAVING COUNT(*) > 0
-		ORDER BY COUNT(*) DESC`, c.UserID)
-	if err != nil {
-		return nil, err
-	}
-	defer rampRows.Close()
-	for rampRows.Next() {
-		var vetID, email, name string
-		var cnt int
-		if err := rampRows.Scan(&vetID, &email, &name, &cnt); err != nil {
-			return nil, err
-		}
-		if awardedRampVets[vetID] {
-			continue
-		}
-		status := "in_progress"
-		if cnt >= commercialRampTargetPets {
-			status = BonusStatusEarned
-		}
-		out = append(out, CommercialBonusTrackRow{
-			CommercialUserID:   c.UserID,
-			CommercialFullName: c.FullName,
-			CommercialEmail:    c.Email,
-			BonusCode:          BonusCodeCommercialRamp,
-			AmountCents:        commercialRampAmountCents,
-			Status:             status,
-			Progress:           cnt,
-			Target:             commercialRampTargetPets,
-			VetUserID:          vetID,
-			VetEmail:           email,
-			VetFullName:        name,
-		})
-	}
-	if err := rampRows.Err(); err != nil {
-		return nil, err
 	}
 
 	if !mixAwardedForMonth {

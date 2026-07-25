@@ -60,9 +60,6 @@
             <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
             <p>{{ formatCurrency(b.amountCents) }}</p>
             <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
-            <p v-if="b.code === 'commercial_ramp' && (b.vetFullName || b.vetEmail)" class="text-muted">
-              {{ $t('commercial.commissions.bonusVet', { vet: b.vetFullName || b.vetEmail }) }}
-            </p>
             <p v-if="b.code === 'commercial_mix' && b.periodYm" class="text-muted">
               {{ $t('commercial.commissions.bonusPeriod', { period: b.periodYm }) }}
             </p>

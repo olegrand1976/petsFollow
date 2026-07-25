@@ -783,7 +783,7 @@
     },
     "commercialBonuses": {
       "title": "SPIFF boonused",
-      "subtitle": "Jälgi kabineti käivitust (€25) ja kolmeaastase mixi (€50/kuu) — käsitsi väljamakse.",
+      "subtitle": "Jälgi kolmeaastase mixi (€50/kuu) — käsitsi väljamakse.",
       "filterStatus": "Olek",
       "filterCommercial": "Müügiesindaja",
       "filterAll": "Kõik",
@@ -791,7 +791,7 @@
       "colCommercial": "Müügiesindaja",
       "colBonus": "Boonus",
       "colProgress": "Edenemine",
-      "colDetail": "Kabinet / periood",
+      "colDetail": "Periood",
       "colAmount": "Summa",
       "colStatus": "Olek",
       "colActions": "Tegevused",
@@ -1709,12 +1709,10 @@
     },
     "bonusTitles": {
       "vet_tier_31": "31 kliendi taseme boonus",
-      "commercial_ramp": "Kabineti käivitamise boonus",
       "commercial_mix": "Kolmeaastase segu boonus"
     },
     "bonusHints": {
       "vet_tier_31": "€50 ühekordselt esimesel 31 maksva kliendi saavutamisel.",
-      "commercial_ramp": "€25, kui 5 makstud lemmiklooma aktiveerub 60 päeva jooksul määratud veterinaari all.",
       "commercial_mix": "€50 / kuu, kui ≥ 55% kuu aktiveerimistest on kolmeaastased."
     },
     "status": {

@@ -237,7 +237,7 @@ Compte : `admin.demo@petsfollow.test`
 | D7 | P1 | Payments | `/admin/payments` | Entitlements / paiements |
 | D8 | P1 | Commissions véto | Close période + mark-paid | `/admin/commissions` |
 | D9 | P1 | Commissions commercial | Idem commercial | `/admin/commercial-commissions` |
-| D10 | P2 | SPIFF bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
+| D10 | P2 | SPIFF mix bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |

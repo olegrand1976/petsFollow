@@ -49,14 +49,7 @@
             </td>
             <td>{{ $t(`commissionSheet.bonusTitles.${row.bonusCode}`) }}</td>
             <td>{{ row.progress }}/{{ row.target }}{{ row.bonusCode === 'commercial_mix' ? ' %' : '' }}</td>
-            <td>
-              <template v-if="row.bonusCode === 'commercial_ramp'">
-                {{ row.vetFullName || row.vetEmail || '—' }}
-              </template>
-              <template v-else>
-                {{ row.periodYm || '—' }}
-              </template>
-            </td>
+            <td>{{ row.periodYm || '—' }}</td>
             <td>{{ formatCurrency(row.amountCents) }}</td>
             <td>
               <ProBadge :variant="statusVariant(row.status)">

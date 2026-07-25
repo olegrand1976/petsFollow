@@ -124,7 +124,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 - **69 € HT / mois**
 - Setup **320 € HT**
 - Facturation **externe** (pas Stripe cabinet)
-- Objectif commercial terrain : **5 animaux payants / 60 jours** (bonus ramp partenaires)
+- Objectif commercial terrain : **activer des pets payants** (commission à chaque activation ; SPIFF mix triennial)
 
 ---
 
@@ -271,7 +271,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 ### Au commercial (interne)
 
-> « Ouvrez le cabinet, activez 5 pets en 60 j → bonus 25 € + commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”. »
+> « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”. »
 
 ### Différenciation (1 slide)
 
