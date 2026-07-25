@@ -250,7 +250,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                   onChanged: (_) => setState(() {})),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedSpecies,
+                initialValue: selectedSpecies,
                 decoration: InputDecoration(labelText: l10n.species),
                 items: [
                   DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
@@ -270,41 +270,46 @@ class _PetFormScreenState extends State<PetFormScreen> {
               Text(l10n.choosePlan,
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              ...displayPlans.map((plan) {
-                final code = plan['code'] as String;
-                final recommended = plan['recommended'] == true;
-                return Card(
-                  color: selectedPlan == code
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : null,
-                  child: RadioListTile<String>(
-                    value: code,
-                    groupValue: selectedPlan,
-                    onChanged: (v) => setState(() {
-                      selectedPlan = v!;
-                      if (selectedPlan == 'monthly') {
-                        autoRenew = true;
-                      }
-                    }),
-                    title: Row(
-                      children: [
-                        Text(plan['label'] as String? ?? code),
-                        if (recommended) ...[
-                          const SizedBox(width: 8),
-                          Chip(
-                            label: Text(l10n.recommended,
-                                style: const TextStyle(fontSize: 11)),
-                            visualDensity: VisualDensity.compact,
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              }),
+              RadioGroup<String>(
+                groupValue: selectedPlan,
+                onChanged: (v) => setState(() {
+                  selectedPlan = v!;
+                  if (selectedPlan == 'monthly') {
+                    autoRenew = true;
+                  }
+                }),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: displayPlans.map((plan) {
+                    final code = plan['code'] as String;
+                    final recommended = plan['recommended'] == true;
+                    return Card(
+                      color: selectedPlan == code
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      child: RadioListTile<String>(
+                        value: code,
+                        title: Row(
+                          children: [
+                            Text(plan['label'] as String? ?? code),
+                            if (recommended) ...[
+                              const SizedBox(width: 8),
+                              Chip(
+                                label: Text(l10n.recommended,
+                                    style: const TextStyle(fontSize: 11)),
+                                visualDensity: VisualDensity.compact,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
               SwitchListTile(
                 title: Text(l10n.autoRenewTitle),
                 subtitle: Text(

@@ -212,7 +212,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                     Text(l10n.careAddReminder, style: Theme.of(ctx).textTheme.titleMedium),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedPet.id,
+                      initialValue: selectedPet.id,
                       decoration: InputDecoration(labelText: l10n.careSelectPet),
                       items: writable
                           .map((p) => DropdownMenuItem(value: p.id, child: Text(p.name)))
@@ -231,7 +231,10 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: typeValue,
+                      // Recrée le champ quand le type est réinitialisé programmatiquement
+                      // (changement d'animal non-cheval) — initialValue seul ne suivrait pas.
+                      key: ValueKey(typeValue),
+                      initialValue: typeValue,
                       items: types
                           .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                           .toList(),
@@ -294,7 +297,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<int>(
-                      value: recurrenceDays,
+                      initialValue: recurrenceDays,
                       decoration: InputDecoration(
                         labelText: l10n.careRecurrenceLabel,
                         suffixIcon: Tooltip(
