@@ -1,0 +1,7 @@
+-- Modules UI optionnels (ex-addons) — défaut OFF.
+
+ALTER TABLE notifications.client_preferences
+    ADD COLUMN IF NOT EXISTS module_care_plus BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS module_horse BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS module_kennel BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS module_family BOOLEAN NOT NULL DEFAULT FALSE;

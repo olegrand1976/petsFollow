@@ -10,6 +10,11 @@ type CheckoutRequest struct {
 	SuccessURL    string
 	CancelURL     string
 	Metadata      map[string]string
+	// When UnitAmountCents > 0, live Stripe uses price_data instead of PriceID
+	// (household discounts). Mock ignores and still succeeds.
+	UnitAmountCents int
+	ProductName     string
+	Currency        string
 }
 
 type CheckoutSession struct {
@@ -30,5 +35,6 @@ type StripeEvent struct {
 type Gateway interface {
 	CreateCheckoutSession(ctx context.Context, req CheckoutRequest) (CheckoutSession, error)
 	CreatePortalSession(ctx context.Context, customerID, returnURL string) (PortalSession, error)
+	CancelSubscription(ctx context.Context, subscriptionID string) error
 	VerifyWebhook(payload []byte, signature string) (StripeEvent, error)
 }

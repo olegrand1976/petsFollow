@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -9,24 +10,32 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/engagement/journey"
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
+	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Application struct {
-	pool   *pgxpool.Pool
-	router chi.Router
-	cfg    config.Config
+	pool          *pgxpool.Pool
+	router        chi.Router
+	cfg           config.Config
+	journeyCancel context.CancelFunc
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
+	// Fail-fast : jamais la clé de signature dev par défaut hors environnement dev/demo.
+	if cfg.JWTSigningKey == "" || (cfg.JWTSigningKey == "dev-change-me" && !cfg.DevSeedEnabled) {
+		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret (default dev key refused outside dev)")
+	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -45,37 +54,119 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	st := store.New(pool)
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
-	notifier := email.NewNotifier(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom)
+	notifier := email.NewNotifier(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
 	bill := billing.NewService(st, cfg)
-	api := handlers.NewAPI(st, tokens, cfg, notifier, bill)
+	mediaBundle, err := media.New(cfg)
+	if err != nil {
+		pool.Close()
+		return nil, err
+	}
+	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
+	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
 
 	r := httpx.NewBaseRouter()
-	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(corsMiddleware)
+	r.Use(selectiveTimeout)
+	r.Use(corsMiddleware(corsAllowedOrigins(cfg)))
+	r.Use(securityHeaders)
 	httpx.MountHealth(r, func(c context.Context) error { return db.Ping(c, pool) })
+	if mediaBundle.LocalHandler != nil && mediaBundle.LocalMount != "" {
+		r.Handle(mediaBundle.LocalMount+"*", mediaBundle.LocalHandler)
+	}
 	r.Route("/api/v1", func(v1 chi.Router) {
 		api.Routes(v1)
 	})
 
-	return &Application{pool: pool, router: r, cfg: cfg}, nil
+	journeyCtx, journeyCancel := context.WithCancel(context.Background())
+	jr := journey.NewRunner(st, notifier, tokens, journey.Config{
+		AppDownloadURL: cfg.PetsAppDownloadURL,
+		APIPublicURL:   cfg.APIPublicURL,
+		Interval:       cfg.JourneyEmailInterval,
+		Enabled:        cfg.JourneyEmailEnabled,
+	})
+	bill.Hooks.OnOwnerPastDue = func(ctx context.Context, ownerUserID string) {
+		jr.TriggerPastDue(ctx, ownerUserID)
+	}
+	go jr.Start(journeyCtx)
+
+	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
+// corsAllowedOrigins : allowlist depuis CORS_ALLOWED_ORIGINS, sinon le site Pro public.
+func corsAllowedOrigins(cfg config.Config) map[string]bool {
+	allowed := map[string]bool{}
+	raw := cfg.CORSAllowedOrigins
+	if strings.TrimSpace(raw) == "" {
+		raw = cfg.ProPublicSiteURL
+	}
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimRight(strings.TrimSpace(o), "/")
+		if o != "" {
+			allowed[o] = true
 		}
+	}
+	return allowed
+}
+
+func corsMiddleware(allowed map[string]bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" && allowed[strings.TrimRight(origin, "/")] {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			}
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "no-referrer")
+		// Ignoré en HTTP local ; effectif derrière TLS (Cloud Run).
+		h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Pitch turn/finalize/audio may exceed the default 60s (Gemini + upload).
+func selectiveTimeout(next http.Handler) http.Handler {
+	short := middleware.Timeout(60 * time.Second)(next)
+	long := middleware.Timeout(10 * time.Minute)(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isPitchLongRequest(r.URL.Path) {
+			long.ServeHTTP(w, r)
+			return
+		}
+		short.ServeHTTP(w, r)
+	})
+}
+
+func isPitchLongRequest(path string) bool {
+	if !strings.Contains(path, "/pitch-sims/") {
+		return false
+	}
+	return strings.HasSuffix(path, "/turn") ||
+		strings.HasSuffix(path, "/finalize") ||
+		strings.HasSuffix(path, "/audio") ||
+		strings.HasSuffix(path, "/live")
 }
 
 func (a *Application) Handler() http.Handler { return a.router }
 
 func (a *Application) Close() {
+	if a.journeyCancel != nil {
+		a.journeyCancel()
+	}
 	if a.pool != nil {
 		a.pool.Close()
 	}

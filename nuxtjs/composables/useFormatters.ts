@@ -7,6 +7,8 @@ export function useFormatters() {
         return 'nl-NL'
       case 'en':
         return 'en-GB'
+      case 'es':
+        return 'es-ES'
       default:
         return 'fr-FR'
     }

@@ -45,6 +45,10 @@ func (g *MockGateway) CreatePortalSession(_ context.Context, customerID, returnU
 		strings.TrimRight(g.APIPublicURL, "/"), customerID, url.QueryEscape(returnURL))}, nil
 }
 
+func (g *MockGateway) CancelSubscription(_ context.Context, subscriptionID string) error {
+	return nil
+}
+
 func (g *MockGateway) VerifyWebhook(payload []byte, signature string) (StripeEvent, error) {
 	if g.WebhookSecret != "" && !verifyStripeSignature(payload, signature, g.WebhookSecret) {
 		return StripeEvent{}, fmt.Errorf("invalid webhook signature")
@@ -84,7 +88,7 @@ func BuildTestWebhookPayload(secret, eventType string, data map[string]any) ([]b
 
 func verifyStripeSignature(payload []byte, signatureHeader, secret string) bool {
 	if signatureHeader == "" {
-		return secret == "whsec_test"
+		return false
 	}
 	var timestamp, sigV1 string
 	for _, part := range strings.Split(signatureHeader, ",") {

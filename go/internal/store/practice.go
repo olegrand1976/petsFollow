@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,19 +13,51 @@ import (
 )
 
 type PracticeProfile struct {
-	PracticeID             string     `json:"practiceId"`
-	PracticeName           string     `json:"practiceName"`
-	Phone                  string     `json:"phone"`
-	ContactEmail           string     `json:"contactEmail"`
-	AddressLine1           string     `json:"addressLine1"`
-	AddressLine2           string     `json:"addressLine2"`
-	City                   string     `json:"city"`
-	PostalCode             string     `json:"postalCode"`
-	Website                string     `json:"website"`
-	ProfileCompletedAt     *time.Time `json:"profileCompletedAt,omitempty"`
-	VetFullName            string     `json:"vetFullName"`
-	VetEmail               string     `json:"vetEmail"`
-	HeartRateDurationsSec  []int      `json:"heartrateDurationsSec"`
+	PracticeID            string     `json:"practiceId"`
+	PracticeName          string     `json:"practiceName"`
+	Phone                 string     `json:"phone"`
+	ContactEmail          string     `json:"contactEmail"`
+	AddressLine1          string     `json:"addressLine1"`
+	AddressLine2          string     `json:"addressLine2"`
+	City                  string     `json:"city"`
+	PostalCode            string     `json:"postalCode"`
+	CountryCode           string     `json:"countryCode"`
+	Website               string     `json:"website"`
+	ProfileCompletedAt    *time.Time `json:"profileCompletedAt,omitempty"`
+	VetFullName           string     `json:"vetFullName"`
+	VetEmail              string     `json:"vetEmail"`
+	HeartRateDurationsSec []int      `json:"heartrateDurationsSec"`
+	// Company / payout (for commission sheets) — not required for onboarding.
+	CompanyLegalName       string `json:"companyLegalName"`
+	VATNumber              string `json:"vatNumber"`
+	CompanyNumber          string `json:"companyNumber"`
+	LegalForm              string `json:"legalForm"`
+	BillingSameAsPractice  bool   `json:"billingSameAsPractice"`
+	BillingAddressLine1    string `json:"billingAddressLine1"`
+	BillingAddressLine2    string `json:"billingAddressLine2"`
+	BillingPostalCode      string `json:"billingPostalCode"`
+	BillingCity            string `json:"billingCity"`
+	PayoutIBAN             string `json:"payoutIban"`
+	PayoutBIC              string `json:"payoutBic"`
+	PayoutAccountHolder    string `json:"payoutAccountHolder"`
+	PayoutProfileComplete  bool   `json:"payoutProfileComplete"`
+}
+
+// IsVetPayoutProfileComplete reports whether company + bank fields are sufficient for payout.
+func IsVetPayoutProfileComplete(p PracticeProfile) bool {
+	if strings.TrimSpace(p.CompanyLegalName) == "" || strings.TrimSpace(p.VATNumber) == "" ||
+		strings.TrimSpace(p.CompanyNumber) == "" || strings.TrimSpace(p.LegalForm) == "" {
+		return false
+	}
+	if strings.TrimSpace(p.PayoutIBAN) == "" || strings.TrimSpace(p.PayoutAccountHolder) == "" {
+		return false
+	}
+	if p.BillingSameAsPractice {
+		return strings.TrimSpace(p.AddressLine1) != "" && strings.TrimSpace(p.City) != "" && strings.TrimSpace(p.PostalCode) != ""
+	}
+	return strings.TrimSpace(p.BillingAddressLine1) != "" &&
+		strings.TrimSpace(p.BillingCity) != "" &&
+		strings.TrimSpace(p.BillingPostalCode) != ""
 }
 
 type RegisterVetInput struct {
@@ -34,11 +67,49 @@ type RegisterVetInput struct {
 	PracticeName     string
 	PreferredLocale  string
 	AutoReplyDefault string
+	// TermsAccepted horodate le consentement CGU/privacy (RGPD art. 7).
+	TermsAccepted bool
+	// AssignedCommercialID optional nearby-commercial pick at signup.
+	AssignedCommercialID string
 }
 
 type RegisterVetResult struct {
 	UserID string
 	Token  string
+}
+
+// PracticeContact is the minimal public contact info for client booking UX.
+type PracticeContact struct {
+	PracticeID   string
+	PracticeName string
+	Phone        string
+	CountryCode  string
+}
+
+func (s *Store) GetPracticeContact(ctx context.Context, practiceID string) (PracticeContact, error) {
+	var c PracticeContact
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, name, COALESCE(phone,''), COALESCE(country_code,'BE')
+		FROM practice.practices WHERE id = $1`, practiceID,
+	).Scan(&c.PracticeID, &c.PracticeName, &c.Phone, &c.CountryCode)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return PracticeContact{}, ErrNotFound
+	}
+	return c, err
+}
+
+// NormalizeCountryCode returns a 2-letter ISO code (default BE).
+func NormalizeCountryCode(code string) string {
+	c := strings.ToUpper(strings.TrimSpace(code))
+	if len(c) != 2 {
+		return "BE"
+	}
+	switch c {
+	case "BE", "FR", "NL", "LU", "DE", "ES", "IT", "PT", "AT", "CH", "GB", "IE", "PL", "EE", "US":
+		return c
+	default:
+		return "BE"
+	}
 }
 
 func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID string) (PracticeProfile, error) {
@@ -48,21 +119,34 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 	err := s.pool.QueryRow(ctx, `
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
-			COALESCE(pr.postal_code,''), COALESCE(pr.website,''), pr.profile_completed_at,
-			u.full_name, u.email, pr.heartrate_durations_sec
+			COALESCE(pr.postal_code,''), COALESCE(pr.country_code,'BE'), COALESCE(pr.website,''), pr.profile_completed_at,
+			u.full_name, u.email, pr.heartrate_durations_sec,
+			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
+			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
+			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_address_line2,''),
+			COALESCE(pr.billing_postal_code,''), COALESCE(pr.billing_city,''),
+			COALESCE(pr.payout_iban,''), COALESCE(pr.payout_bic,''), COALESCE(pr.payout_account_holder,'')
 		FROM practice.practices pr
 		JOIN identity.users u ON u.id = $2 AND u.practice_id = pr.id
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
-		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.Website, &completedAt,
+		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.CountryCode, &p.Website, &completedAt,
 		&p.VetFullName, &p.VetEmail, &durations,
+		&p.CompanyLegalName, &p.VATNumber, &p.CompanyNumber, &p.LegalForm, &p.BillingSameAsPractice,
+		&p.BillingAddressLine1, &p.BillingAddressLine2, &p.BillingPostalCode, &p.BillingCity,
+		&p.PayoutIBAN, &p.PayoutBIC, &p.PayoutAccountHolder,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PracticeProfile{}, ErrNotFound
 	}
+	if err != nil {
+		return PracticeProfile{}, err
+	}
 	p.ProfileCompletedAt = completedAt
+	p.CountryCode = NormalizeCountryCode(p.CountryCode)
 	p.HeartRateDurationsSec = int32SliceToInts(durations)
-	return p, err
+	p.PayoutProfileComplete = IsVetPayoutProfileComplete(p)
+	return p, nil
 }
 
 func int32SliceToInts(in []int32) []int {
@@ -89,7 +173,7 @@ func (s *Store) GetPracticeHeartRateDurations(ctx context.Context, practiceID st
 	return int32SliceToInts(durations), nil
 }
 
-func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool) error {
+func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -102,15 +186,26 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 		return err
 	}
 
-	durations := p.HeartRateDurationsSec
-	if len(durations) == 0 {
-		durations = []int{60}
-	}
 	q := `
 		UPDATE practice.practices
 		SET name = $2, phone = $3, contact_email = $4, address_line1 = $5, address_line2 = $6,
-			city = $7, postal_code = $8, website = $9, heartrate_durations_sec = $10`
-	args := []any{practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2, p.City, p.PostalCode, p.Website, durations}
+			city = $7, postal_code = $8, website = $9, country_code = $10,
+			company_legal_name = $11, vat_number = $12, company_number = $13, legal_form = $14,
+			billing_same_as_practice = $15, billing_address_line1 = $16, billing_address_line2 = $17,
+			billing_postal_code = $18, billing_city = $19,
+			payout_iban = $20, payout_bic = $21, payout_account_holder = $22`
+	args := []any{
+		practiceID, p.PracticeName, p.Phone, p.ContactEmail, p.AddressLine1, p.AddressLine2,
+		p.City, p.PostalCode, p.Website, NormalizeCountryCode(p.CountryCode),
+		p.CompanyLegalName, p.VATNumber, p.CompanyNumber, p.LegalForm,
+		p.BillingSameAsPractice, p.BillingAddressLine1, p.BillingAddressLine2,
+		p.BillingPostalCode, p.BillingCity,
+		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
+	}
+	if heartRateDurationsSec != nil {
+		q += `, heartrate_durations_sec = $23`
+		args = append(args, *heartRateDurationsSec)
+	}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`
 	}
@@ -118,7 +213,11 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 	if _, err := tx.Exec(ctx, q, args...); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	_ = s.RefreshVetPayoutLineStatusesForPractice(ctx, practiceID)
+	return nil
 }
 
 func (s *Store) IsProfileComplete(ctx context.Context, practiceID string) (bool, error) {
@@ -154,10 +253,14 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 		practiceID, in.PracticeName, in.Email); err != nil {
 		return RegisterVetResult{}, err
 	}
+	var assignedCommercial any
+	if in.AssignedCommercialID != "" {
+		assignedCommercial = in.AssignedCommercialID
+	}
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale)
-		VALUES ($1, $2, $3, $4, 'vet', $5, $6)`,
-		userID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.PreferredLocale)); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, preferred_locale, terms_accepted_at, assigned_commercial_id)
+		VALUES ($1, $2, $3, $4, 'vet', $5, $6, CASE WHEN $7 THEN NOW() END, $8)`,
+		userID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.PreferredLocale), in.TermsAccepted, assignedCommercial); err != nil {
 		return RegisterVetResult{}, err
 	}
 	autoReply := in.AutoReplyDefault
@@ -184,6 +287,8 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 	if err := tx.Commit(ctx); err != nil {
 		return RegisterVetResult{}, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
+	_ = s.EnsureReferenceTeamMembership(ctx, practiceID, userID)
 	return RegisterVetResult{UserID: userID, Token: token}, nil
 }
 
@@ -230,16 +335,28 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 	if err != nil {
 		return nil, err
 	}
+	_ = s.EnsureUserProfiles(ctx, userID)
+	profiles, _ := s.ListProfiles(ctx, userID)
+	active, _ := s.GetActiveProfile(ctx, userID)
 	out := map[string]any{
-		"userId":           u.ID,
-		"email":            u.Email,
-		"role":             u.Role,
-		"fullName":         u.FullName,
-		"emailVerified":    u.EmailVerifiedAt != nil,
-		"authProvider":     u.AuthProvider,
-		"googleLinked":     u.GoogleSub != "",
-		"twoFactorEnabled": u.TOTPEnabled,
-		"preferredLocale":  u.PreferredLocale,
+		"userId":             u.ID,
+		"email":              u.Email,
+		"role":               u.Role,
+		"fullName":           u.FullName,
+		"avatarUrl":          u.AvatarURL,
+		"emailVerified":      u.EmailVerifiedAt != nil,
+		"authProvider":       u.AuthProvider,
+		"googleLinked":       u.GoogleSub != "",
+		"twoFactorEnabled":   u.TOTPEnabled,
+		"preferredLocale":    u.PreferredLocale,
+		"mustChangePassword": u.MustChangePassword,
+		"profiles":           profiles,
+	}
+	if active.ID != "" {
+		out["activeProfileId"] = active.ID
+	}
+	if u.ProfessionalSpecialty != "" {
+		out["professionalSpecialty"] = u.ProfessionalSpecialty
 	}
 	if u.PracticeID != "" {
 		out["practiceId"] = u.PracticeID
@@ -248,6 +365,9 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		out["practiceName"] = practiceName
 		complete, _ := s.IsProfileComplete(ctx, u.PracticeID)
 		out["profileComplete"] = complete
+		if ref, _ := s.IsReferenceVet(ctx, u.PracticeID, userID); ref {
+			out["isReferenceVet"] = true
+		}
 	}
 	return out, nil
 }

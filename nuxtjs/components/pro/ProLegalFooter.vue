@@ -1,5 +1,5 @@
 <template>
-  <nav class="pro-legal-footer" aria-label="Legal">
+  <nav class="pro-legal-footer" :aria-label="$t('legal.navAria')">
     <NuxtLink to="/legal/terms">{{ $t('legal.terms.link') }}</NuxtLink>
     <span aria-hidden="true">·</span>
     <NuxtLink to="/legal/privacy">{{ $t('legal.privacy.link') }}</NuxtLink>

@@ -19,6 +19,10 @@ type AdminMetrics struct {
 	ConversionRatePercent float64        `json:"conversionRatePercent"`
 	PlanBreakdown         map[string]int `json:"planBreakdown"`
 	ModeBreakdown         map[string]int `json:"modeBreakdown"`
+	CommercialCount       int            `json:"commercialCount"`
+	ProspectCount         int            `json:"prospectCount"`
+	AddonRevenueCents     int            `json:"addonRevenueCents"`
+	CommercialDueCents    int            `json:"commercialCommissionDueCents"`
 }
 
 type AdminUserRow struct {
@@ -65,12 +69,14 @@ func (s *Store) AdminMetricsOverview(ctx context.Context, from, to time.Time) (A
 		return m, err
 	}
 
+	// MRR: monthly as-is; annual / multi-year normalized to a monthly slice.
 	err = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(SUM(
 			CASE plan_code
-				WHEN 'annual' THEN amount_cents
-				WHEN 'triennial' THEN amount_cents / 3
-				WHEN 'quinquennial' THEN amount_cents / 5
+				WHEN 'monthly' THEN amount_cents
+				WHEN 'annual' THEN amount_cents / 12
+				WHEN 'triennial' THEN amount_cents / 36
+				WHEN 'quinquennial' THEN amount_cents / 60
 				ELSE 0
 			END
 		) FILTER (WHERE billing_mode='subscription' AND status='active'), 0)::int
@@ -133,6 +139,11 @@ func (s *Store) AdminMetricsOverview(ctx context.Context, from, to time.Time) (A
 		}
 		m.ModeBreakdown[mode] = count
 	}
+
+	_ = s.pool.QueryRow(ctx, `SELECT COUNT(*)::int FROM identity.users WHERE role='commercial'`).Scan(&m.CommercialCount)
+	_ = s.pool.QueryRow(ctx, `SELECT COUNT(*)::int FROM sales.prospects`).Scan(&m.ProspectCount)
+	_ = s.pool.QueryRow(ctx, `SELECT COALESCE(SUM(amount_cents),0)::int FROM billing.addon_entitlements WHERE status IN ('active','past_due','cancelled')`).Scan(&m.AddonRevenueCents)
+	_ = s.pool.QueryRow(ctx, `SELECT COALESCE(SUM(commission_cents),0)::int FROM billing.commercial_commission_ledger`).Scan(&m.CommercialDueCents)
 
 	return m, nil
 }

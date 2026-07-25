@@ -1,10 +1,7 @@
-import { apiHeaders } from '~/server/utils/api'
+import { proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
-  const q = getQuery(event)
-  const config = useRuntimeConfig()
-  return $fetch(`${config.apiBase}/api/v1/admin/users`, {
-    headers: apiHeaders(event),
-    query: q,
+  return proxyApi(event, '/api/v1/admin/users', {
+    query: getQuery(event) as Record<string, unknown>,
   })
 })

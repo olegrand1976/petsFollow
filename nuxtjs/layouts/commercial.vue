@@ -1,0 +1,40 @@
+<template>
+  <div class="pro-app">
+    <ProTopbar home-link="/commercial" settings-link="/commercial/settings" :show-notifications="false" />
+    <div class="pro-app-shell">
+      <ProSidebar :items="navItems" />
+      <div class="pro-app-body">
+        <main class="pro-main main">
+          <div class="pro-main-inner">
+            <slot />
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
+
+const { t } = useI18n()
+const { fetchUser } = useProUser()
+
+const navItems = computed<ProNavItem[]>(() => [
+  { to: '/commercial', label: t('nav.commercialDashboard'), exact: true, icon: 'dashboard' },
+  { to: '/commercial/vets', label: t('nav.commercialVets'), icon: 'users' },
+  { to: '/commercial/prospects', label: t('nav.commercialProspects'), icon: 'requests' },
+  { to: '/commercial/commissions', label: t('nav.commercialCommissions'), icon: 'payments' },
+  { to: '/commercial/ai-modules', label: t('nav.commercialAiModules'), icon: 'record_voice_over' },
+  { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description' },
+  { to: '/commercial/settings', label: t('nav.commercialSettings'), icon: 'settings' },
+  { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign' },
+  { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow' },
+  { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics' },
+  { to: '/commercial/training', label: t('nav.commercialTraining'), icon: 'phone_in_talk' },
+  { to: '/produits', label: t('nav.products'), icon: 'description' },
+])
+
+onMounted(() => { void fetchUser().catch(() => {}) })
+
+</script>

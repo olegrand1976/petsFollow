@@ -6,10 +6,15 @@
       <p>{{ $t('auth.login.brandText') }}</p>
     </aside>
     <div class="pro-login-form-panel">
+      <div class="pro-auth-locale">
+        <ProLocaleSelect />
+      </div>
       <form
         v-if="step === 'credentials'"
         class="pro-login-form"
         data-testid="login-form"
+        method="post"
+        action="#"
         @submit.prevent="submit"
       >
         <PetsFollowLogo variant="default" />
@@ -49,15 +54,23 @@
         />
 
         <p class="pro-login-form__footer">
+          <NuxtLink to="/forgot-password" data-testid="login-forgot-link">
+            {{ $t('auth.login.forgotLink') }}
+          </NuxtLink>
+        </p>
+        <p class="pro-login-form__footer">
           {{ $t('auth.login.noAccount') }}
           <NuxtLink to="/register">{{ $t('auth.login.registerLink') }}</NuxtLink>
         </p>
+        <ProLegalFooter />
       </form>
 
       <form
         v-else
         class="pro-login-form"
         data-testid="login-2fa-form"
+        method="post"
+        action="#"
         @submit.prevent="submit2FA"
       >
         <PetsFollowLogo variant="default" />
@@ -87,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { extractAccessToken, isMFAChallenge, unwrapAuthData } from '~/composables/useAuth'
+import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
@@ -105,21 +118,28 @@ const mfaToken = ref('')
 const step = ref<'credentials' | '2fa'>('credentials')
 const error = ref('')
 const loading = ref(false)
-const token = useCookie('pf_token')
 const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
   await syncFromUser()
-  const me: any = await $fetch('/api/me')
-  const role = me.data?.role || me.role
-  const profileComplete = me.data?.profileComplete ?? me.profileComplete
-  if (role === 'admin') await navigateTo('/admin')
-  else if (role === 'vet') {
-    if (profileComplete === false) await navigateTo('/onboarding')
-    else await navigateTo('/dashboard')
-  } else {
-    token.value = null
-    error.value = t('auth.login.proOnly')
+  try {
+    const { fetchUser } = useProUser()
+    const me = await fetchUser(true)
+    const role = me?.role || parseJwtRole(useCookie('pf_token').value)
+    const profileComplete = me?.profileComplete
+    const mustChangePassword = me?.mustChangePassword
+    if (mustChangePassword === true) {
+      await navigateTo('/change-password')
+      return
+    }
+    if (!isProRole(role)) {
+      await clearAuthTokens()
+      error.value = t('auth.login.proOnly')
+      return
+    }
+    await navigateTo(homePathForRole(role, { profileComplete }))
+  } catch (e: any) {
+    error.value = mapError(e) || t('auth.login.invalidResponse')
   }
 }
 
@@ -131,12 +151,11 @@ async function handleAuthResult(res: unknown) {
     totpCode.value = ''
     return
   }
-  const accessToken = extractAccessToken(data)
-  if (!accessToken) {
+  if (!isAuthSuccess(data)) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  token.value = accessToken
+  // Cookies httpOnly posés par la BFF — rien à persister côté client.
   await redirectAfterLogin()
 }
 
@@ -199,7 +218,7 @@ async function handleGoogleCredential(idToken: string) {
   }
 }
 
-onMounted(async () => {
+async function mountGoogleButton() {
   if (!googleEnabled.value || !googleBtnRef.value) return
   try {
     await mountGoogleSignInButton(
@@ -209,6 +228,15 @@ onMounted(async () => {
     )
   } catch {
     /* Google indisponible */
+  }
+}
+
+onMounted(() => { void mountGoogleButton() })
+
+watch(step, async (s) => {
+  if (s === 'credentials') {
+    await nextTick()
+    await mountGoogleButton()
   }
 })
 </script>

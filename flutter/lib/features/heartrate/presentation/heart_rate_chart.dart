@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 
 class HeartRateChart extends StatelessWidget {
   const HeartRateChart({
@@ -56,7 +57,7 @@ class HeartRateChart extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: sorted[i].bpm.toDouble(),
-                    color: sorted[i].isAlert ? Colors.redAccent : Theme.of(context).colorScheme.primary,
+                    color: sorted[i].isAlert ? AppColors.alert : Theme.of(context).colorScheme.primary,
                     width: 14,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                   ),

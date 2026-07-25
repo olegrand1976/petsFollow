@@ -1,4 +1,4 @@
-const SUPPORTED_LOCALES = ['fr', 'nl', 'en'] as const
+const SUPPORTED_LOCALES = ['fr', 'nl', 'en', 'es', 'et'] as const
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export function useLocaleSync() {
@@ -23,8 +23,13 @@ export function useLocaleSync() {
     await $fetch('/api/me/locale', { method: 'PATCH', body: { locale: newLocale } })
     await setLocale(newLocale)
     localeCookie.value = newLocale
-    await useProUser().fetchUser(true)
+    await useProUser().fetchUser(true).catch(() => {})
   }
 
-  return { syncFromUser, saveLocale, locale, supportedLocales: SUPPORTED_LOCALES }
+  async function switchLocale(newLocale: AppLocale) {
+    await setLocale(newLocale)
+    localeCookie.value = newLocale
+  }
+
+  return { syncFromUser, saveLocale, switchLocale, locale, supportedLocales: SUPPORTED_LOCALES }
 }

@@ -2,9 +2,15 @@
   <header class="pro-topbar" data-testid="pro-topbar">
     <div class="pro-topbar__left">
       <PetsFollowLogo variant="compact" :link-to="homeLink" />
+      <span
+        v-if="practiceName"
+        class="pro-topbar__practice"
+        data-testid="pro-topbar-practice"
+      >{{ practiceName }}</span>
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <ProLocaleSelect persist />
       <button
         type="button"
         class="pro-topbar__icon-btn"
@@ -12,23 +18,7 @@
         data-testid="pro-theme-toggle"
         @click="toggleTheme"
       >
-        <svg v-if="isDark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
-          <path
-            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-          />
-        </svg>
-        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M21 14.5A7.5 7.5 0 0110.5 4a6.5 6.5 0 108 10.5z"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <ProIcon :name="isDark ? 'light_mode' : 'dark_mode'" :size="20" />
       </button>
 
       <div v-if="showNotifications" class="pro-topbar__dropdown-wrap">
@@ -41,19 +31,22 @@
           data-testid="pro-notifications-btn"
           @click="toggleNotif"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M12 3a5 5 0 00-5 5v2.5c0 .9-.3 1.8-.9 2.5L5 15.5h14l-1.1-2.5c-.6-.7-.9-1.6-.9-2.5V8a5 5 0 00-5-5z"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linejoin="round"
-            />
-            <path d="M10 18a2 2 0 004 0" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          </svg>
+          <ProIcon name="notifications" :size="20" />
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
         </button>
         <div v-if="notifOpen" class="pro-topbar__dropdown" role="menu">
-          <p class="pro-topbar__dropdown-title">{{ $t('components.topbar.notifications') }}</p>
+          <div class="pro-topbar__dropdown-header">
+            <p class="pro-topbar__dropdown-title">{{ $t('components.topbar.notifications') }}</p>
+            <button
+              v-if="notifCount > 0"
+              type="button"
+              class="pro-topbar__mark-all"
+              data-testid="pro-notifications-mark-all"
+              @click="handleMarkAllRead"
+            >
+              {{ $t('components.topbar.markAllRead') }}
+            </button>
+          </div>
           <ProEmptyState
             v-if="!notifItems.length"
             :title="$t('components.topbar.notificationsEmptyTitle')"
@@ -83,7 +76,7 @@
           data-testid="pro-profile-btn"
           @click="toggleProfile"
         >
-          <span class="pro-avatar">{{ userInitials }}</span>
+          <ProAvatar :src="user?.avatarUrl" :name="userName" size="sm" />
           <span class="pro-topbar__profile-name">{{ userName }}</span>
         </button>
         <div v-if="profileOpen" class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
@@ -97,7 +90,12 @@
           >
             {{ $t('components.topbar.settings') }}
           </NuxtLink>
-          <button type="button" class="pro-topbar__logout-btn" @click="handleLogout">
+          <button
+            type="button"
+            class="pro-topbar__logout-btn"
+            data-testid="pro-logout-btn"
+            @click="handleLogout"
+          >
             {{ $t('common.logout') }}
           </button>
         </div>
@@ -122,27 +120,51 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
-const { user, fetchUser, initials, logout } = useProUser()
-const { items: notifItems, count: notifCount, refresh: refreshNotif } = useProNotifications()
+const { user, fetchUser, logout } = useProUser()
+const {
+  items: notifItems,
+  count: notifCount,
+  refresh: refreshNotif,
+  markAllRead,
+  startPolling,
+  stopPolling,
+} = useProNotifications()
 
 const notifOpen = ref(false)
 const profileOpen = ref(false)
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
-const userInitials = computed(() => initials())
+const practiceName = computed(() => user.value?.practiceName?.trim() || '')
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
-  await fetchUser()
-  if (props.showNotifications) await refreshNotif()
+  try {
+    await fetchUser()
+  } catch { /* 401 handled by middleware */ }
+  if (props.showNotifications) {
+    await refreshNotif()
+    startPolling()
+  }
 })
 
-onUnmounted(() => document.removeEventListener('click', onDocClick))
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick)
+  if (props.showNotifications) stopPolling()
+})
 
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
   profileOpen.value = false
+  if (notifOpen.value) void refreshNotif()
+}
+
+async function handleMarkAllRead() {
+  try {
+    await markAllRead()
+  } catch {
+    // keep dropdown open; badge will refresh on next open
+  }
 }
 
 function toggleProfile() {

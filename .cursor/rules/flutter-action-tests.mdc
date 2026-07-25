@@ -1,0 +1,27 @@
+---
+description: Toute action mutante Flutter doit être tracée par un test
+globs: flutter/lib/features/**/*.dart
+alwaysApply: false
+---
+
+# Flutter — tests d’actions
+
+Quand tu ajoutes ou modifies une **action mutante** (bouton submit, POST/PATCH/DELETE, sheet, flow) dans `flutter/lib/features/` :
+
+1. Ajoute un `Key('feature_action')` stable (idéalement scoped par id : `pet_action_weight_$petId`).
+2. Écris un test widget (ou unit payload) sous `flutter/test/features/…` qui déclenche l’action et assert l’effet (HTTP mock via `test/helpers/mock_api.dart`, nav, ou state).
+3. Mets à jour [`flutter/test/COVERAGE_MATRIX.md`](flutter/test/COVERAGE_MATRIX.md).
+
+```dart
+// ❌ BAD — CTA sans Key ni test
+FilledButton(onPressed: _save, child: Text('Save'));
+
+// ✅ GOOD
+FilledButton(
+  key: const Key('weight_save_btn'),
+  onPressed: _save,
+  child: Text(l10n.weightSave),
+);
+```
+
+Référence harness : `flutter/test/helpers/{pump_app,mock_api,fixtures}.dart`.

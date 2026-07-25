@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-testid="admin-dashboard-page">
     <ProPageHeader
       :title="$t('admin.dashboard.title')"
       :subtitle="$t('admin.dashboard.subtitle')"
@@ -16,6 +16,10 @@
       />
       <ProKpi :value="metrics.pendingPayments" :label="$t('admin.dashboard.pendingPayments')" />
       <ProKpi :value="metrics.pastDueCount" :label="$t('admin.dashboard.pastDue')" />
+      <ProKpi :value="metrics.commercialCount ?? 0" :label="$t('admin.dashboard.commercials')" />
+      <ProKpi :value="metrics.prospectCount ?? 0" :label="$t('admin.dashboard.prospects')" />
+      <ProKpi :value="formatCurrency(metrics.addonRevenueCents ?? 0)" :label="$t('admin.dashboard.addonRevenue')" />
+      <ProKpi :value="formatCurrency(metrics.commercialCommissionDueCents ?? 0)" :label="$t('admin.dashboard.commercialDue')" />
     </div>
     <div v-if="metrics" class="pro-grid-2 pro-mt-lg">
       <ProCard :title="$t('admin.dashboard.planBreakdown')">
@@ -25,7 +29,7 @@
             :key="plan"
             class="pro-bar-row"
           >
-            <span>{{ plan }}</span>
+            <span>{{ planLabel(String(plan)) }}</span>
             <div class="pro-bar-track">
               <div
                 class="pro-bar-fill"
@@ -43,7 +47,7 @@
             :key="mode"
             class="pro-bar-row"
           >
-            <span>{{ mode }}</span>
+            <span>{{ billingModeLabel(String(mode)) }}</span>
             <div class="pro-bar-track">
               <div
                 class="pro-bar-fill"
@@ -62,6 +66,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { formatCurrency } = useFormatters()
+const { planLabel, billingModeLabel } = useCodeLabels()
 
 const metrics = ref<any>(null)
 

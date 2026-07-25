@@ -11,6 +11,10 @@ func writeErr(w http.ResponseWriter, r *http.Request, status int, code, msgKey s
 	httpx.WriteErrorLocalized(w, r, status, code, msgKey)
 }
 
+func writeErrDetails(w http.ResponseWriter, r *http.Request, status int, code, msgKey string, details any) {
+	httpx.WriteErrorLocalizedWithDetails(w, r, status, code, msgKey, details)
+}
+
 func writeInternal(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteErrorLocalized(w, r, http.StatusInternalServerError, "internal", "internal")
 }

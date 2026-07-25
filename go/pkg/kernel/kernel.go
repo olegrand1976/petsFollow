@@ -3,10 +3,64 @@ package kernel
 type Role string
 
 const (
-	RoleVet    Role = "vet"
-	RoleClient Role = "client"
-	RoleAdmin  Role = "admin"
+	RoleVet               Role = "vet"
+	RoleClient            Role = "client"
+	RoleAdmin             Role = "admin"
+	RoleCommercial        Role = "commercial"
+	RoleCommercialManager Role = "commercial_manager"
+	RoleCarePro           Role = "care_pro"
+	RoleVetAssistant      Role = "vet_assistant"
+	RoleSecretary         Role = "secretary"
 )
+
+type ProfessionalSpecialty string
+
+const (
+	SpecialtyVetLight    ProfessionalSpecialty = "vet_light"
+	SpecialtyFarrier     ProfessionalSpecialty = "farrier"
+	SpecialtyPhysio      ProfessionalSpecialty = "physio"
+	SpecialtyBehaviorist ProfessionalSpecialty = "behaviorist"
+	SpecialtyGroomer     ProfessionalSpecialty = "groomer"
+	SpecialtyBreeder     ProfessionalSpecialty = "breeder"
+)
+
+func ValidRole(role Role) bool {
+	switch role {
+	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsPracticeStaff reports whether the role belongs to a veterinary practice team.
+func IsPracticeStaff(role Role) bool {
+	return role == RoleVet || role == RoleVetAssistant || role == RoleSecretary
+}
+
+// IsProRole reports roles that get an automatic personal (client) profile on registration.
+func IsProRole(role Role) bool {
+	return role == RoleVet || role == RoleCarePro || role == RoleCommercial || role == RoleCommercialManager ||
+		role == RoleVetAssistant || role == RoleSecretary
+}
+
+func ValidSpecialty(s ProfessionalSpecialty) bool {
+	switch s {
+	case SpecialtyVetLight, SpecialtyFarrier, SpecialtyPhysio, SpecialtyBehaviorist, SpecialtyGroomer, SpecialtyBreeder:
+		return true
+	default:
+		return false
+	}
+}
+
+func IsCarePro(role Role) bool {
+	return role == RoleCarePro
+}
+
+// IsSalesForce reports whether the role belongs to the commercial sales force.
+func IsSalesForce(role Role) bool {
+	return role == RoleCommercial || role == RoleCommercialManager
+}
 
 type SessionStatus string
 
@@ -29,7 +83,10 @@ type TimelineType string
 const (
 	TimelineMessage   TimelineType = "message"
 	TimelineHeartRate TimelineType = "heartrate"
+	TimelineWeight    TimelineType = "weight"
 	TimelineEvent     TimelineType = "event"
+	TimelineCare      TimelineType = "care"
+	TimelineVisit     TimelineType = "visit"
 )
 
 func CalculateBPM(tapCount, durationSec int) int {

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.237481297060-5pq3v8a0n2t09dbl3igrg7cenvuha4d7</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>237481297060-lc52m7hdkndrjlshfop8tcen57lpl992.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDomEWlkjZulMZfz7kATxeqQVwT73wUIfk</string>
+	<key>GCM_SENDER_ID</key>
+	<string>237481297060</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>be.llitsc.petsfollowMobile</string>
+	<key>PROJECT_ID</key>
+	<string>premedica-prod-2025</string>
+	<key>STORAGE_BUCKET</key>
+	<string>premedica-prod-2025.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<false/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:237481297060:ios:c921e9c056661daec9d231</string>
+</dict>
+</plist>

@@ -1,0 +1,154 @@
+<template>
+  <div data-testid="vet-team-page">
+    <ProPageHeader :title="$t('team.title')" :subtitle="$t('team.subtitle')" />
+
+    <ProCard v-if="isReference" class="pro-mb-lg">
+      <h3 class="pro-mb-md">{{ $t('team.inviteTitle') }}</h3>
+      <form class="pro-form" @submit.prevent="invite">
+        <ProInput v-model="form.email" type="email" :label="$t('team.email')" required />
+        <ProInput v-model="form.fullName" :label="$t('team.fullName')" required />
+        <ProInput v-model="form.password" type="password" :label="$t('team.tempPassword')" required />
+        <div class="pro-field">
+          <label class="pro-label">{{ $t('team.role') }}</label>
+          <select v-model="form.teamRole" class="pro-select">
+            <option value="vet">{{ $t('team.roleVet') }}</option>
+            <option value="vet_assistant">{{ $t('team.roleAssistant') }}</option>
+            <option value="secretary">{{ $t('team.roleSecretary') }}</option>
+          </select>
+        </div>
+        <p v-if="inviteMsg" class="pro-hint">{{ inviteMsg }}</p>
+        <ProButton type="submit" :disabled="saving">{{ $t('team.invite') }}</ProButton>
+      </form>
+    </ProCard>
+
+    <ProCard>
+      <ProTable :empty="!members.length" :empty-title="$t('team.empty')">
+        <thead>
+          <tr>
+            <th>{{ $t('team.columnName') }}</th>
+            <th>{{ $t('team.columnEmail') }}</th>
+            <th>{{ $t('team.columnRole') }}</th>
+            <th>{{ $t('team.columnRights') }}</th>
+            <th v-if="isReference" />
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="m in members" :key="m.id">
+            <td>{{ m.fullName }}</td>
+            <td>{{ m.email }}</td>
+            <td>{{ roleLabel(m.teamRole) }}</td>
+            <td>
+              <div v-if="isReference && m.teamRole !== 'reference_vet'" class="team-perms">
+                <label v-for="(on, key) in m.permissions" :key="key" class="team-perm">
+                  <input
+                    type="checkbox"
+                    :checked="on"
+                    @change="togglePerm(m, String(key), ($event.target as HTMLInputElement).checked)"
+                  >
+                  {{ key }}
+                </label>
+              </div>
+              <span v-else class="pro-hint">{{ $t('team.defaults') }}</span>
+            </td>
+            <td v-if="isReference">
+              <ProButton
+                v-if="m.teamRole !== 'reference_vet'"
+                variant="ghost"
+                @click="revoke(m.id)"
+              >
+                {{ $t('team.revoke') }}
+              </ProButton>
+            </td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({ middleware: 'vet-only' })
+
+type TeamMember = {
+  id: string
+  fullName: string
+  email: string
+  teamRole: string
+  permissions: Record<string, boolean>
+}
+
+const { t } = useI18n()
+const { user, fetchUser } = useProUser()
+const members = ref<TeamMember[]>([])
+const saving = ref(false)
+const inviteMsg = ref('')
+const form = reactive({
+  email: '',
+  fullName: '',
+  password: '',
+  teamRole: 'vet_assistant',
+})
+
+const isReference = computed(() => !!(user.value as { isReferenceVet?: boolean } | null)?.isReferenceVet)
+
+function roleLabel(role: string) {
+  const map: Record<string, string> = {
+    reference_vet: t('team.roleReference'),
+    vet: t('team.roleVet'),
+    vet_assistant: t('team.roleAssistant'),
+    secretary: t('team.roleSecretary'),
+  }
+  return map[role] ?? role
+}
+
+async function load() {
+  await fetchUser()
+  const res = await $fetch<{ data?: TeamMember[] } | TeamMember[]>('/api/vet/team')
+  members.value = Array.isArray(res) ? res : (res.data ?? [])
+}
+
+async function invite() {
+  saving.value = true
+  inviteMsg.value = ''
+  try {
+    await $fetch('/api/vet/team', { method: 'POST', body: { ...form } })
+    inviteMsg.value = t('team.inviteOk')
+    form.email = ''
+    form.fullName = ''
+    form.password = ''
+    await load()
+  } catch {
+    inviteMsg.value = t('team.inviteErr')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function togglePerm(m: TeamMember, key: string, checked: boolean) {
+  const permissions = { ...m.permissions, [key]: checked }
+  await $fetch(`/api/vet/team/${m.id}`, { method: 'PATCH', body: { permissions } })
+  await load()
+}
+
+async function revoke(id: string) {
+  await $fetch(`/api/vet/team/${id}`, { method: 'DELETE' })
+  await load()
+}
+
+onMounted(load)
+</script>
+
+<style scoped>
+.team-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  max-width: 28rem;
+}
+.team-perm {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+</style>

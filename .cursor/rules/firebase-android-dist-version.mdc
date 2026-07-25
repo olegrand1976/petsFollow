@@ -1,0 +1,24 @@
+---
+description: Avant tout deploy Firebase App Distribution (make firebase-android-dist), bump la version Flutter
+alwaysApply: true
+---
+
+# Firebase App Distribution — bump version obligatoire
+
+Avant **chaque** déploiement Firebase Android (`make firebase-android-dist`, `infra/firebase/distribute-android.sh`, ou équivalent) :
+
+1. Lire `version:` dans [`flutter/pubspec.yaml`](flutter/pubspec.yaml) (`name+build`, ex. `0.2.9+15`).
+2. **Toujours** incrémenter le **build number** (`+N` → `+(N+1)`).
+3. Pour un correctif / feature visible par les testeurs : aussi bumper le patch (`0.2.9` → `0.2.10`) si le changement le justifie ; sinon le seul `+build` suffit.
+4. Committer `pubspec.yaml` (et le lock si modifié) **avant** ou **avec** le deploy — ne jamais uploader un APK avec le même `versionName`/`versionCode` que la release précédente.
+5. Inclure la nouvelle version dans les `RELEASE_NOTES` si elles sont fournies.
+
+Le script `distribute-android.sh` bump aussi le build automatiquement ; l’agent doit quand même vérifier / committer la version mise à jour.
+
+```yaml
+# ❌ BAD — même build que la dernière dist
+version: 0.2.9+15
+
+# ✅ GOOD — build incrémenté
+version: 0.2.9+16
+```

@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev test test-go test-flutter test-nuxt smoke gcp-setup gcp-deploy gcp-domain gcp-smoke
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -17,13 +17,21 @@ help:
 	@echo "  make seed           seed demo"
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
+	@echo "  make flutter-dev    Flutter pets (émulateur) + Google Sign-In dart-define"
 	@echo "  make test-go        tests Go"
+	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
+	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
+	@echo "  make firebase-google-signin-android  SHA → Firebase + google-services.json"
+	@echo "  make firebase-android-dist   APK → Firebase App Distribution (groupe petsfollow-testers)"
+	@echo "  make play-android-bundle     AAB signé → Google Play (nécessite key.properties)"
+	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
 	@echo "  T2: make nuxtjs-dev  →  http://localhost:3002"
+	@echo "  (+ Flutter) make flutter-dev"
 
 env:
 	@test -f $(ENV_FILE) || cp .env.example $(ENV_FILE)
@@ -47,10 +55,18 @@ seed: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api seed
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} go run ./cmd/petsfollow-api
 
 nuxtjs-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
+
+# Émulateur Android : API via 10.0.2.2. Device physique : API_BASE=http://<LAN>:8291 make flutter-dev
+GOOGLE_SERVER_CLIENT_ID ?= 237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com
+API_BASE ?= http://10.0.2.2:8291
+flutter-dev: env
+	cd flutter && flutter pub get && flutter run \
+		--dart-define=API_BASE=$(API_BASE) \
+		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID)
 
 test-go:
 	cd go && GOTOOLCHAIN=local go test ./...
@@ -58,10 +74,19 @@ test-go:
 test-flutter:
 	cd flutter && flutter pub get && flutter test
 
+# Smoke API locale seedée (api-dev :8291). Skip propre si API down.
+test-flutter-smoke:
+	cd flutter && flutter pub get && flutter test test/smoke/ --dart-define=RUN_FLUTTER_SMOKE=true
+
 test-nuxt:
 	cd nuxtjs && npm install && npm test
 
-test: test-go
+# Garde-fou connexion / reset — à lancer avant deploy (DB seedée pour le volet Go).
+test-auth:
+	cd go && GOTOOLCHAIN=local go test ./internal/handlers/ -run 'TestAuth' -count=1
+	cd nuxtjs && npm test -- tests/unit/useAuth.spec.ts
+
+test: test-go test-flutter
 
 smoke:
 	@bash scripts/smoke-test.sh
@@ -69,13 +94,36 @@ smoke:
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
 
+gcp-github:
+	bash infra/gcp/setup-github-deploy.sh
+
 gcp-setup:
 	bash infra/gcp/setup-gcp.sh
+
+gcp-setup-media:
+	bash infra/gcp/setup-gcs-media.sh
+
+gcp-setup-stripe:
+	bash infra/gcp/setup-stripe-secrets.sh
 
 gcp-deploy:
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
 
 gcp-domain:
 	bash infra/gcp/setup-custom-domain.sh
+
+firebase-flutter-setup:
+	bash infra/firebase/setup-flutter-firebase.sh
+
+# Usage : make firebase-google-signin-android SHA1=ED:B0:... [SHA256=...]
+firebase-google-signin-android:
+	@test -n "$(SHA1)" || (echo "Usage: make firebase-google-signin-android SHA1=.. [SHA256=..]" >&2; exit 1)
+	bash infra/firebase/setup-google-signin-android.sh "$(SHA1)" $(if $(SHA256),"$(SHA256)",)
+
+firebase-android-dist:
+	bash infra/firebase/distribute-android.sh
+
+play-android-bundle:
+	bash infra/play/build-play-bundle.sh
 
 gcp-smoke: smoke-staging

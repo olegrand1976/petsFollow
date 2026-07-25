@@ -1,5 +1,8 @@
 <template>
   <div class="pro-legal">
+    <div class="pro-legal__toolbar">
+      <ProLocaleSelect />
+    </div>
     <ProPageHeader :title="title" />
     <ProCard>
       <p class="pro-legal__body">{{ body }}</p>
@@ -24,6 +27,12 @@ const body = computed(() => t(`legal.${props.doc}.body`))
   max-width: 48rem;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
+}
+
+.pro-legal__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
 }
 
 .pro-legal__body {

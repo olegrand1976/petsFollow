@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class HowToMeasureScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class HowToMeasureScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.howToMeasure)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: scrollPaddingWithSystemBottom(context, all: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

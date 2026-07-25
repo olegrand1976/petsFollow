@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/pquerna/otp/totp"
@@ -19,9 +21,13 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
-func (a *API) registerAuthRoutes(r chi.Router) {
-	r.Post("/auth/google", a.googleLogin)
-	r.Post("/auth/2fa/verify", a.verify2FA)
+func (a *API) registerAuthRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	// Mêmes limites que login/register : google (idToken) et 2FA (code à 6 chiffres brute-forçable).
+	r.Group(func(ar chi.Router) {
+		ar.Use(rateLimit)
+		ar.Post("/auth/google", a.googleLogin)
+		ar.Post("/auth/2fa/verify", a.verify2FA)
+	})
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -34,7 +40,12 @@ func (a *API) registerAuthRoutes(r chi.Router) {
 }
 
 type googleLoginReq struct {
-	IDToken string `json:"idToken"`
+	IDToken    string `json:"idToken"`
+	Audience   string `json:"audience,omitempty"` // "pro" (default, Nuxt) | "client" (Flutter pets)
+	InviteCode string `json:"inviteCode,omitempty"`
+	// CommercialUserID — optional nearby commercial pick when no invite code (client audience).
+	CommercialUserID string `json:"commercialUserId,omitempty"`
+	Consent          bool   `json:"consent,omitempty"` // requis pour create-if-absent audience=client (RGPD)
 }
 
 func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +73,7 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_google_token")
 		return
 	}
-	email := gClaims.Email
+	email := strings.TrimSpace(strings.ToLower(gClaims.Email))
 	name := gClaims.Name
 	if email == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "google_email_missing")
@@ -76,17 +87,62 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		name = strings.Split(email, "@")[0]
 	}
 
-	u, err := a.resolveGoogleUser(r, email, name, payload.Subject)
+	u, err := a.resolveGoogleUser(r, email, name, payload.Subject, req.Audience, req.Consent)
 	if err != nil {
 		a.writeGoogleAuthError(w, r, err)
 		return
 	}
+	if normalizeGoogleAudience(req.Audience) == "client" {
+		a.tryClaimInvite(r, u.ID, req.InviteCode)
+		if store.NormalizeInviteCode(req.InviteCode) == "" {
+			a.tryLinkCommercialReferral(r, u.ID, req.CommercialUserID)
+		}
+	}
 	a.issueLoginResponse(w, r, u)
 }
 
-func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub string) (store.User, error) {
+func normalizeGoogleAudience(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "client":
+		return "client"
+	default:
+		return "pro"
+	}
+}
+
+func roleMatchesGoogleAudience(role kernel.Role, audience string) bool {
+	switch audience {
+	case "client":
+		return role == kernel.RoleClient
+	default:
+		return role == kernel.RoleVet || role == kernel.RoleAdmin || kernel.IsSalesForce(role)
+	}
+}
+
+func (a *API) linkOrMatchGoogle(ctx context.Context, u store.User, googleSub string) (store.User, error) {
+	if u.GoogleSub == "" {
+		if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
+			return store.User{}, err
+		}
+		return a.store.GetUserByID(ctx, u.ID)
+	}
+	if u.GoogleSub != googleSub {
+		return store.User{}, errGoogleAccountMismatch
+	}
+	return u, nil
+}
+
+func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub, audienceRaw string, consent bool) (store.User, error) {
 	ctx := r.Context()
+	audience := normalizeGoogleAudience(audienceRaw)
+
 	if u, err := a.store.GetUserByGoogleSub(ctx, googleSub); err == nil {
+		if !roleMatchesGoogleAudience(u.Role, audience) {
+			if audience == "client" {
+				return store.User{}, errGoogleClientOnly
+			}
+			return store.User{}, errGoogleProOnly
+		}
 		return u, nil
 	} else if !errors.Is(err, store.ErrNotFound) {
 		return store.User{}, err
@@ -94,37 +150,28 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub stri
 
 	u, err := a.store.GetUserByEmail(ctx, email)
 	if err == nil {
-		switch u.Role {
-		case kernel.RoleClient:
-			return store.User{}, errGoogleProOnly
-		case kernel.RoleAdmin:
-			if u.GoogleSub == "" {
-				if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
-					return store.User{}, err
-				}
-				return a.store.GetUserByID(ctx, u.ID)
+		if !roleMatchesGoogleAudience(u.Role, audience) {
+			if audience == "client" {
+				return store.User{}, errGoogleClientOnly
 			}
-			if u.GoogleSub != googleSub {
-				return store.User{}, errGoogleAccountMismatch
-			}
-			return u, nil
-		case kernel.RoleVet:
-			if u.GoogleSub == "" {
-				if err := a.store.LinkGoogleAccount(ctx, u.ID, googleSub); err != nil {
-					return store.User{}, err
-				}
-				return a.store.GetUserByID(ctx, u.ID)
-			}
-			if u.GoogleSub != googleSub {
-				return store.User{}, errGoogleAccountMismatch
-			}
-			return u, nil
-		default:
 			return store.User{}, errGoogleProOnly
 		}
+		return a.linkOrMatchGoogle(ctx, u, googleSub)
 	}
 	if !errors.Is(err, store.ErrNotFound) {
 		return store.User{}, err
+	}
+
+	// Unknown email: Pro can auto-register a vet; clients can create-if-absent via Google.
+	if audience == "client" {
+		if !consent {
+			return store.User{}, errGoogleConsentRequired
+		}
+		locale := localeOf(r)
+		return a.store.RegisterGoogleClient(ctx, store.RegisterGoogleClientInput{
+			Email: email, FullName: fullName, GoogleSub: googleSub, PreferredLocale: locale,
+			TermsAccepted: true,
+		})
 	}
 
 	practiceName := fmt.Sprintf("Cabinet %s", strings.Split(fullName, " ")[0])
@@ -132,19 +179,28 @@ func (a *API) resolveGoogleUser(r *http.Request, email, fullName, googleSub stri
 	return a.store.RegisterGoogleVet(ctx, store.RegisterGoogleVetInput{
 		Email: email, FullName: fullName, GoogleSub: googleSub, PracticeName: practiceName,
 		PreferredLocale: locale, AutoReplyDefault: t(r, "defaults.auto_reply_unavailable", nil),
+		TermsAccepted: consent,
 	})
 }
 
 var (
-	errGoogleProOnly           = errors.New("google pro only")
-	errGoogleAccountMismatch   = errors.New("google account mismatch")
+	errGoogleProOnly          = errors.New("google pro only")
+	errGoogleClientOnly       = errors.New("google client only")
+	errGoogleAccountMismatch  = errors.New("google account mismatch")
+	errGoogleConsentRequired  = errors.New("google consent required")
 )
 
 func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, errGoogleProOnly):
-		writeErr(w, r, http.StatusForbidden, "forbidden", "google_pro_only")
+		writeErr(w, r, http.StatusForbidden, "google_pro_only", "google_pro_only")
+	case errors.Is(err, errGoogleClientOnly):
+		writeErr(w, r, http.StatusForbidden, "google_client_only", "google_client_only")
 	case errors.Is(err, errGoogleAccountMismatch):
+		writeErr(w, r, http.StatusConflict, "google_account_mismatch", "google_account_mismatch")
+	case errors.Is(err, errGoogleConsentRequired):
+		writeErr(w, r, http.StatusBadRequest, "consent_required", "consent_required")
+	case errors.Is(err, store.ErrConflict):
 		writeErr(w, r, http.StatusConflict, "conflict", "google_account_mismatch")
 	default:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -152,10 +208,21 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 }
 
 func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store.User) {
-	if u.Role == kernel.RoleVet && u.EmailVerifiedAt == nil {
+	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro ||
+		u.Role == kernel.RoleVetAssistant || u.Role == kernel.RoleSecretary) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
+	_ = a.store.EnsureUserProfiles(r.Context(), u.ID)
+	active, _ := a.store.GetActiveProfile(r.Context(), u.ID)
+	// Reload user in case switch sync needed — use active profile role for tokens.
+	if active.ID != "" {
+		u2, err := a.store.GetUserByID(r.Context(), u.ID)
+		if err == nil {
+			u = u2
+		}
+	}
+	profileID := active.ID
 	if u.TOTPEnabled {
 		mfa, err := a.tokens.IssueMFA(u.ID, u.Email, u.Role, u.PracticeID)
 		if err != nil {
@@ -165,12 +232,46 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store
 		httpx.WriteData(w, http.StatusOK, mfa)
 		return
 	}
-	pair, err := a.tokens.Issue(u.ID, u.Email, u.Role, u.PracticeID)
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.store.TouchLastLogin(r.Context(), u.ID)
 	httpx.WriteData(w, http.StatusOK, pair)
+}
+
+// totpReplayGuard — anti-replay : un code TOTP accepté ne peut pas être rejoué
+// dans sa fenêtre de validité (~90 s avec skew ±1). En mémoire, par instance.
+type totpReplayGuard struct {
+	mu   sync.Mutex
+	last map[string]totpUse
+}
+
+type totpUse struct {
+	code string
+	at   time.Time
+}
+
+var totpGuard = totpReplayGuard{last: make(map[string]totpUse)}
+
+// checkAndRemember retourne false si le même code vient d'être consommé pour cet utilisateur.
+func (g *totpReplayGuard) checkAndRemember(userID, code string) bool {
+	const replayWindow = 2 * time.Minute
+	now := time.Now()
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if use, ok := g.last[userID]; ok && use.code == code && now.Sub(use.at) < replayWindow {
+		return false
+	}
+	// GC opportuniste.
+	for k, use := range g.last {
+		if now.Sub(use.at) >= replayWindow {
+			delete(g.last, k)
+		}
+	}
+	g.last[userID] = totpUse{code: code, at: now}
+	return true
 }
 
 type verify2FAReq struct {
@@ -194,15 +295,26 @@ func (a *API) verify2FA(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) {
+	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}
-	pair, err := a.tokens.Issue(id.UserID, id.Email, id.Role, id.PracticeID)
+	// Reload user: MFA token may carry a stale role after profile switch.
+	u, err := a.store.GetUserByID(r.Context(), id.UserID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	profileID := ""
+	if active, err := a.store.GetActiveProfile(r.Context(), u.ID); err == nil {
+		profileID = active.ID
+	}
+	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	a.store.TouchLastLogin(r.Context(), u.ID)
 	httpx.WriteData(w, http.StatusOK, pair)
 }
 
@@ -327,7 +439,7 @@ func (a *API) twoFactorDisable(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "2fa_not_enabled")
 		return
 	}
-	if !totp.Validate(req.Code, secret) {
+	if !totp.Validate(req.Code, secret) || !totpGuard.checkAndRemember(id.UserID, req.Code) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "invalid_2fa_code")
 		return
 	}

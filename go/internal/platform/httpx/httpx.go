@@ -15,6 +15,7 @@ import (
 type APIError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Details any    `json:"details,omitempty"`
 }
 
 type envelope struct {
@@ -35,18 +36,26 @@ func WriteData(w http.ResponseWriter, status int, data any) {
 }
 
 func WriteError(w http.ResponseWriter, status int, code, message string) {
+	WriteErrorWithDetails(w, status, code, message, nil)
+}
+
+func WriteErrorWithDetails(w http.ResponseWriter, status int, code, message string, details any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(envelope{Error: &APIError{Code: code, Message: message}})
+	_ = json.NewEncoder(w).Encode(envelope{Error: &APIError{Code: code, Message: message, Details: details}})
 }
 
 func WriteErrorLocalized(w http.ResponseWriter, r *http.Request, status int, code, msgKey string) {
+	WriteErrorLocalizedWithDetails(w, r, status, code, msgKey, nil)
+}
+
+func WriteErrorLocalizedWithDetails(w http.ResponseWriter, r *http.Request, status int, code, msgKey string, details any) {
 	if msgKey == "" {
 		msgKey = code
 	}
 	locale := i18n.FromContext(r.Context())
 	msg := i18n.T(locale, "errors."+msgKey, nil)
-	WriteError(w, status, code, msg)
+	WriteErrorWithDetails(w, status, code, msg, details)
 }
 
 func LocaleMiddleware(next http.Handler) http.Handler {

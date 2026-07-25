@@ -10,6 +10,7 @@ alwaysApply: false
 
 - Nuxt 3, CSS tokens via `make brand-sync`
 - Face **light** uniquement (ne pas importer le dark Flutter)
+- Icônes UI : **Material Symbols Outlined** (auto-hébergée, RGPD — pas de CDN Google Fonts) via `ProIcon` — pas de SVG maison ni d’emojis
 
 ## Tokens CSS
 
@@ -27,21 +28,28 @@ Utiliser les variables `--pf-vet-*` et `--pf-brand-*` depuis `nuxtjs/assets/css/
 
 ```
 ProApp
-├── ProSidebar (nav + icônes uniquement)
-└── ProAppBody
-    ├── ProTopbar (logo compact, notifications, profil, déconnexion)
-    └── main
+├── ProTopbar (full width — logo compact, notifications, profil, déconnexion)
+└── ProAppShell
+    ├── ProSidebar (nav + icônes uniquement)
+    └── ProAppBody → main
 ```
 
 - **Ne pas** remettre logout/profil dans la sidebar
 - Topbar : `data-testid="pro-topbar"`
 - Composables : `useProUser`, `useProNotifications`, `useListView`
 
+## Icônes
+
+- Composant : `ProIcon` (`name` = ligature Material, ex. `light_mode`, `notifications`, `dashboard`)
+- Police auto-hébergée via `nuxtjs/assets/css/fonts.css` + `public/fonts/` (pas de CDN Google Fonts)
+- Exceptions : logo brand (`PetsFollowLogo` / emblème SVG), graphiques dataviz (`ProBpmChart`)
+
 ## Composants Pro
 
 | Composant | Usage |
 |-----------|--------|
 | `ProTopbar` | Header authentifié |
+| `ProIcon` | Icône Material Symbols Outlined |
 | `ProPageHeader` | Titre page + sous-titre |
 | `ProCard` | Surface (+ `--interactive` pour hover) |
 | `ProButton` | primary / secondary / ghost |
