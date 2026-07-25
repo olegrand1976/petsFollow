@@ -635,6 +635,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get languageIt => 'Italiano';
+
+  @override
   String get planMonthlyLabel => '3,50 € / mes';
 
   @override
@@ -1523,4 +1526,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get proLightReportAiProposalBanner =>
       'Propuesta de IA — validación veterinaria obligatoria antes de finalizar (incluye diagnóstico / medicación sugeridos).';
+
+  @override
+  String get proLightAiModuleRequired =>
+      'Módulo CR IA no activado o prueba caducada — contacte a su comercial petsFollow.';
+
+  @override
+  String proLightAiModuleTrialBanner(int days) {
+    return 'Prueba CR IA — $days días restantes. Dicte y mejore sus informes.';
+  }
+
+  @override
+  String get proLightAiModuleInactiveBanner =>
+      'CR IA no activado para este centro. La dictación IA no estará disponible.';
+
+  @override
+  String get proLightAiModuleVisitScopedBanner =>
+      'CR IA disponible si el centro de la visita tiene el módulo activado.';
 }

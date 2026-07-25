@@ -126,7 +126,9 @@
     "invalid_appetite": "Kehtetu isu",
     "invalid_thirst": "Kehtetu janu",
     "invalid_elimination": "Kehtetu väljaheide / uriin",
-    "invalid_urgency": "Kehtetu kiireloomulisus"
+    "invalid_urgency": "Kehtetu kiireloomulisus",
+    "ai_module_required": "CR IA moodul pole aktiveeritud või prooviperiood lõppenud — võtke ühendust müügiesindajaga",
+    "ai_module_not_found": "CR IA moodulit selle kabineti jaoks ei leitud"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

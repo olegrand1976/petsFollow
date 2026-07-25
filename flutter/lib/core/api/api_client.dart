@@ -337,6 +337,11 @@ class ApiClient {
     return Map<String, dynamic>.from(res.data['data'] as Map);
   }
 
+  Future<Map<String, dynamic>> getAiModule() async {
+    final res = await dio.get('/api/v1/me/ai-module');
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? res.data as Map);
+  }
+
   Future<Map<String, dynamic>> finalizeVisitReport(String visitId) async {
     final res = await dio.post('/api/v1/visits/$visitId/report/finalize');
     return Map<String, dynamic>.from(res.data['data'] as Map);

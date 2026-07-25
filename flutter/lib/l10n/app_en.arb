@@ -237,6 +237,7 @@
   "languageEn": "English",
   "languageEs": "Español",
   "languageEt": "Eesti",
+  "languageIt": "Italiano",
   "planMonthlyLabel": "€3.50 / month",
   "planAnnualLabel": "€35 / year",
   "planTriennialLabel": "€95 / 3 years",
@@ -564,5 +565,16 @@
     }
   },
   "proLightAudioConsentClientCheck": "I have obtained the client's oral consent to record",
-  "proLightReportAiProposalBanner": "AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication)."
+  "proLightReportAiProposalBanner": "AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication).",
+  "proLightAiModuleRequired": "AI visit-report module not activated or trial ended — contact your petsFollow sales rep.",
+  "proLightAiModuleTrialBanner": "AI CR trial — {days} days left. Dictate then improve your visit reports.",
+  "proLightAiModuleInactiveBanner": "AI CR not activated for this practice. AI dictation will be unavailable.",
+  "proLightAiModuleVisitScopedBanner": "AI CR is available when the visit's practice has the module activated.",
+  "@proLightAiModuleTrialBanner": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

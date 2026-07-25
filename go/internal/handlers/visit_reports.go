@@ -235,6 +235,7 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	report.AudioURL = ""
 	report.AudioObjectKey = ""
+	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageFinalize)
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
@@ -255,6 +256,9 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !a.canManageVisit(w, r, id, visit) {
+		return
+	}
+	if !a.requireAiCrEntitlement(w, r, visit.PracticeID) {
 		return
 	}
 	report, err := a.store.EnsureVisitReport(r.Context(), visitID, id.UserID)
@@ -291,6 +295,7 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	system := gemini.BuildVisitReportImprovePrompt(promptIn)
 	improved, err := a.gemini.GenerateText(r.Context(), system, source, 0.3)
 	if err != nil {
+		a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageError)
 		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
 		return
 	}
@@ -303,6 +308,7 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageImprove)
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
@@ -319,6 +325,9 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !a.canManageVisit(w, r, id, visit) {
+		return
+	}
+	if !a.requireAiCrEntitlement(w, r, visit.PracticeID) {
 		return
 	}
 	report, err := a.store.EnsureVisitReport(r.Context(), visitID, id.UserID)
@@ -408,12 +417,14 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 		userPrompt := "Transcris cet enregistrement de visite."
 		out, gerr := a.gemini.GenerateTextWithMedia(r.Context(), system, userPrompt, ct, data, 0.2)
 		if gerr != nil {
+			a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageError)
 			_ = a.purgeVisitReportAudio(r.Context(), report)
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
 		}
 		transcript = strings.TrimSpace(out)
 		if transcript == "" {
+			a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageError)
 			_ = a.purgeVisitReportAudio(r.Context(), report)
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
@@ -429,6 +440,7 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageTranscribe)
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 

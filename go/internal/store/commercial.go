@@ -64,6 +64,7 @@ type CommercialVetRow struct {
 	UserID       string `json:"userId"`
 	FullName     string `json:"fullName"`
 	Email        string `json:"email"`
+	PracticeID   string `json:"practiceId,omitempty"`
 	PracticeName string `json:"practiceName"`
 	ClientCount  int    `json:"clientCount"`
 }
@@ -196,7 +197,7 @@ func (s *Store) GetAssignedCommercialID(ctx context.Context, vetUserID string) (
 
 func (s *Store) ListCommercialVets(ctx context.Context, commercialUserID string) ([]CommercialVetRow, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.full_name, u.email, COALESCE(pr.name,''),
+		SELECT u.id::text, u.full_name, u.email, COALESCE(u.practice_id::text,''), COALESCE(pr.name,''),
 			COALESCE((SELECT COUNT(*)::int FROM practice.practice_clients pc WHERE pc.vet_user_id = u.id), 0)
 		FROM identity.users u
 		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
@@ -209,7 +210,7 @@ func (s *Store) ListCommercialVets(ctx context.Context, commercialUserID string)
 	out := make([]CommercialVetRow, 0)
 	for rows.Next() {
 		var v CommercialVetRow
-		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeName, &v.ClientCount); err != nil {
+		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeID, &v.PracticeName, &v.ClientCount); err != nil {
 			return nil, err
 		}
 		out = append(out, v)

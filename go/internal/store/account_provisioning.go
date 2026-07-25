@@ -58,6 +58,7 @@ type VetOption struct {
 	UserID       string `json:"userId"`
 	FullName     string `json:"fullName"`
 	Email        string `json:"email"`
+	PracticeID   string `json:"practiceId,omitempty"`
 	PracticeName string `json:"practiceName"`
 }
 
@@ -208,7 +209,7 @@ func (s *Store) CreateVetAsAdmin(ctx context.Context, in EncodeVetInput, assigne
 
 func (s *Store) ListVetsForAdmin(ctx context.Context) ([]VetOption, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.full_name, u.email, COALESCE(pr.name,'')
+		SELECT u.id::text, u.full_name, u.email, COALESCE(u.practice_id::text,''), COALESCE(pr.name,'')
 		FROM identity.users u
 		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE u.role='vet'
@@ -220,7 +221,7 @@ func (s *Store) ListVetsForAdmin(ctx context.Context) ([]VetOption, error) {
 	out := make([]VetOption, 0)
 	for rows.Next() {
 		var v VetOption
-		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeName); err != nil {
+		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeID, &v.PracticeName); err != nil {
 			return nil, err
 		}
 		out = append(out, v)

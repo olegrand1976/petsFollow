@@ -1,0 +1,643 @@
+{
+  "@@locale": "it",
+  "appTitle": "petsFollow",
+  "appTagline": "Monitoraggio sanitario del tuo animale",
+  "email": "E-mail",
+  "password": "Password",
+  "login": "Login",
+  "loginFailed": "Impossibile connettersi",
+  "emailNotVerified": "Per prima cosa conferma la tua email (link ricevuto al momento della registrazione), quindi effettua nuovamente l'accesso.",
+  "loginOr": "O",
+  "loginWithGoogle": "Continua con Google",
+  "loginWithApple": "Continua con Apple",
+  "appleComingSoon": "La connessione con Apple sarà presto disponibile.",
+  "twoFaTitle": "Verifica 2FA",
+  "twoFaSubtitle": "Inserisci il codice di 6 cifre per la tua app di autenticazione.",
+  "twoFaCode": "Codice dell'autenticatore",
+  "twoFaSubmit": "Per convalidare",
+  "twoFaBack": "Torna al login",
+  "twoFaInvalid": "Codice 2FA non valido o scaduto",
+  "forgotPassword": "Password dimenticata?",
+  "forgotPasswordTitle": "Password dimenticata",
+  "forgotPasswordSubtitle": "Inserisci l'e-mail del tuo account. Se esiste un account, verrà inviato un collegamento di reimpostazione.",
+  "forgotPasswordSubmit": "Invia collegamento",
+  "forgotPasswordBack": "Torna al login",
+  "forgotPasswordFailed": "Impossibile inviare",
+  "forgotPasswordSentTitle": "E-mail inviata",
+  "forgotPasswordSent": "Se esiste un account per {email}, è stato inviato un collegamento. Aprilo nel tuo browser per scegliere una nuova password.",
+  "@forgotPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "emailRequired": "Inserisci un indirizzo email valido",
+  "resetPasswordTitle": "Nuova password",
+  "resetPasswordSubtitle": "Minimo 8 caratteri.",
+  "resetPasswordToken": "Reimposta gettone",
+  "resetPasswordSubmit": "Salva",
+  "resetPasswordBackToLogin": "Vai al login",
+  "resetPasswordInvalidLink": "Collegamento di reimpostazione non valido",
+  "resetPasswordFailed": "Impossibile reimpostare",
+  "resetPasswordDoneTitle": "Password aggiornata",
+  "resetPasswordDoneSubtitle": "Ora puoi accedere.",
+  "fullName": "Nome e cognome",
+  "registerCta": "Registro",
+  "registerTitle": "Registro",
+  "registerSubtitle": "Crea il tuo account per monitorare la salute del tuo animale domestico. Ti verrà inviata un'e-mail di convalida.",
+  "registerSubmit": "Registro",
+  "registerSuccess": "Conto creato. Apri il collegamento nell'e-mail di convalida, quindi accedi nuovamente all'app.",
+  "registerFailed": "Impossibile registrarsi",
+  "registerEmailExists": "Questa email è già in uso",
+  "registerBackToLogin": "Torna al login",
+  "confirmEmailTitle": "Conferma e-mail",
+  "confirmEmailLoading": "Conferma in corso…",
+  "confirmEmailDoneTitle": "E-mail confermata",
+  "confirmEmailDoneSubtitle": "Il tuo account è attivato. Puoi accedere.",
+  "confirmEmailFailedTitle": "Impossibile confermare",
+  "confirmEmailFailed": "Impossibile confermare questa email.",
+  "confirmEmailInvalidLink": "Link di conferma non valido o già utilizzato.",
+  "confirmEmailBackToLogin": "Torna al login",
+  "vetUseProWeb": "L'account veterinario completo viene utilizzato sul sito Web Pro.",
+  "unsupportedRoleApp": "Questo account non può essere utilizzato nell'app Animali domestici. Utilizzare il sito Web Pro.",
+  "proLightTitle": "Campo professionistico",
+  "proLightAgenda": "Diario",
+  "proLightClients": "Clienti",
+  "proLightPets": "Animali",
+  "proLightLoadError": "Impossibile caricare",
+  "proLightNoVisits": "Nessun appuntamento",
+  "proLightTourToday": "Oggi",
+  "proLightTourWeek": "7 giorni",
+  "proLightTourAll": "Tutto",
+  "proLightNoTourToday": "Nessun appuntamento oggi",
+  "proLightNoTourWeek": "Nessun appuntamento per più di 7 giorni",
+  "proLightNoClients": "Nessun client condiviso",
+  "proLightNoPets": "Nessun animale condiviso",
+  "proLightAddress": "Indirizzo",
+  "proLightOpenMaps": "Mappe",
+  "proLightReportTitle": "Rapporto",
+  "proLightReportHint": "Note di visita...",
+  "proLightImproveAi": "Migliora (AI)",
+  "proLightFinalizeReport": "Finalizzare",
+  "proLightReportFinal": "Finalizzato",
+  "proLightReportHistoryTitle": "Storico",
+  "proLightReportHistoryTranscript": "Originale (trascrizione)",
+  "proLightReportHistoryImproved": "Versione AI",
+  "proLightReportHistorySaved": "Versione registrata",
+  "proLightReportHistoryEmpty": "Nessuna versione disponibile",
+  "proLightSettings": "Impostazioni",
+  "proLightSpecialty": "Specialità",
+  "proLightDocuments": "Documenti",
+  "proLightNoDocuments": "Nessun documento",
+  "proLightTimeline": "Cronologia",
+  "proLightNoTimeline": "Nessun evento",
+  "proLightReminders": "Promemoria",
+  "proLightNoReminders": "Nessun promemoria",
+  "proLightLitterTag": "Etichetta/ambito",
+  "proLightActionFailed": "Azione impossibile",
+  "proLightReadOnly": "Accesso in sola lettura",
+  "petAccessSharedRead": "· Lettura condivisa",
+  "petAccessSharedNotes": "· Note condivise",
+  "petAccessSharedFull": "Condiviso · completo",
+  "proLightUseGps": "GPS",
+  "proLightTranscribeAudio": "File audio",
+  "proLightDictationStart": "Dettare",
+  "proLightDictationStop": "Ferma & trascrivi",
+  "proLightAudioConsentTitle": "Consenso audio",
+  "proLightAudioConsentBody": "La registrazione viene utilizzata solo per generare il report. Confermare l'accordo orale del cliente. L'audio viene rimosso una volta finalizzata la CR.",
+  "proLightAudioConsentAccept": "Accetto",
+  "proLightSpecialtyFarrier": "Maniscalco",
+  "proLightSpecialtyPhysio": "Fisio / osteo",
+  "proLightSpecialtyBehaviorist": "Comportamentista",
+  "proLightSpecialtyGroomer": "Toelettatore",
+  "proLightSpecialtyBreeder": "Allevatore",
+  "proLightSpecialtyVetLight": "Veterinario leggero",
+  "proLightReportHintFarrier": "CR ferratura: piedi, ferro, osservazioni...",
+  "proLightEmptyFarrier": "Nessun cavallo / intervento condiviso",
+  "proLightMicDenied": "Microfono negato: consenti l'accesso nelle impostazioni",
+  "proLightGpsDenied": "Posizione non disponibile",
+  "googleNotConfigured": "Connessione Google non configurata",
+  "googleLoginFailed": "Impossibile connettersi a Google",
+  "googleWrongAudience": "Questo account Google è già un profilo Pro: utilizza l'app Web.",
+  "myPets": "I miei animali",
+  "myData": "I miei dati",
+  "settings": "Parametri",
+  "logout": "Esci",
+  "save": "Per salvaguardare",
+  "cancel": "Cancellare",
+  "firstName": "Il tuo nome",
+  "currentPassword": "Password attuale",
+  "newPassword": "Nuova password",
+  "confirmNewPassword": "Conferma password",
+  "changePassword": "Cambiare la password",
+  "forceChangePasswordTitle": "Cambiare la password",
+  "forceChangePasswordSubtitle": "Questo account è stato creato con una password temporanea. Scegli il tuo per continuare.",
+  "forceChangePasswordSubmit": "Salva e continua",
+  "passwordTooShort": "Minimo 8 caratteri",
+  "passwordMismatch": "Le password non corrispondono",
+  "passwordChangeFailed": "Impossibile modificare la password",
+  "deleteAccount": "Elimina account",
+  "deleteAccountConfirm": "Questa azione è irreversibile. Tutti i tuoi animali domestici e i tuoi dati verranno eliminati.",
+  "exportMyData": "Esporta i miei dati",
+  "registerConsentPrefix": "Accetto il",
+  "registerConsentMiddle": "e il",
+  "registerConsentRequired": "È necessario accettare i termini e l'informativa sulla privacy.",
+  "nearbyCommercialTitle": "Commerciale vicino a te",
+  "nearbyCommercialHint": "Senza un codice di invito, scegli un venditore nelle vicinanze (facoltativo).",
+  "nearbyCommercialUseLocation": "Usa la mia posizione",
+  "nearbyCommercialPostalCode": "Codice postale",
+  "nearbyCommercialSearch": "Fare ricerca",
+  "nearbyCommercialEmpty": "Nessun annuncio pubblicitario trovato nelle vicinanze.",
+  "nearbyCommercialSkip": "Non riattaccare",
+  "nearbyCommercialGeoDenied": "Posizione negata: inserisci un codice postale.",
+  "nearbyCommercialDistance": "{km} km",
+  "@nearbyCommercialDistance": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "pushPermissionTitle": "Notifiche",
+  "pushPermissionBody": "petFollow vuole inviarti notifiche: messaggi dal tuo veterinario, conferme di appuntamenti e promemoria di cure. Puoi disattivarli in qualsiasi momento nell'app o nelle impostazioni del telefono.",
+  "pushPermissionContinue": "Continuare",
+  "exportDataSaved": "Esportazione salvata: {path}",
+  "@exportDataSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSaved": "Profilo salvato",
+  "changePhoto": "Cambia foto",
+  "addPhoto": "Aggiungi una foto",
+  "photoUpdated": "Foto aggiornata",
+  "passwordChanged": "La password è cambiata",
+  "greeting": "Ciao {name},",
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "latestValues": "Ultimi valori",
+  "startMeasurement": "INIZIA LA MISURAZIONE",
+  "heartRateShort": "Cuore",
+  "weightShort": "Peso",
+  "recordWeightTitle": "Registrare il peso",
+  "weightKgLabel": "Peso (kg)",
+  "weightCommentLabel": "Commento (facoltativo)",
+  "weightCommentHint": "Ex. dopo una passeggiata, a stomaco vuoto…",
+  "weightSave": "Salva",
+  "weightSentToVet": "Peso registrato",
+  "weightInvalid": "Inserisci un peso valido (0,01–999,99 kg)",
+  "weightLastLabel": "Ultimo peso: {kg} kg",
+  "@weightLastLabel": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "choosePetForMeasurement": "Scegli un animale",
+  "chooseDuration": "Durata della misurazione",
+  "durationSeconds": "{seconds}s",
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "howToMeasure": "Come misurare?",
+  "howToMeasureIntro": "Misura la frequenza cardiaca del tuo animale domestico a riposo.",
+  "howToMeasureStep1": "1. Metti il ​​tuo animale domestico in un posto tranquillo, sdraiato o seduto.",
+  "howToMeasureStep2": "2. Metti la mano sul petto e picchietta ad ogni battito per la durata indicata.",
+  "howToMeasureStep3": "3. Convalida il rapporto per inviarlo al tuo veterinario.",
+  "howToMeasureWhyTitle": "Perché misurare?",
+  "howToMeasureWhyBody": "Il monitoraggio regolare della frequenza cardiaca consente di rilevare eventuali variazioni e di adattare il trattamento con il veterinario.",
+  "reminders": "Promemoria",
+  "remindersHint": "Ricevi un promemoria quotidiano per leggere il cuore.",
+  "remindersEnabled": "Abilita promemoria",
+  "remindersTime": "Tempo di promemoria",
+  "remindersSaved": "Promemoria salvati",
+  "legalTermsTitle": "Condizioni generali d'uso",
+  "legalPrivacyTitle": "politica sulla riservatezza",
+  "legalNoticeTitle": "Avvisi legali",
+  "legalOpenOnline": "Visualizza la versione online",
+  "legalTermsBody": "Condizioni generali d'uso — animali domesticiSegui\n\nL'app AnimalsFollow consente ai proprietari di animali domestici di monitorare prescritti (messaggi, promemoria per cura/cavallo, letture del cuore), visualizzare la cronologia e comunicare con il proprio veterinario.\n\nI servizi sono forniti come parte dell'abbonamento scelto (pagamento tramite Stripe). L'utente si impegna a utilizzare l'applicazione in conformità con lo scopo previsto.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/terms\n\nData aggiornata: luglio 2026",
+  "legalPrivacyBody": "Informativa sulla privacy — animali domesticiSegui\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@ll-it-sc.be.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026",
+  "legalNoticeBody": "Note legali — animali domesticiSegui\n\nEditore: LL-IT-SC / animali domesticiSegui\nContatto: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (conformità GDPR).\n\nDirettore della pubblicazione: petFollow.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nData aggiornata: luglio 2026",
+  "language": "Lingua",
+  "languageFr": "francese",
+  "languageNl": "Paesi Bassi",
+  "languageEn": "Inglese",
+  "languageEs": "spagnolo",
+  "languageEt": "Eesti",
+  "languageIt": "Italiano",
+  "planMonthlyLabel": "€ 3,50/mese",
+  "planAnnualLabel": "35€/anno",
+  "planTriennialLabel": "95 € / 3 anni",
+  "planQuinquennialLabel": "145 € / 5 anni",
+  "pushNewMessage": "Nuovo messaggio",
+  "pushVisitConfirmed": "Appuntamento confermato",
+  "pushVisitProposed": "Suggerimento per l'incontro",
+  "pushVisitReschedule": "Viaggio su appuntamento",
+  "notifChannelMessages": "Messaggi",
+  "notifChannelVisits": "Visite",
+  "notifChannelCare": "Cura",
+  "paymentResume": "Riprendere il pagamento",
+  "manageSubscription": "Gestisci il mio abbonamento",
+  "heartRate": "Lettura cardiaca",
+  "history": "Storico",
+  "vetMessaging": "Messaggi veterinari",
+  "badgeAutoRenew": "Rinnovo automatico",
+  "badgeActive": "Attivo",
+  "badgePendingPayment": "In attesa di pagamento",
+  "badgeExpiresOn": "scade {date}",
+  "@badgeExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "newPet": "Nuovo animale",
+  "editPet": "Modifica animale",
+  "petName": "Nome",
+  "species": "Specie",
+  "breed": "Razza",
+  "choosePlan": "Scegli la tua formula",
+  "recommended": "Raccomandato",
+  "autoRenewTitle": "Rinnova automaticamente",
+  "autoRenewSubtitle": "Addebito diretto ad ogni data di scadenza",
+  "continueToPayment": "Continua verso il pagamento",
+  "paymentConfirmed": "Pagamento confermato — animale attivo",
+  "paymentPending": "Pagamento in sospeso: puoi riprendere più tardi",
+  "errorGeneric": "Errore: {message}",
+  "@errorGeneric": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNetwork": "Impossibile connettersi. Controlla la tua rete e riprova.",
+  "retryAction": "Riprova",
+  "errorMediaTooLarge": "File troppo grande (25 MB massimo)",
+  "errorInvalidMediaType": "Formato non supportato (JPEG, PNG, WebP, MP4, MOV, WebM)",
+  "errorPaymentRequired": "Abbonamento richiesto per inviare contenuti multimediali",
+  "errorPhotoUploadFailed": "Animale creato, ma non è stato possibile inviare la foto",
+  "errorCouldNotOpenLink": "Impossibile aprire il collegamento",
+  "planMonthlySub": "€ 3,50/mese, rinnovo automatico",
+  "planAnnualSub": "{price}, rinnovato automaticamente",
+  "@planAnnualSub": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "planTriennialSub": "95€ ogni 3 anni, rinnovata automaticamente",
+  "planQuinquennialSub": "€145 per 5 anni, unica soluzione",
+  "planOneTime": "{price}, pagamento unico",
+  "@planOneTime": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateInstructions": "Picchietta con ogni battito per la durata indicata dal tuo veterinario.",
+  "heartRateInstructionsDuration": "Tocca con ogni battito per {seconds} secondi.",
+  "@heartRateInstructionsDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateNoDurationConfigured": "Per questo armadio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.",
+  "start": "Per iniziare",
+  "secondsLeft": "{seconds}s",
+  "@secondsLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "beatsCount": "{count} batte",
+  "@beatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tapHere": "Tocca qui su ogni battito",
+  "bpmLabel": "B/M: {bpm}",
+  "@bpmLabel": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "beatsLabel": "Battiti: {count}",
+  "@beatsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "thresholdAlert": "Avviso di soglia",
+  "validateAndSend": "Convalidare e inviare al veterinario",
+  "heartRateCommentLabel": "Commento (facoltativo)",
+  "heartRateCommentHint": "Ex. agitato, a riposo, dopo l'esercizio...",
+  "restart": "Ricominciare",
+  "sentToVet": "Dichiarazione inviata al veterinario",
+  "navHome": "Benvenuto",
+  "navPets": "Animali",
+  "navCare": "Cura",
+  "navMessages": "Messaggi",
+  "navProfile": "Profilo",
+  "speciesDog": "Cane",
+  "speciesCat": "Gatto",
+  "speciesHorse": "Cavallo",
+  "speciesOther": "Altro",
+  "careComingSoon": "I promemoria per la cura arriveranno presto",
+  "emptyPetsTitle": "Nessun animale",
+  "emptyPetsBody": "Aggiungi il tuo primo animale per iniziare il follow-up prescritto dal tuo veterinario.",
+  "discoveryTitle": "Scopri gli animali domesticiSegui",
+  "discoveryMission": "Il tuo viaggio in 7 giorni",
+  "discoveryDay0Title": "Giorno 0 — Benvenuto",
+  "discoveryDay0Body": "Crea il profilo del tuo animale domestico ed esplora l'app: messaggi, promemoria e letture (inclusa la frequenza cardiaca).",
+  "discoveryDay2Title": "Giorno 2 — Prima misurazione",
+  "discoveryDay2Body": "Effettua la prima lettura della frequenza cardiaca e acquisisci familiarità con la tecnica.",
+  "discoveryDay4Title": "Giorno 4 – Routine",
+  "discoveryDay4Body": "Imposta una routine di misurazione quotidiana con promemoria personalizzati.",
+  "discoveryDay6Title": "Giorno 6 – Condivisione del veto",
+  "discoveryDay6Body": "Le tue letture vengono condivise con il tuo veterinario per un monitoraggio ottimale.",
+  "myVets": "I miei veterinari",
+  "addVetByEmail": "Aggiungi un veterinario via e-mail",
+  "vetEmailHint": "email@cabinet.vet",
+  "noVets": "Nessun veterinario collegato",
+  "primaryVet": "Veterinario senior",
+  "setPrimaryVet": "Imposta come veterinario principale",
+  "careTitle": "Cura",
+  "careDone": "Fare",
+  "carePostpone": "Rimandare",
+  "careOverdue": "Tardi",
+  "visitHistory": "Visita la storia",
+  "requestVisit": "Richiedi una visita",
+  "calendarBookingDisabled": "Per questa pratica non è disponibile la prenotazione online. Chiama in ufficio per fissare un appuntamento.",
+  "calendarBookingDisabledReschedule": "La prenotazione online non è disponibile. Suggerisci una data manualmente.",
+  "calendarNoSlots": "Nessuno spazio disponibile nei prossimi 14 giorni.",
+  "calendarPickSlot": "Scegli una nicchia:",
+  "calendarSelectVet": "Scegli un veterinario:",
+  "calendarCallPractice": "Chiama l'ufficio",
+  "calendarNoPhone": "Per questo ufficio non è fornito alcun numero di telefono. Contattalo in un altro modo.",
+  "visitConfirm": "Confermare",
+  "visitProposeReschedule": "Suggerisci un altro slot",
+  "visitRescheduleProposed": "Proposta di viaggio inviata",
+  "paymentSuccessSnack": "Pagamento ricevuto: aggiorna...",
+  "paymentCancelSnack": "Pagamento annullato",
+  "visitRejectReschedule": "Rifiuta il trasloco",
+  "visitAcceptReschedule": "Accetta il nuovo slot",
+  "upcomingVisit": "Prossima visita",
+  "notificationHrTitle": "petsFollow",
+  "notificationHrBody": "È ora di fare una lettura del cuore per il tuo animale domestico",
+  "reviewAskTitle": "Ti piacciono gli animali domestici Segui?",
+  "reviewAskYes": "Sì, valuta l'app",
+  "reviewAskNo": "Dopo",
+  "careTypeMedication": "Medicinale",
+  "horseAddContact": "Aggiungi un contatto",
+  "horseAddCompetition": "Aggiungi una competizione",
+  "horseContactName": "Nome",
+  "horseContactRole": "Ruolo",
+  "horseCompetitionTitle": "Evento",
+  "horseCompetitionDate": "Data (AAAA-MM-GG)",
+  "familyHouseholdTitle": "Casa Famiglia — {count} animali",
+  "@familyHouseholdTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kennelHouseholdTitle": "Bestiame domestico — {count} animali",
+  "@kennelHouseholdTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "familyHouseholdNext": "Prossimi promemoria per la casa",
+  "familyPetLimit": "Un pacchetto famiglia è già attivo o in fase di acquisto",
+  "familyRequiresTwoPets": "Il pacchetto Famiglia richiede almeno 2 animali",
+  "kennelPackHint": "Pacchetto bestiame: ≥6 animali, −15% sugli abbonamenti successivi",
+  "kennelRequiresSixPets": "Il pacchetto di allevamento richiede almeno 6 animali",
+  "kennelQuickEncodeTitle": "Codifica della gamma (allevamento)",
+  "kennelRequired": "Il pacchetto di allevamento è richiesto per la codifica batch",
+  "litterTag": "Ambito dell'etichetta",
+  "discoveryMarkDone": "Missione compiuta",
+  "notificationPreferences": "Preferenze notifiche",
+  "notificationPrefsHint": "Scegli i tipi di notifiche che desideri ricevere.",
+  "notificationPrefsSaved": "Preferenze salvate",
+  "notificationPrefHr": "Letture cardiache",
+  "notificationPrefCare": "Promemoria per la cura",
+  "notificationPrefVisits": "Visite",
+  "notificationPrefMessages": "Messaggi",
+  "notificationPrefDiscovery": "Sentiero di scoperta",
+  "notificationPrefBilling": "Fatturazione",
+  "carePostponeDays": "Rinviare {days} giorni",
+  "@carePostponeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "noCareReminders": "Nessun promemoria di cura attuale",
+  "careAddReminder": "Aggiungi un promemoria",
+  "careSelectPet": "Animale",
+  "careDueInDays": "Scadenza tra {days} giorni",
+  "@careDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "careReferenceModeDone": "Già fatto",
+  "careReferenceModeFirst": "Prima volta",
+  "careLastDateLabel": "Ultimo appuntamento",
+  "careLastDateDone": "Data dell'ultimo trattamento",
+  "careLastDateFirst": "Data di inizio ciclo",
+  "careRecurrenceLabel": "Ricorrenza",
+  "careRecurrenceNone": "Nessuno (scadenza unica)",
+  "careRecurrenceDays": "Ogni {days} giorni",
+  "@careRecurrenceDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "careDueDateLabel": "Scadenza",
+  "careDueDateComputed": "Data di scadenza calcolata",
+  "careTooltipDoneWithRecurrence": "Trattamento già effettuato: data di scadenza = data dell'ultimo trattamento + recidiva.",
+  "careTooltipFirstWithRecurrence": "Prima programmazione: indicare la data di inizio del ciclo. La scadenza = questa data + ricorrenza.",
+  "careTooltipNoRecurrence": "Senza ricorrenza: la data inserita è l'unica data di scadenza.",
+  "careTooltipDueExplained": "Data di scadenza = ultima data + ricorrenza (se definita).",
+  "carePickDate": "Scegli una data",
+  "discoveryDayBadge": "J{day}",
+  "@discoveryDayBadge": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "timelineTypeHeartrate": "Frequenza cardiaca",
+  "timelineTypeWeight": "Peso",
+  "timelineTypeMessage": "Messaggio",
+  "timelineTypeCare": "Cura",
+  "timelineTypeVisit": "Visita",
+  "timelineTypeEvent": "Evento",
+  "visitCancelAction": "Annulla richiesta",
+  "upcomingVisits": "Prossime visite",
+  "timelineEmpty": "Nessun evento al momento",
+  "noThreads": "Nessuna conversazione",
+  "vetInviteSent": "Invito inviato: l'azienda deve accettare la richiesta",
+  "vetInviteSentNamed": "Richiesta inviata a {practice}: l'azienda deve accettarla",
+  "@vetInviteSentNamed": {
+    "placeholders": {
+      "practice": {
+        "type": "String"
+      }
+    }
+  },
+  "vetNotFound": "Nessun veterinario trovato con questa email",
+  "addVetSearchHint": "Stiamo cercando questo account veterinario in PetFollow. Se esiste, viene inviata una richiesta di collegamento all'azienda.",
+  "visitRequested": "Richiesta di visita inviata",
+  "primaryVetSet": "Veterinario senior aggiornato",
+  "visitStatusRequested": "Richiesto",
+  "visitStatusConfirmed": "Confermato",
+  "visitStatusDone": "Completato",
+  "visitStatusCancelled": "Annullato",
+  "visitStatusReschedulePending": "In attesa del viaggio",
+  "horseHealthTitle": "Salute equina",
+  "horseContactsTitle": "Contatti (maniscalco, dentista, ecc.)",
+  "horseCompetitionsTitle": "Concorsi",
+  "horseContactsSoon": "Attiva il Horse Pack per gestire i tuoi contatti professionali.",
+  "horseCompetitionsSoon": "Attiva il pacchetto cavalli per il calendario delle gare.",
+  "horsePackUpsell": "Horse Pack – maniscalco, coproscopia, contatti e gare",
+  "careTypeFarrier": "Maniscalco",
+  "careTypeFecalEgg": "Coproscopia",
+  "careTypeVaccination": "Vaccinazione",
+  "careTypeDeworming": "Vermifugo",
+  "careTypeVetCheck": "Controllo veterinario",
+  "careTypeDental": "Cure dentistiche",
+  "careTypeCustom": "Promemoria personalizzato",
+  "homeAddFirstVetTitle": "Aggiungi il tuo veterinario",
+  "homeAddFirstVetBody": "Collega l'ufficio che segue il tuo animale per condividere letture e discutere.",
+  "homeAddFirstVetCta": "Aggiungi un veterinario",
+  "photoFrameHint": "Inquadra il muso al centro — anteprima scheda animale",
+  "takePhoto": "Scatta una foto",
+  "chooseFromGallery": "Scegli dalla galleria",
+  "attachMedia": "Allega una foto o un video",
+  "attachPhoto": "Foto",
+  "attachVideo": "Video",
+  "openMedia": "Aprire",
+  "mediaVideoLabel": "Video",
+  "appInviteTitle": "Applicazione di invito QR",
+  "appInviteHint": "Visualizza questo QR o condividi il collegamento. Un nuovo cliente che si registra tramite questo link viene automaticamente collegato.",
+  "appInviteHintShort": "Link per il download e collegamento",
+  "appInviteCodeLabel": "Codice:",
+  "appInviteCopy": "Copia collegamento",
+  "appInviteCopied": "Collegamento copiato",
+  "appInviteLoadError": "Impossibile caricare il QR",
+  "appInviteRetry": "Riprova",
+  "proLightVetTitle": "Campo veterinario",
+  "commercialFieldTitle": "Commerciale",
+  "commercialFieldSubtitle": "Invito cliente QR e accesso al sito Pro.",
+  "commercialOpenProWeb": "Apri il sito Pro",
+  "featureModules": "Opzioni",
+  "featureModulesCatalog": "Scopri le opzioni",
+  "featureModulesSubtitle": "Attiva Care+, Horse, Kennel o Foyer a seconda delle tue esigenze.",
+  "moduleCarePlus": "Care+",
+  "moduleCarePlusDesc": "Promemoria di cura arricchiti per tutti i tuoi animali domestici.",
+  "moduleHorse": "cavallo",
+  "moduleHorseDesc": "Contatti professionali e concorsi per cavalli.",
+  "moduleKennel": "Canile",
+  "moduleKennelDesc": "Codifica rapida della riproduzione/figliata.",
+  "moduleFamily": "Focolare",
+  "moduleFamilyDesc": "Visualizzazione iniziale dei tuoi animali.",
+  "moduleActivate": "Abilitare",
+  "moduleActive": "Attivo",
+  "switchProfile": "Cambia profilo",
+  "profilePersonal": "Personale",
+  "profilePro": "Professionale",
+  "profileSwitched": "Profilo inclinato",
+  "preconsultTitle": "Pre-consultazione",
+  "preconsultTitlePet": "Preconsultazione — {petName}",
+  "preconsultIntro": "Indica lo stato del tuo animale domestico prima della visita. Il tuo veterinario può prepararsi per questo.",
+  "preconsultComplaint": "Motivo/reclamo principale",
+  "preconsultComplaintRequired": "Indicare il motivo della visita",
+  "preconsultDuration": "Da quando?",
+  "preconsultDurationToday": "Oggi",
+  "preconsultDurationFewDays": "Pochi giorni",
+  "preconsultDurationWeek": "Circa una settimana",
+  "preconsultDurationWeeks": "Diverse settimane",
+  "preconsultDurationMonths": "Diversi mesi",
+  "preconsultBehavior": "Comportamento",
+  "preconsultBehaviorNormal": "Normale",
+  "preconsultBehaviorLethargic": "Apatico",
+  "preconsultBehaviorRestless": "Irrequieto",
+  "preconsultBehaviorAggressive": "Aggressivo",
+  "preconsultBehaviorAnxious": "Ansioso",
+  "preconsultBehaviorOther": "Altro",
+  "preconsultAppetite": "Appetito",
+  "preconsultThirst": "Assetato",
+  "preconsultElimination": "Feci/urina",
+  "preconsultScaleNormal": "Normale",
+  "preconsultScaleDecreased": "Diminuito",
+  "preconsultScaleIncreased": "Aumento",
+  "preconsultUrgency": "Urgenza percepita",
+  "preconsultUrgencyLow": "Debole",
+  "preconsultUrgencyMedium": "Media",
+  "preconsultUrgencyHigh": "Alto",
+  "preconsultComment": "Commento (facoltativo)",
+  "preconsultUnknown": "Non lo so",
+  "preconsultSubmit": "Inviare",
+  "preconsultSubmitted": "Preconsultazione inviata",
+  "preconsultAlreadySubmitted": "Hai già inviato questa pre-consultazione.",
+  "preconsultFillCta": "Completa la pre-consultazione",
+  "@preconsultTitlePet": {
+    "placeholders": {
+      "petName": {
+        "type": "String"
+      }
+    }
+  },
+  "proLightAudioConsentClientCheck": "Ho ottenuto l'accordo orale da parte del cliente per la registrazione",
+  "proLightReportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaci inclusi).",
+  "proLightAiModuleRequired": "Modulo CR AI non attivato o periodo di prova scaduto: contatta il rappresentante di vendita PetFollow.",
+  "proLightAiModuleTrialBanner": "Test CR IA — {days} giorni rimanenti. Detta quindi migliora i tuoi rapporti.",
+  "@proLightAiModuleTrialBanner": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proLightAiModuleInactiveBanner": "CR IA non attivata per questa azienda. La dettatura AI non sarà disponibile.",
+  "proLightAiModuleVisitScopedBanner": "CR IA disponibile se l'ufficio visite ha il modulo attivato."
+}

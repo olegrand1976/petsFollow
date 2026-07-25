@@ -126,7 +126,9 @@
     "invalid_appetite": "Apetito no válido",
     "invalid_thirst": "Sed no válida",
     "invalid_elimination": "Heces / orina no válidas",
-    "invalid_urgency": "Urgencia no válida"
+    "invalid_urgency": "Urgencia no válida",
+    "ai_module_required": "Módulo CR IA no activado o prueba caducada — contacte a su comercial",
+    "ai_module_not_found": "Módulo CR IA no encontrado para este centro"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

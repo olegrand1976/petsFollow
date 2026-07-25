@@ -20,6 +20,10 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 		"visitReportsAuthored": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(vr) - 'audio_object_key' - 'audio_url') ORDER BY vr.created_at), '[]'::jsonb)
 			FROM visits.visit_reports vr WHERE vr.author_user_id = $1`,
+		"aiCrUsageEvents": `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
+			FROM practice.ai_cr_usage_events e WHERE e.user_id = $1`,
+		"aiCrFeedback": `SELECT COALESCE(jsonb_agg(to_jsonb(f) ORDER BY f.created_at), '[]'::jsonb)
+			FROM practice.ai_cr_feedback f WHERE f.user_id = $1`,
 	}
 	if fullClientExport {
 		queries["pets"] = `SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.created_at), '[]'::jsonb)

@@ -73,6 +73,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerCommercialManagerRoutes(r)
 	a.registerPitchTrainingRoutes(r)
 	a.registerProductDigestRoutes(r)
+	a.registerAiCrModuleRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
 
 	r.Group(func(pr chi.Router) {

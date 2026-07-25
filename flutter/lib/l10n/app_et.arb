@@ -237,6 +237,7 @@
   "languageEn": "English",
   "languageEs": "Español",
   "languageEt": "Eesti",
+  "languageIt": "Italiano",
   "planMonthlyLabel": "€3,50 / kuu",
   "planAnnualLabel": "35 € / aasta",
   "planTriennialLabel": "95 € / 3 aastat",
@@ -564,5 +565,16 @@
     }
   },
   "proLightAudioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
-  "proLightReportAiProposalBanner": "Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid)."
+  "proLightReportAiProposalBanner": "Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid).",
+  "proLightAiModuleRequired": "CR IA moodul pole aktiveeritud või proov lõppenud — võtke ühendust petsFollow müügiga.",
+  "proLightAiModuleTrialBanner": "CR IA proov — {days} päeva jäänud. Dikteerige ja parandage aruandeid.",
+  "proLightAiModuleInactiveBanner": "CR IA pole selle kabineti jaoks aktiveeritud. AI dikteerimine pole saadaval.",
+  "proLightAiModuleVisitScopedBanner": "CR IA on saadaval, kui visiidi kabinetil on moodul aktiveeritud.",
+  "@proLightAiModuleTrialBanner": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

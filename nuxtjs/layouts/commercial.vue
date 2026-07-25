@@ -25,6 +25,8 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/vets', label: t('nav.commercialVets'), icon: 'users' },
   { to: '/commercial/prospects', label: t('nav.commercialProspects'), icon: 'requests' },
   { to: '/commercial/commissions', label: t('nav.commercialCommissions'), icon: 'payments' },
+  { to: '/commercial/ai-modules', label: t('nav.commercialAiModules'), icon: 'record_voice_over' },
+  { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description' },
   { to: '/commercial/settings', label: t('nav.commercialSettings'), icon: 'settings' },
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign' },
   { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow' },

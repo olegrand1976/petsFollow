@@ -126,7 +126,9 @@
     "invalid_appetite": "Invalid appetite",
     "invalid_thirst": "Invalid thirst",
     "invalid_elimination": "Invalid stool / urine value",
-    "invalid_urgency": "Invalid urgency"
+    "invalid_urgency": "Invalid urgency",
+    "ai_module_required": "AI visit-report module not activated or trial ended — contact your sales rep",
+    "ai_module_not_found": "AI visit-report module not found for this practice"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

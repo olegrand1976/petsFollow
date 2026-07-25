@@ -34,7 +34,10 @@
     "managerPortfolio": "Mijn portefeuille",
     "team": "Team",
     "commercialCompetition": "Concurrentie",
-    "adminBrandAssets": "Store-QR’s"
+    "adminBrandAssets": "Store-QR’s",
+    "adminAiModules": "CR IA-module",
+    "commercialAiModules": "CR IA — kabinetten",
+    "commercialAiPlaybook": "CR IA — gids"
   },
   "auth": {
     "login": {
@@ -276,7 +279,8 @@
       "en": "English",
       "es": "Español",
       "et": "Eesti",
-      "saved": "Taal opgeslagen."
+      "saved": "Taal opgeslagen.",
+      "it": "Italiano"
     },
     "heartrate": {
       "title": "Hartslagmeting",
@@ -653,7 +657,26 @@
     "messaging": "Berichten",
     "about": "Over",
     "aboutText": "petsFollow Pro centraliseert zorgcontinuïteit: cliëntdossiers, beveiligde berichten, hartslagmetingen en veldopvolging voor uw dierenartspraktijk.",
-    "viewCalendar": "Agenda bekijken"
+    "viewCalendar": "Agenda bekijken",
+    "aiModule": {
+      "title": "AI visit reports",
+      "inactive": "Module not activated. Ask your petsFollow sales rep.",
+      "trial": "Trial running — {days} days left",
+      "active": "Module active (paid)",
+      "expired": "Trial ended — request paid activation",
+      "minutesSaved": "minutes saved (est.)",
+      "euroNet": "équivalent net estimé",
+      "disclaimer": "estimation",
+      "roiLocked": "Bilan ROI dans ~{day} j",
+      "requestPaid": "Request paid plan",
+      "openCalendar": "Aller au calendrier",
+      "npsLabel": "Votre note (0–10)",
+      "sendFeedback": "Envoyer mon avis",
+      "requestSent": "Demande envoyée à votre commercial",
+      "feedbackOk": "Merci pour votre retour",
+      "disabled": "Module disabled — contact your sales rep",
+      "roiUnavailable": "ROI summary temporarily unavailable"
+    }
   },
   "messages": {
     "title": "Berichten",
@@ -1029,6 +1052,25 @@
       "saveUrl": "URL opslaan",
       "uploaded": "QR bijgewerkt.",
       "urlSaved": "URL opgeslagen."
+    },
+    "aiModules": {
+      "title": "CR IA-module",
+      "subtitle": "Activation VetPro — essai 90 jours, puis 39 € HT/mois ou 390 € HT/an",
+      "activateTitle": "Activer un cabinet",
+      "practice": "Cabinet",
+      "practicePlaceholder": "Choisir un cabinet",
+      "activate": "Activer l’essai 90 j",
+      "activatedOk": "Module activé (essai 90 jours)",
+      "listTitle": "Modules actifs",
+      "emptyTitle": "Aucun module",
+      "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
+      "colPractice": "Cabinet",
+      "colStatus": "Statut",
+      "colTrial": "Fin essai",
+      "colDays": "J+ / restant",
+      "convertMonthly": "Convertir 39 €/mois",
+      "convertAnnual": "Convertir 390 €/an",
+      "disable": "Désactiver"
     }
   },
   "commissions": {
@@ -1214,7 +1256,8 @@
           "Herinneringen, afspraken & therapietrouw",
           "Partnercommissies (externe facturatie)",
           "Vocale consultatierapporten",
-          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
+          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard",
+          "CR IA-add-on: 90 dagen proef dan 39 € excl. btw/maand of 390 €/jaar — ROI vanaf dag 60"
         ]
       },
       "proLight": {
@@ -1227,7 +1270,7 @@
           "Doorverwijzings-QR-code",
           "Gedeelde documenten & notities",
           "Vocale consultatierapporten",
-          "AI-verbetering van rapporten (+ geschiedenis)"
+          "AI-verbetering van verslagen (+ historiek) als VetPro-kabinet geactiveerd is"
         ]
       }
     },
@@ -1277,7 +1320,8 @@
           "Partnerprogramma (commissies op cliëntactivaties)",
           "Externe SaaS-facturatie — geen online praktijkbetaling",
           "Vocale consultatierapporten",
-          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
+          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard",
+          "CR IA-add-on: 90 dagen proef dan 39 € excl. btw/maand of 390 €/jaar — ROI vanaf dag 60"
         ]
       },
       "proLight": {
@@ -1291,7 +1335,7 @@
           "Doorverwijzings-QR-code",
           "Gedeelde documenten en bezoeknotities",
           "Vocale consultatierapporten",
-          "AI-verbetering van rapporten (+ geschiedenis)",
+          "AI-verbetering van verslagen (+ historiek) als VetPro-kabinet geactiveerd is",
           "Gratis voor professionals"
         ]
       }
@@ -1374,7 +1418,7 @@
       "Timeline / gedeeld patiëntdossier",
       "Care-herinneringen (standaard, medicatie, persoonlijk) en equine pack indien paard",
       "Huishoudenweergave en multi-dier encoding",
-      "Talen FR / NL / EN / ES / ET"
+      "Talen FR / NL / EN / ES / ET / IT"
     ],
     "plansTitle": "Cliëntabonnementen per dier (incl. btw)",
     "plansLead": "Eén abonnement per opgevolgd dier. Stripe-betaling aan eigenaarszijde. Maandelijks = enkel subscription; jaarlijks en driejaarlijks = one_time of subscription.",
@@ -1786,6 +1830,78 @@
     "appInvite": {
       "open": "Download-QR",
       "title": "QR-uitnodiging app"
+    },
+    "aiModules": {
+      "title": "Module CR IA",
+      "subtitle": "Activez l’essai pour vos cabinets, suivez l’adoption, convertissez à 39 € / 390 €",
+      "openPlaybook": "Ouvrir le guide / argumentaire",
+      "activateTitle": "Activer un de vos cabinets",
+      "practice": "Cabinet",
+      "practicePlaceholder": "Choisir",
+      "activate": "Activer 90 j offerts",
+      "activatedOk": "Essai activé — le véto a reçu un e-mail",
+      "listTitle": "Vos modules",
+      "emptyTitle": "Pas encore d’activation",
+      "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
+      "colPractice": "Cabinet",
+      "colStatus": "Statut",
+      "colTrial": "Fin essai",
+      "frictionTitle": "Alertes friction",
+      "frictionEmpty": "Aucune alerte récente",
+      "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
+      "colSignal": "Signal",
+      "colDetail": "Détail",
+      "colWhen": "Quand"
+    },
+    "aiPlaybook": {
+      "title": "AI CR guide",
+      "subtitle": "Mode d’emploi + argumentaire — imprimable / envoyable",
+      "copyLink": "Copier le lien",
+      "mailto": "Envoyer par e-mail",
+      "print": "Imprimer / PDF",
+      "linkCopied": "Lien copié",
+      "mailSubject": "petsFollow — guide module Compte-rendu IA",
+      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du module Compte-rendu IA petsFollow (essai 90 jours, puis 39 € HT/mois ou 390 € HT/an).",
+      "badge": "90 jours offerts · preuve ROI dès J60",
+      "docTitle": "petsFollow AI visit report — how-to",
+      "promise": "Dictate, structure, save time on every visit — we prove value in 90 days before billing.",
+      "priceMonthly": "€39 excl. VAT / month / practice",
+      "priceAnnual": "€390 excl. VAT / year (−17%)",
+      "whoTitle": "Pour qui ?",
+      "whoBody": "Cabinets VetPro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet activé en bénéficient aussi sur ces visites.",
+      "changeTitle": "Ce que ça change",
+      "change1": "Avant : CR tapés le soir, dossiers incomplets, fatigue terrain.",
+      "change2": "Après : dictée mobile → transcription → CR structuré (anamnèse, examen, diagnostic proposé, plan).",
+      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — argument de conversion clair.",
+      "howtoTitle": "Mode d’emploi en 6 étapes",
+      "step1": "Commercial ou admin active le module (essai 90 j) depuis l’espace petsFollow.",
+      "step2": "Sur place : obtenir l’accord oral du client (case à cocher) avant d’enregistrer.",
+      "step3": "Dicter le CR dans Pro Light (Flutter) ou uploader un fichier audio sur le calendrier Web.",
+      "step4": "Lancer « Améliorer » pour structurer le texte, puis éditer si besoin.",
+      "step5": "Finaliser = validation exclusive du pro (purge audio).",
+      "step6": "À partir de J60, lire le ROI (minutes gagnées) sur le tableau de bord VetPro.",
+      "pitchTitle": "Argumentaire terrain",
+      "pitchBody": "« On active 90 jours offerts. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné. Si ça tient, c’est 39 € HT/mois — bien en dessous d’une heure de temps véto. »",
+      "objectionsTitle": "Objections fréquentes",
+      "obj1q": "« C’est trop cher. »",
+      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. À 80 €/h, 39 € est < 5 % de la valeur basse.",
+      "obj2q": "« J’ai déjà Whisper / un dictaphone. »",
+      "obj2a": "Ici : consentement, CR structuré métier, dossier animal, ROI cabinet, pas un fichier texte isolé.",
+      "obj3q": "« Mes assistants vont s’en servir ? »",
+      "obj3a": "Oui si droits write notes. VetLight / care_pro : seulement si le cabinet de la visite est activé.",
+      "roiTitle": "Preuve ROI",
+      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. Prix catalogue fixe : pas de promo intro — la preuve suffit.",
+      "calendarTitle": "Calendrier d’adhésion (checklist commercial)",
+      "calJ0": "J0 — activation + 3 premiers CR",
+      "calJ14": "J14 — NPS #1",
+      "calJ45": "J45 — NPS #2 + tags friction",
+      "calJ60": "J60 — bilan ROI ensemble",
+      "calJ75": "J75 — proposition 39 € / 390 €",
+      "calJ90": "J90 — conversion ou coupure IA (CR manuel reste)",
+      "frictionTitle": "Quand relancer",
+      "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
+      "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
+      "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
     }
   },
   "commissionSheet": {

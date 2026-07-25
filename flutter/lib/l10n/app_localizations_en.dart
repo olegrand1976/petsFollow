@@ -632,6 +632,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get languageIt => 'Italiano';
+
+  @override
   String get planMonthlyLabel => '€3.50 / month';
 
   @override
@@ -1512,4 +1515,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get proLightReportAiProposalBanner =>
       'AI proposal — vet validation required before finalizing (includes suggested diagnosis / medication).';
+
+  @override
+  String get proLightAiModuleRequired =>
+      'AI visit-report module not activated or trial ended — contact your petsFollow sales rep.';
+
+  @override
+  String proLightAiModuleTrialBanner(int days) {
+    return 'AI CR trial — $days days left. Dictate then improve your visit reports.';
+  }
+
+  @override
+  String get proLightAiModuleInactiveBanner =>
+      'AI CR not activated for this practice. AI dictation will be unavailable.';
+
+  @override
+  String get proLightAiModuleVisitScopedBanner =>
+      'AI CR is available when the visit\'s practice has the module activated.';
 }

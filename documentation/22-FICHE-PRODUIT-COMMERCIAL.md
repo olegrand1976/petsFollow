@@ -14,7 +14,8 @@ Le relevé cardiaque (tap, 15 / 30 / 60 s dans l’app) est une **feature** parm
 | Qui | Rôle | Surface | Tarif |
 |-----|------|---------|-------|
 | Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **69 € HT/mois** + setup 320 € HT — **facturation externe** |
-| Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** |
+| Cabinet véto | Add-on CR IA | Dictée / improve Gemini | **39 € HT/mois** ou **390 € HT/an** — essai **90 j**, ROI dès J60 — [32](32-MODULE-IA-CR.md) |
+| Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** (CR IA si cabinet activé) |
 | Propriétaire | Payeur (B2B2C) | App mobile pets | 3,50 / 35 / 95 € TTC (Stripe) |
 | Commercial | Apporteur | Pro web (espace commercial) | — |
 
@@ -27,9 +28,9 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 - Timeline historique (messages, relevés validés, événements)
 - Relevé cardiaque **15 / 30 / 60 s** (tap dans l’app) — feature différenciante
 - Rappels Care, pack Horse, foyer / encodage élevage — **inclus** dès entitlement animal actif
-- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro)
+- **Rapports vocaux de consultation** et **amélioration IA** des CR (Pro Light + Pro ; édition structurée Web Pro) — **module add-on** 39 € HT/mois ou 390 € HT/an après essai 90 j ([32](32-MODULE-IA-CR.md))
 - Agenda terrain (Pro Light) + calendrier cabinet (Pro)
-- Langues **FR / NL / EN / ES / ET**
+- Langues **FR / NL / EN / ES / ET / IT**
 - Push FCM : message véto → client, confirmation RDV (détail [08](08-MESSAGERIE-NOTIFICATIONS.md))
 
 Ne pas promettre : appareil à vendre, WebSocket temps réel (refresh via ouverture app / push), pitch centré « sans boîtier ».

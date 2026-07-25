@@ -634,6 +634,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get languageEt => 'Eesti';
 
   @override
+  String get languageIt => 'Italiano';
+
+  @override
   String get planMonthlyLabel => '€3,50 / kuu';
 
   @override
@@ -1520,4 +1523,21 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get proLightReportAiProposalBanner =>
       'Tehisintellekti ettepanek — loomaarsti kinnitus enne lõpetamist (sh diagnostika / ravimid).';
+
+  @override
+  String get proLightAiModuleRequired =>
+      'CR IA moodul pole aktiveeritud või proov lõppenud — võtke ühendust petsFollow müügiga.';
+
+  @override
+  String proLightAiModuleTrialBanner(int days) {
+    return 'CR IA proov — $days päeva jäänud. Dikteerige ja parandage aruandeid.';
+  }
+
+  @override
+  String get proLightAiModuleInactiveBanner =>
+      'CR IA pole selle kabineti jaoks aktiveeritud. AI dikteerimine pole saadaval.';
+
+  @override
+  String get proLightAiModuleVisitScopedBanner =>
+      'CR IA on saadaval, kui visiidi kabinetil on moodul aktiveeritud.';
 }

@@ -30,6 +30,7 @@ Engagements Pro (facturation externe) :
 | Annuel | **828 € / an** | 12 × 69 |
 | Long terme 3 ans | **745,20 € / an** | −10 % vs annuel (≈ 62,10 €/mois) |
 | Migration données | Sur devis (≥ **350 €**) | Option |
+| **Module CR IA** (add-on) | **39 € HT / mois** ou **390 € HT / an** | Essai **90 j** à l’activation ; facture externe ; ROI dès J60 — voir `documentation/32-MODULE-IA-CR.md` |
 
 Les commissions partenaires (activations clients) peuvent **compenser** la facture SaaS hors ligne (ordre de grandeur : ~7 activations triennales / mois ≈ couverture du mensuel).
 

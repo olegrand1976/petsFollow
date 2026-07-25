@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
@@ -429,6 +430,7 @@ class _SettingsTab extends StatelessWidget {
                   DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
                   DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
                   DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
+                  DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
                 ],
                 onChanged: (next) async {
                   if (next == null || next == code) return;
@@ -489,6 +491,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   bool _busy = false;
   bool _recording = false;
   final AudioRecorder _recorder = AudioRecorder();
+  Map<String, dynamic>? _aiModule;
 
   @override
   void initState() {
@@ -498,6 +501,34 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
     _transcript = widget.initialTranscript;
     _improved = widget.initialImproved;
     _persistedBody = widget.initialText;
+    _loadAiModule();
+  }
+
+  Future<void> _loadAiModule() async {
+    try {
+      final m = await ApiClient.instance.getAiModule();
+      if (!mounted) return;
+      setState(() => _aiModule = m);
+    } catch (_) {
+      /* banner optional */
+    }
+  }
+
+  String? _aiModuleBanner(AppLocalizations l10n) {
+    final m = _aiModule;
+    if (m == null) return null;
+    final status = m['status']?.toString() ?? '';
+    if (status == 'visit_scoped') {
+      return l10n.proLightAiModuleVisitScopedBanner;
+    }
+    if (status == 'trial' && m['allowed'] == true) {
+      final days = (m['daysRemainingTrial'] as num?)?.toInt() ?? 0;
+      return l10n.proLightAiModuleTrialBanner(days);
+    }
+    if (status == 'none' || m['allowed'] != true) {
+      return l10n.proLightAiModuleInactiveBanner;
+    }
+    return null;
   }
 
   String get _historySaved {
@@ -621,7 +652,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
       final l10n = AppLocalizations.of(context)!;
       final msg = e is StateError && e.message == 'mic_denied'
           ? l10n.proLightMicDenied
-          : l10n.proLightActionFailed;
+          : mapApiError(e, l10n);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -661,6 +692,16 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
               l10n.proLightReportAiProposalBanner,
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (_aiModuleBanner(l10n) != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                key: const Key('pro_light_ai_module_banner'),
+                _aiModuleBanner(l10n)!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.gold,
+                    ),
+              ),
+            ],
           ],
           const SizedBox(height: 12),
           TextField(

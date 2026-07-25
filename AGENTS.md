@@ -40,7 +40,7 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Commercial manager | `commercial.manager@petsfollow.test` | Responsable commercial (équipe) |
 | Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné, rattaché manager) |
 
-Entraînement pitch IA (commercial) : `/commercial/training` — nécessite `GEMINI_API_KEY`. Admin : `/admin/training`. Analyseur quotidien : `POST /api/v1/internal/pitch-analyzer/run` + header `X-Pitch-Analyzer-Secret`. Purge RGPD 3 ans d'inactivité : `POST /api/v1/internal/retention/run` + header `X-Retention-Secret` (env `RETENTION_PURGE_SECRET`). Digest produit quotidien (admin/commercial) : ingest GH Action + `POST /api/v1/internal/product-digest/run` à 18:00 Brussels — voir `documentation/25-PRODUCT-DIGEST.md`.
+Entraînement pitch IA (commercial) : `/commercial/training` — nécessite `GEMINI_API_KEY`. Admin : `/admin/training`. Module CR IA (essai 90j / 39 € HT) : `/admin/ai-modules`, `/commercial/ai-modules`, guide `/commercial/ai-cr-playbook` — friction : `POST /api/v1/internal/ai-module-friction/run` + `X-Ai-Module-Friction-Secret`. Analyseur quotidien : `POST /api/v1/internal/pitch-analyzer/run` + header `X-Pitch-Analyzer-Secret`. Purge RGPD 3 ans d'inactivité : `POST /api/v1/internal/retention/run` + header `X-Retention-Secret` (env `RETENTION_PURGE_SECRET`). Digest produit quotidien (admin/commercial) : ingest GH Action + `POST /api/v1/internal/product-digest/run` à 18:00 Brussels — voir `documentation/25-PRODUCT-DIGEST.md`.
 | Admin | `admin.demo@petsfollow.test` | — (global) |
 | Client (Flutter) | `client.demo@petsfollow.test` | VetPlus — 6 pets démo + Care+/Kennel/Horse (seed) |
 | Client | `client.vide@petsfollow.test` | VetPlus — sans animal |
@@ -81,14 +81,14 @@ Prérequis e2e auth : `make up-infra && make migrate && make seed`, API et `make
 - **Auth Flutter** : tokens dans `flutter_secure_storage` (migration one-shot depuis shared_preferences).
 - **Rate limit** : endpoints `/auth/*` publics limités par IP — `AUTH_RATE_LIMIT_PER_MIN` (60/min prod, 1000 en dev via `make api-dev`, 0 = off). La BFF propage `X-Forwarded-For`, honoré par `middleware.RealIP` côté Go.
 - **Headers** : CSP + HSTS via `routeRules` (`nuxtjs/nuxt.config.ts`, helper `buildCsp()`) ; côté Go CORS allowlist (`CORS_ALLOWED_ORIGINS`) + `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy`/HSTS. Fonts auto-hébergées (`nuxtjs/assets/css/fonts.css` + `public/fonts/`) — pas de CDN Google Fonts.
-- **Secrets** : `JWT_SIGNING_KEY` obligatoire hors dev (fail-fast au boot). Les secrets d'endpoints internes (`X-Retention-Secret`, `X-Pitch-Analyzer-Secret`, `X-Product-Digest-Secret`) se comparent en temps constant via `secretHeaderOK` (`go/internal/handlers/retention.go`) — utiliser ce helper pour tout nouvel endpoint interne.
+- **Secrets** : `JWT_SIGNING_KEY` obligatoire hors dev (fail-fast au boot). Les secrets d'endpoints internes (`X-Retention-Secret`, `X-Pitch-Analyzer-Secret`, `X-Product-Digest-Secret`, `X-Ai-Module-Friction-Secret`) se comparent en temps constant via `secretHeaderOK` (`go/internal/handlers/retention.go`) — utiliser ce helper pour tout nouvel endpoint interne.
 - **RGPD** : export `GET /api/v1/me/export` (JSON, BFF `me/export.get.ts`, bouton `/settings` + profil Flutter) · suppression `DELETE /me` (purge complète client / anonymisation pro tombstone) · consentement obligatoire au register (`"consent": true` → `identity.users.terms_accepted_at`) · purge auto 3 ans d'inactivité (`last_login_at`, cron `internal/retention/run`) · pré-dialogue avant permission push Flutter.
 - **Dev only** : `confirmPath`/`resetPath` dans les réponses register/forgot exposés uniquement si `DEV_SEED_ENABLED=true` (les e2e/smoke en dépendent). `BILLING_MOCK_ENABLED` opt-in explicite (défaut true seulement via `make api-dev`) ; signature webhook Stripe toujours vérifiée, même en mock.
 - **2FA** : anti-replay TOTP (`totpReplayGuard`) — un code ne passe qu'une fois par fenêtre.
 
-## Langues (FR / NL / EN / ES / ET)
+## Langues (FR / NL / EN / ES / ET / IT)
 
-Locales supportées : `fr` (défaut), `nl`, `en`, `es`, `et`.
+Locales supportées : `fr` (défaut), `nl`, `en`, `es`, `et`, `it`.
 
 | Face | Mécanisme | Persistance |
 |------|-----------|-------------|
@@ -98,7 +98,7 @@ Locales supportées : `fr` (défaut), `nl`, `en`, `es`, `et`.
 
 Compte démo NL : `client.marie@petsfollow.test` (`preferred_locale = nl`).
 
-Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_locale_et).
+Après migration : `make migrate` (000005_user_locale, 000018_locale_es, 000040_locale_et, 000063_locale_it).
 
 ## Google OAuth + 2FA (optionnel)
 

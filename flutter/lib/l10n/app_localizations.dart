@@ -9,6 +9,7 @@ import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_et.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_it.dart';
 import 'app_localizations_nl.dart';
 
 // ignore_for_file: type=lint
@@ -101,6 +102,7 @@ abstract class AppLocalizations {
     Locale('es'),
     Locale('et'),
     Locale('fr'),
+    Locale('it'),
     Locale('nl')
   ];
 
@@ -1273,6 +1275,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Eesti'**
   String get languageEt;
+
+  /// No description provided for @languageIt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Italiano'**
+  String get languageIt;
 
   /// No description provided for @planMonthlyLabel.
   ///
@@ -2905,6 +2913,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus).'**
   String get proLightReportAiProposalBanner;
+
+  /// No description provided for @proLightAiModuleRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Module CR IA non activé ou essai expiré — contactez votre commercial petsFollow.'**
+  String get proLightAiModuleRequired;
+
+  /// No description provided for @proLightAiModuleTrialBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essai CR IA — {days} j restants. Dictez puis améliorez vos comptes rendus.'**
+  String proLightAiModuleTrialBanner(int days);
+
+  /// No description provided for @proLightAiModuleInactiveBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'CR IA non activé pour ce cabinet. La dictée IA sera indisponible.'**
+  String get proLightAiModuleInactiveBanner;
+
+  /// No description provided for @proLightAiModuleVisitScopedBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'CR IA disponible si le cabinet de la visite a le module activé.'**
+  String get proLightAiModuleVisitScopedBanner;
 }
 
 class _AppLocalizationsDelegate
@@ -2917,8 +2949,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'es', 'et', 'fr', 'nl'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+        'en',
+        'es',
+        'et',
+        'fr',
+        'it',
+        'nl'
+      ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2935,6 +2973,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEt();
     case 'fr':
       return AppLocalizationsFr();
+    case 'it':
+      return AppLocalizationsIt();
     case 'nl':
       return AppLocalizationsNl();
   }

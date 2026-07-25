@@ -346,6 +346,17 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 		vetID, p.vetEmail, string(vetHash), p.vetName, practiceID, p.pendingEmailVerify); err != nil {
 		return err
 	}
+	// Demo: CR IA trial so Flutter/Nuxt dictation works out of the box (admin can still manage).
+	if !p.incompleteProfile {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO practice.ai_cr_modules (
+				practice_id, status, activated_at, trial_ends_at, activated_by_user_id,
+				price_plan, baseline_minutes_per_cr, hourly_cost_cents, updated_at
+			) VALUES ($1, 'trial', NOW(), NOW() + INTERVAL '90 days', $2, 'monthly_39', 10, 8000, NOW())
+			ON CONFLICT (practice_id) DO NOTHING`, practiceID, vetID); err != nil {
+			return err
+		}
+	}
 	if p.pendingEmailVerify {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO identity.email_verification_tokens (id, user_id, token, expires_at)

@@ -237,6 +237,7 @@
   "languageEn": "English",
   "languageEs": "Español",
   "languageEt": "Eesti",
+  "languageIt": "Italiano",
   "planMonthlyLabel": "3,50 € / maand",
   "planAnnualLabel": "35 € / jaar",
   "planTriennialLabel": "95 € / 3 jaar",
@@ -564,5 +565,16 @@
     }
   },
   "proLightAudioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
-  "proLightReportAiProposalBanner": "AI-voorstel — validatie door de dierenarts verplicht vóór finalisatie (incl. diagnose / medicatie)."
+  "proLightReportAiProposalBanner": "AI-voorstel — validatie door de dierenarts verplicht vóór finalisatie (incl. diagnose / medicatie).",
+  "proLightAiModuleRequired": "CR IA-module niet geactiveerd of proef verlopen — contacteer uw petsFollow-commercial.",
+  "proLightAiModuleTrialBanner": "CR IA-proef — nog {days} dagen. Dicteer en verbeter uw verslagen.",
+  "proLightAiModuleInactiveBanner": "CR IA niet geactiveerd voor dit kabinet. AI-dictatie is niet beschikbaar.",
+  "proLightAiModuleVisitScopedBanner": "CR IA beschikbaar als het kabinet van het bezoek de module heeft geactiveerd.",
+  "@proLightAiModuleTrialBanner": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

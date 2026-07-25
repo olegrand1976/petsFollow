@@ -65,6 +65,8 @@ type Config struct {
 	CORSAllowedOrigins string
 	// RetentionPurgeSecret protège POST /internal/retention/run (purge 3 ans d'inactivité RGPD).
 	RetentionPurgeSecret string
+	// AiModuleFrictionSecret protège POST /internal/ai-module-friction/run.
+	AiModuleFrictionSecret string
 }
 
 func Load() Config {
@@ -124,7 +126,8 @@ func Load() Config {
 		CareProPublicRegister: envBool("CARE_PRO_PUBLIC_REGISTER"),
 		AuthRateLimitPerMin:   envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
 		CORSAllowedOrigins:    envOr("CORS_ALLOWED_ORIGINS", ""),
-		RetentionPurgeSecret:  envOr("RETENTION_PURGE_SECRET", ""),
+		RetentionPurgeSecret:   envOr("RETENTION_PURGE_SECRET", ""),
+		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
 	}
 }
 

@@ -70,6 +70,8 @@ Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle, 
 
 Flux : **accord oral client (checkbox)** → dictée/upload → transcription Gemini → édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
 
+**Entitlement module** (add-on VetPro, essai 90 j, 39 € HT/mois ou 390 € HT/an) : `transcribe` / `improve` gated par `practice.ai_cr_modules` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
+
 Sections CR vétérinaire (improve) :
 - Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi
 - Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
@@ -98,4 +100,5 @@ B2B2C inchangé (client paie l’animal). Pros light gratuits au MVP. Partage d�
 
 `000039_multi_profiles_pro` — rôle `care_pro`, specialty, ACL, GPS visites, `visit_reports`.  
 `000042_access_permission_default` — DEFAULT permission `write_notes`.  
-`000062_cr_country_audio_consent` — `practices.country_code` + `visit_reports.client_audio_consent_at`.
+`000062_cr_country_audio_consent` — `practices.country_code` + `visit_reports.client_audio_consent_at`.  
+`000064_ai_cr_module` — entitlement CR IA (trial/usage/feedback/friction).

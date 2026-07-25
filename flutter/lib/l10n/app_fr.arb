@@ -237,6 +237,7 @@
   "languageEn": "English",
   "languageEs": "Español",
   "languageEt": "Eesti",
+  "languageIt": "Italiano",
   "planMonthlyLabel": "3,50 € / mois",
   "planAnnualLabel": "35 € / an",
   "planTriennialLabel": "95 € / 3 ans",
@@ -627,5 +628,16 @@
     }
   },
   "proLightAudioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
-  "proLightReportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus)."
+  "proLightReportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication inclus).",
+  "proLightAiModuleRequired": "Module CR IA non activé ou essai expiré — contactez votre commercial petsFollow.",
+  "proLightAiModuleTrialBanner": "Essai CR IA — {days} j restants. Dictez puis améliorez vos comptes rendus.",
+  "@proLightAiModuleTrialBanner": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proLightAiModuleInactiveBanner": "CR IA non activé pour ce cabinet. La dictée IA sera indisponible.",
+  "proLightAiModuleVisitScopedBanner": "CR IA disponible si le cabinet de la visite a le module activé."
 }
