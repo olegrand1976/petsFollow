@@ -229,15 +229,27 @@ func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID string) (bo
 	return enabled, duration, err
 }
 
+// scheduleLocation never returns nil (avoids panic: missing Location in Time.In).
+func scheduleLocation(tz string) *time.Location {
+	tz = strings.TrimSpace(tz)
+	if tz == "" {
+		tz = defaultScheduleTZ
+	}
+	if loc, err := time.LoadLocation(tz); err == nil {
+		return loc
+	}
+	if loc, err := time.LoadLocation(defaultScheduleTZ); err == nil {
+		return loc
+	}
+	return time.UTC
+}
+
 func (s *Store) IsOnVacation(ctx context.Context, practiceID string, day time.Time) (bool, error) {
 	sched, err := s.GetVetSchedule(ctx, practiceID)
 	if err != nil {
 		return false, err
 	}
-	loc, err := time.LoadLocation(sched.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation(defaultScheduleTZ)
-	}
+	loc := scheduleLocation(sched.Timezone)
 	localDay := day.In(loc).Format("2006-01-02")
 	var n int
 	err = s.pool.QueryRow(ctx, `
@@ -276,10 +288,7 @@ func (s *Store) ListAvailableSlots(ctx context.Context, practiceID string, from,
 	if !sched.ClientBookingEnabled || len(sched.Slots) == 0 {
 		return []AvailableSlot{}, nil
 	}
-	loc, err := time.LoadLocation(sched.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation(defaultScheduleTZ)
-	}
+	loc := scheduleLocation(sched.Timezone)
 	duration := time.Duration(sched.SlotDurationMinutes) * time.Minute
 	vacations, err := s.ListVacations(ctx, practiceID)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata" // embed IANA zones — Cloud Run/Alpine may lack /usr/share/zoneinfo
 
 	"github.com/olegrand1976/petsFollow/go/internal/app"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
