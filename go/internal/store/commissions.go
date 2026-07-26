@@ -421,7 +421,7 @@ func (s *Store) AccrueVetForAddon(ctx context.Context, addonID string) error {
 	}
 	if practiceID == "" {
 		_ = s.pool.QueryRow(ctx, `
-			SELECT practice_id::text FROM pets.pets
+			SELECT COALESCE(practice_id::text,'') FROM pets.pets
 			WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 1`, addon.OwnerUserID).Scan(&practiceID)
 	}
 	vetUserID, _, err := s.resolveVetCommercial(ctx, addon.OwnerUserID, practiceID)

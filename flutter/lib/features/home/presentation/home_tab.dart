@@ -211,10 +211,11 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         speciesLabel: _speciesLabel(l10n, pet.species),
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
-                        onMeasure: pet.isOwner && pet.isActive
+                        onMeasure: pet.isOwner && pet.isActive && !pet.needsVetLink
                             ? () => _startMeasurement(pet)
                             : null,
-                        onWeightRecorded: pet.isOwner && pet.isActive ? load : null,
+                        onWeightRecorded:
+                            pet.isOwner && pet.isActive && !pet.needsVetLink ? load : null,
                         onResumePayment:
                             pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),

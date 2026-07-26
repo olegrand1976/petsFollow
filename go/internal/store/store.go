@@ -246,7 +246,7 @@ func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 	var p Pet
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
 		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt)
@@ -257,8 +257,10 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 		if ent, e := s.GetEntitlementByPetID(ctx, id); e == nil {
 			p.Entitlement = &ent
 		}
-		if durations, e := s.GetPracticeHeartRateDurations(ctx, p.PracticeID); e == nil {
-			p.HeartrateDurationsSec = durations
+		if p.PracticeID != "" {
+			if durations, e := s.GetPracticeHeartRateDurations(ctx, p.PracticeID); e == nil {
+				p.HeartrateDurationsSec = durations
+			}
 		}
 	}
 	return p, err
@@ -266,7 +268,7 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 
 func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
@@ -347,7 +349,7 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {

@@ -312,15 +312,56 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               ],
             ),
           ),
+          if (pet.isOwner && pet.needsVetLink) ...[
+            const SizedBox(height: 24),
+            Card(
+              key: Key('pet_link_vet_banner_${pet.id}'),
+              color: p.surfaceElevated,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.linkVetAfterSaveTitle,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.linkVetAfterSaveBody,
+                      style: TextStyle(color: p.textMuted, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      key: Key('pet_link_vet_cta_${pet.id}'),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+                        );
+                        if (mounted) {
+                          await _loadVets();
+                          await _reloadPet();
+                        }
+                      },
+                      icon: const Icon(Icons.local_hospital_outlined),
+                      label: Text(l10n.addVetSearchLabel),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           if (pet.isOwner &&
               pet.isActive &&
+              !pet.needsVetLink &&
               pet.species == 'horse' &&
               FeatureModulesController.instance.horse) ...[
             const SizedBox(height: 24),
             HorseHealthPanel(petId: pet.id, petName: pet.name),
           ],
           const SizedBox(height: 24),
-          if (pet.isOwner && pet.isActive) ...[
+          if (pet.isOwner && pet.isActive && !pet.needsVetLink) ...[
             PetQuickActions(
               petId: pet.id,
               onHeartRate: () {
@@ -372,7 +413,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                 ),
               ),
             ),
-          if (pet.isOwner && pet.isActive) ...[
+          if (pet.isOwner && pet.isActive && !pet.needsVetLink) ...[
             _ActionTile(
               icon: Icons.event_available,
               label: l10n.requestVisit,
@@ -388,14 +429,17 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             ),
           ],
           if (pet.isOwner) ...[
-            if (pet.isActive) const Divider(height: 32),
+            if (pet.isActive && !pet.needsVetLink) const Divider(height: 32),
             Row(
               children: [
                 Expanded(child: Text(l10n.myVets, style: Theme.of(context).textTheme.titleSmall)),
                 TextButton(
                   onPressed: () async {
                     await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
-                    _loadVets();
+                    if (mounted) {
+                      await _loadVets();
+                      await _reloadPet();
+                    }
                   },
                   child: Text(l10n.addVetSearchLabel),
                 ),

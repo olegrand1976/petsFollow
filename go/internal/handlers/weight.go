@@ -30,6 +30,9 @@ func (a *API) createWeightReading(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePremiumAccess(w, r, pet.ID) {
 		return
 	}
+	if !a.requirePetPractice(w, r, pet) {
+		return
+	}
 	var req createWeightReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")

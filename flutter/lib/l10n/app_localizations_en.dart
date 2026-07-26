@@ -956,7 +956,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noVets => 'No linked veterinarian';
 
   @override
-  String get vetLinkRequired => 'Link a veterinarian before adding a pet';
+  String get vetLinkRequired =>
+      'Link a veterinarian to enable follow-up with your practice';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Link a veterinarian';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Your pet is saved. Link a practice to enable messaging, visits and care reminders.';
+
+  @override
+  String get linkVetLater => 'Later';
 
   @override
   String get primaryVet => 'Primary veterinarian';

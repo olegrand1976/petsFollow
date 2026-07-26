@@ -26,7 +26,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			p.id::text,
-			p.practice_id::text,
+			COALESCE(p.practice_id::text,''),
 			p.owner_user_id::text,
 			COALESCE(u.full_name, ''),
 			p.name,

@@ -962,7 +962,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vetLinkRequired =>
-      'Liez un vétérinaire avant d\'ajouter un animal';
+      'Liez un vétérinaire pour activer le suivi avec votre cabinet';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Lier un vétérinaire';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Votre animal est enregistré. Liez un cabinet pour activer messagerie, visites et rappels de soins.';
+
+  @override
+  String get linkVetLater => 'Plus tard';
 
   @override
   String get primaryVet => 'Vétérinaire principal';

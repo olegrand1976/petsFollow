@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -57,6 +58,11 @@ var horsePackCareTemplates = []careReminderTemplate{
 }
 
 func (s *Store) SeedDefaultCareReminders(ctx context.Context, petID, practiceID, species string) error {
+	practiceID = strings.TrimSpace(practiceID)
+	if practiceID == "" {
+		// care.reminders.practice_id is NOT NULL — seed after the pet is linked to a cabinet.
+		return nil
+	}
 	templates, ok := defaultCareBySpecies[species]
 	if !ok {
 		templates = defaultCareBySpecies["dog"]
@@ -73,7 +79,7 @@ func (s *Store) SeedDefaultCareReminders(ctx context.Context, petID, practiceID,
 // SeedHorsePackReminders adds farrier/copro reminders for all horse pets of an owner (idempotent by type).
 func (s *Store) SeedHorsePackReminders(ctx context.Context, ownerUserID string) error {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text FROM pets.pets
+		SELECT id::text, COALESCE(practice_id::text,'') FROM pets.pets
 		WHERE owner_user_id=$1 AND species='horse'`, ownerUserID)
 	if err != nil {
 		return err
@@ -84,6 +90,9 @@ func (s *Store) SeedHorsePackReminders(ctx context.Context, ownerUserID string) 
 		var petID, practiceID string
 		if err := rows.Scan(&petID, &practiceID); err != nil {
 			return err
+		}
+		if practiceID == "" {
+			continue
 		}
 		for _, tpl := range horsePackCareTemplates {
 			var exists bool

@@ -66,46 +66,66 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
     if (pets.isEmpty) return;
     setState(() => _submitting = true);
     try {
-      await ApiClient.instance.createPetsBatch(pets);
+      final res = await ApiClient.instance.createPetsBatch(pets);
+      if (!mounted) return;
+      final rawPets = res['pets'];
+      var needsVet = false;
+      if (rawPets is List) {
+        for (final item in rawPets) {
+          if (item is! Map) continue;
+          final pid = item['practiceId']?.toString().trim() ?? '';
+          if (pid.isEmpty) {
+            needsVet = true;
+            break;
+          }
+        }
+      } else {
+        // Client JWT without practice → batch pets have no cabinet.
+        needsVet = true;
+      }
+      if (needsVet) {
+        final linkNow = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                key: const Key('kennel_vet_link_dialog'),
+                title: Text(l10n.linkVetAfterSaveTitle),
+                content: Text(l10n.linkVetAfterSaveBody),
+                actions: [
+                  TextButton(
+                    key: const Key('kennel_link_vet_later'),
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(l10n.linkVetLater),
+                  ),
+                  FilledButton(
+                    key: const Key('kennel_link_vet'),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(l10n.addVetByEmail),
+                  ),
+                ],
+              ),
+            ) ??
+            false;
+        if (!mounted) return;
+        final nav = Navigator.of(context);
+        nav.pop(true);
+        if (linkNow) {
+          await nav.push(
+            MaterialPageRoute<void>(builder: (_) => const MyVetsScreen()),
+          );
+        }
+        return;
+      }
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      final code = apiErrorCode(e);
       final msg = mapApiError(e, l10n);
-      if (code == 'vet_link_required') {
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            key: const Key('kennel_vet_link_dialog'),
-            content: Text(msg),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l10n.cancel),
-              ),
-              FilledButton(
-                key: const Key('kennel_link_vet'),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MyVetsScreen()),
-                  );
-                },
-                child: Text(l10n.addVetByEmail),
-              ),
-            ],
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            key: const Key('kennel_error'),
-            content: Text(msg),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          key: const Key('kennel_error'),
+          content: Text(msg),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

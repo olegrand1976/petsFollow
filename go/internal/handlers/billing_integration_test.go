@@ -612,6 +612,154 @@ func TestBillingCreatePetCheckoutFailStill201(t *testing.T) {
 	}
 }
 
+// Orphan client (no practice) can create a pet; practiceId stays empty until link.
+func TestBillingCreatePetWithoutPractice(t *testing.T) {
+	api := newTestAPI(t)
+	email := uniqueEmail("e2e-orphan-pet")
+	password := "ClientPass123!"
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": email, "password": password, "fullName": "Orphan Pet Owner",
+		"consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register-client %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := ""
+	if idx := len("/confirm-email?token="); len(confirmPath) > idx {
+		token = confirmPath[idx:]
+	}
+	if token == "" {
+		t.Fatalf("missing confirm token: %#v", env)
+	}
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": token,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm %d %#v", code, env)
+	}
+	access, _ := dataMap(t, env)["accessToken"].(string)
+	if access == "" {
+		access = loginToken(t, api.handler, email, password)
+	}
+
+	petName := "Orphan-" + uniqueEmail("pet")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", access, map[string]any{
+		"name": petName, "species": "dog", "breed": "Mix",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create without practice %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	pet, _ := data["pet"].(map[string]any)
+	petID, _ := pet["id"].(string)
+	if petID == "" {
+		t.Fatalf("missing pet id: %#v", data)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pets.pets WHERE id=$1`, petID)
+	})
+	if pid, _ := pet["practiceId"].(string); pid != "" {
+		t.Fatalf("expected empty practiceId, got %q", pid)
+	}
+	if status, _ := pet["paymentStatus"].(string); status != "pending_payment" {
+		t.Fatalf("expected pending_payment, got %#v", pet)
+	}
+
+	var dbPractice *string
+	err := api.pool.QueryRow(context.Background(), `
+		SELECT practice_id::text FROM pets.pets WHERE id=$1`, petID).Scan(&dbPractice)
+	if err != nil {
+		t.Fatalf("db lookup: %v", err)
+	}
+	if dbPractice != nil {
+		t.Fatalf("expected NULL practice_id in DB, got %v", *dbPractice)
+	}
+
+	// Care reminders not seeded without practice.
+	var careCount int
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM care.reminders WHERE pet_id=$1`, petID).Scan(&careCount); err != nil {
+		t.Fatalf("care count: %v", err)
+	}
+	if careCount != 0 {
+		t.Fatalf("expected 0 care reminders without practice, got %d", careCount)
+	}
+
+	// Activate entitlement while still orphan — cabinet features must gate.
+	if _, err := api.pool.Exec(context.Background(), `
+		UPDATE billing.pet_entitlements
+		SET status = 'active', valid_until = NOW() + INTERVAL '1 year'
+		WHERE pet_id = $1`, petID); err != nil {
+		t.Fatalf("activate entitlement: %v", err)
+	}
+	if _, err := api.pool.Exec(context.Background(), `
+		UPDATE pets.pets SET payment_status = 'active' WHERE id = $1`, petID); err != nil {
+		t.Fatalf("activate payment: %v", err)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/heartrate/sessions", access, map[string]any{
+		"durationSec": 60,
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "vet_link_required" {
+		t.Fatalf("expected vet_link_required on HR, got %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/weights", access, map[string]any{
+		"weightKg": 12.5,
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "vet_link_required" {
+		t.Fatalf("expected vet_link_required on weight, got %d %#v", code, env)
+	}
+
+	var clientID, vetID, practiceID string
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT id::text FROM identity.users WHERE email = $1`, email).Scan(&clientID); err != nil {
+		t.Fatalf("client id: %v", err)
+	}
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT id::text, practice_id::text FROM identity.users WHERE email = 'vet.demo@petsfollow.test'`).
+		Scan(&vetID, &practiceID); err != nil {
+		t.Fatalf("vet.demo: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `
+			DELETE FROM practice.practice_clients WHERE client_user_id = $1`, clientID)
+		_, _ = api.pool.Exec(context.Background(), `
+			DELETE FROM identity.users WHERE id = $1`, clientID)
+	})
+	if _, err := api.pool.Exec(context.Background(), `
+		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
+		VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3::uuid)
+		ON CONFLICT (practice_id, client_user_id) DO NOTHING`,
+		practiceID, clientID, vetID); err != nil {
+		t.Fatalf("practice_clients: %v", err)
+	}
+
+	// First link allowed even with active entitlement.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/pets/"+petID+"/primary-practice", access, map[string]any{
+		"practiceId": practiceID,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("primary-practice first link %d %#v", code, env)
+	}
+	var linkedPractice string
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT practice_id::text FROM pets.pets WHERE id=$1`, petID).Scan(&linkedPractice); err != nil {
+		t.Fatalf("practice after link: %v", err)
+	}
+	if linkedPractice != practiceID {
+		t.Fatalf("expected practice %s, got %q", practiceID, linkedPractice)
+	}
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM care.reminders WHERE pet_id=$1`, petID).Scan(&careCount); err != nil {
+		t.Fatalf("care after link: %v", err)
+	}
+	if careCount == 0 {
+		t.Fatalf("expected care reminders seeded after first link")
+	}
+}
+
 func errorMsgKey(env map[string]any) string {
 	errObj, _ := env["error"].(map[string]any)
 	if errObj == nil {

@@ -961,7 +961,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get vetLinkRequired =>
-      'Vincula un veterinario antes de añadir una mascota';
+      'Vincula un veterinario para activar el seguimiento con tu clínica';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Vincular un veterinario';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Tu mascota está guardada. Vincula una clínica para activar mensajería, visitas y recordatorios de cuidados.';
+
+  @override
+  String get linkVetLater => 'Más tarde';
 
   @override
   String get primaryVet => 'Veterinario principal';

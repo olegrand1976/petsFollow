@@ -960,7 +960,17 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get vetLinkRequired =>
-      'Koppel een dierenarts voordat u een dier toevoegt';
+      'Koppel een dierenarts om de opvolging met uw praktijk te activeren';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Dierenarts koppelen';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Uw dier is opgeslagen. Koppel een praktijk om berichten, bezoeken en zorgherinneringen te activeren.';
+
+  @override
+  String get linkVetLater => 'Later';
 
   @override
   String get primaryVet => 'Hoofddierenarts';

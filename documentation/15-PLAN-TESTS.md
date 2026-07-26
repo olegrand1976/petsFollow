@@ -257,7 +257,7 @@ Compte : `commercial.demo@petsfollow.test`
 | E1.2 | P0 | Prospects CRM | Contact → RDV → résultat | Transitions statut |
 | E1.3 | P1 | Encode véto | `/commercial/vets` inscription véto | Compte créé / assigné |
 | E1.4 | P1 | Client lié | Encode client lié cabinet | Pets / commission possibles |
-| E1.5 | P1 | Client libre | Client sans liaison | `vet_link_required` à la création pet |
+| E1.5 | P1 | Client libre | Client sans liaison crée pet | 201, `practiceId` vide ; prompt liaison ensuite |
 | E1.6 | P1 | Activer pet payant | Checkout / mock activation | Commission ledger |
 | E1.7 | P1 | Commissions | `/commercial/commissions` + payout profile | Montants + profil |
 | E1.8 | P2 | Pitch | `/commercial/pitch` | Contenu offre à jour |
@@ -301,7 +301,7 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F1.11 | P2 | Foyer / household | Home / pets liés | Affichage foyer |
 | F1.12 | P2 | Discovery cards | Home J0/J2/… | Cartes ; dismiss / CTA |
 | F1.13 | P2 | Pets shared | Grant reçu | Label permission ; read-only si read |
-| F1.14 | P1 | Sans liaison véto | Client libre crée pet | Erreur `vet_link_required` |
+| F1.14 | P1 | Sans liaison véto | Client libre crée pet | 201 + dialog « Lier un vétérinaire » ; badge détail |
 
 ### F2 — Relevé cardiaque
 

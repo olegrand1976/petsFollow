@@ -165,7 +165,13 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if err := a.store.SetPetPrimaryPractice(r.Context(), chi.URLParam(r, "petID"), id.UserID, req.PracticeID); err != nil {
+	petID := chi.URLParam(r, "petID")
+	pet, ok := a.requirePetOwner(w, r, petID, id.UserID)
+	if !ok {
+		return
+	}
+	hadPractice := strings.TrimSpace(pet.PracticeID) != ""
+	if err := a.store.SetPetPrimaryPractice(r.Context(), petID, id.UserID, req.PracticeID); err != nil {
 		if errors.Is(err, store.ErrForbidden) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "cannot_change_practice")
 			return
@@ -176,6 +182,12 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
+	}
+	if !hadPractice {
+		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, req.PracticeID, pet.Species)
+		if pet.Species == "horse" {
+			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "updated"})
 }
@@ -191,6 +203,15 @@ func (a *API) requirePetOwner(w http.ResponseWriter, r *http.Request, petID, use
 		return store.Pet{}, false
 	}
 	return pet, true
+}
+
+// requirePetPractice rejects cabinet-scoped mutations when the pet has no linked practice yet.
+func (a *API) requirePetPractice(w http.ResponseWriter, r *http.Request, pet store.Pet) bool {
+	if strings.TrimSpace(pet.PracticeID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
+		return false
+	}
+	return true
 }
 
 func (a *API) requirePetOwnerOrPractice(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
@@ -297,6 +318,9 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
+	if !a.requirePetPractice(w, r, pet) {
 		return
 	}
 	if kernel.IsPracticeStaff(id.Role) {
@@ -503,6 +527,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
+	if !a.requirePetPractice(w, r, pet) {
 		return
 	}
 	var req createVisitReq

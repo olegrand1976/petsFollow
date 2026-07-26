@@ -653,12 +653,15 @@ func (s *Store) AccrueCommercialForSubscription(ctx context.Context, petID strin
 
 	var practiceID string
 	err = s.pool.QueryRow(ctx, `
-		SELECT practice_id::text FROM pets.pets WHERE id=$1`, petID).Scan(&practiceID)
+		SELECT COALESCE(practice_id::text,'') FROM pets.pets WHERE id=$1`, petID).Scan(&practiceID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
 	if err != nil {
 		return err
+	}
+	if practiceID == "" {
+		return nil
 	}
 
 	vetUserID, commercialUserID, err := s.resolveVetCommercial(ctx, ent.OwnerUserID, practiceID)
@@ -721,7 +724,7 @@ func (s *Store) AccrueCommercialForAddon(ctx context.Context, addonID string) er
 	}
 	if practiceID == "" {
 		_ = s.pool.QueryRow(ctx, `
-			SELECT practice_id::text FROM pets.pets
+			SELECT COALESCE(practice_id::text,'') FROM pets.pets
 			WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 1`, addon.OwnerUserID).Scan(&practiceID)
 	}
 

@@ -372,12 +372,20 @@ func (s *Store) AcceptVetLinkRequest(ctx context.Context, requestID, vetUserID s
 		clientID, practiceID); err != nil {
 		return err
 	}
+	stamped, err := stampOrphanPetsTx(ctx, tx, clientID, practiceID)
+	if err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `
 		UPDATE practice.client_vet_link_requests SET status = 'accepted', updated_at = NOW() WHERE id = $1`,
 		requestID); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	seedCareForStampedPets(ctx, s, clientID, practiceID, stamped)
+	return nil
 }
 
 func (s *Store) RejectVetLinkRequest(ctx context.Context, requestID, vetUserID string) error {
@@ -402,7 +410,7 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 
 	var ownerID, currentPractice string
 	err = tx.QueryRow(ctx, `
-		SELECT owner_user_id::text, practice_id::text FROM pets.pets WHERE id = $1 FOR UPDATE`, petID,
+		SELECT owner_user_id::text, COALESCE(practice_id::text,'') FROM pets.pets WHERE id = $1 FOR UPDATE`, petID,
 	).Scan(&ownerID, &currentPractice)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
@@ -424,7 +432,9 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 	if !member {
 		return ErrForbidden
 	}
-	if currentPractice != practiceID {
+	// First link (orphan → cabinet) is always allowed, even with an active entitlement.
+	// Switching cabinets after payment remains locked.
+	if currentPractice != "" && currentPractice != practiceID {
 		var status string
 		err := tx.QueryRow(ctx, `
 			SELECT status FROM billing.pet_entitlements WHERE pet_id = $1`, petID).Scan(&status)
@@ -447,4 +457,40 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 		return ErrNotFound
 	}
 	return tx.Commit(ctx)
+}
+
+type stampedOrphanPet struct {
+	ID      string
+	Species string
+}
+
+// stampOrphanPetsTx assigns practice_id to an owner's pets that still have none.
+func stampOrphanPetsTx(ctx context.Context, tx pgx.Tx, ownerUserID, practiceID string) ([]stampedOrphanPet, error) {
+	rows, err := tx.Query(ctx, `
+		UPDATE pets.pets
+		SET practice_id = $2::uuid, updated_at = NOW()
+		WHERE owner_user_id = $1 AND practice_id IS NULL
+		RETURNING id::text, species`, ownerUserID, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []stampedOrphanPet
+	for rows.Next() {
+		var p stampedOrphanPet
+		if err := rows.Scan(&p.ID, &p.Species); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+func seedCareForStampedPets(ctx context.Context, s *Store, ownerUserID, practiceID string, stamped []stampedOrphanPet) {
+	for _, p := range stamped {
+		_ = s.SeedDefaultCareReminders(ctx, p.ID, practiceID, p.Species)
+		if p.Species == "horse" {
+			_ = s.SeedHorsePackReminders(ctx, ownerUserID)
+		}
+	}
 }

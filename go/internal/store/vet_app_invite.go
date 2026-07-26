@@ -227,6 +227,10 @@ func (s *Store) claimVetInvite(ctx context.Context, clientUserID string, inv App
 		clientUserID, inv.PracticeID); err != nil {
 		return ClaimAppInviteResult{}, err
 	}
+	stamped, err := stampOrphanPetsTx(ctx, tx, clientUserID, inv.PracticeID)
+	if err != nil {
+		return ClaimAppInviteResult{}, err
+	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
 		SELECT $1, $2, $3, $4, NULL
@@ -245,6 +249,7 @@ func (s *Store) claimVetInvite(ctx context.Context, clientUserID string, inv App
 	if err := tx.Commit(ctx); err != nil {
 		return ClaimAppInviteResult{}, err
 	}
+	seedCareForStampedPets(ctx, s, clientUserID, inv.PracticeID, stamped)
 
 	status := "linked"
 	if already {

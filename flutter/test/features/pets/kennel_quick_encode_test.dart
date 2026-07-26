@@ -26,6 +26,7 @@ void main() {
           'id': 'pet-${p['name']}',
           'name': p['name'],
           'species': p['species'],
+          'practiceId': 'practice-demo',
           'paymentStatus': 'pending_payment',
           'entitlement': {'status': 'pending', 'planCode': 'triennial'},
         };
@@ -104,17 +105,27 @@ void main() {
     expect(find.byType(KennelQuickEncodeScreen), findsOneWidget);
   });
 
-  testWidgets('kennel vet_link_required shows dialog', (tester) async {
+  testWidgets('kennel without practice shows link-vet dialog then pops',
+      (tester) async {
     final l10n = AppLocalizationsFr();
     mock.uninstall();
     mock = MockApi();
     mock.on('POST', '/api/v1/pets/batch', (options) {
-      return mock.err(
+      return mock.ok(
         options,
-        status: 400,
-        code: 'bad_request',
-        msgKey: 'vet_link_required',
-        message: 'Liez un vétérinaire avant d\'ajouter un animal',
+        {
+          'pets': [
+            {
+              'id': 'pet-orphan',
+              'name': 'Rex',
+              'species': 'dog',
+              'practiceId': '',
+              'paymentStatus': 'pending_payment',
+            },
+          ],
+          'count': 1,
+        },
+        status: 201,
       );
     });
     mock.json('GET', '/api/v1/me/vets', data: <dynamic>[]);
@@ -132,10 +143,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('kennel_vet_link_dialog')), findsOneWidget);
-    expect(find.text(l10n.vetLinkRequired), findsOneWidget);
+    expect(find.text(l10n.linkVetAfterSaveTitle), findsOneWidget);
+    expect(find.byKey(const Key('kennel_link_vet')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('kennel_link_vet')));
     await tester.pumpAndSettle();
     expect(find.byType(MyVetsScreen), findsOneWidget);
+    expect(find.byType(KennelQuickEncodeScreen), findsNothing);
   });
 }

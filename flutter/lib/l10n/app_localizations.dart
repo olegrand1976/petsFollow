@@ -1861,8 +1861,26 @@ abstract class AppLocalizations {
   /// No description provided for @vetLinkRequired.
   ///
   /// In fr, this message translates to:
-  /// **'Liez un vétérinaire avant d\'ajouter un animal'**
+  /// **'Liez un vétérinaire pour activer le suivi avec votre cabinet'**
   String get vetLinkRequired;
+
+  /// No description provided for @linkVetAfterSaveTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un vétérinaire'**
+  String get linkVetAfterSaveTitle;
+
+  /// No description provided for @linkVetAfterSaveBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre animal est enregistré. Liez un cabinet pour activer messagerie, visites et rappels de soins.'**
+  String get linkVetAfterSaveBody;
+
+  /// No description provided for @linkVetLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get linkVetLater;
 
   /// No description provided for @primaryVet.
   ///

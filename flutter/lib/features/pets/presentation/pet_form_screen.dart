@@ -188,45 +188,49 @@ class _PetFormScreenState extends State<PetFormScreen> {
         );
       }
       if (!mounted) return;
-      Navigator.pop(context);
+      final practiceId = pet['practiceId']?.toString().trim() ?? '';
+      var linkVetNow = false;
+      if (practiceId.isEmpty) {
+        linkVetNow = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                key: const Key('pet_form_vet_link_dialog'),
+                title: Text(l10n.linkVetAfterSaveTitle),
+                content: Text(l10n.linkVetAfterSaveBody),
+                actions: [
+                  TextButton(
+                    key: const Key('pet_form_link_vet_later'),
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(l10n.linkVetLater),
+                  ),
+                  FilledButton(
+                    key: const Key('pet_form_link_vet'),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(l10n.addVetByEmail),
+                  ),
+                ],
+              ),
+            ) ??
+            false;
+      }
+      if (!mounted) return;
+      final nav = Navigator.of(context);
+      nav.pop();
+      if (linkVetNow) {
+        await nav.push(
+          MaterialPageRoute<void>(builder: (_) => const MyVetsScreen()),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      final code = apiErrorCode(e);
       final msg = mapApiError(e, l10n);
-      if (code == 'vet_link_required') {
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            key: const Key('pet_form_vet_link_dialog'),
-            content: Text(msg),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(l10n.cancel),
-              ),
-              FilledButton(
-                key: const Key('pet_form_link_vet'),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MyVetsScreen()),
-                  );
-                },
-                child: Text(l10n.addVetByEmail),
-              ),
-            ],
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            key: const Key('pet_form_error'),
-            content: Text(msg),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          key: const Key('pet_form_error'),
+          content: Text(msg),
+        ),
+      );
     } finally {
       if (mounted) setState(() => loading = false);
     }

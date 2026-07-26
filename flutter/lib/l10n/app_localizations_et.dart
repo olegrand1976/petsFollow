@@ -959,7 +959,18 @@ class AppLocalizationsEt extends AppLocalizations {
   String get noVets => 'Seotud loomaarsti pole';
 
   @override
-  String get vetLinkRequired => 'Seo loomaarst enne lemmiklooma lisamist';
+  String get vetLinkRequired =>
+      'Seo loomaarst, et aktiveerida jälgimine oma kabinetiga';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Seo loomaarst';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Sinu lemmikloom on salvestatud. Seo kabinet, et aktiveerida sõnumid, visiidid ja hooldusmeeldetuletused.';
+
+  @override
+  String get linkVetLater => 'Hiljem';
 
   @override
   String get primaryVet => 'Peamine loomaarst';

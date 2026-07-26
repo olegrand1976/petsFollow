@@ -15,9 +15,9 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Book visit | · | ✓ | · | `book_visit_screen_test` |
 | Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
 | New pet → save without payment / pay CTA | · | ✓ | ✓ | `pet_form_screen_test` sticky save + skipCheckout + pop/snackbar ; smoke create→list |
-| New pet → vet_link_required | · | ✓ | · | dialog + CTA Mes vétos (`pet_form_link_vet`) |
+| New pet → sans cabinet (post-save link vet) | · | ✓ | · | dialog après 201 + banner détail ; actions FC/poids/visite gated `needsVetLink` |
 | New pet → createPet parse envelope | ✓ | · | · | `create_pet_api_test` _asMap + entitlement |
-| Kennel quick encode → POST /pets/batch | · | ✓ | · | `kennel_quick_encode_test` submit + empty skip + vet_link dialog |
+| Kennel quick encode → POST /pets/batch | · | ✓ | · | `kennel_quick_encode_test` submit + empty skip + post-save link dialog |
 | Add / suggest vet (lookup) | · | ✓ | · | `my_vets_screen_test` invite + suggest |
 | Préconsult models + submit key | ✓ | ✓ | · | models + key contract |
 | Care create/done/postpone keys | ✓ | ✓ | · | `care_actions_test` |

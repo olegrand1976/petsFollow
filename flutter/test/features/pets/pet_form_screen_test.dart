@@ -66,6 +66,7 @@ void main() {
             'id': 'pet-new-1',
             'name': 'Rex',
             'species': 'dog',
+            'practiceId': 'practice-demo',
             'paymentStatus': 'pending_payment',
             'entitlement': {'status': 'pending', 'planCode': 'triennial'},
           },
@@ -180,7 +181,7 @@ void main() {
     expect(find.byKey(const Key('pet_form_saved')), findsNothing);
   });
 
-  testWidgets('vet_link_required shows dialog + CTA to link vet',
+  testWidgets('create without practice shows link-vet dialog then pops',
       (tester) async {
     final l10n = AppLocalizationsFr();
     mock.uninstall();
@@ -193,12 +194,19 @@ void main() {
       ],
     });
     mock.on('POST', '/api/v1/pets', (options) {
-      return mock.err(
+      return mock.ok(
         options,
-        status: 400,
-        code: 'bad_request',
-        msgKey: 'vet_link_required',
-        message: 'Liez un vétérinaire avant d\'ajouter un animal',
+        {
+          'pet': {
+            'id': 'pet-orphan-1',
+            'name': 'Justine',
+            'species': 'dog',
+            'practiceId': '',
+            'paymentStatus': 'pending_payment',
+            'entitlement': {'status': 'pending', 'planCode': 'triennial'},
+          },
+        },
+        status: 201,
       );
     });
     mock.json('GET', '/api/v1/me/vets', data: <dynamic>[]);
@@ -208,19 +216,19 @@ void main() {
 
     await tester.enterText(find.byKey(const Key('pet_form_name')), 'Justine');
     await tester.pump();
-    await tester.tap(find.byKey(const Key('pet_form_continue_payment')));
+    await tester.tap(find.byKey(const Key('pet_form_save')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('pet_form_vet_link_dialog')), findsOneWidget);
-    expect(find.text(l10n.vetLinkRequired), findsOneWidget);
+    expect(find.text(l10n.linkVetAfterSaveTitle), findsOneWidget);
     expect(find.byKey(const Key('pet_form_link_vet')), findsOneWidget);
     expect(find.textContaining('DioException'), findsNothing);
-    expect(find.byType(PetFormScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('pet_form_link_vet')));
     await tester.pumpAndSettle();
     expect(find.byType(MyVetsScreen), findsOneWidget);
+    expect(find.byType(PetFormScreen), findsNothing);
   });
 
   testWidgets('monthly plan always posts billingMode subscription',
@@ -264,6 +272,7 @@ void main() {
             'id': 'pet-no-checkout',
             'name': 'Rex',
             'species': 'dog',
+            'practiceId': 'practice-demo',
             'paymentStatus': 'pending_payment',
           },
         },

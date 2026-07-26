@@ -467,6 +467,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
+	// Practice is optional at create — client may link a vet afterwards.
 	practiceID := strings.TrimSpace(id.PracticeID)
 	if practiceID == "" {
 		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
@@ -475,10 +476,6 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		practiceID = strings.TrimSpace(resolved)
-	}
-	if practiceID == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
-		return
 	}
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
@@ -552,6 +549,7 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
+	// Practice is optional at create — client may link a vet afterwards.
 	practiceID := strings.TrimSpace(id.PracticeID)
 	if practiceID == "" {
 		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
@@ -560,10 +558,6 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		practiceID = strings.TrimSpace(resolved)
-	}
-	if practiceID == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
-		return
 	}
 	var body petsBatchReq
 	if err := httpx.DecodeJSON(r, &body); err != nil {
@@ -761,6 +755,9 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
+	if !a.requirePetPractice(w, r, pet) {
 		return
 	}
 	var req startHRReq

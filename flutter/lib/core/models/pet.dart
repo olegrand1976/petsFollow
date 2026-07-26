@@ -124,6 +124,12 @@ class Pet {
   bool get needsResumePayment =>
       isOwner && paymentStatus == 'pending_payment' && !isActive;
 
+  /// True when the pet has no linked practice yet (vet can be linked after create).
+  bool get needsVetLink {
+    final id = practiceId?.trim();
+    return id == null || id.isEmpty;
+  }
+
   factory Pet.fromJson(Map<String, dynamic> json) {
     final rawDurations = json['heartrateDurationsSec'] as List<dynamic>?;
     return Pet(

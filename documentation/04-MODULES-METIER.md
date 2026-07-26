@@ -35,7 +35,7 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; a
 Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile (+ zone de base GPS/CP pour découverte « près de chez moi »), page pitch. Annuaire partagé `source=directory`.
 
 **Inscription sans invite** : `GET /commercials/nearby` (public, rate-limité) → véto `assignedCommercialId` / client `commercialUserId`. Commission : `assigned_commercial_id` véto prioritaire, sinon fallback `commercial_referrals`.  
-Client sans liaison : `practice_id` NULL — pas de pet ni commission tant qu’une liaison véto n’est pas acceptée (`vet_link_required` sur `POST /pets`).  
+Client sans liaison : `practice_id` NULL — pets créables sans cabinet ; liaison véto demandée ensuite (messagerie / visites). Commission commerciale à l’activation si cabinet lié.  
 **Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; production manager privée (hors tableaux équipe).  
 Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.
 
