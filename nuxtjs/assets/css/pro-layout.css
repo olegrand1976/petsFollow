@@ -64,6 +64,14 @@
   position: relative;
 }
 
+.pro-topbar__profile-btn {
+  list-style: none;
+}
+
+.pro-topbar__profile-btn::-webkit-details-marker {
+  display: none;
+}
+
 .pro-topbar__icon-btn,
 .pro-topbar__profile-btn {
   display: inline-flex;

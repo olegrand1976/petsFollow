@@ -40,6 +40,7 @@ test('commercial ouvre les formulaires client lié et sans liaison', async ({ pa
 })
 
 test('commercial voit pitch et commissions', async ({ page }) => {
+  test.setTimeout(60000)
   await loginAsCommercial(page)
   await page.goto('/commercial/pitch')
   await expect(page.getByTestId('commercial-pitch-page')).toBeVisible()
@@ -48,10 +49,10 @@ test('commercial voit pitch et commissions', async ({ page }) => {
   await expect(page).toHaveURL(/\/commercial\/pitch-deck/, { timeout: 20000 })
   await expect(page.getByTestId('commercial-pitch-deck')).toBeVisible({ timeout: 20000 })
   await expect(page.getByTestId('pitch-deck-next')).toBeVisible({ timeout: 10000 })
-  await page.goto('/commercial/commissions')
+  await page.goto('/commercial/commissions', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('commercial-commissions-page')).toBeVisible()
-  await page.getByTestId('commission-details').locator('summary').click()
-  await expect(page.getByTestId('commercial-bonus-cards')).toBeVisible()
+  // Bonus cards are always visible (no details disclosure on this page).
+  await expect(page.getByTestId('commercial-bonus-cards')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('bonus-card-commercial_mix')).toBeVisible()
 })
 

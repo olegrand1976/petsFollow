@@ -109,7 +109,9 @@ export async function nativeClick(page: Page, testId: string) {
 
 export async function logout(page: Page) {
   await expect(page.getByTestId('pro-profile-btn')).toBeVisible({ timeout: 15000 })
+  // Native <details>/<summary> — open attribute is the source of truth.
   await page.getByTestId('pro-profile-btn').click()
+  await expect(page.getByTestId('pro-profile-details')).toHaveAttribute('open', /.*/, { timeout: 10000 })
   await expect(page.getByTestId('pro-logout-btn')).toBeVisible({ timeout: 10000 })
   await page.getByTestId('pro-logout-btn').click()
   await expect(page).toHaveURL(/login/, { timeout: 15000 })

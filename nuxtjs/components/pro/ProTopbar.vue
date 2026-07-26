@@ -15,7 +15,7 @@
         class="pro-topbar__icon-btn"
         :aria-label="$t('support.buttonAria')"
         data-testid="pro-support-btn"
-        @click.stop="supportOpen = true"
+        @click.stop="openSupport"
       >
         <ProIcon name="support_agent" :size="20" />
       </button>
@@ -75,27 +75,25 @@
         </div>
       </div>
 
-      <div class="pro-topbar__dropdown-wrap">
-        <button
-          type="button"
+      <!-- details/summary: opens without Vue hydration (Cloud Run SSR / e2e). -->
+      <details class="pro-topbar__dropdown-wrap" data-testid="pro-profile-details">
+        <summary
           class="pro-topbar__profile-btn"
           :aria-label="$t('components.topbar.profileMenu')"
-          aria-haspopup="true"
-          :aria-expanded="profileOpen"
           data-testid="pro-profile-btn"
-          @click.stop="toggleProfile"
+          @click="notifOpen = false"
         >
           <ProAvatar :src="user?.avatarUrl" :name="userName" size="sm" />
           <span class="pro-topbar__profile-name">{{ userName }}</span>
-        </button>
-        <div v-if="profileOpen" class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
+        </summary>
+        <div class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
           <p class="pro-topbar__dropdown-title">{{ userName }}</p>
           <p class="pro-topbar__dropdown-email">{{ userEmail }}</p>
           <NuxtLink
             v-if="settingsLink"
             :to="settingsLink"
             class="pro-topbar__dropdown-link"
-            @click="profileOpen = false"
+            @click="closeProfileDetails"
           >
             {{ $t('components.topbar.settings') }}
           </NuxtLink>
@@ -108,7 +106,7 @@
             {{ $t('common.logout') }}
           </button>
         </div>
-      </div>
+      </details>
     </div>
     <ProSupportDialog v-model:open="supportOpen" />
   </header>
@@ -141,7 +139,6 @@ const {
 } = useProNotifications()
 
 const notifOpen = ref(false)
-const profileOpen = ref(false)
 const supportOpen = ref(false)
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
@@ -166,7 +163,7 @@ onUnmounted(() => {
 
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
-  profileOpen.value = false
+  closeProfileDetails()
   if (notifOpen.value) void refreshNotif()
 }
 
@@ -178,13 +175,22 @@ async function handleMarkAllRead() {
   }
 }
 
-function toggleProfile() {
-  profileOpen.value = !profileOpen.value
+function closeProfileDetails() {
+  const el = document.querySelector('[data-testid="pro-profile-details"]') as HTMLDetailsElement | null
+  if (el) el.open = false
+}
+
+function openSupport() {
+  closeProfileDetails()
   notifOpen.value = false
+  // Defer open so the triggering click cannot hit the modal backdrop and close it.
+  nextTick(() => {
+    supportOpen.value = true
+  })
 }
 
 function handleLogout() {
-  profileOpen.value = false
+  closeProfileDetails()
   logout()
 }
 
@@ -193,7 +199,7 @@ function onDocClick(e: MouseEvent) {
   if (!(target instanceof Element)) return
   if (!target.closest('.pro-topbar__dropdown-wrap')) {
     notifOpen.value = false
-    profileOpen.value = false
+    closeProfileDetails()
   }
 }
 </script>
