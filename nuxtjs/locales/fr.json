@@ -54,7 +54,8 @@
       "ops": "Ops",
       "salesForce": "Force de vente",
       "billing": "Paie & catalogue"
-    }
+    },
+    "adminSupport": "Support"
   },
   "training": {
     "title": "Entraînement IA",
@@ -1558,6 +1559,49 @@
       "convertMonthly": "Convertir 39 €/mois",
       "convertAnnual": "Convertir 390 €/an",
       "disable": "Désactiver"
+    },
+    "support": {
+      "title": "Support",
+      "subtitle": "Tickets bug-report des utilisateurs Pro et app.",
+      "filterAll": "Tous",
+      "filterOpen": "Ouverts",
+      "filterInProgress": "En cours",
+      "filterResolved": "Résolus",
+      "filterClosed": "Fermés",
+      "colSubject": "Sujet",
+      "colUser": "Utilisateur",
+      "colSource": "Source",
+      "colStatus": "Statut",
+      "colCreated": "Créé",
+      "colReplies": "Réponses",
+      "empty": "Aucun ticket",
+      "detailTitle": "Ticket support",
+      "back": "Retour à la liste",
+      "message": "Message",
+      "diagnostics": "Diagnostics techniques",
+      "downloadDiag": "Télécharger JSON",
+      "status": "Statut",
+      "replies": "Réponses",
+      "noReplies": "Aucune réponse encore",
+      "replyLabel": "Réponse à l'utilisateur",
+      "replySubmit": "Envoyer la réponse",
+      "replySent": "Réponse envoyée",
+      "statusUpdated": "Statut mis à jour",
+      "status_open": "Ouvert",
+      "status_in_progress": "En cours",
+      "status_resolved": "Résolu",
+      "status_closed": "Fermé",
+      "source_nuxt_pro": "Pro web",
+      "source_flutter_client": "App client",
+      "source_flutter_pro_light": "Pro Light",
+      "prevPage": "Précédent",
+      "nextPage": "Suivant",
+      "pageInfo": "{from}–{to} sur {total}",
+      "pageEmpty": "Aucun ticket",
+      "loadError": "Impossible de charger les tickets support.",
+      "searchLabel": "Recherche",
+      "searchPlaceholder": "Sujet, email ou nom…",
+      "searchSubmit": "Rechercher"
     }
   },
   "calendar": {
@@ -2480,5 +2524,18 @@
     "qrIosAlt": "QR iOS",
     "android": "Android",
     "ios": "iOS"
+  },
+  "support": {
+    "buttonAria": "Signaler un bug",
+    "dialogTitle": "Signaler un problème",
+    "dialogHint": "Décrivez le bug. Les diagnostics techniques des 15 dernières minutes sont joints automatiquement.",
+    "subject": "Sujet",
+    "message": "Description",
+    "diagnosticsPreview": "Diagnostics joints ({count})",
+    "submit": "Envoyer",
+    "success": "Message envoyé. Merci !",
+    "errorGeneric": "Envoi impossible. Réessayez.",
+    "errorRateLimit": "Trop de tickets récemment. Réessayez dans une heure.",
+    "errorTooLarge": "Diagnostics trop volumineux. Rechargez la page et réessayez."
   }
 }

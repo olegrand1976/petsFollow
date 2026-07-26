@@ -49,4 +49,13 @@ Dictionnaire CNK/AFMPS, stocks multi-dépôts FEFO, DAF + PDF, workers VAMReg / 
 
 ## Admin plateforme
 
-Métriques, users, payments, commissions véto & commercial, SPIFF commercial. Simulation 10 ans = **backlog** ([16](16-ADMIN-SIMULATION-10ANS.md)).
+Métriques, users, payments, commissions véto & commercial, SPIFF commercial, imports, brand assets, catalogue Stripe, formation IA, modules CR. Simulation 10 ans = **backlog** ([16](16-ADMIN-SIMULATION-10ANS.md)).
+
+### Support bug-report
+
+- Bouton **Support** dans `ProTopbar` (tous rôles Pro) + entrées Flutter (Settings / AppBar).
+- `POST /api/v1/support/tickets` avec diagnostics (console, HAR-lite, session, config, fenêtre 15 min).
+- Inbox admin `/admin/support` : liste, détail, statut (`open` / `in_progress` / `resolved` / `closed`), réponse → email utilisateur.
+- Email ops à `SUPPORT_INBOX_EMAIL` (défaut `support@petsfollow.app`) à la création.
+- **RGPD** : export `supportTickets` (subject, message, **diagnostics**, replies, métadonnées) ; anonymisation sur `DELETE /me` (client/pro) — donc aussi via le job rétention 3 ans (`POST /internal/retention/run`), qui réutilise les mêmes chemins purge/tombstone.
+- Inbox admin : filtre statut + recherche texte (`q`) sur sujet / email / nom.

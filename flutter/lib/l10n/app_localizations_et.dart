@@ -1685,4 +1685,41 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'CR IA on saadaval, kui visiidi kabinetil on moodul aktiveeritud.';
+
+  @override
+  String get supportTitle => 'Teata probleemist';
+
+  @override
+  String get supportHint =>
+      'Kirjelda viga. Viimase 15 minuti tehniline diagnostika lisatakse automaatselt.';
+
+  @override
+  String get supportSubject => 'Teema';
+
+  @override
+  String get supportMessage => 'Kirjeldus';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnostika lisatakse automaatselt (vead, päringud, seadistus).';
+
+  @override
+  String get supportSubmit => 'Saada';
+
+  @override
+  String get supportSending => 'Saadan…';
+
+  @override
+  String get supportSuccess => 'Sõnum saadetud. Aitäh!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Liiga palju pileteid hiljuti. Proovi tunni pärast.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnostika liiga mahukas. Taaskäivita rakendus ja proovi uuesti.';
+
+  @override
+  String get supportMenu => 'Tugi';
 }

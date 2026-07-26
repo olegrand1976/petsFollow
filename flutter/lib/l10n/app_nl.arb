@@ -621,5 +621,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "supportTitle": "Probleem melden",
+  "supportHint": "Beschrijf de bug. Technische diagnostiek van de laatste 15 minuten wordt automatisch bijgevoegd.",
+  "supportSubject": "Onderwerp",
+  "supportMessage": "Beschrijving",
+  "supportDiagnosticsAttached": "Diagnostiek automatisch bijgevoegd (fouten, requests, configuratie).",
+  "supportSubmit": "Verzenden",
+  "supportSending": "Verzenden…",
+  "supportSuccess": "Bericht verzonden. Dank je!",
+  "supportErrorRateLimit": "Te veel tickets recent. Probeer over een uur.",
+  "supportErrorTooLarge": "Diagnostiek te groot. Herstart de app en probeer opnieuw.",
+  "supportMenu": "Support"
 }

@@ -499,7 +499,23 @@
         "cta": "Request paid activation",
         "disclaimer": "Automated petsFollow Pro email — AI CR module."
       }
-    }
+    },
+    "support_ticket_ops_subject": "petsFollow Support — {subject}",
+    "support_ticket_ops_tagline": "Nuevo ticket de soporte",
+    "support_ticket_ops_preheader": "Ticket {ticketId} de {fullName} ({role}).",
+    "support_ticket_ops_greeting": "Hola,",
+    "support_ticket_ops_intro": "Un nuevo incidente fue reportado por {fullName} ({email}, rol {role}, origen {source}).",
+    "support_ticket_ops_detail": "Asunto: {subject}\n\nMensaje:\n{message}",
+    "support_ticket_ops_cta": "Abrir en admin",
+    "support_ticket_ops_disclaimer": "Email automático — los diagnósticos técnicos están en la interfaz admin.",
+    "support_ticket_reply_subject": "petsFollow Support — respuesta a su solicitud",
+    "support_ticket_reply_tagline": "petsFollow Support",
+    "support_ticket_reply_preheader": "Respuesta a su ticket: {subject}",
+    "support_ticket_reply_greeting": "Hola {fullName},",
+    "support_ticket_reply_intro": "El equipo de soporte respondió a su solicitud «{subject}».",
+    "support_ticket_reply_detail": "{replyBody}",
+    "support_ticket_reply_cta": "Abrir petsFollow",
+    "support_ticket_reply_disclaimer": "Para añadir información, escriba a support@petsfollow.app mencionando su ticket."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

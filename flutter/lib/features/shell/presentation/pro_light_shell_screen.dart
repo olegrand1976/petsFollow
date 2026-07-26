@@ -13,6 +13,7 @@ import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_scr
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
+import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -251,6 +252,12 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
           ),
           actions: [
             IconButton(
+              key: const Key('pro_light_support_btn'),
+              tooltip: l10n.supportMenu,
+              onPressed: () => openSupportReport(context, source: 'flutter_pro_light'),
+              icon: const Icon(Icons.support_agent_outlined),
+            ),
+            IconButton(
               tooltip: l10n.appInviteTitle,
               onPressed: () {
                 Navigator.of(context).push(
@@ -450,6 +457,13 @@ class _SettingsTab extends StatelessWidget {
           },
         ),
         const AppearanceSettingsTile(),
+        ListTile(
+          key: const Key('pro_light_settings_support'),
+          leading: const Icon(Icons.support_agent_outlined),
+          title: Text(l10n.supportMenu),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => openSupportReport(context, source: 'flutter_pro_light'),
+        ),
         ListTile(
           leading: const Icon(Icons.logout),
           title: Text(l10n.logout),

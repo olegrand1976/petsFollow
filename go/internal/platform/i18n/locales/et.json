@@ -499,7 +499,23 @@
         "cta": "Request paid activation",
         "disclaimer": "Automated petsFollow Pro email — AI CR module."
       }
-    }
+    },
+    "support_ticket_ops_subject": "petsFollow Support — {subject}",
+    "support_ticket_ops_tagline": "Uus tugipilet",
+    "support_ticket_ops_preheader": "Pilet {ticketId} kasutajalt {fullName} ({role}).",
+    "support_ticket_ops_greeting": "Tere,",
+    "support_ticket_ops_intro": "Uue probleemi teatas {fullName} ({email}, roll {role}, allikas {source}).",
+    "support_ticket_ops_detail": "Teema: {subject}\n\nSõnum:\n{message}",
+    "support_ticket_ops_cta": "Ava adminis",
+    "support_ticket_ops_disclaimer": "Automaatne e-kiri — tehniline diagnostika on admin-liideses.",
+    "support_ticket_reply_subject": "petsFollow Support — vastus teie päringule",
+    "support_ticket_reply_tagline": "petsFollow Support",
+    "support_ticket_reply_preheader": "Vastus teie piletile: {subject}",
+    "support_ticket_reply_greeting": "Tere {fullName},",
+    "support_ticket_reply_intro": "Tugimeeskond vastas teie päringule „{subject}”.",
+    "support_ticket_reply_detail": "{replyBody}",
+    "support_ticket_reply_cta": "Ava petsFollow",
+    "support_ticket_reply_disclaimer": "Lisainfo saamiseks kirjutage support@petsfollow.app ja mainige piletit."
   },
   "push": {
     "new_message_title": "Uus sõnum",

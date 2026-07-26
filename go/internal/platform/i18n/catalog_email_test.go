@@ -100,12 +100,30 @@ func TestAllEmailCatalogKeys(t *testing.T) {
 		"emails.product_digest_intro_with_headline",
 		"emails.product_digest_disclaimer",
 		"emails.product_digest_fallback_name",
+		"emails.support_ticket_ops_subject",
+		"emails.support_ticket_ops_tagline",
+		"emails.support_ticket_ops_preheader",
+		"emails.support_ticket_ops_greeting",
+		"emails.support_ticket_ops_intro",
+		"emails.support_ticket_ops_detail",
+		"emails.support_ticket_ops_cta",
+		"emails.support_ticket_ops_disclaimer",
+		"emails.support_ticket_reply_subject",
+		"emails.support_ticket_reply_tagline",
+		"emails.support_ticket_reply_preheader",
+		"emails.support_ticket_reply_greeting",
+		"emails.support_ticket_reply_intro",
+		"emails.support_ticket_reply_detail",
+		"emails.support_ticket_reply_cta",
+		"emails.support_ticket_reply_disclaimer",
 		"emails.journey.unsubscribe",
 	}
 	vars := map[string]string{
 		"fullName": "Ada", "bpm": "120", "vetName": "Dr. Vet", "practiceName": "VetPlus",
 		"clientName": "Ada", "petName": "Rex", "when": "01/01/2026 10:00", "notes": "ok",
 		"date": "22/07/2026", "headline": "Améliorations",
+		"ticketId": "abc", "subject": "Bug", "email": "a@b.c", "role": "vet", "source": "nuxt_pro",
+		"message": "oops", "replyBody": "fix soon",
 	}
 	for _, loc := range Supported {
 		for _, key := range keys {

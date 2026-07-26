@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/features/settings/presentation/feature_modules
 import 'package:petsfollow_mobile/features/settings/presentation/notification_preferences_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/reminder_settings_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
+import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -131,6 +132,13 @@ class SettingsMenuScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const SwitchProfileScreen()),
           ),
+        ),
+        ListTile(
+          key: const Key('settings_support'),
+          leading: const Icon(Icons.support_agent_outlined),
+          title: Text(l10n.supportMenu),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => openSupportReport(context, source: 'flutter_client'),
         ),
         const Divider(),
         ListTile(

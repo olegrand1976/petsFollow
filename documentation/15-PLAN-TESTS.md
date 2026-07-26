@@ -241,7 +241,8 @@ Compte : `admin.demo@petsfollow.test`
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |
-| D14 | P2 | Catalogue Stripe | Admin catalogue Stripe | ACL : véto refusé |
+| D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
+| D15 | P2 | Catalogue Stripe | Admin catalogue Stripe | ACL : véto refusé |
 
 ---
 

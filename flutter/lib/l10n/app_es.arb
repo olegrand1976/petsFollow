@@ -621,5 +621,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "supportTitle": "Reportar un problema",
+  "supportHint": "Describa el error. Los diagnósticos técnicos de los últimos 15 minutos se adjuntan automáticamente.",
+  "supportSubject": "Asunto",
+  "supportMessage": "Descripción",
+  "supportDiagnosticsAttached": "Diagnósticos adjuntos automáticamente (errores, peticiones, configuración).",
+  "supportSubmit": "Enviar",
+  "supportSending": "Enviando…",
+  "supportSuccess": "Mensaje enviado. ¡Gracias!",
+  "supportErrorRateLimit": "Demasiados tickets recientemente. Inténtelo en una hora.",
+  "supportErrorTooLarge": "Diagnósticos demasiado grandes. Reinicie la app e inténtelo de nuevo.",
+  "supportMenu": "Soporte"
 }

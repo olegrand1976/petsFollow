@@ -684,5 +684,16 @@
     }
   },
   "proLightAiModuleInactiveBanner": "CR IA non activé pour ce cabinet. La dictée IA sera indisponible.",
-  "proLightAiModuleVisitScopedBanner": "CR IA disponible si le cabinet de la visite a le module activé."
+  "proLightAiModuleVisitScopedBanner": "CR IA disponible si le cabinet de la visite a le module activé.",
+  "supportTitle": "Signaler un problème",
+  "supportHint": "Décrivez le bug. Les diagnostics techniques des 15 dernières minutes sont joints automatiquement.",
+  "supportSubject": "Sujet",
+  "supportMessage": "Description",
+  "supportDiagnosticsAttached": "Diagnostics joints automatiquement (erreurs, requêtes, configuration).",
+  "supportSubmit": "Envoyer",
+  "supportSending": "Envoi…",
+  "supportSuccess": "Message envoyé. Merci !",
+  "supportErrorRateLimit": "Trop de tickets récemment. Réessayez dans une heure.",
+  "supportErrorTooLarge": "Diagnostics trop volumineux. Relancez l'app et réessayez.",
+  "supportMenu": "Support"
 }

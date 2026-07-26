@@ -6,10 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
 import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/support/support_diagnostics_buffer.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/manager_overview.dart';
@@ -130,6 +132,7 @@ class ApiClient {
         handler.next(error);
       },
     ));
+    dio.interceptors.add(SupportDiagnosticsBuffer.instance.dioInterceptor());
   }
 
   static bool _isPublicAuthPath(String path) {
@@ -1295,5 +1298,29 @@ class ApiClient {
 
   Future<void> markThreadRead(String threadId) async {
     await dio.post('/api/v1/messaging/threads/$threadId/read');
+  }
+
+  Future<Map<String, dynamic>> createSupportTicket({
+    required String source,
+    required String subject,
+    required String message,
+    required Map<String, dynamic> diagnostics,
+    String? route,
+    String? appVersion,
+  }) async {
+    final res = await dio.post('/api/v1/support/tickets', data: {
+      'source': source,
+      'subject': subject,
+      'message': message,
+      'diagnostics': diagnostics,
+      'locale': LocaleController.instance.languageCode,
+      'route': route ?? '',
+      'appVersion': appVersion ?? 'flutter/${AppEnv.value}',
+      'userAgent': 'petsfollow-flutter/${AppEnv.value}',
+    });
+    final data = res.data['data'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {};
   }
 }

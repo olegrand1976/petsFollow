@@ -54,7 +54,8 @@
       "salesForce": "Verkoopteam",
       "billing": "Loon & catalogus"
     },
-    "managerAiModules": "AI CR — team"
+    "managerAiModules": "AI CR — team",
+    "adminSupport": "Support"
   },
   "auth": {
     "login": {
@@ -1124,6 +1125,49 @@
       "colCode": "Code",
       "colMembers": "Leden",
       "loadError": "Branches laden mislukt"
+    },
+    "support": {
+      "title": "Support",
+      "subtitle": "Bug-report tickets van Pro-gebruikers en de app.",
+      "filterAll": "Alle",
+      "filterOpen": "Open",
+      "filterInProgress": "Bezig",
+      "filterResolved": "Opgelost",
+      "filterClosed": "Gesloten",
+      "colSubject": "Onderwerp",
+      "colUser": "Gebruiker",
+      "colSource": "Bron",
+      "colStatus": "Status",
+      "colCreated": "Aangemaakt",
+      "colReplies": "Antwoorden",
+      "empty": "Geen tickets",
+      "detailTitle": "Supportticket",
+      "back": "Terug naar lijst",
+      "message": "Bericht",
+      "diagnostics": "Technische diagnostiek",
+      "downloadDiag": "JSON downloaden",
+      "status": "Status",
+      "replies": "Antwoorden",
+      "noReplies": "Nog geen antwoorden",
+      "replyLabel": "Antwoord aan gebruiker",
+      "replySubmit": "Antwoord verzenden",
+      "replySent": "Antwoord verzonden",
+      "statusUpdated": "Status bijgewerkt",
+      "status_open": "Open",
+      "status_in_progress": "Bezig",
+      "status_resolved": "Opgelost",
+      "status_closed": "Gesloten",
+      "source_nuxt_pro": "Pro web",
+      "source_flutter_client": "Client-app",
+      "source_flutter_pro_light": "Pro Light",
+      "prevPage": "Vorige",
+      "nextPage": "Volgende",
+      "pageInfo": "{from}–{to} van {total}",
+      "pageEmpty": "Geen tickets",
+      "loadError": "Supporttickets laden mislukt.",
+      "searchLabel": "Zoeken",
+      "searchPlaceholder": "Onderwerp, e-mail of naam…",
+      "searchSubmit": "Zoeken"
     }
   },
   "commissions": {
@@ -2480,5 +2524,18 @@
     "qrIosAlt": "iOS-QR",
     "android": "Android",
     "ios": "iOS"
+  },
+  "support": {
+    "buttonAria": "Bug melden",
+    "dialogTitle": "Probleem melden",
+    "dialogHint": "Beschrijf de bug. Technische diagnostiek van de laatste 15 minuten wordt automatisch bijgevoegd.",
+    "subject": "Onderwerp",
+    "message": "Beschrijving",
+    "diagnosticsPreview": "Bijgevoegde diagnostiek ({count})",
+    "submit": "Verzenden",
+    "success": "Bericht verzonden. Dank je!",
+    "errorGeneric": "Verzenden mislukt. Probeer opnieuw.",
+    "errorRateLimit": "Te veel tickets recent. Probeer over een uur.",
+    "errorTooLarge": "Diagnostiek te groot. Herlaad de pagina en probeer opnieuw."
   }
 }

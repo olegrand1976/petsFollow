@@ -54,7 +54,8 @@
       "salesForce": "Sales force",
       "billing": "Payroll & catalog"
     },
-    "managerAiModules": "AI CR — team"
+    "managerAiModules": "AI CR — team",
+    "adminSupport": "Support"
   },
   "auth": {
     "login": {
@@ -1124,6 +1125,49 @@
       "colCode": "Code",
       "colMembers": "Members",
       "loadError": "Unable to load branches"
+    },
+    "support": {
+      "title": "Support",
+      "subtitle": "Bug-report tickets from Pro users and the app.",
+      "filterAll": "All",
+      "filterOpen": "Open",
+      "filterInProgress": "In progress",
+      "filterResolved": "Resolved",
+      "filterClosed": "Closed",
+      "colSubject": "Subject",
+      "colUser": "User",
+      "colSource": "Source",
+      "colStatus": "Status",
+      "colCreated": "Created",
+      "colReplies": "Replies",
+      "empty": "No tickets",
+      "detailTitle": "Support ticket",
+      "back": "Back to list",
+      "message": "Message",
+      "diagnostics": "Technical diagnostics",
+      "downloadDiag": "Download JSON",
+      "status": "Status",
+      "replies": "Replies",
+      "noReplies": "No replies yet",
+      "replyLabel": "Reply to user",
+      "replySubmit": "Send reply",
+      "replySent": "Reply sent",
+      "statusUpdated": "Status updated",
+      "status_open": "Open",
+      "status_in_progress": "In progress",
+      "status_resolved": "Resolved",
+      "status_closed": "Closed",
+      "source_nuxt_pro": "Pro web",
+      "source_flutter_client": "Client app",
+      "source_flutter_pro_light": "Pro Light",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "pageInfo": "{from}–{to} of {total}",
+      "pageEmpty": "No tickets",
+      "loadError": "Could not load support tickets.",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Subject, email or name…",
+      "searchSubmit": "Search"
     }
   },
   "commissions": {
@@ -2480,5 +2524,18 @@
     "qrIosAlt": "iOS QR",
     "android": "Android",
     "ios": "iOS"
+  },
+  "support": {
+    "buttonAria": "Report a bug",
+    "dialogTitle": "Report an issue",
+    "dialogHint": "Describe the bug. Technical diagnostics from the last 15 minutes are attached automatically.",
+    "subject": "Subject",
+    "message": "Description",
+    "diagnosticsPreview": "Attached diagnostics ({count})",
+    "submit": "Send",
+    "success": "Message sent. Thank you!",
+    "errorGeneric": "Could not send. Please try again.",
+    "errorRateLimit": "Too many tickets recently. Try again in an hour.",
+    "errorTooLarge": "Diagnostics too large. Reload the page and try again."
   }
 }

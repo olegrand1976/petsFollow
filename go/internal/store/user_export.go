@@ -73,5 +73,16 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 		}
 		out[key] = v
 	}
+
+	supportRaw, err := s.ListSupportTicketsForExport(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	var support any
+	if err := json.Unmarshal(supportRaw, &support); err != nil {
+		return nil, err
+	}
+	out["supportTickets"] = support
+
 	return out, nil
 }

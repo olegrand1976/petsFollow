@@ -1678,4 +1678,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'AI CR is available when the visit\'s practice has the module activated.';
+
+  @override
+  String get supportTitle => 'Report an issue';
+
+  @override
+  String get supportHint =>
+      'Describe the bug. Technical diagnostics from the last 15 minutes are attached automatically.';
+
+  @override
+  String get supportSubject => 'Subject';
+
+  @override
+  String get supportMessage => 'Description';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnostics attached automatically (errors, requests, configuration).';
+
+  @override
+  String get supportSubmit => 'Send';
+
+  @override
+  String get supportSending => 'Sending…';
+
+  @override
+  String get supportSuccess => 'Message sent. Thank you!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Too many tickets recently. Try again in an hour.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnostics too large. Restart the app and try again.';
+
+  @override
+  String get supportMenu => 'Support';
 }

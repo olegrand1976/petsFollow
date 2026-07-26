@@ -3207,6 +3207,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'CR IA disponible si le cabinet de la visite a le module activé.'**
   String get proLightAiModuleVisitScopedBanner;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get supportTitle;
+
+  /// No description provided for @supportHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le bug. Les diagnostics techniques des 15 dernières minutes sont joints automatiquement.'**
+  String get supportHint;
+
+  /// No description provided for @supportSubject.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sujet'**
+  String get supportSubject;
+
+  /// No description provided for @supportMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get supportMessage;
+
+  /// No description provided for @supportDiagnosticsAttached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics joints automatiquement (erreurs, requêtes, configuration).'**
+  String get supportDiagnosticsAttached;
+
+  /// No description provided for @supportSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get supportSubmit;
+
+  /// No description provided for @supportSending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi…'**
+  String get supportSending;
+
+  /// No description provided for @supportSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message envoyé. Merci !'**
+  String get supportSuccess;
+
+  /// No description provided for @supportErrorRateLimit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de tickets récemment. Réessayez dans une heure.'**
+  String get supportErrorRateLimit;
+
+  /// No description provided for @supportErrorTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics trop volumineux. Relancez l\'app et réessayez.'**
+  String get supportErrorTooLarge;
+
+  /// No description provided for @supportMenu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support'**
+  String get supportMenu;
 }
 
 class _AppLocalizationsDelegate

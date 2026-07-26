@@ -684,5 +684,16 @@
     }
   },
   "proLightAiModuleInactiveBanner": "CR AI non attivata per questo studio. La dettatura AI non sarà disponibile.",
-  "proLightAiModuleVisitScopedBanner": "CR IA disponibile se lo studio visite ha il modulo attivato."
+  "proLightAiModuleVisitScopedBanner": "CR IA disponibile se lo studio visite ha il modulo attivato.",
+  "supportTitle": "Segnala un problema",
+  "supportHint": "Descrivi il bug. I diagnostici tecnici degli ultimi 15 minuti sono allegati automaticamente.",
+  "supportSubject": "Oggetto",
+  "supportMessage": "Descrizione",
+  "supportDiagnosticsAttached": "Diagnostici allegati automaticamente (errori, richieste, configurazione).",
+  "supportSubmit": "Invia",
+  "supportSending": "Invio…",
+  "supportSuccess": "Messaggio inviato. Grazie!",
+  "supportErrorRateLimit": "Troppi ticket di recente. Riprova tra un'ora.",
+  "supportErrorTooLarge": "Diagnostici troppo grandi. Riavvia l'app e riprova.",
+  "supportMenu": "Supporto"
 }

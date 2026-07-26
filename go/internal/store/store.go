@@ -17,10 +17,11 @@ import (
 const MaxHeartRateCommentLen = 500
 
 var (
-	ErrNotFound   = errors.New("not found")
-	ErrValidation = errors.New("validation")
-	ErrForbidden  = errors.New("forbidden")
-	ErrConflict   = errors.New("conflict")
+	ErrNotFound             = errors.New("not found")
+	ErrValidation           = errors.New("validation")
+	ErrForbidden            = errors.New("forbidden")
+	ErrConflict             = errors.New("conflict")
+	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
 )
 
 type User struct {

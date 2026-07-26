@@ -385,6 +385,68 @@ func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubs
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendSupportTicketOps notifies the support inbox of a new bug-report ticket.
+func (n *Notifier) SendSupportTicketOps(to, locale, ticketID, subjectLine, fullName, emailAddr, role, source, message, adminURL string) error {
+	if strings.TrimSpace(to) == "" {
+		return nil
+	}
+	vars := map[string]string{
+		"ticketId": ticketID,
+		"subject":  subjectLine,
+		"fullName": fullName,
+		"email":    emailAddr,
+		"role":     role,
+		"source":   source,
+		"message":  message,
+	}
+	subject := mustT(locale, "emails.support_ticket_ops_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.support_ticket_ops_tagline"),
+		Preheader:       mustT(locale, "emails.support_ticket_ops_preheader", vars),
+		Greeting:        mustT(locale, "emails.support_ticket_ops_greeting"),
+		Intro:           mustT(locale, "emails.support_ticket_ops_intro", vars),
+		Detail:          mustT(locale, "emails.support_ticket_ops_detail", vars),
+		CTALabel:        mustT(locale, "emails.support_ticket_ops_cta"),
+		CTAURL:          adminURL,
+		Disclaimer:      mustT(locale, "emails.support_ticket_ops_disclaimer"),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+		Brand:           n.brandURLs(),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
+// SendSupportTicketReply notifies the ticket creator of an admin reply.
+func (n *Notifier) SendSupportTicketReply(to, locale, fullName, subjectLine, replyBody, siteURL string) error {
+	if strings.TrimSpace(to) == "" {
+		return nil
+	}
+	vars := map[string]string{
+		"fullName":  fullName,
+		"subject":   subjectLine,
+		"replyBody": replyBody,
+	}
+	subject := mustT(locale, "emails.support_ticket_reply_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.support_ticket_reply_tagline"),
+		Preheader:       mustT(locale, "emails.support_ticket_reply_preheader", vars),
+		Greeting:        mustT(locale, "emails.support_ticket_reply_greeting", vars),
+		Intro:           mustT(locale, "emails.support_ticket_reply_intro", vars),
+		Detail:          mustT(locale, "emails.support_ticket_reply_detail", vars),
+		CTALabel:        mustT(locale, "emails.support_ticket_reply_cta"),
+		CTAURL:          siteURL,
+		Disclaimer:      mustT(locale, "emails.support_ticket_reply_disclaimer"),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+		Brand:           n.brandURLs(),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendVetLeadNotify alerts ops/commercial that a client suggested a vet not on the platform.
 func (n *Notifier) SendVetLeadNotify(to, clientName, clientEmail, vetEmail, vetPhone, vetName, practiceName string) error {
 	if strings.TrimSpace(to) == "" {

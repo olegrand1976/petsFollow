@@ -621,5 +621,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "supportTitle": "Report an issue",
+  "supportHint": "Describe the bug. Technical diagnostics from the last 15 minutes are attached automatically.",
+  "supportSubject": "Subject",
+  "supportMessage": "Description",
+  "supportDiagnosticsAttached": "Diagnostics attached automatically (errors, requests, configuration).",
+  "supportSubmit": "Send",
+  "supportSending": "Sending…",
+  "supportSuccess": "Message sent. Thank you!",
+  "supportErrorRateLimit": "Too many tickets recently. Try again in an hour.",
+  "supportErrorTooLarge": "Diagnostics too large. Restart the app and try again.",
+  "supportMenu": "Support"
 }

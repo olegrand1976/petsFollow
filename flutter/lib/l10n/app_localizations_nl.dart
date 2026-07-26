@@ -1684,4 +1684,41 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'CR IA beschikbaar als het kabinet van het bezoek de module heeft geactiveerd.';
+
+  @override
+  String get supportTitle => 'Probleem melden';
+
+  @override
+  String get supportHint =>
+      'Beschrijf de bug. Technische diagnostiek van de laatste 15 minuten wordt automatisch bijgevoegd.';
+
+  @override
+  String get supportSubject => 'Onderwerp';
+
+  @override
+  String get supportMessage => 'Beschrijving';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnostiek automatisch bijgevoegd (fouten, requests, configuratie).';
+
+  @override
+  String get supportSubmit => 'Verzenden';
+
+  @override
+  String get supportSending => 'Verzenden…';
+
+  @override
+  String get supportSuccess => 'Bericht verzonden. Dank je!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Te veel tickets recent. Probeer over een uur.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnostiek te groot. Herstart de app en probeer opnieuw.';
+
+  @override
+  String get supportMenu => 'Support';
 }

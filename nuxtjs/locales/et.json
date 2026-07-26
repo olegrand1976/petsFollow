@@ -54,7 +54,8 @@
       "salesForce": "Müügimeeskond",
       "billing": "Palk ja kataloog"
     },
-    "managerAiModules": "AI CR — meeskond"
+    "managerAiModules": "AI CR — meeskond",
+    "adminSupport": "Tugi"
   },
   "auth": {
     "login": {
@@ -1124,6 +1125,49 @@
       "colCode": "Code",
       "colMembers": "Members",
       "loadError": "Unable to load branches"
+    },
+    "support": {
+      "title": "Tugi",
+      "subtitle": "Veateadete piletid Pro kasutajatelt ja rakendusest.",
+      "filterAll": "Kõik",
+      "filterOpen": "Avatud",
+      "filterInProgress": "Töös",
+      "filterResolved": "Lahendatud",
+      "filterClosed": "Suletud",
+      "colSubject": "Teema",
+      "colUser": "Kasutaja",
+      "colSource": "Allikas",
+      "colStatus": "Olek",
+      "colCreated": "Loodud",
+      "colReplies": "Vastused",
+      "empty": "Pileteid pole",
+      "detailTitle": "Tugipilet",
+      "back": "Tagasi nimekirja",
+      "message": "Sõnum",
+      "diagnostics": "Tehniline diagnostika",
+      "downloadDiag": "Laadi JSON alla",
+      "status": "Olek",
+      "replies": "Vastused",
+      "noReplies": "Vastuseid pole veel",
+      "replyLabel": "Vastus kasutajale",
+      "replySubmit": "Saada vastus",
+      "replySent": "Vastus saadetud",
+      "statusUpdated": "Olek uuendatud",
+      "status_open": "Avatud",
+      "status_in_progress": "Töös",
+      "status_resolved": "Lahendatud",
+      "status_closed": "Suletud",
+      "source_nuxt_pro": "Pro veeb",
+      "source_flutter_client": "Kliendi rakendus",
+      "source_flutter_pro_light": "Pro Light",
+      "prevPage": "Eelmine",
+      "nextPage": "Järgmine",
+      "pageInfo": "{from}–{to} / {total}",
+      "pageEmpty": "Pileteid pole",
+      "loadError": "Tugipiletite laadimine ebaõnnestus.",
+      "searchLabel": "Otsing",
+      "searchPlaceholder": "Teema, e-post või nimi…",
+      "searchSubmit": "Otsi"
     }
   },
   "commissions": {
@@ -2480,5 +2524,18 @@
     "qrIosAlt": "iOS QR",
     "android": "Android",
     "ios": "iOS"
+  },
+  "support": {
+    "buttonAria": "Teata veast",
+    "dialogTitle": "Teata probleemist",
+    "dialogHint": "Kirjelda viga. Viimase 15 minuti tehniline diagnostika lisatakse automaatselt.",
+    "subject": "Teema",
+    "message": "Kirjeldus",
+    "diagnosticsPreview": "Lisatud diagnostika ({count})",
+    "submit": "Saada",
+    "success": "Sõnum saadetud. Aitäh!",
+    "errorGeneric": "Saatmine ebaõnnestus. Proovi uuesti.",
+    "errorRateLimit": "Liiga palju pileteid hiljuti. Proovi tunni pärast.",
+    "errorTooLarge": "Diagnostika liiga mahukas. Laadi leht uuesti ja proovi uuesti."
   }
 }

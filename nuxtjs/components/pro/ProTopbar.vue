@@ -10,6 +10,15 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <button
+        type="button"
+        class="pro-topbar__icon-btn"
+        :aria-label="$t('support.buttonAria')"
+        data-testid="pro-support-btn"
+        @click="supportOpen = true"
+      >
+        <ProIcon name="support_agent" :size="20" />
+      </button>
       <ProLocaleSelect persist />
       <button
         type="button"
@@ -101,6 +110,7 @@
         </div>
       </div>
     </div>
+    <ProSupportDialog v-model:open="supportOpen" />
   </header>
 </template>
 
@@ -132,6 +142,7 @@ const {
 
 const notifOpen = ref(false)
 const profileOpen = ref(false)
+const supportOpen = ref(false)
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')

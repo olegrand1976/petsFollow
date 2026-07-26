@@ -54,7 +54,8 @@
       "salesForce": "Fuerza de ventas",
       "billing": "Nómina y catálogo"
     },
-    "managerAiModules": "CR IA — equipo"
+    "managerAiModules": "CR IA — equipo",
+    "adminSupport": "Soporte"
   },
   "auth": {
     "login": {
@@ -1124,6 +1125,49 @@
       "colCode": "Code",
       "colMembers": "Members",
       "loadError": "Unable to load branches"
+    },
+    "support": {
+      "title": "Soporte",
+      "subtitle": "Tickets de errores de usuarios Pro y la app.",
+      "filterAll": "Todos",
+      "filterOpen": "Abiertos",
+      "filterInProgress": "En curso",
+      "filterResolved": "Resueltos",
+      "filterClosed": "Cerrados",
+      "colSubject": "Asunto",
+      "colUser": "Usuario",
+      "colSource": "Origen",
+      "colStatus": "Estado",
+      "colCreated": "Creado",
+      "colReplies": "Respuestas",
+      "empty": "Ningún ticket",
+      "detailTitle": "Ticket de soporte",
+      "back": "Volver a la lista",
+      "message": "Mensaje",
+      "diagnostics": "Diagnósticos técnicos",
+      "downloadDiag": "Descargar JSON",
+      "status": "Estado",
+      "replies": "Respuestas",
+      "noReplies": "Aún no hay respuestas",
+      "replyLabel": "Respuesta al usuario",
+      "replySubmit": "Enviar respuesta",
+      "replySent": "Respuesta enviada",
+      "statusUpdated": "Estado actualizado",
+      "status_open": "Abierto",
+      "status_in_progress": "En curso",
+      "status_resolved": "Resuelto",
+      "status_closed": "Cerrado",
+      "source_nuxt_pro": "Pro web",
+      "source_flutter_client": "App cliente",
+      "source_flutter_pro_light": "Pro Light",
+      "prevPage": "Anterior",
+      "nextPage": "Siguiente",
+      "pageInfo": "{from}–{to} de {total}",
+      "pageEmpty": "Ningún ticket",
+      "loadError": "No se pudieron cargar los tickets de soporte.",
+      "searchLabel": "Buscar",
+      "searchPlaceholder": "Asunto, email o nombre…",
+      "searchSubmit": "Buscar"
     }
   },
   "commissions": {
@@ -2480,5 +2524,18 @@
     "qrIosAlt": "QR iOS",
     "android": "Android",
     "ios": "iOS"
+  },
+  "support": {
+    "buttonAria": "Reportar un error",
+    "dialogTitle": "Reportar un problema",
+    "dialogHint": "Describa el error. Los diagnósticos técnicos de los últimos 15 minutos se adjuntan automáticamente.",
+    "subject": "Asunto",
+    "message": "Descripción",
+    "diagnosticsPreview": "Diagnósticos adjuntos ({count})",
+    "submit": "Enviar",
+    "success": "Mensaje enviado. ¡Gracias!",
+    "errorGeneric": "No se pudo enviar. Inténtelo de nuevo.",
+    "errorRateLimit": "Demasiados tickets recientemente. Inténtelo en una hora.",
+    "errorTooLarge": "Diagnósticos demasiado grandes. Recargue la página e inténtelo de nuevo."
   }
 }

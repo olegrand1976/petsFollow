@@ -180,6 +180,9 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
 
@@ -190,6 +193,9 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	}
 	defer tx.Rollback(ctx)
 
+	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `DELETE FROM pets.pets WHERE owner_user_id = $1`, userID); err != nil {
 		return err
 	}

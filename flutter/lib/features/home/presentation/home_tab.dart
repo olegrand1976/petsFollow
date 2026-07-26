@@ -17,6 +17,7 @@ import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.d
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
+import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/widgets/add_vet_panel.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -166,6 +167,14 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
 
     return PetsTabScaffold(
       title: const PetsAppBarLogo(),
+      actions: [
+        IconButton(
+          key: const Key('home_support_btn'),
+          tooltip: l10n.supportMenu,
+          onPressed: () => openSupportReport(context, source: 'flutter_client'),
+          icon: const Icon(Icons.support_agent_outlined),
+        ),
+      ],
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : loadError != null
