@@ -108,6 +108,10 @@ import {
   clearAuthTokens,
   sessionCookieOpts,
   markAuthSessionActive,
+  fetchUserAfterLogin,
+  resolvePostLoginTarget,
+  parseJwtRole,
+  authErrorStatus,
 } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
@@ -115,7 +119,7 @@ definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const { mapError } = useApiError()
-const { syncFromUser } = useLocaleSync()
+const { applyPreferredLocale } = useLocaleSync()
 const config = useRuntimeConfig()
 const googleEnabled = computed(() => !!config.public.googleClientId)
 
@@ -132,29 +136,41 @@ async function redirectAfterLogin() {
   // Align client marker with BFF Set-Cookie before middlewares run (non-httpOnly).
   markAuthSessionActive()
   useCookie('pf_session', sessionCookieOpts()).value = '1'
-  await syncFromUser()
-  let target = '/login'
   try {
     const { fetchUser } = useProUser()
-    const me = await fetchUser(true)
-    const role = me?.role || parseJwtRole(useCookie('pf_token').value)
-    const profileComplete = me?.profileComplete
-    const mustChangePassword = me?.mustChangePassword
-    if (mustChangePassword === true) {
-      target = '/change-password'
-    } else if (!isProRole(role)) {
-      await clearAuthTokens()
-      error.value = t('auth.login.proOnly')
-      return
-    } else {
-      target = homePathForRole(role, { profileComplete })
+    const me = await fetchUserAfterLogin((force) => fetchUser(force))
+    // pf_token is httpOnly — usually null in SPA; kept as SSR / legacy fallback.
+    const decision = resolvePostLoginTarget(me, parseJwtRole(useCookie('pf_token').value))
+    switch (decision.kind) {
+      case 'navigate':
+        // Locale depuis le /me déjà chargé — évite un 2ᵉ GET /api/me.
+        await applyPreferredLocale(me?.preferredLocale)
+        // Hors catch : un NavigationFailure middleware n'est pas une erreur auth.
+        await navigateTo(decision.path)
+        return
+      case 'proOnly':
+        await clearAuthTokens()
+        error.value = t('auth.login.proOnly')
+        return
+      case 'sessionUnavailable':
+        // Soft-null /me (5xx) : ne pas logout — JWT potentiellement valides (aligné auth.global).
+        error.value = t('auth.login.sessionUnavailable')
+        return
+      default: {
+        const _exhaustive: never = decision
+        return _exhaustive
+      }
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const status = authErrorStatus(e)
+    if (status === 401 || status === 403) {
+      await clearAuthTokens()
+      error.value = t('auth.login.sessionUnavailable')
+      return
+    }
+    // Erreur inattendue : ne pas purger une session encore valide.
     error.value = mapError(e) || t('auth.login.invalidResponse')
-    return
   }
-  // navigateTo hors catch : un NavigationFailure middleware n'est pas une erreur auth.
-  await navigateTo(target)
 }
 
 async function handleAuthResult(res: unknown) {

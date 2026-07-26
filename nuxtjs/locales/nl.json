@@ -51,7 +51,8 @@
       "forgotLink": "Wachtwoord vergeten?",
       "or": "of",
       "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / salesmanager / admin)",
-      "invalidResponse": "Ongeldig authenticatie-antwoord"
+      "invalidResponse": "Ongeldig authenticatie-antwoord",
+      "sessionUnavailable": "De sessie kon niet worden opgezet. Sta cookies voor deze site toe en probeer opnieuw."
     },
     "forgot": {
       "brandTitle": "Herstel de toegang tot uw account",

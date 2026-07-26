@@ -12,6 +12,9 @@ import {
   unwrapAuthData,
   clearAuthTokens,
   markAuthSessionActive,
+  resolvePostLoginTarget,
+  fetchUserAfterLogin,
+  authErrorStatus,
   type AuthMFAChallenge,
   type AuthTokens,
 } from '../../composables/useAuth'
@@ -162,5 +165,100 @@ describe('useAuth helpers', () => {
     expect(parseJwtRole(jwtWithPayload({ role: 'commercial_manager', sub: 'm1' }))).toBe(
       'commercial_manager',
     )
+  })
+
+  describe('resolvePostLoginTarget', () => {
+    it('ne confond pas /me null avec proOnly (login OK + cookies absents)', () => {
+      expect(resolvePostLoginTarget(null)).toEqual({ kind: 'sessionUnavailable' })
+      expect(resolvePostLoginTarget(undefined)).toEqual({ kind: 'sessionUnavailable' })
+      expect(resolvePostLoginTarget({})).toEqual({ kind: 'sessionUnavailable' })
+    })
+
+    it('redirige commercial / manager vers leur home', () => {
+      expect(resolvePostLoginTarget({ role: 'commercial' })).toEqual({
+        kind: 'navigate',
+        path: '/commercial',
+      })
+      expect(resolvePostLoginTarget({ role: 'commercial_manager' })).toEqual({
+        kind: 'navigate',
+        path: '/commercial-manager',
+      })
+    })
+
+    it('force change-password avant le home', () => {
+      expect(resolvePostLoginTarget({
+        role: 'commercial',
+        mustChangePassword: true,
+      })).toEqual({ kind: 'navigate', path: '/change-password' })
+    })
+
+    it('refuse un rôle client (proOnly)', () => {
+      expect(resolvePostLoginTarget({ role: 'client' })).toEqual({ kind: 'proOnly' })
+    })
+
+    it('accepte un rôle JWT si /me soft-null (fallback legacy/SSR)', () => {
+      expect(resolvePostLoginTarget(null, 'commercial')).toEqual({
+        kind: 'navigate',
+        path: '/commercial',
+      })
+    })
+  })
+
+  describe('fetchUserAfterLogin', () => {
+    it('retry sur soft-null puis retourne le profil', async () => {
+      const sleep = vi.fn(async () => {})
+      const fetchUser = vi
+        .fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ role: 'commercial' })
+
+      const me = await fetchUserAfterLogin(fetchUser, { attempts: 3, delayMs: 10, sleep })
+      expect(me).toEqual({ role: 'commercial' })
+      expect(fetchUser).toHaveBeenCalledTimes(2)
+      expect(sleep).toHaveBeenCalledTimes(1)
+    })
+
+    it('retry sur 401 puis propage si toujours KO', async () => {
+      const sleep = vi.fn(async () => {})
+      const err = { statusCode: 401 }
+      const fetchUser = vi.fn().mockRejectedValue(err)
+
+      await expect(
+        fetchUserAfterLogin(fetchUser, { attempts: 3, delayMs: 10, sleep }),
+      ).rejects.toEqual(err)
+      expect(fetchUser).toHaveBeenCalledTimes(3)
+      expect(sleep).toHaveBeenCalledTimes(2)
+    })
+
+    it('ne confond plus soft-null final avec un throw (login OK + /me échec)', async () => {
+      const sleep = vi.fn(async () => {})
+      const fetchUser = vi.fn().mockResolvedValue(null)
+
+      await expect(
+        fetchUserAfterLogin(fetchUser, { attempts: 2, delayMs: 5, sleep }),
+      ).resolves.toBeNull()
+      expect(resolvePostLoginTarget(null)).toEqual({ kind: 'sessionUnavailable' })
+    })
+
+    it('récupère après un 401 transitoire (course Set-Cookie)', async () => {
+      const sleep = vi.fn(async () => {})
+      const fetchUser = vi
+        .fn()
+        .mockRejectedValueOnce({ statusCode: 401 })
+        .mockResolvedValueOnce({ role: 'commercial', profileComplete: true })
+
+      const me = await fetchUserAfterLogin(fetchUser, { attempts: 3, delayMs: 10, sleep })
+      expect(me?.role).toBe('commercial')
+      expect(fetchUser).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('authErrorStatus', () => {
+    it('lit statusCode / status / response.status', () => {
+      expect(authErrorStatus({ statusCode: 401 })).toBe(401)
+      expect(authErrorStatus({ status: 403 })).toBe(403)
+      expect(authErrorStatus({ response: { status: 500 } })).toBe(500)
+      expect(authErrorStatus({})).toBeNull()
+    })
   })
 })

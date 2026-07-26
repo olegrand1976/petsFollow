@@ -51,7 +51,8 @@
       "forgotLink": "Forgot password?",
       "or": "or",
       "proOnly": "Access reserved for Pro profiles (vet / sales / sales manager / admin)",
-      "invalidResponse": "Invalid authentication response"
+      "invalidResponse": "Invalid authentication response",
+      "sessionUnavailable": "Could not establish your session. Allow cookies for this site, then try again."
     },
     "forgot": {
       "brandTitle": "Recover access to your account",

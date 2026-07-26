@@ -51,7 +51,8 @@
       "forgotLink": "Unustasid parooli?",
       "or": "või",
       "proOnly": "Juurdepääs ainult Pro profiilidele (vet / müük / müügijuht / admin)",
-      "invalidResponse": "Vigane autentimisvastus"
+      "invalidResponse": "Vigane autentimisvastus",
+      "sessionUnavailable": "Seanssi ei õnnestunud luua. Lubage selle saidi küpsised ja proovige uuesti."
     },
     "forgot": {
       "brandTitle": "Taasta juurdepääs oma kontole",

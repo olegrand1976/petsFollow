@@ -5,15 +5,18 @@ export function useLocaleSync() {
   const { locale, setLocale } = useI18n()
   const localeCookie = useCookie('pf_locale')
 
+  async function applyPreferredLocale(preferred?: string | null) {
+    if (preferred && SUPPORTED_LOCALES.includes(preferred as AppLocale)) {
+      await setLocale(preferred)
+      localeCookie.value = preferred
+    }
+  }
+
   async function syncFromUser() {
     try {
       const res: any = await $fetch('/api/me')
       const data = res.data ?? res
-      const preferred = data.preferredLocale as string | undefined
-      if (preferred && SUPPORTED_LOCALES.includes(preferred as AppLocale)) {
-        await setLocale(preferred)
-        localeCookie.value = preferred
-      }
+      await applyPreferredLocale(data.preferredLocale as string | undefined)
     } catch {
       /* ignore — user may not be authenticated */
     }
@@ -31,5 +34,12 @@ export function useLocaleSync() {
     localeCookie.value = newLocale
   }
 
-  return { syncFromUser, saveLocale, switchLocale, locale, supportedLocales: SUPPORTED_LOCALES }
+  return {
+    syncFromUser,
+    applyPreferredLocale,
+    saveLocale,
+    switchLocale,
+    locale,
+    supportedLocales: SUPPORTED_LOCALES,
+  }
 }

@@ -71,6 +71,83 @@ export function homePathForRole(role: string | null | undefined, opts?: { profil
   }
 }
 
+/** Profil minimal lu après login (GET /api/me). */
+export type PostLoginProfile = {
+  role?: string
+  profileComplete?: boolean | null
+  mustChangePassword?: boolean | null
+  preferredLocale?: string | null
+}
+
+/**
+ * Décision post-login : ne pas confondre « /me indisponible » (cookies / course WebKit)
+ * avec « rôle non-Pro ».
+ */
+export type PostLoginTarget =
+  | { kind: 'navigate'; path: string }
+  | { kind: 'proOnly' }
+  | { kind: 'sessionUnavailable' }
+
+export function resolvePostLoginTarget(
+  me: PostLoginProfile | null | undefined,
+  jwtRole?: string | null,
+): PostLoginTarget {
+  const role = me?.role || jwtRole || null
+  if (!role) {
+    return { kind: 'sessionUnavailable' }
+  }
+  if (me?.mustChangePassword === true) {
+    return { kind: 'navigate', path: '/change-password' }
+  }
+  if (!isProRole(role)) {
+    return { kind: 'proOnly' }
+  }
+  return {
+    kind: 'navigate',
+    path: homePathForRole(role, { profileComplete: me?.profileComplete }),
+  }
+}
+
+export function authErrorStatus(e: unknown): number | null {
+  const err = e as { statusCode?: number; status?: number; response?: { status?: number } }
+  return err?.statusCode ?? err?.status ?? err?.response?.status ?? null
+}
+
+/**
+ * Relit /api/me juste après Set-Cookie (course possible sur WebKit / Firefox iOS).
+ * Réessaie sur soft-null et 401/403 ; propage le dernier 401/403 si toujours KO.
+ */
+export async function fetchUserAfterLogin<T extends PostLoginProfile>(
+  fetchUser: (force?: boolean) => Promise<T | null>,
+  opts?: {
+    attempts?: number
+    delayMs?: number
+    sleep?: (ms: number) => Promise<void>
+  },
+): Promise<T | null> {
+  const attempts = opts?.attempts ?? 3
+  const delayMs = opts?.delayMs ?? 120
+  const sleep = opts?.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)))
+  let lastAuthError: unknown = null
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const me = await fetchUser(true)
+      if (me?.role) return me
+    } catch (e) {
+      const status = authErrorStatus(e)
+      if (status === 401 || status === 403) {
+        lastAuthError = e
+      } else {
+        throw e
+      }
+    }
+    if (i < attempts - 1) await sleep(delayMs)
+  }
+  if (lastAuthError) throw lastAuthError
+  return null
+}
+
 export function unwrapAuthData(res: unknown): AuthResponse {
   const data = (res as { data?: AuthResponse })?.data ?? res
   return data as AuthResponse

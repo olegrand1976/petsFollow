@@ -158,7 +158,8 @@
       "forgotLink": "Mot de passe oublié ?",
       "or": "ou",
       "proOnly": "Accès réservé aux profils Pro (véto / commercial / responsable commercial / admin)",
-      "invalidResponse": "Réponse d'authentification invalide"
+      "invalidResponse": "Réponse d'authentification invalide",
+      "sessionUnavailable": "La session n'a pas pu être établie. Autorisez les cookies pour ce site, puis réessayez."
     },
     "forgot": {
       "brandTitle": "Récupérez l'accès à votre compte",

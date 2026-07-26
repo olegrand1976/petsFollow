@@ -158,7 +158,8 @@
       "forgotLink": "Password dimenticata?",
       "or": "o",
       "proOnly": "Accesso riservato ai profili Pro (veterinario / commerciale / responsabile commerciale / amministratore)",
-      "invalidResponse": "Risposta di autenticazione non valida"
+      "invalidResponse": "Risposta di autenticazione non valida",
+      "sessionUnavailable": "Impossibile stabilire la sessione. Consenti i cookie per questo sito, poi riprova."
     },
     "forgot": {
       "brandTitle": "Recupera l'accesso al tuo account",

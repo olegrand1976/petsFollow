@@ -51,7 +51,8 @@
       "forgotLink": "¿Ha olvidado la contraseña?",
       "or": "o",
       "proOnly": "Acceso reservado a perfiles Pro (vet / comercial / responsable comercial / admin)",
-      "invalidResponse": "Respuesta de autenticación no válida"
+      "invalidResponse": "Respuesta de autenticación no válida",
+      "sessionUnavailable": "No se pudo establecer la sesión. Permita las cookies de este sitio e inténtelo de nuevo."
     },
     "forgot": {
       "brandTitle": "Recupere el acceso a su cuenta",
