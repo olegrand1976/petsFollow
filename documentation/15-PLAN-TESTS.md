@@ -242,6 +242,7 @@ Compte : `admin.demo@petsfollow.test`
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |
 | D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
+| D16 | P1 | Alertes auth ALERT/URGENT | SMTP confirm fail / stuck unverified | Ticket `source=system` + email `OPS_NOTIFY_EMAIL` · Go `TestSMTPConfirmFailCreatesSystemAlertTicket` · job `POST /internal/auth-health/run` |
 | D15 | P2 | Catalogue Stripe | Admin catalogue Stripe | ACL : véto refusé |
 
 ---
@@ -553,7 +554,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 
 ### Go / Nuxt unit / Flutter
 
-- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB)
+- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket`
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API
