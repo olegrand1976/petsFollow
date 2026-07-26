@@ -129,7 +129,7 @@ export async function registerVet(
   const responsePromise = expectApi
     ? page.waitForResponse(
       (r) => r.url().includes('/api/auth/register') && r.request().method() === 'POST',
-      { timeout: 15000 },
+      { timeout: 30000 },
     )
     : Promise.resolve(null)
 

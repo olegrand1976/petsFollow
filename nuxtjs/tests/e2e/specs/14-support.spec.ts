@@ -7,8 +7,9 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     const replyText = `E2E reply ${Date.now()}`
 
     await loginAsVet(page)
+    await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 15000 })
     await page.getByTestId('pro-support-btn').click()
-    await expect(page.getByTestId('support-form')).toBeVisible()
+    await expect(page.getByTestId('support-form')).toBeVisible({ timeout: 15000 })
     await fillField(page, 'support-subject', subject)
     const message = page.getByTestId('support-message')
     await message.fill('Bouton calendrier ne répond plus (e2e).')

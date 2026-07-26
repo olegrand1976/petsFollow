@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"log"
 	"mime"
+	"net"
 	"net/smtp"
 	"strings"
+	"time"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
+
+const smtpOpTimeout = 8 * time.Second
 
 const defaultLLITWebsiteURL = "https://ll-it-sc.be"
 
@@ -73,12 +77,23 @@ func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
 		n.from, to, encodedSubject, body)
 	mailFrom := envelopeFrom(n.from)
+
+	// USER set without PASS (staging secret missing) — fail fast, do not dial OVH.
+	if strings.TrimSpace(n.user) != "" && strings.TrimSpace(n.pass) == "" {
+		err := fmt.Errorf("smtp: SMTP_PASS empty for user %s", n.user)
+		log.Printf("email send failed to=%s from=%s: %v", to, mailFrom, err)
+		if softFail || n.isDevSMTP() {
+			return nil
+		}
+		return err
+	}
+
 	var auth smtp.Auth
 	if n.user != "" {
 		// identity empty — OVH expects username = mailbox addr.
 		auth = smtp.PlainAuth("", n.user, n.pass, n.host)
 	}
-	if err := smtp.SendMail(addr, auth, mailFrom, []string{to}, []byte(msg)); err != nil {
+	if err := sendMailTimeout(addr, auth, mailFrom, []string{to}, []byte(msg), smtpOpTimeout); err != nil {
 		if n.isDevSMTP() {
 			log.Printf("email send (mailhog/dev): %v", err)
 		} else {
@@ -90,6 +105,49 @@ func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 		return err
 	}
 	return nil
+}
+
+// sendMailTimeout is smtp.SendMail with a dial/deadline so auth paths cannot hang E2E.
+func sendMailTimeout(addr string, a smtp.Auth, from string, to []string, msg []byte, timeout time.Duration) error {
+	conn, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	_ = conn.SetDeadline(time.Now().Add(timeout))
+
+	host, _, _ := net.SplitHostPort(addr)
+	c, err := smtp.NewClient(conn, host)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if a != nil {
+		if ok, _ := c.Extension("AUTH"); ok {
+			if err = c.Auth(a); err != nil {
+				return err
+			}
+		}
+	}
+	if err = c.Mail(from); err != nil {
+		return err
+	}
+	for _, rcpt := range to {
+		if err = c.Rcpt(rcpt); err != nil {
+			return err
+		}
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	if _, err = w.Write(msg); err != nil {
+		return err
+	}
+	if err = w.Close(); err != nil {
+		return err
+	}
+	return c.Quit()
 }
 
 func (n *Notifier) SendVetAlert(to, subject, body string) error {

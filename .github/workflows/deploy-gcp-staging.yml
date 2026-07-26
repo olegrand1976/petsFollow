@@ -84,7 +84,15 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium
       - name: E2E P0+P1 against Cloud Run frontend
+        env:
+          # Specs API-direct (ex. 09-pet-detail) — ne pas laisser le défaut localhost:8291.
+          PETSFOLLOW_API_URL: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}
+          NUXT_PUBLIC_API_BASE: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}
         run: |
-          FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
+          FE_URL="${PETSFOLLOW_PUBLIC_SITE_URL}"
+          if ! curl -fsS --max-time 10 "${FE_URL}/" >/dev/null 2>&1; then
+            FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
+          fi
           # Suite complète web Pro (auth → commercial → team). Specs flaky : tag @flaky hors gate.
+          echo "PLAYWRIGHT_BASE_URL=${FE_URL} PETSFOLLOW_API_URL=${PETSFOLLOW_API_URL}"
           PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert @flaky

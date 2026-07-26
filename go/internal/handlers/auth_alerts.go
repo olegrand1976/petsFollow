@@ -154,7 +154,12 @@ func (a *API) reportConfirmEmailFailure(ctx context.Context, emailAddr string, s
 	if fp == "" {
 		fp = "unknown"
 	}
-	a.notifyAuthAlert(ctx, store.AuthAlertSMTPConfirmFail, fp, detail)
+	// Async: never block register/resend on ticket insert + second SMTP (ops alert).
+	go func() {
+		bg, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+		defer cancel()
+		a.notifyAuthAlert(bg, store.AuthAlertSMTPConfirmFail, fp, detail)
+	}()
 }
 
 func (a *API) internalRunAuthHealth(w http.ResponseWriter, r *http.Request) {

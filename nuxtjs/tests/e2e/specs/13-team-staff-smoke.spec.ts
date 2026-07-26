@@ -9,7 +9,15 @@ async function completeForcedPasswordChange(page: Page, nextPassword = STAFF_PAS
   await waitForAuthForm(page, 'force-change-password-form')
   await fillField(page, 'force-change-password', nextPassword)
   await fillField(page, 'force-change-password-confirm', nextPassword)
+  const patch = page.waitForResponse(
+    (r) => r.url().includes('/api/me/password') && r.request().method() === 'PATCH',
+    { timeout: 20000 },
+  )
   await page.getByTestId('force-change-submit').click()
+  const res = await patch
+  if (!res.ok()) {
+    throw new Error(`force-change password PATCH ${res.status()}`)
+  }
   await page.waitForURL((url) => !url.pathname.includes('/change-password'), { timeout: 20000 })
 }
 
