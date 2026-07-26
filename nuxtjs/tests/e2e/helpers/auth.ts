@@ -113,8 +113,11 @@ export async function logout(page: Page) {
   await page.getByTestId('pro-profile-btn').click()
   await expect(page.getByTestId('pro-profile-details')).toHaveAttribute('open', /.*/, { timeout: 10000 })
   await expect(page.getByTestId('pro-logout-btn')).toBeVisible({ timeout: 10000 })
-  await page.getByTestId('pro-logout-btn').click()
-  await expect(page).toHaveURL(/login/, { timeout: 15000 })
+  // Full-document logout-redirect (clears httpOnly cookies server-side).
+  await Promise.all([
+    page.waitForURL(/\/login/, { timeout: 20000 }),
+    page.getByTestId('pro-logout-btn').click(),
+  ])
   await waitForAuthForm(page, 'login-form')
 }
 

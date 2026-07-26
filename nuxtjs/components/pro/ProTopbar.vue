@@ -10,15 +10,15 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
-      <button
-        type="button"
+      <NuxtLink
+        to="/support"
         class="pro-topbar__icon-btn"
         :aria-label="$t('support.buttonAria')"
         data-testid="pro-support-btn"
-        @click.stop="openSupport"
+        @click="onSupportNav"
       >
         <ProIcon name="support_agent" :size="20" />
-      </button>
+      </NuxtLink>
       <ProLocaleSelect persist />
       <button
         type="button"
@@ -97,18 +97,17 @@
           >
             {{ $t('components.topbar.settings') }}
           </NuxtLink>
-          <button
-            type="button"
+          <a
+            href="/api/auth/logout-redirect"
             class="pro-topbar__logout-btn"
             data-testid="pro-logout-btn"
-            @click="handleLogout"
+            @click="closeProfileDetails"
           >
             {{ $t('common.logout') }}
-          </button>
+          </a>
         </div>
       </details>
     </div>
-    <ProSupportDialog v-model:open="supportOpen" />
   </header>
 </template>
 
@@ -128,7 +127,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
-const { user, fetchUser, logout } = useProUser()
+const { user, fetchUser } = useProUser()
 const {
   items: notifItems,
   count: notifCount,
@@ -139,7 +138,6 @@ const {
 } = useProNotifications()
 
 const notifOpen = ref(false)
-const supportOpen = ref(false)
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
@@ -180,18 +178,9 @@ function closeProfileDetails() {
   if (el) el.open = false
 }
 
-function openSupport() {
+function onSupportNav() {
   closeProfileDetails()
   notifOpen.value = false
-  // Defer open so the triggering click cannot hit the modal backdrop and close it.
-  nextTick(() => {
-    supportOpen.value = true
-  })
-}
-
-function handleLogout() {
-  closeProfileDetails()
-  logout()
 }
 
 function onDocClick(e: MouseEvent) {
