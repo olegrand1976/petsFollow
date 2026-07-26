@@ -1870,7 +1870,10 @@
       "ledgerTitle": "Generated commissions",
       "typeAll": "All types",
       "exportCsv": "Exportar CSV",
-      "exportCsvTruncated": "Exportación limitada a las {n} últimas líneas del ledger."
+      "exportCsvTruncated": "Exportación limitada a las {n} últimas líneas del ledger.",
+      "ledgerTruncated": "Lista limitada a las {n} últimas líneas — use la exportación CSV para más.",
+      "exportEmpty": "No hay filas que exportar con este filtro.",
+      "exportFailed": "No se pudo exportar el CSV."
     },
     "settings": {
       "title": "Perfil de pago",
@@ -1941,7 +1944,9 @@
       "frictionEmptyDesc": "Las señales (0 uso D7, caída, NPS bajo…) aparecen aquí.",
       "colSignal": "Señal",
       "colDetail": "Detalle",
-      "colWhen": "Cuándo"
+      "colWhen": "Cuándo",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -2258,7 +2263,9 @@
       "colWhen": "Cuándo",
       "loadError": "No se pudieron cargar los módulos CR IA",
       "call": "Llamar",
-      "email": "Email"
+      "email": "Email",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     }
   },
   "training": {

@@ -98,7 +98,10 @@
         </ProButton>
       </div>
       <p v-if="ledgerTruncated" class="pro-hint pro-mb-md" data-testid="ledger-truncated-hint">
-        {{ $t('commercial.commissions.exportCsvTruncated', { n: summary?.ledgerLimit || 50 }) }}
+        {{ $t('commercial.commissions.ledgerTruncated', { n: summary?.ledgerLimit || 50 }) }}
+      </p>
+      <p v-if="exportHint" class="pro-hint pro-mb-md" data-testid="ledger-export-hint" role="status">
+        {{ exportHint }}
       </p>
       <ProTable :empty="!filteredLedger.length" :empty-title="$t('commercial.commissions.empty')">
         <thead>
@@ -135,6 +138,7 @@ const summary = ref<any>(null)
 const hasIban = ref(false)
 const ledgerType = ref('')
 const exporting = ref(false)
+const exportHint = ref('')
 
 const filteredLedger = computed(() => {
   const rows = summary.value?.recentLedger || []
@@ -195,6 +199,7 @@ function rowsToCsv(rows: any[]) {
 
 async function exportLedgerCsv() {
   exporting.value = true
+  exportHint.value = ''
   try {
     const res: any = await $fetch('/api/commercial/commissions', { query: { limit: 500 } })
     const data = res.data ?? res
@@ -202,7 +207,10 @@ async function exportLedgerCsv() {
     if (ledgerType.value) {
       rows = rows.filter((r: any) => r.sourceType === ledgerType.value)
     }
-    if (!rows.length) return
+    if (!rows.length) {
+      exportHint.value = t('commercial.commissions.exportEmpty')
+      return
+    }
     const blob = new Blob([rowsToCsv(rows)], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -211,9 +219,10 @@ async function exportLedgerCsv() {
     a.click()
     URL.revokeObjectURL(url)
     if (data?.ledgerTruncated) {
-      // keep UI hint in sync if export hit the cap
-      summary.value = { ...summary.value, ledgerTruncated: true, ledgerLimit: data.ledgerLimit || 500 }
+      exportHint.value = t('commercial.commissions.exportCsvTruncated', { n: data.ledgerLimit || 500 })
     }
+  } catch {
+    exportHint.value = t('commercial.commissions.exportFailed')
   } finally {
     exporting.value = false
   }

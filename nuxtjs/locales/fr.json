@@ -558,7 +558,10 @@
       "pendingPayouts": "Versements en attente",
       "paidPayouts": "Versements payés",
       "monthDue": "À toucher ce mois",
-      "exportCsvTruncated": "Export limité aux {n} dernières lignes du ledger."
+      "exportCsvTruncated": "Export limité aux {n} dernières lignes du ledger.",
+      "ledgerTruncated": "Liste limitée aux {n} dernières lignes — utilisez l’export CSV pour davantage.",
+      "exportEmpty": "Aucune ligne à exporter pour ce filtre.",
+      "exportFailed": "Export CSV impossible."
     },
     "settings": {
       "title": "Profil paiement",
@@ -629,7 +632,9 @@
       "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
       "colSignal": "Signal",
       "colDetail": "Détail",
-      "colWhen": "Quand"
+      "colWhen": "Quand",
+      "daysSince": "J+{n}",
+      "daysRemaining": "{n} j"
     },
     "aiPlaybook": {
       "title": "Guide CR IA",
@@ -2372,7 +2377,9 @@
       "colWhen": "Quand",
       "loadError": "Impossible de charger les modules CR IA",
       "call": "Appeler",
-      "email": "E-mail"
+      "email": "E-mail",
+      "daysSince": "J+{n}",
+      "daysRemaining": "{n} j"
     }
   },
   "invite": {

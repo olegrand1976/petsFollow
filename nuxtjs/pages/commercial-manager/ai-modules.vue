@@ -44,18 +44,18 @@
                 :href="`tel:${a.practicePhone}`"
               >{{ $t('manager.aiModules.call') }}</a>
               <a
-                v-else-if="a.practiceContactEmail"
+                v-if="a.practiceContactEmail"
                 class="pro-link"
                 :href="`mailto:${a.practiceContactEmail}`"
               >{{ $t('manager.aiModules.email') }}</a>
               <NuxtLink
-                v-else-if="a.commercialUserId"
+                v-if="a.commercialUserId"
                 :to="`/commercial-manager/member/${a.commercialUserId}`"
                 class="pro-link"
               >
                 {{ $t('manager.aiModules.openMember') }}
               </NuxtLink>
-              <span v-else>—</span>
+              <span v-if="!a.practicePhone && !a.practiceContactEmail && !a.commercialUserId">—</span>
             </td>
           </tr>
         </tbody>
@@ -79,8 +79,8 @@
         <tbody>
           <tr v-for="m in modules" :key="m.practiceId">
             <td>{{ m.practiceName || m.practiceId }}</td>
-            <td>{{ m.status }} · J+{{ m.daysSinceActivation }}</td>
-            <td>{{ formatDate(m.trialEndsAt) }} ({{ m.daysRemainingTrial }}j)</td>
+            <td>{{ m.status }} · {{ $t('manager.aiModules.daysSince', { n: m.daysSinceActivation }) }}</td>
+            <td>{{ formatDate(m.trialEndsAt) }} ({{ $t('manager.aiModules.daysRemaining', { n: m.daysRemainingTrial }) }})</td>
           </tr>
         </tbody>
       </ProTable>

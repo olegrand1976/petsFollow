@@ -1870,7 +1870,10 @@
       "ledgerTitle": "Generated commissions",
       "typeAll": "All types",
       "exportCsv": "Ekspordi CSV",
-      "exportCsvTruncated": "Eksport on piiratud viimase {n} ledger-reaga."
+      "exportCsvTruncated": "Eksport on piiratud viimase {n} ledger-reaga.",
+      "ledgerTruncated": "Loend on piiratud viimase {n} reaga — rohkemaks kasuta CSV eksporti.",
+      "exportEmpty": "Selle filtriga pole eksporditavaid ridu.",
+      "exportFailed": "CSV eksport ebaõnnestus."
     },
     "settings": {
       "title": "Väljamakseprofiil",
@@ -1941,7 +1944,9 @@
       "frictionEmptyDesc": "Signaalid (0 kasutust P7, langus, madal NPS…) ilmuvad siia.",
       "colSignal": "Signaal",
       "colDetail": "Detail",
-      "colWhen": "Millal"
+      "colWhen": "Millal",
+      "daysSince": "P+{n}",
+      "daysRemaining": "{n} p"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -2258,7 +2263,9 @@
       "colWhen": "Millal",
       "loadError": "AI CR mooduleid ei õnnestunud laadida",
       "call": "Helista",
-      "email": "E-post"
+      "email": "E-post",
+      "daysSince": "P+{n}",
+      "daysRemaining": "{n} p"
     }
   },
   "training": {

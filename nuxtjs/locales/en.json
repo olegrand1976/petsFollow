@@ -1870,7 +1870,10 @@
       "ledgerTitle": "Generated commissions",
       "typeAll": "All types",
       "exportCsv": "Export CSV",
-      "exportCsvTruncated": "Export limited to the latest {n} ledger rows."
+      "exportCsvTruncated": "Export limited to the latest {n} ledger rows.",
+      "ledgerTruncated": "List limited to the latest {n} rows — use CSV export for more.",
+      "exportEmpty": "No rows to export for this filter.",
+      "exportFailed": "CSV export failed."
     },
     "settings": {
       "title": "Payout profile",
@@ -1941,7 +1944,9 @@
       "frictionEmptyDesc": "Signals (0 usage D7, drop, low NPS…) appear here.",
       "colSignal": "Signal",
       "colDetail": "Detail",
-      "colWhen": "When"
+      "colWhen": "When",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -2258,7 +2263,9 @@
       "colWhen": "When",
       "loadError": "Could not load AI CR modules",
       "call": "Call",
-      "email": "Email"
+      "email": "Email",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     }
   },
   "training": {

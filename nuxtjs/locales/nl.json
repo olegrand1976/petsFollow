@@ -1870,7 +1870,10 @@
       "ledgerTitle": "Gegenereerde commissies",
       "typeAll": "Alle types",
       "exportCsv": "CSV exporteren",
-      "exportCsvTruncated": "Export beperkt tot de laatste {n} ledgerregels."
+      "exportCsvTruncated": "Export beperkt tot de laatste {n} ledgerregels.",
+      "ledgerTruncated": "Lijst beperkt tot de laatste {n} rijen — gebruik CSV-export voor meer.",
+      "exportEmpty": "Geen rijen om te exporteren voor dit filter.",
+      "exportFailed": "CSV-export mislukt."
     },
     "settings": {
       "title": "Betalingsprofiel",
@@ -1941,7 +1944,9 @@
       "frictionEmptyDesc": "Signalen (0 gebruik D7, daling, lage NPS…) verschijnen hier.",
       "colSignal": "Signaal",
       "colDetail": "Detail",
-      "colWhen": "Wanneer"
+      "colWhen": "Wanneer",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -2258,7 +2263,9 @@
       "colWhen": "Wanneer",
       "loadError": "AI CR-modules laden mislukt",
       "call": "Bellen",
-      "email": "E-mail"
+      "email": "E-mail",
+      "daysSince": "D+{n}",
+      "daysRemaining": "{n} d"
     }
   },
   "training": {
