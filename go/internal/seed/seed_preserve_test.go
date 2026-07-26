@@ -114,10 +114,10 @@ func TestSeedPreservesProtectedRoles(t *testing.T) {
 		t.Fatalf("admin.demo missing after seed: %v", err)
 	}
 
-	var mgrEmail, commEmail string
+	var seedMgrID, mgrEmail, commEmail, comm2Email string
 	err = pool.QueryRow(ctx, `
-		SELECT email FROM identity.users
-		WHERE email='commercial.manager@petsfollow.test' AND role='commercial_manager'`).Scan(&mgrEmail)
+		SELECT id::text, email FROM identity.users
+		WHERE email='commercial.manager@petsfollow.test' AND role='commercial_manager'`).Scan(&seedMgrID, &mgrEmail)
 	if err != nil {
 		t.Fatalf("commercial.manager missing after seed: %v", err)
 	}
@@ -126,6 +126,23 @@ func TestSeedPreservesProtectedRoles(t *testing.T) {
 		WHERE email='commercial.demo@petsfollow.test' AND role='commercial'`).Scan(&commEmail)
 	if err != nil {
 		t.Fatalf("commercial.demo missing after seed: %v", err)
+	}
+	err = pool.QueryRow(ctx, `
+		SELECT email FROM identity.users
+		WHERE email='commercial.demo2@petsfollow.test' AND role='commercial'`).Scan(&comm2Email)
+	if err != nil {
+		t.Fatalf("commercial.demo2 missing after seed: %v", err)
+	}
+
+	var demoTeamCount int
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM identity.users
+		WHERE email IN ('commercial.demo@petsfollow.test', 'commercial.demo2@petsfollow.test')
+		  AND manager_user_id = $1::uuid`, seedMgrID).Scan(&demoTeamCount); err != nil {
+		t.Fatal(err)
+	}
+	if demoTeamCount != 2 {
+		t.Fatalf("expected both demo commercials linked to seed manager, got count=%d", demoTeamCount)
 	}
 
 	var vetCount int
@@ -136,7 +153,8 @@ func TestSeedPreservesProtectedRoles(t *testing.T) {
 		t.Fatalf("expected vet.demo recreated, got count=%d", vetCount)
 	}
 
-	// commercial.demo must keep an existing non-seed manager across seed.
+	// Non-demo commercials must keep an existing manager across seed (COALESCE / untouched).
+	// Demo emails are force-linked to commercial.manager — use a separate account here.
 	altMgrID := uuid.NewString()
 	altMgrEmail := "alt-mgr+" + uuid.NewString() + "@example.test"
 	altHash, err := bcrypt.GenerateFromPassword([]byte("AltMgr123!"), bcrypt.DefaultCost)
@@ -153,23 +171,56 @@ func TestSeedPreservesProtectedRoles(t *testing.T) {
 	t.Cleanup(func() {
 		_, _ = pool.Exec(context.Background(), `DELETE FROM identity.users WHERE id=$1`, altMgrID)
 	})
+	preserveID := uuid.NewString()
+	preserveEmail := "commercial.preserve@petsfollow.test"
+	if _, err := pool.Exec(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			manager_user_id, must_change_password
+		) VALUES ($1, $2, $3, 'Preserve Comm', 'commercial', NULL, NOW(), $4::uuid, true)
+		ON CONFLICT (email) DO UPDATE SET
+			manager_user_id = EXCLUDED.manager_user_id,
+			password_hash = EXCLUDED.password_hash,
+			must_change_password = true`,
+		preserveID, preserveEmail, string(hash), altMgrID); err != nil {
+		t.Fatalf("insert preserve commercial: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM identity.users WHERE email=$1`, preserveEmail)
+	})
+	// Detach demos to an alt manager — seed must re-attach them to Bérénice.
 	if _, err := pool.Exec(ctx, `
 		UPDATE identity.users SET manager_user_id=$1
-		WHERE email='commercial.demo@petsfollow.test'`, altMgrID); err != nil {
-		t.Fatalf("attach demo to alt manager: %v", err)
+		WHERE email IN ('commercial.demo@petsfollow.test', 'commercial.demo2@petsfollow.test')`,
+		altMgrID); err != nil {
+		t.Fatalf("detach demos to alt manager: %v", err)
 	}
 	if err := seed.Run(ctx, pool); err != nil {
 		t.Fatalf("second seed.Run: %v", err)
 	}
-	var mgrAfter string
+	var preserveMgrAfter string
 	err = pool.QueryRow(ctx, `
 		SELECT manager_user_id::text FROM identity.users
-		WHERE email='commercial.demo@petsfollow.test'`).Scan(&mgrAfter)
+		WHERE email=$1`, preserveEmail).Scan(&preserveMgrAfter)
 	if err != nil {
-		t.Fatalf("commercial.demo after second seed: %v", err)
+		t.Fatalf("commercial.preserve after second seed: %v", err)
 	}
-	if mgrAfter != altMgrID {
-		t.Fatalf("commercial.demo manager_user_id overwritten: got %q want %q", mgrAfter, altMgrID)
+	if preserveMgrAfter != altMgrID {
+		t.Fatalf("commercial.preserve manager_user_id overwritten: got %q want %q", preserveMgrAfter, altMgrID)
+	}
+	if err := pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users
+		WHERE email='commercial.manager@petsfollow.test'`).Scan(&seedMgrID); err != nil {
+		t.Fatalf("seed manager after second seed: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM identity.users
+		WHERE email IN ('commercial.demo@petsfollow.test', 'commercial.demo2@petsfollow.test')
+		  AND manager_user_id = $1::uuid`, seedMgrID).Scan(&demoTeamCount); err != nil {
+		t.Fatal(err)
+	}
+	if demoTeamCount != 2 {
+		t.Fatalf("expected demos force-relinked to seed manager after re-seed, got count=%d", demoTeamCount)
 	}
 
 	smokeEmail := fmt.Sprintf("smoke-comm+%d@petsfollow.test", time.Now().UnixNano())

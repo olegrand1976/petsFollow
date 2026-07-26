@@ -165,11 +165,20 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	// Detach surviving users from practices before TRUNCATE practice.practices.
+	// Detach surviving users from practices/profiles before clearing those tables.
 	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL, active_profile_id = NULL WHERE true`); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `TRUNCATE practice.team_members, identity.profiles CASCADE`); err != nil {
+	// Drop FK so TRUNCATE … practices CASCADE cannot wipe identity.users via
+	// profiles.practice_id → practices and users.active_profile_id → profiles.
+	if _, err := tx.Exec(ctx, `
+		ALTER TABLE identity.users DROP CONSTRAINT IF EXISTS users_active_profile_id_fkey`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM practice.team_members`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM identity.profiles`); err != nil {
 		return err
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
@@ -192,6 +201,12 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
 		practice.commercial_referrals,
 		practice.practice_clients, practice.practices CASCADE`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		ALTER TABLE identity.users
+		ADD CONSTRAINT users_active_profile_id_fkey
+		FOREIGN KEY (active_profile_id) REFERENCES identity.profiles(id) ON DELETE SET NULL`); err != nil {
 		return err
 	}
 	// Drop ephemeral smoke commercials (role protected, but email pattern is disposable).
@@ -258,7 +273,7 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			payout_iban = EXCLUDED.payout_iban,
 			payout_bic = EXCLUDED.payout_bic,
 			payout_account_holder = EXCLUDED.payout_account_holder,
-			-- Keep existing manager (e.g. staging Murgo); only fill when unset.
+			-- COALESCE kept for upsert symmetry; demo emails are force-linked just below.
 			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
 			sponsor_user_id = COALESCE(identity.users.sponsor_user_id, EXCLUDED.sponsor_user_id),
 			must_change_password = false,
@@ -298,6 +313,18 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash), managerID).Scan(&commercial2ID); err != nil {
+		return err
+	}
+	// Force-link known demo reps to seed manager so overview always shows the 2-rep team
+	// after re-seed (COALESCE above preserves staging reassignments for non-demo emails only).
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET manager_user_id = $1,
+		  sponsor_user_id = CASE
+		    WHEN sponsor_user_id IS NULL OR sponsor_user_id IS NOT DISTINCT FROM manager_user_id THEN $1
+		    ELSE sponsor_user_id
+		  END
+		WHERE email IN ('commercial.demo@petsfollow.test', 'commercial.demo2@petsfollow.test')`,
+		managerID); err != nil {
 		return err
 	}
 	// vet.demo → Camille ; vet.parc → Alex (deux portefeuilles distincts).

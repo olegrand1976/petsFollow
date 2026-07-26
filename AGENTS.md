@@ -37,9 +37,9 @@ Mot de passe commun véto : `VetDemo123!` · client : `ClientDemo123!` · admin 
 | Care pro (farrier) | `farrier.demo@petsfollow.test` | Flutter pro light — Spirit (write_notes) · dual profil client |
 | Care pro (vet_light) | `vetlight.demo@petsfollow.test` | Flutter pro light — Spirit · dual profil client |
 | Équipe VetPlus | `vet.colleague@` · `vet.assist@` · `secretary.demo@` | MDP `VetDemo123!` — page `/team` |
-| Commercial manager | `commercial.manager@petsfollow.test` | Responsable commercial (équipe) |
-| Commercial | `commercial.demo@petsfollow.test` | Force de vente (vet.demo assigné, 5 prospects, rattaché manager) |
-| Commercial | `commercial.demo2@petsfollow.test` | 2ᵉ commercial (Alex — vet.parc assigné, 5 prospects Nord) |
+| Commercial manager | `commercial.manager@petsfollow.test` | Bérénice — équipe démo forcée au seed : Camille + Alex (2 reps) |
+| Commercial | `commercial.demo@petsfollow.test` | Camille — vet.demo assigné, 5 prospects Bruxelles, rattaché manager |
+| Commercial | `commercial.demo2@petsfollow.test` | Alex — vet.parc assigné, 5 prospects Nord, rattaché manager |
 
 Entraînement pitch IA (commercial) : `/commercial/training` — nécessite `GEMINI_API_KEY`. Admin : `/admin/training`. Module CR IA (essai 90j / 39 € HT) : `/admin/ai-modules`, `/commercial/ai-modules`, guide `/commercial/ai-cr-playbook` — job quotidien adhésion+friction : `POST /api/v1/internal/ai-module-friction/run` + `X-Ai-Module-Friction-Secret` (`AI_MODULE_FRICTION_SECRET`, scheduler `infra/gcp/setup-ai-module-friction-scheduler.sh`). Analyseur quotidien : `POST /api/v1/internal/pitch-analyzer/run` + header `X-Pitch-Analyzer-Secret`. Purge RGPD 3 ans d'inactivité : `POST /api/v1/internal/retention/run` + header `X-Retention-Secret` (env `RETENTION_PURGE_SECRET`). Digest produit quotidien (admin/commercial) : ingest GH Action + `POST /api/v1/internal/product-digest/run` à 18:00 Brussels — voir `documentation/25-PRODUCT-DIGEST.md`.
 | Admin | `admin.demo@petsfollow.test` | — (global) |
