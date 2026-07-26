@@ -29,7 +29,7 @@ void main() {
                 'practiceId': 'pr-1',
                 'practiceName': 'Cabinet VetPlus Demo',
                 'vetFullName': 'Dr Demo',
-                'vetEmail': 'vet.demo@petsfollow.test',
+                'vetEmail': 'v***@petsfollow.test',
               }
             ]
           : <Map<String, dynamic>>[];

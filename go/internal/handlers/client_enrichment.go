@@ -38,6 +38,10 @@ func (a *API) lookupVets(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
+	if a.vetLookupRL != nil && !a.vetLookupRL.Allow("lookup:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	hits, err := a.store.LookupVets(r.Context(), q, 10)
 	if err != nil {
@@ -91,6 +95,10 @@ func (a *API) suggestVet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
+	if a.vetSuggestRL != nil && !a.vetSuggestRL.Allow("suggest:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
 	var req suggestVetReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -103,7 +111,12 @@ func (a *API) suggestVet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// If the email already matches a vet on the platform, create a real invite instead.
-	if existing, ierr := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, email); ierr == nil && existing.Found {
+	existing, ierr := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, email)
+	if ierr != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if existing.Found {
 		httpx.WriteData(w, http.StatusOK, map[string]any{
 			"status":       "invited",
 			"found":        true,

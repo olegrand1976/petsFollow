@@ -70,38 +70,62 @@ type VetInviteResult struct {
 	VetFullName  string `json:"vetFullName,omitempty"`
 }
 
-// VetLookupHit is a minimal public hit for client autocomplete.
+// VetLookupHit is a minimal public hit for client autocomplete (email masked).
 type VetLookupHit struct {
 	VetUserID    string `json:"vetUserId"`
 	PracticeID   string `json:"practiceId"`
 	PracticeName string `json:"practiceName"`
 	VetFullName  string `json:"vetFullName"`
-	VetEmail     string `json:"vetEmail"`
+	VetEmail     string `json:"vetEmail"` // masked, e.g. v***@cabinet.fr
 }
 
-// LookupVets searches vets/practices by name or email fragment (min 2 runes).
+// MaskEmail hides the local-part for client-facing lookup responses.
+func MaskEmail(email string) string {
+	email = strings.TrimSpace(strings.ToLower(email))
+	at := strings.LastIndex(email, "@")
+	if at <= 0 || at == len(email)-1 {
+		return "***"
+	}
+	local, domain := email[:at], email[at+1:]
+	r, size := utf8.DecodeRuneInString(local)
+	if r == utf8.RuneError && size == 1 {
+		return "***@" + domain
+	}
+	return string(r) + "***@" + domain
+}
+
+func likeContainsPattern(q string) string {
+	q = strings.ToLower(strings.TrimSpace(q))
+	q = strings.ReplaceAll(q, `\`, `\\`)
+	q = strings.ReplaceAll(q, `%`, `\%`)
+	q = strings.ReplaceAll(q, `_`, `\_`)
+	return "%" + q + "%"
+}
+
+// LookupVets searches vets/practices by name or email fragment (min 3 runes).
 func (s *Store) LookupVets(ctx context.Context, q string, limit int) ([]VetLookupHit, error) {
 	q = strings.TrimSpace(q)
-	if utf8.RuneCountInString(q) < 2 {
+	if utf8.RuneCountInString(q) < 3 {
 		return nil, nil
 	}
 	if limit <= 0 || limit > 20 {
 		limit = 10
 	}
-	pattern := "%" + strings.ToLower(q) + "%"
+	pattern := likeContainsPattern(q)
 	rows, err := s.pool.Query(ctx, `
 		SELECT u.id::text, u.practice_id::text, pr.name, u.full_name, u.email
 		FROM identity.users u
 		JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE u.role = 'vet' AND u.practice_id IS NOT NULL
+		  AND u.email_verified_at IS NOT NULL
 		  AND (
-			lower(u.email) LIKE $1
-			OR lower(u.full_name) LIKE $1
-			OR lower(pr.name) LIKE $1
+			lower(u.email) LIKE $1 ESCAPE '\'
+			OR lower(u.full_name) LIKE $1 ESCAPE '\'
+			OR lower(pr.name) LIKE $1 ESCAPE '\'
 		  )
 		ORDER BY
 			CASE WHEN lower(u.email) = lower($2) THEN 0
-			     WHEN lower(u.email) LIKE lower($2) || '%' THEN 1
+			     WHEN lower(u.email) LIKE lower($2) || '%' ESCAPE '\' THEN 1
 			     ELSE 2 END,
 			pr.name, u.full_name
 		LIMIT $3`, pattern, q, limit)
@@ -112,9 +136,11 @@ func (s *Store) LookupVets(ctx context.Context, q string, limit int) ([]VetLooku
 	var out []VetLookupHit
 	for rows.Next() {
 		var h VetLookupHit
-		if err := rows.Scan(&h.VetUserID, &h.PracticeID, &h.PracticeName, &h.VetFullName, &h.VetEmail); err != nil {
+		var rawEmail string
+		if err := rows.Scan(&h.VetUserID, &h.PracticeID, &h.PracticeName, &h.VetFullName, &rawEmail); err != nil {
 			return nil, err
 		}
+		h.VetEmail = MaskEmail(rawEmail)
 		out = append(out, h)
 	}
 	return out, rows.Err()
@@ -204,27 +230,33 @@ type VetLead struct {
 }
 
 // CreateVetLead stores a client-suggested vet (no phantom vet account).
+// Upserts on (client_user_id, email) to avoid duplicate open leads.
 func (s *Store) CreateVetLead(ctx context.Context, clientUserID string, in VetLeadInput) (VetLead, error) {
 	email := strings.ToLower(strings.TrimSpace(in.Email))
 	phone := strings.TrimSpace(in.Phone)
 	if email == "" || phone == "" {
 		return VetLead{}, ErrValidation
 	}
-	id := uuid.NewString()
-	_, err := s.pool.Exec(ctx, `
+	fullName := strings.TrimSpace(in.FullName)
+	practiceName := strings.TrimSpace(in.PracticeName)
+	var id, status string
+	err := s.pool.QueryRow(ctx, `
 		INSERT INTO practice.vet_leads (id, client_user_id, email, phone, full_name, practice_name, status)
-		VALUES ($1, $2, $3, $4, $5, $6, 'new')`,
-		id, clientUserID, email, phone, strings.TrimSpace(in.FullName), strings.TrimSpace(in.PracticeName))
+		VALUES ($1, $2, $3, $4, $5, $6, 'new')
+		ON CONFLICT (client_user_id, email) DO UPDATE SET
+			phone = EXCLUDED.phone,
+			full_name = EXCLUDED.full_name,
+			practice_name = EXCLUDED.practice_name,
+			status = 'new',
+			updated_at = NOW()
+		RETURNING id::text, email, phone, full_name, practice_name, status`,
+		uuid.NewString(), clientUserID, email, phone, fullName, practiceName,
+	).Scan(&id, &email, &phone, &fullName, &practiceName, &status)
 	if err != nil {
 		return VetLead{}, err
 	}
 	return VetLead{
-		ID:           id,
-		Email:        email,
-		Phone:        phone,
-		FullName:     strings.TrimSpace(in.FullName),
-		PracticeName: strings.TrimSpace(in.PracticeName),
-		Status:       "new",
+		ID: id, Email: email, Phone: phone, FullName: fullName, PracticeName: practiceName, Status: status,
 	}, nil
 }
 

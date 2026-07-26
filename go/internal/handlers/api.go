@@ -32,6 +32,9 @@ type API struct {
 	media    media.Store
 	pusher   fcm.Pusher
 	gemini   *gemini.Client
+	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
+	vetLookupRL  *httpx.RateLimiter
+	vetSuggestRL *httpx.RateLimiter
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -42,7 +45,11 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	if cfg.GeminiAPIKey != "" {
 		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
 	}
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g}
+	return &API{
+		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g,
+		vetLookupRL:  httpx.NewRateLimiter(30, time.Minute),
+		vetSuggestRL: httpx.NewRateLimiter(10, time.Minute),
+	}
 }
 
 func (a *API) Routes(r chi.Router) {

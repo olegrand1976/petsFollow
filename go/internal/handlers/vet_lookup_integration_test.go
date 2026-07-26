@@ -49,7 +49,7 @@ func TestVetLookupInviteSuggestAndPracticeStamp(t *testing.T) {
 			DELETE FROM identity.users WHERE email = $1`, email)
 	})
 
-	// Lookup by practice fragment.
+	// Lookup by practice fragment — emails must be masked.
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/vets/lookup?q=VetPlus", clientTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("lookup %d %#v", code, env)
@@ -58,16 +58,30 @@ func TestVetLookupInviteSuggestAndPracticeStamp(t *testing.T) {
 	if !ok || len(hits) == 0 {
 		t.Fatalf("expected lookup hits, got %#v", env["data"])
 	}
-	var vetUserID string
 	for _, raw := range hits {
 		m, _ := raw.(map[string]any)
-		if em, _ := m["vetEmail"].(string); em == "vet.demo@petsfollow.test" {
-			vetUserID, _ = m["vetUserId"].(string)
-			break
+		em, _ := m["vetEmail"].(string)
+		if em == "" || !strings.Contains(em, "***@") {
+			t.Fatalf("expected masked vetEmail, got %#v", m)
 		}
 	}
+
+	// Narrow lookup to get a specific vet, then invite by vetUserId.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/vets/lookup?q=vet.demo", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("lookup vet.demo %d %#v", code, env)
+	}
+	hits, ok = env["data"].([]any)
+	if !ok || len(hits) == 0 {
+		t.Fatalf("expected vet.demo hit, got %#v", env["data"])
+	}
+	first, _ := hits[0].(map[string]any)
+	vetUserID, _ := first["vetUserId"].(string)
 	if vetUserID == "" {
-		t.Fatalf("vet.demo not in lookup hits: %#v", hits)
+		t.Fatalf("missing vetUserId: %#v", first)
+	}
+	if em, _ := first["vetEmail"].(string); em != "v***@petsfollow.test" {
+		t.Fatalf("expected v***@petsfollow.test, got %#v", first)
 	}
 
 	// Invite by vetUserId.

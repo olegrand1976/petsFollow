@@ -52,7 +52,7 @@ class _AddVetPanelState extends State<AddVetPanel> {
   void _onQueryChanged(String raw) {
     _debounce?.cancel();
     final q = raw.trim();
-    if (q.length < 2) {
+    if (q.length < 3) {
       setState(() {
         _hits = [];
         _searching = false;

@@ -56,6 +56,11 @@ func (rl *RateLimiter) allow(key string) bool {
 	return b.count <= rl.limit
 }
 
+// Allow reports whether key may proceed (same window as Middleware).
+func (rl *RateLimiter) Allow(key string) bool {
+	return rl.allow(key)
+}
+
 // Middleware limite par IP (middleware.RealIP est appliqué en amont sur le routeur de base).
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -803,7 +803,7 @@ class ApiClient {
 
   Future<List<VetLookupHit>> lookupVets(String query) async {
     final q = query.trim();
-    if (q.length < 2) return [];
+    if (q.length < 3) return [];
     final res = await dio.get('/api/v1/me/vets/lookup', queryParameters: {'q': q});
     final data = _asList(res.data is Map ? res.data['data'] : null);
     return data
