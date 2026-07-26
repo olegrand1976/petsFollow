@@ -27,8 +27,6 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
     super.initState();
     LocaleController.instance.addListener(_onPrefsChanged);
     ThemeController.instance.addListener(_onPrefsChanged);
-    LocaleController.instance.load();
-    ThemeController.instance.load();
     NotificationService.instance.explainPushPermission = _showPushPermissionInfo;
     NotificationService.instance.init();
     AppDeepLink.instance.start();

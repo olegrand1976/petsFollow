@@ -11,6 +11,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  tearDown(() async {
+    await ThemeController.instance.setDark(true);
+  });
+
   testWidgets('settings_appearance toggles ThemeController', (tester) async {
     await ThemeController.instance.load();
     expect(ThemeController.instance.isDark, isTrue);
@@ -37,8 +41,5 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('pf_theme'), 'light');
-
-    // Restore default for other tests.
-    await ThemeController.instance.setDark(true);
   });
 }

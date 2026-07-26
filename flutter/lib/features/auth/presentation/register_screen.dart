@@ -368,13 +368,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   List<Widget> _buildSocialButtons(AppLocalizations l10n) {
     return [
       if (_isIOS)
-        // Variante blanche des guidelines Apple : le fond de
-        // l'écran (loginGradient) est sombre.
+        // Apple HIG: white on dark backgrounds, black on light.
         FilledButton.icon(
           onPressed: _busy ? null : tapApple,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
+            foregroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
           ),
           icon: const Icon(Icons.apple, size: 24),
           label: Text(l10n.loginWithApple),
