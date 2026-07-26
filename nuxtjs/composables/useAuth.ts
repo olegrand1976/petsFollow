@@ -151,14 +151,18 @@ export async function fetchWsToken(): Promise<string> {
 
 export async function clearAuthTokens() {
   authClearedState().value = true
-  // Efficace en SSR ; côté client les cookies httpOnly ne sont supprimables que par la BFF.
-  useCookie('pf_token', httpOnlyAuthCookieOpts()).value = null
-  useCookie('pf_refresh', httpOnlyAuthCookieOpts()).value = null
-  useCookie('pf_session', sessionCookieOpts()).value = null
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.
   useState('pro-user').value = null
+  // pf_session is the only auth cookie the browser JS can clear (non-httpOnly).
+  useCookie('pf_session', sessionCookieOpts()).value = null
+  if (import.meta.server) {
+    // SSR: Set-Cookie can clear httpOnly JWT cookies on the response.
+    useCookie('pf_token', httpOnlyAuthCookieOpts()).value = null
+    useCookie('pf_refresh', httpOnlyAuthCookieOpts()).value = null
+  }
   if (import.meta.client) {
     try {
+      // httpOnly pf_token / pf_refresh: only the BFF may delete them.
       await $fetch('/api/auth/logout', { method: 'POST' })
     } catch {
       // best effort — le marqueur pf_session est déjà purgé.

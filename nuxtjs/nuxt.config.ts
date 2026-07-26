@@ -5,17 +5,18 @@
 function buildCsp(): string {
   const apiBase = (process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291').replace(/\/$/, '')
   const apiWs = apiBase.replace(/^http/, 'ws')
+  // Google Identity Services : https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com",
-    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
+    "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
     // Avatars/photos : BFF, data-URI, blob (aperçus upload) et médias GCS/https.
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
-    `connect-src 'self' ${apiBase} ${apiWs} https://accounts.google.com`,
+    `connect-src 'self' ${apiBase} ${apiWs} https://accounts.google.com/gsi/`,
     // Audio des comptes rendus (stream authentifié via API).
     `media-src 'self' blob: ${apiBase}`,
-    'frame-src https://accounts.google.com',
+    'frame-src https://accounts.google.com/gsi/',
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

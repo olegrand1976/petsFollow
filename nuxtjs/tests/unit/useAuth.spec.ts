@@ -111,18 +111,18 @@ describe('useAuth helpers', () => {
     expect(hasSessionCookie()).toBe(true)
   })
 
-  it('clearAuthTokens purge les cookies visibles et le profil Pro', async () => {
+  it('clearAuthTokens purge pf_session et le profil Pro (JWT via BFF côté client)', async () => {
     cookieStore.set('pf_token', 'access.jwt')
     cookieStore.set('pf_refresh', 'refresh.jwt')
     cookieStore.set('pf_session', '1')
     useState('pro-user').value = { role: 'vet' }
     await clearAuthTokens()
-    expect(cookieStore.get('pf_token')).toBeNull()
-    expect(cookieStore.get('pf_refresh')).toBeNull()
+    // Client: httpOnly JWT are left to POST /api/auth/logout — do not touch via useCookie.
+    expect(cookieStore.get('pf_token')).toBe('access.jwt')
+    expect(cookieStore.get('pf_refresh')).toBe('refresh.jwt')
     expect(cookieStore.get('pf_session')).toBeNull()
     expect(useState('pro-user').value).toBeNull()
     // Stale request cookies must not re-arm hasSession (SSR redirect loop).
-    cookieStore.set('pf_token', 'stale.jwt')
     expect(hasSessionCookie()).toBe(false)
     markAuthSessionActive()
     expect(hasSessionCookie()).toBe(true)
