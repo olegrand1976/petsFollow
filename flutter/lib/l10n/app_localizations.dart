@@ -922,6 +922,18 @@ abstract class AppLocalizations {
   /// **'Vous devez accepter les conditions et la politique de confidentialité.'**
   String get registerConsentRequired;
 
+  /// No description provided for @registerInviteCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code d\'invitation (optionnel)'**
+  String get registerInviteCode;
+
+  /// No description provided for @registerInviteCodeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code du QR / lien commercial'**
+  String get registerInviteCodeHint;
+
   /// No description provided for @nearbyCommercialTitle.
   ///
   /// In fr, this message translates to:
@@ -2710,11 +2722,101 @@ abstract class AppLocalizations {
   /// **'QR invitation clients et accès au site Pro.'**
   String get commercialFieldSubtitle;
 
+  /// No description provided for @commercialManagerFieldSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats d\'équipe, QR invitation et accès au site Pro.'**
+  String get commercialManagerFieldSubtitle;
+
   /// No description provided for @commercialOpenProWeb.
   ///
   /// In fr, this message translates to:
   /// **'Ouvrir le site Pro'**
   String get commercialOpenProWeb;
+
+  /// No description provided for @managerTeamCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats de mon équipe'**
+  String get managerTeamCta;
+
+  /// No description provided for @managerTeamTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Équipe'**
+  String get managerTeamTitle;
+
+  /// No description provided for @managerTeamSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats équipe'**
+  String get managerTeamSection;
+
+  /// No description provided for @managerSelfSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes résultats'**
+  String get managerSelfSection;
+
+  /// No description provided for @managerMembersSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commerciaux'**
+  String get managerMembersSection;
+
+  /// No description provided for @managerTeamEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun commercial rattaché.'**
+  String get managerTeamEmpty;
+
+  /// No description provided for @managerKpiProspects.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prospects'**
+  String get managerKpiProspects;
+
+  /// No description provided for @managerKpiConverted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Convertis'**
+  String get managerKpiConverted;
+
+  /// No description provided for @managerKpiConversion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de conversion'**
+  String get managerKpiConversion;
+
+  /// No description provided for @managerKpiAppointments.
+  ///
+  /// In fr, this message translates to:
+  /// **'RDV à venir'**
+  String get managerKpiAppointments;
+
+  /// No description provided for @managerKpiStale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stale pipeline'**
+  String get managerKpiStale;
+
+  /// No description provided for @managerKpiMonthEarned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commissions (mois)'**
+  String get managerKpiMonthEarned;
+
+  /// No description provided for @managerKpiLifetimeEarned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commissions (total)'**
+  String get managerKpiLifetimeEarned;
+
+  /// No description provided for @managerKpiVets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Véto assignés'**
+  String get managerKpiVets;
 
   /// No description provided for @featureModules.
   ///

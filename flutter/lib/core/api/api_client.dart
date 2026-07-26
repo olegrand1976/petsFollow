@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
+import 'package:petsfollow_mobile/core/models/manager_overview.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/models/practice_availability.dart';
@@ -389,7 +390,7 @@ class ApiClient {
     return _completeLogin(data);
   }
 
-  Future<void> registerClient({
+  Future<Map<String, dynamic>> registerClient({
     required String email,
     required String password,
     required String fullName,
@@ -398,8 +399,14 @@ class ApiClient {
     String? commercialUserId,
     bool consent = false,
   }) async {
-    final code = inviteCode ?? await InviteCodeStore.instance.peek();
-    await dio.post(
+    final fromStore = await InviteCodeStore.instance.peek();
+    final code = (inviteCode != null && inviteCode.trim().isNotEmpty)
+        ? inviteCode.trim().toUpperCase()
+        : fromStore;
+    if (code != null && code.isNotEmpty) {
+      await InviteCodeStore.instance.save(code);
+    }
+    final res = await dio.post(
       '/api/v1/auth/register-client',
       data: {
         'email': email,
@@ -418,8 +425,27 @@ class ApiClient {
         },
       ),
     );
-    if (code != null && code.isNotEmpty) {
+    final data = res.data is Map ? res.data['data'] : null;
+    final inviteStatus =
+        data is Map ? data['inviteStatus']?.toString() ?? '' : '';
+    // Clear only after a successful claim; keep code for retry on login otherwise.
+    if (_inviteClaimSucceeded(inviteStatus)) {
       await InviteCodeStore.instance.save(null);
+    }
+    return data is Map
+        ? Map<String, dynamic>.from(data)
+        : <String, dynamic>{};
+  }
+
+  static bool _inviteClaimSucceeded(String status) {
+    switch (status) {
+      case 'referred':
+      case 'linked':
+      case 'granted':
+      case 'already_linked':
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -489,6 +515,24 @@ class ApiClient {
   Future<Map<String, dynamic>> getMyAppInvite() async {
     final res = await dio.get('/api/v1/me/app-invite');
     return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<ManagerOverview> getCommercialManagerOverview() async {
+    final res = await dio.get('/api/v1/commercial-manager/overview');
+    return ManagerOverview.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
+  }
+
+  Future<CommercialSelfStats> getCommercialManagerMemberOverview(
+    String memberUserId,
+  ) async {
+    final res = await dio.get(
+      '/api/v1/commercial-manager/team/$memberUserId/overview',
+    );
+    return CommercialSelfStats.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
   }
 
   Future<({List<dynamic> visits, List<dynamic> clients, List<dynamic> pets})>
@@ -606,6 +650,10 @@ class ApiClient {
     });
     final data = res.data['data'] as Map<String, dynamic>;
     if (_isMfaChallenge(data)) return data;
+    final inviteStatus = data['inviteStatus']?.toString() ?? '';
+    if (_inviteClaimSucceeded(inviteStatus)) {
+      await InviteCodeStore.instance.save(null);
+    }
     return _completeLogin(data);
   }
 
@@ -695,8 +743,11 @@ class ApiClient {
     final code = await InviteCodeStore.instance.peek();
     if (code == null || code.isEmpty) return;
     try {
-      await claimVetInvite(code);
-      await InviteCodeStore.instance.save(null);
+      final result = await claimVetInvite(code);
+      final status = result['status']?.toString() ?? '';
+      if (_inviteClaimSucceeded(status) || status.isNotEmpty) {
+        await InviteCodeStore.instance.save(null);
+      }
     } catch (e) {
       debugPrint('claim invite failed: $e');
     }

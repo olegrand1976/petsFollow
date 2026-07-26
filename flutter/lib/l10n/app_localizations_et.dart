@@ -435,6 +435,12 @@ class AppLocalizationsEt extends AppLocalizations {
       'Peate nõustuma tingimuste ja privaatsuspoliitikaga.';
 
   @override
+  String get registerInviteCode => 'Kutsekood (valikuline)';
+
+  @override
+  String get registerInviteCodeHint => 'Sisestage QR / müügilinki kood';
+
+  @override
   String get nearbyCommercialTitle => 'Müügiesindaja teie lähedal';
 
   @override
@@ -1421,7 +1427,53 @@ class AppLocalizationsEt extends AppLocalizations {
       'Kliendi kutse QR ja Pro veebi juurdepääs.';
 
   @override
+  String get commercialManagerFieldSubtitle =>
+      'Meeskonna tulemused, kliendi kutse QR ja Pro veebi juurdepääs.';
+
+  @override
   String get commercialOpenProWeb => 'Ava Pro veebisait';
+
+  @override
+  String get managerTeamCta => 'Minu meeskonna tulemused';
+
+  @override
+  String get managerTeamTitle => 'Meeskond';
+
+  @override
+  String get managerTeamSection => 'Meeskonna tulemused';
+
+  @override
+  String get managerSelfSection => 'Minu tulemused';
+
+  @override
+  String get managerMembersSection => 'Müügiesindajad';
+
+  @override
+  String get managerTeamEmpty => 'Müügiesindajaid ei ole määratud.';
+
+  @override
+  String get managerKpiProspects => 'Potentsiaalsed kliendid';
+
+  @override
+  String get managerKpiConverted => 'Konverteeritud';
+
+  @override
+  String get managerKpiConversion => 'Konversioonimäär';
+
+  @override
+  String get managerKpiAppointments => 'Tulevased kohtumised';
+
+  @override
+  String get managerKpiStale => 'Seisnud pipeline';
+
+  @override
+  String get managerKpiMonthEarned => 'Komisjonitasud (kuu)';
+
+  @override
+  String get managerKpiLifetimeEarned => 'Komisjonitasud (kokku)';
+
+  @override
+  String get managerKpiVets => 'Määratud loomaarstid';
 
   @override
   String get featureModules => 'Valikud';

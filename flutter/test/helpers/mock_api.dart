@@ -45,9 +45,13 @@ class MockApi {
   void install() {
     _interceptor = InterceptorsWrapper(
       onRequest: (options, handler) {
-        final key = '${options.method.toUpperCase()} ${_normalize(options.path)}';
+        final method = options.method.toUpperCase();
+        final candidates = <String>{
+          '$method ${_normalize(options.path)}',
+          '$method ${_normalize(options.uri.path)}',
+        };
         for (final entry in _routes.entries) {
-          if (entry.key.hasMatch(key)) {
+          if (candidates.any(entry.key.hasMatch)) {
             try {
               final res = entry.value(options);
               final status = res.statusCode ?? 200;
@@ -77,6 +81,7 @@ class MockApi {
             return;
           }
         }
+        final key = candidates.first;
         handler.reject(
           DioException(
             requestOptions: options,

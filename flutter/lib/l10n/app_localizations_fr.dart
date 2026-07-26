@@ -436,6 +436,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous devez accepter les conditions et la politique de confidentialité.';
 
   @override
+  String get registerInviteCode => 'Code d\'invitation (optionnel)';
+
+  @override
+  String get registerInviteCodeHint =>
+      'Saisissez le code du QR / lien commercial';
+
+  @override
   String get nearbyCommercialTitle => 'Commercial près de chez vous';
 
   @override
@@ -1426,7 +1433,53 @@ class AppLocalizationsFr extends AppLocalizations {
       'QR invitation clients et accès au site Pro.';
 
   @override
+  String get commercialManagerFieldSubtitle =>
+      'Résultats d\'équipe, QR invitation et accès au site Pro.';
+
+  @override
   String get commercialOpenProWeb => 'Ouvrir le site Pro';
+
+  @override
+  String get managerTeamCta => 'Résultats de mon équipe';
+
+  @override
+  String get managerTeamTitle => 'Équipe';
+
+  @override
+  String get managerTeamSection => 'Résultats équipe';
+
+  @override
+  String get managerSelfSection => 'Mes résultats';
+
+  @override
+  String get managerMembersSection => 'Commerciaux';
+
+  @override
+  String get managerTeamEmpty => 'Aucun commercial rattaché.';
+
+  @override
+  String get managerKpiProspects => 'Prospects';
+
+  @override
+  String get managerKpiConverted => 'Convertis';
+
+  @override
+  String get managerKpiConversion => 'Taux de conversion';
+
+  @override
+  String get managerKpiAppointments => 'RDV à venir';
+
+  @override
+  String get managerKpiStale => 'Stale pipeline';
+
+  @override
+  String get managerKpiMonthEarned => 'Commissions (mois)';
+
+  @override
+  String get managerKpiLifetimeEarned => 'Commissions (total)';
+
+  @override
+  String get managerKpiVets => 'Véto assignés';
 
   @override
   String get featureModules => 'Options';

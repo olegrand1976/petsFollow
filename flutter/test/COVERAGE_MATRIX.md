@@ -29,6 +29,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` |
 | Pro Light audio consent checkbox | · | ✓ | · | `pro_light_audio_consent_test` |
 | Commercial logout key | · | ✓ | · | messaging_keys_test |
+| Commercial manager team results | ✓ | ✓ | · | overview parse + CTA gated + list |
 | Smoke login→HR→poids | · | · | ✓ | `test/smoke/…` — `accessToken` ; `make test-flutter-smoke` |
 
 ## Run
