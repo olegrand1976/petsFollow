@@ -25,7 +25,8 @@ func (s *Store) CountPetsByOwner(ctx context.Context, ownerUserID string) (int, 
 	return n, err
 }
 
-// ListHouseholdUpcomingCare returns the next pending reminders across the owner's pets.
+// ListHouseholdUpcomingCare returns the next pending reminders across the owner's
+// pets that already have premium access (active / past_due / cancelled, not expired).
 func (s *Store) ListHouseholdUpcomingCare(ctx context.Context, ownerUserID string, limit int) ([]HouseholdCareItem, error) {
 	if limit <= 0 {
 		limit = 8
@@ -34,7 +35,11 @@ func (s *Store) ListHouseholdUpcomingCare(ctx context.Context, ownerUserID strin
 		SELECT cr.id::text, cr.pet_id::text, p.name, cr.type, COALESCE(cr.title,''), cr.due_at, cr.status
 		FROM care.reminders cr
 		JOIN pets.pets p ON p.id = cr.pet_id
-		WHERE p.owner_user_id=$1 AND cr.status='pending'
+		JOIN billing.pet_entitlements e ON e.pet_id = p.id
+		WHERE p.owner_user_id=$1
+			AND cr.status='pending'
+			AND e.status IN ('active','past_due','cancelled')
+			AND (e.valid_until IS NULL OR e.valid_until > NOW())
 		ORDER BY cr.due_at ASC
 		LIMIT $2`, ownerUserID, limit)
 	if err != nil {

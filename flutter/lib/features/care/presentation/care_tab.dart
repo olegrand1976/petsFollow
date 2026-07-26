@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
@@ -146,6 +147,25 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
           SnackBar(content: Text(mapApiError(e, l10n))),
         );
       }
+    }
+  }
+
+  Future<void> _resumePayment(Pet pet) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final url = await ApiClient.instance.resumeCheckout(pet.id);
+      final opened = await openExternalUrl(url);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+        );
+      }
+      await load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
     }
   }
 
@@ -475,13 +495,12 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                                         leading: const Icon(Icons.lock_outline),
                                         title: Text(pet.name),
                                         subtitle: Text(l10n.paymentFeaturesLocked),
-                                        trailing: Text(
-                                          l10n.badgePendingPayment,
-                                          style: TextStyle(
-                                            color: AppColors.gold,
-                                            fontSize: 12,
-                                          ),
+                                        trailing: TextButton(
+                                          key: Key('care_resume_payment_${pet.id}'),
+                                          onPressed: () => _resumePayment(pet),
+                                          child: Text(l10n.paymentResume),
                                         ),
+                                        onTap: () => _resumePayment(pet),
                                       ),
                                     ),
                                   const SizedBox(height: 8),

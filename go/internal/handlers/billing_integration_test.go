@@ -348,4 +348,17 @@ func TestBillingCreatePetSkipCheckout(t *testing.T) {
 	if code != http.StatusPaymentRequired {
 		t.Fatalf("expected 402 care create, got %d %#v", code, env)
 	}
+
+	// Household digest must not surface unpaid seeded reminders.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/household", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("household %d %#v", code, env)
+	}
+	upcoming, _ := dataMap(t, env)["upcomingReminders"].([]any)
+	for _, item := range upcoming {
+		m, _ := item.(map[string]any)
+		if m["petId"] == petID {
+			t.Fatalf("unpaid pet reminders leaked into household: %#v", m)
+		}
+	}
 }
