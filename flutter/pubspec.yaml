@@ -1,7 +1,7 @@
 name: petsfollow_mobile
 description: petsFollow — suivi santé de votre animal
 publish_to: 'none'
-version: 0.2.27+38
+version: 0.2.27+40
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -40,8 +40,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   mocktail: ^1.0.4
-  integration_test:
-    sdk: flutter
 
 flutter:
   uses-material-design: true
