@@ -100,7 +100,14 @@
 </template>
 
 <script setup lang="ts">
-import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens, sessionCookieOpts } from '~/composables/useAuth'
+import {
+  isAuthSuccess,
+  isMFAChallenge,
+  unwrapAuthData,
+  clearAuthTokens,
+  sessionCookieOpts,
+  markAuthSessionActive,
+} from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
@@ -122,6 +129,7 @@ const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
   // Align client marker with BFF Set-Cookie before middlewares run (non-httpOnly).
+  markAuthSessionActive()
   useCookie('pf_session', sessionCookieOpts()).value = '1'
   await syncFromUser()
   let target = '/login'

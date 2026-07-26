@@ -28,7 +28,11 @@ export function parseJwtRole(token: string | null | undefined): string | null {
   if (parts.length < 2) return null
   try {
     const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
-    return payload.role as string
+    // Expired access JWT must not drive AUTH_ENTRY redirects (SSR loop risk).
+    if (typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now()) {
+      return null
+    }
+    return (payload.role as string) || null
   } catch {
     return null
   }
@@ -92,6 +96,14 @@ function authCookieOpts() {
   }
 }
 
+/** Opts de purge JWT — httpOnly doit matcher setAuthCookies BFF. */
+function httpOnlyAuthCookieOpts() {
+  return {
+    ...authCookieOpts(),
+    httpOnly: true,
+  }
+}
+
 /** Marqueur pf_session (non-httpOnly) — aligné sur sessionMarkerOpts BFF. */
 export function sessionCookieOpts() {
   return {
@@ -101,10 +113,24 @@ export function sessionCookieOpts() {
 }
 
 /**
+ * Après clear dans la même requête SSR, getCookie peut encore renvoyer l'ancien
+ * JWT (Set-Cookie ne met pas à jour la map request) → boucle login↔dashboard.
+ */
+function authClearedState() {
+  return useState<boolean>('pf-auth-cleared', () => false)
+}
+
+/** Appeler après login / confirm réussi (SPA) pour réactiver hasSessionCookie. */
+export function markAuthSessionActive() {
+  authClearedState().value = false
+}
+
+/**
  * Session présente ? Les JWT sont httpOnly : côté client seul le marqueur
  * `pf_session` est visible ; côté SSR les cookies de requête restent lisibles.
  */
 export function hasSessionCookie(): boolean {
+  if (authClearedState().value) return false
   return !!(
     useCookie('pf_token').value
     || useCookie('pf_refresh').value
@@ -124,10 +150,10 @@ export async function fetchWsToken(): Promise<string> {
 }
 
 export async function clearAuthTokens() {
-  const opts = authCookieOpts()
+  authClearedState().value = true
   // Efficace en SSR ; côté client les cookies httpOnly ne sont supprimables que par la BFF.
-  useCookie('pf_token', opts).value = null
-  useCookie('pf_refresh', opts).value = null
+  useCookie('pf_token', httpOnlyAuthCookieOpts()).value = null
+  useCookie('pf_refresh', httpOnlyAuthCookieOpts()).value = null
   useCookie('pf_session', sessionCookieOpts()).value = null
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.
   useState('pro-user').value = null

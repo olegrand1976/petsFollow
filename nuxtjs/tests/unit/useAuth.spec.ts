@@ -11,6 +11,7 @@ import {
   parseJwtRole,
   unwrapAuthData,
   clearAuthTokens,
+  markAuthSessionActive,
   type AuthMFAChallenge,
   type AuthTokens,
 } from '../../composables/useAuth'
@@ -70,23 +71,28 @@ describe('useAuth helpers', () => {
     expect(extractAccessToken(mfa)).toBeNull()
   })
 
-  it('parseJwtRole décode le rôle du payload', () => {
-    const payload = btoa(JSON.stringify({ role: 'vet', sub: 'u1' }))
+  function jwtWithPayload(payload: Record<string, unknown>) {
+    const body = btoa(JSON.stringify(payload))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '')
-    const token = `hdr.${payload}.sig`
-    expect(parseJwtRole(token)).toBe('vet')
+    return `hdr.${body}.sig`
+  }
+
+  it('parseJwtRole décode le rôle du payload', () => {
+    expect(parseJwtRole(jwtWithPayload({ role: 'vet', sub: 'u1' }))).toBe('vet')
     expect(parseJwtRole('bad')).toBeNull()
     expect(parseJwtRole(null)).toBeNull()
   })
 
+  it('parseJwtRole ignore un JWT expiré', () => {
+    expect(parseJwtRole(jwtWithPayload({ role: 'vet', exp: 1 }))).toBeNull()
+    const futureExp = Math.floor(Date.now() / 1000) + 3600
+    expect(parseJwtRole(jwtWithPayload({ role: 'vet', exp: futureExp }))).toBe('vet')
+  })
+
   it('parseJwtRole reconnaît commercial', () => {
-    const payload = btoa(JSON.stringify({ role: 'commercial', sub: 'c1' }))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '')
-    expect(parseJwtRole(`hdr.${payload}.sig`)).toBe('commercial')
+    expect(parseJwtRole(jwtWithPayload({ role: 'commercial', sub: 'c1' }))).toBe('commercial')
   })
 
   it('isAuthSuccess accepte le flag BFF ou les tokens legacy, refuse le MFA', () => {
@@ -115,6 +121,11 @@ describe('useAuth helpers', () => {
     expect(cookieStore.get('pf_refresh')).toBeNull()
     expect(cookieStore.get('pf_session')).toBeNull()
     expect(useState('pro-user').value).toBeNull()
+    // Stale request cookies must not re-arm hasSession (SSR redirect loop).
+    cookieStore.set('pf_token', 'stale.jwt')
+    expect(hasSessionCookie()).toBe(false)
+    markAuthSessionActive()
+    expect(hasSessionCookie()).toBe(true)
   })
 
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
@@ -148,10 +159,8 @@ describe('useAuth helpers', () => {
   })
 
   it('parseJwtRole reconnaît commercial_manager', () => {
-    const payload = btoa(JSON.stringify({ role: 'commercial_manager', sub: 'm1' }))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '')
-    expect(parseJwtRole(`hdr.${payload}.sig`)).toBe('commercial_manager')
+    expect(parseJwtRole(jwtWithPayload({ role: 'commercial_manager', sub: 'm1' }))).toBe(
+      'commercial_manager',
+    )
   })
 })

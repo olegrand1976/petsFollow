@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+import { markAuthSessionActive } from '~/composables/useAuth'
+
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
@@ -94,6 +96,7 @@ onMounted(async () => {
     confirmedEmail.value = data.email || ''
     if (data.authenticated || data.accessToken) {
       // Cookies httpOnly posés par la BFF.
+      markAuthSessionActive()
       sessionReady.value = true
     }
   } catch (e: any) {

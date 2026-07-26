@@ -15,10 +15,7 @@ const PUBLIC_PATHS = new Set([
 const AUTH_ENTRY_PATHS = new Set(['/', '/login', '/register', '/register/sent'])
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const token = useCookie('pf_token')
-  const refresh = useCookie('pf_refresh')
-  const session = useCookie('pf_session')
-  const hasSession = !!(token.value || refresh.value || session.value)
+  const hasSession = hasSessionCookie()
   const isPublic = PUBLIC_PATHS.has(to.path)
     || to.path.startsWith('/register')
     || to.path.startsWith('/legal/')
@@ -27,23 +24,28 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (isPublic) {
     if (hasSession && AUTH_ENTRY_PATHS.has(to.path)) {
-      let role = parseJwtRole(token.value)
-      if (!role) {
-        try {
-          const { fetchUser } = useProUser()
-          const me = await fetchUser(true)
-          role = me?.role ?? null
-        } catch {
-          role = null
+      // Toujours valider via /me — un JWT expiré/révoqué ne doit pas rediriger
+      // vers le home (boucle SSR login↔dashboard si getCookie reste stale).
+      try {
+        const { fetchUser } = useProUser()
+        const me = await fetchUser(true)
+        // Soft fail (5xx/network) : ne pas purger une session encore valide.
+        if (!me) return
+        if (isProRole(me.role)) {
+          return navigateTo(homePathForRole(me.role, { profileComplete: me.profileComplete }))
         }
+        // Session OK mais rôle non-Pro (ex. client).
+        await clearAuthTokens()
+      } catch {
+        // 401/403 uniquement (fetchUser throw).
+        await clearAuthTokens()
       }
-      if (isProRole(role)) return navigateTo(homePathForRole(role))
-      await clearAuthTokens()
-      if (to.path === '/login' || to.path === '/register') return
+      // Landing et écrans auth : rester après purge (pas de re-redirect).
+      if (to.path === '/' || to.path === '/login' || to.path === '/register') return
       return navigateTo('/login')
     }
     return
   }
 
-  if (!hasSession) return navigateTo('/login')
+  if (!hasSessionCookie()) return navigateTo('/login')
 })

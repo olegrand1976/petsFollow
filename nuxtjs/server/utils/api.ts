@@ -60,10 +60,21 @@ export function setAuthCookies(
 }
 
 export function clearAuthCookies(event: H3Event) {
-  const opts = { path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production' }
-  deleteCookie(event, 'pf_token', opts)
-  deleteCookie(event, 'pf_refresh', opts)
-  deleteCookie(event, 'pf_session', opts)
+  // httpOnly must match setAuthCookies or browsers may keep pf_token / pf_refresh.
+  const tokenOpts = {
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  }
+  const markerOpts = {
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+  }
+  deleteCookie(event, 'pf_token', tokenOpts)
+  deleteCookie(event, 'pf_refresh', tokenOpts)
+  deleteCookie(event, 'pf_session', markerOpts)
 }
 
 /**
