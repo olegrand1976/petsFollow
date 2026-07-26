@@ -9,6 +9,7 @@ import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/core/widgets/google_logo.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/forgot_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/register_screen.dart';
@@ -378,13 +379,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildConsentRow(l10n),
-          const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _busy ? null : submitGoogle,
-            icon: const Icon(Icons.g_mobiledata, size: 28),
+            icon: const GoogleLogo(size: 20),
             label: Text(l10n.loginWithGoogle),
           ),
+          const SizedBox(height: 16),
+          _buildConsentRow(l10n),
         ],
       ],
     );

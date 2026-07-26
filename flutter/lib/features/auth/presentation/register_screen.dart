@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/core/widgets/google_logo.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
@@ -417,7 +418,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (GoogleAuth.isConfigured)
         OutlinedButton.icon(
           onPressed: _busy ? null : submitGoogle,
-          icon: const Icon(Icons.g_mobiledata, size: 28),
+          icon: const GoogleLogo(size: 20),
           label: Text(l10n.loginWithGoogle),
         ),
     ];
