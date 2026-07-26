@@ -1114,6 +1114,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get litterTag => 'Tag portée';
 
   @override
+  String get petBirthDate => 'Date de naissance';
+
+  @override
+  String get petBirthDateInvalid => 'Date de naissance invalide (AAAA-MM-JJ)';
+
+  @override
   String get discoveryMarkDone => 'Mission accomplie';
 
   @override

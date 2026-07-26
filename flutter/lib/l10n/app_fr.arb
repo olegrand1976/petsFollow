@@ -457,6 +457,8 @@
   "kennelQuickEncodeTitle": "Encodage portée (élevage)",
   "kennelRequired": "Le pack Élevage est requis pour l'encodage par lot",
   "litterTag": "Tag portée",
+  "petBirthDate": "Date de naissance",
+  "petBirthDateInvalid": "Date de naissance invalide (AAAA-MM-JJ)",
   "discoveryMarkDone": "Mission accomplie",
   "notificationPreferences": "Préférences de notifications",
   "notificationPrefsHint": "Choisissez les types de notifications que vous souhaitez recevoir.",

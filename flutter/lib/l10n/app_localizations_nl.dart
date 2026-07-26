@@ -1109,6 +1109,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get litterTag => 'Nest-tag';
 
   @override
+  String get petBirthDate => 'Geboortedatum';
+
+  @override
+  String get petBirthDateInvalid => 'Ongeldige geboortedatum (JJJJ-MM-DD)';
+
+  @override
   String get discoveryMarkDone => 'Missie voltooid';
 
   @override

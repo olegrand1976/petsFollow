@@ -387,6 +387,8 @@
   "kennelQuickEncodeTitle": "Litter quick encode",
   "kennelRequired": "Kennel pack is required for batch encoding",
   "litterTag": "Litter tag",
+  "petBirthDate": "Date of birth",
+  "petBirthDateInvalid": "Invalid date of birth (YYYY-MM-DD)",
   "discoveryMarkDone": "Mission complete",
   "notificationPreferences": "Notification preferences",
   "notificationPrefsHint": "Choose which notification types you want to receive.",

@@ -59,33 +59,83 @@ func (s *Store) ListHouseholdUpcomingCare(ctx context.Context, ownerUserID strin
 	return out, rows.Err()
 }
 
-// CreatePet inserts a pet (Family no longer caps pet count).
-func (s *Store) CreatePetRespectingFamily(ctx context.Context, p Pet) (Pet, error) {
-	tx, err := s.pool.Begin(ctx)
+// PetWithPendingEntitlement is one pet + billing row to insert atomically.
+type PetWithPendingEntitlement struct {
+	Pet         Pet
+	PlanCode    string
+	BillingMode string
+	AmountCents int
+}
+
+// CreatePetWithPendingEntitlement inserts a pet and its pending entitlement in one transaction
+// so a failed entitlement never leaves an orphan pet without billing row.
+func (s *Store) CreatePetWithPendingEntitlement(ctx context.Context, p Pet, planCode, billingMode string, amountCents int) (Pet, error) {
+	out, err := s.CreatePetsBatchWithPendingEntitlements(ctx, []PetWithPendingEntitlement{{
+		Pet: p, PlanCode: planCode, BillingMode: billingMode, AmountCents: amountCents,
+	}})
 	if err != nil {
 		return Pet{}, err
+	}
+	return out[0], nil
+}
+
+// CreatePetsBatchWithPendingEntitlements inserts all pets + pending entitlements in a single
+// transaction (all-or-nothing). Owner advisory lock is taken once for the batch.
+func (s *Store) CreatePetsBatchWithPendingEntitlements(ctx context.Context, items []PetWithPendingEntitlement) ([]Pet, error) {
+	if len(items) == 0 {
+		return nil, ErrValidation
+	}
+	ownerID := items[0].Pet.OwnerUserID
+	for _, it := range items {
+		if it.Pet.OwnerUserID != ownerID {
+			return nil, ErrValidation
+		}
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, p.OwnerUserID); err != nil {
-		return Pet{}, err
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, ownerID); err != nil {
+		return nil, err
 	}
 
-	p.ID = uuid.NewString()
-	if p.PaymentStatus == "" {
-		p.PaymentStatus = "pending_payment"
+	out := make([]Pet, 0, len(items))
+	for _, it := range items {
+		p := it.Pet
+		p.ID = uuid.NewString()
+		if p.PaymentStatus == "" {
+			p.PaymentStatus = "pending_payment"
+		}
+		err = tx.QueryRow(ctx, `
+			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+			RETURNING created_at`,
+			p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag,
+		).Scan(&p.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		entID := uuid.NewString()
+		var ent Entitlement
+		err = tx.QueryRow(ctx, `
+			INSERT INTO billing.pet_entitlements (id, pet_id, owner_user_id, plan_code, billing_mode, status, amount_cents, currency)
+			VALUES ($1,$2,$3,$4,$5,'pending',$6,'eur')
+			RETURNING id::text, pet_id::text, owner_user_id::text, plan_code, billing_mode, status, amount_cents, currency, created_at`,
+			entID, p.ID, p.OwnerUserID, it.PlanCode, it.BillingMode, it.AmountCents,
+		).Scan(&ent.ID, &ent.PetID, &ent.OwnerUserID, &ent.PlanCode, &ent.BillingMode, &ent.Status, &ent.AmountCents, &ent.Currency, &ent.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		p.Entitlement = &ent
+		out = append(out, p)
 	}
-	err = tx.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-		RETURNING created_at`,
-		p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag,
-	).Scan(&p.CreatedAt)
-	if err != nil {
-		return Pet{}, err
-	}
+
 	if err := tx.Commit(ctx); err != nil {
-		return Pet{}, err
+		return nil, err
 	}
-	return p, nil
+	return out, nil
 }

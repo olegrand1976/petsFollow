@@ -137,7 +137,9 @@ class Pet {
       ownerUserId: json['ownerUserId'] as String?,
       permission: json['permission'] as String?,
       entitlement: PetEntitlement.fromJson(
-        json['entitlement'] as Map<String, dynamic>?,
+        json['entitlement'] is Map
+            ? Map<String, dynamic>.from(json['entitlement'] as Map)
+            : null,
       ),
       heartrateDurationsSec: rawDurations == null || rawDurations.isEmpty
           ? const [60]

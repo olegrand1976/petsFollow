@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class KennelQuickEncodeScreen extends StatefulWidget {
@@ -56,6 +58,9 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
         'species': r.species,
         if (birth.isNotEmpty) 'birthDate': birth,
         'litterTag': r.litterTag.text.trim(),
+        // Default steer plan (same as API defaultStr) — explicit for clarity.
+        'plan': 'triennial',
+        'billingMode': 'subscription',
       });
     }
     if (pets.isEmpty) return;
@@ -66,9 +71,41 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      final raw = e.toString();
-      final msg = raw.contains('vet_link_required') ? l10n.noVets : raw;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      final code = apiErrorCode(e);
+      final msg = mapApiError(e, l10n);
+      if (code == 'vet_link_required') {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            key: const Key('kennel_vet_link_dialog'),
+            content: Text(msg),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                key: const Key('kennel_link_vet'),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+                  );
+                },
+                child: Text(l10n.addVetByEmail),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const Key('kennel_error'),
+            content: Text(msg),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -123,7 +160,10 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _rows[i].birth,
-              decoration: InputDecoration(labelText: l10n.horseCompetitionDate),
+              decoration: InputDecoration(
+                labelText: l10n.petBirthDate,
+                hintText: 'YYYY-MM-DD',
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -139,6 +179,7 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
           ),
           const SizedBox(height: 12),
           FilledButton(
+            key: const Key('kennel_submit'),
             onPressed: _submitting ? null : _submit,
             child: _submitting
                 ? const SizedBox(

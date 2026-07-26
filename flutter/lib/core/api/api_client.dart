@@ -871,7 +871,7 @@ class ApiClient {
 
   Future<Map<String, dynamic>> createPet(Map<String, dynamic> body) async {
     final res = await dio.post('/api/v1/pets', data: body);
-    return res.data['data'] as Map<String, dynamic>;
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   /// Kennel privilege: create several pets in one call (`POST /pets/batch`).
@@ -881,7 +881,7 @@ class ApiClient {
 
   Future<Map<String, dynamic>> createPetsBatch(List<Map<String, dynamic>> pets) async {
     final res = await dio.post('/api/v1/pets/batch', data: {'pets': pets});
-    return Map<String, dynamic>.from(res.data['data'] as Map);
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> getPet(String petId) async {

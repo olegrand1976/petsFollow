@@ -1109,6 +1109,12 @@ class AppLocalizationsEt extends AppLocalizations {
   String get litterTag => 'Pesakonna silt';
 
   @override
+  String get petBirthDate => 'Sünnikuupäev';
+
+  @override
+  String get petBirthDateInvalid => 'Vigane sünnikuupäev (AAAA-KK-PP)';
+
+  @override
   String get discoveryMarkDone => 'Missioon täidetud';
 
   @override

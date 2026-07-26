@@ -305,8 +305,9 @@ func TestBillingCreatePetSkipCheckout(t *testing.T) {
 	api := newTestAPI(t)
 	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
 
+	petName := "SkipPay-" + uniqueEmail("pet")
 	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
-		"name": "SkipPay-" + uniqueEmail("pet"), "species": "dog", "breed": "Mix",
+		"name": petName, "species": "dog", "breed": "Mix",
 		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
 	})
 	if code != http.StatusCreated {
@@ -330,6 +331,31 @@ func TestBillingCreatePetSkipCheckout(t *testing.T) {
 	ent, _ := pet["entitlement"].(map[string]any)
 	if ent["status"] != "pending" || ent["planCode"] != "triennial" {
 		t.Fatalf("expected pending triennial entitlement, got %#v", ent)
+	}
+
+	// Listed immediately after create-only.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list pets %d %#v", code, env)
+	}
+	list, _ := env["data"].([]any)
+	found := false
+	for _, item := range list {
+		m, _ := item.(map[string]any)
+		if m["id"] == petID {
+			found = true
+			if m["name"] != petName {
+				t.Fatalf("listed pet name %#v want %s", m["name"], petName)
+			}
+			listedEnt, _ := m["entitlement"].(map[string]any)
+			if listedEnt["status"] != "pending" {
+				t.Fatalf("listed entitlement not pending: %#v", listedEnt)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("created pet %s not in list (%d pets)", petID, len(list))
 	}
 
 	// Resume checkout still works after create-only.
@@ -361,4 +387,241 @@ func TestBillingCreatePetSkipCheckout(t *testing.T) {
 			t.Fatalf("unpaid pet reminders leaked into household: %#v", m)
 		}
 	}
+}
+
+func TestBillingCreatePetRejectsInvalidBirthDate(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	bad := "not-a-date"
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
+		"name": "BadBirth", "species": "dog", "birthDate": bad,
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("expected 400 invalid birth, got %d %#v", code, env)
+	}
+	if msgKey := errorMsgKey(env); msgKey != "invalid_birth_date" {
+		t.Fatalf("expected invalid_birth_date, got %#v", env)
+	}
+}
+
+func TestBillingCreatePetRequiresNameSpecies(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
+		"name": "  ", "species": "dog",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("expected 400 empty name, got %d %#v", code, env)
+	}
+	if msgKey := errorMsgKey(env); msgKey != "name_species_required" {
+		t.Fatalf("expected name_species_required, got %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
+		"name": "Rex", "species": "",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("expected 400 empty species, got %d %#v", code, env)
+	}
+}
+
+func TestBillingCreatePetsBatchRejectsInvalidPlan(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	// Count before — invalid second row must not leave the first pet committed.
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list before %d %#v", code, env)
+	}
+	before := len(env["data"].([]any))
+
+	goodName := "BatchOk-" + uniqueEmail("pet")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/batch", ownerTok, map[string]any{
+		"pets": []any{
+			map[string]any{
+				"name": goodName, "species": "dog",
+				"plan": "triennial", "billingMode": "subscription",
+			},
+			map[string]any{
+				"name": "BatchBad-" + uniqueEmail("pet"), "species": "dog",
+				"plan": "lifetime_gold", "billingMode": "subscription",
+			},
+		},
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("expected 400 invalid plan, got %d %#v", code, env)
+	}
+	if msgKey := errorMsgKey(env); msgKey != "invalid_plan" {
+		t.Fatalf("expected invalid_plan, got %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list after %d %#v", code, env)
+	}
+	after := env["data"].([]any)
+	if len(after) != before {
+		t.Fatalf("batch validation fail must be atomic: before=%d after=%d", before, len(after))
+	}
+	for _, item := range after {
+		m, _ := item.(map[string]any)
+		if m["name"] == goodName {
+			t.Fatalf("good pet leaked despite batch validation fail: %#v", m)
+		}
+	}
+}
+
+func TestBillingCreatePetsBatchAtomicOK(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	n1 := "BatchA-" + uniqueEmail("pet")
+	n2 := "BatchB-" + uniqueEmail("pet")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/batch", ownerTok, map[string]any{
+		"pets": []any{
+			map[string]any{"name": n1, "species": "dog", "plan": "annual", "billingMode": "subscription"},
+			map[string]any{"name": n2, "species": "cat", "plan": "triennial", "billingMode": "subscription"},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("batch create %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	pets, _ := data["pets"].([]any)
+	if len(pets) != 2 {
+		t.Fatalf("expected 2 pets, got %#v", data)
+	}
+	ids := make([]string, 0, 2)
+	for _, item := range pets {
+		m, _ := item.(map[string]any)
+		id, _ := m["id"].(string)
+		if id == "" {
+			t.Fatalf("missing id: %#v", m)
+		}
+		ids = append(ids, id)
+		ent, _ := m["entitlement"].(map[string]any)
+		if ent["status"] != "pending" {
+			t.Fatalf("expected pending entitlement: %#v", m)
+		}
+		t.Cleanup(func() {
+			_, _ = api.pool.Exec(context.Background(), `DELETE FROM pets.pets WHERE id=$1`, id)
+		})
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list %d %#v", code, env)
+	}
+	found := map[string]bool{}
+	for _, item := range env["data"].([]any) {
+		m, _ := item.(map[string]any)
+		for _, id := range ids {
+			if m["id"] == id {
+				found[id] = true
+			}
+		}
+	}
+	for _, id := range ids {
+		if !found[id] {
+			t.Fatalf("batch pet %s not listed", id)
+		}
+	}
+}
+
+// failingCheckoutGateway forces StartCheckout to fail after pet+entitlement commit.
+type failingCheckoutGateway struct {
+	inner billing.Gateway
+}
+
+func (g failingCheckoutGateway) CreateCheckoutSession(ctx context.Context, req billing.CheckoutRequest) (billing.CheckoutSession, error) {
+	return billing.CheckoutSession{}, errStripeDown
+}
+
+func (g failingCheckoutGateway) CreatePortalSession(ctx context.Context, customerID, returnURL string) (billing.PortalSession, error) {
+	return g.inner.CreatePortalSession(ctx, customerID, returnURL)
+}
+
+func (g failingCheckoutGateway) CancelSubscription(ctx context.Context, subscriptionID string) error {
+	return g.inner.CancelSubscription(ctx, subscriptionID)
+}
+
+func (g failingCheckoutGateway) VerifyWebhook(payload []byte, signature string) (billing.StripeEvent, error) {
+	return g.inner.VerifyWebhook(payload, signature)
+}
+
+var errStripeDown = errString("stripe unavailable")
+
+type errString string
+
+func (e errString) Error() string { return string(e) }
+
+func TestBillingCreatePetCheckoutFailStill201(t *testing.T) {
+	inner := billing.NewMockGateway(webhookSecret(), "http://localhost:8291")
+	api := newTestAPIWithBilling(t, failingCheckoutGateway{inner: inner})
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	name := "CheckoutFail-" + uniqueEmail("pet")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
+		"name": name, "species": "dog", "breed": "Mix",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": false,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("expected 201 despite checkout fail, got %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	if _, has := data["checkoutUrl"]; has {
+		t.Fatalf("expected no checkoutUrl on stripe fail, got %#v", data)
+	}
+	pet, _ := data["pet"].(map[string]any)
+	petID, _ := pet["id"].(string)
+	if petID == "" {
+		t.Fatalf("missing pet id: %#v", data)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pets.pets WHERE id=$1`, petID)
+	})
+	if status, _ := pet["paymentStatus"].(string); status != "pending_payment" {
+		t.Fatalf("expected pending_payment, got %#v", pet)
+	}
+	ent, _ := pet["entitlement"].(map[string]any)
+	if ent["status"] != "pending" {
+		t.Fatalf("expected pending entitlement, got %#v", ent)
+	}
+
+	// Listed despite checkout failure.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list pets %d %#v", code, env)
+	}
+	found := false
+	for _, item := range env["data"].([]any) {
+		m, _ := item.(map[string]any)
+		if m["id"] == petID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("pet %s not listed after checkout fail", petID)
+	}
+}
+
+func errorMsgKey(env map[string]any) string {
+	errObj, _ := env["error"].(map[string]any)
+	if errObj == nil {
+		return ""
+	}
+	if k, _ := errObj["msgKey"].(string); k != "" {
+		return k
+	}
+	if k, _ := errObj["messageKey"].(string); k != "" {
+		return k
+	}
+	return ""
 }

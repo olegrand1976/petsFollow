@@ -485,31 +485,65 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
+	name := strings.TrimSpace(req.Name)
+	species := strings.TrimSpace(req.Species)
+	if name == "" || species == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "name_species_required")
+		return
+	}
+	planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+		return
+	}
+	mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
+	if !billing.SupportsBillingMode(planCode, mode) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
+	plan, planErr := billing.GetPlan(planCode)
+	if planErr != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+		return
+	}
+
 	p := store.Pet{
-		Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg,
+		Name: name, Species: species, Breed: strings.TrimSpace(req.Breed), WeightKg: req.WeightKg,
 		PhotoURL: req.PhotoURL, LitterTag: strings.TrimSpace(req.LitterTag),
 		OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
 	}
 	if req.BirthDate != nil {
-		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
+		raw := strings.TrimSpace(*req.BirthDate)
+		if raw != "" {
+			t, perr := time.Parse("2006-01-02", raw)
+			if perr != nil {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_birth_date")
+				return
+			}
 			p.BirthDate = &t
 		}
 	}
-	created, err := a.store.CreatePetRespectingFamily(r.Context(), p)
+	created, err := a.store.CreatePetWithPendingEntitlement(r.Context(), p, string(planCode), string(mode), plan.AmountCents)
 	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "validation")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	if err := a.store.SeedDefaultCareReminders(r.Context(), created.ID, created.PracticeID, created.Species); err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
+	// Best-effort like batch — never fail create after pet+entitlement committed.
+	_ = a.store.SeedDefaultCareReminders(r.Context(), created.ID, created.PracticeID, created.Species)
 	if created.Species == "horse" {
 		_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
 	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
-		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
-	}, req.SkipCheckout)
+		SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
+	}, req.SkipCheckout, planCode, mode)
 }
 
 func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
@@ -540,12 +574,33 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "batch_size")
 		return
 	}
-	created := make([]store.Pet, 0, len(body.Pets))
+
+	// Validate all rows before any insert (all-or-nothing TX).
+	items := make([]store.PetWithPendingEntitlement, 0, len(body.Pets))
 	for _, req := range body.Pets {
 		name := strings.TrimSpace(req.Name)
 		species := strings.TrimSpace(req.Species)
 		if name == "" || species == "" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "name_species_required")
+			return
+		}
+		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+			return
+		}
+		mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+			return
+		}
+		if !billing.SupportsBillingMode(planCode, mode) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+			return
+		}
+		plan, planErr := billing.GetPlan(planCode)
+		if planErr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
 			return
 		}
 		p := store.Pet{
@@ -554,39 +609,35 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 			OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
 		}
 		if req.BirthDate != nil {
-			if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
+			raw := strings.TrimSpace(*req.BirthDate)
+			if raw != "" {
+				t, perr := time.Parse("2006-01-02", raw)
+				if perr != nil {
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_birth_date")
+					return
+				}
 				p.BirthDate = &t
 			}
 		}
-		pet, err := a.store.CreatePetRespectingFamily(r.Context(), p)
-		if err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		items = append(items, store.PetWithPendingEntitlement{
+			Pet: p, PlanCode: string(planCode), BillingMode: string(mode), AmountCents: plan.AmountCents,
+		})
+	}
+
+	created, err := a.store.CreatePetsBatchWithPendingEntitlements(r.Context(), items)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "validation")
 			return
 		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	for _, pet := range created {
 		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, pet.PracticeID, pet.Species)
 		if pet.Species == "horse" {
 			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
 		}
-		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
-		if err != nil {
-			planCode = billing.PlanTriennial
-		}
-		mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
-		if err != nil || !billing.SupportsBillingMode(planCode, mode) {
-			mode = billing.ModeSubscription
-			if !billing.SupportsBillingMode(planCode, mode) {
-				mode = billing.ModeOneTime
-			}
-		}
-		plan, _ := billing.GetPlan(planCode)
-		if _, err := a.store.CreateEntitlement(r.Context(), pet.ID, id.UserID, string(planCode), string(mode), plan.AmountCents); err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
-			pet.Entitlement = &ent
-		}
-		created = append(created, pet)
 	}
 	httpx.WriteData(w, http.StatusCreated, map[string]any{"pets": created, "count": len(created)})
 }

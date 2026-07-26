@@ -2134,6 +2134,18 @@ abstract class AppLocalizations {
   /// **'Tag portée'**
   String get litterTag;
 
+  /// No description provided for @petBirthDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance'**
+  String get petBirthDate;
+
+  /// No description provided for @petBirthDateInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance invalide (AAAA-MM-JJ)'**
+  String get petBirthDateInvalid;
+
   /// No description provided for @discoveryMarkDone.
   ///
   /// In fr, this message translates to:

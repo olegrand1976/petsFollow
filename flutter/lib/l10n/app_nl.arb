@@ -394,6 +394,8 @@
   "kennelQuickEncodeTitle": "Nest snel encoderen",
   "kennelRequired": "Kennelpakket is vereist voor batch-encoding",
   "litterTag": "Nest-tag",
+  "petBirthDate": "Geboortedatum",
+  "petBirthDateInvalid": "Ongeldige geboortedatum (JJJJ-MM-DD)",
   "discoveryMarkDone": "Missie voltooid",
   "notificationPreferences": "Meldingsvoorkeuren",
   "notificationPrefsHint": "Kies welke meldingstypes u wilt ontvangen.",

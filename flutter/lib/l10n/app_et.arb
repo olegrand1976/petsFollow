@@ -387,6 +387,8 @@
   "kennelQuickEncodeTitle": "Pesakonna kiirkodeerimine",
   "kennelRequired": "Partii kodeerimiseks on vaja Kennel paketti",
   "litterTag": "Pesakonna silt",
+  "petBirthDate": "Sünnikuupäev",
+  "petBirthDateInvalid": "Vigane sünnikuupäev (AAAA-KK-PP)",
   "discoveryMarkDone": "Missioon täidetud",
   "notificationPreferences": "Teavituste eelistused",
   "notificationPrefsHint": "Valige, milliseid teavitusi soovite vastu võtta.",

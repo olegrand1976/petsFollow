@@ -387,6 +387,8 @@
   "kennelQuickEncodeTitle": "Codificación rápida de camada",
   "kennelRequired": "El pack Criadero es necesario para la codificación por lotes",
   "litterTag": "Etiqueta de camada",
+  "petBirthDate": "Fecha de nacimiento",
+  "petBirthDateInvalid": "Fecha de nacimiento no válida (AAAA-MM-DD)",
   "discoveryMarkDone": "Misión completada",
   "notificationPreferences": "Preferencias de notificación",
   "notificationPrefsHint": "Elija qué tipos de notificación desea recibir.",

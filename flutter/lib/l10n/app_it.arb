@@ -457,6 +457,8 @@
   "kennelQuickEncodeTitle": "Codifica della gamma (allevamento)",
   "kennelRequired": "Il pacchetto di allevamento è richiesto per la codifica batch",
   "litterTag": "Ambito dell'etichetta",
+  "petBirthDate": "Data di nascita",
+  "petBirthDateInvalid": "Data di nascita non valida (AAAA-MM-GG)",
   "discoveryMarkDone": "Missione compiuta",
   "notificationPreferences": "Preferenze notifiche",
   "notificationPrefsHint": "Scegli i tipi di notifiche che desideri ricevere.",

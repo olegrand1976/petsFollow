@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -72,35 +73,17 @@ func (a *API) listBillingPlans(w http.ResponseWriter, r *http.Request) {
 }
 
 type createPetBilling struct {
-	Plan        string `json:"plan"`
-	BillingMode string `json:"billingMode"`
-	SuccessURL  string `json:"successUrl"`
-	CancelURL   string `json:"cancelUrl"`
+	SuccessURL string `json:"successUrl"`
+	CancelURL  string `json:"cancelUrl"`
 }
 
-func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pet store.Pet, owner authx.Identity, b createPetBilling, skipCheckout bool) {
-	planCode, err := billing.ParsePlanCode(defaultStr(b.Plan, string(billing.PlanTriennial)))
-	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
-		return
-	}
-	mode, err := billing.ParseBillingMode(defaultStr(b.BillingMode, string(billing.ModeSubscription)))
-	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
-		return
-	}
-	if !billing.SupportsBillingMode(planCode, mode) {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
-		return
-	}
-	plan, _ := billing.GetPlan(planCode)
-	_, err = a.store.CreateEntitlement(r.Context(), pet.ID, owner.UserID, string(planCode), string(mode), plan.AmountCents)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
-		pet.Entitlement = &ent
+// startPetBillingCheckout assumes pet + pending entitlement are already committed.
+// Checkout failures still return 201 with the pet so the client never sees a false "not saved".
+func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pet store.Pet, owner authx.Identity, b createPetBilling, skipCheckout bool, planCode billing.PlanCode, mode billing.BillingMode) {
+	if pet.Entitlement == nil {
+		if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
+			pet.Entitlement = &ent
+		}
 	}
 	if skipCheckout {
 		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
@@ -108,7 +91,8 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 	}
 	u, err := a.store.GetUserByID(r.Context(), owner.UserID)
 	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		log.Printf("create pet %s: load owner for checkout: %v", pet.ID, err)
+		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
 		return
 	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
@@ -121,7 +105,8 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 		CancelURL:   b.CancelURL,
 	})
 	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		log.Printf("create pet %s: checkout after commit: %v", pet.ID, err)
+		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, map[string]any{

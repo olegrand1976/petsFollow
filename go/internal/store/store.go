@@ -230,18 +230,6 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 	return out, rows.Err()
 }
 
-func (s *Store) CreatePet(ctx context.Context, p Pet) (Pet, error) {
-	p.ID = uuid.NewString()
-	if p.PaymentStatus == "" {
-		p.PaymentStatus = "pending_payment"
-	}
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag).Scan(&p.CreatedAt)
-	return p, err
-}
-
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8, updated_at=NOW()

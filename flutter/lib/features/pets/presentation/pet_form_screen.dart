@@ -133,9 +133,23 @@ class _PetFormScreenState extends State<PetFormScreen> {
         'skipCheckout': !payNow,
       });
       final checkoutUrl = res['checkoutUrl'] as String?;
-      final pet = res['pet'] as Map<String, dynamic>? ?? res;
-      final petId = pet['id'] as String?;
-      if (petId != null && photoFile != null) {
+      final rawPet = res['pet'];
+      final pet = rawPet is Map
+          ? Map<String, dynamic>.from(rawPet)
+          : res;
+      final petId = pet['id']?.toString();
+      if (petId == null || petId.isEmpty) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const Key('pet_form_error'),
+            content: Text(l10n.errorGeneric('missing pet id')),
+          ),
+        );
+        return;
+      }
+      if (photoFile != null) {
         try {
           await ApiClient.instance.uploadPetPhoto(petId, photoFile!.path);
         } catch (_) {
@@ -147,27 +161,34 @@ class _PetFormScreenState extends State<PetFormScreen> {
           }
         }
       }
-      if (payNow && checkoutUrl != null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final hasCheckout = checkoutUrl != null && checkoutUrl.isNotEmpty;
+      if (payNow && hasCheckout) {
         final opened = await openExternalUrl(checkoutUrl);
-        if (!opened && mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
-          );
-        } else if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.paymentPending)),
-          );
-        }
-      } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              opened ? l10n.paymentPending : l10n.errorCouldNotOpenLink,
+            ),
+          ),
+        );
+      } else if (payNow && !hasCheckout) {
+        // Pet created but checkout unavailable — resume later via needsResumePayment.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.petSavedPendingPayment)),
         );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const Key('pet_form_saved'),
+            content: Text(l10n.petSavedPendingPayment),
+          ),
+        );
       }
-      if (!mounted || petId == null) return;
-      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;

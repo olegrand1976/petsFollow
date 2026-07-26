@@ -1116,6 +1116,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get litterTag => 'Ambito dell\'etichetta';
 
   @override
+  String get petBirthDate => 'Data di nascita';
+
+  @override
+  String get petBirthDateInvalid => 'Data di nascita non valida (AAAA-MM-GG)';
+
+  @override
   String get discoveryMarkDone => 'Missione compiuta';
 
   @override

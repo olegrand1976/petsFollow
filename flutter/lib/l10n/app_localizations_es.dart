@@ -1112,6 +1112,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get litterTag => 'Etiqueta de camada';
 
   @override
+  String get petBirthDate => 'Fecha de nacimiento';
+
+  @override
+  String get petBirthDateInvalid =>
+      'Fecha de nacimiento no válida (AAAA-MM-DD)';
+
+  @override
   String get discoveryMarkDone => 'Misión completada';
 
   @override
