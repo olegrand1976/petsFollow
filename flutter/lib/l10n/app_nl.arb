@@ -261,6 +261,7 @@
   "newPet": "Nieuw huisdier",
   "editPet": "Huisdier bewerken",
   "petName": "Naam",
+  "petNameRequired": "Geef de naam van het dier op",
   "species": "Soort",
   "breed": "Ras",
   "choosePlan": "Kies uw formule",

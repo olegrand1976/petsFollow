@@ -711,6 +711,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petName => 'Nome';
 
   @override
+  String get petNameRequired => 'Indica il nome dell’animale';
+
+  @override
   String get species => 'Specie';
 
   @override

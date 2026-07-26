@@ -261,6 +261,7 @@
   "newPet": "New pet",
   "editPet": "Edit pet",
   "petName": "Name",
+  "petNameRequired": "Enter the pet’s name",
   "species": "Species",
   "breed": "Breed",
   "choosePlan": "Choose your plan",

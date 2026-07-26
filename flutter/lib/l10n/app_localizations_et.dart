@@ -708,6 +708,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get petName => 'Nimi';
 
   @override
+  String get petNameRequired => 'Sisesta looma nimi';
+
+  @override
   String get species => 'Liik';
 
   @override

@@ -1420,6 +1420,12 @@ abstract class AppLocalizations {
   /// **'Nom'**
   String get petName;
 
+  /// No description provided for @petNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le nom de l’animal'**
+  String get petNameRequired;
+
   /// No description provided for @species.
   ///
   /// In fr, this message translates to:

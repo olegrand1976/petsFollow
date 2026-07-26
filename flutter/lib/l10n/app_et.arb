@@ -261,6 +261,7 @@
   "newPet": "Uus lemmikloom",
   "editPet": "Muuda lemmiklooma",
   "petName": "Nimi",
+  "petNameRequired": "Sisesta looma nimi",
   "species": "Liik",
   "breed": "Tõug",
   "choosePlan": "Valige oma plaan",

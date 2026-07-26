@@ -22,6 +22,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
   String selectedPlan = 'triennial';
   bool autoRenew = true;
   bool loading = false;
+  bool _nameError = false;
   List<Map<String, dynamic>> plans = [];
   XFile? photoFile;
 
@@ -106,13 +107,22 @@ class _PetFormScreenState extends State<PetFormScreen> {
   }
 
   Future<void> save() async {
-    setState(() => loading = true);
+    final trimmed = name.text.trim();
+    if (loading) return;
+    if (trimmed.isEmpty) {
+      setState(() => _nameError = true);
+      return;
+    }
+    setState(() {
+      _nameError = false;
+      loading = true;
+    });
     try {
       final renew = autoRenew || _subscriptionForced;
       final res = await ApiClient.instance.createPet({
-        'name': name.text,
+        'name': trimmed,
         'species': selectedSpecies,
-        'breed': breed.text,
+        'breed': breed.text.trim(),
         'plan': selectedPlan,
         'billingMode': renew ? 'subscription' : 'one_time',
       });
@@ -182,160 +192,212 @@ class _PetFormScreenState extends State<PetFormScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
-      body: SingleChildScrollView(
-          padding: scrollPaddingWithSystemBottom(context, all: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickPhoto,
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: AppColors.primary, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.18),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: _pickPhoto,
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.primary, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.18),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: ClipOval(
+                              child: photoFile != null
+                                  ? Image.file(
+                                      File(photoFile!.path),
+                                      fit: BoxFit.cover,
+                                      width: 140,
+                                      height: 140,
+                                    )
+                                  : ColoredBox(
+                                      color: AppColors.surfaceElevated,
+                                      child: Center(
+                                        child: Text(initial,
+                                            style: const TextStyle(
+                                                fontSize: 36,
+                                                fontWeight: FontWeight.w600)),
+                                      ),
+                                    ),
+                            ),
+                          ),
                         ),
-                        child: ClipOval(
-                          child: photoFile != null
-                              ? Image.file(
-                                  File(photoFile!.path),
-                                  fit: BoxFit.cover,
-                                  width: 140,
-                                  height: 140,
-                                )
-                              : ColoredBox(
-                                  color: AppColors.surfaceElevated,
-                                  child: Center(
-                                    child: Text(initial,
-                                        style: const TextStyle(
-                                            fontSize: 36,
-                                            fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.photoFrameHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: AppColors.textMuted, fontSize: 12),
+                        ),
+                        TextButton.icon(
+                          onPressed: _pickPhoto,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: Text(photoFile == null
+                              ? l10n.addPhoto
+                              : l10n.changePhoto),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_name'),
+                    controller: name,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l10n.petName,
+                      errorText: _nameError ? l10n.petNameRequired : null,
+                    ),
+                    onChanged: (_) {
+                      setState(() {
+                        if (_nameError && name.text.trim().isNotEmpty) {
+                          _nameError = false;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedSpecies,
+                    decoration: InputDecoration(labelText: l10n.species),
+                    items: [
+                      DropdownMenuItem(
+                          value: 'dog', child: Text(l10n.speciesDog)),
+                      DropdownMenuItem(
+                          value: 'cat', child: Text(l10n.speciesCat)),
+                      DropdownMenuItem(
+                          value: 'horse', child: Text(l10n.speciesHorse)),
+                      DropdownMenuItem(
+                          value: 'other', child: Text(l10n.speciesOther)),
+                    ],
+                    onChanged: (v) =>
+                        setState(() => selectedSpecies = v ?? 'dog'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                      controller: breed,
+                      decoration: InputDecoration(labelText: l10n.breed)),
+                  const SizedBox(height: 24),
+                  Text(l10n.choosePlan,
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  RadioGroup<String>(
+                    groupValue: selectedPlan,
+                    onChanged: (v) => setState(() {
+                      selectedPlan = v!;
+                      if (selectedPlan == 'monthly') {
+                        autoRenew = true;
+                      }
+                    }),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: displayPlans.map((plan) {
+                        final code = plan['code'] as String;
+                        final recommended = plan['recommended'] == true;
+                        return Card(
+                          color: selectedPlan == code
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                              : null,
+                          child: RadioListTile<String>(
+                            value: code,
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    plan['label'] as String? ?? code,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                        ),
-                      ),
+                                if (recommended) ...[
+                                  const SizedBox(width: 8),
+                                  Chip(
+                                    label: Text(l10n.recommended,
+                                        style: const TextStyle(fontSize: 11)),
+                                    visualDensity: VisualDensity.compact,
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .secondaryContainer,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.photoFrameHint,
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.autoRenewTitle),
+                    subtitle: Text(
+                      _subscriptionForced
+                          ? l10n.planMonthlySub
+                          : l10n.autoRenewSubtitle,
                     ),
-                    TextButton.icon(
-                      onPressed: _pickPhoto,
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: Text(
-                          photoFile == null ? l10n.addPhoto : l10n.changePhoto),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                  controller: name,
-                  decoration: InputDecoration(labelText: l10n.petName),
-                  onChanged: (_) => setState(() {})),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedSpecies,
-                decoration: InputDecoration(labelText: l10n.species),
-                items: [
-                  DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
-                  DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
-                  DropdownMenuItem(
-                      value: 'horse', child: Text(l10n.speciesHorse)),
-                  DropdownMenuItem(
-                      value: 'other', child: Text(l10n.speciesOther)),
+                    value: autoRenew || _subscriptionForced,
+                    onChanged: _subscriptionForced
+                        ? null
+                        : (v) => setState(() => autoRenew = v),
+                  ),
                 ],
-                onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                  controller: breed,
-                  decoration: InputDecoration(labelText: l10n.breed)),
-              const SizedBox(height: 24),
-              Text(l10n.choosePlan,
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              RadioGroup<String>(
-                groupValue: selectedPlan,
-                onChanged: (v) => setState(() {
-                  selectedPlan = v!;
-                  if (selectedPlan == 'monthly') {
-                    autoRenew = true;
-                  }
-                }),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: displayPlans.map((plan) {
-                    final code = plan['code'] as String;
-                    final recommended = plan['recommended'] == true;
-                    return Card(
-                      color: selectedPlan == code
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      child: RadioListTile<String>(
-                        value: code,
-                        title: Row(
-                          children: [
-                            Text(plan['label'] as String? ?? code),
-                            if (recommended) ...[
-                              const SizedBox(width: 8),
-                              Chip(
-                                label: Text(l10n.recommended,
-                                    style: const TextStyle(fontSize: 11)),
-                                visualDensity: VisualDensity.compact,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              SwitchListTile(
-                title: Text(l10n.autoRenewTitle),
-                subtitle: Text(
-                  _subscriptionForced
-                      ? l10n.planMonthlySub
-                      : l10n.autoRenewSubtitle,
-                ),
-                value: autoRenew || _subscriptionForced,
-                onChanged: _subscriptionForced
-                    ? null
-                    : (v) => setState(() => autoRenew = v),
-              ),
-              Text(_summary(l10n),
-                  style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: loading ? null : save,
-                child: loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l10n.continueToPayment),
-              ),
-            ],
+            ),
           ),
+          // Sticky CTA — always visible above the system nav bar.
+          Material(
+            elevation: 6,
+            color: Theme.of(context).colorScheme.surface,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                12 + systemBottomInset(context),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_summary(l10n),
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    key: const Key('pet_form_continue_payment'),
+                    onPressed: loading ? null : save,
+                    child: loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2))
+                        : Text(l10n.continueToPayment),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

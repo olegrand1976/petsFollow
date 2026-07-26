@@ -261,6 +261,7 @@
   "newPet": "Nueva mascota",
   "editPet": "Editar mascota",
   "petName": "Nombre",
+  "petNameRequired": "Indica el nombre del animal",
   "species": "Especie",
   "breed": "Raza",
   "choosePlan": "Elija su plan",

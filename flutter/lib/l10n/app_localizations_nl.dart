@@ -708,6 +708,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get petName => 'Naam';
 
   @override
+  String get petNameRequired => 'Geef de naam van het dier op';
+
+  @override
   String get species => 'Soort';
 
   @override
