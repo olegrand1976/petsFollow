@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
@@ -429,6 +430,8 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
     final title = pack == 'kennel'
         ? widget.l10n.kennelHouseholdTitle(count)
         : widget.l10n.familyHouseholdTitle(count);
+    final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    final now = DateTime.now();
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -450,12 +453,39 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
             ...upcoming.take(3).map((raw) {
               final item = Map<String, dynamic>.from(raw as Map);
               final petName = '${item['petName'] ?? ''}';
-              final title = '${item['title'] ?? item['type'] ?? ''}';
+              final reminderTitle = '${item['title'] ?? item['type'] ?? ''}';
+              final dueAt = DateTime.tryParse('${item['dueAt'] ?? ''}')?.toLocal();
+              final isOverdue = item['isOverdue'] == true ||
+                  (dueAt != null && dueAt.isBefore(now));
+              final dateLabel = dueAt == null
+                  ? null
+                  : (isOverdue
+                      ? '${widget.l10n.careOverdue} · ${dateFmt.format(dueAt)}'
+                      : dateFmt.format(dueAt));
               return Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '• $petName — $title',
-                  style: const TextStyle(fontSize: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '• $petName — $reminderTitle',
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                    if (dateLabel != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        dateLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isOverdue ? AppColors.alert : AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               );
             }),
