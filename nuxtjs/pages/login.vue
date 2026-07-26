@@ -104,9 +104,13 @@
 import {
   isAuthSuccess,
   isMFAChallenge,
+  isProRole,
   unwrapAuthData,
   finishClientLoginSession,
+  homePathForRole,
+  clearAuthTokens,
   AUTH_LOGIN_REASON_PRO_ONLY,
+  AUTH_POST_LOGIN_RELOAD_PATH,
 } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
@@ -131,7 +135,7 @@ const error = ref(
 const loading = ref(false)
 const googleBtnRef = ref<HTMLElement | null>(null)
 
-function handleAuthResult(res: unknown) {
+async function handleAuthResult(res: unknown) {
   const data = unwrapAuthData(res)
   if (isMFAChallenge(data)) {
     mfaToken.value = data.mfaToken
@@ -143,9 +147,16 @@ function handleAuthResult(res: unknown) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  // Cookies httpOnly posés par la BFF. Navigation document (pas de GET /api/me XHR) :
-  // Safari/iPad ne voit pas encore pf_token sur le XHR suivant → 401 + logout accidentel.
-  finishClientLoginSession()
+  const role = !isMFAChallenge(data) && typeof data.role === 'string' ? data.role : null
+  if (role && !isProRole(role)) {
+    await clearAuthTokens()
+    error.value = t('auth.login.proOnly')
+    return
+  }
+  // Navigation document vers la home du rôle (évite bounce `/` + XHR /me WebKit).
+  // Fallback `/` si role absent (ancien BFF) — auth.global SSR redirige alors.
+  const path = role ? homePathForRole(role) : AUTH_POST_LOGIN_RELOAD_PATH
+  finishClientLoginSession(path)
 }
 
 function mapAuthError(e: any) {

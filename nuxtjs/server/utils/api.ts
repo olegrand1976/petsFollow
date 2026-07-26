@@ -90,6 +90,7 @@ export function clearAuthCookies(event: H3Event) {
 /**
  * Absorbe une réponse auth Go : pose les cookies httpOnly et retire les JWT du body
  * renvoyé au navigateur. Les challenges MFA (sans accessToken) passent inchangés.
+ * Expose `role` (claim JWT) pour la navigation document post-login sans XHR /me.
  */
 export function absorbAuthTokens<T>(event: H3Event, res: T): T {
   const envelope = res as { data?: Record<string, unknown> } & Record<string, unknown>
@@ -98,8 +99,27 @@ export function absorbAuthTokens<T>(event: H3Event, res: T): T {
   if (!accessToken) return res
   setAuthCookies(event, { accessToken, refreshToken: data.refreshToken as string | undefined })
   const { accessToken: _a, refreshToken: _r, ...rest } = data
-  const sanitized = { ...rest, authenticated: true }
+  const role = roleFromAccessToken(accessToken)
+  const sanitized = {
+    ...rest,
+    authenticated: true,
+    ...(role ? { role } : {}),
+  }
   return (envelope?.data ? { ...envelope, data: sanitized } : sanitized) as T
+}
+
+/** Claim `role` du JWT access — pas de vérif crypto (token déjà émis par notre API). */
+export function roleFromAccessToken(accessToken: string): string | undefined {
+  const parts = accessToken.split('.')
+  if (parts.length < 2) return undefined
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = Buffer.from(b64, 'base64').toString('utf8')
+    const payload = JSON.parse(json) as { role?: unknown }
+    return typeof payload.role === 'string' ? payload.role : undefined
+  } catch {
+    return undefined
+  }
 }
 
 type TokenPair = { accessToken: string, refreshToken?: string, expiresIn?: number }

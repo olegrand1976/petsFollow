@@ -10,6 +10,8 @@ export type AuthTokens = {
   expiresIn?: number
   /** Posé par la BFF quand les cookies httpOnly ont été établis. */
   authenticated?: boolean
+  /** Claim rôle (BFF, après absorption) — pour redirect document sans XHR /me. */
+  role?: string
 }
 
 export type AuthMFAChallenge = {

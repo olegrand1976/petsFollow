@@ -40,10 +40,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
         // Soft fail (5xx/network) : ne pas purger une session encore valide.
         if (!me) return
         if (isProRole(me.role)) {
-          // Locale profil (remplace l'ancien applyPreferredLocale post-login SPA).
-          const { applyPreferredLocale } = useLocaleSync()
-          await applyPreferredLocale(me.preferredLocale)
-          return navigateTo(homePathForRole(me.role, { profileComplete: me.profileComplete }))
+          const home = homePathForRole(me.role, { profileComplete: me.profileComplete })
+          // Locale hors du try auth : un échec setLocale ne doit pas logout.
+          try {
+            const { applyPreferredLocale } = useLocaleSync()
+            await applyPreferredLocale(me.preferredLocale)
+          } catch {
+            /* best-effort */
+          }
+          return navigateTo(home)
         }
         // Session OK mais rôle non-Pro (ex. client) — message explicite sur /login.
         await clearAuthTokens()
