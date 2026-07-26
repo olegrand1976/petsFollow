@@ -49,7 +49,9 @@ jobs:
           go run ./cmd/petsfollow-api seed
       - name: Go tests (unit + integration)
         working-directory: go
-        run: go test ./...
+        # -p 1: packages share one Postgres. seed tests call seed.Run() and race with
+        # handlers (demo password resets → flaky 401 / pet_not_found).
+        run: go test ./... -p 1
 
   nuxt:
     runs-on: ubuntu-latest
@@ -129,9 +131,12 @@ jobs:
         working-directory: nuxtjs
         run: |
           npm run build
-          nohup npx nuxt preview --port 3002 --host 0.0.0.0 > /tmp/nuxt-preview.log 2>&1 &
+          # nuxi preview has no --host flag (ROOTDIR arg); binding via HOST/NITRO_HOST.
+          # --host 0.0.0.0 was interpreted as ROOTDIR → looked for nuxtjs/0.0.0.0/.output/nitro.json
+          nohup env HOST=127.0.0.1 NITRO_HOST=127.0.0.1 PORT=3002 NITRO_PORT=3002 \
+            npx nuxt preview --port 3002 > /tmp/nuxt-preview.log 2>&1 &
           for i in $(seq 1 60); do
-            if curl -sf http://localhost:3002 >/dev/null 2>&1; then
+            if curl -sf http://127.0.0.1:3002 >/dev/null 2>&1; then
               echo "Nuxt up"
               exit 0
             fi

@@ -245,10 +245,6 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if a.gemini == nil || !a.gemini.Configured() {
-		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
-		return
-	}
 	visitID := chi.URLParam(r, "visitID")
 	visit, err := a.store.GetVisit(r.Context(), visitID)
 	if err != nil {
@@ -258,7 +254,12 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	if !a.canManageVisit(w, r, id, visit) {
 		return
 	}
+	// Entitlement (402) before Gemini config (503): paywall must win when the module is off.
 	if !a.requireAiCrEntitlement(w, r, visit.PracticeID) {
+		return
+	}
+	if a.gemini == nil || !a.gemini.Configured() {
+		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
 		return
 	}
 	report, err := a.store.EnsureVisitReport(r.Context(), visitID, id.UserID)
