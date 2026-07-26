@@ -13,10 +13,11 @@ import (
 func TestSMTPConfirmFailCreatesSystemAlertTicket(t *testing.T) {
 	api := newTestAPI(t)
 	// Non-dev SMTP (user set + non-localhost host) so confirm mail errors propagate.
+	// USER set + empty PASS → fail-fast (no DNS dial), still triggers ALERT ticket.
 	api.api.TestReplaceNotifier(email.NewNotifierAuth(
 		"smtp.invalid.petsfollow", 587,
 		"petsFollow <noreply@petsfollow.app>",
-		"noreply@petsfollow.app", "bad-pass",
+		"noreply@petsfollow.app", "",
 		"http://localhost:3002", "https://ll-it-sc.be",
 	))
 	api.api.TestSetOpsNotifyEmail("ops@petsfollow.test")

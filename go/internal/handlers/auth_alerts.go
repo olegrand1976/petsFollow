@@ -134,8 +134,10 @@ func (a *API) notifyAuthAlert(ctx context.Context, kind, fingerprint, detail str
 			"<p><a href=\"%s\">Ouvrir dans l'admin</a></p>",
 		htmlEsc(kind), htmlEsc(msg), htmlEsc(adminURL),
 	)
-	// Soft-fail SendVetAlert — never recurse into notifyAuthAlert.
-	_ = a.notifier.SendVetAlert(to, subject, body)
+	// Soft-fail ops mail async — never block register/resend on a second SMTP dial.
+	go func(toAddr, subj, html string) {
+		_ = a.notifier.SendVetAlert(toAddr, subj, html)
+	}(to, subject, body)
 	return true
 }
 
@@ -154,12 +156,8 @@ func (a *API) reportConfirmEmailFailure(ctx context.Context, emailAddr string, s
 	if fp == "" {
 		fp = "unknown"
 	}
-	// Async: never block register/resend on ticket insert + second SMTP (ops alert).
-	go func() {
-		bg, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-		defer cancel()
-		a.notifyAuthAlert(bg, store.AuthAlertSMTPConfirmFail, fp, detail)
-	}()
+	// Ticket/dedup sync (admin UI) ; email ops is async inside notifyAuthAlert.
+	a.notifyAuthAlert(ctx, store.AuthAlertSMTPConfirmFail, fp, detail)
 }
 
 func (a *API) internalRunAuthHealth(w http.ResponseWriter, r *http.Request) {
