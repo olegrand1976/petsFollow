@@ -16,11 +16,23 @@
           <h1 data-testid="app-invite-ok">{{ $t('invite.title') }}</h1>
           <p class="pro-page-header__subtitle">{{ subtitle }}</p>
           <p class="pro-hint">{{ autoLinkHint }}</p>
-          <p class="invite-code" data-testid="app-invite-code">
-            <span class="text-muted">{{ $t('invite.codeLabel') }}</span>
-            <strong>{{ invite.code }}</strong>
-          </p>
-          <p class="pro-hint invite-code-hint">{{ $t('invite.codeHint') }}</p>
+          <div class="invite-code-row" data-testid="app-invite-code">
+            <p class="invite-code">
+              <span class="text-muted">{{ $t('invite.codeLabel') }}</span>
+              <strong>{{ invite.code }}</strong>
+            </p>
+            <ProButton
+              type="button"
+              variant="secondary"
+              test-id="app-invite-copy-code"
+              @click="copyCode"
+            >
+              <ProIcon name="content_copy" />
+              {{ codeCopied ? $t('invite.codeCopied') : $t('invite.copyCode') }}
+            </ProButton>
+          </div>
+          <p v-if="copyError" class="pro-field-error" role="alert">{{ copyError }}</p>
+          <p class="pro-hint invite-code-hint">{{ codeHint }}</p>
           <div class="invite-actions">
             <ProButton
               block
@@ -79,6 +91,8 @@ const route = useRoute()
 
 const loading = ref(true)
 const error = ref('')
+const codeCopied = ref(false)
+const copyError = ref('')
 const invite = ref<{
   code: string
   role: InviteRole
@@ -163,6 +177,35 @@ const autoLinkHint = computed(() => {
   }
 })
 
+const codeHint = computed(() => {
+  const role = invite.value?.role ?? 'vet'
+  switch (role) {
+    case 'commercial':
+    case 'commercial_manager':
+      return t('invite.codeHintCommercial')
+    case 'care_pro':
+    case 'vet':
+      return t('invite.codeHint')
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
+})
+
+async function copyCode() {
+  copyError.value = ''
+  codeCopied.value = false
+  const code = invite.value?.code
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+    codeCopied.value = true
+  } catch {
+    copyError.value = t('invite.copyError')
+  }
+}
+
 function openApp() {
   const inv = invite.value
   if (!inv) return
@@ -236,8 +279,15 @@ onMounted(async () => {
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
-.invite-code {
+.invite-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
   margin: 1rem 0 0.25rem;
+}
+.invite-code {
+  margin: 0;
   font-size: 1.05rem;
   letter-spacing: 0.06em;
 }
