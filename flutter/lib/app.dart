@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/deeplink/payment_deeplink.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/theme/theme_controller.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/force_change_password_screen.dart';
@@ -65,7 +67,7 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'petsFollow',
+      title: AppEnv.appTitle,
       theme: buildAppLightTheme(),
       darkTheme: buildAppDarkTheme(),
       themeMode: ThemeController.instance.themeMode,
@@ -78,6 +80,37 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) {
+        if (!AppEnv.isStaging || child == null) return child ?? const SizedBox.shrink();
+        return Column(
+          children: [
+            Material(
+              color: AppColors.brandCoral,
+              child: SafeArea(
+                bottom: false,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      'STAGING',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.brandNavy,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: child),
+          ],
+        );
+      },
       home: const AuthGate(),
     );
   }

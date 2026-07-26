@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-# Build Android App Bundle (AAB) for Google Play Console upload.
+# Build Android App Bundle (AAB) for Google Play Console upload — flavor prod.
 # Requires flutter/android/key.properties + upload keystore (see key.properties.example).
+# Until a dedicated prod API exists, pass API_BASE explicitly (HTTPS).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FLUTTER_DIR="${ROOT}/flutter"
 ANDROID_DIR="${FLUTTER_DIR}/android"
-API_BASE="${API_BASE:-https://petsfollow-api-a7ako2njea-od.a.run.app}"
+# No silent default to staging Cloud Run for prod-flavored store builds.
+if [[ -z "${API_BASE:-}" ]]; then
+  echo "ERROR: set API_BASE=https://… explicitly for prod AAB builds." >&2
+  echo "  (Staging testeurs : make firebase-android-dist — flavor staging.)" >&2
+  exit 1
+fi
 GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 
 if [[ "${API_BASE}" != https://* ]]; then
@@ -36,15 +42,21 @@ cd "${FLUTTER_DIR}"
 
 PUBSPEC="${FLUTTER_DIR}/pubspec.yaml"
 CURRENT="$(grep -E '^version:' "${PUBSPEC}" | head -1 | awk '{print $2}')"
-echo "→ Building Play App Bundle (version ${CURRENT})"
+echo "→ Building Play App Bundle flavor=prod APP_ENV=prod (version ${CURRENT})"
 echo "→ API_BASE=${API_BASE}"
+echo "→ Package be.llitsc.petsfollow_mobile (pas .staging)"
 
 flutter pub get
-flutter build appbundle --release \
+flutter build appbundle --release --flavor prod \
+  --dart-define="FLAVOR=prod" \
+  --dart-define="APP_ENV=prod" \
   --dart-define="API_BASE=${API_BASE}" \
   --dart-define="GOOGLE_SERVER_CLIENT_ID=${GOOGLE_SERVER_CLIENT_ID}"
 
-AAB_PATH="${FLUTTER_DIR}/build/app/outputs/bundle/release/app-release.aab"
+AAB_PATH="${FLUTTER_DIR}/build/app/outputs/bundle/prodRelease/app-prod-release.aab"
+if [[ ! -f "${AAB_PATH}" ]]; then
+  AAB_PATH="${FLUTTER_DIR}/build/app/outputs/bundle/release/app-release.aab"
+fi
 test -f "${AAB_PATH}"
 
 echo ""
@@ -52,3 +64,4 @@ echo "✓ AAB prêt : ${AAB_PATH}"
 echo "  Upload → Play Console → Testing (internal/closed) puis Production."
 echo "  Privacy policy URL : https://petsfollow.ll-it-sc.be/legal/privacy"
 echo "  Checklist : documentation/26-PLAY-STORE.md"
+echo "  Canal testeurs staging : make firebase-android-dist"

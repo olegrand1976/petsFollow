@@ -38,6 +38,21 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "env"
+    productFlavors {
+        // Always pair with: --dart-define=FLAVOR=<name> --dart-define=APP_ENV=<name>
+        // (enforced by AppEnv.validate() in release). See Makefile / distribute-android.sh.
+        create("staging") {
+            dimension = "env"
+            applicationIdSuffix = ".staging"
+            resValue("string", "app_name", "petsFollow Staging")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "petsFollow")
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (hasReleaseKeystore) {

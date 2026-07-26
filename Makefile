@@ -17,15 +17,15 @@ help:
 	@echo "  make seed           seed demo"
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
-	@echo "  make flutter-dev    Flutter pets (émulateur) + Google Sign-In dart-define"
+	@echo "  make flutter-dev    Flutter pets staging (émulateur) + Google Sign-In"
 	@echo "  make test-go        tests Go"
 	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
-	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS"
-	@echo "  make firebase-google-signin-android  SHA → Firebase + google-services.json"
-	@echo "  make firebase-android-dist   APK → Firebase App Distribution (groupe petsfollow-testers)"
-	@echo "  make play-android-bundle     AAB signé → Google Play (nécessite key.properties)"
+	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS (staging + prod)"
+	@echo "  make firebase-google-signin-android  SHA → Firebase (FLAVOR=staging|prod)"
+	@echo "  make firebase-android-dist   APK staging → App Distribution (petsfollow-testers)"
+	@echo "  make play-android-bundle     AAB prod → Google Play (API_BASE=https://… requis)"
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
@@ -60,11 +60,15 @@ api-dev: env
 nuxtjs-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
 
-# Émulateur Android : API via 10.0.2.2. Device physique : API_BASE=http://<LAN>:8291 make flutter-dev
+# Flavor staging (package …mobile.staging). Device physique : API_BASE=http://<LAN>:8291 make flutter-dev
 GOOGLE_SERVER_CLIENT_ID ?= 237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com
 API_BASE ?= http://10.0.2.2:8291
+# SHA → Firebase : make firebase-google-signin-android SHA1=… [FLAVOR=staging|prod]
+FLAVOR ?= staging
 flutter-dev: env
-	cd flutter && flutter pub get && flutter run \
+	cd flutter && flutter pub get && flutter run --flavor staging \
+		--dart-define=FLAVOR=staging \
+		--dart-define=APP_ENV=staging \
 		--dart-define=API_BASE=$(API_BASE) \
 		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID)
 
@@ -115,10 +119,10 @@ gcp-domain:
 firebase-flutter-setup:
 	bash infra/firebase/setup-flutter-firebase.sh
 
-# Usage : make firebase-google-signin-android SHA1=ED:B0:... [SHA256=...]
+# Usage : make firebase-google-signin-android SHA1=ED:B0:... [SHA256=...] [FLAVOR=staging|prod]
 firebase-google-signin-android:
-	@test -n "$(SHA1)" || (echo "Usage: make firebase-google-signin-android SHA1=.. [SHA256=..]" >&2; exit 1)
-	bash infra/firebase/setup-google-signin-android.sh "$(SHA1)" $(if $(SHA256),"$(SHA256)",)
+	@test -n "$(SHA1)" || (echo "Usage: make firebase-google-signin-android SHA1=.. [SHA256=..] [FLAVOR=staging|prod]" >&2; exit 1)
+	FLAVOR=$(FLAVOR) bash infra/firebase/setup-google-signin-android.sh "$(SHA1)" $(if $(SHA256),"$(SHA256)",)
 
 firebase-android-dist:
 	bash infra/firebase/distribute-android.sh
