@@ -1,3 +1,11 @@
+import {
+  AUTH_LOGIN_REASON_PRO_ONLY,
+  clearAuthTokens,
+  hasSessionCookie,
+  homePathForRole,
+  isProRole,
+} from '~/composables/useAuth'
+
 const PUBLIC_PATHS = new Set([
   '/',
   '/login',
@@ -32,10 +40,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
         // Soft fail (5xx/network) : ne pas purger une session encore valide.
         if (!me) return
         if (isProRole(me.role)) {
+          // Locale profil (remplace l'ancien applyPreferredLocale post-login SPA).
+          const { applyPreferredLocale } = useLocaleSync()
+          await applyPreferredLocale(me.preferredLocale)
           return navigateTo(homePathForRole(me.role, { profileComplete: me.profileComplete }))
         }
-        // Session OK mais rôle non-Pro (ex. client).
+        // Session OK mais rôle non-Pro (ex. client) — message explicite sur /login.
         await clearAuthTokens()
+        return navigateTo({ path: '/login', query: { reason: AUTH_LOGIN_REASON_PRO_ONLY } })
       } catch {
         // 401/403 uniquement (fetchUser throw).
         await clearAuthTokens()

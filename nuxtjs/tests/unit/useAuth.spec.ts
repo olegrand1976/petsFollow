@@ -12,6 +12,9 @@ import {
   unwrapAuthData,
   clearAuthTokens,
   markAuthSessionActive,
+  finishClientLoginSession,
+  AUTH_POST_LOGIN_RELOAD_PATH,
+  AUTH_LOGIN_REASON_PRO_ONLY,
   resolvePostLoginTarget,
   fetchUserAfterLogin,
   authErrorStatus,
@@ -112,6 +115,37 @@ describe('useAuth helpers', () => {
     cookieStore.set('pf_session', null)
     cookieStore.set('pf_token', 'jwt')
     expect(hasSessionCookie()).toBe(true)
+  })
+
+  it('finishClientLoginSession pose pf_session et replace vers un path interne', () => {
+    const replace = vi.fn()
+    const prevWindow = globalThis.window
+    vi.stubGlobal('window', { location: { replace } })
+    try {
+      cookieStore.set('pf_session', null)
+      finishClientLoginSession()
+      expect(cookieStore.get('pf_session')).toBe('1')
+      expect(hasSessionCookie()).toBe(true)
+      expect(replace).toHaveBeenCalledWith(AUTH_POST_LOGIN_RELOAD_PATH)
+      finishClientLoginSession('/dashboard')
+      expect(replace).toHaveBeenCalledWith('/dashboard')
+      // open-redirect refusé
+      finishClientLoginSession('https://evil.example/')
+      expect(replace).toHaveBeenCalledWith(AUTH_POST_LOGIN_RELOAD_PATH)
+      finishClientLoginSession('//evil.example/')
+      expect(replace).toHaveBeenLastCalledWith(AUTH_POST_LOGIN_RELOAD_PATH)
+    } finally {
+      if (prevWindow === undefined) {
+        // @ts-expect-error restore absent window in node
+        delete globalThis.window
+      } else {
+        vi.stubGlobal('window', prevWindow)
+      }
+    }
+  })
+
+  it('AUTH_LOGIN_REASON_PRO_ONLY est stable pour /login?reason=', () => {
+    expect(AUTH_LOGIN_REASON_PRO_ONLY).toBe('proOnly')
   })
 
   it('clearAuthTokens purge pf_session et le profil Pro (JWT via BFF côté client)', async () => {

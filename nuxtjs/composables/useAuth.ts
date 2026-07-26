@@ -207,6 +207,40 @@ export function markAuthSessionActive() {
 }
 
 /**
+ * Path d'entrée post-login (document navigation).
+ * Doit rester dans AUTH_ENTRY_PATHS : le middleware SSR lit les cookies httpOnly
+ * et redirige vers la home du rôle (évite GET /api/me XHR avant commit WebKit).
+ */
+export const AUTH_POST_LOGIN_RELOAD_PATH = '/'
+
+/** Query `?reason=` sur /login après refus d'un rôle non-Pro. */
+export const AUTH_LOGIN_REASON_PRO_ONLY = 'proOnly'
+
+function safeInternalPath(path: string): string {
+  // Empêche open-redirect si un appelant passe une URL absolue / protocol-relative.
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) {
+    return AUTH_POST_LOGIN_RELOAD_PATH
+  }
+  return path
+}
+
+/**
+ * Finalise un login réussi côté navigateur : marqueur + reload document.
+ * Sur Safari/iPad, les Set-Cookie du POST login ne sont pas encore visibles au
+ * prochain XHR → 401 /api/me → clearAuthTokens effaçait la session naissante.
+ */
+export function finishClientLoginSession(path: string = AUTH_POST_LOGIN_RELOAD_PATH) {
+  markAuthSessionActive()
+  useCookie('pf_session', sessionCookieOpts()).value = '1'
+  const target = safeInternalPath(path)
+  // typeof window : OK en SPA / tests ; absent en SSR Nitro.
+  // replace : évite /login dans l'historique (retour → re-redirect).
+  if (typeof window !== 'undefined' && typeof window.location?.replace === 'function') {
+    window.location.replace(target)
+  }
+}
+
+/**
  * Session présente ? Les JWT sont httpOnly : côté client seul le marqueur
  * `pf_session` est visible ; côté SSR les cookies de requête restent lisibles.
  */

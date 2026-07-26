@@ -105,13 +105,8 @@ import {
   isAuthSuccess,
   isMFAChallenge,
   unwrapAuthData,
-  clearAuthTokens,
-  sessionCookieOpts,
-  markAuthSessionActive,
-  fetchUserAfterLogin,
-  resolvePostLoginTarget,
-  parseJwtRole,
-  authErrorStatus,
+  finishClientLoginSession,
+  AUTH_LOGIN_REASON_PRO_ONLY,
 } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
@@ -119,7 +114,7 @@ definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const { mapError } = useApiError()
-const { applyPreferredLocale } = useLocaleSync()
+const route = useRoute()
 const config = useRuntimeConfig()
 const googleEnabled = computed(() => !!config.public.googleClientId)
 
@@ -128,52 +123,15 @@ const password = ref(import.meta.dev ? 'VetDemo123!' : '')
 const totpCode = ref('')
 const mfaToken = ref('')
 const step = ref<'credentials' | '2fa'>('credentials')
-const error = ref('')
+const error = ref(
+  String(route.query.reason || '') === AUTH_LOGIN_REASON_PRO_ONLY
+    ? t('auth.login.proOnly')
+    : '',
+)
 const loading = ref(false)
 const googleBtnRef = ref<HTMLElement | null>(null)
 
-async function redirectAfterLogin() {
-  // Align client marker with BFF Set-Cookie before middlewares run (non-httpOnly).
-  markAuthSessionActive()
-  useCookie('pf_session', sessionCookieOpts()).value = '1'
-  try {
-    const { fetchUser } = useProUser()
-    const me = await fetchUserAfterLogin((force) => fetchUser(force))
-    // pf_token is httpOnly — usually null in SPA; kept as SSR / legacy fallback.
-    const decision = resolvePostLoginTarget(me, parseJwtRole(useCookie('pf_token').value))
-    switch (decision.kind) {
-      case 'navigate':
-        // Locale depuis le /me déjà chargé — évite un 2ᵉ GET /api/me.
-        await applyPreferredLocale(me?.preferredLocale)
-        // Hors catch : un NavigationFailure middleware n'est pas une erreur auth.
-        await navigateTo(decision.path)
-        return
-      case 'proOnly':
-        await clearAuthTokens()
-        error.value = t('auth.login.proOnly')
-        return
-      case 'sessionUnavailable':
-        // Soft-null /me (5xx) : ne pas logout — JWT potentiellement valides (aligné auth.global).
-        error.value = t('auth.login.sessionUnavailable')
-        return
-      default: {
-        const _exhaustive: never = decision
-        return _exhaustive
-      }
-    }
-  } catch (e: unknown) {
-    const status = authErrorStatus(e)
-    if (status === 401 || status === 403) {
-      await clearAuthTokens()
-      error.value = t('auth.login.sessionUnavailable')
-      return
-    }
-    // Erreur inattendue : ne pas purger une session encore valide.
-    error.value = mapError(e) || t('auth.login.invalidResponse')
-  }
-}
-
-async function handleAuthResult(res: unknown) {
+function handleAuthResult(res: unknown) {
   const data = unwrapAuthData(res)
   if (isMFAChallenge(data)) {
     mfaToken.value = data.mfaToken
@@ -185,8 +143,9 @@ async function handleAuthResult(res: unknown) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  // Cookies httpOnly posés par la BFF — rien à persister côté client.
-  await redirectAfterLogin()
+  // Cookies httpOnly posés par la BFF. Navigation document (pas de GET /api/me XHR) :
+  // Safari/iPad ne voit pas encore pf_token sur le XHR suivant → 401 + logout accidentel.
+  finishClientLoginSession()
 }
 
 function mapAuthError(e: any) {
