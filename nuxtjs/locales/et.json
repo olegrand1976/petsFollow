@@ -37,7 +37,24 @@
     "adminBrandAssets": "Poe QR-id",
     "adminAiModules": "CR IA moodul",
     "commercialAiModules": "CR IA — kabinetid",
-    "commercialAiPlaybook": "CR IA — juhend"
+    "commercialAiPlaybook": "CR IA — juhend",
+    "commercialNetwork": "Minu võrgustik",
+    "managerLeaderboard": "Edetabel",
+    "adminSalesBranches": "Harud",
+    "adminSalesForce": "Müügimeeskond",
+    "section": {
+      "pipeline": "Torustik",
+      "offer": "Pakkumine",
+      "ai": "AI jõudlus",
+      "payout": "Väljamaksed",
+      "network": "Võrgustik",
+      "team": "Meeskond / Haru",
+      "portfolio": "Minu portfell",
+      "ops": "Ops",
+      "salesForce": "Müügimeeskond",
+      "billing": "Palk ja kataloog"
+    },
+    "managerAiModules": "AI CR — meeskond"
   },
   "auth": {
     "login": {
@@ -51,8 +68,8 @@
       "forgotLink": "Unustasid parooli?",
       "or": "või",
       "proOnly": "Juurdepääs ainult Pro profiilidele (vet / müük / müügijuht / admin)",
-      "invalidResponse": "Vigane autentimisvastus",
-      "sessionUnavailable": "Seanssi ei õnnestunud luua. Lubage selle saidi küpsised ja proovige uuesti."
+      "sessionUnavailable": "Seanssi ei õnnestunud luua. Lubage selle saidi küpsised ja proovige uuesti.",
+      "invalidResponse": "Vigane autentimisvastus"
     },
     "forgot": {
       "brandTitle": "Taasta juurdepääs oma kontole",
@@ -967,7 +984,9 @@
       "baseLng": "Pikkuskraad",
       "baseLocationSubmit": "Salvesta piirkond",
       "baseLocationSuccess": "Baaspiirkond salvestatud.",
-      "baseLocationFailed": "Piirkonda ei õnnestunud salvestada."
+      "baseLocationFailed": "Piirkonda ei õnnestunud salvestada.",
+      "colManager": "Juht",
+      "colBranch": "Haru"
     },
     "prospects": {
       "title": "Turunduse potentsiaalsed kliendid",
@@ -1082,6 +1101,29 @@
       "convertMonthly": "Convertir 39 €/mois",
       "convertAnnual": "Convertir 390 €/an",
       "disable": "Désactiver"
+    },
+    "branches": {
+      "title": "Müügiharud",
+      "subtitle": "MLM org prep — branches and assignments.",
+      "createTitle": "Loo haru",
+      "name": "Name",
+      "code": "Code",
+      "createSubmit": "Create",
+      "createSuccess": "Haru loodud.",
+      "createFailed": "Haru loomine ebaõnnestus.",
+      "assignTitle": "Assign a sales rep",
+      "assignCommercial": "Sales rep",
+      "assignCommercialPlaceholder": "Select a sales rep",
+      "assignBranch": "Branch",
+      "assignBranchNone": "None",
+      "assignSubmit": "Save assignment",
+      "assignSuccess": "Haru määratud.",
+      "assignFailed": "Määramine ebaõnnestus.",
+      "empty": "No branches yet",
+      "colName": "Name",
+      "colCode": "Code",
+      "colMembers": "Members",
+      "loadError": "Unable to load branches"
     }
   },
   "commissions": {
@@ -1660,6 +1702,7 @@
       "title": "Müügi töölaud",
       "subtitle": "Määratud veterinaarid, müügivihjete toru ja komisjonid.",
       "assignedVets": "Määratud veterinaarid",
+      "referredClients": "Kliendid QR / nearby kaudu",
       "prospects": "Müügivihjed",
       "prospectsNew": "Uued",
       "converted": "Konverteeritud",
@@ -1667,7 +1710,16 @@
       "lifetimeEarned": "Koguaja komisjonid",
       "subRevenue": "Seotud tellimuste tulu",
       "addonRevenue": "Seotud lisandmoodulite tulu",
-      "directory": "BCE kataloog"
+      "directory": "BCE kataloog",
+      "paidPets": "Paid pets (month)",
+      "mix": "Triennial mix",
+      "upcoming": "Upcoming appointments",
+      "stale": "Stale (>7d)",
+      "upcomingTitle": "Upcoming appointments",
+      "upcomingEmpty": "No upcoming appointments",
+      "staleTitle": "Prospects to chase",
+      "staleEmpty": "No stale prospects",
+      "loadError": "Unable to load dashboard"
     },
     "vets": {
       "title": "Registreerimised",
@@ -1688,7 +1740,28 @@
       "prospectId": "Müügivihje ID (konversioon)",
       "cardTitle": "Veterinaar",
       "cardDesc": "Loo endale määratud veterinaari konto.",
-      "backToCards": "Vali teine tegevus"
+      "backToCards": "Vali teine tegevus",
+      "search": "Search",
+      "searchPlaceholder": "Name, email, practice…",
+      "attachTitle": "Add a profile to a registered user",
+      "attachUserId": "User ID",
+      "attachRole": "Role",
+      "attachSpecialty": "Specialty",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Add profile",
+      "attachOk": "Profile added",
+      "attachError": "Error (not yourself / profile already exists)",
+      "paidPetsMonth": "Tasulised loomad (kuu)",
+      "monthEarned": "Komisjonitasud (kuu)"
+    },
+    "referrals": {
+      "title": "Kliendid QR / nearby kaudu",
+      "subtitle": "Rakenduse registreerimised, mis on omistatud teie referralile (QR-kood või nearby valik).",
+      "empty": "Viidatud kliente veel pole",
+      "fullName": "Nimi",
+      "email": "Email",
+      "inviteCode": "Kutsekood",
+      "createdAt": "Registreeritud"
     },
     "clients": {
       "create": "Loo seotud klient",
@@ -1751,7 +1824,9 @@
       "sourceAll": "Kõik allikad",
       "totalCount": "{from}–{to} / {total}",
       "prev": "Eelmine",
-      "next": "Järgmine"
+      "next": "Järgmine",
+      "encode": "Registreeri",
+      "daysShort": "{n} d"
     },
     "commissions": {
       "title": "Minu komisjonid",
@@ -1791,7 +1866,11 @@
       "detailsTitle": "Komisjoni üksikasjad",
       "pendingPayouts": "Ootel väljamaksed",
       "paidPayouts": "Makstud väljamaksed",
-      "monthDue": "Sellel kuul tasumisele"
+      "monthDue": "Sellel kuul tasumisele",
+      "ledgerTitle": "Generated commissions",
+      "typeAll": "All types",
+      "exportCsv": "Ekspordi CSV",
+      "exportCsvTruncated": "Eksport on piiratud viimase {n} ledger-reaga."
     },
     "settings": {
       "title": "Väljamakseprofiil",
@@ -1843,26 +1922,26 @@
       "title": "Rakenduse kutse QR"
     },
     "aiModules": {
-      "title": "Module CR IA",
-      "subtitle": "Activez l’essai pour vos cabinets, suivez l’adoption, convertissez à 39 € / 390 €",
-      "openPlaybook": "Ouvrir le guide / argumentaire",
-      "activateTitle": "Activer un de vos cabinets",
-      "practice": "Cabinet",
-      "practicePlaceholder": "Choisir",
-      "activate": "Activer 90 j offerts",
-      "activatedOk": "Essai activé — le véto a reçu un e-mail",
-      "listTitle": "Vos modules",
-      "emptyTitle": "Pas encore d’activation",
-      "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
-      "colPractice": "Cabinet",
-      "colStatus": "Statut",
-      "colTrial": "Fin essai",
-      "frictionTitle": "Alertes friction",
-      "frictionEmpty": "Aucune alerte récente",
-      "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
-      "colSignal": "Signal",
-      "colDetail": "Détail",
-      "colWhen": "Quand"
+      "title": "AI CR moodul",
+      "subtitle": "Aktiveeri prooviperiood oma praktikatele, jälgi kasutuselevõttu, konverteeri 39 € / 390 €",
+      "openPlaybook": "Ava juhend / pitch",
+      "activateTitle": "Aktiveeri üks oma praktikatest",
+      "practice": "Praktika",
+      "practicePlaceholder": "Vali",
+      "activate": "Aktiveeri 90 tasuta päeva",
+      "activatedOk": "Proov aktiveeritud — loomaarst sai e-kirja",
+      "listTitle": "Sinu moodulid",
+      "emptyTitle": "Aktiveerimist pole veel",
+      "emptyDescription": "Alustamiseks vali määratud praktika.",
+      "colPractice": "Praktika",
+      "colStatus": "Olek",
+      "colTrial": "Proovi lõpp",
+      "frictionTitle": "Hõõrdumishoiatused",
+      "frictionEmpty": "Hiljutisi hoiatusi pole",
+      "frictionEmptyDesc": "Signaalid (0 kasutust P7, langus, madal NPS…) ilmuvad siia.",
+      "colSignal": "Signaal",
+      "colDetail": "Detail",
+      "colWhen": "Millal"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -1913,6 +1992,24 @@
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
       "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
       "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+    },
+    "network": {
+      "title": "Minu võrgustik",
+      "subtitle": "Haru, sponsorlus ja downline (MLM ettevalmistus).",
+      "branch": "Haru",
+      "sponsor": "Sponsor",
+      "manager": "Juht",
+      "rank": "Rank",
+      "downlineTitle": "Downline",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colDepth": "Depth",
+      "mlmPending": "MLM võrgustik peagi saadaval",
+      "mlmPendingDesc": "Downline integration is not active yet. Your branch and manager remain visible.",
+      "loadError": "Võrgustiku laadimine ebaõnnestus",
+      "downlineEmpty": "No downline yet",
+      "downlineEmptyDesc": "Your downline will appear here after recruitment."
     }
   },
   "commissionSheet": {
@@ -2113,7 +2210,55 @@
     "prospects": {
       "title": "Meeskonna müügivihjed",
       "subtitle": "CRM-vaade meeskonnale ja jagatud kataloogile.",
-      "allCommercials": "Kõik müügiesindajad"
+      "allCommercials": "Kõik müügiesindajad",
+      "reassign": "Määra",
+      "unassigned": "Määramata"
+    },
+    "leaderboard": {
+      "title": "Meeskonna edetabel",
+      "subtitle": "Monthly performance and quotas.",
+      "period": "Period",
+      "empty": "No sales reps on the team",
+      "colRank": "#",
+      "colCommercial": "Sales rep",
+      "colConverted": "Converted",
+      "colEarned": "Commissions",
+      "colQuotaActivations": "Activation quota",
+      "colQuotaEarned": "Commission quota",
+      "saveQuota": "Save",
+      "quotaSaved": "Quota saved.",
+      "quotaFailed": "Could not save quota.",
+      "loadError": "Unable to load leaderboard",
+      "quotaEuros": "Eesmärk eurodes"
+    },
+    "member": {
+      "title": "Sales rep profile",
+      "titleNamed": "{name}",
+      "subtitle": "Individual team member KPIs.",
+      "back": "Tagasi meeskonda",
+      "loadError": "Impossible de charger la fiche"
+    },
+    "aiModules": {
+      "title": "AI CR — meeskond",
+      "subtitle": "Meeskonna praktikate moodulid ja hõõrdumishoiatused.",
+      "frictionTitle": "Meeskonna hõõrdumishoiatused",
+      "listTitle": "Meeskonna AI CR moodulid",
+      "colCommercial": "Müügiesindaja",
+      "openMember": "Vaata esindajat",
+      "emptyDescription": "Meeskonnale määratud praktikatel pole AI CR moodulit.",
+      "openPlaybook": "Ava juhend / pitch",
+      "frictionEmpty": "Hiljutisi hoiatusi pole",
+      "frictionEmptyDesc": "Signaalid (0 kasutust P7, langus, madal NPS…) ilmuvad siia.",
+      "emptyTitle": "Aktiveerimisi pole veel",
+      "colPractice": "Praktika",
+      "colStatus": "Olek",
+      "colTrial": "Proovi lõpp",
+      "colSignal": "Signaal",
+      "colDetail": "Detail",
+      "colWhen": "Millal",
+      "loadError": "AI CR mooduleid ei õnnestunud laadida",
+      "call": "Helista",
+      "email": "E-post"
     }
   },
   "training": {
@@ -2221,7 +2366,14 @@
     "badgeOff": "VÄLJAS",
     "badgeCurrent": "praegune",
     "feedbackCount": "{count} tagasisidet",
-    "feedbackMeta": "veterinaar {vet}/5 · coach {coach}/5 · {felt}"
+    "feedbackMeta": "veterinaar {vet}/5 · coach {coach}/5 · {felt}",
+    "colName": "Nimi",
+    "colEmail": "E-post",
+    "colNote": "Treeningmärkus",
+    "saveNote": "Salvesta",
+    "noteSaved": "Märkus salvestatud.",
+    "noteFailed": "Salvestamine ebaõnnestus.",
+    "avgScore": "keskm. hinne"
   },
   "invite": {
     "brandTitle": "Teie loomaarst kutsub teid",
@@ -2229,15 +2381,17 @@
     "brandTitleCommercial": "petsFollowi kutse",
     "brandText": "Laadige alla petsFollow oma loomade ettekirjutatud tervisejälgimiseks.",
     "loading": "Kutse laadimine…",
-    "title": "Laadi petsFollowi rakendus alla",
+    "title": "Ava petsFollowi rakendus",
     "subtitle": "Kutse: {vet} — {practice}",
     "subtitleCarePro": "Kutse: {name}",
     "subtitleCommercial": "Kutse: {name}",
     "autoLinkHint": "Sellelt lingilt registreerudes seotakse teid automaatselt selle kabinetiga.",
     "autoLinkHintCarePro": "Sellelt lingilt registreerudes saab see professionaal märkmete juurdepääsu teie toimikule.",
     "autoLinkHintCommercial": "Sellelt lingilt registreerudes omistatakse teie konto sellele müügireferralile.",
+    "codeLabel": "Kutsekood:",
+    "codeHint": "Kui rakendus ei avane automaatselt, avage see ja sisestage see kood registreerimisel.",
     "download": "Laadi rakendus alla",
-    "openApp": "Mul on rakendus juba olemas",
+    "openApp": "Ava rakendus",
     "failedTitle": "Kutset ei leitud",
     "invalid": "See kutselink ei kehti enam."
   },

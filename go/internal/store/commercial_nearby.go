@@ -173,9 +173,21 @@ func (s *Store) IsAssignableCommercial(ctx context.Context, userID string) (bool
 	return ok, err
 }
 
+// canOwnCommercialReferral — commercial or commercial_manager may own a client referral
+// (QR claim, standalone create). Nearby discovery still uses IsAssignableCommercial.
+func (s *Store) canOwnCommercialReferral(ctx context.Context, userID string) (bool, error) {
+	var ok bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM identity.users
+			WHERE id=$1 AND role IN ('commercial','commercial_manager')
+		)`, userID).Scan(&ok)
+	return ok, err
+}
+
 // LinkClientCommercialReferral soft-links a client to a commercial (first wins).
 func (s *Store) LinkClientCommercialReferral(ctx context.Context, clientUserID, commercialUserID string) error {
-	ok, err := s.IsAssignableCommercial(ctx, commercialUserID)
+	ok, err := s.canOwnCommercialReferral(ctx, commercialUserID)
 	if err != nil {
 		return err
 	}

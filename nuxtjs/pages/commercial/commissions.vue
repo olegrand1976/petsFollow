@@ -39,75 +39,90 @@
       </ProTable>
     </ProCard>
 
-    <details class="pf-details pro-mt-lg" data-testid="commission-details">
-      <summary>{{ $t('commercial.commissions.detailsTitle') }}</summary>
-
-      <ProCard :title="$t('commercial.commissions.gainsTitle')" class="pro-mt-md">
-        <div class="pf-plan-compare">
-          <div
-            v-for="row in summary?.planRates || []"
-            :key="row.code"
-            class="pf-plan-compare__item"
-            :class="{ 'pf-plan-compare__item--rec': row.recommended }"
-          >
-            <strong>{{ $t(`commissionSheet.plans.${row.code}`) }}</strong>
-            <span>{{ formatPct(row.commercialRateBps) }} · {{ formatCurrency(row.commercialCents) }}</span>
-            <ProBadge v-if="row.recommended" variant="success">{{ $t('commissionSheet.recommended') }}</ProBadge>
-          </div>
+    <ProCard :title="$t('commercial.commissions.gainsTitle')" class="pro-mt-lg" data-testid="commission-rates">
+      <div class="pf-plan-compare">
+        <div
+          v-for="row in summary?.planRates || []"
+          :key="row.code"
+          class="pf-plan-compare__item"
+          :class="{ 'pf-plan-compare__item--rec': row.recommended }"
+        >
+          <strong>{{ $t(`commissionSheet.plans.${row.code}`) }}</strong>
+          <span>{{ formatPct(row.commercialRateBps) }} · {{ formatCurrency(row.commercialCents) }}</span>
+          <ProBadge v-if="row.recommended" variant="success">{{ $t('commissionSheet.recommended') }}</ProBadge>
         </div>
-        <div class="pf-bonus-row" data-testid="commercial-bonus-cards">
-          <ProCard v-for="b in commercialBonuses" :key="b.code" class="pf-bonus-card" :data-testid="`bonus-card-${b.code}`">
-            <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
-            <p>{{ formatCurrency(b.amountCents) }}</p>
-            <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
-            <p v-if="b.code === 'commercial_mix' && b.periodYm" class="text-muted">
-              {{ $t('commercial.commissions.bonusPeriod', { period: b.periodYm }) }}
-            </p>
-            <ProBadge :variant="bonusBadgeVariant(b.status)">
-              {{ $t(`commissionSheet.status.${b.status || 'available'}`) }}
-              <template v-if="b.progress != null && b.target">
-                — {{ b.progress }}/{{ b.target }}<template v-if="b.code === 'commercial_mix'"> %</template>
-              </template>
-            </ProBadge>
-          </ProCard>
-        </div>
-      </ProCard>
+      </div>
+      <div class="pf-bonus-row" data-testid="commercial-bonus-cards">
+        <ProCard v-for="b in commercialBonuses" :key="b.code" class="pf-bonus-card" :data-testid="`bonus-card-${b.code}`">
+          <strong>{{ $t(`commissionSheet.bonusTitles.${b.code}`) }}</strong>
+          <p>{{ formatCurrency(b.amountCents) }}</p>
+          <p class="text-muted">{{ $t(`commissionSheet.bonusHints.${b.code}`) }}</p>
+          <p v-if="b.code === 'commercial_mix' && b.periodYm" class="text-muted">
+            {{ $t('commercial.commissions.bonusPeriod', { period: b.periodYm }) }}
+          </p>
+          <ProBadge :variant="bonusBadgeVariant(b.status)">
+            {{ $t(`commissionSheet.status.${b.status || 'available'}`) }}
+            <template v-if="b.progress != null && b.target">
+              — {{ b.progress }}/{{ b.target }}<template v-if="b.code === 'commercial_mix'"> %</template>
+            </template>
+          </ProBadge>
+        </ProCard>
+      </div>
+    </ProCard>
 
-      <ProCard :title="$t('commercial.commissions.sheetTitle')" class="pro-mt-lg">
-        <ProCommissionSheet
-          audience="commercial"
-          :plan-rates="summary?.planRates || []"
-          :addon-rates="summary?.addonRates || []"
-          :bonuses="summary?.bonuses || []"
-        />
-        <NuxtLink to="/commercial/pitch" class="pro-hint-link">{{ $t('commercial.commissions.pitchLink') }}</NuxtLink>
-      </ProCard>
+    <ProCard :title="$t('commercial.commissions.sheetTitle')" class="pro-mt-lg">
+      <ProCommissionSheet
+        audience="commercial"
+        :plan-rates="summary?.planRates || []"
+        :addon-rates="summary?.addonRates || []"
+        :bonuses="summary?.bonuses || []"
+      />
+      <NuxtLink to="/commercial/pitch" class="pro-hint-link">{{ $t('commercial.commissions.pitchLink') }}</NuxtLink>
+    </ProCard>
 
-      <ProCard class="pro-mt-lg">
-        <ProTable :empty="!summary?.recentLedger?.length" :empty-title="$t('commercial.commissions.empty')">
-          <thead>
-            <tr>
-              <th>{{ $t('commercial.commissions.date') }}</th>
-              <th>{{ $t('commercial.commissions.type') }}</th>
-              <th>{{ $t('commercial.commissions.vet') }}</th>
-              <th>{{ $t('commercial.commissions.client') }}</th>
-              <th>{{ $t('commercial.commissions.base') }}</th>
-              <th>{{ $t('commercial.commissions.amount') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in summary?.recentLedger || []" :key="row.id">
-              <td>{{ row.accruedAt?.substring?.(0, 10) || row.accruedAt }}</td>
-              <td><ProBadge variant="neutral">{{ row.sourceType }}</ProBadge></td>
-              <td>{{ row.vetEmail }}</td>
-              <td>{{ row.clientEmail }}</td>
-              <td>{{ formatCurrency(row.baseAmountCents) }}</td>
-              <td>{{ formatCurrency(row.commissionCents) }}</td>
-            </tr>
-          </tbody>
-        </ProTable>
-      </ProCard>
-    </details>
+    <ProCard class="pro-mt-lg" :title="$t('commercial.commissions.ledgerTitle')">
+      <div class="pf-ledger-filters pro-mb-md">
+        <select v-model="ledgerType" class="pro-select" data-testid="ledger-type-filter">
+          <option value="">{{ $t('commercial.commissions.typeAll') }}</option>
+          <option value="subscription_pct">subscription_pct</option>
+          <option value="subscription_mirror">subscription_mirror</option>
+          <option value="addon_pct">addon_pct</option>
+        </select>
+        <ProButton
+          variant="secondary"
+          test-id="ledger-export-csv"
+          :disabled="exporting"
+          @click="exportLedgerCsv"
+        >
+          {{ $t('commercial.commissions.exportCsv') }}
+        </ProButton>
+      </div>
+      <p v-if="ledgerTruncated" class="pro-hint pro-mb-md" data-testid="ledger-truncated-hint">
+        {{ $t('commercial.commissions.exportCsvTruncated', { n: summary?.ledgerLimit || 50 }) }}
+      </p>
+      <ProTable :empty="!filteredLedger.length" :empty-title="$t('commercial.commissions.empty')">
+        <thead>
+          <tr>
+            <th>{{ $t('commercial.commissions.date') }}</th>
+            <th>{{ $t('commercial.commissions.type') }}</th>
+            <th>{{ $t('commercial.commissions.vet') }}</th>
+            <th>{{ $t('commercial.commissions.client') }}</th>
+            <th>{{ $t('commercial.commissions.base') }}</th>
+            <th>{{ $t('commercial.commissions.amount') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in filteredLedger" :key="row.id">
+            <td>{{ row.accruedAt?.substring?.(0, 10) || row.accruedAt }}</td>
+            <td><ProBadge variant="neutral">{{ row.sourceType }}</ProBadge></td>
+            <td>{{ row.vetEmail }}</td>
+            <td>{{ row.clientEmail }}</td>
+            <td>{{ formatCurrency(row.baseAmountCents) }}</td>
+            <td>{{ formatCurrency(row.commissionCents) }}</td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
   </div>
 </template>
 
@@ -118,6 +133,16 @@ const { t } = useI18n()
 const { formatCurrency } = useFormatters()
 const summary = ref<any>(null)
 const hasIban = ref(false)
+const ledgerType = ref('')
+const exporting = ref(false)
+
+const filteredLedger = computed(() => {
+  const rows = summary.value?.recentLedger || []
+  if (!ledgerType.value) return rows
+  return rows.filter((r: any) => r.sourceType === ledgerType.value)
+})
+
+const ledgerTruncated = computed(() => Boolean(summary.value?.ledgerTruncated))
 
 function payoutStatusLabel(status: string) {
   const key = `commercial.commissions.runStatus.${status}`
@@ -143,6 +168,55 @@ const paidPayoutCents = computed(() =>
 
 function formatPct(bps: number) {
   return `${((bps || 0) / 100).toFixed(0)} %`
+}
+
+function csvEscape(v: unknown) {
+  const s = String(v ?? '')
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
+function rowsToCsv(rows: any[]) {
+  const headers = ['date', 'type', 'vet', 'client', 'baseCents', 'commissionCents', 'periodYm']
+  const lines = [headers.join(',')]
+  for (const row of rows) {
+    lines.push([
+      csvEscape(row.accruedAt?.substring?.(0, 10) || row.accruedAt),
+      csvEscape(row.sourceType),
+      csvEscape(row.vetEmail),
+      csvEscape(row.clientEmail),
+      csvEscape(row.baseAmountCents),
+      csvEscape(row.commissionCents),
+      csvEscape(row.periodYm),
+    ].join(','))
+  }
+  return '\uFEFF' + lines.join('\n')
+}
+
+async function exportLedgerCsv() {
+  exporting.value = true
+  try {
+    const res: any = await $fetch('/api/commercial/commissions', { query: { limit: 500 } })
+    const data = res.data ?? res
+    let rows = data?.recentLedger || []
+    if (ledgerType.value) {
+      rows = rows.filter((r: any) => r.sourceType === ledgerType.value)
+    }
+    if (!rows.length) return
+    const blob = new Blob([rowsToCsv(rows)], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `commissions-ledger-${data?.monthPeriodYm || summary.value?.monthPeriodYm || 'export'}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    if (data?.ledgerTruncated) {
+      // keep UI hint in sync if export hit the cap
+      summary.value = { ...summary.value, ledgerTruncated: true, ledgerLimit: data.ledgerLimit || 500 }
+    }
+  } finally {
+    exporting.value = false
+  }
 }
 
 function bonusBadgeVariant(status?: string): 'success' | 'warning' | 'neutral' {
@@ -205,16 +279,12 @@ onMounted(async () => {
   margin-top: 0.75rem;
   color: var(--pf-vet-accent);
 }
-.pf-details {
-  border: 1px solid var(--pf-vet-border);
-  border-radius: 8px;
-  padding: 0.75rem 1rem 1rem;
-  background: var(--pf-vet-surface);
-}
-.pf-details > summary {
-  cursor: pointer;
-  font-weight: 600;
-  padding: 0.35rem 0;
+.pf-ledger-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  max-width: none;
 }
 @media (max-width: 900px) {
   .pf-plan-compare { grid-template-columns: 1fr; }

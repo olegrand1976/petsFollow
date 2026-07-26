@@ -139,6 +139,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuenta creada. Abre el enlace del email de validación y vuelve a iniciar sesión en la app.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Cuenta creada, pero no se pudo aplicar el código de invitación. Puede volver a introducirlo tras iniciar sesión.';
+
+  @override
   String get registerFailed => 'No se pudo registrar';
 
   @override

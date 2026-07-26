@@ -37,7 +37,24 @@
     "adminBrandAssets": "QR store",
     "adminAiModules": "Modulo CR IA",
     "commercialAiModules": "CR IA — studi",
-    "commercialAiPlaybook": "CR IA — guida"
+    "commercialAiPlaybook": "CR IA — guida",
+    "commercialNetwork": "La mia rete",
+    "managerLeaderboard": "Classifica",
+    "adminSalesBranches": "Filiali",
+    "adminSalesForce": "Forza vendita",
+    "section": {
+      "pipeline": "Pipeline",
+      "offer": "Offerta",
+      "ai": "Performance IA",
+      "payout": "Compensi",
+      "network": "Rete",
+      "team": "Team / Filiale",
+      "portfolio": "Il mio portafoglio",
+      "ops": "Ops",
+      "salesForce": "Forza vendita",
+      "billing": "Paghe e catalogo"
+    },
+    "managerAiModules": "CR IA — team"
   },
   "training": {
     "title": "Allenamento AI",
@@ -144,7 +161,14 @@
     "badgeOff": "OFF",
     "badgeCurrent": "fund size",
     "feedbackCount": "RESI",
-    "feedbackMeta": "veto {vet}/5 · coach {coach}/5 · {felt}"
+    "feedbackMeta": "veto {vet}/5 · coach {coach}/5 · {felt}",
+    "colName": "Nome",
+    "colEmail": "Email",
+    "colNote": "Nota coaching",
+    "saveNote": "Salva",
+    "noteSaved": "Nota salvata.",
+    "noteFailed": "Salvataggio non riuscito.",
+    "avgScore": "voto medio"
   },
   "auth": {
     "login": {
@@ -158,8 +182,8 @@
       "forgotLink": "Password dimenticata?",
       "or": "o",
       "proOnly": "Accesso riservato ai profili Pro (veterinario / commerciale / responsabile commerciale / amministratore)",
-      "invalidResponse": "Risposta di autenticazione non valida",
-      "sessionUnavailable": "Impossibile stabilire la sessione. Consenti i cookie per questo sito, poi riprova."
+      "sessionUnavailable": "Impossibile stabilire la sessione. Consenti i cookie per questo sito, poi riprova.",
+      "invalidResponse": "Risposta di autenticazione non valida"
     },
     "forgot": {
       "brandTitle": "Recupera l'accesso al tuo account",
@@ -348,6 +372,7 @@
       "title": "Cruscotto delle vendite",
       "subtitle": "KPI assegnati ai veterinari, alla pipeline dei potenziali clienti e alle commissioni.",
       "assignedVets": "Veterinari assegnati",
+      "referredClients": "Clienti via QR / nearby",
       "prospects": "Prospect ",
       "prospectsNew": "Nuovo",
       "converted": "Convertito",
@@ -355,7 +380,16 @@
       "lifetimeEarned": "Commissioni a vita",
       "subRevenue": "Abbonamenti relativi a CA",
       "addonRevenue": "Componenti aggiuntivi relativi a CA",
-      "directory": "Direttorio BCE"
+      "directory": "Direttorio BCE",
+      "paidPets": "Paid pets (month)",
+      "mix": "Triennial mix",
+      "upcoming": "Upcoming appointments",
+      "stale": "Stale (>7d)",
+      "upcomingTitle": "Upcoming appointments",
+      "upcomingEmpty": "No upcoming appointments",
+      "staleTitle": "Prospects to chase",
+      "staleEmpty": "No stale prospects",
+      "loadError": "Unable to load dashboard"
     },
     "vets": {
       "title": "Iscrizioni",
@@ -376,7 +410,28 @@
       "prospectId": "ID lead (conversione)",
       "cardTitle": "Veterinario",
       "cardDesc": "Inserisci un account veterinario che ti è stato assegnato.",
-      "backToCards": "Scegli un'altra azione"
+      "backToCards": "Scegli un'altra azione",
+      "search": "Search",
+      "searchPlaceholder": "Name, email, practice…",
+      "attachTitle": "Add a profile to a registered user",
+      "attachUserId": "User ID",
+      "attachRole": "Role",
+      "attachSpecialty": "Specialty",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Add profile",
+      "attachOk": "Profile added",
+      "attachError": "Error (not yourself / profile already exists)",
+      "paidPetsMonth": "Animali a pagamento (mese)",
+      "monthEarned": "Commissioni (mese)"
+    },
+    "referrals": {
+      "title": "Clienti via QR / nearby",
+      "subtitle": "Iscrizioni app attribuite al tuo referral (codice QR o selezione nearby).",
+      "empty": "Nessun cliente referenziato",
+      "fullName": "Nome",
+      "email": "Email",
+      "inviteCode": "Codice invito",
+      "createdAt": "Iscritto il"
     },
     "clients": {
       "create": "Crea un cliente collegato",
@@ -439,7 +494,9 @@
       "sourceAll": "Tutte le fonti",
       "totalCount": "{from}–{to} di {total}",
       "prev": "Precedente",
-      "next": "Successivo"
+      "next": "Successivo",
+      "encode": "Registra",
+      "daysShort": "{n} d"
     },
     "commissions": {
       "title": "Le mie commissioni",
@@ -479,7 +536,11 @@
       "detailsTitle": "Dettaglio della messa in servizio",
       "pendingPayouts": "Pagamenti in sospeso",
       "paidPayouts": "Pagamenti pagati",
-      "monthDue": "Per colpire questo mese"
+      "monthDue": "Per colpire questo mese",
+      "ledgerTitle": "Generated commissions",
+      "typeAll": "All types",
+      "exportCsv": "Esporta CSV",
+      "exportCsvTruncated": "Esportazione limitata alle ultime {n} righe del ledger."
     },
     "settings": {
       "title": "Profilo di pagamento:",
@@ -532,22 +593,22 @@
     },
     "aiModules": {
       "title": "Modulo CR IA",
-      "subtitle": "Attiva la prova per le tue pratiche, monitora l'adozione, converti a €39 / €390",
-      "openPlaybook": "Apri la guida/argomento",
-      "activateTitle": "Attiva uno dei tuoi uffici",
-      "practice": "Ufficio",
-      "practicePlaceholder": "Scegliere",
+      "subtitle": "Attiva la prova per le tue cliniche, segui l’adozione, converti a 39 € / 390 €",
+      "openPlaybook": "Apri guida / pitch",
+      "activateTitle": "Attiva una delle tue cliniche",
+      "practice": "Clinica",
+      "practicePlaceholder": "Scegli",
       "activate": "Attiva 90 giorni gratis",
-      "activatedOk": "Prova attivata: il veterinario ha ricevuto un'e-mail",
+      "activatedOk": "Prova attivata — il vet ha ricevuto un’email",
       "listTitle": "I tuoi moduli",
       "emptyTitle": "Nessuna attivazione ancora",
-      "emptyDescription": "Scegli una pratica assegnata per iniziare.",
-      "colPractice": "Ufficio",
+      "emptyDescription": "Scegli una clinica assegnata per iniziare.",
+      "colPractice": "Clinica",
       "colStatus": "Stato",
-      "colTrial": "Fine della prova",
-      "frictionTitle": "Avvisi di attrito",
+      "colTrial": "Fine prova",
+      "frictionTitle": "Avvisi friction",
       "frictionEmpty": "Nessun avviso recente",
-      "frictionEmptyDesc": "I segnali (0 utilizzo D7, calo, NPS basso, ecc.) vengono visualizzati qui.",
+      "frictionEmptyDesc": "I segnali (0 uso G7, calo, NPS basso…) compaiono qui.",
       "colSignal": "Segnale",
       "colDetail": "Dettaglio",
       "colWhen": "Quando"
@@ -601,6 +662,24 @@
       "frictionBody": "Utilizzo 0 su D7, calo di utilizzo, errori Gemini, NPS ≤ 6, abbandono dopo l'avvio. L'app ti avvisa; utilizzare questa guida per il ripristino.",
       "footer": "Fatturazione esterna (come SaaS Pro). petsFollow: continuità assistenziale prescritta.",
       "mailBodyPdf": "Ciao,\n\nIn allegato trovi le istruzioni per l'uso del modulo petsFollow AI Report (PDF tramite Stampa / Salva come PDF dall'area commerciale).\n\nProva gratuita di 90 giorni, poi 39 € IVA esclusa/mese o 390 € IVA esclusa/anno (fattura esterna).\n\nSinceramente,"
+    },
+    "network": {
+      "title": "La mia rete",
+      "subtitle": "Filiale, sponsor e downline (prep. MLM).",
+      "branch": "Filiale",
+      "sponsor": "Sponsor",
+      "manager": "Responsabile",
+      "rank": "Rank",
+      "downlineTitle": "Downline",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colDepth": "Depth",
+      "mlmPending": "Rete MLM in arrivo",
+      "mlmPendingDesc": "Downline integration is not active yet. Your branch and manager remain visible.",
+      "loadError": "Impossibile caricare la rete",
+      "downlineEmpty": "No downline yet",
+      "downlineEmptyDesc": "Your downline will appear here after recruitment."
     }
   },
   "settings": {
@@ -1209,7 +1288,9 @@
       "baseLng": "Longitudine",
       "baseLocationSubmit": "Salva area",
       "baseLocationSuccess": "Area di base salvata.",
-      "baseLocationFailed": "Impossibile salvare la zona."
+      "baseLocationFailed": "Impossibile salvare la zona.",
+      "colManager": "Responsabile",
+      "colBranch": "Filiale"
     },
     "prospects": {
       "title": "Lead di marketing",
@@ -1441,6 +1522,29 @@
       "convertMonthly": "Converti € 39/mese",
       "convertAnnual": "Converti € 390/anno",
       "disable": "Disabilita"
+    },
+    "branches": {
+      "title": "Filiali commerciali",
+      "subtitle": "MLM org prep — branches and assignments.",
+      "createTitle": "Crea filiale",
+      "name": "Name",
+      "code": "Code",
+      "createSubmit": "Create",
+      "createSuccess": "Filiale creata.",
+      "createFailed": "Creazione filiale non riuscita.",
+      "assignTitle": "Assign a sales rep",
+      "assignCommercial": "Sales rep",
+      "assignCommercialPlaceholder": "Select a sales rep",
+      "assignBranch": "Branch",
+      "assignBranchNone": "None",
+      "assignSubmit": "Save assignment",
+      "assignSuccess": "Assegnazione aggiornata.",
+      "assignFailed": "Assegnazione non riuscita.",
+      "empty": "No branches yet",
+      "colName": "Name",
+      "colCode": "Code",
+      "colMembers": "Members",
+      "loadError": "Unable to load branches"
     }
   },
   "calendar": {
@@ -2212,7 +2316,55 @@
     "prospects": {
       "title": "Lead team",
       "subtitle": "Visualizzazione CRM del team e della directory condivisa.",
-      "allCommercials": "Tutti i venditori"
+      "allCommercials": "Tutti i venditori",
+      "reassign": "Assegna a",
+      "unassigned": "Non assegnato"
+    },
+    "leaderboard": {
+      "title": "Classifica team",
+      "subtitle": "Monthly performance and quotas.",
+      "period": "Period",
+      "empty": "No sales reps on the team",
+      "colRank": "#",
+      "colCommercial": "Sales rep",
+      "colConverted": "Converted",
+      "colEarned": "Commissions",
+      "colQuotaActivations": "Activation quota",
+      "colQuotaEarned": "Commission quota",
+      "saveQuota": "Save",
+      "quotaSaved": "Quota saved.",
+      "quotaFailed": "Could not save quota.",
+      "loadError": "Unable to load leaderboard",
+      "quotaEuros": "Obiettivo in euro"
+    },
+    "member": {
+      "title": "Sales rep profile",
+      "titleNamed": "{name}",
+      "subtitle": "Individual team member KPIs.",
+      "back": "Torna al team",
+      "loadError": "Impossible de charger la fiche"
+    },
+    "aiModules": {
+      "title": "CR IA — team",
+      "subtitle": "Moduli e avvisi di friction delle cliniche del team.",
+      "frictionTitle": "Avvisi friction del team",
+      "listTitle": "Moduli CR IA del team",
+      "colCommercial": "Commerciale",
+      "openMember": "Vedi commerciale",
+      "emptyDescription": "Nessun modulo CR IA sulle cliniche assegnate al team.",
+      "openPlaybook": "Apri guida / pitch",
+      "frictionEmpty": "Nessun avviso recente",
+      "frictionEmptyDesc": "I segnali (0 uso G7, calo, NPS basso…) compaiono qui.",
+      "emptyTitle": "Nessuna attivazione ancora",
+      "colPractice": "Clinica",
+      "colStatus": "Stato",
+      "colTrial": "Fine prova",
+      "colSignal": "Segnale",
+      "colDetail": "Dettaglio",
+      "colWhen": "Quando",
+      "loadError": "Impossibile caricare i moduli CR IA",
+      "call": "Chiama",
+      "email": "Email"
     }
   },
   "invite": {
@@ -2221,15 +2373,17 @@
     "brandTitleCommercial": "Animali domesticiSegui l'invito",
     "brandText": "Scarica petsFollow il monitoraggio sanitario prescritto dei tuoi animali domestici.",
     "loading": "Caricamento dell'invito…",
-    "title": "Scarica l'app petsFollow",
+    "title": "Apri l'app petsFollow",
     "subtitle": "Invito da {vet} — {practice}",
     "subtitleCarePro": "Invito da {name}",
     "subtitleCommercial": "Invito tramite {name}",
     "autoLinkHint": "Registrandoti da questo link verrai automaticamente collegato a questo studio.",
     "autoLinkHintCarePro": "Registrandosi utilizzando questo collegamento, questo professionista ottiene l'accesso alle note al tuo file.",
     "autoLinkHintCommercial": "Registrandoti da questo link, il tuo account viene assegnato a questo venditore (referral).",
+    "codeLabel": "Codice invito:",
+    "codeHint": "Se l'app non si apre automaticamente, aprila e inserisci questo codice in fase di registrazione.",
     "download": "Scarica l'applicazione",
-    "openApp": "Ho già l'app",
+    "openApp": "Apri l'app",
     "failedTitle": "Invito non trovato",
     "invalid": "Questo link di invito non è più valido."
   },

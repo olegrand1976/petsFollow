@@ -34,6 +34,7 @@ func (a *API) registerPitchTrainingRoutes(r chi.Router) {
 		pr.Post("/commercial/pitch-sims/{id}/feedback", a.commercialPitchSimFeedback)
 
 		pr.Get("/commercial-manager/pitch-sims", a.managerListPitchSims)
+		pr.Patch("/commercial-manager/pitch-sims/{id}/note", a.managerPatchPitchSimNote)
 
 		pr.Get("/admin/pitch-scripts", a.adminListPitchScripts)
 		pr.Post("/admin/pitch-scripts", a.adminCreatePitchScript)
@@ -573,6 +574,52 @@ func (a *API) managerListPitchSims(w http.ResponseWriter, r *http.Request) {
 		a.enrichPitchSim(&list[i])
 	}
 	httpx.WriteData(w, http.StatusOK, list)
+}
+
+type managerPitchNoteReq struct {
+	Note string `json:"note"`
+}
+
+func (a *API) managerPatchPitchSimNote(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	simID := chi.URLParam(r, "id")
+	ownerID, err := a.store.GetPitchSimOwner(r.Context(), simID)
+	if err != nil {
+		if errors.Is(err, store.ErrPitchSimNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if ownerID != id.UserID {
+		belongs, err := a.store.CommercialBelongsToManager(r.Context(), ownerID, id.UserID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !belongs {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+	}
+	var req managerPitchNoteReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if len([]rune(req.Note)) > 4000 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "note_too_long")
+		return
+	}
+	if err := a.store.UpsertPitchSimManagerNote(r.Context(), simID, id.UserID, req.Note); err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (a *API) adminListPitchScripts(w http.ResponseWriter, r *http.Request) {

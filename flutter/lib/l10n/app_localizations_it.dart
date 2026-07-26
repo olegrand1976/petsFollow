@@ -141,6 +141,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Conto creato. Apri il collegamento nell\'e-mail di convalida, quindi accedi nuovamente all\'app.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Account creato, ma il codice invito non è stato applicato. Potrai inserirlo di nuovo dopo l\'accesso.';
+
+  @override
   String get registerFailed => 'Impossibile registrarsi';
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/auth/pending_login_hint.dart';
@@ -153,6 +154,12 @@ class AppDeepLink {
     if (path == 'preconsult' || path.endsWith('preconsult')) {
       final visitId = uri.queryParameters['visitId'] ?? '';
       if (visitId.trim().isEmpty) return;
+      final inviteCode = uri.queryParameters['inviteCode'] ??
+          uri.queryParameters['code'] ??
+          '';
+      if (inviteCode.trim().isNotEmpty) {
+        unawaited(_persistAndMaybeClaim(inviteCode.trim()));
+      }
       unawaited(_openOrPersistPreconsult(visitId.trim()));
     }
   }
@@ -190,6 +197,13 @@ class AppDeepLink {
     try {
       await ApiClient.instance.claimVetInvite(code);
       await InviteCodeStore.instance.save(null);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 404 || status == 400) {
+        await InviteCodeStore.instance.save(null);
+        return;
+      }
+      debugPrint('deeplink claim invite: $e');
     } catch (e) {
       debugPrint('deeplink claim invite: $e');
     }

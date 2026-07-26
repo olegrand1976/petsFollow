@@ -243,11 +243,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
-			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
 			base_lat, base_lng, base_city, base_postal_code
 		) VALUES (
 			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, false,
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, $3::uuid, false,
 			50.8503, 4.3517, 'Bruxelles', '1000'
 		)
 		ON CONFLICT (email) DO UPDATE SET
@@ -260,6 +260,7 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			payout_account_holder = EXCLUDED.payout_account_holder,
 			-- Keep existing manager (e.g. staging Murgo); only fill when unset.
 			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			sponsor_user_id = COALESCE(identity.users.sponsor_user_id, EXCLUDED.sponsor_user_id),
 			must_change_password = false,
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
@@ -273,11 +274,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
-			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
 			base_lat, base_lng, base_city, base_postal_code
 		) VALUES (
 			$1, 'commercial.demo2@petsfollow.test', $2, 'Alex Vente', 'commercial', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Alex Vente', $3::uuid, false,
+			'BE68539007547034', 'GEBABEBB', 'Alex Vente', $3::uuid, $3::uuid, false,
 			50.6292, 3.0573, 'Lille', '59000'
 		)
 		ON CONFLICT (email) DO UPDATE SET
@@ -289,6 +290,7 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			payout_bic = EXCLUDED.payout_bic,
 			payout_account_holder = EXCLUDED.payout_account_holder,
 			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			sponsor_user_id = COALESCE(identity.users.sponsor_user_id, EXCLUDED.sponsor_user_id),
 			must_change_password = false,
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
@@ -312,7 +314,47 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err := seedProspects(ctx, tx, commercialID, demo1Prospects); err != nil {
 		return err
 	}
-	return seedProspects(ctx, tx, commercial2ID, demo2Prospects)
+	if err := seedProspects(ctx, tx, commercial2ID, demo2Prospects); err != nil {
+		return err
+	}
+	return seedSalesBranches(ctx, tx, managerID, commercialID, commercial2ID)
+}
+
+func seedSalesBranches(ctx context.Context, tx pgx.Tx, managerID, commercialID, commercial2ID string) error {
+	var bruxellesID, nordID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO sales.branches (id, name, code, external_mlm_id)
+		VALUES ($1, 'Bruxelles', 'BRU', NULL)
+		ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
+		RETURNING id::text`, uuid.NewString()).Scan(&bruxellesID); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO sales.branches (id, name, code, external_mlm_id)
+		VALUES ($1, 'Nord', 'NORD', NULL)
+		ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
+		RETURNING id::text`, uuid.NewString()).Scan(&nordID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET branch_id = $1,
+		    sponsor_user_id = COALESCE(sponsor_user_id, manager_user_id)
+		WHERE id = $2`, bruxellesID, commercialID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET branch_id = $1,
+		    sponsor_user_id = COALESCE(sponsor_user_id, manager_user_id)
+		WHERE id = $2`, nordID, commercial2ID); err != nil {
+		return err
+	}
+	// Manager sees both branches; attach to Bruxelles as primary for seed.
+	_, err := tx.Exec(ctx, `
+		UPDATE identity.users SET branch_id = COALESCE(branch_id, $1)
+		WHERE id = $2`, bruxellesID, managerID)
+	return err
 }
 
 type seedProspect struct {

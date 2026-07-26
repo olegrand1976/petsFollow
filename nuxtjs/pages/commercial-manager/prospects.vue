@@ -6,7 +6,7 @@
     />
 
     <ProCard>
-      <ProListToolbar>
+      <ProListToolbar :show-view-toggle="false">
         <template #filters>
           <select v-model="statusFilter" class="pro-select" data-testid="manager-prospect-status-filter">
             <option value="">{{ $t('commercial.prospects.statusAll') }}</option>
@@ -29,6 +29,7 @@
             <th>{{ $t('commercial.prospects.appointmentAt') }}</th>
             <th>{{ $t('commercial.prospects.appointmentOutcome') }}</th>
             <th>{{ $t('commercial.prospects.city') }}</th>
+            <th>{{ $t('manager.prospects.reassign') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -74,6 +75,17 @@
               </select>
             </td>
             <td>{{ p.city }}</td>
+            <td>
+              <select
+                class="pro-select"
+                :value="p.commercialUserId || ''"
+                data-testid="manager-prospect-reassign"
+                @change="(e) => reassign(p.id, (e.target as HTMLSelectElement).value)"
+              >
+                <option v-if="p.source === 'directory'" value="">{{ $t('manager.prospects.unassigned') }}</option>
+                <option v-for="m in team" :key="m.userId" :value="m.userId">{{ m.fullName }}</option>
+              </select>
+            </td>
           </tr>
         </tbody>
       </ProTable>
@@ -118,6 +130,14 @@ async function onAppt(id: string, value: string) {
     return
   }
   await patch(id, { appointmentAt: new Date(value).toISOString(), appointmentOutcome: 'scheduled' })
+}
+
+async function reassign(id: string, commercialUserId: string) {
+  await $fetch(`/api/commercial-manager/prospects/${id}/reassign`, {
+    method: 'PATCH',
+    body: { commercialUserId },
+  })
+  await load()
 }
 
 watch([statusFilter, commercialFilter], load)

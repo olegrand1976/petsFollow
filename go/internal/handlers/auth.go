@@ -93,10 +93,12 @@ func (a *API) googleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if normalizeGoogleAudience(req.Audience) == "client" {
-		a.tryClaimInvite(r, u.ID, req.InviteCode)
+		inviteStatus := a.tryClaimInvite(r, u.ID, req.InviteCode)
 		if store.NormalizeInviteCode(req.InviteCode) == "" {
 			a.tryLinkCommercialReferral(r, u.ID, req.CommercialUserID)
 		}
+		a.issueLoginResponseWithExtra(w, r, u, map[string]any{"inviteStatus": inviteStatus})
+		return
 	}
 	a.issueLoginResponse(w, r, u)
 }
@@ -208,6 +210,10 @@ func (a *API) writeGoogleAuthError(w http.ResponseWriter, r *http.Request, err e
 }
 
 func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store.User) {
+	a.issueLoginResponseWithExtra(w, r, u, nil)
+}
+
+func (a *API) issueLoginResponseWithExtra(w http.ResponseWriter, r *http.Request, u store.User, extra map[string]any) {
 	if (u.Role == kernel.RoleVet || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro ||
 		u.Role == kernel.RoleVetAssistant || u.Role == kernel.RoleSecretary) && u.EmailVerifiedAt == nil {
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
@@ -229,7 +235,19 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, mfa)
+		if len(extra) == 0 {
+			httpx.WriteData(w, http.StatusOK, mfa)
+			return
+		}
+		out := map[string]any{
+			"requires2FA": mfa.Requires2FA,
+			"mfaToken":    mfa.MFAToken,
+			"expiresIn":   mfa.ExpiresIn,
+		}
+		for k, v := range extra {
+			out[k] = v
+		}
+		httpx.WriteData(w, http.StatusOK, out)
 		return
 	}
 	pair, err := a.tokens.IssueProfile(u.ID, u.Email, u.Role, u.PracticeID, profileID)
@@ -238,7 +256,19 @@ func (a *API) issueLoginResponse(w http.ResponseWriter, r *http.Request, u store
 		return
 	}
 	a.store.TouchLastLogin(r.Context(), u.ID)
-	httpx.WriteData(w, http.StatusOK, pair)
+	if len(extra) == 0 {
+		httpx.WriteData(w, http.StatusOK, pair)
+		return
+	}
+	out := map[string]any{
+		"accessToken":  pair.AccessToken,
+		"refreshToken": pair.RefreshToken,
+		"expiresIn":    pair.ExpiresIn,
+	}
+	for k, v := range extra {
+		out[k] = v
+	}
+	httpx.WriteData(w, http.StatusOK, out)
 }
 
 // totpReplayGuard — anti-replay : un code TOTP accepté ne peut pas être rejoué

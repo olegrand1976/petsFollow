@@ -18,7 +18,9 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/commercial/overview", a.commercialOverview)
+		pr.Get("/commercial/network", a.commercialNetwork)
 		pr.Get("/commercial/vets", a.commercialListVets)
+		pr.Get("/commercial/referrals", a.commercialListReferrals)
 		pr.Post("/commercial/vets", a.commercialEncodeVet)
 		pr.Post("/commercial/clients", a.commercialCreateClient)
 		pr.Get("/commercial/commissions", a.commercialCommissions)
@@ -49,6 +51,23 @@ func (a *API) commercialOverview(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, overview)
 }
 
+func (a *API) commercialNetwork(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	info, err := a.store.GetSalesNetworkInfo(r.Context(), id.UserID, a.cfg.MLMOrgEnabled)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, info)
+}
+
 func (a *API) commercialListVets(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireCommercial(w, r)
 	if !ok {
@@ -60,6 +79,19 @@ func (a *API) commercialListVets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, vets)
+}
+
+func (a *API) commercialListReferrals(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListCommercialReferrals(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }
 
 type encodeVetReq struct {
@@ -127,7 +159,16 @@ func (a *API) commercialCommissions(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	summary, err := a.store.GetCommercialCommissionSummary(r.Context(), id.UserID)
+	limit := 50
+	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_limit")
+			return
+		}
+		limit = n
+	}
+	summary, err := a.store.GetCommercialCommissionSummary(r.Context(), id.UserID, limit)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

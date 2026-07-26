@@ -48,6 +48,7 @@
   "registerSubtitle": "Maak een account om de gezondheid van uw dier te volgen. U ontvangt een bevestigingsmail.",
   "registerSubmit": "Registreren",
   "registerSuccess": "Account aangemaakt. Open de link in de bevestigingsmail en kom terug om in te loggen.",
+  "registerInviteNotApplied": "Account aangemaakt, maar de uitnodigingscode kon niet worden toegepast. U kunt die na het inloggen opnieuw invoeren.",
   "registerFailed": "Registratie mislukt",
   "registerEmailExists": "Dit e-mailadres is al in gebruik",
   "registerBackToLogin": "Terug naar inloggen",

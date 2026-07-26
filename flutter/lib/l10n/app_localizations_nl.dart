@@ -139,6 +139,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Account aangemaakt. Open de link in de bevestigingsmail en kom terug om in te loggen.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Account aangemaakt, maar de uitnodigingscode kon niet worden toegepast. U kunt die na het inloggen opnieuw invoeren.';
+
+  @override
   String get registerFailed => 'Registratie mislukt';
 
   @override

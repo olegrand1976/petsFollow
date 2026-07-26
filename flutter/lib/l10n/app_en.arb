@@ -48,6 +48,7 @@
   "registerSubtitle": "Create an account to monitor your pet's health. A validation email will be sent.",
   "registerSubmit": "Sign up",
   "registerSuccess": "Account created. Open the link in the validation email, then come back to sign in.",
+  "registerInviteNotApplied": "Account created, but the invite code could not be applied. You can enter it again after signing in.",
   "registerFailed": "Could not register",
   "registerEmailExists": "This email is already in use",
   "registerBackToLogin": "Back to sign in",

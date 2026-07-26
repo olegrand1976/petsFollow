@@ -67,7 +67,7 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	a.tryClaimInvite(r, result.UserID, req.InviteCode)
+	inviteStatus := a.tryClaimInvite(r, result.UserID, req.InviteCode)
 	// Nearby pick only when no invite code (invite wins attribution).
 	if store.NormalizeInviteCode(req.InviteCode) == "" {
 		a.tryLinkCommercialReferral(r, result.UserID, req.CommercialUserID)
@@ -75,7 +75,8 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
 	out := map[string]any{
-		"message": t(r, "success.confirm_email_sent", nil),
+		"message":      t(r, "success.confirm_email_sent", nil),
+		"inviteStatus": inviteStatus,
 	}
 	// Dev/demo only: never expose the confirmation token outside seeded environments.
 	if a.cfg.DevSeedEnabled {

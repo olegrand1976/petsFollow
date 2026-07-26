@@ -70,7 +70,8 @@ func (s *Store) CreateCommercialManagerUser(ctx context.Context, email, password
 func (s *Store) SetCommercialManager(ctx context.Context, commercialUserID, managerUserID string) error {
 	if managerUserID == "" {
 		ct, err := s.pool.Exec(ctx, `
-			UPDATE identity.users SET manager_user_id=NULL
+			UPDATE identity.users SET manager_user_id=NULL,
+				sponsor_user_id = CASE WHEN sponsor_user_id IS NOT DISTINCT FROM manager_user_id THEN NULL ELSE sponsor_user_id END
 			WHERE id=$1 AND role='commercial'`, commercialUserID)
 		if err != nil {
 			return err
@@ -91,8 +92,15 @@ func (s *Store) SetCommercialManager(ctx context.Context, commercialUserID, mana
 	if role != "commercial_manager" {
 		return errors.New("invalid_manager")
 	}
+	// Sync sponsor only when unset or still equal to the previous manager (SFM depth-1).
+	// Preserve an explicit MLM sponsor chain once set independently.
 	ct, err := s.pool.Exec(ctx, `
-		UPDATE identity.users SET manager_user_id=$2
+		UPDATE identity.users SET
+			manager_user_id=$2,
+			sponsor_user_id = CASE
+				WHEN sponsor_user_id IS NULL OR sponsor_user_id IS NOT DISTINCT FROM manager_user_id THEN $2::uuid
+				ELSE sponsor_user_id
+			END
 		WHERE id=$1 AND role='commercial'`, commercialUserID, managerUserID)
 	if err != nil {
 		return err
@@ -151,8 +159,8 @@ func (s *Store) CreateCommercialUserWithManager(ctx context.Context, email, pass
 	}
 	defer tx.Rollback(ctx)
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password, manager_user_id)
-		VALUES ($1, $2, $3, $4, 'commercial', NULL, NOW(), true, NULLIF($5::text,'')::uuid)`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password, manager_user_id, sponsor_user_id)
+		VALUES ($1, $2, $3, $4, 'commercial', NULL, NOW(), true, NULLIF($5::text,'')::uuid, NULLIF($5::text,'')::uuid)`,
 		userID, email, string(hash), fullName, managerUserID); err != nil {
 		return "", err
 	}
@@ -186,7 +194,13 @@ func (s *Store) ListCommercialManagers(ctx context.Context) ([]CommercialRow, er
 }
 
 func (s *Store) ListManagerTeam(ctx context.Context, managerUserID string) ([]ManagerTeamMember, error) {
-	period := time.Now().UTC().Format("2006-01")
+	return s.ListManagerTeamForPeriod(ctx, managerUserID, PeriodYM(time.Now()))
+}
+
+func (s *Store) ListManagerTeamForPeriod(ctx context.Context, managerUserID, period string) ([]ManagerTeamMember, error) {
+	if period == "" {
+		period = PeriodYM(time.Now())
+	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT u.id::text, u.full_name, u.email,
 			COALESCE((SELECT COUNT(*)::int FROM identity.users v WHERE v.role='vet' AND v.assigned_commercial_id=u.id), 0),

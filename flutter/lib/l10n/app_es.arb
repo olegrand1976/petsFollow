@@ -48,6 +48,7 @@
   "registerSubtitle": "Crea una cuenta para seguir la salud de tu animal. Recibirás un email de validación.",
   "registerSubmit": "Registrarse",
   "registerSuccess": "Cuenta creada. Abre el enlace del email de validación y vuelve a iniciar sesión en la app.",
+  "registerInviteNotApplied": "Cuenta creada, pero no se pudo aplicar el código de invitación. Puede volver a introducirlo tras iniciar sesión.",
   "registerFailed": "No se pudo registrar",
   "registerEmailExists": "Este email ya está en uso",
   "registerBackToLogin": "Volver al inicio de sesión",

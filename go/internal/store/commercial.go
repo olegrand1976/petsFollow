@@ -61,12 +61,14 @@ func (s *Store) EnsureCommissionSettings(ctx context.Context) error {
 }
 
 type CommercialVetRow struct {
-	UserID       string `json:"userId"`
-	FullName     string `json:"fullName"`
-	Email        string `json:"email"`
-	PracticeID   string `json:"practiceId,omitempty"`
-	PracticeName string `json:"practiceName"`
-	ClientCount  int    `json:"clientCount"`
+	UserID           string `json:"userId"`
+	FullName         string `json:"fullName"`
+	Email            string `json:"email"`
+	PracticeID       string `json:"practiceId,omitempty"`
+	PracticeName     string `json:"practiceName"`
+	ClientCount      int    `json:"clientCount"`
+	PaidPetsMonth    int    `json:"paidPetsMonth"`
+	MonthEarnedCents int    `json:"monthEarnedCents"`
 }
 
 type CommercialRow struct {
@@ -74,6 +76,15 @@ type CommercialRow struct {
 	FullName    string `json:"fullName"`
 	Email       string `json:"email"`
 	ClientCount int    `json:"clientCount"`
+}
+
+// CommercialReferralRow is a client attributed via QR invite or nearby pick.
+type CommercialReferralRow struct {
+	ClientUserID string    `json:"clientUserId"`
+	FullName     string    `json:"fullName"`
+	Email        string    `json:"email"`
+	InviteCode   string    `json:"inviteCode,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type CommercialLedgerRow struct {
@@ -196,13 +207,24 @@ func (s *Store) GetAssignedCommercialID(ctx context.Context, vetUserID string) (
 }
 
 func (s *Store) ListCommercialVets(ctx context.Context, commercialUserID string) ([]CommercialVetRow, error) {
+	month := PeriodYM(time.Now())
 	rows, err := s.pool.Query(ctx, `
 		SELECT u.id::text, u.full_name, u.email, COALESCE(u.practice_id::text,''), COALESCE(pr.name,''),
-			COALESCE((SELECT COUNT(*)::int FROM practice.practice_clients pc WHERE pc.vet_user_id = u.id), 0)
+			COALESCE((SELECT COUNT(*)::int FROM practice.practice_clients pc WHERE pc.vet_user_id = u.id), 0),
+			COALESCE((
+				SELECT COUNT(*)::int FROM billing.commercial_commission_ledger cl
+				JOIN billing.pet_entitlements pe ON pe.id = cl.source_id
+				WHERE cl.commercial_user_id=$1 AND cl.vet_user_id=u.id AND cl.period_ym=$2
+				  AND cl.source_type IN ('subscription_pct','subscription_mirror')
+			), 0),
+			COALESCE((
+				SELECT SUM(cl.commission_cents)::int FROM billing.commercial_commission_ledger cl
+				WHERE cl.commercial_user_id=$1 AND cl.vet_user_id=u.id AND cl.period_ym=$2
+			), 0)
 		FROM identity.users u
 		LEFT JOIN practice.practices pr ON pr.id = u.practice_id
 		WHERE u.role='vet' AND u.assigned_commercial_id=$1
-		ORDER BY u.full_name`, commercialUserID)
+		ORDER BY u.full_name`, commercialUserID, month)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +232,8 @@ func (s *Store) ListCommercialVets(ctx context.Context, commercialUserID string)
 	out := make([]CommercialVetRow, 0)
 	for rows.Next() {
 		var v CommercialVetRow
-		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeID, &v.PracticeName, &v.ClientCount); err != nil {
+		if err := rows.Scan(&v.UserID, &v.FullName, &v.Email, &v.PracticeID, &v.PracticeName, &v.ClientCount,
+			&v.PaidPetsMonth, &v.MonthEarnedCents); err != nil {
 			return nil, err
 		}
 		out = append(out, v)
@@ -241,10 +264,15 @@ func (s *Store) ListAllCommercials(ctx context.Context) ([]CommercialRow, error)
 }
 
 func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string) (map[string]any, error) {
-	var assignedVets, prospectsTotal, prospectsNew, prospectsConverted, directoryProspects int
+	var assignedVets, prospectsTotal, prospectsNew, prospectsConverted, directoryProspects, referredClients int
 	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM identity.users WHERE role='vet' AND assigned_commercial_id=$1`,
 		commercialUserID).Scan(&assignedVets); err != nil {
+		return nil, err
+	}
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM practice.commercial_referrals WHERE commercial_user_id=$1`,
+		commercialUserID).Scan(&referredClients); err != nil {
 		return nil, err
 	}
 	if err := s.pool.QueryRow(ctx, `
@@ -283,8 +311,84 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		return nil, err
 	}
 
+	var paidPetsMonth, triennialMonth, appointmentsUpcoming, staleInPipeline int
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int,
+			COUNT(*) FILTER (WHERE pe.plan_code='triennial')::int
+		FROM billing.commercial_commission_ledger cl
+		JOIN billing.pet_entitlements pe ON pe.id = cl.source_id
+		WHERE cl.commercial_user_id=$1 AND cl.period_ym=$2
+		  AND cl.source_type IN ('subscription_pct','subscription_mirror')`,
+		commercialUserID, month).Scan(&paidPetsMonth, &triennialMonth)
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM sales.prospects
+		WHERE commercial_user_id=$1
+		  AND appointment_at IS NOT NULL AND appointment_at >= NOW()
+		  AND status NOT IN ('converted','lost')`, commercialUserID).Scan(&appointmentsUpcoming)
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM sales.prospects
+		WHERE commercial_user_id=$1
+		  AND status IN ('new','contacted','qualified')
+		  AND status_changed_at < NOW() - INTERVAL '7 days'`, commercialUserID).Scan(&staleInPipeline)
+
+	mixBps := 0
+	if paidPetsMonth > 0 {
+		mixBps = triennialMonth * 10000 / paidPetsMonth
+	}
+
+	upcoming := make([]map[string]any, 0)
+	upRows, err := s.pool.Query(ctx, `
+		SELECT id::text, practice_name, contact_name, appointment_at, status, city
+		FROM sales.prospects
+		WHERE commercial_user_id=$1
+		  AND appointment_at IS NOT NULL AND appointment_at >= NOW()
+		  AND status NOT IN ('converted','lost')
+		ORDER BY appointment_at ASC
+		LIMIT 8`, commercialUserID)
+	if err == nil {
+		defer upRows.Close()
+		for upRows.Next() {
+			var id, practice, contact, status, city string
+			var at time.Time
+			if err := upRows.Scan(&id, &practice, &contact, &at, &status, &city); err == nil {
+				upcoming = append(upcoming, map[string]any{
+					"id": id, "practiceName": practice, "contactName": contact,
+					"appointmentAt": at, "status": status, "city": city,
+				})
+			}
+		}
+	}
+
+	stale := make([]map[string]any, 0)
+	stRows, err := s.pool.Query(ctx, `
+		SELECT id::text, practice_name, contact_name, status, city,
+			EXTRACT(DAY FROM NOW() - status_changed_at)::int
+		FROM sales.prospects
+		WHERE commercial_user_id=$1
+		  AND status IN ('new','contacted','qualified')
+		  AND status_changed_at < NOW() - INTERVAL '7 days'
+		ORDER BY status_changed_at ASC
+		LIMIT 8`, commercialUserID)
+	if err == nil {
+		defer stRows.Close()
+		for stRows.Next() {
+			var id, practice, contact, status, city string
+			var days int
+			if err := stRows.Scan(&id, &practice, &contact, &status, &city, &days); err == nil {
+				stale = append(stale, map[string]any{
+					"id": id, "practiceName": practice, "contactName": contact,
+					"status": status, "city": city, "daysInStatus": days,
+				})
+			}
+		}
+	}
+
+	_ = s.SyncCommercialBonusAwards(ctx, commercialUserID)
+	bonuses, _ := s.commercialBonusProgress(ctx, commercialUserID, month)
+
 	return map[string]any{
 		"assignedVets":                   assignedVets,
+		"referredClients":                referredClients,
 		"prospectsTotal":                 prospectsTotal,
 		"prospectsNew":                   prospectsNew,
 		"prospectsConverted":             prospectsConverted,
@@ -293,10 +397,47 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		"lifetimeEarnedCents":            lifetime,
 		"linkedSubscriptionRevenueCents": subRevenue,
 		"linkedAddonRevenueCents":        addonRevenue,
+		"paidPetsMonth":                  paidPetsMonth,
+		"triennialMixBps":                mixBps,
+		"appointmentsUpcoming":           appointmentsUpcoming,
+		"staleInPipeline":                staleInPipeline,
+		"upcomingAppointments":           upcoming,
+		"staleProspects":                 stale,
+		"bonuses":                        bonuses,
 	}, nil
 }
 
-func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUserID string) (map[string]any, error) {
+// ListCommercialReferrals returns clients attributed to this commercial (QR / nearby).
+func (s *Store) ListCommercialReferrals(ctx context.Context, commercialUserID string) ([]CommercialReferralRow, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT cr.client_user_id::text, u.full_name, u.email,
+			COALESCE(cr.invite_code,''), cr.created_at
+		FROM practice.commercial_referrals cr
+		JOIN identity.users u ON u.id = cr.client_user_id
+		WHERE cr.commercial_user_id=$1
+		ORDER BY cr.created_at DESC`, commercialUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]CommercialReferralRow, 0)
+	for rows.Next() {
+		var r CommercialReferralRow
+		if err := rows.Scan(&r.ClientUserID, &r.FullName, &r.Email, &r.InviteCode, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUserID string, ledgerLimit int) (map[string]any, error) {
+	if ledgerLimit <= 0 {
+		ledgerLimit = 50
+	}
+	if ledgerLimit > 500 {
+		ledgerLimit = 500
+	}
 	month := PeriodYM(time.Now())
 	var monthEarned, lifetime, subCommission, addonCommission int
 	if err := s.pool.QueryRow(ctx, `
@@ -328,7 +469,7 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 		JOIN identity.users ce ON ce.id = cl.client_user_id
 		WHERE cl.commercial_user_id=$1
 		ORDER BY cl.accrued_at DESC
-		LIMIT 50`, commercialUserID)
+		LIMIT $2`, commercialUserID, ledgerLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -369,6 +510,8 @@ func (s *Store) GetCommercialCommissionSummary(ctx context.Context, commercialUs
 		"vetTiers":                    DefaultVetCommissionTiers(),
 		"bonuses":                     bonuses,
 		"recentLedger":                recent,
+		"ledgerLimit":                 ledgerLimit,
+		"ledgerTruncated":             len(recent) >= ledgerLimit,
 		"payoutHistory":               payoutHistory,
 	}, nil
 }

@@ -37,7 +37,24 @@
     "adminBrandAssets": "Store QRs",
     "adminAiModules": "AI CR module",
     "commercialAiModules": "AI CR — practices",
-    "commercialAiPlaybook": "AI CR — guide"
+    "commercialAiPlaybook": "AI CR — guide",
+    "commercialNetwork": "My network",
+    "managerLeaderboard": "Leaderboard",
+    "adminSalesBranches": "Branches",
+    "adminSalesForce": "Sales force",
+    "section": {
+      "pipeline": "Pipeline",
+      "offer": "Offer",
+      "ai": "AI performance",
+      "payout": "Payouts",
+      "network": "Network",
+      "team": "Team / Branch",
+      "portfolio": "My portfolio",
+      "ops": "Ops",
+      "salesForce": "Sales force",
+      "billing": "Payroll & catalog"
+    },
+    "managerAiModules": "AI CR — team"
   },
   "auth": {
     "login": {
@@ -51,8 +68,8 @@
       "forgotLink": "Forgot password?",
       "or": "or",
       "proOnly": "Access reserved for Pro profiles (vet / sales / sales manager / admin)",
-      "invalidResponse": "Invalid authentication response",
-      "sessionUnavailable": "Could not establish your session. Allow cookies for this site, then try again."
+      "sessionUnavailable": "Could not establish your session. Allow cookies for this site, then try again.",
+      "invalidResponse": "Invalid authentication response"
     },
     "forgot": {
       "brandTitle": "Recover access to your account",
@@ -967,7 +984,9 @@
       "baseLng": "Longitude",
       "baseLocationSubmit": "Save base area",
       "baseLocationSuccess": "Base area saved.",
-      "baseLocationFailed": "Could not save base area."
+      "baseLocationFailed": "Could not save base area.",
+      "colManager": "Manager",
+      "colBranch": "Branch"
     },
     "prospects": {
       "title": "Marketing prospects",
@@ -1082,6 +1101,29 @@
       "convertMonthly": "Convertir 39 €/mois",
       "convertAnnual": "Convertir 390 €/an",
       "disable": "Désactiver"
+    },
+    "branches": {
+      "title": "Sales branches",
+      "subtitle": "MLM org prep — branches and assignments.",
+      "createTitle": "Create a branch",
+      "name": "Name",
+      "code": "Code",
+      "createSubmit": "Create",
+      "createSuccess": "Branch created.",
+      "createFailed": "Could not create branch.",
+      "assignTitle": "Assign a sales rep",
+      "assignCommercial": "Sales rep",
+      "assignCommercialPlaceholder": "Select a sales rep",
+      "assignBranch": "Branch",
+      "assignBranchNone": "None",
+      "assignSubmit": "Save assignment",
+      "assignSuccess": "Branch assignment updated.",
+      "assignFailed": "Could not assign branch.",
+      "empty": "No branches yet",
+      "colName": "Name",
+      "colCode": "Code",
+      "colMembers": "Members",
+      "loadError": "Unable to load branches"
     }
   },
   "commissions": {
@@ -1660,6 +1702,7 @@
       "title": "Sales dashboard",
       "subtitle": "Assigned vets, prospect pipeline and commissions.",
       "assignedVets": "Assigned vets",
+      "referredClients": "Clients via QR / nearby",
       "prospects": "Prospects",
       "prospectsNew": "New",
       "converted": "Converted",
@@ -1667,7 +1710,16 @@
       "lifetimeEarned": "Lifetime commissions",
       "subRevenue": "Linked subscription revenue",
       "addonRevenue": "Linked addon revenue",
-      "directory": "BCE directory"
+      "directory": "BCE directory",
+      "paidPets": "Paid pets (month)",
+      "mix": "Triennial mix",
+      "upcoming": "Upcoming appointments",
+      "stale": "Stale (>7d)",
+      "upcomingTitle": "Upcoming appointments",
+      "upcomingEmpty": "No upcoming appointments",
+      "staleTitle": "Prospects to chase",
+      "staleEmpty": "No stale prospects",
+      "loadError": "Unable to load dashboard"
     },
     "vets": {
       "title": "Registrations",
@@ -1688,7 +1740,28 @@
       "prospectId": "Prospect ID (conversion)",
       "cardTitle": "Veterinarian",
       "cardDesc": "Create a vet account assigned to you.",
-      "backToCards": "Choose another action"
+      "backToCards": "Choose another action",
+      "search": "Search",
+      "searchPlaceholder": "Name, email, practice…",
+      "attachTitle": "Add a profile to a registered user",
+      "attachUserId": "User ID",
+      "attachRole": "Role",
+      "attachSpecialty": "Specialty",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Add profile",
+      "attachOk": "Profile added",
+      "attachError": "Error (not yourself / profile already exists)",
+      "paidPetsMonth": "Paid pets (month)",
+      "monthEarned": "Commissions (month)"
+    },
+    "referrals": {
+      "title": "Clients via QR / nearby",
+      "subtitle": "App sign-ups attributed to your referral (QR code or nearby pick).",
+      "empty": "No referred clients yet",
+      "fullName": "Name",
+      "email": "Email",
+      "inviteCode": "Invite code",
+      "createdAt": "Signed up"
     },
     "clients": {
       "create": "Create linked client",
@@ -1751,7 +1824,9 @@
       "sourceAll": "All sources",
       "totalCount": "{from}–{to} of {total}",
       "prev": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "encode": "Register",
+      "daysShort": "{n} d"
     },
     "commissions": {
       "title": "My commissions",
@@ -1791,7 +1866,11 @@
       "detailsTitle": "Commission details",
       "pendingPayouts": "Pending payouts",
       "paidPayouts": "Paid payouts",
-      "monthDue": "Due this month"
+      "monthDue": "Due this month",
+      "ledgerTitle": "Generated commissions",
+      "typeAll": "All types",
+      "exportCsv": "Export CSV",
+      "exportCsvTruncated": "Export limited to the latest {n} ledger rows."
     },
     "settings": {
       "title": "Payout profile",
@@ -1843,23 +1922,23 @@
       "title": "Client app invite QR"
     },
     "aiModules": {
-      "title": "Module CR IA",
-      "subtitle": "Activez l’essai pour vos cabinets, suivez l’adoption, convertissez à 39 € / 390 €",
-      "openPlaybook": "Ouvrir le guide / argumentaire",
-      "activateTitle": "Activer un de vos cabinets",
-      "practice": "Cabinet",
-      "practicePlaceholder": "Choisir",
-      "activate": "Activer 90 j offerts",
-      "activatedOk": "Essai activé — le véto a reçu un e-mail",
-      "listTitle": "Vos modules",
-      "emptyTitle": "Pas encore d’activation",
-      "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
-      "colPractice": "Cabinet",
-      "colStatus": "Statut",
-      "colTrial": "Fin essai",
+      "title": "AI CR module",
+      "subtitle": "Activate the trial for your practices, track adoption, convert at €39 / €390",
+      "openPlaybook": "Open guide / pitch",
+      "activateTitle": "Activate one of your practices",
+      "practice": "Practice",
+      "practicePlaceholder": "Choose",
+      "activate": "Activate 90 free days",
+      "activatedOk": "Trial activated — the vet received an email",
+      "listTitle": "Your modules",
+      "emptyTitle": "No activation yet",
+      "emptyDescription": "Pick an assigned practice to start.",
+      "colPractice": "Practice",
+      "colStatus": "Status",
+      "colTrial": "Trial ends",
       "frictionTitle": "Friction alerts",
       "frictionEmpty": "No recent alerts",
-      "frictionEmptyDesc": "Signals (no usage by day 7, drop, low NPS…) show up here.",
+      "frictionEmptyDesc": "Signals (0 usage D7, drop, low NPS…) appear here.",
       "colSignal": "Signal",
       "colDetail": "Detail",
       "colWhen": "When"
@@ -1913,6 +1992,24 @@
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
       "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
       "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+    },
+    "network": {
+      "title": "My network",
+      "subtitle": "Branch, sponsorship and downline (MLM prep).",
+      "branch": "Branch",
+      "sponsor": "Sponsor",
+      "manager": "Manager",
+      "rank": "Rank",
+      "downlineTitle": "Downline",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colDepth": "Depth",
+      "mlmPending": "MLM network coming soon",
+      "mlmPendingDesc": "Downline integration is not active yet. Your branch and manager remain visible.",
+      "loadError": "Unable to load network",
+      "downlineEmpty": "No downline yet",
+      "downlineEmptyDesc": "Your downline will appear here after recruitment."
     }
   },
   "commissionSheet": {
@@ -2113,7 +2210,55 @@
     "prospects": {
       "title": "Team prospects",
       "subtitle": "CRM view for the team and shared directory.",
-      "allCommercials": "All sales reps"
+      "allCommercials": "All sales reps",
+      "reassign": "Assign to",
+      "unassigned": "Unassigned"
+    },
+    "leaderboard": {
+      "title": "Team leaderboard",
+      "subtitle": "Monthly performance and quotas.",
+      "period": "Period",
+      "empty": "No sales reps on the team",
+      "colRank": "#",
+      "colCommercial": "Sales rep",
+      "colConverted": "Converted",
+      "colEarned": "Commissions",
+      "colQuotaActivations": "Activation quota",
+      "colQuotaEarned": "Commission quota",
+      "saveQuota": "Save",
+      "quotaSaved": "Quota saved.",
+      "quotaFailed": "Could not save quota.",
+      "loadError": "Unable to load leaderboard",
+      "quotaEuros": "Target in euros"
+    },
+    "member": {
+      "title": "Sales rep profile",
+      "titleNamed": "{name}",
+      "subtitle": "Individual team member KPIs.",
+      "back": "Back to team",
+      "loadError": "Impossible de charger la fiche"
+    },
+    "aiModules": {
+      "title": "AI CR — team",
+      "subtitle": "Modules and friction alerts for your team’s practices.",
+      "frictionTitle": "Team friction alerts",
+      "listTitle": "Team AI CR modules",
+      "colCommercial": "Sales rep",
+      "openMember": "View sales rep",
+      "emptyDescription": "No AI CR module on practices assigned to the team.",
+      "openPlaybook": "Open guide / pitch",
+      "frictionEmpty": "No recent alerts",
+      "frictionEmptyDesc": "Signals (0 usage D7, drop, low NPS…) appear here.",
+      "emptyTitle": "No activations yet",
+      "colPractice": "Practice",
+      "colStatus": "Status",
+      "colTrial": "Trial ends",
+      "colSignal": "Signal",
+      "colDetail": "Detail",
+      "colWhen": "When",
+      "loadError": "Could not load AI CR modules",
+      "call": "Call",
+      "email": "Email"
     }
   },
   "training": {
@@ -2221,7 +2366,14 @@
     "badgeOff": "OFF",
     "badgeCurrent": "current",
     "feedbackCount": "{count} feedbacks",
-    "feedbackMeta": "vet {vet}/5 · coach {coach}/5 · {felt}"
+    "feedbackMeta": "vet {vet}/5 · coach {coach}/5 · {felt}",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colNote": "Coaching note",
+    "saveNote": "Save",
+    "noteSaved": "Note saved.",
+    "noteFailed": "Could not save note.",
+    "avgScore": "avg. score"
   },
   "invite": {
     "brandTitle": "Your vet invites you",
@@ -2229,15 +2381,17 @@
     "brandTitleCommercial": "petsFollow invitation",
     "brandText": "Download petsFollow for prescribed health follow-up of your pets.",
     "loading": "Loading invitation…",
-    "title": "Download the petsFollow app",
+    "title": "Open the petsFollow app",
     "subtitle": "Invite from {vet} — {practice}",
     "subtitleCarePro": "Invite from {name}",
     "subtitleCommercial": "Invite via {name}",
     "autoLinkHint": "By signing up from this link, you will be automatically linked to this practice.",
     "autoLinkHintCarePro": "By signing up from this link, this professional gets notes access to your record.",
     "autoLinkHintCommercial": "By signing up from this link, your account is attributed to this sales referral.",
+    "codeLabel": "Invite code:",
+    "codeHint": "If the app does not open automatically, open it and enter this code when signing up.",
     "download": "Download the app",
-    "openApp": "I already have the app",
+    "openApp": "Open the app",
     "failedTitle": "Invite not found",
     "invalid": "This invite link is no longer valid."
   },

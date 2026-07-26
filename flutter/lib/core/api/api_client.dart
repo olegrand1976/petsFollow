@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
@@ -428,8 +429,8 @@ class ApiClient {
     final data = res.data is Map ? res.data['data'] : null;
     final inviteStatus =
         data is Map ? data['inviteStatus']?.toString() ?? '' : '';
-    // Clear only after a successful claim; keep code for retry on login otherwise.
-    if (_inviteClaimSucceeded(inviteStatus)) {
+    // Clear after success or known-invalid code; keep on soft failure for login retry.
+    if (_inviteClaimSettled(inviteStatus)) {
       await InviteCodeStore.instance.save(null);
     }
     return data is Map
@@ -447,6 +448,11 @@ class ApiClient {
       default:
         return false;
     }
+  }
+
+  /// Clear pending invite after a definitive outcome (success or known-invalid).
+  static bool _inviteClaimSettled(String status) {
+    return _inviteClaimSucceeded(status) || status == 'ignored';
   }
 
   Future<List<dynamic>> listCareProVisits() async {
@@ -649,11 +655,11 @@ class ApiClient {
         'commercialUserId': commercialUserId,
     });
     final data = res.data['data'] as Map<String, dynamic>;
-    if (_isMfaChallenge(data)) return data;
     final inviteStatus = data['inviteStatus']?.toString() ?? '';
-    if (_inviteClaimSucceeded(inviteStatus)) {
+    if (_inviteClaimSettled(inviteStatus)) {
       await InviteCodeStore.instance.save(null);
     }
+    if (_isMfaChallenge(data)) return data;
     return _completeLogin(data);
   }
 
@@ -748,6 +754,19 @@ class ApiClient {
       if (_inviteClaimSucceeded(status) || status.isNotEmpty) {
         await InviteCodeStore.instance.save(null);
       }
+    } on DioException catch (e) {
+      final err = apiErrorCode(e);
+      // Unknown / invalid code: stop retrying forever.
+      if (err == 'invite_not_found' ||
+          err == 'not_found' ||
+          err == 'invalid_role' ||
+          err == 'bad_request' ||
+          e.response?.statusCode == 404 ||
+          e.response?.statusCode == 400) {
+        await InviteCodeStore.instance.save(null);
+        return;
+      }
+      debugPrint('claim invite failed: $e');
     } catch (e) {
       debugPrint('claim invite failed: $e');
     }

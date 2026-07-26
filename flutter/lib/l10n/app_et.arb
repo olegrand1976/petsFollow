@@ -48,6 +48,7 @@
   "registerSubtitle": "Looge konto lemmiklooma tervise jälgimiseks. Saadame kinnitusmeili.",
   "registerSubmit": "Registreeru",
   "registerSuccess": "Konto loodud. Avage kinnitusmeili link ja tulge rakendusse sisse logima.",
+  "registerInviteNotApplied": "Konto loodud, kuid kutsekoodi ei saanud rakendada. Saate selle pärast sisselogimist uuesti sisestada.",
   "registerFailed": "Registreerimine ebaõnnestus",
   "registerEmailExists": "See e-post on juba kasutusel",
   "registerBackToLogin": "Tagasi sisselogimise juurde",

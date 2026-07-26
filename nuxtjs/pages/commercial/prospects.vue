@@ -31,7 +31,7 @@
     </ProCard>
 
     <ProCard>
-      <ProListToolbar>
+      <ProListToolbar v-model:view-mode="viewMode">
         <template #filters>
           <ProInput
             v-model="q"
@@ -56,7 +56,11 @@
         {{ $t('commercial.prospects.totalCount', { total, from: rangeFrom, to: rangeTo }) }}
       </p>
 
-      <ProTable :empty="!prospects.length" :empty-title="$t('commercial.prospects.empty')">
+      <ProTable
+        v-if="viewMode === 'table'"
+        :empty="!prospects.length"
+        :empty-title="$t('commercial.prospects.empty')"
+      >
         <thead>
           <tr>
             <th>{{ $t('commercial.prospects.practiceName') }}</th>
@@ -120,7 +124,15 @@
             <td>
               <span class="pf-notes" :title="p.notes || ''">{{ truncate(p.notes) }}</span>
             </td>
-            <td>
+            <td class="pf-actions">
+              <NuxtLink
+                v-if="p.status !== 'converted'"
+                :to="`/commercial/vets?prospectId=${p.id}`"
+                class="pro-link"
+                :data-testid="`prospect-encode-${p.id}`"
+              >
+                {{ $t('commercial.prospects.encode') }}
+              </NuxtLink>
               <ProButton
                 v-if="p.source !== 'directory'"
                 variant="ghost"
@@ -134,7 +146,39 @@
         </tbody>
       </ProTable>
 
-      <div class="pf-pager" data-testid="prospect-pager">
+      <ProKanban v-else>
+        <ProKanbanColumn
+          v-for="col in kanbanColumns"
+          :key="col.key"
+          :title="col.title"
+          :count="col.items.length"
+          :empty="!col.items.length"
+          :empty-title="$t('common.empty')"
+        >
+          <div
+            v-for="p in col.items"
+            :key="p.id"
+            class="pro-kanban-card"
+            :data-testid="`prospect-kanban-${p.id}`"
+          >
+            <strong>{{ p.practiceName }}</strong>
+            <p class="pro-kanban-card__meta">{{ p.city || '—' }} · {{ p.contactName || p.contactEmail || '—' }}</p>
+            <ProBadge variant="neutral">{{ $t(`commercial.prospects.source.${p.source || 'commercial'}`) }}</ProBadge>
+            <p v-if="p.daysInStatus != null" class="pro-kanban-card__meta">
+              {{ $t('commercial.prospects.daysShort', { n: p.daysInStatus }) }}
+            </p>
+            <NuxtLink
+              v-if="p.status !== 'converted'"
+              :to="`/commercial/vets?prospectId=${p.id}`"
+              class="pro-link"
+            >
+              {{ $t('commercial.prospects.encode') }}
+            </NuxtLink>
+          </div>
+        </ProKanbanColumn>
+      </ProKanban>
+
+      <div v-if="viewMode === 'table'" class="pf-pager" data-testid="prospect-pager">
         <ProButton
           variant="secondary"
           test-id="prospect-prev"
@@ -159,6 +203,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
+const { t } = useI18n()
 const { mapError } = useApiError()
 const statuses = ['new', 'contacted', 'qualified', 'converted', 'lost'] as const
 const outcomes = ['scheduled', 'done', 'no_show', 'cancelled'] as const
@@ -167,13 +212,22 @@ const prospects = ref<any[]>([])
 const total = ref(0)
 const offset = ref(0)
 const q = ref('')
-const sourceFilter = ref('directory')
+const sourceFilter = ref('')
 const statusFilter = ref('')
 const showCreate = ref(false)
 const loading = ref(false)
 const actionError = ref('')
+const { viewMode } = useListView('commercial-prospects', 'table')
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
+
+const kanbanColumns = computed(() =>
+  statuses.map((key) => ({
+    key,
+    title: t(`commercial.prospects.status.${key}`),
+    items: prospects.value.filter((p) => p.status === key),
+  })),
+)
 
 function toggleCreate() {
   showCreate.value = !showCreate.value
@@ -209,13 +263,14 @@ async function load() {
   const seq = ++loadSeq
   loading.value = true
   try {
+    const isKanban = viewMode.value === 'kanban'
     const res: any = await $fetch('/api/commercial/prospects', {
       query: {
         q: q.value || undefined,
         source: sourceFilter.value || undefined,
         status: statusFilter.value || undefined,
-        limit: pageSize,
-        offset: offset.value,
+        limit: isKanban ? 500 : pageSize,
+        offset: isKanban ? 0 : offset.value,
       },
     })
     if (seq !== loadSeq) return
@@ -236,6 +291,10 @@ function scheduleReload() {
 }
 
 watch([sourceFilter, statusFilter], () => {
+  offset.value = 0
+  load()
+})
+watch(viewMode, () => {
   offset.value = 0
   load()
 })
@@ -341,5 +400,19 @@ onMounted(load)
   gap: 0.75rem;
   margin-top: 1rem;
   justify-content: flex-end;
+}
+.pf-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+.pro-link {
+  color: var(--pf-vet-accent);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+.pro-link:hover {
+  text-decoration: underline;
 }
 </style>

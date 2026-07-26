@@ -69,6 +69,8 @@ type Config struct {
 	AiModuleFrictionSecret string
 	// OpsNotifyEmail reçoit les leads « nouveau véto » suggérés depuis l'app client.
 	OpsNotifyEmail string
+	// MLMOrgEnabled exposes multi-depth downline UI; commissions remain flat until MLM billing ships.
+	MLMOrgEnabled bool
 }
 
 func Load() Config {
@@ -131,6 +133,7 @@ func Load() Config {
 		RetentionPurgeSecret:   envOr("RETENTION_PURGE_SECRET", ""),
 		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
+		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),
 	}
 }
 

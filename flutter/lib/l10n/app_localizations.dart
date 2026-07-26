@@ -352,6 +352,12 @@ abstract class AppLocalizations {
   /// **'Compte créé. Ouvrez le lien dans l\'email de validation, puis revenez vous connecter dans l\'app.'**
   String get registerSuccess;
 
+  /// No description provided for @registerInviteNotApplied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte créé, mais le code d\'invitation n\'a pas pu être appliqué. Vous pourrez le ressaisir après connexion.'**
+  String get registerInviteNotApplied;
+
   /// No description provided for @registerFailed.
   ///
   /// In fr, this message translates to:

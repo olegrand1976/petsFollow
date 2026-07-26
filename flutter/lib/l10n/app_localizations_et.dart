@@ -139,6 +139,10 @@ class AppLocalizationsEt extends AppLocalizations {
       'Konto loodud. Avage kinnitusmeili link ja tulge rakendusse sisse logima.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Konto loodud, kuid kutsekoodi ei saanud rakendada. Saate selle pärast sisselogimist uuesti sisestada.';
+
+  @override
   String get registerFailed => 'Registreerimine ebaõnnestus';
 
   @override

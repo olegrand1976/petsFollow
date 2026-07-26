@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/base64"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -182,13 +183,46 @@ func (a *API) claimVetAppInvite(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, result)
 }
 
-// tryClaimInvite soft-applies an invite code (invalid codes are ignored).
-func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) {
+// Invite claim outcomes returned to clients (register / Google).
+const (
+	inviteStatusIgnored  = "ignored"
+	inviteStatusFailed   = "failed"
+	inviteStatusReferred = "referred"
+	inviteStatusLinked   = "linked"
+	inviteStatusGranted  = "granted"
+	inviteStatusAlready  = "already_linked"
+)
+
+// tryClaimInvite soft-applies an invite code and returns a status for the client.
+// Empty / unknown / invalid codes → "ignored"; unexpected store errors → "failed" (logged).
+func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) string {
 	code = store.NormalizeInviteCode(code)
 	if code == "" || clientUserID == "" {
-		return
+		return inviteStatusIgnored
 	}
-	_, _ = a.store.ClaimAppInvite(r.Context(), clientUserID, code)
+	result, err := a.store.ClaimAppInvite(r.Context(), clientUserID, code)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
+			return inviteStatusIgnored
+		}
+		log.Printf("claim invite user=%s code=%s: %v", clientUserID, code, err)
+		return inviteStatusFailed
+	}
+	switch result.Status {
+	case "referred":
+		return inviteStatusReferred
+	case "linked":
+		return inviteStatusLinked
+	case "granted":
+		return inviteStatusGranted
+	case "already_linked":
+		return inviteStatusAlready
+	default:
+		if result.Status != "" {
+			return result.Status
+		}
+		return inviteStatusLinked
+	}
 }
 
 // tryLinkCommercialReferral soft-links a nearby commercial pick (invalid IDs ignored).
@@ -197,5 +231,7 @@ func (a *API) tryLinkCommercialReferral(r *http.Request, clientUserID, commercia
 	if commercialUserID == "" || clientUserID == "" {
 		return
 	}
-	_ = a.store.LinkClientCommercialReferral(r.Context(), clientUserID, commercialUserID)
+	if err := a.store.LinkClientCommercialReferral(r.Context(), clientUserID, commercialUserID); err != nil {
+		log.Printf("link commercial referral client=%s commercial=%s: %v", clientUserID, commercialUserID, err)
+	}
 }

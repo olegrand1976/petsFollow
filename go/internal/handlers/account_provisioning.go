@@ -80,6 +80,8 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
+		// Attribute standalone client to the creating commercial (QR/nearby table).
+		a.tryLinkCommercialReferral(r, clientID, id.UserID)
 		httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": clientID, "email": req.Email})
 		return
 	}

@@ -48,6 +48,7 @@
   "registerSubtitle": "Crea il tuo account per monitorare la salute del tuo animale domestico. Ti verrà inviata un'e-mail di convalida.",
   "registerSubmit": "Registro",
   "registerSuccess": "Conto creato. Apri il collegamento nell'e-mail di convalida, quindi accedi nuovamente all'app.",
+  "registerInviteNotApplied": "Account creato, ma il codice invito non è stato applicato. Potrai inserirlo di nuovo dopo l'accesso.",
   "registerFailed": "Impossibile registrarsi",
   "registerEmailExists": "Questa email è già in uso",
   "registerBackToLogin": "Torna al login",

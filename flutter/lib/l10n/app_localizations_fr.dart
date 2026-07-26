@@ -140,6 +140,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Compte créé. Ouvrez le lien dans l\'email de validation, puis revenez vous connecter dans l\'app.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Compte créé, mais le code d\'invitation n\'a pas pu être appliqué. Vous pourrez le ressaisir après connexion.';
+
+  @override
   String get registerFailed => 'Inscription impossible';
 
   @override

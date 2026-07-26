@@ -114,6 +114,8 @@
           <tr>
             <th>{{ $t('admin.commercials.columnName') }}</th>
             <th>{{ $t('admin.commercials.columnEmail') }}</th>
+            <th>{{ $t('admin.commercials.colManager') }}</th>
+            <th>{{ $t('admin.commercials.colBranch') }}</th>
             <th>{{ $t('admin.commercials.columnVets') }}</th>
             <th>{{ $t('admin.commercials.columnDue') }}</th>
           </tr>
@@ -122,6 +124,8 @@
           <tr v-for="r in rows" :key="r.userId">
             <td>{{ r.fullName }}</td>
             <td>{{ r.email }}</td>
+            <td>{{ r.managerName || '—' }}</td>
+            <td>{{ r.branchName || '—' }}</td>
             <td>{{ r.clientCount }}</td>
             <td>{{ formatDue(r.userId) }}</td>
           </tr>

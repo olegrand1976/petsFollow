@@ -22,6 +22,9 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
 		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
+		pr.Get("/admin/sales-branches", a.adminListSalesBranches)
+		pr.Post("/admin/sales-branches", a.adminCreateSalesBranch)
+		pr.Patch("/admin/commercials/{id}/branch", a.adminSetCommercialBranch)
 		pr.Post("/admin/commercials", a.adminCreateCommercial)
 		pr.Patch("/admin/commercials/{id}/assign", a.adminAssignVet)
 		pr.Patch("/admin/commercials/{id}/manager", a.adminSetCommercialManager)
@@ -41,12 +44,80 @@ func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	rows, err := a.store.ListAllCommercials(r.Context())
+	rows, err := a.store.ListAllCommercialsAdmin(r.Context())
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rows, err := a.store.ListSalesBranches(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+type createBranchReq struct {
+	Name          string `json:"name"`
+	Code          string `json:"code"`
+	ExternalMLMID string `json:"externalMlmId"`
+}
+
+func (a *API) adminCreateSalesBranch(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	var req createBranchReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	b, err := a.store.CreateSalesBranch(r.Context(), req.Name, req.Code, req.ExternalMLMID)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+			return
+		}
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "code_already_exists")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, b)
+}
+
+type setBranchReq struct {
+	BranchID string `json:"branchId"`
+}
+
+func (a *API) adminSetCommercialBranch(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	commercialID := chi.URLParam(r, "id")
+	var req setBranchReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.SetUserBranch(r.Context(), commercialID, strings.TrimSpace(req.BranchID)); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +310,16 @@ func (a *API) adminCommercialCommissions(w http.ResponseWriter, r *http.Request)
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	summary, err := a.store.GetCommercialCommissionSummary(r.Context(), chi.URLParam(r, "id"))
+	limit := 50
+	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_limit")
+			return
+		}
+		limit = n
+	}
+	summary, err := a.store.GetCommercialCommissionSummary(r.Context(), chi.URLParam(r, "id"), limit)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return

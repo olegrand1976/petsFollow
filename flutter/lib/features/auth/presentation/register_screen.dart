@@ -29,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final password = TextEditingController();
   final confirm = TextEditingController();
   final postalCode = TextEditingController();
+  final inviteCodeCtrl = TextEditingController();
   String? error;
   String? info;
   String? success;
@@ -43,12 +44,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
+  String get _effectiveInviteCode => inviteCodeCtrl.text.trim().toUpperCase();
+
+  bool get _hasInviteCode => _effectiveInviteCode.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
     InviteCodeStore.instance.peek().then((code) {
       if (!mounted) return;
+      if (code != null && code.isNotEmpty) {
+        inviteCodeCtrl.text = code;
+      }
       setState(() => _hasInvite = code != null && code.isNotEmpty);
+    });
+    inviteCodeCtrl.addListener(() {
+      final has = _hasInviteCode;
+      if (has != _hasInvite) {
+        setState(() {
+          _hasInvite = has;
+          if (has) _selectedCommercialId = null;
+        });
+      }
     });
   }
 
@@ -59,6 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     password.dispose();
     confirm.dispose();
     postalCode.dispose();
+    inviteCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -90,16 +108,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _busy = true;
     });
     try {
-      await ApiClient.instance.registerClient(
+      final result = await ApiClient.instance.registerClient(
         email: mail,
         password: pass,
         fullName: name,
         locale: LocaleController.instance.locale.languageCode,
         consent: consent,
-        commercialUserId: _hasInvite ? null : _selectedCommercialId,
+        inviteCode: _hasInviteCode ? _effectiveInviteCode : null,
+        commercialUserId: _hasInviteCode ? null : _selectedCommercialId,
       );
       if (!mounted) return;
-      setState(() => success = l10n.registerSuccess);
+      final inviteStatus = result['inviteStatus']?.toString() ?? '';
+      final inviteOk = inviteStatus == 'referred' ||
+          inviteStatus == 'linked' ||
+          inviteStatus == 'granted' ||
+          inviteStatus == 'already_linked';
+      setState(() {
+        success = _hasInviteCode && !inviteOk
+            ? l10n.registerInviteNotApplied
+            : l10n.registerSuccess;
+      });
     } on DioException catch (e) {
       if (!mounted) return;
       final code = apiErrorCode(e);
@@ -131,9 +159,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _busy = true;
     });
     try {
+      if (_hasInviteCode) {
+        await InviteCodeStore.instance.save(_effectiveInviteCode);
+      }
       final data = await GoogleLoginFlow.signIn(
         consent: true,
-        commercialUserId: _hasInvite ? null : _selectedCommercialId,
+        commercialUserId: _hasInviteCode ? null : _selectedCommercialId,
       );
       if (!mounted) return;
       if (data != null) {
@@ -275,7 +306,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildNearbySection(AppLocalizations l10n) {
-    if (_hasInvite) return const SizedBox.shrink();
+    if (_hasInviteCode) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -466,13 +497,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: confirm,
                     obscureText: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: l10n.confirmNewPassword),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('register_invite_code'),
+                    controller: inviteCodeCtrl,
+                    textCapitalization: TextCapitalization.characters,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => submit(),
-                    decoration: InputDecoration(labelText: l10n.confirmNewPassword),
+                    decoration: InputDecoration(
+                      labelText: l10n.registerInviteCode,
+                      hintText: l10n.registerInviteCodeHint,
+                    ),
                   ),
                   _buildNearbySection(l10n),
                   const SizedBox(height: 16),
                   FilledButton(
+                    key: const Key('register_submit_btn'),
                     onPressed: _busy ? null : submit,
                     child: Text(l10n.registerSubmit),
                   ),

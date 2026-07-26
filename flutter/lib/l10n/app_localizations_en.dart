@@ -139,6 +139,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Account created. Open the link in the validation email, then come back to sign in.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Account created, but the invite code could not be applied. You can enter it again after signing in.';
+
+  @override
   String get registerFailed => 'Could not register';
 
   @override

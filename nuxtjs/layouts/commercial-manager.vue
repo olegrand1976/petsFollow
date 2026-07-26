@@ -1,6 +1,6 @@
 <template>
   <div class="pro-app">
-    <ProTopbar home-link="/commercial-manager" :show-notifications="false" />
+    <ProTopbar home-link="/commercial-manager" settings-link="/commercial/settings" :show-notifications="false" />
     <div class="pro-app-shell">
       <ProSidebar :items="navItems" />
       <div class="pro-app-body">
@@ -21,15 +21,19 @@ const { t } = useI18n()
 const { fetchUser } = useProUser()
 
 const navItems = computed<ProNavItem[]>(() => [
-  { to: '/commercial-manager', label: t('nav.managerDashboard'), exact: true, icon: 'dashboard' },
-  { to: '/commercial-manager/suivi', label: t('nav.managerFollowups'), icon: 'event' },
-  { to: '/commercial-manager/prospects', label: t('nav.managerProspects'), icon: 'requests' },
-  { to: '/commercial', label: t('nav.managerPortfolio'), icon: 'users' },
-  { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign' },
-  { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow' },
-  { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics' },
-  { to: '/commercial-manager/training', label: t('nav.commercialTraining'), icon: 'phone_in_talk' },
-  { to: '/produits', label: t('nav.products'), icon: 'description' },
+  { to: '/commercial-manager', label: t('nav.managerDashboard'), exact: true, icon: 'dashboard', section: t('nav.section.team') },
+  { to: '/commercial-manager/suivi', label: t('nav.managerFollowups'), icon: 'event', section: t('nav.section.team') },
+  { to: '/commercial-manager/prospects', label: t('nav.managerProspects'), icon: 'requests', section: t('nav.section.team') },
+  { to: '/commercial-manager/leaderboard', label: t('nav.managerLeaderboard'), icon: 'analytics', section: t('nav.section.team') },
+  { to: '/produits', label: t('nav.products'), icon: 'description', section: t('nav.section.offer') },
+  { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
+  { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },
+  { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics', section: t('nav.section.offer') },
+  { to: '/commercial-manager/training', label: t('nav.commercialTraining'), icon: 'phone_in_talk', section: t('nav.section.ai') },
+  { to: '/commercial-manager/ai-modules', label: t('nav.managerAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
+  { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description', section: t('nav.section.ai') },
+  { to: '/commercial', label: t('nav.managerPortfolio'), icon: 'users', section: t('nav.section.portfolio') },
+  { to: '/commercial/network', label: t('nav.commercialNetwork'), icon: 'account_tree', section: t('nav.section.network') },
 ])
 
 onMounted(() => { void fetchUser().catch(() => {}) })

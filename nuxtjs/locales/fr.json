@@ -37,7 +37,24 @@
     "adminBrandAssets": "QR stores",
     "adminAiModules": "Module CR IA",
     "commercialAiModules": "CR IA — cabinets",
-    "commercialAiPlaybook": "CR IA — guide"
+    "commercialAiPlaybook": "CR IA — guide",
+    "commercialNetwork": "Mon réseau",
+    "managerLeaderboard": "Classement",
+    "managerAiModules": "CR IA — équipe",
+    "adminSalesBranches": "Branches",
+    "adminSalesForce": "Force de vente",
+    "section": {
+      "pipeline": "Pipeline",
+      "offer": "Offre",
+      "ai": "Performance IA",
+      "payout": "Rémunération",
+      "network": "Réseau",
+      "team": "Équipe / Branche",
+      "portfolio": "Mon portefeuille",
+      "ops": "Ops",
+      "salesForce": "Force de vente",
+      "billing": "Paie & catalogue"
+    }
   },
   "training": {
     "title": "Entraînement IA",
@@ -100,6 +117,13 @@
     "colOutcome": "Fin",
     "colScore": "Note",
     "colUser": "Collab",
+    "colName": "Nom",
+    "colEmail": "Email",
+    "colNote": "Note coaching",
+    "saveNote": "Enregistrer",
+    "noteSaved": "Note enregistrée.",
+    "noteFailed": "Enregistrement impossible.",
+    "avgScore": "score moy.",
     "adminTab": {
       "scripts": "Scripts",
       "vet": "Agent véto",
@@ -158,8 +182,8 @@
       "forgotLink": "Mot de passe oublié ?",
       "or": "ou",
       "proOnly": "Accès réservé aux profils Pro (véto / commercial / responsable commercial / admin)",
-      "invalidResponse": "Réponse d'authentification invalide",
-      "sessionUnavailable": "La session n'a pas pu être établie. Autorisez les cookies pour ce site, puis réessayez."
+      "sessionUnavailable": "La session n'a pas pu être établie. Autorisez les cookies pour ce site, puis réessayez.",
+      "invalidResponse": "Réponse d'authentification invalide"
     },
     "forgot": {
       "brandTitle": "Récupérez l'accès à votre compte",
@@ -348,6 +372,7 @@
       "title": "Dashboard commercial",
       "subtitle": "KPI vétos assignés, pipeline prospects et commissions.",
       "assignedVets": "Vétos assignés",
+      "referredClients": "Clients via QR / nearby",
       "prospects": "Prospects",
       "prospectsNew": "Nouveaux",
       "converted": "Convertis",
@@ -355,7 +380,34 @@
       "lifetimeEarned": "Commissions lifetime",
       "subRevenue": "CA abonnements liés",
       "addonRevenue": "CA addons liés",
-      "directory": "Annuaire BCE"
+      "directory": "Annuaire BCE",
+      "paidPets": "Animaux payants (mois)",
+      "mix": "Mix triennal",
+      "upcoming": "RDV à venir",
+      "stale": "Relances (>7 j)",
+      "upcomingTitle": "Prochains rendez-vous",
+      "upcomingEmpty": "Aucun RDV planifié",
+      "staleTitle": "Prospects à relancer",
+      "staleEmpty": "Aucune relance en attente",
+      "loadError": "Impossible de charger le dashboard"
+    },
+    "network": {
+      "title": "Mon réseau",
+      "subtitle": "Branche, parrainage et downline (préparation MLM).",
+      "branch": "Branche",
+      "sponsor": "Parrain",
+      "manager": "Responsable",
+      "rank": "Rang",
+      "downlineTitle": "Downline",
+      "colName": "Nom",
+      "colEmail": "Email",
+      "colRole": "Rôle",
+      "colDepth": "Profondeur",
+      "mlmPending": "Réseau MLM bientôt disponible",
+      "mlmPendingDesc": "L’intégration downline n’est pas encore active. Votre branche et votre responsable restent visibles.",
+      "downlineEmpty": "Aucun filleul",
+      "downlineEmptyDesc": "Votre downline apparaîtra ici après recrutement.",
+      "loadError": "Impossible de charger le réseau"
     },
     "vets": {
       "title": "Inscriptions",
@@ -372,11 +424,32 @@
       "postalCode": "Code postal",
       "address": "Adresse",
       "clients": "Clients",
+      "paidPetsMonth": "Animaux payants (mois)",
+      "monthEarned": "Commissions (mois)",
       "encodeFailed": "Création impossible",
       "prospectId": "ID prospect (conversion)",
       "cardTitle": "Vétérinaire",
       "cardDesc": "Encoder un compte véto qui vous est assigné.",
-      "backToCards": "Choisir une autre action"
+      "backToCards": "Choisir une autre action",
+      "search": "Recherche",
+      "searchPlaceholder": "Nom, email, cabinet…",
+      "attachTitle": "Ajouter un profil à un inscrit",
+      "attachUserId": "User ID",
+      "attachRole": "Rôle",
+      "attachSpecialty": "Spécialité",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Ajouter le profil",
+      "attachOk": "Profil ajouté",
+      "attachError": "Erreur (pas sur soi-même / profil existant)"
+    },
+    "referrals": {
+      "title": "Clients via QR / nearby",
+      "subtitle": "Inscriptions app attribuées à votre referral (code QR ou sélection nearby).",
+      "empty": "Aucun client référé pour l’instant",
+      "fullName": "Nom",
+      "email": "Email",
+      "inviteCode": "Code invite",
+      "createdAt": "Inscrit le"
     },
     "clients": {
       "create": "Créer un client lié",
@@ -439,7 +512,9 @@
       "sourceAll": "Toutes les sources",
       "totalCount": "{from}–{to} sur {total}",
       "prev": "Précédent",
-      "next": "Suivant"
+      "next": "Suivant",
+      "encode": "Encoder",
+      "daysShort": "{n} j"
     },
     "commissions": {
       "title": "Mes commissions",
@@ -477,9 +552,13 @@
       "paymentsTitle": "Mes paiements",
       "paymentsSubtitle": "Montants à toucher et historique des versements.",
       "detailsTitle": "Détail commissionnement",
+      "ledgerTitle": "Commissions générées",
+      "exportCsv": "Exporter CSV",
+      "typeAll": "Tous les types",
       "pendingPayouts": "Versements en attente",
       "paidPayouts": "Versements payés",
-      "monthDue": "À toucher ce mois"
+      "monthDue": "À toucher ce mois",
+      "exportCsvTruncated": "Export limité aux {n} dernières lignes du ledger."
     },
     "settings": {
       "title": "Profil paiement",
@@ -1217,7 +1296,32 @@
       "baseLng": "Longitude",
       "baseLocationSubmit": "Enregistrer la zone",
       "baseLocationSuccess": "Zone de base enregistrée.",
-      "baseLocationFailed": "Impossible d’enregistrer la zone."
+      "baseLocationFailed": "Impossible d’enregistrer la zone.",
+      "colManager": "Responsable",
+      "colBranch": "Branche"
+    },
+    "branches": {
+      "title": "Branches commerciales",
+      "subtitle": "Organisation territoriale de la force de vente.",
+      "createTitle": "Créer une branche",
+      "name": "Nom",
+      "code": "Code",
+      "createSubmit": "Créer",
+      "createSuccess": "Branche créée.",
+      "createFailed": "Création impossible.",
+      "assignTitle": "Assigner un commercial à une branche",
+      "assignCommercial": "Commercial",
+      "assignCommercialPlaceholder": "Choisir un commercial",
+      "assignBranch": "Branche",
+      "assignBranchNone": "Aucune",
+      "assignSubmit": "Enregistrer",
+      "assignSuccess": "Branche mise à jour.",
+      "assignFailed": "Assignation impossible.",
+      "empty": "Aucune branche",
+      "colName": "Nom",
+      "colCode": "Code",
+      "colMembers": "Membres",
+      "loadError": "Impossible de charger les branches"
     },
     "prospects": {
       "title": "Prospects marketing",
@@ -2220,7 +2324,55 @@
     "prospects": {
       "title": "Prospects équipe",
       "subtitle": "Vue CRM de l'équipe et de l'annuaire partagé.",
-      "allCommercials": "Tous les commerciaux"
+      "allCommercials": "Tous les commerciaux",
+      "reassign": "Assigner à",
+      "unassigned": "Non assigné"
+    },
+    "leaderboard": {
+      "title": "Classement équipe",
+      "subtitle": "Performance du mois et quotas.",
+      "period": "Période",
+      "empty": "Aucun commercial dans l’équipe",
+      "colRank": "#",
+      "colCommercial": "Commercial",
+      "colConverted": "Convertis",
+      "colEarned": "Commissions",
+      "colQuotaActivations": "Quota activations",
+      "colQuotaEarned": "Quota commissions",
+      "saveQuota": "Enregistrer",
+      "quotaSaved": "Quota enregistré.",
+      "quotaFailed": "Enregistrement impossible.",
+      "quotaEuros": "Objectif en euros",
+      "loadError": "Impossible de charger le classement"
+    },
+    "member": {
+      "title": "Fiche commercial",
+      "titleNamed": "{name}",
+      "subtitle": "KPI individuels du membre d’équipe.",
+      "back": "Retour à l’équipe",
+      "loadError": "Impossible de charger la fiche"
+    },
+    "aiModules": {
+      "title": "CR IA — équipe",
+      "subtitle": "Modules et alertes friction des cabinets de l’équipe.",
+      "frictionTitle": "Alertes friction équipe",
+      "listTitle": "Modules CR IA équipe",
+      "colCommercial": "Commercial",
+      "openMember": "Voir le commercial",
+      "emptyDescription": "Aucun module CR IA sur les cabinets assignés à l’équipe.",
+      "openPlaybook": "Ouvrir le guide / argumentaire",
+      "frictionEmpty": "Aucune alerte récente",
+      "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
+      "emptyTitle": "Pas encore d’activation",
+      "colPractice": "Cabinet",
+      "colStatus": "Statut",
+      "colTrial": "Fin essai",
+      "colSignal": "Signal",
+      "colDetail": "Détail",
+      "colWhen": "Quand",
+      "loadError": "Impossible de charger les modules CR IA",
+      "call": "Appeler",
+      "email": "E-mail"
     }
   },
   "invite": {
@@ -2229,15 +2381,17 @@
     "brandTitleCommercial": "Invitation petsFollow",
     "brandText": "Téléchargez petsFollow pour le suivi santé prescrit de vos animaux.",
     "loading": "Chargement de l’invitation…",
-    "title": "Télécharger l’app petsFollow",
+    "title": "Ouvrir l’app petsFollow",
     "subtitle": "Invitation de {vet} — {practice}",
     "subtitleCarePro": "Invitation de {name}",
     "subtitleCommercial": "Invitation via {name}",
     "autoLinkHint": "En vous inscrivant depuis ce lien, vous serez automatiquement rattaché à ce cabinet.",
     "autoLinkHintCarePro": "En vous inscrivant depuis ce lien, ce professionnel obtient un accès notes à votre dossier.",
     "autoLinkHintCommercial": "En vous inscrivant depuis ce lien, votre compte est attribué à ce commercial (referral).",
+    "codeLabel": "Code invitation :",
+    "codeHint": "Si l’app ne s’ouvre pas automatiquement, ouvrez-la puis saisissez ce code à l’inscription.",
     "download": "Télécharger l’application",
-    "openApp": "J’ai déjà l’app",
+    "openApp": "Ouvrir l’app",
     "failedTitle": "Invitation introuvable",
     "invalid": "Ce lien d’invitation n’est plus valide."
   },

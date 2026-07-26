@@ -37,7 +37,24 @@
     "adminBrandAssets": "Store-QR’s",
     "adminAiModules": "CR IA-module",
     "commercialAiModules": "CR IA — kabinetten",
-    "commercialAiPlaybook": "CR IA — gids"
+    "commercialAiPlaybook": "CR IA — gids",
+    "commercialNetwork": "Mijn netwerk",
+    "managerLeaderboard": "Klassement",
+    "adminSalesBranches": "Branches",
+    "adminSalesForce": "Verkoopteam",
+    "section": {
+      "pipeline": "Pijplijn",
+      "offer": "Aanbod",
+      "ai": "AI-prestaties",
+      "payout": "Uitbetalingen",
+      "network": "Netwerk",
+      "team": "Team / Branch",
+      "portfolio": "Mijn portefeuille",
+      "ops": "Ops",
+      "salesForce": "Verkoopteam",
+      "billing": "Loon & catalogus"
+    },
+    "managerAiModules": "AI CR — team"
   },
   "auth": {
     "login": {
@@ -51,8 +68,8 @@
       "forgotLink": "Wachtwoord vergeten?",
       "or": "of",
       "proOnly": "Toegang voorbehouden aan Pro-profielen (dierenarts / commercieel / salesmanager / admin)",
-      "invalidResponse": "Ongeldig authenticatie-antwoord",
-      "sessionUnavailable": "De sessie kon niet worden opgezet. Sta cookies voor deze site toe en probeer opnieuw."
+      "sessionUnavailable": "De sessie kon niet worden opgezet. Sta cookies voor deze site toe en probeer opnieuw.",
+      "invalidResponse": "Ongeldig authenticatie-antwoord"
     },
     "forgot": {
       "brandTitle": "Herstel de toegang tot uw account",
@@ -967,7 +984,9 @@
       "baseLng": "Lengtegraad",
       "baseLocationSubmit": "Zone opslaan",
       "baseLocationSuccess": "Basiszone opgeslagen.",
-      "baseLocationFailed": "Zone kon niet worden opgeslagen."
+      "baseLocationFailed": "Zone kon niet worden opgeslagen.",
+      "colManager": "Manager",
+      "colBranch": "Branch"
     },
     "prospects": {
       "title": "Marketingprospects",
@@ -1082,6 +1101,29 @@
       "convertMonthly": "Convertir 39 €/mois",
       "convertAnnual": "Convertir 390 €/an",
       "disable": "Désactiver"
+    },
+    "branches": {
+      "title": "Verkoopbranches",
+      "subtitle": "MLM-org voorbereiding — branches en toewijzingen.",
+      "createTitle": "Branch aanmaken",
+      "name": "Naam",
+      "code": "Code",
+      "createSubmit": "Aanmaken",
+      "createSuccess": "Branch aangemaakt.",
+      "createFailed": "Branch aanmaken mislukt.",
+      "assignTitle": "Commercial toewijzen",
+      "assignCommercial": "Commercial",
+      "assignCommercialPlaceholder": "Kies een commercial",
+      "assignBranch": "Branch",
+      "assignBranchNone": "Geen",
+      "assignSubmit": "Toewijzing opslaan",
+      "assignSuccess": "Branchtoewijzing bijgewerkt.",
+      "assignFailed": "Toewijzing mislukt.",
+      "empty": "Nog geen branches",
+      "colName": "Naam",
+      "colCode": "Code",
+      "colMembers": "Leden",
+      "loadError": "Branches laden mislukt"
     }
   },
   "commissions": {
@@ -1660,6 +1702,7 @@
       "title": "Commercieel dashboard",
       "subtitle": "Toegewezen dierenartsen, prospectpipeline en commissies.",
       "assignedVets": "Toegewezen dierenartsen",
+      "referredClients": "Cliënten via QR / nearby",
       "prospects": "Prospects",
       "prospectsNew": "Nieuw",
       "converted": "Geconverteerd",
@@ -1667,7 +1710,16 @@
       "lifetimeEarned": "Commissies lifetime",
       "subRevenue": "Gekoppelde abonnementsomzet",
       "addonRevenue": "Gekoppelde addon-omzet",
-      "directory": "BCE-directory"
+      "directory": "BCE-directory",
+      "paidPets": "Betaalde dieren (maand)",
+      "mix": "Triennial mix",
+      "upcoming": "Komende afspraken",
+      "stale": "Te heractiveren (>7d)",
+      "upcomingTitle": "Komende afspraken",
+      "upcomingEmpty": "Geen komende afspraken",
+      "staleTitle": "Prospects te heractiveren",
+      "staleEmpty": "Geen stale prospects",
+      "loadError": "Dashboard laden mislukt"
     },
     "vets": {
       "title": "Registraties",
@@ -1688,7 +1740,28 @@
       "prospectId": "Prospect-ID (conversie)",
       "cardTitle": "Dierenarts",
       "cardDesc": "Een dierenartsaccount aanmaken dat aan u is toegewezen.",
-      "backToCards": "Andere actie kiezen"
+      "backToCards": "Andere actie kiezen",
+      "search": "Zoeken",
+      "searchPlaceholder": "Naam, e-mail, praktijk…",
+      "attachTitle": "Profiel toevoegen aan een gebruiker",
+      "attachUserId": "User ID",
+      "attachRole": "Rol",
+      "attachSpecialty": "Specialiteit",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Profiel toevoegen",
+      "attachOk": "Profiel toegevoegd",
+      "attachError": "Fout (niet uzelf / profiel bestaat al)",
+      "paidPetsMonth": "Betaalde dieren (maand)",
+      "monthEarned": "Commissies (maand)"
+    },
+    "referrals": {
+      "title": "Cliënten via QR / nearby",
+      "subtitle": "App-inschrijvingen toegeschreven aan uw referral (QR-code of nearby-keuze).",
+      "empty": "Nog geen verwezen cliënten",
+      "fullName": "Naam",
+      "email": "Email",
+      "inviteCode": "Uitnodigingscode",
+      "createdAt": "Ingeschreven op"
     },
     "clients": {
       "create": "Gekoppelde cliënt aanmaken",
@@ -1751,7 +1824,9 @@
       "sourceAll": "Alle bronnen",
       "totalCount": "{from}–{to} van {total}",
       "prev": "Vorige",
-      "next": "Volgende"
+      "next": "Volgende",
+      "encode": "Registreren",
+      "daysShort": "{n} d"
     },
     "commissions": {
       "title": "Mijn commissies",
@@ -1791,7 +1866,11 @@
       "detailsTitle": "Commissiedetails",
       "pendingPayouts": "Openstaande uitbetalingen",
       "paidPayouts": "Betaalde uitbetalingen",
-      "monthDue": "Te ontvangen deze maand"
+      "monthDue": "Te ontvangen deze maand",
+      "ledgerTitle": "Gegenereerde commissies",
+      "typeAll": "Alle types",
+      "exportCsv": "CSV exporteren",
+      "exportCsvTruncated": "Export beperkt tot de laatste {n} ledgerregels."
     },
     "settings": {
       "title": "Betalingsprofiel",
@@ -1843,26 +1922,26 @@
       "title": "QR-uitnodiging app"
     },
     "aiModules": {
-      "title": "Module CR IA",
-      "subtitle": "Activez l’essai pour vos cabinets, suivez l’adoption, convertissez à 39 € / 390 €",
-      "openPlaybook": "Ouvrir le guide / argumentaire",
-      "activateTitle": "Activer un de vos cabinets",
-      "practice": "Cabinet",
-      "practicePlaceholder": "Choisir",
-      "activate": "Activer 90 j offerts",
-      "activatedOk": "Essai activé — le véto a reçu un e-mail",
-      "listTitle": "Vos modules",
-      "emptyTitle": "Pas encore d’activation",
-      "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
-      "colPractice": "Cabinet",
-      "colStatus": "Statut",
-      "colTrial": "Fin essai",
-      "frictionTitle": "Alertes friction",
-      "frictionEmpty": "Aucune alerte récente",
-      "frictionEmptyDesc": "Les signaux (0 usage J7, chute, NPS bas…) apparaissent ici.",
-      "colSignal": "Signal",
-      "colDetail": "Détail",
-      "colWhen": "Quand"
+      "title": "AI CR-module",
+      "subtitle": "Activeer de proef voor je praktijken, volg adoptie, converteer voor €39 / €390",
+      "openPlaybook": "Gids / pitch openen",
+      "activateTitle": "Activeer een van je praktijken",
+      "practice": "Praktijk",
+      "practicePlaceholder": "Kiezen",
+      "activate": "Activeer 90 gratis dagen",
+      "activatedOk": "Proef geactiveerd — de dierenarts ontving een e-mail",
+      "listTitle": "Jouw modules",
+      "emptyTitle": "Nog geen activatie",
+      "emptyDescription": "Kies een toegewezen praktijk om te starten.",
+      "colPractice": "Praktijk",
+      "colStatus": "Status",
+      "colTrial": "Einde proef",
+      "frictionTitle": "Frictie-alerts",
+      "frictionEmpty": "Geen recente alerts",
+      "frictionEmptyDesc": "Signalen (0 gebruik D7, daling, lage NPS…) verschijnen hier.",
+      "colSignal": "Signaal",
+      "colDetail": "Detail",
+      "colWhen": "Wanneer"
     },
     "aiPlaybook": {
       "title": "AI CR guide",
@@ -1913,6 +1992,24 @@
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
       "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
       "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+    },
+    "network": {
+      "title": "Mijn netwerk",
+      "subtitle": "Branch, sponsoring en downline (MLM-voorbereiding).",
+      "branch": "Branch",
+      "sponsor": "Sponsor",
+      "manager": "Manager",
+      "rank": "Rang",
+      "downlineTitle": "Downline",
+      "colName": "Naam",
+      "colEmail": "E-mail",
+      "colRole": "Rol",
+      "colDepth": "Diepte",
+      "mlmPending": "MLM-netwerk binnenkort beschikbaar",
+      "mlmPendingDesc": "Downline-integratie is nog niet actief. Uw branch en manager blijven zichtbaar.",
+      "loadError": "Netwerk laden mislukt",
+      "downlineEmpty": "Nog geen downline",
+      "downlineEmptyDesc": "Uw downline verschijnt hier na rekrutering."
     }
   },
   "commissionSheet": {
@@ -2113,7 +2210,55 @@
     "prospects": {
       "title": "Teamprospects",
       "subtitle": "CRM-weergave van het team en gedeelde directory.",
-      "allCommercials": "Alle commercials"
+      "allCommercials": "Alle commercials",
+      "reassign": "Toewijzen aan",
+      "unassigned": "Niet toegewezen"
+    },
+    "leaderboard": {
+      "title": "Teamklassement",
+      "subtitle": "Maandelijkse prestaties en quota.",
+      "period": "Periode",
+      "empty": "Geen commercials in het team",
+      "colRank": "#",
+      "colCommercial": "Commercial",
+      "colConverted": "Geconverteerd",
+      "colEarned": "Commissies",
+      "colQuotaActivations": "Activatiequota",
+      "colQuotaEarned": "Commissiequota",
+      "saveQuota": "Opslaan",
+      "quotaSaved": "Quota opgeslagen.",
+      "quotaFailed": "Quota opslaan mislukt.",
+      "loadError": "Klassement laden mislukt",
+      "quotaEuros": "Doel in euro"
+    },
+    "member": {
+      "title": "Commercialprofiel",
+      "titleNamed": "{name}",
+      "subtitle": "Individuele KPI’s van het teamlid.",
+      "back": "Terug naar team",
+      "loadError": "Impossible de charger la fiche"
+    },
+    "aiModules": {
+      "title": "AI CR — team",
+      "subtitle": "Modules en frictie-alerts van de praktijken van je team.",
+      "frictionTitle": "Team frictie-alerts",
+      "listTitle": "Team AI CR-modules",
+      "colCommercial": "Verkoper",
+      "openMember": "Verkoper bekijken",
+      "emptyDescription": "Geen AI CR-module op praktijken toegewezen aan het team.",
+      "openPlaybook": "Gids / pitch openen",
+      "frictionEmpty": "Geen recente alerts",
+      "frictionEmptyDesc": "Signalen (0 gebruik D7, daling, lage NPS…) verschijnen hier.",
+      "emptyTitle": "Nog geen activaties",
+      "colPractice": "Praktijk",
+      "colStatus": "Status",
+      "colTrial": "Einde proef",
+      "colSignal": "Signaal",
+      "colDetail": "Detail",
+      "colWhen": "Wanneer",
+      "loadError": "AI CR-modules laden mislukt",
+      "call": "Bellen",
+      "email": "E-mail"
     }
   },
   "training": {
@@ -2221,7 +2366,14 @@
     "badgeOff": "UIT",
     "badgeCurrent": "huidig",
     "feedbackCount": "{count} feedbacks",
-    "feedbackMeta": "dierenarts {vet}/5 · coach {coach}/5 · {felt}"
+    "feedbackMeta": "dierenarts {vet}/5 · coach {coach}/5 · {felt}",
+    "colName": "Naam",
+    "colEmail": "E-mail",
+    "colNote": "Coachingnotitie",
+    "saveNote": "Opslaan",
+    "noteSaved": "Notitie opgeslagen.",
+    "noteFailed": "Opslaan mislukt.",
+    "avgScore": "gem. score"
   },
   "invite": {
     "brandTitle": "Uw dierenarts nodigt u uit",
@@ -2229,15 +2381,17 @@
     "brandTitleCommercial": "petsFollow-uitnodiging",
     "brandText": "Download petsFollow voor voorgeschreven gezondheidsopvolging van uw dieren.",
     "loading": "Uitnodiging laden…",
-    "title": "Download de petsFollow-app",
+    "title": "Open de petsFollow-app",
     "subtitle": "Uitnodiging van {vet} — {practice}",
     "subtitleCarePro": "Uitnodiging van {name}",
     "subtitleCommercial": "Uitnodiging via {name}",
     "autoLinkHint": "Door u via deze link te registreren, wordt u automatisch aan deze praktijk gekoppeld.",
     "autoLinkHintCarePro": "Door u via deze link te registreren krijgt deze professional notities-toegang tot uw dossier.",
     "autoLinkHintCommercial": "Door u via deze link te registreren wordt uw account aan deze commercial-referral toegewezen.",
+    "codeLabel": "Uitnodigingscode:",
+    "codeHint": "Als de app niet automatisch opent, open hem en voer deze code in bij registratie.",
     "download": "App downloaden",
-    "openApp": "Ik heb de app al",
+    "openApp": "App openen",
     "failedTitle": "Uitnodiging niet gevonden",
     "invalid": "Deze uitnodigingslink is niet meer geldig."
   },
