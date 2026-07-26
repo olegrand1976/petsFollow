@@ -32,7 +32,7 @@
           <ProButton type="button" variant="ghost" test-id="support-cancel" @click="navigateTo('/')">
             {{ $t('common.cancel') }}
           </ProButton>
-          <ProButton type="submit" test-id="support-submit" :disabled="saving || !canSubmit">
+          <ProButton type="button" test-id="support-submit" :disabled="saving" @click="submit">
             {{ saving ? $t('common.loading') : $t('support.submit') }}
           </ProButton>
         </div>
@@ -63,7 +63,16 @@ onMounted(() => {
 })
 
 async function submit() {
-  if (!canSubmit.value || saving.value) return
+  if (saving.value) return
+  // Read DOM as fallback when v-model missed Playwright fills (SSR hydration races).
+  const subjectEl = document.querySelector('[data-testid="support-subject"]') as HTMLInputElement | null
+  const messageEl = document.querySelector('[data-testid="support-message"]') as HTMLTextAreaElement | null
+  if (subjectEl?.value) subject.value = subjectEl.value
+  if (messageEl?.value) message.value = messageEl.value
+  if (!canSubmit.value) {
+    error.value = t('support.errorGeneric')
+    return
+  }
   saving.value = true
   error.value = ''
   success.value = false

@@ -16,16 +16,14 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     await message.fill('Bouton calendrier ne répond plus (e2e).')
     await expect(message).toHaveValue(/calendrier/)
 
-    await Promise.all([
-      page.waitForResponse(
-        (r) =>
-          r.request().method() === 'POST' &&
-          /\/api\/support\/tickets\/?$/.test(new URL(r.url()).pathname) &&
-          r.status() === 201,
-        { timeout: 20000 },
-      ),
-      page.getByTestId('support-submit').click(),
-    ])
+    await expect(page.getByTestId('support-submit')).toBeEnabled()
+    const post = page.waitForResponse(
+      (r) => r.request().method() === 'POST' && /\/api\/support\/tickets\/?$/.test(new URL(r.url()).pathname),
+      { timeout: 20000 },
+    )
+    await page.getByTestId('support-submit').click()
+    const res = await post
+    expect(res.status(), `support ticket POST ${res.status()}`).toBe(201)
     await expect(page.getByTestId('support-success')).toBeVisible({ timeout: 10000 })
 
     await loginAsAdmin(page)
