@@ -2,13 +2,13 @@
  * CSP calculée au build : Nuxt requiert 'unsafe-inline' (scripts d'hydratation),
  * Google Sign-In son script/iframe, et le WS pitch une connexion directe à l'API.
  *
- * Ne jamais bake localhost/127.0.0.1 dans la CSP (Docker sans ARG ne doit pas
- * exposer les restes de dev). L'API publique passe via NUXT_PUBLIC_API_BASE.
+ * - Pas de défaut localhost : env absente → `'self'` seul (évite bake Docker nu).
+ * - Loopback explicite (CI Playwright `NUXT_PUBLIC_API_BASE=http://localhost:8291`) conservé
+ *   pour les WebSockets pitch.
+ * - Prod Cloud Build : ARG `https://api.petsfollow.ll-it-sc.be`.
  */
 export function buildCsp(apiBaseEnv = process.env.NUXT_PUBLIC_API_BASE): string {
-  const raw = (apiBaseEnv || '').trim().replace(/\/$/, '')
-  const isLoopback = !raw || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(raw)
-  const apiBase = isLoopback ? '' : raw
+  const apiBase = (apiBaseEnv || '').trim().replace(/\/$/, '')
   const apiWs = apiBase ? apiBase.replace(/^http/, 'ws') : ''
   const connectApi = apiBase ? ` ${apiBase} ${apiWs}` : ''
   const mediaApi = apiBase ? ` ${apiBase}` : ''

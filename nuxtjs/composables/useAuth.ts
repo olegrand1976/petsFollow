@@ -223,7 +223,10 @@ function armPostLoginGrace() {
   }
 }
 
-/** True pendant quelques secondes après finishClientLoginSession (survit au reload document). */
+/** True pendant quelques secondes après finishClientLoginSession.
+ * Client-only (sessionStorage) : survit au reload document, mais pas au SSR —
+ * le 1er passage middleware après replace s'appuie sur les cookies httpOnly de la requête.
+ */
 export function isWithinPostLoginGrace(): boolean {
   if (typeof sessionStorage === 'undefined') return false
   try {
