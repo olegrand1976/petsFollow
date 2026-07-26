@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main, staging]
+    # staging: quality runs via Deploy GCP staging (workflow_call) — avoid duplicate suite.
+    branches: [main]
   pull_request:
   workflow_call:
 
