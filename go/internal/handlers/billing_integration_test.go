@@ -5,7 +5,9 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
@@ -205,5 +207,96 @@ func TestBillingCheckoutRejectsInvalidPlan(t *testing.T) {
 	})
 	if code != http.StatusBadRequest || errCode(env) != "bad_request" {
 		t.Fatalf("expected bad_request for invalid plan, got %d %#v", code, env)
+	}
+}
+
+func TestBillingPortalAfterCheckout(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("me %d %#v", code, env)
+	}
+	ownerID, _ := dataMap(t, env)["userId"].(string)
+
+	petID, sessionID := createPendingPet(t, api, ownerTok, "BillingPortal-"+uniqueEmail("pet"))
+	payload, sig, err := billing.BuildTestWebhookPayload(webhookSecret(), "checkout.session.completed", map[string]any{
+		"id":             sessionID,
+		"payment_status": "paid",
+		"customer":       billing.MockCustomerID(ownerID),
+		"subscription":   "sub_portal_" + petID,
+		"payment_intent": "pi_portal_" + petID,
+		"metadata": map[string]any{
+			"pet_id":        petID,
+			"owner_user_id": ownerID,
+			"plan_code":     "annual",
+			"billing_mode":  "subscription",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code, body := postWebhook(t, api, payload, sig); code != http.StatusOK {
+		t.Fatalf("webhook %d %s", code, body)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/billing/portal", ownerTok, map[string]any{
+		"returnUrl": "petsfollow://home",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("portal %d %#v", code, env)
+	}
+	portalURL, _ := dataMap(t, env)["url"].(string)
+	if portalURL == "" || !strings.Contains(portalURL, "/api/v1/billing/dev/mock-portal") {
+		t.Fatalf("expected mock portal url, got %q", portalURL)
+	}
+
+	u, err := url.Parse(portalURL)
+	if err != nil {
+		t.Fatalf("parse portal url: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, u.RequestURI(), nil)
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("mock portal page %d %s", rec.Code, rec.Body.String())
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "Mock Stripe portal") || !strings.Contains(body, "petsfollow://home") {
+		t.Fatalf("unexpected mock portal html: %s", body)
+	}
+}
+
+func TestBillingPortalSeededSubscription(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list pets %d %#v", code, env)
+	}
+	pets, ok := env["data"].([]any)
+	if !ok {
+		t.Fatalf("expected pets list, got %#v", env["data"])
+	}
+	var bellaID string
+	for _, item := range pets {
+		m, _ := item.(map[string]any)
+		if m["name"] == "Bella" {
+			bellaID, _ = m["id"].(string)
+			break
+		}
+	}
+	if bellaID == "" {
+		t.Fatal("seeded Bella not found — run make seed")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+bellaID+"/billing/portal", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("seeded portal %d %#v (re-seed if stripe_customers missing)", code, env)
+	}
+	if u, _ := dataMap(t, env)["url"].(string); !strings.Contains(u, "/billing/dev/mock-portal") {
+		t.Fatalf("expected mock portal url, got %#v", env)
 	}
 }

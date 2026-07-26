@@ -69,7 +69,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   }
 
   Future<void> _loadVets() async {
-    final l10n = AppLocalizations.of(context)!;
     if (mounted) {
       setState(() {
         loadingVets = true;
@@ -87,6 +86,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           loadingVets = false;
           vetsLoadError = mapApiError(e, l10n);
@@ -434,10 +434,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final url = await ApiClient.instance.billingPortal(pet.id);
-                    await openExternalUrl(url);
-                  },
+                  key: Key('pet_manage_subscription_${pet.id}'),
+                  onPressed: _openBillingPortal,
                   icon: const Icon(Icons.settings),
                   label: Text(l10n.manageSubscription),
                 ),
@@ -446,6 +444,24 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
         ],
       ),
     );
+  }
+
+  Future<void> _openBillingPortal() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final url = await ApiClient.instance.billingPortal(pet.id);
+      final opened = await openExternalUrl(url);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
+    }
   }
 }
 

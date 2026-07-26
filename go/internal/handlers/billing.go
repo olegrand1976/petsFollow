@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"time"
@@ -19,6 +21,7 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 	r.Post("/billing/webhooks/stripe", a.stripeWebhook)
 	if a.cfg.BillingMockEnabled {
 		r.Get("/billing/dev/mock-complete", a.billingMockComplete)
+		r.Get("/billing/dev/mock-portal", a.billingMockPortal)
 	}
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -277,6 +280,30 @@ func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "completed", "petId": petID})
+}
+
+// billingMockPortal is the Stripe Customer Portal stand-in when BILLING_MOCK_ENABLED.
+func (a *API) billingMockPortal(w http.ResponseWriter, r *http.Request) {
+	customer := r.URL.Query().Get("customer")
+	returnURL := r.URL.Query().Get("return")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>petsFollow — mock billing portal</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:0 1rem;line-height:1.45}
+a{color:#0b6e4f}
+.meta{color:#666;font-size:.9rem;word-break:break-all}
+</style></head><body>
+<h1>Mock Stripe portal</h1>
+<p>Dev / seed billing — no live Stripe Customer Portal.</p>
+<p class="meta">customer: %s</p>
+`, html.EscapeString(customer))
+	if returnURL != "" {
+		_, _ = fmt.Fprintf(w, `<p><a href="%s">Return to app</a></p>`, html.EscapeString(returnURL))
+	}
+	_, _ = io.WriteString(w, `</body></html>`)
 }
 
 func (a *API) requirePremiumAccess(w http.ResponseWriter, r *http.Request, petID string) bool {

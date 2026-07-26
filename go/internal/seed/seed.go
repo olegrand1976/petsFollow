@@ -471,10 +471,24 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 		return err
 	}
 
+	hasSubscription := false
 	for _, pet := range c.pets {
 		petKey := c.email + "/" + pet.name
 		if err := seedPet(ctx, tx, reg, clientID, petKey, pet); err != nil {
 			return fmt.Errorf("pet %q: %w", pet.name, err)
+		}
+		if pet.billingMode == billing.ModeSubscription {
+			hasSubscription = true
+		}
+	}
+	// Portail Stripe (Gérer mon abonnement) exige un customer — même convention que le mock checkout.
+	if hasSubscription {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO billing.stripe_customers (user_id, stripe_customer_id)
+			VALUES ($1, $2)
+			ON CONFLICT (user_id) DO UPDATE SET stripe_customer_id = EXCLUDED.stripe_customer_id`,
+			clientID, billing.MockCustomerID(clientID)); err != nil {
+			return err
 		}
 	}
 

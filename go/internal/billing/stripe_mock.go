@@ -40,9 +40,15 @@ func (g *MockGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 	return CheckoutSession{ID: id, URL: checkoutURL}, nil
 }
 
+// MockCustomerID mirrors the customer id written by MockCompleteCheckout webhooks.
+func MockCustomerID(ownerUserID string) string {
+	return "cus_mock_" + ownerUserID
+}
+
 func (g *MockGateway) CreatePortalSession(_ context.Context, customerID, returnURL string) (PortalSession, error) {
-	return PortalSession{URL: fmt.Sprintf("%s/billing/portal/mock?customer=%s&return=%s",
-		strings.TrimRight(g.APIPublicURL, "/"), customerID, url.QueryEscape(returnURL))}, nil
+	base := strings.TrimRight(g.APIPublicURL, "/")
+	return PortalSession{URL: fmt.Sprintf("%s/api/v1/billing/dev/mock-portal?customer=%s&return=%s",
+		base, url.QueryEscape(customerID), url.QueryEscape(returnURL))}, nil
 }
 
 func (g *MockGateway) CancelSubscription(_ context.Context, subscriptionID string) error {

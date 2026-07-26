@@ -13,6 +13,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | HR start/taps | · | ✓ | ✓ | flow + smoke cancel |
 | HR keys start/validate | · | ✓ | · | `heart_rate_validate_keys_test` |
 | Book visit | · | ✓ | · | `book_visit_screen_test` |
+| Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
 | Préconsult models + submit key | ✓ | ✓ | · | models + key contract |
 | Care create/done/postpone keys | ✓ | ✓ | · | `care_actions_test` |
 | Messaging send keys | · | ✓ | · | `messaging_keys_test` |
