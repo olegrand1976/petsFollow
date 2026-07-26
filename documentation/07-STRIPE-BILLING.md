@@ -56,7 +56,10 @@ PETSFOLLOW_API_PUBLIC_URL=http://localhost:8291
 ## Dev mock
 
 Sans clé Stripe, `BILLING_MOCK_ENABLED=true` : le `checkoutUrl` pointe vers  
-`GET /api/v1/billing/dev/mock-complete?pet_id=...&owner_user_id=...&plan_code=...&billing_mode=...`
+`GET /api/v1/billing/dev/mock-complete?pet_id=...&owner_user_id=...&plan_code=...&billing_mode=...&success_url=...`
+
+- Appels API / smoke / e2e **sans** `success_url` (ou `Accept: application/json` / `format=json`) → JSON `{ status, petId }`.
+- Ouverture navigateur (Flutter) avec `success_url` deep link (`petsfollow://…`, ex. `STRIPE_SUCCESS_URL`) → page HTML « Payment completed » + meta refresh / lien vers l’app (pas de `https://` — anti open-redirect).
 
 ## Admin plateforme
 

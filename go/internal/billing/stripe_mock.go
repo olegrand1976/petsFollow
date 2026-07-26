@@ -36,6 +36,9 @@ func (g *MockGateway) CreateCheckoutSession(_ context.Context, req CheckoutReque
 		q.Set(k, v)
 	}
 	q.Set("session_id", id)
+	if req.SuccessURL != "" {
+		q.Set("success_url", req.SuccessURL)
+	}
 	checkoutURL := fmt.Sprintf("%s/api/v1/billing/dev/mock-complete?%s", strings.TrimRight(g.APIPublicURL, "/"), q.Encode())
 	return CheckoutSession{ID: id, URL: checkoutURL}, nil
 }
