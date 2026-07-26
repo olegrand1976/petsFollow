@@ -19,7 +19,14 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const route = useRoute()
 const { t } = useI18n()
+const { user, fetchUser } = useProUser()
+// SSR : résoudre /me avant rendu pour aligner hydratation (pas de shell fantôme).
+if (!user.value) {
+  await fetchUser().catch(() => null)
+}
 const showNav = computed(() => {
+  // Pas de shell Pro tant que /api/me n'a pas confirmé le rôle (évite login sous topbar).
+  if (!user.value?.role) return false
   const bare = [
     '/login',
     '/register',
@@ -34,7 +41,6 @@ const showNav = computed(() => {
     && !route.path.startsWith('/register')
     && !route.path.startsWith('/invite')
 })
-const { user, fetchUser } = useProUser()
 const { count: messagesBadge } = useProNotifications()
 const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
@@ -64,9 +70,11 @@ async function loadNavBadges() {
 }
 
 onMounted(async () => {
-  try {
-    await fetchUser()
-  } catch { /* 401 handled by middleware */ }
+  if (!user.value) {
+    try {
+      await fetchUser()
+    } catch { /* 401 handled by middleware */ }
+  }
   await loadNavBadges()
 })
 

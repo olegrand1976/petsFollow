@@ -1,16 +1,23 @@
 <template>
   <div class="pro-app">
-    <ProTopbar home-link="/commercial" settings-link="/commercial/settings" :show-notifications="false" />
-    <div class="pro-app-shell">
-      <ProSidebar :items="navItems" />
-      <div class="pro-app-body">
-        <main class="pro-main main">
-          <div class="pro-main-inner">
-            <slot />
-          </div>
-        </main>
+    <template v-if="shellReady">
+      <ProTopbar home-link="/commercial" settings-link="/commercial/settings" :show-notifications="false" />
+      <div class="pro-app-shell">
+        <ProSidebar :items="navItems" />
+        <div class="pro-app-body">
+          <main class="pro-main main">
+            <div class="pro-main-inner">
+              <slot />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </template>
+    <main v-else class="pro-main main">
+      <div class="pro-main-inner">
+        <slot />
+      </div>
+    </main>
   </div>
 </template>
 
@@ -18,7 +25,11 @@
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const { t } = useI18n()
-const { fetchUser } = useProUser()
+const { user, fetchUser } = useProUser()
+if (!user.value) {
+  await fetchUser().catch(() => null)
+}
+const shellReady = computed(() => !!user.value?.role)
 
 const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial', label: t('nav.commercialDashboard'), exact: true, icon: 'dashboard' },
@@ -36,6 +47,8 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/settings', label: t('nav.commercialSettings'), icon: 'settings', section: t('nav.section.payout') },
 ])
 
-onMounted(() => { void fetchUser().catch(() => {}) })
+onMounted(() => {
+  if (!user.value) void fetchUser().catch(() => {})
+})
 
 </script>

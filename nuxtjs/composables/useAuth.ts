@@ -269,10 +269,12 @@ function safeInternalPath(path: string): string {
  * Finalise un login réussi côté navigateur : marqueur + reload document.
  * Sur Safari/iPad, les Set-Cookie du POST login ne sont pas encore visibles au
  * prochain XHR → 401 /api/me → clearAuthTokens effaçait la session naissante.
+ *
+ * Ne pas réécrire pf_session en document.cookie : le BFF l'a déjà posé (Set-Cookie).
+ * Une écriture client peut créer une session fantôme (SSR sans JWT httpOnly).
  */
 export function finishClientLoginSession(path: string = AUTH_POST_LOGIN_RELOAD_PATH) {
   markAuthSessionActive()
-  useCookie('pf_session', sessionCookieOpts()).value = '1'
   const target = safeInternalPath(path)
   // typeof window : OK en SPA / tests ; absent en SSR Nitro.
   // replace : évite /login dans l'historique (retour → re-redirect).
@@ -282,15 +284,20 @@ export function finishClientLoginSession(path: string = AUTH_POST_LOGIN_RELOAD_P
 }
 
 /**
- * Session présente ? Les JWT sont httpOnly : côté client seul le marqueur
- * `pf_session` est visible ; côté SSR les cookies de requête restent lisibles.
+ * Session présente ?
+ * - SSR : seuls pf_token / pf_refresh comptent (évite session fantôme pf_session sans JWT
+ *   → layout Pro rendu au-dessus de /login, hydratation cassée).
+ * - Client : pf_session (seul cookie auth lisible JS) + JWT si exposés (legacy).
  */
 export function hasSessionCookie(): boolean {
   if (authClearedState().value) return false
+  if (import.meta.server) {
+    return !!(useCookie('pf_token').value || useCookie('pf_refresh').value)
+  }
   return !!(
-    useCookie('pf_token').value
+    useCookie('pf_session').value
+    || useCookie('pf_token').value
     || useCookie('pf_refresh').value
-    || useCookie('pf_session').value
   )
 }
 

@@ -32,10 +32,24 @@ type Application struct {
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
-	// Fail-fast : jamais la clé de signature dev par défaut hors environnement dev/demo.
-	if cfg.JWTSigningKey == "" || (cfg.JWTSigningKey == "dev-change-me" && !cfg.DevSeedEnabled) {
-		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret (default dev key refused outside dev)")
+	// Fail-fast : jamais de secret faible / placeholder hors environnement dev/demo.
+	// Pas de génération aléatoire au boot — toutes les instances Cloud Run doivent
+	// partager JWT_SIGNING_KEY (Secret Manager : petsfollow-jwt-signing-key).
+	key := strings.TrimSpace(cfg.JWTSigningKey)
+	weak := key == "" ||
+		key == "dev-change-me" ||
+		key == "dev-change-me-in-production" ||
+		strings.EqualFold(key, "changeme")
+	if weak && !cfg.DevSeedEnabled {
+		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret via env/Secret Manager (weak/default keys refused outside DEV_SEED_ENABLED)")
 	}
+	if key == "" {
+		return nil, errors.New("JWT_SIGNING_KEY must not be empty")
+	}
+	if !cfg.DevSeedEnabled && len(key) < 32 {
+		return nil, errors.New("JWT_SIGNING_KEY too short (min 32 characters outside DEV_SEED_ENABLED)")
+	}
+	cfg.JWTSigningKey = key
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err

@@ -137,8 +137,17 @@ export async function refreshAccessToken(event: H3Event): Promise<TokenPair | nu
     if (!pair?.accessToken) return null
     setAuthCookies(event, pair)
     return pair
-  } catch {
-    clearAuthCookies(event)
+  } catch (e: unknown) {
+    const err = e as { statusCode?: number, status?: number }
+    const status = err?.statusCode ?? err?.status
+    // Purge uniquement si le refresh est réellement rejeté (token invalide/expiré).
+    // Un 5xx / réseau ne doit pas détruire la session (cause de 401 permanents iPad).
+    if (status === 401 || status === 403) {
+      console.warn('[auth/refresh] rejected, clearing cookies', { status })
+      clearAuthCookies(event)
+    } else {
+      console.warn('[auth/refresh] transient failure, keeping cookies', { status: status ?? 'unknown' })
+    }
     return null
   }
 }

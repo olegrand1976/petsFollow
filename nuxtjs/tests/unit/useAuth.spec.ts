@@ -120,15 +120,19 @@ describe('useAuth helpers', () => {
     expect(hasSessionCookie()).toBe(true)
   })
 
-  it('finishClientLoginSession pose pf_session et replace vers un path interne', () => {
+  it('finishClientLoginSession arme la grâce et replace vers un path interne', () => {
     const replace = vi.fn()
     const prevWindow = globalThis.window
     vi.stubGlobal('window', { location: { replace } })
+    const store = new Map<string, string>()
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v) },
+      removeItem: (k: string) => { store.delete(k) },
+    })
     try {
-      cookieStore.set('pf_session', null)
       finishClientLoginSession()
-      expect(cookieStore.get('pf_session')).toBe('1')
-      expect(hasSessionCookie()).toBe(true)
+      expect(isWithinPostLoginGrace()).toBe(true)
       expect(replace).toHaveBeenCalledWith(AUTH_POST_LOGIN_RELOAD_PATH)
       finishClientLoginSession('/dashboard')
       expect(replace).toHaveBeenCalledWith('/dashboard')
