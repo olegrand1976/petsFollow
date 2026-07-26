@@ -59,6 +59,8 @@ Relancer les données : `make seed`
 
 ## Tests
 
+**Philosophie** : toute mutation métier = test au niveau le plus bas possible (Go intégration > Playwright `@p0` > widget Flutter). Non effet de bord (billing mock, users jetables, seed `*.petsfollow.test`). Règle Cursor : `.cursor/rules/anti-regression-quality.mdc`. Checklist P0/P1 + auto : [`documentation/15-PLAN-TESTS.md`](documentation/15-PLAN-TESTS.md).
+
 ```bash
 # Unitaires + intégration Go (intégration skip si DB absente ; sinon make up-infra)
 make test-go
@@ -66,15 +68,19 @@ make test-go
 # Unitaires Nuxt (Vitest)
 make test-nuxt   # ou: cd nuxtjs && npm test
 
-# E2E Playwright auth (API :8291 + Nuxt :3002 + seed requis)
-cd nuxtjs && npm run test:e2e -- tests/e2e/specs/01-auth.spec.ts
-cd nuxtjs && npm run build
+# Flutter widget/unit (+ smoke API opt-in)
+make test-flutter
+make test-flutter-smoke   # API :8291 seedée
 
-# Smoke API (login + register/confirm/forgot/reset)
+# E2E Playwright P0 (API :8291 + Nuxt :3002 + seed requis)
+make test-e2e-p0
+# Suite complète : make test-e2e
+
+# Smoke API (login + H1 messagerie croisée + HR comment + timeline + register flows)
 make smoke
 ```
 
-Prérequis e2e auth : `make up-infra && make migrate && make seed`, API et `make nuxtjs-dev` démarrés. `make api-dev` fixe `AUTH_RATE_LIMIT_PER_MIN=1000` par défaut (prod : 60/min par IP) — sans ça, la suite e2e complète déclenche des 429 sur `/auth/*`.
+`make test` = Go + Nuxt + Flutter. Prérequis e2e : `make up-infra && make migrate && make seed`, API et `make nuxtjs-dev` démarrés. `make api-dev` fixe `AUTH_RATE_LIMIT_PER_MIN=1000` par défaut (prod : 60/min par IP) — sans ça, la suite e2e complète déclenche des 429 sur `/auth/*`.
 
 ## Sécurité & RGPD
 

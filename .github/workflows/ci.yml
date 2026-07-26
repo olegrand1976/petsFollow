@@ -6,15 +6,50 @@ on:
   pull_request:
   workflow_call:
 
+env:
+  DATABASE_URL: postgres://petsfollow:petsfollow@localhost:5432/petsfollow_test?sslmode=disable
+  DEV_SEED_ENABLED: "true"
+  BILLING_MOCK_ENABLED: "true"
+  AUTH_RATE_LIMIT_PER_MIN: "0"
+  FCM_ENABLED: "false"
+  JWT_SIGNING_KEY: ci-test-signing-key-not-for-prod
+  HTTP_ADDR: ":8291"
+  NUXT_PUBLIC_API_BASE: http://localhost:8291
+  PETSFOLLOW_API_URL: http://localhost:8291
+  PETSFOLLOW_PUBLIC_SITE_URL: http://localhost:3002
+  # Preview Nuxt = HTTP : cookies auth non-Secure (évite flakes Playwright).
+  AUTH_COOKIE_SECURE: "0"
+
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: petsfollow
+          POSTGRES_PASSWORD: petsfollow
+          POSTGRES_DB: petsfollow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U petsfollow -d petsfollow_test"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-      - run: cd go && go test ./...
+      - name: Migrate + seed
+        working-directory: go
+        run: |
+          go run ./cmd/petsfollow-api migrate
+          go run ./cmd/petsfollow-api seed
+      - name: Go tests (unit + integration)
+        working-directory: go
+        run: go test ./...
 
   nuxt:
     runs-on: ubuntu-latest
@@ -43,14 +78,71 @@ jobs:
 
   playwright:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: nuxtjs
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: petsfollow
+          POSTGRES_PASSWORD: petsfollow
+          POSTGRES_DB: petsfollow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U petsfollow -d petsfollow_test"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci
-      - run: npx playwright install chromium
-      - run: npx playwright test --list
+      - name: Migrate
+        working-directory: go
+        run: go run ./cmd/petsfollow-api migrate
+      - name: Start API
+        working-directory: go
+        run: |
+          # DEV_SEED_ENABLED=true → seed une seule fois au boot (confirmPath e2e) + ListenAndServe.
+          nohup go run ./cmd/petsfollow-api > /tmp/petsfollow-api.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:8291/health >/dev/null 2>&1 \
+              || curl -sf http://localhost:8291/ready >/dev/null 2>&1; then
+              echo "API up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to start" >&2
+          cat /tmp/petsfollow-api.log >&2 || true
+          exit 1
+      - name: Install Nuxt + Playwright
+        working-directory: nuxtjs
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+      - name: Build + preview Nuxt
+        working-directory: nuxtjs
+        run: |
+          npm run build
+          nohup npx nuxt preview --port 3002 --host 0.0.0.0 > /tmp/nuxt-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3002 >/dev/null 2>&1; then
+              echo "Nuxt up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Nuxt preview failed" >&2
+          cat /tmp/nuxt-preview.log >&2 || true
+          exit 1
+      - name: Playwright P0
+        working-directory: nuxtjs
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3002
+          CI: "true"
+        run: npx playwright test --grep @p0

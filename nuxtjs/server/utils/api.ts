@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { authCookieSecure } from '../../utils/authCookieSecure'
 
 /** Aligné sur JWT_REFRESH_TTL (30 jours). */
 const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
@@ -26,24 +27,32 @@ export function apiHeaders(event: H3Event) {
   return { ...authHeaders(event), ...localeHeaders(event) }
 }
 
-function authCookieOpts() {
+function requestProtocol(event: H3Event): string | undefined {
+  try {
+    return getRequestURL(event).protocol
+  } catch {
+    return undefined
+  }
+}
+
+function authCookieOpts(event: H3Event) {
   return {
     maxAge: AUTH_COOKIE_MAX_AGE,
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: authCookieSecure({ protocol: requestProtocol(event) }),
     // Anti-XSS : les JWT ne sont jamais lisibles par le JS navigateur.
     httpOnly: true,
   }
 }
 
 /** Marqueur de session non-httpOnly (aucune donnée sensible) pour les middlewares côté client. */
-function sessionMarkerOpts() {
+function sessionMarkerOpts(event: H3Event) {
   return {
     maxAge: AUTH_COOKIE_MAX_AGE,
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: authCookieSecure({ protocol: requestProtocol(event) }),
   }
 }
 
@@ -51,26 +60,27 @@ export function setAuthCookies(
   event: H3Event,
   pair: { accessToken: string, refreshToken?: string },
 ) {
-  const opts = authCookieOpts()
+  const opts = authCookieOpts(event)
   setCookie(event, 'pf_token', pair.accessToken, opts)
   if (pair.refreshToken) {
     setCookie(event, 'pf_refresh', pair.refreshToken, opts)
   }
-  setCookie(event, 'pf_session', '1', sessionMarkerOpts())
+  setCookie(event, 'pf_session', '1', sessionMarkerOpts(event))
 }
 
 export function clearAuthCookies(event: H3Event) {
   // httpOnly must match setAuthCookies or browsers may keep pf_token / pf_refresh.
+  const secure = authCookieSecure({ protocol: requestProtocol(event) })
   const tokenOpts = {
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure,
     httpOnly: true,
   }
   const markerOpts = {
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure,
   }
   deleteCookie(event, 'pf_token', tokenOpts)
   deleteCookie(event, 'pf_refresh', tokenOpts)

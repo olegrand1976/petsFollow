@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -19,6 +19,8 @@ help:
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
 	@echo "  make flutter-dev    Flutter pets staging (émulateur) + Google Sign-In"
 	@echo "  make test-go        tests Go"
+	@echo "  make test-e2e-p0    Playwright @p0 (API+Nuxt locaux)"
+	@echo "  make test-e2e       Playwright suite complète"
 	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
@@ -90,7 +92,14 @@ test-auth:
 	cd go && GOTOOLCHAIN=local go test ./internal/handlers/ -run 'TestAuth' -count=1
 	cd nuxtjs && npm test -- tests/unit/useAuth.spec.ts
 
-test: test-go test-flutter
+# Playwright P0 — nécessite API :8291 + Nuxt :3002 + seed.
+test-e2e-p0:
+	cd nuxtjs && npx playwright test --grep @p0
+
+test-e2e:
+	cd nuxtjs && npm run test:e2e
+
+test: test-go test-nuxt test-flutter
 
 smoke:
 	@bash scripts/smoke-test.sh
@@ -111,6 +120,7 @@ gcp-setup-stripe:
 	bash infra/gcp/setup-stripe-secrets.sh
 
 gcp-deploy:
+	@echo "→ Préférer push branche staging (CI + smoke + Playwright). Deploy nu = hors filet."
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
 
 gcp-domain:

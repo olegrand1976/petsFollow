@@ -40,6 +40,14 @@ fi
 
 cd "${FLUTTER_DIR}"
 
+if [[ "${SKIP_TESTS:-}" != "1" ]]; then
+  echo "→ flutter test (SKIP_TESTS=1 pour contourner)"
+  flutter pub get
+  flutter test
+else
+  echo "→ SKIP_TESTS=1 — tests Flutter ignorés"
+fi
+
 PUBSPEC="${FLUTTER_DIR}/pubspec.yaml"
 CURRENT="$(grep -E '^version:' "${PUBSPEC}" | head -1 | awk '{print $2}')"
 echo "→ Building Play App Bundle flavor=prod APP_ENV=prod (version ${CURRENT})"

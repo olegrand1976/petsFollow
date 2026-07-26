@@ -1,3 +1,5 @@
+import { authCookieSecure } from '../utils/authCookieSecure'
+
 /** Aligné sur JWT_REFRESH_TTL (30 jours) — durée cookie ≠ durée JWT access. */
 export const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
 
@@ -165,10 +167,12 @@ export function isAuthSuccess(res: AuthResponse): boolean {
 }
 
 function authCookieOpts() {
+  const protocol =
+    import.meta.client && typeof location !== 'undefined' ? location.protocol : undefined
   return {
     sameSite: 'lax' as const,
-    // Align with server/utils/api.ts (NODE_ENV === 'production').
-    secure: process.env.NODE_ENV === 'production',
+    // Align with server/utils/api.ts (authCookieSecure — pas Secure sur HTTP).
+    secure: authCookieSecure({ protocol }),
     path: '/',
   }
 }

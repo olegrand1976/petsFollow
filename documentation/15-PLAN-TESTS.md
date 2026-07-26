@@ -500,38 +500,59 @@ Notes :
 
 ## Z — Tests automatisés (référence)
 
+### Philosophie
+
+Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-quality.mdc`). Niveau le plus bas : Go intégration > Playwright `@p0` > widget Flutter. Suites auto = billing mock, comptes `*.petsfollow.test`, users jetables pour `DELETE /me`.
+
 ### API (smoke)
 
-`make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie, heartrate validate **avec comment**, timeline.
+`make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline.
 
 ### Web Pro (Playwright)
 
 Répertoire : `nuxtjs/tests/e2e/specs/`
 
-| Spec | Scénario |
-|------|----------|
-| `01-auth` | Login véto → dashboard → clients |
-| `02-locale` | Changement langue EN dans settings |
-| `03-clients` | Recherche client |
-| `04-messaging` | Page messagerie + deep-link thread |
-| `05-onboarding` | Redirection véto profil incomplet |
-| `06-admin` | Login admin → dashboard |
-| `07-commercial` | Login commercial → overview / prospects |
-| `08-commercial-manager` | Dashboard équipe |
-| `08-requests` | Calendrier + invitations clients |
-| `09-pet-detail` | Fiche animal, shares, commentaire relevé HR |
-| `10-products` | `/produits` plans TTC 3,50 / 35 / 95 |
-| `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto |
-| `12-competition` | Concurrence commerciale FR/BE/ES |
+| Spec | Scénario | Tag |
+|------|----------|-----|
+| `01-auth` | Login / register / forgot-reset | `@p0` |
+| `02-locale` | Changement langue EN dans settings | |
+| `03-clients` | Recherche client | `@p0` |
+| `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
+| `05-onboarding` | Redirection véto profil incomplet | |
+| `06-admin` | Login admin → dashboard | |
+| `07-commercial` | Login commercial → overview / prospects | |
+| `08-commercial-manager` | Dashboard équipe | |
+| `08-requests` | Calendrier + invitations clients | |
+| `09-pet-detail` | Fiche animal, shares, commentaire relevé HR | `@p0` (parcours chart/HR) |
+| `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
+| `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
+| `12-competition` | Concurrence commerciale FR/BE/ES | |
+| `13-team-staff-smoke` | Assist / secretary /team ACL | `@p0` |
 
-Local : `cd nuxtjs && npm run test:e2e` (API + Nuxt sur 8291/3002).
+Local :
 
-CI PR : `npx playwright test --list` (validation des specs).
+```bash
+make test-e2e-p0   # --grep @p0
+make test-e2e      # suite complète
+```
 
-Staging : workflow `deploy-gcp-staging.yml` exécute Playwright contre `petsfollow.ll-it-sc.be`.
+Prérequis : API `:8291` + Nuxt `:3002` + seed (`AUTH_RATE_LIMIT_PER_MIN=1000` via `make api-dev`).
+
+CI PR : job `playwright` — stack Postgres + API + Nuxt preview, exécute `--grep @p0`.
+
+Staging (`deploy-gcp-staging.yml`) : smoke API postdeploy + Playwright suite complète (`--grep-invert @flaky`) contre Cloud Run Nuxt.
+
+**Rollback staging** si Playwright / smoke post-deploy rouge : workflow en échec (pas de rollback auto). Revenir à la révision Cloud Run précédente :
+
+```bash
+gcloud run services update-traffic petsfollow-api --to-revisions=PREV=100 --region=europe-west9
+gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --region=europe-west9
+# ou redeploy du commit known-good sur branche staging
+```
 
 ### Go / Nuxt unit / Flutter
 
-- Go unit + intégration : `make test-go` (heartrate comment, stripe catalog, care_pro ACL, multi-profils)
-- Nuxt unit : `make test-nuxt` (Vitest)
-- Flutter unit/widget : `make test-flutter` (palette, comment HR payload, pro light nav)
+- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB)
+- Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
+- Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
+- Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API

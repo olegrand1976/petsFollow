@@ -63,7 +63,7 @@ async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> 
   return { clientId: client.userId, petId: pet.id }
 }
 
-test('pet detail — chart filtres, shares, commentaire HR', async ({ page }) => {
+test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
   const comment = await seedHeartRateComment(petId)

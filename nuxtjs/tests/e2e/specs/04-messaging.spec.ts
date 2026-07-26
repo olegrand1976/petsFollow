@@ -4,14 +4,14 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-test('messagerie affiche les conversations', async ({ page }) => {
+test('messagerie affiche les conversations', { tag: '@p0' }, async ({ page }) => {
   await loginAsVet(page)
   await page.goto('/messages')
   await expect(page.getByTestId('messages-page')).toBeVisible()
   await expect(page.getByRole('heading', { name: /messagerie|messaging|berichten/i })).toBeVisible()
 })
 
-test('deep-link thread depuis query', async ({ page }) => {
+test('deep-link thread depuis query', { tag: '@p0' }, async ({ page }) => {
   await loginAsVet(page)
   await page.goto('/messages')
   const threadBtn = page.locator('[data-testid^="thread-"]').first()
@@ -24,7 +24,7 @@ test('deep-link thread depuis query', async ({ page }) => {
   }
 })
 
-test('envoi pièce jointe image sur un thread', async ({ page }) => {
+test('envoi pièce jointe image sur un thread', { tag: '@p0' }, async ({ page }) => {
   await loginAsVet(page)
   await page.goto('/messages')
   await expect(page.getByTestId('messages-page')).toBeVisible()

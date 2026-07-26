@@ -69,6 +69,20 @@ curl -sf -X POST "$API/api/v1/messaging/threads/$THREAD_ID/messages" \
   -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
   -d '{"body":"smoke test message"}' >/dev/null
 
+# H1 croisé : véto → client (assert lecture côté client)
+VET_MSG="smoke vet to client $(date +%s)"
+curl -sf -X POST "$API/api/v1/messaging/threads/$THREAD_ID/messages" \
+  -H "Authorization: Bearer $VET_TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"body\":\"$VET_MSG\"}" >/dev/null
+MSGS=$(curl -sf "$API/api/v1/messaging/threads/$THREAD_ID/messages" -H "Authorization: Bearer $CLIENT_TOKEN")
+VET_MSG="$VET_MSG" python3 -c '
+import json, os, sys
+want = os.environ["VET_MSG"]
+rows = json.load(sys.stdin).get("data") or []
+if not any((m.get("body") or "") == want for m in rows):
+    raise SystemExit("H1: client did not see vet message")
+' <<<"$MSGS"
+
 SESS=$(curl -sf -X POST "$API/api/v1/pets/$PET_ID/heartrate/sessions" -H "Authorization: Bearer $CLIENT_TOKEN")
 SESS_ID=$(echo "$SESS" | python3 -c "import sys,json; s=json.load(sys.stdin)['data']; print(s.get('id') or s.get('ID',''))")
 curl -sf -X PATCH "$API/api/v1/heartrate/sessions/$SESS_ID" \

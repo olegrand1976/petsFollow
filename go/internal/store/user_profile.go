@@ -114,7 +114,7 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		return a, err
 	}
 	if err := collect(&a.MediaObjectKeys, `
-		SELECT COALESCE(d.object_key,'') FROM pets.pet_documents d
+		SELECT COALESCE(d.object_key,'') FROM pets.documents d
 		JOIN pets.pets p ON p.id = d.pet_id WHERE p.owner_user_id=$1`); err != nil {
 		return a, err
 	}

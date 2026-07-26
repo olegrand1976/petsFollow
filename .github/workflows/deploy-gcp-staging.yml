@@ -83,7 +83,8 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npx playwright install chromium
-      - name: E2E against Cloud Run frontend
+      - name: E2E P0+P1 against Cloud Run frontend
         run: |
           FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
-          PLAYWRIGHT_BASE_URL="${FE_URL}" npm run test:e2e -- tests/e2e/specs/01-auth.spec.ts
+          # Suite complète web Pro (auth → commercial → team). Specs flaky : tag @flaky hors gate.
+          PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert @flaky

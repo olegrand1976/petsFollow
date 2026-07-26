@@ -1,0 +1,41 @@
+---
+description: Anti-régression — tests + non effet de bord sur tout développement
+alwaysApply: true
+---
+
+# Qualité & anti-régression
+
+Toute feature / fix mutante doit laisser le filet **plus fort**, pas plus faible.
+Réf. manuelle + auto : `documentation/15-PLAN-TESTS.md` (P0/P1 + section Z).
+
+## Obligation de test (niveau le plus bas possible)
+
+| Surface | Préférer | Sinon |
+|---------|----------|-------|
+| API Go | `*_integration_test.go` via `newTestAPI` | unit store/billing |
+| Pro Nuxt | Playwright (tag `@p0` si parcours critique) | Vitest helpers |
+| Flutter | widget + Key (voir règle flutter-action-tests) | smoke API opt-in |
+
+```text
+# ❌ BAD — merge feature métier sans test ni maj checklist P0
+# ✅ GOOD — même PR : code + test (Go/Playwright/widget) + maj matrice/doc si besoin
+```
+
+## Non effet de bord
+
+- Suites auto : `BILLING_MOCK_ENABLED`, pas de Stripe live / FCM réel / emails externes.
+- Mutations destructives (`DELETE /me`, purge) : **user jetable** créé dans le test uniquement.
+- Staging / smoke : comptes `*.petsfollow.test` + re-seed ; jamais de données « vraies ».
+- Idempotence : pas de dépendance à l’ordre des workers Playwright.
+
+## Gates à respecter (ne pas contourner)
+
+- PR : ne pas proposer de désactiver CI / skip intégration / Playwright `--list` only.
+- Dist Android / Play : ne pas uploader sans tests (`SKIP_TESTS=1` seulement si demandé explicitement).
+- Deploy : préférer la voie `staging` (CI + smoke + e2e) ; pas de `gcp-deploy` « nu » sans validation.
+
+## Avant de clôturer une feature
+
+1. Identifier le parcours P0/P1 impacté dans `15-PLAN-TESTS.md`.
+2. Ajouter ou étendre le test automatisé correspondant.
+3. Indiquer comment rejouer localement (`make test-go` / `test-nuxt` / `test-e2e-p0` / smoke).

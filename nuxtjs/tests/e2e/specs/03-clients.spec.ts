@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
 
-test('liste clients avec recherche', async ({ page }) => {
+test('liste clients avec recherche', { tag: '@p0' }, async ({ page }) => {
   await loginAsVet(page)
   await expect(page).toHaveURL(/dashboard/)
 

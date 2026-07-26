@@ -40,7 +40,7 @@ async function loginExpectDashboard(page: Page, email: string, password = STAFF_
   await expect(page).toHaveURL(/dashboard/, { timeout: 15000 })
 }
 
-test.describe('team staff smoke — assist / secretary / reference', () => {
+test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0' }, () => {
   test('A: assist login → /dashboard with nav', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.assist@petsfollow.test')
     const nav = page

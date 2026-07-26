@@ -13,13 +13,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 void main() {
   const runSmoke = bool.fromEnvironment('RUN_FLUTTER_SMOKE');
 
-  test('login → list pets → weight reading', () async {
-    if (!runSmoke) {
-      // ignore: avoid_print
-      print('SKIP smoke: pass --dart-define=RUN_FLUTTER_SMOKE=true');
-      return;
-    }
-
+  Future<Dio?> loginSmokeDio() async {
     final dio = Dio(
       BaseOptions(
         baseUrl: 'http://localhost:8291',
@@ -40,27 +34,39 @@ void main() {
     } catch (e) {
       // ignore: avoid_print
       print('SKIP smoke: API unreachable or login failed ($e)');
-      return;
+      return null;
     }
 
     final data = loginRes.data['data'] as Map<String, dynamic>?;
     if (data == null) {
       // ignore: avoid_print
       print('SKIP smoke: unexpected login payload');
-      return;
+      return null;
     }
     if (data['requires2FA'] == true) {
       // ignore: avoid_print
       print('SKIP smoke: 2FA required for seed user');
-      return;
+      return null;
     }
     final token = (data['accessToken'] ?? data['token']) as String?;
     if (token == null || token.isEmpty) {
       // ignore: avoid_print
       print('SKIP smoke: missing accessToken');
-      return;
+      return null;
     }
     dio.options.headers['Authorization'] = 'Bearer $token';
+    return dio;
+  }
+
+  test('login → list pets → weight reading', () async {
+    if (!runSmoke) {
+      // ignore: avoid_print
+      print('SKIP smoke: pass --dart-define=RUN_FLUTTER_SMOKE=true');
+      return;
+    }
+
+    final dio = await loginSmokeDio();
+    if (dio == null) return;
 
     try {
       final petsRes = await dio.get('/api/v1/pets');
@@ -94,6 +100,81 @@ void main() {
       expect(ApiClient.instance, isNotNull);
     } catch (e) {
       fail('smoke post-login failed: $e');
+    }
+  });
+
+  test('create pet skipCheckout → listed in GET /pets', () async {
+    if (!runSmoke) {
+      // ignore: avoid_print
+      print('SKIP smoke: pass --dart-define=RUN_FLUTTER_SMOKE=true');
+      return;
+    }
+
+    final dio = await loginSmokeDio();
+    if (dio == null) return;
+
+    final name = 'SmokeCreate-${DateTime.now().millisecondsSinceEpoch}';
+    try {
+      final createRes = await dio.post(
+        '/api/v1/pets',
+        data: {
+          'name': name,
+          'species': 'dog',
+          'breed': 'Smoke',
+          'plan': 'triennial',
+          'billingMode': 'subscription',
+          'skipCheckout': true,
+        },
+      );
+      expect(createRes.statusCode, 201);
+      final data = Map<String, dynamic>.from(createRes.data['data'] as Map);
+      expect(data.containsKey('checkoutUrl'), isFalse,
+          reason: 'skipCheckout must not return checkoutUrl');
+      final pet = Map<String, dynamic>.from(data['pet'] as Map);
+      final petId = pet['id'] as String;
+      expect(petId, isNotEmpty);
+      expect(pet['paymentStatus'], 'pending_payment');
+      final ent = pet['entitlement'];
+      expect(ent, isA<Map>());
+      expect((ent as Map)['status'], 'pending');
+
+      final listRes = await dio.get('/api/v1/pets');
+      final list = listRes.data['data'] as List<dynamic>;
+      final found = list.cast<Map>().where((p) => p['id'] == petId);
+      expect(found, isNotEmpty, reason: 'created pet must appear in list');
+      expect(found.first['name'], name);
+    } catch (e) {
+      fail('smoke create pet failed: $e');
+    }
+  });
+
+  test('login → messaging threads + care reminders list', () async {
+    if (!runSmoke) {
+      // ignore: avoid_print
+      print('SKIP smoke: pass --dart-define=RUN_FLUTTER_SMOKE=true');
+      return;
+    }
+
+    final dio = await loginSmokeDio();
+    if (dio == null) return;
+
+    try {
+      final threadsRes = await dio.get('/api/v1/messaging/threads');
+      expect(threadsRes.statusCode, 200);
+      expect(threadsRes.data['data'], isA<List>());
+
+      final petsRes = await dio.get('/api/v1/pets');
+      final pets = petsRes.data['data'] as List<dynamic>;
+      expect(pets, isNotEmpty);
+      final petId = (pets.first as Map)['id'] as String;
+
+      final careRes = await dio.get('/api/v1/pets/$petId/care-reminders');
+      expect(careRes.statusCode, anyOf(200, 404));
+      if (careRes.statusCode == 200) {
+        expect(careRes.data['data'], isA<List>());
+      }
+    } catch (e) {
+      fail('smoke messaging/care failed: $e');
     }
   });
 }

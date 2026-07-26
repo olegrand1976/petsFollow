@@ -17,6 +17,14 @@ RELEASE_NOTES="${RELEASE_NOTES:-petsFollow pets staging — Google Sign-In clien
 
 cd "${FLUTTER_DIR}"
 
+if [[ "${SKIP_TESTS:-}" != "1" ]]; then
+  echo "→ flutter test (SKIP_TESTS=1 pour contourner)"
+  flutter pub get
+  flutter test
+else
+  echo "→ SKIP_TESTS=1 — tests Flutter ignorés"
+fi
+
 PUBSPEC="${FLUTTER_DIR}/pubspec.yaml"
 # Toujours bump le build number (+N) avant dist — requis App Distribution / versionCode.
 CURRENT="$(grep -E '^version:' "${PUBSPEC}" | head -1 | awk '{print $2}')"
