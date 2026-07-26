@@ -20,26 +20,31 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 const route = useRoute()
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
-// SSR : résoudre /me avant rendu pour aligner hydratation (pas de shell fantôme).
-if (!user.value) {
+
+const bareShellPaths = new Set([
+  '/login',
+  '/register',
+  '/register/sent',
+  '/confirm-email',
+  '/forgot-password',
+  '/reset-password',
+  '/welcome',
+  '/',
+])
+function isBareShellPath(path: string) {
+  return bareShellPaths.has(path)
+    || path.startsWith('/register')
+    || path.startsWith('/invite')
+}
+
+// SSR : /me avant rendu sur les pages shell uniquement (évite 401 bruyants sur landing/auth).
+if (!user.value && !isBareShellPath(route.path)) {
   await fetchUser().catch(() => null)
 }
 const showNav = computed(() => {
   // Pas de shell Pro tant que /api/me n'a pas confirmé le rôle (évite login sous topbar).
   if (!user.value?.role) return false
-  const bare = [
-    '/login',
-    '/register',
-    '/register/sent',
-    '/confirm-email',
-    '/forgot-password',
-    '/reset-password',
-    '/welcome',
-    '/',
-  ]
-  return !bare.includes(route.path)
-    && !route.path.startsWith('/register')
-    && !route.path.startsWith('/invite')
+  return !isBareShellPath(route.path)
 })
 const { count: messagesBadge } = useProNotifications()
 const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()

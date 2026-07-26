@@ -124,9 +124,22 @@ export function roleFromAccessToken(accessToken: string): string | undefined {
 
 type TokenPair = { accessToken: string, refreshToken?: string, expiresIn?: number }
 
-export async function refreshAccessToken(event: H3Event): Promise<TokenPair | null> {
+/** Résultat refresh — permet au proxy de renvoyer 503 (pas 401) si l'API est momentanément down. */
+export type RefreshOutcome =
+  | { kind: 'ok', pair: TokenPair }
+  | { kind: 'missing' }
+  | { kind: 'rejected' }
+  | { kind: 'transient', status?: number }
+
+/** 401/403 = session morte ; tout le reste (5xx, réseau) = garder les cookies. */
+export function classifyRefreshHttpStatus(status: number | undefined): 'rejected' | 'transient' {
+  if (status === 401 || status === 403) return 'rejected'
+  return 'transient'
+}
+
+export async function refreshAccessToken(event: H3Event): Promise<RefreshOutcome> {
   const refreshToken = getCookie(event, 'pf_refresh')
-  if (!refreshToken) return null
+  if (!refreshToken) return { kind: 'missing' }
   try {
     const res = await $fetch<{ data?: TokenPair } & TokenPair>(`${apiBase()}/api/v1/auth/refresh`, {
       method: 'POST',
@@ -134,21 +147,50 @@ export async function refreshAccessToken(event: H3Event): Promise<TokenPair | nu
       headers: localeHeaders(event),
     })
     const pair = (res as { data?: TokenPair }).data ?? (res as TokenPair)
-    if (!pair?.accessToken) return null
+    if (!pair?.accessToken) {
+      console.warn('[auth/refresh] rejected, empty accessToken')
+      clearAuthCookies(event)
+      return { kind: 'rejected' }
+    }
     setAuthCookies(event, pair)
-    return pair
+    return { kind: 'ok', pair }
   } catch (e: unknown) {
     const err = e as { statusCode?: number, status?: number }
     const status = err?.statusCode ?? err?.status
-    // Purge uniquement si le refresh est réellement rejeté (token invalide/expiré).
-    // Un 5xx / réseau ne doit pas détruire la session (cause de 401 permanents iPad).
-    if (status === 401 || status === 403) {
+    const kind = classifyRefreshHttpStatus(status)
+    if (kind === 'rejected') {
       console.warn('[auth/refresh] rejected, clearing cookies', { status })
       clearAuthCookies(event)
-    } else {
-      console.warn('[auth/refresh] transient failure, keeping cookies', { status: status ?? 'unknown' })
+      return { kind: 'rejected' }
     }
-    return null
+    console.warn('[auth/refresh] transient failure, keeping cookies', { status: status ?? 'unknown' })
+    return { kind: 'transient', status }
+  }
+}
+
+function refreshUnavailableError() {
+  return createError({
+    statusCode: 503,
+    statusMessage: 'Auth refresh temporarily unavailable',
+    data: { reason: 'refresh_unavailable' },
+  })
+}
+
+/** Après un 401 upstream : retry si refresh OK, sinon 401 session morte ou 503 transient. */
+function throwAfterFailedRefresh(outcome: RefreshOutcome, originalUnauthorized: unknown): never {
+  switch (outcome.kind) {
+    case 'ok':
+      // Invariant : l'appelant ne passe ici que si refresh a échoué.
+      throw toProxyError(originalUnauthorized)
+    case 'transient':
+      throw refreshUnavailableError()
+    case 'missing':
+    case 'rejected':
+      throw toProxyError(originalUnauthorized)
+    default: {
+      const _exhaustive: never = outcome
+      throw _exhaustive
+    }
   }
 }
 
@@ -215,10 +257,10 @@ export async function proxyApi<T>(
     return await fetchOnce()
   } catch (e: any) {
     if (!isUnauthorized(e)) throw toProxyError(e)
-    const pair = await refreshAccessToken(event)
-    if (!pair) throw toProxyError(e)
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
     try {
-      return await fetchOnce(pair.accessToken)
+      return await fetchOnce(outcome.pair.accessToken)
     } catch (retryErr: any) {
       throw toProxyError(retryErr)
     }
@@ -252,10 +294,10 @@ export async function proxyUpload(
     return await fetchOnce()
   } catch (e: any) {
     if (!isUnauthorized(e)) throw toProxyError(e)
-    const pair = await refreshAccessToken(event)
-    if (!pair) throw toProxyError(e)
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
     try {
-      return await fetchOnce(pair.accessToken)
+      return await fetchOnce(outcome.pair.accessToken)
     } catch (retryErr: any) {
       throw toProxyError(retryErr)
     }
