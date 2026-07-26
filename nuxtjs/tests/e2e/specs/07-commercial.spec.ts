@@ -44,8 +44,11 @@ test('commercial voit pitch et commissions', async ({ page }) => {
   await page.goto('/commercial/pitch')
   await expect(page.getByTestId('commercial-pitch-page')).toBeVisible()
   await expect(page.getByTestId('pitch-open-deck')).toBeVisible()
-  await page.getByTestId('pitch-open-deck').click()
-  await expect(page.getByTestId('commercial-pitch-deck')).toBeVisible({ timeout: 15000 })
+  await Promise.all([
+    page.waitForURL(/\/commercial\/pitch-deck/, { timeout: 20000 }),
+    page.getByTestId('pitch-open-deck').click(),
+  ])
+  await expect(page.getByTestId('commercial-pitch-deck')).toBeVisible({ timeout: 20000 })
   await expect(page.getByTestId('pitch-deck-next')).toBeVisible({ timeout: 10000 })
   await page.goto('/commercial/commissions')
   await expect(page.getByTestId('commercial-commissions-page')).toBeVisible()

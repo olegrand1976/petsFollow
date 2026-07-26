@@ -302,6 +302,20 @@ func (s *Store) InviteTeamMember(ctx context.Context, practiceID, invitedBy stri
 		return TeamMember{}, err
 	} else {
 		userID = u.ID
+		// Demo team accounts: re-seed resets password + must_change for deterministic e2e/smoke.
+		if strings.HasSuffix(email, "@petsfollow.test") && strings.TrimSpace(in.Password) != "" {
+			hash, herr := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+			if herr != nil {
+				return TeamMember{}, herr
+			}
+			if _, uerr := s.pool.Exec(ctx, `
+				UPDATE identity.users
+				SET password_hash = $2, must_change_password = true, full_name = COALESCE(NULLIF($3,''), full_name)
+				WHERE id = $1`,
+				userID, string(hash), strings.TrimSpace(in.FullName)); uerr != nil {
+				return TeamMember{}, uerr
+			}
+		}
 		if _, err := s.AttachProfile(ctx, invitedBy, userID, AttachProfileInput{
 			Role: profileRole, PracticeID: practiceID,
 		}); err != nil && !errors.Is(err, ErrProfileExists) {

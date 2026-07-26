@@ -106,9 +106,12 @@ export async function nativeClick(page: Page, testId: string) {
 }
 
 export async function logout(page: Page) {
-  await page.getByTestId('pro-profile-btn').click()
-  await page.getByTestId('pro-logout-btn').click()
-  await expect(page).toHaveURL(/login/)
+  await expect(page.getByTestId('pro-profile-btn')).toBeVisible({ timeout: 15000 })
+  await nativeClick(page, 'pro-profile-btn')
+  await expect(page.getByTestId('pro-logout-btn')).toBeVisible({ timeout: 10000 })
+  await nativeClick(page, 'pro-logout-btn')
+  await expect(page).toHaveURL(/login/, { timeout: 15000 })
+  await waitForAuthForm(page, 'login-form')
 }
 
 export async function registerVet(

@@ -85,6 +85,7 @@ jobs:
       - run: npx playwright install chromium
       - name: E2E P0+P1 against Cloud Run frontend
         env:
+          CI: true
           # Specs API-direct (ex. 09-pet-detail) — ne pas laisser le défaut localhost:8291.
           PETSFOLLOW_API_URL: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}
           NUXT_PUBLIC_API_BASE: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}

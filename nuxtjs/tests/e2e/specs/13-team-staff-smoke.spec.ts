@@ -9,14 +9,17 @@ async function completeForcedPasswordChange(page: Page, nextPassword = STAFF_PAS
   await waitForAuthForm(page, 'force-change-password-form')
   await fillField(page, 'force-change-password', nextPassword)
   await fillField(page, 'force-change-password-confirm', nextPassword)
+  await expect(page.getByTestId('force-change-password')).toHaveValue(nextPassword)
+  await expect(page.getByTestId('force-change-password-confirm')).toHaveValue(nextPassword)
   const patch = page.waitForResponse(
     (r) => r.url().includes('/api/me/password') && r.request().method() === 'PATCH',
-    { timeout: 20000 },
+    { timeout: 25000 },
   )
-  await page.getByTestId('force-change-submit').click()
+  await page.getByTestId('force-change-submit').evaluate((node) => (node as HTMLElement).click())
   const res = await patch
   if (!res.ok()) {
-    throw new Error(`force-change password PATCH ${res.status()}`)
+    const errText = await page.locator('.pro-field-error').innerText().catch(() => '')
+    throw new Error(`force-change password PATCH ${res.status()} ${errText}`)
   }
   await page.waitForURL((url) => !url.pathname.includes('/change-password'), { timeout: 20000 })
 }

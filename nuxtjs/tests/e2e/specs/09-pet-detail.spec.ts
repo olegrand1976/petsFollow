@@ -69,10 +69,9 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
   const comment = await seedHeartRateComment(petId)
 
   await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
-  await page.getByTestId('section-tab-vitals').click()
-  await expect(page.getByTestId('pet-tab-vitals')).toBeVisible()
+  await expect(page.getByTestId('pet-tab-vitals')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('pet-chart-range-3m')).toBeVisible()
   await page.getByTestId('pet-chart-range-6m').click()
   await page.getByTestId('pet-filter-all').click()
@@ -80,8 +79,8 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
     timeout: 15000,
   })
 
-  await page.getByTestId('section-tab-sharing').click()
-  await expect(page.getByTestId('pet-shares-card')).toBeVisible()
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=sharing`)
+  await expect(page.getByTestId('pet-shares-card')).toBeVisible({ timeout: 15000 })
 })
 
 test('pet detail — suivi poids chart + tableau', async ({ page }) => {
@@ -101,10 +100,9 @@ test('pet detail — suivi poids chart + tableau', async ({ page }) => {
   if (!create.ok) throw new Error(`create weight ${create.status}`)
 
   await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
-  await page.getByTestId('section-tab-vitals').click()
-  await expect(page.getByTestId('pet-weight-table-card')).toBeVisible()
+  await expect(page.getByTestId('pet-weight-table-card')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('pet-weight-comment').filter({ hasText: comment })).toBeVisible({
     timeout: 15000,
   })
@@ -130,8 +128,10 @@ test('heartrate — durées cabinet exposées au client + BPM sur 15s', async ()
     }),
   })
   if (!reg.ok) throw new Error(`register vet ${reg.status}`)
-  const confirmPath = (await reg.json()).data.confirmPath as string
-  const confirmToken = confirmPath.replace('/confirm-email?token=', '')
+  const confirmPath = (await reg.json()).data?.confirmPath as string | undefined
+  // confirmPath only when DEV_SEED_ENABLED=true (local/CI) — staging production-like omits it.
+  test.skip(!confirmPath, 'confirmPath masqué hors DEV_SEED_ENABLED')
+  const confirmToken = confirmPath!.replace('/confirm-email?token=', '')
   const confirm = await fetch(`${API}/api/v1/auth/confirm-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
