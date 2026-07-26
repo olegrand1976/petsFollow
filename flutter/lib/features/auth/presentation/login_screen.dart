@@ -303,7 +303,13 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 48),
         const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
         const SizedBox(height: 24),
-        const Center(child: PetsLogo(height: 36)),
+        const Center(
+          child: PetsLogo(
+            variant: PetsLogoVariant.wordmark,
+            height: 36,
+            excludeSemantics: true,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           l10n.appTagline,
