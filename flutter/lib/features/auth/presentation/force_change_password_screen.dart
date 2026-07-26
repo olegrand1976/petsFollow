@@ -56,7 +56,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
+      decoration: BoxDecoration(gradient: AppTheme.loginGradientOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(

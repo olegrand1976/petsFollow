@@ -637,6 +637,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageIt => 'Italiano';
 
   @override
+  String get appearance => 'Weergave';
+
+  @override
+  String get themeLight => 'Licht';
+
+  @override
+  String get themeDark => 'Donker';
+
+  @override
   String get planMonthlyLabel => '3,50 € / maand';
 
   @override
@@ -729,7 +738,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String get autoRenewSubtitle => 'Incasso bij elke vervaldatum';
 
   @override
-  String get continueToPayment => 'Doorgaan naar betaling';
+  String get continueToPayment => 'Opslaan en betalen';
+
+  @override
+  String get petFormSave => 'Opslaan';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Huisdier opgeslagen — activeer het om functies te gebruiken';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Betaling vereist om de functies van dit huisdier te gebruiken';
 
   @override
   String get paymentConfirmed => 'Betaling bevestigd — huisdier actief';
@@ -758,7 +778,8 @@ class AppLocalizationsNl extends AppLocalizations {
       'Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)';
 
   @override
-  String get errorPaymentRequired => 'Abonnement vereist om media te versturen';
+  String get errorPaymentRequired =>
+      'Abonnement vereist om deze functie te gebruiken';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -925,6 +946,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get noVets => 'Geen gekoppelde dierenarts';
+
+  @override
+  String get vetLinkRequired =>
+      'Koppel een dierenarts voordat u een dier toevoegt';
 
   @override
   String get primaryVet => 'Hoofddierenarts';
@@ -1222,7 +1247,39 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'We zoeken dit dierenartsaccount in petsFollow. Als het bestaat, wordt een koppelingsaanvraag naar de praktijk gestuurd.';
+      'Zoek op naam, e-mail of praktijk. Als ze al op petsFollow staan, wordt een koppelingsaanvraag naar de praktijk gestuurd.';
+
+  @override
+  String get addVetSearchLabel => 'Zoek een dierenarts';
+
+  @override
+  String get addVetSearchFieldHint => 'Naam, e-mail of praktijk';
+
+  @override
+  String get addVetNotListed => 'Mijn dierenarts staat niet in de lijst';
+
+  @override
+  String get addVetSuggestTitle => 'Nieuwe dierenarts';
+
+  @override
+  String get addVetSuggestBody =>
+      'Geef het e-mailadres en telefoonnummer van de praktijk. Wij nemen contact op zodat ze petsFollow kunnen gebruiken.';
+
+  @override
+  String get addVetSuggestEmail => 'E-mail van de praktijk';
+
+  @override
+  String get addVetSuggestPhone => 'Telefoon';
+
+  @override
+  String get addVetSuggestNameOptional => 'Naam dierenarts (optioneel)';
+
+  @override
+  String get addVetSuggestCta => 'Suggestie versturen';
+
+  @override
+  String get vetSuggestSent =>
+      'Bedankt — we contacteren de praktijk. U wordt verwittigd wanneer ze petsFollow gebruiken.';
 
   @override
   String get visitRequested => 'Bezoekaanvraag verzonden';

@@ -14,6 +14,7 @@ import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/models/practice_availability.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
+import 'package:petsfollow_mobile/core/models/vet_lookup_hit.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
@@ -800,13 +801,49 @@ class ApiClient {
         .toList();
   }
 
-  Future<Map<String, dynamic>> inviteVet(String email) async {
-    final res = await dio.post('/api/v1/me/vets/invite', data: {'email': email});
+  Future<List<VetLookupHit>> lookupVets(String query) async {
+    final q = query.trim();
+    if (q.length < 2) return [];
+    final res = await dio.get('/api/v1/me/vets/lookup', queryParameters: {'q': q});
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((v) => VetLookupHit.fromJson(Map<String, dynamic>.from(v)))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> inviteVet({String? email, String? vetUserId}) async {
+    final body = <String, dynamic>{};
+    if (vetUserId != null && vetUserId.trim().isNotEmpty) {
+      body['vetUserId'] = vetUserId.trim();
+    } else if (email != null && email.trim().isNotEmpty) {
+      body['email'] = email.trim();
+    }
+    final res = await dio.post('/api/v1/me/vets/invite', data: body);
     final data = res.data['data'];
     if (data is Map) {
       return Map<String, dynamic>.from(data);
     }
     return {'found': false, 'status': 'not_found'};
+  }
+
+  Future<Map<String, dynamic>> suggestVet({
+    required String email,
+    required String phone,
+    String? fullName,
+    String? practiceName,
+  }) async {
+    final res = await dio.post('/api/v1/me/vets/suggest', data: {
+      'email': email.trim(),
+      'phone': phone.trim(),
+      if (fullName != null && fullName.trim().isNotEmpty) 'fullName': fullName.trim(),
+      if (practiceName != null && practiceName.trim().isNotEmpty) 'practiceName': practiceName.trim(),
+    });
+    final data = res.data['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'status': 'suggested', 'found': false};
   }
 
   Future<Map<String, dynamic>> claimVetInvite(String code) async {

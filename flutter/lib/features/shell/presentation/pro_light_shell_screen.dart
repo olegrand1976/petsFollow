@@ -7,6 +7,7 @@ import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
@@ -231,7 +232,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
             ? l10n.proLightTitle
             : '${l10n.proLightTitle} · $specialtyLabel');
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
+      decoration: BoxDecoration(gradient: AppTheme.loginGradientOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -448,6 +449,7 @@ class _SettingsTab extends StatelessWidget {
             );
           },
         ),
+        const AppearanceSettingsTile(),
         ListTile(
           leading: const Icon(Icons.logout),
           title: Text(l10n.logout),

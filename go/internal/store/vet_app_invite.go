@@ -221,6 +221,13 @@ func (s *Store) claimVetInvite(ctx context.Context, clientUserID string, inv App
 		return ClaimAppInviteResult{}, err
 	}
 	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET practice_id = $2::uuid
+		WHERE id = $1 AND role = 'client' AND practice_id IS NULL`,
+		clientUserID, inv.PracticeID); err != nil {
+		return ClaimAppInviteResult{}, err
+	}
+	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
 		SELECT $1, $2, $3, $4, NULL
 		WHERE NOT EXISTS (

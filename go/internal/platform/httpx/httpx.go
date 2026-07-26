@@ -15,6 +15,7 @@ import (
 type APIError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	MsgKey  string `json:"msgKey,omitempty"`
 	Details any    `json:"details,omitempty"`
 }
 
@@ -55,7 +56,11 @@ func WriteErrorLocalizedWithDetails(w http.ResponseWriter, r *http.Request, stat
 	}
 	locale := i18n.FromContext(r.Context())
 	msg := i18n.T(locale, "errors."+msgKey, nil)
-	WriteErrorWithDetails(w, status, code, msg, details)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(envelope{Error: &APIError{
+		Code: code, Message: msg, MsgKey: msgKey, Details: details,
+	}})
 }
 
 func LocaleMiddleware(next http.Handler) http.Handler {

@@ -25,6 +25,7 @@
     "family_pet_limit": "Un pack foyer (Family ou Kennel) est déjà actif ou en cours d'achat",
     "family_requires_two_pets": "Le pack Famille nécessite au moins 2 animaux",
     "family_required": "Pack Famille requis",
+    "vet_link_required": "Liez un vétérinaire avant d'ajouter un animal",
     "invalid_billing_mode": "Mode de facturation invalide",
     "no_pending_payment": "Aucun paiement en attente",
     "not_a_subscription": "Ce n'est pas un abonnement",

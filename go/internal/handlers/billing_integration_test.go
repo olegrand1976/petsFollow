@@ -300,3 +300,52 @@ func TestBillingPortalSeededSubscription(t *testing.T) {
 		t.Fatalf("expected mock portal url, got %#v", env)
 	}
 }
+
+func TestBillingCreatePetSkipCheckout(t *testing.T) {
+	api := newTestAPI(t)
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets", ownerTok, map[string]any{
+		"name": "SkipPay-" + uniqueEmail("pet"), "species": "dog", "breed": "Mix",
+		"plan": "triennial", "billingMode": "subscription", "skipCheckout": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create skipCheckout %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	if _, has := data["checkoutUrl"]; has {
+		t.Fatalf("expected no checkoutUrl, got %#v", data)
+	}
+	pet, _ := data["pet"].(map[string]any)
+	petID, _ := pet["id"].(string)
+	if petID == "" {
+		t.Fatalf("missing pet id: %#v", data)
+	}
+	t.Cleanup(func() {
+		_, _ = api.pool.Exec(context.Background(), `DELETE FROM pets.pets WHERE id=$1`, petID)
+	})
+	if status, _ := pet["paymentStatus"].(string); status != "pending_payment" {
+		t.Fatalf("expected pending_payment, got %#v", pet)
+	}
+	ent, _ := pet["entitlement"].(map[string]any)
+	if ent["status"] != "pending" || ent["planCode"] != "triennial" {
+		t.Fatalf("expected pending triennial entitlement, got %#v", ent)
+	}
+
+	// Resume checkout still works after create-only.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/billing/checkout", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("resume after skip %d %#v", code, env)
+	}
+	if u, _ := dataMap(t, env)["checkoutUrl"].(string); u == "" {
+		t.Fatalf("expected checkoutUrl on resume, got %#v", env)
+	}
+
+	// Care mutation blocked while pending.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/care-reminders", ownerTok, map[string]any{
+		"type": "vaccination", "title": "blocked",
+	})
+	if code != http.StatusPaymentRequired {
+		t.Fatalf("expected 402 care create, got %d %#v", code, env)
+	}
+}

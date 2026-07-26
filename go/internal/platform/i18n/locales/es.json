@@ -25,6 +25,7 @@
     "family_pet_limit": "Ya hay un pack hogar (Family o Kennel) activo o en compra",
     "family_requires_two_pets": "El pack Familia requiere al menos 2 mascotas",
     "family_required": "Se requiere el pack Familia",
+    "vet_link_required": "Vincula un veterinario antes de añadir una mascota",
     "invalid_billing_mode": "Modo de facturación no válido",
     "no_pending_payment": "Ningún pago pendiente",
     "not_a_subscription": "No es una suscripción",

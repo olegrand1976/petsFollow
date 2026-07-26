@@ -1282,6 +1282,24 @@ abstract class AppLocalizations {
   /// **'Italiano'**
   String get languageIt;
 
+  /// No description provided for @appearance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Apparence'**
+  String get appearance;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get themeDark;
+
   /// No description provided for @planMonthlyLabel.
   ///
   /// In fr, this message translates to:
@@ -1465,8 +1483,26 @@ abstract class AppLocalizations {
   /// No description provided for @continueToPayment.
   ///
   /// In fr, this message translates to:
-  /// **'Continuer vers le paiement'**
+  /// **'Enregistrer et payer'**
   String get continueToPayment;
+
+  /// No description provided for @petFormSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get petFormSave;
+
+  /// No description provided for @petSavedPendingPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal enregistré — activez-le pour accéder aux fonctionnalités'**
+  String get petSavedPendingPayment;
+
+  /// No description provided for @paymentFeaturesLocked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement requis pour utiliser les fonctionnalités de cet animal'**
+  String get paymentFeaturesLocked;
 
   /// No description provided for @paymentConfirmed.
   ///
@@ -1513,7 +1549,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentRequired.
   ///
   /// In fr, this message translates to:
-  /// **'Abonnement requis pour envoyer des médias'**
+  /// **'Abonnement requis pour utiliser cette fonctionnalité'**
   String get errorPaymentRequired;
 
   /// No description provided for @errorPhotoUploadFailed.
@@ -1803,6 +1839,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun vétérinaire lié'**
   String get noVets;
+
+  /// No description provided for @vetLinkRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez un vétérinaire avant d\'ajouter un animal'**
+  String get vetLinkRequired;
 
   /// No description provided for @primaryVet.
   ///
@@ -2341,8 +2383,68 @@ abstract class AppLocalizations {
   /// No description provided for @addVetSearchHint.
   ///
   /// In fr, this message translates to:
-  /// **'Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.'**
+  /// **'Recherchez par nom, email ou cabinet. S’il est déjà sur petsFollow, une demande de liaison est envoyée au cabinet.'**
   String get addVetSearchHint;
+
+  /// No description provided for @addVetSearchLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un vétérinaire'**
+  String get addVetSearchLabel;
+
+  /// No description provided for @addVetSearchFieldHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom, email ou cabinet'**
+  String get addVetSearchFieldHint;
+
+  /// No description provided for @addVetNotListed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon véto n’est pas listé'**
+  String get addVetNotListed;
+
+  /// No description provided for @addVetSuggestTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau vétérinaire'**
+  String get addVetSuggestTitle;
+
+  /// No description provided for @addVetSuggestBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l’email et le téléphone du cabinet. Nous le contacterons pour qu’il rejoigne petsFollow.'**
+  String get addVetSuggestBody;
+
+  /// No description provided for @addVetSuggestEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email du cabinet'**
+  String get addVetSuggestEmail;
+
+  /// No description provided for @addVetSuggestPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get addVetSuggestPhone;
+
+  /// No description provided for @addVetSuggestNameOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du véto (optionnel)'**
+  String get addVetSuggestNameOptional;
+
+  /// No description provided for @addVetSuggestCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la suggestion'**
+  String get addVetSuggestCta;
+
+  /// No description provided for @vetSuggestSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci — nous contactons le cabinet. Vous serez notifié quand il rejoindra petsFollow.'**
+  String get vetSuggestSent;
 
   /// No description provided for @visitRequested.
   ///

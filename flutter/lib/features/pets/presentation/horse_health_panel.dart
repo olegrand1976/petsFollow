@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 const _horseCareTypes = {'farrier', 'fecal_egg'};
@@ -159,6 +160,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final horseReminders = reminders.where((r) => _horseCareTypes.contains(r.type)).toList();
     final otherReminders = reminders.where((r) => !_horseCareTypes.contains(r.type)).toList();
@@ -175,7 +177,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(l10n.noCareReminders, style: TextStyle(color: AppColors.textMuted)),
+                child: Text(l10n.noCareReminders, style: TextStyle(color: p.textMuted)),
               ),
             )
           else
@@ -224,7 +226,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
           (c) => Card(
             child: ListTile(
               title: Text(c['fullName'] as String? ?? ''),
-              subtitle: Text(c['role'] as String? ?? '', style: TextStyle(color: AppColors.textMuted)),
+              subtitle: Text(c['role'] as String? ?? '', style: TextStyle(color: p.textMuted)),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () async {
@@ -248,7 +250,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
               title: Text(c['title'] as String? ?? ''),
               subtitle: Text(
                 '${c['eventDate'] ?? ''} ${c['location'] ?? ''}'.trim(),
-                style: TextStyle(color: AppColors.textMuted),
+                style: TextStyle(color: p.textMuted),
               ),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
@@ -280,6 +282,7 @@ class _HorseCareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = PetsPalette.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: highlighted ? AppColors.gold.withValues(alpha: 0.08) : null,
@@ -297,7 +300,7 @@ class _HorseCareCard extends StatelessWidget {
         title: Text(label, style: TextStyle(fontWeight: highlighted ? FontWeight.w600 : FontWeight.normal)),
         subtitle: Text(
           dueLabel,
-          style: TextStyle(color: isOverdue ? AppColors.alert : AppColors.textMuted),
+          style: TextStyle(color: isOverdue ? AppColors.alert : p.textMuted),
         ),
       ),
     );

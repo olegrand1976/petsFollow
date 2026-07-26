@@ -6,6 +6,7 @@ import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
@@ -67,7 +68,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
           // Local notification failures must not wipe the care list.
           // Read-only shared pets: never schedule (cancel leftovers).
           try {
-            if (pet.canWriteNotes) {
+            if (pet.canWriteNotes && pet.isActive) {
               await NotificationService.instance.scheduleCareReminders(reminders, petName: pet.name);
             } else {
               for (final r in reminders) {
@@ -149,7 +150,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   }
 
   Future<void> _showCreateSheet() async {
-    final writable = pets.where((p) => p.canWriteNotes).toList();
+    final writable = pets.where((p) => p.canWriteNotes && p.isActive).toList();
     if (writable.isEmpty || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
@@ -270,7 +271,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 8),
                     Text(modeTooltip(), style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textMuted,
+                          color: PetsPalette.of(ctx).textMuted,
                         )),
                     const SizedBox(height: 12),
                     ListTile(
@@ -280,7 +281,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                           Expanded(child: Text(lastDateLabel)),
                           Tooltip(
                             message: modeTooltip(),
-                            child: Icon(Icons.info_outline, size: 18, color: AppColors.textMuted),
+                            child: Icon(Icons.info_outline, size: 18, color: PetsPalette.of(ctx).textMuted),
                           ),
                         ],
                       ),
@@ -409,13 +410,17 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
-    final petsWithReminders =
-        pets.where((p) => (remindersByPet[p.id] ?? []).isNotEmpty).toList();
+    final petsWithReminders = pets
+        .where((p) => p.isActive && (remindersByPet[p.id] ?? []).isNotEmpty)
+        .toList();
+    final pendingPets = pets.where((p) => p.needsResumePayment).toList();
+    final canAddCare = pets.any((p) => p.canWriteNotes && p.isActive);
 
     return PetsTabScaffold(
       title: Text(l10n.careTitle),
-      floatingActionButton: pets.any((p) => p.canWriteNotes)
+      floatingActionButton: canAddCare
           ? FloatingActionButton(
               key: const Key('care_add_fab'),
               onPressed: _showCreateSheet,
@@ -437,13 +442,13 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                               child: Center(
                                 child: Text(
                                   l10n.emptyPetsTitle,
-                                  style: TextStyle(color: AppColors.textMuted),
+                                  style: TextStyle(color: p.textMuted),
                                 ),
                               ),
                             ),
                           ],
                         )
-                      : petsWithReminders.isEmpty
+                      : petsWithReminders.isEmpty && pendingPets.isEmpty
                           ? ListView(
                               padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
                               children: [
@@ -452,102 +457,115 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
                                   child: Center(
                                     child: Text(
                                       l10n.noCareReminders,
-                                      style: TextStyle(color: AppColors.textMuted),
+                                      style: TextStyle(color: p.textMuted),
                                     ),
                                   ),
                                 ),
                               ],
                             )
-                          : ListView.builder(
+                          : ListView(
                               padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
-                              itemCount: petsWithReminders.length,
-                              itemBuilder: (_, i) {
-                                final pet = petsWithReminders[i];
-                                final reminders = remindersByPet[pet.id] ?? [];
-                                final initial = pet.name.isNotEmpty
-                                    ? pet.name.substring(0, 1).toUpperCase()
-                                    : '?';
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 12, bottom: 8),
-                                      child: Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 16,
-                                            backgroundColor: AppColors.surfaceElevated,
-                                            backgroundImage: pet.photoUrl?.isNotEmpty == true
-                                                ? NetworkImage(pet.photoUrl!)
-                                                : null,
-                                            child: pet.photoUrl?.isNotEmpty == true
-                                                ? null
-                                                : Text(
-                                                    initial,
-                                                    style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
+                              children: [
+                                if (pendingPets.isNotEmpty) ...[
+                                  for (final pet in pendingPets)
+                                    Card(
+                                      key: Key('care_pending_${pet.id}'),
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: ListTile(
+                                        leading: const Icon(Icons.lock_outline),
+                                        title: Text(pet.name),
+                                        subtitle: Text(l10n.paymentFeaturesLocked),
+                                        trailing: Text(
+                                          l10n.badgePendingPayment,
+                                          style: TextStyle(
+                                            color: AppColors.gold,
+                                            fontSize: 12,
                                           ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              pet.name,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                                  ?.copyWith(fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                    ...reminders.map((r) {
-                                      final dueLabel = r.isOverdue
-                                          ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
-                                          : dateFmt.format(r.dueAt);
-                                      final subtitle = r.hasRecurrence
-                                          ? '$dueLabel · ${l10n.careRecurrenceDays(r.recurrenceDays!)}'
-                                          : dueLabel;
-                                      return Card(
-                                        margin: const EdgeInsets.only(bottom: 8),
-                                        child: ListTile(
-                                          title: Text(_careTitle(l10n, r)),
-                                          subtitle: Text(
-                                            subtitle,
-                                            style: TextStyle(
-                                              color: r.isOverdue
-                                                  ? AppColors.alert
-                                                  : AppColors.textMuted,
-                                            ),
-                                          ),
-                                          trailing: pet.canWriteNotes
-                                              ? Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    IconButton(
-                                                      key: Key('care_done_${r.id}'),
-                                                      icon: const Icon(Icons.check_circle_outline),
-                                                      tooltip: l10n.careDone,
-                                                      onPressed: () => markDone(r),
-                                                    ),
-                                                    IconButton(
-                                                      key: Key('care_postpone_${r.id}'),
-                                                      icon: const Icon(Icons.schedule),
-                                                      tooltip: l10n.carePostpone,
-                                                      onPressed: () => postpone(r),
-                                                    ),
-                                                  ],
-                                                )
+                                  const SizedBox(height: 8),
+                                ],
+                                for (final pet in petsWithReminders) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: p.surfaceElevated,
+                                          backgroundImage: pet.photoUrl?.isNotEmpty == true
+                                              ? NetworkImage(pet.photoUrl!)
                                               : null,
+                                          child: pet.photoUrl?.isNotEmpty == true
+                                              ? null
+                                              : Text(
+                                                  pet.name.isNotEmpty
+                                                      ? pet.name.substring(0, 1).toUpperCase()
+                                                      : '?',
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                         ),
-                                      );
-                                    }),
-                                    const SizedBox(height: 8),
-                                  ],
-                                );
-                              },
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            pet.name,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ...(remindersByPet[pet.id] ?? []).map((r) {
+                                    final dueLabel = r.isOverdue
+                                        ? '${l10n.careOverdue} · ${dateFmt.format(r.dueAt)}'
+                                        : dateFmt.format(r.dueAt);
+                                    final subtitle = r.hasRecurrence
+                                        ? '$dueLabel · ${l10n.careRecurrenceDays(r.recurrenceDays!)}'
+                                        : dueLabel;
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: ListTile(
+                                        title: Text(_careTitle(l10n, r)),
+                                        subtitle: Text(
+                                          subtitle,
+                                          style: TextStyle(
+                                            color: r.isOverdue
+                                                ? AppColors.alert
+                                                : p.textMuted,
+                                          ),
+                                        ),
+                                        trailing: pet.canWriteNotes
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    key: Key('care_done_${r.id}'),
+                                                    icon: const Icon(Icons.check_circle_outline),
+                                                    tooltip: l10n.careDone,
+                                                    onPressed: () => markDone(r),
+                                                  ),
+                                                  IconButton(
+                                                    key: Key('care_postpone_${r.id}'),
+                                                    icon: const Icon(Icons.schedule),
+                                                    tooltip: l10n.carePostpone,
+                                                    onPressed: () => postpone(r),
+                                                  ),
+                                                ],
+                                              )
+                                            : null,
+                                      ),
+                                    );
+                                  }),
+                                  const SizedBox(height: 8),
+                                ],
+                              ],
                             ),
                 ),
     );

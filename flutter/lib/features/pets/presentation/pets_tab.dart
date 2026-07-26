@@ -3,6 +3,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
@@ -79,6 +80,7 @@ class _PetsTabState extends State<PetsTab> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
 
     return PetsTabScaffold(
       title: Text(l10n.navPets),
@@ -129,7 +131,7 @@ class _PetsTabState extends State<PetsTab> {
                           trailing: pet.isSharedAccess
                               ? Icon(
                                   pet.canWriteNotes ? Icons.edit_note_outlined : Icons.visibility_outlined,
-                                  color: AppColors.textMuted,
+                                  color: p.textMuted,
                                 )
                               : pet.isActive
                                   ? Icon(Icons.check_circle, color: AppColors.primary)

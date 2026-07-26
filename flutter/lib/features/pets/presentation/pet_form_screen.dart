@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetFormScreen extends StatefulWidget {
@@ -106,7 +109,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
     return l10n.planOneTime(label);
   }
 
-  Future<void> save() async {
+  Future<void> save({bool payNow = false}) async {
     final trimmed = name.text.trim();
     if (loading) return;
     if (trimmed.isEmpty) {
@@ -118,13 +121,16 @@ class _PetFormScreenState extends State<PetFormScreen> {
       loading = true;
     });
     try {
-      final renew = autoRenew || _subscriptionForced;
+      // Monthly is subscription-only (API rejects monthly/one_time).
+      final billingMode =
+          selectedPlan == 'monthly' || autoRenew ? 'subscription' : 'one_time';
       final res = await ApiClient.instance.createPet({
         'name': trimmed,
         'species': selectedSpecies,
         'breed': breed.text.trim(),
         'plan': selectedPlan,
-        'billingMode': renew ? 'subscription' : 'one_time',
+        'billingMode': billingMode,
+        'skipCheckout': !payNow,
       });
       final checkoutUrl = res['checkoutUrl'] as String?;
       final pet = res['pet'] as Map<String, dynamic>? ?? res;
@@ -141,7 +147,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
           }
         }
       }
-      if (checkoutUrl != null) {
+      if (payNow && checkoutUrl != null) {
         final opened = await openExternalUrl(checkoutUrl);
         if (!opened && mounted) {
           final l10n = AppLocalizations.of(context)!;
@@ -154,22 +160,50 @@ class _PetFormScreenState extends State<PetFormScreen> {
             SnackBar(content: Text(l10n.paymentPending)),
           );
         }
+      } else if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.petSavedPendingPayment)),
+        );
       }
       if (!mounted || petId == null) return;
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        final raw = e.toString();
-        final msg = raw.contains('family_pet_limit')
-            ? l10n.familyPetLimit
-            : raw.contains('family_requires_two_pets')
-                ? l10n.familyRequiresTwoPets
-                : raw.contains('vet_link_required')
-                    ? l10n.noVets
-                    : l10n.errorGeneric(raw);
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final code = apiErrorCode(e);
+      final msg = mapApiError(e, l10n);
+      if (code == 'vet_link_required') {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            key: const Key('pet_form_vet_link_dialog'),
+            content: Text(msg),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                key: const Key('pet_form_link_vet'),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+                  );
+                },
+                child: Text(l10n.addVetByEmail),
+              ),
+            ],
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+          SnackBar(
+            key: const Key('pet_form_error'),
+            content: Text(msg),
+          ),
         );
       }
     } finally {
@@ -180,6 +214,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
@@ -230,7 +265,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                                       height: 140,
                                     )
                                   : ColoredBox(
-                                      color: AppColors.surfaceElevated,
+                                      color: p.surfaceElevated,
                                       child: Center(
                                         child: Text(initial,
                                             style: const TextStyle(
@@ -246,7 +281,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                           l10n.photoFrameHint,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              color: AppColors.textMuted, fontSize: 12),
+                              color: p.textMuted, fontSize: 12),
                         ),
                         TextButton.icon(
                           onPressed: _pickPhoto,
@@ -383,15 +418,21 @@ class _PetFormScreenState extends State<PetFormScreen> {
                       style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 12),
                   FilledButton(
-                    key: const Key('pet_form_continue_payment'),
-                    onPressed: loading ? null : save,
+                    key: const Key('pet_form_save'),
+                    onPressed: loading ? null : () => save(payNow: false),
                     child: loading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
                             child:
                                 CircularProgressIndicator(strokeWidth: 2))
-                        : Text(l10n.continueToPayment),
+                        : Text(l10n.petFormSave),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    key: const Key('pet_form_continue_payment'),
+                    onPressed: loading ? null : () => save(payNow: true),
+                    child: Text(l10n.continueToPayment),
                   ),
                 ],
               ),

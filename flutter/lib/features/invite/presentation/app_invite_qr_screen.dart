@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
-import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 /// Shows the durable app-invite QR (vet / care_pro / commercial).
@@ -72,6 +72,7 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final bytes = _qrBytes();
     final practice = _invite?['practiceName'] as String? ?? '';
     final name = (_invite?['displayName'] as String?) ??
@@ -108,7 +109,7 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.textMuted),
+                            border: Border.all(color: p.textMuted),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(12),

@@ -1,52 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 
 abstract final class AppTheme {
-  static const gradientBg = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [AppColors.bg, AppColors.surface],
-    stops: [0.0, 0.48],
-  );
-
-  static const loginGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [AppColors.bg, AppColors.surface, AppColors.surfaceElevated],
-  );
-
   static const double radiusLg = 28;
   static const double radiusMd = 20;
+
+  static LinearGradient gradientBgFor(PetsPalette p) => LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [p.bg, p.surface],
+        stops: const [0.0, 0.48],
+      );
+
+  static LinearGradient loginGradientFor(PetsPalette p) => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [p.bg, p.surface, p.surfaceElevated],
+      );
+
+  static LinearGradient gradientBgOf(BuildContext context) =>
+      gradientBgFor(PetsPalette.of(context));
+
+  static LinearGradient loginGradientOf(BuildContext context) =>
+      loginGradientFor(PetsPalette.of(context));
 }
 
-ThemeData buildAppTheme() {
-  final base = ThemeData(useMaterial3: true, brightness: Brightness.dark);
+ThemeData buildAppDarkTheme() => _buildTheme(Brightness.dark, PetsPalette.dark);
+
+ThemeData buildAppLightTheme() => _buildTheme(Brightness.light, PetsPalette.light);
+
+/// Legacy alias — dark pets theme.
+ThemeData buildAppTheme() => buildAppDarkTheme();
+
+ThemeData _buildTheme(Brightness brightness, PetsPalette palette) {
+  final isDark = brightness == Brightness.dark;
+  final base = ThemeData(useMaterial3: true, brightness: brightness);
+  final shadow = isDark ? Colors.black.withValues(alpha: 0.3) : AppColors.brandNavy.withValues(alpha: 0.08);
   return base.copyWith(
-    colorScheme: ColorScheme.dark(
+    extensions: [palette],
+    colorScheme: ColorScheme(
+      brightness: brightness,
       primary: AppColors.primary,
+      onPrimary: AppColors.bg,
       secondary: AppColors.accent,
+      onSecondary: AppColors.bg,
       tertiary: AppColors.gold,
-      surface: AppColors.surface,
+      onTertiary: AppColors.bg,
+      surface: palette.surface,
+      onSurface: palette.text,
       error: AppColors.alert,
+      onError: AppColors.cream,
     ),
-    scaffoldBackgroundColor: AppColors.bg,
+    scaffoldBackgroundColor: palette.bg,
     textTheme: GoogleFonts.dmSansTextTheme(base.textTheme).apply(
-      bodyColor: AppColors.cream,
-      displayColor: AppColors.cream,
+      bodyColor: palette.text,
+      displayColor: palette.text,
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: false,
+      foregroundColor: palette.text,
+      systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
     ),
     cardTheme: CardThemeData(
-      color: AppColors.surfaceElevated,
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.3),
+      color: palette.surfaceElevated,
+      elevation: isDark ? 2 : 1,
+      shadowColor: shadow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: BorderSide(color: AppColors.gold.withValues(alpha: 0.08)),
+        side: BorderSide(color: AppColors.gold.withValues(alpha: isDark ? 0.08 : 0.2)),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -65,36 +91,63 @@ ThemeData buildAppTheme() {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AppColors.surface,
+      backgroundColor: palette.surface,
       indicatorColor: AppColors.primary.withValues(alpha: 0.2),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return TextStyle(color: AppColors.primary, fontSize: 12);
+          return const TextStyle(color: AppColors.primary, fontSize: 12);
         }
-        return TextStyle(color: AppColors.textMuted, fontSize: 12);
+        return TextStyle(color: palette.textMuted, fontSize: 12);
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const IconThemeData(color: AppColors.primary);
+        }
+        return IconThemeData(color: palette.textMuted);
       }),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.gold.withValues(alpha: 0.15),
-      labelStyle: TextStyle(color: AppColors.gold),
+      labelStyle: const TextStyle(color: AppColors.gold),
       side: BorderSide(color: AppColors.gold.withValues(alpha: 0.4)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceElevated,
+      fillColor: palette.surfaceElevated,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        borderSide: BorderSide(color: AppColors.textMuted.withValues(alpha: 0.3)),
+        borderSide: BorderSide(color: palette.textMuted.withValues(alpha: 0.3)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        borderSide: BorderSide(color: AppColors.textMuted.withValues(alpha: 0.3)),
+        borderSide: BorderSide(color: palette.textMuted.withValues(alpha: 0.3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
       ),
-      labelStyle: TextStyle(color: AppColors.textMuted),
+      labelStyle: TextStyle(color: palette.textMuted),
+      hintStyle: TextStyle(color: palette.textMuted),
+    ),
+    listTileTheme: ListTileThemeData(
+      iconColor: palette.textMuted,
+      textColor: palette.text,
+    ),
+    dividerTheme: DividerThemeData(color: palette.textMuted.withValues(alpha: 0.25)),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) return AppColors.primary;
+        return palette.textMuted;
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.primary.withValues(alpha: 0.35);
+        }
+        return palette.surfaceElevated;
+      }),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      textStyle: TextStyle(color: palette.text),
     ),
   );
 }

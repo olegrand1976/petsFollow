@@ -14,15 +14,17 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | HR keys start/validate | · | ✓ | · | `heart_rate_validate_keys_test` |
 | Book visit | · | ✓ | · | `book_visit_screen_test` |
 | Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
-| New pet → continue payment | · | ✓ | · | `pet_form_screen_test` sticky CTA |
+| New pet → save without payment / pay CTA | · | ✓ | · | `pet_form_screen_test` sticky save + skipCheckout |
+| New pet → vet_link_required | · | ✓ | · | dialog + CTA Mes vétos (`pet_form_link_vet`) |
+| Add / suggest vet (lookup) | · | ✓ | · | `my_vets_screen_test` invite + suggest |
 | Préconsult models + submit key | ✓ | ✓ | · | models + key contract |
 | Care create/done/postpone keys | ✓ | ✓ | · | `care_actions_test` |
 | Messaging send keys | · | ✓ | · | `messaging_keys_test` |
 | Messaging attach camera/gallery keys | · | ✓ | · | `messaging_keys_test` |
 | Messaging attach sheet flow | · | ✓ | · | `messaging_attach_sheet_test` |
 | Messaging video upload basename | ✓ | · | · | `message_media_upload_test` |
-| Messaging attach camera/gallery keys | · | ✓ | · | `messaging_keys_test` |
 | Settings logout | · | ✓ | · | `settings_logout_test` |
+| Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` |
 | Pro Light audio consent checkbox | · | ✓ | · | `pro_light_audio_consent_test` |

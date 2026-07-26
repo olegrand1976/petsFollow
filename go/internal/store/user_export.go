@@ -47,6 +47,12 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 			FROM billing.pet_entitlements e WHERE e.owner_user_id = $1`
 		queries["addons"] = `SELECT COALESCE(jsonb_agg(to_jsonb(a) ORDER BY a.created_at), '[]'::jsonb)
 			FROM billing.addon_entitlements a WHERE a.owner_user_id = $1`
+		queries["vetLinks"] = `SELECT COALESCE(jsonb_agg(to_jsonb(pc) ORDER BY pc.created_at), '[]'::jsonb)
+			FROM practice.practice_clients pc WHERE pc.client_user_id = $1`
+		queries["vetLinkRequests"] = `SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY r.created_at), '[]'::jsonb)
+			FROM practice.client_vet_link_requests r WHERE r.client_user_id = $1`
+		queries["vetLeads"] = `SELECT COALESCE(jsonb_agg(to_jsonb(l) ORDER BY l.created_at), '[]'::jsonb)
+			FROM practice.vet_leads l WHERE l.client_user_id = $1`
 	}
 
 	for key, q := range queries {

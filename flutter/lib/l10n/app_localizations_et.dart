@@ -637,6 +637,15 @@ class AppLocalizationsEt extends AppLocalizations {
   String get languageIt => 'Italiano';
 
   @override
+  String get appearance => 'Välimus';
+
+  @override
+  String get themeLight => 'Hele';
+
+  @override
+  String get themeDark => 'Tume';
+
+  @override
   String get planMonthlyLabel => '€3,50 / kuu';
 
   @override
@@ -729,7 +738,18 @@ class AppLocalizationsEt extends AppLocalizations {
   String get autoRenewSubtitle => 'Võetakse iga uuendamise ajal';
 
   @override
-  String get continueToPayment => 'Jätka maksele';
+  String get continueToPayment => 'Salvesta ja maksa';
+
+  @override
+  String get petFormSave => 'Salvesta';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Lemmikloom salvestatud — aktiveerige funktsioonide kasutamiseks';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Selle lemmiklooma funktsioonide kasutamiseks on vaja makset';
 
   @override
   String get paymentConfirmed => 'Makse kinnitatud — lemmikloom aktiivne';
@@ -757,7 +777,8 @@ class AppLocalizationsEt extends AppLocalizations {
       'Toetamata vorming (JPEG, PNG, WebP, MP4, MOV, WebM)';
 
   @override
-  String get errorPaymentRequired => 'Meedia saatmiseks on vaja tellimust';
+  String get errorPaymentRequired =>
+      'Selle funktsiooni kasutamiseks on vaja tellimust';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -926,6 +947,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get noVets => 'Seotud loomaarsti pole';
+
+  @override
+  String get vetLinkRequired => 'Seo loomaarst enne lemmiklooma lisamist';
 
   @override
   String get primaryVet => 'Peamine loomaarst';
@@ -1224,7 +1248,39 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'Otsime seda loomaarsti kontot petsFollowist. Kui see on olemas, saadetakse praktikale ühenduse taotlus.';
+      'Otsige nime, e-posti või praktika järgi. Kui nad on juba petsFollowis, saadetakse praktikale ühenduse taotlus.';
+
+  @override
+  String get addVetSearchLabel => 'Otsi loomaarsti';
+
+  @override
+  String get addVetSearchFieldHint => 'Nimi, e-post või praktika';
+
+  @override
+  String get addVetNotListed => 'Minu loomaarsti pole nimekirjas';
+
+  @override
+  String get addVetSuggestTitle => 'Uus loomaarst';
+
+  @override
+  String get addVetSuggestBody =>
+      'Sisestage praktika e-post ja telefon. Võtame nendega ühendust, et nad liituksid petsFollowiga.';
+
+  @override
+  String get addVetSuggestEmail => 'Praktika e-post';
+
+  @override
+  String get addVetSuggestPhone => 'Telefon';
+
+  @override
+  String get addVetSuggestNameOptional => 'Loomaarsti nimi (valikuline)';
+
+  @override
+  String get addVetSuggestCta => 'Saada soovitus';
+
+  @override
+  String get vetSuggestSent =>
+      'Aitäh — võtame praktikaga ühendust. Teavitame teid, kui nad liituvad petsFollowiga.';
 
   @override
   String get visitRequested => 'Visiidi taotlus saadetud';

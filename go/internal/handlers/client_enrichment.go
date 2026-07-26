@@ -28,7 +28,26 @@ func (a *API) listMyVets(w http.ResponseWriter, r *http.Request) {
 }
 
 type inviteVetReq struct {
-	Email string `json:"email"`
+	Email     string `json:"email"`
+	VetUserID string `json:"vetUserId"`
+}
+
+func (a *API) lookupVets(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	hits, err := a.store.LookupVets(r.Context(), q, 10)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if hits == nil {
+		hits = []store.VetLookupHit{}
+	}
+	httpx.WriteData(w, http.StatusOK, hits)
 }
 
 func (a *API) inviteVet(w http.ResponseWriter, r *http.Request) {
@@ -38,16 +57,84 @@ func (a *API) inviteVet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req inviteVetReq
-	if err := httpx.DecodeJSON(r, &req); err != nil || req.Email == "" {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	result, err := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
+	var result store.VetInviteResult
+	switch {
+	case strings.TrimSpace(req.VetUserID) != "":
+		result, err = a.store.InviteClientToVetByID(r.Context(), id.UserID, req.VetUserID)
+	case strings.TrimSpace(req.Email) != "":
+		result, err = a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, result)
+}
+
+type suggestVetReq struct {
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	FullName     string `json:"fullName"`
+	PracticeName string `json:"practiceName"`
+}
+
+func (a *API) suggestVet(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	var req suggestVetReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	phone := strings.TrimSpace(req.Phone)
+	if email == "" || phone == "" || !strings.Contains(email, "@") {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	// If the email already matches a vet on the platform, create a real invite instead.
+	if existing, ierr := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, email); ierr == nil && existing.Found {
+		httpx.WriteData(w, http.StatusOK, map[string]any{
+			"status":       "invited",
+			"found":        true,
+			"practiceName": existing.PracticeName,
+			"vetFullName":  existing.VetFullName,
+		})
+		return
+	}
+	lead, err := a.store.CreateVetLead(r.Context(), id.UserID, store.VetLeadInput{
+		Email: email, Phone: phone, FullName: req.FullName, PracticeName: req.PracticeName,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	clientName := id.Email
+	if u, uerr := a.store.GetUserByID(r.Context(), id.UserID); uerr == nil && u.FullName != "" {
+		clientName = u.FullName
+	}
+	if to := strings.TrimSpace(a.cfg.OpsNotifyEmail); to != "" && a.notifier != nil {
+		_ = a.notifier.SendVetLeadNotify(to, clientName, id.Email, lead.Email, lead.Phone, lead.FullName, lead.PracticeName)
+	}
+	httpx.WriteData(w, http.StatusCreated, map[string]any{
+		"status": "suggested",
+		"found":  false,
+		"leadId": lead.ID,
+	})
 }
 
 type primaryPracticeReq struct {
@@ -196,6 +283,9 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
 	if kernel.IsPracticeStaff(id.Role) {
 		if !a.checkPracticePerm(w, r, id, "care.manage") {
 			return
@@ -271,6 +361,9 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
 			return
 		}
+		if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, rem.PetID) {
+			return
+		}
 		updated, err = a.store.MarkCareReminderDoneByID(r.Context(), rem.ID)
 	default:
 		if !a.checkPracticePerm(w, r, id, "care.manage") {
@@ -321,6 +414,9 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
+			return
+		}
+		if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, rem.PetID) {
 			return
 		}
 		updated, err = a.store.PostponeCareReminderByID(r.Context(), rem.ID, req.Days)
@@ -391,6 +487,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	petID := chi.URLParam(r, "petID")
 	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
 	if !ok {
+		return
+	}
+	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
 		return
 	}
 	var req createVisitReq

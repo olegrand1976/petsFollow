@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 /// Minimal MaterialApp with FR l10n for widget tests.
@@ -11,6 +12,9 @@ Future<void> pumpApp(
   await tester.pumpWidget(
     MaterialApp(
       locale: locale,
+      theme: buildAppLightTheme(),
+      darkTheme: buildAppDarkTheme(),
+      themeMode: ThemeMode.dark,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: home,

@@ -638,6 +638,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageIt => 'Italiano';
 
   @override
+  String get appearance => 'Apparence';
+
+  @override
+  String get themeLight => 'Clair';
+
+  @override
+  String get themeDark => 'Sombre';
+
+  @override
   String get planMonthlyLabel => '3,50 € / mois';
 
   @override
@@ -730,7 +739,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get autoRenewSubtitle => 'Prélèvement à chaque échéance';
 
   @override
-  String get continueToPayment => 'Continuer vers le paiement';
+  String get continueToPayment => 'Enregistrer et payer';
+
+  @override
+  String get petFormSave => 'Enregistrer';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Animal enregistré — activez-le pour accéder aux fonctionnalités';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Paiement requis pour utiliser les fonctionnalités de cet animal';
 
   @override
   String get paymentConfirmed => 'Paiement confirmé — animal actif';
@@ -760,7 +780,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPaymentRequired =>
-      'Abonnement requis pour envoyer des médias';
+      'Abonnement requis pour utiliser cette fonctionnalité';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -928,6 +948,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noVets => 'Aucun vétérinaire lié';
+
+  @override
+  String get vetLinkRequired =>
+      'Liez un vétérinaire avant d\'ajouter un animal';
 
   @override
   String get primaryVet => 'Vétérinaire principal';
@@ -1228,7 +1252,39 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.';
+      'Recherchez par nom, email ou cabinet. S’il est déjà sur petsFollow, une demande de liaison est envoyée au cabinet.';
+
+  @override
+  String get addVetSearchLabel => 'Rechercher un vétérinaire';
+
+  @override
+  String get addVetSearchFieldHint => 'Nom, email ou cabinet';
+
+  @override
+  String get addVetNotListed => 'Mon véto n’est pas listé';
+
+  @override
+  String get addVetSuggestTitle => 'Nouveau vétérinaire';
+
+  @override
+  String get addVetSuggestBody =>
+      'Indiquez l’email et le téléphone du cabinet. Nous le contacterons pour qu’il rejoigne petsFollow.';
+
+  @override
+  String get addVetSuggestEmail => 'Email du cabinet';
+
+  @override
+  String get addVetSuggestPhone => 'Téléphone';
+
+  @override
+  String get addVetSuggestNameOptional => 'Nom du véto (optionnel)';
+
+  @override
+  String get addVetSuggestCta => 'Envoyer la suggestion';
+
+  @override
+  String get vetSuggestSent =>
+      'Merci — nous contactons le cabinet. Vous serez notifié quand il rejoindra petsFollow.';
 
   @override
   String get visitRequested => 'Demande de visite envoyée';

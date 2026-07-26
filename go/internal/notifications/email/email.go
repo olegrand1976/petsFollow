@@ -385,6 +385,36 @@ func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubs
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendVetLeadNotify alerts ops/commercial that a client suggested a vet not on the platform.
+func (n *Notifier) SendVetLeadNotify(to, clientName, clientEmail, vetEmail, vetPhone, vetName, practiceName string) error {
+	if strings.TrimSpace(to) == "" {
+		return nil
+	}
+	subject := "Nouveau véto suggéré (app client)"
+	esc := func(s string) string {
+		s = strings.ReplaceAll(s, "&", "&amp;")
+		s = strings.ReplaceAll(s, "<", "&lt;")
+		s = strings.ReplaceAll(s, ">", "&gt;")
+		return s
+	}
+	if practiceName == "" {
+		practiceName = "—"
+	}
+	if vetName == "" {
+		vetName = "—"
+	}
+	body := fmt.Sprintf(`<p>Un client a suggéré un vétérinaire absent de petsFollow.</p>
+<ul>
+<li><strong>Client</strong> : %s (%s)</li>
+<li><strong>Véto</strong> : %s</li>
+<li><strong>Cabinet</strong> : %s</li>
+<li><strong>Email</strong> : %s</li>
+<li><strong>Téléphone</strong> : %s</li>
+</ul>`,
+		esc(clientName), esc(clientEmail), esc(vetName), esc(practiceName), esc(vetEmail), esc(vetPhone))
+	return n.SendVetAlert(to, subject, body)
+}
+
 // mustT returns the translation or a clear fallback that still identifies the key in tests/logs.
 func mustT(locale, key string, varsList ...map[string]string) string {
 	var vars map[string]string

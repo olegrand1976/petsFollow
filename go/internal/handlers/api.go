@@ -88,7 +88,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/me/locale", a.updateMeLocale)
 		a.registerProfileRoutes(pr)
 		pr.Get("/me/vets", a.listMyVets)
+		pr.Get("/me/vets/lookup", a.lookupVets)
 		pr.Post("/me/vets/invite", a.inviteVet)
+		pr.Post("/me/vets/suggest", a.suggestVet)
 		pr.Get("/vet/link-requests", a.listVetLinkRequests)
 		pr.Post("/vet/link-requests/{id}/accept", a.acceptVetLinkRequest)
 		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
@@ -434,17 +436,18 @@ func (a *API) listMyPets(w http.ResponseWriter, r *http.Request) {
 }
 
 type petReq struct {
-	Name        string   `json:"name"`
-	Species     string   `json:"species"`
-	Breed       string   `json:"breed"`
-	BirthDate   *string  `json:"birthDate"`
-	WeightKg    *float64 `json:"weightKg"`
-	PhotoURL    string   `json:"photoUrl"`
-	LitterTag   string   `json:"litterTag"`
-	Plan        string   `json:"plan"`
-	BillingMode string   `json:"billingMode"`
-	SuccessURL  string   `json:"successUrl"`
-	CancelURL   string   `json:"cancelUrl"`
+	Name         string   `json:"name"`
+	Species      string   `json:"species"`
+	Breed        string   `json:"breed"`
+	BirthDate    *string  `json:"birthDate"`
+	WeightKg     *float64 `json:"weightKg"`
+	PhotoURL     string   `json:"photoUrl"`
+	LitterTag    string   `json:"litterTag"`
+	Plan         string   `json:"plan"`
+	BillingMode  string   `json:"billingMode"`
+	SuccessURL   string   `json:"successUrl"`
+	CancelURL    string   `json:"cancelUrl"`
+	SkipCheckout bool     `json:"skipCheckout"`
 }
 
 type petsBatchReq struct {
@@ -457,7 +460,16 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	if strings.TrimSpace(id.PracticeID) == "" {
+	practiceID := strings.TrimSpace(id.PracticeID)
+	if practiceID == "" {
+		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
+		if rerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		practiceID = strings.TrimSpace(resolved)
+	}
+	if practiceID == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
 		return
 	}
@@ -469,7 +481,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	p := store.Pet{
 		Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg,
 		PhotoURL: req.PhotoURL, LitterTag: strings.TrimSpace(req.LitterTag),
-		OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+		OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
 	}
 	if req.BirthDate != nil {
 		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
@@ -490,7 +502,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 	}
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
 		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
-	})
+	}, req.SkipCheckout)
 }
 
 func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
@@ -499,7 +511,16 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	if strings.TrimSpace(id.PracticeID) == "" {
+	practiceID := strings.TrimSpace(id.PracticeID)
+	if practiceID == "" {
+		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
+		if rerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		practiceID = strings.TrimSpace(resolved)
+	}
+	if practiceID == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
 		return
 	}
@@ -523,7 +544,7 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		p := store.Pet{
 			Name: name, Species: species, Breed: strings.TrimSpace(req.Breed),
 			LitterTag:   strings.TrimSpace(req.LitterTag),
-			OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+			OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
 		}
 		if req.BirthDate != nil {
 			if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {

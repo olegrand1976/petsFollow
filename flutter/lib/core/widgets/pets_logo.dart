@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 
 enum PetsLogoVariant {
   /// Emblème + wordmark (optionnellement « Pro »).
@@ -88,6 +89,7 @@ class _Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = PetsPalette.of(context);
     final nameSize = height * 0.72;
     final proSize = height * 0.48;
     final text = Text.rich(
@@ -98,7 +100,7 @@ class _Wordmark extends StatelessWidget {
             style: TextStyle(
               fontSize: nameSize,
               fontWeight: FontWeight.w700,
-              color: AppColors.cream,
+              color: p.text,
               height: 1,
             ),
           ),

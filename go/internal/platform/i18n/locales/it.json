@@ -25,6 +25,7 @@
     "family_pet_limit": "Un pacchetto famiglia (Famiglia o Canile) è già attivo o in fase di acquisto",
     "family_requires_two_pets": "Il pacchetto Famiglia richiede almeno 2 animali",
     "family_required": "È richiesto il pacchetto famiglia",
+    "vet_link_required": "Collega un veterinario prima di aggiungere un animale",
     "invalid_billing_mode": "Metodo di fatturazione non valido",
     "no_pending_payment": "Nessun pagamento in sospeso",
     "not_a_subscription": "Questo non è un abbonamento",

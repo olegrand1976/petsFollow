@@ -5,6 +5,7 @@ import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/care/presentation/care_tab.dart';
 import 'package:petsfollow_mobile/features/home/presentation/home_tab.dart';
@@ -86,9 +87,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.gradientBg),
+      decoration: BoxDecoration(gradient: AppTheme.gradientBgOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: IndexedStack(
@@ -107,7 +109,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: _onTabSelected,
-          backgroundColor: AppColors.surface,
+          backgroundColor: p.surface,
           indicatorColor: AppColors.primary.withValues(alpha: 0.2),
           destinations: [
             NavigationDestination(
@@ -160,7 +162,7 @@ class PetsTabScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.gradientBg),
+      decoration: BoxDecoration(gradient: AppTheme.gradientBgOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

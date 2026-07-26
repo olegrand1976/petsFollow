@@ -25,6 +25,7 @@
     "family_pet_limit": "Majapidamise pakett (Family või Kennel) on juba aktiivne või ostmisel",
     "family_requires_two_pets": "Family pakett nõuab vähemalt 2 looma",
     "family_required": "Family pakett on nõutav",
+    "vet_link_required": "Seo loomaarst enne lemmiklooma lisamist",
     "invalid_billing_mode": "Vigane arveldusrežiim",
     "no_pending_payment": "Ootel makset pole",
     "not_a_subscription": "See ei ole tellimus",

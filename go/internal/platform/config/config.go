@@ -67,6 +67,8 @@ type Config struct {
 	RetentionPurgeSecret string
 	// AiModuleFrictionSecret protège POST /internal/ai-module-friction/run.
 	AiModuleFrictionSecret string
+	// OpsNotifyEmail reçoit les leads « nouveau véto » suggérés depuis l'app client.
+	OpsNotifyEmail string
 }
 
 func Load() Config {
@@ -128,6 +130,7 @@ func Load() Config {
 		CORSAllowedOrigins:    envOr("CORS_ALLOWED_ORIGINS", ""),
 		RetentionPurgeSecret:   envOr("RETENTION_PURGE_SECRET", ""),
 		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
+		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
 	}
 }
 

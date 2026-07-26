@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
 import 'package:petsfollow_mobile/features/education/presentation/how_to_measure_screen.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
@@ -67,6 +68,7 @@ class SettingsMenuScreen extends StatelessWidget {
             );
           },
         ),
+        const AppearanceSettingsTile(),
         ListTile(
           leading: const Icon(Icons.play_circle_outline),
           title: Text(l10n.howToMeasure),

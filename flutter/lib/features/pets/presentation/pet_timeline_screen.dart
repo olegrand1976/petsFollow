@@ -6,6 +6,7 @@ import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
@@ -174,7 +175,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
-  Color _colorForType(String type) {
+  Color _colorForType(String type, Color textMuted) {
     switch (type) {
       case 'heartrate':
         return AppColors.alert;
@@ -187,7 +188,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       case 'visit':
         return AppColors.primary;
       default:
-        return AppColors.textMuted;
+        return textMuted;
     }
   }
 
@@ -266,6 +267,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final upcoming = visits.where((v) => v.isUpcoming).toList();
 
@@ -370,7 +372,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                   if (items.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Text(l10n.timelineEmpty, style: TextStyle(color: AppColors.textMuted)),
+                      child: Text(l10n.timelineEmpty, style: TextStyle(color: p.textMuted)),
                     )
                   else
                     ...items.map((m) {
@@ -380,8 +382,8 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: _colorForType(type).withValues(alpha: 0.15),
-                            child: Icon(_iconForType(type), color: _colorForType(type), size: 20),
+                            backgroundColor: _colorForType(type, p.textMuted).withValues(alpha: 0.15),
+                            child: Icon(_iconForType(type), color: _colorForType(type, p.textMuted), size: 20),
                           ),
                           title: Text(_typeLabel(l10n, type)),
                           subtitle: Text(

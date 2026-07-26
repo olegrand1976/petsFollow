@@ -7,6 +7,7 @@ import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
@@ -239,6 +240,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final species = _speciesLabel(l10n, pet.species);
     final initial = pet.name.isNotEmpty ? pet.name.substring(0, 1).toUpperCase() : '?';
     final primaryVet = vets.where((v) => v.isPrimary).firstOrNull;
@@ -272,7 +274,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               children: [
                 CircleAvatar(
                   radius: 56,
-                  backgroundColor: AppColors.surfaceElevated,
+                  backgroundColor: p.surfaceElevated,
                   backgroundImage: pet.photoUrl?.isNotEmpty == true ? NetworkImage(pet.photoUrl!) : null,
                   child: pet.photoUrl?.isNotEmpty == true
                       ? null
@@ -290,12 +292,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       pet.sharedAccessLabel(l10n),
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      style: TextStyle(color: p.textMuted, fontSize: 13),
                     ),
                   ),
                 const SizedBox(height: 4),
                 Text(species, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold)),
-                Text(pet.breed, style: TextStyle(color: AppColors.textMuted)),
+                Text(pet.breed, style: TextStyle(color: p.textMuted)),
                 if (pet.weightKg != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -304,13 +306,14 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                         pet.weightKg! == pet.weightKg!.roundToDouble() ? 0 : 2,
                       ),
                     ),
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    style: TextStyle(color: p.textMuted, fontSize: 13),
                   ),
                 ],
               ],
             ),
           ),
           if (pet.isOwner &&
+              pet.isActive &&
               pet.species == 'horse' &&
               FeatureModulesController.instance.horse) ...[
             const SizedBox(height: 24),
@@ -336,7 +339,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             const SizedBox(height: 8),
           ],
           if (pet.needsResumePayment) ...[
+            Text(
+              l10n.paymentFeaturesLocked,
+              style: TextStyle(color: p.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
             FilledButton.icon(
+              key: Key('pet_resume_payment_${pet.id}'),
               onPressed: () async {
                 final url = await ApiClient.instance.resumeCheckout(pet.id);
                 await openExternalUrl(url);
@@ -348,21 +357,22 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             const SizedBox(height: 8),
           ],
           const SizedBox(height: 8),
-          _ActionTile(
-            icon: Icons.history,
-            label: l10n.visitHistory,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PetTimelineScreen(
-                  petId: pet.id,
-                  petName: pet.name,
-                  canWriteNotes: pet.canWriteNotes,
+          if (pet.isActive)
+            _ActionTile(
+              icon: Icons.history,
+              label: l10n.visitHistory,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PetTimelineScreen(
+                    petId: pet.id,
+                    petName: pet.name,
+                    canWriteNotes: pet.canWriteNotes,
+                  ),
                 ),
               ),
             ),
-          ),
-          if (pet.isOwner) ...[
+          if (pet.isOwner && pet.isActive) ...[
             _ActionTile(
               icon: Icons.event_available,
               label: l10n.requestVisit,
@@ -376,7 +386,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                 MaterialPageRoute(builder: (_) => const MessagingScreen()),
               ),
             ),
-            const Divider(height: 32),
+          ],
+          if (pet.isOwner) ...[
+            if (pet.isActive) const Divider(height: 32),
             Row(
               children: [
                 Expanded(child: Text(l10n.myVets, style: Theme.of(context).textTheme.titleSmall)),
@@ -385,7 +397,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                     await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
                     _loadVets();
                   },
-                  child: Text(l10n.addVetByEmail),
+                  child: Text(l10n.addVetSearchLabel),
                 ),
               ],
             ),
@@ -393,7 +405,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
             else if (vetsLoadError != null)
               ListTile(
-                leading: const Icon(Icons.cloud_off_outlined, color: AppColors.textMuted),
+                leading: Icon(Icons.cloud_off_outlined, color: p.textMuted),
                 title: Text(vetsLoadError!),
                 trailing: TextButton(
                   onPressed: _loadVets,
@@ -404,7 +416,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               ListTile(
                 leading: const Icon(Icons.local_hospital_outlined),
                 title: Text(l10n.noVets),
-                subtitle: Text(l10n.addVetByEmail),
+                subtitle: Text(l10n.addVetSearchHint),
               )
             else
               ...vets.map(

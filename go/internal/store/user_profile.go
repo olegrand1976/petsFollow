@@ -196,6 +196,9 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM messaging.threads WHERE client_user_id = $1`, userID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(ctx, `DELETE FROM practice.vet_leads WHERE client_user_id = $1`, userID); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `DELETE FROM practice.practice_clients WHERE client_user_id = $1`, userID); err != nil {
 		return err
 	}

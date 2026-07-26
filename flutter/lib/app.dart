@@ -6,6 +6,7 @@ import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/theme/theme_controller.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/force_change_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/commercial_field_shell_screen.dart';
@@ -24,8 +25,10 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
   @override
   void initState() {
     super.initState();
-    LocaleController.instance.addListener(_onLocaleChanged);
+    LocaleController.instance.addListener(_onPrefsChanged);
+    ThemeController.instance.addListener(_onPrefsChanged);
     LocaleController.instance.load();
+    ThemeController.instance.load();
     NotificationService.instance.explainPushPermission = _showPushPermissionInfo;
     NotificationService.instance.init();
     AppDeepLink.instance.start();
@@ -53,18 +56,21 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
 
   @override
   void dispose() {
-    LocaleController.instance.removeListener(_onLocaleChanged);
+    LocaleController.instance.removeListener(_onPrefsChanged);
+    ThemeController.instance.removeListener(_onPrefsChanged);
     AppDeepLink.instance.dispose();
     super.dispose();
   }
 
-  void _onLocaleChanged() => setState(() {});
+  void _onPrefsChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'petsFollow',
-      theme: buildAppTheme(),
+      theme: buildAppLightTheme(),
+      darkTheme: buildAppDarkTheme(),
+      themeMode: ThemeController.instance.themeMode,
       navigatorKey: PushNavigation.instance.navigatorKey,
       locale: LocaleController.instance.locale,
       localizationsDelegates: const [
