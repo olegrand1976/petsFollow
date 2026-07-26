@@ -1298,6 +1298,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takePhoto => 'Take a photo';
 
   @override
+  String get takeVideo => 'Record a video';
+
+  @override
   String get chooseFromGallery => 'Choose from gallery';
 
   @override
@@ -1308,6 +1311,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachVideo => 'Video';
+
+  @override
+  String get compressingMedia => 'Compressing video…';
 
   @override
   String get openMedia => 'Open';

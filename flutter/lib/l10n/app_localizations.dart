@@ -2494,6 +2494,12 @@ abstract class AppLocalizations {
   /// **'Prendre une photo'**
   String get takePhoto;
 
+  /// No description provided for @takeVideo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filmer une vidéo'**
+  String get takeVideo;
+
   /// No description provided for @chooseFromGallery.
   ///
   /// In fr, this message translates to:
@@ -2517,6 +2523,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vidéo'**
   String get attachVideo;
+
+  /// No description provided for @compressingMedia.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compression de la vidéo…'**
+  String get compressingMedia;
 
   /// No description provided for @openMedia.
   ///

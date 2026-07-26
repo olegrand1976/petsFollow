@@ -11,8 +11,11 @@ import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/messaging/message_media_upload.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
+import 'package:video_compress/video_compress.dart';
 
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key, this.embedded = false, this.active = true});
@@ -247,34 +250,64 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     }
   }
 
-  Future<void> _pickAndSendMedia({required bool video}) async {
+  Future<void> _pickAndSendMedia({
+    required bool video,
+    required ImageSource source,
+  }) async {
     if (threadId == null || sending) return;
     final l10n = AppLocalizations.of(context)!;
     final picker = ImagePicker();
-    final XFile? file = video
-        ? await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 2))
-        : await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 85);
-    if (file == null) return;
-    final size = await File(file.path).length();
-    if (size > 25 << 20) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorMediaTooLarge)),
-        );
-      }
-      return;
-    }
+    final XFile? picked = video
+        ? await picker.pickVideo(
+            source: source,
+            maxDuration: kMaxMessageVideoDuration,
+          )
+        : await picker.pickImage(
+            source: source,
+            maxWidth: 1920,
+            imageQuality: 85,
+            preferredCameraDevice: CameraDevice.rear,
+          );
+    if (picked == null) return;
+
     setState(() => sending = true);
     try {
+      var uploadPath = picked.path;
+      var filename = picked.name;
+      if (video) {
+        final prepared = await _prepareVideoForUpload(picked.path, l10n: l10n);
+        if (prepared == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorMediaTooLarge)),
+            );
+          }
+          return;
+        }
+        uploadPath = prepared.path;
+        filename = prepared.filename;
+      } else {
+        final size = await File(uploadPath).length();
+        if (size > kMaxMessageMediaBytes) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorMediaTooLarge)),
+            );
+          }
+          return;
+        }
+      }
+
       final caption = draft.text.trim();
       await ApiClient.instance.sendMessageMedia(
         threadId!,
-        file.path,
+        uploadPath,
         body: caption.isEmpty ? null : caption,
-        filename: file.name,
+        filename: filename,
       );
       draft.clear();
       await loadMessages();
+      unawaited(VideoCompress.deleteAllCache());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -286,34 +319,137 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     }
   }
 
+  /// Compresses large videos so GCS upload stays under 25 MiB.
+  Future<({String path, String filename})?> _prepareVideoForUpload(
+    String path, {
+    required AppLocalizations l10n,
+  }) async {
+    final originalSize = await File(path).length();
+    if (!shouldCompressMessageVideo(originalSize)) {
+      return (
+        path: path,
+        filename: messageMediaUploadBasename(path, fromCompressedOutput: false),
+      );
+    }
+
+    try {
+      final info = await VideoCompress.getMediaInfo(path);
+      final durationMs = info.duration;
+      if (durationMs != null &&
+          durationMs > kMaxMessageVideoDuration.inMilliseconds) {
+        return null;
+      }
+    } catch (_) {
+      // getMediaInfo est best-effort ; on tente quand même la compression.
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.compressingMedia)),
+      );
+    }
+
+    String? bestPath;
+    var bestSize = originalSize;
+
+    Future<void> consider(MediaInfo? info) async {
+      final out = info?.path;
+      if (out == null || out.isEmpty) return;
+      final size = await File(out).length();
+      if (size <= kMaxMessageMediaBytes && size < bestSize) {
+        bestPath = out;
+        bestSize = size;
+      }
+    }
+
+    await consider(
+      await VideoCompress.compressVideo(
+        path,
+        quality: VideoQuality.MediumQuality,
+        deleteOrigin: false,
+        includeAudio: true,
+        frameRate: 30,
+      ),
+    );
+    if (bestPath == null || bestSize > (kMaxMessageMediaBytes ~/ 2)) {
+      await consider(
+        await VideoCompress.compressVideo(
+          path,
+          quality: VideoQuality.LowQuality,
+          deleteOrigin: false,
+          includeAudio: true,
+          frameRate: 24,
+        ),
+      );
+    }
+
+    if (bestPath != null) {
+      return (
+        path: bestPath!,
+        filename: messageMediaUploadBasename(bestPath!, fromCompressedOutput: true),
+      );
+    }
+    if (originalSize <= kMaxMessageMediaBytes) {
+      return (
+        path: path,
+        filename: messageMediaUploadBasename(path, fromCompressedOutput: false),
+      );
+    }
+    return null;
+  }
+
   Future<void> _showAttachSheet() async {
     final l10n = AppLocalizations.of(context)!;
-    await showModalBottomSheet<void>(
+    final kind = await showModalBottomSheet<bool>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              key: const Key('message_attach_photo'),
               leading: const Icon(Icons.photo_outlined),
               title: Text(l10n.attachPhoto),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickAndSendMedia(video: false);
-              },
+              onTap: () => Navigator.pop(ctx, false),
             ),
             ListTile(
+              key: const Key('message_attach_video'),
               leading: const Icon(Icons.videocam_outlined),
               title: Text(l10n.attachVideo),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickAndSendMedia(video: true);
-              },
+              onTap: () => Navigator.pop(ctx, true),
             ),
           ],
         ),
       ),
     );
+    if (kind == null || !mounted) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: const Key('message_attach_camera'),
+              leading: Icon(
+                kind ? Icons.videocam_outlined : Icons.photo_camera_outlined,
+              ),
+              title: Text(kind ? l10n.takeVideo : l10n.takePhoto),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              key: const Key('message_attach_gallery'),
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.chooseFromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    await _pickAndSendMedia(video: kind, source: source);
   }
 
   Future<void> _openMedia(String url) async {
@@ -329,15 +465,16 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final timeFmt = DateFormat.Hm(Localizations.localeOf(context).toString());
 
     final chatArea = threadId == null
-        ? Center(child: Text(l10n.noThreads, style: TextStyle(color: AppColors.textMuted)))
+        ? Center(child: Text(l10n.noThreads, style: TextStyle(color: p.textMuted)))
         : Column(
             children: [
               Expanded(
                 child: messages.isEmpty
-                    ? Center(child: Text(l10n.vetMessaging, style: TextStyle(color: AppColors.textMuted)))
+                    ? Center(child: Text(l10n.vetMessaging, style: TextStyle(color: p.textMuted)))
                     : ListView.builder(
                         reverse: true,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -354,7 +491,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                               decoration: BoxDecoration(
                                 color: isMine
                                     ? AppColors.primary.withValues(alpha: 0.85)
-                                    : AppColors.surfaceElevated,
+                                    : p.surfaceElevated,
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(16),
                                   topRight: const Radius.circular(16),
@@ -389,7 +526,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                                       fontSize: 10,
                                       color: isMine
                                           ? AppColors.bg.withValues(alpha: 0.7)
-                                          : AppColors.textMuted,
+                                          : p.textMuted,
                                     ),
                                   ),
                                 ],
@@ -409,6 +546,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                 child: Row(
                   children: [
                     IconButton(
+                      key: const Key('message_attach_btn'),
                       tooltip: l10n.attachMedia,
                       onPressed: sending ? null : _showAttachSheet,
                       icon: const Icon(Icons.attach_file),

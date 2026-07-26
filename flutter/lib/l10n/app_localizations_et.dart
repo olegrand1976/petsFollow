@@ -1306,6 +1306,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get takePhoto => 'Tee foto';
 
   @override
+  String get takeVideo => 'Salvesta video';
+
+  @override
   String get chooseFromGallery => 'Vali galeriist';
 
   @override
@@ -1316,6 +1319,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get attachVideo => 'Video';
+
+  @override
+  String get compressingMedia => 'Video tihendamine…';
 
   @override
   String get openMedia => 'Ava';

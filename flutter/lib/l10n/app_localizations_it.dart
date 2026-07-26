@@ -1313,6 +1313,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get takePhoto => 'Scatta una foto';
 
   @override
+  String get takeVideo => 'Registra un video';
+
+  @override
   String get chooseFromGallery => 'Scegli dalla galleria';
 
   @override
@@ -1323,6 +1326,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get attachVideo => 'Video';
+
+  @override
+  String get compressingMedia => 'Compressione del video…';
 
   @override
   String get openMedia => 'Aprire';
