@@ -17,6 +17,7 @@ const (
 	SupportSourceNuxtPro         = "nuxt_pro"
 	SupportSourceFlutterClient   = "flutter_client"
 	SupportSourceFlutterProLight = "flutter_pro_light"
+	SupportSourceSystem          = "system"
 
 	SupportStatusOpen       = "open"
 	SupportStatusInProgress = "in_progress"
@@ -34,6 +35,7 @@ var validSupportSources = map[string]bool{
 	SupportSourceNuxtPro:         true,
 	SupportSourceFlutterClient:   true,
 	SupportSourceFlutterProLight: true,
+	SupportSourceSystem:          true,
 }
 
 var validSupportStatuses = map[string]bool{
@@ -147,6 +149,11 @@ func (s *Store) CreateSupportTicket(ctx context.Context, in CreateSupportTicketI
 		return SupportTicket{}, ErrDiagnosticsTooLarge
 	}
 
+	var createdByArg any
+	if strings.TrimSpace(in.CreatedBy) != "" {
+		createdByArg = strings.TrimSpace(in.CreatedBy)
+	}
+
 	var t SupportTicket
 	var createdBy *string
 	err := s.pool.QueryRow(ctx, `
@@ -156,7 +163,7 @@ func (s *Store) CreateSupportTicket(ctx context.Context, in CreateSupportTicketI
 		) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)
 		RETURNING id, created_by, source, subject, message, status, diagnostics,
 			user_agent, app_version, locale, route, created_at, updated_at`,
-		in.CreatedBy, source, subject, message, SupportStatusOpen, []byte(diag),
+		createdByArg, source, subject, message, SupportStatusOpen, []byte(diag),
 		strings.TrimSpace(in.UserAgent), strings.TrimSpace(in.AppVersion),
 		strings.TrimSpace(in.Locale), strings.TrimSpace(in.Route),
 	).Scan(

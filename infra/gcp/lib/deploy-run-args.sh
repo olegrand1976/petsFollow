@@ -46,6 +46,8 @@ SMTP_HOST: "pro1.mail.ovh.net"
 SMTP_PORT: "587"
 SMTP_FROM: "petsFollow <noreply@petsfollow.app>"
 SMTP_USER: "noreply@petsfollow.app"
+OPS_NOTIFY_EMAIL: "${OPS_NOTIFY_EMAIL:-o.legrand1976@gmail.com}"
+SUPPORT_INBOX_EMAIL: "${SUPPORT_INBOX_EMAIL:-o.legrand1976@gmail.com}"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
@@ -77,6 +79,10 @@ pf_api_secrets() {
   if gcloud secrets versions access latest \
     --secret=petsfollow-smtp-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},SMTP_PASS=petsfollow-smtp-password:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-auth-health-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},AUTH_HEALTH_SECRET=petsfollow-auth-health-secret:latest"
   fi
   # Import clients admin — mapping colonnes (Secret Manager).
   if gcloud secrets versions access latest \

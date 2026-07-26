@@ -92,6 +92,7 @@ make smoke
 - **RGPD** : export `GET /api/v1/me/export` (JSON, BFF `me/export.get.ts`, bouton `/settings` + profil Flutter) · suppression `DELETE /me` (purge complète client / anonymisation pro tombstone) · consentement obligatoire au register (`"consent": true` → `identity.users.terms_accepted_at`) · purge auto 3 ans d'inactivité (`last_login_at`, cron `internal/retention/run`) · pré-dialogue avant permission push Flutter.
 - **Dev only** : `confirmPath`/`resetPath` dans les réponses register/forgot/resend-confirmation exposés uniquement si `DEV_SEED_ENABLED=true` (les e2e/smoke en dépendent). `BILLING_MOCK_ENABLED` opt-in explicite (défaut true seulement via `make api-dev`) ; signature webhook Stripe toujours vérifiée, même en mock.
 - **Resend confirm** : `POST /auth/resend-confirmation` `{email}` (rate-limité, toujours 200) — BFF Nuxt `/api/auth/resend-confirmation` · Flutter login si `email_not_verified` · Pro `/register/sent`.
+- **Alertes auth ALERT/URGENT** : échec SMTP confirm / spikes login / clients non vérifiés → ticket `source=system` dans `/admin/support` + email `OPS_NOTIFY_EMAIL` (staging : `o.legrand1976@gmail.com`). Job horaire `POST /internal/auth-health/run` + `X-Auth-Health-Secret` (`AUTH_HEALTH_SECRET`, script `infra/gcp/setup-auth-health-scheduler.sh`).
 - **2FA** : anti-replay TOTP (`totpReplayGuard`) — un code ne passe qu'une fois par fenêtre.
 
 ## Langues (FR / NL / EN / ES / ET / IT)

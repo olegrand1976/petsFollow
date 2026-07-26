@@ -35,6 +35,7 @@ type API struct {
 	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
 	vetLookupRL  *httpx.RateLimiter
 	vetSuggestRL *httpx.RateLimiter
+	authPulse    *authPulse
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -49,8 +50,15 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g,
 		vetLookupRL:  httpx.NewRateLimiter(30, time.Minute),
 		vetSuggestRL: httpx.NewRateLimiter(10, time.Minute),
+		authPulse:    newAuthPulse(),
 	}
 }
+
+// TestReplaceNotifier swaps the email notifier (integration tests only).
+func (a *API) TestReplaceNotifier(n *email.Notifier) { a.notifier = n }
+
+// TestSetOpsNotifyEmail sets OPS_NOTIFY_EMAIL (integration tests only).
+func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
@@ -84,6 +92,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerAiCrModuleRoutes(r)
 	a.registerSupportRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
+	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
@@ -211,6 +220,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	u, err := a.store.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
+		a.noteAuthSignal(store.AuthAlertLoginFailSpike, authSpikeLoginFail, "login unauthorized (email inconnu ou erreur)")
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
@@ -219,10 +229,12 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
+		a.noteAuthSignal(store.AuthAlertLoginFailSpike, authSpikeLoginFail, "login unauthorized (mauvais mot de passe)")
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
 	if (kernel.IsPracticeStaff(u.Role) || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
+		a.noteAuthSignal(store.AuthAlertUnverifiedSpike, authSpikeUnverified, "login email_not_verified")
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
@@ -1243,7 +1255,10 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register vet: SMTP confirm fail")
+	}
 	out := map[string]any{
 		"message": t(r, "success.confirm_email_sent", nil),
 	}
@@ -1318,7 +1333,9 @@ func (a *API) resendConfirmation(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		confirmURL := fmt.Sprintf("%s/confirm-email?token=%s",
 			strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-		_ = a.notifier.SendConfirmRegistration(result.Email, result.Locale, result.FullName, confirmURL)
+		if sendErr := a.notifier.SendConfirmRegistration(result.Email, result.Locale, result.FullName, confirmURL); sendErr != nil {
+			a.reportConfirmEmailFailure(r.Context(), result.Email, sendErr)
+		}
 		if a.cfg.DevSeedEnabled {
 			out["confirmPath"] = "/confirm-email?token=" + result.Token
 		}

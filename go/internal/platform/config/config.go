@@ -70,10 +70,12 @@ type Config struct {
 	RetentionPurgeSecret string
 	// AiModuleFrictionSecret protège POST /internal/ai-module-friction/run.
 	AiModuleFrictionSecret string
-	// OpsNotifyEmail reçoit les leads « nouveau véto » suggérés depuis l'app client.
+	// OpsNotifyEmail reçoit les leads « nouveau véto » + alertes auth ALERT/URGENT.
 	OpsNotifyEmail string
 	// SupportInboxEmail reçoit les nouveaux tickets bug-report (défaut support@petsfollow.app).
 	SupportInboxEmail string
+	// AuthHealthSecret protège POST /internal/auth-health/run.
+	AuthHealthSecret string
 	// MLMOrgEnabled exposes multi-depth downline UI; commissions remain flat until MLM billing ships.
 	MLMOrgEnabled bool
 }
@@ -141,6 +143,7 @@ func Load() Config {
 		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
 		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
+		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),
 	}
 }

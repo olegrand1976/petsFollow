@@ -73,7 +73,10 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		a.tryLinkCommercialReferral(r, result.UserID, req.CommercialUserID)
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register-client: SMTP confirm fail")
+	}
 	out := map[string]any{
 		"message":      t(r, "success.confirm_email_sent", nil),
 		"inviteStatus": inviteStatus,
@@ -122,7 +125,10 @@ func (a *API) registerCarePro(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register-care-pro: SMTP confirm fail")
+	}
 	out := map[string]any{
 		"message": t(r, "success.confirm_email_sent", nil),
 	}

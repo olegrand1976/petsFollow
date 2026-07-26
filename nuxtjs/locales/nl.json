@@ -1163,6 +1163,7 @@
       "source_nuxt_pro": "Pro web",
       "source_flutter_client": "Client-app",
       "source_flutter_pro_light": "Pro Light",
+      "source_system": "Systeem (ALERT)",
       "prevPage": "Vorige",
       "nextPage": "Volgende",
       "pageInfo": "{from}–{to} van {total}",

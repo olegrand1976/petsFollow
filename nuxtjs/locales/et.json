@@ -1163,6 +1163,7 @@
       "source_nuxt_pro": "Pro veeb",
       "source_flutter_client": "Kliendi rakendus",
       "source_flutter_pro_light": "Pro Light",
+      "source_system": "Süsteem (ALERT)",
       "prevPage": "Eelmine",
       "nextPage": "Järgmine",
       "pageInfo": "{from}–{to} / {total}",

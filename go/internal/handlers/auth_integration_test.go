@@ -27,6 +27,7 @@ import (
 type testAPI struct {
 	handler http.Handler
 	pool    *pgxpool.Pool
+	api     *handlers.API
 }
 
 func loadDotEnv() {
@@ -41,7 +42,9 @@ func loadDotEnv() {
 				}
 				parts := strings.SplitN(line, "=", 2)
 				k, v := parts[0], parts[1]
-				if os.Getenv(k) == "" {
+				// Prefer repo .env for DATABASE_URL: shell may point at petsfollow_app
+				// (DML-only), which cannot apply ownership-bound migrations.
+				if k == "DATABASE_URL" || os.Getenv(k) == "" {
 					_ = os.Setenv(k, v)
 				}
 			}
@@ -103,7 +106,7 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	r.Route("/api/v1", api.Routes)
 
 	t.Cleanup(func() { pool.Close() })
-	return &testAPI{handler: r, pool: pool}
+	return &testAPI{handler: r, pool: pool, api: api}
 }
 
 func uniqueEmail(prefix string) string {

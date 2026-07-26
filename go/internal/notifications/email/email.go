@@ -58,7 +58,16 @@ func envelopeFrom(from string) string {
 	return from
 }
 
-func (n *Notifier) SendVetAlert(to, subject, body string) error {
+// isDevSMTP — MailHog / localhost / sans auth : soft-fail (tests + local).
+func (n *Notifier) isDevSMTP() bool {
+	if strings.TrimSpace(n.user) == "" {
+		return true
+	}
+	h := strings.ToLower(strings.TrimSpace(n.host))
+	return h == "localhost" || h == "127.0.0.1" || h == "mailhog"
+}
+
+func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 	addr := fmt.Sprintf("%s:%d", n.host, n.port)
 	encodedSubject := mime.QEncoding.Encode("UTF-8", subject)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
@@ -70,15 +79,26 @@ func (n *Notifier) SendVetAlert(to, subject, body string) error {
 		auth = smtp.PlainAuth("", n.user, n.pass, n.host)
 	}
 	if err := smtp.SendMail(addr, auth, mailFrom, []string{to}, []byte(msg)); err != nil {
-		if n.user == "" {
-			log.Printf("email send (mailhog/unauthenticated): %v", err)
+		if n.isDevSMTP() {
+			log.Printf("email send (mailhog/dev): %v", err)
 		} else {
 			log.Printf("email send failed to=%s from=%s: %v", to, mailFrom, err)
 		}
-		// Soft-fail — callers treat email as best-effort (local MailHog / SMTP outages).
-		return nil
+		if softFail || n.isDevSMTP() {
+			return nil
+		}
+		return err
 	}
 	return nil
+}
+
+func (n *Notifier) SendVetAlert(to, subject, body string) error {
+	return n.sendHTML(to, subject, body, true)
+}
+
+// SendCritical delivers an ops/alert email and returns SMTP errors (no soft-fail in prod).
+func (n *Notifier) SendCritical(to, subject, body string) error {
+	return n.sendHTML(to, subject, body, false)
 }
 
 func (n *Notifier) brandURLs() brandAssets {
@@ -111,7 +131,8 @@ func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL stri
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
-	return n.SendVetAlert(to, subject, body)
+	// Confirm registration is critical in staging/prod (auth path); soft-fail only on dev SMTP.
+	return n.sendHTML(to, subject, body, false)
 }
 
 func (n *Notifier) SendPasswordReset(to, locale, fullName, resetURL string) error {
