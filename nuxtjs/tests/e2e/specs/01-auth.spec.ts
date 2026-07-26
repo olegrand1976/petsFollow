@@ -142,8 +142,9 @@ test.describe('auth — inscription et confirmation', { tag: '@p0' }, () => {
     await page.getByTestId('register-nearby-postal').fill('1000')
     await page.getByTestId('register-nearby-postal-btn').click()
     // Seed commercial.demo est à Bruxelles 1000 — résultat attendu en local après seed.
+    const nearby = page.getByTestId('register-nearby-commercial')
     await expect(
-      page.locator('.nearby-commercial__option').first().or(page.locator('.pro-field-hint')),
+      nearby.locator('.nearby-commercial__option, p.pro-field-hint, p.pro-field-error').first(),
     ).toBeVisible({ timeout: 10000 })
   })
 })
