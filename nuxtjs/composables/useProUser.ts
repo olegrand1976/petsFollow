@@ -1,3 +1,5 @@
+import { authErrorStatus, clearAuthTokens, isWithinPostLoginGrace } from '~/composables/useAuth'
+
 export type ProUser = {
   id?: string
   userId?: string
@@ -14,15 +16,20 @@ export type ProUser = {
   isReferenceVet?: boolean
 }
 
+type InFlight = {
+  force: boolean
+  promise: Promise<ProUser | null>
+}
+
 export function useProUser() {
   const userState = useState<ProUser | null>('pro-user', () => null)
   const loadingState = useState<boolean>('pro-user-loading', () => false)
+  const inflightState = useState<InFlight | null>('pro-user-inflight', () => null)
 
   const user = computed(() => userState.value)
   const loading = computed(() => loadingState.value)
 
-  async function fetchUser(force = false) {
-    if (userState.value && !force) return userState.value
+  async function fetchUserOnce(force: boolean, allowGraceRetry: boolean): Promise<ProUser | null> {
     loadingState.value = true
     try {
       // SSR: never $fetch our own /api/* via the public URL — on Cloud Run that
@@ -34,9 +41,14 @@ export function useProUser() {
       const data = res.data ?? res
       userState.value = data
       return data as ProUser
-    } catch (e: any) {
-      const status = e?.statusCode ?? e?.status ?? e?.response?.status
+    } catch (e: unknown) {
+      const status = authErrorStatus(e)
       if (status === 401 || status === 403) {
+        // Une seule reprise pendant la grâce post-login (cookies WebKit pas encore attachés).
+        if (allowGraceRetry && isWithinPostLoginGrace()) {
+          await new Promise((r) => setTimeout(r, 200))
+          return fetchUserOnce(true, false)
+        }
         userState.value = null
         throw e
       }
@@ -44,6 +56,26 @@ export function useProUser() {
       return userState.value
     } finally {
       loadingState.value = false
+    }
+  }
+
+  async function fetchUser(force = false) {
+    if (userState.value && !force) return userState.value
+
+    const inflight = inflightState.value
+    // Coalesce concurrent callers (middlewares + layout) into one /api/me.
+    if (inflight && (!force || inflight.force)) {
+      return inflight.promise
+    }
+
+    const promise = fetchUserOnce(force, true)
+    inflightState.value = { force, promise }
+    try {
+      return await promise
+    } finally {
+      if (inflightState.value?.promise === promise) {
+        inflightState.value = null
+      }
     }
   }
 

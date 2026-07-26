@@ -31,6 +31,8 @@ steps:
       - --cache=true
       - --context=dir://.
       - --dockerfile=deploy/Dockerfile.nuxtjs
+      # CSP connect-src : API publique (jamais localhost bake).
+      - --build-arg=NUXT_PUBLIC_API_BASE=https://api.petsfollow.ll-it-sc.be
 
   - id: migrate
     name: gcr.io/google.com/cloudsdktool/cloud-sdk

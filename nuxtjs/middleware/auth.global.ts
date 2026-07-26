@@ -1,6 +1,7 @@
 import {
   AUTH_LOGIN_REASON_PRO_ONLY,
   clearAuthTokens,
+  clearAuthTokensUnlessPostLoginGrace,
   hasSessionCookie,
   homePathForRole,
   isProRole,
@@ -54,8 +55,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
         await clearAuthTokens()
         return navigateTo({ path: '/login', query: { reason: AUTH_LOGIN_REASON_PRO_ONLY } })
       } catch {
-        // 401/403 uniquement (fetchUser throw).
-        await clearAuthTokens()
+        // 401/403 : ne pas logout pendant la grâce post-login (course cookies).
+        await clearAuthTokensUnlessPostLoginGrace()
       }
       // Landing et écrans auth : rester après purge (pas de re-redirect).
       if (to.path === '/' || to.path === '/login' || to.path === '/register') return

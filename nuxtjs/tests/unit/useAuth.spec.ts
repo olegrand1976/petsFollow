@@ -15,6 +15,9 @@ import {
   finishClientLoginSession,
   AUTH_POST_LOGIN_RELOAD_PATH,
   AUTH_LOGIN_REASON_PRO_ONLY,
+  AUTH_POST_LOGIN_GRACE_MS,
+  isWithinPostLoginGrace,
+  clearAuthTokensUnlessPostLoginGrace,
   resolvePostLoginTarget,
   fetchUserAfterLogin,
   authErrorStatus,
@@ -146,6 +149,26 @@ describe('useAuth helpers', () => {
 
   it('AUTH_LOGIN_REASON_PRO_ONLY est stable pour /login?reason=', () => {
     expect(AUTH_LOGIN_REASON_PRO_ONLY).toBe('proOnly')
+  })
+
+  it('post-login grace bloque clearAuthTokens pendant AUTH_POST_LOGIN_GRACE_MS', async () => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v) },
+      removeItem: (k: string) => { store.delete(k) },
+    })
+    expect(isWithinPostLoginGrace()).toBe(false)
+    markAuthSessionActive()
+    expect(isWithinPostLoginGrace()).toBe(true)
+    expect(AUTH_POST_LOGIN_GRACE_MS).toBeGreaterThan(1000)
+    cookieStore.set('pf_session', '1')
+    const cleared = await clearAuthTokensUnlessPostLoginGrace()
+    expect(cleared).toBe(false)
+    expect(cookieStore.get('pf_session')).toBe('1')
+    // Expire la grâce
+    store.set('pf_auth_grace_until', String(Date.now() - 1))
+    expect(isWithinPostLoginGrace()).toBe(false)
   })
 
   it('clearAuthTokens purge pf_session et le profil Pro (JWT via BFF côté client)', async () => {

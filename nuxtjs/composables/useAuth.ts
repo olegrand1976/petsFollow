@@ -206,6 +206,42 @@ function authClearedState() {
 /** Appeler après login / confirm réussi (SPA) pour réactiver hasSessionCookie. */
 export function markAuthSessionActive() {
   authClearedState().value = false
+  armPostLoginGrace()
+}
+
+/** Fenêtre anti-logout après login (course cookies WebKit / hard navigation). */
+export const AUTH_POST_LOGIN_GRACE_MS = 15_000
+
+const POST_LOGIN_GRACE_KEY = 'pf_auth_grace_until'
+
+function armPostLoginGrace() {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    sessionStorage.setItem(POST_LOGIN_GRACE_KEY, String(Date.now() + AUTH_POST_LOGIN_GRACE_MS))
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+/** True pendant quelques secondes après finishClientLoginSession (survit au reload document). */
+export function isWithinPostLoginGrace(): boolean {
+  if (typeof sessionStorage === 'undefined') return false
+  try {
+    const until = Number(sessionStorage.getItem(POST_LOGIN_GRACE_KEY) || 0)
+    return Number.isFinite(until) && Date.now() < until
+  } catch {
+    return false
+  }
+}
+
+/**
+ * clearAuthTokens sauf pendant la grâce post-login (évite d'éjecter une session naissante).
+ * @returns true si la session a bien été purgée.
+ */
+export async function clearAuthTokensUnlessPostLoginGrace(): Promise<boolean> {
+  if (isWithinPostLoginGrace()) return false
+  await clearAuthTokens()
+  return true
 }
 
 /**

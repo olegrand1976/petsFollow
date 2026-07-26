@@ -1,3 +1,5 @@
+import { clearAuthTokensUnlessPostLoginGrace, hasSessionCookie } from '~/composables/useAuth'
+
 const SKIP_PATHS = new Set([
   '/',
   '/produits',
@@ -46,8 +48,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   } catch (e) {
     if (isUnauthorized(e)) {
-      await clearAuthTokens()
-      return navigateTo('/login')
+      const cleared = await clearAuthTokensUnlessPostLoginGrace()
+      if (cleared) return navigateTo('/login')
     }
   }
 })
