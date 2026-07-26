@@ -79,7 +79,7 @@ func Load() Config {
 		RedisKeyPrefix:                 envOr("REDIS_KEY_PREFIX", "petsfollow:"),
 		JWTSigningKey:                  envOr("JWT_SIGNING_KEY", "dev-change-me"),
 		JWTAccessTTL:                   envDuration("JWT_ACCESS_TTL", 15*time.Minute),
-		JWTRefreshTTL:                  envDuration("JWT_REFRESH_TTL", 7*24*time.Hour),
+		JWTRefreshTTL:                  envDuration("JWT_REFRESH_TTL", 30*24*time.Hour),
 		LogLevel:                       envOr("LOG_LEVEL", "info"),
 		MigrateOnBoot:                  envBool("MIGRATE_ON_BOOT"),
 		DevSeedEnabled:                 envBool("DEV_SEED_ENABLED"),

@@ -1,5 +1,5 @@
-/** Aligné sur JWT_REFRESH_TTL (7 jours) — durée cookie ≠ durée JWT access. */
-export const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
+/** Aligné sur JWT_REFRESH_TTL (30 jours) — durée cookie ≠ durée JWT access. */
+export const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
 
 export type AuthTokens = {
   /** Absent quand la BFF a absorbé les tokens en cookies httpOnly. */

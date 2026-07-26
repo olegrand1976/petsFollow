@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 
-/** Aligné sur JWT_REFRESH_TTL (7 jours). */
-const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
+/** Aligné sur JWT_REFRESH_TTL (30 jours). */
+const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
 
 export function apiBase() {
   const config = useRuntimeConfig()

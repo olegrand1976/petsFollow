@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -27,6 +28,9 @@ Map<String, String>? heartRateCommentPayload(String? comment) {
   return {'comment': trimmed};
 }
 
+/// Outcome of [ApiClient] refresh — never treat network blips as logout.
+enum _TokenRefreshResult { success, invalid, transient }
+
 class ApiClient {
   ApiClient._() {
     if (kReleaseMode && !_apiBase.startsWith('https://')) {
@@ -39,6 +43,8 @@ class ApiClient {
   static final instance = ApiClient._();
 
   static const _tokenKey = 'pf_token';
+  static const _refreshKey = 'pf_refresh';
+  static const _sessionMetaKey = 'pf_session_meta';
   static const _apiBaseDefined = String.fromEnvironment('API_BASE');
 
   /// JWT en Keystore/Keychain — jamais en SharedPreferences (lisible sur device rooté/backup).
@@ -56,6 +62,7 @@ class ApiClient {
   }
 
   String? token;
+  String? refreshToken;
 
   /// Fired after a 401 clears the local session (AuthGate rebuilds → login).
   void Function()? onSessionInvalidated;
@@ -65,6 +72,7 @@ class ApiClient {
 
   bool _handlingUnauthorized = false;
   int _authGeneration = 0;
+  Completer<_TokenRefreshResult>? _refreshInFlight;
 
   late final dio = Dio(BaseOptions(
     baseUrl: _apiBase,
@@ -85,12 +93,37 @@ class ApiClient {
         }
         handler.next(options);
       },
-      onError: (error, handler) {
+      onError: (error, handler) async {
+        final path = error.requestOptions.path;
+        final alreadyRetried = error.requestOptions.extra['pf_auth_retried'] == true;
         if (error.response?.statusCode == 401 &&
-            token != null &&
-            !_isPublicAuthPath(error.requestOptions.path)) {
-          // Clear token sync so AuthGate sees token == null immediately.
-          unawaited(_invalidateSessionFromUnauthorized());
+            !_isPublicAuthPath(path) &&
+            !alreadyRetried &&
+            (token != null || refreshToken != null)) {
+          final refreshResult = await _refreshTokens();
+          switch (refreshResult) {
+            case _TokenRefreshResult.success:
+              final req = error.requestOptions;
+              req.extra['pf_auth_retried'] = true;
+              req.headers['Authorization'] = 'Bearer $token';
+              try {
+                final response = await dio.fetch(req);
+                return handler.resolve(response);
+              } on DioException catch (retryErr) {
+                // Only wipe session if the server still rejects auth after refresh.
+                if (retryErr.response?.statusCode == 401) {
+                  unawaited(_invalidateSessionFromUnauthorized());
+                }
+                return handler.next(retryErr);
+              } catch (_) {
+                return handler.next(error);
+              }
+            case _TokenRefreshResult.invalid:
+              unawaited(_invalidateSessionFromUnauthorized());
+            case _TokenRefreshResult.transient:
+              // Keep tokens; propagate the original 401 to the caller.
+              break;
+          }
         }
         handler.next(error);
       },
@@ -103,10 +136,11 @@ class ApiClient {
 
   /// Clears session after an authenticated 401. Safe to call multiple times.
   Future<void> _invalidateSessionFromUnauthorized() async {
-    if (_handlingUnauthorized || token == null) return;
+    if (_handlingUnauthorized || (token == null && refreshToken == null)) return;
     _handlingUnauthorized = true;
     final generation = ++_authGeneration;
     token = null;
+    refreshToken = null;
     userId = null;
     userRole = null;
     userSpecialty = null;
@@ -114,9 +148,13 @@ class ApiClient {
     try {
       // Abort if a new login started after we cleared.
       if (_authGeneration != generation || token != null) return;
-      await _persistToken(null);
+      await _persistTokens(null, null);
+      await _persistSessionMeta();
       if (_authGeneration != generation || token != null) {
-        if (token != null) await _persistToken(token);
+        if (token != null) {
+          await _persistTokens(token, refreshToken);
+          await _persistSessionMeta();
+        }
         return;
       }
       NotificationService.instance.resetSession();
@@ -128,52 +166,200 @@ class ApiClient {
     }
   }
 
+  /// Restores session from Keystore. Access JWT (~15 min) is refreshed via
+  /// [refreshToken] (API `JWT_REFRESH_TTL`, défaut 30 j). Network errors do
+  /// not wipe the session. Forgot-password / reset stay independent of this.
   Future<void> restoreSession() async {
-    token = await _readPersistedToken();
+    token = await _readPersistedSecret(_tokenKey);
+    refreshToken = await _readPersistedSecret(_refreshKey);
+    // Legacy access JWT may still live in SharedPreferences.
+    token ??= await _migrateLegacyAccessToken();
+    await _restoreSessionMeta();
     loadToken();
-    if (token != null) {
+    if (token == null && refreshToken == null) return;
+
+    if (token == null) {
+      switch (await _refreshTokens()) {
+        case _TokenRefreshResult.success:
+          break;
+        case _TokenRefreshResult.invalid:
+          await logout();
+          return;
+        case _TokenRefreshResult.transient:
+          // Hors-ligne : garder refresh + meta rôle pour le shell.
+          return;
+      }
+    }
+
+    try {
+      await _hydrateMe();
+    } on DioException catch (e) {
+      if (_isTransientNetworkError(e)) return;
+      if (e.response?.statusCode == 401) {
+        // Interceptor may already have refreshed or invalidated.
+        if (token == null && refreshToken == null) return;
+        switch (await _refreshTokens()) {
+          case _TokenRefreshResult.success:
+            try {
+              await _hydrateMe();
+            } on DioException catch (e2) {
+              if (_isTransientNetworkError(e2)) return;
+              if (e2.response?.statusCode == 401) await logout();
+            } catch (_) {}
+          case _TokenRefreshResult.invalid:
+            await logout();
+          case _TokenRefreshResult.transient:
+            break;
+        }
+        return;
+      }
+      // Autre erreur HTTP : garder les tokens (API down, 5xx…).
+    } catch (_) {
+      // Ne pas détruire la session sur erreur inattendue au boot.
+    }
+  }
+
+  Future<void> _hydrateMe() async {
+    final me = await getMe();
+    userId = me['userId'] as String? ?? me['id'] as String?;
+    userRole = me['role'] as String?;
+    userSpecialty = me['professionalSpecialty'] as String?;
+    await _persistSessionMeta();
+  }
+
+  Future<void> _restoreSessionMeta() async {
+    final raw = await _readPersistedSecret(_sessionMetaKey);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      userId = map['userId'] as String?;
+      userRole = map['role'] as String?;
+      userSpecialty = map['specialty'] as String?;
+    } catch (_) {}
+  }
+
+  Future<void> _persistSessionMeta() async {
+    if (userId == null && userRole == null && userSpecialty == null) {
       try {
-        final me = await getMe();
-        userId = me['userId'] as String? ?? me['id'] as String?;
-        userRole = me['role'] as String?;
-        userSpecialty = me['professionalSpecialty'] as String?;
-      } catch (_) {
-        await logout();
+        await _secureStorage.delete(key: _sessionMetaKey);
+      } catch (_) {}
+      return;
+    }
+    try {
+      await _secureStorage.write(
+        key: _sessionMetaKey,
+        value: jsonEncode({
+          'userId': userId,
+          'role': userRole,
+          'specialty': userSpecialty,
+        }),
+      );
+    } catch (_) {}
+  }
+
+  static bool _isTransientNetworkError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.transformTimeout:
+        return true;
+      case DioExceptionType.badResponse:
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.unknown:
+        return e.response == null;
+    }
+  }
+
+  static bool _isAuthRejectionStatus(int? status) {
+    return status == 401 || status == 403 || status == 400;
+  }
+
+  /// Exchange refresh JWT for a new access (+ rotated refresh). Single-flight.
+  Future<_TokenRefreshResult> _refreshTokens() async {
+    if (_refreshInFlight != null) return _refreshInFlight!.future;
+    final stored = refreshToken ?? await _readPersistedSecret(_refreshKey);
+    if (stored == null || stored.isEmpty) return _TokenRefreshResult.invalid;
+
+    final completer = Completer<_TokenRefreshResult>();
+    _refreshInFlight = completer;
+    try {
+      final res = await dio.post(
+        '/api/v1/auth/refresh',
+        data: {'refreshToken': stored},
+        options: Options(extra: {'pf_auth_retried': true}),
+      );
+      final data = res.data['data'] as Map<String, dynamic>?;
+      final access = data?['accessToken'] as String?;
+      final nextRefresh = data?['refreshToken'] as String? ?? stored;
+      if (access == null || access.isEmpty) {
+        completer.complete(_TokenRefreshResult.invalid);
+        return _TokenRefreshResult.invalid;
+      }
+      token = access;
+      refreshToken = nextRefresh;
+      await _persistTokens(token, refreshToken);
+      // onRequest lit [token] à chaud — pas de loadToken() ici (évite de
+      // recréer l'interceptor pendant un onError en cours).
+      completer.complete(_TokenRefreshResult.success);
+      return _TokenRefreshResult.success;
+    } on DioException catch (e) {
+      // 5xx / pas de status / réseau → transient ; 400/401/403 → invalid.
+      final resolved = e.response?.statusCode == null || _isTransientNetworkError(e)
+          ? _TokenRefreshResult.transient
+          : (_isAuthRejectionStatus(e.response?.statusCode)
+              ? _TokenRefreshResult.invalid
+              : _TokenRefreshResult.transient);
+      completer.complete(resolved);
+      return resolved;
+    } catch (_) {
+      completer.complete(_TokenRefreshResult.transient);
+      return _TokenRefreshResult.transient;
+    } finally {
+      if (identical(_refreshInFlight, completer)) {
+        _refreshInFlight = null;
       }
     }
   }
 
-  Future<String?> _readPersistedToken() async {
+  Future<String?> _readPersistedSecret(String key) async {
     try {
-      final secure = await _secureStorage.read(key: _tokenKey);
-      if (secure != null) return secure;
+      return await _secureStorage.read(key: key);
     } catch (_) {
-      // Keystore indisponible : on retombe sur la migration legacy.
+      return null;
     }
-    // Migration one-shot depuis SharedPreferences (stockage historique en clair).
+  }
+
+  Future<String?> _migrateLegacyAccessToken() async {
     final sp = await SharedPreferences.getInstance();
     final legacy = sp.getString(_tokenKey);
-    if (legacy != null) {
-      try {
-        await _secureStorage.write(key: _tokenKey, value: legacy);
-        await sp.remove(_tokenKey);
-      } catch (_) {
-        // Réessaiera au prochain démarrage.
-      }
+    if (legacy == null) return null;
+    try {
+      await _secureStorage.write(key: _tokenKey, value: legacy);
+      await sp.remove(_tokenKey);
+    } catch (_) {
+      // Réessaiera au prochain démarrage.
     }
     return legacy;
   }
 
-  Future<void> _persistToken(String? value) async {
-    if (value == null) {
-      try {
+  Future<void> _persistTokens(String? access, String? refresh) async {
+    try {
+      if (access == null) {
         await _secureStorage.delete(key: _tokenKey);
-      } catch (_) {}
-    } else {
-      try {
-        await _secureStorage.write(key: _tokenKey, value: value);
-      } catch (_) {}
-    }
+      } else {
+        await _secureStorage.write(key: _tokenKey, value: access);
+      }
+    } catch (_) {}
+    try {
+      if (refresh == null) {
+        await _secureStorage.delete(key: _refreshKey);
+      } else {
+        await _secureStorage.write(key: _refreshKey, value: refresh);
+      }
+    } catch (_) {}
     // Purge systématique de l'ancien emplacement en clair.
     final sp = await SharedPreferences.getInstance();
     await sp.remove(_tokenKey);
@@ -181,10 +367,12 @@ class ApiClient {
 
   Future<void> logout() async {
     token = null;
+    refreshToken = null;
     userId = null;
     userRole = null;
     userSpecialty = null;
-    await _persistToken(null);
+    await _persistTokens(null, null);
+    await _persistSessionMeta();
     loadToken();
     NotificationService.instance.resetSession();
     await DiscoveryController.instance.clearLocal();
@@ -480,8 +668,9 @@ class ApiClient {
         message: 'mfa_required_or_missing_token',
       );
     }
+    refreshToken = data['refreshToken'] as String?;
     _authGeneration++;
-    await _persistToken(token);
+    await _persistTokens(token, refreshToken);
     loadToken();
     await syncLocaleFromMe();
     try {
@@ -490,6 +679,7 @@ class ApiClient {
       userRole = me['role'] as String?;
       userSpecialty = me['professionalSpecialty'] as String?;
       DiscoveryController.instance.bindUser(userId);
+      await _persistSessionMeta();
     } catch (_) {
       // Keep token but force safe ACL defaults (Pet.isOwner → false without userId).
       userId = null;
