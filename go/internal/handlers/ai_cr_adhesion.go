@@ -131,6 +131,7 @@ func (a *API) aiCrStepsForDay(days, usage int, status string) []string {
 }
 
 func (a *API) sendAiCrAdhesionStep(ctx context.Context, c store.AiCrAdhesionCandidate, step, cta string, days, usage int) (sent bool, err error) {
+	// Claim first to avoid double-send under concurrent jobs; release on hard failure so drip can retry.
 	claimed, err := a.store.TryClaimAiCrEmailSend(ctx, c.PracticeID, step, "sent", map[string]any{
 		"days":  days,
 		"usage": usage,
@@ -138,12 +139,18 @@ func (a *API) sendAiCrAdhesionStep(ctx context.Context, c store.AiCrAdhesionCand
 	if err != nil || !claimed {
 		return false, err
 	}
+	release := func() {
+		if delErr := a.store.DeleteAiCrEmailSend(ctx, c.PracticeID, step); delErr != nil {
+			log.Printf("ai_cr adhesion release %s %s: %v", c.PracticeID, step, delErr)
+		}
+	}
 	if a.notifier == nil {
 		return true, nil
 	}
 	vets, err := a.store.ListVetsForVisitAlert(ctx, c.PracticeID, "")
 	if err != nil {
-		return true, err
+		release()
+		return false, err
 	}
 	vars := a.aiCrAdhesionVars(ctx, c, days, usage)
 	anySent := false
@@ -157,7 +164,12 @@ func (a *API) sendAiCrAdhesionStep(ctx context.Context, c store.AiCrAdhesionCand
 		}
 		anySent = true
 	}
-	return anySent, nil
+	if !anySent {
+		// No recipient or all SMTP failed — allow next daily run to retry.
+		release()
+		return false, nil
+	}
+	return true, nil
 }
 
 func (a *API) aiCrAdhesionVars(ctx context.Context, c store.AiCrAdhesionCandidate, days, usage int) map[string]string {
@@ -205,6 +217,7 @@ func (a *API) notifyPracticeAiModuleActivated(r *http.Request, practiceID string
 	}
 	vets, err := a.store.ListVetsForVisitAlert(r.Context(), practiceID, "")
 	if err != nil {
+		log.Printf("ai_cr activation list vets %s: %v", practiceID, err)
 		return
 	}
 	cta := strings.TrimRight(a.cfg.ProPublicSiteURL, "/") + "/dashboard"
@@ -216,10 +229,13 @@ func (a *API) notifyPracticeAiModuleActivated(r *http.Request, practiceID string
 		TrialEndsAt:  m.TrialEndsAt,
 	}
 	vars := a.aiCrAdhesionVars(r.Context(), c, 0, 0)
+	// Keep claim even if SMTP fails: avoid re-spamming J0 on every drip/activate retry.
 	for _, v := range vets {
 		if strings.TrimSpace(v.Email) == "" {
 			continue
 		}
-		_ = a.notifier.SendAiCrAdhesionStep(v.Email, v.PreferredLocale, v.FullName, store.AiCrStepJ0Activation, cta, vars)
+		if err := a.notifier.SendAiCrAdhesionStep(v.Email, v.PreferredLocale, v.FullName, store.AiCrStepJ0Activation, cta, vars); err != nil {
+			log.Printf("ai_cr activation mail %s: %v", v.Email, err)
+		}
 	}
 }

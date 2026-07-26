@@ -89,6 +89,14 @@ func (s *Store) HasAiCrEmailSend(ctx context.Context, practiceID, stepKey string
 	return exists, err
 }
 
+// DeleteAiCrEmailSend releases a claim so a failed send can be retried on the next run.
+func (s *Store) DeleteAiCrEmailSend(ctx context.Context, practiceID, stepKey string) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM practice.ai_cr_email_sends
+		WHERE practice_id = $1::uuid AND step_key = $2`, practiceID, stepKey)
+	return err
+}
+
 // AiCrAdhesionDaysSince returns whole days since activation (UTC floor).
 func AiCrAdhesionDaysSince(activatedAt, now time.Time) int {
 	if now.Before(activatedAt) {

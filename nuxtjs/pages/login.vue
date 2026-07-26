@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens } from '~/composables/useAuth'
+import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens, sessionCookieOpts } from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
@@ -121,7 +121,10 @@ const loading = ref(false)
 const googleBtnRef = ref<HTMLElement | null>(null)
 
 async function redirectAfterLogin() {
+  // Align client marker with BFF Set-Cookie before middlewares run (non-httpOnly).
+  useCookie('pf_session', sessionCookieOpts()).value = '1'
   await syncFromUser()
+  let target = '/login'
   try {
     const { fetchUser } = useProUser()
     const me = await fetchUser(true)
@@ -129,18 +132,20 @@ async function redirectAfterLogin() {
     const profileComplete = me?.profileComplete
     const mustChangePassword = me?.mustChangePassword
     if (mustChangePassword === true) {
-      await navigateTo('/change-password')
-      return
-    }
-    if (!isProRole(role)) {
+      target = '/change-password'
+    } else if (!isProRole(role)) {
       await clearAuthTokens()
       error.value = t('auth.login.proOnly')
       return
+    } else {
+      target = homePathForRole(role, { profileComplete })
     }
-    await navigateTo(homePathForRole(role, { profileComplete }))
   } catch (e: any) {
     error.value = mapError(e) || t('auth.login.invalidResponse')
+    return
   }
+  // navigateTo hors catch : un NavigationFailure middleware n'est pas une erreur auth.
+  await navigateTo(target)
 }
 
 async function handleAuthResult(res: unknown) {

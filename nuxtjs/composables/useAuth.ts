@@ -92,6 +92,14 @@ function authCookieOpts() {
   }
 }
 
+/** Marqueur pf_session (non-httpOnly) — aligné sur sessionMarkerOpts BFF. */
+export function sessionCookieOpts() {
+  return {
+    ...authCookieOpts(),
+    maxAge: AUTH_COOKIE_MAX_AGE,
+  }
+}
+
 /**
  * Session présente ? Les JWT sont httpOnly : côté client seul le marqueur
  * `pf_session` est visible ; côté SSR les cookies de requête restent lisibles.
@@ -120,7 +128,7 @@ export async function clearAuthTokens() {
   // Efficace en SSR ; côté client les cookies httpOnly ne sont supprimables que par la BFF.
   useCookie('pf_token', opts).value = null
   useCookie('pf_refresh', opts).value = null
-  useCookie('pf_session', opts).value = null
+  useCookie('pf_session', sessionCookieOpts()).value = null
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.
   useState('pro-user').value = null
   if (import.meta.client) {

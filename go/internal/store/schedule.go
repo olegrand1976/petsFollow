@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -357,20 +358,23 @@ func overlapsBusy(visits []Visit, start, end time.Time, defaultDur int) bool {
 }
 
 func (s *Store) ListVetsForVisitAlert(ctx context.Context, practiceID, clientUserID string) ([]User, error) {
-	var vetID string
-	err := s.pool.QueryRow(ctx, `
-		SELECT vet_user_id::text FROM practice.practice_clients
-		WHERE practice_id = $1 AND client_user_id = $2`, practiceID, clientUserID,
-	).Scan(&vetID)
-	if err == nil {
-		u, err := s.GetUserByID(ctx, vetID)
-		if err != nil {
+	clientUserID = strings.TrimSpace(clientUserID)
+	if clientUserID != "" {
+		var vetID string
+		err := s.pool.QueryRow(ctx, `
+			SELECT vet_user_id::text FROM practice.practice_clients
+			WHERE practice_id = $1 AND client_user_id = $2`, practiceID, clientUserID,
+		).Scan(&vetID)
+		if err == nil {
+			u, err := s.GetUserByID(ctx, vetID)
+			if err != nil {
+				return nil, err
+			}
+			return []User{u}, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
 			return nil, err
 		}
-		return []User{u}, nil
-	}
-	if !errors.Is(err, pgx.ErrNoRows) {
-		return nil, err
 	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT `+userSelectCols+` FROM identity.users WHERE practice_id = $1 AND role = 'vet'`, practiceID)

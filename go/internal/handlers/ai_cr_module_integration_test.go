@@ -20,12 +20,23 @@ func TestAiCrModuleGateAndActivate(t *testing.T) {
 		t.Fatalf("me ai-module %d %#v", code, env)
 	}
 	mod := dataMap(t, env)
-	if mod["allowed"] == true {
-		t.Fatalf("expected inactive module for onboarding vet, got %#v", mod)
-	}
 	practiceID, _ := mod["practiceId"].(string)
 	if practiceID == "" {
 		t.Fatal("missing practiceId")
+	}
+	// Reset pollution from other AI CR tests sharing the DB.
+	if mod["status"] != "none" && mod["status"] != nil {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+practiceID, adminTok, map[string]any{
+			"status": "disabled",
+		})
+		code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/ai-module", vetTok, nil)
+		if code != http.StatusOK {
+			t.Fatalf("me after disable %d %#v", code, env)
+		}
+		mod = dataMap(t, env)
+	}
+	if mod["allowed"] == true {
+		t.Fatalf("expected inactive module for onboarding vet, got %#v", mod)
 	}
 
 	vetDemo := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
@@ -178,7 +189,17 @@ func TestAiCrAdhesionDripIdempotent(t *testing.T) {
 	if practiceID == "" {
 		t.Fatal("no practice")
 	}
-	_, _ = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/activate", adminTok, nil)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/ai-modules/"+practiceID, adminTok, map[string]any{
+			"status": "disabled",
+		})
+		_, _ = api.pool.Exec(context.Background(), `
+			DELETE FROM practice.ai_cr_email_sends WHERE practice_id = $1`, practiceID)
+	})
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/ai-modules/"+practiceID+"/activate", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("activate %d %#v", code, env)
+	}
 
 	var hasJ0 bool
 	if err := api.pool.QueryRow(context.Background(), `

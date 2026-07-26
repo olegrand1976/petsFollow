@@ -269,8 +269,8 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
 		return err
 	}
-	// Second demo commercial (team under same manager; no exclusive vet assignment).
-	if _, err := tx.Exec(ctx, `
+	var commercial2ID string
+	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password,
@@ -293,30 +293,50 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)`,
-		uuid.NewString(), string(hash), managerID); err != nil {
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+		RETURNING id::text`,
+		uuid.NewString(), string(hash), managerID).Scan(&commercial2ID); err != nil {
 		return err
 	}
-	// vet.demo is assigned to the demo commercial.
+	// vet.demo → Camille ; vet.parc → Alex (deux portefeuilles distincts).
 	if _, err := tx.Exec(ctx, `
 		UPDATE identity.users SET assigned_commercial_id = $1
 		WHERE email = 'vet.demo@petsfollow.test' AND role = 'vet'`, commercialID); err != nil {
 		return err
 	}
-	return seedProspects(ctx, tx, commercialID)
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = $1
+		WHERE email = 'vet.parc@petsfollow.test' AND role = 'vet'`, commercial2ID); err != nil {
+		return err
+	}
+	if err := seedProspects(ctx, tx, commercialID, demo1Prospects); err != nil {
+		return err
+	}
+	return seedProspects(ctx, tx, commercial2ID, demo2Prospects)
 }
 
-func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string) error {
-	prospects := []struct {
-		practiceName, contactName, contactEmail, contactPhone, city, notes, status string
-		ageDays                                                                    int
-	}{
-		{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
-		{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
-		{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
-		{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
-		{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
-	}
+type seedProspect struct {
+	practiceName, contactName, contactEmail, contactPhone, city, notes, status string
+	ageDays                                                                    int
+}
+
+var demo1Prospects = []seedProspect{
+	{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
+	{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
+	{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
+	{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
+	{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
+}
+
+var demo2Prospects = []seedProspect{
+	{"Cabinet Flandres Vet", "Dr Inès Flandres", "ines@flandres-vet.test", "0320112233", "Lille", "Relance module CR IA.", "qualified", 10},
+	{"Clinique Grand Place", "Dr Tom Place", "tom@grandplace-vet.test", "0321223344", "Mons", "RDV démo planifié.", "contacted", 4},
+	{"Vet & Co Tournai", "Dr Sara Tour", "sara@vetco-tournai.test", "0690334455", "Tournai", "Lead salon.", "new", 2},
+	{"Centre Équin Ardenne", "Dr Luc Ardenne", "luc@equin-ardenne.test", "0612445566", "Namur", "Converti — onboarding.", "converted", 28},
+	{"Cabinet du Canal", "Dr Eva Canal", "eva@canal-vet.test", "02-5556677", "Bruxelles", "Pas intéressée cette année.", "lost", 40},
+}
+
+func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string, prospects []seedProspect) error {
 	for _, p := range prospects {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO sales.prospects (id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone, city, notes, status, status_changed_at, created_at)
@@ -848,7 +868,7 @@ func logSummary() {
 	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
 	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
 	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
-	log.Printf("Commerc: commercial.demo2@petsfollow.test / %s (Alex Vente, rattaché manager)", passwordCommercial)
+	log.Printf("Commerc: commercial.demo2@petsfollow.test / %s (vet.parc assigné, 5 prospects Nord, rattaché manager)", passwordCommercial)
 	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
