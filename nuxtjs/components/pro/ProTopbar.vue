@@ -15,7 +15,7 @@
         class="pro-topbar__icon-btn"
         :aria-label="$t('support.buttonAria')"
         data-testid="pro-support-btn"
-        @click="supportOpen = true"
+        @click.stop="supportOpen = true"
       >
         <ProIcon name="support_agent" :size="20" />
       </button>
@@ -38,7 +38,7 @@
           aria-haspopup="true"
           :aria-expanded="notifOpen"
           data-testid="pro-notifications-btn"
-          @click="toggleNotif"
+          @click.stop="toggleNotif"
         >
           <ProIcon name="notifications" :size="20" />
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
@@ -83,7 +83,7 @@
           aria-haspopup="true"
           :aria-expanded="profileOpen"
           data-testid="pro-profile-btn"
-          @click="toggleProfile"
+          @click.stop="toggleProfile"
         >
           <ProAvatar :src="user?.avatarUrl" :name="userName" size="sm" />
           <span class="pro-topbar__profile-name">{{ userName }}</span>
@@ -189,7 +189,8 @@ function handleLogout() {
 }
 
 function onDocClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
+  const target = e.target
+  if (!(target instanceof Element)) return
   if (!target.closest('.pro-topbar__dropdown-wrap')) {
     notifOpen.value = false
     profileOpen.value = false

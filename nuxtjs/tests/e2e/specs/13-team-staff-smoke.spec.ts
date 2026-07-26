@@ -15,7 +15,11 @@ async function completeForcedPasswordChange(page: Page, nextPassword = STAFF_PAS
     (r) => r.url().includes('/api/me/password') && r.request().method() === 'PATCH',
     { timeout: 25000 },
   )
-  await page.getByTestId('force-change-submit').evaluate((node) => (node as HTMLElement).click())
+  await page.getByTestId('force-change-password-form').evaluate((node) => {
+    const form = node as HTMLFormElement
+    if (typeof form.requestSubmit === 'function') form.requestSubmit()
+    else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+  })
   const res = await patch
   if (!res.ok()) {
     const errText = await page.locator('.pro-field-error').innerText().catch(() => '')

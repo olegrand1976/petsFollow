@@ -27,6 +27,8 @@ export async function waitForAuthForm(page: Page, testId: string) {
     const form = document.querySelector(`[data-testid="${id}"]`)
     return !!form && !!document.querySelector('#__nuxt')
   }, testId)
+  // Cloud Run cold start: wait for JS hydration before submit/click handlers bind.
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 }
 
 function unwrapData(body: unknown): Record<string, unknown> {
@@ -107,9 +109,9 @@ export async function nativeClick(page: Page, testId: string) {
 
 export async function logout(page: Page) {
   await expect(page.getByTestId('pro-profile-btn')).toBeVisible({ timeout: 15000 })
-  await nativeClick(page, 'pro-profile-btn')
+  await page.getByTestId('pro-profile-btn').click()
   await expect(page.getByTestId('pro-logout-btn')).toBeVisible({ timeout: 10000 })
-  await nativeClick(page, 'pro-logout-btn')
+  await page.getByTestId('pro-logout-btn').click()
   await expect(page).toHaveURL(/login/, { timeout: 15000 })
   await waitForAuthForm(page, 'login-form')
 }

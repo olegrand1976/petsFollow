@@ -8,7 +8,7 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
 
     await loginAsVet(page)
     await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 15000 })
-    await page.getByTestId('pro-support-btn').evaluate((node) => (node as HTMLElement).click())
+    await page.getByTestId('pro-support-btn').click()
     await expect(page.getByTestId('support-form')).toBeVisible({ timeout: 15000 })
     await fillField(page, 'support-subject', subject)
     const message = page.getByTestId('support-message')
