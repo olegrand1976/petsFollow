@@ -71,14 +71,17 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
   await loginAsVet(page)
   await page.goto(`/clients/${clientId}/pets/${petId}`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
+  await page.getByTestId('section-tab-vitals').click()
+  await expect(page.getByTestId('pet-tab-vitals')).toBeVisible()
   await expect(page.getByTestId('pet-chart-range-3m')).toBeVisible()
   await page.getByTestId('pet-chart-range-6m').click()
   await page.getByTestId('pet-filter-all').click()
-  await expect(page.getByTestId('pet-shares-card')).toBeVisible()
-
   await expect(page.getByTestId('pet-reading-comment').filter({ hasText: comment })).toBeVisible({
     timeout: 15000,
   })
+
+  await page.getByTestId('section-tab-sharing').click()
+  await expect(page.getByTestId('pet-shares-card')).toBeVisible()
 })
 
 test('pet detail — suivi poids chart + tableau', async ({ page }) => {
