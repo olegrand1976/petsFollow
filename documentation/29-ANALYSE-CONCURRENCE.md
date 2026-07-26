@@ -10,7 +10,7 @@ Fichier machine-readable :
 
 [`nuxtjs/data/competition/markets.json`](../nuxtjs/data/competition/markets.json)
 
-- `lastReviewedAt` : **2026-07-25**
+- `lastReviewedAt` : **2026-07-26**
 - Marchés : `fr`, `be`, `es` (5 produits chacun)
 - Bannières petsFollow + synthèse par marché (FR/EN)
 - Catégories : `pms` | `telemed` | `wearables` | `owner_app` | `insurance_tech` | `other`
@@ -19,7 +19,7 @@ Fichier machine-readable :
 
 1. **Périmètre** : logiciels et services visibles par un cabinet ou un propriétaire en France, Belgique et Espagne (présence locale ou pan-européenne réelle).
 2. **Sources** : sites publics, grilles affichées, observations terrain commercial, documentation interne tarifaire petsFollow ([17-POLITIQUE-TARIFAIRE](17-POLITIQUE-TARIFAIRE.md), [22-FICHE-PRODUIT-COMMERCIAL](22-FICHE-PRODUIT-COMMERCIAL.md)).
-3. **Prix** : si non publics → `rangeHint` / notes = **« sur devis »**. Pas d’invention de montants cabinet.
+3. **Prix** : si non publics → `rangeHint` / notes = **« sur devis »**. Pas d’invention de montants cabinet. Exception BE : **Pégase/ByVets** publie une grille (~856 € HTVA/an sur [byvets.be/souscrire](https://www.byvets.be/souscrire)).
 4. **Ton** : factuel, complémentaire vs substitutif quand le concurrent est un PMS ; distinguer clairement **GPS / wellness grand public** vs **continuité de soins prescrite** (FC = feature, pas identité).
 5. **Angle petsFollow (récurrent)** : **Pro (Web) · Pro Light (mobile) · app client (mobile)** · prescription véto · B2B2C · Pro **69 € HT/mois** (+ setup) · client **3,50 / 35 / 95 €** · Care/Horse inclus · relevés FC en feature · 6 langues (FR/NL/EN/ES/ET/IT).
 
@@ -34,5 +34,11 @@ Fichier machine-readable :
 
 | Champ | Valeur |
 |-------|--------|
-| Dernière revue | 2026-07-25 |
+| Dernière revue | 2026-07-26 |
 | Prochaine revue suggérée | ≤ 6 mois ou avant campagne commerciale majeure |
+
+## BE — note Pégase (2026-07-26)
+
+- Remplace Provet Cloud dans la grille BE (empreinte locale plus actionnable pour le pitch).
+- Vendor : ByVets ([byvets.be](https://www.byvets.be), [souscrire](https://www.byvets.be/souscrire)).
+- Positionnement : PMS desktop coopératif FR-BE ; talk-track complément, pas remplacement.
