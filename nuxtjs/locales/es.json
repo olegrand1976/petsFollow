@@ -167,7 +167,9 @@
     },
     "fields": {
       "email": "Correo",
-      "password": "Contraseña"
+      "password": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña"
     }
   },
   "common": {

@@ -36,6 +36,7 @@
           name="password"
           autocomplete="current-password"
           required
+          revealable
           test-id="login-password"
         />
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>

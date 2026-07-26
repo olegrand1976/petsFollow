@@ -167,7 +167,9 @@
     },
     "fields": {
       "email": "E-post",
-      "password": "Parool"
+      "password": "Parool",
+      "showPassword": "Näita parooli",
+      "hidePassword": "Peida parool"
     }
   },
   "common": {

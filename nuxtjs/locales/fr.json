@@ -274,7 +274,9 @@
     },
     "fields": {
       "email": "Email",
-      "password": "Mot de passe"
+      "password": "Mot de passe",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe"
     }
   },
   "common": {

@@ -167,7 +167,9 @@
     },
     "fields": {
       "email": "E-mail",
-      "password": "Wachtwoord"
+      "password": "Wachtwoord",
+      "showPassword": "Wachtwoord tonen",
+      "hidePassword": "Wachtwoord verbergen"
     }
   },
   "common": {
