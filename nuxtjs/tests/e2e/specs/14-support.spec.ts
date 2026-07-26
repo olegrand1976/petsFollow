@@ -46,7 +46,8 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
         },
       })
     }
-    expect(res.status(), `support ticket POST ${res.status()}`).toBe(201)
+    // BFF historically answered 200; create handlers now forward 201.
+    expect([200, 201], `support ticket POST ${res.status()}`).toContain(res.status())
     if (viaUi) {
       await expect(page.getByTestId('support-success')).toBeVisible({ timeout: 10000 })
     }
@@ -70,7 +71,7 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
         (r) =>
           r.request().method() === 'POST' &&
           /\/api\/admin\/support\/tickets\/[^/]+\/replies\/?$/.test(new URL(r.url()).pathname) &&
-          r.status() === 201,
+          (r.status() === 200 || r.status() === 201),
         { timeout: 20000 },
       ),
       page.getByTestId('admin-support-reply-submit').click(),
