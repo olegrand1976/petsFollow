@@ -31,6 +31,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Confirmez d\'abord votre email (lien reçu à l\'inscription), puis reconnectez-vous.';
 
   @override
+  String get resendConfirmation => 'Renvoyer l\'email de confirmation';
+
+  @override
+  String get resendConfirmationSent =>
+      'Si le compte existe et n\'est pas encore confirmé, un nouvel email a été envoyé.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Envoi impossible. Réessayez dans un instant.';
+
+  @override
   String get loginOr => 'ou';
 
   @override

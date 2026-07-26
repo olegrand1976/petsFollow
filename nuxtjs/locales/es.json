@@ -165,6 +165,9 @@
       "subtitle": "Se ha enviado un mensaje de confirmación a {email}.",
       "instructions": "Abra el enlace del correo para confirmar su registro y, a continuación, inicie sesión para configurar el perfil de su clínica.",
       "devLinkLabel": "Enlace de confirmación (dev)",
+      "resend": "Reenviar el correo de confirmación",
+      "resendOk": "Si la cuenta existe y aún no está confirmada, se ha enviado un nuevo correo.",
+      "resendFailed": "No se pudo enviar. Inténtelo de nuevo en un momento.",
       "goToLogin": "Ir al inicio de sesión",
       "backHome": "Volver al inicio"
     },

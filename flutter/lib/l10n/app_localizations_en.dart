@@ -31,6 +31,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Confirm your email first (link sent at sign-up), then sign in again.';
 
   @override
+  String get resendConfirmation => 'Resend confirmation email';
+
+  @override
+  String get resendConfirmationSent =>
+      'If the account exists and is not yet confirmed, a new email was sent.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Could not send. Please try again shortly.';
+
+  @override
   String get loginOr => 'or';
 
   @override

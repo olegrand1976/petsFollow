@@ -43,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? error;
   String? info;
   bool _busy = false;
+  bool _emailNotVerified = false;
   String? _mfaToken;
   bool consent = false;
 
@@ -90,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       error = null;
       info = null;
+      _emailNotVerified = false;
       _busy = true;
     });
     try {
@@ -99,9 +101,31 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       final code = apiErrorCode(e);
+      final unverified = code == 'email_not_verified';
       setState(() {
-        error = code == 'email_not_verified' ? l10n.emailNotVerified : l10n.loginFailed;
+        _emailNotVerified = unverified;
+        error = unverified ? l10n.emailNotVerified : l10n.loginFailed;
       });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> resendConfirmation() async {
+    final l10n = AppLocalizations.of(context)!;
+    final mail = email.text.trim();
+    if (mail.isEmpty || _busy) return;
+    setState(() {
+      error = null;
+      info = null;
+      _busy = true;
+    });
+    try {
+      await ApiClient.instance.resendConfirmation(mail);
+      if (!mounted) return;
+      setState(() => info = l10n.resendConfirmationSent);
+    } catch (_) {
+      if (mounted) setState(() => error = l10n.resendConfirmationFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -359,6 +383,16 @@ class _LoginScreenState extends State<LoginScreen> {
         if (error != null) ...[
           const SizedBox(height: 4),
           Text(error!, key: const Key('login_error'), style: const TextStyle(color: AppColors.alert)),
+        ],
+        if (_emailNotVerified) ...[
+          Align(
+            alignment: Alignment.center,
+            child: TextButton(
+              key: const Key('login_resend_confirmation'),
+              onPressed: _busy ? null : resendConfirmation,
+              child: Text(l10n.resendConfirmation),
+            ),
+          ),
         ],
         const SizedBox(height: 16),
         FilledButton(

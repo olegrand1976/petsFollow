@@ -31,6 +31,17 @@ class AppLocalizationsNl extends AppLocalizations {
       'Bevestig eerst uw e-mail (link bij registratie), log daarna opnieuw in.';
 
   @override
+  String get resendConfirmation => 'Bevestigingsmail opnieuw versturen';
+
+  @override
+  String get resendConfirmationSent =>
+      'Als het account bestaat en nog niet bevestigd is, is er een nieuwe e-mail verzonden.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Verzenden mislukt. Probeer het zo opnieuw.';
+
+  @override
   String get loginOr => 'of';
 
   @override

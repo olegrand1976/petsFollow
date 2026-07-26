@@ -54,7 +54,7 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	st := store.New(pool)
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
-	notifier := email.NewNotifier(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
+	notifier := email.NewNotifierAuth(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.SMTPUser, cfg.SMTPPass, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
 	bill := billing.NewService(st, cfg)
 	mediaBundle, err := media.New(cfg)
 	if err != nil {

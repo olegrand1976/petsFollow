@@ -699,6 +699,11 @@ class ApiClient {
     await dio.post('/api/v1/auth/forgot-password', data: {'email': email});
   }
 
+  /// Always 200 — does not reveal whether the email exists / is already verified.
+  Future<void> resendConfirmation(String email) async {
+    await dio.post('/api/v1/auth/resend-confirmation', data: {'email': email});
+  }
+
   Future<void> resetPassword(String token, String password) async {
     await dio.post('/api/v1/auth/reset-password', data: {
       'token': token,

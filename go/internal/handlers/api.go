@@ -63,6 +63,7 @@ func (a *API) Routes(r chi.Router) {
 		ar.Post("/auth/register-client", a.registerClient)
 		ar.Post("/auth/register-care-pro", a.registerCarePro)
 		ar.Post("/auth/confirm-email", a.confirmEmail)
+		ar.Post("/auth/resend-confirmation", a.resendConfirmation)
 		ar.Post("/auth/forgot-password", a.forgotPassword)
 		ar.Post("/auth/reset-password", a.resetPassword)
 	})
@@ -1241,7 +1242,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", a.cfg.ProPublicSiteURL, result.Token)
+	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
 	out := map[string]any{
 		"message": t(r, "success.confirm_email_sent", nil),
@@ -1294,6 +1295,38 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type resendConfirmationReq struct {
+	Email string `json:"email"`
+}
+
+func (a *API) resendConfirmation(w http.ResponseWriter, r *http.Request) {
+	var req resendConfirmationReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+
+	result, err := a.store.RequestEmailConfirmation(r.Context(), req.Email)
+	out := map[string]any{
+		"message": t(r, "success.confirm_email_sent", nil),
+	}
+	if err == nil {
+		confirmURL := fmt.Sprintf("%s/confirm-email?token=%s",
+			strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
+		_ = a.notifier.SendConfirmRegistration(result.Email, result.Locale, result.FullName, confirmURL)
+		if a.cfg.DevSeedEnabled {
+			out["confirmPath"] = "/confirm-email?token=" + result.Token
+		}
+	}
+	// Always 200 — do not reveal whether the email exists / is already verified.
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
 type forgotPasswordReq struct {
 	Email string `json:"email"`
 }
@@ -1315,7 +1348,7 @@ func (a *API) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		"message": t(r, "success.password_reset_sent", nil),
 	}
 	if err == nil {
-		resetURL := fmt.Sprintf("%s/reset-password?token=%s", a.cfg.ProPublicSiteURL, result.Token)
+		resetURL := fmt.Sprintf("%s/reset-password?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 		_ = a.notifier.SendPasswordReset(result.Email, result.Locale, result.FullName, resetURL)
 		// Dev/demo only: never expose the reset token outside seeded environments.
 		if a.cfg.DevSeedEnabled {

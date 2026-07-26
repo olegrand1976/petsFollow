@@ -62,4 +62,48 @@ void main() {
     expect(find.byKey(const Key('login_password')), findsOneWidget);
     expect(find.byKey(const Key('login_submit')), findsOneWidget);
   });
+
+  testWidgets('email_not_verified shows resend confirmation action', (tester) async {
+    var resendCalls = 0;
+    mock.on('POST', r'/api/v1/auth/login', (options) {
+      return mock.err(
+        options,
+        status: 403,
+        code: 'email_not_verified',
+        message: 'unverified',
+      );
+    });
+    mock.on('POST', r'/api/v1/auth/resend-confirmation', (options) {
+      resendCalls++;
+      return mock.ok(options, {'message': 'ok'});
+    });
+
+    await pumpApp(
+      tester,
+      home: LoginScreen(onLoggedIn: () {}),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('login_email')),
+      'unverified@test.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('login_password')),
+      'ClientPass123!',
+    );
+    await tester.tap(find.byKey(const Key('login_submit')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text(AppLocalizationsFr().emailNotVerified), findsOneWidget);
+    expect(find.byKey(const Key('login_resend_confirmation')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('login_resend_confirmation')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(resendCalls, 1);
+    expect(find.text(AppLocalizationsFr().resendConfirmationSent), findsOneWidget);
+  });
 }

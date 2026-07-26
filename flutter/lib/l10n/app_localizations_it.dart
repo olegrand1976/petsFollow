@@ -31,6 +31,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Per prima cosa conferma la tua email (link ricevuto al momento della registrazione), quindi effettua nuovamente l\'accesso.';
 
   @override
+  String get resendConfirmation => 'Reinvia l\'e-mail di conferma';
+
+  @override
+  String get resendConfirmationSent =>
+      'Se l\'account esiste e non è ancora confermato, è stata inviata una nuova e-mail.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Invio non riuscito. Riprova tra poco.';
+
+  @override
   String get loginOr => 'O';
 
   @override

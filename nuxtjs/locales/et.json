@@ -165,6 +165,9 @@
       "subtitle": "Kinnituskiri saadeti aadressile {email}.",
       "instructions": "Avage e-kirjas olev link registreerimise kinnitamiseks, seejärel logige sisse ja seadistage oma praktikaprofiil.",
       "devLinkLabel": "Kinnituslink (dev)",
+      "resend": "Saada kinnituskiri uuesti",
+      "resendOk": "Kui konto on olemas ja veel kinnitamata, saadeti uus e-kiri.",
+      "resendFailed": "Saatmine ebaõnnestus. Proovige hetke pärast uuesti.",
       "goToLogin": "Mine sisselogimisele",
       "backHome": "Tagasi avalehele"
     },

@@ -31,6 +31,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Confirme primero su email (enlace enviado al registrarse) y vuelva a iniciar sesión.';
 
   @override
+  String get resendConfirmation => 'Reenviar el correo de confirmación';
+
+  @override
+  String get resendConfirmationSent =>
+      'Si la cuenta existe y aún no está confirmada, se ha enviado un nuevo correo.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'No se pudo enviar. Inténtelo de nuevo en un momento.';
+
+  @override
   String get loginOr => 'o';
 
   @override

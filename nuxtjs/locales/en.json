@@ -165,6 +165,9 @@
       "subtitle": "A confirmation message was sent to {email}.",
       "instructions": "Open the link in the email to confirm your registration, then sign in to set up your practice profile.",
       "devLinkLabel": "Confirmation link (dev)",
+      "resend": "Resend confirmation email",
+      "resendOk": "If the account exists and is not yet confirmed, a new email was sent.",
+      "resendFailed": "Could not send. Please try again shortly.",
       "goToLogin": "Go to login",
       "backHome": "Back to home"
     },

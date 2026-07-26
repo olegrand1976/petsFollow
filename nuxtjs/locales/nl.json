@@ -165,6 +165,9 @@
       "subtitle": "Een bevestigingsbericht is verzonden naar {email}.",
       "instructions": "Open de link in de e-mail om uw registratie te bevestigen en meld u daarna aan om uw praktijkprofiel in te stellen.",
       "devLinkLabel": "Bevestigingslink (dev)",
+      "resend": "Bevestigingsmail opnieuw versturen",
+      "resendOk": "Als het account bestaat en nog niet bevestigd is, is er een nieuwe e-mail verzonden.",
+      "resendFailed": "Verzenden mislukt. Probeer het zo opnieuw.",
       "goToLogin": "Naar aanmelding",
       "backHome": "Terug naar home"
     },

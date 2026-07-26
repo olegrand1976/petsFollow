@@ -148,6 +148,24 @@ abstract class AppLocalizations {
   /// **'Confirmez d\'abord votre email (lien reçu à l\'inscription), puis reconnectez-vous.'**
   String get emailNotVerified;
 
+  /// No description provided for @resendConfirmation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer l\'email de confirmation'**
+  String get resendConfirmation;
+
+  /// No description provided for @resendConfirmationSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si le compte existe et n\'est pas encore confirmé, un nouvel email a été envoyé.'**
+  String get resendConfirmationSent;
+
+  /// No description provided for @resendConfirmationFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi impossible. Réessayez dans un instant.'**
+  String get resendConfirmationFailed;
+
   /// No description provided for @loginOr.
   ///
   /// In fr, this message translates to:

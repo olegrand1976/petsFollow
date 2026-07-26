@@ -279,6 +279,9 @@
       "subtitle": "Un messaggio di conferma è stato inviato a {email}.",
       "instructions": "Apri il link contenuto nell'e-mail per confermare la registrazione, quindi accedi per configurare il profilo della tuo studio.",
       "devLinkLabel": "Link di conferma (sviluppatore)",
+      "resend": "Reinvia l'e-mail di conferma",
+      "resendOk": "Se l'account esiste e non è ancora confermato, è stata inviata una nuova e-mail.",
+      "resendFailed": "Invio non riuscito. Riprova tra poco.",
       "goToLogin": "Vai al login",
       "backHome": "Ritorno a casa"
     },

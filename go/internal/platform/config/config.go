@@ -20,6 +20,9 @@ type Config struct {
 	SMTPHost                       string
 	SMTPPort                       int
 	SMTPFrom                       string
+	// SMTPUser / SMTPPass — auth PLAIN (OVH :587). Vides = MailHog / relay ouvert.
+	SMTPUser string
+	SMTPPass string
 	HeartRateMinBPM                int
 	HeartRateMaxBPM                int
 	HeartRateSeconds               int
@@ -90,6 +93,8 @@ func Load() Config {
 		SMTPHost:                       envOr("SMTP_HOST", "localhost"),
 		SMTPPort:                       envInt("SMTP_PORT", 1027),
 		SMTPFrom:                       envOr("SMTP_FROM", "petsFollow <noreply@petsfollow.test>"),
+		SMTPUser:                       envOr("SMTP_USER", ""),
+		SMTPPass:                       envOr("SMTP_PASS", ""),
 		HeartRateMinBPM:                envInt("HEARTRATE_MIN_BPM", 60),
 		HeartRateMaxBPM:                envInt("HEARTRATE_MAX_BPM", 140),
 		HeartRateSeconds:               envInt("HEARTRATE_DURATION_SEC", 60),

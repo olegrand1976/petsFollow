@@ -31,6 +31,17 @@ class AppLocalizationsEt extends AppLocalizations {
       'Kinnitage esmalt oma e-post (registreerimisel saadetud link), seejärel logige uuesti sisse.';
 
   @override
+  String get resendConfirmation => 'Saada kinnituskiri uuesti';
+
+  @override
+  String get resendConfirmationSent =>
+      'Kui konto on olemas ja veel kinnitamata, saadeti uus e-kiri.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Saatmine ebaõnnestus. Proovige hetke pärast uuesti.';
+
+  @override
   String get loginOr => 'või';
 
   @override

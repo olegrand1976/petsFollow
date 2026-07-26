@@ -5,7 +5,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Action | Unit | Widget | Smoke | Notes |
 |--------|------|--------|-------|-------|
 | Login email/mdp + erreurs | · | ✓ | ✓ | `login_screen_test` + smoke |
-| Forgot / reset / confirm | · | ~ | · | confirm partiel existant |
+| Forgot / reset / confirm | · | ~ | · | confirm partiel ; resend depuis login (`login_resend_confirmation`) |
 | Register + consent | · | ~ | · | social buttons existants |
 | Home HR / poids keys | · | ✓ | · | `pet_quick_actions_test` |
 | Weight sheet validate/save | ✓ | ✓ | ✓ | min 0.01 + POST mock + smoke |

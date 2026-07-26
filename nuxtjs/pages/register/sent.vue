@@ -16,13 +16,26 @@
           {{ $t('auth.registerSent.subtitle', { email }) }}
         </p>
         <p class="text-muted">{{ $t('auth.registerSent.instructions') }}</p>
+        <p v-if="resendInfo" class="text-muted" data-testid="register-resend-info">{{ resendInfo }}</p>
+        <p v-if="resendError" class="alert" data-testid="register-resend-error">{{ resendError }}</p>
 
         <div v-if="devLink" class="pro-dev-link">
           <p class="pro-dev-link__label">{{ $t('auth.registerSent.devLinkLabel') }}</p>
           <NuxtLink :to="devLink" class="pro-dev-link__url">{{ devLink }}</NuxtLink>
         </div>
 
-        <ProButton block class="pro-mt-lg" @click="navigateTo('/login')">
+        <ProButton
+          v-if="email"
+          variant="secondary"
+          block
+          class="pro-mt-lg"
+          :disabled="resendBusy"
+          test-id="register-resend"
+          @click="resend"
+        >
+          {{ $t('auth.registerSent.resend') }}
+        </ProButton>
+        <ProButton block :class="email ? '' : 'pro-mt-lg'" @click="navigateTo('/login')">
           {{ $t('auth.registerSent.goToLogin') }}
         </ProButton>
         <ProButton variant="ghost" block @click="navigateTo('/')">
@@ -36,9 +49,32 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
 const route = useRoute()
 const email = computed(() => String(route.query.email || ''))
 const devLink = computed(() => route.query.devLink ? String(route.query.devLink) : '')
+const resendBusy = ref(false)
+const resendInfo = ref('')
+const resendError = ref('')
+
+async function resend() {
+  const addr = email.value.trim().toLowerCase()
+  if (!addr || resendBusy.value) return
+  resendBusy.value = true
+  resendInfo.value = ''
+  resendError.value = ''
+  try {
+    await $fetch('/api/auth/resend-confirmation', {
+      method: 'POST',
+      body: { email: addr },
+    })
+    resendInfo.value = t('auth.registerSent.resendOk')
+  } catch {
+    resendError.value = t('auth.registerSent.resendFailed')
+  } finally {
+    resendBusy.value = false
+  }
+}
 </script>
 
 <style scoped>

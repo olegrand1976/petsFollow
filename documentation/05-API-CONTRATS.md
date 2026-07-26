@@ -13,7 +13,7 @@ Base : `http://localhost:8291/api/v1` (staging : `https://api.petsfollow.ll-it-s
 
 | Groupe | Exemples (préfixe `/api/v1`) |
 |--------|------------------------------|
-| Auth public | `POST /auth/login`, `/register`, `/confirm-email`, `/forgot-password`, `/reset-password`, `/refresh`, `/auth/google`, `/auth/2fa/verify` |
+| Auth public | `POST /auth/login`, `/register`, `/register-client`, `/confirm-email`, `/resend-confirmation`, `/forgot-password`, `/reset-password`, `/refresh`, `/auth/google`, `/auth/2fa/verify` |
 | Journey public | `GET/POST /public/journey/unsubscribe?token=` (opt-out parcours email) |
 | Auth protégé | `GET/POST /auth/2fa/*` |
 | Me | `GET/PATCH /me`, avatar, password, locale, vets, household, discovery, device-tokens |

@@ -279,6 +279,9 @@
       "subtitle": "Un message de confirmation a été envoyé à {email}.",
       "instructions": "Ouvrez le lien dans l'email pour confirmer votre inscription, puis connectez-vous pour configurer votre fiche cabinet.",
       "devLinkLabel": "Lien de confirmation (dev)",
+      "resend": "Renvoyer l'email de confirmation",
+      "resendOk": "Si le compte existe et n'est pas encore confirmé, un nouvel email a été envoyé.",
+      "resendFailed": "Envoi impossible. Réessayez dans un instant.",
       "goToLogin": "Aller à la connexion",
       "backHome": "Retour à l'accueil"
     },

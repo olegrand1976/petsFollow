@@ -16,11 +16,18 @@ type Notifier struct {
 	host           string
 	port           int
 	from           string
+	user           string
+	pass           string
 	publicSiteURL  string
 	llitWebsiteURL string
 }
 
 func NewNotifier(host string, port int, from, publicSiteURL, llitWebsiteURL string) *Notifier {
+	return NewNotifierAuth(host, port, from, "", "", publicSiteURL, llitWebsiteURL)
+}
+
+// NewNotifierAuth is like NewNotifier with optional SMTP PLAIN credentials (OVH :587).
+func NewNotifierAuth(host string, port int, from, user, pass, publicSiteURL, llitWebsiteURL string) *Notifier {
 	if strings.TrimSpace(llitWebsiteURL) == "" {
 		llitWebsiteURL = defaultLLITWebsiteURL
 	}
@@ -28,9 +35,27 @@ func NewNotifier(host string, port int, from, publicSiteURL, llitWebsiteURL stri
 		host:           host,
 		port:           port,
 		from:           from,
+		user:           strings.TrimSpace(user),
+		pass:           pass,
 		publicSiteURL:  strings.TrimRight(publicSiteURL, "/"),
 		llitWebsiteURL: strings.TrimRight(llitWebsiteURL, "/"),
 	}
+}
+
+// envelopeFrom extracts the bare RFC5322 addr-spec for SMTP MAIL FROM.
+// Display-form values like `petsFollow <noreply@petsfollow.app>` are rejected by
+// many MTAs (OVH returns 501 5.1.7 Invalid address).
+func envelopeFrom(from string) string {
+	from = strings.TrimSpace(from)
+	if i := strings.LastIndex(from, "<"); i >= 0 {
+		if j := strings.Index(from[i:], ">"); j > 1 {
+			addr := strings.TrimSpace(from[i+1 : i+j])
+			if addr != "" {
+				return addr
+			}
+		}
+	}
+	return from
 }
 
 func (n *Notifier) SendVetAlert(to, subject, body string) error {
@@ -38,9 +63,19 @@ func (n *Notifier) SendVetAlert(to, subject, body string) error {
 	encodedSubject := mime.QEncoding.Encode("UTF-8", subject)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
 		n.from, to, encodedSubject, body)
-	if err := smtp.SendMail(addr, nil, n.from, []string{to}, []byte(msg)); err != nil {
-		log.Printf("email send (dev may use mailhog): %v", err)
-		// Soft-fail for local MailHog / SMTP outages — callers treat email as best-effort.
+	mailFrom := envelopeFrom(n.from)
+	var auth smtp.Auth
+	if n.user != "" {
+		// identity empty — OVH expects username = mailbox addr.
+		auth = smtp.PlainAuth("", n.user, n.pass, n.host)
+	}
+	if err := smtp.SendMail(addr, auth, mailFrom, []string{to}, []byte(msg)); err != nil {
+		if n.user == "" {
+			log.Printf("email send (mailhog/unauthenticated): %v", err)
+		} else {
+			log.Printf("email send failed to=%s from=%s: %v", to, mailFrom, err)
+		}
+		// Soft-fail — callers treat email as best-effort (local MailHog / SMTP outages).
 		return nil
 	}
 	return nil
