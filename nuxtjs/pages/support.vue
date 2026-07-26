@@ -32,9 +32,15 @@
           <ProButton type="button" variant="ghost" test-id="support-cancel" @click="navigateTo('/')">
             {{ $t('common.cancel') }}
           </ProButton>
-          <ProButton type="button" test-id="support-submit" :disabled="saving" @click="submit">
+          <!-- Native submit: Cloud Run e2e cannot rely on ProButton Vue emit alone. -->
+          <button
+            type="submit"
+            class="pro-btn pro-btn--primary"
+            data-testid="support-submit"
+            :disabled="saving"
+          >
             {{ saving ? $t('common.loading') : $t('support.submit') }}
-          </ProButton>
+          </button>
         </div>
       </form>
     </ProCard>
