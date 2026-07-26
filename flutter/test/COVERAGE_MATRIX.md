@@ -15,7 +15,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Book visit | · | ✓ | · | `book_visit_screen_test` |
 | Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
 | New pet → save without payment / pay CTA | · | ✓ | ✓ | `pet_form_screen_test` sticky save + skipCheckout + pop/snackbar ; smoke create→list |
-| New pet → sans cabinet (post-save link vet) | · | ✓ | · | dialog après 201 + banner détail ; actions FC/poids/visite gated `needsVetLink` |
+| New pet → sans cabinet (post-save link vet) | · | ✓ | · | `PetCreateResult` + snack host ; dialog Home seulement si déjà des vétos (`hasLinkedVets`) ; sinon bandeau |
 | New pet → createPet parse envelope | ✓ | · | · | `create_pet_api_test` _asMap + entitlement |
 | Kennel quick encode → POST /pets/batch | · | ✓ | · | `kennel_quick_encode_test` submit + empty skip + post-save link dialog |
 | Add / suggest vet (lookup) | · | ✓ | · | `my_vets_screen_test` invite + suggest |

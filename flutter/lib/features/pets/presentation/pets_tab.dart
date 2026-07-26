@@ -5,9 +5,8 @@ import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -63,6 +62,12 @@ class _PetsTabState extends State<PetsTab> {
       }
     }
   }
+
+  Future<void> _openPetForm() =>
+      openPetFormAndFollowUp(context, onReload: load);
+
+  Future<void> _openKennelEncode() =>
+      openKennelEncodeAndFollowUp(context, onReload: load);
 
   String _speciesLabel(AppLocalizations l10n, String species) {
     switch (species) {
@@ -157,13 +162,7 @@ class _PetsTabState extends State<PetsTab> {
           if (pets.any((p) => p.isOwner)) ...[
             FloatingActionButton.extended(
               heroTag: 'kennel-encode',
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
-                );
-                load();
-              },
+              onPressed: _openKennelEncode,
               icon: const Icon(Icons.pets_outlined),
               label: Text(l10n.kennelQuickEncodeTitle),
             ),
@@ -171,13 +170,7 @@ class _PetsTabState extends State<PetsTab> {
           ],
           FloatingActionButton(
             heroTag: 'add-pet',
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PetFormScreen()),
-              );
-              load();
-            },
+            onPressed: _openPetForm,
             child: const Icon(Icons.add),
           ),
         ],

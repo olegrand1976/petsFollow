@@ -8,7 +8,7 @@ import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
-import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetFormScreen extends StatefulWidget {
@@ -162,65 +162,26 @@ class _PetFormScreenState extends State<PetFormScreen> {
         }
       }
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
       final hasCheckout = checkoutUrl != null && checkoutUrl.isNotEmpty;
+      late final PetCreateSnack snack;
       if (payNow && hasCheckout) {
         final opened = await openExternalUrl(checkoutUrl);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              opened ? l10n.paymentPending : l10n.errorCouldNotOpenLink,
-            ),
-          ),
-        );
-      } else if (payNow && !hasCheckout) {
-        // Pet created but checkout unavailable — resume later via needsResumePayment.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.petSavedPendingPayment)),
-        );
+        snack = opened
+            ? PetCreateSnack.paymentPending
+            : PetCreateSnack.couldNotOpenLink;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            key: const Key('pet_form_saved'),
-            content: Text(l10n.petSavedPendingPayment),
-          ),
-        );
+        // skipCheckout, or payNow without URL — resume later via needsResumePayment.
+        snack = PetCreateSnack.savedPendingPayment;
       }
-      if (!mounted) return;
       final practiceId = pet['practiceId']?.toString().trim() ?? '';
-      var linkVetNow = false;
-      if (practiceId.isEmpty) {
-        linkVetNow = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                key: const Key('pet_form_vet_link_dialog'),
-                title: Text(l10n.linkVetAfterSaveTitle),
-                content: Text(l10n.linkVetAfterSaveBody),
-                actions: [
-                  TextButton(
-                    key: const Key('pet_form_link_vet_later'),
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(l10n.linkVetLater),
-                  ),
-                  FilledButton(
-                    key: const Key('pet_form_link_vet'),
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(l10n.addVetByEmail),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-      }
-      if (!mounted) return;
-      final nav = Navigator.of(context);
-      nav.pop();
-      if (linkVetNow) {
-        await nav.push(
-          MaterialPageRoute<void>(builder: (_) => const MyVetsScreen()),
-        );
-      }
+      Navigator.pop(
+        context,
+        PetCreateResult(
+          promptLinkVet: practiceId.isEmpty,
+          snack: snack,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
-import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class KennelQuickEncodeScreen extends StatefulWidget {
@@ -80,43 +80,13 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
           }
         }
       } else {
-        // Client JWT without practice → batch pets have no cabinet.
         needsVet = true;
       }
-      if (needsVet) {
-        final linkNow = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                key: const Key('kennel_vet_link_dialog'),
-                title: Text(l10n.linkVetAfterSaveTitle),
-                content: Text(l10n.linkVetAfterSaveBody),
-                actions: [
-                  TextButton(
-                    key: const Key('kennel_link_vet_later'),
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(l10n.linkVetLater),
-                  ),
-                  FilledButton(
-                    key: const Key('kennel_link_vet'),
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(l10n.addVetByEmail),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-        if (!mounted) return;
-        final nav = Navigator.of(context);
-        nav.pop(true);
-        if (linkNow) {
-          await nav.push(
-            MaterialPageRoute<void>(builder: (_) => const MyVetsScreen()),
-          );
-        }
-        return;
-      }
-      if (!mounted) return;
-      Navigator.pop(context, true);
+      // Caller shows snack + optional link-vet prompt on Home/Pets.
+      Navigator.pop(
+        context,
+        PetCreateResult(promptLinkVet: needsVet),
+      );
     } catch (e) {
       if (!mounted) return;
       final msg = mapApiError(e, l10n);

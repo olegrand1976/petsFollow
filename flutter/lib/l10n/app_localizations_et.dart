@@ -967,7 +967,14 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get linkVetAfterSaveBody =>
-      'Sinu lemmikloom on salvestatud. Seo kabinet, et aktiveerida sõnumid, visiidid ja hooldusmeeldetuletused.';
+      'Seo kabinet, et aktiveerida sõnumid, visiidid ja hooldusmeeldetuletused.';
+
+  @override
+  String get linkVetHomeTitle => 'Seo loomaarst?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Sinu lemmikloom on salvestatud. Kas soovid loomaarsti siduda? Valikuline — saad seda hiljem teha.';
 
   @override
   String get linkVetLater => 'Hiljem';

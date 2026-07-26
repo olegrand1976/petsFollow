@@ -964,7 +964,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkVetAfterSaveBody =>
-      'Your pet is saved. Link a practice to enable messaging, visits and care reminders.';
+      'Link a practice to enable messaging, visits and care reminders.';
+
+  @override
+  String get linkVetHomeTitle => 'Link a veterinarian?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Your pet is saved. Would you like to link a veterinarian? Optional — you can do it later.';
 
   @override
   String get linkVetLater => 'Later';

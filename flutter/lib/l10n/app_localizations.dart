@@ -1873,8 +1873,20 @@ abstract class AppLocalizations {
   /// No description provided for @linkVetAfterSaveBody.
   ///
   /// In fr, this message translates to:
-  /// **'Votre animal est enregistré. Liez un cabinet pour activer messagerie, visites et rappels de soins.'**
+  /// **'Liez un cabinet pour activer messagerie, visites et rappels de soins.'**
   String get linkVetAfterSaveBody;
+
+  /// No description provided for @linkVetHomeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un vétérinaire ?'**
+  String get linkVetHomeTitle;
+
+  /// No description provided for @linkVetHomeBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre animal est enregistré. Souhaitez-vous lier un vétérinaire ? C’est optionnel — vous pourrez le faire plus tard.'**
+  String get linkVetHomeBody;
 
   /// No description provided for @linkVetLater.
   ///

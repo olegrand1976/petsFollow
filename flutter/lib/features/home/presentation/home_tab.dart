@@ -12,9 +12,8 @@ import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
@@ -126,6 +125,18 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     if (mounted) setState(() => discoveryProgress = progress);
   }
 
+  Future<void> _openPetForm() => openPetFormAndFollowUp(
+        context,
+        onReload: load,
+        hasLinkedVets: hasVets,
+      );
+
+  Future<void> _openKennelEncode() => openKennelEncodeAndFollowUp(
+        context,
+        onReload: load,
+        hasLinkedVets: hasVets,
+      );
+
   String _speciesLabel(AppLocalizations l10n, String species) {
     switch (species) {
       case 'dog':
@@ -183,17 +194,11 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   ],
                   if (pets.isEmpty)
                     _EmptyPetsState(
-                      onAdd: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PetFormScreen()),
-                        );
-                        load();
-                      },
+                      onAdd: _openPetForm,
                     )
                   else ...[
                     if (FeatureModulesController.instance.kennel) ...[
-                      _KennelEncodeButton(l10n: l10n, onDone: load),
+                      _KennelEncodeButton(l10n: l10n, onPressed: _openKennelEncode),
                       const SizedBox(height: 12),
                     ],
                     if (FeatureModulesController.instance.family)
@@ -238,13 +243,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       floatingActionButton: pets.isNotEmpty
           ? null
           : FloatingActionButton.extended(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PetFormScreen()),
-                );
-                load();
-              },
+              onPressed: _openPetForm,
               icon: const Icon(Icons.add),
               label: Text(l10n.newPet),
             ),
@@ -425,21 +424,15 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
 }
 
 class _KennelEncodeButton extends StatelessWidget {
-  const _KennelEncodeButton({required this.l10n, this.onDone});
+  const _KennelEncodeButton({required this.l10n, required this.onPressed});
 
   final AppLocalizations l10n;
-  final Future<void> Function()? onDone;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
-      onPressed: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
-        );
-        await onDone?.call();
-      },
+      onPressed: onPressed,
       icon: const Icon(Icons.pets_outlined, size: 18),
       label: Text(l10n.kennelQuickEncodeTitle),
     );

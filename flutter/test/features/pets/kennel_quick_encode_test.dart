@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
-import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations_fr.dart';
 
 import '../../helpers/mock_api.dart';
@@ -105,9 +104,7 @@ void main() {
     expect(find.byType(KennelQuickEncodeScreen), findsOneWidget);
   });
 
-  testWidgets('kennel without practice shows link-vet dialog then pops',
-      (tester) async {
-    final l10n = AppLocalizationsFr();
+  testWidgets('kennel without practice pops without dialog', (tester) async {
     mock.uninstall();
     mock = MockApi();
     mock.on('POST', '/api/v1/pets/batch', (options) {
@@ -128,7 +125,6 @@ void main() {
         status: 201,
       );
     });
-    mock.json('GET', '/api/v1/me/vets', data: <dynamic>[]);
     mock.install();
 
     await tester.binding.setSurfaceSize(const Size(390, 844));
@@ -141,14 +137,9 @@ void main() {
     await tester.tap(find.byKey(const Key('kennel_submit')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.byKey(const Key('kennel_vet_link_dialog')), findsOneWidget);
-    expect(find.text(l10n.linkVetAfterSaveTitle), findsOneWidget);
-    expect(find.byKey(const Key('kennel_link_vet')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('kennel_link_vet')));
     await tester.pumpAndSettle();
-    expect(find.byType(MyVetsScreen), findsOneWidget);
+
+    expect(find.byKey(const Key('kennel_vet_link_dialog')), findsNothing);
     expect(find.byType(KennelQuickEncodeScreen), findsNothing);
   });
 }

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
-import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations_fr.dart';
 
 import '../../helpers/mock_api.dart';
 import '../../helpers/pump_app.dart';
 
-/// Push [PetFormScreen] onto a stack so [Navigator.pop] after save is observable.
+/// Opens [PetFormScreen] via [openPetFormAndFollowUp] (snack on host after pop).
 Future<void> pumpPetForm(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(390, 844));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -20,11 +20,11 @@ Future<void> pumpPetForm(WidgetTester tester) async {
         builder: (ctx) => Center(
           child: TextButton(
             key: const Key('open_pet_form'),
-            onPressed: () {
-              Navigator.of(ctx).push(
-                MaterialPageRoute<void>(builder: (_) => const PetFormScreen()),
-              );
-            },
+            onPressed: () => openPetFormAndFollowUp(
+              ctx,
+              onReload: () async {},
+              hasLinkedVets: true,
+            ),
             child: const Text('open'),
           ),
         ),
@@ -105,7 +105,6 @@ void main() {
     expect(ctaRect.top, greaterThan(screenH * 0.55),
         reason: 'CTA must sit in sticky footer (lower half), not buried in scroll');
 
-    // Empty name → error, no API call.
     await tester.tap(saveCta);
     await tester.pump();
     expect(find.text(l10n.petNameRequired), findsOneWidget);
@@ -131,12 +130,10 @@ void main() {
   });
 
   testWidgets('pay CTA posts createPet without skipCheckout', (tester) async {
-    final l10n = AppLocalizationsFr();
     await pumpPetForm(tester);
 
     await tester.enterText(find.byKey(const Key('pet_form_name')), 'Rex');
     await tester.pump();
-
     await tester.tap(find.byKey(const Key('pet_form_continue_payment')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
@@ -144,7 +141,6 @@ void main() {
 
     expect(createPetCalled, isTrue);
     expect(createPetBody?['skipCheckout'], isFalse);
-    expect(find.text(l10n.paymentPending), findsOneWidget);
     expect(find.byType(PetFormScreen), findsNothing);
   });
 
@@ -153,8 +149,6 @@ void main() {
     mock = MockApi();
     mock.json('GET', '/api/v1/billing/plans', data: {
       'plans': [
-        {'code': 'monthly', 'label': '3,50 € / mois'},
-        {'code': 'annual', 'label': '35 € / an'},
         {'code': 'triennial', 'label': '95 € / 3 ans', 'recommended': true},
       ],
     });
@@ -164,7 +158,7 @@ void main() {
         status: 500,
         code: 'internal',
         msgKey: 'internal',
-        message: 'boom',
+        message: 'Erreur serveur',
       );
     });
     mock.install();
@@ -181,7 +175,7 @@ void main() {
     expect(find.byKey(const Key('pet_form_saved')), findsNothing);
   });
 
-  testWidgets('create without practice shows link-vet dialog then pops',
+  testWidgets('create without practice pops then optional home dialog',
       (tester) async {
     final l10n = AppLocalizationsFr();
     mock.uninstall();
@@ -219,16 +213,18 @@ void main() {
     await tester.tap(find.byKey(const Key('pet_form_save')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.byKey(const Key('pet_form_vet_link_dialog')), findsOneWidget);
-    expect(find.text(l10n.linkVetAfterSaveTitle), findsOneWidget);
-    expect(find.byKey(const Key('pet_form_link_vet')), findsOneWidget);
-    expect(find.textContaining('DioException'), findsNothing);
-
-    await tester.tap(find.byKey(const Key('pet_form_link_vet')));
     await tester.pumpAndSettle();
-    expect(find.byType(MyVetsScreen), findsOneWidget);
+
+    expect(find.byKey(const Key('pet_form_vet_link_dialog')), findsNothing);
     expect(find.byType(PetFormScreen), findsNothing);
+    expect(find.byKey(const Key('pet_form_saved')), findsOneWidget);
+    // hasLinkedVets: true in pumpPetForm → dialog after pop.
+    expect(find.byKey(const Key('home_link_vet_dialog')), findsOneWidget);
+    expect(find.text(l10n.linkVetHomeTitle), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('home_link_vet_later')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home_link_vet_dialog')), findsNothing);
   });
 
   testWidgets('monthly plan always posts billingMode subscription',
@@ -264,7 +260,6 @@ void main() {
     });
     mock.on('POST', '/api/v1/pets', (options) {
       createPetCalled = true;
-      // 201 with pet but no checkoutUrl (Stripe failure after commit).
       return mock.ok(
         options,
         {

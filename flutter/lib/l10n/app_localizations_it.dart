@@ -971,7 +971,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get linkVetAfterSaveBody =>
-      'Il tuo animale è salvato. Collega uno studio per attivare messaggi, visite e promemoria di cura.';
+      'Collega uno studio per attivare messaggi, visite e promemoria di cura.';
+
+  @override
+  String get linkVetHomeTitle => 'Collegare un veterinario?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Il tuo animale è salvato. Vuoi collegare un veterinario? È facoltativo — potrai farlo più tardi.';
 
   @override
   String get linkVetLater => 'Più tardi';

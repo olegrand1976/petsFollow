@@ -968,7 +968,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get linkVetAfterSaveBody =>
-      'Tu mascota está guardada. Vincula una clínica para activar mensajería, visitas y recordatorios de cuidados.';
+      'Vincula una clínica para activar mensajería, visitas y recordatorios de cuidados.';
+
+  @override
+  String get linkVetHomeTitle => '¿Vincular un veterinario?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Tu mascota está guardada. ¿Quieres vincular un veterinario? Es opcional — puedes hacerlo más tarde.';
 
   @override
   String get linkVetLater => 'Más tarde';
