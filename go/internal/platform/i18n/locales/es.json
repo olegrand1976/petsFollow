@@ -561,16 +561,7 @@
     "pet_dossier_share_register": "Crear una cuenta pro: {registerUrl}",
     "pet_dossier_share_cta": "Descargar el historial",
     "pet_dossier_share_expiry": "Este enlace caduca en 24 horas.",
-    "pet_dossier_share_disclaimer": "Si no esperaba este correo, puede ignorarlo. Los datos se comparten a petición del propietario.",
-    "sales_branch_congrats_subject": "¡Enhorabuena — tu sucursal {branchName} está creada!",
-    "sales_branch_congrats_tagline": "Fuerza comercial",
-    "sales_branch_congrats_preheader": "Tu sucursal comercial {branchName} ({branchCode}) acaba de crearse.",
-    "sales_branch_congrats_greeting": "Hola {fullName},",
-    "sales_branch_congrats_intro": "¡Enhorabuena! Acaba de crearse una sucursal comercial para ti.",
-    "sales_branch_congrats_detail": "• Nombre: {branchName}\n• Código: {branchCode}\n\nPuedes consultar tu asignación en la sección Red de petsFollow Pro.",
-    "sales_branch_congrats_cta": "Ver mi red",
-    "sales_branch_congrats_disclaimer": "Email automático — creación de sucursal comercial petsFollow.",
-    "sales_branch_congrats_fallback_name": "comercial"
+    "pet_dossier_share_disclaimer": "Si no esperaba este correo, puede ignorarlo. Los datos se comparten a petición del propietario."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

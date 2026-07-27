@@ -66,6 +66,8 @@ type Config struct {
 	CORSAllowedOrigins string
 	// RetentionPurgeSecret protège POST /internal/retention/run (purge 3 ans d'inactivité RGPD).
 	RetentionPurgeSecret string
+	// SalesBranchesAutoSecret protège POST /internal/sales-branches-auto/run.
+	SalesBranchesAutoSecret string
 	// AiModuleFrictionSecret protège POST /internal/ai-module-friction/run.
 	AiModuleFrictionSecret string
 	// OpsNotifyEmail reçoit les leads « nouveau véto » + alertes auth ALERT/URGENT.
@@ -141,8 +143,9 @@ func Load() Config {
 		CareProPublicRegister: envBool("CARE_PRO_PUBLIC_REGISTER"),
 		AuthRateLimitPerMin:   envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
 		CORSAllowedOrigins:    envOr("CORS_ALLOWED_ORIGINS", ""),
-		RetentionPurgeSecret:   envOr("RETENTION_PURGE_SECRET", ""),
-		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
+		RetentionPurgeSecret:      envOr("RETENTION_PURGE_SECRET", ""),
+		SalesBranchesAutoSecret:   envOr("SALES_BRANCHES_AUTO_SECRET", ""),
+		AiModuleFrictionSecret:    envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
 		CommercialContactPhone: envOr("COMMERCIAL_CONTACT_PHONE", ""),
 		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),

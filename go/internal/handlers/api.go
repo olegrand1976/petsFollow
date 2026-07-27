@@ -100,6 +100,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerAiCrModuleRoutes(r)
 	a.registerSupportRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
+	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 
 	r.Group(func(pr chi.Router) {

@@ -117,6 +117,10 @@ pf_api_secrets() {
     --secret=petsfollow-retention-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},RETENTION_PURGE_SECRET=petsfollow-retention-secret:latest"
   fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-sales-branches-auto-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},SALES_BRANCHES_AUTO_SECRET=petsfollow-sales-branches-auto-secret:latest"
+  fi
   printf '%s' "$secrets"
 }
 

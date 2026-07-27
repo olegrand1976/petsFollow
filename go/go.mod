@@ -19,6 +19,7 @@ require (
 	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/image v0.23.0
+	golang.org/x/text v0.21.0
 	google.golang.org/api v0.215.0
 )
 
@@ -73,7 +74,6 @@ require (
 	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect

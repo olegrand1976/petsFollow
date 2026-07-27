@@ -492,6 +492,35 @@ func (n *Notifier) SendStagingSeedNotice(to, locale, fullName, siteURL string) e
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendSalesBranchCongrats congratulates a commercial on their newly auto-created sales branch.
+func (n *Notifier) SendSalesBranchCongrats(to, locale, fullName, branchName, branchCode, ctaURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"fullName":   fullName,
+		"branchName": branchName,
+		"branchCode": branchCode,
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = mustT(locale, "emails.sales_branch_congrats_fallback_name")
+	}
+	subject := mustT(locale, "emails.sales_branch_congrats_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.sales_branch_congrats_tagline"),
+		Greeting:        mustT(locale, "emails.sales_branch_congrats_greeting", vars),
+		Intro:           mustT(locale, "emails.sales_branch_congrats_intro", vars),
+		Detail:          mustT(locale, "emails.sales_branch_congrats_detail", vars),
+		CTALabel:        mustT(locale, "emails.sales_branch_congrats_cta"),
+		CTAURL:          strings.TrimRight(ctaURL, "/"),
+		Disclaimer:      mustT(locale, "emails.sales_branch_congrats_disclaimer"),
+		Preheader:       mustT(locale, "emails.sales_branch_congrats_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendVisitPreconsult invites the client to fill the pre-consult form (and download the app if needed).
 func (n *Notifier) SendVisitPreconsult(to, locale, clientName, petName, when, practiceName, ctaURL string) error {
 	locale = i18n.NormalizeLocale(locale)

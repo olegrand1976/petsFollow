@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -32,6 +32,7 @@ help:
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
+	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -138,6 +139,9 @@ gcp-setup-stripe:
 
 gcp-retention-scheduler:
 	bash infra/gcp/setup-retention-scheduler.sh
+
+gcp-sales-branches-scheduler:
+	bash infra/gcp/setup-sales-branches-scheduler.sh
 
 # Alias obsolète → suppression du job Scheduler (plus de reset auto).
 gcp-seed-scheduler: gcp-delete-seed-scheduler

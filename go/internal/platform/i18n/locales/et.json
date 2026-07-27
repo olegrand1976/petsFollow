@@ -561,16 +561,7 @@
     "pet_dossier_share_register": "Loo pro konto: {registerUrl}",
     "pet_dossier_share_cta": "Laadi toimik alla",
     "pet_dossier_share_expiry": "See link aegub 24 tunni pärast.",
-    "pet_dossier_share_disclaimer": "Kui te ei oodanud seda e-kirja, võite selle ignoreerida. Andmeid jagatakse omaniku soovil.",
-    "sales_branch_congrats_subject": "Õnnitleme — sinu haru {branchName} on loodud!",
-    "sales_branch_congrats_tagline": "Müügitiim",
-    "sales_branch_congrats_preheader": "Sinu müügiharu {branchName} ({branchCode}) on just loodud.",
-    "sales_branch_congrats_greeting": "Tere {fullName},",
-    "sales_branch_congrats_intro": "Õnnitleme! Sulle on just loodud müügiharu.",
-    "sales_branch_congrats_detail": "• Nimi: {branchName}\n• Kood: {branchCode}\n\nSaad oma seost vaadata petsFollow Pro võrgustiku jaotisest.",
-    "sales_branch_congrats_cta": "Vaata minu võrgustikku",
-    "sales_branch_congrats_disclaimer": "Automaatne e-kiri — petsFollow müügiharu loomine.",
-    "sales_branch_congrats_fallback_name": "müügiesindaja"
+    "pet_dossier_share_disclaimer": "Kui te ei oodanud seda e-kirja, võite selle ignoreerida. Andmeid jagatakse omaniku soovil."
   },
   "push": {
     "new_message_title": "Uus sõnum",

@@ -27,6 +27,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
 		pr.Get("/admin/sales-branches", a.adminListSalesBranches)
 		pr.Post("/admin/sales-branches", a.adminCreateSalesBranch)
+		pr.Post("/admin/sales-branches/auto-run", a.adminRunSalesBranchesAuto)
 		pr.Patch("/admin/commercials/{id}/branch", a.adminSetCommercialBranch)
 		pr.Post("/admin/commercials", a.adminCreateCommercial)
 		pr.Patch("/admin/commercials/{id}/assign", a.adminAssignVet)
@@ -132,7 +133,32 @@ func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, rows)
+	pending, err := a.store.ListBranchlessIndependentCommercials(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"branches":    rows,
+		"pendingAuto": pending,
+	})
+}
+
+func (a *API) adminRunSalesBranchesAuto(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	result, err := a.runSalesBranchesAuto(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"created":      len(result.Created),
+		"skipped":      len(result.Skipped),
+		"items":        result.Created,
+		"skippedItems": result.Skipped,
+	})
 }
 
 type createBranchReq struct {

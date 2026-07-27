@@ -436,7 +436,7 @@ async function loadBranches() {
   try {
     const res: any = await $fetch('/api/admin/sales-branches')
     const list = res.data ?? res ?? []
-    branches.value = Array.isArray(list) ? list : []
+    branches.value = Array.isArray(list) ? list : (list.branches ?? [])
   } catch {
     branches.value = []
   }

@@ -27,18 +27,31 @@ Voir aussi : [06-FLUX-UTILISATEURS.md](06-FLUX-UTILISATEURS.md) · [19-FICHE-COM
 | Endpoint | Rôle |
 |----------|------|
 | `GET /commercial/network` | Branche + sponsor + downline (`maxDepth=1` si flag off) |
-| `GET/POST /admin/sales-branches` | CRUD branches |
+| `GET /admin/sales-branches` | Liste branches + `pendingAuto` (éligibles auto-création) |
+| `POST /admin/sales-branches` | Création manuelle (secours) |
+| `POST /admin/sales-branches/auto-run` | Lance immédiatement l’auto-création (+ emails) |
+| `POST /internal/sales-branches-auto/run` | Job bi-quotidien 10h/18h (`X-Sales-Branches-Auto-Secret`) |
 | `PATCH /admin/commercials/{id}/branch` | Assign branche |
 | `GET /commercial-manager/leaderboard` | Classement € équipe |
 | `GET/PUT /commercial-manager/quotas` | Objectifs |
 | `PATCH /commercial-manager/prospects/{id}/reassign` | Réassignation |
+
+### Auto-création de branche
+
+Éligible : `role=commercial`, `branch_id` vide, sponsor **absent** ou **non** `commercial` (peer).
+
+Dérivation depuis `full_name` (`Prénom … Nom`) :
+- **name** : `Dupont D`
+- **code** : `DUPONTD` (sans accents, collision → `DUPONTD2`, …)
+
+Le commercial reçoit un email de félicitations. Réponse job/admin : `{ created, skipped, items, skippedItems }`. Scheduler GCP : `make gcp-sales-branches-scheduler` (`0 10,18 * * *` Europe/Brussels). Create+assign sont atomiques (transaction).
 
 Helper store : `ListDownline(userID, maxDepth)` — prêt pour N quand `MLM_ORG_ENABLED=true`.
 
 ## UI
 
 - Commercial / manager : section nav **Réseau** → `/commercial/network`
-- Admin : `/admin/sales-branches` + colonnes branche / manager sur commerciaux
+- Admin : `/admin/sales-branches` (liste + pending + run now + création manuelle secours) ; colonnes branche / manager sur commerciaux
 - Seed démo : branches **Bruxelles** (`BRU`) et **Nord** (`NORD`)
 
 ## Hors scope (chantier MLM ultérieur)

@@ -53,6 +53,7 @@ type CommercialAdminRow struct {
 	ManagerName   string  `json:"managerName,omitempty"`
 	SponsorUserID string  `json:"sponsorUserId,omitempty"`
 	SponsorName   string  `json:"sponsorName,omitempty"`
+	SponsorRole   string  `json:"sponsorRole,omitempty"`
 	BranchID      string  `json:"branchId,omitempty"`
 	BranchName    string  `json:"branchName,omitempty"`
 	BranchCode    string  `json:"branchCode,omitempty"`
@@ -259,7 +260,7 @@ func (s *Store) ListAllCommercialsAdmin(ctx context.Context) ([]CommercialAdminR
 		SELECT u.id::text, u.full_name, u.email,
 			COALESCE((SELECT COUNT(*)::int FROM identity.users v WHERE v.role='vet' AND v.assigned_commercial_id=u.id), 0),
 			COALESCE(u.manager_user_id::text,''), COALESCE(m.full_name,''),
-			COALESCE(u.sponsor_user_id::text,''), COALESCE(sp.full_name,''),
+			COALESCE(u.sponsor_user_id::text,''), COALESCE(sp.full_name,''), COALESCE(sp.role,''),
 			COALESCE(u.branch_id::text,''), COALESCE(b.name,''), COALESCE(b.code,''),
 			u.sales_rank,
 			COALESCE(u.base_city,''), COALESCE(u.base_postal_code,'')
@@ -279,7 +280,7 @@ func (s *Store) ListAllCommercialsAdmin(ctx context.Context) ([]CommercialAdminR
 		if err := rows.Scan(
 			&c.UserID, &c.FullName, &c.Email, &c.ClientCount,
 			&c.ManagerUserID, &c.ManagerName,
-			&c.SponsorUserID, &c.SponsorName,
+			&c.SponsorUserID, &c.SponsorName, &c.SponsorRole,
 			&c.BranchID, &c.BranchName, &c.BranchCode,
 			&c.SalesRank, &c.BaseCity, &c.BasePostalCode,
 		); err != nil {

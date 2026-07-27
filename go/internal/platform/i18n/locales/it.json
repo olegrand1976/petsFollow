@@ -449,16 +449,7 @@
     "pet_dossier_share_register": "Crea un account pro: {registerUrl}",
     "pet_dossier_share_cta": "Scarica la cartella",
     "pet_dossier_share_expiry": "Questo link scade tra 24 ore.",
-    "pet_dossier_share_disclaimer": "Se non si aspettava questa email, può ignorarla. I dati sono condivisi su richiesta del proprietario.",
-    "sales_branch_congrats_subject": "Congratulazioni — la tua filiale {branchName} è creata!",
-    "sales_branch_congrats_tagline": "Forza vendita",
-    "sales_branch_congrats_preheader": "La tua filiale commerciale {branchName} ({branchCode}) è appena stata creata.",
-    "sales_branch_congrats_greeting": "Ciao {fullName},",
-    "sales_branch_congrats_intro": "Congratulazioni! È appena stata creata una filiale commerciale per te.",
-    "sales_branch_congrats_detail": "• Nome: {branchName}\n• Codice: {branchCode}\n\nPuoi consultare il tuo assegnamento nella sezione Rete di petsFollow Pro.",
-    "sales_branch_congrats_cta": "Vedi la mia rete",
-    "sales_branch_congrats_disclaimer": "Email automatica — creazione filiale commerciale petsFollow.",
-    "sales_branch_congrats_fallback_name": "commerciale"
+    "pet_dossier_share_disclaimer": "Se non si aspettava questa email, può ignorarla. I dati sono condivisi su richiesta del proprietario."
   },
   "push": {
     "new_message_title": "Nuovo messaggio",

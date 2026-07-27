@@ -234,6 +234,7 @@ Compte : `admin.demo@petsfollow.test`
 | D4 | P1 | Care_pro admin | Créer care_pro + specialty | Login Flutter pro light OK |
 | D5 | P1 | Commercials | `/admin/commercials` CRUD + assign véto + manager | Assign persist |
 | D5b | P1 | Pool cabinets | `/admin/vet-pool` + suggestions | Assign depuis suggestion |
+| D5c | P1 | Branches commerciales | `/admin/sales-branches` liste + pending + run now | Auto `DUPONTD` ; job 10h/18h ; Go `TestSalesBranchesAutoCreateAndSkipPeerSponsored` |
 | D6 | P1 | Prospects globaux | `/admin/prospects` | Liste |
 | D7 | P1 | Payments | `/admin/payments` | Entitlements / paiements |
 | D8 | P1 | Commissions véto | Close période + mark-paid | `/admin/commissions` |
