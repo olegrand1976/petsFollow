@@ -542,7 +542,18 @@
     "heartrate_alert_preheader": "Oluline BPM tõus — {bpm}.",
     "heartrate_alert_greeting": "Tere,",
     "heartrate_alert_intro": "Kinnitatud südame löögisageduse näit näitab olulist BPM tõusu võrreldes eelmise mõõtmisega. BPM: {bpm}. Palun vaadake patsiendi kaarti.",
-    "heartrate_alert_disclaimer": "Logige petsFollow Pro'sse sisse, et patsiendi kaarti vaadata."
+    "heartrate_alert_disclaimer": "Logige petsFollow Pro'sse sisse, et patsiendi kaarti vaadata.",
+    "pet_dossier_share_subject": "Looma toimik {petName} — jagatud petsFollow kaudu",
+    "pet_dossier_share_tagline": "Loomade hoolduse järjepidevus",
+    "pet_dossier_share_preheader": "{clientName} saadab teile {petName} toimiku. Link kehtib 24 tundi.",
+    "pet_dossier_share_greeting": "Tere,",
+    "pet_dossier_share_intro": "{clientName} jagab {petName} täielikku toimikut petsFollow kaudu. Laadige pakett (PDF + dokumendid) alla alloleva nupuga.",
+    "pet_dossier_share_detail": "petsFollow aitab spetsialistidel patsiente jälgida, omanikega suhelda ja hooldust koondada. Vaadake pakkumist: {siteUrl}",
+    "pet_dossier_share_phone": "Teie müügikontakt {commercialName}: {commercialPhone}",
+    "pet_dossier_share_register": "Loo pro konto: {registerUrl}",
+    "pet_dossier_share_cta": "Laadi toimik alla",
+    "pet_dossier_share_expiry": "See link aegub 24 tunni pärast.",
+    "pet_dossier_share_disclaimer": "Kui te ei oodanud seda e-kirja, võite selle ignoreerida. Andmeid jagatakse omaniku soovil."
   },
   "push": {
     "new_message_title": "Uus sõnum",

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
@@ -13,7 +15,8 @@ import (
 )
 
 type updateMeReq struct {
-	FullName string `json:"fullName"`
+	FullName     *string `json:"fullName"`
+	ContactPhone *string `json:"contactPhone"`
 }
 
 type changePasswordReq struct {
@@ -32,13 +35,42 @@ func (a *API) updateMe(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if req.FullName == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "full_name_required")
+	if req.FullName == nil && req.ContactPhone == nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
 		return
 	}
-	if err := a.store.UpdateUserFullName(r.Context(), id.UserID, req.FullName); err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
+	if req.FullName != nil {
+		name := strings.TrimSpace(*req.FullName)
+		if name == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "full_name_required")
+			return
+		}
+		if err := a.store.UpdateUserFullName(r.Context(), id.UserID, name); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	}
+	if req.ContactPhone != nil {
+		phone := strings.TrimSpace(*req.ContactPhone)
+		if phone == "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_required")
+			return
+		}
+		if utf8.RuneCountInString(phone) > 40 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
+			return
+		}
+		switch id.Role {
+		case kernel.RoleCommercial, kernel.RoleCommercialManager, kernel.RoleAdmin:
+			// ok
+		default:
+			writeErr(w, r, http.StatusForbidden, "forbidden", "contact_phone_role")
+			return
+		}
+		if err := a.store.UpdateUserContactPhone(r.Context(), id.UserID, phone); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
 	}
 	data, err := a.store.GetUserMe(r.Context(), id.UserID)
 	if err != nil {

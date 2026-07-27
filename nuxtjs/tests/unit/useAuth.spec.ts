@@ -236,13 +236,20 @@ describe('useAuth helpers', () => {
     })
 
     it('redirige commercial / manager vers leur home', () => {
-      expect(resolvePostLoginTarget({ role: 'commercial' })).toEqual({
+      expect(resolvePostLoginTarget({ role: 'commercial', contactPhone: '0470' })).toEqual({
         kind: 'navigate',
         path: '/commercial',
       })
-      expect(resolvePostLoginTarget({ role: 'commercial_manager' })).toEqual({
+      expect(resolvePostLoginTarget({ role: 'commercial_manager', contactPhone: '0470' })).toEqual({
         kind: 'navigate',
         path: '/commercial-manager',
+      })
+    })
+
+    it('force complete-contact-phone si commercial sans téléphone', () => {
+      expect(resolvePostLoginTarget({ role: 'commercial', contactPhone: '' })).toEqual({
+        kind: 'navigate',
+        path: '/complete-contact-phone',
       })
     })
 

@@ -401,6 +401,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | H3 | P1 | RDV bilatéral | client book → vet confirm | Calendar + push + prefs email |
 | H4 | P1 | Link-request | Flutter invite → Pro accept | Relation active ; pets possibles |
 | H5 | P1 | Share → care_pro | Vet share → farrier | Agenda/fiche ; notes selon permission |
+| H13 | P1 | Envoi dossier animal → pro | Client Flutter → e-mail pro → `/dossier/{token}` | ZIP (PDF + docs + carnet) ; marketing + tél. commercial ; expiry 24 h ; UC-X-08 |
 | H6 | P1 | Billing → features | Checkout pet | Entitlement → FC + messaging + Care/Horse ; commission activation |
 | H7 | P1 | Care overdue | Pro crée → client postpone/done | Dashboard véto sync |
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
@@ -514,6 +515,19 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 ### API (smoke)
 
 `make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline.
+
+### Envoi dossier animal (Go intégration — H13)
+
+`go test ./internal/handlers/ -run 'TestPetDossierShare|TestUpdateMeContactPhone' -count=1`
+
+| Cas | Attendu |
+|-----|---------|
+| Create + meta + download ZIP | `dossier.pdf` dans le ZIP ; `commercialPhone` présent |
+| Expiry | GET meta/download → 410 |
+| Non-owner | POST → 403 |
+| PATCH contactPhone commercial | `/me` expose le numéro |
+
+Flutter widget : `pet_send_dossier_test` · Nuxt gate : `completeContactPhoneGate.spec.ts` · Playwright mocké : `16-dossier-public.spec.ts` · UC : `UC-X-08`.
 
 ### Parrainage / QR (Go intégration — anti-régression)
 

@@ -10,6 +10,7 @@ const SKIP_PATHS = new Set([
   '/forgot-password',
   '/reset-password',
   '/change-password',
+  '/complete-contact-phone',
   '/welcome',
   '/onboarding',
 ])
@@ -28,6 +29,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     || to.path.startsWith('/legal')
     || to.path.startsWith('/invite')
     || to.path.startsWith('/preconsult')
+    || to.path.startsWith('/dossier')
     || to.path.startsWith('/admin')
     || to.path.startsWith('/commercial')
     || to.path.startsWith('/commercial-manager')

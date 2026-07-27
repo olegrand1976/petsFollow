@@ -1,4 +1,5 @@
 import { authCookieSecure } from '../utils/authCookieSecure'
+import { needsContactPhone } from '../utils/needsContactPhone'
 
 /** Aligné sur JWT_REFRESH_TTL (30 jours) — durée cookie ≠ durée JWT access. */
 export const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
@@ -80,6 +81,7 @@ export type PostLoginProfile = {
   role?: string
   profileComplete?: boolean | null
   mustChangePassword?: boolean | null
+  contactPhone?: string | null
   preferredLocale?: string | null
 }
 
@@ -102,6 +104,10 @@ export function resolvePostLoginTarget(
   }
   if (me?.mustChangePassword === true) {
     return { kind: 'navigate', path: '/change-password' }
+  }
+  // Only when /me loaded — JWT-only fallback must not assume empty phone.
+  if (me && needsContactPhone(me)) {
+    return { kind: 'navigate', path: '/complete-contact-phone' }
   }
   if (!isProRole(role)) {
     return { kind: 'proOnly' }

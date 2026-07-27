@@ -32,6 +32,9 @@ pf_write_api_env_file() {
   local path="$1"
   local seed_enabled="${2:-false}"
   local admin_staging_seed="${3:-false}"
+  # Explicit : staging | production — défaut production (seed/seed-mass refusés
+  # hors allowlist, donc un déploiement sans APP_ENV ne peut pas tronquer la base).
+  local app_env="${4:-production}"
   local redis_addr
   local billing_mock
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
@@ -39,7 +42,7 @@ pf_write_api_env_file() {
   cat >"$path" <<EOF
 HTTP_ADDR: ":8080"
 LOG_LEVEL: "info"
-APP_ENV: "${APP_ENV:-staging}"
+APP_ENV: "${app_env}"
 MIGRATE_ON_BOOT: "false"
 DEV_SEED_ENABLED: "${seed_enabled}"
 ADMIN_STAGING_SEED_ENABLED: "${admin_staging_seed}"

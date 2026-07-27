@@ -542,7 +542,18 @@
     "heartrate_alert_preheader": "Significant BPM rise — {bpm}.",
     "heartrate_alert_greeting": "Hello,",
     "heartrate_alert_intro": "A validated heart rate reading shows a significant BPM rise versus the previous one. BPM: {bpm}. Please review the patient record.",
-    "heartrate_alert_disclaimer": "Sign in to petsFollow Pro to review the patient record."
+    "heartrate_alert_disclaimer": "Sign in to petsFollow Pro to review the patient record.",
+    "pet_dossier_share_subject": "Pet file {petName} — shared via petsFollow",
+    "pet_dossier_share_tagline": "Animal care continuity",
+    "pet_dossier_share_preheader": "{clientName} is sharing {petName}'s file with you. Link valid 24h.",
+    "pet_dossier_share_greeting": "Hello,",
+    "pet_dossier_share_intro": "{clientName} is sharing {petName}'s complete file via petsFollow. Download the pack (PDF + documents) with the button below.",
+    "pet_dossier_share_detail": "petsFollow helps professionals follow patients, message owners and centralise care. See the offer at {siteUrl}",
+    "pet_dossier_share_phone": "Your sales contact {commercialName}: {commercialPhone}",
+    "pet_dossier_share_register": "Create a pro account: {registerUrl}",
+    "pet_dossier_share_cta": "Download the file",
+    "pet_dossier_share_expiry": "This link expires in 24 hours.",
+    "pet_dossier_share_disclaimer": "If you were not expecting this email, you can ignore it. Data is shared at the owner's request."
   },
   "push": {
     "new_message_title": "New message",

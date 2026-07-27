@@ -235,11 +235,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder, must_change_password,
-			base_lat, base_lng, base_city, base_postal_code
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
 		) VALUES (
 			$1, 'commercial.manager@petsfollow.test', $2, 'Bérénice Manager', 'commercial_manager', NULL, NOW(),
 			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager', false,
-			50.6326, 5.5797, 'Liège', '4000'
+			50.6326, 5.5797, 'Liège', '4000', '0472 11 22 33'
 		)
 		ON CONFLICT (email) DO UPDATE SET
 			password_hash = EXCLUDED.password_hash,
@@ -253,7 +253,8 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash)).Scan(&managerID); err != nil {
 		return err
@@ -263,11 +264,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
-			base_lat, base_lng, base_city, base_postal_code
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
 		) VALUES (
 			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
 			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, $3::uuid, false,
-			50.8503, 4.3517, 'Bruxelles', '1000'
+			50.8503, 4.3517, 'Bruxelles', '1000', '0470 12 34 56'
 		)
 		ON CONFLICT (email) DO UPDATE SET
 			password_hash = EXCLUDED.password_hash,
@@ -284,7 +285,8 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
 		return err
@@ -294,11 +296,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
-			base_lat, base_lng, base_city, base_postal_code
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
 		) VALUES (
 			$1, 'commercial.demo2@petsfollow.test', $2, 'Alex Vente', 'commercial', NULL, NOW(),
 			'BE68539007547034', 'GEBABEBB', 'Alex Vente', $3::uuid, $3::uuid, false,
-			50.6292, 3.0573, 'Lille', '59000'
+			50.6292, 3.0573, 'Lille', '59000', '0471 98 76 54'
 		)
 		ON CONFLICT (email) DO UPDATE SET
 			password_hash = EXCLUDED.password_hash,
@@ -314,7 +316,8 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash), managerID).Scan(&commercial2ID); err != nil {
 		return err

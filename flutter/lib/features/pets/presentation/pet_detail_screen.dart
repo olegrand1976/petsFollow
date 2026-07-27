@@ -554,6 +554,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               ),
             ),
           ],
+          if (pet.isOwner && pet.isActive)
+            _ActionTile(
+              key: Key('pet_send_dossier_${pet.id}'),
+              icon: Icons.send_outlined,
+              label: l10n.sendDossierToPro,
+              onTap: _sendDossierToPro,
+            ),
           if (pet.isOwner) ...[
             if (pet.isActive && !pet.needsVetLink) const Divider(height: 32),
             Row(
@@ -645,10 +652,94 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
       );
     }
   }
+
+  Future<void> _sendDossierToPro() async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _SendDossierEmailDialog(l10n: l10n),
+    );
+    if (email == null || email.isEmpty || !mounted) return;
+    if (!email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.sendDossierInvalidEmail)),
+      );
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ApiClient.instance.sendPetDossierShare(pet.id, email);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(l10n.sendDossierSuccess)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(mapApiError(e, l10n))));
+    }
+  }
+}
+
+class _SendDossierEmailDialog extends StatefulWidget {
+  const _SendDossierEmailDialog({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  State<_SendDossierEmailDialog> createState() => _SendDossierEmailDialogState();
+}
+
+class _SendDossierEmailDialogState extends State<_SendDossierEmailDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      key: const Key('pet_send_dossier_dialog'),
+      title: Text(l10n.sendDossierToPro),
+      content: TextField(
+        key: const Key('pet_send_dossier_email'),
+        controller: _controller,
+        keyboardType: TextInputType.emailAddress,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: l10n.sendDossierEmailLabel,
+          hintText: l10n.sendDossierEmailHint,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('pet_send_dossier_confirm'),
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: Text(l10n.sendDossierConfirm),
+        ),
+      ],
+    );
+  }
 }
 
 class _ActionTile extends StatelessWidget {
-  const _ActionTile({required this.icon, required this.label, required this.onTap});
+  const _ActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String label;

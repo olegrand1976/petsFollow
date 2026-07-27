@@ -681,5 +681,11 @@
   "supportMenu": "Tugi",
   "appInviteHintSales": "Jaga oma sponsorikoodi kabineti või kliendiga.",
   "appInviteCopyVet": "Kopeeri kabineti registreerimislink",
-  "appInviteCopyClient": "Kopeeri kliendi kutselink"
+  "appInviteCopyClient": "Kopeeri kliendi kutselink",
+  "sendDossierToPro": "Saada spetsialistile",
+  "sendDossierEmailLabel": "Spetsialisti e-post",
+  "sendDossierEmailHint": "vet@kliinik.ee",
+  "sendDossierConfirm": "Saada",
+  "sendDossierSuccess": "Toimik saadetud — link kehtib 24 tundi.",
+  "sendDossierInvalidEmail": "Vigane e-posti aadress."
 }

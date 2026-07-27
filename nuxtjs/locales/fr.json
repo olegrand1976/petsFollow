@@ -346,6 +346,15 @@
       "password": "Mot de passe",
       "showPassword": "Afficher le mot de passe",
       "hidePassword": "Masquer le mot de passe"
+    },
+    "contactPhone": {
+      "brandTitle": "Coordonnées commerciales",
+      "brandText": "Votre numéro apparaît sur les envois de dossiers clients vers les professionnels.",
+      "title": "Numéro de téléphone",
+      "subtitle": "Obligatoire pour continuer. Il sera proposé aux pros destinataires des dossiers animaux.",
+      "phone": "Téléphone mobile / direct",
+      "hint": "Minimum 6 caractères (ex. 0470 12 34 56).",
+      "submit": "Enregistrer et continuer"
     }
   },
   "common": {
@@ -630,7 +639,12 @@
       "baseLat": "Latitude",
       "baseLng": "Longitude",
       "save": "Enregistrer",
-      "saved": "Profil enregistré"
+      "saved": "Profil enregistré",
+      "contactPhoneTitle": "Téléphone commercial",
+      "contactPhoneHint": "Affiché dans les e-mails et PDF d’envoi de dossier animal.",
+      "contactPhone": "Téléphone",
+      "contactPhoneSaved": "Téléphone enregistré.",
+      "savePhone": "Enregistrer le téléphone"
     },
     "pitch": {
       "title": "Aide de vente",
@@ -2694,5 +2708,26 @@
     "truncatedPage": "Page complète ({limit} lignes) — utilisez Suivant pour la suite.",
     "exportCsvPageHint": "L’export CSV contient uniquement la page affichée.",
     "eventsTruncatedPage": "Page historique complète ({limit} lignes) — utilisez Suivant pour la suite."
+  },
+  "dossierPublic": {
+    "brandTitle": "Dossier animal partagé",
+    "brandText": "Téléchargez le pack complet et découvrez petsFollow pour vos patients.",
+    "loading": "Chargement…",
+    "title": "Dossier de {petName}",
+    "subtitle": "PDF de synthèse, documents joints et carnet de santé (si disponible).",
+    "expires": "Lien valable jusqu’au {when}",
+    "downloadCta": "Télécharger le dossier",
+    "downloadError": "Téléchargement impossible.",
+    "expiredTitle": "Lien expiré",
+    "expiredText": "Ce lien de téléchargement n’est plus valable (24 h). Demandez un nouvel envoi au propriétaire.",
+    "errorTitle": "Dossier introuvable",
+    "marketingTitle": "Rejoignez petsFollow",
+    "marketingText": "Centralisez le suivi, la messagerie et les soins avec les propriétaires.",
+    "benefitFollow": "Suivi cardiaque et timeline partagée",
+    "benefitMessages": "Messagerie sécurisée avec les clients",
+    "benefitContinuity": "Continuité de soins multi-professionnels",
+    "registerCta": "Créer un compte professionnel",
+    "productsLink": "Voir l’offre petsFollow",
+    "commercialPhone": "Tél. commercial : {phone}"
   }
 }

@@ -82,8 +82,8 @@ steps:
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
         ENV_FILE="$$(mktemp)"
-        # false=DEV_SEED, true=ADMIN_STAGING_SEED (API staging only)
-        pf_write_api_env_file "$$ENV_FILE" false true
+        # false=DEV_SEED, true=ADMIN_STAGING_SEED, staging=APP_ENV (API staging only)
+        pf_write_api_env_file "$$ENV_FILE" false true staging
         SECRETS="$$(pf_api_secrets)"
         # timeout 900s : WebSocket Gemini Live (appel pitch 8 min + marge)
         gcloud run deploy ${_API_SERVICE} \

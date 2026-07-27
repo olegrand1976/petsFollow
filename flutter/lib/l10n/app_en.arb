@@ -681,5 +681,11 @@
   "supportMenu": "Support",
   "appInviteHintSales": "Share your referral code with practices (cabinet signup) or clients (app invite).",
   "appInviteCopyVet": "Copy practice signup link",
-  "appInviteCopyClient": "Copy client invite link"
+  "appInviteCopyClient": "Copy client invite link",
+  "sendDossierToPro": "Send to a pro",
+  "sendDossierEmailLabel": "Professional email",
+  "sendDossierEmailHint": "vet@clinic.com",
+  "sendDossierConfirm": "Send",
+  "sendDossierSuccess": "File sent — link valid for 24h.",
+  "sendDossierInvalidEmail": "Invalid email address."
 }

@@ -70,6 +70,8 @@ type Config struct {
 	AiModuleFrictionSecret string
 	// OpsNotifyEmail reçoit les leads « nouveau véto » + alertes auth ALERT/URGENT.
 	OpsNotifyEmail string
+	// CommercialContactPhone — fallback téléphone commercial (mail/PDF dossier) si profil vide.
+	CommercialContactPhone string
 	// SupportInboxEmail reçoit les nouveaux tickets bug-report (défaut support@petsfollow.app).
 	SupportInboxEmail string
 	// AuthHealthSecret protège POST /internal/auth-health/run.
@@ -142,6 +144,7 @@ func Load() Config {
 		RetentionPurgeSecret:   envOr("RETENTION_PURGE_SECRET", ""),
 		AiModuleFrictionSecret: envOr("AI_MODULE_FRICTION_SECRET", ""),
 		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
+		CommercialContactPhone: envOr("COMMERCIAL_CONTACT_PHONE", ""),
 		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
 		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),

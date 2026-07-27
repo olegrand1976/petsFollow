@@ -17,8 +17,9 @@ SEED_ENV_FILE="$(mktemp)"
 trap 'rm -f "$API_ENV_FILE" "$SEED_ENV_FILE"' EXIT
 
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
-pf_write_api_env_file "$API_ENV_FILE" false false
-pf_write_api_env_file "$SEED_ENV_FILE" true false
+pf_write_api_env_file "$API_ENV_FILE" false false staging
+# APP_ENV=staging obligatoire : les jobs seed / seed-mass refusent tout autre environnement.
+pf_write_api_env_file "$SEED_ENV_FILE" true false staging
 # Email staff après seed manuel CLI (admins / commerciaux / managers).
 {
   echo "SEED_NOTIFY_STAFF: \"true\""

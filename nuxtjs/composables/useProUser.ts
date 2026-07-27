@@ -13,6 +13,7 @@ export type ProUser = {
   profileComplete?: boolean
   preferredLocale?: string
   mustChangePassword?: boolean
+  contactPhone?: string
   isReferenceVet?: boolean
 }
 

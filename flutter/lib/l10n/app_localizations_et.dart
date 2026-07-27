@@ -1821,4 +1821,22 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get appInviteCopyClient => 'Kopeeri kliendi kutselink';
+
+  @override
+  String get sendDossierToPro => 'Saada spetsialistile';
+
+  @override
+  String get sendDossierEmailLabel => 'Spetsialisti e-post';
+
+  @override
+  String get sendDossierEmailHint => 'vet@kliinik.ee';
+
+  @override
+  String get sendDossierConfirm => 'Saada';
+
+  @override
+  String get sendDossierSuccess => 'Toimik saadetud — link kehtib 24 tundi.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Vigane e-posti aadress.';
 }

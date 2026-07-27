@@ -542,7 +542,18 @@
     "heartrate_alert_preheader": "Hausse significative du BPM — {bpm}.",
     "heartrate_alert_greeting": "Bonjour,",
     "heartrate_alert_intro": "Un relevé cardiaque validé montre une hausse significative du BPM par rapport au précédent. BPM : {bpm}. Merci de consulter le dossier patient.",
-    "heartrate_alert_disclaimer": "Connectez-vous à petsFollow Pro pour consulter le dossier patient."
+    "heartrate_alert_disclaimer": "Connectez-vous à petsFollow Pro pour consulter le dossier patient.",
+    "pet_dossier_share_subject": "Dossier animal {petName} — partagé via petsFollow",
+    "pet_dossier_share_tagline": "Continuité de soins animaliers",
+    "pet_dossier_share_preheader": "{clientName} vous envoie le dossier de {petName}. Lien valable 24 h.",
+    "pet_dossier_share_greeting": "Bonjour,",
+    "pet_dossier_share_intro": "{clientName} vous partage le dossier complet de {petName} via petsFollow. Téléchargez le pack (PDF + documents) grâce au bouton ci-dessous.",
+    "pet_dossier_share_detail": "petsFollow aide les professionnels à suivre leurs patients, échanger avec les propriétaires et centraliser les soins. Découvrez l'offre sur {siteUrl}",
+    "pet_dossier_share_phone": "Votre contact commercial {commercialName} : {commercialPhone}",
+    "pet_dossier_share_register": "Créer un compte pro : {registerUrl}",
+    "pet_dossier_share_cta": "Télécharger le dossier",
+    "pet_dossier_share_expiry": "Ce lien expire dans 24 heures.",
+    "pet_dossier_share_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer. Les données sont partagées à la demande du propriétaire."
   },
   "push": {
     "new_message_title": "Nouveau message",

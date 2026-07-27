@@ -89,7 +89,8 @@ flutter-dev: env
 		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID)
 
 test-go:
-	cd go && GOTOOLCHAIN=local go test ./...
+	# -p 1 : les suites d'intégration partagent une seule base (seed tronque pendant que handlers lit).
+	cd go && GOTOOLCHAIN=local go test -p 1 ./...
 
 test-flutter:
 	cd flutter && flutter pub get && flutter test

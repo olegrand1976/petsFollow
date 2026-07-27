@@ -744,5 +744,11 @@
   "supportMenu": "Supporto",
   "appInviteHintSales": "Condividi il codice sponsor con uno studio o un cliente.",
   "appInviteCopyVet": "Copia link iscrizione studio",
-  "appInviteCopyClient": "Copia link invito cliente"
+  "appInviteCopyClient": "Copia link invito cliente",
+  "sendDossierToPro": "Invia a un professionista",
+  "sendDossierEmailLabel": "Email del professionista",
+  "sendDossierEmailHint": "vet@clinica.it",
+  "sendDossierConfirm": "Invia",
+  "sendDossierSuccess": "Cartella inviata — link valido 24 ore.",
+  "sendDossierInvalidEmail": "Indirizzo email non valido."
 }

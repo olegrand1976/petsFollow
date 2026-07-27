@@ -57,7 +57,9 @@ Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; sta
 
 Relancer les données : `make seed`
 
-**Densification démo (prod-like)** : après le seed de base, `make seed-mass` ajoute des comptes `mass.*@petsfollow.test` (≈20 cabinets/vétos, ≈360 clients, ≈700 animaux, 8 care_pros), rattache les nouveaux vétos aux commerciaux Camille/Alex (inchangés), et recalcule les commissions (`AccrueAll*`). Idempotent (skip si déjà présent). Refusé si `APP_ENV=production`. Pour régénérer : `make seed && make seed-mass`.
+**Densification démo (prod-like)** : après le seed de base, `make seed-mass` ajoute des comptes `mass.*@petsfollow.test` (≈20 cabinets/vétos, ≈360 clients, ≈700 animaux, 8 care_pros), rattache les nouveaux vétos aux commerciaux Camille/Alex (inchangés), et recalcule les commissions (`AccrueAll*`). Idempotent (skip si déjà présent). Pour régénérer : `make seed && make seed-mass`.
+
+**Garde-fou seed** : `seed` **et** `seed-mass` refusent de tourner si `APP_ENV` n'est pas dans l'allowlist `dev` / `development` / `local` / `test` / `staging` — une variable absente ou mal orthographiée bloque au lieu de laisser passer. `APP_ENV` est posé par les cibles Make (défaut `local`) et par `pf_write_api_env_file` côté Cloud Run (défaut **`production`**, `staging` passé explicitement en 4e argument par `cloudbuild.yaml` et `setup-jobs.sh`).
 
 **Staging GCP** : pas de seed auto (Scheduler supprimé : `make gcp-delete-seed-scheduler`). Reset manuel : admin Pro (zone danger, phrase `RESET STAGING`) ou `bash infra/gcp/postdeploy.sh --seed`. Annonce staff après seed : email auto / commande `seed-notify`.
 

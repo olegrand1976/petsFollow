@@ -949,6 +949,15 @@ class ApiClient {
     return res.data['data'] as Map<String, dynamic>;
   }
 
+  /// Send a 24h download link for the full pet dossier to a care professional.
+  Future<Map<String, dynamic>> sendPetDossierShare(String petId, String email) async {
+    final res = await dio.post(
+      '/api/v1/pets/$petId/dossier-shares',
+      data: {'email': email.trim()},
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
   Future<String> resumeCheckout(String petId) async {
     final res = await dio.post('/api/v1/pets/$petId/billing/checkout');
     return res.data['data']['checkoutUrl'] as String;

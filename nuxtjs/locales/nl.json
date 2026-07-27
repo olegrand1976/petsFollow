@@ -188,6 +188,15 @@
       "password": "Wachtwoord",
       "showPassword": "Wachtwoord tonen",
       "hidePassword": "Wachtwoord verbergen"
+    },
+    "contactPhone": {
+      "brandTitle": "Commerciële contactgegevens",
+      "brandText": "Uw nummer verschijnt wanneer klanten dierdossiers delen met professionals.",
+      "title": "Telefoonnummer",
+      "subtitle": "Verplicht om verder te gaan. Het wordt getoond aan professionals die dossiers ontvangen.",
+      "phone": "Mobiel / direct nummer",
+      "hint": "Minimaal 6 tekens.",
+      "submit": "Opslaan en doorgaan"
     }
   },
   "common": {
@@ -1987,7 +1996,12 @@
       "baseLat": "Breedtegraad",
       "baseLng": "Lengtegraad",
       "save": "Opslaan",
-      "saved": "Profiel opgeslagen"
+      "saved": "Profiel opgeslagen",
+      "contactPhoneTitle": "Commercieel telefoonnummer",
+      "contactPhoneHint": "Getoond in e-mails en PDF’s van dossierdeling.",
+      "contactPhone": "Telefoon",
+      "contactPhoneSaved": "Telefoon opgeslagen.",
+      "savePhone": "Telefoon opslaan"
     },
     "pitch": {
       "title": "Verkoophulp",
@@ -2694,5 +2708,26 @@
     "notFound": "Scenario not found",
     "notFoundHint": "Go back to the list or ask the team to regenerate the catalog.",
     "durationLabel": "Duur: {duration}"
+  },
+  "dossierPublic": {
+    "brandTitle": "Gedeeld dierdossier",
+    "brandText": "Download the full pack and discover petsFollow for your patients.",
+    "loading": "Loading…",
+    "title": "{petName}’s file",
+    "subtitle": "Summary PDF, attachments and health book (if available).",
+    "expires": "Link valid until {when}",
+    "downloadCta": "Dossier downloaden",
+    "downloadError": "Download failed.",
+    "expiredTitle": "Link expired",
+    "expiredText": "This download link is no longer valid (24h). Ask the owner for a new send.",
+    "errorTitle": "File not found",
+    "marketingTitle": "Join petsFollow",
+    "marketingText": "Centralise follow-up, messaging and care with pet owners.",
+    "benefitFollow": "Heart-rate follow-up and shared timeline",
+    "benefitMessages": "Secure messaging with clients",
+    "benefitContinuity": "Multi-professional care continuity",
+    "registerCta": "Pro-account aanmaken",
+    "productsLink": "See the petsFollow offer",
+    "commercialPhone": "Sales phone: {phone}"
   }
 }

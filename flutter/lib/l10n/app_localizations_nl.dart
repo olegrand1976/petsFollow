@@ -1820,4 +1820,22 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get appInviteCopyClient => 'Kopieer cliënt-uitnodigingslink';
+
+  @override
+  String get sendDossierToPro => 'Naar een pro sturen';
+
+  @override
+  String get sendDossierEmailLabel => 'E-mail van de professional';
+
+  @override
+  String get sendDossierEmailHint => 'vet@kliniek.be';
+
+  @override
+  String get sendDossierConfirm => 'Versturen';
+
+  @override
+  String get sendDossierSuccess => 'Dossier verstuurd — link 24 uur geldig.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Ongeldig e-mailadres.';
 }

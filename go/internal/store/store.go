@@ -45,6 +45,7 @@ type User struct {
 	AvatarURL              string
 	MustChangePassword     bool
 	ProfessionalSpecialty  string
+	ContactPhone           string
 }
 
 type Practice struct {
@@ -189,7 +190,7 @@ func scanUser(row pgx.Row) (User, error) {
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
 		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
-		&u.MustChangePassword, &u.ProfessionalSpecialty,
+		&u.MustChangePassword, &u.ProfessionalSpecialty, &u.ContactPhone,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -201,7 +202,7 @@ const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
 	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password,
-	COALESCE(professional_specialty,'')`
+	COALESCE(professional_specialty,''), COALESCE(contact_phone,'')`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))

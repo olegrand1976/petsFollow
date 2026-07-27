@@ -681,5 +681,11 @@
   "supportMenu": "Soporte",
   "appInviteHintSales": "Comparte tu código con una clínica o un cliente.",
   "appInviteCopyVet": "Copiar enlace de alta clínica",
-  "appInviteCopyClient": "Copiar enlace de invitación cliente"
+  "appInviteCopyClient": "Copiar enlace de invitación cliente",
+  "sendDossierToPro": "Enviar a un profesional",
+  "sendDossierEmailLabel": "Email del profesional",
+  "sendDossierEmailHint": "vet@clinica.es",
+  "sendDossierConfirm": "Enviar",
+  "sendDossierSuccess": "Historial enviado — enlace válido 24 h.",
+  "sendDossierInvalidEmail": "Email no válido."
 }

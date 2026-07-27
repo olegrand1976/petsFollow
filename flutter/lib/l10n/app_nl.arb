@@ -681,5 +681,11 @@
   "supportMenu": "Support",
   "appInviteHintSales": "Deel je sponsorcode met een praktijk of een cliënt.",
   "appInviteCopyVet": "Kopieer praktijk-aanmeldlink",
-  "appInviteCopyClient": "Kopieer cliënt-uitnodigingslink"
+  "appInviteCopyClient": "Kopieer cliënt-uitnodigingslink",
+  "sendDossierToPro": "Naar een pro sturen",
+  "sendDossierEmailLabel": "E-mail van de professional",
+  "sendDossierEmailHint": "vet@kliniek.be",
+  "sendDossierConfirm": "Versturen",
+  "sendDossierSuccess": "Dossier verstuurd — link 24 uur geldig.",
+  "sendDossierInvalidEmail": "Ongeldig e-mailadres."
 }

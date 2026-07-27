@@ -1830,4 +1830,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get appInviteCopyClient => 'Copia link invito cliente';
+
+  @override
+  String get sendDossierToPro => 'Invia a un professionista';
+
+  @override
+  String get sendDossierEmailLabel => 'Email del professionista';
+
+  @override
+  String get sendDossierEmailHint => 'vet@clinica.it';
+
+  @override
+  String get sendDossierConfirm => 'Invia';
+
+  @override
+  String get sendDossierSuccess => 'Cartella inviata — link valido 24 ore.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Indirizzo email non valido.';
 }

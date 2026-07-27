@@ -3441,6 +3441,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Copier le lien invitation client'**
   String get appInviteCopyClient;
+
+  /// No description provided for @sendDossierToPro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer vers un pro'**
+  String get sendDossierToPro;
+
+  /// No description provided for @sendDossierEmailLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail du professionnel'**
+  String get sendDossierEmailLabel;
+
+  /// No description provided for @sendDossierEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'vet@cabinet.be'**
+  String get sendDossierEmailHint;
+
+  /// No description provided for @sendDossierConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get sendDossierConfirm;
+
+  /// No description provided for @sendDossierSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dossier envoyé — lien valable 24 h.'**
+  String get sendDossierSuccess;
+
+  /// No description provided for @sendDossierInvalidEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail invalide.'**
+  String get sendDossierInvalidEmail;
 }
 
 class _AppLocalizationsDelegate

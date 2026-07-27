@@ -359,6 +359,52 @@ func (n *Notifier) SendVisitRequest(to, locale, clientName, petName, when, notes
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendPetDossierShare emails a pro with a 24h download link for a client pet dossier.
+func (n *Notifier) SendPetDossierShare(
+	to, locale, petName, clientName, downloadURL,
+	commercialName, commercialPhone, commercialEmail, registerURL, siteURL string,
+) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"petName":          petName,
+		"clientName":       clientName,
+		"commercialName":   commercialName,
+		"commercialPhone":  commercialPhone,
+		"commercialEmail":  commercialEmail,
+		"registerUrl":      registerURL,
+		"siteUrl":          siteURL,
+	}
+	if vars["commercialName"] == "" {
+		vars["commercialName"] = "petsFollow"
+	}
+	detail := mustT(locale, "emails.pet_dossier_share_detail", vars)
+	if commercialPhone != "" {
+		detail += "\n" + mustT(locale, "emails.pet_dossier_share_phone", vars)
+	}
+	if registerURL != "" {
+		detail += "\n" + mustT(locale, "emails.pet_dossier_share_register", vars)
+	}
+	subject := mustT(locale, "emails.pet_dossier_share_subject", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		ProductLabel:    "petsFollow",
+		Tagline:         mustT(locale, "emails.pet_dossier_share_tagline"),
+		Greeting:        mustT(locale, "emails.pet_dossier_share_greeting"),
+		Intro:           mustT(locale, "emails.pet_dossier_share_intro", vars),
+		Detail:          detail,
+		CTALabel:        mustT(locale, "emails.pet_dossier_share_cta"),
+		CTAURL:          downloadURL,
+		Expiry:          mustT(locale, "emails.pet_dossier_share_expiry"),
+		Disclaimer:      mustT(locale, "emails.pet_dossier_share_disclaimer"),
+		Preheader:       mustT(locale, "emails.pet_dossier_share_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	// Critical: destinataire hors plateforme — échec SMTP doit remonter (soft-fail seulement en dev/MailHog).
+	return n.SendCritical(to, subject, body)
+}
+
 func (n *Notifier) SendAppDownloadInvite(to, locale, clientName, vetName, practiceName, downloadURL string) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{

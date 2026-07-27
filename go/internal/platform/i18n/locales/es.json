@@ -542,7 +542,18 @@
     "heartrate_alert_preheader": "Aumento significativo del BPM — {bpm}.",
     "heartrate_alert_greeting": "Hola,",
     "heartrate_alert_intro": "Una lectura cardíaca validada muestra un aumento significativo del BPM respecto a la anterior. BPM: {bpm}. Revise la ficha del paciente.",
-    "heartrate_alert_disclaimer": "Inicie sesión en petsFollow Pro para revisar la ficha del paciente."
+    "heartrate_alert_disclaimer": "Inicie sesión en petsFollow Pro para revisar la ficha del paciente.",
+    "pet_dossier_share_subject": "Historial de {petName} — compartido vía petsFollow",
+    "pet_dossier_share_tagline": "Continuidad de cuidados animales",
+    "pet_dossier_share_preheader": "{clientName} le envía el historial de {petName}. Enlace válido 24 h.",
+    "pet_dossier_share_greeting": "Hola,",
+    "pet_dossier_share_intro": "{clientName} comparte el historial completo de {petName} vía petsFollow. Descargue el paquete (PDF + documentos) con el botón siguiente.",
+    "pet_dossier_share_detail": "petsFollow ayuda a los profesionales a seguir a sus pacientes, hablar con los dueños y centralizar los cuidados. Descubra la oferta en {siteUrl}",
+    "pet_dossier_share_phone": "Su contacto comercial {commercialName}: {commercialPhone}",
+    "pet_dossier_share_register": "Crear una cuenta pro: {registerUrl}",
+    "pet_dossier_share_cta": "Descargar el historial",
+    "pet_dossier_share_expiry": "Este enlace caduca en 24 horas.",
+    "pet_dossier_share_disclaimer": "Si no esperaba este correo, puede ignorarlo. Los datos se comparten a petición del propietario."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

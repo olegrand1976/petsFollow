@@ -1813,4 +1813,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appInviteCopyClient => 'Copy client invite link';
+
+  @override
+  String get sendDossierToPro => 'Send to a pro';
+
+  @override
+  String get sendDossierEmailLabel => 'Professional email';
+
+  @override
+  String get sendDossierEmailHint => 'vet@clinic.com';
+
+  @override
+  String get sendDossierConfirm => 'Send';
+
+  @override
+  String get sendDossierSuccess => 'File sent — link valid for 24h.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Invalid email address.';
 }

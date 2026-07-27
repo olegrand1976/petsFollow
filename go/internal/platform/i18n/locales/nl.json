@@ -542,7 +542,18 @@
     "heartrate_alert_preheader": "Significante BPM-stijging — {bpm}.",
     "heartrate_alert_greeting": "Hallo,",
     "heartrate_alert_intro": "Een gevalideerde hartslagmeting toont een significante BPM-stijging ten opzichte van de vorige. BPM: {bpm}. Raadpleeg het patiëntendossier.",
-    "heartrate_alert_disclaimer": "Meld u aan bij petsFollow Pro om het patiëntendossier te raadplegen."
+    "heartrate_alert_disclaimer": "Meld u aan bij petsFollow Pro om het patiëntendossier te raadplegen.",
+    "pet_dossier_share_subject": "Dossier dier {petName} — gedeeld via petsFollow",
+    "pet_dossier_share_tagline": "Continuïteit van dierenzorg",
+    "pet_dossier_share_preheader": "{clientName} deelt het dossier van {petName}. Link 24 uur geldig.",
+    "pet_dossier_share_greeting": "Hallo,",
+    "pet_dossier_share_intro": "{clientName} deelt het volledige dossier van {petName} via petsFollow. Download het pakket (PDF + documenten) via de knop hieronder.",
+    "pet_dossier_share_detail": "petsFollow helpt professionals patiënten te volgen, met eigenaars te chatten en zorg te centraliseren. Bekijk het aanbod op {siteUrl}",
+    "pet_dossier_share_phone": "Uw commercieel contact {commercialName}: {commercialPhone}",
+    "pet_dossier_share_register": "Pro-account aanmaken: {registerUrl}",
+    "pet_dossier_share_cta": "Dossier downloaden",
+    "pet_dossier_share_expiry": "Deze link verloopt binnen 24 uur.",
+    "pet_dossier_share_disclaimer": "Als u deze e-mail niet verwachtte, mag u ze negeren. Gegevens worden gedeeld op vraag van de eigenaar."
   },
   "push": {
     "new_message_title": "Nieuw bericht",

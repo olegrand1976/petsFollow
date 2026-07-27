@@ -2,6 +2,7 @@ import { clearAuthTokensUnlessPostLoginGrace, hasSessionCookie, homePathForRole 
 
 const SKIP_PREFIXES = [
   '/change-password',
+  '/complete-contact-phone',
   '/login',
   '/register',
   '/confirm-email',
@@ -11,6 +12,7 @@ const SKIP_PREFIXES = [
   '/legal',
   '/invite',
   '/preconsult',
+  '/dossier',
 ]
 
 function isUnauthorized(e: unknown): boolean {

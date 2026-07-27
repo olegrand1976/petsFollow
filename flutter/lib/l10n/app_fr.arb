@@ -744,5 +744,11 @@
   "supportMenu": "Support",
   "appInviteHintSales": "Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).",
   "appInviteCopyVet": "Copier le lien inscription cabinet",
-  "appInviteCopyClient": "Copier le lien invitation client"
+  "appInviteCopyClient": "Copier le lien invitation client",
+  "sendDossierToPro": "Envoyer vers un pro",
+  "sendDossierEmailLabel": "E-mail du professionnel",
+  "sendDossierEmailHint": "vet@cabinet.be",
+  "sendDossierConfirm": "Envoyer",
+  "sendDossierSuccess": "Dossier envoyé — lien valable 24 h.",
+  "sendDossierInvalidEmail": "Adresse e-mail invalide."
 }

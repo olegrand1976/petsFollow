@@ -1828,4 +1828,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appInviteCopyClient => 'Copier le lien invitation client';
+
+  @override
+  String get sendDossierToPro => 'Envoyer vers un pro';
+
+  @override
+  String get sendDossierEmailLabel => 'E-mail du professionnel';
+
+  @override
+  String get sendDossierEmailHint => 'vet@cabinet.be';
+
+  @override
+  String get sendDossierConfirm => 'Envoyer';
+
+  @override
+  String get sendDossierSuccess => 'Dossier envoyé — lien valable 24 h.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Adresse e-mail invalide.';
 }

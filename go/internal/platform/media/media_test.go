@@ -111,6 +111,10 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"health-books/",
 		"health-books/p1/a.pdf",
 		"Health-Books/x",
+		"dossier-shares",
+		"dossier-shares/",
+		"dossier-shares/t1/pack.zip",
+		"Dossier-Shares/x",
 	}
 	for _, k := range yes {
 		if !IsSensitiveObjectKey(k) {

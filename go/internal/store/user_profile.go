@@ -20,6 +20,17 @@ func (s *Store) UpdateUserFullName(ctx context.Context, userID, fullName string)
 	return nil
 }
 
+func (s *Store) UpdateUserContactPhone(ctx context.Context, userID, contactPhone string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE identity.users SET contact_phone = $2 WHERE id = $1`, userID, strings.TrimSpace(contactPhone))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) UpdateUserAvatarURL(ctx context.Context, userID, avatarURL string) error {
 	tag, err := s.pool.Exec(ctx, `UPDATE identity.users SET avatar_url = $2 WHERE id = $1`, userID, avatarURL)
 	if err != nil {
@@ -137,6 +148,10 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id=$1`); err != nil {
 		return a, err
 	}
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(object_key,'') FROM pets.dossier_share_tokens WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
 	if err := collect(&a.SubscriptionIDs, `
 		SELECT COALESCE(stripe_subscription_id,'') FROM billing.pet_entitlements
 		WHERE owner_user_id=$1 AND status IN ('active','past_due','pending')`); err != nil {
@@ -192,7 +207,8 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 			totp_enabled = false,
 			avatar_url = NULL,
 			email_verified_at = NULL,
-			assigned_commercial_id = NULL
+			assigned_commercial_id = NULL,
+			contact_phone = ''
 		WHERE id = $1 AND role IN ('vet','commercial','commercial_manager','care_pro')`, userID)
 	if err != nil {
 		return err

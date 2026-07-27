@@ -188,6 +188,15 @@
       "password": "Contraseña",
       "showPassword": "Mostrar contraseña",
       "hidePassword": "Ocultar contraseña"
+    },
+    "contactPhone": {
+      "brandTitle": "Datos de contacto comercial",
+      "brandText": "Su número aparece cuando los clientes comparten historiales con profesionales.",
+      "title": "Número de teléfono",
+      "subtitle": "Obligatorio para continuar. Se mostrará a los profesionales destinatarios.",
+      "phone": "Móvil / directo",
+      "hint": "Mínimo 6 caracteres.",
+      "submit": "Guardar y continuar"
     }
   },
   "common": {
@@ -1987,7 +1996,12 @@
       "baseLat": "Latitud",
       "baseLng": "Longitud",
       "save": "Guardar",
-      "saved": "Perfil guardado"
+      "saved": "Perfil guardado",
+      "contactPhoneTitle": "Teléfono comercial",
+      "contactPhoneHint": "Visible en correos y PDF de envío de historial.",
+      "contactPhone": "Teléfono",
+      "contactPhoneSaved": "Teléfono guardado.",
+      "savePhone": "Guardar teléfono"
     },
     "pitch": {
       "title": "Ayuda de venta",
@@ -2694,5 +2708,26 @@
     "notFound": "Scenario not found",
     "notFoundHint": "Go back to the list or ask the team to regenerate the catalog.",
     "durationLabel": "Duración: {duration}"
+  },
+  "dossierPublic": {
+    "brandTitle": "Historial compartido",
+    "brandText": "Download the full pack and discover petsFollow for your patients.",
+    "loading": "Loading…",
+    "title": "{petName}’s file",
+    "subtitle": "Summary PDF, attachments and health book (if available).",
+    "expires": "Link valid until {when}",
+    "downloadCta": "Descargar el historial",
+    "downloadError": "Download failed.",
+    "expiredTitle": "Link expired",
+    "expiredText": "This download link is no longer valid (24h). Ask the owner for a new send.",
+    "errorTitle": "File not found",
+    "marketingTitle": "Join petsFollow",
+    "marketingText": "Centralise follow-up, messaging and care with pet owners.",
+    "benefitFollow": "Heart-rate follow-up and shared timeline",
+    "benefitMessages": "Secure messaging with clients",
+    "benefitContinuity": "Multi-professional care continuity",
+    "registerCta": "Crear una cuenta profesional",
+    "productsLink": "See the petsFollow offer",
+    "commercialPhone": "Sales phone: {phone}"
   }
 }

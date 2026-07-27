@@ -188,6 +188,15 @@
       "password": "Parool",
       "showPassword": "Näita parooli",
       "hidePassword": "Peida parool"
+    },
+    "contactPhone": {
+      "brandTitle": "Müügikontakti andmed",
+      "brandText": "Teie number kuvatakse, kui kliendid jagavad looma toimikuid spetsialistidega.",
+      "title": "Telefoninumber",
+      "subtitle": "Jätkamiseks kohustuslik. Seda näidatakse toimikuid saavate spetsialistidele.",
+      "phone": "Mobiil / otse",
+      "hint": "Vähemalt 6 tähemärki.",
+      "submit": "Salvesta ja jätka"
     }
   },
   "common": {
@@ -1987,7 +1996,12 @@
       "baseLat": "Laiuskraad",
       "baseLng": "Pikkuskraad",
       "save": "Salvesta",
-      "saved": "Profiil salvestatud"
+      "saved": "Profiil salvestatud",
+      "contactPhoneTitle": "Müügitelefon",
+      "contactPhoneHint": "Kuvatakse looma toimiku jagamise e-kirjades ja PDF-ides.",
+      "contactPhone": "Telefon",
+      "contactPhoneSaved": "Telefon salvestatud.",
+      "savePhone": "Salvesta telefon"
     },
     "pitch": {
       "title": "Müügitugi",
@@ -2694,5 +2708,26 @@
     "notFound": "Scenario not found",
     "notFoundHint": "Go back to the list or ask the team to regenerate the catalog.",
     "durationLabel": "Kestus: {duration}"
+  },
+  "dossierPublic": {
+    "brandTitle": "Jagatud looma toimik",
+    "brandText": "Download the full pack and discover petsFollow for your patients.",
+    "loading": "Loading…",
+    "title": "{petName}’s file",
+    "subtitle": "Summary PDF, attachments and health book (if available).",
+    "expires": "Link valid until {when}",
+    "downloadCta": "Laadi toimik alla",
+    "downloadError": "Download failed.",
+    "expiredTitle": "Link expired",
+    "expiredText": "This download link is no longer valid (24h). Ask the owner for a new send.",
+    "errorTitle": "File not found",
+    "marketingTitle": "Join petsFollow",
+    "marketingText": "Centralise follow-up, messaging and care with pet owners.",
+    "benefitFollow": "Heart-rate follow-up and shared timeline",
+    "benefitMessages": "Secure messaging with clients",
+    "benefitContinuity": "Multi-professional care continuity",
+    "registerCta": "Loo professionaalne konto",
+    "productsLink": "See the petsFollow offer",
+    "commercialPhone": "Sales phone: {phone}"
   }
 }

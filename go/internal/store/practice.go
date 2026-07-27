@@ -360,6 +360,7 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"twoFactorEnabled":   u.TOTPEnabled,
 		"preferredLocale":    u.PreferredLocale,
 		"mustChangePassword": u.MustChangePassword,
+		"contactPhone":       u.ContactPhone,
 		"profiles":           profiles,
 	}
 	if active.ID != "" {

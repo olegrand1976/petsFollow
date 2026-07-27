@@ -91,7 +91,8 @@
         "UC-X-04",
         "UC-X-05",
         "UC-X-06",
-        "UC-X-07"
+        "UC-X-07",
+        "UC-X-08"
       ]
     }
   ],
@@ -921,6 +922,62 @@
         "Encode",
         "Activation",
         "Commission"
+      ]
+    },
+    "UC-X-08": {
+      "id": "UC-X-08",
+      "folderId": "interactions",
+      "slug": "UC-X-08-envoi-dossier-pro",
+      "title": "Client envoie le dossier animal à un pro (lien 24 h)",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Flutter Client → e-mail → page Web publique /dossier/{token}",
+      "destructive": false,
+      "objective": "Montrer qu’un propriétaire peut envoyer le dossier complet d’un animal (PDF + pièces + carnet + timeline/visites) à un professionnel hors plateforme, via un lien magique valable 24 h, avec message marketing petsFollow et téléphone du commercial.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Destinataire",
+          "account": "boîte MailHog / e-mail test",
+          "password": "—"
+        },
+        {
+          "role": "Commercial (contexte)",
+          "account": "commercial.demo@petsfollow.test (Camille, rattachée via vet.demo)",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Seed + app client + API + SMTP (MailHog local ou staging).",
+        "Animal actif chez client.demo (ex. Bella / Rex).",
+        "Commercial avec téléphone profil (seed Camille) — sinon gate Pro à la connexion."
+      ],
+      "steps": [
+        "App client — login client.demo → ouvrir la fiche d’un animal actif.",
+        "Appuyer sur Envoyer vers un pro.",
+        "Saisir l’e-mail du professionnel destinataire → confirmer.",
+        "Ouvrir l’e-mail reçu : vérifier le ton marketing, le CTA inscription, le téléphone commercial, le lien 24 h.",
+        "Ouvrir le lien → page /dossier/... → Télécharger le dossier.",
+        "Vérifier le ZIP : dossier.pdf (identité, mesures, visites avec pro consulté, liens petsFollow, téléphone commercial) + documents / carnet si présents.",
+        "(Optionnel) Attendre / forcer l’expiration → page « lien expiré »."
+      ],
+      "expected": [
+        "Snackbar succès côté client.",
+        "E-mail branding petsFollow + CTA pro + contact commercial.",
+        "Téléchargement ZIP avant expiry ; refus après 24 h.",
+        "Messagerie non incluse dans le pack."
+      ],
+      "checklist": [
+        "CTA fiche animal",
+        "E-mail reçu",
+        "Téléphone commercial visible (mail + PDF)",
+        "ZIP + dossier.pdf",
+        "Visites avec pro consulté",
+        "Expiry 24 h"
       ]
     }
   }
