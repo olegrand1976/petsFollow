@@ -26,6 +26,7 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+const { isStagingLike } = useAppEnv()
 if (!user.value) {
   await fetchUser().catch(() => null)
 }
@@ -41,6 +42,9 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
   { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },
   { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics', section: t('nav.section.offer') },
+  ...(isStagingLike.value
+    ? [usecasesNavItem(t('nav.usecases'), t('nav.section.offer'))]
+    : []),
   { to: '/commercial-manager/training', label: t('nav.commercialTraining'), icon: 'phone_in_talk', section: t('nav.section.ai') },
   { to: '/commercial-manager/ai-modules', label: t('nav.managerAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
   { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description', section: t('nav.section.ai') },

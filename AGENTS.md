@@ -57,11 +57,15 @@ Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; sta
 
 Relancer les données : `make seed`
 
+**Densification démo (prod-like)** : après le seed de base, `make seed-mass` ajoute des comptes `mass.*@petsfollow.test` (≈20 cabinets/vétos, ≈360 clients, ≈700 animaux, 8 care_pros), rattache les nouveaux vétos aux commerciaux Camille/Alex (inchangés), et recalcule les commissions (`AccrueAll*`). Idempotent (skip si déjà présent). Refusé si `APP_ENV=production`. Pour régénérer : `make seed && make seed-mass`.
+
 **Staging GCP** : pas de seed auto (Scheduler supprimé : `make gcp-delete-seed-scheduler`). Reset manuel : admin Pro (zone danger, phrase `RESET STAGING`) ou `bash infra/gcp/postdeploy.sh --seed`. Annonce staff après seed : email auto / commande `seed-notify`.
 
 ## Tests
 
 **Philosophie** : toute mutation métier = test au niveau le plus bas possible (Go intégration > Playwright `@p0` > widget Flutter). Non effet de bord (billing mock, users jetables, seed `*.petsfollow.test`). Règle Cursor : `.cursor/rules/anti-regression-quality.mdc`. Checklist P0/P1 + auto : [`documentation/15-PLAN-TESTS.md`](documentation/15-PLAN-TESTS.md).
+
+**Use cases commerciaux** : scénarios manuels non-tech → dossier [`useCase/`](useCase/) ; page Pro staging `/usecases` (admin / commercial / manager, layout selon rôle). Badge **S** topbar si `NUXT_PUBLIC_APP_ENV=staging` + session auth. Sync catalogue : `make usecases-sync` / garde-fou `make usecases-check` (CI). Règle `.cursor/rules/usecase-sync.mdc`.
 
 ```bash
 # Unitaires + intégration Go (intégration skip si DB absente ; sinon make up-infra)

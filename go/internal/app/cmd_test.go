@@ -16,3 +16,15 @@ func TestIsSeedNotifyCmd(t *testing.T) {
 		t.Fatal("empty args must not match")
 	}
 }
+
+func TestIsSeedMassCmd(t *testing.T) {
+	if !IsSeedMassCmd([]string{"seed-mass"}) {
+		t.Fatal("expected seed-mass match")
+	}
+	if IsSeedMassCmd([]string{"seed"}) {
+		t.Fatal("seed must not match seed-mass")
+	}
+	if IsSeedCmd([]string{"seed-mass"}) {
+		t.Fatal("seed-mass must not match seed")
+	}
+}

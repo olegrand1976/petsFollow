@@ -195,8 +195,16 @@ func (s *Store) EncodeVetForCommercial(ctx context.Context, commercialUserID str
 // AssignVetToCommercial sets assigned_commercial_id (admin overwrite allowed).
 // actorUserID is the admin/manager performing the action (falls back to commercialUserID).
 func (s *Store) AssignVetToCommercial(ctx context.Context, vetUserID, commercialUserID, actorUserID string) error {
+	// assigned_commercial_id has no role constraint in DB: refuse a non-sales target.
+	assignable, err := s.canOwnCommercialReferral(ctx, commercialUserID)
+	if err != nil {
+		return err
+	}
+	if !assignable {
+		return ErrValidation
+	}
 	var prevCommercial, practiceID string
-	err := s.pool.QueryRow(ctx, `
+	err = s.pool.QueryRow(ctx, `
 		SELECT COALESCE(assigned_commercial_id::text,''), COALESCE(practice_id::text,'')
 		FROM identity.users WHERE id=$1 AND role='vet'`, vetUserID).Scan(&prevCommercial, &practiceID)
 	if errors.Is(err, pgx.ErrNoRows) {

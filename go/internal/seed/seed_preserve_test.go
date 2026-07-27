@@ -16,6 +16,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TestMain marks the suite as a seedable environment: seed.Run / seed.RunMass
+// refuse to touch a database when APP_ENV is unset or unknown.
+func TestMain(m *testing.M) {
+	if os.Getenv("APP_ENV") == "" {
+		_ = os.Setenv("APP_ENV", "test")
+	}
+	os.Exit(m.Run())
+}
+
 func loadDotEnv() {
 	dir, _ := os.Getwd()
 	for i := 0; i < 8; i++ {

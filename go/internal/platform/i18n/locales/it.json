@@ -101,6 +101,7 @@
     "email_already_exists": "Esiste già un account con questa email",
     "prospect_already_owned": "Questo prospect è già gestito da un collega",
     "cannot_release_converted": "Impossibile liberare un prospect convertito",
+    "cannot_reassign_converted": "Impossibile riassegnare un prospect convertito",
     "invalid_invite_code": "Codice sponsor non valido",
     "already_assigned": "Questo studio è già assegnato a un commerciale",
     "already_linked": "Questo cliente è già collegato a questo studio",

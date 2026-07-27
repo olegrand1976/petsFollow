@@ -101,6 +101,7 @@
     "email_already_exists": "Er bestaat al een account met dit e-mailadres",
     "prospect_already_owned": "Dit prospect wordt al beheerd door een collega",
     "cannot_release_converted": "Kan een geconverteerd prospect niet vrijgeven",
+    "cannot_reassign_converted": "Kan een geconverteerd prospect niet opnieuw toewijzen",
     "invalid_invite_code": "Ongeldige sponsorcode",
     "already_assigned": "Deze praktijk is al toegewezen aan een commercial",
     "already_linked": "Deze klant is al gekoppeld aan deze praktijk",

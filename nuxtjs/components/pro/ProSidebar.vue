@@ -57,6 +57,9 @@ export type ProNavIcon =
   | 'analytics'
   | 'hub'
   | 'account_tree'
+  | 'support_agent'
+  | 'groups'
+  | 'checklist'
 
 export type ProNavItem = {
   to: string
@@ -114,6 +117,9 @@ const icons: Record<ProNavIcon, string> = {
   analytics: 'analytics',
   hub: 'hub',
   account_tree: 'account_tree',
+  support_agent: 'support_agent',
+  groups: 'groups',
+  checklist: 'checklist',
 }
 
 function iconName(name: ProNavIcon) {

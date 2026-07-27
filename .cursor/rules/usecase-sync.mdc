@@ -1,0 +1,24 @@
+---
+description: Garder useCase/ aligné avec tout parcours produit testable par les commerciaux
+alwaysApply: true
+---
+
+# Use cases commerciaux — sync `useCase/`
+
+À chaque **nouveau parcours utilisateur**, **changement de surface** (VetPro / Flutter Client / Pro Light), **nouveau rôle ou compte seed**, **changement d’offre/prix visible en démo**, **retrait ou rename d’écran**, ou **fix UX qui change les étapes** d’un scénario commercial :
+
+1. Identifier le(s) fichier(s) [`useCase/**/UC-*.md`](useCase/) impactés — ou **créer** un UC si parcours démo nouveau (bon dossier profil ou `useCase/10-interactions/`).
+2. Mettre à jour : étapes, résultat attendu, priorités ; [`useCase/COMPTES.md`](useCase/COMPTES.md) si seed changé ; session démo dans [`useCase/README.md`](useCase/README.md) si l’ordre change.
+3. Régénérer le catalogue Nuxt : `make usecases-sync` → [`nuxtjs/data/usecases/catalog.json`](nuxtjs/data/usecases/catalog.json) (page staging [`/usecases`](nuxtjs/pages/usecases/index.vue)). CI : `make usecases-check`.
+4. Si le parcours est aussi P0/P1 QA : aligner [`documentation/15-PLAN-TESTS.md`](documentation/15-PLAN-TESTS.md) (règle anti-régression). `useCase/` reste la version **non-tech** pour les commerciaux.
+5. Ne **pas** inventer de parcours non livrés (ex. pharmacie BE, simulation 10 ans).
+
+## Convention
+
+- IDs `UC-XX-NN` **immuables** ; renommer le slug fichier seulement si le titre change.
+- Compte seed nouveau → `useCase/COMPTES.md` **et** [`AGENTS.md`](AGENTS.md).
+
+```text
+# ❌ BAD — feature métier mergeée, étapes useCase/ obsolètes (démo commerciale mensongère)
+# ✅ GOOD — même PR : code + test auto + maj UC commercial(s) touché(s)
+```

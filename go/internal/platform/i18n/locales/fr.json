@@ -101,6 +101,7 @@
     "email_already_exists": "Un compte existe déjà avec cet email",
     "prospect_already_owned": "Ce prospect est déjà géré par un collègue",
     "cannot_release_converted": "Impossible de libérer un prospect converti",
+    "cannot_reassign_converted": "Impossible de réattribuer un prospect converti",
     "invalid_invite_code": "Code parrain invalide",
     "already_assigned": "Ce cabinet est déjà rattaché à un commercial",
     "already_linked": "Ce client est déjà rattaché à ce cabinet",

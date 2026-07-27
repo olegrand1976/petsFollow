@@ -84,7 +84,7 @@ func (a *API) Routes(r chi.Router) {
 	})
 	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
-	a.registerAppInviteRoutes(r)
+	a.registerAppInviteRoutes(r, authRL.Middleware)
 	a.registerPreconsultPublicRoutes(r, authRL.Middleware)
 	a.registerCommercialDiscoveryRoutes(r, authRL.Middleware)
 	a.registerAuthRoutes(r, authRL.Middleware)

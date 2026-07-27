@@ -101,6 +101,7 @@
     "email_already_exists": "An account already exists with this email",
     "prospect_already_owned": "This prospect is already managed by a colleague",
     "cannot_release_converted": "Cannot release a converted prospect",
+    "cannot_reassign_converted": "Cannot reassign a converted prospect",
     "invalid_invite_code": "Invalid referral code",
     "already_assigned": "This practice is already assigned to a sales rep",
     "already_linked": "This client is already linked to this practice",

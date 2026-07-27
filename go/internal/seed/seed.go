@@ -25,6 +25,9 @@ type ids struct {
 }
 
 func Run(ctx context.Context, pool *pgxpool.Pool) error {
+	if err := refuseSeedUnlessSeedableEnv("seed"); err != nil {
+		return err
+	}
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -948,24 +951,26 @@ func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
 }
 
 func logSummary() {
-	log.Println("--- Comptes démo petsFollow ---")
-	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
-	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
-	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
-	log.Printf("Commerc: commercial.demo2@petsfollow.test / %s (vet.parc assigné, 5 prospects Nord, rattaché manager)", passwordCommercial)
-	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
+	// Les mots de passe démo restent hors des logs (Cloud Run staging est plus
+	// largement lisible que la base) — voir AGENTS.md.
+	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
+	log.Println("Admin  : admin.demo@petsfollow.test")
+	log.Println("Manager: commercial.manager@petsfollow.test")
+	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
+	log.Println("Commerc: commercial.demo2@petsfollow.test (vet.parc assigné, 5 prospects Nord, rattaché manager)")
+	log.Println("Vétos  : *@petsfollow.test")
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
 	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
 	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
 	log.Println("  vet.reset@       — token démo reset mot de passe")
-	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
+	log.Println("Clients: *@petsfollow.test")
 	log.Println("  client.demo@     — 6 animaux · mix monthly/annual/triennial")
 	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
-	log.Printf("Care pro: *@petsfollow.test / %s (Flutter pro light)", passwordCarePro)
+	log.Println("Care pro: *@petsfollow.test (Flutter pro light)")
 	log.Println("  farrier.demo@    — maréchal · write_notes sur Spirit + visite ferrage")
 	log.Println("  vetlight.demo@   — véto light · write_notes sur Spirit")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)

@@ -59,4 +59,16 @@ gcloud run jobs deploy petsfollow-seed \
   --command=/app/petsfollow-api --args=seed \
   --quiet
 
-echo "Jobs déployés : petsfollow-migrate, petsfollow-seed"
+# Densification démo (additif, après seed). Pas de truncate. Idempotent.
+gcloud run jobs deploy petsfollow-seed-mass \
+  --project="$GCP_PROJECT_ID" --image="$IMAGE" --region="$GCP_RUN_REGION" \
+  --service-account="$SA" \
+  --memory=1Gi --cpu=1 --task-timeout=1800 --max-retries=0 \
+  --set-cloudsql-instances="$CLOUDSQL_INSTANCE" \
+  --vpc-connector="$CONNECTOR" --vpc-egress=private-ranges-only \
+  --env-vars-file="$API_ENV_FILE" \
+  --set-secrets="$(pf_seed_secrets)" \
+  --command=/app/petsfollow-api --args=seed-mass \
+  --quiet
+
+echo "Jobs déployés : petsfollow-migrate, petsfollow-seed, petsfollow-seed-mass"

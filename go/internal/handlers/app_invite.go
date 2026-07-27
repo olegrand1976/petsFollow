@@ -15,8 +15,13 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-func (a *API) registerAppInviteRoutes(r chi.Router) {
-	r.Get("/public/app-invite/{code}", a.getPublicAppInvite)
+func (a *API) registerAppInviteRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	// Public: brute-force d'un code (~40 bits) sinon possible sans limite.
+	if rateLimit != nil {
+		r.With(rateLimit).Get("/public/app-invite/{code}", a.getPublicAppInvite)
+	} else {
+		r.Get("/public/app-invite/{code}", a.getPublicAppInvite)
+	}
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))

@@ -26,6 +26,7 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+const { isStagingLike } = useAppEnv()
 if (!user.value) {
   await fetchUser().catch(() => null)
 }
@@ -37,6 +38,9 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/client-imports', label: t('nav.adminClientImports'), icon: 'description', section: t('nav.section.ops') },
   { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: t('nav.section.ops') },
   { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
+  ...(isStagingLike.value
+    ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
+    : []),
   { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users', section: t('nav.section.salesForce') },
   { to: '/admin/vet-pool', label: t('nav.adminVetPool'), icon: 'pets', section: t('nav.section.salesForce') },
   { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: t('nav.section.salesForce') },

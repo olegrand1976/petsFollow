@@ -39,6 +39,7 @@ pf_write_api_env_file() {
   cat >"$path" <<EOF
 HTTP_ADDR: ":8080"
 LOG_LEVEL: "info"
+APP_ENV: "${APP_ENV:-staging}"
 MIGRATE_ON_BOOT: "false"
 DEV_SEED_ENABLED: "${seed_enabled}"
 ADMIN_STAGING_SEED_ENABLED: "${admin_staging_seed}"
@@ -65,11 +66,14 @@ EOF
 pf_write_frontend_env_file() {
   local path="$1"
   local api_url="${2:-${PUBLIC_API_URL}}"
+  # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
+  local app_env="${3:-production}"
   cat >"$path" <<EOF
 NUXT_PUBLIC_API_BASE: "${api_url}"
 NUXT_API_BASE: "${api_url}"
 NUXT_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 NUXT_PUBLIC_GOOGLE_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
+NUXT_PUBLIC_APP_ENV: "${app_env}"
 HOST: "0.0.0.0"
 NITRO_PORT: "3000"
 NODE_OPTIONS: "--max-old-space-size=768"

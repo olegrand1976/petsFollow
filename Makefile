@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -15,6 +15,7 @@ help:
 	@echo "  make up-infra       db + redis + mailhog"
 	@echo "  make migrate        migrations API"
 	@echo "  make seed           seed demo"
+	@echo "  make seed-mass      densifie la DB (après seed) — volume démo prod-like"
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
 	@echo "  make flutter-dev    Flutter pets staging (émulateur) + Google Sign-In"
@@ -42,6 +43,15 @@ env:
 brand-sync:
 	@bash scripts/brand-sync.sh
 
+usecases-sync:
+	@node scripts/sync-usecases.mjs
+
+# Échoue si useCase/*.md a divergé du catalogue Nuxt (CI).
+usecases-check:
+	@node scripts/sync-usecases.mjs
+	@git diff --exit-code -- nuxtjs/data/usecases/catalog.json \
+		|| (echo "catalog.json obsolète — lancez make usecases-sync et committez" >&2; exit 1)
+
 up: env brand-sync
 	$(COMPOSE) up --build -d
 
@@ -55,10 +65,13 @@ migrate: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api migrate
 
 seed: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local go run ./cmd/petsfollow-api seed
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed
+
+seed-mass: env
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} go run ./cmd/petsfollow-api
 
 nuxtjs-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
@@ -86,6 +99,7 @@ test-flutter-smoke:
 	cd flutter && flutter pub get && flutter test test/smoke/ --dart-define=RUN_FLUTTER_SMOKE=true
 
 test-nuxt:
+	$(MAKE) usecases-check
 	cd nuxtjs && npm install && npm test
 
 # Garde-fou connexion / reset — à lancer avant deploy (DB seedée pour le volet Go).

@@ -210,6 +210,16 @@ func SeedOnly(ctx context.Context, cfg config.Config) error {
 	return nil
 }
 
+// SeedMassOnly densifies the DB after a normal seed (additive mass.* accounts).
+func SeedMassOnly(ctx context.Context, cfg config.Config) error {
+	pool, err := db.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	return seed.RunMass(ctx, pool)
+}
+
 // SeedNotifyOnly emails staging seed notice to staff (no DB truncate).
 func SeedNotifyOnly(ctx context.Context, cfg config.Config) error {
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
@@ -232,6 +242,10 @@ func IsMigrateCmd(args []string) bool {
 
 func IsSeedCmd(args []string) bool {
 	return len(args) > 0 && strings.EqualFold(args[0], "seed")
+}
+
+func IsSeedMassCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "seed-mass")
 }
 
 func IsSeedNotifyCmd(args []string) bool {

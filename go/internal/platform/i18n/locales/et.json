@@ -101,6 +101,7 @@
     "email_already_exists": "Selle e-postiga konto on juba olemas",
     "prospect_already_owned": "Seda prospecti haldab juba kolleeg",
     "cannot_release_converted": "Konverteeritud prospecti ei saa vabastada",
+    "cannot_reassign_converted": "Konverteeritud prospecti ei saa ümber määrata",
     "invalid_invite_code": "Vigane sponsorikood",
     "already_assigned": "See kabinet on juba müügiesindajale määratud",
     "already_linked": "See klient on juba selle kabinetiga seotud",

@@ -31,9 +31,17 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291',
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+      /** local | staging | production — pages use cases + badge S (staging AUTH). */
+      appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'local',
     },
   },
   routeRules: {
+    '/admin/usecases': { redirect: '/usecases' },
+    '/admin/usecases/**': { redirect: '/usecases' },
+    '/commercial/usecases': { redirect: '/usecases' },
+    '/commercial/usecases/**': { redirect: '/usecases' },
+    '/commercial-manager/usecases': { redirect: '/usecases' },
+    '/commercial-manager/usecases/**': { redirect: '/usecases' },
     '/**': {
       headers: {
         'X-Frame-Options': 'DENY',

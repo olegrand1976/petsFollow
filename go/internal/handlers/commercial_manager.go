@@ -283,13 +283,18 @@ func (a *API) managerReassignProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if err := a.store.ReassignProspectCommercial(r.Context(), prospectID, strings.TrimSpace(req.CommercialUserID), id.UserID); err != nil {
+	target := strings.TrimSpace(req.CommercialUserID)
+	if err := a.store.ReassignProspectCommercial(r.Context(), prospectID, target, id.UserID); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
 		if errors.Is(err, store.ErrValidation) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "cannot_release_converted")
+			msg := "cannot_reassign_converted"
+			if target == "" {
+				msg = "cannot_release_converted"
+			}
+			writeErr(w, r, http.StatusBadRequest, "bad_request", msg)
 			return
 		}
 		if err.Error() == "invalid_commercial" {

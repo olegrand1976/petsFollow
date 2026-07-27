@@ -65,6 +65,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - name: Use cases catalog in sync
+        working-directory: .
+        run: make usecases-check
       - run: npm test
 
   flutter:

@@ -59,7 +59,8 @@
     "adminVetPool": "Pool studi",
     "commercialFiliation": "Filiazione",
     "managerFiliation": "Filiazione team",
-    "adminFiliation": "Filiazione"
+    "adminFiliation": "Filiazione",
+    "usecases": "Guide di test"
   },
   "training": {
     "title": "Allenamento AI",
@@ -364,7 +365,8 @@
         "subscription": "Sottoscrizione",
         "one_time": "Pagamento unico"
       }
-    }
+    },
+    "stagingEnv": "Ambiente staging"
   },
   "commercial": {
     "dashboard": {
@@ -2640,5 +2642,49 @@
     "truncatedPage": "Pagina completa ({limit} righe) — usa Avanti per continuare.",
     "exportCsvPageHint": "L’export CSV include solo la pagina visualizzata.",
     "eventsTruncatedPage": "Pagina storico completa ({limit} righe) — usa Avanti per continuare."
+  },
+  "usecases": {
+    "title": "Guide di test",
+    "subtitle": "No tech skills needed: follow the steps like a checklist and note what breaks.",
+    "stagingOnly": "Test environment",
+    "howtoTitle": "Come fare?",
+    "howto1": "Pick a scenario (ideally the recommended path below).",
+    "howto2": "Sign in with the account shown (Copy buttons on the detail page).",
+    "howto3": "Follow the steps one by one.",
+    "howto4": "Mark: works / issue / not tested — and report bugs.",
+    "howtoHint": "Tip: if a scenario says “Attention”, it changes demo data — don’t repeat it the same day.",
+    "demoSession": "Recommended path (30–45 min)",
+    "demoSessionBlurb": "Best sequence to discover the product before a client meeting.",
+    "destructive": "Attention — demo data",
+    "destructiveShort": "Attention",
+    "destructiveHint": "This scenario creates or consumes a demo account. If already done, skip it or mark “not tested”.",
+    "back": "Torna all'elenco",
+    "refId": "Reference: {id}",
+    "objective": "What is this for?",
+    "actors": "Who signs in?",
+    "actorsHelp": "Use exactly these demo credentials.",
+    "prerequisites": "Before you start",
+    "steps": "Steps to follow",
+    "stepsHelp": "Do them in order. Take your time.",
+    "expected": "What you should see",
+    "expectedHelp": "If not, note an issue (screen, error message, screenshot).",
+    "checklist": "Quick review",
+    "checklistHelp": "For each point: works · issue · not tested.",
+    "checkOk": "works",
+    "checkKo": "issue",
+    "checkNa": "not tested",
+    "colRole": "Profile",
+    "colAccount": "Email",
+    "colPassword": "Password",
+    "copy": "Copia",
+    "copied": "Copiato!",
+    "priorityDemo": "For the demo",
+    "priorityImportant": "Important",
+    "prioritySecondary": "Secondary",
+    "feedbackTitle": "A problem or an idea?",
+    "feedbackBody": "Write what happened, what you expected, and send it to the product team (screenshot welcome).",
+    "notFound": "Scenario not found",
+    "notFoundHint": "Go back to the list or ask the team to regenerate the catalog.",
+    "durationLabel": "Durata: {duration}"
   }
 }

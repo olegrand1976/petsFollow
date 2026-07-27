@@ -134,6 +134,31 @@ func (s *Store) CommercialBelongsToManager(ctx context.Context, commercialUserID
 	return ok, err
 }
 
+// SalesPeerVisible reports whether viewerUserID may see ownerUserID's full sales
+// records: same user, own team member, or own manager.
+func (s *Store) SalesPeerVisible(ctx context.Context, ownerUserID, viewerUserID string) (bool, error) {
+	if ownerUserID == "" || viewerUserID == "" {
+		return false, nil
+	}
+	if ownerUserID == viewerUserID {
+		return true, nil
+	}
+	var ok bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1
+			FROM identity.users owner, identity.users viewer
+			WHERE owner.id=$1 AND viewer.id=$2
+			  AND (
+				owner.manager_user_id = viewer.id
+				OR viewer.manager_user_id = owner.id
+				OR (owner.manager_user_id IS NOT NULL
+					AND owner.manager_user_id = viewer.manager_user_id)
+			  )
+		)`, ownerUserID, viewerUserID).Scan(&ok)
+	return ok, err
+}
+
 func (s *Store) CreateCommercialUserWithManager(ctx context.Context, email, password, fullName, managerUserID string) (string, error) {
 	if managerUserID != "" {
 		var role string

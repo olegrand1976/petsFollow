@@ -34,5 +34,6 @@ Index des documents de référence du projet.
 | 29 | [29-ANALYSE-CONCURRENCE.md](29-ANALYSE-CONCURRENCE.md) | Concurrence FR/BE/ES (commerciaux) |
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
+| — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 
 Opérationnel : `make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`.

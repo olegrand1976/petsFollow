@@ -372,6 +372,10 @@ func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_commercial")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

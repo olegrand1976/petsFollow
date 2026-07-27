@@ -3,6 +3,13 @@
     <div class="pro-topbar__left">
       <PetsFollowLogo variant="compact" :link-to="homeLink" />
       <span
+        v-if="showStagingTag"
+        class="pro-topbar__env"
+        data-testid="pro-topbar-staging"
+        :title="$t('common.stagingEnv')"
+        :aria-label="$t('common.stagingEnv')"
+      >S</span>
+      <span
         v-if="practiceName"
         class="pro-topbar__practice"
         data-testid="pro-topbar-practice"
@@ -128,6 +135,7 @@ const props = withDefaults(
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser } = useProUser()
+const { isStaging } = useAppEnv()
 const { captureOriginPage } = useSupportDiagnostics()
 const {
   items: notifItems,
@@ -143,6 +151,8 @@ const notifOpen = ref(false)
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
 const practiceName = computed(() => user.value?.practiceName?.trim() || '')
+/** Tag « S » : environnement staging + session authentifiée. */
+const showStagingTag = computed(() => isStaging.value && !!user.value)
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)

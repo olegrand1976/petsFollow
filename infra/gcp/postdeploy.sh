@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Postdeploy petsFollow : jobs + seed optionnel + smoke.
-# Usage: ./infra/gcp/postdeploy.sh [--seed]
+# Usage: ./infra/gcp/postdeploy.sh [--seed] [--seed-mass]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,9 +8,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/gcp-env.sh"
 
 RUN_SEED=false
+RUN_SEED_MASS=false
 for arg in "$@"; do
   case "$arg" in
     --seed|--seed-reset) RUN_SEED=true ;;
+    --seed-mass) RUN_SEED_MASS=true ;;
     --skip-seed) RUN_SEED=false ;;
   esac
 done
@@ -32,6 +34,9 @@ bash "${SCRIPT_DIR}/grant-app-privileges.sh"
 
 if $RUN_SEED; then
   run_job "petsfollow-seed"
+fi
+if $RUN_SEED_MASS; then
+  run_job "petsfollow-seed-mass"
 fi
 
 API_URL="$(api_run_url)"

@@ -351,7 +351,8 @@ func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) commercialLookupProspect(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireCommercial(w, r); !ok {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
 		return
 	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
@@ -364,7 +365,28 @@ func (a *API) commercialLookupProspect(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	if res.Status == "owned" && res.Prospect != nil {
+		visible, verr := a.store.SalesPeerVisible(r.Context(), res.OwnerUserID, id.UserID)
+		if verr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !visible {
+			res.Prospect = minimalForeignProspect(res.Prospect)
+		}
+	}
 	httpx.WriteData(w, http.StatusOK, res)
+}
+
+// minimalForeignProspect keeps only what the anti-duplicate check needs when the
+// prospect belongs to another team — no contact details, no notes.
+func minimalForeignProspect(p *store.Prospect) *store.Prospect {
+	return &store.Prospect{
+		ID:           p.ID,
+		PracticeName: p.PracticeName,
+		City:         p.City,
+		Status:       p.Status,
+	}
 }
 
 func writeProspectOwned(w http.ResponseWriter, r *http.Request, owned *store.ErrProspectOwned) {

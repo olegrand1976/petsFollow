@@ -74,8 +74,13 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	// dev/demo) et sur le gateway billing mock (opt-in explicite).
 	_ = os.Setenv("DEV_SEED_ENABLED", "true")
 	_ = os.Setenv("BILLING_MOCK_ENABLED", "true")
+	// seed.Run refuse de tourner hors environnement seedable (allowlist APP_ENV).
+	_ = os.Setenv("APP_ENV", "test")
 	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).
-	_ = os.Setenv("AUTH_RATE_LIMIT_PER_MIN", "0")
+	// Les tests qui vérifient le rate limit posent AUTH_RATE_LIMIT_PER_MIN via t.Setenv.
+	if os.Getenv("AUTH_RATE_LIMIT_PER_MIN") == "" {
+		_ = os.Setenv("AUTH_RATE_LIMIT_PER_MIN", "0")
+	}
 	cfg := config.Load()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

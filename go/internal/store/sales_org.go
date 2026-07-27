@@ -321,6 +321,10 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 		}
 		return nil
 	}
+	// A converted prospect is already accrued: moving it would rewrite attribution.
+	if existing.Status == "converted" {
+		return ErrValidation
+	}
 	if existing.CommercialUserID != "" {
 		ok, err := s.CommercialBelongsToManager(ctx, existing.CommercialUserID, managerUserID)
 		if err != nil {
@@ -340,7 +344,7 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE sales.prospects
 		SET commercial_user_id=$2::uuid, updated_at=NOW()
-		WHERE id=$1`, prospectID, commercialUserID)
+		WHERE id=$1 AND status <> 'converted'`, prospectID, commercialUserID)
 	if err != nil {
 		return err
 	}

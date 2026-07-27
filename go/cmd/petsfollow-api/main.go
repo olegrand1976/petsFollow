@@ -32,6 +32,13 @@ func main() {
 		log.Println("seed-notify OK")
 		return
 	}
+	if app.IsSeedMassCmd(os.Args[1:]) {
+		if err := app.SeedMassOnly(ctx, cfg); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("seed-mass OK")
+		return
+	}
 	if app.IsSeedCmd(os.Args[1:]) {
 		if err := app.SeedOnly(ctx, cfg); err != nil {
 			log.Fatal(err)

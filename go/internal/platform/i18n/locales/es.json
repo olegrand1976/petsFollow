@@ -101,6 +101,7 @@
     "email_already_exists": "Ya existe una cuenta con este correo",
     "prospect_already_owned": "Este prospecto ya lo gestiona un compañero",
     "cannot_release_converted": "No se puede liberar un prospecto convertido",
+    "cannot_reassign_converted": "No se puede reasignar un prospecto convertido",
     "invalid_invite_code": "Código de padrino inválido",
     "already_assigned": "Esta clínica ya está asignada a un comercial",
     "already_linked": "Este cliente ya está vinculado a esta clínica",

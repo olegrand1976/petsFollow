@@ -39,3 +39,4 @@ Réf. manuelle + auto : `documentation/15-PLAN-TESTS.md` (P0/P1 + section Z).
 1. Identifier le parcours P0/P1 impacté dans `15-PLAN-TESTS.md`.
 2. Ajouter ou étendre le test automatisé correspondant.
 3. Indiquer comment rejouer localement (`make test-go` / `test-nuxt` / `test-e2e-p0` / smoke).
+4. Si parcours **démo / commercial** impacté → maj [`useCase/`](useCase/) (règle `usecase-sync.mdc`).
