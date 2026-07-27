@@ -161,7 +161,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         : l10n.myPets;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
-    final mission = DiscoveryController.instance.missionCardForToday(
+    final mission = DiscoveryController.instance.nextMissionCard(
       cards.where((c) => !c.completed && !c.locked).toList(),
       progress,
     );

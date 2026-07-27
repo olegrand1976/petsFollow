@@ -11,7 +11,7 @@ class DiscoveryProgress {
   final List<String> completedCards;
   final int streakDays;
 
-  /// Journey step indices (narrative labels may still say "day N").
+  /// Stage indices (API keys remain `day0`/`day2`/`day4`/`day6` for compat).
   static const journeyDays = [0, 2, 4, 6];
 
   factory DiscoveryProgress.fromJson(Map<String, dynamic> json) {
@@ -26,16 +26,8 @@ class DiscoveryProgress {
 
   static String cardKeyForDay(int dayIndex) => 'day$dayIndex';
 
-  int daysSinceStart([DateTime? now]) {
-    final today = now ?? DateTime.now();
-    final start = DateTime(startedAt.year, startedAt.month, startedAt.day);
-    final current = DateTime(today.year, today.month, today.day);
-    return current.difference(start).inDays;
-  }
-
-  /// Sequential unlock: card N opens once the previous journey card is completed.
-  /// Calendar days no longer gate progression.
-  bool isCardUnlocked(int dayIndex, [DateTime? now]) {
+  /// Next stage unlocks as soon as the previous stage is completed (no calendar wait).
+  bool isCardUnlocked(int dayIndex) {
     final i = journeyDays.indexOf(dayIndex);
     if (i <= 0) return true;
     return isCardCompleted(journeyDays[i - 1]);
