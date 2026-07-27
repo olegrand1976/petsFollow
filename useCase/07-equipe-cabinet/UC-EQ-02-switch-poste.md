@@ -37,6 +37,8 @@ Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un a
 ## Résultat attendu
 
 - Switch toujours protégé par mot de passe (jamais de bascule silencieuse).
+- Dès l’ouverture du switch, la session précédente est invalidée (comme en veille) : un autre onglet ne garde pas l’accès.
+- « Annuler » sur le switch ne restaure pas le compte précédent sans mot de passe → écran de veille.
 - Veille après inactivité : plus d’accès aux données sans re-saisie du mot de passe.
 - Chaque utilisateur retrouve son dernier écran.
 
@@ -46,6 +48,7 @@ Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un a
 |--|----------|
 | Avatars équipe dans le header | OK / KO / N/A |
 | Switch avec mot de passe | OK / KO / N/A |
+| Annuler switch → veille (re-auth) | OK / KO / N/A |
 | Restauration dernier écran | OK / KO / N/A |
 | Veille 2 min + déverrouillage | OK / KO / N/A |
 

@@ -142,14 +142,10 @@ async function onAbandon() {
 }
 
 function backFrom2fa() {
-  if (promptMode.value === 'lock') {
-    step.value = 'credentials'
-    totpCode.value = ''
-    mfaToken.value = ''
-    error.value = ''
-    return
-  }
-  desk.cancelPrompt()
+  step.value = 'credentials'
+  totpCode.value = ''
+  mfaToken.value = ''
+  error.value = ''
 }
 
 function mapAuthFail(reason: 'error' | 'proOnly' | 'mfa') {

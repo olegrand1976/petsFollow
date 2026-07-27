@@ -55,8 +55,8 @@ if (!user.value && !isBareShellPath(route.path) && !isDeskLockedFlag()) {
 }
 const showNav = computed(() => {
   // Pas de shell Pro tant que /api/me n'a pas confirmé le rôle (évite login sous topbar).
-  // En veille desk : pas de nav (overlay couvre).
-  if (deskLocked.value) return false
+  // Veille / switch : pas de nav (overlay couvre — PHI + identité hors écran).
+  if (deskUiBlocked.value) return false
   if (!user.value?.role) return false
   return !isBareShellPath(route.path)
 })

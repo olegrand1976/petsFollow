@@ -36,7 +36,7 @@ function isCurrent(email: string) {
 
 function onPick(email: string) {
   if (isCurrent(email)) return
-  desk.openSwitch(email)
+  void desk.openSwitch(email)
 }
 </script>
 

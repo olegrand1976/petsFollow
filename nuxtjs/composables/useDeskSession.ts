@@ -75,9 +75,14 @@ function setDeskLockedFlag(on: boolean) {
 
 function idleMs(): number {
   if (!import.meta.client) return DEFAULT_IDLE_MS
-  const w = window as Window & { __PF_DESK_IDLE_MS?: number }
-  if (typeof w.__PF_DESK_IDLE_MS === 'number' && w.__PF_DESK_IDLE_MS > 0) {
-    return w.__PF_DESK_IDLE_MS
+  // Override only hors prod — évite de désactiver la veille partagée en production.
+  const env = String(useRuntimeConfig().public.appEnv || '')
+  const allowOverride = import.meta.dev || env === 'staging' || env === 'local' || env === 'test'
+  if (allowOverride) {
+    const w = window as Window & { __PF_DESK_IDLE_MS?: number }
+    if (typeof w.__PF_DESK_IDLE_MS === 'number' && w.__PF_DESK_IDLE_MS > 0) {
+      return w.__PF_DESK_IDLE_MS
+    }
   }
   return DEFAULT_IDLE_MS
 }
@@ -210,16 +215,32 @@ export function useDeskSession() {
     await clearAuthTokens()
   }
 
-  function openSwitch(email: string) {
+  function emailAllowedForDesk(email: string): boolean {
+    if (!roster.value.length) return true
+    const needle = email.toLowerCase()
+    return roster.value.some((m) => m.email.toLowerCase() === needle)
+  }
+
+  /** Switch = suspend session (comme veille) : autre onglet ne doit plus voir le JWT précédent. */
+  async function openSwitch(email: string) {
     if (!email || email.toLowerCase() === user.value?.email?.toLowerCase()) return
     rememberCurrentPath()
     clearIdleTimer()
+    const practiceId = user.value?.practiceId
     pendingEmail.value = email
     promptMode.value = 'switch'
+    locked.value = true
+    setDeskLockedFlag(true)
+    loadRosterFromCache(practiceId)
+    await clearAuthTokens()
   }
 
   function cancelPrompt() {
-    if (locked.value) return
+    // Après openSwitch la session est déjà purgée → bascule en veille (re-auth obligatoire).
+    if (locked.value) {
+      promptMode.value = 'lock'
+      return
+    }
     promptMode.value = null
     pendingEmail.value = ''
     bumpIdle()
@@ -242,6 +263,7 @@ export function useDeskSession() {
     | { ok: false; reason: 'error' | 'proOnly' }
 
   async function authenticate(email: string, password: string): Promise<AuthResult> {
+    if (!emailAllowedForDesk(email)) return { ok: false, reason: 'error' }
     try {
       const res = await $fetch('/api/auth/login', {
         method: 'POST',
