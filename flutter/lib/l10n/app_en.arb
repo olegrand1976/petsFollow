@@ -338,7 +338,7 @@
   "tapHere": "Tap here on each beat",
   "bpmLabel": "BPM: {bpm}",
   "beatsLabel": "Beats: {count}",
-  "thresholdAlert": "Threshold alert",
+  "thresholdAlert": "Alert: significant rise vs previous reading",
   "validateAndSend": "Validate and send to vet",
   "heartRateCommentLabel": "Comment (optional)",
   "heartRateCommentHint": "E.g. restless, at rest, after exercise…",

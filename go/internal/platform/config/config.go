@@ -23,8 +23,6 @@ type Config struct {
 	// SMTPUser / SMTPPass — auth PLAIN (OVH :587). Vides = MailHog / relay ouvert.
 	SMTPUser string
 	SMTPPass string
-	HeartRateMinBPM                int
-	HeartRateMaxBPM                int
 	HeartRateSeconds               int
 	StripeSecretKey                string
 	StripeWebhookSecret            string
@@ -101,8 +99,6 @@ func Load() Config {
 		SMTPFrom:                       envOr("SMTP_FROM", "petsFollow <noreply@petsfollow.test>"),
 		SMTPUser:                       envOr("SMTP_USER", ""),
 		SMTPPass:                       envOr("SMTP_PASS", ""),
-		HeartRateMinBPM:                envInt("HEARTRATE_MIN_BPM", 60),
-		HeartRateMaxBPM:                envInt("HEARTRATE_MAX_BPM", 140),
 		HeartRateSeconds:               envInt("HEARTRATE_DURATION_SEC", 60),
 		StripeSecretKey:                envOr("STRIPE_SECRET_KEY", ""),
 		StripeWebhookSecret:            envOr("STRIPE_WEBHOOK_SECRET", "whsec_test"),

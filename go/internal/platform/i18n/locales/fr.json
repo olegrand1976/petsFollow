@@ -538,7 +538,7 @@
     "support_ticket_reply_disclaimer": "Si vous avez besoin d'ajouter des informations, répondez à support@petsfollow.app en rappelant votre ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Alerte seuil cardiaque",
     "heartrate_alert_tagline": "Alerte seuil BPM",
-    "heartrate_alert_preheader": "Relevé hors seuils — BPM {bpm}.",
+    "heartrate_alert_preheader": "Hausse significative du BPM — {bpm}.",
     "heartrate_alert_greeting": "Bonjour,",
     "heartrate_alert_intro": "Un relevé cardiaque validé montre une hausse significative du BPM par rapport au précédent. BPM : {bpm}. Merci de consulter le dossier patient.",
     "heartrate_alert_disclaimer": "Connectez-vous à petsFollow Pro pour consulter le dossier patient."

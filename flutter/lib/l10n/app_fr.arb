@@ -401,7 +401,7 @@
       }
     }
   },
-  "thresholdAlert": "Alerte seuil",
+  "thresholdAlert": "Alerte : hausse significative vs le relevé précédent",
   "validateAndSend": "Valider et envoyer au véto",
   "heartRateCommentLabel": "Commentaire (optionnel)",
   "heartRateCommentHint": "Ex. agité, au repos, après effort…",

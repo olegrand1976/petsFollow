@@ -15,7 +15,7 @@ class HeartRateFlowScreen extends StatefulWidget {
     super.key,
     required this.petId,
     required this.durationsSec,
-    this.species,
+    required this.species,
   });
 
   final String petId;
@@ -23,8 +23,8 @@ class HeartRateFlowScreen extends StatefulWidget {
   /// Durations enabled by the pet's primary practice (vet settings).
   final List<int> durationsSec;
 
-  /// When set to a non-HR species (`other`), the screen pops immediately.
-  final String? species;
+  /// Pet species; non-HR species (`other`) pop immediately.
+  final String species;
 
   @override
   State<HeartRateFlowScreen> createState() => _HeartRateFlowScreenState();

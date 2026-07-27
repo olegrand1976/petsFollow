@@ -11,17 +11,6 @@ func TestCalculateBPM(t *testing.T) {
 	}
 }
 
-func TestIsHeartRateAlert(t *testing.T) {
-	if !IsHeartRateAlert(50, 60, 140) {
-		t.Fatal("expected alert for low bpm")
-	}
-	if !IsHeartRateAlert(150, 60, 140) {
-		t.Fatal("expected alert for high bpm")
-	}
-	if IsHeartRateAlert(80, 60, 140) {
-		t.Fatal("expected no alert")
-	}
-}
 
 func TestSupportsHeartRateControl(t *testing.T) {
 	if !SupportsHeartRateControl("dog") || !SupportsHeartRateControl("cat") || !SupportsHeartRateControl("horse") {

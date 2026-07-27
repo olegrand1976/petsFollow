@@ -915,7 +915,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Alerte seuil';
+  String get thresholdAlert =>
+      'Alerte : hausse significative vs le relevé précédent';
 
   @override
   String get validateAndSend => 'Valider et envoyer au véto';

@@ -916,7 +916,8 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Avviso di soglia';
+  String get thresholdAlert =>
+      'Avviso: aumento significativo rispetto alla lettura precedente';
 
   @override
   String get validateAndSend => 'Convalidare e inviare al veterinario';

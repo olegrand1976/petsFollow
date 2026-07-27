@@ -338,7 +338,7 @@
   "tapHere": "Pulse aquí en cada latido",
   "bpmLabel": "BPM: {bpm}",
   "beatsLabel": "Latidos: {count}",
-  "thresholdAlert": "Alerta de umbral",
+  "thresholdAlert": "Alerta: aumento significativo respecto a la lectura anterior",
   "validateAndSend": "Validar y enviar al veterinario",
   "heartRateCommentLabel": "Comentario (opcional)",
   "heartRateCommentHint": "Ej. agitado, en reposo, tras el esfuerzo…",

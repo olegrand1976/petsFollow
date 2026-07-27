@@ -10,7 +10,7 @@ void main() {
   ) async {
     await pumpApp(
       tester,
-      home: const HeartRateFlowScreen(petId: 'pet-1', durationsSec: [15]),
+      home: const HeartRateFlowScreen(petId: 'pet-1', durationsSec: [15], species: 'dog'),
     );
     await tester.pumpAndSettle();
 

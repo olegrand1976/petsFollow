@@ -913,7 +913,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Alerta de umbral';
+  String get thresholdAlert =>
+      'Alerta: aumento significativo respecto a la lectura anterior';
 
   @override
   String get validateAndSend => 'Validar y enviar al veterinario';

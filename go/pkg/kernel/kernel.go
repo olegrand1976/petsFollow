@@ -115,7 +115,3 @@ func IsHeartRateDeltaAlert(currentBPM int, previousBPM *int, delta int) bool {
 	return currentBPM-*previousBPM >= delta
 }
 
-// IsHeartRateAlert reports whether bpm is outside an absolute band (legacy).
-func IsHeartRateAlert(bpm, minBPM, maxBPM int) bool {
-	return bpm < minBPM || bpm > maxBPM
-}

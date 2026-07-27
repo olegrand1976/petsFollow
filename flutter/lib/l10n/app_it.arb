@@ -401,7 +401,7 @@
       }
     }
   },
-  "thresholdAlert": "Avviso di soglia",
+  "thresholdAlert": "Avviso: aumento significativo rispetto alla lettura precedente",
   "validateAndSend": "Convalidare e inviare al veterinario",
   "heartRateCommentLabel": "Commento (facoltativo)",
   "heartRateCommentHint": "Ex. agitato, a riposo, dopo l'esercizio...",

@@ -289,7 +289,7 @@ func (n *Notifier) SendHeartrateValidated(to, locale string, bpm int) error {
 	return n.SendVetAlert(to, subject, body)
 }
 
-// SendHeartrateThresholdAlert notifies the vet that a validated reading is outside the normal BPM range.
+// SendHeartrateThresholdAlert notifies the vet that a validated reading rose by at least the species BPM delta.
 func (n *Notifier) SendHeartrateThresholdAlert(to, locale string, bpm int) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{"bpm": fmt.Sprintf("%d", bpm)}

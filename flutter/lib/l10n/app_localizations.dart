@@ -1759,7 +1759,7 @@ abstract class AppLocalizations {
   /// No description provided for @thresholdAlert.
   ///
   /// In fr, this message translates to:
-  /// **'Alerte seuil'**
+  /// **'Alerte : hausse significative vs le relevé précédent'**
   String get thresholdAlert;
 
   /// No description provided for @validateAndSend.

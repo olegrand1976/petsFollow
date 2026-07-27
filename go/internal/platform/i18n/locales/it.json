@@ -426,7 +426,7 @@
     "support_ticket_reply_disclaimer": "Per aggiungere dettagli, scrivi a support@petsfollow.app citando il ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Allerta soglia cardiaca",
     "heartrate_alert_tagline": "Allerta soglia BPM",
-    "heartrate_alert_preheader": "Lettura fuori soglia — BPM {bpm}.",
+    "heartrate_alert_preheader": "Aumento significativo del BPM — {bpm}.",
     "heartrate_alert_greeting": "Buongiorno,",
     "heartrate_alert_intro": "Una lettura cardiaca convalidata mostra un aumento significativo del BPM rispetto alla precedente. BPM: {bpm}. Consultare la cartella del paziente.",
     "heartrate_alert_disclaimer": "Accedi a PetsFollow Pro per visualizzare la cartella clinica del paziente."

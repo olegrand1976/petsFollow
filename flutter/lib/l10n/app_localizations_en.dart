@@ -910,7 +910,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Threshold alert';
+  String get thresholdAlert => 'Alert: significant rise vs previous reading';
 
   @override
   String get validateAndSend => 'Validate and send to vet';

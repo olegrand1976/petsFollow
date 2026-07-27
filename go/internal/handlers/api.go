@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -851,14 +852,10 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bpm := kernel.CalculateBPM(req.TapCount, sess.DurationSec)
-	alert := false
-	if pet, perr := a.store.GetPet(r.Context(), sess.PetID); perr == nil {
-		if delta, ok, derr := a.store.GetHeartRateAlertDelta(r.Context(), pet.Species); derr == nil && ok {
-			prev, lerr := a.store.LastValidatedBPM(r.Context(), sess.PetID)
-			if lerr == nil {
-				alert = kernel.IsHeartRateDeltaAlert(bpm, prev, delta)
-			}
-		}
+	alert, err := a.heartRateDeltaAlert(r.Context(), sess.PetID, bpm)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
 	}
 	sess, err = a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
 	if err != nil {
@@ -920,6 +917,28 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
+}
+
+
+// heartRateDeltaAlert reports whether bpm rose by at least the species delta
+// versus the last validated reading. Unsupported species → false, nil.
+func (a *API) heartRateDeltaAlert(ctx context.Context, petID string, bpm int) (bool, error) {
+	pet, err := a.store.GetPet(ctx, petID)
+	if err != nil {
+		return false, err
+	}
+	delta, ok, err := a.store.GetHeartRateAlertDelta(ctx, pet.Species)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	prev, err := a.store.LastValidatedBPM(ctx, petID)
+	if err != nil {
+		return false, err
+	}
+	return kernel.IsHeartRateDeltaAlert(bpm, prev, delta), nil
 }
 
 func (a *API) cancelHeartRate(w http.ResponseWriter, r *http.Request) {

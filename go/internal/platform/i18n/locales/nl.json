@@ -538,7 +538,7 @@
     "support_ticket_reply_disclaimer": "Voor meer details: mail support@petsfollow.app met vermelding van uw ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Drempelwaarschuwing hartslag",
     "heartrate_alert_tagline": "BPM-drempelwaarschuwing",
-    "heartrate_alert_preheader": "Meting buiten drempels — BPM {bpm}.",
+    "heartrate_alert_preheader": "Significante BPM-stijging — {bpm}.",
     "heartrate_alert_greeting": "Hallo,",
     "heartrate_alert_intro": "Een gevalideerde hartslagmeting toont een significante BPM-stijging ten opzichte van de vorige. BPM: {bpm}. Raadpleeg het patiëntendossier.",
     "heartrate_alert_disclaimer": "Meld u aan bij petsFollow Pro om het patiëntendossier te raadplegen."

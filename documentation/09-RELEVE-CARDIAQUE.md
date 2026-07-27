@@ -51,7 +51,7 @@ Alerte si **hausse** par rapport au **dernier relevé validé** du même animal 
 - Seuils en base : `heartrate.species_alert_deltas` (migration `000078`, seed **dog / cat / horse = 30**).
 - À la validation d’un relevé `is_alert` : email véto `SendHeartrateThresholdAlert` (si pref `emailOnHeartrate`).
 
-Les anciens seuils absolus 60–140 (`HEARTRATE_MIN/MAX_BPM`) ne pilotent plus `is_alert`.
+Les anciens seuils absolus 60–140 (`HEARTRATE_MIN/MAX_BPM`) ont été retirés ; seule la hausse vs précédent pilote `is_alert`.
 
 ## Accueil Flutter
 

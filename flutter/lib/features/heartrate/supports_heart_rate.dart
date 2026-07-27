@@ -1,8 +1,6 @@
-/// Species that support heart-rate measurement.
-/// Unknown/`null` is treated as allowed (caller may omit species); only
-/// explicit non-HR species such as `other` are blocked.
+/// Species that support heart-rate measurement (aligned with API kernel).
+/// Empty/unknown species are not supported.
 bool supportsHeartRateControl(String? species) {
-  if (species == null || species.isEmpty) return true;
   switch (species) {
     case 'dog':
     case 'cat':

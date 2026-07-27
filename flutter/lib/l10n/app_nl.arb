@@ -338,7 +338,7 @@
   "tapHere": "Tik hier bij elke slag",
   "bpmLabel": "BPM: {bpm}",
   "beatsLabel": "Slagen: {count}",
-  "thresholdAlert": "Drempelwaarschuwing",
+  "thresholdAlert": "Waarschuwing: significante stijging t.o.v. vorige meting",
   "validateAndSend": "Valideren en naar dierenarts sturen",
   "heartRateCommentLabel": "Opmerking (optioneel)",
   "heartRateCommentHint": "Bv. onrustig, in rust, na inspanning…",

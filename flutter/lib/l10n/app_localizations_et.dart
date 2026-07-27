@@ -912,7 +912,8 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Lävehoiatus';
+  String get thresholdAlert =>
+      'Hoiatus: oluline tõus võrreldes eelmise mõõtmisega';
 
   @override
   String get validateAndSend => 'Kinnita ja saada loomaarstile';

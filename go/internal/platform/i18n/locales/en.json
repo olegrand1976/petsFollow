@@ -538,7 +538,7 @@
     "support_ticket_reply_disclaimer": "To add more details, email support@petsfollow.app and mention your ticket.",
     "heartrate_alert_subject": "petsFollow Pro — Heart rate threshold alert",
     "heartrate_alert_tagline": "BPM threshold alert",
-    "heartrate_alert_preheader": "Reading outside thresholds — BPM {bpm}.",
+    "heartrate_alert_preheader": "Significant BPM rise — {bpm}.",
     "heartrate_alert_greeting": "Hello,",
     "heartrate_alert_intro": "A validated heart rate reading shows a significant BPM rise versus the previous one. BPM: {bpm}. Please review the patient record.",
     "heartrate_alert_disclaimer": "Sign in to petsFollow Pro to review the patient record."

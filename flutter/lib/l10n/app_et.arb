@@ -338,7 +338,7 @@
   "tapHere": "Puudutage siin iga löögi peale",
   "bpmLabel": "BPM: {bpm}",
   "beatsLabel": "Lööke: {count}",
-  "thresholdAlert": "Lävehoiatus",
+  "thresholdAlert": "Hoiatus: oluline tõus võrreldes eelmise mõõtmisega",
   "validateAndSend": "Kinnita ja saada loomaarstile",
   "heartRateCommentLabel": "Kommentaar (valikuline)",
   "heartRateCommentHint": "Nt rahutu, puhkeolekus, pärast pingutust…",

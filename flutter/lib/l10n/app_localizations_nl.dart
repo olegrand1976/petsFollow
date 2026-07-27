@@ -913,7 +913,8 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Drempelwaarschuwing';
+  String get thresholdAlert =>
+      'Waarschuwing: significante stijging t.o.v. vorige meting';
 
   @override
   String get validateAndSend => 'Valideren en naar dierenarts sturen';
