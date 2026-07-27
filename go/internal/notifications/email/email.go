@@ -1,6 +1,7 @@
 package email
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"mime"
@@ -122,6 +123,13 @@ func sendMailTimeout(addr string, a smtp.Auth, from string, to []string, msg []b
 		return err
 	}
 	defer c.Close()
+	// OVH :587 requires STARTTLS before AUTH — PlainAuth returns
+	// "unencrypted connection" otherwise (same as net/smtp.SendMail).
+	if ok, _ := c.Extension("STARTTLS"); ok {
+		if err = c.StartTLS(&tls.Config{ServerName: host, MinVersion: tls.VersionTLS12}); err != nil {
+			return err
+		}
+	}
 	if a != nil {
 		if ok, _ := c.Extension("AUTH"); ok {
 			if err = c.Auth(a); err != nil {
