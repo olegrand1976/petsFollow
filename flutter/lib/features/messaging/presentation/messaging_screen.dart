@@ -653,34 +653,33 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
             ],
           );
 
+    // Icon-only FAB — extended + long labels covered the attach/send row on
+    // narrow phones (blocked taps in widget tests and production UX).
+    final composeFab = _hasLinkedVets
+        ? FloatingActionButton(
+            key: const Key('message_compose_fab'),
+            tooltip: l10n.messageNewConversation,
+            onPressed: _composeConversation,
+            child: const Icon(Icons.chat_bubble_outline),
+          )
+        : null;
+
     if (widget.embedded) {
       return Stack(
         children: [
           content,
-          if (_hasLinkedVets)
+          if (composeFab != null)
             Positioned(
               right: 16,
               bottom: 16 + systemBottomInset(context),
-              child: FloatingActionButton.extended(
-                key: const Key('message_compose_fab'),
-                onPressed: _composeConversation,
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: Text(l10n.messageNewConversation),
-              ),
+              child: composeFab,
             ),
         ],
       );
     }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vetMessaging)),
-      floatingActionButton: _hasLinkedVets
-          ? FloatingActionButton.extended(
-              key: const Key('message_compose_fab'),
-              onPressed: _composeConversation,
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: Text(l10n.messageNewConversation),
-            )
-          : null,
+      floatingActionButton: composeFab,
       body: content,
     );
   }
