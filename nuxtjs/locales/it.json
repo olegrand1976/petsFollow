@@ -1596,6 +1596,7 @@
       "back": "Torna all'elenco",
       "message": "Messaggio",
       "diagnostics": "Diagnostici tecnici",
+      "originRoute": "Pagina di origine",
       "downloadDiag": "Scarica JSON",
       "status": "Stato",
       "replies": "Risposte",

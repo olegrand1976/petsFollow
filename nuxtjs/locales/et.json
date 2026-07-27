@@ -1161,6 +1161,7 @@
       "back": "Tagasi nimekirja",
       "message": "Sõnum",
       "diagnostics": "Tehniline diagnostika",
+      "originRoute": "Lähteleht",
       "downloadDiag": "Laadi JSON alla",
       "status": "Olek",
       "replies": "Vastused",

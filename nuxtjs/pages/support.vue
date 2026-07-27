@@ -49,9 +49,8 @@
 
 <script setup lang="ts">
 const { t, locale } = useI18n()
-const route = useRoute()
 const router = useRouter()
-const { snapshot } = useSupportDiagnostics()
+const { snapshot, consumeOriginPage } = useSupportDiagnostics()
 
 const subject = ref('')
 const message = ref('')
@@ -71,10 +70,14 @@ function goBack() {
   void navigateTo('/')
 }
 
-onMounted(() => {
+function refreshPreview() {
   const snap = snapshot()
   diagnosticsJson.value = JSON.stringify(snap, null, 2)
   diagCount.value = (snap.consoleErrors?.length || 0) + (snap.networkEntries?.length || 0)
+}
+
+onMounted(() => {
+  refreshPreview()
 })
 
 async function submit() {
@@ -93,6 +96,7 @@ async function submit() {
   success.value = false
   try {
     const snap = snapshot()
+    refreshPreview()
     await $fetch('/api/support/tickets', {
       method: 'POST',
       body: {
@@ -103,9 +107,10 @@ async function submit() {
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         appVersion: 'web',
         locale: locale.value,
-        route: route.fullPath,
+        route: snap.config.route,
       },
     })
+    consumeOriginPage()
     success.value = true
     // Brief success flash then return to the previous screen (same as ProSupportDialog).
     setTimeout(goBack, 900)

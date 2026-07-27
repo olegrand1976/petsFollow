@@ -49,8 +49,7 @@ const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ 'update:open': [boolean] }>()
 
 const { t, locale } = useI18n()
-const route = useRoute()
-const { snapshot } = useSupportDiagnostics()
+const { snapshot, captureOriginPage, consumeOriginPage } = useSupportDiagnostics()
 
 const subject = ref('')
 const message = ref('')
@@ -66,15 +65,20 @@ watch(
   () => props.open,
   (isOpen) => {
     if (!isOpen) return
+    captureOriginPage()
     error.value = ''
     success.value = false
     subject.value = ''
     message.value = ''
-    const snap = snapshot()
-    diagnosticsJson.value = JSON.stringify(snap, null, 2)
-    diagCount.value = (snap.consoleErrors?.length || 0) + (snap.networkEntries?.length || 0)
+    refreshPreview()
   },
 )
+
+function refreshPreview() {
+  const snap = snapshot()
+  diagnosticsJson.value = JSON.stringify(snap, null, 2)
+  diagCount.value = (snap.consoleErrors?.length || 0) + (snap.networkEntries?.length || 0)
+}
 
 async function submit() {
   if (saving.value) return
@@ -91,6 +95,7 @@ async function submit() {
   success.value = false
   try {
     const snap = snapshot()
+    refreshPreview()
     await $fetch('/api/support/tickets', {
       method: 'POST',
       body: {
@@ -101,9 +106,10 @@ async function submit() {
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         appVersion: 'web',
         locale: locale.value,
-        route: route.fullPath,
+        route: snap.config.route,
       },
     })
+    consumeOriginPage()
     success.value = true
     setTimeout(() => emit('update:open', false), 900)
   } catch (e: any) {

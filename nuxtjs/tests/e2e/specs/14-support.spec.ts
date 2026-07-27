@@ -7,9 +7,14 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     const subject = `E2E support ${Date.now()}`
     const replyText = `E2E reply ${Date.now()}`
     const messageText = 'Bouton calendrier ne répond plus (e2e).'
+    const originPath = '/calendar'
 
     await loginAsVet(page)
     await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 15000 })
+    await page.goto(originPath, { waitUntil: 'networkidle' })
+    await expect(page).toHaveURL(/\/calendar/, { timeout: 15000 })
+    await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 15000 })
+
     await page.getByTestId('pro-support-btn').click()
     await expect(page).toHaveURL(/\/support/, { timeout: 15000 })
     await waitForAuthForm(page, 'support-form')
@@ -18,10 +23,10 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     await message.fill(messageText)
     await expect(message).toHaveValue(/calendrier/)
 
-    // Prefer UI submit; fall back to same-origin authenticated request if Vue handlers lag.
+    // UI submit required — origin capture is asserted from the POST body.
     const postWait = page.waitForResponse(
       (r) => r.request().method() === 'POST' && /\/api\/support\/tickets\/?$/.test(new URL(r.url()).pathname),
-      { timeout: 8000 },
+      { timeout: 15000 },
     ).catch(() => null)
 
     await page.getByTestId('support-form').evaluate((node) => {
@@ -31,26 +36,19 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     })
 
     let res = await postWait
-    const viaUi = !!res
-    if (!res) {
-      res = await page.request.post('/api/support/tickets', {
-        data: {
-          source: 'nuxt_pro',
-          subject,
-          message: messageText,
-          diagnostics: { e2e: true },
-          userAgent: 'playwright-e2e',
-          appVersion: 'web',
-          locale: 'fr',
-          route: '/support',
-        },
-      })
+    expect(res, 'support ticket must be created via UI form (origin capture)').toBeTruthy()
+    const body = res!.request().postDataJSON() as {
+      route?: string
+      diagnostics?: { config?: { route?: string }; originPage?: { fullPath?: string } }
     }
+    expect(body.route, 'ticket.route must be origin page').toMatch(/\/calendar/)
+    expect(body.route).not.toBe('/support')
+    expect(body.diagnostics?.config?.route).toMatch(/\/calendar/)
+    expect(body.diagnostics?.originPage?.fullPath).toMatch(/\/calendar/)
+
     // BFF historically answered 200; create handlers now forward 201.
-    expect([200, 201], `support ticket POST ${res.status()}`).toContain(res.status())
-    if (viaUi) {
-      await expect(page.getByTestId('support-success')).toBeVisible({ timeout: 10000 })
-    }
+    expect([200, 201], `support ticket POST ${res!.status()}`).toContain(res!.status())
+    await expect(page.getByTestId('support-success')).toBeVisible({ timeout: 10000 })
 
     await loginAsAdmin(page)
     await page.goto('/admin/support', { waitUntil: 'networkidle' })
@@ -62,6 +60,7 @@ test.describe('support bug-report + admin inbox', { tag: '@p1' }, () => {
     await row.click()
     await expect(page.getByTestId('admin-support-detail-page')).toBeVisible()
     await expect(page.getByTestId('admin-support-message')).toContainText(/calendrier/i)
+    await expect(page.getByTestId('admin-support-origin-route')).toContainText(/\/calendar/)
     await expect(page.getByTestId('admin-support-diagnostics')).toBeVisible()
 
     const replyBox = page.getByTestId('admin-support-reply')

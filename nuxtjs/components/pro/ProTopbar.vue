@@ -15,7 +15,7 @@
         class="pro-topbar__icon-btn"
         :aria-label="$t('support.buttonAria')"
         data-testid="pro-support-btn"
-        @click="onSupportNav"
+        @click.capture="onSupportNav"
       >
         <ProIcon name="support_agent" :size="20" />
       </NuxtLink>
@@ -128,6 +128,7 @@ const props = withDefaults(
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser } = useProUser()
+const { captureOriginPage } = useSupportDiagnostics()
 const {
   items: notifItems,
   count: notifCount,
@@ -179,6 +180,7 @@ function closeProfileDetails() {
 }
 
 function onSupportNav() {
+  captureOriginPage()
   closeProfileDetails()
   notifOpen.value = false
 }

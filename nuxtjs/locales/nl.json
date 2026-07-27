@@ -1161,6 +1161,7 @@
       "back": "Terug naar lijst",
       "message": "Bericht",
       "diagnostics": "Technische diagnostiek",
+      "originRoute": "Bronpagina",
       "downloadDiag": "JSON downloaden",
       "status": "Status",
       "replies": "Antwoorden",

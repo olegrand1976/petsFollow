@@ -1161,6 +1161,7 @@
       "back": "Back to list",
       "message": "Message",
       "diagnostics": "Technical diagnostics",
+      "originRoute": "Origin page",
       "downloadDiag": "Download JSON",
       "status": "Status",
       "replies": "Replies",

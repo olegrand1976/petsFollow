@@ -1604,6 +1604,7 @@
       "back": "Retour à la liste",
       "message": "Message",
       "diagnostics": "Diagnostics techniques",
+      "originRoute": "Page d'origine",
       "downloadDiag": "Télécharger JSON",
       "status": "Statut",
       "replies": "Réponses",

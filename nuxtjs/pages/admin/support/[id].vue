@@ -43,6 +43,14 @@
             {{ $t('admin.support.downloadDiag') }}
           </ProButton>
         </div>
+        <p
+          v-if="ticket.route"
+          class="support-origin-route pro-mb-md"
+          data-testid="admin-support-origin-route"
+        >
+          <span class="pro-label">{{ $t('admin.support.originRoute') }}</span>
+          <code>{{ ticket.route }}</code>
+        </p>
         <pre class="support-diag-pre" data-testid="admin-support-diagnostics">{{ diagnosticsPretty }}</pre>
       </ProCard>
 
@@ -204,6 +212,20 @@ onMounted(() => { void load() })
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+.support-origin-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+.support-origin-route .pro-label {
+  margin: 0;
+}
+.support-origin-route code {
+  font-size: 0.85rem;
+  word-break: break-all;
 }
 .support-diag-pre {
   max-height: 24rem;
