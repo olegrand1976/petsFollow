@@ -238,7 +238,9 @@
         "care_pro": "Field pro",
         "admin": "Admin",
         "commercial": "Sales",
-        "commercial_manager": "Sales manager"
+        "commercial_manager": "Sales manager",
+        "vet_assistant": "Vet assistant",
+        "secretary": "Secretary"
       },
       "payment": {
         "active": "Active",
@@ -864,7 +866,22 @@
       "roleCommercialManager": "Sales manager",
       "commercialManager": "Manager",
       "commercialManagerNone": "None (unassigned)",
-      "paymentNone": "None"
+      "paymentNone": "None",
+      "tabsLabel": "Registration sections",
+      "tabList": "List",
+      "tabCommercial": "Sales",
+      "tabVet": "Veterinarian",
+      "tabClient": "Client",
+      "tabCarePro": "Field pro",
+      "tabAttach": "Profile",
+      "attachTitle": "Add a profile to a registered user",
+      "attachUserId": "User ID",
+      "attachRole": "Role",
+      "attachSpecialty": "Specialty",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Add profile",
+      "attachOk": "Profile added",
+      "attachError": "Error (not on yourself / profile already exists)"
     },
     "payments": {
       "title": "Payments received",

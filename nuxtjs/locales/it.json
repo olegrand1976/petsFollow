@@ -352,7 +352,9 @@
         "care_pro": "Campo professionistico",
         "admin": "Ammin",
         "commercial": "Commerciale",
-        "commercial_manager": "Direttore delle vendite"
+        "commercial_manager": "Direttore delle vendite",
+        "vet_assistant": "Assistente veterinario",
+        "secretary": "Segretario/a"
       },
       "payment": {
         "active": "Attivo",
@@ -1304,7 +1306,22 @@
       "roleCommercialManager": "Direttore delle vendite",
       "commercialManager": "Responsabile",
       "commercialManagerNone": "Nessuno (non allegato)",
-      "paymentNone": "Nessuno"
+      "paymentNone": "Nessuno",
+      "tabsLabel": "Sezioni iscrizioni",
+      "tabList": "Elenco",
+      "tabCommercial": "Commerciale",
+      "tabVet": "Veterinario",
+      "tabClient": "Cliente",
+      "tabCarePro": "Pro sul campo",
+      "tabAttach": "Profilo",
+      "attachTitle": "Aggiungere un profilo a un iscritto",
+      "attachUserId": "User ID",
+      "attachRole": "Ruolo",
+      "attachSpecialty": "Specialità",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Aggiungi profilo",
+      "attachOk": "Profilo aggiunto",
+      "attachError": "Errore (non su se stessi / profilo già esistente)"
     },
     "commercials": {
       "title": "Commerciali",

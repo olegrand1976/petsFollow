@@ -238,7 +238,9 @@
         "care_pro": "Veld-pro",
         "admin": "Admin",
         "commercial": "Commercieel",
-        "commercial_manager": "Commercieel verantwoordelijke"
+        "commercial_manager": "Commercieel verantwoordelijke",
+        "vet_assistant": "Dierenartsassistent",
+        "secretary": "Secretaris"
       },
       "payment": {
         "active": "Actief",
@@ -864,7 +866,22 @@
       "roleCommercialManager": "Salesmanager",
       "commercialManager": "Manager",
       "commercialManagerNone": "Geen (niet toegewezen)",
-      "paymentNone": "Geen"
+      "paymentNone": "Geen",
+      "tabsLabel": "Registratiesecties",
+      "tabList": "Lijst",
+      "tabCommercial": "Commercieel",
+      "tabVet": "Dierenarts",
+      "tabClient": "Cliënt",
+      "tabCarePro": "Veldpro",
+      "tabAttach": "Profiel",
+      "attachTitle": "Profiel toevoegen aan een gebruiker",
+      "attachUserId": "User ID",
+      "attachRole": "Rol",
+      "attachSpecialty": "Specialiteit",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Profiel toevoegen",
+      "attachOk": "Profiel toegevoegd",
+      "attachError": "Fout (niet op jezelf / profiel bestaat al)"
     },
     "payments": {
       "title": "Ontvangen betalingen",

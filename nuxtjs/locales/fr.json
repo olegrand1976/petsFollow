@@ -397,7 +397,9 @@
         "care_pro": "Pro terrain",
         "admin": "Admin",
         "commercial": "Commercial",
-        "commercial_manager": "Responsable commercial"
+        "commercial_manager": "Responsable commercial",
+        "vet_assistant": "Assistant véto",
+        "secretary": "Secrétaire"
       },
       "payment": {
         "active": "Actif",
@@ -1356,7 +1358,22 @@
       "roleCommercialManager": "Responsable commercial",
       "commercialManager": "Responsable",
       "commercialManagerNone": "Aucun (non rattaché)",
-      "paymentNone": "Aucun"
+      "paymentNone": "Aucun",
+      "tabsLabel": "Sections inscriptions",
+      "tabList": "Liste",
+      "tabCommercial": "Commercial",
+      "tabVet": "Vétérinaire",
+      "tabClient": "Client",
+      "tabCarePro": "Pro terrain",
+      "tabAttach": "Profil",
+      "attachTitle": "Ajouter un profil à un inscrit",
+      "attachUserId": "User ID",
+      "attachRole": "Rôle",
+      "attachSpecialty": "Spécialité",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Ajouter le profil",
+      "attachOk": "Profil ajouté",
+      "attachError": "Erreur (pas sur soi-même / profil existant)"
     },
     "commercials": {
       "title": "Commerciaux",

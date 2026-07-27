@@ -238,7 +238,9 @@
         "care_pro": "Välipro",
         "admin": "Admin",
         "commercial": "Müük",
-        "commercial_manager": "Müügijuht"
+        "commercial_manager": "Müügijuht",
+        "vet_assistant": "Loomaarsti assistent",
+        "secretary": "Sekretär"
       },
       "payment": {
         "active": "Aktiivne",
@@ -864,7 +866,22 @@
       "roleCommercialManager": "Müügijuht",
       "commercialManager": "Juht",
       "commercialManagerNone": "Puudub (määramata)",
-      "paymentNone": "Puudub"
+      "paymentNone": "Puudub",
+      "tabsLabel": "Registreerimise jaotised",
+      "tabList": "Loend",
+      "tabCommercial": "Müük",
+      "tabVet": "Loomaarst",
+      "tabClient": "Klient",
+      "tabCarePro": "Välipro",
+      "tabAttach": "Profiil",
+      "attachTitle": "Lisa profiil registreeritule",
+      "attachUserId": "User ID",
+      "attachRole": "Roll",
+      "attachSpecialty": "Eriala",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Lisa profiil",
+      "attachOk": "Profiil lisatud",
+      "attachError": "Viga (mitte iseendale / profiil juba olemas)"
     },
     "payments": {
       "title": "Laekunud maksed",

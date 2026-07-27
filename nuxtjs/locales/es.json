@@ -238,7 +238,9 @@
         "care_pro": "Pro terreno",
         "admin": "Admin",
         "commercial": "Comercial",
-        "commercial_manager": "Responsable comercial"
+        "commercial_manager": "Responsable comercial",
+        "vet_assistant": "Asistente veterinario",
+        "secretary": "Secretario/a"
       },
       "payment": {
         "active": "Activo",
@@ -864,7 +866,22 @@
       "roleCommercialManager": "Responsable comercial",
       "commercialManager": "Responsable",
       "commercialManagerNone": "Ninguno (sin asignar)",
-      "paymentNone": "Ninguno"
+      "paymentNone": "Ninguno",
+      "tabsLabel": "Secciones de registros",
+      "tabList": "Lista",
+      "tabCommercial": "Comercial",
+      "tabVet": "Veterinario",
+      "tabClient": "Cliente",
+      "tabCarePro": "Pro de campo",
+      "tabAttach": "Perfil",
+      "attachTitle": "Añadir un perfil a un inscrito",
+      "attachUserId": "User ID",
+      "attachRole": "Rol",
+      "attachSpecialty": "Especialidad",
+      "attachPracticeId": "Practice ID",
+      "attachSubmit": "Añadir perfil",
+      "attachOk": "Perfil añadido",
+      "attachError": "Error (no sobre uno mismo / perfil ya existente)"
     },
     "payments": {
       "title": "Pagos recibidos",

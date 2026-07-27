@@ -10,7 +10,7 @@ test('admin accède au tableau de bord', async ({ page }) => {
 
 test('admin crée un commercial', async ({ page }) => {
   await loginAsAdmin(page)
-  await page.goto('/admin/users', { waitUntil: 'networkidle' })
+  await page.goto('/admin/users?tab=commercial', { waitUntil: 'networkidle' })
   await expect(page.getByTestId('admin-create-commercial')).toBeVisible()
   const email = uniqueE2EEmail('pw-commercial')
   // Remplir le nom en dernier : le fill password peut vider le champ name (autofill navigateur).
