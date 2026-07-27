@@ -67,7 +67,7 @@ Si standardiste :
 
 Version courte (recommandée) :
 
-> « petsFollow, c’est la **continuité de soins prescrite** : **Web** pour votre cabinet, **mobile ProLight** pour le terrain, **app** pour vos clients — messagerie, rappels, relevés. C’est le propriétaire qui paie le suivi animal, moins de 3,50 € par mois. »
+> « petsFollow, c’est la **continuité de soins prescrite** — un **passeport digital** de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. **Web** Pro, **ProLight** gratuit, **app** client. C’est le propriétaire qui paie le suivi, moins de 3,50 € par mois. »
 
 Si besoin d’une seule phrase :
 
@@ -155,11 +155,11 @@ Durée totale cible après le « oui » au RDV : **&lt; 30 s**.
 
 ### Associé / manager cabinet
 
-> « Je cherche la personne qui décide des outils patients. petsFollow = continuité de soins prescrite — Web + mobile. Je propose 20 minutes — mardi ou jeudi ? »
+> « Je cherche la personne qui décide des outils patients. petsFollow = continuité prescrite + passeport digital animal — Web + mobile. Je propose 20 minutes — mardi ou jeudi ? »
 
 ### Rappel après e-mail / annuaire
 
-> « Bonjour Dr [X], [Nom] de petsFollow — je vous avais laissé un message sur la continuité de soins Web + mobile. Je ne vous retiens pas : mardi 12h45 ou jeudi 18h30 pour une démo de 20 minutes ? »
+> « Bonjour Dr [X], [Nom] de petsFollow — je vous avais laissé un message sur le passeport digital animal (Web + mobile). Je ne vous retiens pas : mardi 12h45 ou jeudi 18h30 pour une démo de 20 minutes ? »
 
 ---
 

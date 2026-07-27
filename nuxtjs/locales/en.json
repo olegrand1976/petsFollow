@@ -1297,68 +1297,69 @@
   "index": {
     "login": "Sign in",
     "registerCta": "Sign up",
-    "badge": "Web Pro · Pro Light · Owner app",
-    "heroTitle": "Care continuity for your patients, simplified",
-    "heroLead": "Prescribed care continuity: Web for the practice, Pro Light mobile for the field, an app for owners.",
+    "badge": "Digital passport · Web Pro · Pro Light · Owner app",
+    "heroTitle": "Your patients' digital passport, shared across all caregivers",
+    "heroLead": "Prescribed care continuity: one living shared record between practice, field care pros and owners.",
     "heroCta": "Create my professional account",
     "heroLogin": "I already have an account",
     "cards": {
       "heartrate": {
-        "title": "Heart rate readings",
-        "text": "Guided BPM from the owner app (feature)"
+        "title": "Pro Light field",
+        "text": "Notes, visit reports and docs for vet light and care pros"
       },
       "messaging": {
-        "title": "Secure messaging",
-        "text": "Direct exchanges with your clients"
+        "title": "Owner link",
+        "text": "Secure messaging practice ↔ client"
       },
       "records": {
-        "title": "Patient records",
-        "text": "Complete history per animal"
+        "title": "Shared passport",
+        "text": "One living multi-actor record per animal"
       }
     },
     "featuresTitle": "Why choose petsFollow Pro?",
     "features": {
       "heartrate": {
-        "title": "Guided heart rate readings",
-        "text": "Clients take BPM readings from the mobile app. You validate and track progress."
+        "title": "Prescribed follow-up",
+        "text": "Guided heart-rate checks and Care/Horse reminders — owners follow what you prescribe."
       },
       "alerts": {
-        "title": "Smart alerts",
-        "text": "Get notified immediately for tachycardia or detected anomalies."
+        "title": "Multi-actor passport",
+        "text": "Practice, care pro and household on the same animal — a shared digital passport, not a silo."
       },
       "messaging": {
-        "title": "Built-in messaging",
-        "text": "Communicate with clients without leaving the platform. Configurable availability."
+        "title": "Owner link",
+        "text": "Secure messaging and timeline with your clients. Configurable availability."
       },
       "partner": {
         "title": "Partner model",
-        "text": "Pro Light is free. Pro is invoiced offline — offsettable via client commissions."
+        "text": "Pro Light is free. Pro is invoiced offline — self-funding via client commissions."
       },
       "security": {
-        "title": "Secure data",
-        "text": "Compliant hosting, role-restricted access, encrypted messaging."
+        "title": "Data & roles",
+        "text": "Compliant hosting, role-based ACL, controlled record sharing — no inter-pro chat."
       },
       "onboarding": {
-        "title": "Quick onboarding",
-        "text": "Register in 2 minutes, set up your practice profile on first access."
+        "title": "Field & care pro",
+        "text": "Free Pro Light: agenda, notes, visit reports, docs and record sharing with colleagues or external pros."
       }
     },
     "ctaTitle": "Join petsFollow Pro today",
-    "ctaText": "Two offers: free Pro Light for field work, or Pro (Web + client app) with commercial invoicing. Clients pay for their pets' monitoring.",
+    "ctaText": "Two offers: free Pro Light (field / care pro), or Pro (Web + client app) with commercial invoicing. Your clients pay for their pets' digital passport.",
     "ctaButton": "Start registration",
     "productsLink": "Products",
     "productsTitle": "Professional offer — 2 solutions",
-    "productsLead": "Choose Pro (practice Web + client app) or Pro Light (free ProLight mobile app). Owners then subscribe to monitoring for their pets.",
+    "productsLead": "Choose Pro (practice Web + client passport) or Pro Light (field / care pro app, free). Owners then subscribe to monitoring for their pets.",
     "productsCta": "Create my account",
     "solutions": {
       "proComplete": {
         "price": "€69 excl. VAT / month",
         "title": "Pro",
-        "text": "Web SaaS platform + client mobile app. Clinical follow-up, messaging, records and loyalty.",
+        "text": "Web SaaS platform + client mobile app. Digital passport, messaging, records and loyalty.",
         "features": [
-          "Medical record & shared timeline",
-          "Secure messaging + push",
+          "Digital passport & shared timeline",
+          "Secure messaging + push (practice ↔ client)",
           "Reminders, appointments & adherence",
+          "Record sharing with care pros / colleagues",
           "Partner commissions (external invoicing)",
           "Voice consultation reports",
           "AI report improvement — structured, editable before saving, histories kept",
@@ -1368,60 +1369,62 @@
       "proLight": {
         "price": "Free",
         "title": "Pro Light",
-        "text": "ProLight mobile app: client follow-up, pet history, referral QR, shared documents. Works with or without a Web Pro account.",
+        "text": "ProLight mobile app: field and care pro — pet files, notes, visit reports, referral QR. With or without a Web Pro account.",
         "features": [
           "Field agenda & client records",
           "Pet history",
           "Referral QR code",
           "Shared documents & notes",
+          "Record sharing with colleagues / external pros",
           "Voice consultation reports",
           "AI report improve (+ history) when VetPro practice is activated"
         ]
       }
     },
     "clientPlansTitle": "What your clients pay",
-    "clientPlansLead": "Three plans per pet — all features included once the subscription is active.",
+    "clientPlansLead": "Three plans per pet — full digital passport included once the subscription is active.",
     "productHighlights": {
       "monthly": {
         "price": "€3.50 / month",
         "title": "Monthly",
-        "text": "Flexibility — checks, messaging, timeline, Care/Horse reminders, household view. No long commitment."
+        "text": "Flexibility — passport / health record, messaging, timeline, Care/Horse reminders, household view. No long commitment."
       },
       "annual": {
         "price": "€35 / year",
         "title": "Annual",
-        "text": "≈ €2.9 / month — same full monitoring, better price than monthly."
+        "text": "≈ €2.9 / month — same full passport, better price than monthly."
       },
       "triennial": {
         "price": "€95 / 3 years",
         "title": "Triennial (recommended)",
-        "text": "≈ €2.6 / month — core offer, −10% vs 3× annual."
+        "text": "≈ €2.6 / month — core offer, full passport, −10% vs 3× annual."
       }
     },
-    "footer": "© {year} petsFollow — Veterinary care continuity"
+    "footer": "© {year} petsFollow — Care continuity · animal digital passport"
   },
   "products": {
     "seoTitle": "petsFollow — Professional offer",
-    "seoDescription": "Two Pro solutions: Pro (Web + client mobile) and Pro Light (free ProLight app). Client plans and partner model.",
+    "seoDescription": "Prescribed care continuity + digital passport: Pro (Web + clients) and Pro Light (field / care pro, free). Client grid and partner model.",
     "backHome": "Home",
     "print": "Print / PDF",
     "badge": "Practice presentation support",
     "title": "petsFollow professional offer",
-    "lead": "The ecosystem linking practice, field and owners — prescribed care continuity (Web Pro · mobile ProLight · mobile Client).",
-    "positioning": "Two solutions: Pro (Web SaaS + client app, commercial invoicing) and Pro Light (ProLight mobile app, free, with or without a Web account). Owners pay for pet monitoring (€3.50 / €35 / €95).",
+    "lead": "The animal's digital passport — prescribed care continuity between practice, field care pros and owners (Web Pro · mobile ProLight · mobile Client).",
+    "positioning": "Two solutions: Pro (Web SaaS + client passport, commercial invoicing) and Pro Light (field / care pro app, free, with or without a Web account). Owners pay for pet monitoring (€3.50 / €35 / €95).",
     "solutionsTitle": "Two professional solutions",
-    "solutionsLead": "Match the tool to your practice: full connected clinic, or lightweight field app.",
+    "solutionsLead": "Match the tool to your practice: full connected clinic, or lightweight field / care pro app.",
     "solutions": {
       "proComplete": {
         "name": "Pro",
         "badge": "Web + client mobile",
         "price": "€69 excl. VAT / month",
         "setup": "Setup & training: €320 excl. VAT (one-shot)",
-        "tagline": "Web platform for the practice + mobile app for your clients.",
+        "tagline": "Web platform for the practice + digital passport mobile for your clients.",
         "features": [
-          "Centralised medical record and shared timeline",
+          "Centralised digital passport and shared timeline",
           "Prescriptions, reminders and appointment requests",
           "Secure client ↔ practice messaging + push",
+          "Record sharing with care pros / colleagues",
           "Partner programme (commissions on client activations)",
           "External SaaS invoicing — no online practice payment",
           "Voice consultation reports",
@@ -1433,12 +1436,13 @@
         "name": "Pro Light",
         "badge": "Free",
         "price": "€0",
-        "tagline": "ProLight mobile app — field follow-up, with or without a Web Pro account.",
+        "tagline": "ProLight mobile app — field and care pro, with or without a Web Pro account.",
         "features": [
-          "Client follow-up and field agenda",
+          "Client follow-up and field agenda (vet light / care pro)",
           "Pet records & history",
           "Referral QR code",
           "Shared documents and visit notes",
+          "Record sharing with colleagues / external pros",
           "Voice consultation reports",
           "AI report improve (+ history) when VetPro practice is activated",
           "Free for professionals"
@@ -1447,22 +1451,23 @@
     },
     "saasInvoiceNote": "Pro: subscription and setup invoiced offline (sales / accounting). No practice SaaS payment via Stripe.",
     "webTitle": "PetsFollow Web platform (practice)",
-    "webLead": "Centralises and simplifies clinical and admin workflows.",
+    "webLead": "Centralises the digital passport and clinical & admin workflows for the practice.",
     "webFeatures": [
-      "Centralised medical record: patient files, history, labs",
+      "Centralised digital passport: patient files, history, labs",
       "Prescriptions & adherence: reminders on the client's phone",
       "Reminders & appointments (vaccines, antiparasitics, check-ups)",
-      "Secure messaging & post-op / chronic follow-up",
+      "Secure messaging & post-op / chronic follow-up (practice ↔ client)",
+      "Record sharing with care pros and colleagues",
       "Client activation tracking and partner commissions",
       "Voice consultation reports",
       "AI report improvement — structured, editable before saving, histories kept"
     ],
     "mobileTitle": "PetsFollow mobile app (owners)",
-    "mobileLead": "The owner's daily companion — extending your care at home.",
+    "mobileLead": "The owner-facing side of the digital passport — extending your care at home.",
     "mobileFeatures": [
-      "Digital health booklet: vaccines, weight, history, emergencies",
+      "Digital passport / health record: vaccines, weight, history, emergencies",
       "Treatment alerts & smart reminders (push)",
-      "Direct link to the practice: renewals, appointment requests",
+      "Direct link to the practice: messaging, renewals, appointment requests",
       "Health journal: weight, symptoms, diet, activity",
       "Guided heart-rate checks 15 / 30 / 60 s"
     ],
@@ -1470,14 +1475,15 @@
     "benefitsCabinetTitle": "For your practice",
     "benefitsClientsTitle": "For your clients",
     "benefitsCabinet": [
-      "Massive time saved on follow-ups and phone calls",
+      "Time saved on follow-ups and phone calls",
       "Better therapeutic adherence",
       "Stronger client loyalty",
+      "Collaborate with care pros / colleagues via record sharing",
       "SaaS offsettable via the partner programme"
     ],
     "benefitsClients": [
       "Peace of mind from automated reminders",
-      "Health booklet always in their pocket",
+      "Digital passport always in their pocket",
       "Stronger trust with their vet",
       "Optimal preventive monitoring"
     ],
@@ -1517,10 +1523,10 @@
     "includedTitle": "Included in every pet subscription (clients)",
     "includedLead": "Whatever the plan (monthly, annual or triennial), owners get:",
     "included": [
+      "Digital passport / health record: shared timeline and record",
       "Guided heart-rate checks 15 / 30 / 60 s from the mobile app",
       "Sessions sent to and validated by the practice",
       "Secure client ↔ vet messaging + push notifications",
-      "Timeline / shared patient record",
       "Care reminders (standard, meds, custom) and equine pack if horse",
       "Household view and multi-pet encoding",
       "Languages FR / NL / EN / ES / ET / IT"
@@ -1582,7 +1588,7 @@
         "role": "Recommended"
       }
     },
-    "footer": "petsFollow — prescribed care continuity · Web + mobile"
+    "footer": "petsFollow — prescribed care continuity · animal digital passport · Web + mobile"
   },
   "components": {
     "topbar": {

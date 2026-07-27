@@ -1,6 +1,6 @@
 # Vision produit — petsFollow
 
-**Promesse** : continuité de soins prescrite — Web cabinet · mobile ProLight · mobile particulier.  
+**Promesse** : continuité de soins prescrite, matérialisée en **passeport digital** de l’animal — Web cabinet · mobile ProLight / care pro · mobile particulier.  
 Le relevé cardiaque est un **module** différenciant, pas l’identité produit. Positionnement → [14](14-POSITIONNEMENT-MARKETING.md).
 
 ## Personas
@@ -11,13 +11,14 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 - **Marc** — maréchal-ferrant (`care_pro` / `farrier`), agenda terrain + CR ferrage
 - Autres care pro : physio, comportementaliste, toiletteur, éleveur — voir [28](28-MULTI-PROFILS-PRO.md)
 
-## Périmètre cœur (continuité)
+## Périmètre cœur (continuité + passeport)
 
 1. Création animal (client — Flutter)
 2. Suivi clients + animaux (véto — Nuxt Pro)
-3. Messagerie interne + mode indisponible véto
+3. Messagerie interne + mode indisponible véto (véto ↔ propriétaire — **pas** care_pro)
 4. Timeline historique (messages, relevés validés, événements)
-5. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client) — **feature**
+5. Partage multi-acteurs (ACL `pet_access` / `client_access`) — collègue / care pro / notes / CR / docs
+6. Relevé cardiaque (durée 15/30/60 s selon paramètres du cabinet) — Valider envoi véto / Recommencer (client) — **feature**
 
 ## Livré au-delà du MVP initial
 
@@ -43,7 +44,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 - Refresh token silencieux côté clients
 - Simulation prospection admin 10 ans → [16](16-ADMIN-SIMULATION-10ANS.md) (**non livré**)
 - Export / emails Care avancés (features incluses — plus de roadmap « addon Care+ »)
-- Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (phase 4)
+- Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (**livré** — axes passeport ; messagerie care_pro hors scope)
 
 ## Comptes seed
 

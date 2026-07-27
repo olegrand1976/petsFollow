@@ -1297,68 +1297,69 @@
   "index": {
     "login": "Iniciar sesión",
     "registerCta": "Registrarse",
-    "badge": "Web Pro · Pro Light · App cliente",
-    "heroTitle": "Continuidad de cuidados para sus pacientes, simplificada",
-    "heroLead": "Continuidad de cuidados prescrita: Web para la clínica, Pro Light móvil para el campo, app para propietarios.",
+    "badge": "Pasaporte digital · Web Pro · Pro Light · App cliente",
+    "heroTitle": "El pasaporte digital de sus pacientes, entre todos sus cuidadores",
+    "heroLead": "Continuidad de cuidados prescrita: un mismo dossier vivo compartido entre clínica, pros de cuidados de campo y propietarios.",
     "heroCta": "Crear mi cuenta profesional",
     "heroLogin": "Ya tengo una cuenta",
     "cards": {
       "heartrate": {
-        "title": "Lecturas cardíacas",
-        "text": "BPM guiados desde la app del propietario (función)"
+        "title": "Terreno Pro Light",
+        "text": "Notas, informes y docs para vet light y care pro"
       },
       "messaging": {
-        "title": "Mensajería segura",
-        "text": "Intercambios directos con sus clientes"
+        "title": "Enlace propietario",
+        "text": "Mensajería segura clínica ↔ cliente"
       },
       "records": {
-        "title": "Historiales pacientes",
-        "text": "Historial completo por animal"
+        "title": "Pasaporte compartido",
+        "text": "Un dossier vivo multi-actores por animal"
       }
     },
     "featuresTitle": "¿Por qué elegir petsFollow Pro?",
     "features": {
       "heartrate": {
-        "title": "Lecturas cardíacas guiadas",
-        "text": "Los clientes realizan lecturas BPM desde la app. Usted valida y sigue la evolución."
+        "title": "Seguimiento prescrito",
+        "text": "Lecturas cardíacas guiadas y recordatorios Care/Horse — el propietario sigue lo que usted prescribe."
       },
       "alerts": {
-        "title": "Alertas inteligentes",
-        "text": "Reciba avisos inmediatos ante taquicardia o anomalías."
+        "title": "Pasaporte multi-actores",
+        "text": "Clínica, care pro y hogar en el mismo animal — un pasaporte digital compartido, no un silo."
       },
       "messaging": {
-        "title": "Mensajería integrada",
-        "text": "Comunique con clientes sin salir de la plataforma. Disponibilidad configurable."
+        "title": "Enlace propietario",
+        "text": "Mensajería segura y timeline con sus clientes. Disponibilidad configurable."
       },
       "partner": {
         "title": "Modelo partner",
-        "text": "Pro Light gratis. Pro facturado offline — compensable vía comisiones de clientes."
+        "text": "Pro Light gratis. Pro facturado offline — autofinanciable vía comisiones de clientes."
       },
       "security": {
-        "title": "Datos seguros",
-        "text": "Hosting conforme, acceso por rol, mensajería cifrada."
+        "title": "Datos y roles",
+        "text": "Hosting conforme, ACL por rol, compartición de dossier controlada — sin chat entre pros."
       },
       "onboarding": {
-        "title": "Puesta en marcha rápida",
-        "text": "Registro en 2 minutos, ficha de clínica en el primer acceso."
+        "title": "Terreno y care pro",
+        "text": "Pro Light gratis: agenda, notas, informes, docs y compartición de dossier con colegas o pros externos."
       }
     },
     "ctaTitle": "Únase a petsFollow Pro hoy",
-    "ctaText": "Dos ofertas: Pro Light gratis para el terreno, o Pro (Web + app clientes) con facturación comercial. Los clientes pagan el seguimiento de sus animales.",
+    "ctaText": "Dos ofertas: Pro Light gratis (terreno / care pro), o Pro (Web + app clientes) con facturación comercial. Sus clientes pagan el pasaporte digital de sus animales.",
     "ctaButton": "Empezar el registro",
     "productsLink": "Productos",
     "productsTitle": "Oferta profesional — 2 soluciones",
-    "productsLead": "Elija Pro (Web clínica + app clientes) o Pro Light (app móvil ProLight gratuita). Los propietarios se suscriben después al seguimiento de sus animales.",
+    "productsLead": "Elija Pro (Web clínica + pasaporte clientes) o Pro Light (app terreno / care pro, gratuita). Los propietarios se suscriben después al seguimiento de sus animales.",
     "productsCta": "Crear mi cuenta",
     "solutions": {
       "proComplete": {
         "price": "69 € sin IVA / mes",
         "title": "Pro",
-        "text": "Plataforma Web SaaS + app móvil clientes. Seguimiento clínico, mensajería, historiales y fidelización.",
+        "text": "Plataforma Web SaaS + app móvil clientes. Pasaporte digital, mensajería, historiales y fidelización.",
         "features": [
-          "Historial médico y timeline compartida",
-          "Mensajería segura + push",
+          "Pasaporte digital y timeline compartida",
+          "Mensajería segura + push (clínica ↔ cliente)",
           "Recordatorios, citas y adherencia",
+          "Compartición de dossier con care pro / colegas",
           "Comisiones partner (facturación externa)",
           "Informes de consulta por voz",
           "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados",
@@ -1368,60 +1369,62 @@
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "App móvil ProLight: seguimiento de clientes, historial de animales, QR de referidos, documentos compartidos. Funciona con o sin cuenta Web Pro.",
+        "text": "App móvil ProLight: terreno y care pro — fichas de animales, notas, informes, QR de referidos. Con o sin cuenta Web Pro.",
         "features": [
           "Agenda de campo y fichas de clientes",
           "Historial de animales",
           "Código QR de referidos",
           "Documentos compartidos y notas",
+          "Compartición de dossier con colegas / pros externos",
           "Informes de consulta por voz",
           "Mejora IA de informes (+ historial) si el centro VetPro está activado"
         ]
       }
     },
     "clientPlansTitle": "Lo que pagan sus clientes",
-    "clientPlansLead": "Tres fórmulas por animal — todas las funciones incluidas cuando la suscripción está activa.",
+    "clientPlansLead": "Tres fórmulas por animal — pasaporte digital completo incluido cuando la suscripción está activa.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / mes",
         "title": "Mensual",
-        "text": "Flexibilidad — lecturas, mensajería, timeline, recordatorios Care/Horse, hogar. Sin compromiso largo."
+        "text": "Flexibilidad — pasaporte / cartilla, mensajería, timeline, recordatorios Care/Horse, hogar. Sin compromiso largo."
       },
       "annual": {
         "price": "35 € / año",
         "title": "Anual",
-        "text": "≈ 2,9 € / mes — mismo seguimiento completo, mejor precio que el mensual."
+        "text": "≈ 2,9 € / mes — mismo pasaporte completo, mejor precio que el mensual."
       },
       "triennial": {
         "price": "95 € / 3 años",
         "title": "Trienal (recomendado)",
-        "text": "≈ 2,6 € / mes — oferta principal, −10 % vs 3× anual."
+        "text": "≈ 2,6 € / mes — oferta principal, pasaporte completo, −10 % vs 3× anual."
       }
     },
-    "footer": "© {year} petsFollow — Continuidad de cuidados veterinarios"
+    "footer": "© {year} petsFollow — Continuidad de cuidados · pasaporte digital del animal"
   },
   "products": {
     "seoTitle": "petsFollow — Oferta profesional",
-    "seoDescription": "Dos soluciones Pro: Pro (Web + móvil clientes) y Pro Light (app ProLight gratuita). Planes clientes y modelo partner.",
+    "seoDescription": "Continuidad de cuidados prescrita + pasaporte digital: Pro (Web + clientes) y Pro Light (terreno / care pro, gratis). Rejilla clientes y modelo partner.",
     "backHome": "Inicio",
     "print": "Imprimir / PDF",
     "badge": "Soporte de presentación clínica",
     "title": "Oferta profesional petsFollow",
-    "lead": "El ecosistema que conecta clínica, campo y propietarios — continuidad de cuidados prescrita (Web Pro · móvil ProLight · móvil Client).",
-    "positioning": "Dos soluciones: Pro (Web SaaS + app clientes, facturación comercial) y Pro Light (app móvil ProLight, gratis, con o sin cuenta Web). Los propietarios pagan el seguimiento (3,50 / 35 / 95 €).",
+    "lead": "El pasaporte digital del animal — continuidad de cuidados prescrita entre clínica, pros de cuidados de campo y propietarios (Web Pro · móvil ProLight · móvil Client).",
+    "positioning": "Dos soluciones: Pro (Web SaaS + pasaporte clientes, facturación comercial) y Pro Light (app terreno / care pro, gratis, con o sin cuenta Web). Los propietarios pagan el seguimiento (3,50 / 35 / 95 €).",
     "solutionsTitle": "Dos soluciones profesionales",
-    "solutionsLead": "Adapte la herramienta a su práctica: clínica conectada completa, o app de campo ligera.",
+    "solutionsLead": "Adapte la herramienta a su práctica: clínica conectada completa, o app de campo / care pro ligera.",
     "solutions": {
       "proComplete": {
         "name": "Pro",
         "badge": "Web + móvil clientes",
         "price": "69 € sin IVA / mes",
         "setup": "Puesta en marcha y formación: 320 € sin IVA (one-shot)",
-        "tagline": "Plataforma Web para la clínica + app móvil para sus clientes.",
+        "tagline": "Plataforma Web para la clínica + pasaporte digital móvil para sus clientes.",
         "features": [
-          "Historial médico centralizado y timeline compartida",
+          "Pasaporte digital centralizado y timeline compartida",
           "Recetas, recordatorios y solicitudes de cita",
           "Mensajería segura cliente ↔ clínica + push",
+          "Compartición de dossier con care pro / colegas",
           "Programa partner (comisiones por activaciones)",
           "Facturación SaaS externa — sin pago online de clínica",
           "Informes de consulta por voz",
@@ -1433,12 +1436,13 @@
         "name": "Pro Light",
         "badge": "Gratis",
         "price": "0 €",
-        "tagline": "App móvil ProLight — seguimiento de campo, con o sin cuenta Web Pro.",
+        "tagline": "App móvil ProLight — terreno y care pro, con o sin cuenta Web Pro.",
         "features": [
-          "Seguimiento de clientes y agenda de campo",
+          "Seguimiento de clientes y agenda de campo (vet light / care pro)",
           "Fichas e historial de animales",
           "Código QR de referidos",
           "Documentos compartidos y notas de visita",
+          "Compartición de dossier con colegas / pros externos",
           "Informes de consulta por voz",
           "Mejora IA de informes (+ historial) si el centro VetPro está activado",
           "Gratis para profesionales"
@@ -1447,22 +1451,23 @@
     },
     "saasInvoiceNote": "Pro: suscripción y puesta en marcha facturados offline (comercial / contabilidad). Sin pago SaaS de clínica vía Stripe.",
     "webTitle": "Plataforma Web PetsFollow (clínica)",
-    "webLead": "Centraliza y simplifica los flujos clínicos y administrativos.",
+    "webLead": "Centraliza el pasaporte digital y los flujos clínicos y administrativos de la clínica.",
     "webFeatures": [
-      "Historial médico centralizado: fichas, antecedentes, analíticas",
+      "Pasaporte digital centralizado: fichas, antecedentes, analíticas",
       "Recetas y adherencia: recordatorios en el teléfono del cliente",
       "Recordatorios y citas (vacunas, antiparasitarios, controles)",
-      "Mensajería segura y seguimiento postoperatorio / crónico",
+      "Mensajería segura y seguimiento postoperatorio / crónico (clínica ↔ cliente)",
+      "Compartición de dossier con care pro y colegas",
       "Seguimiento de activaciones y comisiones partner",
       "Informes de consulta por voz",
       "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados"
     ],
     "mobileTitle": "App móvil PetsFollow (propietarios)",
-    "mobileLead": "El compañero diario del propietario — extensión de sus cuidados en casa.",
+    "mobileLead": "La cara propietaria del pasaporte digital — extensión de sus cuidados en casa.",
     "mobileFeatures": [
-      "Cartilla digital: vacunas, peso, antecedentes, urgencias",
+      "Pasaporte / cartilla digital: vacunas, peso, antecedentes, urgencias",
       "Alertas de tratamiento y recordatorios inteligentes (push)",
-      "Enlace directo con la clínica: renovaciones, citas",
+      "Enlace directo con la clínica: mensajería, renovaciones, citas",
       "Diario de salud: peso, síntomas, alimentación, actividad",
       "Lecturas cardíacas guiadas 15 / 30 / 60 s"
     ],
@@ -1473,11 +1478,12 @@
       "Ahorro de tiempo en seguimientos y teléfono",
       "Mejor adherencia terapéutica",
       "Mayor fidelización de la clientela",
+      "Colabore con care pro / colegas vía compartición de dossier",
       "SaaS compensable vía programa partner"
     ],
     "benefitsClients": [
       "Tranquilidad gracias a recordatorios automáticos",
-      "Cartilla siempre en el bolsillo",
+      "Pasaporte digital siempre en el bolsillo",
       "Mayor confianza con su veterinario",
       "Seguimiento preventivo óptimo"
     ],
@@ -1517,10 +1523,10 @@
     "includedTitle": "Incluido en cada suscripción animal (clientes)",
     "includedLead": "Sea cual sea el plan (mensual, anual o trienal), el propietario dispone de:",
     "included": [
+      "Pasaporte digital / cartilla: timeline y dossier compartido",
       "Lecturas cardíacas guiadas 15 / 30 / 60 s desde la app",
       "Sesiones enviadas y validadas por la clínica",
       "Mensajería segura cliente ↔ veterinario + notificaciones push",
-      "Timeline / historial compartido",
       "Recordatorios Care (estándar, medicamentos, personal) y pack equino si caballo",
       "Vista hogar y multicodificación de animales",
       "Idiomas FR / NL / EN / ES / ET / IT"
@@ -1582,7 +1588,7 @@
         "role": "Recomendado"
       }
     },
-    "footer": "petsFollow — continuidad de cuidados prescrita · Web + móvil"
+    "footer": "petsFollow — continuidad de cuidados prescrita · pasaporte digital del animal · Web + móvil"
   },
   "components": {
     "topbar": {

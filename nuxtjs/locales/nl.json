@@ -1297,68 +1297,69 @@
   "index": {
     "login": "Inloggen",
     "registerCta": "Registreren",
-    "badge": "Web Pro · Pro Light · Cliënt-app",
-    "heroTitle": "Zorgcontinuïteit voor uw patiënten, vereenvoudigd",
-    "heroLead": "Voorgeschreven zorgcontinuïteit: Web voor de praktijk, Pro Light mobiel voor het veld, een app voor eigenaren.",
+    "badge": "Digitaal paspoort · Web Pro · Pro Light · Cliënt-app",
+    "heroTitle": "Het digitale paspoort van uw patiënten, bij al hun zorgverleners",
+    "heroLead": "Voorgeschreven zorgcontinuïteit: één levend gedeeld dossier tussen praktijk, zorgpros op het terrein en eigenaren.",
     "heroCta": "Mijn professioneel account aanmaken",
     "heroLogin": "Ik heb al een account",
     "cards": {
       "heartrate": {
-        "title": "Hartmetingen",
-        "text": "Begeleide BPM vanuit de eigenaarsapp (feature)"
+        "title": "Pro Light terrein",
+        "text": "Notities, verslagen en docs voor vet light en care pro"
       },
       "messaging": {
-        "title": "Veilige berichten",
-        "text": "Directe uitwisseling met uw cliënten"
+        "title": "Eigenaarslink",
+        "text": "Veilige berichten praktijk ↔ cliënt"
       },
       "records": {
-        "title": "Patiëntdossiers",
-        "text": "Volledige geschiedenis per dier"
+        "title": "Gedeeld paspoort",
+        "text": "Eén levend multi-actor dossier per dier"
       }
     },
     "featuresTitle": "Waarom petsFollow Pro kiezen?",
     "features": {
       "heartrate": {
-        "title": "Begeleide hartmetingen",
-        "text": "Cliënten nemen BPM-metingen via de mobiele app. U valideert en volgt de evolutie."
+        "title": "Voorgeschreven opvolging",
+        "text": "Begeleide hartmetingen en Care/Horse-herinneringen — de eigenaar volgt wat u voorschrijft."
       },
       "alerts": {
-        "title": "Slimme waarschuwingen",
-        "text": "Word meteen verwittigd bij tachycardie of anomalieën."
+        "title": "Multi-actor paspoort",
+        "text": "Praktijk, care pro en huishouden op hetzelfde dier — een gedeeld digitaal paspoort, geen silo."
       },
       "messaging": {
-        "title": "Geïntegreerde berichten",
-        "text": "Communiceer met cliënten zonder het platform te verlaten. Configureerbare beschikbaarheid."
+        "title": "Eigenaarslink",
+        "text": "Veilige berichten en timeline met uw cliënten. Configureerbare beschikbaarheid."
       },
       "partner": {
         "title": "Partnermodel",
-        "text": "Pro Light is gratis. Pro wordt offline gefactureerd — te compenseren via cliëntcommissies."
+        "text": "Pro Light is gratis. Pro wordt offline gefactureerd — zelf financierbaar via cliëntcommissies."
       },
       "security": {
-        "title": "Veilige gegevens",
-        "text": "Conforme hosting, rolbeperkte toegang, versleutelde berichten."
+        "title": "Gegevens & rollen",
+        "text": "Conforme hosting, ACL per rol, gecontroleerd dossierdelen — geen chat tussen pros."
       },
       "onboarding": {
-        "title": "Snelle start",
-        "text": "Registratie in 2 minuten, praktijkfiche bij eerste toegang."
+        "title": "Terrein & care pro",
+        "text": "Gratis Pro Light: agenda, notities, verslagen, docs en dossierdelen met collega's of externe pros."
       }
     },
     "ctaTitle": "Word vandaag lid van petsFollow Pro",
-    "ctaText": "Twee aanbiedingen: gratis Pro Light voor het terrein, of Pro (Web + cliëntapp) met commerciële facturatie. Cliënten betalen voor de opvolging van hun dieren.",
+    "ctaText": "Twee aanbiedingen: gratis Pro Light (terrein / care pro), of Pro (Web + cliëntapp) met commerciële facturatie. Uw cliënten betalen het digitale paspoort van hun dieren.",
     "ctaButton": "Registratie starten",
     "productsLink": "Producten",
     "productsTitle": "Professioneel aanbod — 2 oplossingen",
-    "productsLead": "Kies Pro (praktijk Web + cliëntapp) of Pro Light (gratis ProLight-mobiele app). Eigenaars schrijven daarna in voor de opvolging van hun dieren.",
+    "productsLead": "Kies Pro (praktijk Web + cliëntpaspoort) of Pro Light (terrein-/care-pro-app, gratis). Eigenaars schrijven daarna in voor de opvolging van hun dieren.",
     "productsCta": "Mijn account aanmaken",
     "solutions": {
       "proComplete": {
         "price": "€69 excl. btw / maand",
         "title": "Pro",
-        "text": "Web SaaS-platform + mobiele app voor cliënten. Medische opvolging, berichten, dossiers en loyaliteit.",
+        "text": "Web SaaS-platform + mobiele app voor cliënten. Digitaal paspoort, berichten, dossiers en loyaliteit.",
         "features": [
-          "Medisch dossier & gedeelde timeline",
-          "Veilige berichten + push",
+          "Digitaal paspoort & gedeelde timeline",
+          "Veilige berichten + push (praktijk ↔ cliënt)",
           "Herinneringen, afspraken & therapietrouw",
+          "Dossierdelen met care pro / collega's",
           "Partnercommissies (externe facturatie)",
           "Vocale consultatierapporten",
           "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard",
@@ -1368,60 +1369,62 @@
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "ProLight-mobiele app: cliëntopvolging, diergeschiedenis, doorverwijzings-QR, gedeelde documenten. Werkt met of zonder Web Pro-account.",
+        "text": "ProLight-mobiele app: terrein en care pro — dierfiches, notities, verslagen, doorverwijzings-QR. Met of zonder Web Pro-account.",
         "features": [
           "Agenda op het terrein & cliëntfiches",
           "Diergeschiedenis",
           "Doorverwijzings-QR-code",
           "Gedeelde documenten & notities",
+          "Dossierdelen met collega's / externe pros",
           "Vocale consultatierapporten",
           "AI-verbetering van verslagen (+ historiek) als VetPro-kabinet geactiveerd is"
         ]
       }
     },
     "clientPlansTitle": "Wat uw cliënten betalen",
-    "clientPlansLead": "Drie formules per dier — alle functies inbegrepen zodra het abonnement actief is.",
+    "clientPlansLead": "Drie formules per dier — volledig digitaal paspoort inbegrepen zodra het abonnement actief is.",
     "productHighlights": {
       "monthly": {
         "price": "€3,50 / maand",
         "title": "Maandelijks",
-        "text": "Flexibiliteit — metingen, berichten, timeline, Care/Horse-herinneringen, huishouden. Geen lange verbintenis."
+        "text": "Flexibiliteit — paspoort / gezondheidsboekje, berichten, timeline, Care/Horse-herinneringen, huishouden. Geen lange verbintenis."
       },
       "annual": {
         "price": "€35 / jaar",
         "title": "Jaarlijks",
-        "text": "≈ €2,9 / maand — dezelfde volledige opvolging, betere prijs dan maandelijks."
+        "text": "≈ €2,9 / maand — hetzelfde volledige paspoort, betere prijs dan maandelijks."
       },
       "triennial": {
         "price": "€95 / 3 jaar",
         "title": "Driejaarlijks (aanbevolen)",
-        "text": "≈ €2,6 / maand — kerkaanbod, −10 % vs 3× jaarlijks."
+        "text": "≈ €2,6 / maand — kerkaanbod, volledig paspoort, −10 % vs 3× jaarlijks."
       }
     },
-    "footer": "© {year} petsFollow — Veterinaire zorgcontinuïteit"
+    "footer": "© {year} petsFollow — Zorgcontinuïteit · digitaal paspoort van het dier"
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
-    "seoDescription": "Twee Pro-oplossingen: Pro (Web + cliëntmobiel) en Pro Light (gratis ProLight-app). Cliëntplannen en partnermodel.",
+    "seoDescription": "Voorgeschreven zorgcontinuïteit + digitaal paspoort: Pro (Web + cliënten) en Pro Light (terrein / care pro, gratis). Cliëntgrid en partnermodel.",
     "backHome": "Home",
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
     "title": "Professioneel aanbod petsFollow",
-    "lead": "Het ecosysteem dat praktijk, veld en eigenaren verbindt — voorgeschreven zorgcontinuïteit (Web Pro · mobiel ProLight · mobiel Client).",
-    "positioning": "Twee oplossingen: Pro (Web SaaS + cliëntapp, commerciële facturatie) en Pro Light (ProLight-mobiele app, gratis, met of zonder Web-account). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
+    "lead": "Het digitale paspoort van het dier — voorgeschreven zorgcontinuïteit tussen praktijk, zorgpros op het terrein en eigenaren (Web Pro · mobiel ProLight · mobiel Client).",
+    "positioning": "Twee oplossingen: Pro (Web SaaS + cliëntpaspoort, commerciële facturatie) en Pro Light (terrein-/care-pro-app, gratis, met of zonder Web-account). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
     "solutionsTitle": "Twee professionele oplossingen",
-    "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terreinapp.",
+    "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terrein-/care-pro-app.",
     "solutions": {
       "proComplete": {
         "name": "Pro",
         "badge": "Web + cliëntmobiel",
         "price": "€69 excl. btw / maand",
         "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
-        "tagline": "Webplatform voor de praktijk + mobiele app voor uw cliënten.",
+        "tagline": "Webplatform voor de praktijk + digitaal paspoort mobiel voor uw cliënten.",
         "features": [
-          "Gecentraliseerd medisch dossier en gedeelde timeline",
+          "Gecentraliseerd digitaal paspoort en gedeelde timeline",
           "Voorschriften, herinneringen en afspraakverzoeken",
           "Veilige berichten cliënt ↔ praktijk + push",
+          "Dossierdelen met care pro / collega's",
           "Partnerprogramma (commissies op cliëntactivaties)",
           "Externe SaaS-facturatie — geen online praktijkbetaling",
           "Vocale consultatierapporten",
@@ -1433,12 +1436,13 @@
         "name": "Pro Light",
         "badge": "Gratis",
         "price": "€0",
-        "tagline": "ProLight-mobiele app — terreinopvolging, met of zonder Web Pro-account.",
+        "tagline": "ProLight-mobiele app — terrein en care pro, met of zonder Web Pro-account.",
         "features": [
-          "Cliëntopvolging en terreinagenda",
+          "Cliëntopvolging en terreinagenda (vet light / care pro)",
           "Dierfiches & geschiedenis",
           "Doorverwijzings-QR-code",
           "Gedeelde documenten en bezoeknotities",
+          "Dossierdelen met collega's / externe pros",
           "Vocale consultatierapporten",
           "AI-verbetering van verslagen (+ historiek) als VetPro-kabinet geactiveerd is",
           "Gratis voor professionals"
@@ -1447,22 +1451,23 @@
     },
     "saasInvoiceNote": "Pro: abonnement en opzet offline gefactureerd (sales / boekhouding). Geen praktijk-SaaS-betaling via Stripe.",
     "webTitle": "PetsFollow Webplatform (praktijk)",
-    "webLead": "Centraliseert en vereenvoudigt klinische en administratieve stromen.",
+    "webLead": "Centraliseert het digitale paspoort en de klinische & administratieve stromen van de praktijk.",
     "webFeatures": [
-      "Gecentraliseerd medisch dossier: patiëntfiches, geschiedenis, labo's",
+      "Gecentraliseerd digitaal paspoort: patiëntfiches, geschiedenis, labo's",
       "Voorschriften & therapietrouw: herinneringen op de telefoon van de cliënt",
       "Herinneringen & afspraken (vaccins, antiparasitica, controles)",
-      "Veilige berichten & post-op / chronische opvolging",
+      "Veilige berichten & post-op / chronische opvolging (praktijk ↔ cliënt)",
+      "Dossierdelen met care pro en collega's",
       "Opvolging van cliëntactivaties en partnercommissies",
       "Vocale consultatierapporten",
       "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
     ],
     "mobileTitle": "PetsFollow mobiele app (eigenaars)",
-    "mobileLead": "De dagelijkse metgezel van de eigenaar — verlenging van uw zorg thuis.",
+    "mobileLead": "De eigenaarszijde van het digitale paspoort — verlenging van uw zorg thuis.",
     "mobileFeatures": [
-      "Digitaal gezondheidsboekje: vaccins, gewicht, voorgeschiedenis, noodgevallen",
+      "Digitaal paspoort / gezondheidsboekje: vaccins, gewicht, voorgeschiedenis, noodgevallen",
       "Behandelingswaarschuwingen & slimme herinneringen (push)",
-      "Directe link met de praktijk: hernieuwingen, afspraakverzoeken",
+      "Directe link met de praktijk: berichten, hernieuwingen, afspraakverzoeken",
       "Gezondheidsdagboek: gewicht, symptomen, voeding, activiteit",
       "Begeleide hartmetingen 15 / 30 / 60 s"
     ],
@@ -1473,11 +1478,12 @@
       "Tijdwinst op opvolgingen en telefoon",
       "Betere therapietrouw",
       "Sterkere cliëntloyaliteit",
+      "Samenwerken met care pro / collega's via dossierdelen",
       "SaaS te compenseren via het partnerprogramma"
     ],
     "benefitsClients": [
       "Gemoedsrust dankzij automatische herinneringen",
-      "Gezondheidsboekje altijd op zak",
+      "Digitaal paspoort altijd op zak",
       "Sterker vertrouwen met hun dierenarts",
       "Optimale preventieve opvolging"
     ],
@@ -1517,10 +1523,10 @@
     "includedTitle": "Inbegrepen in elk dierabonnement (cliënten)",
     "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of driejaarlijks) krijgen eigenaars:",
     "included": [
+      "Digitaal paspoort / gezondheidsboekje: timeline en gedeeld dossier",
       "Begeleide hartmetingen 15 / 30 / 60 s via de mobiele app",
       "Sessies verzonden naar en gevalideerd door de praktijk",
       "Veilige berichten cliënt ↔ dierenarts + pushmeldingen",
-      "Timeline / gedeeld patiëntdossier",
       "Care-herinneringen (standaard, medicatie, persoonlijk) en equine pack indien paard",
       "Huishoudenweergave en multi-dier encoding",
       "Talen FR / NL / EN / ES / ET / IT"
@@ -1582,7 +1588,7 @@
         "role": "Aanbevolen"
       }
     },
-    "footer": "petsFollow — voorgeschreven zorgcontinuïteit · Web + mobiel"
+    "footer": "petsFollow — voorgeschreven zorgcontinuïteit · digitaal paspoort van het dier · Web + mobiel"
   },
   "components": {
     "topbar": {

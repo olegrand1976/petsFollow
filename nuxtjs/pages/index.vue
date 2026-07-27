@@ -26,17 +26,17 @@
       </div>
       <div class="pro-landing__hero-visual" aria-hidden="true">
         <div class="pro-landing__card pro-landing__card--float">
+          <ProIcon name="folder_shared" class="pro-landing__card-icon" :size="24" />
+          <strong>{{ $t('index.cards.records.title') }}</strong>
+          <p>{{ $t('index.cards.records.text') }}</p>
+        </div>
+        <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay">
           <ProIcon name="chat" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.messaging.title') }}</strong>
           <p>{{ $t('index.cards.messaging.text') }}</p>
         </div>
-        <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay">
-          <ProIcon name="description" class="pro-landing__card-icon" :size="24" />
-          <strong>{{ $t('index.cards.records.title') }}</strong>
-          <p>{{ $t('index.cards.records.text') }}</p>
-        </div>
         <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay2">
-          <ProIcon name="favorite" class="pro-landing__card-icon" :size="24" />
+          <ProIcon name="smartphone" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.heartrate.title') }}</strong>
           <p>{{ $t('index.cards.heartrate.text') }}</p>
         </div>
@@ -124,12 +124,12 @@ function listFrom(key: string): string[] {
 }
 
 const features = [
+  { key: 'alerts', icon: 'folder_shared' },
   { key: 'messaging', icon: 'chat' },
-  { key: 'partner', icon: 'handshake' },
+  { key: 'onboarding', icon: 'smartphone' },
   { key: 'heartrate', icon: 'favorite' },
-  { key: 'alerts', icon: 'notifications' },
+  { key: 'partner', icon: 'handshake' },
   { key: 'security', icon: 'lock' },
-  { key: 'onboarding', icon: 'bolt' },
 ]
 
 const solutions = computed(() =>

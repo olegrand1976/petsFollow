@@ -20,7 +20,7 @@ Aligné fiches [18](18-FICHE-COMMISSION-VETO.md) / [19](19-FICHE-COMMISSION-COMM
 - **Commercial** : « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. »
 - **Téléphone → RDV** : funnel complet → [25-SCRIPT-TELEPHONE-RDV-VETO.md](25-SCRIPT-TELEPHONE-RDV-VETO.md)
 
-Promesse canon → [14](14-POSITIONNEMENT-MARKETING.md) · fiche pitch → [22](22-FICHE-PRODUIT-COMMERCIAL.md).
+Promesse canon → [14](14-POSITIONNEMENT-MARKETING.md) (continuité prescrite + passeport digital multi-acteurs) · fiche pitch → [22](22-FICHE-PRODUIT-COMMERCIAL.md).
 
 ## SPIFF
 - Mix mois 50 € (≥ 55 % activations triennial) : détection auto + mark-paid admin

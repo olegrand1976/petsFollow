@@ -1297,68 +1297,69 @@
   "index": {
     "login": "Logi sisse",
     "registerCta": "Registreeru",
-    "badge": "Web Pro · Pro Light · Kliendi äpp",
-    "heroTitle": "Patsientide ravi järjepidevus, lihtsustatult",
-    "heroLead": "Ettekirjutatud ravi järjepidevus: Web kabinetile, Pro Light mobiil väljale, äpp omanikele.",
+    "badge": "Digitaalne pass · Web Pro · Pro Light · Kliendi äpp",
+    "heroTitle": "Teie patsientide digitaalne pass, kõigi nende hooldajate vahel",
+    "heroLead": "Ettekirjutatud ravi järjepidevus: üks elav jagatud toimik kabineti, välja care pro'de ja omanike vahel.",
     "heroCta": "Loo professionaalne konto",
     "heroLogin": "Mul on juba konto",
     "cards": {
       "heartrate": {
-        "title": "Südame mõõtmised",
-        "text": "Juhendatud BPM omaniku äpist (funktsioon)"
+        "title": "Pro Light väli",
+        "text": "Märkmed, visiidiraportid ja dokumendid véto light'ile ning care pro'le"
       },
       "messaging": {
-        "title": "Turvaline sõnumside",
-        "text": "Otsevahetus teie klientidega"
+        "title": "Omaniku side",
+        "text": "Turvaline sõnumside kabinet ↔ klient"
       },
       "records": {
-        "title": "Patsiendikaardid",
-        "text": "Täielik ajalugu looma kohta"
+        "title": "Jagatud pass",
+        "text": "Üks elav mitme osaleja toimik looma kohta"
       }
     },
     "featuresTitle": "Miks valida petsFollow Pro?",
     "features": {
       "heartrate": {
-        "title": "Juhendatud südamerütmi mõõtmised",
-        "text": "Kliendid teevad BPM-mõõtmisi mobiilirakendusest. Te kinnitate ja jälgite arengut."
+        "title": "Ettekirjutatud jälgimine",
+        "text": "Juhendatud südamerütmi mõõtmised ja Care/Horse meeldetuletused — omanik järgib seda, mida te määrate."
       },
       "alerts": {
-        "title": "Nutikad hoiatused",
-        "text": "Saate kohe teate tahhükardia või anomaalia korral."
+        "title": "Mitme osaleja pass",
+        "text": "Kabinet, care pro ja leibkond sama looma juures — jagatud digitaalne pass, mitte silo."
       },
       "messaging": {
-        "title": "Integreeritud sõnumside",
-        "text": "Suhelge klientidega platvormilt lahkumata. Konfigureeritav saadavus."
+        "title": "Omaniku side",
+        "text": "Turvaline sõnumside ja ajajoon teie klientidega. Konfigureeritav saadavus."
       },
       "partner": {
         "title": "Partnerimudel",
         "text": "Pro Light on tasuta. Pro arveldatakse offline — kompenseeritav kliendikomisjonidega."
       },
       "security": {
-        "title": "Turvalised andmed",
-        "text": "Nõuetele vastav majutus, rollipõhine juurdepääs, krüpteeritud sõnumside."
+        "title": "Andmed ja rollid",
+        "text": "Nõuetele vastav majutus, rollipõhine ACL, kontrollitud toimiku jagamine — ilma care pro'de vahelise vestluseta."
       },
       "onboarding": {
-        "title": "Kiire kasutuselevõtt",
-        "text": "Registreerumine 2 minutiga, kliiniku andmed esimesel sisselogimisel."
+        "title": "Väli ja care pro",
+        "text": "Tasuta Pro Light: päevakava, märkmed, visiidiraportid, dokumendid ja toimiku jagamine kolleegide või väliste pro'dega."
       }
     },
     "ctaTitle": "Liituge petsFollow Pro-ga juba täna",
-    "ctaText": "Kaks pakkumist: tasuta Pro Light välitööks või Pro (veeb + kliendirakendus) kommertsarvetega. Kliendid maksavad oma loomade jälgimise eest.",
+    "ctaText": "Kaks pakkumist: tasuta Pro Light (väli / care pro) või Pro (veeb + kliendirakendus) kommertsarvetega. Teie kliendid maksavad oma loomade digitaalse passi eest.",
     "ctaButton": "Alusta registreerimist",
     "productsLink": "Tooted",
     "productsTitle": "Professionaalne pakkumine — 2 lahendust",
-    "productsLead": "Valige Pro (kliiniku veeb + kliendirakendus) või Pro Light (tasuta ProLight-mobiilirakendus). Omanikud tellivad seejärel oma loomade jälgimise.",
+    "productsLead": "Valige Pro (kliiniku veeb + klientide pass) või Pro Light (välja / care pro äpp, tasuta). Omanikud tellivad seejärel oma loomade jälgimise.",
     "productsCta": "Loo konto",
     "solutions": {
       "proComplete": {
         "price": "69 € km-ta / kuu",
         "title": "Pro",
-        "text": "Veebi-SaaS + klientide mobiilirakendus. Kliiniline jälgimine, sõnumside, kaardid ja lojaalsus.",
+        "text": "Veebi-SaaS + klientide mobiilirakendus. Digitaalne pass, sõnumside, toimikud ja lojaalsus.",
         "features": [
-          "Meditsiiniline kaart ja jagatud ajajoon",
-          "Turvaline sõnumside + push",
+          "Digitaalne pass ja jagatud ajajoon",
+          "Turvaline sõnumside + push (kabinet ↔ klient)",
           "Meeldetuletused, vastuvõtud ja ravi järgimine",
+          "Toimiku jagamine care pro / kolleegidega",
           "Partnerikomisjonid (väline arveldus)",
           "Häälelised konsultatsiooniraportid",
           "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib",
@@ -1368,60 +1369,62 @@
       "proLight": {
         "price": "Tasuta",
         "title": "Pro Light",
-        "text": "ProLight-mobiilirakendus: klientide jälgimine, loomade ajalugu, soovitus-QR, jagatud dokumendid. Töötab koos Web Pro kontoga või ilma.",
+        "text": "ProLight-mobiilirakendus: väli ja care pro — loomakaardid, märkmed, visiidiraportid, soovitus-QR. Koos Web Pro kontoga või ilma.",
         "features": [
           "Välipäevakava ja kliendikaardid",
           "Loomade ajalugu",
           "Soovitus-QR-kood",
           "Jagatud dokumendid ja märkmed",
+          "Toimiku jagamine kolleegide / väliste pro'dega",
           "Häälelised konsultatsiooniraportid",
           "AI aruandeparandus (+ ajalugu), kui VetPro kabinet on aktiveeritud"
         ]
       }
     },
     "clientPlansTitle": "Mida teie kliendid maksavad",
-    "clientPlansLead": "Kolm valemit looma kohta — kõik funktsioonid on kaasatud, kui tellimus on aktiivne.",
+    "clientPlansLead": "Kolm valemit looma kohta — täielik digitaalne pass on kaasatud, kui tellimus on aktiivne.",
     "productHighlights": {
       "monthly": {
         "price": "3,50 € / kuu",
         "title": "Igakuine",
-        "text": "Paindlikkus — mõõtmised, sõnumside, ajajoon, Care/Horse meeldetuletused, leibkond. Ilma pika kohustuseta."
+        "text": "Paindlikkus — pass / tervisekaart, sõnumside, ajajoon, Care/Horse meeldetuletused, leibkond. Ilma pika kohustuseta."
       },
       "annual": {
         "price": "35 € / aasta",
         "title": "Aastane",
-        "text": "≈ 2,9 € / kuu — sama täielik jälgimine, parem hind kui igakuine."
+        "text": "≈ 2,9 € / kuu — sama täielik pass, parem hind kui igakuine."
       },
       "triennial": {
         "price": "95 € / 3 aastat",
         "title": "Kolmeaastane (soovitatav)",
-        "text": "≈ 2,6 € / kuu — põhitarne, −10 % vs 3× aastane."
+        "text": "≈ 2,6 € / kuu — põhitarne, täielik pass, −10 % vs 3× aastane."
       }
     },
-    "footer": "© {year} petsFollow — Veterinaarse ravi järjepidevus"
+    "footer": "© {year} petsFollow — Ravi järjepidevus · looma digitaalne pass"
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
-    "seoDescription": "Kaks Pro lahendust: Pro (veeb + kliendi mobiil) ja Pro Light (tasuta ProLight-äpp). Kliendiplaanid ja partnerimudel.",
+    "seoDescription": "Ettekirjutatud ravi järjepidevus + digitaalne pass: Pro (veeb + kliendid) ja Pro Light (väli / care pro, tasuta). Kliendiplaanid ja partnerimudel.",
     "backHome": "Avaleht",
     "print": "Prindi / PDF",
     "badge": "Kliiniku esitluse tugi",
     "title": "petsFollow professionaalne pakkumine",
-    "lead": "Ökosüsteem, mis ühendab kabineti, välja ja omanikud — ettekirjutatud ravi järjepidevus (Web Pro · mobiilne ProLight · mobiilne Client).",
-    "positioning": "Kaks lahendust: Pro (veebi-SaaS + kliendirakendus, kommertsarveldus) ja Pro Light (ProLight-mobiilirakendus, tasuta, koos Web kontoga või ilma). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
+    "lead": "Looma digitaalne pass — ettekirjutatud ravi järjepidevus kabineti, välja care pro'de ja omanike vahel (Web Pro · mobiilne ProLight · mobiilne Client).",
+    "positioning": "Kaks lahendust: Pro (veebi-SaaS + klientide pass, kommertsarveldus) ja Pro Light (välja / care pro äpp, tasuta, koos Web kontoga või ilma). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
     "solutionsTitle": "Kaks professionaalset lahendust",
-    "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välirakendus.",
+    "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välja / care pro äpp.",
     "solutions": {
       "proComplete": {
         "name": "Pro",
         "badge": "Veeb + kliendi mobiil",
         "price": "69 € km-ta / kuu",
         "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
-        "tagline": "Veebiplatvorm kliinikule + mobiilirakendus teie klientidele.",
+        "tagline": "Veebiplatvorm kliinikule + digitaalne mobiilipass teie klientidele.",
         "features": [
-          "Tsentraliseeritud meditsiiniline kaart ja jagatud ajajoon",
+          "Tsentraliseeritud digitaalne pass ja jagatud ajajoon",
           "Retseptid, meeldetuletused ja vastuvõtutaotlused",
           "Turvaline sõnumside klient ↔ kliinik + push",
+          "Toimiku jagamine care pro / kolleegidega",
           "Partneriprogramm (komisjonid aktiveerimiste pealt)",
           "Väline SaaS-arveldus — ilma kliiniku veebimaksena",
           "Häälelised konsultatsiooniraportid",
@@ -1433,12 +1436,13 @@
         "name": "Pro Light",
         "badge": "Tasuta",
         "price": "0 €",
-        "tagline": "ProLight-mobiilirakendus — väljäälgimine, koos Web Pro kontoga või ilma.",
+        "tagline": "ProLight-mobiilirakendus — väli ja care pro, koos Web Pro kontoga või ilma.",
         "features": [
-          "Klientide jälgimine ja välipäevakava",
+          "Klientide jälgimine ja välipäevakava (véto light / care pro)",
           "Loomade kaardid ja ajalugu",
           "Soovitus-QR-kood",
           "Jagatud dokumendid ja visiidimärkmed",
+          "Toimiku jagamine kolleegide / väliste pro'dega",
           "Häälelised konsultatsiooniraportid",
           "AI aruandeparandus (+ ajalugu), kui VetPro kabinet on aktiveeritud",
           "Tasuta professionaalidele"
@@ -1447,22 +1451,23 @@
     },
     "saasInvoiceNote": "Pro: tellimus ja käivitamine arveldatakse offline (müük / raamatupidamine). Stripe'i kaudu kliiniku SaaS-makseid ei ole.",
     "webTitle": "PetsFollow veebiplatvorm (kliinik)",
-    "webLead": "Tsentraliseerib ja lihtsustab kliinilisi ning administratiivseid vooge.",
+    "webLead": "Tsentraliseerib digitaalse passi ning kabineti kliinilised ja administratiivsed vood.",
     "webFeatures": [
-      "Tsentraliseeritud meditsiiniline kaart: patsiendikaardid, ajalugu, analüüsid",
-      "Retseptid ja ravi järgimine: meeldetuletused kliendi telefonis",
+      "Tsentraliseeritud digitaalne pass: patsiendikaardid, ajalugu, analüüsid",
+      "Retseptid ja ravi järgimine: retseptid ja meeldetuletused kliendi telefonis",
       "Meeldetuletused ja vastuvõtud (vaktsiinid, antiparasiidid, kontrollid)",
-      "Turvaline sõnumside ning post-op / krooniline jälgimine",
+      "Turvaline sõnumside ning post-op / krooniline jälgimine (kabinet ↔ klient)",
+      "Toimiku jagamine care pro ja kolleegidega",
       "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine",
       "Häälelised konsultatsiooniraportid",
       "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib"
     ],
     "mobileTitle": "PetsFollow mobiilirakendus (omanikud)",
-    "mobileLead": "Omaniku igapäevane kaaslane — teie ravi jätkumine kodus.",
+    "mobileLead": "Digitaalse passi omanikupoolne nägu — teie ravi jätkumine kodus.",
     "mobileFeatures": [
-      "Digitaalne tervisekaart: vaktsiinid, kaal, anamnees, hädaolukorrad",
+      "Digitaalne pass / tervisekaart: vaktsiinid, kaal, anamnees, hädaolukorrad",
       "Ravihoiatused ja nutikad meeldetuletused (push)",
-      "Otselink kliinikuga: uuendused, vastuvõtutaotlused",
+      "Otselink kliinikuga: sõnumside, uuendused, vastuvõtutaotlused",
       "Tervisepäevik: kaal, sümptomid, toit, aktiivsus",
       "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s"
     ],
@@ -1473,11 +1478,12 @@
       "Aja kokkuhoid järelkontrollidel ja telefonil",
       "Parem ravi järgimine",
       "Suurem kliendilojaalsus",
+      "Tehke koostööd care pro / kolleegidega toimiku jagamise kaudu",
       "SaaS kompenseeritav partneriprogrammiga"
     ],
     "benefitsClients": [
       "Rahulik meel tänu automaatsetele meeldetuletustele",
-      "Tervisekaart alati taskus",
+      "Digitaalne pass alati taskus",
       "Tugevam usaldus oma loomaarstiga",
       "Optimaalne ennetav jälgimine"
     ],
@@ -1517,10 +1523,10 @@
     "includedTitle": "Igas loomade tellimuses (kliendid)",
     "includedLead": "Olenemata plaanist (igakuine, aastane või kolmeaastane) saab omanik:",
     "included": [
+      "Digitaalne pass / tervisekaart: ajajoon ja jagatud toimik",
       "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s mobiilirakendusest",
       "Seansid saadetakse kliinikusse ja kinnitatakse seal",
       "Turvaline sõnumside klient ↔ loomaarst + push-teavitused",
-      "Ajajoon / jagatud patsiendikaart",
       "Care meeldetuletused (standard, ravimid, isiklik) ja hobuste pakett vajadusel",
       "Leibkonna vaade ja mitme looma kodeerimine",
       "Keeled FR / NL / EN / ES / ET / IT"
@@ -1582,7 +1588,7 @@
         "role": "Soovitatav"
       }
     },
-    "footer": "petsFollow — ettekirjutatud ravi järjepidevus · Web + mobiil"
+    "footer": "petsFollow — ettekirjutatud ravi järjepidevus · looma digitaalne pass · Web + mobiil"
   },
   "components": {
     "topbar": {
