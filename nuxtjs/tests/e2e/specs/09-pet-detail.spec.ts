@@ -63,6 +63,49 @@ async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> 
   return { clientId: client.userId, petId: pet.id }
 }
 
+test('pet detail — CR IA ouvert depuis Soins & RDV', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  const when = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString()
+  const create = await fetch(`${API}/api/v1/pets/${petId}/visits`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${vetTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      notes: `e2e cr ${Date.now()}`,
+      confirmDirect: true,
+      scheduledAt: when,
+    }),
+  })
+  if (!create.ok) throw new Error(`create visit ${create.status}`)
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=care`)
+  await expect(page.getByTestId('pet-tab-care')).toBeVisible({ timeout: 15000 })
+  await page.getByTestId('pet-visit-report-open').first().click()
+  await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('visit-report-body')).toBeVisible()
+  await expect(page.getByTestId('visit-report-improve')).toBeVisible()
+  await expect(page.getByTestId('visit-report-audio')).toBeAttached()
+})
+
+test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  await seedHeartRateComment(petId)
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible()
+  await expect(page.getByTestId('pet-tab-overview')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-overview-charts')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-timeline-card')).toBeVisible()
+  await expect(page.getByTestId('pet-history-day').first()).toBeVisible()
+})
+
 test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
@@ -71,11 +114,12 @@ test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, asy
   await loginAsVet(page)
   await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
-  await expect(page.getByTestId('pet-tab-vitals')).toBeVisible({ timeout: 15000 })
-  await expect(page.getByTestId('pet-chart-range-3m')).toBeVisible()
-  await page.getByTestId('pet-chart-range-6m').click()
-  await page.getByTestId('pet-filter-all').click()
-  await expect(page.getByTestId('pet-reading-comment').filter({ hasText: comment })).toBeVisible({
+  const vitals = page.getByTestId('pet-tab-vitals')
+  await expect(vitals).toBeVisible({ timeout: 15000 })
+  await expect(vitals.getByTestId('pet-chart-range-3m')).toBeVisible()
+  await vitals.getByTestId('pet-chart-range-6m').click()
+  await vitals.getByTestId('pet-filter-all').click()
+  await expect(vitals.getByTestId('pet-reading-comment').filter({ hasText: comment })).toBeVisible({
     timeout: 15000,
   })
 

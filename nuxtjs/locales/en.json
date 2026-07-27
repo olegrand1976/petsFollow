@@ -493,7 +493,7 @@
         "vitals": "HR & weight",
         "care": "Care & visits",
         "documents": "Documents",
-        "sharing": "Sharing & timeline"
+        "sharing": "Sharing"
       },
       "kpi": {
         "lastBpm": "Last HR",
@@ -514,6 +514,8 @@
       "timelineTypeCare": "Care",
       "timelineTypeVisit": "Visit",
       "timelineTypeEvent": "Event",
+      "chartsToggle": "HR & weight charts",
+      "timelineDayCount": "{n} event(s)",
       "heartrateTitle": "Validated heart rate readings",
       "heartrateEmptyTitle": "No validated readings",
       "heartrateEmptyDescription": "Validated BPM sessions will appear here.",
@@ -547,6 +549,7 @@
       "timelineTitle": "Monitoring history",
       "timelineEmptyTitle": "Empty history",
       "timelineEmptyDescription": "No monitoring events for this pet.",
+      "openReportInCalendar": "Open in calendar",
       "photoTitle": "Pet photo",
       "photoChange": "Change photo",
       "photoHint": "JPEG, PNG or WebP — 2 MB max.",

@@ -137,23 +137,36 @@
           </div>
         </dl>
       </ProCard>
-      <ProCard :title="$t('clients.pet.timelineRecentTitle')">
-        <ul v-if="timelinePreview.length" class="pro-timeline">
-          <li v-for="item in timelinePreview" :key="item.id" class="pro-timeline__item">
-            <div class="pro-timeline__dot" aria-hidden="true" />
-            <div>
-              <strong>{{ timelineItemTitle(item) }}</strong>
-              <p>{{ item.body }}</p>
-              <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
-            </div>
-          </li>
-        </ul>
-        <ProEmptyState
-          v-else
-          :title="$t('clients.pet.timelineEmptyTitle')"
-          :description="$t('clients.pet.timelineEmptyDescription')"
-        />
-      </ProCard>
+      <details
+        v-if="hasChartData || hasWeightChartData"
+        class="pro-pet-charts-details"
+        open
+        data-testid="pet-overview-charts"
+      >
+        <summary>{{ $t('clients.pet.chartsToggle') }}</summary>
+        <div class="pro-pet-charts-details__body">
+          <ProPetVitalsCharts
+            layout="grid"
+            :chart-range="chartRange"
+            :weight-chart-range="weightChartRange"
+            :has-chart-data="hasChartData"
+            :has-weight-chart-data="hasWeightChartData"
+            :chart-values="chartValues"
+            :chart-alerts="chartAlerts"
+            :chart-dates="chartDates"
+            :domain-start="chartDomain.start"
+            :domain-end="chartDomain.end"
+            :weight-chart-values="weightChartValues"
+            :weight-chart-dates="weightChartDates"
+            :weight-domain-start="weightChartDomain.start"
+            :weight-domain-end="weightChartDomain.end"
+            @update:chart-range="chartRange = $event"
+            @update:weight-chart-range="weightChartRange = $event"
+          />
+        </div>
+      </details>
+
+      <ProPetDayTimeline :items="timeline" class="pro-mb-lg" />
     </div>
 
     <div
@@ -162,52 +175,23 @@
       aria-labelledby="tab-vitals"
       data-testid="pet-tab-vitals"
     >
-      <ProCard v-if="hasChartData" :title="$t('clients.pet.chartTitle')">
-      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '3m' }"
-          :aria-pressed="chartRange === '3m'"
-          data-testid="pet-chart-range-3m"
-          @click="chartRange = '3m'"
-        >
-          {{ $t('clients.pet.chartRange3m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '6m' }"
-          :aria-pressed="chartRange === '6m'"
-          data-testid="pet-chart-range-6m"
-          @click="chartRange = '6m'"
-        >
-          {{ $t('clients.pet.chartRange6m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '1y' }"
-          :aria-pressed="chartRange === '1y'"
-          data-testid="pet-chart-range-1y"
-          @click="chartRange = '1y'"
-        >
-          {{ $t('clients.pet.chartRange1y') }}
-        </button>
-      </div>
-      <ProBpmChart
-        v-if="chartValues.length"
-        :values="chartValues"
-        :alerts="chartAlerts"
-        :dates="chartDates"
+      <ProPetVitalsCharts
+        :chart-range="chartRange"
+        :weight-chart-range="weightChartRange"
+        :has-chart-data="hasChartData"
+        :has-weight-chart-data="hasWeightChartData"
+        :chart-values="chartValues"
+        :chart-alerts="chartAlerts"
+        :chart-dates="chartDates"
         :domain-start="chartDomain.start"
         :domain-end="chartDomain.end"
-        :aria-label="$t('clients.pet.chartTitle')"
+        :weight-chart-values="weightChartValues"
+        :weight-chart-dates="weightChartDates"
+        :weight-domain-start="weightChartDomain.start"
+        :weight-domain-end="weightChartDomain.end"
+        @update:chart-range="chartRange = $event"
+        @update:weight-chart-range="weightChartRange = $event"
       />
-      <p v-else class="text-muted" data-testid="pet-chart-empty-period">
-        {{ $t('clients.pet.chartEmptyPeriod') }}
-      </p>
-      </ProCard>
 
       <ProCard :title="$t('clients.pet.heartrateTitle')">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.heartrateTitle')">
@@ -281,59 +265,6 @@
           </tr>
         </tbody>
       </ProTable>
-      </ProCard>
-
-      <ProCard
-      v-if="hasWeightChartData"
-      :title="$t('clients.pet.weightChartTitle')"
-      data-testid="pet-weight-chart-card"
-      >
-      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '3m' }"
-          :aria-pressed="weightChartRange === '3m'"
-          data-testid="pet-weight-range-3m"
-          @click="weightChartRange = '3m'"
-        >
-          {{ $t('clients.pet.chartRange3m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '6m' }"
-          :aria-pressed="weightChartRange === '6m'"
-          data-testid="pet-weight-range-6m"
-          @click="weightChartRange = '6m'"
-        >
-          {{ $t('clients.pet.chartRange6m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '1y' }"
-          :aria-pressed="weightChartRange === '1y'"
-          data-testid="pet-weight-range-1y"
-          @click="weightChartRange = '1y'"
-        >
-          {{ $t('clients.pet.chartRange1y') }}
-        </button>
-      </div>
-      <ProBpmChart
-        v-if="weightChartValues.length"
-        :values="weightChartValues"
-        :dates="weightChartDates"
-        :domain-start="weightChartDomain.start"
-        :domain-end="weightChartDomain.end"
-        :axis-title="$t('clients.pet.weightAxisKg')"
-        auto-y-domain
-        hide-legend
-        :aria-label="$t('clients.pet.weightChartTitle')"
-      />
-      <p v-else class="text-muted">
-        {{ $t('clients.pet.chartEmptyPeriod') }}
-      </p>
       </ProCard>
 
       <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card">
@@ -495,6 +426,14 @@
                   {{ $t('calendar.rejectReschedule') }}
                 </ProButton>
                 <ProButton
+                  variant="secondary"
+                  test-id="pet-visit-report-open"
+                  @click="openVisitReport(v)"
+                >
+                  <ProIcon name="description" :size="18" />
+                  {{ $t('calendar.reportTitle') }}
+                </ProButton>
+                <ProButton
                   v-if="v.status === 'confirmed'"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'done')"
@@ -643,25 +582,27 @@
         </tbody>
       </ProTable>
       </ProCard>
-    
-      <ProCard :title="$t('clients.pet.timelineTitle')" data-testid="pet-timeline-card">
-      <ul v-if="timeline.length" class="pro-timeline">
-        <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
-          <div class="pro-timeline__dot" aria-hidden="true" />
-          <div>
-            <strong>{{ timelineItemTitle(item) }}</strong>
-            <p>{{ item.body }}</p>
-            <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
-          </div>
-        </li>
-      </ul>
-      <ProEmptyState
-        v-else
-        :title="$t('clients.pet.timelineEmptyTitle')"
-        :description="$t('clients.pet.timelineEmptyDescription')"
-      />
-      </ProCard>
     </div>
+
+    <ProModal
+      v-model:open="visitReportOpen"
+      :title="$t('calendar.reportTitle')"
+      size="lg"
+    >
+      <ProVisitReportPanel
+        v-if="visitReportId"
+        :visit-id="visitReportId"
+      />
+      <p class="pro-hint pro-mb-md">
+        <NuxtLink
+          v-if="visitReportId"
+          :to="`/calendar?visit=${visitReportId}`"
+          data-testid="pet-visit-report-calendar-link"
+        >
+          {{ $t('clients.pet.openReportInCalendar') }}
+        </NuxtLink>
+      </p>
+    </ProModal>
   </div>
 </template>
 
@@ -685,6 +626,8 @@ const weightChartRange = ref<'3m' | '6m' | '1y'>('3m')
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
+const visitReportOpen = ref(false)
+const visitReportId = ref('')
 const messagingBusy = ref(false)
 const messagingError = ref('')
 const pageError = ref('')
@@ -721,8 +664,6 @@ const petTabs = computed(() => [
   { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
   { id: 'sharing', label: t('clients.pet.tabs.sharing') },
 ])
-
-const timelinePreview = computed(() => timeline.value.slice(0, 5))
 
 const petPlanLabel = computed(() => {
   const code = pet.value?.entitlement?.planCode || pet.value?.planCode
@@ -793,22 +734,6 @@ const kpiNextVisit = computed(() => {
   if (!upcoming.length) return '—'
   return formatDate(upcoming[0].scheduledAt)
 })
-
-function timelineItemTitle(item: { type?: string; title?: string }) {
-  if (item.title?.trim()) return item.title
-  const type = item.type ?? ''
-  const keyByType: Record<string, string> = {
-    heartrate: 'clients.pet.timelineTypeHeartrate',
-    weight: 'clients.pet.timelineTypeWeight',
-    message: 'clients.pet.timelineTypeMessage',
-    care: 'clients.pet.timelineTypeCare',
-    visit: 'clients.pet.timelineTypeVisit',
-    event: 'clients.pet.timelineTypeEvent',
-  }
-  const key = keyByType[type]
-  if (key) return t(key)
-  return type || t('clients.pet.timelineTypeEvent')
-}
 
 function isReadingNew(s: { id: string, isNew?: boolean }) {
   return highlightedNewIds.value.has(s.id) || !!s.isNew
@@ -1153,6 +1078,11 @@ async function visitAction(id: string, action: string) {
   }
 }
 
+function openVisitReport(v: { id: string }) {
+  visitReportId.value = v.id
+  visitReportOpen.value = true
+}
+
 onMounted(async () => {
   pageError.value = ''
   try {
@@ -1267,39 +1197,39 @@ onBeforeUnmount(() => {
   min-width: 8rem;
 }
 
-.pro-timeline {
+.pro-pet-charts-details {
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-surface);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.pro-pet-charts-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
-.pro-timeline__item {
-  display: grid;
-  grid-template-columns: 1rem 1fr;
-  gap: 0.75rem 1rem;
-  padding-bottom: 1.25rem;
-  border-left: 2px solid var(--pf-vet-border);
-  margin-left: 0.35rem;
-  padding-left: 1.25rem;
-  position: relative;
+.pro-pet-charts-details > summary::-webkit-details-marker {
+  display: none;
 }
 
-.pro-timeline__item:last-child {
-  border-left-color: transparent;
-  padding-bottom: 0;
+.pro-pet-charts-details > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4rem;
+  transition: transform 0.15s ease;
 }
 
-.pro-timeline__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--pf-vet-accent);
-  position: absolute;
-  left: -6px;
-  top: 0.35rem;
+.pro-pet-charts-details[open] > summary::before {
+  transform: rotate(90deg);
 }
 
-.pro-timeline__item p {
-  margin: 0.25rem 0;
+.pro-pet-charts-details__body {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pf-vet-border);
 }
 </style>

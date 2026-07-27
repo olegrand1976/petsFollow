@@ -995,7 +995,7 @@
         "vitals": "FC & poids",
         "care": "Soins & RDV",
         "documents": "Documents",
-        "sharing": "Partage & timeline"
+        "sharing": "Partage"
       },
       "kpi": {
         "lastBpm": "Dernière FC",
@@ -1016,6 +1016,8 @@
       "timelineTypeCare": "Soin",
       "timelineTypeVisit": "Visite",
       "timelineTypeEvent": "Événement",
+      "chartsToggle": "Courbes FC & poids",
+      "timelineDayCount": "{n} événement(s)",
       "heartrateTitle": "Relevés cardiaques validés",
       "heartrateEmptyTitle": "Aucun relevé validé",
       "heartrateEmptyDescription": "Les sessions BPM validées apparaîtront ici.",
@@ -1049,6 +1051,7 @@
       "timelineTitle": "Historique suivi",
       "timelineEmptyTitle": "Historique vide",
       "timelineEmptyDescription": "Aucun événement de suivi pour cet animal.",
+      "openReportInCalendar": "Ouvrir dans l’agenda",
       "photoTitle": "Photo de l'animal",
       "photoChange": "Changer la photo",
       "photoHint": "JPEG, PNG ou WebP — 2 Mo max.",

@@ -493,7 +493,7 @@
         "vitals": "FC y peso",
         "care": "Cuidados y citas",
         "documents": "Documentos",
-        "sharing": "Compartir y timeline"
+        "sharing": "Compartir"
       },
       "kpi": {
         "lastBpm": "Última FC",
@@ -514,6 +514,8 @@
       "timelineTypeCare": "Cuidado",
       "timelineTypeVisit": "Visita",
       "timelineTypeEvent": "Evento",
+      "chartsToggle": "Curvas FC y peso",
+      "timelineDayCount": "{n} evento(s)",
       "heartrateTitle": "Lecturas de frecuencia cardíaca validadas",
       "heartrateEmptyTitle": "Sin lecturas validadas",
       "heartrateEmptyDescription": "Las sesiones BPM validadas aparecerán aquí.",
@@ -547,6 +549,7 @@
       "timelineTitle": "Historial de seguimiento",
       "timelineEmptyTitle": "Historial vacío",
       "timelineEmptyDescription": "No hay eventos de seguimiento para esta mascota.",
+      "openReportInCalendar": "Abrir en la agenda",
       "photoTitle": "Foto de la mascota",
       "photoChange": "Cambiar foto",
       "photoHint": "JPEG, PNG o WebP — máx. 2 MB.",

@@ -493,7 +493,7 @@
         "vitals": "HR ja kaal",
         "care": "Hooldus ja vastuvõtud",
         "documents": "Dokumendid",
-        "sharing": "Jagamine ja ajajoon"
+        "sharing": "Jagamine"
       },
       "kpi": {
         "lastBpm": "Viimane HR",
@@ -514,6 +514,8 @@
       "timelineTypeCare": "Hooldus",
       "timelineTypeVisit": "Vastuvõtt",
       "timelineTypeEvent": "Sündmus",
+      "chartsToggle": "HR ja kaalu kõverad",
+      "timelineDayCount": "{n} sündmus(t)",
       "heartrateTitle": "Kinnitatud südamerütmi mõõtmised",
       "heartrateEmptyTitle": "Kinnitatud mõõtmisi pole",
       "heartrateEmptyDescription": "Kinnitatud BPM sessioonid ilmuvad siia.",
@@ -547,6 +549,7 @@
       "timelineTitle": "Jälgimise ajalugu",
       "timelineEmptyTitle": "Tühi ajalugu",
       "timelineEmptyDescription": "Selle lemmiklooma kohta jälgimissündmusi pole.",
+      "openReportInCalendar": "Ava kalendris",
       "photoTitle": "Lemmiklooma foto",
       "photoChange": "Muuda fotot",
       "photoHint": "JPEG, PNG või WebP — max 2 MB.",

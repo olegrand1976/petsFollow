@@ -493,7 +493,7 @@
         "vitals": "HF & gewicht",
         "care": "Zorg & afspraken",
         "documents": "Documenten",
-        "sharing": "Delen & timeline"
+        "sharing": "Delen"
       },
       "kpi": {
         "lastBpm": "Laatste HF",
@@ -514,6 +514,8 @@
       "timelineTypeCare": "Zorg",
       "timelineTypeVisit": "Bezoek",
       "timelineTypeEvent": "Gebeurtenis",
+      "chartsToggle": "HF- & gewichtscurves",
+      "timelineDayCount": "{n} gebeurtenis(sen)",
       "heartrateTitle": "Gevalideerde hartslagmetingen",
       "heartrateEmptyTitle": "Geen gevalideerde metingen",
       "heartrateEmptyDescription": "Gevalideerde BPM-sessies verschijnen hier.",
@@ -547,6 +549,7 @@
       "timelineTitle": "Opvolgingsgeschiedenis",
       "timelineEmptyTitle": "Lege geschiedenis",
       "timelineEmptyDescription": "Geen opvolgingsgebeurtenissen voor dit dier.",
+      "openReportInCalendar": "Openen in agenda",
       "photoTitle": "Foto van het dier",
       "photoChange": "Foto wijzigen",
       "photoHint": "JPEG, PNG of WebP — max. 2 MB.",
