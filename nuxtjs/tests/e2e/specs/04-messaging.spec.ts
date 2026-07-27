@@ -9,6 +9,30 @@ test('messagerie affiche les conversations', { tag: '@p0' }, async ({ page }) =>
   await page.goto('/messages')
   await expect(page.getByTestId('messages-page')).toBeVisible()
   await expect(page.getByRole('heading', { name: /messagerie|messaging|berichten/i })).toBeVisible()
+  await expect(page.getByTestId('messages-client-search')).toBeVisible()
+})
+
+test('recherche client ouvre une conversation', { tag: '@p0' }, async ({ page }) => {
+  await loginAsVet(page)
+  await page.goto('/messages')
+  await expect(page.getByTestId('messages-page')).toBeVisible()
+
+  const threadBtn = page.locator('[data-testid^="thread-"]').first()
+  const search = page.getByTestId('messages-client-search').getByTestId('pro-combobox-input')
+  await expect(search).toBeVisible()
+
+  if ((await threadBtn.count()) === 0) {
+    test.skip(true, 'Aucun thread visible pour tester la recherche')
+    return
+  }
+
+  const label = (await threadBtn.locator('strong').innerText()).trim()
+  const query = label.slice(0, Math.min(3, label.length)) || label
+  await search.fill(query)
+  const option = page.getByTestId('pro-combobox-list').locator('[role="option"]').first()
+  await expect(option).toBeVisible({ timeout: 5000 })
+  await option.click()
+  await expect(page.locator('.pro-chat__thread-btn--active')).toBeVisible()
 })
 
 test('deep-link thread depuis query', { tag: '@p0' }, async ({ page }) => {

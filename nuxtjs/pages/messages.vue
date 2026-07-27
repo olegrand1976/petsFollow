@@ -5,13 +5,26 @@
     <div class="pro-chat">
       <aside class="pro-chat__threads">
         <h3 class="pro-card__title">{{ $t('messages.threads') }}</h3>
+        <div class="pro-chat__search" data-testid="messages-client-search">
+          <label class="pro-sr-only" for="messages-client-search-input">
+            {{ $t('messages.searchPlaceholder') }}
+          </label>
+          <ProCombobox
+            v-model="clientSearch"
+            input-id="messages-client-search-input"
+            :placeholder="$t('messages.searchPlaceholder')"
+            :min-chars="1"
+            :search-fn="searchClients"
+            @select="onClientSelect"
+          />
+        </div>
         <ProEmptyState
-          v-if="!threads.length"
+          v-if="!visibleThreads.length"
           :title="$t('messages.emptyTitle')"
           :description="$t('messages.emptyDescription')"
         />
         <button
-          v-for="t in threads"
+          v-for="t in visibleThreads"
           :key="t.id"
           type="button"
           class="pro-chat__thread-btn"
@@ -105,6 +118,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
+
 definePageMeta({ middleware: 'vet-only' })
 
 const route = useRoute()
@@ -116,6 +131,7 @@ const { refresh: refreshNotif } = useProNotifications()
 const threads = ref<any[]>([])
 const messages = ref<any[]>([])
 const active = ref<any>(null)
+const clientSearch = ref<ProComboboxItem | null>(null)
 const draft = ref('')
 const sending = ref(false)
 const actionError = ref('')
@@ -132,8 +148,49 @@ function threadLabel(thread: any) {
   return thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' })
 }
 
+function hasMessage(thread: any) {
+  return Boolean(String(thread?.lastMessagePreview ?? '').trim())
+}
+
+const visibleThreads = computed(() => {
+  const activeId = active.value?.id
+  const filtered = threads.value.filter(
+    (t) => hasMessage(t) || (activeId != null && t.id === activeId),
+  )
+  return [...filtered].sort((a, b) => {
+    const aUnread = (a.unreadCount ?? 0) > 0 ? 1 : 0
+    const bUnread = (b.unreadCount ?? 0) > 0 ? 1 : 0
+    return bUnread - aUnread
+  })
+})
+
 function unreadLabel(count: number) {
   return count > 1 ? t('messages.unreadPlural', { count }) : t('messages.unread', { count })
+}
+
+async function searchClients(q: string): Promise<ProComboboxItem[]> {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return []
+  return threads.value
+    .filter((t) => {
+      const name = String(t.clientName ?? '').toLowerCase()
+      const email = String(t.clientEmail ?? '').toLowerCase()
+      return name.includes(needle) || email.includes(needle)
+    })
+    .slice(0, 20)
+    .map((t) => ({
+      id: t.id,
+      label: threadLabel(t),
+      hint: t.clientEmail || t.lastMessagePreview || undefined,
+      badge: (t.unreadCount ?? 0) > 0 ? unreadLabel(t.unreadCount) : undefined,
+      raw: t,
+    }))
+}
+
+async function onClientSelect(item: ProComboboxItem) {
+  const thread = item.raw ?? threads.value.find((t) => t.id === item.id)
+  if (thread) await select(thread)
+  clientSearch.value = null
 }
 
 function isVetMessage(msg: any) {
@@ -321,6 +378,10 @@ async function onFileSelected(event: Event) {
 </script>
 
 <style scoped>
+.pro-chat__search {
+  margin-bottom: 0.75rem;
+}
+
 .pro-chat__composer {
   display: flex;
   flex-direction: column;
