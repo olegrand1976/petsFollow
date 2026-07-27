@@ -561,7 +561,16 @@
     "pet_dossier_share_register": "Créer un compte pro : {registerUrl}",
     "pet_dossier_share_cta": "Télécharger le dossier",
     "pet_dossier_share_expiry": "Ce lien expire dans 24 heures.",
-    "pet_dossier_share_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer. Les données sont partagées à la demande du propriétaire."
+    "pet_dossier_share_disclaimer": "Si vous n'attendiez pas cet email, vous pouvez l'ignorer. Les données sont partagées à la demande du propriétaire.",
+    "sales_branch_congrats_subject": "Félicitations — votre branche {branchName} est créée !",
+    "sales_branch_congrats_tagline": "Force de vente",
+    "sales_branch_congrats_preheader": "Votre branche commerciale {branchName} ({branchCode}) vient d’être créée.",
+    "sales_branch_congrats_greeting": "Bonjour {fullName},",
+    "sales_branch_congrats_intro": "Félicitations ! Une branche commerciale vient d’être créée pour vous.",
+    "sales_branch_congrats_detail": "• Nom : {branchName}\n• Code : {branchCode}\n\nVous pouvez consulter votre rattachement dans la section Réseau de petsFollow Pro.",
+    "sales_branch_congrats_cta": "Voir mon réseau",
+    "sales_branch_congrats_disclaimer": "Email automatique — création de branche commerciale petsFollow.",
+    "sales_branch_congrats_fallback_name": "commercial"
   },
   "push": {
     "new_message_title": "Nouveau message",

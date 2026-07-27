@@ -5,6 +5,10 @@
 # Usage:
 #   RETENTION_PURGE_SECRET=... ./infra/gcp/setup-retention-scheduler.sh
 #   ./infra/gcp/setup-retention-scheduler.sh
+#
+# Le secret est stocké dans la config du job (header X-Retention-Secret), comme
+# auth-health / ai-module-friction. Restreindre scheduler.jobs.get ; ne pas
+# afficher la description YAML du job (elle contient le secret en clair).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,10 +27,10 @@ ENDPOINT="${API_URL}/api/v1/internal/retention/run"
 if [[ -n "${RETENTION_PURGE_SECRET:-}" ]]; then
   if gcloud secrets describe "$SECRET_NAME" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     echo -n "$RETENTION_PURGE_SECRET" | gcloud secrets versions add "$SECRET_NAME" \
-      --project="$GCP_PROJECT_ID" --data-file=-
+      --project="$GCP_PROJECT_ID" --data-file=- >/dev/null
   else
     echo -n "$RETENTION_PURGE_SECRET" | gcloud secrets create "$SECRET_NAME" \
-      --project="$GCP_PROJECT_ID" --replication-policy=automatic --data-file=-
+      --project="$GCP_PROJECT_ID" --replication-policy=automatic --data-file=- >/dev/null
   fi
 fi
 
@@ -48,8 +52,9 @@ if gcloud scheduler jobs describe "$JOB_NAME" --location="$LOCATION" --project="
     --http-method=POST \
     --headers="$HEADERS" \
     --message-body='{}' \
-    --attempt-deadline=300s
-  echo "Updated scheduler job ${JOB_NAME}"
+    --attempt-deadline=300s \
+    >/dev/null
+  echo "Updated scheduler job ${JOB_NAME} (${SCHEDULE} ${TZ})"
 else
   gcloud scheduler jobs create http "$JOB_NAME" \
     --project="$GCP_PROJECT_ID" \
@@ -60,6 +65,7 @@ else
     --http-method=POST \
     --headers="$HEADERS" \
     --message-body='{}' \
-    --attempt-deadline=300s
-  echo "Created scheduler job ${JOB_NAME}"
+    --attempt-deadline=300s \
+    >/dev/null
+  echo "Created scheduler job ${JOB_NAME} (${SCHEDULE} ${TZ})"
 fi

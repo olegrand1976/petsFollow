@@ -47,20 +47,45 @@ gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
 
 # Filet de secours sur les ZIP de partage de dossier (PHI) : le token expire à 24 h
 # et la purge applicative les efface, mais si les deux échouent le bucket nettoie.
-# Attention : --lifecycle-file remplace TOUTES les règles du bucket.
-echo "→ Lifecycle : suppression de dossier-shares/** au-delà de 2 jours"
+# --lifecycle-file remplace TOUTES les règles : on fusionne avec l'existant.
+echo "→ Lifecycle : suppression de dossier-shares/** au-delà de 2 jours (merge)"
 LIFECYCLE_FILE="$(mktemp)"
 trap 'rm -f "$LIFECYCLE_FILE"' EXIT
-cat >"$LIFECYCLE_FILE" <<'EOF'
-{
-  "rule": [
-    {
-      "action": { "type": "Delete" },
-      "condition": { "age": 2, "matchesPrefix": ["dossier-shares/"] }
-    }
-  ]
+python3 - "$BUCKET" "$GCP_PROJECT_ID" "$LIFECYCLE_FILE" <<'PY'
+import json, subprocess, sys
+
+bucket, project, out = sys.argv[1], sys.argv[2], sys.argv[3]
+desired = {
+    "action": {"type": "Delete"},
+    "condition": {"age": 2, "matchesPrefix": ["dossier-shares/"]},
 }
-EOF
+
+raw = subprocess.check_output(
+    [
+        "gcloud", "storage", "buckets", "describe", f"gs://{bucket}",
+        f"--project={project}", "--format=json",
+    ],
+    text=True,
+)
+meta = json.loads(raw)
+# gcloud JSON : lifecycle.rule ou lifecycle_config.rule selon la version CLI.
+lifecycle = meta.get("lifecycle") or meta.get("lifecycle_config") or {}
+rules = list(lifecycle.get("rule") or [])
+
+def is_dossier_shares_rule(rule: dict) -> bool:
+    cond = rule.get("condition") or {}
+    prefixes = cond.get("matchesPrefix") or []
+    return prefixes == ["dossier-shares/"] or (
+        isinstance(prefixes, list) and "dossier-shares/" in prefixes and len(prefixes) == 1
+    )
+
+kept = [r for r in rules if not is_dossier_shares_rule(r)]
+kept.append(desired)
+payload = {"rule": kept}
+with open(out, "w", encoding="utf-8") as f:
+    json.dump(payload, f)
+print(f"  {len(kept)} règle(s) lifecycle (dont dossier-shares/)")
+PY
 gcloud storage buckets update "gs://${BUCKET}" \
   --project="$GCP_PROJECT_ID" \
   --lifecycle-file="$LIFECYCLE_FILE" \
