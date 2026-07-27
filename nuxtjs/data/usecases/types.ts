@@ -30,7 +30,6 @@ export type UseCaseFolder = {
 }
 
 export type UseCaseCatalog = {
-  generatedAt: string
   source: string
   demoSession: string[]
   folders: UseCaseFolder[]

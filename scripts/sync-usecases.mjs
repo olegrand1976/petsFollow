@@ -163,7 +163,6 @@ for (const f of FOLDERS) {
 }
 
 const catalog = {
-  generatedAt: new Date().toISOString(),
   source: 'useCase/',
   demoSession: ['UC-VP-01', 'UC-X-01', 'UC-X-02', 'UC-X-05', 'UC-PL-01', 'UC-CL-02', 'UC-CO-02'],
   folders,

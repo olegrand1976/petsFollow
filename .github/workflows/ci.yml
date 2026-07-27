@@ -9,6 +9,7 @@ on:
 
 env:
   DATABASE_URL: postgres://petsfollow:petsfollow@localhost:5432/petsfollow_test?sslmode=disable
+  APP_ENV: test
   DEV_SEED_ENABLED: "true"
   BILLING_MOCK_ENABLED: "true"
   AUTH_RATE_LIMIT_PER_MIN: "0"
