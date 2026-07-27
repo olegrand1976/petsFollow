@@ -322,7 +322,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proLightDictationStart => 'Dictate';
 
   @override
-  String get proLightDictationStop => 'Stop & transcribe';
+  String get proLightDictationStop => 'Stop';
+
+  @override
+  String get proLightRecordingInProgress => 'Recording in progress';
 
   @override
   String get proLightAudioConsentTitle => 'Audio consent';

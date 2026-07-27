@@ -522,6 +522,27 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 	return out, rows.Err()
 }
 
+// CareProMayMessageClient reports whether the care_pro has any active ACL on the client
+// (client_access) or at least one of their pets (pet_access).
+func (s *Store) CareProMayMessageClient(ctx context.Context, careProID, clientUserID string) (bool, error) {
+	ok, err := s.hasClientAccess(ctx, clientUserID, careProID, PermRead)
+	if err != nil || ok {
+		return ok, err
+	}
+	var n int
+	err = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM pets.pets p
+		WHERE p.owner_user_id=$1 AND EXISTS (
+			SELECT 1 FROM pets.pet_access pa
+			WHERE pa.pet_id=p.id AND pa.grantee_user_id=$2
+				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+		)`, clientUserID, careProID).Scan(&n)
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
 // ListCareProClients aggregates distinct owners from pet grants + client_access.
 func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `

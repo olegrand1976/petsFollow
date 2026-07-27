@@ -378,7 +378,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| G1 | P0 | Shell | Login farrier | Agenda · Clients · Pets · Settings (pas Messages) |
+| G1 | P0 | Shell | Login farrier | Agenda · Clients · Pets · **Messages** · Settings |
 | G1b | P0 | Shell staff | Login `vet.demo` | Agenda · Clients · Pets · **Messages** · Settings |
 | G2 | P0 | Agenda filtres | Aujourd’hui / 7j / Tout | Tri ASC fenêtres courtes ; hors done/cancelled |
 | G3 | P1 | Marquer Fait | Bouton Fait (write_notes) | Statut done |
@@ -390,8 +390,9 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | G9 | P1 | Audio PHI | Après finalize | Audio inaccessible ; pas d’URL `/media/` publique |
 | G10 | P2 | Permission read | Share read-only | Pas de Fait / CR write |
 | G11 | P2 | Settings | Specialty, locale, logout | OK |
-| G12 | P2 | vet_light | Login `vetlight.demo` | Même shell ; prompts CR specialty ; **pas** Messages |
+| G12 | P1 | vet_light | Login `vetlight.demo` | Même shell 5 tabs (Messages inclus) ; CR sans Améliorer IA |
 | G13 | P1 | Messagerie staff | `vet.demo` → Messages → compose / envoi | Thread client ; saisie OK ; pas de lock « lier un véto » |
+| G14 | P0 | Messagerie care_pro | `vetlight.demo` → Messages → compose Spirit / envoi | Thread person-scoped ; visible client ; distinct du fil cabinet |
 
 ---
 

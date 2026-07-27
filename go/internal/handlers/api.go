@@ -1031,6 +1031,24 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		}
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
+	case id.Role == kernel.RoleCarePro:
+		threads, err := a.store.ListThreadSummariesForVet(r.Context(), id.UserID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		out := make([]store.ThreadSummary, 0, len(threads))
+		for _, t := range threads {
+			th := store.Thread{
+				ID: t.ID, PracticeID: t.PracticeID, ClientUserID: t.ClientUserID,
+				VetUserID: t.VetUserID, PetID: t.PetID,
+			}
+			if a.canAccessThread(r, id, th) {
+				out = append(out, t)
+			}
+		}
+		httpx.WriteData(w, http.StatusOK, out)
+		return
 	case id.Role == kernel.RoleClient:
 		threads, err := a.store.ListThreadSummariesForClient(r.Context(), id.UserID)
 		if err != nil {
@@ -1055,7 +1073,28 @@ func (a *API) canAccessThread(r *http.Request, id authx.Identity, thread store.T
 	if kernel.IsPracticeStaff(id.Role) && id.PracticeID != "" && id.PracticeID == thread.PracticeID {
 		return a.allowPracticePerm(r, id, "messaging")
 	}
-	return id.UserID == thread.VetUserID
+	if id.UserID != thread.VetUserID {
+		return false
+	}
+	// care_pro person-scoped threads: ACL must still be active (revoke cuts access).
+	if id.Role == kernel.RoleCarePro && thread.PracticeID == "" {
+		return a.careProMayAccessThread(r, id, thread)
+	}
+	return true
+}
+
+// careProMayAccessThread re-checks pet_access / client_access for a care_pro thread.
+func (a *API) careProMayAccessThread(r *http.Request, id authx.Identity, thread store.Thread) bool {
+	if thread.PetID != "" {
+		pet, err := a.store.GetPet(r.Context(), thread.PetID)
+		if err != nil {
+			return false
+		}
+		ok, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermRead)
+		return err == nil && ok
+	}
+	ok, err := a.store.CareProMayMessageClient(r.Context(), id.UserID, thread.ClientUserID)
+	return err == nil && ok
 }
 
 func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
@@ -1162,8 +1201,9 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
 		}
+		a.pushNewMessage(thread.VetUserID, thread.ID, req.Body)
 	}
-	if kernel.IsPracticeStaff(id.Role) {
+	if kernel.IsPracticeStaff(id.Role) || id.Role == kernel.RoleCarePro {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, req.Body)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -1221,8 +1261,9 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, preview)
 		}
+		a.pushNewMessage(thread.VetUserID, thread.ID, preview)
 	}
-	if kernel.IsPracticeStaff(id.Role) {
+	if kernel.IsPracticeStaff(id.Role) || id.Role == kernel.RoleCarePro {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, preview)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)

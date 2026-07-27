@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -57,12 +59,11 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   List<dynamic> _clients = [];
   List<dynamic> _pets = [];
   int _loadGen = 0;
+  int _messagesUnread = 0;
 
-  /// Staff: Agenda / Clients / Pets / Messages / Settings.
-  /// care_pro: Agenda / Clients / Pets / Settings (no Messages).
-  static const _staffMessagesIndex = 3;
-  static const _staffSettingsIndex = 4;
-  static const _careSettingsIndex = 3;
+  /// Agenda / Clients / Pets / Messages / Settings (identical for care_pro + cabinet staff).
+  static const _messagesIndex = 3;
+  static const _settingsIndex = 4;
 
   @override
   void initState() {
@@ -81,25 +82,16 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   }
 
   void _onPushSelectTab(int i) {
-    if (!mounted || !_isCabinetStaff) return;
-    // Client shell uses tabMessages=3; map to staff messages index.
-    final target = i == PushNavigation.tabMessages ? _staffMessagesIndex : i;
-    if (target < 0 || target > _staffSettingsIndex) return;
+    if (!mounted) return;
+    // Client shell uses tabMessages=3; map to Pro Light messages index.
+    final target = i == PushNavigation.tabMessages ? _messagesIndex : i;
+    if (target < 0 || target > _settingsIndex) return;
     setState(() => _index = target);
   }
 
   void _bindPushNavigation() {
-    if (!_isCabinetStaff) return;
     PushNavigation.instance.onSelectTab = _onPushSelectTab;
   }
-
-  bool get _isCabinetStaff {
-    final role = ApiClient.instance.userRole;
-    return role == 'vet' || role == 'vet_assistant' || role == 'secretary';
-  }
-
-  int get _settingsIndex =>
-      _isCabinetStaff ? _staffSettingsIndex : _careSettingsIndex;
 
   List<Map<String, dynamic>> get _staffClientMaps => _clients
       .whereType<Map>()
@@ -269,31 +261,13 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final specialty = ApiClient.instance.userSpecialty ?? '';
-    final specialtyLabel = proLightSpecialtyLabel(l10n, specialty);
-    final isCabinet = _isCabinetStaff;
-    final title = isCabinet
-        ? l10n.proLightVetTitle
-        : (specialtyLabel.isEmpty
-            ? l10n.proLightTitle
-            : '${l10n.proLightTitle} · $specialtyLabel');
     return Container(
       decoration: BoxDecoration(gradient: AppTheme.loginGradientOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          title: Row(
-            children: [
-              const PetsLogo(height: 28),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+          title: const PetsLogo(variant: PetsLogoVariant.horizontal, height: 28),
           actions: [
             IconButton(
               key: const Key('pro_light_support_btn'),
@@ -400,15 +374,18 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                           _openPet(id, petName: row['name'] as String?);
                         },
                       ),
-                      if (_isCabinetStaff)
-                        MessagingScreen(
-                          key: const Key('pro_light_messaging'),
-                          embedded: true,
-                          active: _index == _staffMessagesIndex,
-                          staffMode: true,
-                          staffClients: _staffClientMaps,
-                          staffPets: _staffPetMaps,
-                        ),
+                      MessagingScreen(
+                        key: const Key('pro_light_messaging'),
+                        embedded: true,
+                        active: _index == _messagesIndex,
+                        staffMode: true,
+                        staffClients: _staffClientMaps,
+                        staffPets: _staffPetMaps,
+                        onUnreadTotalChanged: (n) {
+                          if (!mounted || n == _messagesUnread) return;
+                          setState(() => _messagesUnread = n);
+                        },
+                      ),
                       _SettingsTab(onLogout: widget.onLogout),
                     ],
                   ),
@@ -420,11 +397,14 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
             NavigationDestination(icon: const Icon(Icons.event), label: l10n.proLightAgenda),
             NavigationDestination(icon: const Icon(Icons.people), label: l10n.proLightClients),
             NavigationDestination(icon: const Icon(Icons.pets), label: l10n.proLightPets),
-            if (_isCabinetStaff)
-              NavigationDestination(
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: l10n.vetMessaging,
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: _messagesUnread > 0,
+                label: Text(_messagesUnread > 99 ? '99+' : '$_messagesUnread'),
+                child: const Icon(Icons.chat_bubble_outline),
               ),
+              label: l10n.vetMessaging,
+            ),
             NavigationDestination(
               icon: const Icon(Icons.settings_outlined),
               label: l10n.proLightSettings,
@@ -556,7 +536,8 @@ class _VisitReportSheet extends StatefulWidget {
   State<_VisitReportSheet> createState() => _VisitReportSheetState();
 }
 
-class _VisitReportSheetState extends State<_VisitReportSheet> {
+class _VisitReportSheetState extends State<_VisitReportSheet>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _controller;
   late String _status;
   late String _transcript;
@@ -564,8 +545,10 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   late String _persistedBody;
   bool _busy = false;
   bool _recording = false;
+  int _recordingSeconds = 0;
+  Timer? _recordingTimer;
   final AudioRecorder _recorder = AudioRecorder();
-  Map<String, dynamic>? _aiModule;
+  late final AnimationController _pulseController;
 
   @override
   void initState() {
@@ -575,34 +558,10 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
     _transcript = widget.initialTranscript;
     _improved = widget.initialImproved;
     _persistedBody = widget.initialText;
-    _loadAiModule();
-  }
-
-  Future<void> _loadAiModule() async {
-    try {
-      final m = await ApiClient.instance.getAiModule();
-      if (!mounted) return;
-      setState(() => _aiModule = m);
-    } catch (_) {
-      /* banner optional */
-    }
-  }
-
-  String? _aiModuleBanner(AppLocalizations l10n) {
-    final m = _aiModule;
-    if (m == null) return null;
-    final status = m['status']?.toString() ?? '';
-    if (status == 'visit_scoped') {
-      return l10n.proLightAiModuleVisitScopedBanner;
-    }
-    if (status == 'trial' && m['allowed'] == true) {
-      final days = (m['daysRemainingTrial'] as num?)?.toInt() ?? 0;
-      return l10n.proLightAiModuleTrialBanner(days);
-    }
-    if (status == 'none' || m['allowed'] != true) {
-      return l10n.proLightAiModuleInactiveBanner;
-    }
-    return null;
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
   }
 
   String get _historySaved {
@@ -629,12 +588,39 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
 
   @override
   void dispose() {
+    _recordingTimer?.cancel();
+    _pulseController.dispose();
     _controller.dispose();
     _recorder.dispose();
     super.dispose();
   }
 
   String get _specialty => ApiClient.instance.userSpecialty ?? '';
+
+  String get _recordingClock {
+    final m = (_recordingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_recordingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  void _startRecordingTimer() {
+    _recordingTimer?.cancel();
+    _recordingSeconds = 0;
+    _pulseController.repeat(reverse: true);
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _recordingSeconds++);
+    });
+  }
+
+  void _stopRecordingTimer() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    _recordingSeconds = 0;
+    _pulseController
+      ..stop()
+      ..value = 1;
+  }
 
   Future<bool> _confirmAudioConsent() async {
     final l10n = AppLocalizations.of(context)!;
@@ -688,6 +674,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
   Future<void> _toggleDictation() async {
     if (_recording) {
       final path = await _recorder.stop();
+      _stopRecordingTimer();
       setState(() => _recording = false);
       if (path == null || path.isEmpty) return;
       final transcribed = await ApiClient.instance.transcribeVisitReport(
@@ -712,7 +699,30 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
       path: path,
     );
     if (!mounted) return;
+    _startRecordingTimer();
     setState(() => _recording = true);
+  }
+
+  Future<void> _pickAudioFile() async {
+    if (!await _confirmAudioConsent()) return;
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['mp3', 'm4a', 'wav', 'ogg', 'webm'],
+    );
+    if (picked == null || picked.files.isEmpty) return;
+    final file = picked.files.first;
+    final path = file.path;
+    if (path == null || path.isEmpty) {
+      throw StateError('no_path');
+    }
+    final transcribed = await ApiClient.instance.transcribeVisitReport(
+      widget.visitId,
+      path,
+      filename: file.name,
+      clientAudioConsent: true,
+    );
+    if (!mounted) return;
+    await _applyTranscript(transcribed);
   }
 
   Future<void> _run(Future<void> Function() action, {bool popOnOk = false}) async {
@@ -733,201 +743,217 @@ class _VisitReportSheetState extends State<_VisitReportSheet> {
     }
   }
 
+  Widget _recordingBanner(AppLocalizations l10n) {
+    return Container(
+      key: const Key('pro_light_cr_recording_banner'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.alert.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.alert.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          FadeTransition(
+            opacity: Tween<double>(begin: 0.35, end: 1).animate(_pulseController),
+            child: const Icon(Icons.mic, color: AppColors.alert, size: 28),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.proLightRecordingInProgress,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.alert,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                Text(
+                  _recordingClock,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          FilledButton(
+            key: const Key('pro_light_cr_dictation_stop'),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.alert),
+            onPressed: _busy
+                ? null
+                : () => _run(() async {
+                      await _toggleDictation();
+                    }),
+            child: Text(l10n.proLightDictationStop),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isFinal = _status == 'final';
-    final readOnly = !widget.canWrite || isFinal || _busy || _status == 'none' && !widget.canWrite;
+    final readOnly = !widget.canWrite || isFinal || _busy || _recording;
     final hint =
         _specialty == 'farrier' ? l10n.proLightReportHintFarrier : l10n.proLightReportHint;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            isFinal
-                ? '${l10n.proLightReportTitle} · ${l10n.proLightReportFinal}'
-                : (!widget.canWrite
-                    ? '${l10n.proLightReportTitle} · ${l10n.proLightReadOnly}'
-                    : l10n.proLightReportTitle),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          if (!isFinal && widget.canWrite) ...[
-            const SizedBox(height: 8),
-            Text(
-              key: const Key('pro_light_report_ai_banner'),
-              l10n.proLightReportAiProposalBanner,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (_aiModuleBanner(l10n) != null) ...[
-              const SizedBox(height: 6),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 8,
+          bottom: bottomInset + 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                key: const Key('pro_light_ai_module_banner'),
-                _aiModuleBanner(l10n)!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.gold,
-                    ),
+                isFinal
+                    ? '${l10n.proLightReportTitle} · ${l10n.proLightReportFinal}'
+                    : (!widget.canWrite
+                        ? '${l10n.proLightReportTitle} · ${l10n.proLightReadOnly}'
+                        : l10n.proLightReportTitle),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-            ],
-          ],
-          const SizedBox(height: 12),
-          TextField(
-            controller: _controller,
-            maxLines: 8,
-            readOnly: readOnly || !widget.canWrite,
-            decoration: InputDecoration(hintText: hint),
-          ),
-          if (_transcript.isNotEmpty ||
-              _improved.isNotEmpty ||
-              _historySaved.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: Text(l10n.proLightReportHistoryTitle),
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.proLightReportHistoryTranscript,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _transcript.isEmpty
-                        ? l10n.proLightReportHistoryEmpty
-                        : _transcript,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.proLightReportHistoryImproved,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _improved.isEmpty
-                        ? l10n.proLightReportHistoryEmpty
-                        : _improved,
-                  ),
-                ),
-                if (_historySaved.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.proLightReportHistorySaved,
-                      style: Theme.of(context).textTheme.labelLarge,
+              const SizedBox(height: 12),
+              TextField(
+                controller: _controller,
+                maxLines: 8,
+                readOnly: readOnly || !widget.canWrite,
+                decoration: InputDecoration(hintText: hint),
+              ),
+              if (_transcript.isNotEmpty ||
+                  _improved.isNotEmpty ||
+                  _historySaved.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Text(l10n.proLightReportHistoryTitle),
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l10n.proLightReportHistoryTranscript,
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _transcript.isEmpty
+                            ? l10n.proLightReportHistoryEmpty
+                            : _transcript,
+                      ),
+                    ),
+                    if (_improved.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          l10n.proLightReportHistoryImproved,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(_improved),
+                      ),
+                    ],
+                    if (_historySaved.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          l10n.proLightReportHistorySaved,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(_historySaved),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+              if (widget.canWrite && !isFinal) ...[
+                const SizedBox(height: 16),
+                if (_recording)
+                  _recordingBanner(l10n)
+                else ...[
+                  FilledButton.tonalIcon(
+                    key: const Key('pro_light_cr_dictation'),
+                    onPressed: _busy
+                        ? null
+                        : () => _run(() async {
+                              await _toggleDictation();
+                            }),
+                    icon: const Icon(Icons.mic_none),
+                    label: Text(l10n.proLightDictationStart),
                   ),
-                  const SizedBox(height: 4),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(_historySaved),
+                    child: TextButton.icon(
+                      key: const Key('pro_light_cr_audio_file'),
+                      onPressed: _busy
+                          ? null
+                          : () => _run(() async {
+                                await _pickAudioFile();
+                              }),
+                      icon: const Icon(Icons.attach_file, size: 18),
+                      label: Text(l10n.proLightTranscribeAudio),
+                    ),
                   ),
                 ],
-              ],
-            ),
-          ],
-          const SizedBox(height: 12),
-          if (widget.canWrite && !isFinal)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton(
-                  key: const Key('pro_light_cr_save'),
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() async {
-                            final saved = await ApiClient.instance
-                                .putVisitReport(widget.visitId, _controller.text);
-                            if (!mounted) return;
-                            _applyPayload(saved);
-                          }, popOnOk: true),
-                  child: Text(l10n.save),
-                ),
-                FilledButton(
-                  key: const Key('pro_light_cr_improve'),
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() async {
-                            await ApiClient.instance
-                                .putVisitReport(widget.visitId, _controller.text);
-                            final improved = await ApiClient.instance
-                                .improveVisitReport(widget.visitId);
-                            if (!mounted) return;
-                            _applyPayload(improved);
-                          }),
-                  child: Text(l10n.proLightImproveAi),
-                ),
-                FilledButton.tonal(
-                  key: const Key('pro_light_cr_finalize'),
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() async {
-                            await ApiClient.instance
-                                .putVisitReport(widget.visitId, _controller.text);
-                            final finalized = await ApiClient.instance
-                                .finalizeVisitReport(widget.visitId);
-                            if (!mounted) return;
-                            _applyPayload(finalized);
-                          }, popOnOk: true),
-                  child: Text(l10n.proLightFinalizeReport),
-                ),
-                FilledButton.tonal(
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() async {
-                            await _toggleDictation();
-                          }),
-                  child: Text(
-                    _recording ? l10n.proLightDictationStop : l10n.proLightDictationStart,
-                  ),
-                ),
-                OutlinedButton(
-                  onPressed: _busy || _recording
-                      ? null
-                      : () => _run(() async {
-                            if (!await _confirmAudioConsent()) return;
-                            final picked = await FilePicker.pickFiles(
-                              type: FileType.custom,
-                              allowedExtensions: const ['mp3', 'm4a', 'wav', 'ogg', 'webm'],
-                            );
-                            if (picked == null || picked.files.isEmpty) return;
-                            final file = picked.files.first;
-                            final path = file.path;
-                            if (path == null || path.isEmpty) {
-                              throw StateError('no_path');
-                            }
-                            final transcribed = await ApiClient.instance.transcribeVisitReport(
-                              widget.visitId,
-                              path,
-                              filename: file.name,
-                              clientAudioConsent: true,
-                            );
-                            if (!mounted) return;
-                            await _applyTranscript(transcribed);
-                          }),
-                  child: Text(l10n.proLightTranscribeAudio),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: const Key('pro_light_cr_save'),
+                        onPressed: _busy || _recording
+                            ? null
+                            : () => _run(() async {
+                                  final saved = await ApiClient.instance
+                                      .putVisitReport(widget.visitId, _controller.text);
+                                  if (!mounted) return;
+                                  _applyPayload(saved);
+                                }, popOnOk: true),
+                        child: Text(l10n.save),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        key: const Key('pro_light_cr_finalize'),
+                        onPressed: _busy || _recording
+                            ? null
+                            : () => _run(() async {
+                                  await ApiClient.instance
+                                      .putVisitReport(widget.visitId, _controller.text);
+                                  final finalized = await ApiClient.instance
+                                      .finalizeVisitReport(widget.visitId);
+                                  if (!mounted) return;
+                                  _applyPayload(finalized);
+                                }, popOnOk: true),
+                        child: Text(l10n.proLightFinalizeReport),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

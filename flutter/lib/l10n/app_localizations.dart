@@ -709,8 +709,14 @@ abstract class AppLocalizations {
   /// No description provided for @proLightDictationStop.
   ///
   /// In fr, this message translates to:
-  /// **'Arrêter & transcrire'**
+  /// **'Arrêter'**
   String get proLightDictationStop;
+
+  /// No description provided for @proLightRecordingInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement en cours'**
+  String get proLightRecordingInProgress;
 
   /// No description provided for @proLightAudioConsentTitle.
   ///

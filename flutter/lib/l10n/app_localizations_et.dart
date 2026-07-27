@@ -323,7 +323,10 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightDictationStart => 'Dikteeri';
 
   @override
-  String get proLightDictationStop => 'Peata ja transkribeeri';
+  String get proLightDictationStop => 'Peata';
+
+  @override
+  String get proLightRecordingInProgress => 'Salvestamine käib';
 
   @override
   String get proLightAudioConsentTitle => 'Helisalvestuse nõusolek';

@@ -24,7 +24,7 @@ Monétisation : **SaaS cabinet hors ligne** + **activations clients payantes** (
 
 - **Passeport digital** de l’animal partagé entre cabinet, care pro et propriétaire
 - Création / suivi des animaux
-- Messagerie client ↔ véto (+ mode indisponible) — **pas** de messagerie care_pro
+- Messagerie client ↔ véto (+ mode indisponible) et client ↔ care_pro (app Pro Light, fil distinct du cabinet)
 - Timeline historique (messages, relevés validés, événements)
 - Partage de dossier (`pet_access` / `client_access`) : collègue / care pro / pro externe — notes, CR, docs
 - Relevé cardiaque **15 / 30 / 60 s** (tap dans l’app) — feature différenciante

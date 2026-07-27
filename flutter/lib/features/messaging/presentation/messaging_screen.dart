@@ -28,6 +28,7 @@ class MessagingScreen extends StatefulWidget {
     this.staffMode = false,
     this.staffClients = const [],
     this.staffPets = const [],
+    this.onUnreadTotalChanged,
   });
 
   final bool embedded;
@@ -41,6 +42,8 @@ class MessagingScreen extends StatefulWidget {
   final List<Map<String, dynamic>> staffClients;
   /// Optional preloaded pets for staff compose (`id` / `name` / `ownerUserId`).
   final List<Map<String, dynamic>> staffPets;
+  /// Total unread across threads (for shell nav badge).
+  final ValueChanged<int>? onUnreadTotalChanged;
 
   @override
   State<MessagingScreen> createState() => _MessagingScreenState();
@@ -207,6 +210,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
         threadId = nextThreadId;
         messages = nextMessages;
       });
+      _emitUnreadTotal();
     } catch (e) {
       if (showErrors && mounted) {
         final l10n = AppLocalizations.of(context)!;
@@ -215,6 +219,16 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
         );
       }
     }
+  }
+
+  void _emitUnreadTotal() {
+    final cb = widget.onUnreadTotalChanged;
+    if (cb == null) return;
+    var total = 0;
+    for (final t in threads) {
+      total += t.unreadCount;
+    }
+    cb(total);
   }
 
   Future<void> selectThread(String id) async {
@@ -239,6 +253,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
           .map((t) => t.id == id ? t.copyWith(unreadCount: 0) : t)
           .toList();
     });
+    _emitUnreadTotal();
   }
 
   Future<void> loadMessages() async {

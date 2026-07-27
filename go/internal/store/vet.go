@@ -155,7 +155,7 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 }
 
 const threadSummarySelect = `
-		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
+		SELECT t.id::text, COALESCE(t.practice_id::text,''), t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''), u.full_name, u.email,
 			COALESCE(p.name, ''),
 			COALESCE((
@@ -202,7 +202,7 @@ func (s *Store) ListThreadSummariesForPractice(ctx context.Context, practiceID s
 // ListThreadSummariesForClient lists all messaging threads for a client across cabinets.
 func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID string) ([]ThreadSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
+		SELECT t.id::text, COALESCE(t.practice_id::text,''), t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''),
 			COALESCE(pr.name, ''),
 			COALESCE(v.full_name, ''),

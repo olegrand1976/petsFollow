@@ -19,7 +19,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 |------------------|--------------------|-------|
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
-| `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs |
+| `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
 | `admin` / commercial* | Nuxt Pro | Inchangé |
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
@@ -58,8 +58,13 @@ Admin `/admin/users` : création **client**, **véto**, **care_pro** (spécialit
 
 ## Pro light Flutter
 
-Tabs care_pro : Agenda · Clients · Animaux · Settings.
-Tabs staff cabinet (`vet` / assistant / secretary) : Agenda · Clients · Animaux · **Messages** · Settings.
+Shell **identique** pour `care_pro` (toutes specialties) et staff cabinet (`vet` / assistant / secretary) :
+
+Tabs : Agenda · Clients · Animaux · **Messages** · Settings.
+
+AppBar : logo petsFollow uniquement (pas de sous-titre specialty / « Pro terrain »).
+
+Messagerie care_pro : threads person-scoped (`practice_id` NULL) via ACL ; le care_pro initie (compose client) ; le client répond dans le même fil.
 
 ## Agenda GPS
 
@@ -70,13 +75,15 @@ Tournées (Vague O) : agenda Flutter pro light — filtres **Aujourd’hui** / *
 
 ## Statut
 
-Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Messagerie Pro Light : **staff cabinet** uniquement. Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
+Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Messagerie Pro Light : **staff + care_pro** (threads care_pro person-scoped). Hors scope : Places, register public care_pro, P2, monétisation, pharmacie, GCS privé PHI, compose client→care_pro depuis zéro (le care_pro initie).
 
 ## CR visite + IA
 
 Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle, `client_audio_consent_at`).
 
-Flux : **accord oral client (checkbox)** → dictée/upload → transcription Gemini → édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
+Flux Flutter Pro Light : **accord oral client (checkbox)** → dictée (bandeau micro + Arrêter) / fichier audio → transcription Gemini → édition → **Enregistrer** / **Finaliser**. L’action « Améliorer (IA) » reste sur **Web Pro** uniquement.
+
+Flux Web : édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
 
 **Entitlement module** (add-on VetPro, essai 90 j, 39 € HT/mois ou 390 € HT/an) : `transcribe` / `improve` gated par `practice.ai_cr_modules` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
 

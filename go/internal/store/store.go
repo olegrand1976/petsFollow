@@ -653,13 +653,13 @@ func (s *Store) GetOrCreateThreadForPet(ctx context.Context, practiceID, clientI
 	var err error
 	if petID == "" {
 		err = s.pool.QueryRow(ctx, `
-			SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 			FROM messaging.threads
 			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id IS NULL`,
 			practiceID, clientID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
 	} else {
 		err = s.pool.QueryRow(ctx, `
-			SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 			FROM messaging.threads
 			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id=$3::uuid`,
 			practiceID, clientID, petID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
@@ -675,6 +675,39 @@ func (s *Store) GetOrCreateThreadForPet(ctx context.Context, practiceID, clientI
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
 		VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid)`,
 		t.ID, t.PracticeID, t.ClientUserID, t.VetUserID, t.PetID)
+	return t, err
+}
+
+// GetOrCreateCareProThread returns a person-scoped thread (practice_id IS NULL)
+// between a care_pro and a client. Distinct from cabinet practice threads.
+func (s *Store) GetOrCreateCareProThread(ctx context.Context, careProID, clientID, petID string) (Thread, error) {
+	petID = strings.TrimSpace(petID)
+	var t Thread
+	var err error
+	if petID == "" {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id IS NULL AND vet_user_id=$1 AND client_user_id=$2 AND pet_id IS NULL`,
+			careProID, clientID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id IS NULL AND vet_user_id=$1 AND client_user_id=$2 AND pet_id=$3::uuid`,
+			careProID, clientID, petID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	}
+	if err == nil {
+		return t, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return Thread{}, err
+	}
+	t = Thread{ID: uuid.NewString(), ClientUserID: clientID, VetUserID: careProID, PetID: petID}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
+		VALUES ($1,NULL,$2,$3,NULLIF($4,'')::uuid)`,
+		t.ID, t.ClientUserID, t.VetUserID, t.PetID)
 	return t, err
 }
 
@@ -779,7 +812,7 @@ func (s *Store) SetVetAvailability(ctx context.Context, vetID, practiceID string
 func (s *Store) GetThreadByID(ctx context.Context, threadID string) (Thread, error) {
 	var t Thread
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+		SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 		FROM messaging.threads WHERE id=$1`, threadID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Thread{}, ErrNotFound
@@ -789,7 +822,7 @@ func (s *Store) GetThreadByID(ctx context.Context, threadID string) (Thread, err
 
 func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+		SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 		FROM messaging.threads WHERE vet_user_id=$1 ORDER BY created_at DESC`, vetID)
 	if err != nil {
 		return nil, err

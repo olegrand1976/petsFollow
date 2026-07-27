@@ -44,7 +44,7 @@ Le relevé cardiaque est un **module** différenciant, pas l’identité produit
 - Refresh token silencieux côté clients
 - Simulation prospection admin 10 ans → [16](16-ADMIN-SIMULATION-10ANS.md) (**non livré**)
 - Export / emails Care avancés (features incluses — plus de roadmap « addon Care+ »)
-- Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (**livré** — axes passeport ; messagerie care_pro hors scope)
+- Multi-profils pro / partage / CR IA → [28](28-MULTI-PROFILS-PRO.md) (**livré** — axes passeport ; messagerie care_pro Pro Light livrée)
 
 ## Comptes seed
 

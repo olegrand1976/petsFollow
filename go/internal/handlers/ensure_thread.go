@@ -33,11 +33,63 @@ func (a *API) ensureThread(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case kernel.IsPracticeStaff(id.Role):
 		a.ensureThreadStaff(w, r, id, req)
+	case id.Role == kernel.RoleCarePro:
+		a.ensureThreadCarePro(w, r, id, req)
 	case id.Role == kernel.RoleClient:
 		a.ensureThreadClient(w, r, id, req)
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
 	}
+}
+
+func (a *API) ensureThreadCarePro(w http.ResponseWriter, r *http.Request, id authx.Identity, req ensureThreadReq) {
+	if strings.TrimSpace(req.ClientUserID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "client_required")
+		return
+	}
+	clientID := strings.TrimSpace(req.ClientUserID)
+	client, err := a.store.GetUserByID(r.Context(), clientID)
+	if err != nil || client.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
+		return
+	}
+	petID := strings.TrimSpace(req.PetID)
+	if petID != "" {
+		pet, err := a.store.GetPet(r.Context(), petID)
+		if err != nil {
+			writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+			return
+		}
+		if pet.OwnerUserID != clientID {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "pet_owner_mismatch")
+			return
+		}
+		ok, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermRead)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !ok {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "no_pet_access")
+			return
+		}
+	} else {
+		ok, err := a.store.CareProMayMessageClient(r.Context(), id.UserID, clientID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if !ok {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "no_client_access")
+			return
+		}
+	}
+	thread, err := a.store.GetOrCreateCareProThread(r.Context(), id.UserID, clientID, petID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, thread)
 }
 
 func (a *API) ensureThreadStaff(w http.ResponseWriter, r *http.Request, id authx.Identity, req ensureThreadReq) {

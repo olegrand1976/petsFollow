@@ -140,7 +140,8 @@ Une **app mobile Pro Light gratuite** pour travailler **sur le terrain** :
 
 - Voir l’**agenda** du jour / 7 jours / tout
 - Accéder aux **fiches clients & animaux** partagés
-- Saisir un **compte rendu** (dictée vocale → transcription → amélioration IA → finalisation)
+- Saisir un **compte rendu** (dictée → transcription → finalisation ; Améliorer IA sur Web Pro)
+- Échanger en **messagerie** avec le propriétaire (fil distinct du cabinet)
 - Noter GPS / adresse de visite, ouvrir Maps
 - Marquer une visite **faite**
 
@@ -150,9 +151,9 @@ Une **app mobile Pro Light gratuite** pour travailler **sur le terrain** :
 |---|--------|----------|
 | Surface | **App Web** cabinet | **App mobile** terrain |
 | Prix | SaaS payant | Gratuit |
-| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité ; messagerie si compte staff cabinet |
+| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité, messagerie client |
 | Compte | Rôle `vet` | Même compte `vet` **ou** `care_pro` + specialty |
-| Messagerie | Oui (cœur) | Hors scope care_pro ; véto utilise surtout le Web pour le chat |
+| Messagerie | Oui (cœur Web) | Oui sur Pro Light (staff **et** care_pro ↔ client ; fil distinct du cabinet). Pas de chat **entre** care pro |
 
 Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’avoir que **VetLight**.
 
@@ -167,10 +168,11 @@ Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’a
 
 | Domaine | Ce que fait VetLight |
 |---------|----------------------|
-| Shell | Onglets Agenda · Clients · Settings (+ drill-down animal / docs / CR) |
+| Shell | Onglets Agenda · Clients · Animaux · Messages · Settings |
 | Agenda | Filtres Aujourd’hui / 7 j / Tout ; bouton Fait ; GPS / Maps |
 | Dossiers | Clients & pets selon droits (read / write_notes / full) |
-| CR | Micro → upload → transcription Gemini → « améliorer » (SOAP / specialty) → finaliser |
+| Messagerie | Threads care_pro ↔ client (ACL) ; staff cabinet = fil practice |
+| CR | Micro → transcription Gemini → éditer → enregistrer / finaliser (Améliorer IA = Web Pro) |
 | Sécurité PHI | Audio CR non public ; stream auth ; purge à la finalisation |
 | Langues | FR / NL / EN / ES / ET / IT |
 
@@ -179,8 +181,9 @@ Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’a
 1. Login (compte véto ou care_pro créé / rattaché)  
 2. Agenda du jour → ouvrir visite  
 3. Consulter fiche animal  
-4. Dictée CR → améliorer IA → enregistrer / finaliser  
-5. Marquer la visite faite  
+4. Dictée CR → enregistrer / finaliser (Améliorer IA sur Web Pro)  
+5. Messages → composer vers le client partagé  
+6. Marquer la visite faite  
 
 ---
 
@@ -270,7 +273,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 ### Au commercial (interne)
 
-> « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = passeport multi-acteurs · Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”, pas messagerie care pro. »
+> « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = passeport multi-acteurs · Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”, pas messagerie **entre** care pro (oui care_pro ↔ client sur Pro Light). »
 
 ### Différenciation (1 slide)
 
@@ -279,7 +282,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 - **Passeport multi-acteurs** : vet / care pro / foyer sur le même animal  
 - Continuité multi-profil : VetPro · VetLight · Client · Care pro — 6 langues  
 - Complémentaire du PMS (ne le remplace pas)  
-- VetLight gratuit pour le terrain + CR IA + partage ACL  
+- VetLight gratuit pour le terrain + CR (IA sur Web) + partage ACL + messagerie client  
 - Alignement économique véto / commercial (pas de pénalité co-selling)  
 
 ### Objections fréquentes
@@ -368,7 +371,7 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 | Surfaces = **Web Pro + mobile ProLight + mobile Client** | | |
 | FC présenté comme **feature**, pas comme produit | | |
 | Pas de pitch centré « sans boîtier » | | |
-| Pas de promesse **messagerie care pro** | | |
+| Pas de promesse **messagerie entre care pro** (client ↔ care_pro OK) | | |
 | Steer **triennial 95 €** | | |
 | Care/Horse/foyer = **inclus** | | |
 | Pas de promesse WebSocket / addons / appareil à vendre | | |

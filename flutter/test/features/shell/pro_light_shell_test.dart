@@ -12,7 +12,7 @@ void main() {
     expect(proLightSpecialtyLabel(l10n, 'unknown'), 'unknown');
   });
 
-  testWidgets('pro light nav exposes four destinations', (tester) async {
+  testWidgets('pro light nav exposes five destinations including messages', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr'),
@@ -31,6 +31,10 @@ void main() {
                   NavigationDestination(icon: const Icon(Icons.people), label: l10n.proLightClients),
                   NavigationDestination(icon: const Icon(Icons.pets), label: l10n.proLightPets),
                   NavigationDestination(
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: l10n.vetMessaging,
+                  ),
+                  NavigationDestination(
                     icon: const Icon(Icons.settings_outlined),
                     label: l10n.proLightSettings,
                   ),
@@ -46,6 +50,7 @@ void main() {
     expect(find.text(AppLocalizationsFr().proLightAgenda), findsWidgets);
     expect(find.text(AppLocalizationsFr().proLightClients), findsWidgets);
     expect(find.text(AppLocalizationsFr().proLightPets), findsWidgets);
+    expect(find.text(AppLocalizationsFr().vetMessaging), findsWidgets);
     expect(find.text(AppLocalizationsFr().proLightSettings), findsWidgets);
   });
 }
