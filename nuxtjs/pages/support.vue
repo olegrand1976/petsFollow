@@ -29,7 +29,7 @@
         <p v-if="error" class="pro-error" role="alert" data-testid="support-error">{{ error }}</p>
         <p v-if="success" class="pro-hint" data-testid="support-success">{{ $t('support.success') }}</p>
         <div class="pro-form-actions">
-          <ProButton type="button" variant="ghost" test-id="support-cancel" @click="navigateTo('/')">
+          <ProButton type="button" variant="ghost" test-id="support-cancel" @click="goBack">
             {{ $t('common.cancel') }}
           </ProButton>
           <!-- Native submit: Cloud Run e2e cannot rely on ProButton Vue emit alone. -->
@@ -50,6 +50,7 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const { snapshot } = useSupportDiagnostics()
 
 const subject = ref('')
@@ -61,6 +62,14 @@ const diagnosticsJson = ref('{}')
 const diagCount = ref(0)
 
 const canSubmit = computed(() => subject.value.trim().length > 0 && message.value.trim().length > 0)
+
+function goBack() {
+  if (import.meta.client && window.history.length > 1) {
+    router.back()
+    return
+  }
+  void navigateTo('/')
+}
 
 onMounted(() => {
   const snap = snapshot()
@@ -98,6 +107,8 @@ async function submit() {
       },
     })
     success.value = true
+    // Brief success flash then return to the previous screen (same as ProSupportDialog).
+    setTimeout(goBack, 900)
   } catch (e: any) {
     const code = e?.data?.error?.code || e?.data?.error?.msgKey || ''
     if (code === 'rate_limited' || e?.statusCode === 429) {
