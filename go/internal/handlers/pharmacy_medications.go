@@ -5,8 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 )
+
+func (a *API) registerPharmacyMedicationRoutes(pr chi.Router) {
+	pr.Get("/vet/pharmacy/medications/search", a.searchPharmacyMedications)
+}
 
 // requirePharmacyEnabled gates pharmacy endpoints behind PHARMACY_ENABLED.
 func (a *API) requirePharmacyEnabled(w http.ResponseWriter, r *http.Request) bool {

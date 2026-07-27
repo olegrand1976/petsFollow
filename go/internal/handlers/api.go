@@ -114,10 +114,14 @@ func (a *API) Routes(r chi.Router) {
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
 	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
+	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		a.registerPharmacyMedicationRoutes(pr)
+		a.registerPharmacyStockRoutes(pr)
+		a.registerPharmacyDAFRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)
