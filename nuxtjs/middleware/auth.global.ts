@@ -6,6 +6,7 @@ import {
   homePathForRole,
   isProRole,
 } from '~/composables/useAuth'
+import { isDeskLockedFlag } from '~/composables/useDeskSession'
 
 const PUBLIC_PATHS = new Set([
   '/',
@@ -67,5 +68,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  if (!hasSessionCookie()) return navigateTo('/login')
+  if (!hasSessionCookie()) {
+    // Veille poste partagé : cookies purgés mais overlay de re-auth sur place.
+    if (isDeskLockedFlag()) return
+    return navigateTo('/login')
+  }
 })

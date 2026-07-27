@@ -91,6 +91,17 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByRole('button', { name: /invit/i })).toBeVisible({ timeout: 10000 })
   })
 
+  test('D2: vet.demo — ACL labels i18n (not raw keys)', async ({ page }) => {
+    await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
+    await page.goto('/team', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('vet-team-page')).toBeVisible({ timeout: 15000 })
+    const perms = page.getByTestId('team-perms').first()
+    await expect(perms).toBeVisible({ timeout: 10000 })
+    await expect(perms.getByText(/voir les clients|view clients/i)).toBeVisible({ timeout: 5000 })
+    await expect(perms.getByText('clients.read')).toHaveCount(0)
+    await expect(perms.getByText('pets.write_clinical')).toHaveCount(0)
+  })
+
   test('E: vet.demo — /commissions allowed for reference', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
     await page.goto('/commissions', { waitUntil: 'networkidle' })

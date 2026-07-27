@@ -26,6 +26,7 @@
       >
         <ProIcon name="support_agent" :size="20" />
       </NuxtLink>
+      <ProDeskSwitcher v-if="showDeskSwitcher" />
       <ProLocaleSelect persist />
       <button
         type="button"
@@ -119,16 +120,20 @@
 </template>
 
 <script setup lang="ts">
+import { isPracticeStaffRole } from '~/composables/useAuth'
+
 const props = withDefaults(
   defineProps<{
     homeLink?: string
     settingsLink?: string
     showNotifications?: boolean
+    showDeskSwitcher?: boolean
   }>(),
   {
     homeLink: '/',
     settingsLink: undefined,
     showNotifications: true,
+    showDeskSwitcher: true,
   },
 )
 
@@ -137,6 +142,7 @@ const { isDark, toggleTheme } = useColorTheme()
 const { user, fetchUser } = useProUser()
 const { isStaging } = useAppEnv()
 const { captureOriginPage } = useSupportDiagnostics()
+const desk = useDeskSession()
 const {
   items: notifItems,
   count: notifCount,
@@ -153,13 +159,17 @@ const userEmail = computed(() => user.value?.email || '')
 const practiceName = computed(() => user.value?.practiceName?.trim() || '')
 /** Tag « S » : environnement staging + session authentifiée. */
 const showStagingTag = computed(() => isStaging.value && !!user.value)
+const showDeskSwitcher = computed(
+  () => props.showDeskSwitcher !== false && isPracticeStaffRole(user.value?.role),
+)
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
   try {
     await fetchUser()
   } catch { /* 401 handled by middleware */ }
-  if (props.showNotifications) {
+  // Idle/bootstrap owned by layout — topbar only renders switcher.
+  if (props.showNotifications && !desk.uiBlocked.value) {
     await refreshNotif()
     startPolling()
   }
@@ -169,6 +179,19 @@ onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
   if (props.showNotifications) stopPolling()
 })
+
+watch(
+  () => desk.uiBlocked.value,
+  async (blocked) => {
+    if (!props.showNotifications) return
+    if (blocked) {
+      stopPolling()
+      return
+    }
+    await refreshNotif()
+    startPolling()
+  },
+)
 
 function toggleNotif() {
   notifOpen.value = !notifOpen.value

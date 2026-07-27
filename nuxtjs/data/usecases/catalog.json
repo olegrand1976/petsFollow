@@ -76,7 +76,8 @@
       "label": "Équipe du cabinet",
       "blurb": "Collègue, assistante, secrétaire.",
       "items": [
-        "UC-EQ-01"
+        "UC-EQ-01",
+        "UC-EQ-02"
       ]
     },
     {
@@ -607,12 +608,13 @@
       "steps": [
         "Se connecter en vet.demo → ouvrir la page Équipe.",
         "Vérifier la liste des membres (collègue, assistante, secrétaire).",
+        "Vérifier que les droits affichent des libellés clairs (ex. « Voir les clients ») avec info-bulle au survol — pas de codes techniques.",
         "Se déconnecter → se connecter en vet.colleague : accès cabinet cohérent.",
         "Se connecter en vet.assist : noter ce qui est accessible / masqué (droits réduits).",
         "Se connecter en secretary.demo : idem, focus secrétariat (agenda / clients selon l’écran)."
       ],
       "expected": [
-        "Page Équipe lisible côté véto référence.",
+        "Page Équipe lisible côté véto référence (droits compréhensibles).",
         "Chaque rôle se connecte ; l’espace Admin reste inaccessible.",
         "Différences de droits perceptibles (même sommaires) entre assistante / secrétaire / collègue."
       ],
@@ -621,6 +623,54 @@
         "Login collègue",
         "Login assistante",
         "Login secrétaire"
+      ]
+    },
+    "UC-EQ-02": {
+      "id": "UC-EQ-02",
+      "folderId": "equipe-cabinet",
+      "slug": "UC-EQ-02-switch-poste",
+      "title": "Switch poste partagé (veille)",
+      "duration": "~10 min",
+      "priority": "Important",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un autre avec mot de passe, et vérifier que l’inactivité met le poste en veille.",
+      "actors": [
+        {
+          "role": "Véto référence",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Secrétaire",
+          "account": "secretary.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Seed équipe VetPlus."
+      ],
+      "steps": [
+        "Se connecter en vet.demo → ouvrir Clients (ou une fiche animal).",
+        "Dans le header, repérer les avatars de l’équipe.",
+        "Cliquer l’avatar de la secrétaire → saisir son mot de passe → valider.",
+        "Vérifier que l’on arrive sur le dernier écran connu de ce compte (ou l’accueil si première fois).",
+        "Naviguer vers Agenda en secrétaire.",
+        "Rebasculer vers vet.demo (mot de passe) → vérifier le retour vers l’écran précédent du véto si possible.",
+        "Laisser le poste inactif 2 minutes (ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
+        "Déverrouiller avec un compte équipe + mot de passe."
+      ],
+      "expected": [
+        "Switch toujours protégé par mot de passe (jamais de bascule silencieuse).",
+        "Veille après inactivité : plus d’accès aux données sans re-saisie du mot de passe.",
+        "Chaque utilisateur retrouve son dernier écran."
+      ],
+      "checklist": [
+        "Avatars équipe dans le header",
+        "Switch avec mot de passe",
+        "Restauration dernier écran",
+        "Veille 2 min + déverrouillage"
       ]
     },
     "UC-X-01": {

@@ -118,6 +118,7 @@ Ordre pour un commercial sur staging :
 | ID | Fichier | Priorité |
 |----|---------|----------|
 | UC-EQ-01 | [Rôles équipe](07-equipe-cabinet/UC-EQ-01-roles-team.md) | Important |
+| UC-EQ-02 | [Switch poste partagé](07-equipe-cabinet/UC-EQ-02-switch-poste.md) | Important |
 
 ### Interactions — [`10-interactions/`](10-interactions/)
 

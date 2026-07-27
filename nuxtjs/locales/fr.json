@@ -2774,7 +2774,8 @@
     "twoFaSubmit": "Valider",
     "twoFaInvalid": "Code invalide.",
     "current": "Actif",
-    "ariaSwitcher": "Profils du poste partagé"
+    "ariaSwitcher": "Profils du poste partagé",
+    "goLogin": "Aller à la connexion"
   },
   "competition": {
     "title": "Analyse concurrence",

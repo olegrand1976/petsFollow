@@ -2730,7 +2730,8 @@
     "twoFaSubmit": "Conferma",
     "twoFaInvalid": "Codice non valido.",
     "current": "Attivo",
-    "ariaSwitcher": "Profili della postazione condivisa"
+    "ariaSwitcher": "Profili della postazione condivisa",
+    "goLogin": "Vai al login"
   },
   "competition": {
     "title": "Analisi della concorrenza",

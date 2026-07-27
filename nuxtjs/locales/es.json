@@ -2730,7 +2730,8 @@
     "twoFaSubmit": "Validar",
     "twoFaInvalid": "Código inválido.",
     "current": "Activo",
-    "ariaSwitcher": "Perfiles del puesto compartido"
+    "ariaSwitcher": "Perfiles del puesto compartido",
+    "goLogin": "Ir al inicio de sesión"
   },
   "competition": {
     "title": "Análisis de competencia",

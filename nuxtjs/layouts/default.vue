@@ -1,12 +1,14 @@
 <template>
   <div class="pro-app">
     <ProTopbar v-if="showNav" home-link="/dashboard" settings-link="/settings" />
+    <ProDeskLockOverlay />
     <div class="pro-app-shell">
       <ProSidebar v-if="showNav" :items="navItems" />
       <div class="pro-app-body">
         <main class="pro-main main">
           <div class="pro-main-inner">
-            <slot />
+            <!-- Lock / switch : démonter la page pour ne pas laisser de PHI dans le DOM. -->
+            <slot v-if="!deskUiBlocked" />
           </div>
         </main>
       </div>
@@ -16,10 +18,20 @@
 
 <script setup lang="ts">
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
+import { isPracticeStaffRole } from '~/composables/useAuth'
+import { isDeskLockedFlag } from '~/composables/useDeskSession'
 
 const route = useRoute()
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+const desk = useDeskSession()
+const deskLocked = computed(() => desk.locked.value)
+const deskUiBlocked = computed(() => desk.uiBlocked.value)
+const {
+  count: messagesBadge,
+  stopPolling,
+} = useProNotifications()
+const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
 const bareShellPaths = new Set([
   '/login',
@@ -38,16 +50,16 @@ function isBareShellPath(path: string) {
 }
 
 // SSR : /me avant rendu sur les pages shell uniquement (évite 401 bruyants sur landing/auth).
-if (!user.value && !isBareShellPath(route.path)) {
+if (!user.value && !isBareShellPath(route.path) && !isDeskLockedFlag()) {
   await fetchUser().catch(() => null)
 }
 const showNav = computed(() => {
   // Pas de shell Pro tant que /api/me n'a pas confirmé le rôle (évite login sous topbar).
+  // En veille desk : pas de nav (overlay couvre).
+  if (deskLocked.value) return false
   if (!user.value?.role) return false
   return !isBareShellPath(route.path)
 })
-const { count: messagesBadge } = useProNotifications()
-const { clientsBadge, calendarBadge, petsBadge, refresh: refreshNavBadges } = useNavBadges()
 
 const navItems = computed<ProNavItem[]>(() => {
   const items: ProNavItem[] = [
@@ -76,12 +88,36 @@ async function loadNavBadges() {
 }
 
 onMounted(async () => {
+  // Owner du cycle desk : layout (survit au démontage topbar en veille).
+  if (isDeskLockedFlag() || deskLocked.value) {
+    await desk.bootstrap()
+    stopPolling()
+    return
+  }
   if (!user.value) {
     try {
       await fetchUser()
     } catch { /* 401 handled by middleware */ }
   }
+  if (isPracticeStaffRole(user.value?.role)) {
+    await desk.bootstrap()
+  }
   await loadNavBadges()
+})
+
+onUnmounted(() => {
+  desk.stopIdleWatch()
+})
+
+watch(
+  () => desk.uiBlocked.value,
+  (blocked) => {
+    if (blocked) stopPolling()
+  },
+)
+
+watch(() => route.fullPath, () => {
+  desk.rememberCurrentPath()
 })
 
 watch(() => route.path, (path) => {

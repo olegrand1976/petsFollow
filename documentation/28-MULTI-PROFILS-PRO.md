@@ -6,6 +6,12 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 
 Équipe cabinet : `practice.team_members` + `/team` (véto de référence).
 
+**Poste partagé (PC bureau)** — distinct du multi-profil même compte :
+- Header VetPro : avatars de l’équipe (`GET /vet/team`), clic → re-auth mot de passe (+ 2FA si actif).
+- Idle 2 min → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT).
+- Au déverrouillage / switch : restauration de la dernière route de l’utilisateur cible.
+- Voir UC-EQ-02.
+
 ## Surfaces
 
 | Rôle / specialty | Surface principale | Notes |

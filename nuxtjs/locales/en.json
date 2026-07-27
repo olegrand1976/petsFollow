@@ -2730,7 +2730,8 @@
     "twoFaSubmit": "Verify",
     "twoFaInvalid": "Invalid code.",
     "current": "Active",
-    "ariaSwitcher": "Shared workstation profiles"
+    "ariaSwitcher": "Shared workstation profiles",
+    "goLogin": "Go to login"
   },
   "competition": {
     "title": "Competitive analysis",

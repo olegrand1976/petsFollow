@@ -2730,7 +2730,8 @@
     "twoFaSubmit": "Kinnita",
     "twoFaInvalid": "Vale kood.",
     "current": "Aktiivne",
-    "ariaSwitcher": "Jagatud töökoha profiilid"
+    "ariaSwitcher": "Jagatud töökoha profiilid",
+    "goLogin": "Mine sisselogimisele"
   },
   "competition": {
     "title": "Konkurentsianalüüs",

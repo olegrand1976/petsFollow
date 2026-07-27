@@ -29,13 +29,14 @@ Vérifier la page équipe et que collègue / assistante / secrétaire se connect
 
 1. Se connecter en `vet.demo` → ouvrir la page **Équipe**.
 2. Vérifier la liste des membres (collègue, assistante, secrétaire).
-3. Se déconnecter → se connecter en `vet.colleague` : accès cabinet cohérent.
-4. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits).
-5. Se connecter en `secretary.demo` : idem, focus secrétariat (agenda / clients selon l’écran).
+3. Vérifier que les **droits** affichent des libellés clairs (ex. « Voir les clients ») avec info-bulle au survol — pas de codes techniques.
+4. Se déconnecter → se connecter en `vet.colleague` : accès cabinet cohérent.
+5. Se connecter en `vet.assist` : noter ce qui est accessible / masqué (droits réduits).
+6. Se connecter en `secretary.demo` : idem, focus secrétariat (agenda / clients selon l’écran).
 
 ## Résultat attendu
 
-- Page Équipe lisible côté véto référence.
+- Page Équipe lisible côté véto référence (droits compréhensibles).
 - Chaque rôle se connecte ; l’espace **Admin** reste inaccessible.
 - Différences de droits **perceptibles** (même sommaires) entre assistante / secrétaire / collègue.
 
