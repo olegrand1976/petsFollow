@@ -1003,6 +1003,12 @@
     "commercials": {
       "title": "Commercials",
       "subtitle": "Verkoopteam en toegewezen dierenartsen.",
+      "tabsLabel": "Commercial-acties",
+      "tabManager": "Koppeling manager",
+      "tabAssign": "Dierenarts toewijzen",
+      "tabBase": "Basiszone",
+      "listTitle": "Lijst commercials",
+      "loadFailed": "Commercials laden mislukt.",
       "empty": "Geen",
       "columnName": "Naam",
       "columnEmail": "E-mail",

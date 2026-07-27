@@ -1378,6 +1378,12 @@
     "commercials": {
       "title": "Commerciaux",
       "subtitle": "Suivi force de vente et vétos assignés.",
+      "tabsLabel": "Actions commerciaux",
+      "tabManager": "Rattachement",
+      "tabAssign": "Assignation véto",
+      "tabBase": "Zone de base",
+      "listTitle": "Liste des commerciaux",
+      "loadFailed": "Impossible de charger les commerciaux.",
       "empty": "Aucun commercial",
       "columnName": "Nom",
       "columnEmail": "Email",

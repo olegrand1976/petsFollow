@@ -1326,6 +1326,12 @@
     "commercials": {
       "title": "Commerciali",
       "subtitle": "Monitoraggio della forza vendita e veterinari assegnati.",
+      "tabsLabel": "Azioni commerciali",
+      "tabManager": "Collegamento",
+      "tabAssign": "Assegna veterinario",
+      "tabBase": "Area base",
+      "listTitle": "Elenco commerciali",
+      "loadFailed": "Impossibile caricare i commerciali.",
       "empty": "Nessun venditore",
       "columnName": "Nome",
       "columnEmail": "E-mail",

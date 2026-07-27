@@ -1003,6 +1003,12 @@
     "commercials": {
       "title": "Equipo comercial",
       "subtitle": "Fuerza de ventas y veterinarios asignados.",
+      "tabsLabel": "Acciones comerciales",
+      "tabManager": "Vinculación",
+      "tabAssign": "Asignar veterinario",
+      "tabBase": "Zona base",
+      "listTitle": "Lista de comerciales",
+      "loadFailed": "No se pudieron cargar los comerciales.",
       "empty": "Ninguno",
       "columnName": "Nombre",
       "columnEmail": "Correo",

@@ -1003,6 +1003,12 @@
     "commercials": {
       "title": "Sales team",
       "subtitle": "Sales force and assigned vets.",
+      "tabsLabel": "Sales actions",
+      "tabManager": "Manager link",
+      "tabAssign": "Assign vet",
+      "tabBase": "Base area",
+      "listTitle": "Sales reps",
+      "loadFailed": "Could not load sales reps.",
       "empty": "None",
       "columnName": "Name",
       "columnEmail": "Email",
