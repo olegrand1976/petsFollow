@@ -96,9 +96,6 @@
       <div class="pro-landing__cta-inner">
         <h2>{{ $t('index.ctaTitle') }}</h2>
         <p>{{ $t('index.ctaText') }}</p>
-        <NuxtLink to="/register">
-          <ProButton variant="secondary">{{ $t('index.ctaButton') }}</ProButton>
-        </NuxtLink>
       </div>
     </section>
 
