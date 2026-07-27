@@ -31,6 +31,7 @@ pf_resolve_redis_addr() {
 pf_write_api_env_file() {
   local path="$1"
   local seed_enabled="${2:-false}"
+  local admin_staging_seed="${3:-false}"
   local redis_addr
   local billing_mock
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
@@ -40,6 +41,7 @@ HTTP_ADDR: ":8080"
 LOG_LEVEL: "info"
 MIGRATE_ON_BOOT: "false"
 DEV_SEED_ENABLED: "${seed_enabled}"
+ADMIN_STAGING_SEED_ENABLED: "${admin_staging_seed}"
 REDIS_ADDR: "${redis_addr}"
 REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX}:"
 SMTP_HOST: "pro1.mail.ovh.net"

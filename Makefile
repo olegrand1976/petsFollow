@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
+.PHONY: help env brand-sync up up-infra down migrate seed api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle
 
 help:
 	@echo "petsFollow — commandes"
@@ -29,7 +29,7 @@ help:
 	@echo "  make firebase-android-dist   APK staging → App Distribution (petsfollow-testers)"
 	@echo "  make play-android-bundle     AAB prod → Google Play (API_BASE=https://… requis)"
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
-	@echo "  make gcp-seed-scheduler      seed staging hebdo dimanche 08:00 + annonce email"
+	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -120,8 +120,11 @@ gcp-setup-media:
 gcp-setup-stripe:
 	bash infra/gcp/setup-stripe-secrets.sh
 
-gcp-seed-scheduler:
-	bash infra/gcp/setup-seed-scheduler.sh
+# Alias obsolète → suppression du job Scheduler (plus de reset auto).
+gcp-seed-scheduler: gcp-delete-seed-scheduler
+
+gcp-delete-seed-scheduler:
+	bash infra/gcp/delete-seed-scheduler.sh
 
 gcp-deploy:
 	@echo "→ Préférer push branche staging (CI + smoke + Playwright). Deploy nu = hors filet."

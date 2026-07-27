@@ -63,6 +63,9 @@ func (a *API) TestSetMedia(m media.Store) { a.media = m }
 // TestSetOpsNotifyEmail sets OPS_NOTIFY_EMAIL (integration tests only).
 func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
+// TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
+func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
+
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
 	// Anti brute-force / spam sur les endpoints auth publics (par IP).

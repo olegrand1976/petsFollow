@@ -34,11 +34,14 @@ Pipeline GitHub : push branche `staging` → [`.github/workflows/deploy-gcp-stag
 
 ### Seed DB staging
 
-Le seed **n’est plus** exécuté à chaque deploy. Remise à zéro automatique **chaque dimanche à 08:00** (`Europe/Brussels`) via Cloud Scheduler → job Cloud Run `petsfollow-seed`, puis email aux admins / commerciaux / managers (hors `*.petsfollow.test`).
+Le seed **n’est plus** exécuté à chaque deploy ni via Scheduler. Remise à zéro **manuelle uniquement** :
+
+1. **Admin Pro** → tableau de bord → zone danger (saisie `RESET STAGING`) — API `POST /api/v1/admin/staging/seed` (flag `ADMIN_STAGING_SEED_ENABLED`).
+2. **CLI** : `bash infra/gcp/postdeploy.sh --seed` (job Cloud Run `petsfollow-seed`).
 
 ```bash
-./infra/gcp/setup-seed-scheduler.sh   # crée/maj le job Scheduler
-bash infra/gcp/postdeploy.sh --seed   # reset manuel immédiat (+ email si SEED_NOTIFY_STAFF)
+make gcp-delete-seed-scheduler        # retire le job Scheduler hebdo s’il existe encore
+bash infra/gcp/postdeploy.sh --seed   # reset CLI (+ email si SEED_NOTIFY_STAFF)
 # Annonce seule (sans truncate) :
 # gcloud run jobs execute petsfollow-seed --region=europe-west9 --args=seed-notify --wait
 ```

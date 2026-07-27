@@ -57,7 +57,7 @@ Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; sta
 
 Relancer les données : `make seed`
 
-**Staging GCP** : seed **hebdo** dimanche 08:00 Brussels (`make gcp-seed-scheduler`) — plus à chaque deploy. Reset manuel : `bash infra/gcp/postdeploy.sh --seed`. Annonce staff : commande `seed-notify`.
+**Staging GCP** : pas de seed auto (Scheduler supprimé : `make gcp-delete-seed-scheduler`). Reset manuel : admin Pro (zone danger, phrase `RESET STAGING`) ou `bash infra/gcp/postdeploy.sh --seed`. Annonce staff après seed : email auto / commande `seed-notify`.
 
 ## Tests
 

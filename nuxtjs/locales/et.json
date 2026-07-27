@@ -779,7 +779,18 @@
       "commercials": "Müük",
       "prospects": "Potentsiaalsed kliendid",
       "addonRevenue": "Lisade tulu",
-      "commercialDue": "Müügikomisjonid"
+      "commercialDue": "Müügikomisjonid",
+      "stagingSeedTitle": "Lähtesta staging-andmebaas",
+      "stagingSeedWarn": "Pöördumatu: tühjendab demoandmed ja seedib uuesti. Tõelised admini / müügi / juhi kontod säilitatakse.",
+      "stagingSeedHint": "Kinnitamiseks sisesta täpselt: {phrase}",
+      "stagingSeedConfirmLabel": "Kinnitusfraas",
+      "stagingSeedConfirmDialog": "Kinnitada staging-andmebaasi täielik lähtestamine?",
+      "stagingSeedSubmit": "Lähtesta andmebaas",
+      "stagingSeedBusy": "Lähtestan…",
+      "stagingSeedOk": "Staging-andmebaas lähtestatud. {n} personali e-kirja saadetud.",
+      "stagingSeedOkNoEmail": "Staging-andmebaas lähtestatud (ühtegi personali e-kirja ei saadetud).",
+      "stagingSeedFail": "Lähtestamine ebaõnnestus.",
+      "stagingSeedStatusFail": "Ei saanud kontrollida, kas stagingi lähtestamine on saadaval."
     },
     "users": {
       "title": "Registreerimised",

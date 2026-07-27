@@ -35,6 +35,8 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Post("/admin/care-pros", a.adminCreateCarePro)
 		pr.Get("/admin/commercials/{id}/commissions", a.adminCommercialCommissions)
 		pr.Get("/admin/prospects", a.adminListProspects)
+		pr.Get("/admin/staging/seed", a.adminStagingSeedStatus)
+		pr.Post("/admin/staging/seed", a.adminStagingSeed)
 		a.registerClientImportRoutes(pr)
 		a.registerStripeCatalogRoutes(pr)
 	})

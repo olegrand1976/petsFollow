@@ -555,7 +555,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 
 ### Go / Nuxt unit / Flutter
 
-- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket`
+- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*`
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API

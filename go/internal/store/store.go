@@ -22,7 +22,11 @@ var (
 	ErrForbidden            = errors.New("forbidden")
 	ErrConflict             = errors.New("conflict")
 	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
+	ErrAdvisoryLockBusy     = errors.New("advisory lock busy")
 )
+
+// StagingSeedLockKey is the session advisory lock for admin/CLI staging re-seed.
+const StagingSeedLockKey int64 = 0x70667365656401 // "pfseed\x01"
 
 type User struct {
 	ID                     string
@@ -171,6 +175,11 @@ type Store struct {
 
 func New(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
+}
+
+// Pool exposes the underlying pgx pool (admin staging seed, ops tooling).
+func (s *Store) Pool() *pgxpool.Pool {
+	return s.pool
 }
 
 func scanUser(row pgx.Row) (User, error) {

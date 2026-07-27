@@ -396,12 +396,11 @@ func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, headline, 
 	return n.SendVetAlert(to, subject, body)
 }
 
-// SendStagingSeedNotice informs internal staff that staging demo data was (or will be) reset weekly.
+// SendStagingSeedNotice informs internal staff that staging demo data was reset (manual admin action).
 func (n *Notifier) SendStagingSeedNotice(to, locale, fullName, siteURL string) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{
 		"fullName": fullName,
-		"schedule": mustT(locale, "emails.staging_seed_schedule"),
 	}
 	if vars["fullName"] == "" {
 		vars["fullName"] = mustT(locale, "emails.staging_seed_fallback_name")

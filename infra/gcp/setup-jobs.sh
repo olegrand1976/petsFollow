@@ -17,9 +17,9 @@ SEED_ENV_FILE="$(mktemp)"
 trap 'rm -f "$API_ENV_FILE" "$SEED_ENV_FILE"' EXIT
 
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
-pf_write_api_env_file "$API_ENV_FILE" false
-pf_write_api_env_file "$SEED_ENV_FILE" true
-# Email staff après seed hebdo (admins / commerciaux / managers).
+pf_write_api_env_file "$API_ENV_FILE" false false
+pf_write_api_env_file "$SEED_ENV_FILE" true false
+# Email staff après seed manuel CLI (admins / commerciaux / managers).
 {
   echo "SEED_NOTIFY_STAFF: \"true\""
 } >>"$SEED_ENV_FILE"

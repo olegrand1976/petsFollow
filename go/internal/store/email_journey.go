@@ -165,7 +165,17 @@ func (s *Store) CompleteEmailJourney(ctx context.Context, userID string) error {
 
 // WithAdvisoryLock runs fn while holding a session advisory lock on a dedicated pool connection.
 // Required for pgxpool: lock acquire/release must use the same backend session.
+// If the lock is already held, returns nil without running fn (skip semantics for jobs).
 func (s *Store) WithAdvisoryLock(ctx context.Context, key int64, fn func(context.Context) error) error {
+	err := s.TryWithAdvisoryLock(ctx, key, fn)
+	if errors.Is(err, ErrAdvisoryLockBusy) {
+		return nil
+	}
+	return err
+}
+
+// TryWithAdvisoryLock is like WithAdvisoryLock but returns ErrAdvisoryLockBusy when the lock is held.
+func (s *Store) TryWithAdvisoryLock(ctx context.Context, key int64, fn func(context.Context) error) error {
 	conn, err := s.pool.Acquire(ctx)
 	if err != nil {
 		return err
@@ -177,7 +187,7 @@ func (s *Store) WithAdvisoryLock(ctx context.Context, key int64, fn func(context
 		return err
 	}
 	if !ok {
-		return nil
+		return ErrAdvisoryLockBusy
 	}
 	defer func() {
 		_, _ = conn.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, key)

@@ -78,8 +78,10 @@ type Config struct {
 	AuthHealthSecret string
 	// MLMOrgEnabled exposes multi-depth downline UI; commissions remain flat until MLM billing ships.
 	MLMOrgEnabled bool
-	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging weekly reset).
+	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging reset).
 	SeedNotifyStaff bool
+	// AdminStagingSeedEnabled enables POST /admin/staging/seed (staging only — never prod).
+	AdminStagingSeedEnabled bool
 }
 
 func Load() Config {
@@ -148,6 +150,7 @@ func Load() Config {
 		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),
 		SeedNotifyStaff:        envBool("SEED_NOTIFY_STAFF"),
+		AdminStagingSeedEnabled: envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}
 }
 

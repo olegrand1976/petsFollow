@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -20,7 +19,6 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
-	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -212,7 +210,7 @@ func SeedOnly(ctx context.Context, cfg config.Config) error {
 	return nil
 }
 
-// SeedNotifyOnly emails staging seed policy to staff (no DB truncate).
+// SeedNotifyOnly emails staging seed notice to staff (no DB truncate).
 func SeedNotifyOnly(ctx context.Context, cfg config.Config) error {
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -223,40 +221,9 @@ func SeedNotifyOnly(ctx context.Context, cfg config.Config) error {
 }
 
 func notifyStagingSeedStaff(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
-	st := store.New(pool)
-	recipients, err := st.ListDigestRecipients(ctx)
-	if err != nil {
-		return err
-	}
 	notifier := email.NewNotifierAuth(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.SMTPUser, cfg.SMTPPass, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
-	siteURL := strings.TrimRight(cfg.ProPublicSiteURL, "/")
-	sent := map[string]struct{}{}
-	var firstErr error
-	sendOne := func(to, locale, fullName string) {
-		to = strings.TrimSpace(to)
-		if to == "" || strings.HasSuffix(strings.ToLower(to), "@petsfollow.test") {
-			return
-		}
-		key := strings.ToLower(to)
-		if _, ok := sent[key]; ok {
-			return
-		}
-		sent[key] = struct{}{}
-		if err := notifier.SendStagingSeedNotice(to, locale, fullName, siteURL); err != nil {
-			log.Printf("seed-notify: %s: %v", to, err)
-			if firstErr == nil {
-				firstErr = err
-			}
-		}
-	}
-	for _, r := range recipients {
-		sendOne(r.Email, i18n.NormalizeLocale(r.PreferredLocale), r.FullName)
-	}
-	if ops := strings.TrimSpace(cfg.OpsNotifyEmail); ops != "" {
-		sendOne(ops, "fr", "")
-	}
-	log.Printf("seed-notify: %d recipient(s)", len(sent))
-	return firstErr
+	_, err := seed.NotifyStaff(ctx, store.New(pool), notifier, cfg.ProPublicSiteURL, cfg.OpsNotifyEmail)
+	return err
 }
 
 func IsMigrateCmd(args []string) bool {

@@ -779,7 +779,18 @@
       "commercials": "Comerciales",
       "prospects": "Prospectos",
       "addonRevenue": "Ingresos por complementos",
-      "commercialDue": "Comisiones comerciales"
+      "commercialDue": "Comisiones comerciales",
+      "stagingSeedTitle": "Reiniciar BD staging",
+      "stagingSeedWarn": "Irreversible: trunca datos demo y vuelve a seed. Se conservan cuentas reales admin / comercial / manager.",
+      "stagingSeedHint": "Para confirmar, escribe exactamente: {phrase}",
+      "stagingSeedConfirmLabel": "Frase de confirmación",
+      "stagingSeedConfirmDialog": "¿Confirmar el reset completo de la base staging?",
+      "stagingSeedSubmit": "Reiniciar BD",
+      "stagingSeedBusy": "Reiniciando…",
+      "stagingSeedOk": "Base staging reiniciada. {n} email(s) al staff enviados.",
+      "stagingSeedOkNoEmail": "Base staging reiniciada (ningún email al staff).",
+      "stagingSeedFail": "Fallo al reiniciar.",
+      "stagingSeedStatusFail": "No se pudo comprobar si el reset staging está disponible."
     },
     "users": {
       "title": "Registros",

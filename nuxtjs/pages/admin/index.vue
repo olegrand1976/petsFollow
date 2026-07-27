@@ -59,16 +59,53 @@
         </div>
       </ProCard>
     </div>
+
+    <ProCard
+      v-if="stagingSeedEnabled"
+      class="pro-mt-lg admin-staging-seed"
+      :title="$t('admin.dashboard.stagingSeedTitle')"
+      data-testid="admin-staging-seed"
+    >
+      <p class="admin-staging-seed__warn">{{ $t('admin.dashboard.stagingSeedWarn') }}</p>
+      <p class="admin-staging-seed__hint">{{ $t('admin.dashboard.stagingSeedHint', { phrase: confirmPhrase }) }}</p>
+      <ProInput
+        v-model="confirmInput"
+        :label="$t('admin.dashboard.stagingSeedConfirmLabel')"
+        autocomplete="off"
+        test-id="admin-staging-seed-confirm"
+      />
+      <p v-if="seedError" class="admin-staging-seed__error" role="alert">{{ seedError }}</p>
+      <p v-if="seedOkMsg" class="admin-staging-seed__ok" role="status">{{ seedOkMsg }}</p>
+      <div class="admin-staging-seed__actions">
+        <ProButton
+          variant="secondary"
+          :disabled="!canSubmit || seedBusy"
+          data-testid="admin-staging-seed-submit"
+          @click="runStagingSeed"
+        >
+          {{ seedBusy ? $t('admin.dashboard.stagingSeedBusy') : $t('admin.dashboard.stagingSeedSubmit') }}
+        </ProButton>
+      </div>
+    </ProCard>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
+const CONFIRM_PHRASE = 'RESET STAGING'
+
+const { t } = useI18n()
 const { formatCurrency } = useFormatters()
 const { planLabel, billingModeLabel } = useCodeLabels()
 
 const metrics = ref<any>(null)
+const stagingSeedEnabled = ref(false)
+const confirmInput = ref('')
+const confirmPhrase = CONFIRM_PHRASE
+const seedBusy = ref(false)
+const seedError = ref('')
+const seedOkMsg = ref('')
 
 const planMax = computed(() =>
   Math.max(...Object.values(metrics.value?.planBreakdown ?? { _: 1 }) as number[], 1),
@@ -77,12 +114,73 @@ const modeMax = computed(() =>
   Math.max(...Object.values(metrics.value?.modeBreakdown ?? { _: 1 }) as number[], 1),
 )
 
+const canSubmit = computed(() => confirmInput.value.trim() === CONFIRM_PHRASE)
+
 function barWidth(count: number, max: number) {
   return `${Math.round((count / max) * 100)}%`
 }
 
+async function runStagingSeed() {
+  if (!canSubmit.value || seedBusy.value) return
+  if (!confirm(t('admin.dashboard.stagingSeedConfirmDialog'))) return
+  seedBusy.value = true
+  seedError.value = ''
+  seedOkMsg.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/staging/seed', {
+      method: 'POST',
+      body: { confirm: CONFIRM_PHRASE },
+    })
+    const n = Number(res?.data?.notified ?? 0)
+    seedOkMsg.value = n > 0
+      ? t('admin.dashboard.stagingSeedOk', { n })
+      : t('admin.dashboard.stagingSeedOkNoEmail')
+    confirmInput.value = ''
+    const metricsRes: any = await $fetch('/api/admin/metrics')
+    metrics.value = metricsRes.data
+  } catch (e: any) {
+    const msg = e?.data?.error?.message || e?.data?.message || e?.message
+    seedError.value = typeof msg === 'string' && msg ? msg : t('admin.dashboard.stagingSeedFail')
+  } finally {
+    seedBusy.value = false
+  }
+}
+
 onMounted(async () => {
-  const res: any = await $fetch('/api/admin/metrics')
-  metrics.value = res.data
+  const metricsRes: any = await $fetch('/api/admin/metrics')
+  metrics.value = metricsRes.data
+  try {
+    const seedStatus: any = await $fetch('/api/admin/staging/seed')
+    stagingSeedEnabled.value = !!seedStatus?.data?.enabled
+  } catch (e: any) {
+    stagingSeedEnabled.value = false
+    const status = e?.statusCode || e?.status
+    if (status && status !== 403 && status !== 404) {
+      seedError.value = t('admin.dashboard.stagingSeedStatusFail')
+    }
+  }
 })
 </script>
+
+<style scoped>
+.admin-staging-seed__warn {
+  color: var(--pf-vet-alert);
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+.admin-staging-seed__hint {
+  margin: 0 0 1rem;
+  color: var(--pf-vet-text-muted, #5a6570);
+}
+.admin-staging-seed__actions {
+  margin-top: 1rem;
+}
+.admin-staging-seed__error {
+  color: var(--pf-vet-alert);
+  margin: 0.75rem 0 0;
+}
+.admin-staging-seed__ok {
+  color: var(--pf-vet-accent);
+  margin: 0.75rem 0 0;
+}
+</style>

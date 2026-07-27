@@ -779,7 +779,18 @@
       "commercials": "Sales",
       "prospects": "Prospects",
       "addonRevenue": "Addon revenue",
-      "commercialDue": "Sales commissions"
+      "commercialDue": "Sales commissions",
+      "stagingSeedTitle": "Reset staging database",
+      "stagingSeedWarn": "Irreversible: truncates demo data and re-seeds. Real admin / sales / manager accounts are preserved.",
+      "stagingSeedHint": "To confirm, type exactly: {phrase}",
+      "stagingSeedConfirmLabel": "Confirmation phrase",
+      "stagingSeedConfirmDialog": "Confirm a full reset of the staging database?",
+      "stagingSeedSubmit": "Reset database",
+      "stagingSeedBusy": "Resetting…",
+      "stagingSeedOk": "Staging database reset. {n} staff email(s) sent.",
+      "stagingSeedOkNoEmail": "Staging database reset (no staff email sent).",
+      "stagingSeedFail": "Reset failed.",
+      "stagingSeedStatusFail": "Could not check whether staging reset is available."
     },
     "users": {
       "title": "Registrations",

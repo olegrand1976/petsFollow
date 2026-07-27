@@ -44,8 +44,7 @@ jobs:
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
           gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
       - name: Postdeploy (jobs + smoke, sans seed)
-        # Seed staging : Cloud Scheduler dimanche 08:00 Europe/Brussels (setup-seed-scheduler.sh).
-        # Reset manuel : bash infra/gcp/postdeploy.sh --seed
+        # Seed staging : manuel uniquement (admin Pro « RESET STAGING » ou postdeploy.sh --seed).
         run: bash infra/gcp/postdeploy.sh
       - name: Summary
         run: |

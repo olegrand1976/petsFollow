@@ -29,7 +29,7 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(context.Background()) }()
 
 	if err := truncateAll(ctx, tx); err != nil {
 		return err

@@ -779,7 +779,18 @@
       "commercials": "Commercials",
       "prospects": "Prospects",
       "addonRevenue": "Addon-omzet",
-      "commercialDue": "Commerciële commissies"
+      "commercialDue": "Commerciële commissies",
+      "stagingSeedTitle": "Staging-database resetten",
+      "stagingSeedWarn": "Onomkeerbaar: wist demodata en seed opnieuw. Echte admin- / sales- / manager-accounts blijven behouden.",
+      "stagingSeedHint": "Ter bevestiging, typ exact: {phrase}",
+      "stagingSeedConfirmLabel": "Bevestigingszin",
+      "stagingSeedConfirmDialog": "Volledige reset van de staging-database bevestigen?",
+      "stagingSeedSubmit": "Database resetten",
+      "stagingSeedBusy": "Bezig met resetten…",
+      "stagingSeedOk": "Staging-database gereset. {n} staff-e-mail(s) verzonden.",
+      "stagingSeedOkNoEmail": "Staging-database gereset (geen staff-e-mail verzonden).",
+      "stagingSeedFail": "Reset mislukt.",
+      "stagingSeedStatusFail": "Kon niet controleren of staging-reset beschikbaar is."
     },
     "users": {
       "title": "Registraties",

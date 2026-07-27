@@ -1213,7 +1213,18 @@
       "commercials": "Commerciaux",
       "prospects": "Prospects",
       "addonRevenue": "CA addons",
-      "commercialDue": "Commissions commerciales"
+      "commercialDue": "Commissions commerciales",
+      "stagingSeedTitle": "Réinitialiser la DB staging",
+      "stagingSeedWarn": "Action irréversible : truncate des données démo et re-seed. Les comptes admin / commercial / manager réels sont conservés.",
+      "stagingSeedHint": "Pour confirmer, saisissez exactement : {phrase}",
+      "stagingSeedConfirmLabel": "Phrase de confirmation",
+      "stagingSeedConfirmDialog": "Confirmer le reset complet de la base staging ?",
+      "stagingSeedSubmit": "Réinitialiser la DB",
+      "stagingSeedBusy": "Réinitialisation…",
+      "stagingSeedOk": "Base staging réinitialisée. {n} email(s) staff envoyé(s).",
+      "stagingSeedOkNoEmail": "Base staging réinitialisée (aucun email staff envoyé).",
+      "stagingSeedFail": "Échec de la réinitialisation.",
+      "stagingSeedStatusFail": "Impossible de vérifier si le reset staging est disponible."
     },
     "users": {
       "title": "Inscriptions",
