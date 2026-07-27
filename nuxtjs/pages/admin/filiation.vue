@@ -9,6 +9,7 @@
         api-path="/api/admin/filiation"
         :show-org-cols="true"
         :show-branch-filter="true"
+        :show-commercial-filter="true"
       />
     </ProCard>
   </div>

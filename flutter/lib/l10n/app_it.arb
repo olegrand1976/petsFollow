@@ -366,6 +366,7 @@
     }
   },
   "heartRateNoDurationConfigured": "Per questo studio non è configurata alcuna durata di misurazione. Contatta il tuo veterinario.",
+  "heartRateNotSupported": "La misurazione della frequenza cardiaca non è disponibile per questa specie",
   "start": "Per iniziare",
   "secondsLeft": "{seconds}s",
   "@secondsLeft": {
@@ -419,14 +420,14 @@
   "emptyPetsTitle": "Nessun animale",
   "emptyPetsBody": "Aggiungi il tuo primo animale per iniziare il follow-up prescritto dal tuo veterinario.",
   "discoveryTitle": "Scopri petsFollow",
-  "discoveryMission": "Il tuo viaggio in 7 giorni",
-  "discoveryDay0Title": "Giorno 0 — Benvenuto",
+  "discoveryMission": "Il tuo percorso petsFollow",
+  "discoveryDay0Title": "Passo 1 — Benvenuto",
   "discoveryDay0Body": "Crea il profilo del tuo animale domestico ed esplora l'app: messaggi, promemoria e letture (inclusa la frequenza cardiaca).",
-  "discoveryDay2Title": "Giorno 2 — Prima misurazione",
+  "discoveryDay2Title": "Passo 2 — Prima misurazione",
   "discoveryDay2Body": "Effettua la prima lettura della frequenza cardiaca e acquisisci familiarità con la tecnica.",
-  "discoveryDay4Title": "Giorno 4 – Routine",
+  "discoveryDay4Title": "Passo 3 – Routine",
   "discoveryDay4Body": "Imposta una routine di misurazione quotidiana con promemoria personalizzati.",
-  "discoveryDay6Title": "Giorno 6 – Condivisione del veto",
+  "discoveryDay6Title": "Passo 4 – Condivisione del veto",
   "discoveryDay6Body": "Le tue letture vengono condivise con il tuo veterinario per un monitoraggio ottimale.",
   "myVets": "I miei veterinari",
   "addVetByEmail": "Aggiungi un veterinario via e-mail",
@@ -550,7 +551,7 @@
   "careTooltipNoRecurrence": "Senza ricorrenza: la data inserita è l'unica data di scadenza.",
   "careTooltipDueExplained": "Data di scadenza = ultima data + ricorrenza (se definita).",
   "carePickDate": "Scegli una data",
-  "discoveryDayBadge": "J{day}",
+  "discoveryDayBadge": "P{day}",
   "@discoveryDayBadge": {
     "placeholders": {
       "day": {
@@ -568,6 +569,14 @@
   "upcomingVisits": "Prossime visite",
   "timelineEmpty": "Nessun evento al momento",
   "noThreads": "Nessuna conversazione",
+  "messageNoMessagesYet": "Ancora nessun messaggio",
+  "messageNewConversation": "Nuova conversazione",
+  "messageComposeTitle": "Nuova conversazione",
+  "messageChoosePro": "Professionista della cura",
+  "messageChoosePet": "Animale interessato",
+  "messageStartConversation": "Avvia",
+  "messageLockedTitle": "Messaggistica non disponibile",
+  "messageLockedBody": "Collega un veterinario per chattare con un professionista della cura.",
   "vetInviteSent": "Invito inviato: lo studio deve accettare la richiesta",
   "vetInviteSentNamed": "Richiesta inviata a {practice}: lo studio deve accettarla",
   "@vetInviteSentNamed": {

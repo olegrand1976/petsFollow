@@ -134,7 +134,9 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
     ApiClient.instance.onSessionInvalidated = _onSessionInvalidated;
     ApiClient.instance.onSessionEstablished = _onAuthChanged;
-    AppDeepLink.instance.onPaymentSuccess = () {
+    AppDeepLink.instance.onPaymentSuccess = () async {
+      final ok = await ApiClient.instance.ensureFreshSession();
+      if (!ok) return;
       if (mounted) setState(() => _petsRefreshTick++);
     };
     AppDeepLink.instance.onLoginHint = () {
@@ -153,6 +155,9 @@ class _AuthGateState extends State<AuthGate> {
     }
     if (AppDeepLink.instance.onLoginHint != null) {
       AppDeepLink.instance.onLoginHint = null;
+    }
+    if (AppDeepLink.instance.onPaymentSuccess != null) {
+      AppDeepLink.instance.onPaymentSuccess = null;
     }
     super.dispose();
   }

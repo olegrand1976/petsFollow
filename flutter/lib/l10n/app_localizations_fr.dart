@@ -885,6 +885,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.';
 
   @override
+  String get heartRateNotSupported =>
+      'Le relevé cardiaque n’est pas disponible pour cette espèce';
+
+  @override
   String get start => 'Démarrer';
 
   @override
@@ -969,31 +973,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoveryTitle => 'Découvrir petsFollow';
 
   @override
-  String get discoveryMission => 'Votre parcours en 7 jours';
+  String get discoveryMission => 'Votre parcours petsFollow';
 
   @override
-  String get discoveryDay0Title => 'Jour 0 — Bienvenue';
+  String get discoveryDay0Title => 'Étape 1 — Bienvenue';
 
   @override
   String get discoveryDay0Body =>
       'Créez le profil de votre animal et découvrez l\'app — messagerie, rappels et relevés (dont la fréquence cardiaque).';
 
   @override
-  String get discoveryDay2Title => 'Jour 2 — Première mesure';
+  String get discoveryDay2Title => 'Étape 2 — Première mesure';
 
   @override
   String get discoveryDay2Body =>
       'Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.';
 
   @override
-  String get discoveryDay4Title => 'Jour 4 — Routine';
+  String get discoveryDay4Title => 'Étape 3 — Routine';
 
   @override
   String get discoveryDay4Body =>
       'Installez une routine de mesure quotidienne avec les rappels personnalisés.';
 
   @override
-  String get discoveryDay6Title => 'Jour 6 — Partage véto';
+  String get discoveryDay6Title => 'Étape 4 — Partage véto';
 
   @override
   String get discoveryDay6Body =>
@@ -1290,7 +1294,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'J$day';
+    return 'E$day';
   }
 
   @override
@@ -1322,6 +1326,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noThreads => 'Aucune conversation';
+
+  @override
+  String get messageNoMessagesYet => 'Pas encore de messages';
+
+  @override
+  String get messageNewConversation => 'Nouvelle conversation';
+
+  @override
+  String get messageComposeTitle => 'Nouvelle conversation';
+
+  @override
+  String get messageChoosePro => 'Professionnel de soins';
+
+  @override
+  String get messageChoosePet => 'Animal concerné';
+
+  @override
+  String get messageStartConversation => 'Démarrer';
+
+  @override
+  String get messageLockedTitle => 'Messagerie indisponible';
+
+  @override
+  String get messageLockedBody =>
+      'Liez un vétérinaire pour discuter avec un professionnel de soins.';
 
   @override
   String get vetInviteSent =>

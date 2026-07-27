@@ -111,6 +111,18 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	} else {
 		_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
 	}
+	var assignedComm string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE id=$1`, threadVetID).Scan(&assignedComm)
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventPracticeClientLinked,
+		CommercialUserID: assignedComm,
+		VetUserID:        threadVetID,
+		ClientUserID:     clientID,
+		PracticeID:       practiceID,
+		ActorUserID:      threadVetID,
+		Meta:             map[string]any{"source": "create_client_for_vet"},
+	})
 	return clientID, nil
 }
 
@@ -203,6 +215,16 @@ func (s *Store) CreateVetAsAdmin(ctx context.Context, in EncodeVetInput, assigne
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
+	}
+	if assignedCommercialID != "" {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventVetAssigned,
+			CommercialUserID: assignedCommercialID,
+			VetUserID:        userID,
+			PracticeID:       practiceID,
+			ActorUserID:      assignedCommercialID,
+			Meta:             map[string]any{"source": "admin_create_vet"},
+		})
 	}
 	return userID, nil
 }

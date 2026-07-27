@@ -12,6 +12,7 @@ import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
+import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
@@ -190,7 +191,10 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   const SizedBox(height: 20),
                   if (hasVets == false) ...[
                     _AddFirstVetCard(
-                      onLinked: load,
+                      onLinked: () async {
+                        await ApiClient.instance.ensureFreshSession();
+                        if (mounted) load();
+                      },
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -225,11 +229,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         speciesLabel: _speciesLabel(l10n, pet.species),
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
-                        onMeasure: pet.isOwner && pet.isActive && !pet.needsVetLink
+                        onMeasure: pet.isOwner &&
+                                pet.isActive &&
+                                supportsHeartRateControl(pet.species)
                             ? () => _startMeasurement(pet)
                             : null,
                         onWeightRecorded:
-                            pet.isOwner && pet.isActive && !pet.needsVetLink ? load : null,
+                            pet.isOwner && pet.isActive ? load : null,
                         onResumePayment:
                             pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),
@@ -266,6 +272,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         builder: (_) => HeartRateFlowScreen(
           petId: pet.id,
           durationsSec: pet.heartrateDurationsSec,
+          species: pet.species,
         ),
       ),
     );
@@ -275,7 +282,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   Future<void> _resumePayment(Pet pet) async {
     final url = await ApiClient.instance.resumeCheckout(pet.id);
     await openExternalUrl(url);
-    load();
+    // Do not reload here — wait for payment deep link / resume to refresh.
   }
 
   void _openPetDetail(Pet pet) {
@@ -544,11 +551,11 @@ class _PetHeroCard extends StatelessWidget {
                   _PaymentBadge(pet: pet, l10n: l10n),
                 ],
               ),
-              if (onMeasure != null) ...[
+              if (onMeasure != null || onWeightRecorded != null) ...[
                 const SizedBox(height: 12),
                 PetQuickActions(
                   petId: pet.id,
-                  onHeartRate: onMeasure!,
+                  onHeartRate: onMeasure,
                   onWeightRecorded: onWeightRecorded,
                 ),
               ],

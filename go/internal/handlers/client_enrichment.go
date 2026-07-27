@@ -166,11 +166,9 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetOwner(w, r, petID, id.UserID)
-	if !ok {
+	if _, ok := a.requirePetOwner(w, r, petID, id.UserID); !ok {
 		return
 	}
-	hadPractice := strings.TrimSpace(pet.PracticeID) != ""
 	if err := a.store.SetPetPrimaryPractice(r.Context(), petID, id.UserID, req.PracticeID); err != nil {
 		if errors.Is(err, store.ErrForbidden) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "cannot_change_practice")
@@ -183,12 +181,7 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	if !hadPractice {
-		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, req.PracticeID, pet.Species)
-		if pet.Species == "horse" {
-			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-		}
-	}
+	_ = a.store.StampClientPracticeIfEmpty(r.Context(), id.UserID, req.PracticeID)
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 

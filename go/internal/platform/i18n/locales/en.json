@@ -58,6 +58,7 @@
     "google_pro_only": "Google reserved for Pro profiles",
     "google_client_only": "This Google account is a Pro profile — use the web app",
     "not_your_pet": "Not your pet",
+    "heartrate_not_supported": "Heart rate measurement is not available for this species",
     "wrong_practice": "Wrong practice",
     "not_participant": "Not a participant",
     "email_not_verified": "Confirm your email before signing in",
@@ -534,7 +535,13 @@
     "support_ticket_reply_intro": "The support team replied to your request “{subject}”.",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Open petsFollow",
-    "support_ticket_reply_disclaimer": "To add more details, email support@petsfollow.app and mention your ticket."
+    "support_ticket_reply_disclaimer": "To add more details, email support@petsfollow.app and mention your ticket.",
+    "heartrate_alert_subject": "petsFollow Pro — Heart rate threshold alert",
+    "heartrate_alert_tagline": "BPM threshold alert",
+    "heartrate_alert_preheader": "Reading outside thresholds — BPM {bpm}.",
+    "heartrate_alert_greeting": "Hello,",
+    "heartrate_alert_intro": "A validated heart rate reading shows a significant BPM rise versus the previous one. BPM: {bpm}. Please review the patient record.",
+    "heartrate_alert_disclaimer": "Sign in to petsFollow Pro to review the patient record."
   },
   "push": {
     "new_message_title": "New message",

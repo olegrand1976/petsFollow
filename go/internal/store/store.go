@@ -506,7 +506,7 @@ func (s *Store) StartHeartRateSession(ctx context.Context, petID, ownerID, pract
 	}
 	err := s.pool.QueryRow(ctx, `
 		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, duration_sec, started_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING started_at`,
+		VALUES ($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7) RETURNING started_at`,
 		sess.ID, sess.PetID, sess.OwnerUserID, sess.PracticeID, sess.Status, sess.DurationSec, sess.StartedAt).Scan(&sess.StartedAt)
 	return sess, err
 }
@@ -588,6 +588,43 @@ func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView
 	return out, rows.Err()
 }
 
+// GetHeartRateAlertDelta returns the species rise threshold. ok=false when the
+// species is not monitored (e.g. other).
+func (s *Store) GetHeartRateAlertDelta(ctx context.Context, species string) (int, bool, error) {
+	species = strings.TrimSpace(strings.ToLower(species))
+	if !kernel.SupportsHeartRateControl(species) {
+		return 0, false, nil
+	}
+	var delta int
+	err := s.pool.QueryRow(ctx, `
+		SELECT delta_bpm FROM heartrate.species_alert_deltas WHERE species=$1`, species,
+	).Scan(&delta)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return delta, true, nil
+}
+
+// LastValidatedBPM returns the most recent validated BPM for a pet, if any.
+func (s *Store) LastValidatedBPM(ctx context.Context, petID string) (*int, error) {
+	var bpm int
+	err := s.pool.QueryRow(ctx, `
+		SELECT bpm FROM heartrate.sessions
+		WHERE pet_id=$1 AND status='validated' AND bpm IS NOT NULL
+		ORDER BY COALESCE(validated_at, ended_at, started_at) DESC
+		LIMIT 1`, petID).Scan(&bpm)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &bpm, nil
+}
+
 // MarkPetHeartRateSessionsSeen sets vet_seen_at for all validated unread sessions of a pet in a practice.
 func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practiceID string) (int64, error) {
 	ct, err := s.pool.Exec(ctx, `
@@ -604,21 +641,39 @@ func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practic
 }
 
 func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vetID string) (Thread, error) {
+	return s.GetOrCreateThreadForPet(ctx, practiceID, clientID, vetID, "")
+}
+
+// GetOrCreateThreadForPet returns the (practice, client, pet) thread.
+// Empty petID keeps the legacy general thread (pet_id IS NULL).
+func (s *Store) GetOrCreateThreadForPet(ctx context.Context, practiceID, clientID, vetID, petID string) (Thread, error) {
+	petID = strings.TrimSpace(petID)
 	var t Thread
-	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
-		FROM messaging.threads WHERE practice_id=$1 AND client_user_id=$2`, practiceID, clientID).Scan(
-		&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	var err error
+	if petID == "" {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id IS NULL`,
+			practiceID, clientID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id=$3::uuid`,
+			practiceID, clientID, petID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	}
 	if err == nil {
 		return t, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return Thread{}, err
 	}
-	t = Thread{ID: uuid.NewString(), PracticeID: practiceID, ClientUserID: clientID, VetUserID: vetID}
+	t = Thread{ID: uuid.NewString(), PracticeID: practiceID, ClientUserID: clientID, VetUserID: vetID, PetID: petID}
 	_, err = s.pool.Exec(ctx, `
-		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id) VALUES ($1,$2,$3,$4)`,
-		t.ID, t.PracticeID, t.ClientUserID, t.VetUserID)
+		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
+		VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid)`,
+		t.ID, t.PracticeID, t.ClientUserID, t.VetUserID, t.PetID)
 	return t, err
 }
 

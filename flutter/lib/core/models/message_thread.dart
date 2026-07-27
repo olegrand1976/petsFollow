@@ -7,6 +7,7 @@ class MessageThread {
     this.clientUserId,
     this.vetUserId,
     this.petId,
+    this.petName,
     this.practiceName,
     this.vetName,
     this.lastMessagePreview,
@@ -18,20 +19,21 @@ class MessageThread {
   final String? clientUserId;
   final String? vetUserId;
   final String? petId;
+  final String? petName;
   final String? practiceName;
   final String? vetName;
   final String? lastMessagePreview;
   final int unreadCount;
 
   String get displayLabel {
-    if (practiceName != null && practiceName!.isNotEmpty) {
-      if (vetName != null && vetName!.isNotEmpty) {
-        return '$practiceName · $vetName';
-      }
-      return practiceName!;
-    }
-    if (vetName != null && vetName!.isNotEmpty) return vetName!;
-    return id.substring(0, 8);
+    final pro = (practiceName != null && practiceName!.isNotEmpty)
+        ? practiceName!
+        : (vetName != null && vetName!.isNotEmpty ? vetName! : '');
+    final pet = (petName != null && petName!.isNotEmpty) ? petName! : '';
+    if (pro.isNotEmpty && pet.isNotEmpty) return '$pro · $pet';
+    if (pro.isNotEmpty) return pro;
+    if (pet.isNotEmpty) return pet;
+    return id.length >= 8 ? id.substring(0, 8) : id;
   }
 
   factory MessageThread.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class MessageThread {
       clientUserId: json['clientUserId'] as String?,
       vetUserId: json['vetUserId'] as String?,
       petId: json['petId'] as String?,
+      petName: json['petName'] as String?,
       practiceName: json['practiceName'] as String?,
       vetName: json['vetFullName'] as String? ?? json['clientName'] as String?,
       lastMessagePreview: json['lastMessagePreview'] as String?,

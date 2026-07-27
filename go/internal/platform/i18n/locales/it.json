@@ -58,6 +58,7 @@
     "google_pro_only": "Google riservato ai profili Pro",
     "google_client_only": "Questo account Google è un profilo Pro: utilizza l'app Web",
     "not_your_pet": "Non è il tuo animale domestico",
+    "heartrate_not_supported": "La misurazione della frequenza cardiaca non è disponibile per questa specie",
     "wrong_practice": "Armadietto errato",
     "not_participant": "Non stai partecipando",
     "email_not_verified": "Conferma la tua email prima di accedere",
@@ -422,7 +423,13 @@
     "support_ticket_reply_intro": "Il team di supporto ha risposto alla tua richiesta «{subject}».",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Apri petsFollow",
-    "support_ticket_reply_disclaimer": "Per aggiungere dettagli, scrivi a support@petsfollow.app citando il ticket."
+    "support_ticket_reply_disclaimer": "Per aggiungere dettagli, scrivi a support@petsfollow.app citando il ticket.",
+    "heartrate_alert_subject": "petsFollow Pro — Allerta soglia cardiaca",
+    "heartrate_alert_tagline": "Allerta soglia BPM",
+    "heartrate_alert_preheader": "Lettura fuori soglia — BPM {bpm}.",
+    "heartrate_alert_greeting": "Buongiorno,",
+    "heartrate_alert_intro": "Una lettura cardiaca convalidata mostra un aumento significativo del BPM rispetto alla precedente. BPM: {bpm}. Consultare la cartella del paziente.",
+    "heartrate_alert_disclaimer": "Accedi a PetsFollow Pro per visualizzare la cartella clinica del paziente."
   },
   "push": {
     "new_message_title": "Nuovo messaggio",

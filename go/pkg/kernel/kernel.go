@@ -96,6 +96,26 @@ func CalculateBPM(tapCount, durationSec int) int {
 	return (tapCount * 60) / durationSec
 }
 
+// SupportsHeartRateControl is false for "other" and unknown species.
+func SupportsHeartRateControl(species string) bool {
+	switch species {
+	case "dog", "cat", "horse":
+		return true
+	default:
+		return false
+	}
+}
+
+// IsHeartRateDeltaAlert is true when the current BPM rose by at least delta
+// compared to the previous validated reading. No previous → no alert.
+func IsHeartRateDeltaAlert(currentBPM int, previousBPM *int, delta int) bool {
+	if previousBPM == nil || delta <= 0 {
+		return false
+	}
+	return currentBPM-*previousBPM >= delta
+}
+
+// IsHeartRateAlert reports whether bpm is outside an absolute band (legacy).
 func IsHeartRateAlert(bpm, minBPM, maxBPM int) bool {
 	return bpm < minBPM || bpm > maxBPM
 }

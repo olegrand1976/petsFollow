@@ -1714,6 +1714,12 @@ abstract class AppLocalizations {
   /// **'Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.'**
   String get heartRateNoDurationConfigured;
 
+  /// No description provided for @heartRateNotSupported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le relevé cardiaque n’est pas disponible pour cette espèce'**
+  String get heartRateNotSupported;
+
   /// No description provided for @start.
   ///
   /// In fr, this message translates to:
@@ -1867,13 +1873,13 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryMission.
   ///
   /// In fr, this message translates to:
-  /// **'Votre parcours en 7 jours'**
+  /// **'Votre parcours petsFollow'**
   String get discoveryMission;
 
   /// No description provided for @discoveryDay0Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 0 — Bienvenue'**
+  /// **'Étape 1 — Bienvenue'**
   String get discoveryDay0Title;
 
   /// No description provided for @discoveryDay0Body.
@@ -1885,7 +1891,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay2Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 2 — Première mesure'**
+  /// **'Étape 2 — Première mesure'**
   String get discoveryDay2Title;
 
   /// No description provided for @discoveryDay2Body.
@@ -1897,7 +1903,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay4Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 4 — Routine'**
+  /// **'Étape 3 — Routine'**
   String get discoveryDay4Title;
 
   /// No description provided for @discoveryDay4Body.
@@ -1909,7 +1915,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay6Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 6 — Partage véto'**
+  /// **'Étape 4 — Partage véto'**
   String get discoveryDay6Title;
 
   /// No description provided for @discoveryDay6Body.
@@ -2443,7 +2449,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDayBadge.
   ///
   /// In fr, this message translates to:
-  /// **'J{day}'**
+  /// **'E{day}'**
   String discoveryDayBadge(int day);
 
   /// No description provided for @timelineTypeHeartrate.
@@ -2505,6 +2511,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucune conversation'**
   String get noThreads;
+
+  /// No description provided for @messageNoMessagesYet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore de messages'**
+  String get messageNoMessagesYet;
+
+  /// No description provided for @messageNewConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get messageNewConversation;
+
+  /// No description provided for @messageComposeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get messageComposeTitle;
+
+  /// No description provided for @messageChoosePro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel de soins'**
+  String get messageChoosePro;
+
+  /// No description provided for @messageChoosePet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal concerné'**
+  String get messageChoosePet;
+
+  /// No description provided for @messageStartConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer'**
+  String get messageStartConversation;
+
+  /// No description provided for @messageLockedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messagerie indisponible'**
+  String get messageLockedTitle;
+
+  /// No description provided for @messageLockedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez un vétérinaire pour discuter avec un professionnel de soins.'**
+  String get messageLockedBody;
 
   /// No description provided for @vetInviteSent.
   ///

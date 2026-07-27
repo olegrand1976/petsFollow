@@ -2,7 +2,9 @@
 
 ## Messagerie interne
 
-- Threads client ↔ véto (lié au cabinet / relation).
+- Threads **cabinet × client × animal** (`messaging.threads.pet_id`) ; un client peut avoir plusieurs threads (un par couple practice/pet).
+- Création côté client : `POST /api/v1/messaging/threads` `{ practiceId, petId }` → `GetOrCreateThreadForPet` (ensure). Si l’animal est déjà rattaché à un autre cabinet → `403` `wrong_practice`.
+- Sans véto lié : UI Flutter verrouillée (pas d’envoi) ; composition après liaison : choix care pro / cabinet + animal filtré par practice.
 - Messages texte + **media** (`POST …/messages/media`).
 - Marquage lu thread / read-all.
 - **Mode indisponible** véto : `PUT/GET /vet/availability` — le client voit l’indisponibilité.

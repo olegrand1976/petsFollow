@@ -9,9 +9,17 @@ Future<bool> _defaultOpenExternalUrl(String url) async {
   final uri = Uri.tryParse(url);
   if (uri == null) return false;
   try {
+    // Prefer in-app browser / Custom Tabs to reduce process death on return.
+    if (await launchUrl(uri, mode: LaunchMode.inAppBrowserView)) {
+      return true;
+    }
     return await launchUrl(uri, mode: LaunchMode.externalApplication);
   } catch (_) {
-    return false;
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
   }
 }
 

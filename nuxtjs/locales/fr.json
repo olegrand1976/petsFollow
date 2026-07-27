@@ -2604,12 +2604,10 @@
     "subtitle": {
       "commercial": "Vos vétos assignés et clients attribués — commercial effectif (commission).",
       "manager": "Filiation de votre équipe : commercial → véto → client, avec payé effectif.",
-      "admin": "Vue globale de filiation (toutes branches). Filtrez par branche ou recherche."
+      "admin": "Vue globale de filiation (toutes branches). Filtrez par branche, commercial ou recherche."
     },
     "search": "Recherche",
     "searchPlaceholder": "Nom, email, cabinet…",
-    "branchId": "Branche (UUID)",
-    "branchIdPlaceholder": "Filtrer par branchId",
     "branch": "Branche",
     "commercial": "Commercial",
     "vet": "Véto",
@@ -2624,6 +2622,30 @@
       "vet_assignment": "Assign véto",
       "client_referral": "Referral client",
       "none": "Aucun"
-    }
+    },
+    "loadError": "Impossible de charger la filiation",
+    "branchAll": "Toutes les branches",
+    "commercialAll": "Tous les commerciaux",
+    "exportCsv": "Exporter CSV",
+    "truncated": "Liste tronquée — {limit} lignes max. Affinez la recherche ou les filtres.",
+    "historyTitle": "Historique d’attribution",
+    "historyEmpty": "Aucun événement d’attribution",
+    "historyWhen": "Quand",
+    "historyType": "Événement",
+    "event": {
+      "vet_assigned": "Véto assigné",
+      "vet_unassigned": "Véto désassigné",
+      "client_referral": "Referral client",
+      "practice_client_linked": "Client lié au cabinet"
+    },
+    "exportEventsCsv": "Exporter historique CSV",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "pageHint": "Offset {offset} · {limit}/page",
+    "eventTypeAll": "Tous les événements",
+    "eventsTruncated": "Historique tronqué — {limit} lignes max.",
+    "truncatedPage": "Page complète ({limit} lignes) — utilisez Suivant pour la suite.",
+    "exportCsvPageHint": "L’export CSV contient uniquement la page affichée.",
+    "eventsTruncatedPage": "Page historique complète ({limit} lignes) — utilisez Suivant pour la suite."
   }
 }

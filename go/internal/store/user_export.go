@@ -58,6 +58,14 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 		queries["clientReferrals"] = `SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY r.created_at), '[]'::jsonb)
 			FROM practice.client_referrals r
 			WHERE r.referred_client_user_id = $1 OR r.sponsor_client_user_id = $1`
+		queries["filiationEvents"] = `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
+			FROM practice.filiation_events e
+			WHERE e.client_user_id = $1 OR e.actor_user_id = $1`
+	} else {
+		// Pro portability: attribution audit involving this user as commercial, vet, or actor.
+		queries["filiationEvents"] = `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
+			FROM practice.filiation_events e
+			WHERE e.commercial_user_id = $1 OR e.vet_user_id = $1 OR e.actor_user_id = $1`
 	}
 
 	for key, q := range queries {

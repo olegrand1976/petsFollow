@@ -9,15 +9,18 @@ import (
 )
 
 type ThreadSummary struct {
-	ID                  string `json:"id"`
-	PracticeID          string `json:"practiceId"`
-	ClientUserID        string `json:"clientUserId"`
-	VetUserID           string `json:"vetUserId"`
-	PetID               string `json:"petId"`
-	ClientName          string `json:"clientName"`
-	ClientEmail         string `json:"clientEmail"`
-	LastMessagePreview  string `json:"lastMessagePreview"`
-	UnreadCount         int    `json:"unreadCount"`
+	ID                 string `json:"id"`
+	PracticeID         string `json:"practiceId"`
+	ClientUserID       string `json:"clientUserId"`
+	VetUserID          string `json:"vetUserId"`
+	PetID              string `json:"petId"`
+	ClientName         string `json:"clientName"`
+	ClientEmail        string `json:"clientEmail"`
+	PracticeName       string `json:"practiceName,omitempty"`
+	VetFullName        string `json:"vetFullName,omitempty"`
+	PetName            string `json:"petName,omitempty"`
+	LastMessagePreview string `json:"lastMessagePreview"`
+	UnreadCount        int    `json:"unreadCount"`
 }
 
 type VetOverview struct {
@@ -192,6 +195,53 @@ func (s *Store) ListThreadSummariesForPractice(ctx context.Context, practiceID s
 	}
 	defer rows.Close()
 	return scanThreadSummaries(rows)
+}
+
+// ListThreadSummariesForClient lists all messaging threads for a client across cabinets.
+func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID string) ([]ThreadSummary, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
+			COALESCE(t.pet_id::text, ''),
+			COALESCE(pr.name, ''),
+			COALESCE(v.full_name, ''),
+			COALESCE(p.name, ''),
+			COALESCE((
+				SELECT CASE
+					WHEN COALESCE(m.body, '') <> '' THEN LEFT(m.body, 120)
+					WHEN m.media_type = 'video' THEN '[video]'
+					WHEN m.media_type = 'image' THEN '[image]'
+					ELSE ''
+				END
+				FROM messaging.messages m
+				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+			), ''),
+			COALESCE((
+				SELECT COUNT(*)::int FROM messaging.messages m
+				WHERE m.thread_id = t.id AND m.sender_user_id <> $1 AND m.read_at IS NULL
+			), 0)
+		FROM messaging.threads t
+		LEFT JOIN practice.practices pr ON pr.id = t.practice_id
+		LEFT JOIN identity.users v ON v.id = t.vet_user_id
+		LEFT JOIN pets.pets p ON p.id = t.pet_id
+		WHERE t.client_user_id = $1
+		ORDER BY t.created_at DESC`, clientUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []ThreadSummary
+	for rows.Next() {
+		var t ThreadSummary
+		if err := rows.Scan(
+			&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID,
+			&t.PracticeName, &t.VetFullName, &t.PetName,
+			&t.LastMessagePreview, &t.UnreadCount,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
 }
 
 func scanThreadSummaries(rows pgx.Rows) ([]ThreadSummary, error) {

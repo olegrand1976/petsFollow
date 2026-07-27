@@ -68,6 +68,11 @@ func (s *Store) ListUnassignedVets(ctx context.Context) ([]UnassignedVetRow, err
 
 // UnassignVetFromCommercial clears assigned_commercial_id for a vet.
 func (s *Store) UnassignVetFromCommercial(ctx context.Context, vetUserID string) error {
+	var prevCommercial, practiceID string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(assigned_commercial_id::text,''), COALESCE(practice_id::text,'')
+		FROM identity.users WHERE id=$1 AND role='vet'`, vetUserID).Scan(&prevCommercial, &practiceID)
+
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE identity.users SET assigned_commercial_id = NULL
 		WHERE id = $1 AND role = 'vet'`, vetUserID)
@@ -77,6 +82,13 @@ func (s *Store) UnassignVetFromCommercial(ctx context.Context, vetUserID string)
 	if ct.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventVetUnassigned,
+		CommercialUserID: prevCommercial,
+		VetUserID:        vetUserID,
+		PracticeID:       practiceID,
+		Meta:             map[string]any{"source": "admin_unassign"},
+	})
 	return nil
 }
 

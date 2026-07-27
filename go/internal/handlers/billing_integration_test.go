@@ -702,14 +702,14 @@ func TestBillingCreatePetWithoutPractice(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/heartrate/sessions", access, map[string]any{
 		"durationSec": 60,
 	})
-	if code != http.StatusBadRequest || errorMsgKey(env) != "vet_link_required" {
-		t.Fatalf("expected vet_link_required on HR, got %d %#v", code, env)
+	if code != http.StatusCreated {
+		t.Fatalf("orphan HR start want 201 got %d %#v", code, env)
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/weights", access, map[string]any{
 		"weightKg": 12.5,
 	})
-	if code != http.StatusBadRequest || errorMsgKey(env) != "vet_link_required" {
-		t.Fatalf("expected vet_link_required on weight, got %d %#v", code, env)
+	if code != http.StatusCreated {
+		t.Fatalf("orphan weight want 201 got %d %#v", code, env)
 	}
 
 	var clientID, vetID, practiceID string
@@ -755,8 +755,8 @@ func TestBillingCreatePetWithoutPractice(t *testing.T) {
 		SELECT COUNT(*) FROM care.reminders WHERE pet_id=$1`, petID).Scan(&careCount); err != nil {
 		t.Fatalf("care after link: %v", err)
 	}
-	if careCount == 0 {
-		t.Fatalf("expected care reminders seeded after first link")
+	if careCount != 0 {
+		t.Fatalf("expected no auto care seed after first link, got %d", careCount)
 	}
 }
 

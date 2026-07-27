@@ -316,7 +316,8 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F2.2 | P0 | Session complète | Taps → résultat BPM | Calcul `(taps×60)/durée` |
 | F2.3 | P0 | Valider + comment | Commentaire ≤500 → validate | Visible Pro (C5) |
 | F2.4 | P1 | Recommencer | Cancel / restart | Pas de session fantôme côté véto |
-| F2.5 | P1 | Alerte seuil | BPM hors 60–140 | Warning UI |
+| F2.5 | P1 | Alerte hausse BPM | Hausse ≥ delta espèce (seed 30) vs dernier validé | `isAlert` + email véto ; 1er relevé sans alerte |
+| F2.5b | P1 | Espèce `other` | Pet other | CTA FC masqué ; start API `heartrate_not_supported` |
 | F2.6 | P1 | How-to measure | Settings / éducation | Contenu |
 | F2.7 | P1 | Premium gate | Pet sans entitlement | FC bloquée / CTA paywall |
 | F2.8 | P2 | Commentaire max | >500 car. | Truncate / erreur validation |
@@ -330,7 +331,8 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F3.3 | P1 | Indisponible véto | Après C1.4 | Banner / état indispo |
 | F3.4 | P1 | Push message | Véto écrit (FCM) | Notif + tap → Messages |
 | F3.5 | P2 | Prefs notif | Désactiver `messages` | Pas de push message |
-| F3.6 | P2 | Depuis détail pet | CTA message | Bon thread |
+| F3.6 | P2 | Depuis détail pet | CTA message | Bon thread (practice×pet) |
+| F3.7 | P1 | Ensure thread | Compose pro+pet | `POST /messaging/threads` ; lock sans véto |
 
 ### F4 — Care & RDV
 
@@ -543,7 +545,7 @@ Fichier : `go/internal/handlers/parrainage_invite_control_integration_test.go`.
 |------|----------|
 | `15-app-invite` | Landing `role=client` sans CTA cabinet ; modal commercial `vetRegisterUrl` |
 
-#### Filiation — 4 chaînes anti-perte (F1–F10)
+#### Filiation — 4 chaînes anti-perte (F1–F14)
 
 Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 
@@ -560,6 +562,11 @@ Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 | F9 | Comm→véto→client | Referred A + claim véto assigné C | referral **reste A** ; Resolve = **C** (priorité assign ≠ perte de row) |
 | F10 | Comm→véto→client | Unassign après F8 | Resolve bascule sur fallback `commercial_referrals` (= A) |
 | F10b | Comm→véto→client | Unassign après F9 (était C) | Resolve bascule sur fallback A (pas silent 0) |
+| F11 | Comm→véto→client | Multi-cabinet CommA + CommB | `Resolve(P_A)=A`, `Resolve(P_B)=B`, `Resolve("")=B` (dernier lien) ; List Effectif aligné par practice |
+| F12 | RGPD | Client avec `commercial_referrals` | `GET /me/export` → `commercialReferrals`, `clientReferrals`, **`filiationEvents` (contenu)** ; `DELETE /me` purge referrals **et** events |
+| F13 | Commission | Multi-cabinet Accrue 2 pets | ledger `subscription_pct` → CommA sur P_A, CommB sur P_B |
+| F14 | Audit | Encode / referral / claim / unassign / **re-assign** / accept-link | `filiation_events` : `vet_assigned`, `client_referral`, **`practice_client_linked`**, `vet_unassigned` (re-assign émet unassign+assign) |
+| F15 | RGPD pro | `DELETE /me` commercial | purge `filiation_events` + clear `assigned_commercial_id` + `commercial_referrals` |
 
 #### Vue filiation (API + Pro UI)
 
@@ -567,14 +574,22 @@ Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 
 | Surface | Endpoint | Page |
 |---------|----------|------|
-| Commercial | `GET /commercial/filiation?q=` | `/commercial/filiation` |
-| Manager | `GET /commercial-manager/filiation?q=` (équipe + soi) | `/commercial-manager/filiation` |
-| Admin | `GET /admin/filiation?q=&branchId=&commercialId=` | `/admin/filiation` |
+| Commercial | `GET /commercial/filiation?q=&limit=&offset=` | `/commercial/filiation` |
+| Manager | `GET /commercial-manager/filiation?q=&commercialId=&limit=&offset=` (équipe + soi) | `/commercial-manager/filiation` |
+| Admin | `GET /admin/filiation?q=&branchId=&commercialId=&limit=&offset=` | `/admin/filiation` |
+| Events | `GET …/filiation/events?eventType=&limit=&offset=` (+ admin filters) | section historique UI |
 
-Colonnes : commercial → véto/cabinet → client + invite + parrain + badge **Effectif** (`vet_assignment` \| `client_referral` \| `none`) = même priorité et sélection de lien que `ResolveVetCommercial` (dernier `practice_clients`, puis assign, sinon referral).
+Réponse list / events : `{ items, limit, offset, truncated }` (list défaut 2000 ; events 100). Rétrocompat `?format=items` → tableau nu. UI : pagination offset, filtres history, CSV rows+events, filtre commercial manager.
 
-Fichiers : `go/internal/store/filiation.go`, `filiation_list_integration_test.go`, `nuxtjs/components/pro/ProFiliationTable.vue`.
+Colonnes : commercial → véto/cabinet → client + invite + parrain + badge **Effectif**. Accrue = `Resolve(practiceID)` du pet.
 
+Tests list : scope A≠B, admin, manager, F9 effective=C, unassign → `client_referral`, UUID invalides, `limit=1` → truncated, manager events scoped, `format=items`.
+
+**V1 livrée** ; polish restant = E2E profond / audit transactionnel (non bloquant).
+
+Fichiers : `go/internal/store/filiation.go`, `filiation_events.go`, `filiation_*_integration_test.go`, `nuxtjs/components/pro/ProFiliationTable.vue`.
+
+E2E Playwright `@p1` : `07-commercial`, `08-commercial-manager`, `06-admin` (smoke pages filiation + history + export).
 ### Web Pro (Playwright)
 
 Répertoire : `nuxtjs/tests/e2e/specs/`
@@ -586,9 +601,9 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `03-clients` | Recherche client | `@p0` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
-| `06-admin` | Login admin → dashboard | |
-| `07-commercial` | Login commercial → overview / prospects | |
-| `08-commercial-manager` | Dashboard équipe | |
+| `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
+| `07-commercial` | Login commercial → overview / prospects / filiation | `@p1` (filiation) |
+| `08-commercial-manager` | Dashboard manager / suivi / prospects / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
 | `09-pet-detail` | Fiche animal, shares, commentaire relevé HR | `@p0` (parcours chart/HR) |
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |

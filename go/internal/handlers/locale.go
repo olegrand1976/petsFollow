@@ -15,11 +15,16 @@ func (a *API) localeFromUserMiddleware(next http.Handler) http.Handler {
 			if locale, err := a.store.GetUserPreferredLocale(r.Context(), id.UserID); err == nil {
 				r = r.WithContext(i18n.WithLocale(r.Context(), locale))
 			}
-			// After seed/redeploy, JWT practice_id can lag behind identity.users.practice_id.
-			// Refresh it so /clients and other practice-scoped routes stay correct without re-login.
+			// After seed/redeploy / client vet link, JWT practice_id can lag behind DB.
+			// Refresh it so practice-scoped routes stay correct without re-login.
 			if kernel.IsPracticeStaff(id.Role) {
 				if u, err := a.store.GetUserByID(r.Context(), id.UserID); err == nil && u.PracticeID != "" && u.PracticeID != id.PracticeID {
 					id.PracticeID = u.PracticeID
+					r = r.WithContext(authx.WithIdentity(r.Context(), id))
+				}
+			} else if id.Role == kernel.RoleClient {
+				if resolved, err := a.store.ResolveClientPracticeID(r.Context(), id.UserID); err == nil && resolved != "" && resolved != id.PracticeID {
+					id.PracticeID = resolved
 					r = r.WithContext(authx.WithIdentity(r.Context(), id))
 				}
 			}

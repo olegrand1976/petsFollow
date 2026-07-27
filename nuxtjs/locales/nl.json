@@ -2604,12 +2604,10 @@
     "subtitle": {
       "commercial": "Uw toegewezen dierenartsen en cliënten — effectieve commercial (commissie).",
       "manager": "Filiatie van uw team: commercial → dierenarts → cliënt, met effectieve begunstigde.",
-      "admin": "Globale filiatieweergave (alle branches). Filter op branch of zoek."
+      "admin": "Globaal overzicht (alle vestigingen). Filter op vestiging, verkoper of zoeken."
     },
     "search": "Zoeken",
     "searchPlaceholder": "Naam, e-mail, praktijk…",
-    "branchId": "Branch (UUID)",
-    "branchIdPlaceholder": "Filter op branchId",
     "branch": "Branch",
     "commercial": "Commercial",
     "vet": "Dierenarts",
@@ -2624,6 +2622,30 @@
       "vet_assignment": "Dierenarts-toewijzing",
       "client_referral": "Cliënt-referral",
       "none": "Geen"
-    }
+    },
+    "loadError": "Filialiteit laden mislukt",
+    "branchAll": "Alle vestigingen",
+    "commercialAll": "Alle verkopers",
+    "exportCsv": "CSV exporteren",
+    "truncated": "Lijst ingekort — max {limit} rijen. Verfijn zoeken of filters.",
+    "historyTitle": "Attributiegeschiedenis",
+    "historyEmpty": "Geen attributiegebeurtenissen",
+    "historyWhen": "Wanneer",
+    "historyType": "Gebeurtenis",
+    "event": {
+      "vet_assigned": "Dierenarts toegewezen",
+      "vet_unassigned": "Dierenarts vrijgegeven",
+      "client_referral": "Klantreferral",
+      "practice_client_linked": "Klant gekoppeld aan praktijk"
+    },
+    "exportEventsCsv": "Geschiedenis CSV exporteren",
+    "prev": "Vorige",
+    "next": "Volgende",
+    "pageHint": "Offset {offset} · {limit}/pagina",
+    "eventTypeAll": "Alle gebeurtenissen",
+    "eventsTruncated": "Geschiedenis ingekort — max {limit} rijen.",
+    "truncatedPage": "Volledige pagina ({limit} rijen) — gebruik Volgende voor meer.",
+    "exportCsvPageHint": "CSV-export bevat enkel de huidige pagina.",
+    "eventsTruncatedPage": "Volledige geschiedenispagina ({limit} rijen) — gebruik Volgende voor meer."
   }
 }

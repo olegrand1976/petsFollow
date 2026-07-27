@@ -46,24 +46,58 @@ type FiliationRow struct {
 //   - nil → all commercials/managers (admin global)
 //   - non-nil empty → no rows (explicit empty scope)
 //   - non-empty → only those reps
+const (
+	DefaultFiliationLimit = 2000
+	MaxFiliationLimit     = 5000
+)
+
 type FiliationFilter struct {
 	CommercialIDs []string
 	BranchID      string
 	Query         string
+	Limit         int // 0 → DefaultFiliationLimit
+	Offset        int
+}
+
+// FiliationPage is a capped ListFiliation result (safety + pagination).
+type FiliationPage struct {
+	Items     []FiliationRow `json:"items"`
+	Limit     int            `json:"limit"`
+	Offset    int            `json:"offset"`
+	Truncated bool           `json:"truncated"`
 }
 
 // ListFiliation returns flat filiation rows for visualization.
 // Part A: assigned vets (+ practice_clients, LEFT so vet-only rows appear).
 // Part B: commercial_referrals not already shown under an assigned vet of the same commercial.
 //
-// Effective* mirrors ResolveVetCommercial: latest practice_clients link (scoped to the row
-// practice when set) → assigned_commercial_id, else commercial_referrals, else none.
-func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) ([]FiliationRow, error) {
+// Effective* mirrors ResolveVetCommercial:
+//   - part_a: latest practice_clients for the row practice (Accrue-equivalent when practice set)
+//   - part_b: latest practice_clients globally (= Resolve("", "")), practice column = that link's
+//     practice_id (not vet.practice_id, which can diverge if the vet moved); Accrue for another
+//     practice may differ — use Resolve(practiceID) / part_a for practice-scoped payee.
+// Priority: assigned_commercial_id on the chosen link, else commercial_referrals, else none.
+func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) (FiliationPage, error) {
+	empty := FiliationPage{Items: []FiliationRow{}, Limit: DefaultFiliationLimit}
 	if f.CommercialIDs != nil && len(f.CommercialIDs) == 0 {
-		return []FiliationRow{}, nil
+		return empty, nil
 	}
 
-	args := make([]any, 0, 4)
+	limit := f.Limit
+	if limit <= 0 {
+		limit = DefaultFiliationLimit
+	}
+	if limit > MaxFiliationLimit {
+		limit = MaxFiliationLimit
+	}
+	offset := f.Offset
+	if offset < 0 {
+		offset = 0
+	}
+	empty.Limit = limit
+	empty.Offset = offset
+
+	args := make([]any, 0, 6)
 	argN := 1
 
 	scopeSQL := "c.role IN ('commercial','commercial_manager')"
@@ -93,7 +127,14 @@ func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) ([]Filiati
 		argN++
 	}
 
+	limitArg := argN
+	args = append(args, limit+1) // fetch one extra to detect truncation
+	argN++
+	offsetArg := argN
+	args = append(args, offset)
+
 	// Resolve-aligned effective for a client row (practice_id of the row when available).
+	// part_a: client row always has a practice_clients link (via JOIN); align Resolve.
 	resolveEffID := fmt.Sprintf(`
 		CASE
 			WHEN resolve_link.assigned_commercial_id IS NOT NULL THEN resolve_link.assigned_commercial_id::text
@@ -106,6 +147,22 @@ func (s *Store) ListFiliation(ctx context.Context, f FiliationFilter) ([]Filiati
 			WHEN cr.commercial_user_id IS NOT NULL THEN '%s'
 			ELSE '%s'
 		END`, FiliationSourceVetAssignment, FiliationSourceClientReferral, FiliationSourceNone)
+	// part_b orphan referral: no practice_clients → Resolve returns empty → Effectif none
+	// (still show the referral row; Accrue will not pay until a cabinet link exists).
+	partBEffID := `
+		CASE
+			WHEN resolve_link.vet_user_id IS NULL THEN ''
+			WHEN resolve_link.assigned_commercial_id IS NOT NULL THEN resolve_link.assigned_commercial_id::text
+			WHEN cr.commercial_user_id IS NOT NULL THEN cr.commercial_user_id::text
+			ELSE ''
+		END`
+	partBEffSrc := fmt.Sprintf(`
+		CASE
+			WHEN resolve_link.vet_user_id IS NULL THEN '%s'
+			WHEN resolve_link.assigned_commercial_id IS NOT NULL THEN '%s'
+			WHEN cr.commercial_user_id IS NOT NULL THEN '%s'
+			ELSE '%s'
+		END`, FiliationSourceNone, FiliationSourceVetAssignment, FiliationSourceClientReferral, FiliationSourceNone)
 
 	sql := fmt.Sprintf(`
 WITH scoped_comms AS (
@@ -177,7 +234,7 @@ part_b AS (
 		COALESCE(v.id::text,'') AS vet_user_id,
 		COALESCE(v.full_name,'') AS vet_name,
 		COALESCE(v.email,'') AS vet_email,
-		COALESCE(v.practice_id::text,'') AS practice_id,
+		COALESCE(resolve_link.practice_id::text,'') AS practice_id,
 		COALESCE(pr.name,'') AS practice_name,
 		cli.id::text AS client_user_id,
 		cli.full_name AS client_name,
@@ -196,6 +253,7 @@ part_b AS (
 	LEFT JOIN identity.users mgr ON mgr.id = c.manager_user_id
 	LEFT JOIN practice.client_referrals clr ON clr.referred_client_user_id = cli.id
 	LEFT JOIN identity.users sp ON sp.id = clr.sponsor_client_user_id
+	-- Resolve("",""): latest global practice_clients link; display that link's practice_id.
 	LEFT JOIN LATERAL (
 		SELECT rpc.vet_user_id, rpc.practice_id, u.assigned_commercial_id
 		FROM practice.practice_clients rpc
@@ -205,7 +263,7 @@ part_b AS (
 		LIMIT 1
 	) resolve_link ON TRUE
 	LEFT JOIN identity.users v ON v.id = resolve_link.vet_user_id
-	LEFT JOIN practice.practices pr ON pr.id = COALESCE(v.practice_id, resolve_link.practice_id)
+	LEFT JOIN practice.practices pr ON pr.id = resolve_link.practice_id
 	WHERE NOT EXISTS (
 		SELECT 1
 		FROM practice.practice_clients pc2
@@ -232,13 +290,14 @@ FROM (
 ) a
 LEFT JOIN identity.users ec ON a.effective_commercial_id <> '' AND ec.id::text = a.effective_commercial_id
 ORDER BY a.commercial_name, a.vet_name NULLS LAST, a.client_name NULLS LAST, a.linked_at DESC
+LIMIT $%d OFFSET $%d
 `, scopeSQL, branchSQL,
 		resolveEffID, FiliationSourceVetAssignment, resolveEffSrc, querySQL,
-		resolveEffID, resolveEffSrc, querySQL)
+		partBEffID, partBEffSrc, querySQL, limitArg, offsetArg)
 
 	rows, err := s.pool.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, err
+		return empty, err
 	}
 	defer rows.Close()
 
@@ -255,7 +314,7 @@ ORDER BY a.commercial_name, a.vet_name NULLS LAST, a.client_name NULLS LAST, a.l
 			&r.EffectiveCommercialID, &r.EffectiveCommercialName, &r.EffectiveSource,
 			&linkedAt,
 		); err != nil {
-			return nil, err
+			return empty, err
 		}
 		if linkedAt != nil {
 			r.LinkedAt = *linkedAt
@@ -263,9 +322,18 @@ ORDER BY a.commercial_name, a.vet_name NULLS LAST, a.client_name NULLS LAST, a.l
 		out = append(out, r)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return empty, err
 	}
-	return out, nil
+	truncated := len(out) > limit
+	if truncated {
+		out = out[:limit]
+	}
+	return FiliationPage{
+		Items:     out,
+		Limit:     limit,
+		Offset:    offset,
+		Truncated: truncated,
+	}, nil
 }
 
 // ListTeamCommercialIDs returns commercial user IDs managed by managerUserID.

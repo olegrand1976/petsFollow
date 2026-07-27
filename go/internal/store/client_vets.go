@@ -44,12 +44,27 @@ func (s *Store) ListClientVets(ctx context.Context, clientUserID string) ([]Clie
 }
 
 func (s *Store) UpsertPracticeClient(ctx context.Context, practiceID, clientUserID, vetUserID string) error {
+	var prevVet *string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT vet_user_id::text FROM practice.practice_clients
+		WHERE practice_id=$1 AND client_user_id=$2`, practiceID, clientUserID).Scan(&prevVet)
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (practice_id, client_user_id) DO UPDATE SET vet_user_id = EXCLUDED.vet_user_id`,
 		uuid.NewString(), practiceID, clientUserID, vetUserID)
-	return err
+	if err != nil {
+		return err
+	}
+	changed := prevVet == nil || *prevVet != vetUserID
+	if changed {
+		meta := map[string]any{"source": "upsert_practice_client"}
+		if prevVet != nil && *prevVet != "" && *prevVet != vetUserID {
+			meta["previousVetUserId"] = *prevVet
+		}
+		s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientUserID, vetUserID, vetUserID, meta)
+	}
+	return nil
 }
 
 func (s *Store) ClientIsMemberOfPractice(ctx context.Context, clientUserID, practiceID string) (bool, error) {
@@ -384,7 +399,10 @@ func (s *Store) AcceptVetLinkRequest(ctx context.Context, requestID, vetUserID s
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
-	seedCareForStampedPets(ctx, s, clientID, practiceID, stamped)
+	_ = stamped // orphans stamped; care reminders stay manual
+	s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientID, vetUserID, vetUserID, map[string]any{
+		"source": "accept_vet_link",
+	})
 	return nil
 }
 
@@ -486,11 +504,8 @@ func stampOrphanPetsTx(ctx context.Context, tx pgx.Tx, ownerUserID, practiceID s
 	return out, rows.Err()
 }
 
+// seedCareForStampedPets is a no-op: care reminders are created manually by the client.
 func seedCareForStampedPets(ctx context.Context, s *Store, ownerUserID, practiceID string, stamped []stampedOrphanPet) {
-	for _, p := range stamped {
-		_ = s.SeedDefaultCareReminders(ctx, p.ID, practiceID, p.Species)
-		if p.Species == "horse" {
-			_ = s.SeedHorsePackReminders(ctx, ownerUserID)
-		}
-	}
+	_, _, _, _ = ctx, s, ownerUserID, practiceID
+	_ = stamped
 }

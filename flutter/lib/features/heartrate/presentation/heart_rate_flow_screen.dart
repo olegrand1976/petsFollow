@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/review/in_app_review_helper.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 enum HeartRatePhase { ready, running, review }
@@ -13,12 +15,16 @@ class HeartRateFlowScreen extends StatefulWidget {
     super.key,
     required this.petId,
     required this.durationsSec,
+    this.species,
   });
 
   final String petId;
 
   /// Durations enabled by the pet's primary practice (vet settings).
   final List<int> durationsSec;
+
+  /// When set to a non-HR species (`other`), the screen pops immediately.
+  final String? species;
 
   @override
   State<HeartRateFlowScreen> createState() => _HeartRateFlowScreenState();
@@ -37,13 +43,15 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
   bool _completing = false;
   final TextEditingController _commentController = TextEditingController();
 
-  /// Practice-configured durations, ascending. Never invent options the vet did not enable.
+  /// Practice-configured durations, ascending. Orphan pets (no cabinet) get the
+  /// clinical default of 60s so readings still work before a vet is linked.
   List<int> get _practiceDurations {
     final raw = widget.durationsSec
         .where((d) => d == 15 || d == 30 || d == 60)
         .toSet()
         .toList()
       ..sort();
+    if (raw.isEmpty) return const [60];
     return raw;
   }
 
@@ -54,9 +62,27 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
     // Prefer the longest duration the vet enabled (clinical default).
     selectedDuration = durations.isEmpty ? 60 : durations.last;
     secondsLeft = selectedDuration;
+    if (!supportsHeartRateControl(widget.species)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.heartRateNotSupported)),
+        );
+        Navigator.of(context).pop();
+      });
+    }
   }
 
   Future<void> start() async {
+    if (!supportsHeartRateControl(widget.species)) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.heartRateNotSupported)),
+      );
+      return;
+    }
     final durations = _practiceDurations;
     if (durations.isEmpty || !durations.contains(selectedDuration)) {
       if (!mounted) return;
@@ -91,11 +117,11 @@ class _HeartRateFlowScreenState extends State<HeartRateFlowScreen> {
           setState(() => secondsLeft--);
         }
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric('heartrate'))),
+        SnackBar(content: Text(mapApiError(e, l10n))),
       );
     }
   }

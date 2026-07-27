@@ -46,9 +46,18 @@ class DiscoveryCardWidget extends StatelessWidget {
                         : AppColors.gold.withValues(alpha: 0.2),
                     child: card.completed
                         ? Icon(Icons.check, color: AppColors.primary, size: 20)
-                        : Text(
-                            l10n.discoveryDayBadge(card.dayIndex),
-                            style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
+                        : Builder(
+                            builder: (_) {
+                              final step =
+                                  DiscoveryCard.journeyDays.indexOf(card.dayIndex);
+                              return Text(
+                                l10n.discoveryDayBadge(step >= 0 ? step + 1 : 1),
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            },
                           ),
                   ),
                   const SizedBox(width: 12),

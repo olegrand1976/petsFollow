@@ -78,3 +78,15 @@ test('commercial CRM prospects', async ({ page }) => {
   await expect(page.getByTestId('prospect-source-filter')).toHaveValue('commercial')
   await expect(page.getByText(practice)).toBeVisible({ timeout: 15000 })
 })
+
+test.describe('commercial filiation', { tag: '@p1' }, () => {
+  test('commercial ouvre la page filiation', async ({ page }) => {
+    await loginAsCommercial(page)
+    await page.goto('/commercial/filiation', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('commercial-filiation-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('filiation-table')).toBeVisible()
+    await expect(page.getByTestId('filiation-error')).toHaveCount(0)
+    await expect(page.getByTestId('filiation-export-csv')).toBeVisible()
+    await expect(page.getByTestId('filiation-history')).toBeVisible()
+  })
+})

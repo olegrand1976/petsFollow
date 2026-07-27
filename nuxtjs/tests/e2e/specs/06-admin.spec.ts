@@ -45,6 +45,20 @@ test('admin voit page bonus SPIFF', async ({ page }) => {
   await expect(page.getByTestId('bonus-filter-status')).toBeVisible()
 })
 
+test.describe('admin filiation', { tag: '@p1' }, () => {
+  test('admin ouvre la page filiation avec filtres', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/admin/filiation', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('admin-filiation-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('filiation-table')).toBeVisible()
+    await expect(page.getByTestId('filiation-error')).toHaveCount(0)
+    await expect(page.getByTestId('filiation-branch')).toBeVisible()
+    await expect(page.getByTestId('filiation-commercial')).toBeVisible()
+    await expect(page.getByTestId('filiation-export-csv')).toBeVisible()
+    await expect(page.getByTestId('filiation-history')).toBeVisible()
+  })
+})
+
 test('commercial bloqué sur admin', async ({ page }) => {
   await loginAsCommercial(page)
   await page.goto('/admin')

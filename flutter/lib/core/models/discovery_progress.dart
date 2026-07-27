@@ -11,6 +11,9 @@ class DiscoveryProgress {
   final List<String> completedCards;
   final int streakDays;
 
+  /// Journey step indices (narrative labels may still say "day N").
+  static const journeyDays = [0, 2, 4, 6];
+
   factory DiscoveryProgress.fromJson(Map<String, dynamic> json) {
     final raw = json['completedCards'];
     return DiscoveryProgress(
@@ -30,7 +33,13 @@ class DiscoveryProgress {
     return current.difference(start).inDays;
   }
 
-  bool isCardUnlocked(int dayIndex, [DateTime? now]) => daysSinceStart(now) >= dayIndex;
+  /// Sequential unlock: card N opens once the previous journey card is completed.
+  /// Calendar days no longer gate progression.
+  bool isCardUnlocked(int dayIndex, [DateTime? now]) {
+    final i = journeyDays.indexOf(dayIndex);
+    if (i <= 0) return true;
+    return isCardCompleted(journeyDays[i - 1]);
+  }
 
   bool isCardCompleted(int dayIndex) => completedCards.contains(cardKeyForDay(dayIndex));
 }

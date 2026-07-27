@@ -170,6 +170,17 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.device_tokens WHERE user_id = $1`, userID); err != nil {
 		return err
 	}
+	// Drop live attribution before tombstone so Resolve/Accrue/List cannot pay or
+	// surface a deleted commercial (assigned_commercial_id + commercial_referrals).
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = NULL
+		WHERE assigned_commercial_id = $1 AND role = 'vet'`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.commercial_referrals WHERE commercial_user_id = $1`, userID); err != nil {
+		return err
+	}
 	tag, err := tx.Exec(ctx, `
 		UPDATE identity.users SET
 			email = 'deleted+' || id || '`+tombstoneEmailSuffix+`',
@@ -180,7 +191,8 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 			totp_secret = NULL,
 			totp_enabled = false,
 			avatar_url = NULL,
-			email_verified_at = NULL
+			email_verified_at = NULL,
+			assigned_commercial_id = NULL
 		WHERE id = $1 AND role IN ('vet','commercial','commercial_manager','care_pro')`, userID)
 	if err != nil {
 		return err
@@ -189,6 +201,12 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		return ErrNotFound
 	}
 	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
+		return err
+	}
+	// Purge attribution audit rows tied to this pro (commercial / vet / actor).
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.filiation_events
+		WHERE commercial_user_id = $1 OR vet_user_id = $1 OR actor_user_id = $1`, userID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -222,6 +240,11 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM practice.commercial_referrals WHERE client_user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.filiation_events
+		WHERE client_user_id = $1 OR actor_user_id = $1`, userID); err != nil {
 		return err
 	}
 	tag, err := tx.Exec(ctx, `DELETE FROM identity.users WHERE id = $1 AND role = 'client'`, userID)

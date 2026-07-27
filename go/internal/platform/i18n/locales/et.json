@@ -58,6 +58,7 @@
     "google_pro_only": "Google on reserveeritud Pro profiilidele",
     "google_client_only": "See Google'i konto on Pro profiil — kasutage veebirakendust",
     "not_your_pet": "See ei ole teie loom",
+    "heartrate_not_supported": "Südame löögisageduse mõõtmine ei ole selle liigi jaoks saadaval",
     "wrong_practice": "Vale kabinet",
     "not_participant": "Pole osaleja",
     "email_not_verified": "Kinnitage e-post enne sisselogimist",
@@ -534,7 +535,13 @@
     "support_ticket_reply_intro": "Tugimeeskond vastas teie päringule „{subject}”.",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Ava petsFollow",
-    "support_ticket_reply_disclaimer": "Lisainfo saamiseks kirjutage support@petsfollow.app ja mainige piletit."
+    "support_ticket_reply_disclaimer": "Lisainfo saamiseks kirjutage support@petsfollow.app ja mainige piletit.",
+    "heartrate_alert_subject": "petsFollow Pro — Südame löögisageduse lävealarm",
+    "heartrate_alert_tagline": "BPM lävealarm",
+    "heartrate_alert_preheader": "Näit väljaspool lävesid — BPM {bpm}.",
+    "heartrate_alert_greeting": "Tere,",
+    "heartrate_alert_intro": "Kinnitatud südame löögisageduse näit näitab olulist BPM tõusu võrreldes eelmise mõõtmisega. BPM: {bpm}. Palun vaadake patsiendi kaarti.",
+    "heartrate_alert_disclaimer": "Logige petsFollow Pro'sse sisse, et patsiendi kaarti vaadata."
   },
   "push": {
     "new_message_title": "Uus sõnum",

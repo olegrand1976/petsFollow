@@ -234,6 +234,20 @@ func (s *Store) claimVetInvite(ctx context.Context, clientUserID string, inv App
 	status := "linked"
 	if already {
 		status = "already_linked"
+	} else {
+		var assignedComm string
+		_ = s.pool.QueryRow(ctx, `
+			SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE id=$1`, linkedVet).Scan(&assignedComm)
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventPracticeClientLinked,
+			CommercialUserID: assignedComm,
+			VetUserID:        linkedVet,
+			ClientUserID:     clientUserID,
+			PracticeID:       inv.PracticeID,
+			ActorUserID:      clientUserID,
+			InviteCode:       inv.Code,
+			Meta:             map[string]any{"source": "claim_vet_invite"},
+		})
 	}
 	return ClaimAppInviteResult{
 		Status:       status,
@@ -266,12 +280,14 @@ func linkClientToPracticeTx(ctx context.Context, tx pgx.Tx, clientUserID, practi
 	if err != nil {
 		return nil, err
 	}
-	// One thread per (practice, client) — UNIQUE (practice_id, client_user_id).
-	// Do not insert a second row when a colleague QR is claimed on the same cabinet.
+	// One general thread per (practice, client) when pet_id IS NULL.
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
-		VALUES ($1, $2, $3, $4, NULL)
-		ON CONFLICT (practice_id, client_user_id) DO NOTHING`,
+		SELECT $1, $2, $3, $4, NULL
+		WHERE NOT EXISTS (
+			SELECT 1 FROM messaging.threads
+			WHERE practice_id=$2 AND client_user_id=$3 AND pet_id IS NULL
+		)`,
 		uuid.NewString(), practiceID, clientUserID, vetUserID); err != nil {
 		return nil, err
 	}
@@ -374,6 +390,14 @@ func (s *Store) claimCommercialInvite(ctx context.Context, clientUserID string, 
 			WHERE client_user_id = $1 AND commercial_user_id = $3`,
 			clientUserID, inv.Code, inv.UserID)
 	}
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventClientReferral,
+		CommercialUserID: inv.UserID,
+		ClientUserID:     clientUserID,
+		ActorUserID:      clientUserID,
+		InviteCode:       inv.Code,
+		Meta:             map[string]any{"source": "claim_commercial_invite"},
+	})
 	return ClaimAppInviteResult{
 		Status:      "referred",
 		Kind:        "commercial",
@@ -480,6 +504,9 @@ func (s *Store) claimClientInvite(ctx context.Context, clientUserID string, inv 
 
 		if linkedCabinet {
 			status = "linked"
+			s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientUserID, vetUserID, clientUserID, map[string]any{
+				"source": "claim_client_invite",
+			})
 		}
 
 		result := ClaimAppInviteResult{
@@ -558,10 +585,23 @@ func (s *Store) inheritCommercialFromSponsor(ctx context.Context, filleulID, spo
 		return nil
 	}
 
-	_, err = s.pool.Exec(ctx, `
+	tag, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.commercial_referrals (client_user_id, commercial_user_id, invite_code, updated_at)
 		VALUES ($1, $2, $3, NOW())
 		ON CONFLICT (client_user_id) DO NOTHING`,
 		filleulID, commercialID, inviteCode)
-	return err
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() > 0 {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventClientReferral,
+			CommercialUserID: commercialID,
+			ClientUserID:     filleulID,
+			ActorUserID:      sponsorID,
+			InviteCode:       inviteCode,
+			Meta:             map[string]any{"source": "sponsor_inherit"},
+		})
+	}
+	return nil
 }

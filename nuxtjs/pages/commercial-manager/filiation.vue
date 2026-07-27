@@ -5,7 +5,12 @@
       :subtitle="$t('filiation.subtitle.manager')"
     />
     <ProCard>
-      <ProFiliationTable api-path="/api/commercial-manager/filiation" :show-org-cols="true" />
+      <ProFiliationTable
+        api-path="/api/commercial-manager/filiation"
+        commercials-api-path="/api/commercial-manager/team"
+        :show-org-cols="true"
+        :show-commercial-filter="true"
+      />
     </ProCard>
   </div>
 </template>

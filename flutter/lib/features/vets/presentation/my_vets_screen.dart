@@ -80,7 +80,10 @@ class _MyVetsScreenState extends State<MyVetsScreen> {
                   child: ListView(
                     padding: scrollPaddingWithSystemBottom(context, all: 16),
                     children: [
-                      AddVetPanel(onLinked: load),
+                      AddVetPanel(onLinked: () async {
+                        await ApiClient.instance.ensureFreshSession();
+                        if (mounted) load();
+                      }),
                       const SizedBox(height: 20),
                       if (vets.isEmpty)
                         Center(

@@ -2604,12 +2604,10 @@
     "subtitle": {
       "commercial": "Sus veterinarios asignados y clientes atribuidos — comercial efectivo (comisión).",
       "manager": "Árbol de su equipo: comercial → veterinario → cliente, con beneficiario efectivo.",
-      "admin": "Vista global de filación (todas las ramas). Filtre por rama o busque."
+      "admin": "Vista global de filiación (todas las sucursales). Filtre por sucursal, comercial o búsqueda."
     },
     "search": "Buscar",
     "searchPlaceholder": "Nombre, email, clínica…",
-    "branchId": "Rama (UUID)",
-    "branchIdPlaceholder": "Filtrar por branchId",
     "branch": "Rama",
     "commercial": "Comercial",
     "vet": "Veterinario",
@@ -2624,6 +2622,30 @@
       "vet_assignment": "Asignación vet",
       "client_referral": "Referral cliente",
       "none": "Ninguno"
-    }
+    },
+    "loadError": "No se pudo cargar la filiación",
+    "branchAll": "Todas las sucursales",
+    "commercialAll": "Todos los comerciales",
+    "exportCsv": "Exportar CSV",
+    "truncated": "Lista truncada — máx. {limit} filas. Afine la búsqueda o los filtros.",
+    "historyTitle": "Historial de atribución",
+    "historyEmpty": "Sin eventos de atribución",
+    "historyWhen": "Cuándo",
+    "historyType": "Evento",
+    "event": {
+      "vet_assigned": "Veterinario asignado",
+      "vet_unassigned": "Veterinario desasignado",
+      "client_referral": "Referral de cliente",
+      "practice_client_linked": "Cliente vinculado al gabinete"
+    },
+    "exportEventsCsv": "Exportar historial CSV",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "pageHint": "Offset {offset} · {limit}/página",
+    "eventTypeAll": "Todos los eventos",
+    "eventsTruncated": "Historial truncado — máx. {limit} filas.",
+    "truncatedPage": "Página completa ({limit} filas) — use Siguiente para continuar.",
+    "exportCsvPageHint": "La exportación CSV incluye solo la página actual.",
+    "eventsTruncatedPage": "Página de historial completa ({limit} filas) — use Siguiente para continuar."
   }
 }

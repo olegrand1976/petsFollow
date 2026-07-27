@@ -246,13 +246,36 @@ class _PetFormScreenState extends State<PetFormScreen> {
     final initial =
         (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final ctaButtons = <Widget>[
+      Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
+      const SizedBox(height: 12),
+      FilledButton(
+        key: const Key('pet_form_save'),
+        onPressed: loading ? null : () => save(payNow: false),
+        child: loading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(l10n.petFormSave),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton(
+        key: const Key('pet_form_continue_payment'),
+        onPressed: loading ? null : () => save(payNow: true),
+        child: Text(l10n.continueToPayment),
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: scrollPaddingWithSystemBottom(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -460,49 +483,33 @@ class _PetFormScreenState extends State<PetFormScreen> {
                         ? null
                         : (v) => setState(() => autoRenew = v),
                   ),
+                  if (keyboardOpen) ...[
+                    const SizedBox(height: 24),
+                    ...ctaButtons,
+                  ],
                 ],
               ),
             ),
           ),
-          // Sticky CTA — always visible above the system nav bar.
-          Material(
-            elevation: 6,
-            color: Theme.of(context).colorScheme.surface,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                12,
-                16,
-                12 + systemBottomInset(context),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_summary(l10n),
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    key: const Key('pet_form_save'),
-                    onPressed: loading ? null : () => save(payNow: false),
-                    child: loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2))
-                        : Text(l10n.petFormSave),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    key: const Key('pet_form_continue_payment'),
-                    onPressed: loading ? null : () => save(payNow: true),
-                    child: Text(l10n.continueToPayment),
-                  ),
-                ],
+          // Sticky CTA — hidden while keyboard is open (shown in scroll instead).
+          if (!keyboardOpen)
+            Material(
+              elevation: 6,
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  12 + systemBottomInset(context),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: ctaButtons,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

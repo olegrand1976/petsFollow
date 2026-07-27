@@ -882,6 +882,10 @@ class AppLocalizationsEt extends AppLocalizations {
       'Selle praktika jaoks pole mõõtmise kestust seadistatud. Võtke ühendust oma loomaarstiga.';
 
   @override
+  String get heartRateNotSupported =>
+      'Südame löögisageduse mõõtmine ei ole selle liigi jaoks saadaval';
+
+  @override
   String get start => 'Alusta';
 
   @override
@@ -967,31 +971,31 @@ class AppLocalizationsEt extends AppLocalizations {
   String get discoveryTitle => 'Avastage petsFollow';
 
   @override
-  String get discoveryMission => 'Teie 7-päevane teekond';
+  String get discoveryMission => 'Teie petsFollow teekond';
 
   @override
-  String get discoveryDay0Title => 'Päev 0 — Tere tulemast';
+  String get discoveryDay0Title => 'Samm 1 — Tere tulemast';
 
   @override
   String get discoveryDay0Body =>
       'Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh südame löögisagedus).';
 
   @override
-  String get discoveryDay2Title => 'Päev 2 — Esimene näit';
+  String get discoveryDay2Title => 'Samm 2 — Esimene näit';
 
   @override
   String get discoveryDay2Body =>
       'Tehke esimene südame löögisageduse mõõtmine ja harjuge tehnikaga.';
 
   @override
-  String get discoveryDay4Title => 'Päev 4 — Rutiin';
+  String get discoveryDay4Title => 'Samm 3 — Rutiin';
 
   @override
   String get discoveryDay4Body =>
       'Looge igapäevane mõõtmisharjumus isiklike meeldetuletustega.';
 
   @override
-  String get discoveryDay6Title => 'Päev 6 — Jagamine loomaarstiga';
+  String get discoveryDay6Title => 'Samm 4 — Jagamine loomaarstiga';
 
   @override
   String get discoveryDay6Body =>
@@ -1286,7 +1290,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'P$day';
+    return 'S$day';
   }
 
   @override
@@ -1318,6 +1322,31 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get noThreads => 'Vestlusi pole';
+
+  @override
+  String get messageNoMessagesYet => 'Sõnumeid pole veel';
+
+  @override
+  String get messageNewConversation => 'Uus vestlus';
+
+  @override
+  String get messageComposeTitle => 'Uus vestlus';
+
+  @override
+  String get messageChoosePro => 'Hooldusspetsialist';
+
+  @override
+  String get messageChoosePet => 'Asjaomane loom';
+
+  @override
+  String get messageStartConversation => 'Alusta';
+
+  @override
+  String get messageLockedTitle => 'Sõnumid pole saadaval';
+
+  @override
+  String get messageLockedBody =>
+      'Siduge loomaarst, et hooldusspetsialistiga vestelda.';
 
   @override
   String get vetInviteSent =>

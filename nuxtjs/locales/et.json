@@ -2604,12 +2604,10 @@
     "subtitle": {
       "commercial": "Teie määratud loomaarstid ja kliendid — tegelik müügiesindaja (komisjon).",
       "manager": "Meeskonna seotus: müük → loomaarst → klient, tegeliku saajaga.",
-      "admin": "Globaalne seotuse vaade (kõik harud). Filtreeri haru või otsi."
+      "admin": "Globaalne filatsiooni vaade (kõik harud). Filtreeri haru, müügiesindaja või otsingu järgi."
     },
     "search": "Otsi",
     "searchPlaceholder": "Nimi, e-post, praktika…",
-    "branchId": "Haru (UUID)",
-    "branchIdPlaceholder": "Filtreeri branchId järgi",
     "branch": "Haru",
     "commercial": "Müügiesindaja",
     "vet": "Loomaarst",
@@ -2624,6 +2622,30 @@
       "vet_assignment": "Loomaarsti määramine",
       "client_referral": "Kliendi soovitus",
       "none": "Puudub"
-    }
+    },
+    "loadError": "Filatsiooni laadimine ebaõnnestus",
+    "branchAll": "Kõik harud",
+    "commercialAll": "Kõik müügiesindajad",
+    "exportCsv": "Ekspordi CSV",
+    "truncated": "Nimekiri kärbitud — max {limit} rida. Täpsusta otsingut või filtreid.",
+    "historyTitle": "Omistamise ajalugu",
+    "historyEmpty": "Omistamise sündmusi pole",
+    "historyWhen": "Millal",
+    "historyType": "Sündmus",
+    "event": {
+      "vet_assigned": "Loomaarst määratud",
+      "vet_unassigned": "Loomaarst vabastatud",
+      "client_referral": "Kliendi soovitus",
+      "practice_client_linked": "Klient seotud kabinetiga"
+    },
+    "exportEventsCsv": "Ekspordi ajalugu CSV",
+    "prev": "Eelmine",
+    "next": "Järgmine",
+    "pageHint": "Offset {offset} · {limit}/leht",
+    "eventTypeAll": "Kõik sündmused",
+    "eventsTruncated": "Ajalugu kärbitud — max {limit} rida.",
+    "truncatedPage": "Täielik leht ({limit} rida) — jätkamiseks vajutage Järgmine.",
+    "exportCsvPageHint": "CSV eksport sisaldab ainult praegust lehte.",
+    "eventsTruncatedPage": "Täielik ajaloo leht ({limit} rida) — jätkamiseks vajutage Järgmine."
   }
 }

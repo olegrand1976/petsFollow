@@ -23,6 +23,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
 		pr.Get("/admin/filiation", a.adminListFiliation)
+		pr.Get("/admin/filiation/events", a.adminListFiliationEvents)
 		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
 		pr.Get("/admin/sales-branches", a.adminListSalesBranches)
 		pr.Post("/admin/sales-branches", a.adminCreateSalesBranch)
@@ -63,9 +64,8 @@ func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	f := store.FiliationFilter{
-		Query: strings.TrimSpace(r.URL.Query().Get("q")),
-	}
+	f := store.FiliationFilter{}
+	applyFiliationQuery(&f, r)
 	if raw := strings.TrimSpace(r.URL.Query().Get("branchId")); raw != "" {
 		if !isUUID(raw) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
@@ -80,12 +80,47 @@ func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
 		}
 		f.CommercialIDs = []string{raw}
 	}
-	rows, err := a.store.ListFiliation(r.Context(), f)
+	page, err := a.store.ListFiliation(r.Context(), f)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, rows)
+	writeFiliationList(w, r, page)
+}
+
+func (a *API) adminListFiliationEvents(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	f := store.FiliationEventFilter{}
+	applyFiliationEventQuery(&f, r)
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		f.CommercialIDs = []string{raw}
+	}
+	if raw := strings.TrimSpace(r.URL.Query().Get("clientUserId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		f.ClientUserID = raw
+	}
+	if raw := strings.TrimSpace(r.URL.Query().Get("vetUserId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		f.VetUserID = raw
+	}
+	page, err := a.store.ListFiliationEvents(r.Context(), f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	writeFiliationEvents(w, r, page)
 }
 
 func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
@@ -322,7 +357,8 @@ func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Re
 }
 
 func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	adminID, ok := a.requireAdmin(w, r)
+	if !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -331,7 +367,7 @@ func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return
 	}
-	if err := a.store.AssignVetToCommercial(r.Context(), req.VetUserID, commercialID); err != nil {
+	if err := a.store.AssignVetToCommercial(r.Context(), req.VetUserID, commercialID, adminID.UserID); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return

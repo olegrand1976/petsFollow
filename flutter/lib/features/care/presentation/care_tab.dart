@@ -160,7 +160,7 @@ class _CareTabState extends State<CareTab> with WidgetsBindingObserver {
           SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
         );
       }
-      await load();
+      // Do not reload here — wait for payment deep link / resume to refresh.
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

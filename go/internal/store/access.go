@@ -395,7 +395,13 @@ func (s *Store) LinkExistingClientToVet(ctx context.Context, vetUserID, clientUs
 		)`, uuid.NewString(), practiceID, clientUserID, threadVetID); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientUserID, threadVetID, vetUserID, map[string]any{
+		"source": "link_existing_client",
+	})
+	return nil
 }
 
 // LookupClientConflict returns details for an email that already exists (client preferred).

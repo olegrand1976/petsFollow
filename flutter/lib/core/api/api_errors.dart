@@ -37,6 +37,8 @@ String mapApiError(Object e, AppLocalizations l10n) {
               return apiMsg;
             }
             return l10n.vetLinkRequired;
+          case 'heartrate_not_supported':
+            return l10n.heartRateNotSupported;
           case 'invalid_birth_date':
             return l10n.petBirthDateInvalid;
           case 'family_pet_limit':

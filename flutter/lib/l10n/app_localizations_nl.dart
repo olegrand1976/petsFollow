@@ -883,6 +883,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Er is geen meetduur geconfigureerd voor deze praktijk. Neem contact op met uw dierenarts.';
 
   @override
+  String get heartRateNotSupported =>
+      'Hartslagmeting is niet beschikbaar voor deze diersoort';
+
+  @override
   String get start => 'Starten';
 
   @override
@@ -967,31 +971,31 @@ class AppLocalizationsNl extends AppLocalizations {
   String get discoveryTitle => 'Ontdek petsFollow';
 
   @override
-  String get discoveryMission => 'Uw 7-daagse traject';
+  String get discoveryMission => 'Uw petsFollow-traject';
 
   @override
-  String get discoveryDay0Title => 'Dag 0 — Welkom';
+  String get discoveryDay0Title => 'Stap 1 — Welkom';
 
   @override
   String get discoveryDay0Body =>
       'Maak het profiel van uw huisdier aan en ontdek de app — berichten, herinneringen en metingen (inclusief hartslag).';
 
   @override
-  String get discoveryDay2Title => 'Dag 2 — Eerste meting';
+  String get discoveryDay2Title => 'Stap 2 — Eerste meting';
 
   @override
   String get discoveryDay2Body =>
       'Doe uw eerste hartslagmeting en oefen de techniek.';
 
   @override
-  String get discoveryDay4Title => 'Dag 4 — Routine';
+  String get discoveryDay4Title => 'Stap 3 — Routine';
 
   @override
   String get discoveryDay4Body =>
       'Bouw een dagelijkse meetroutine op met gepersonaliseerde herinneringen.';
 
   @override
-  String get discoveryDay6Title => 'Dag 6 — Delen met dierenarts';
+  String get discoveryDay6Title => 'Stap 4 — Delen met dierenarts';
 
   @override
   String get discoveryDay6Body =>
@@ -1285,7 +1289,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'D$day';
+    return 'S$day';
   }
 
   @override
@@ -1317,6 +1321,31 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get noThreads => 'Geen gesprekken';
+
+  @override
+  String get messageNoMessagesYet => 'Nog geen berichten';
+
+  @override
+  String get messageNewConversation => 'Nieuw gesprek';
+
+  @override
+  String get messageComposeTitle => 'Nieuw gesprek';
+
+  @override
+  String get messageChoosePro => 'Zorgprofessional';
+
+  @override
+  String get messageChoosePet => 'Betrokken dier';
+
+  @override
+  String get messageStartConversation => 'Starten';
+
+  @override
+  String get messageLockedTitle => 'Berichten niet beschikbaar';
+
+  @override
+  String get messageLockedBody =>
+      'Koppel een dierenarts om met een zorgprofessional te chatten.';
 
   @override
   String get vetInviteSent =>

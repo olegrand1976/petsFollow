@@ -8,21 +8,30 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
+import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/messaging/message_media_upload.dart';
+import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:video_compress/video_compress.dart';
 
 class MessagingScreen extends StatefulWidget {
-  const MessagingScreen({super.key, this.embedded = false, this.active = true});
+  const MessagingScreen({
+    super.key,
+    this.embedded = false,
+    this.active = true,
+    this.initialPetId,
+  });
 
   final bool embedded;
   /// When embedded in IndexedStack, true while the Messages tab is selected.
   final bool active;
+  /// Prefill pet when composing from a pet fiche.
+  final String? initialPetId;
 
   @override
   State<MessagingScreen> createState() => _MessagingScreenState();
@@ -39,6 +48,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
   bool loading = true;
   bool sending = false;
   bool _refreshing = false;
+  bool _hasLinkedVets = true;
   Timer? _pollTimer;
 
   @override
@@ -134,13 +144,13 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     try {
       if (currentUserId == null) {
         final me = await ApiClient.instance.getMe();
-        currentUserId = me['userId'] as String?;
+        currentUserId = me['userId'] as String? ?? me['id'] as String?;
       }
-      final rawThreads = await ApiClient.instance.getMessageThreads();
       List<VetLink> vets = [];
       try {
         vets = await ApiClient.instance.getMyVets();
       } catch (_) {}
+      final rawThreads = await ApiClient.instance.getMessageThreads();
       final enriched = rawThreads.map((t) {
         final vet = vets.where((v) => v.practiceId == t.practiceId).firstOrNull;
         return MessageThread(
@@ -149,8 +159,13 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
           clientUserId: t.clientUserId,
           vetUserId: t.vetUserId,
           petId: t.petId,
-          practiceName: vet?.practiceName,
-          vetName: vet?.vetFullName,
+          petName: t.petName,
+          practiceName: (t.practiceName != null && t.practiceName!.isNotEmpty)
+              ? t.practiceName
+              : vet?.practiceName,
+          vetName: (t.vetName != null && t.vetName!.isNotEmpty)
+              ? t.vetName
+              : vet?.vetFullName,
           lastMessagePreview: t.lastMessagePreview,
           unreadCount: t.unreadCount,
         );
@@ -158,14 +173,23 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
       var nextThreadId = threadId;
       if (enriched.isNotEmpty &&
           (nextThreadId == null || !enriched.any((t) => t.id == nextThreadId))) {
-        nextThreadId = enriched.first.id;
+        final preferredPet = widget.initialPetId?.trim();
+        if (preferredPet != null && preferredPet.isNotEmpty) {
+          nextThreadId = enriched
+              .where((t) => t.petId == preferredPet)
+              .map((t) => t.id)
+              .firstOrNull;
+        }
+        nextThreadId ??= enriched.first.id;
       }
-      List<ChatMessage> nextMessages = messages;
+      if (enriched.isEmpty) nextThreadId = null;
+      List<ChatMessage> nextMessages = const [];
       if (nextThreadId != null) {
         nextMessages = await ApiClient.instance.getChatMessages(nextThreadId);
       }
       if (!mounted) return;
       setState(() {
+        _hasLinkedVets = vets.isNotEmpty;
         threads = enriched;
         threadId = nextThreadId;
         messages = nextMessages;
@@ -206,6 +230,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                   clientUserId: t.clientUserId,
                   vetUserId: t.vetUserId,
                   petId: t.petId,
+                  petName: t.petName,
                   practiceName: t.practiceName,
                   vetName: t.vetName,
                   lastMessagePreview: t.lastMessagePreview,
@@ -468,13 +493,38 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     final p = PetsPalette.of(context);
     final timeFmt = DateFormat.Hm(Localizations.localeOf(context).toString());
 
-    final chatArea = threadId == null
-        ? Center(child: Text(l10n.noThreads, style: TextStyle(color: p.textMuted)))
+    final chatArea = !_hasLinkedVets
+        ? _MessagingLocked(
+            onLinkVet: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+              );
+              await ApiClient.instance.ensureFreshSession();
+              if (mounted) initThreads();
+            },
+          )
+        : threadId == null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.noThreads, style: TextStyle(color: p.textMuted)),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      key: const Key('message_compose_empty_btn'),
+                      onPressed: _composeConversation,
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: Text(l10n.messageNewConversation),
+                    ),
+                  ],
+                ),
+              )
         : Column(
             children: [
               Expanded(
                 child: messages.isEmpty
-                    ? Center(child: Text(l10n.vetMessaging, style: TextStyle(color: p.textMuted)))
+                    ? Center(child: Text(l10n.messageNoMessagesYet, style: TextStyle(color: p.textMuted)))
                     : ListView.builder(
                         reverse: true,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -603,10 +653,215 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
             ],
           );
 
-    if (widget.embedded) return content;
+    if (widget.embedded) {
+      return Stack(
+        children: [
+          content,
+          if (_hasLinkedVets)
+            Positioned(
+              right: 16,
+              bottom: 16 + systemBottomInset(context),
+              child: FloatingActionButton.extended(
+                key: const Key('message_compose_fab'),
+                onPressed: _composeConversation,
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: Text(l10n.messageNewConversation),
+              ),
+            ),
+        ],
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vetMessaging)),
+      floatingActionButton: _hasLinkedVets
+          ? FloatingActionButton.extended(
+              key: const Key('message_compose_fab'),
+              onPressed: _composeConversation,
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: Text(l10n.messageNewConversation),
+            )
+          : null,
       body: content,
+    );
+  }
+
+  Future<void> _composeConversation() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final vets = await ApiClient.instance.getMyVets();
+      final petsRaw = await ApiClient.instance.getPets();
+      final pets = petsRaw
+          .whereType<Map>()
+          .map((e) => Pet.fromJson(Map<String, dynamic>.from(e)))
+          .where((p) => p.isActive)
+          .toList();
+      if (!mounted) return;
+      if (vets.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
+        return;
+      }
+      if (pets.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.emptyPetsTitle)));
+        return;
+      }
+      VetLink? selectedVet = vets.length == 1 ? vets.first : null;
+      List<Pet> petsForVet(VetLink? vet) {
+        if (vet == null) return pets;
+        return pets
+            .where((p) {
+              final pid = p.practiceId?.trim() ?? '';
+              return pid.isEmpty || pid == vet.practiceId;
+            })
+            .toList();
+      }
+      Pet? selectedPet;
+      final initial = widget.initialPetId != null
+          ? pets.where((p) => p.id == widget.initialPetId).firstOrNull
+          : null;
+      final available = petsForVet(selectedVet);
+      if (initial != null && available.any((p) => p.id == initial.id)) {
+        selectedPet = initial;
+      } else if (available.length == 1) {
+        selectedPet = available.first;
+      }
+
+      final confirmed = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setModal) {
+              final visiblePets = petsForVet(selectedVet);
+              return Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  20,
+                  20 + systemBottomInset(ctx),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.messageComposeTitle, style: Theme.of(ctx).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    Text(l10n.messageChoosePro, style: Theme.of(ctx).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    ...vets.map(
+                      (v) => ListTile(
+                        key: Key('message_compose_vet_${v.practiceId}'),
+                        leading: Icon(
+                          selectedVet?.practiceId == v.practiceId
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: AppColors.primary,
+                        ),
+                        title: Text(v.practiceName.isNotEmpty ? v.practiceName : v.vetFullName),
+                        subtitle: v.vetFullName.isNotEmpty ? Text(v.vetFullName) : null,
+                        onTap: () => setModal(() {
+                          selectedVet = v;
+                          final next = petsForVet(v);
+                          if (selectedPet == null || !next.any((p) => p.id == selectedPet!.id)) {
+                            selectedPet = next.length == 1 ? next.first : null;
+                          }
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(l10n.messageChoosePet, style: Theme.of(ctx).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    if (visiblePets.isEmpty)
+                      Text(l10n.emptyPetsTitle, style: TextStyle(color: PetsPalette.of(ctx).textMuted))
+                    else
+                      ...visiblePets.map(
+                        (pet) => ListTile(
+                          key: Key('message_compose_pet_${pet.id}'),
+                          leading: Icon(
+                            selectedPet?.id == pet.id
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
+                            color: AppColors.primary,
+                          ),
+                          title: Text(pet.name),
+                          onTap: () => setModal(() => selectedPet = pet),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      key: const Key('message_compose_confirm'),
+                      onPressed: selectedVet == null || selectedPet == null
+                          ? null
+                          : () => Navigator.pop(ctx, true),
+                      child: Text(l10n.messageStartConversation),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+      if (confirmed != true || selectedVet == null || selectedPet == null || !mounted) {
+        return;
+      }
+      final thread = await ApiClient.instance.ensureMessageThread(
+        practiceId: selectedVet!.practiceId,
+        petId: selectedPet!.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (!threads.any((t) => t.id == thread.id)) {
+          threads = [thread, ...threads];
+        }
+        threadId = thread.id;
+      });
+      await loadMessages();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
+    }
+  }
+}
+
+class _MessagingLocked extends StatelessWidget {
+  const _MessagingLocked({required this.onLinkVet});
+
+  final VoidCallback onLinkVet;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline, size: 48, color: p.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              l10n.messageLockedTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.messageLockedBody,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: p.textMuted),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              key: const Key('message_link_vet_cta'),
+              onPressed: onLinkVet,
+              child: Text(l10n.linkVetAfterSaveTitle),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

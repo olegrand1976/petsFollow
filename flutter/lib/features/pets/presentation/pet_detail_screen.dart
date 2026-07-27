@@ -12,13 +12,16 @@ import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
+import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/horse_health_panel.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_edit_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_timeline_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/weight_chart.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -38,6 +41,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
   List<VetLink> vets = [];
   bool loadingVets = true;
   String? vetsLoadError;
+  List<({DateTime date, int bpm, bool isAlert})> hrPoints = [];
+  List<({DateTime date, double kg})> weightPoints = [];
 
   @override
   void initState() {
@@ -45,6 +50,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     WidgetsBinding.instance.addObserver(this);
     pet = widget.pet;
     _loadVets();
+    _loadCharts();
     FeatureModulesController.instance.load().then((_) {
       if (mounted) setState(() {});
     });
@@ -69,6 +75,41 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
       if (!mounted) return;
       setState(() => pet = Pet.fromJson(updated));
       widget.onUpdated?.call();
+      await _loadCharts();
+    } catch (_) {}
+  }
+
+  Future<void> _loadCharts() async {
+    try {
+      final sessions = await ApiClient.instance.getHeartRateSessions(pet.id);
+      final weights = await ApiClient.instance.getWeightReadings(pet.id);
+      if (!mounted) return;
+      setState(() {
+        hrPoints = sessions
+            .whereType<Map>()
+            .map((e) {
+              final bpm = e['bpm'];
+              final started = DateTime.tryParse('${e['startedAt'] ?? e['endedAt'] ?? ''}');
+              if (bpm is! num || started == null) return null;
+              return (
+                date: started,
+                bpm: bpm.round(),
+                isAlert: e['isAlert'] == true,
+              );
+            })
+            .whereType<({DateTime date, int bpm, bool isAlert})>()
+            .toList();
+        weightPoints = weights
+            .whereType<Map>()
+            .map((e) {
+              final kg = e['weightKg'];
+              final at = DateTime.tryParse('${e['recordedAt'] ?? ''}');
+              if (kg is! num || at == null) return null;
+              return (date: at, kg: kg.toDouble());
+            })
+            .whereType<({DateTime date, double kg})>()
+            .toList();
+      });
     } catch (_) {}
   }
 
@@ -161,6 +202,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     final l10n = AppLocalizations.of(context)!;
     try {
       await ApiClient.instance.setPetPrimaryPractice(pet.id, vet.practiceId);
+      await ApiClient.instance.ensureFreshSession();
       final updated = await ApiClient.instance.getPet(pet.id);
       if (mounted) {
         setState(() => pet = Pet.fromJson(updated));
@@ -408,22 +450,42 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             const SizedBox(height: 24),
             HorseHealthPanel(petId: pet.id, petName: pet.name),
           ],
+          if (hrPoints.isNotEmpty || weightPoints.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            if (hrPoints.isNotEmpty) ...[
+              Text(l10n.heartRateShort, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              HeartRateChart(points: hrPoints, height: 180),
+              const SizedBox(height: 16),
+            ],
+            if (weightPoints.isNotEmpty) ...[
+              Text(l10n.weightShort, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              WeightChart(points: weightPoints, height: 180),
+            ],
+          ],
           const SizedBox(height: 24),
-          if (pet.isOwner && pet.isActive && !pet.needsVetLink) ...[
+          if (pet.isOwner && pet.isActive) ...[
             PetQuickActions(
               petId: pet.id,
-              onHeartRate: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => HeartRateFlowScreen(
-                      petId: pet.id,
-                      durationsSec: pet.heartrateDurationsSec,
-                    ),
-                  ),
-                );
+              onHeartRate: supportsHeartRateControl(pet.species)
+                  ? () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => HeartRateFlowScreen(
+                            petId: pet.id,
+                            durationsSec: pet.heartrateDurationsSec,
+                            species: pet.species,
+                          ),
+                        ),
+                      );
+                      if (mounted) await _loadCharts();
+                    }
+                  : null,
+              onWeightRecorded: () async {
+                await _reloadPet();
               },
-              onWeightRecorded: _reloadPet,
             ),
             const SizedBox(height: 8),
           ],
@@ -436,9 +498,23 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             FilledButton.icon(
               key: Key('pet_resume_payment_${pet.id}'),
               onPressed: () async {
-                final url = await ApiClient.instance.resumeCheckout(pet.id);
-                await openExternalUrl(url);
-                await _reloadPet();
+                final messenger = ScaffoldMessenger.of(context);
+                final l10n = AppLocalizations.of(context)!;
+                try {
+                  final url = await ApiClient.instance.resumeCheckout(pet.id);
+                  final opened = await openExternalUrl(url);
+                  if (!opened && mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+                    );
+                  }
+                  // Do not reload here — wait for payment deep link / resume.
+                } catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(mapApiError(e, l10n))),
+                  );
+                }
               },
               icon: const Icon(Icons.payment),
               label: Text(l10n.paymentResume),
@@ -472,7 +548,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               label: l10n.vetMessaging,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const MessagingScreen()),
+                MaterialPageRoute(
+                  builder: (_) => MessagingScreen(initialPetId: pet.id),
+                ),
               ),
             ),
           ],

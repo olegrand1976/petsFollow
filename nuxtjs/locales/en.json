@@ -2604,12 +2604,10 @@
     "subtitle": {
       "commercial": "Your assigned vets and attributed clients — effective commercial (commission).",
       "manager": "Your team tree: commercial → vet → client, with effective payee.",
-      "admin": "Global attribution view (all branches). Filter by branch or search."
+      "admin": "Global attribution view (all branches). Filter by branch, sales rep, or search."
     },
     "search": "Search",
     "searchPlaceholder": "Name, email, practice…",
-    "branchId": "Branch (UUID)",
-    "branchIdPlaceholder": "Filter by branchId",
     "branch": "Branch",
     "commercial": "Sales rep",
     "vet": "Vet",
@@ -2624,6 +2622,30 @@
       "vet_assignment": "Vet assignment",
       "client_referral": "Client referral",
       "none": "None"
-    }
+    },
+    "loadError": "Could not load attribution",
+    "branchAll": "All branches",
+    "commercialAll": "All sales reps",
+    "exportCsv": "Export CSV",
+    "truncated": "List truncated — max {limit} rows. Narrow search or filters.",
+    "historyTitle": "Attribution history",
+    "historyEmpty": "No attribution events",
+    "historyWhen": "When",
+    "historyType": "Event",
+    "event": {
+      "vet_assigned": "Vet assigned",
+      "vet_unassigned": "Vet unassigned",
+      "client_referral": "Client referral",
+      "practice_client_linked": "Client linked to practice"
+    },
+    "exportEventsCsv": "Export history CSV",
+    "prev": "Previous",
+    "next": "Next",
+    "pageHint": "Offset {offset} · {limit}/page",
+    "eventTypeAll": "All events",
+    "eventsTruncated": "History truncated — max {limit} rows.",
+    "truncatedPage": "Full page ({limit} rows) — use Next for more.",
+    "exportCsvPageHint": "CSV export includes the current page only.",
+    "eventsTruncatedPage": "Full history page ({limit} rows) — use Next for more."
   }
 }

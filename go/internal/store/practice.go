@@ -289,6 +289,16 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 	}
 	_ = s.EnsureUserProfiles(ctx, userID)
 	_ = s.EnsureReferenceTeamMembership(ctx, practiceID, userID)
+	if in.AssignedCommercialID != "" {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventVetAssigned,
+			CommercialUserID: in.AssignedCommercialID,
+			VetUserID:        userID,
+			PracticeID:       practiceID,
+			ActorUserID:      in.AssignedCommercialID,
+			Meta:             map[string]any{"source": "register_invite"},
+		})
+	}
 	return RegisterVetResult{UserID: userID, Token: token}, nil
 }
 

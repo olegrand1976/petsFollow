@@ -564,11 +564,7 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// Best-effort like batch — never fail create after pet+entitlement committed.
-	_ = a.store.SeedDefaultCareReminders(r.Context(), created.ID, created.PracticeID, created.Species)
-	if created.Species == "horse" {
-		_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-	}
+	// Care reminders are created manually by the client — no default seed.
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
 		SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
 	}, req.SkipCheckout, planCode, mode)
@@ -664,12 +660,7 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	for _, pet := range created {
-		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, pet.PracticeID, pet.Species)
-		if pet.Species == "horse" {
-			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-		}
-	}
+	// Care reminders are created manually by the client — no default seed.
 	httpx.WriteData(w, http.StatusCreated, map[string]any{"pets": created, "count": len(created)})
 }
 
@@ -798,17 +789,21 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
-	if !a.requirePremiumAccess(w, r, pet.ID) {
+	if !kernel.SupportsHeartRateControl(pet.Species) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "heartrate_not_supported")
 		return
 	}
-	if !a.requirePetPractice(w, r, pet) {
+	if !a.requirePremiumAccess(w, r, pet.ID) {
 		return
 	}
 	var req startHRReq
 	_ = httpx.DecodeJSON(r, &req)
-	allowed, err := a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
-	if err != nil {
-		allowed = nil
+	var allowed []int
+	if strings.TrimSpace(pet.PracticeID) != "" {
+		allowed, err = a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
+		if err != nil {
+			allowed = nil
+		}
 	}
 	normalized := kernel.NormalizeHeartRateDurations(allowed)
 	durationSec := req.DurationSec
@@ -856,7 +851,15 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bpm := kernel.CalculateBPM(req.TapCount, sess.DurationSec)
-	alert := kernel.IsHeartRateAlert(bpm, a.cfg.HeartRateMinBPM, a.cfg.HeartRateMaxBPM)
+	alert := false
+	if pet, perr := a.store.GetPet(r.Context(), sess.PetID); perr == nil {
+		if delta, ok, derr := a.store.GetHeartRateAlertDelta(r.Context(), pet.Species); derr == nil && ok {
+			prev, lerr := a.store.LastValidatedBPM(r.Context(), sess.PetID)
+			if lerr == nil {
+				alert = kernel.IsHeartRateDeltaAlert(bpm, prev, delta)
+			}
+		}
+	}
 	sess, err = a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
@@ -885,16 +888,36 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
 	}
-	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-	prefs, _ := a.store.EmailPrefs(r.Context(), vetID)
-	if prefs.OnHeartRate {
-		vet, _ := a.store.GetUserByID(r.Context(), vetID)
-		locale := vet.PreferredLocale
-		if locale == "" {
-			locale = localeOf(r)
+	practiceID := strings.TrimSpace(sess.PracticeID)
+	if practiceID == "" {
+		practiceID = strings.TrimSpace(id.PracticeID)
+	}
+	if practiceID == "" {
+		if resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID); rerr == nil {
+			practiceID = resolved
 		}
-		_ = a.notifier.SendHeartrateValidated(vet.Email, locale, *sess.BPM)
-		_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": sess.BPM})
+	}
+	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, practiceID)
+	if vetID != "" {
+		prefs, _ := a.store.EmailPrefs(r.Context(), vetID)
+		if prefs.OnHeartRate {
+			vet, _ := a.store.GetUserByID(r.Context(), vetID)
+			locale := vet.PreferredLocale
+			if locale == "" {
+				locale = localeOf(r)
+			}
+			bpm := 0
+			if sess.BPM != nil {
+				bpm = *sess.BPM
+			}
+			if sess.IsAlert {
+				_ = a.notifier.SendHeartrateThresholdAlert(vet.Email, locale, bpm)
+				_ = a.store.LogNotification(r.Context(), vetID, "heartrate_threshold_alert", map[string]any{"sessionId": sess.ID, "bpm": bpm})
+			} else {
+				_ = a.notifier.SendHeartrateValidated(vet.Email, locale, bpm)
+				_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": bpm})
+			}
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
 }
@@ -970,26 +993,15 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
 	case id.Role == kernel.RoleClient:
-		// Self-signup Google / register-client : pas encore de cabinet → liste vide.
-		if id.PracticeID == "" {
-			httpx.WriteData(w, http.StatusOK, []store.Thread{})
-			return
-		}
-		vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-		if err != nil {
-			if errors.Is(err, store.ErrNotFound) {
-				httpx.WriteData(w, http.StatusOK, []store.Thread{})
-				return
-			}
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		t, err := a.store.GetOrCreateThread(r.Context(), id.PracticeID, id.UserID, vetID)
+		threads, err := a.store.ListThreadSummariesForClient(r.Context(), id.UserID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, []store.Thread{t})
+		if threads == nil {
+			threads = []store.ThreadSummary{}
+		}
+		httpx.WriteData(w, http.StatusOK, threads)
 		return
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")

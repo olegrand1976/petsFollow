@@ -2,14 +2,16 @@ package handlers_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
-// Filiation chain anti-regression (F1–F10).
+// Filiation chain anti-regression (F1–F14).
 //
 // Invariants locked here:
 //  1. First-wins — a second commercial/client claim never overwrites the first promoter;
@@ -20,6 +22,10 @@ import (
 //  5. Chain Comm→Vet→Client — ResolveVetCommercial returns the vet's assigned commercial.
 //  6. Unassign — Resolve falls back to commercial_referrals when assigned_commercial_id is cleared.
 //  7. Soft-fail invite — invalid code must not attach nearby (P9).
+//  8. Multi-cabinet — Resolve(practiceID) is scoped; Resolve("") = latest global link (F11).
+//  9. RGPD — export includes commercialReferrals / clientReferrals; DELETE /me purges referrals (F12).
+// 10. Accrue — multi-cabinet pays the commercial of the pet's practice (F13).
+// 11. Audit — filiation_events on assign / referral / unassign (F14).
 //
 // Commission priority (documented, not a filiation loss):
 //   assigned_commercial_id on the linked vet always wins over commercial_referrals (F9).
@@ -645,4 +651,538 @@ func TestFiliationChain_UnassignAfterAssignPriorityFallsBackToReferral(t *testin
 	if eff != commA {
 		t.Fatalf("Resolve after unassign (was C)=%s want fallback A %s", eff, commA)
 	}
+}
+
+// F11 — Multi-cabinet: Resolve is practice-scoped; empty practiceID = latest global link.
+func TestFiliationChain_MultiCabinetResolveScopedByPractice(t *testing.T) {
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+	adminTok := ensureAdminToken(t, api)
+	commA, _, tokA := createCommercial(t, api, adminTok, "fil-f11-a", "F11 Comm A")
+	commB, _, tokB := createCommercial(t, api, adminTok, "fil-f11-b", "F11 Comm B")
+
+	vetEmailA := uniqueEmail("fil-f11-va")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tokA, map[string]any{
+		"email": vetEmailA, "password": "VetDemo123!", "fullName": "Dr F11A",
+		"practiceName": "Cabinet F11A",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode A %d %#v", code, env)
+	}
+	vetA, _ := dataMap(t, env)["userId"].(string)
+
+	vetEmailB := uniqueEmail("fil-f11-vb")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tokB, map[string]any{
+		"email": vetEmailB, "password": "VetDemo123!", "fullName": "Dr F11B",
+		"practiceName": "Cabinet F11B",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode B %d %#v", code, env)
+	}
+	vetB, _ := dataMap(t, env)["userId"].(string)
+
+	ctx := context.Background()
+	invA, err := st.EnsureAppInviteCode(ctx, vetA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	invB, err := st.EnsureAppInviteCode(ctx, vetB)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clientEmail := uniqueEmail("fil-f11-cli")
+	clientID := insertVerifiedUser(t, api, "client", clientEmail, "ClientDemo123!", "Client F11", nil)
+	_ = st.EnsureUserProfiles(ctx, clientID)
+	tok := loginToken(t, api.handler, clientEmail, "ClientDemo123!")
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/vets/claim-invite", tok, map[string]any{
+		"code": invA.Code,
+	})
+	if code != http.StatusOK || dataMap(t, env)["status"] != "linked" {
+		t.Fatalf("claim A %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/vets/claim-invite", tok, map[string]any{
+		"code": invB.Code,
+	})
+	if code != http.StatusOK || dataMap(t, env)["status"] != "linked" {
+		t.Fatalf("claim B %d %#v", code, env)
+	}
+
+	var practiceA, practiceB string
+	_ = api.pool.QueryRow(ctx, `SELECT practice_id::text FROM identity.users WHERE id=$1`, vetA).Scan(&practiceA)
+	_ = api.pool.QueryRow(ctx, `SELECT practice_id::text FROM identity.users WHERE id=$1`, vetB).Scan(&practiceB)
+
+	_, effA, err := st.ResolveVetCommercial(ctx, clientID, practiceA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if effA != commA {
+		t.Fatalf("Resolve(P_A)=%s want A %s", effA, commA)
+	}
+	_, effB, err := st.ResolveVetCommercial(ctx, clientID, practiceB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if effB != commB {
+		t.Fatalf("Resolve(P_B)=%s want B %s", effB, commB)
+	}
+	_, effGlobal, err := st.ResolveVetCommercial(ctx, clientID, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if effGlobal != commB {
+		t.Fatalf("Resolve(\"\")=%s want latest B %s", effGlobal, commB)
+	}
+
+	// List Effectif on each commercial's part_a row matches Resolve(practice).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/filiation", tokA, nil)
+	if code != http.StatusOK {
+		t.Fatalf("A filiation %d %#v", code, env)
+	}
+	rowsA := filiationItems(t, env)
+	if !filiationRowMatch(rowsA, func(m map[string]any) bool {
+		return m["clientUserId"] == clientID &&
+			m["practiceId"] == practiceA &&
+			m["effectiveCommercialId"] == commA &&
+			m["effectiveSource"] == store.FiliationSourceVetAssignment
+	}) {
+		t.Fatalf("A list Effectif vs Resolve(P_A) %#v", rowsA)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/filiation", tokB, nil)
+	if code != http.StatusOK {
+		t.Fatalf("B filiation %d %#v", code, env)
+	}
+	rowsB := filiationItems(t, env)
+	if !filiationRowMatch(rowsB, func(m map[string]any) bool {
+		return m["clientUserId"] == clientID &&
+			m["practiceId"] == practiceB &&
+			m["effectiveCommercialId"] == commB &&
+			m["effectiveSource"] == store.FiliationSourceVetAssignment
+	}) {
+		t.Fatalf("B list Effectif vs Resolve(P_B) %#v", rowsB)
+	}
+}
+
+// F12 — RGPD export includes commercialReferrals (+ clientReferrals key) for referred clients.
+func TestFiliationChain_ExportIncludesReferrals(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := ensureAdminToken(t, api)
+	commID, _, tok := createCommercial(t, api, adminTok, "fil-f12-comm", "F12 Comm")
+
+	clientEmail := uniqueEmail("fil-f12-cli")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", tok, map[string]any{
+		"email": clientEmail, "password": "ClientDemo123!", "fullName": "Client F12",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("standalone client %d %#v", code, env)
+	}
+	clientID := userIDByEmail(t, api, clientEmail)
+	ref, _ := commercialReferralOf(t, api, clientID)
+	if ref != commID {
+		t.Fatalf("referral=%s want %s", ref, commID)
+	}
+
+	access := loginToken(t, api.handler, clientEmail, "ClientDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("export %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	cr, ok := data["commercialReferrals"].([]any)
+	if !ok || len(cr) == 0 {
+		t.Fatalf("export missing commercialReferrals: %#v", data["commercialReferrals"])
+	}
+	found := false
+	for _, raw := range cr {
+		m, _ := raw.(map[string]any)
+		if m == nil {
+			continue
+		}
+		if fmt.Sprint(m["commercial_user_id"]) == commID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("commercialReferrals does not include %s: %#v", commID, cr)
+	}
+	if _, ok := data["clientReferrals"]; !ok {
+		t.Fatalf("export missing clientReferrals key: %#v", data)
+	}
+	if _, ok := data["filiationEvents"]; !ok {
+		t.Fatalf("export missing filiationEvents key: %#v", data)
+	}
+	fe, _ := data["filiationEvents"].([]any)
+	if len(fe) == 0 {
+		t.Fatalf("export filiationEvents empty, want client_referral event: %#v", data["filiationEvents"])
+	}
+	foundEvent := false
+	for _, raw := range fe {
+		m, _ := raw.(map[string]any)
+		if m == nil {
+			continue
+		}
+		if fmt.Sprint(m["event_type"]) == store.FiliationEventClientReferral ||
+			fmt.Sprint(m["eventType"]) == store.FiliationEventClientReferral {
+			foundEvent = true
+			break
+		}
+	}
+	if !foundEvent {
+		t.Fatalf("export filiationEvents missing client_referral: %#v", fe)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me %d %#v", code, env)
+	}
+	if n := commercialReferralCount(t, api, clientID); n != 0 {
+		t.Fatalf("commercial_referrals after purge count=%d want 0", n)
+	}
+	var eventN int
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM practice.filiation_events
+		WHERE client_user_id=$1 OR actor_user_id=$1`, clientID).Scan(&eventN); err != nil {
+		t.Fatal(err)
+	}
+	if eventN != 0 {
+		t.Fatalf("filiation_events after purge count=%d want 0", eventN)
+	}
+}
+
+// F13 — Multi-cabinet Accrue: pet at practice A → ledger CommA; pet at B → CommB.
+func TestFiliationChain_AccruePaysPracticeScopedCommercial(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	st := store.New(api.pool)
+	if err := st.EnsureDefaultCommissionTiers(ctx); err != nil {
+		t.Fatal(err)
+	}
+	_ = st.EnsureCommissionSettings(ctx)
+	_ = st.SetCommercialRateBps(ctx, store.DefaultCommercialCommissionRateBps)
+
+	adminTok := ensureAdminToken(t, api)
+	commA, _, tokA := createCommercial(t, api, adminTok, "fil-f13-a", "F13 Comm A")
+	commB, _, tokB := createCommercial(t, api, adminTok, "fil-f13-b", "F13 Comm B")
+
+	vetEmailA := uniqueEmail("fil-f13-va")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tokA, map[string]any{
+		"email": vetEmailA, "password": "VetDemo123!", "fullName": "Dr F13A",
+		"practiceName": "Cabinet F13A",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode A %d %#v", code, env)
+	}
+	vetA, _ := dataMap(t, env)["userId"].(string)
+
+	vetEmailB := uniqueEmail("fil-f13-vb")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tokB, map[string]any{
+		"email": vetEmailB, "password": "VetDemo123!", "fullName": "Dr F13B",
+		"practiceName": "Cabinet F13B",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode B %d %#v", code, env)
+	}
+	vetB, _ := dataMap(t, env)["userId"].(string)
+
+	invA, err := st.EnsureAppInviteCode(ctx, vetA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	invB, err := st.EnsureAppInviteCode(ctx, vetB)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clientEmail := uniqueEmail("fil-f13-cli")
+	clientID := insertVerifiedUser(t, api, "client", clientEmail, "ClientDemo123!", "Client F13", nil)
+	_ = st.EnsureUserProfiles(ctx, clientID)
+	tok := loginToken(t, api.handler, clientEmail, "ClientDemo123!")
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/vets/claim-invite", tok, map[string]any{"code": invA.Code})
+	if code != http.StatusOK {
+		t.Fatalf("claim A %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/vets/claim-invite", tok, map[string]any{"code": invB.Code})
+	if code != http.StatusOK {
+		t.Fatalf("claim B %d %#v", code, env)
+	}
+
+	var practiceA, practiceB string
+	_ = api.pool.QueryRow(ctx, `SELECT practice_id::text FROM identity.users WHERE id=$1`, vetA).Scan(&practiceA)
+	_ = api.pool.QueryRow(ctx, `SELECT practice_id::text FROM identity.users WHERE id=$1`, vetB).Scan(&practiceB)
+
+	activateAndAccrue := func(practiceID, petName string) (entID string) {
+		t.Helper()
+		petID := uuid.NewString()
+		if _, err := api.pool.Exec(ctx, `
+			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, payment_status)
+			VALUES ($1, $2, $3, $4, 'dog', 'lab', 'pending_payment')`,
+			petID, practiceID, clientID, petName); err != nil {
+			t.Fatal(err)
+		}
+		baseCents := 3500
+		ent, err := st.CreateEntitlement(ctx, petID, clientID, "annual", "subscription", baseCents)
+		if err != nil {
+			t.Fatal(err)
+		}
+		now := time.Now().UTC()
+		if err := st.ActivateEntitlement(ctx, store.ActivateEntitlementParams{
+			PetID: petID, Status: "active", ValidFrom: now, ValidUntil: now.Add(365 * 24 * time.Hour),
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if err := st.AccrueCommissionForPetActivation(ctx, petID); err != nil {
+			t.Fatal(err)
+		}
+		return ent.ID
+	}
+
+	entA := activateAndAccrue(practiceA, "Pet F13A")
+	entB := activateAndAccrue(practiceB, "Pet F13B")
+
+	ledgerComm := func(entID string) string {
+		t.Helper()
+		var commercialID string
+		if err := api.pool.QueryRow(ctx, `
+			SELECT commercial_user_id::text
+			FROM billing.commercial_commission_ledger
+			WHERE source_id=$1 AND source_type='subscription_pct'`, entID).Scan(&commercialID); err != nil {
+			t.Fatalf("ledger for %s: %v", entID, err)
+		}
+		return commercialID
+	}
+	if got := ledgerComm(entA); got != commA {
+		t.Fatalf("Accrue practice A commercial=%s want %s", got, commA)
+	}
+	if got := ledgerComm(entB); got != commB {
+		t.Fatalf("Accrue practice B commercial=%s want %s", got, commB)
+	}
+}
+
+// F14 — Audit trail: encode → vet_assigned; standalone client → client_referral; unassign → vet_unassigned.
+func TestFiliationChain_AuditTrailEvents(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := ensureAdminToken(t, api)
+	commID, _, tok := createCommercial(t, api, adminTok, "fil-f14-comm", "F14 Comm")
+
+	vetEmail := uniqueEmail("fil-f14-vet")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tok, map[string]any{
+		"email": vetEmail, "password": "VetDemo123!", "fullName": "Dr F14",
+		"practiceName": "Cabinet F14",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/filiation/events", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("events %d %#v", code, env)
+	}
+	events := filiationEventItems(t, env)
+	if !filiationEventHas(events, store.FiliationEventVetAssigned, vetID) {
+		t.Fatalf("missing vet_assigned for %s %#v", vetID, events)
+	}
+
+	cliEmail := uniqueEmail("fil-f14-cli")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", tok, map[string]any{
+		"email": cliEmail, "password": "ClientDemo123!", "fullName": "Client F14",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("standalone %d %#v", code, env)
+	}
+	clientID := userIDByEmail(t, api, cliEmail)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/filiation/events", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("events2 %d %#v", code, env)
+	}
+	events = filiationEventItems(t, env)
+	if !filiationEventMatch(events, func(m map[string]any) bool {
+		return m["eventType"] == store.FiliationEventClientReferral && m["clientUserId"] == clientID
+	}) {
+		t.Fatalf("missing client_referral %#v", events)
+	}
+
+	// practice_client_linked via claim QR of assigned vet.
+	st := store.New(api.pool)
+	inv, err := st.EnsureAppInviteCode(context.Background(), vetID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Re-assign after we will unassign later — encode already assigned; claim uses that vet.
+	// First re-assign for claim (still assigned from encode).
+	verifyEmail(t, api, clientID)
+	cliTok := loginToken(t, api.handler, cliEmail, "ClientDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/vets/claim-invite", cliTok, map[string]any{
+		"code": inv.Code,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("claim %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/filiation/events", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("events3 %d %#v", code, env)
+	}
+	events = filiationEventItems(t, env)
+	if !filiationEventMatch(events, func(m map[string]any) bool {
+		return m["eventType"] == store.FiliationEventPracticeClientLinked && m["clientUserId"] == clientID
+	}) {
+		t.Fatalf("missing practice_client_linked %#v", events)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/vets/"+vetID+"/unassign", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("unassign %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/filiation/events?commercialId="+commID, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin events %d %#v", code, env)
+	}
+	events = filiationEventItems(t, env)
+	if !filiationEventHas(events, store.FiliationEventVetUnassigned, vetID) {
+		t.Fatalf("missing vet_unassigned %#v", events)
+	}
+}
+
+// Pro DELETE /me (tombstone) purges filiation_events and clears live attribution
+// (assigned_commercial_id + commercial_referrals) so Accrue cannot pay a dead commercial.
+func TestFiliationChain_ProDeletePurgesEvents(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := ensureAdminToken(t, api)
+	commID, email, tok := createCommercial(t, api, adminTok, "fil-pro-del", "Pro Del Comm")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tok, map[string]any{
+		"email": uniqueEmail("fil-pro-del-v"), "password": "VetDemo123!", "fullName": "Dr ProDel",
+		"practiceName": "Cab ProDel",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+	var nBefore int
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM practice.filiation_events WHERE commercial_user_id=$1`, commID).Scan(&nBefore); err != nil {
+		t.Fatal(err)
+	}
+	if nBefore == 0 {
+		t.Fatal("expected events before pro delete")
+	}
+
+	// Standalone referral also cleared on commercial tombstone.
+	cliEmail := uniqueEmail("fil-pro-del-cli")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/clients", tok, map[string]any{
+		"email": cliEmail, "password": "ClientDemo123!", "fullName": "Cli ProDel",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create client %d %#v", code, env)
+	}
+	var refCount int
+	_ = api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM practice.commercial_referrals WHERE commercial_user_id=$1`, commID).Scan(&refCount)
+	if refCount == 0 {
+		t.Fatal("expected commercial_referrals before delete")
+	}
+
+	access := loginToken(t, api.handler, email, "CommercialDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me pro %d %#v", code, env)
+	}
+	var nAfter int
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM practice.filiation_events
+		WHERE commercial_user_id=$1 OR actor_user_id=$1`, commID).Scan(&nAfter); err != nil {
+		t.Fatal(err)
+	}
+	if nAfter != 0 {
+		t.Fatalf("filiation_events after pro tombstone count=%d want 0", nAfter)
+	}
+	var assignedLeft string
+	_ = api.pool.QueryRow(context.Background(), `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE id=$1`, vetID).Scan(&assignedLeft)
+	if assignedLeft != "" {
+		t.Fatalf("assigned_commercial_id still set after commercial tombstone: %s", assignedLeft)
+	}
+	var refAfter int
+	_ = api.pool.QueryRow(context.Background(), `
+		SELECT COUNT(*) FROM practice.commercial_referrals WHERE commercial_user_id=$1`, commID).Scan(&refAfter)
+	if refAfter != 0 {
+		t.Fatalf("commercial_referrals after tombstone count=%d want 0", refAfter)
+	}
+}
+
+// Admin re-assign records vet_unassigned for previous commercial then vet_assigned for new.
+func TestFiliationChain_ReassignEmitsUnassign(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := ensureAdminToken(t, api)
+	commA, _, tokA := createCommercial(t, api, adminTok, "fil-reass-a", "Reass A")
+	commB, _, _ := createCommercial(t, api, adminTok, "fil-reass-b", "Reass B")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/vets", tokA, map[string]any{
+		"email": uniqueEmail("fil-reass-v"), "password": "VetDemo123!", "fullName": "Dr Reass",
+		"practiceName": "Cab Reass",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("encode %d %#v", code, env)
+	}
+	vetID, _ := dataMap(t, env)["userId"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/commercials/"+commB+"/assign", adminTok, map[string]any{
+		"vetUserId": vetID,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("reassign %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/filiation/events?commercialId="+commA, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("events A %d %#v", code, env)
+	}
+	eventsA := filiationEventItems(t, env)
+	if !filiationEventHas(eventsA, store.FiliationEventVetUnassigned, vetID) {
+		t.Fatalf("missing vet_unassigned for A %#v", eventsA)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/filiation/events?commercialId="+commB, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("events B %d %#v", code, env)
+	}
+	eventsB := filiationEventItems(t, env)
+	if !filiationEventHas(eventsB, store.FiliationEventVetAssigned, vetID) {
+		t.Fatalf("missing vet_assigned for B %#v", eventsB)
+	}
+}
+
+func filiationEventItems(t *testing.T, env map[string]any) []any {
+	t.Helper()
+	data := env["data"]
+	if m, ok := data.(map[string]any); ok {
+		items, _ := m["items"].([]any)
+		if items == nil {
+			return []any{}
+		}
+		return items
+	}
+	if arr, ok := data.([]any); ok {
+		return arr
+	}
+	t.Fatalf("filiation events data shape: %#v", data)
+	return nil
+}
+
+func filiationEventHas(events []any, eventType, vetID string) bool {
+	return filiationEventMatch(events, func(m map[string]any) bool {
+		return m["eventType"] == eventType && m["vetUserId"] == vetID
+	})
+}
+
+func filiationEventMatch(events []any, pred func(map[string]any) bool) bool {
+	for _, raw := range events {
+		m, _ := raw.(map[string]any)
+		if pred(m) {
+			return true
+		}
+	}
+	return false
 }

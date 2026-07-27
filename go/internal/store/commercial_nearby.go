@@ -209,12 +209,24 @@ func (s *Store) LinkClientCommercialReferral(ctx context.Context, clientUserID, 
 	if !ok {
 		return ErrNotFound
 	}
-	_, err = s.pool.Exec(ctx, `
+	tag, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.commercial_referrals (client_user_id, commercial_user_id, invite_code, updated_at)
 		VALUES ($1, $2, '', NOW())
 		ON CONFLICT (client_user_id) DO NOTHING`,
 		clientUserID, commercialUserID)
-	return err
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() > 0 {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventClientReferral,
+			CommercialUserID: commercialUserID,
+			ClientUserID:     clientUserID,
+			ActorUserID:      commercialUserID,
+			Meta:             map[string]any{"source": "link_referral"},
+		})
+	}
+	return nil
 }
 
 // UpdateCommercialBaseLocation sets base_* for a commercial or manager user.

@@ -77,6 +77,45 @@ void main() {
     expect(find.text('Filmer une vidéo'), findsOneWidget);
   });
 
+  testWidgets('messaging locked and compose keys are findable', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Scaffold(
+              floatingActionButton: FloatingActionButton.extended(
+                key: const Key('message_compose_fab'),
+                onPressed: () {},
+                label: Text(l10n.messageNewConversation),
+              ),
+              body: Column(
+                children: [
+                  FilledButton(
+                    key: const Key('message_link_vet_cta'),
+                    onPressed: () {},
+                    child: Text(l10n.linkVetAfterSaveTitle),
+                  ),
+                  FilledButton(
+                    key: const Key('message_compose_confirm'),
+                    onPressed: () {},
+                    child: Text(l10n.messageStartConversation),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('message_compose_fab')), findsOneWidget);
+    expect(find.byKey(const Key('message_link_vet_cta')), findsOneWidget);
+    expect(find.byKey(const Key('message_compose_confirm')), findsOneWidget);
+  });
+
   testWidgets('preconsult_submit and commercial_logout keys', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

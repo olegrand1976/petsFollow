@@ -23,6 +23,28 @@ func TestIsHeartRateAlert(t *testing.T) {
 	}
 }
 
+func TestSupportsHeartRateControl(t *testing.T) {
+	if !SupportsHeartRateControl("dog") || !SupportsHeartRateControl("cat") || !SupportsHeartRateControl("horse") {
+		t.Fatal("expected dog/cat/horse supported")
+	}
+	if SupportsHeartRateControl("other") || SupportsHeartRateControl("") {
+		t.Fatal("expected other/empty unsupported")
+	}
+}
+
+func TestIsHeartRateDeltaAlert(t *testing.T) {
+	prev := 80
+	if !IsHeartRateDeltaAlert(110, &prev, 30) {
+		t.Fatal("expected alert for +30")
+	}
+	if IsHeartRateDeltaAlert(109, &prev, 30) {
+		t.Fatal("expected no alert for +29")
+	}
+	if IsHeartRateDeltaAlert(110, nil, 30) {
+		t.Fatal("expected no alert without previous")
+	}
+}
+
 func TestNormalizeHeartRateDurations(t *testing.T) {
 	cases := []struct {
 		in   []int

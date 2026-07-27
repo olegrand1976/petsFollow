@@ -20,6 +20,7 @@ func (a *API) registerCommercialManagerRoutes(r chi.Router) {
 		pr.Get("/commercial-manager/overview", a.managerOverview)
 		pr.Get("/commercial-manager/team", a.managerListTeam)
 		pr.Get("/commercial-manager/filiation", a.managerListFiliation)
+		pr.Get("/commercial-manager/filiation/events", a.managerListFiliationEvents)
 		pr.Get("/commercial-manager/team/{id}/overview", a.managerTeamMemberOverview)
 		pr.Get("/commercial-manager/prospects", a.managerListProspects)
 		pr.Patch("/commercial-manager/prospects/{id}", a.managerUpdateProspect)
@@ -91,15 +92,71 @@ func (a *API) managerListFiliation(w http.ResponseWriter, r *http.Request) {
 	}
 	// Include manager self portfolio (managers may also encode via commercial routes).
 	scope := append([]string{id.UserID}, teamIDs...)
-	rows, err := a.store.ListFiliation(r.Context(), store.FiliationFilter{
-		CommercialIDs: scope,
-		Query:         strings.TrimSpace(r.URL.Query().Get("q")),
-	})
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		allowed := false
+		for _, sid := range scope {
+			if sid == raw {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		scope = []string{raw}
+	}
+	f := store.FiliationFilter{CommercialIDs: scope}
+	applyFiliationQuery(&f, r)
+	page, err := a.store.ListFiliation(r.Context(), f)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, rows)
+	writeFiliationList(w, r, page)
+}
+
+func (a *API) managerListFiliationEvents(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	teamIDs, err := a.store.ListTeamCommercialIDs(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	scope := append([]string{id.UserID}, teamIDs...)
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		allowed := false
+		for _, sid := range scope {
+			if sid == raw {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		scope = []string{raw}
+	}
+	f := store.FiliationEventFilter{CommercialIDs: scope}
+	applyFiliationEventQuery(&f, r)
+	page, err := a.store.ListFiliationEvents(r.Context(), f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	writeFiliationEvents(w, r, page)
 }
 
 func (a *API) managerTeamMemberOverview(w http.ResponseWriter, r *http.Request) {

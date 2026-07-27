@@ -23,6 +23,7 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Get("/commercial/vets", a.commercialListVets)
 		pr.Get("/commercial/referrals", a.commercialListReferrals)
 		pr.Get("/commercial/filiation", a.commercialListFiliation)
+		pr.Get("/commercial/filiation/events", a.commercialListFiliationEvents)
 		pr.Post("/commercial/vets", a.commercialEncodeVet)
 		pr.Post("/commercial/clients", a.commercialCreateClient)
 		pr.Get("/commercial/commissions", a.commercialCommissions)
@@ -103,15 +104,29 @@ func (a *API) commercialListFiliation(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	rows, err := a.store.ListFiliation(r.Context(), store.FiliationFilter{
-		CommercialIDs: []string{id.UserID},
-		Query:         strings.TrimSpace(r.URL.Query().Get("q")),
-	})
+	f := store.FiliationFilter{CommercialIDs: []string{id.UserID}}
+	applyFiliationQuery(&f, r)
+	page, err := a.store.ListFiliation(r.Context(), f)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, rows)
+	writeFiliationList(w, r, page)
+}
+
+func (a *API) commercialListFiliationEvents(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	f := store.FiliationEventFilter{CommercialIDs: []string{id.UserID}}
+	applyFiliationEventQuery(&f, r)
+	page, err := a.store.ListFiliationEvents(r.Context(), f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	writeFiliationEvents(w, r, page)
 }
 
 type encodeVetReq struct {

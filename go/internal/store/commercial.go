@@ -181,10 +181,30 @@ func (s *Store) EncodeVetForCommercial(ctx context.Context, commercialUserID str
 	if in.ProspectID != "" {
 		_ = s.MarkProspectConverted(ctx, in.ProspectID, commercialUserID, userID)
 	}
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventVetAssigned,
+		CommercialUserID: commercialUserID,
+		VetUserID:        userID,
+		PracticeID:       practiceID,
+		ActorUserID:      commercialUserID,
+		Meta:             map[string]any{"source": "encode_vet"},
+	})
 	return userID, nil
 }
 
-func (s *Store) AssignVetToCommercial(ctx context.Context, vetUserID, commercialUserID string) error {
+// AssignVetToCommercial sets assigned_commercial_id (admin overwrite allowed).
+// actorUserID is the admin/manager performing the action (falls back to commercialUserID).
+func (s *Store) AssignVetToCommercial(ctx context.Context, vetUserID, commercialUserID, actorUserID string) error {
+	var prevCommercial, practiceID string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(assigned_commercial_id::text,''), COALESCE(practice_id::text,'')
+		FROM identity.users WHERE id=$1 AND role='vet'`, vetUserID).Scan(&prevCommercial, &practiceID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE identity.users SET assigned_commercial_id=$2 WHERE id=$1 AND role='vet'`, vetUserID, commercialUserID)
 	if err != nil {
@@ -193,6 +213,31 @@ func (s *Store) AssignVetToCommercial(ctx context.Context, vetUserID, commercial
 	if ct.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+	if actorUserID == "" {
+		actorUserID = commercialUserID
+	}
+	if prevCommercial != "" && prevCommercial != commercialUserID {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventVetUnassigned,
+			CommercialUserID: prevCommercial,
+			VetUserID:        vetUserID,
+			PracticeID:       practiceID,
+			ActorUserID:      actorUserID,
+			Meta:             map[string]any{"source": "reassign", "nextCommercialId": commercialUserID},
+		})
+	}
+	meta := map[string]any{"source": "assign_vet"}
+	if prevCommercial != "" && prevCommercial != commercialUserID {
+		meta["previousCommercialId"] = prevCommercial
+	}
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventVetAssigned,
+		CommercialUserID: commercialUserID,
+		VetUserID:        vetUserID,
+		PracticeID:       practiceID,
+		ActorUserID:      actorUserID,
+		Meta:             meta,
+	})
 	return nil
 }
 

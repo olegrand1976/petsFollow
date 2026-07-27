@@ -366,6 +366,7 @@
     }
   },
   "heartRateNoDurationConfigured": "Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.",
+  "heartRateNotSupported": "Le relevé cardiaque n’est pas disponible pour cette espèce",
   "start": "Démarrer",
   "secondsLeft": "{seconds} s",
   "@secondsLeft": {
@@ -419,14 +420,14 @@
   "emptyPetsTitle": "Aucun animal",
   "emptyPetsBody": "Ajoutez votre premier animal pour commencer le suivi prescrit avec votre vétérinaire.",
   "discoveryTitle": "Découvrir petsFollow",
-  "discoveryMission": "Votre parcours en 7 jours",
-  "discoveryDay0Title": "Jour 0 — Bienvenue",
+  "discoveryMission": "Votre parcours petsFollow",
+  "discoveryDay0Title": "Étape 1 — Bienvenue",
   "discoveryDay0Body": "Créez le profil de votre animal et découvrez l'app — messagerie, rappels et relevés (dont la fréquence cardiaque).",
-  "discoveryDay2Title": "Jour 2 — Première mesure",
+  "discoveryDay2Title": "Étape 2 — Première mesure",
   "discoveryDay2Body": "Effectuez votre premier relevé cardiaque et familiarisez-vous avec la technique.",
-  "discoveryDay4Title": "Jour 4 — Routine",
+  "discoveryDay4Title": "Étape 3 — Routine",
   "discoveryDay4Body": "Installez une routine de mesure quotidienne avec les rappels personnalisés.",
-  "discoveryDay6Title": "Jour 6 — Partage véto",
+  "discoveryDay6Title": "Étape 4 — Partage véto",
   "discoveryDay6Body": "Vos relevés sont partagés avec votre vétérinaire pour un suivi optimal.",
   "myVets": "Mes vétérinaires",
   "addVetByEmail": "Ajouter un véto par email",
@@ -550,7 +551,7 @@
   "careTooltipNoRecurrence": "Sans récurrence : la date saisie est l’échéance unique.",
   "careTooltipDueExplained": "Échéance = dernière date + récurrence (si définie).",
   "carePickDate": "Choisir une date",
-  "discoveryDayBadge": "J{day}",
+  "discoveryDayBadge": "E{day}",
   "@discoveryDayBadge": {
     "placeholders": {
       "day": {
@@ -568,6 +569,14 @@
   "upcomingVisits": "Prochaines visites",
   "timelineEmpty": "Aucun événement pour le moment",
   "noThreads": "Aucune conversation",
+  "messageNoMessagesYet": "Pas encore de messages",
+  "messageNewConversation": "Nouvelle conversation",
+  "messageComposeTitle": "Nouvelle conversation",
+  "messageChoosePro": "Professionnel de soins",
+  "messageChoosePet": "Animal concerné",
+  "messageStartConversation": "Démarrer",
+  "messageLockedTitle": "Messagerie indisponible",
+  "messageLockedBody": "Liez un vétérinaire pour discuter avec un professionnel de soins.",
   "vetInviteSent": "Invitation envoyée — le cabinet doit accepter la demande",
   "vetInviteSentNamed": "Demande envoyée à {practice} — le cabinet doit l’accepter",
   "@vetInviteSentNamed": {

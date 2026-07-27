@@ -2596,12 +2596,10 @@
     "subtitle": {
       "commercial": "I vostri vet assegnati e clienti attribuiti — commerciale effettivo (commissione).",
       "manager": "Albero del team: commerciale → vet → cliente, con beneficiario effettivo.",
-      "admin": "Vista globale di filiazione (tutti i rami). Filtrate per ramo o cercate."
+      "admin": "Vista globale della filiazione (tutte le filiali). Filtra per filiale, commerciale o ricerca."
     },
     "search": "Cerca",
     "searchPlaceholder": "Nome, email, clinica…",
-    "branchId": "Ramo (UUID)",
-    "branchIdPlaceholder": "Filtra per branchId",
     "branch": "Ramo",
     "commercial": "Commerciale",
     "vet": "Veterinario",
@@ -2616,6 +2614,30 @@
       "vet_assignment": "Assegnazione vet",
       "client_referral": "Referral cliente",
       "none": "Nessuno"
-    }
+    },
+    "loadError": "Impossibile caricare la filiazione",
+    "branchAll": "Tutte le filiali",
+    "commercialAll": "Tutti i commerciali",
+    "exportCsv": "Esporta CSV",
+    "truncated": "Elenco troncato — max {limit} righe. Affina ricerca o filtri.",
+    "historyTitle": "Storico attribuzione",
+    "historyEmpty": "Nessun evento di attribuzione",
+    "historyWhen": "Quando",
+    "historyType": "Evento",
+    "event": {
+      "vet_assigned": "Veterinario assegnato",
+      "vet_unassigned": "Veterinario disassegnato",
+      "client_referral": "Referral cliente",
+      "practice_client_linked": "Cliente collegato allo studio"
+    },
+    "exportEventsCsv": "Esporta storico CSV",
+    "prev": "Precedente",
+    "next": "Successivo",
+    "pageHint": "Offset {offset} · {limit}/pagina",
+    "eventTypeAll": "Tutti gli eventi",
+    "eventsTruncated": "Storico troncato — max {limit} righe.",
+    "truncatedPage": "Pagina completa ({limit} righe) — usa Avanti per continuare.",
+    "exportCsvPageHint": "L’export CSV include solo la pagina visualizzata.",
+    "eventsTruncatedPage": "Pagina storico completa ({limit} righe) — usa Avanti per continuare."
   }
 }

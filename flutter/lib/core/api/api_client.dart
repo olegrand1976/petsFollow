@@ -279,7 +279,27 @@ class ApiClient {
   }
 
   static bool _isAuthRejectionStatus(int? status) {
-    return status == 401 || status == 403 || status == 400;
+    // Only a true unauthorized from the refresh endpoint should wipe the session.
+    // 400/403 from proxies/WAF must not force logout.
+    return status == 401;
+  }
+
+  /// Proactively exchange the refresh JWT so a post-payment API storm does not
+  /// wipe the session on a stale 15-min access token.
+  Future<bool> ensureFreshSession() async {
+    if (refreshToken == null || refreshToken!.isEmpty) {
+      refreshToken = await _readPersistedSecret(_refreshKey);
+    }
+    if (refreshToken == null || refreshToken!.isEmpty) return token != null;
+    switch (await _refreshTokens()) {
+      case _TokenRefreshResult.success:
+        return true;
+      case _TokenRefreshResult.transient:
+        return token != null;
+      case _TokenRefreshResult.invalid:
+        unawaited(_invalidateSessionFromUnauthorized());
+        return false;
+    }
   }
 
   /// Exchange refresh JWT for a new access (+ rotated refresh). Single-flight.
@@ -311,7 +331,8 @@ class ApiClient {
       completer.complete(_TokenRefreshResult.success);
       return _TokenRefreshResult.success;
     } on DioException catch (e) {
-      // 5xx / pas de status / réseau → transient ; 400/401/403 → invalid.
+      // 5xx / pas de status / réseau → transient ; seul 401 refresh = invalid.
+      // 400/403 (WAF/proxy) restent transient pour ne pas forcer un logout.
       final resolved = e.response?.statusCode == null || _isTransientNetworkError(e)
           ? _TokenRefreshResult.transient
           : (_isAuthRejectionStatus(e.response?.statusCode)
@@ -1319,12 +1340,27 @@ class ApiClient {
   /// Typed messaging threads (single wrapper for `/messaging/threads`).
   Future<List<MessageThread>> getMessageThreads() async {
     final res = await dio.get('/api/v1/messaging/threads');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t as Map))).toList();
+    final raw = res.data['data'];
+    final data = raw is List ? raw : const <dynamic>[];
+    return data
+        .whereType<Map>()
+        .map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t)))
+        .toList();
   }
 
   /// Alias of [getMessageThreads] — prefer this or [getMessageThreads], not a raw duplicate.
   Future<List<MessageThread>> getThreads() => getMessageThreads();
+
+  Future<MessageThread> ensureMessageThread({
+    required String practiceId,
+    required String petId,
+  }) async {
+    final res = await dio.post('/api/v1/messaging/threads', data: {
+      'practiceId': practiceId,
+      'petId': petId,
+    });
+    return MessageThread.fromJson(Map<String, dynamic>.from(res.data['data'] as Map));
+  }
 
   Future<List<ChatMessage>> getChatMessages(String threadId) async {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');

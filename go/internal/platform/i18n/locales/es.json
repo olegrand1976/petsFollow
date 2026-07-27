@@ -58,6 +58,7 @@
     "google_pro_only": "Google reservado para perfiles Pro",
     "google_client_only": "Esta cuenta de Google es un perfil Pro — use la app web",
     "not_your_pet": "No es su mascota",
+    "heartrate_not_supported": "La medición cardíaca no está disponible para esta especie",
     "wrong_practice": "Clínica incorrecta",
     "not_participant": "No es participante",
     "email_not_verified": "Confirme su correo antes de iniciar sesión",
@@ -534,7 +535,13 @@
     "support_ticket_reply_intro": "El equipo de soporte respondió a su solicitud «{subject}».",
     "support_ticket_reply_detail": "{replyBody}",
     "support_ticket_reply_cta": "Abrir petsFollow",
-    "support_ticket_reply_disclaimer": "Para añadir información, escriba a support@petsfollow.app mencionando su ticket."
+    "support_ticket_reply_disclaimer": "Para añadir información, escriba a support@petsfollow.app mencionando su ticket.",
+    "heartrate_alert_subject": "petsFollow Pro — Alerta de umbral cardíaco",
+    "heartrate_alert_tagline": "Alerta de umbral BPM",
+    "heartrate_alert_preheader": "Lectura fuera de umbrales — BPM {bpm}.",
+    "heartrate_alert_greeting": "Hola,",
+    "heartrate_alert_intro": "Una lectura cardíaca validada muestra un aumento significativo del BPM respecto a la anterior. BPM: {bpm}. Revise la ficha del paciente.",
+    "heartrate_alert_disclaimer": "Inicie sesión en petsFollow Pro para revisar la ficha del paciente."
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

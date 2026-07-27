@@ -289,6 +289,25 @@ func (n *Notifier) SendHeartrateValidated(to, locale string, bpm int) error {
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendHeartrateThresholdAlert notifies the vet that a validated reading is outside the normal BPM range.
+func (n *Notifier) SendHeartrateThresholdAlert(to, locale string, bpm int) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{"bpm": fmt.Sprintf("%d", bpm)}
+	subject := mustT(locale, "emails.heartrate_alert_subject")
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.heartrate_alert_tagline"),
+		Greeting:        mustT(locale, "emails.heartrate_alert_greeting"),
+		Intro:           mustT(locale, "emails.heartrate_alert_intro", vars),
+		Disclaimer:      mustT(locale, "emails.heartrate_alert_disclaimer"),
+		Preheader:       mustT(locale, "emails.heartrate_alert_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 func (n *Notifier) SendNewMessage(to, locale, messageBody string) error {
 	locale = i18n.NormalizeLocale(locale)
 	subject := mustT(locale, "emails.new_message_subject")
