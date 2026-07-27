@@ -5,11 +5,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
+import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
@@ -56,16 +58,58 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
   List<dynamic> _pets = [];
   int _loadGen = 0;
 
+  /// Staff: Agenda / Clients / Pets / Messages / Settings.
+  /// care_pro: Agenda / Clients / Pets / Settings (no Messages).
+  static const _staffMessagesIndex = 3;
+  static const _staffSettingsIndex = 4;
+  static const _careSettingsIndex = 3;
+
   @override
   void initState() {
     super.initState();
+    _bindPushNavigation();
     _load();
+  }
+
+  @override
+  void dispose() {
+    final nav = PushNavigation.instance;
+    if (identical(nav.onSelectTab, _onPushSelectTab)) {
+      nav.onSelectTab = null;
+    }
+    super.dispose();
+  }
+
+  void _onPushSelectTab(int i) {
+    if (!mounted || !_isCabinetStaff) return;
+    // Client shell uses tabMessages=3; map to staff messages index.
+    final target = i == PushNavigation.tabMessages ? _staffMessagesIndex : i;
+    if (target < 0 || target > _staffSettingsIndex) return;
+    setState(() => _index = target);
+  }
+
+  void _bindPushNavigation() {
+    if (!_isCabinetStaff) return;
+    PushNavigation.instance.onSelectTab = _onPushSelectTab;
   }
 
   bool get _isCabinetStaff {
     final role = ApiClient.instance.userRole;
     return role == 'vet' || role == 'vet_assistant' || role == 'secretary';
   }
+
+  int get _settingsIndex =>
+      _isCabinetStaff ? _staffSettingsIndex : _careSettingsIndex;
+
+  List<Map<String, dynamic>> get _staffClientMaps => _clients
+      .whereType<Map>()
+      .map((e) => Map<String, dynamic>.from(e))
+      .toList();
+
+  List<Map<String, dynamic>> get _staffPetMaps => _pets
+      .whereType<Map>()
+      .map((e) => Map<String, dynamic>.from(e))
+      .toList();
 
   bool _canWriteNotes(Map<String, dynamic> row) {
     // Secretary defaults: no pets.write_clinical — hide write UI to avoid 403.
@@ -356,17 +400,31 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                           _openPet(id, petName: row['name'] as String?);
                         },
                       ),
+                      if (_isCabinetStaff)
+                        MessagingScreen(
+                          key: const Key('pro_light_messaging'),
+                          embedded: true,
+                          active: _index == _staffMessagesIndex,
+                          staffMode: true,
+                          staffClients: _staffClientMaps,
+                          staffPets: _staffPetMaps,
+                        ),
                       _SettingsTab(onLogout: widget.onLogout),
                     ],
                   ),
         bottomNavigationBar: NavigationBar(
           key: const Key('pro_light_nav'),
-          selectedIndex: _index,
+          selectedIndex: _index.clamp(0, _settingsIndex),
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: [
             NavigationDestination(icon: const Icon(Icons.event), label: l10n.proLightAgenda),
             NavigationDestination(icon: const Icon(Icons.people), label: l10n.proLightClients),
             NavigationDestination(icon: const Icon(Icons.pets), label: l10n.proLightPets),
+            if (_isCabinetStaff)
+              NavigationDestination(
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: l10n.vetMessaging,
+              ),
             NavigationDestination(
               icon: const Icon(Icons.settings_outlined),
               label: l10n.proLightSettings,

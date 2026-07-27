@@ -1336,7 +1336,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get messageChoosePro => 'Zorgprofessional';
 
   @override
+  String get messageChooseClient => 'Cliënt';
+
+  @override
   String get messageChoosePet => 'Betrokken dier';
+
+  @override
+  String get messageChoosePetOptional => 'Dier (optioneel)';
+
+  @override
+  String get messageGeneralThread => 'Algemeen gesprek';
 
   @override
   String get messageStartConversation => 'Starten';

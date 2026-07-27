@@ -219,6 +219,7 @@ Compte : `vet.demo@petsfollow.test`
 | C6.5 | P2 | Permissions | read vs write_notes vs full | Notes / messages masqués selon ACL |
 | C6.6 | P2 | Révoquer share | DELETE share | Disparaît côté care_pro |
 | C6.7 | P2 | CR visite Nuxt | Rapport + finalize (si UI) | Draft → final ; audio purgé |
+| C6.8 | P1 | CR multi-auteurs | Visite avec CR terrain + cabinet → `/calendar` | Liste auteurs ; peer lecture seule ; « Mon CR » éditable |
 
 ---
 
@@ -377,7 +378,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| G1 | P0 | Shell | Login farrier | Agenda · Clients · Pets · Settings |
+| G1 | P0 | Shell | Login farrier | Agenda · Clients · Pets · Settings (pas Messages) |
+| G1b | P0 | Shell staff | Login `vet.demo` | Agenda · Clients · Pets · **Messages** · Settings |
 | G2 | P0 | Agenda filtres | Aujourd’hui / 7j / Tout | Tri ASC fenêtres courtes ; hors done/cancelled |
 | G3 | P1 | Marquer Fait | Bouton Fait (write_notes) | Statut done |
 | G4 | P1 | Maps / GPS | Ouvrir adresse visite | App Maps |
@@ -388,7 +390,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | G9 | P1 | Audio PHI | Après finalize | Audio inaccessible ; pas d’URL `/media/` publique |
 | G10 | P2 | Permission read | Share read-only | Pas de Fait / CR write |
 | G11 | P2 | Settings | Specialty, locale, logout | OK |
-| G12 | P2 | vet_light | Login `vetlight.demo` | Même shell ; prompts CR specialty |
+| G12 | P2 | vet_light | Login `vetlight.demo` | Même shell ; prompts CR specialty ; **pas** Messages |
+| G13 | P1 | Messagerie staff | `vet.demo` → Messages → compose / envoi | Thread client ; saisie OK ; pas de lock « lier un véto » |
 
 ---
 
@@ -428,7 +431,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
 | I9 | Offre sync | Landing `#produits` + `/produits` | Même prix / inclus |
 
-**Hors scope manuel (non livré)** : pharmacie BE ([27](27-PHARMACIE-BELGIQUE.md)), simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)).
+**Pharmacie BE (dev)** : stock + DAF/PDF sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` / `TestPharmacyDAF*` ([28](28-PLAN-STOCK-PEREMPTION.md)) ; Playwright P0 et workers VAMReg encore hors scope. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
 
 ---
 

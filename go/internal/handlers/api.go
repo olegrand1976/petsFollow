@@ -196,6 +196,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
 		pr.Put("/visits/{visitID}/preconsult", a.putVisitPreconsult)
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
+		pr.Get("/visits/{visitID}/reports", a.listVisitReports)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)
 		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)

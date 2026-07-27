@@ -1340,7 +1340,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messageChoosePro => 'Profesional de cuidados';
 
   @override
+  String get messageChooseClient => 'Cliente';
+
+  @override
   String get messageChoosePet => 'Animal concernido';
+
+  @override
+  String get messageChoosePetOptional => 'Animal (opcional)';
+
+  @override
+  String get messageGeneralThread => 'Conversación general';
 
   @override
   String get messageStartConversation => 'Empezar';

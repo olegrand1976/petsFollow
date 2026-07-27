@@ -9,7 +9,7 @@
 - Marquage lu thread / read-all.
 - **Mode indisponible** véto : `PUT/GET /vet/availability` — le client voit l’indisponibilité.
 
-Surfaces : Pro `/messages` · Flutter messagerie animal/véto.
+Surfaces : Pro `/messages` · Flutter client (onglet Messages) · Flutter Pro Light **staff** (`vet` / assistant / secretary — onglet Messages). Hors scope V1 : messagerie `care_pro` / VetLight specialty.
 
 ## Notifications email (livré)
 

@@ -2314,7 +2314,10 @@
     },
     "requestPreconsult": "Request a pre-consultation",
     "audioConsentClientCheck": "I have obtained the client's oral consent to record",
-    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication)."
+    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication).",
+    "reportAuthorMine": "My report",
+    "reportAuthorPeer": "Other author",
+    "reportReadOnlyPeer": "Report from another professional — read-only. Switch back to “My report” to edit yours."
   },
   "manager": {
     "dashboard": {

@@ -29,6 +29,28 @@ func TestMessagingVetClientHappyPath(t *testing.T) {
 		t.Fatalf("missing thread id: %#v", thread)
 	}
 
+	// Practice list should expose clientName (and petName when pet-scoped).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/messaging/threads", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list threads vet %d %#v", code, env)
+	}
+	listed, _ := env["data"].([]any)
+	foundThread := false
+	for _, row := range listed {
+		m, _ := row.(map[string]any)
+		if m["id"] != threadID {
+			continue
+		}
+		foundThread = true
+		if name, _ := m["clientName"].(string); name == "" {
+			t.Fatalf("expected clientName on practice thread, got %#v", m)
+		}
+		break
+	}
+	if !foundThread {
+		t.Fatalf("ensured thread not in practice list: %#v", listed)
+	}
+
 	body := "integration messaging hello"
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/messaging/threads/"+threadID+"/messages", vetTok, map[string]any{
 		"body": body,
@@ -60,6 +82,56 @@ func TestMessagingVetClientHappyPath(t *testing.T) {
 	if !found {
 		t.Fatalf("client did not see vet message: %#v", raw)
 	}
+
+	t.Run("ensure_with_pet_exposes_petName", func(t *testing.T) {
+		code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+		if code != http.StatusOK {
+			t.Fatalf("list client pets %d %#v", code, env)
+		}
+		pets, _ := env["data"].([]any)
+		if len(pets) == 0 {
+			t.Fatal("expected at least one pet for client.demo")
+		}
+		pet, _ := pets[0].(map[string]any)
+		petID, _ := pet["id"].(string)
+		if petID == "" {
+			t.Fatalf("missing pet id: %#v", pet)
+		}
+
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/messaging/threads", vetTok, map[string]any{
+			"clientUserId": clientID,
+			"petId":        petID,
+		})
+		if code != http.StatusOK {
+			t.Fatalf("ensure thread with pet %d %#v", code, env)
+		}
+		petThread := dataMap(t, env)
+		petThreadID, _ := petThread["id"].(string)
+		if petThreadID == "" {
+			t.Fatalf("missing pet-scoped thread id: %#v", petThread)
+		}
+
+		code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/messaging/threads", vetTok, nil)
+		if code != http.StatusOK {
+			t.Fatalf("list threads vet %d %#v", code, env)
+		}
+		listed, _ := env["data"].([]any)
+		found := false
+		for _, row := range listed {
+			m, _ := row.(map[string]any)
+			if m["id"] != petThreadID {
+				continue
+			}
+			found = true
+			if name, _ := m["petName"].(string); name == "" {
+				t.Fatalf("expected non-empty petName on pet-scoped thread, got %#v", m)
+			}
+			break
+		}
+		if !found {
+			t.Fatalf("pet-scoped thread not in practice list: %#v", listed)
+		}
+	})
 
 	// ACL : client orphelin ne peut pas lire le thread d'un autre.
 	orphanEmail := uniqueEmail("msg-orphan")

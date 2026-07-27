@@ -1847,7 +1847,10 @@
     },
     "requestPreconsult": "Richiedi una pre-consulenza",
     "audioConsentClientCheck": "Ho ottenuto l'accordo orale da parte del cliente per la registrazione",
-    "reportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaco proposto)."
+    "reportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaco proposto).",
+    "reportAuthorMine": "Il mio CR",
+    "reportAuthorPeer": "Altro autore",
+    "reportReadOnlyPeer": "CR di un altro professionista — sola lettura. Torna a « Il mio CR » per modificare il tuo."
   },
   "commissions": {
     "title": "Le mie ricompense",

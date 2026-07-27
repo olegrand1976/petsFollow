@@ -235,7 +235,33 @@
         </div>
         <div class="pro-field pro-mb-md">
           <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
-          <p class="pro-hint" data-testid="visit-report-ai-banner">{{ $t('calendar.reportAiProposalBanner') }}</p>
+          <div
+            v-if="reportAuthors.length > 1"
+            class="pro-flex-gap visit-report-authors"
+            data-testid="visit-report-authors"
+            style="margin-bottom: 0.5rem; flex-wrap: wrap"
+          >
+            <ProButton
+              v-for="author in reportAuthors"
+              :key="author.authorUserId || author.id"
+              :variant="selectedReportAuthorId === author.authorUserId ? 'primary' : 'secondary'"
+              :test-id="author.mine ? 'visit-report-author-mine' : `visit-report-author-${author.authorUserId}`"
+              @click="selectReportAuthor(author)"
+            >
+              {{ author.mine
+                ? $t('calendar.reportAuthorMine')
+                : (author.authorFullName || $t('calendar.reportAuthorPeer')) }}
+              <span v-if="author.status" class="pro-hint"> · {{ author.status }}</span>
+            </ProButton>
+          </div>
+          <p
+            v-if="viewingPeerReport"
+            class="pro-hint"
+            data-testid="visit-report-peer-readonly"
+          >
+            {{ $t('calendar.reportReadOnlyPeer') }}
+          </p>
+          <p v-else class="pro-hint" data-testid="visit-report-ai-banner">{{ $t('calendar.reportAiProposalBanner') }}</p>
           <textarea
             id="visit-report-body"
             v-model="reportBody"
@@ -243,9 +269,10 @@
             rows="6"
             data-testid="visit-report-body"
             :placeholder="$t('calendar.reportHint')"
-            :disabled="reportBusy || reportStatus === 'final'"
+            :disabled="reportBusy || reportStatus === 'final' || viewingPeerReport"
+            :readonly="viewingPeerReport"
           />
-          <div class="pro-flex-gap" style="margin-top: 0.5rem">
+          <div v-if="!viewingPeerReport" class="pro-flex-gap" style="margin-top: 0.5rem">
             <ProButton
               variant="secondary"
               :disabled="reportBusy || reportStatus === 'final'"
@@ -459,6 +486,23 @@ const reportImproved = ref('')
 const reportStatus = ref('')
 const reportBusy = ref(false)
 const reportMsg = ref('')
+type ReportAuthor = {
+  id?: string
+  authorUserId?: string
+  authorFullName?: string
+  mine?: boolean
+  status?: string
+  bodyText?: string
+  transcriptText?: string
+  improvedText?: string
+}
+const reportAuthors = ref<ReportAuthor[]>([])
+const selectedReportAuthorId = ref('')
+const viewingPeerReport = computed(() => {
+  if (!selectedReportAuthorId.value || reportAuthors.value.length === 0) return false
+  const selected = reportAuthors.value.find(a => a.authorUserId === selectedReportAuthorId.value)
+  return Boolean(selected && !selected.mine)
+})
 const preconsult = ref<{
   status?: string
   answers?: {
@@ -681,11 +725,86 @@ function openVisitDetail(v: CalendarVisit) {
   reportImproved.value = ''
   reportStatus.value = ''
   reportMsg.value = ''
+  reportAuthors.value = []
+  selectedReportAuthorId.value = ''
   preconsult.value = null
   focusVisitId.value = v.id
   detailOpen.value = true
-  void loadVisitReport(v.id)
+  void hydrateVisitReports(v.id)
   void loadVisitPreconsult(v.id)
+}
+
+function reportHasContent(author: ReportAuthor | null | undefined) {
+  if (!author) return false
+  return Boolean(
+    (author.bodyText || '').trim()
+    || (author.transcriptText || '').trim()
+    || (author.improvedText || '').trim(),
+  )
+}
+
+/** Load mine (ensure) then list authors; prefer peer content when mine is empty. */
+async function hydrateVisitReports(visitId: string) {
+  let minePayload: Record<string, unknown> | null = null
+  try {
+    const res: any = await $fetch(`/api/visits/${visitId}/report`)
+    minePayload = (res.data ?? res) as Record<string, unknown>
+  } catch {
+    minePayload = null
+  }
+
+  try {
+    const res: any = await $fetch(`/api/visits/${visitId}/reports`)
+    const list = (res.data ?? res) as ReportAuthor[]
+    reportAuthors.value = Array.isArray(list) ? list : []
+  } catch {
+    reportAuthors.value = []
+  }
+
+  const mine = reportAuthors.value.find(a => a.mine)
+  const peerWithContent = reportAuthors.value.find(a => !a.mine && reportHasContent(a))
+
+  if (mine && reportHasContent(mine)) {
+    selectedReportAuthorId.value = mine.authorUserId || ''
+    applyReportPayload(minePayload)
+    return
+  }
+  if (peerWithContent) {
+    selectedReportAuthorId.value = peerWithContent.authorUserId || ''
+    applyPeerReport(peerWithContent)
+    return
+  }
+  if (mine?.authorUserId) {
+    selectedReportAuthorId.value = mine.authorUserId
+  }
+  applyReportPayload(minePayload)
+}
+
+async function loadVisitReports(visitId: string) {
+  try {
+    const res: any = await $fetch(`/api/visits/${visitId}/reports`)
+    const list = (res.data ?? res) as ReportAuthor[]
+    reportAuthors.value = Array.isArray(list) ? list : []
+  } catch {
+    reportAuthors.value = []
+  }
+}
+
+function applyPeerReport(author: ReportAuthor) {
+  reportBody.value = author.bodyText || ''
+  reportPersistedBody.value = author.bodyText || ''
+  reportTranscript.value = author.transcriptText || ''
+  reportImproved.value = author.improvedText || ''
+  reportStatus.value = author.status || ''
+}
+
+function selectReportAuthor(author: ReportAuthor) {
+  selectedReportAuthorId.value = author.authorUserId || ''
+  if (author.mine) {
+    if (selectedVisit.value?.id) void loadVisitReport(selectedVisit.value.id)
+    return
+  }
+  applyPeerReport(author)
 }
 
 async function loadVisitPreconsult(visitId: string) {
@@ -704,6 +823,8 @@ async function loadVisitPreconsult(visitId: string) {
 }
 
 async function loadVisitReport(visitId: string) {
+  // Never overwrite a peer view with the viewer's own draft.
+  if (viewingPeerReport.value) return
   try {
     const res: any = await $fetch(`/api/visits/${visitId}/report`)
     applyReportPayload(res.data ?? res)
@@ -755,6 +876,7 @@ async function saveVisitReport() {
     })
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
+    if (selectedVisit.value?.id) void loadVisitReports(selectedVisit.value.id)
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
@@ -776,6 +898,7 @@ async function improveVisitReport() {
     })
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportImproved')
+    if (selectedVisit.value?.id) void loadVisitReports(selectedVisit.value.id)
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
@@ -797,6 +920,7 @@ async function finalizeVisitReport() {
     })
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportFinalized')
+    if (selectedVisit.value?.id) void loadVisitReports(selectedVisit.value.id)
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {

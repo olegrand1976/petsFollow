@@ -51,7 +51,8 @@ Admin `/admin/users` : création **client**, **véto**, **care_pro** (spécialit
 
 ## Pro light Flutter
 
-Tabs : Agenda · Clients · (drill-down animal / docs / CR) · Settings.
+Tabs care_pro : Agenda · Clients · Animaux · Settings.
+Tabs staff cabinet (`vet` / assistant / secretary) : Agenda · Clients · Animaux · **Messages** · Settings.
 
 ## Agenda GPS
 
@@ -62,7 +63,7 @@ Tournées (Vague O) : agenda Flutter pro light — filtres **Aujourd’hui** / *
 
 ## Statut
 
-Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
+Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Messagerie Pro Light : **staff cabinet** uniquement. Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
 
 ## CR visite + IA
 
@@ -78,6 +79,7 @@ Sections CR vétérinaire (improve) :
 - Care_pro : templates specialty (farrier/physio/…) sans section médication véto
 
 Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`) et Flutter Pro Light.
+Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 `POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.
 Audio CR : **pas** servi via `/media/` public (`visit-reports/` bloqué en local via `DenySensitivePrefixes`) ; stream auth `GET /visits/{id}/report/audio` (refusé si CR `final`) ; **suppression à la finalisation** (Clear DB seulement après Delete média OK). Sur GCS, pas d’URL publique retournée pour ce prefix (GCP refuse une condition IAM sur `allUsers`).

@@ -25,11 +25,12 @@ Se connecter en care pro / VetLight, voir l’agenda du jour et marquer une visi
 ## Étapes
 
 1. Se connecter avec `farrier.demo` (ou `vetlight.demo`).
-2. Vérifier le shell **Pro Light** (Agenda / Clients / Animaux / Réglages — pas les 5 onglets client).
+2. Vérifier le shell **Pro Light** (Agenda / Clients / Animaux / Réglages — **pas** d’onglet Messages pour `care_pro` ; le staff cabinet `vet` a en plus **Messages**).
 3. Ouvrir **Agenda** → vue **Aujourd’hui** (ou équivalent).
 4. Ouvrir une visite / créneau si présent.
 5. Marquer **Fait** (ou action équivalente).
-6. (Optionnel) Consulter une fiche animal partagée / notes.
+6. (Optionnel) Consulter une fiche animal partagée / notes / CR (dictée + consentement).
+7. (Staff only) Si login `vet.demo` : onglet **Messages** → threads clients visibles + composer.
 
 ## Résultat attendu
 

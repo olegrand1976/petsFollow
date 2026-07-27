@@ -150,7 +150,7 @@ Une **app mobile Pro Light gratuite** pour travailler **sur le terrain** :
 |---|--------|----------|
 | Surface | **App Web** cabinet | **App mobile** terrain |
 | Prix | SaaS payant | Gratuit |
-| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité |
+| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité ; messagerie si compte staff cabinet |
 | Compte | Rôle `vet` | Même compte `vet` **ou** `care_pro` + specialty |
 | Messagerie | Oui (cœur) | Hors scope care_pro ; véto utilise surtout le Web pour le chat |
 

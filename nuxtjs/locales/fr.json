@@ -1891,7 +1891,10 @@
     },
     "requestPreconsult": "Demander une pré-consultation",
     "audioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
-    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés)."
+    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés).",
+    "reportAuthorMine": "Mon CR",
+    "reportAuthorPeer": "Autre auteur",
+    "reportReadOnlyPeer": "CR d’un autre professionnel — lecture seule. Repassez sur « Mon CR » pour éditer le vôtre."
   },
   "commissions": {
     "title": "Mes rétributions",

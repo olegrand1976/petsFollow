@@ -166,3 +166,48 @@ func (s *Store) EnsureVisitReport(ctx context.Context, visitID, authorUserID str
 	}
 	return s.UpsertVisitReport(ctx, visitID, authorUserID, "")
 }
+
+// VisitReportSummary is a visit report with author display name for multi-author listing.
+type VisitReportSummary struct {
+	VisitReport
+	AuthorFullName string `json:"authorFullName,omitempty"`
+	Mine           bool   `json:"mine"`
+}
+
+// ListVisitReportsForVisit returns all reports for a visit (any author), newest first.
+func (s *Store) ListVisitReportsForVisit(ctx context.Context, visitID, viewerUserID string) ([]VisitReportSummary, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			r.id::text, r.visit_id::text, r.author_user_id::text, r.status, COALESCE(r.body_text,''),
+			COALESCE(r.audio_url,''), COALESCE(r.audio_object_key,''), COALESCE(r.transcript_text,''),
+			COALESCE(r.improved_text,''), r.client_audio_consent_at, r.created_at, r.updated_at, r.finalized_at,
+			COALESCE(NULLIF(TRIM(u.full_name), ''), u.email) AS author_full_name
+		FROM visits.visit_reports r
+		JOIN identity.users u ON u.id = r.author_user_id
+		WHERE r.visit_id = $1
+		ORDER BY r.updated_at DESC`, visitID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []VisitReportSummary
+	for rows.Next() {
+		var sum VisitReportSummary
+		var r VisitReport
+		if err := rows.Scan(
+			&r.ID, &r.VisitID, &r.AuthorUserID, &r.Status, &r.BodyText,
+			&r.AudioURL, &r.AudioObjectKey, &r.TranscriptText, &r.ImprovedText,
+			&r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
+			&sum.AuthorFullName,
+		); err != nil {
+			return nil, err
+		}
+		sum.VisitReport = r
+		sum.Mine = r.AuthorUserID == viewerUserID
+		out = append(out, sum)
+	}
+	if out == nil {
+		out = []VisitReportSummary{}
+	}
+	return out, rows.Err()
+}

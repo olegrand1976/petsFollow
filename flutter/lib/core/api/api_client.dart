@@ -1360,14 +1360,23 @@ class ApiClient {
   /// Alias of [getMessageThreads] — prefer this or [getMessageThreads], not a raw duplicate.
   Future<List<MessageThread>> getThreads() => getMessageThreads();
 
+  /// Client: [practiceId] + [petId]. Staff: [clientUserId] (+ optional [petId]).
   Future<MessageThread> ensureMessageThread({
-    required String practiceId,
-    required String petId,
+    String? practiceId,
+    String? petId,
+    String? clientUserId,
   }) async {
-    final res = await dio.post('/api/v1/messaging/threads', data: {
-      'practiceId': practiceId,
-      'petId': petId,
-    });
+    final data = <String, dynamic>{};
+    final cid = clientUserId?.trim() ?? '';
+    if (cid.isNotEmpty) {
+      data['clientUserId'] = cid;
+      final pid = petId?.trim() ?? '';
+      if (pid.isNotEmpty) data['petId'] = pid;
+    } else {
+      data['practiceId'] = practiceId?.trim() ?? '';
+      data['petId'] = petId?.trim() ?? '';
+    }
+    final res = await dio.post('/api/v1/messaging/threads', data: data);
     return MessageThread.fromJson(Map<String, dynamic>.from(res.data['data'] as Map));
   }
 

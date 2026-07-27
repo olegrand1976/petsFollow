@@ -157,6 +157,7 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 const threadSummarySelect = `
 		SELECT t.id::text, t.practice_id::text, t.client_user_id::text, t.vet_user_id::text,
 			COALESCE(t.pet_id::text, ''), u.full_name, u.email,
+			COALESCE(p.name, ''),
 			COALESCE((
 				SELECT CASE
 					WHEN COALESCE(m.body, '') <> '' THEN LEFT(m.body, 120)
@@ -172,7 +173,8 @@ const threadSummarySelect = `
 				WHERE m.thread_id = t.id AND m.sender_user_id = t.client_user_id AND m.read_at IS NULL
 			), 0)
 		FROM messaging.threads t
-		JOIN identity.users u ON u.id = t.client_user_id`
+		JOIN identity.users u ON u.id = t.client_user_id
+		LEFT JOIN pets.pets p ON p.id = t.pet_id`
 
 func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]ThreadSummary, error) {
 	rows, err := s.pool.Query(ctx, threadSummarySelect+`
@@ -250,7 +252,8 @@ func scanThreadSummaries(rows pgx.Rows) ([]ThreadSummary, error) {
 		var t ThreadSummary
 		if err := rows.Scan(
 			&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID,
-			&t.ClientName, &t.ClientEmail, &t.LastMessagePreview, &t.UnreadCount,
+			&t.ClientName, &t.ClientEmail, &t.PetName,
+			&t.LastMessagePreview, &t.UnreadCount,
 		); err != nil {
 			return nil, err
 		}

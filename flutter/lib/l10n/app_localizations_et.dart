@@ -1337,7 +1337,16 @@ class AppLocalizationsEt extends AppLocalizations {
   String get messageChoosePro => 'Hooldusspetsialist';
 
   @override
+  String get messageChooseClient => 'Klient';
+
+  @override
   String get messageChoosePet => 'Asjaomane loom';
+
+  @override
+  String get messageChoosePetOptional => 'Loom (valikuline)';
+
+  @override
+  String get messageGeneralThread => 'Üldine vestlus';
 
   @override
   String get messageStartConversation => 'Alusta';

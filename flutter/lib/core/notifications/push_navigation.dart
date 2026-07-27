@@ -20,12 +20,21 @@ class PushNavigation {
 
   final ValueNotifier<int> messageRefreshTick = ValueNotifier(0);
 
+  /// Thread id received while no [onOpenMessageThread] handler was bound yet
+  /// (e.g. Pro Light still loading). Consumed when MessagingScreen mounts.
+  String? pendingMessageThreadId;
+
   void selectTab(int index) => onSelectTab?.call(index);
 
   void openMessages({String? threadId}) {
     selectTab(tabMessages);
     if (threadId != null && threadId.isNotEmpty) {
-      onOpenMessageThread?.call(threadId);
+      final open = onOpenMessageThread;
+      if (open != null) {
+        open(threadId);
+      } else {
+        pendingMessageThreadId = threadId;
+      }
     }
     bumpMessageRefresh();
   }

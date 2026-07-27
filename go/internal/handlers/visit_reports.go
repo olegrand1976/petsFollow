@@ -119,6 +119,65 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
+func (a *API) listVisitReports(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if id.Role != kernel.RoleCarePro && !(kernel.IsPracticeStaff(id.Role) && a.allowPracticePerm(r, id, "pets.read")) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	visitID := chi.URLParam(r, "visitID")
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	pet, err := a.store.GetPet(r.Context(), visit.PetID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	ident := store.IdentityOf(id.UserID, id.Role, id.PracticeID)
+	canRead, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermRead)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !canRead {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	reports, err := a.store.ListVisitReportsForVisit(r.Context(), visitID, id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	out := make([]any, 0, len(reports))
+	for _, sum := range reports {
+		item := redactVisitReportAudio(sum.VisitReport)
+		out = append(out, map[string]any{
+			"id":                   item.ID,
+			"visitId":              item.VisitID,
+			"authorUserId":         item.AuthorUserID,
+			"authorFullName":       sum.AuthorFullName,
+			"mine":                 sum.Mine,
+			"status":               item.Status,
+			"bodyText":             item.BodyText,
+			"audioUrl":             item.AudioURL,
+			"transcriptText":       item.TranscriptText,
+			"improvedText":         item.ImprovedText,
+			"clientAudioConsentAt": item.ClientAudioConsentAt,
+			"createdAt":            item.CreatedAt,
+			"updatedAt":            item.UpdatedAt,
+			"finalizedAt":          item.FinalizedAt,
+		})
+	}
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
 func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {

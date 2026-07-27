@@ -2314,7 +2314,10 @@
     },
     "requestPreconsult": "Solicitar preconsulta",
     "audioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
-    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación)."
+    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación).",
+    "reportAuthorMine": "Mi informe",
+    "reportAuthorPeer": "Otro autor",
+    "reportReadOnlyPeer": "Informe de otro profesional — solo lectura. Vuelva a « Mi informe » para editar el suyo."
   },
   "manager": {
     "dashboard": {

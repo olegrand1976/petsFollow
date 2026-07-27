@@ -2314,7 +2314,10 @@
     },
     "requestPreconsult": "Küsi eelkonsultatsiooni",
     "audioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
-    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid)."
+    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid).",
+    "reportAuthorMine": "Minu raport",
+    "reportAuthorPeer": "Teine autor",
+    "reportReadOnlyPeer": "Teise spetsialisti raport — ainult lugemiseks. Mine tagasi « Minu raport », et enda oma muuta."
   },
   "manager": {
     "dashboard": {

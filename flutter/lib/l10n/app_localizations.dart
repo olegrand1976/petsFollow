@@ -2536,11 +2536,29 @@ abstract class AppLocalizations {
   /// **'Professionnel de soins'**
   String get messageChoosePro;
 
+  /// No description provided for @messageChooseClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Client'**
+  String get messageChooseClient;
+
   /// No description provided for @messageChoosePet.
   ///
   /// In fr, this message translates to:
   /// **'Animal concerné'**
   String get messageChoosePet;
+
+  /// No description provided for @messageChoosePetOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal (optionnel)'**
+  String get messageChoosePetOptional;
+
+  /// No description provided for @messageGeneralThread.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation générale'**
+  String get messageGeneralThread;
 
   /// No description provided for @messageStartConversation.
   ///

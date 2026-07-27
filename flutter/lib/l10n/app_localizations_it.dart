@@ -1343,7 +1343,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messageChoosePro => 'Professionista della cura';
 
   @override
+  String get messageChooseClient => 'Cliente';
+
+  @override
   String get messageChoosePet => 'Animale interessato';
+
+  @override
+  String get messageChoosePetOptional => 'Animale (opzionale)';
+
+  @override
+  String get messageGeneralThread => 'Conversazione generale';
 
   @override
   String get messageStartConversation => 'Avvia';

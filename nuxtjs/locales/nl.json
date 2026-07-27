@@ -2314,7 +2314,10 @@
     },
     "requestPreconsult": "Preconsultatie vragen",
     "audioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
-    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie)."
+    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie).",
+    "reportAuthorMine": "Mijn verslag",
+    "reportAuthorPeer": "Andere auteur",
+    "reportReadOnlyPeer": "Verslag van een andere professional — alleen lezen. Schakel terug naar « Mijn verslag » om het uwe te bewerken."
   },
   "manager": {
     "dashboard": {
