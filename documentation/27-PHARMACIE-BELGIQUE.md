@@ -3,6 +3,8 @@
 Document de **mise en place** (architecture, modèle, API, infra, sprints).  
 **Statut** : spécification — **non implémenté** dans le code au moment de la rédaction.
 
+Plan d’exécution stock + **péremption** (seuils, quarantaine, digests) : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) — décisions figées 2026-07-27.
+
 Ne confondre pas avec l’addon **Care+** (rappels médicaments côté client Flutter) : ce module est une **pharmacie cabinet** (Pro Nuxt), multi-tenant `practice_id`, alignée sur les contraintes belges (CNK / AFMPS, DAF, VAMReg).
 
 ---
