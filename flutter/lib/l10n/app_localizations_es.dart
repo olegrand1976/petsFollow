@@ -1843,4 +1843,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Email no válido.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Este historial contiene datos de salud: informes de visita, cartilla sanitaria y documentos. El enlace es válido 24 h y cualquiera que lo tenga podrá consultarlos.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Acepto compartir estos datos de salud con este profesional.';
 }

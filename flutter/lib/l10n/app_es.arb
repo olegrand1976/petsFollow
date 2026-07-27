@@ -687,5 +687,7 @@
   "sendDossierEmailHint": "vet@clinica.es",
   "sendDossierConfirm": "Enviar",
   "sendDossierSuccess": "Historial enviado — enlace válido 24 h.",
-  "sendDossierInvalidEmail": "Email no válido."
+  "sendDossierInvalidEmail": "Email no válido.",
+  "sendDossierPhiWarning": "Este historial contiene datos de salud: informes de visita, cartilla sanitaria y documentos. El enlace es válido 24 h y cualquiera que lo tenga podrá consultarlos.",
+  "sendDossierPhiConsent": "Acepto compartir estos datos de salud con este profesional."
 }

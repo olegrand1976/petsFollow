@@ -1839,4 +1839,12 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Vigane e-posti aadress.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'See toimik sisaldab terviseandmeid: visiidiaruanded, tervisekaart ja dokumendid. Link kehtib 24 tundi ja igaüks, kellel see on, pääseb neile ligi.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Nõustun jagama neid terviseandmeid selle spetsialistiga.';
 }

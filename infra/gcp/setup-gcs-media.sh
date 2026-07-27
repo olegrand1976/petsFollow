@@ -45,6 +45,27 @@ gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
   --role="roles/storage.objectViewer" \
   --quiet >/dev/null 2>&1 || true
 
+# Filet de secours sur les ZIP de partage de dossier (PHI) : le token expire à 24 h
+# et la purge applicative les efface, mais si les deux échouent le bucket nettoie.
+# Attention : --lifecycle-file remplace TOUTES les règles du bucket.
+echo "→ Lifecycle : suppression de dossier-shares/** au-delà de 2 jours"
+LIFECYCLE_FILE="$(mktemp)"
+trap 'rm -f "$LIFECYCLE_FILE"' EXIT
+cat >"$LIFECYCLE_FILE" <<'EOF'
+{
+  "rule": [
+    {
+      "action": { "type": "Delete" },
+      "condition": { "age": 2, "matchesPrefix": ["dossier-shares/"] }
+    }
+  ]
+}
+EOF
+gcloud storage buckets update "gs://${BUCKET}" \
+  --project="$GCP_PROJECT_ID" \
+  --lifecycle-file="$LIFECYCLE_FILE" \
+  --quiet >/dev/null
+
 echo ""
 echo "Configurer Cloud Run API :"
 echo "  GCS_MEDIA_BUCKET=${BUCKET}"

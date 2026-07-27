@@ -14,7 +14,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | HR keys start/validate | · | ✓ | · | `heart_rate_validate_keys_test` |
 | Book visit | · | ✓ | · | `book_visit_screen_test` |
 | Manage subscription portal | · | ✓ | · | `pet_manage_subscription_test` |
-| Send pet dossier to pro | · | ✓ | · | `pet_send_dossier_test` |
+| Send pet dossier to pro | · | ✓ | · | `pet_send_dossier_test` (consentement PHI requis ; fiche + dialogue sans débordement en 360 dp clavier ouvert) |
 | New pet → save without payment / pay CTA | · | ✓ | ✓ | `pet_form_screen_test` sticky save + skipCheckout + pop/snackbar ; smoke create→list |
 | Edit pet → puce + n° carnet | · | ✓ | · | `pet_edit_screen_test` PUT microchip/healthBook |
 | New pet → sans cabinet (post-save link vet) | · | ✓ | · | `PetCreateResult` + snack host ; dialog Home seulement si déjà des vétos (`hasLinkedVets`) ; sinon bandeau |

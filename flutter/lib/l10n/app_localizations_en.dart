@@ -1831,4 +1831,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Invalid email address.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'This file contains health data: visit reports, health book and documents. The link stays valid for 24h and anyone holding it can open them.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'I agree to share this health data with this professional.';
 }

@@ -687,5 +687,7 @@
   "sendDossierEmailHint": "vet@kliinik.ee",
   "sendDossierConfirm": "Saada",
   "sendDossierSuccess": "Toimik saadetud — link kehtib 24 tundi.",
-  "sendDossierInvalidEmail": "Vigane e-posti aadress."
+  "sendDossierInvalidEmail": "Vigane e-posti aadress.",
+  "sendDossierPhiWarning": "See toimik sisaldab terviseandmeid: visiidiaruanded, tervisekaart ja dokumendid. Link kehtib 24 tundi ja igaüks, kellel see on, pääseb neile ligi.",
+  "sendDossierPhiConsent": "Nõustun jagama neid terviseandmeid selle spetsialistiga."
 }

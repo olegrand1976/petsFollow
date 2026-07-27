@@ -166,4 +166,9 @@ BAD=$(curl -s -o /tmp/pf-smoke-bad-login.json -w '%{http_code}' -X POST "$API/ap
   -d '{"email":"vet.demo@petsfollow.test","password":"WrongPass999!"}')
 test "$BAD" = "401"
 
-echo "OK — smoke MVP + billing + auth reset + register-client + shares/media + commercial + manager passed"
+# H13 — surface publique partage de dossier (route montée ; token inconnu → 404)
+DOSSIER=$(curl -s -o /tmp/pf-smoke-dossier.json -w '%{http_code}' \
+  "$API/api/v1/public/pet-dossier/smoke-inconnu-$(date +%s)")
+test "$DOSSIER" = "404"
+
+echo "OK — smoke MVP + billing + auth reset + register-client + shares/media + commercial + manager + dossier public passed"

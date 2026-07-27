@@ -27,10 +27,20 @@ Environnement : **staging** (ou seed local).
 | Commercial Camille | `commercial.demo@petsfollow.test` | Web Commercial | CO-*, X-07 |
 | Manager | `commercial.manager@petsfollow.test` | Web Manager | CM-01 |
 | Admin | `admin.demo@petsfollow.test` | Web Admin | AD-01 |
-| Client riche | `client.demo@petsfollow.test` | Flutter Client | CL-01/03, X-01…03, X-06 (Spirit seed) |
+| Client riche | `client.demo@petsfollow.test` | Flutter Client | CL-01/03, X-01…03, X-06 (Spirit seed), X-08 |
 | Client vide | `client.vide@petsfollow.test` | Flutter Client | **CL-02 uniquement** (**Destructif**) |
 
 > **Ne pas** réutiliser `client.vide` pour le lien cabinet (`UC-X-04`) : utiliser un **email jetable** (voir X-04).
+
+## Téléphones commerciaux seedés
+
+Affichés sur la page de dossier partagé (`UC-X-08`) et modifiables dans `/commercial/settings`. Un commercial sans numéro est bloqué sur `/complete-contact-phone` jusqu'à la saisie.
+
+| Commercial | Téléphone seedé |
+|------------|-----------------|
+| Camille (`commercial.demo@`) | `0470 12 34 56` |
+| Alex (`commercial.demo2@`) | `0471 98 76 54` |
+| Bérénice manager (`commercial.manager@`) | `0472 11 22 33` |
 
 ## Autres comptes seed (hors UC V1)
 

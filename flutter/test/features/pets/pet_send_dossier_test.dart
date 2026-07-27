@@ -77,7 +77,15 @@ void main() {
     ApiClient.instance.userId = null;
   });
 
-  testWidgets('send dossier posts email to API', (tester) async {
+  Future<void> openDialog(WidgetTester tester, {Size? screen}) async {
+    if (screen != null) {
+      tester.view.physicalSize = screen;
+      tester.view.devicePixelRatio = 1.0;
+      // Le champ e-mail a autofocus : le clavier est ouvert dès l'affichage et
+      // ampute la hauteur disponible pour le contenu du dialogue.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      addTearDown(tester.view.reset);
+    }
     final raw = Fixtures.pet(id: petId, name: 'Bella', ownerUserId: userId);
     raw['practiceId'] = 'practice-1';
     final pet = Pet.fromJson(raw);
@@ -89,21 +97,61 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    final l10n = AppLocalizationsFr();
     final key = Key('pet_send_dossier_$petId');
+    if (find.byKey(key).evaluate().isEmpty) {
+      await tester.scrollUntilVisible(find.byKey(key), 240,
+          scrollable: find.byType(Scrollable).first);
+    }
     await tester.ensureVisible(find.byKey(key));
     await tester.pump();
-
-    expect(find.text(l10n.sendDossierToPro), findsOneWidget);
     await tester.tap(find.byKey(key));
     await tester.pumpAndSettle();
-
     expect(find.byKey(const Key('pet_send_dossier_dialog')), findsOneWidget);
+  }
+
+  testWidgets('send dossier posts email to API once consent is given', (tester) async {
+    final l10n = AppLocalizationsFr();
+    await openDialog(tester);
+
+    expect(find.text(l10n.sendDossierPhiWarning), findsOneWidget);
     await tester.enterText(find.byKey(const Key('pet_send_dossier_email')), 'pro@clinic.test');
+    await tester.tap(find.byKey(const Key('pet_send_dossier_consent')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pet_send_dossier_confirm')));
     await tester.pumpAndSettle();
 
     expect(postedEmail, 'pro@clinic.test');
     expect(find.text(l10n.sendDossierSuccess), findsOneWidget);
+  });
+
+  // Données de santé vers un tiers : rien ne part tant que le consentement
+  // explicite n'est pas coché.
+  testWidgets('send dossier stays blocked without consent', (tester) async {
+    await openDialog(tester);
+
+    await tester.enterText(find.byKey(const Key('pet_send_dossier_email')), 'pro@clinic.test');
+    await tester.pumpAndSettle();
+
+    final confirm = tester.widget<FilledButton>(
+      find.byKey(const Key('pet_send_dossier_confirm')),
+    );
+    expect(confirm.onPressed, isNull);
+
+    await tester.tap(find.byKey(const Key('pet_send_dossier_confirm')));
+    await tester.pumpAndSettle();
+
+    expect(postedEmail, isNull);
+    expect(find.byKey(const Key('pet_send_dossier_dialog')), findsOneWidget);
+  });
+
+  // Deux débordements sur la largeur Android la plus courante : le dialogue
+  // allongé par l'avertissement PHI passait sous le clavier (d'où
+  // `scrollable: true`), et l'en-tête « Mes vétérinaires » de l'écran écrasait
+  // son titre à zéro pour loger le bouton (d'où le `Flexible`).
+  testWidgets('pet detail and send dossier dialog fit a 360 dp screen', (tester) async {
+    await openDialog(tester, screen: const Size(360, 560));
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('pet_send_dossier_consent')), findsOneWidget);
   });
 }

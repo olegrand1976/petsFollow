@@ -29,7 +29,7 @@ Montrer qu’un propriétaire peut envoyer le **dossier complet** d’un animal 
 
 1. **App client** — login `client.demo` → ouvrir la fiche d’un animal actif.
 2. Appuyer sur **Envoyer vers un pro**.
-3. Saisir l’e-mail du professionnel destinataire → confirmer.
+3. Lire l’avertissement « données de santé », saisir l’e-mail du professionnel destinataire, **cocher le consentement** (le bouton d’envoi reste grisé sans la case) → confirmer.
 4. Ouvrir l’e-mail reçu : vérifier le ton marketing, le CTA inscription, le **téléphone commercial**, le lien 24 h.
 5. Ouvrir le lien → page `/dossier/...` → **Télécharger le dossier**.
 6. Vérifier le ZIP : `dossier.pdf` (identité, mesures, visites avec **pro consulté**, liens petsFollow, téléphone commercial) + documents / carnet si présents.
@@ -47,6 +47,7 @@ Montrer qu’un propriétaire peut envoyer le **dossier complet** d’un animal 
 | | Résultat |
 |--|----------|
 | CTA fiche animal | OK / KO / N/A |
+| Avertissement PHI + consentement obligatoire | OK / KO / N/A |
 | E-mail reçu | OK / KO / N/A |
 | Téléphone commercial visible (mail + PDF) | OK / KO / N/A |
 | ZIP + dossier.pdf | OK / KO / N/A |

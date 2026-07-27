@@ -1846,4 +1846,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Adresse e-mail invalide.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Ce dossier contient des données de santé : comptes rendus de visite, carnet de santé et documents. Le lien reste valable 24 h et n\'importe qui le possédant pourra les consulter.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'J\'accepte de partager ces données de santé avec ce professionnel.';
 }

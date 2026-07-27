@@ -112,6 +112,11 @@ pf_api_secrets() {
     --secret=petsfollow-ai-module-friction-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},AI_MODULE_FRICTION_SECRET=petsfollow-ai-module-friction-secret:latest"
   fi
+  # Sans ce secret, /internal/retention/run répond 401 : la purge RGPD ne tourne pas.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-retention-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},RETENTION_PURGE_SECRET=petsfollow-retention-secret:latest"
+  fi
   printf '%s' "$secrets"
 }
 

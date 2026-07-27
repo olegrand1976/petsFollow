@@ -3477,6 +3477,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Adresse e-mail invalide.'**
   String get sendDossierInvalidEmail;
+
+  /// No description provided for @sendDossierPhiWarning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce dossier contient des données de santé : comptes rendus de visite, carnet de santé et documents. Le lien reste valable 24 h et n\'importe qui le possédant pourra les consulter.'**
+  String get sendDossierPhiWarning;
+
+  /// No description provided for @sendDossierPhiConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte de partager ces données de santé avec ce professionnel.'**
+  String get sendDossierPhiConsent;
 }
 
 class _AppLocalizationsDelegate

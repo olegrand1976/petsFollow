@@ -687,5 +687,7 @@
   "sendDossierEmailHint": "vet@kliniek.be",
   "sendDossierConfirm": "Versturen",
   "sendDossierSuccess": "Dossier verstuurd — link 24 uur geldig.",
-  "sendDossierInvalidEmail": "Ongeldig e-mailadres."
+  "sendDossierInvalidEmail": "Ongeldig e-mailadres.",
+  "sendDossierPhiWarning": "Dit dossier bevat gezondheidsgegevens: consultverslagen, gezondheidsboekje en documenten. De link blijft 24 uur geldig en iedereen die hem heeft, kan ze inkijken.",
+  "sendDossierPhiConsent": "Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen."
 }

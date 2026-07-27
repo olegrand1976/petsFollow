@@ -1848,4 +1848,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Indirizzo email non valido.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Questa cartella contiene dati sanitari: referti delle visite, libretto sanitario e documenti. Il link resta valido 24 ore e chiunque lo possieda potrà consultarli.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Accetto di condividere questi dati sanitari con questo professionista.';
 }

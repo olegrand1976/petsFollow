@@ -687,5 +687,7 @@
   "sendDossierEmailHint": "vet@clinic.com",
   "sendDossierConfirm": "Send",
   "sendDossierSuccess": "File sent — link valid for 24h.",
-  "sendDossierInvalidEmail": "Invalid email address."
+  "sendDossierInvalidEmail": "Invalid email address.",
+  "sendDossierPhiWarning": "This file contains health data: visit reports, health book and documents. The link stays valid for 24h and anyone holding it can open them.",
+  "sendDossierPhiConsent": "I agree to share this health data with this professional."
 }

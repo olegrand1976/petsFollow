@@ -266,7 +266,8 @@ Compte : `commercial.demo@petsfollow.test`
 | E1.7 | P1 | Commissions | `/commercial/commissions` + payout profile | Montants + profil |
 | E1.8 | P2 | Pitch | `/commercial/pitch` | Contenu offre à jour |
 | E1.9 | P2 | Training IA | `/commercial/training` | Session Gemini (si clé) |
-| E1.10 | P2 | Settings | `/commercial/settings` | Locale / prefs |
+| E1.10 | P2 | Settings | `/commercial/settings` | Locale / prefs + champ téléphone de contact |
+| E1.12 | P1 | Porte téléphone | Commercial sans `contactPhone` → toute page Pro | Redirection `/complete-contact-phone` ; après saisie, retour au tableau de bord ; pages publiques (`/dossier/**`, `/login`) non impactées |
 | E1.11 | P2 | Directory | Prospect `source=directory` | Annuaire partagé |
 
 ### E2 — Commercial manager
@@ -514,7 +515,7 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 ### API (smoke)
 
-`make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline.
+`make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, **H13** `GET /public/pet-dossier/{token}` inconnu → 404.
 
 ### Envoi dossier animal (Go intégration — H13)
 
@@ -534,7 +535,9 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 Bornes anti-DoS de la construction du ZIP (route publique, tout en mémoire) : 25 pièces jointes max et 40 Mio cumulés — au-delà, les pièces sont écartées, jamais tronquées.
 
-Flutter widget : `pet_send_dossier_test` · Nuxt gate : `completeContactPhoneGate.spec.ts` · Playwright mocké : `16-dossier-public.spec.ts` · UC : `UC-X-08`.
+Flutter widget : `pet_send_dossier_test` (envoi bloqué tant que le consentement PHI n'est pas coché ; fiche animal + dialogue sans débordement en 360 dp clavier ouvert) · Nuxt gate : `completeContactPhoneGate.spec.ts` · Playwright mocké : `16-dossier-public.spec.ts` · UC : `UC-X-08`.
+
+Surface publique `/dossier/{token}` : `Referrer-Policy: no-referrer` et `X-Robots-Tag: noindex, nofollow` (`routeRules`) — sans ça un clic vers `/register` fuiterait le token dans le `Referer`. Purge des partages périmés : job quotidien `POST /internal/retention/run` (`make gcp-retention-scheduler`) + lifecycle GCS 2 jours sur `dossier-shares/`.
 
 ### Parrainage / QR (Go intégration — anti-régression)
 
@@ -633,6 +636,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `13-team-staff-smoke` | Assist / secretary /team ACL | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
+| `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |
 
 Local :
 

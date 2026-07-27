@@ -959,7 +959,7 @@
       "steps": [
         "App client — login client.demo → ouvrir la fiche d’un animal actif.",
         "Appuyer sur Envoyer vers un pro.",
-        "Saisir l’e-mail du professionnel destinataire → confirmer.",
+        "Lire l’avertissement « données de santé », saisir l’e-mail du professionnel destinataire, cocher le consentement (le bouton d’envoi reste grisé sans la case) → confirmer.",
         "Ouvrir l’e-mail reçu : vérifier le ton marketing, le CTA inscription, le téléphone commercial, le lien 24 h.",
         "Ouvrir le lien → page /dossier/... → Télécharger le dossier.",
         "Vérifier le ZIP : dossier.pdf (identité, mesures, visites avec pro consulté, liens petsFollow, téléphone commercial) + documents / carnet si présents.",
@@ -973,6 +973,7 @@
       ],
       "checklist": [
         "CTA fiche animal",
+        "Avertissement PHI + consentement obligatoire",
         "E-mail reçu",
         "Téléphone commercial visible (mail + PDF)",
         "ZIP + dossier.pdf",

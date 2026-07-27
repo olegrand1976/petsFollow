@@ -1838,4 +1838,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get sendDossierInvalidEmail => 'Ongeldig e-mailadres.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Dit dossier bevat gezondheidsgegevens: consultverslagen, gezondheidsboekje en documenten. De link blijft 24 uur geldig en iedereen die hem heeft, kan ze inkijken.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen.';
 }

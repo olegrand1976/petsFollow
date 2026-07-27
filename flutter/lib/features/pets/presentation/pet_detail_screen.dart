@@ -566,15 +566,19 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             Row(
               children: [
                 Expanded(child: Text(l10n.myVets, style: Theme.of(context).textTheme.titleSmall)),
-                TextButton(
-                  onPressed: () async {
-                    await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
-                    if (mounted) {
-                      await _loadVets();
-                      await _reloadPet();
-                    }
-                  },
-                  child: Text(l10n.addVetSearchLabel),
+                // Flexible : sur un écran de 360 dp le libellé du bouton réclame
+                // plus que la largeur totale, écrasant le titre à zéro.
+                Flexible(
+                  child: TextButton(
+                    onPressed: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const MyVetsScreen()));
+                      if (mounted) {
+                        await _loadVets();
+                        await _reloadPet();
+                      }
+                    },
+                    child: Text(l10n.addVetSearchLabel, textAlign: TextAlign.end),
+                  ),
                 ),
               ],
             ),
@@ -689,6 +693,7 @@ class _SendDossierEmailDialog extends StatefulWidget {
 
 class _SendDossierEmailDialogState extends State<_SendDossierEmailDialog> {
   late final TextEditingController _controller;
+  bool _consented = false;
 
   @override
   void initState() {
@@ -707,16 +712,41 @@ class _SendDossierEmailDialogState extends State<_SendDossierEmailDialog> {
     final l10n = widget.l10n;
     return AlertDialog(
       key: const Key('pet_send_dossier_dialog'),
+      // Depuis l'ajout de l'avertissement PHI, le dialogue dépasse la hauteur
+      // laissée par le clavier sur un petit écran (le champ e-mail a autofocus).
+      scrollable: true,
       title: Text(l10n.sendDossierToPro),
-      content: TextField(
-        key: const Key('pet_send_dossier_email'),
-        controller: _controller,
-        keyboardType: TextInputType.emailAddress,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: l10n.sendDossierEmailLabel,
-          hintText: l10n.sendDossierEmailHint,
-        ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.sendDossierPhiWarning,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('pet_send_dossier_email'),
+            controller: _controller,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.sendDossierEmailLabel,
+              hintText: l10n.sendDossierEmailHint,
+            ),
+          ),
+          CheckboxListTile(
+            key: const Key('pet_send_dossier_consent'),
+            value: _consented,
+            onChanged: (v) => setState(() => _consented = v ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              l10n.sendDossierPhiConsent,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -725,7 +755,9 @@ class _SendDossierEmailDialogState extends State<_SendDossierEmailDialog> {
         ),
         FilledButton(
           key: const Key('pet_send_dossier_confirm'),
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          onPressed: _consented
+              ? () => Navigator.pop(context, _controller.text.trim())
+              : null,
           child: Text(l10n.sendDossierConfirm),
         ),
       ],

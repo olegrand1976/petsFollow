@@ -42,6 +42,14 @@ export default defineNuxtConfig({
     '/commercial/usecases/**': { redirect: '/usecases' },
     '/commercial-manager/usecases': { redirect: '/usecases' },
     '/commercial-manager/usecases/**': { redirect: '/usecases' },
+    // Le token de partage est dans l'URL : sans no-referrer, un clic vers /register
+    // ou /produits (même origine) le transmettrait dans l'en-tête Referer.
+    '/dossier/**': {
+      headers: {
+        'Referrer-Policy': 'no-referrer',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+    },
     '/**': {
       headers: {
         'X-Frame-Options': 'DENY',
