@@ -216,59 +216,61 @@ func (s *Store) MarkDossierShareDownloaded(ctx context.Context, id, objectKey st
 	return err
 }
 
-// TakeDossierShareObjectKey returns the current object_key and clears it atomically.
-func (s *Store) TakeDossierShareObjectKey(ctx context.Context, id string) (string, error) {
-	var key string
-	err := s.pool.QueryRow(ctx, `
-		WITH prev AS (
-			SELECT id, object_key FROM pets.dossier_share_tokens
-			WHERE id = $1 AND COALESCE(object_key,'') <> ''
-			FOR UPDATE
-		)
-		UPDATE pets.dossier_share_tokens t
-		SET object_key = '', cached_at = NULL
-		FROM prev
-		WHERE t.id = prev.id
-		RETURNING prev.object_key`, id).Scan(&key)
+// DeleteDossierShareByID removes a share row (e.g. SMTP failed after insert) and
+// returns any cached ZIP object_key for media cleanup.
+func (s *Store) DeleteDossierShareByID(ctx context.Context, id string) (objectKey string, err error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return "", ErrValidation
+	}
+	err = s.pool.QueryRow(ctx, `
+		DELETE FROM pets.dossier_share_tokens
+		WHERE id = $1
+		RETURNING COALESCE(object_key, '')`, id).Scan(&objectKey)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", nil
 	}
-	return strings.TrimSpace(key), err
+	return strings.TrimSpace(objectKey), err
 }
 
-// PurgeExpiredDossierShareCaches clears object_key on expired rows and returns keys to delete from media.
-func (s *Store) PurgeExpiredDossierShareCaches(ctx context.Context, limit int) ([]string, error) {
+// PurgeExpiredDossierShares deletes expired share rows and returns their cached ZIP
+// keys. Clearing the cache is not enough for the RGPD: the row itself holds the
+// recipient's email, i.e. personal data of a third party who never signed up.
+// An empty ownerUserID purges every owner (retention job).
+// It returns the keys to delete from the media bucket and the number of rows removed.
+func (s *Store) PurgeExpiredDossierShares(ctx context.Context, ownerUserID string, limit int) ([]string, int, error) {
 	if limit <= 0 {
-		limit = 50
+		limit = 200
 	}
 	rows, err := s.pool.Query(ctx, `
-		WITH doomed AS (
-			SELECT id, object_key FROM pets.dossier_share_tokens
-			WHERE expires_at < NOW() AND COALESCE(object_key,'') <> ''
+		DELETE FROM pets.dossier_share_tokens t
+		USING (
+			SELECT id FROM pets.dossier_share_tokens
+			WHERE expires_at < NOW()
+			  AND owner_user_id = COALESCE(NULLIF($1, '')::uuid, owner_user_id)
 			ORDER BY expires_at ASC
-			LIMIT $1
+			LIMIT $2
 			FOR UPDATE SKIP LOCKED
-		)
-		UPDATE pets.dossier_share_tokens t
-		SET object_key = '', cached_at = NULL
-		FROM doomed d
+		) d
 		WHERE t.id = d.id
-		RETURNING d.object_key`, limit)
+		RETURNING COALESCE(t.object_key, '')`, strings.TrimSpace(ownerUserID), limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 	var keys []string
+	deleted := 0
 	for rows.Next() {
 		var k string
 		if err := rows.Scan(&k); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
+		deleted++
 		if strings.TrimSpace(k) != "" {
 			keys = append(keys, k)
 		}
 	}
-	return keys, rows.Err()
+	return keys, deleted, rows.Err()
 }
 
 // ListVisitsForDossier returns visits with practice name and consulted pro (CR author or practice vet).

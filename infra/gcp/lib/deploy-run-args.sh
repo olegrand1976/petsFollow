@@ -54,6 +54,8 @@ SMTP_FROM: "petsFollow <noreply@petsfollow.app>"
 SMTP_USER: "noreply@petsfollow.app"
 OPS_NOTIFY_EMAIL: "${OPS_NOTIFY_EMAIL:-o.legrand1976@gmail.com}"
 SUPPORT_INBOX_EMAIL: "${SUPPORT_INBOX_EMAIL:-o.legrand1976@gmail.com}"
+# Fallback téléphone commercial (mail/PDF envoi dossier) si profil commercial vide.
+COMMERCIAL_CONTACT_PHONE: "${COMMERCIAL_CONTACT_PHONE:-}"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"

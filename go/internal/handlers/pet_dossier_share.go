@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
+	"net/mail"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -22,13 +22,22 @@ import (
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
+const (
+	// Le ZIP est assemblé et servi entièrement en mémoire depuis une route publique :
+	// sans plafond, un animal très documenté suffit à faire tomber l'instance.
+	maxDossierAttachments     = 25
+	maxDossierAttachmentBytes = 40 << 20
+)
+
 type createDossierShareReq struct {
 	Email string `json:"email"`
 }
 
 func (a *API) registerDossierSharePublicRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
 	r.Group(func(pr chi.Router) {
-		pr.Use(rateLimit)
+		if rateLimit != nil {
+			pr.Use(rateLimit)
+		}
 		pr.Get("/public/pet-dossier/{token}", a.getPublicPetDossier)
 		pr.Get("/public/pet-dossier/{token}/download", a.downloadPublicPetDossier)
 	})
@@ -64,11 +73,14 @@ func (a *API) createPetDossierShare(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	email := strings.TrimSpace(strings.ToLower(req.Email))
-	if email == "" || !strings.Contains(email, "@") || utf8.RuneCountInString(email) > 254 {
+	// ParseAddress plutôt qu'un test sur "@" : rejette les CR/LF et les adresses
+	// malformées avant de créer un token et de tenter un envoi SMTP voué à l'échec.
+	parsed, err := mail.ParseAddress(strings.TrimSpace(req.Email))
+	if err != nil || utf8.RuneCountInString(parsed.Address) > 254 {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_email")
 		return
 	}
+	email := strings.ToLower(parsed.Address)
 
 	owner, err := a.store.GetUserByID(r.Context(), id.UserID)
 	if err != nil {
@@ -79,6 +91,10 @@ func (a *API) createPetDossierShare(w http.ResponseWriter, r *http.Request) {
 	site := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
 
 	commercialID, commercialName, commercialPhone, commercialEmail, registerURL := a.resolveDossierCommercial(r.Context(), id.UserID, pet.PracticeID, site)
+
+	// Le job de rétention n'a pas de scheduler : on purge aussi les partages périmés
+	// du propriétaire sur son propre chemin de création, seul passage garanti.
+	a.purgeExpiredDossierShares(r.Context(), id.UserID)
 
 	tok, err := a.store.CreateDossierShareToken(r.Context(), store.CreateDossierShareInput{
 		PetID:            pet.ID,
@@ -109,6 +125,12 @@ func (a *API) createPetDossierShare(w http.ResponseWriter, r *http.Request) {
 			email, locale, pet.Name, owner.FullName,
 			downloadURL, commercialName, commercialPhone, commercialEmail, registerURL, site,
 		); err != nil {
+			// Ne pas laisser un token orphelin (quota + lien fantôme).
+			if key, delErr := a.store.DeleteDossierShareByID(r.Context(), tok.ID); delErr != nil {
+				fmt.Printf("dossier share: rollback after SMTP failure id=%s: %v\n", tok.ID, delErr)
+			} else if key != "" {
+				a.purgeMediaObjects(r.Context(), []string{key})
+			}
 			writeErr(w, r, http.StatusBadGateway, "email_failed", "email_send_failed")
 			return
 		}
@@ -158,7 +180,8 @@ func (a *API) getPublicPetDossier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if time.Now().UTC().After(tok.ExpiresAt) {
-		a.purgeExpiredDossierCaches(r.Context())
+		// Row + email tiers + ZIP cache — pas seulement object_key.
+		a.purgeExpiredDossierShares(r.Context(), tok.OwnerUserID)
 		writeErr(w, r, http.StatusGone, "gone", "dossier_expired")
 		return
 	}
@@ -196,18 +219,18 @@ func (a *API) downloadPublicPetDossier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if time.Now().UTC().After(tok.ExpiresAt) {
+		ownerID := tok.OwnerUserID
 		_ = tx.Rollback(ctx)
-		a.purgeExpiredDossierCaches(ctx)
+		a.purgeExpiredDossierShares(ctx, ownerID)
 		writeErr(w, r, http.StatusGone, "gone", "dossier_expired")
 		return
 	}
 
 	var zipBytes []byte
-	if key := strings.TrimSpace(tok.ObjectKey); key != "" && a.media != nil {
-		if rc, _, openErr := a.media.Open(ctx, key); openErr == nil {
-			zipBytes, _ = io.ReadAll(rc)
-			_ = rc.Close()
-		}
+	if key := strings.TrimSpace(tok.ObjectKey); key != "" {
+		// Le cache a été écrit par nous : même plafond que la construction, plus la
+		// marge du PDF de synthèse.
+		zipBytes = a.readDossierAttachment(ctx, key, maxDossierAttachmentBytes+(8<<20))
 	}
 	cacheKey := ""
 	if len(zipBytes) == 0 {
@@ -239,16 +262,6 @@ func (a *API) downloadPublicPetDossier(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(zipBytes)
-}
-
-func (a *API) purgeExpiredDossierCaches(ctx context.Context) {
-	keys, err := a.store.PurgeExpiredDossierShareCaches(ctx, 50)
-	if err != nil || a.media == nil {
-		return
-	}
-	for _, key := range keys {
-		_ = a.media.Delete(ctx, key)
-	}
 }
 
 func (a *API) buildDossierZip(ctx context.Context, tok store.DossierShareToken) ([]byte, error) {
@@ -371,37 +384,53 @@ func (a *API) buildDossierZip(ctx context.Context, tok store.DossierShareToken) 
 		return nil, err
 	}
 	files := []petdossier.ZipFile{{Name: "dossier.pdf", Data: pdfBytes}}
+	budget := int64(maxDossierAttachmentBytes)
 
 	if key := strings.TrimSpace(pet.HealthBookPDFObjectKey); key != "" && a.media != nil {
-		if rc, _, err := a.media.Open(ctx, key); err == nil {
-			data, readErr := io.ReadAll(rc)
-			_ = rc.Close()
-			if readErr == nil && len(data) > 0 {
-				files = append(files, petdossier.ZipFile{Name: "carnet-sante.pdf", Data: data})
-			}
+		if data := a.readDossierAttachment(ctx, key, budget); data != nil {
+			budget -= int64(len(data))
+			files = append(files, petdossier.ZipFile{Name: "carnet-sante.pdf", Data: data})
 		}
 	}
+	attached := 0
 	for _, d := range docs {
+		if attached >= maxDossierAttachments || budget <= 0 || a.media == nil {
+			break
+		}
 		key := strings.TrimSpace(d.ObjectKey)
-		if key == "" || a.media == nil {
+		if key == "" {
 			continue
 		}
-		rc, _, err := a.media.Open(ctx, key)
-		if err != nil {
+		data := a.readDossierAttachment(ctx, key, budget)
+		if data == nil {
 			continue
 		}
-		data, err := io.ReadAll(rc)
-		_ = rc.Close()
-		if err != nil || len(data) == 0 {
-			continue
-		}
-		name := d.FileName
-		if name == "" {
-			name = path.Base(key)
-		}
-		files = append(files, petdossier.ZipFile{Name: "documents/" + name, Data: data})
+		budget -= int64(len(data))
+		attached++
+		files = append(files, petdossier.ZipFile{
+			Name: petdossier.DocumentZipPath(d.Title, d.FileName, key),
+			Data: data,
+		})
 	}
 	return petdossier.BuildZip(files)
+}
+
+// readDossierAttachment returns nil when the object is missing, empty, or larger
+// than the remaining budget — a single oversized file is skipped, never truncated.
+func (a *API) readDossierAttachment(ctx context.Context, objectKey string, budget int64) []byte {
+	if a.media == nil || budget <= 0 {
+		return nil
+	}
+	rc, _, err := a.media.Open(ctx, objectKey)
+	if err != nil {
+		return nil
+	}
+	data, err := io.ReadAll(io.LimitReader(rc, budget+1))
+	_ = rc.Close()
+	if err != nil || len(data) == 0 || int64(len(data)) > budget {
+		return nil
+	}
+	return data
 }
 
 func sanitizeFilename(s string) string {

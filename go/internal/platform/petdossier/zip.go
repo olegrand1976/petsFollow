@@ -55,6 +55,11 @@ func sanitizeZipName(name string) string {
 	if name == "." || name == "" {
 		return ""
 	}
+	// path.Clean laisse passer les "../" de tête : les garder produirait une entrée
+	// d'archive qui s'extrait hors du dossier cible (zip slip) chez le destinataire.
+	if name == ".." || strings.HasPrefix(name, "../") {
+		return ""
+	}
 	var b strings.Builder
 	for _, r := range name {
 		switch {

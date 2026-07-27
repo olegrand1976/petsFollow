@@ -518,14 +518,21 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 ### Envoi dossier animal (Go intégration — H13)
 
-`go test ./internal/handlers/ -run 'TestPetDossierShare|TestUpdateMeContactPhone' -count=1`
+`go test ./internal/handlers/ -run 'PetDossier|PublicPetDossier|TestUpdateMeContactPhone' -count=1`
+`go test ./internal/platform/petdossier/ -count=1`
 
 | Cas | Attendu |
 |-----|---------|
 | Create + meta + download ZIP | `dossier.pdf` dans le ZIP ; `commercialPhone` présent |
 | Expiry | GET meta/download → 410 |
 | Non-owner | POST → 403 |
-| PATCH contactPhone commercial | `/me` expose le numéro |
+| Email destinataire malformé (dont CR/LF) | POST → 400 `invalid_email` |
+| Quota du jour saturé | POST → 429 `dossier_share_limit` |
+| Partage périmé + nouveau partage | l'ancienne ligne (email du tiers) est supprimée |
+| Consultation publique en rafale | 429 (anti-énumération de tokens) |
+| Nom de document piégé (`../`) | entrée écartée du ZIP (zip slip) |
+
+Bornes anti-DoS de la construction du ZIP (route publique, tout en mémoire) : 25 pièces jointes max et 40 Mio cumulés — au-delà, les pièces sont écartées, jamais tronquées.
 
 Flutter widget : `pet_send_dossier_test` · Nuxt gate : `completeContactPhoneGate.spec.ts` · Playwright mocké : `16-dossier-public.spec.ts` · UC : `UC-X-08`.
 

@@ -54,12 +54,25 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"candidates":     len(accounts),
-		"purgedClients":  purgedClients,
-		"anonymizedPros": anonymizedPros,
-		"failed":         failed,
-		"cutoff":         cutoff,
+		"candidates":          len(accounts),
+		"purgedClients":       purgedClients,
+		"anonymizedPros":      anonymizedPros,
+		"failed":              failed,
+		"cutoff":              cutoff,
+		"purgedDossierShares": a.purgeExpiredDossierShares(r.Context(), ""),
 	})
+}
+
+// purgeExpiredDossierShares supprime les partages de dossier périmés (lignes + ZIP
+// en bucket) et renvoie le nombre de lignes traitées. ownerUserID vide = tous.
+func (a *API) purgeExpiredDossierShares(ctx context.Context, ownerUserID string) int {
+	keys, deleted, err := a.store.PurgeExpiredDossierShares(ctx, ownerUserID, 200)
+	if err != nil {
+		fmt.Printf("retention purge: dossier shares failed: %v\n", err)
+		return 0
+	}
+	a.purgeMediaObjects(ctx, keys)
+	return deleted
 }
 
 // purgeClientAccount — même effacement que DELETE /me côté client.
