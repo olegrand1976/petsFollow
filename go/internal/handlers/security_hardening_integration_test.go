@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/google/uuid"
@@ -58,7 +59,7 @@ func TestLookupProspectHidesContactDetailsAcrossTeams(t *testing.T) {
 			id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone,
 			city, notes, source, status
 		) VALUES ($1, $2, $3, 'Dr Contact', 'contact@cabinet.test', '+32470000000',
-			'Namur', 'Notes internes confidentielles', 'manual', 'new')`,
+			'Namur', 'Notes internes confidentielles', 'commercial', 'new')`,
 		uuid.NewString(), owner, marker); err != nil {
 		t.Fatalf("insert prospect: %v", err)
 	}
@@ -67,7 +68,7 @@ func TestLookupProspectHidesContactDetailsAcrossTeams(t *testing.T) {
 		t.Helper()
 		tok := loginToken(t, api.handler, email, "CommercialDemo123!")
 		code, env := doAuthJSON(t, api.handler, http.MethodGet,
-			"/api/v1/commercial/prospects/lookup?q="+marker, tok, nil)
+			"/api/v1/commercial/prospects/lookup?q="+url.QueryEscape(marker), tok, nil)
 		if code != http.StatusOK {
 			t.Fatalf("lookup as %s: %d %#v", email, code, env)
 		}
@@ -117,7 +118,7 @@ func TestReassignProspectRefusesConverted(t *testing.T) {
 		INSERT INTO sales.prospects (
 			id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone,
 			city, notes, source, status
-		) VALUES ($1, $2, $3, '', '', '', 'Liege', '', 'manual', 'converted')`,
+		) VALUES ($1, $2, $3, '', '', '', 'Liege', '', 'commercial', 'converted')`,
 		prospectID, from, "Cabinet Converti "+uuid.NewString()[:8]); err != nil {
 		t.Fatalf("insert prospect: %v", err)
 	}
