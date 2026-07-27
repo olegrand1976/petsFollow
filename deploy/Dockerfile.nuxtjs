@@ -10,6 +10,8 @@ ARG NUXT_PUBLIC_API_BASE=https://api.petsfollow.ll-it-sc.be
 ARG NUXT_PUBLIC_APP_ENV=production
 ENV NUXT_PUBLIC_API_BASE=$NUXT_PUBLIC_API_BASE
 ENV NUXT_PUBLIC_APP_ENV=$NUXT_PUBLIC_APP_ENV
+# Nitro SSR build dépasse le défaut ~2 Go sur Cloud Build (OOM mark-compact).
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN cd nuxtjs && npm run build
 
 FROM node:22-alpine
