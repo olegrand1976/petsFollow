@@ -120,8 +120,11 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
       return page.evaluate(() => document.cookie.split(';').some((c) => c.trim().startsWith('pf_session=')))
     }, { timeout: 10000 }).toBe(false)
 
-    const me = await page.request.get('/api/me')
-    expect(me.status()).toBe(401)
+    // Wait until BFF logout has cleared httpOnly JWT (pf_session alone is not enough).
+    await expect.poll(async () => {
+      const me = await page.request.get('/api/me')
+      return me.status()
+    }, { timeout: 15000 }).toBe(401)
 
     await page.getByTestId('pro-desk-lock-cancel').click()
     // Cancel after purge ≠ restore précédent : on reste en veille.

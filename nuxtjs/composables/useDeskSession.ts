@@ -229,10 +229,11 @@ export function useDeskSession() {
     const practiceId = user.value?.practiceId
     pendingEmail.value = email
     promptMode.value = 'switch'
+    loadRosterFromCache(practiceId)
+    // Purge JWT avant d’afficher le lock — sinon pf_session part trop tôt vs httpOnly.
+    await clearAuthTokens()
     locked.value = true
     setDeskLockedFlag(true)
-    loadRosterFromCache(practiceId)
-    await clearAuthTokens()
   }
 
   function cancelPrompt() {

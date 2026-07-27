@@ -322,19 +322,23 @@ export async function clearAuthTokens() {
   authClearedState().value = true
   // Avoid stale Pro profile after logout / non-Pro reject / re-login.
   useState('pro-user').value = null
-  // pf_session is the only auth cookie the browser JS can clear (non-httpOnly).
-  useCookie('pf_session', sessionCookieOpts()).value = null
   if (import.meta.server) {
     // SSR: Set-Cookie can clear httpOnly JWT cookies on the response.
     useCookie('pf_token', httpOnlyAuthCookieOpts()).value = null
     useCookie('pf_refresh', httpOnlyAuthCookieOpts()).value = null
+    useCookie('pf_session', sessionCookieOpts()).value = null
+    return
   }
   if (import.meta.client) {
     try {
       // httpOnly pf_token / pf_refresh: only the BFF may delete them.
+      // Must complete before dropping pf_session — otherwise e2e/page.request
+      // can still call /api/me with JWT while the marker is already gone.
       await $fetch('/api/auth/logout', { method: 'POST' })
     } catch {
-      // best effort — le marqueur pf_session est déjà purgé.
+      // best effort
     }
   }
+  // pf_session is the only auth cookie the browser JS can clear (non-httpOnly).
+  useCookie('pf_session', sessionCookieOpts()).value = null
 }
