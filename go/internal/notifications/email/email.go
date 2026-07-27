@@ -2,6 +2,7 @@ package email
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 	"mime"
@@ -13,7 +14,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
 
-const smtpOpTimeout = 8 * time.Second
+const smtpOpTimeout = 15 * time.Second
 
 const defaultLLITWebsiteURL = "https://ll-it-sc.be"
 
@@ -89,12 +90,11 @@ func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 		return err
 	}
 
-	var auth smtp.Auth
+	var authUser, authPass string
 	if n.user != "" {
-		// identity empty — OVH expects username = mailbox addr.
-		auth = smtp.PlainAuth("", n.user, n.pass, n.host)
+		authUser, authPass = n.user, n.pass
 	}
-	if err := sendMailTimeout(addr, auth, mailFrom, []string{to}, []byte(msg), smtpOpTimeout); err != nil {
+	if err := sendMailTimeout(addr, authUser, authPass, mailFrom, []string{to}, []byte(msg), smtpOpTimeout); err != nil {
 		if n.isDevSMTP() {
 			log.Printf("email send (mailhog/dev): %v", err)
 		} else {
@@ -108,8 +108,51 @@ func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 	return nil
 }
 
+// loginAuth implements SMTP AUTH LOGIN (OVH advertises LOGIN, not PLAIN, after STARTTLS).
+type loginAuth struct {
+	username, password string
+}
+
+func LoginAuth(username, password string) smtp.Auth {
+	return &loginAuth{username, password}
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS {
+		return "", nil, errors.New("unencrypted connection")
+	}
+	return "LOGIN", nil, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if !more {
+		return nil, nil
+	}
+	prompt := strings.ToLower(strings.TrimSpace(string(fromServer)))
+	switch {
+	case strings.Contains(prompt, "user"):
+		return []byte(a.username), nil
+	case strings.Contains(prompt, "pass"):
+		return []byte(a.password), nil
+	default:
+		return nil, fmt.Errorf("unexpected AUTH LOGIN challenge %q", string(fromServer))
+	}
+}
+
+func pickSMTPAuth(host, user, pass, mechanisms string) (smtp.Auth, error) {
+	mechs := strings.ToUpper(mechanisms)
+	switch {
+	case strings.Contains(mechs, "LOGIN"):
+		return LoginAuth(user, pass), nil
+	case strings.Contains(mechs, "PLAIN"):
+		return smtp.PlainAuth("", user, pass, host), nil
+	default:
+		return nil, fmt.Errorf("smtp: no supported AUTH in %q", mechanisms)
+	}
+}
+
 // sendMailTimeout is smtp.SendMail with a dial/deadline so auth paths cannot hang E2E.
-func sendMailTimeout(addr string, a smtp.Auth, from string, to []string, msg []byte, timeout time.Duration) error {
+func sendMailTimeout(addr, user, pass, from string, to []string, msg []byte, timeout time.Duration) error {
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return err
@@ -130,11 +173,17 @@ func sendMailTimeout(addr string, a smtp.Auth, from string, to []string, msg []b
 			return err
 		}
 	}
-	if a != nil {
-		if ok, _ := c.Extension("AUTH"); ok {
-			if err = c.Auth(a); err != nil {
-				return err
-			}
+	if user != "" {
+		ok, mechanisms := c.Extension("AUTH")
+		if !ok {
+			return fmt.Errorf("smtp: AUTH not advertised")
+		}
+		a, aerr := pickSMTPAuth(host, user, pass, mechanisms)
+		if aerr != nil {
+			return aerr
+		}
+		if err = c.Auth(a); err != nil {
+			return err
 		}
 	}
 	if err = c.Mail(from); err != nil {

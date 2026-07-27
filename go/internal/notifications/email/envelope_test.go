@@ -1,6 +1,7 @@
 package email
 
 import (
+	"net/smtp"
 	"strings"
 	"testing"
 )
@@ -36,5 +37,41 @@ func TestSendConfirmFailsFastWhenSMTPPassEmpty(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "SMTP_PASS empty") {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestPickSMTPAuthPrefersLOGIN(t *testing.T) {
+	a, err := pickSMTPAuth("pro1.mail.ovh.net", "u", "p", "GSSAPI NTLM LOGIN")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mech, proto, err := a.Start(&smtp.ServerInfo{Name: "pro1.mail.ovh.net", TLS: true, Auth: []string{"LOGIN"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mech != "LOGIN" || proto != nil {
+		t.Fatalf("got mech=%q proto=%v", mech, proto)
+	}
+	user, err := a.Next([]byte("Username:"), true)
+	if err != nil || string(user) != "u" {
+		t.Fatalf("username step: %q %v", user, err)
+	}
+	pass, err := a.Next([]byte("Password:"), true)
+	if err != nil || string(pass) != "p" {
+		t.Fatalf("password step: %q %v", pass, err)
+	}
+}
+
+func TestPickSMTPAuthPLAINWhenNoLOGIN(t *testing.T) {
+	a, err := pickSMTPAuth("mail.example.com", "u", "p", "PLAIN")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mech, _, err := a.Start(&smtp.ServerInfo{Name: "mail.example.com", TLS: true, Auth: []string{"PLAIN"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mech != "PLAIN" {
+		t.Fatalf("got %q", mech)
 	}
 }
