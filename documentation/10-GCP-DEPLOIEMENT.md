@@ -9,6 +9,8 @@ Projet partagé : `premedica-prod-2025` · région Run : `europe-west9` · LB : 
 
 Infra partagée : Cloud SQL `premedica-db-staging` (DB `petsfollow`), Redis VM `shared-redis` (DB **14**), VPC connector `premedica-connector`. Pattern domaine = LB Premedica + Serverless NEG (comme Kore).
 
+**Pharmacie** : la migration `000081` exige l’extension PostgreSQL **`pg_trgm`**. Sur Cloud SQL, la créer une fois (rôle `cloudsqlsuperuser` / console GCP → Extensions) si le job migrate échoue sur `CREATE EXTENSION`.
+
 ## Prérequis
 
 - `gcloud` authentifié sur `premedica-prod-2025`

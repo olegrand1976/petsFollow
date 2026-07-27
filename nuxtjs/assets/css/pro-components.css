@@ -129,6 +129,7 @@
   border-radius: var(--pf-vet-radius-lg);
   background: rgba(42, 157, 143, 0.12);
   color: var(--pf-vet-accent);
+  overflow: hidden;
 }
 
 .pro-kpi-card--alert .pro-kpi__icon-wrap {

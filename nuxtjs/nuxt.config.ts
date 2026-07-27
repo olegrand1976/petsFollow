@@ -33,6 +33,8 @@ export default defineNuxtConfig({
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
       /** local | staging | production — pages use cases + badge S (staging AUTH). */
       appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'local',
+      /** Pharmacie cabinet (CNK / stock / DAF) — mirror PHARMACY_ENABLED. */
+      pharmacyEnabled: process.env.NUXT_PUBLIC_PHARMACY_ENABLED === 'true' || process.env.NUXT_PUBLIC_PHARMACY_ENABLED === '1',
     },
   },
   routeRules: {
@@ -72,6 +74,13 @@ export default defineNuxtConfig({
         {
           rel: 'preload',
           href: '/fonts/dm-sans-latin.woff2',
+          as: 'font',
+          type: 'font/woff2',
+          crossorigin: 'anonymous',
+        },
+        {
+          rel: 'preload',
+          href: '/fonts/material-symbols-outlined.woff2',
           as: 'font',
           type: 'font/woff2',
           crossorigin: 'anonymous',

@@ -1,494 +1,385 @@
-# 28 — Plan complet : stock cabinet & péremption
+# 28 — Plan de mise en place : stock cabinet & péremption
 
-Plan d’implémentation pour la **gestion de stock médicamenteux** côté Pro (Nuxt), avec la **péremption** comme contrainte métier de premier plan.
+**Objectif** : livrer la pharmacie cabinet Pro (Belgique) avec stock multi-dépôts, **péremption** (90/60/30), FEFO, DAF, workers.
 
-- **Statut** : plan produit/tech — **décisions figées** (2026-07-27) — **non implémenté**
-- **Socle réglementaire / architecture** : [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) (CNK, DAF, VAMReg, FEFO)
-- **Ne pas confondre** avec les rappels Care côté Flutter (suivi patient, pas stock cabinet)
-- **Références externes** (arbitrage §11) : Règlement (UE) 2019/6 · GDP vétérinaire (UE) 2021/1248 art. 24 FEFO · loi BE détention de médicaments périmés · AFMPS DAF (lot + n° AMM) · bonnes pratiques stock pharmacie 90/60/30
+| Méta | Valeur |
+|------|--------|
+| Statut global | **~65 % Phase 1** — S0 ✅ · S1–S3 ✅ (~95 %) · S4–S6 ⬜ |
+| Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
+| Dernière revue | 2026-07-27 (S3 DAF livré) |
+| Prochaine action | **Sprint 4** — worker VAMReg (Asynq) **ou** S6 ops si pilote staging |
+
+Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
+
+---
 
 <details>
 <summary><strong>Cadre légal géré par l’application</strong> (repliable)</summary>
 
-Textes et obligations que le module pharmacie Pro couvre ou outille. À exposer aussi en UI Pro (`<details>` sous le header des pages `/medicaments`, `/stock`, `/daf`) via i18n `pharmacy.legal.*`.
-
 | Thème | Surface app | Description |
 |-------|-------------|-------------|
-| **FEFO** | Sortie DAF · `AllocateFEFO` · preview wizard | Règlement d’exécution **(UE) 2021/1248 art. 24** (GDP médicaments vétérinaires) : rotation « first expiry, first out » ; exceptions documentées. Phase 1 = FEFO strict, pas d’override. |
-| **Médicaments périmés** | Auto-quarantaine · blocage DAF/adjust · waste | Droit belge : détention / vente / délivrance de médicaments vétérinaires **périmés** sanctionnée. Dès `expires_on < today` (Europe/Brussels) → hors stock actif ; sortie uniquement via waste tracé. |
-| **DAF — mentions** | Wizard · PDF GCS | **AFMPS** : n° de **lot** + n° **AMM** obligatoires (modèles sept. 2024+). La DLC n’est pas une mention légale du formulaire ; gérée en stock/FEFO, bonus PDF possible. |
-| **Registres & conservation** | `stock_movements` · DAF gapless · `job_audit` | **(UE) 2019/6** + règles BE : traçabilité entrées/sorties ; conservation typique **5 ans** pour inspection AFMPS. |
-| **Inventaire annuel** | Export CSV `/stock` · backlog inventaire guidé | Dépositaire : ≥ **1×/an** rapprochement registres ↔ stock physique, écarts consignés. |
-| **Quarantaine & destruction** | `status=quarantine` · waste | Séparer physiquement périmés / retours / à détruire jusqu’à disposition. Logiciel = quarantaine auto ; destruction ou retour fournisseur = acte humain documenté. |
-| **Antibiotiques / VAMReg** | DAF · worker Asynq | Champs VAMReg obligatoires si antibiotique ; finalize bloqué tant qu’incomplets. |
+| **FEFO** | Sortie DAF · `AllocateFEFO` · preview wizard | (UE) **2021/1248 art. 24** — rotation first expiry first out ; Phase 1 sans override |
+| **Médicaments périmés** | Auto-quarantaine · blocage DAF/adjust · waste | Droit BE : détention/délivrance de périmés sanctionnée → hors stock actif dès J+0 |
+| **DAF — mentions** | Wizard · PDF GCS | **AFMPS** : n° **lot** + n° **AMM** obligatoires ; DLC = bonus PDF |
+| **Registres & conservation** | mouvements · DAF gapless · `job_audit` | (UE) **2019/6** + BE — traçabilité ; conservation typique **5 ans** |
+| **Inventaire annuel** | Export CSV · backlog inventaire | ≥ **1×/an** registres ↔ stock physique |
+| **Quarantaine & destruction** | `quarantine` · waste | Séparation physique ; waste **manuel** (destruction ou retour fournisseur) |
+| **Antibiotiques / VAMReg** | DAF · worker Asynq | Finalize bloqué si payload incomplet |
 
 </details>
 
 ---
 
-## 1. Problème à résoudre
+## 0. Tableau de bord (contrôle 2026-07-27)
 
-Les cabinets vétérinaires gèrent des médicaments avec :
+| Domaine | Avancement | Preuve / écart |
+|---------|------------|----------------|
+| Spec & décisions produit | ✅ | Docs 27 + 28 |
+| Prérequis monorepo | 🟡 | Redis/GCS/API OK — Asynq / PDF DAF non branchés |
+| Nav tag `dev` + `/medicaments` | ✅ | `layouts/default.vue` + `ProSidebar.tag` |
+| Schéma SQL `pharmacy` | ✅ | `ref_medications` + stock (deposits/batches/movements/settings) |
+| Search CNK (API + BFF + UI) | ✅ | Tests Go verts |
+| Stock / FEFO / péremption | ✅ | Store + API + `/stock` + expiry-run |
+| DAF / PDF | ✅ | draft/finalize/cancel + PDF media |
+| Workers VAMReg / invoices.connect | ⬜ | Pas d’Asynq |
+| Scheduler expiry | 🟡 | Endpoint `expiry-run` ✅ · script GCP → S6 |
+| Tests Go pharmacie | ✅ | Unit bands + FEFO store + intégration stock/search · Playwright P0 ⬜ |
+| Staging `PHARMACY_ENABLED` | ⬜ | Local only (`.env.example` / `api-dev`) |
+| **Collision migration `000082`** | ⚠️ | Coexistent `000082_invoicing_billit` **et** `000082_pharmacy_ref_drop_unused_fts` — stock = **`000083+`** |
 
-1. **Lots** (numéro de fabrication) et **dates de péremption** obligatoires.
-2. Obligation pratique de sortir d’abord le lot qui expire le plus tôt (**FEFO**).
-3. Risque clinique / légal si un produit **périmé** est administré ou fourni.
-4. Coût : destruction / waste des lots proches ou dépassés ; besoin d’**anticiper** (alertes).
-5. Multi-dépôts (frigo, salle de soins, voiture) avec des durées de vie différentes selon conservation.
+**Progression par sprint (effort estimé Phase 1)**
 
-PetsFollow doit couvrir le circuit **entrée → stockage → alerte → sortie contrôlée → DAF → destruction**, pas seulement un compteur de quantité.
-
----
-
-## 2. Objectifs & non-objectifs
-
-### Objectifs (MVP → Phase 1)
-
-| ID | Objectif | Priorité |
-|----|----------|----------|
-| O1 | Dictionnaire médicaments BE (CNK) + recherche cabinet | P0 |
-| O2 | Stocks multi-dépôts, lots, qty, `expires_on` | P0 |
-| O3 | Sorties FEFO atomiques (concurrence sûre) | P0 |
-| O4 | **Cycle de vie péremption** (seuils, blocages, waste) | P0 |
-| O5 | Alertes & digests péremption (UI + email / notif Pro) | P0 |
-| O6 | DAF + PDF + numérotation gapless | P1 |
-| O7 | VAMReg + invoices.connect (workers) | P1 |
-
-### Non-objectifs Phase 1
-
-- UI Flutter client / stock propriétaire
-- Facturation Stripe des lignes DAF
-- Logiciel DAF « certifié » de remplacement légal
-- Scan code-barres matériel (prévu Phase 1.1 optionnelle)
-- Multi-practice / partage de stock inter-cabinets
+| Sprint | Poids | Avancement | Contribution |
+|--------|-------|------------|--------------|
+| S0 Spec | 5 % | 100 % | 5 % |
+| S1 CNK | 15 % | ~95 % | ~14 % |
+| S2 Stock + péremption | 25 % | ~95 % | ~24 % |
+| S3 DAF + PDF | 20 % | ~95 % | ~19 % |
+| S4 VAMReg | 15 % | 0 % | 0 % |
+| S5 invoices.connect | 10 % | 0 % | 0 % |
+| S6 Ops staging | 10 % | 0 % | 0 % |
+| **Total** | 100 % | | **~62–65 %** |
 
 ---
 
-## 3. Principes métier — péremption
+## 1. Déjà fait (tracé)
 
-### 3.1 Définitions
+### 1.1 Documentation & produit — ✅
 
-| Terme | Définition |
-|-------|------------|
-| `expires_on` | Date de péremption du **lot** (jour calendaire, timezone métier = **Europe/Brussels**) |
-| **Périmé** | `expires_on < today` (Bruxelles) |
-| **Critique** | `today ≤ expires_on ≤ today + warn_critical_days` (défaut **30**) |
-| **À retourner** | `today + warn_critical_days < expires_on ≤ today + warn_return_days` (défaut **60**) |
-| **Attention** | `today + warn_return_days < expires_on ≤ today + warn_soon_days` (défaut **90**) |
-| **OK** | `expires_on > today + warn_soon_days` |
-| **Quarantaine** | Lot bloqué (auto-périmé, rappel fabricant, chaîne du froid, suspicion) — **non sortible** |
+| Livrable | Preuve |
+|----------|--------|
+| Spec architecture pharmacie BE | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
+| Plan stock + péremption + légal | ce document |
+| Entrée index docs | [README.md](README.md) §27–28 |
+| Mention module | [04-MODULES-METIER.md](04-MODULES-METIER.md) (« spec — non livré ») |
+| Mention schéma | [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md) (`pharmacy` = Spec) |
+| Décisions §11 figées | Seuils **90/60/30**, auto-quarantaine, waste manuel, FEFO strict, digest lundi, tag menu **dev** |
+| Canvas plan | `plan-stock-peremption.canvas.tsx` |
 
-Trois horizons d’alerte (**90 / 60 / 30**) = standard pharmacie : revue → retour fournisseur → retrait urgent du stock actif.
+### 1.2 Prérequis techniques déjà dans le monorepo — 🟡 (réemploi)
 
-Seuils **par practice** (table `pharmacy.practice_settings`) :
+| Prérequis | État | Où |
+|-----------|------|-----|
+| API Go + `store` pgx + handlers | ✅ | `go/internal/` |
+| Migrations jusqu’à `000080` | ✅ | Prochaine = **000081** (ne pas réutiliser 000039–000042 de la spec 27) |
+| Nuxt Pro vet-only + BFF cookies httpOnly | ✅ | `nuxtjs/` |
+| Redis (`REDIS_ADDR`) local + staging | ✅ | config / compose / deploy — **pas** Asynq |
+| GCS médias / PDF pattern | ✅ | `platform/media` — kind `daf` à ajouter |
+| Jobs internes + `secretHeaderOK` | ✅ | Pattern rétention / auth-health |
+| Emails transactionnels i18n | ✅ | `notifications/email` |
+| `ProSidebar` champ `tag` + pastille | ✅ | `ProSidebar.vue` — utilisé par `/invoicing` |
+| i18n `nav.tagDev` = `dev` (6 locales) | ✅ | `nuxtjs/locales/*.json` |
+| Rappels médicaments **client** (Care) | ✅ | Flutter — **hors** périmètre pharmacie cabinet |
 
-| Paramètre | Défaut | Rôle |
-|-----------|--------|------|
-| `warn_soon_days` | 90 | Badge ambre — planifier usage / revue |
-| `warn_return_days` | 60 | Badge orange — file retour fournisseur / reverse |
-| `warn_critical_days` | 30 | Badge rouge — action urgente |
-| `receipt_warn_days` | 30 | Soft-confirm à l’entrée si DLC ≤ N jours |
-| `allow_expired_receipt` | `false` | Interdit d’entrer un lot déjà périmé |
-| `block_expired_on_daf` | `true` | Interdit finalize si lot périmé |
-| `block_expired_on_adjust_out` | `true` | Interdit sortie manuelle sur lot périmé (sauf waste) |
-| `auto_quarantine_expired` | `true` | Job quotidien : périmé → `quarantine` (pas de destruction auto) |
-| `expiry_digest_enabled` | `true` | Digest **hebdomadaire** (pas quotidien) |
-| `expiry_digest_weekday` | `1` | 1 = lundi (ISO) · 07:00 Europe/Brussels |
-| `notify_on_auto_quarantine` | `true` | Email événementiel si nouveaux lots auto-quarantaine |
+### 1.3 Livré Sprint 1 (code) — ✅
 
-### 3.2 États d’un lot
+| Livrable | Preuve |
+|----------|--------|
+| Migrations `000081_pharmacy_ref` (+ `000082_pharmacy_ref_drop_unused_fts`) | appliquées local |
+| Table `pharmacy.ref_medications` | 3 CNK sample |
+| `store/pharmacy_ref.go` + search | tests OK |
+| `handlers/pharmacy_medications.go` | `GET /vet/pharmacy/medications/search` |
+| CLI `import-cnk` + `make import-cnk` | `go/testdata/cnk_sample.csv` |
+| Flag `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED` | config + api-dev |
+| Page `/medicaments` + `ProCombobox` + bloc légal | Nuxt |
+| Nav Médicaments + tag `dev` | `default.vue` |
+| i18n `pharmacy.*` | 6 locales |
+| Review fixes (A11y `inputId`, Makefile paths, test CNK) | ✅ |
 
-```text
-active ──(péremption atteinte + job)──► quarantine ──(waste UI)──► depleted (qty=0, status=wasted)
-   │                                         │
-   └──(sortie FEFO / adjust)──► qty↓         └──(override admin rare)──► active (audit)
-```
+### 1.4 Livré Sprint 2 (code) — ✅ ~95 %
 
-| `status` | Sortable FEFO ? | Visible stock ? |
-|----------|-----------------|-----------------|
-| `active` | oui si `expires_on >= today` et `qty > 0` | oui |
-| `quarantine` | **non** | oui (filtre dédié) |
-| `wasted` | non | historique / mouvements |
+| Livrable | Preuve |
+|----------|--------|
+| Migration `000083_pharmacy_stock` | settings, deposits, batches(+status), movements |
+| Domaine `go/internal/pharmacy` | bands 90/60/30, BrusselsToday, erreurs métier |
+| Store FEFO + CRUD | receipt / adjust / quarantine / waste / AllocateFEFO |
+| API vet stock + CSV | `handlers/pharmacy_stock.go` |
+| Job `POST /internal/pharmacy/expiry-run` | `X-Pharmacy-Expiry-Secret` + digest lundi |
+| BFF + page `/stock` + nav tag `dev` | Nuxt + i18n 6 locales |
+| Tests | `pharmacy/domain_test`, `store/pharmacy_stock_test`, handlers stock |
 
-**Règle dure** : `AllocateFEFO` ne sélectionne que `status = active AND expires_on >= CURRENT_DATE AND qty_on_hand > 0`.
+### 1.5 Livré Sprint 3 (code) — ✅ ~95 %
 
-### 3.3 FEFO enrichi
+| Livrable | Preuve |
+|----------|--------|
+| Migration `000084_pharmacy_daf` | sequences, documents, items |
+| Finalize ACID + FEFO + gapless | `store/pharmacy_daf.go` |
+| PDF gofpdf + media `daf/` (sensible) | `pharmacy/daf_pdf.go` |
+| API + BFF + UI `/daf` · `/daf/nouveau` · `/daf/[id]` | tag `dev` |
+| Gate antibiotique VAMReg | `pharmacy/vamreg.go` (worker = S4) |
+| Tests | `TestPharmacyDAFFinalizeCancelPDF` + unit PDF/VAMReg |
 
-**Obligation GDP UE 2021/1248 art. 24** : rotation « first expiry, first out » ; **toute exception doit être documentée**.
+### 1.6 Encore non démarré — ⬜
 
-Phase 1 :
-
-1. `expires_on ASC`
-2. `created_at ASC` (stabilité)
-3. Split multi-lots si qty insuffisante sur le premier
-4. **Pas d’override FEFO** (pas de choix manuel d’un lot plus long) — évite les exceptions non auditées
-
-UI wizard DAF : **preview FEFO** avant finalize (lots + dates + bandes 90/60/30).
-
-Si stock « mathématiquement » suffisant mais uniquement en lots périmés / quarantaine → **409** `stock_unavailable_valid_lots`.
-
-### 3.4 Entrée stock (receipt)
-
-- `lot_number` + `expires_on` **obligatoires** (+ `medication_id` / CNK)
-- **Hard block** si `expires_on < today` (`allow_expired_receipt=false`) — aligné interdiction BE de détenir/délivrer des périmés
-- **Soft confirm** si `expires_on ≤ today + receipt_warn_days` (30) — questionner les lots court-datés (pratique clinique)
-- Conservation : dépôt (ex. `FRIDGE`) — **BUD post-ouverture hors Phase 1** (`opened_at` backlog)
-
-### 3.5 Sorties & waste
-
-| Motif | Effet péremption |
-|-------|------------------|
-| `daf` | FEFO ; jamais lot périmé / quarantaine |
-| `adjust` (−) | même garde-fou si `block_expired_on_adjust_out` |
-| `waste` | **seul** chemin comptable pour sortir un lot périmé/quarantaine (destruction **ou** retour fournisseur) |
-| `daf_cancel` | restock même `batch_id` si non administré ; sinon waste |
-
-`waste_reason` : `expired` \| `supplier_return` \| `cold_chain` \| `damaged` \| `recall` \| `other`
-
-- **Pas de waste automatique** : la destruction / retour exige un acte humain + motif (traçabilité inspection).
-- Quarantaine logiciel ≠ déplacement physique : UI rappelle de **séparer physiquement** (zone quarantaine / destruction) — bonnes pratiques entreposage.
-
-### 3.6 Alertes & digests
-
-| Canal | Contenu | Fréquence |
-|-------|---------|-----------|
-| UI `/stock` | Compteurs + tri `expires_on` ; bandes 90/60/30/périmé/quarantaine | à chaque chargement |
-| Badge nav « Stock » | Nb Critique + Quarantaine/Périmé | refresh page |
-| Job `expiry-run` | Auto-quarantaine des lots `expires_on < today` encore `active` | **quotidien** 06:30 Europe/Brussels |
-| Email événementiel | Nouveaux lots auto-quarantaine (si `notify_on_auto_quarantine`) | à chaque run qui mute ≥1 lot |
-| Digest hebdo | Synthèse Attention / À retourner / Critique / Quarantaine | **lundi** 07:00 Europe/Brussels |
-| (P1.1) | Notif in-app Pro | — |
-
-Un seul endpoint interne (fusionné) :
-
-```text
-POST /api/v1/internal/pharmacy/expiry-run
-Header: X-Pharmacy-Expiry-Secret  # secretHeaderOK
-Body optionnel: { "forceDigest": true }
-```
-
-Comportement : (1) auto-quarantaine → (2) emails événementiels → (3) si weekday = digest weekday **ou** `forceDigest`, envoi digest (skip si tous compteurs à 0).
-
-Scheduler GCP : `infra/gcp/setup-pharmacy-expiry-scheduler.sh` (cron quotidien).
-
-### 3.7 Reporting péremption (MVP UI)
-
-- Filtres : Tous / Attention / À retourner / Critique / Quarantaine / Dépôt
-- Tri défaut : `expires_on ASC`
-- Actions : quarantaine manuelle · waste (destruction / retour fournisseur)
-- Export CSV (inventaire / contrôle annuel — AR belge : vérif registres ↔ stock **≥ 1×/an**)
-- PDF DAF : **lot + n° AMM obligatoires** (AFMPS) ; `expires_on` **affichée en bonus** (non exigée sur le formulaire légal)
+- Workers Asynq, VAMReg, invoices.connect
+- Script scheduler GCP `expiry-run`
+- Import AFMPS national complet
+- Playwright `@p0` pharmacie
+- Use case commercial `UC-*` pharmacie
+- Activation staging Cloud Run (`PHARMACY_ENABLED` + `pg_trgm` + secret expiry)
 
 ---
 
-## 4. Architecture (rappel aligné sur 27)
+## 2. Décisions métier figées (ne pas re-débattre)
+
+| # | Décision | Statut |
+|---|----------|--------|
+| 1 | Seuils **90 / 60 / 30** j | ✅ |
+| 2 | Auto-quarantaine ON (pas waste auto) | ✅ |
+| 3 | Pas d’entrée déjà périmée + soft-warn ≤ 30 j | ✅ |
+| 4 | Waste = seul chemin sortie (destruction **ou** `supplier_return`) | ✅ |
+| 5 | Job `expiry-run` quotidien + digest **lundi** + mail si nouveaux quarantaine | ✅ |
+| 6 | FEFO strict Phase 1 (pas d’override) | ✅ |
+| 7 | Tag menu **`dev`** sur Médicaments / Stock / DAF | ✅ |
+| 8 | Bloc légal `<details>` sur les 3 pages | ✅ |
+| 9 | Timezone métier `Europe/Brussels` | ✅ |
+| 10 | Numéros migration = **000081+** (spec 27 obsolète sur 000039–042) | ✅ (ce plan) |
+
+Sources : (UE) 2019/6 · 2021/1248 art. 24 · AFMPS DAF · loi BE périmés · bonnes pratiques 90/60/30.
+
+---
+
+## 3. Architecture cible (rappel)
 
 ```mermaid
 flowchart LR
   Nuxt[Nuxt Pro] --> BFF[BFF /api/vet/pharmacy]
   BFF --> API[Go handlers]
   API --> Dom[internal/pharmacy]
-  Dom --> Store[store pgx schema pharmacy]
-  Store --> PG[(PostgreSQL)]
+  Dom --> Store[store pgx]
+  Store --> PG[(schema pharmacy)]
   API --> Media[PDF DAF GCS]
   API --> Q[Asynq Redis]
   Q --> W1[VAMReg]
   Q --> W2[invoices.connect]
-  Cron[Scheduler expiry] --> API
-  Cron --> Digest[Email digest]
+  Cron[expiry-run] --> API
 ```
 
-- Feature flag : `PHARMACY_ENABLED`
-- Isolation : tout scoppé `practice_id`
-- Domaine : `go/internal/pharmacy/` (FEFO, expiry status, DAF number)
-- Pas de JWT en JS client ; cookies httpOnly BFF inchangés
+- Flag : `PHARMACY_ENABLED` (défaut `false`)
+- Isolation : `practice_id`
+- Nav : `tag: t('nav.tagDev')` sur les 3 entrées
 
 ---
 
-## 5. Modèle de données (extensions vs 27)
+## 4. Modèle de données (à créer)
 
-Réutiliser le schéma `pharmacy` de la doc 27, **plus** :
+Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-dessous.
 
-### 5.1 `pharmacy.practice_settings` (nouveau)
+| Migration (cible) | Contenu | Statut |
+|-------------------|---------|--------|
+| `000081_pharmacy_ref` | `ref_medications` + `pg_trgm` | ✅ |
+| `000082_pharmacy_ref_drop_unused_fts` | cleanup index FTS draft | ✅ (⚠️ même préfixe 000082 que Billit) |
+| `000083_pharmacy_stock` | deposits, batches(+status), movements, `practice_settings` | ✅ |
+| `000084_pharmacy_daf` | sequences, documents, items | ✅ |
+| `000085_pharmacy_jobs_audit` | `job_audit` | ⬜ |
 
-| Colonne | Type | Notes |
-|---------|------|-------|
-| `practice_id` | UUID PK | |
-| `warn_soon_days` | INT | défaut 90 |
-| `warn_return_days` | INT | défaut 60 |
-| `warn_critical_days` | INT | défaut 30 |
-| `receipt_warn_days` | INT | défaut 30 |
-| `allow_expired_receipt` | BOOL | défaut false |
-| `block_expired_on_daf` | BOOL | défaut true |
-| `block_expired_on_adjust_out` | BOOL | défaut true |
-| `auto_quarantine_expired` | BOOL | défaut true |
-| `expiry_digest_enabled` | BOOL | défaut true |
-| `expiry_digest_weekday` | INT | défaut 1 (lundi) |
-| `notify_on_auto_quarantine` | BOOL | défaut true |
-| `digest_user_ids` | UUID[] | nullable = tous vets practice |
-| `updated_at` | TIMESTAMPTZ | |
+> **Attention** : `000082_invoicing_billit` coexiste déjà. Ne **pas** réutiliser `000082` pour le stock — démarrer à **`000083_pharmacy_stock`**.
 
-### 5.2 `pharmacy.medication_batches` — colonnes ajoutées
+**Bandes** : OK / Attention (90) / À retourner (60) / Critique (30) / Périmé / Quarantaine.
 
-| Colonne | Type | Notes |
-|---------|------|-------|
-| `status` | TEXT | `active` \| `quarantine` \| `wasted` |
-| `quarantined_at` | TIMESTAMPTZ | nullable |
-| `quarantine_reason` | TEXT | nullable |
-| `wasted_at` | TIMESTAMPTZ | nullable |
-| `waste_reason` | TEXT | `expired` \| `cold_chain` \| `damaged` \| `recall` \| `other` |
-
-Index FEFO mis à jour :
-
-```text
-(practice_id, medication_id, deposit_id, expires_on ASC)
-WHERE qty_on_hand > 0 AND status = 'active'
-```
-
-Index alertes :
-
-```text
-(practice_id, expires_on ASC)
-WHERE qty_on_hand > 0 AND status IN ('active', 'quarantine')
-```
-
-### 5.3 `pharmacy.stock_movements` — `reason` étendu
-
-`receipt` | `daf` | `adjust` | `waste` | `daf_cancel` | `quarantine` | `unquarantine`
-
-Champ optionnel `reason_detail` TEXT.
-
-### 5.4 Migrations (ordre)
-
-| Migration | Contenu |
-|-----------|---------|
-| `0000XX_pharmacy_ref` | `ref_medications` + trgm |
-| `0000XX_pharmacy_stock` | deposits, batches(+status), movements, practice_settings |
-| `0000XX_pharmacy_daf` | sequences, documents, items |
-| `0000XX_pharmacy_jobs_audit` | job_audit workers |
-
-*(Numéros exacts = prochaines libres au moment du merge — ne pas figer 000039 si déjà pris.)*
+**FEFO** : `status=active AND expires_on >= today AND qty_on_hand > 0` ORDER BY `expires_on ASC`.
 
 ---
 
-## 6. API (surface stock + péremption)
+## 5. Plan d’exécution tracé (sprints)
 
-Préfixe authentifié véto : `/api/v1/vet/pharmacy/…` (+ BFF Nuxt miroir).
+### Sprint 0 — Spec & décisions — ✅ FAIT
 
-| Méthode | Route | Rôle |
-|---------|-------|------|
-| GET | `/medications/search?q=` | Autocomplete CNK |
-| GET/POST | `/deposits` | Dépôts |
-| GET | `/batches?status=&expiry=&depositId=` | Liste lots + filtres péremption |
-| POST | `/batches` | Receipt (lot + expires_on) |
-| POST | `/batches/{id}/adjust` | Ajustement |
-| POST | `/batches/{id}/quarantine` | Bloquer lot |
-| POST | `/batches/{id}/waste` | Destruction / péremption |
-| GET | `/movements` | Journal |
-| GET | `/expiry/summary` | Compteurs OK / soon / critical / expired / quarantine |
-| PATCH | `/settings` | Seuils + digest |
-| … | DAF (voir 27) | |
+| Tâche | Statut |
+|-------|--------|
+| Doc 27 + 28 + index | ✅ |
+| Décisions péremption / FEFO / digests / tag `dev` / bloc légal | ✅ |
+| Feature flag nommé `PHARMACY_ENABLED` (décision) | ✅ |
+| Flag réellement branché dans config Go / Nuxt | ✅ |
+| Extension Cloud SQL `pg_trgm` | 🟡 — requise avant migrate staging (user cloudsqlsuperuser si besoin) ; `unaccent` non utilisée (normalize Go) |
 
-Interne :
-
-| Méthode | Route | Rôle |
-|---------|-------|------|
-| POST | `/internal/pharmacy/expiry-run` | Quarantaine auto + enqueue digests |
-| POST | `/internal/pharmacy/expiry-digest/run` | Envoi digests (ou fusionné avec expiry-run) |
-
-Erreurs métier stables (i18n) :
-
-- `stock_insufficient`
-- `stock_unavailable_valid_lots` (périmé/quarantaine uniquement)
-- `batch_expired`
-- `batch_quarantined`
-- `invalid_expiry_on_receipt`
+**Done when (restant)** : rien bloquant — passer Sprint 1.
 
 ---
 
-## 7. UX Pro
+### Sprint 1 — Dictionnaire CNK — ✅ ~95 %
 
-### Navigation (vet-only, si `PHARMACY_ENABLED`)
+| Tâche | Statut |
+|-------|--------|
+| Migration `000081_pharmacy_ref` | ✅ |
+| CLI `import-cnk` (hors HTTP) + `make import-cnk` | ✅ |
+| `PHARMACY_ENABLED` dans config + `.env.example` + `api-dev` | ✅ |
+| API `GET …/medications/search` | ✅ |
+| BFF + page `/medicaments` | ✅ |
+| `ProCombobox` (+ A11y `inputId`) | ✅ |
+| Nav `/medicaments` + tag **`dev`** + `data-testid` | ✅ |
+| i18n `nav.medicaments` + `pharmacy.*` (6 locales) | ✅ |
+| Bloc légal `<details>` (filtre CNK/antibiotiques) | ✅ |
+| Tests search + import | ✅ |
+| Import AFMPS national complet (fichier officiel) | ⬜ (échantillon local seulement) |
 
-**Médicaments** · **Stock** · **DAF**
-
-### `/stock`
-
-1. Header : stats (Critique / Attention / À retourner / Périmé / Quarantaine)
-2. **Bloc légal rétractable** (`<details class="pharmacy-legal">`) : cadre FEFO / périmés / inventaire (clés `pharmacy.legal.*`) — fermé par défaut
-3. Toolbar : recherche, filtre dépôt, filtre bande péremption
-4. Table lots : médicament, CNK, lot, dépôt, qty, `expires_on`, badge statut
-5. Actions ligne : adjust · quarantine · waste
-6. CTA « Entrée stock »
-
-Même motif `<details>` (contenu filtré par page) sur `/medicaments` (CNK / antibiotiques) et `/daf` (mentions AFMPS lot+AMM, conservation 5 ans).
-
-### `/stock/mouvements`
-
-Journal filtrable (dont `waste` / `quarantine`).
-
-### `/daf/nouveau`
-
-Preview FEFO avec dates ; blocage finalize si ligne sans lot valide ; panneau antibiotique (27).
-
-### i18n
-
-Namespace `pharmacy.*` dans **fr / en / nl / es / et / it** (6 locales).
-
-Clés péremption minimales :
-
-- `pharmacy.expiry.ok|soon|return|critical|expired|quarantine`
-- `pharmacy.expiry.digestSubject`
-- `pharmacy.expiry.physicalSegregationHint`
-- `pharmacy.errors.stockUnavailableValidLots`
-- `pharmacy.waste.reasons.*`
-- `pharmacy.legal.title` + `pharmacy.legal.fefo|expired|daf|records|inventory|quarantine|vamreg` (corps du bloc rétractable)
+**Done when restant** : brancher un export AFMPS réel en staging (non bloquant pour S2).
 
 ---
 
-## 8. Plan d’exécution par sprints
+### Sprint 2 — Stock + péremption — ✅ ~95 %
 
-Ordre strict. Chaque sprint a un critère **Done when**.
+| Tâche | Statut |
+|-------|--------|
+| Migration **`000083_pharmacy_stock`** + `practice_settings` | ✅ |
+| CRUD dépôts / receipt / adjust / quarantine / waste | ✅ |
+| `AllocateFEFO` + lock `FOR UPDATE` (+ test FEFO) | ✅ (pas de test concurrence multi-goroutine dédié) |
+| UI `/stock` + filtres 90/60/30 + summary | ✅ |
+| Nav `/stock` + tag **`dev`** | ✅ |
+| Bloc légal + hint séparation physique | ✅ |
+| Job `POST /internal/pharmacy/expiry-run` + `secretHeaderOK` | ✅ |
+| Digest hebdo + notify auto-quarantaine | ✅ (via `SendVetAlert`) |
+| Export CSV | ✅ |
+| Tests intégration péremption / receipt expiré | ✅ |
+| Script scheduler GCP | ⬜ → S6 |
 
-### Sprint 0 — Validation plan (0,5 j)
-
-- Valider ce document + [27](27-PHARMACIE-BELGIQUE.md) (seuils 30/90, auto-quarantaine, digests).
-- Décider : un job `expiry-run` fusionné vs deux endpoints.
-- **Done when** : OK produit + tech ; flag `PHARMACY_ENABLED` acté.
-
-### Sprint 1 — Dictionnaire CNK (3–5 j)
-
-- Migration ref + CLI `import-cnk`
-- API search + page `/medicaments` + `ProCombobox`
-- **Done when** : import idempotent ; search &lt; 100 ms ; badge antibiotique
-
-### Sprint 2 — Stock + péremption cœur (5–8 j) ← **critique**
-
-- Migrations stock + `practice_settings` + status lots
-- CRUD dépôts / receipt / adjust / waste / quarantine
-- `AllocateFEFO` (ignore périmé & quarantaine) + tests concurrence
-- UI `/stock` + summary expiry + filtres
-- Job `expiry-run` (auto-quarantaine quotidienne) + digest hebdo + notify événementiel (dry-run OK)
-- **Done when** :
-  - 2 TX parallèles sans qty négative
-  - lot périmé **jamais** sorti en DAF/adjust
-  - waste seul chemin de sortie périmé (motifs incl. `supplier_return`)
-  - bandes 90/60/30 visibles UI
-  - expiry-run idempotent ; digest skip si vide
-  - tests Go intégration sur bandeaux expiry
-
-### Sprint 3 — DAF + PDF (5–8 j)
-
-- Sequences gapless, draft/finalize/cancel, PDF GCS
-- Wizard + preview FEFO daté
-- **Done when** : finalize ACID ; 409 si seuls lots périmés ; PDF hashé
-
-### Sprint 4 — Workers VAMReg (3–5 j)
-
-- Asynq + audit + retry
-- **Done when** : dry-run + failed→retry→failed terminal
-
-### Sprint 5 — invoices.connect (3–5 j)
-
-- Export asynchrone + webhook HMAC
-- **Done when** : contrat JSON figé ; idempotence
-
-### Sprint 6 — Durcissement & ops (2–3 j)
-
-- Scheduler GCP expiry + secrets
-- Smoke staging : receipt → alerte → waste → DAF happy path
-- Maj `15-PLAN-TESTS.md` (P0 stock/péremption) + useCase commercial si démo
-- **Done when** : checklist §10 verte sur staging pilote
+**Done when** : pas de sortie périmé ; waste seul chemin ; expiry-run idempotent ; bandes UI — **atteint** (scheduler GCP reporté S6).
 
 ---
 
-## 9. Tests anti-régression (obligation)
+### Sprint 3 — DAF + PDF — ✅ ~95 %
 
-| Couche | Cas péremption / stock |
-|--------|------------------------|
-| Unit Go | FEFO skip périmé ; split multi-lots ; seuils soon/critical |
-| Intégration PG | finalize concurrent ; waste ; auto-quarantaine job |
-| API | receipt expires_on passé → 400 ; DAF sur lot périmé → 409 |
-| Worker/cron | expiry-run idempotent ; digest dry-run |
-| E2E Playwright `@p0` (après UI) | Filtre Critique + waste + entrée stock |
+| Tâche | Statut |
+|-------|--------|
+| Migration **`000084_pharmacy_daf`** | ✅ |
+| Draft / finalize / cancel + numérotation gapless | ✅ |
+| PDF media local/GCS + sha256 | ✅ |
+| Wizard `/daf/nouveau` + preview FEFO | ✅ |
+| Nav `/daf` + tag **`dev`** | ✅ |
+| Mentions PDF : lot + AMM (+ DLC bonus) | ✅ |
+| Tests finalize / gapless / antibio / PDF / cancel | ✅ (pas de stress 2-TX dédié ; FEFO `FOR UPDATE` réutilisé) |
 
-Commandes : `make test-go` · smoke · `make test-e2e-p0` (quand pages prêtes).
+**Done when** : finalize ACID ; PDF accessible ; numéros monotones — **atteint**.
 
 ---
 
-## 10. Checklist ops (avant activation staging)
+### Sprint 4 — Worker VAMReg — ⬜ 0 %
 
-- [ ] Migrations pharmacy appliquées
+| Tâche | Statut |
+|-------|--------|
+| Migration **`000085_pharmacy_jobs_audit`** | ⬜ |
+| Dépendance Asynq + `internal/workers` | ⬜ |
+| Handler VAMReg + dry-run + retry | ⬜ |
+| `PHARMACY_WORKERS_ENABLED` | ⬜ |
+| UI statut + retry | ⬜ |
+
+**Done when** : dry-run OK ; échec → retries → `failed` ; succès → `sent`.
+
+---
+
+### Sprint 5 — invoices.connect — ⬜ 0 %
+
+| Tâche | Statut |
+|-------|--------|
+| Gateway + task Asynq + webhook HMAC | ⬜ |
+| Contrat JSON figé avec facturation | ⬜ |
+| UI statut export | ⬜ |
+
+**Done when** : mock HTTP vert ; idempotence.
+
+---
+
+### Sprint 6 — Ops staging & filet QA — ⬜ 0 %
+
+| Tâche | Statut |
+|-------|--------|
+| `setup-pharmacy-expiry-scheduler.sh` | ⬜ |
+| Secrets SM + env Cloud Run | ⬜ |
+| Smoke staging pilote | ⬜ |
+| Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ⬜ |
+| Use case commercial + `make usecases-sync` si démo | ⬜ |
+| Option : retirer tag `dev` (ou flag) à la GA | ⬜ |
+
+**Done when** : checklist §7 verte.
+
+---
+
+## 6. Surfaces API (à créer) — ⬜
+
+Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
+
+| Zone | Routes clés | Statut |
+|------|-------------|--------|
+| Médicaments | `GET /medications/search` | ✅ |
+| Dépôts / lots / mouvements | CRUD + adjust / quarantine / waste | ✅ |
+| Expiry | `GET /expiry/summary` · `PATCH /settings` | ✅ |
+| DAF | draft / finalize / cancel / PDF | ✅ |
+| Interne | `POST /internal/pharmacy/expiry-run` | ✅ |
+
+Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_expired` · `batch_quarantined` · `invalid_expiry_on_receipt`.
+
+---
+
+## 7. Checklist ops staging
+
+- [ ] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
+- [ ] Migrations `000081`+ appliquées
 - [ ] Import CNK exécuté
-- [ ] `PHARMACY_ENABLED=true` (staging / cabinet pilote)
-- [ ] Secrets : expiry digest + VAMReg + invoices (selon sprint)
-- [ ] Scheduler `expiry-run` quotidien (Europe/Brussels)
-- [ ] Redis joignable si workers activés
-- [ ] GCS pour PDF DAF
-- [ ] Smoke : entrée lot bientôt périmé → badge Critique → waste → entrée lot OK → DAF finalize
+- [ ] `PHARMACY_ENABLED=true` (pilote)
+- [ ] Nav Médicaments + tag **`dev`** visible
+- [ ] Secrets expiry (+ VAMReg / invoices selon sprint)
+- [ ] Scheduler `expiry-run` (Europe/Brussels)
+- [ ] Redis si workers ON
+- [ ] GCS PDF DAF
+- [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize
 
 ---
 
-## 11. Décisions figées (validées + arbitrage web 2026-07-27)
+## 8. Hors Phase 1 — ❌
 
-### 11.1 Les 5 points validés (confirmés)
-
-| # | Décision | Statut |
-|---|----------|--------|
-| 1 | Seuils d’alerte péremption | **Étendu** → **90 / 60 / 30** (voir 11.2) |
-| 2 | Auto-quarantaine des lots périmés ON | **Confirmé** |
-| 3 | Pas d’entrée stock déjà périmé | **Confirmé** (+ soft-warn ≤ 30 j) |
-| 4 | Waste = seul chemin sortie comptable d’un périmé | **Confirmé** (inclut retour fournisseur) |
-| 5 | Un job `expiry-run` | **Confirmé** (quotidien quarantaine ; digest **hebdo**) |
-
-### 11.2 Ambiguïtés tranchées (sources)
-
-| Ambiguïté | Décision retenue | Pourquoi |
-|-----------|------------------|----------|
-| 2 bandes (90/30) vs 3 (90/60/30) | **90 / 60 / 30** | Standard pharmacie : 90 revue, 60 retour fournisseur, 30 retrait urgent |
-| Digests quotidiens vs hebdo | Job **quotidien** silencieux (quarantaine) + digest **lundi** + email si nouveaux auto-quarantaine | Évite le bruit ; revue clinique typiquement hebdo/mensuelle |
-| Quarantaine auto vs waste auto | **Quarantaine auto uniquement** ; waste **manuel** | Entreposage : séparer jusqu’à disposition ; destruction documentée |
-| Override FEFO (choisir un autre lot) | **Interdit Phase 1** | GDP UE 2021/1248 art. 24 : FEFO ; exceptions à documenter → pas d’exception sans audit dédié |
-| Expiry sur le DAF PDF | Lot + **n° AMM** obligatoires ; `expires_on` **bonus UI/PDF** | Liste AFMPS DAF : lot + AMM, **pas** la DLC |
-| Court-daté à la réception | Soft-confirm ≤ 30 j ; hard-block périmé | Pratique clinique « refuse/question short-dated » |
-| Timezone | `Europe/Brussels` | Métier BE |
-| BUD post-ouverture | **Hors Phase 1** | Complexité conservation / multi-dose |
-| Inventaire annuel | Backlog P1.1 + export CSV dès S2 | AR belge : vérif registres ↔ stock ≥ 1×/an |
-| Possession de périmés | Hors stock **actif** dès J+0 (quarantaine) | Loi BE : détention/délivrance de médicaments vétérinaires **périmés** sanctionnée |
-
-### 11.3 Risques résiduels
-
-| Risque | Mitigation |
-|--------|------------|
-| Digests bruyants | Skip si compteurs à 0 ; weekday configurable |
-| Séparation physique oubliée | Copy UI « Séparer physiquement » à chaque passage quarantaine |
-| Confusion Care vs stock | Libellés « Stock cabinet » ; pas de surface Flutter |
-| Override admin receipt périmé | Flag `allow_expired_receipt` défaut OFF + audit log |
+| Item | Note |
+|------|------|
+| Flutter client / stock proprio | Care ≠ pharmacie |
+| BUD post-ouverture | Backlog |
+| Scan Datamatrix | Backlog |
+| Override FEFO documenté | Backlog |
+| Inventaire guidé annuel | Export CSV dès S2 ; UI guidée P1.1 |
+| Stripe sur lignes DAF | Non |
+| Multi-cabinet cross-practice | Non |
+| Remplacement logiciel DAF certifié | Non |
 
 ---
 
-## 12. Backlog Phase 1.1+
+## 9. Risques
 
-- Scan code-barres / Datamatrix lot + expiry
-- Beyond-use date après ouverture (`opened_at`)
-- Lien fiche animal → historique DAF/médicaments
-- Inventaire physique guidé (comptage annuel obligatoire BE)
-- Seuils par dépôt ou par médicament (vaccins vs topiques)
-- Intégration rappel fabricant (lot recall → quarantine mass)
-- Override FEFO documenté (motif obligatoire) si besoin terrain
-- Fenêtre crédit retour fournisseur (souvent 6–9 mois) — bande optionnelle 180 j
+| Risque | Mitigation | Statut mitigation |
+|--------|------------|-------------------|
+| Digests bruyants | Skip si vide ; lundi only | ⬜ (à coder) |
+| Séparation physique oubliée | Copy UI quarantaine | ⬜ |
+| Confusion Care vs stock | Libellés « Stock cabinet » | ⬜ |
+| Numéros migration 27 obsolètes | Ce plan impose **000081+** | ✅ |
 
 ---
 
-## 13. Liens
+## 10. Liens
 
 | Doc | Lien |
 |-----|------|
-| Spec pharmacie BE | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
-| Modules métier | [04-MODULES-METIER.md](04-MODULES-METIER.md) |
-| Plan de tests | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) |
+| Spec détaillée | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
+| Modules | [04-MODULES-METIER.md](04-MODULES-METIER.md) |
+| Modèle | [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md) |
+| Tests | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) |
 | GCP | [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT.md) |
-| AFMPS — documents vétérinaires / DAF | https://www.afmps.be/fr/usage_veterinaire/medicaments/medicaments/distribution_et_delivrance/documents_veterinaires |
-| GDP FEFO médicaments vétérinaires | Règlement d’exécution (UE) 2021/1248 art. 24 |
+| AFMPS DAF | https://www.afmps.be/fr/usage_veterinaire/medicaments/medicaments/distribution_et_delivrance/documents_veterinaires |
 
-**Prochaine action** : démarrer **Sprint 1** (dictionnaire CNK) — décisions §11 figées.
+**Prochaine action concrète** : **Sprint 4** — Asynq VAMReg (retry UI) ; Billit / invoices.connect restent hors priorité pharmacie.

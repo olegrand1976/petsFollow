@@ -3,6 +3,8 @@
     class="material-symbols-outlined pro-icon"
     :style="sizeStyle"
     aria-hidden="true"
+    translate="no"
+    lang="en"
   >{{ name }}</span>
 </template>
 

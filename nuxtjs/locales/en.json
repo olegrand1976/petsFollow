@@ -27,6 +27,9 @@
     "commercialTraining": "AI training",
     "adminTraining": "AI training admin",
     "products": "Products",
+    "invoicing": "Invoicing",
+    "medicaments": "Medications",
+    "tagDev": "dev",
     "calendar": "Calendar",
     "managerDashboard": "Team dashboard",
     "managerFollowups": "Follow-up",
@@ -60,7 +63,9 @@
     "commercialFiliation": "Attribution",
     "managerFiliation": "Team attribution",
     "adminFiliation": "Attribution",
-    "usecases": "Test guides"
+    "usecases": "Test guides",
+    "stock": "Stock",
+    "daf": "DAF"
   },
   "auth": {
     "login": {
@@ -652,6 +657,106 @@
     "columnOwner": "Client",
     "unreadBadge": "New",
     "unreadCount": "{n} new"
+  },
+  "invoicing": {
+    "title": "Invoicing",
+    "subtitle": "Issue invoices, credit notes and quotes (Peppol).",
+    "wip": "Activate the Billit connection (mock locally) to create and send test invoices.",
+    "connectionTitle": "Billit connection",
+    "status": "Status",
+    "usage": "Documents this month: {used} / {max}",
+    "activate": "Enable invoicing",
+    "openReseller": "Open Billit registration",
+    "refresh": "Refresh status",
+    "completeHint": "After Billit signup (or in mock), enter PartyID and API key.",
+    "state": "State",
+    "partyId": "Billit PartyID",
+    "apiKey": "Billit API key",
+    "complete": "Link account",
+    "documentsTitle": "Documents",
+    "newInvoice": "New invoice (demo)",
+    "emptyDocs": "No documents yet",
+    "colType": "Type",
+    "colStatus": "Status",
+    "colTotal": "Total incl. VAT",
+    "send": "Send",
+    "errorGeneric": "Something went wrong"
+  },
+  "pharmacy": {
+    "antibioticWarning": "Antibiotic",
+    "medicaments": {
+      "title": "Medications",
+      "subtitle": "CNK / FAMHP dictionary — practice search.",
+      "searchLabel": "Search a medication",
+      "searchPlaceholder": "Name or CNK code…"
+    },
+    "legal": {
+      "title": "Legal framework (collapsible)",
+      "fefo": "FEFO (EU 2021/1248 art. 24): first expiry first out — applied to stock outbound.",
+      "daf": "ASD/DAF (FAMHP): batch number and MA number are mandatory on the document.",
+      "vamreg": "Antibiotics: VAMReg declaration and required fields before DAF finalisation.",
+      "expiry": "Expiry: 90 / 60 / 30 day thresholds; expired lots are auto-quarantined (daily job).",
+      "waste": "Only a waste declaration (destruction or supplier return) permanently removes the lot from stock.",
+      "dafFinalize": "Finalize requires lot + MA number; antibiotics need VAMReg payload."
+    },
+    "stock": {
+      "title": "Practice stock",
+      "subtitle": "Lots, expiry (90/60/30) and movements — FEFO.",
+      "export": "Export CSV",
+      "receiptTitle": "Stock receipt",
+      "medication": "Medication",
+      "lot": "Lot no.",
+      "expiresOn": "Expiry",
+      "qty": "Quantity",
+      "receive": "Receive",
+      "shortDatedWarn": "Warning: expiry ≤ 30 days — verify before putting into stock.",
+      "searchPlaceholder": "Filter name, CNK or lot…",
+      "refresh": "Refresh",
+      "empty": "No lots on hand.",
+      "colMed": "Medication",
+      "band": "Alert",
+      "quarantine": "Quarantine",
+      "waste": "Waste / exit",
+      "wasteConfirm": "Confirm stock exit (destruction or supplier return)?",
+      "bandAll": "All",
+      "bandOk": "OK",
+      "bandSoon": "Soon",
+      "bandReturn": "Return",
+      "bandCritical": "Critical",
+      "bandExpired": "Expired",
+      "bandQuarantine": "Quarantine",
+      "errorLoad": "Could not load stock.",
+      "errorReceive": "Receipt rejected.",
+      "errorAction": "Action failed."
+    },
+    "daf": {
+      "title": "DAF documents",
+      "subtitle": "Administration & supply — gapless numbering + PDF.",
+      "new": "New DAF",
+      "empty": "No DAF yet.",
+      "colNumber": "No.",
+      "colStatus": "Status",
+      "colDate": "Created",
+      "statusDraft": "Draft",
+      "statusFinalized": "Finalized",
+      "statusCancelled": "Cancelled",
+      "wizardTitle": "New DAF",
+      "wizardSubtitle": "Medication lines → FEFO preview → finalize.",
+      "amm": "MA number",
+      "addLine": "Add line",
+      "preview": "FEFO preview",
+      "saveDraft": "Save draft",
+      "finalize": "Finalize",
+      "cancel": "Cancel DAF",
+      "cancelConfirm": "Cancel this DAF and restock lots?",
+      "openPdf": "Open PDF",
+      "vamregSpecies": "Species (VAMReg)",
+      "vamregIndication": "Indication",
+      "vamregDuration": "Duration (days)",
+      "previewTitle": "Planned FEFO allocation",
+      "error": "DAF action failed.",
+      "legalExpiry": "Finalize requires lot + MA number; antibiotics need VAMReg payload."
+    }
   },
   "recommend": {
     "title": "Refer a practice",
@@ -2228,6 +2333,9 @@
     "addressSaved": "Address saved",
     "openMaps": "Open in Maps",
     "reportTitle": "Visit report",
+    "reportAuthorMine": "My report",
+    "reportAuthorPeer": "Other author",
+    "reportReadOnlyPeer": "Report from another professional — read-only. Switch back to “My report” to edit yours.",
     "reportHint": "Visit notes…",
     "saveReport": "Save report",
     "improveReport": "Improve (AI)",
@@ -2314,10 +2422,7 @@
     },
     "requestPreconsult": "Request a pre-consultation",
     "audioConsentClientCheck": "I have obtained the client's oral consent to record",
-    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication).",
-    "reportAuthorMine": "My report",
-    "reportAuthorPeer": "Other author",
-    "reportReadOnlyPeer": "Report from another professional — read-only. Switch back to “My report” to edit yours."
+    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication)."
   },
   "manager": {
     "dashboard": {
@@ -2575,7 +2680,57 @@
     "columnRole": "Role",
     "columnRights": "Rights",
     "defaults": "Role defaults",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "perms": {
+      "clients": {
+        "read": { "label": "View clients", "tip": "Access the practice client list and profiles." },
+        "write": { "label": "Edit clients", "tip": "Create or update client records." }
+      },
+      "pets": {
+        "read": { "label": "View pets", "tip": "Access pet records (no clinical write)." },
+        "write_clinical": { "label": "Clinical write", "tip": "Enter clinical notes, validations and medical acts." }
+      },
+      "heartrate": {
+        "validate": { "label": "Validate HR", "tip": "Validate heart-rate readings." }
+      },
+      "messaging": { "label": "Messaging", "tip": "Read and send messages with clients." },
+      "calendar": {
+        "manage": { "label": "Calendar", "tip": "Manage appointments and the practice calendar." }
+      },
+      "care": {
+        "manage": { "label": "Care & reminders", "tip": "Manage care plans, Care reminders and related follow-ups." }
+      },
+      "shares": {
+        "manage": { "label": "Shares", "tip": "Manage pet-record shares with other actors." }
+      },
+      "practice": {
+        "settings": { "label": "Practice settings", "tip": "Change practice settings." }
+      },
+      "team": {
+        "manage": { "label": "Manage team", "tip": "Invite members, edit rights or revoke access." }
+      },
+      "commissions": {
+        "view": { "label": "View commissions", "tip": "Access the practice commissions board." }
+      }
+    }
+  },
+  "desk": {
+    "switchTitle": "Switch profile",
+    "switchHint": "Enter the password to switch to this account.",
+    "lockTitle": "Workstation locked",
+    "lockHint": "Idle timeout. Pick a profile and enter the password.",
+    "password": "Password",
+    "unlock": "Unlock",
+    "switch": "Switch",
+    "cancel": "Cancel",
+    "error": "Invalid credentials.",
+    "proOnly": "This account is not a Pro profile.",
+    "twoFaTitle": "2FA code",
+    "twoFaHint": "Enter the code from your authenticator app.",
+    "twoFaSubmit": "Verify",
+    "twoFaInvalid": "Invalid code.",
+    "current": "Active",
+    "ariaSwitcher": "Shared workstation profiles"
   },
   "competition": {
     "title": "Competitive analysis",

@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
+	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
@@ -25,12 +27,13 @@ import (
 )
 
 type API struct {
-	store    *store.Store
-	tokens   *authx.TokenIssuer
-	cfg      config.Config
-	notifier *email.Notifier
-	billing  *billing.Service
-	media    media.Store
+	store      *store.Store
+	tokens     *authx.TokenIssuer
+	cfg        config.Config
+	notifier   *email.Notifier
+	billing    *billing.Service
+	invoicing  *invoicing.Service
+	media      media.Store
 	pusher   fcm.Pusher
 	gemini   *gemini.Client
 	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
@@ -47,8 +50,16 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	if cfg.GeminiAPIKey != "" {
 		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
 	}
+	var inv *invoicing.Service
+	if cfg.BillitEnabled {
+		if !cfg.BillitMockEnabled {
+			// Live client not shipped yet — ValidateBillit should have blocked boot.
+			panic("BILLIT_ENABLED without mock: live Billit gateway not implemented")
+		}
+		inv = invoicing.NewService(st, invoicingmock.New(), cfg)
+	}
 	return &API{
-		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g,
+		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
 		vetLookupRL:  httpx.NewRateLimiter(30, time.Minute),
 		vetSuggestRL: httpx.NewRateLimiter(10, time.Minute),
 		authPulse:    newAuthPulse(),
@@ -90,6 +101,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerCommercialDiscoveryRoutes(r, authRL.Middleware)
 	a.registerAuthRoutes(r, authRL.Middleware)
 	a.registerBillingRoutes(r)
+	a.registerInvoicingRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerBrandAssetAdminRoutes(r)
 	a.registerCommissionRoutes(r)

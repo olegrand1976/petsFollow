@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -80,6 +82,22 @@ type Config struct {
 	AuthHealthSecret string
 	// MLMOrgEnabled exposes multi-depth downline UI; commissions remain flat until MLM billing ships.
 	MLMOrgEnabled bool
+	// PharmacyEnabled enables vet pharmacy module (CNK dictionary, stock, DAF) — default off.
+	PharmacyEnabled bool
+	// PharmacyExpirySecret protège POST /internal/pharmacy/expiry-run.
+	PharmacyExpirySecret string
+	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
+	BillitEnabled bool
+	// BillitMockEnabled uses the mock gateway (local/CI) — never call Billit live.
+	BillitMockEnabled bool
+	BillitBaseURL             string
+	BillitMasterPartyID       string
+	BillitMasterAPIKey        string
+	BillitResellerRegisterURL string
+	BillitWebhookSecret       string
+	BillitDefaultDocsIncluded int
+	BillitSecretsBackend      string // local_enc | plain_dev
+	BillitSecretsKey          string
 	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging reset).
 	SeedNotifyStaff bool
 	// AdminStagingSeedEnabled enables POST /admin/staging/seed (staging only — never prod).
@@ -150,10 +168,43 @@ func Load() Config {
 		CommercialContactPhone: envOr("COMMERCIAL_CONTACT_PHONE", ""),
 		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
 		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
-		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),
-		SeedNotifyStaff:        envBool("SEED_NOTIFY_STAFF"),
+		MLMOrgEnabled:           envBool("MLM_ORG_ENABLED"),
+		PharmacyEnabled:         envBool("PHARMACY_ENABLED"),
+		PharmacyExpirySecret:    envOr("PHARMACY_EXPIRY_SECRET", ""),
+		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
+		BillitEnabled:           envBool("BILLIT_ENABLED"),
+		BillitMockEnabled:       envBool("BILLIT_MOCK_ENABLED"),
+		BillitBaseURL:           envOr("BILLIT_BASE_URL", "https://api.billit.be"),
+		BillitMasterPartyID:     envOr("BILLIT_MASTER_PARTY_ID", ""),
+		BillitMasterAPIKey:      envOr("BILLIT_MASTER_API_KEY", ""),
+		BillitResellerRegisterURL: envOr("BILLIT_RESELLER_REGISTER_URL", "https://my.billit.be/account/PetsFollow/Register"),
+		BillitWebhookSecret:       envOr("BILLIT_WEBHOOK_SECRET", ""),
+		BillitDefaultDocsIncluded: envInt("BILLIT_DEFAULT_DOCS_INCLUDED", 50),
+		BillitSecretsBackend:      envOr("BILLIT_SECRETS_BACKEND", "plain_dev"),
+		BillitSecretsKey:          envOr("BILLIT_SECRETS_KEY", ""),
+		SeedNotifyStaff:         envBool("SEED_NOTIFY_STAFF"),
 		AdminStagingSeedEnabled: envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}
+}
+
+// ValidateBillit refuses unsafe Billit configs outside DEV_SEED (prod/staging).
+func (c Config) ValidateBillit() error {
+	if !c.BillitEnabled {
+		return nil
+	}
+	if !c.BillitMockEnabled {
+		return errors.New("BILLIT_ENABLED without BILLIT_MOCK_ENABLED requires a live Billit client (not implemented yet — keep BILLIT_MOCK_ENABLED=true or disable BILLIT_ENABLED)")
+	}
+	if c.DevSeedEnabled {
+		return nil
+	}
+	if c.BillitSecretsBackend == "" || c.BillitSecretsBackend == "plain_dev" {
+		return errors.New("BILLIT_SECRETS_BACKEND=plain_dev refused outside DEV_SEED_ENABLED (use local_enc + BILLIT_SECRETS_KEY)")
+	}
+	if c.BillitSecretsBackend == "local_enc" && strings.TrimSpace(c.BillitSecretsKey) == "" {
+		return errors.New("BILLIT_SECRETS_KEY required when BILLIT_SECRETS_BACKEND=local_enc")
+	}
+	return nil
 }
 
 func envOr(k, def string) string {

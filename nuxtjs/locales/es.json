@@ -27,6 +27,9 @@
     "commercialTraining": "Entrenamiento IA",
     "adminTraining": "Formación IA",
     "products": "Productos",
+    "invoicing": "Facturación",
+    "medicaments": "Medicamentos",
+    "tagDev": "dev",
     "calendar": "Calendario",
     "managerDashboard": "Panel del equipo",
     "managerFollowups": "Seguimiento",
@@ -60,7 +63,9 @@
     "commercialFiliation": "Filación",
     "managerFiliation": "Filación equipo",
     "adminFiliation": "Filación",
-    "usecases": "Guías de prueba"
+    "usecases": "Guías de prueba",
+    "stock": "Stock",
+    "daf": "DAF"
   },
   "auth": {
     "login": {
@@ -652,6 +657,106 @@
     "columnOwner": "Cliente",
     "unreadBadge": "Nuevo",
     "unreadCount": "{n} nuevos"
+  },
+  "invoicing": {
+    "title": "Facturación",
+    "subtitle": "Emisión de facturas, notas de crédito y presupuestos (Peppol).",
+    "wip": "Active la conexión Billit (mock en local) para crear facturas de prueba.",
+    "connectionTitle": "Conexión Billit",
+    "status": "Estado",
+    "usage": "Documentos este mes: {used} / {max}",
+    "activate": "Activar facturación",
+    "openReseller": "Abrir registro Billit",
+    "refresh": "Actualizar estado",
+    "completeHint": "Tras el alta Billit (o en mock), indique PartyID y clave API.",
+    "state": "State",
+    "partyId": "PartyID Billit",
+    "apiKey": "Clave API Billit",
+    "complete": "Vincular cuenta",
+    "documentsTitle": "Documentos",
+    "newInvoice": "Nueva factura (demo)",
+    "emptyDocs": "Sin documentos todavía",
+    "colType": "Tipo",
+    "colStatus": "Estado",
+    "colTotal": "Total IVA incl.",
+    "send": "Enviar",
+    "errorGeneric": "Ha ocurrido un error"
+  },
+  "pharmacy": {
+    "antibioticWarning": "Antibiótico",
+    "medicaments": {
+      "title": "Medicamentos",
+      "subtitle": "Diccionario CNK / AFMPS — búsqueda en la clínica.",
+      "searchLabel": "Buscar un medicamento",
+      "searchPlaceholder": "Nombre o código CNK…"
+    },
+    "legal": {
+      "title": "Marco legal (plegable)",
+      "fefo": "FEFO (UE 2021/1248 art. 24): first expiry first out — aplicado a las salidas de stock.",
+      "daf": "DAF (AFMPS): el número de lote y el de AMM son obligatorios en el documento.",
+      "vamreg": "Antibióticos: declaración VAMReg y campos obligatorios antes de finalizar el DAF.",
+      "expiry": "Caducidad: umbrales 90 / 60 / 30 días; los lotes caducados pasan a cuarentena automáticamente (job diario).",
+      "waste": "Solo una declaración waste (destrucción o devolución) saca definitivamente el lote del stock.",
+      "dafFinalize": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg."
+    },
+    "stock": {
+      "title": "Stock del gabinete",
+      "subtitle": "Lotes, caducidad (90/60/30) y movimientos — FEFO.",
+      "export": "Exportar CSV",
+      "receiptTitle": "Entrada de stock",
+      "medication": "Medicamento",
+      "lot": "N.º lote",
+      "expiresOn": "Caducidad",
+      "qty": "Cantidad",
+      "receive": "Registrar",
+      "shortDatedWarn": "Atención: caducidad ≤ 30 días — verifique antes de almacenar.",
+      "searchPlaceholder": "Filtrar nombre, CNK o lote…",
+      "refresh": "Actualizar",
+      "empty": "No hay lotes en stock.",
+      "colMed": "Medicamento",
+      "band": "Alerta",
+      "quarantine": "Cuarentena",
+      "waste": "Salida / waste",
+      "wasteConfirm": "¿Confirmar salida de stock (destrucción o devolución)?",
+      "bandAll": "Todos",
+      "bandOk": "OK",
+      "bandSoon": "Pronto",
+      "bandReturn": "Devolver",
+      "bandCritical": "Crítico",
+      "bandExpired": "Caducado",
+      "bandQuarantine": "Cuarentena",
+      "errorLoad": "No se pudo cargar el stock.",
+      "errorReceive": "Entrada rechazada.",
+      "errorAction": "Acción imposible."
+    },
+    "daf": {
+      "title": "Documentos DAF",
+      "subtitle": "Administración y suministro — numeración gapless + PDF.",
+      "new": "Nuevo DAF",
+      "empty": "Ningún DAF.",
+      "colNumber": "N.º",
+      "colStatus": "Estado",
+      "colDate": "Creado",
+      "statusDraft": "Borrador",
+      "statusFinalized": "Finalizado",
+      "statusCancelled": "Anulado",
+      "wizardTitle": "Nuevo DAF",
+      "wizardSubtitle": "Líneas → preview FEFO → finalizar.",
+      "amm": "N.º AMM",
+      "addLine": "Añadir línea",
+      "preview": "Preview FEFO",
+      "saveDraft": "Guardar borrador",
+      "finalize": "Finalizar",
+      "cancel": "Anular DAF",
+      "cancelConfirm": "¿Anular este DAF y reponer lotes?",
+      "openPdf": "Abrir PDF",
+      "vamregSpecies": "Especie (VAMReg)",
+      "vamregIndication": "Indicación",
+      "vamregDuration": "Duración (días)",
+      "previewTitle": "Asignación FEFO prevista",
+      "error": "Acción DAF imposible.",
+      "legalExpiry": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg."
+    }
   },
   "recommend": {
     "title": "Recomendar una clínica",
@@ -2228,6 +2333,9 @@
     "addressSaved": "Dirección guardada",
     "openMaps": "Abrir en Maps",
     "reportTitle": "Informe de visita",
+    "reportAuthorMine": "Mi informe",
+    "reportAuthorPeer": "Otro autor",
+    "reportReadOnlyPeer": "Informe de otro profesional — solo lectura. Vuelva a « Mi informe » para editar el suyo.",
     "reportHint": "Notas de visita…",
     "saveReport": "Guardar informe",
     "improveReport": "Mejorar (IA)",
@@ -2314,10 +2422,7 @@
     },
     "requestPreconsult": "Solicitar preconsulta",
     "audioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
-    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación).",
-    "reportAuthorMine": "Mi informe",
-    "reportAuthorPeer": "Otro autor",
-    "reportReadOnlyPeer": "Informe de otro profesional — solo lectura. Vuelva a « Mi informe » para editar el suyo."
+    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación)."
   },
   "manager": {
     "dashboard": {
@@ -2559,23 +2664,73 @@
     "subtitle": "Asistentes, veterinarios y secretarias — derechos configurables.",
     "inviteTitle": "Invitar a un miembro",
     "email": "Email",
-    "fullName": "Full name",
-    "tempPassword": "Temporary password",
-    "role": "Role",
+    "fullName": "Nombre completo",
+    "tempPassword": "Contraseña temporal",
+    "role": "Rol",
     "roleReference": "Veterinario de referencia",
     "roleVet": "Veterinario",
     "roleAssistant": "Asistente veterinario",
     "roleSecretary": "Secretaria",
     "invite": "Invitar",
-    "inviteOk": "Member added.",
-    "inviteErr": "Invite failed.",
-    "empty": "No members.",
-    "columnName": "Name",
+    "inviteOk": "Miembro añadido.",
+    "inviteErr": "No se pudo invitar.",
+    "empty": "Sin miembros.",
+    "columnName": "Nombre",
     "columnEmail": "Email",
-    "columnRole": "Role",
-    "columnRights": "Rights",
-    "defaults": "Role defaults",
-    "revoke": "Revocar"
+    "columnRole": "Rol",
+    "columnRights": "Derechos",
+    "defaults": "Valores del rol",
+    "revoke": "Revocar",
+    "perms": {
+      "clients": {
+        "read": { "label": "Ver clientes", "tip": "Acceso a la lista y fichas de clientes de la clínica." },
+        "write": { "label": "Editar clientes", "tip": "Crear o modificar fichas de clientes." }
+      },
+      "pets": {
+        "read": { "label": "Ver animales", "tip": "Acceso a historiales (sin escritura clínica)." },
+        "write_clinical": { "label": "Escritura clínica", "tip": "Notas clínicas, validaciones y actos médicos." }
+      },
+      "heartrate": {
+        "validate": { "label": "Validar FC", "tip": "Validar lecturas de frecuencia cardíaca." }
+      },
+      "messaging": { "label": "Mensajería", "tip": "Leer y enviar mensajes con los clientes." },
+      "calendar": {
+        "manage": { "label": "Agenda", "tip": "Gestionar citas y el calendario de la clínica." }
+      },
+      "care": {
+        "manage": { "label": "Cuidados y recordatorios", "tip": "Gestionar cuidados, recordatorios Care y seguimientos." }
+      },
+      "shares": {
+        "manage": { "label": "Compartidos", "tip": "Gestionar el uso compartido de historiales." }
+      },
+      "practice": {
+        "settings": { "label": "Ajustes de clínica", "tip": "Modificar la configuración de la clínica." }
+      },
+      "team": {
+        "manage": { "label": "Gestionar equipo", "tip": "Invitar, editar derechos o revocar miembros." }
+      },
+      "commissions": {
+        "view": { "label": "Ver comisiones", "tip": "Acceder al panel de comisiones." }
+      }
+    }
+  },
+  "desk": {
+    "switchTitle": "Cambiar de perfil",
+    "switchHint": "Introduzca la contraseña para cambiar a esta cuenta.",
+    "lockTitle": "Puesto en espera",
+    "lockHint": "Inactividad detectada. Elija un perfil e introduzca la contraseña.",
+    "password": "Contraseña",
+    "unlock": "Desbloquear",
+    "switch": "Cambiar",
+    "cancel": "Cancelar",
+    "error": "Credenciales incorrectas.",
+    "proOnly": "Esta cuenta no es un perfil Pro.",
+    "twoFaTitle": "Código 2FA",
+    "twoFaHint": "Introduzca el código de su aplicación de autenticación.",
+    "twoFaSubmit": "Validar",
+    "twoFaInvalid": "Código inválido.",
+    "current": "Activo",
+    "ariaSwitcher": "Perfiles del puesto compartido"
   },
   "competition": {
     "title": "Análisis de competencia",

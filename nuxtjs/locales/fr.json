@@ -29,6 +29,9 @@
     "commercialTraining": "Entraînement IA",
     "adminTraining": "Formation IA",
     "products": "Produits",
+    "invoicing": "Facturation",
+    "medicaments": "Médicaments",
+    "tagDev": "dev",
     "managerDashboard": "Dashboard équipe",
     "managerFollowups": "Suivi",
     "managerProspects": "Prospects équipe",
@@ -60,7 +63,9 @@
     "commercialFiliation": "Filiation",
     "managerFiliation": "Filiation équipe",
     "adminFiliation": "Filiation",
-    "usecases": "Guides de test"
+    "usecases": "Guides de test",
+    "stock": "Stock",
+    "daf": "DAF"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1145,6 +1150,106 @@
     "unreadBadge": "Nouveau",
     "unreadCount": "{n} nouveaux"
   },
+  "invoicing": {
+    "title": "Facturation",
+    "subtitle": "Émission de factures, notes de crédit et devis (Peppol).",
+    "wip": "Activez la connexion Billit (mode mock en local) pour créer et envoyer des factures de test.",
+    "connectionTitle": "Connexion Billit",
+    "status": "Statut",
+    "usage": "Documents ce mois : {used} / {max}",
+    "activate": "Activer la facturation",
+    "openReseller": "Ouvrir l’inscription Billit",
+    "refresh": "Actualiser le statut",
+    "completeHint": "Après inscription Billit (ou en mock), saisissez le PartyID et la clé API.",
+    "state": "State",
+    "partyId": "PartyID Billit",
+    "apiKey": "Clé API Billit",
+    "complete": "Lier le compte",
+    "documentsTitle": "Documents",
+    "newInvoice": "Nouvelle facture (démo)",
+    "emptyDocs": "Aucun document pour l’instant",
+    "colType": "Type",
+    "colStatus": "Statut",
+    "colTotal": "Total TTC",
+    "send": "Envoyer",
+    "errorGeneric": "Une erreur est survenue"
+  },
+  "pharmacy": {
+    "antibioticWarning": "Antibiotique",
+    "medicaments": {
+      "title": "Médicaments",
+      "subtitle": "Dictionnaire CNK / AFMPS — recherche cabinet.",
+      "searchLabel": "Rechercher un médicament",
+      "searchPlaceholder": "Nom ou code CNK…"
+    },
+    "legal": {
+      "title": "Cadre légal (repliable)",
+      "fefo": "FEFO (UE 2021/1248 art. 24) : rotation first expiry first out — appliquée aux sorties de stock.",
+      "daf": "DAF (AFMPS) : numéro de lot et numéro d’AMM obligatoires sur le document.",
+      "vamreg": "Antibiotiques : déclaration VAMReg et champs obligatoires avant finalisation DAF.",
+      "expiry": "Péremption : seuils 90 / 60 / 30 jours ; lots périmés mis en quarantaine automatiquement (job quotidien).",
+      "waste": "Seule une déclaration waste (destruction ou retour fournisseur) sort définitivement le lot du stock.",
+      "dafFinalize": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg."
+    },
+    "stock": {
+      "title": "Stock cabinet",
+      "subtitle": "Lots, péremption (90/60/30) et mouvements — FEFO.",
+      "export": "Exporter CSV",
+      "receiptTitle": "Entrée de stock",
+      "medication": "Médicament",
+      "lot": "N° lot",
+      "expiresOn": "Péremption",
+      "qty": "Quantité",
+      "receive": "Enregistrer",
+      "shortDatedWarn": "Attention : DLC ≤ 30 jours — vérifiez avant mise en stock.",
+      "searchPlaceholder": "Filtrer nom, CNK ou lot…",
+      "refresh": "Actualiser",
+      "empty": "Aucun lot en stock.",
+      "colMed": "Médicament",
+      "band": "Alerte",
+      "quarantine": "Quarantaine",
+      "waste": "Sortie / waste",
+      "wasteConfirm": "Confirmer la sortie de stock (destruction ou retour fournisseur) ?",
+      "bandAll": "Tous",
+      "bandOk": "OK",
+      "bandSoon": "Attention",
+      "bandReturn": "À retourner",
+      "bandCritical": "Critique",
+      "bandExpired": "Périmé",
+      "bandQuarantine": "Quarantaine",
+      "errorLoad": "Impossible de charger le stock.",
+      "errorReceive": "Entrée de stock refusée.",
+      "errorAction": "Action impossible."
+    },
+    "daf": {
+      "title": "Documents DAF",
+      "subtitle": "Administration et fourniture — numérotation gapless + PDF.",
+      "new": "Nouveau DAF",
+      "empty": "Aucun DAF.",
+      "colNumber": "N°",
+      "colStatus": "Statut",
+      "colDate": "Créé",
+      "statusDraft": "Brouillon",
+      "statusFinalized": "Finalisé",
+      "statusCancelled": "Annulé",
+      "wizardTitle": "Nouveau DAF",
+      "wizardSubtitle": "Lignes médicament → preview FEFO → finaliser.",
+      "amm": "N° AMM",
+      "addLine": "Ajouter une ligne",
+      "preview": "Preview FEFO",
+      "saveDraft": "Enregistrer brouillon",
+      "finalize": "Finaliser",
+      "cancel": "Annuler le DAF",
+      "cancelConfirm": "Annuler ce DAF et restocker les lots ?",
+      "openPdf": "Ouvrir PDF",
+      "vamregSpecies": "Espèce (VAMReg)",
+      "vamregIndication": "Indication",
+      "vamregDuration": "Durée (jours)",
+      "previewTitle": "Allocation FEFO prévue",
+      "error": "Action DAF impossible.",
+      "legalExpiry": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg."
+    }
+  },
   "recommend": {
     "title": "Recommander un cabinet",
     "subtitle": "Signalez un confrère intéressé — votre commercial assure le suivi.",
@@ -1805,6 +1910,9 @@
     "addressSaved": "Adresse enregistrée",
     "openMaps": "Ouvrir dans Maps",
     "reportTitle": "Compte rendu",
+    "reportAuthorMine": "Mon CR",
+    "reportAuthorPeer": "Autre auteur",
+    "reportReadOnlyPeer": "CR d’un autre professionnel — lecture seule. Repassez sur « Mon CR » pour éditer le vôtre.",
     "reportHint": "Notes de visite…",
     "saveReport": "Enregistrer le CR",
     "improveReport": "Améliorer (IA)",
@@ -1891,10 +1999,7 @@
     },
     "requestPreconsult": "Demander une pré-consultation",
     "audioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
-    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés).",
-    "reportAuthorMine": "Mon CR",
-    "reportAuthorPeer": "Autre auteur",
-    "reportReadOnlyPeer": "CR d’un autre professionnel — lecture seule. Repassez sur « Mon CR » pour éditer le vôtre."
+    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés)."
   },
   "commissions": {
     "title": "Mes rétributions",
@@ -2619,7 +2724,57 @@
     "columnRole": "Rôle",
     "columnRights": "Droits",
     "defaults": "Défauts du rôle",
-    "revoke": "Révoquer"
+    "revoke": "Révoquer",
+    "perms": {
+      "clients": {
+        "read": { "label": "Voir les clients", "tip": "Accès à la liste et aux fiches clients du cabinet." },
+        "write": { "label": "Modifier les clients", "tip": "Créer ou modifier les fiches clients." }
+      },
+      "pets": {
+        "read": { "label": "Voir les animaux", "tip": "Accès aux dossiers animaux (hors écriture clinique)." },
+        "write_clinical": { "label": "Écriture clinique", "tip": "Saisir notes cliniques, validations et actes médicaux." }
+      },
+      "heartrate": {
+        "validate": { "label": "Valider la FC", "tip": "Valider les relevés de fréquence cardiaque." }
+      },
+      "messaging": { "label": "Messagerie", "tip": "Lire et envoyer des messages avec les clients." },
+      "calendar": {
+        "manage": { "label": "Agenda", "tip": "Gérer les rendez-vous et le calendrier du cabinet." }
+      },
+      "care": {
+        "manage": { "label": "Soins & rappels", "tip": "Gérer les soins, rappels Care et suivis associés." }
+      },
+      "shares": {
+        "manage": { "label": "Partages", "tip": "Gérer les partages de dossier animal vers d’autres acteurs." }
+      },
+      "practice": {
+        "settings": { "label": "Paramètres cabinet", "tip": "Modifier les réglages du cabinet." }
+      },
+      "team": {
+        "manage": { "label": "Gérer l’équipe", "tip": "Inviter, modifier les droits ou révoquer des membres." }
+      },
+      "commissions": {
+        "view": { "label": "Voir les commissions", "tip": "Accéder au tableau des commissions du cabinet." }
+      }
+    }
+  },
+  "desk": {
+    "switchTitle": "Changer de profil",
+    "switchHint": "Saisissez le mot de passe pour basculer vers ce compte.",
+    "lockTitle": "Poste en veille",
+    "lockHint": "Inactivité détectée. Choisissez un profil et saisissez le mot de passe.",
+    "password": "Mot de passe",
+    "unlock": "Déverrouiller",
+    "switch": "Changer",
+    "cancel": "Annuler",
+    "error": "Identifiants incorrects.",
+    "proOnly": "Ce compte n’est pas un profil Pro.",
+    "twoFaTitle": "Code 2FA",
+    "twoFaHint": "Saisissez le code de votre application d’authentification.",
+    "twoFaSubmit": "Valider",
+    "twoFaInvalid": "Code invalide.",
+    "current": "Actif",
+    "ariaSwitcher": "Profils du poste partagé"
   },
   "competition": {
     "title": "Analyse concurrence",

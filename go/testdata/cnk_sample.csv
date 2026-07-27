@@ -1,0 +1,4 @@
+cnk;name;atc_code;is_antibiotic;form;pack
+2712345;Amoxicilline Vet Demo;J01CA04;true;cp;20
+2899999;Vaccin Rage Demo;;false;inj;1
+2555123;Méloxicam Chat Demo;M01AC06;false;sol;10

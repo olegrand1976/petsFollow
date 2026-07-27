@@ -27,6 +27,9 @@
     "commercialTraining": "AI-training",
     "adminTraining": "AI-training beheer",
     "products": "Producten",
+    "invoicing": "Facturatie",
+    "medicaments": "Geneesmiddelen",
+    "tagDev": "dev",
     "calendar": "Agenda",
     "managerDashboard": "Teamdashboard",
     "managerFollowups": "Opvolging",
@@ -60,7 +63,9 @@
     "commercialFiliation": "Filiatie",
     "managerFiliation": "Teamfiliatie",
     "adminFiliation": "Filiatie",
-    "usecases": "Testgidsen"
+    "usecases": "Testgidsen",
+    "stock": "Voorraad",
+    "daf": "DAF"
   },
   "auth": {
     "login": {
@@ -652,6 +657,106 @@
     "columnOwner": "Cliënt",
     "unreadBadge": "Nieuw",
     "unreadCount": "{n} nieuwe"
+  },
+  "invoicing": {
+    "title": "Facturatie",
+    "subtitle": "Facturen, creditnota’s en offertes (Peppol).",
+    "wip": "Activeer de Billit-verbinding (mock lokaal) om testfacturen te maken.",
+    "connectionTitle": "Billit-verbinding",
+    "status": "Status",
+    "usage": "Documenten deze maand: {used} / {max}",
+    "activate": "Facturatie activeren",
+    "openReseller": "Billit-registratie openen",
+    "refresh": "Status vernieuwen",
+    "completeHint": "Na Billit-aanmelding (of in mock): PartyID en API-sleutel invullen.",
+    "state": "State",
+    "partyId": "Billit PartyID",
+    "apiKey": "Billit API-sleutel",
+    "complete": "Account koppelen",
+    "documentsTitle": "Documenten",
+    "newInvoice": "Nieuwe factuur (demo)",
+    "emptyDocs": "Nog geen documenten",
+    "colType": "Type",
+    "colStatus": "Status",
+    "colTotal": "Totaal incl. btw",
+    "send": "Verzenden",
+    "errorGeneric": "Er is iets misgegaan"
+  },
+  "pharmacy": {
+    "antibioticWarning": "Antibiotica",
+    "medicaments": {
+      "title": "Geneesmiddelen",
+      "subtitle": "CNK / FAGG-woordenboek — zoeken in de praktijk.",
+      "searchLabel": "Zoek een geneesmiddel",
+      "searchPlaceholder": "Naam of CNK-code…"
+    },
+    "legal": {
+      "title": "Wettelijk kader (inklappen)",
+      "fefo": "FEFO (EU 2021/1248 art. 24): first expiry first out — van toepassing op voorraaduitgifte.",
+      "daf": "DAF (FAGG): lotnummer en VHB-nummer zijn verplicht op het document.",
+      "vamreg": "Antibiotica: VAMReg-aangifte en verplichte velden vóór DAF-finalisatie.",
+      "expiry": "Verval: drempels 90 / 60 / 30 dagen; verlopen partijen gaan automatisch in quarantaine (dagelijkse job).",
+      "waste": "Alleen een waste-declaratie (vernietiging of retour leverancier) haalt de partij definitief uit de voorraad.",
+      "dafFinalize": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload."
+    },
+    "stock": {
+      "title": "Praktijkvoorraad",
+      "subtitle": "Partijen, verval (90/60/30) en bewegingen — FEFO.",
+      "export": "CSV exporteren",
+      "receiptTitle": "Voorraadontvangst",
+      "medication": "Geneesmiddel",
+      "lot": "Partijnr.",
+      "expiresOn": "Vervaldatum",
+      "qty": "Hoeveelheid",
+      "receive": "Registreren",
+      "shortDatedWarn": "Let op: houdbaarheid ≤ 30 dagen — controleer vóór opslag.",
+      "searchPlaceholder": "Filter naam, CNK of partij…",
+      "refresh": "Vernieuwen",
+      "empty": "Geen partijen op voorraad.",
+      "colMed": "Geneesmiddel",
+      "band": "Alert",
+      "quarantine": "Quarantaine",
+      "waste": "Afvoer / waste",
+      "wasteConfirm": "Voorraaduitgang bevestigen (vernietiging of retour leverancier)?",
+      "bandAll": "Alles",
+      "bandOk": "OK",
+      "bandSoon": "Binnenkort",
+      "bandReturn": "Retour",
+      "bandCritical": "Kritiek",
+      "bandExpired": "Vervallen",
+      "bandQuarantine": "Quarantaine",
+      "errorLoad": "Voorraad laden mislukt.",
+      "errorReceive": "Ontvangst geweigerd.",
+      "errorAction": "Actie mislukt."
+    },
+    "daf": {
+      "title": "DAF-documenten",
+      "subtitle": "Toediening en levering — gapless nummering + PDF.",
+      "new": "Nieuwe DAF",
+      "empty": "Geen DAF.",
+      "colNumber": "Nr.",
+      "colStatus": "Status",
+      "colDate": "Aangemaakt",
+      "statusDraft": "Concept",
+      "statusFinalized": "Gefinaliseerd",
+      "statusCancelled": "Geannuleerd",
+      "wizardTitle": "Nieuwe DAF",
+      "wizardSubtitle": "Geneesmiddelregels → FEFO-preview → finaliseren.",
+      "amm": "VHB-nr.",
+      "addLine": "Regel toevoegen",
+      "preview": "FEFO-preview",
+      "saveDraft": "Concept opslaan",
+      "finalize": "Finaliseren",
+      "cancel": "DAF annuleren",
+      "cancelConfirm": "Deze DAF annuleren en partijen restocken?",
+      "openPdf": "PDF openen",
+      "vamregSpecies": "Soort (VAMReg)",
+      "vamregIndication": "Indicatie",
+      "vamregDuration": "Duur (dagen)",
+      "previewTitle": "Geplande FEFO-toewijzing",
+      "error": "DAF-actie mislukt.",
+      "legalExpiry": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload."
+    }
   },
   "recommend": {
     "title": "Praktijk aanbevelen",
@@ -2228,6 +2333,9 @@
     "addressSaved": "Adres opgeslagen",
     "openMaps": "Openen in Maps",
     "reportTitle": "Bezoekverslag",
+    "reportAuthorMine": "Mijn verslag",
+    "reportAuthorPeer": "Andere auteur",
+    "reportReadOnlyPeer": "Verslag van een andere professional — alleen lezen. Schakel terug naar « Mijn verslag » om het uwe te bewerken.",
     "reportHint": "Bezoeknotities…",
     "saveReport": "Verslag opslaan",
     "improveReport": "Verbeteren (IA)",
@@ -2314,10 +2422,7 @@
     },
     "requestPreconsult": "Preconsultatie vragen",
     "audioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
-    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie).",
-    "reportAuthorMine": "Mijn verslag",
-    "reportAuthorPeer": "Andere auteur",
-    "reportReadOnlyPeer": "Verslag van een andere professional — alleen lezen. Schakel terug naar « Mijn verslag » om het uwe te bewerken."
+    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie)."
   },
   "manager": {
     "dashboard": {
@@ -2556,26 +2661,76 @@
   },
   "team": {
     "title": "Praktijkteam",
-    "subtitle": "Assistants, vets and secretaries — configurable rights.",
-    "inviteTitle": "Invite a member",
-    "email": "Email",
-    "fullName": "Full name",
-    "tempPassword": "Temporary password",
-    "role": "Role",
+    "subtitle": "Assistants, dierenartsen en secretaresses — configureerbare rechten.",
+    "inviteTitle": "Lid uitnodigen",
+    "email": "E-mail",
+    "fullName": "Volledige naam",
+    "tempPassword": "Tijdelijk wachtwoord",
+    "role": "Rol",
     "roleReference": "Referentiedierenarts",
-    "roleVet": "Veterinarian",
+    "roleVet": "Dierenarts",
     "roleAssistant": "Assistent",
     "roleSecretary": "Secretaresse",
     "invite": "Uitnodigen",
-    "inviteOk": "Member added.",
-    "inviteErr": "Invite failed.",
-    "empty": "No members.",
-    "columnName": "Name",
-    "columnEmail": "Email",
-    "columnRole": "Role",
-    "columnRights": "Rights",
-    "defaults": "Role defaults",
-    "revoke": "Intrekken"
+    "inviteOk": "Lid toegevoegd.",
+    "inviteErr": "Uitnodigen mislukt.",
+    "empty": "Geen leden.",
+    "columnName": "Naam",
+    "columnEmail": "E-mail",
+    "columnRole": "Rol",
+    "columnRights": "Rechten",
+    "defaults": "Rolstandaarden",
+    "revoke": "Intrekken",
+    "perms": {
+      "clients": {
+        "read": { "label": "Cliënten bekijken", "tip": "Toegang tot de cliëntenlijst en dossiers van de praktijk." },
+        "write": { "label": "Cliënten bewerken", "tip": "Cliëntdossiers aanmaken of wijzigen." }
+      },
+      "pets": {
+        "read": { "label": "Dieren bekijken", "tip": "Toegang tot dierdossiers (zonder klinisch schrijven)." },
+        "write_clinical": { "label": "Klinisch schrijven", "tip": "Klinische notities, validaties en medische handelingen." }
+      },
+      "heartrate": {
+        "validate": { "label": "HF valideren", "tip": "Hartslagmetingen valideren." }
+      },
+      "messaging": { "label": "Berichten", "tip": "Berichten met cliënten lezen en sturen." },
+      "calendar": {
+        "manage": { "label": "Agenda", "tip": "Afspraken en de praktijkagenda beheren." }
+      },
+      "care": {
+        "manage": { "label": "Zorg & herinneringen", "tip": "Zorgplannen, Care-herinneringen en opvolging beheren." }
+      },
+      "shares": {
+        "manage": { "label": "Delen", "tip": "Delen van dierdossiers met andere actoren beheren." }
+      },
+      "practice": {
+        "settings": { "label": "Praktijkinstellingen", "tip": "Instellingen van de praktijk wijzigen." }
+      },
+      "team": {
+        "manage": { "label": "Team beheren", "tip": "Leden uitnodigen, rechten wijzigen of intrekken." }
+      },
+      "commissions": {
+        "view": { "label": "Commissies bekijken", "tip": "Toegang tot het commissieoverzicht." }
+      }
+    }
+  },
+  "desk": {
+    "switchTitle": "Profiel wisselen",
+    "switchHint": "Voer het wachtwoord in om naar dit account te schakelen.",
+    "lockTitle": "Werkplek vergrendeld",
+    "lockHint": "Inactiviteit. Kies een profiel en voer het wachtwoord in.",
+    "password": "Wachtwoord",
+    "unlock": "Ontgrendelen",
+    "switch": "Wisselen",
+    "cancel": "Annuleren",
+    "error": "Ongeldige gegevens.",
+    "proOnly": "Dit account is geen Pro-profiel.",
+    "twoFaTitle": "2FA-code",
+    "twoFaHint": "Voer de code van uw authenticator-app in.",
+    "twoFaSubmit": "Bevestigen",
+    "twoFaInvalid": "Ongeldige code.",
+    "current": "Actief",
+    "ariaSwitcher": "Gedeelde werkplekprofielen"
   },
   "competition": {
     "title": "Concurrentieanalyse",

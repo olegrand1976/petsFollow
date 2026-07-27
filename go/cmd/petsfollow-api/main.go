@@ -47,6 +47,13 @@ func main() {
 		return
 	}
 
+	if app.IsImportCNKCmd(os.Args[1:]) {
+		if err := app.ImportCNKOnly(ctx, cfg, os.Args[1:]); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
 	application, err := app.New(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)

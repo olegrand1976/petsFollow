@@ -476,6 +476,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L3 | P1 | Override droits | PATCH permissions |
 | L4 | P1 | Révoquer | Statut revoked |
 | L5 | P2 | Non-référence | Invite refusé |
+| L6 | P0 | Labels ACL lisibles | Droits i18n + tooltips (pas de clés brutes `clients.read`) |
+| L7 | P0 | Switch poste + veille | Header avatars équipe ; idle / force lock → overlay MDP ; restore lastPath |
 
 ## M — Concurrence commerciale
 
@@ -637,7 +639,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
-| `13-team-staff-smoke` | Assist / secretary /team ACL | `@p0` |
+| `13-team-staff-smoke` | Assist / secretary /team ACL + labels i18n | `@p0` |
+| `13b-desk-switch` | Switch poste partagé + veille (lock overlay) | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 | `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |

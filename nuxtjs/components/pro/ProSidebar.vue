@@ -20,7 +20,15 @@
           </span>
           <span class="pro-sidebar__label">{{ entry.item.label }}</span>
           <ProBadge
-            v-if="entry.item.badge && entry.item.badge > 0"
+            v-if="entry.item.tag"
+            variant="warning"
+            class="pro-sidebar__tag"
+            :data-testid="tagTestId(entry.item.to)"
+          >
+            {{ entry.item.tag }}
+          </ProBadge>
+          <ProBadge
+            v-else-if="entry.item.badge && entry.item.badge > 0"
             variant="danger"
             class="pro-sidebar__badge"
             :data-testid="badgeTestId(entry.item.to)"
@@ -60,6 +68,9 @@ export type ProNavIcon =
   | 'support_agent'
   | 'groups'
   | 'checklist'
+  | 'receipt'
+  | 'medication'
+  | 'inventory_2'
 
 export type ProNavItem = {
   to: string
@@ -67,6 +78,8 @@ export type ProNavItem = {
   exact?: boolean
   icon: ProNavIcon
   badge?: number
+  /** Static label badge (e.g. `dev`) — takes precedence over numeric badge. */
+  tag?: string
   /** When set, starts a labeled group (shown once when consecutive items share the same label). */
   section?: string
 }
@@ -120,6 +133,9 @@ const icons: Record<ProNavIcon, string> = {
   support_agent: 'support_agent',
   groups: 'groups',
   checklist: 'checklist',
+  receipt: 'receipt_long',
+  medication: 'medication',
+  inventory_2: 'inventory_2',
 }
 
 function iconName(name: ProNavIcon) {
@@ -132,6 +148,7 @@ function navTestId(to: string) {
   if (to === '/pets') return 'nav-pets'
   if (to === '/messages') return 'nav-messages'
   if (to === '/requests') return 'nav-requests'
+  if (to === '/invoicing') return 'nav-invoicing'
   return undefined
 }
 
@@ -141,6 +158,14 @@ function badgeTestId(to: string) {
   if (to === '/pets') return 'nav-pets-badge'
   if (to === '/messages') return 'nav-messages-badge'
   if (to === '/requests') return 'nav-requests-badge'
+  return undefined
+}
+
+function tagTestId(to: string) {
+  if (to === '/invoicing') return 'nav-invoicing-tag'
+  if (to === '/medicaments') return 'nav-medicaments-dev-tag'
+  if (to === '/stock') return 'nav-stock-dev-tag'
+  if (to === '/daf') return 'nav-daf-dev-tag'
   return undefined
 }
 </script>
@@ -190,6 +215,17 @@ function badgeTestId(to: string) {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: none;
+  line-height: 1.2;
+}
+
+.pro-sidebar__tag {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
   line-height: 1.2;
 }
 </style>

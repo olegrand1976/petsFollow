@@ -30,10 +30,12 @@ Index des documents de référence du projet.
 | 25b | [25-PRODUCT-DIGEST.md](25-PRODUCT-DIGEST.md) | Digest produit quotidien admin/commercial |
 | 26 | [26-PLAY-STORE.md](26-PLAY-STORE.md) | Publication Play Store |
 | 27 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) | **Spec** pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) — non implémenté |
-| 27b | [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) | **Plan** stock cabinet + péremption (90/60/30, quarantaine, waste) — décisions figées, non implémenté |
+| 28 | [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) | **Plan de mise en place** stock + péremption — suivi (S0 spec ✅ · code métier ⬜) |
 | 28 | [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md) | Multi-profils care_pro, ACL partage, pro light, CR IA |
 | 29 | [29-ANALYSE-CONCURRENCE.md](29-ANALYSE-CONCURRENCE.md) | Concurrence FR/BE/ES (commerciaux) |
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
+| 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | **Plan** facturation Peppol Billit (88 € tout compris, partner Invoice to) — non implémenté |
+| 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | **Plan technique** Billit reseller (connect, API, schéma, sprints) — non implémenté |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

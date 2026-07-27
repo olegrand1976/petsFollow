@@ -27,6 +27,9 @@
     "commercialTraining": "AI-treening",
     "adminTraining": "AI-treeningu haldus",
     "products": "Tooted",
+    "invoicing": "Arveldamine",
+    "medicaments": "Ravimid",
+    "tagDev": "dev",
     "calendar": "Kalender",
     "managerDashboard": "Meeskonna töölaud",
     "managerFollowups": "Järeltegevus",
@@ -60,7 +63,9 @@
     "commercialFiliation": "Seotus",
     "managerFiliation": "Meeskonna seotus",
     "adminFiliation": "Seotus",
-    "usecases": "Testijuhendid"
+    "usecases": "Testijuhendid",
+    "stock": "Varu",
+    "daf": "DAF"
   },
   "auth": {
     "login": {
@@ -652,6 +657,106 @@
     "columnOwner": "Klient",
     "unreadBadge": "Uus",
     "unreadCount": "{n} uut"
+  },
+  "invoicing": {
+    "title": "Arveldamine",
+    "subtitle": "Arved, kreeditarved ja pakkumised (Peppol).",
+    "wip": "Aktiveerige Billit’i ühendus (mock kohalikult), et luua testarveid.",
+    "connectionTitle": "Billit’i ühendus",
+    "status": "Olek",
+    "usage": "Dokumendid sel kuul: {used} / {max}",
+    "activate": "Aktiveeri arveldamine",
+    "openReseller": "Ava Billit’i registreerimine",
+    "refresh": "Värskenda olekut",
+    "completeHint": "Pärast Billit’i registreerimist (või mock’is) sisestage PartyID ja API võti.",
+    "state": "State",
+    "partyId": "Billit PartyID",
+    "apiKey": "Billit API võti",
+    "complete": "Seo konto",
+    "documentsTitle": "Dokumendid",
+    "newInvoice": "Uus arve (demo)",
+    "emptyDocs": "Dokumente pole veel",
+    "colType": "Tüüp",
+    "colStatus": "Olek",
+    "colTotal": "Kokku koos KM-ga",
+    "send": "Saada",
+    "errorGeneric": "Midagi läks valesti"
+  },
+  "pharmacy": {
+    "antibioticWarning": "Antibiootikum",
+    "medicaments": {
+      "title": "Ravimid",
+      "subtitle": "CNK / AFMPS sõnastik — kabineti otsing.",
+      "searchLabel": "Otsi ravimit",
+      "searchPlaceholder": "Nimi või CNK kood…"
+    },
+    "legal": {
+      "title": "Õigusraamistik (ahendatav)",
+      "fefo": "FEFO (EL 2021/1248 art. 24): first expiry first out — rakendub laovarude väljastamisele.",
+      "daf": "DAF (AFMPS): partiinumber ja müügiloa number on dokumendil kohustuslikud.",
+      "vamreg": "Antibiootikumid: VAMReg deklaratsioon ja kohustuslikud väljad enne DAF lõpetamist.",
+      "expiry": "Aegumine: läved 90 / 60 / 30 päeva; aegunud partiid lähevad automaatselt karantiini (igapäevane töö).",
+      "waste": "Ainult waste-deklaratsioon (hävitamine või tagastus) eemaldab partii lõplikult laost.",
+      "dafFinalize": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg."
+    },
+    "stock": {
+      "title": "Kabineti varu",
+      "subtitle": "Partiid, aegumine (90/60/30) ja liikumised — FEFO.",
+      "export": "Ekspordi CSV",
+      "receiptTitle": "Lao sissetulek",
+      "medication": "Ravim",
+      "lot": "Partii nr",
+      "expiresOn": "Aegumine",
+      "qty": "Kogus",
+      "receive": "Salvesta",
+      "shortDatedWarn": "Hoiatus: aegumine ≤ 30 päeva — kontrollige enne lattu panemist.",
+      "searchPlaceholder": "Filtreeri nimi, CNK või partii…",
+      "refresh": "Värskenda",
+      "empty": "Laos partiisid pole.",
+      "colMed": "Ravim",
+      "band": "Hoiatus",
+      "quarantine": "Karantiin",
+      "waste": "Väljaminek / waste",
+      "wasteConfirm": "Kinnitada lao väljaminek (hävitamine või tagastus)?",
+      "bandAll": "Kõik",
+      "bandOk": "OK",
+      "bandSoon": "Peagi",
+      "bandReturn": "Tagastus",
+      "bandCritical": "Kriitiline",
+      "bandExpired": "Aegunud",
+      "bandQuarantine": "Karantiin",
+      "errorLoad": "Varu laadimine ebaõnnestus.",
+      "errorReceive": "Sissetulek keelduti.",
+      "errorAction": "Toiming ebaõnnestus."
+    },
+    "daf": {
+      "title": "DAF dokumendid",
+      "subtitle": "Manustamine ja tarnimine — gapless nummerdus + PDF.",
+      "new": "Uus DAF",
+      "empty": "DAF-e pole.",
+      "colNumber": "Nr",
+      "colStatus": "Olek",
+      "colDate": "Loodud",
+      "statusDraft": "Mustand",
+      "statusFinalized": "Lõpetatud",
+      "statusCancelled": "Tühistatud",
+      "wizardTitle": "Uus DAF",
+      "wizardSubtitle": "Read → FEFO eelvaade → lõpeta.",
+      "amm": "AMM nr",
+      "addLine": "Lisa rida",
+      "preview": "FEFO eelvaade",
+      "saveDraft": "Salvesta mustand",
+      "finalize": "Lõpeta",
+      "cancel": "Tühista DAF",
+      "cancelConfirm": "Tühistada see DAF ja taastada partiid?",
+      "openPdf": "Ava PDF",
+      "vamregSpecies": "Liik (VAMReg)",
+      "vamregIndication": "Näidustus",
+      "vamregDuration": "Kestus (päeva)",
+      "previewTitle": "Planeeritud FEFO jaotus",
+      "error": "DAF toiming ebaõnnestus.",
+      "legalExpiry": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg."
+    }
   },
   "recommend": {
     "title": "Soovita praktikat",
@@ -2228,6 +2333,9 @@
     "addressSaved": "Aadress salvestatud",
     "openMaps": "Ava Mapsis",
     "reportTitle": "Külastusraport",
+    "reportAuthorMine": "Minu raport",
+    "reportAuthorPeer": "Teine autor",
+    "reportReadOnlyPeer": "Teise spetsialisti raport — ainult lugemiseks. Mine tagasi « Minu raport », et enda oma muuta.",
     "reportHint": "Külastuse märkmed…",
     "saveReport": "Salvesta raport",
     "improveReport": "Paranda (AI)",
@@ -2314,10 +2422,7 @@
     },
     "requestPreconsult": "Küsi eelkonsultatsiooni",
     "audioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
-    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid).",
-    "reportAuthorMine": "Minu raport",
-    "reportAuthorPeer": "Teine autor",
-    "reportReadOnlyPeer": "Teise spetsialisti raport — ainult lugemiseks. Mine tagasi « Minu raport », et enda oma muuta."
+    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid)."
   },
   "manager": {
     "dashboard": {
@@ -2556,26 +2661,76 @@
   },
   "team": {
     "title": "Kliiniku meeskond",
-    "subtitle": "Assistants, vets and secretaries — configurable rights.",
-    "inviteTitle": "Invite a member",
-    "email": "Email",
-    "fullName": "Full name",
-    "tempPassword": "Temporary password",
-    "role": "Role",
-    "roleReference": "Reference vet",
-    "roleVet": "Veterinarian",
-    "roleAssistant": "Vet assistant",
-    "roleSecretary": "Secretary",
+    "subtitle": "Assistendid, loomaarstid ja sekretärid — seadistatavad õigused.",
+    "inviteTitle": "Kutsu liige",
+    "email": "E-post",
+    "fullName": "Täisnimi",
+    "tempPassword": "Ajutine parool",
+    "role": "Roll",
+    "roleReference": "Viiteloomaarst",
+    "roleVet": "Loomaarst",
+    "roleAssistant": "Assistent",
+    "roleSecretary": "Sekretär",
     "invite": "Kutsu",
-    "inviteOk": "Member added.",
-    "inviteErr": "Invite failed.",
-    "empty": "No members.",
-    "columnName": "Name",
-    "columnEmail": "Email",
-    "columnRole": "Role",
-    "columnRights": "Rights",
-    "defaults": "Role defaults",
-    "revoke": "Tühista"
+    "inviteOk": "Liige lisatud.",
+    "inviteErr": "Kutsumine ebaõnnestus.",
+    "empty": "Liikmeid pole.",
+    "columnName": "Nimi",
+    "columnEmail": "E-post",
+    "columnRole": "Roll",
+    "columnRights": "Õigused",
+    "defaults": "Rolli vaikimisi",
+    "revoke": "Tühista",
+    "perms": {
+      "clients": {
+        "read": { "label": "Klientide vaatamine", "tip": "Juurdepääs kliiniku klientide nimekirjale ja kaartidele." },
+        "write": { "label": "Klientide muutmine", "tip": "Klientide kaartide loomine või muutmine." }
+      },
+      "pets": {
+        "read": { "label": "Loomade vaatamine", "tip": "Juurdepääs loomade toimikutele (ilma kliinilise kirjutuseta)." },
+        "write_clinical": { "label": "Kliiniline kirjutamine", "tip": "Kliinilised märkmed, kinnitused ja meditsiinitoimingud." }
+      },
+      "heartrate": {
+        "validate": { "label": "SK kinnitamine", "tip": "Südame löögisageduse näitude kinnitamine." }
+      },
+      "messaging": { "label": "Sõnumid", "tip": "Klientidega sõnumite lugemine ja saatmine." },
+      "calendar": {
+        "manage": { "label": "Kalender", "tip": "Vastuvõttude ja kliiniku kalendri haldamine." }
+      },
+      "care": {
+        "manage": { "label": "Hooldus ja meeldetuletused", "tip": "Hoolduste, Care-meeldetuletuste ja jälgimise haldamine." }
+      },
+      "shares": {
+        "manage": { "label": "Jagamine", "tip": "Loomatoimikute jagamise haldamine." }
+      },
+      "practice": {
+        "settings": { "label": "Kliiniku seaded", "tip": "Kliiniku seadete muutmine." }
+      },
+      "team": {
+        "manage": { "label": "Meeskonna haldus", "tip": "Liikmete kutsumine, õiguste muutmine või tühistamine." }
+      },
+      "commissions": {
+        "view": { "label": "Komisjonide vaatamine", "tip": "Juurdepääs komisjonide ülevaatele." }
+      }
+    }
+  },
+  "desk": {
+    "switchTitle": "Vaheta profiili",
+    "switchHint": "Sisesta parool, et sellele kontole lülituda.",
+    "lockTitle": "Töökoht lukustatud",
+    "lockHint": "Jõudeolek. Vali profiil ja sisesta parool.",
+    "password": "Parool",
+    "unlock": "Ava",
+    "switch": "Vaheta",
+    "cancel": "Tühista",
+    "error": "Vale kasutajanimi või parool.",
+    "proOnly": "See konto ei ole Pro-profiil.",
+    "twoFaTitle": "2FA kood",
+    "twoFaHint": "Sisesta kood oma autentimisrakendusest.",
+    "twoFaSubmit": "Kinnita",
+    "twoFaInvalid": "Vale kood.",
+    "current": "Aktiivne",
+    "ariaSwitcher": "Jagatud töökoha profiilid"
   },
   "competition": {
     "title": "Konkurentsianalüüs",

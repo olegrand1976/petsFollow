@@ -3,7 +3,7 @@
 Document de **mise en place** (architecture, modèle, API, infra, sprints).  
 **Statut** : spécification — **non implémenté** dans le code au moment de la rédaction.
 
-Plan d’exécution stock + **péremption** (seuils, quarantaine, digests) : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) — décisions figées 2026-07-27.
+Plan d’exécution **tracé** (fait / partiel / à faire) : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) — S0 spec ✅ · code métier ⬜ · migrations cibles **000081+** (les numéros 000039–000042 de ce doc sont obsolètes : déjà utilisés par d’autres features).
 
 Ne confondre pas avec l’addon **Care+** (rappels médicaments côté client Flutter) : ce module est une **pharmacie cabinet** (Pro Nuxt), multi-tenant `practice_id`, alignée sur les contraintes belges (CNK / AFMPS, DAF, VAMReg).
 
@@ -137,7 +137,7 @@ nuxtjs/
 └── locales/{fr,en,nl,es,et}.json     # nav.* + pharmacy.*
 ```
 
-Nav véto (`layouts/default.vue`) : **Médicaments** · **Stock** · **DAF**.  
+Nav véto (`layouts/default.vue`) : **Médicaments** · **Stock** · **DAF**, chacun avec tag menu **`dev`** (en cours de développement) — détail [28 §7](28-PLAN-STOCK-PEREMPTION.md#7-ux-pro).  
 Middleware : `vet-only`. Lien animal (section fiche pet) = Phase 1.1 optionnelle.
 
 ---
@@ -571,6 +571,8 @@ Local : `make api-dev` peut co-héberger workers si flag `true` (DX simplifiée)
 | `/daf` | Liste |
 | `/daf/nouveau` | Wizard : client/pet → lignes Combobox → preview lots FEFO → finalize |
 | `/daf/[id]` | Détail, PDF, VAMReg, export |
+
+Nav : pastille **`dev`** sur Médicaments / Stock / DAF tant que le module est en développement ([28 §7](28-PLAN-STOCK-PEREMPTION.md#7-ux-pro)).
 
 ### Composants
 

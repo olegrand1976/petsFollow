@@ -56,6 +56,7 @@ const navItems = computed<ProNavItem[]>(() => {
     { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
     { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
     { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
+    { to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: t('nav.tagDev') },
     { to: '/produits', label: t('nav.products'), icon: 'description' },
   ]
   if (user.value?.isReferenceVet === true) {

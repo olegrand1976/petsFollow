@@ -50,6 +50,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 		return nil, errors.New("JWT_SIGNING_KEY too short (min 32 characters outside DEV_SEED_ENABLED)")
 	}
 	cfg.JWTSigningKey = key
+	if err := cfg.ValidateBillit(); err != nil {
+		return nil, err
+	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -250,4 +253,8 @@ func IsSeedMassCmd(args []string) bool {
 
 func IsSeedNotifyCmd(args []string) bool {
 	return len(args) > 0 && strings.EqualFold(args[0], "seed-notify")
+}
+
+func IsImportCNKCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "import-cnk")
 }

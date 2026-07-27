@@ -28,3 +28,18 @@ func TestIsSeedMassCmd(t *testing.T) {
 		t.Fatal("seed-mass must not match seed")
 	}
 }
+
+func TestIsImportCNKCmd(t *testing.T) {
+	if !IsImportCNKCmd([]string{"import-cnk"}) {
+		t.Fatal("expected import-cnk match")
+	}
+	if !IsImportCNKCmd([]string{"IMPORT-CNK"}) {
+		t.Fatal("expected case-insensitive match")
+	}
+	if IsImportCNKCmd([]string{"import"}) {
+		t.Fatal("import must not match import-cnk")
+	}
+	if IsImportCNKCmd(nil) {
+		t.Fatal("empty args must not match")
+	}
+}
