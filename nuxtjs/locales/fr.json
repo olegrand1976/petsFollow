@@ -2166,122 +2166,82 @@
   },
   "products": {
     "seoTitle": "petsFollow — Offre professionnelle",
-    "seoDescription": "Continuité de soins prescrite + passeport digital : Pro (Web + clients) et Pro Light (terrain / care pro, gratuit). Grille clients et modèle partenaire.",
+    "seoDescription": "Plateforme Web Pro (cabinet), Pro Light gratuit, app clients. Grille 3,50 / 35 / 95 € et modèle partenaire.",
     "backHome": "Accueil",
     "print": "Imprimer / PDF",
     "badge": "Support de présentation cabinet",
-    "title": "Offre professionnelle petsFollow",
-    "lead": "Le passeport digital de l'animal — continuité de soins prescrite entre cabinet, pros de soins terrain et propriétaires (Web Pro · mobile ProLight · mobile Client).",
-    "positioning": "Deux solutions : Pro (Web SaaS + passeport clients, facturation commerciale) et Pro Light (app terrain / care pro, gratuite, avec ou sans compte Web). Les propriétaires paient le suivi de leurs animaux (3,50 / 35 / 95 €).",
-    "solutionsTitle": "Deux solutions professionnelles",
-    "solutionsLead": "Adaptez l'outil à votre pratique : cabinet connecté complet, ou app terrain / care pro légère.",
-    "solutions": {
-      "proComplete": {
-        "name": "Pro",
-        "badge": "Web + Mobile clients",
-        "price": "69 € HT / mois",
-        "setup": "Mise en place & formation : 320 € HT (one-shot)",
-        "tagline": "Plateforme Web pour le cabinet + passeport digital mobile pour vos clients.",
-        "features": [
-          "Passeport digital centralisé et timeline partagée",
-          "Ordonnances, rappels et demandes de RDV",
-          "Messagerie sécurisée client ↔ cabinet + push",
-          "Partage de dossier avec care pro / collègues",
-          "Programme partenaire (commissions sur activations clients)",
-          "Facturation SaaS externe — pas de paiement en ligne",
-          "Rapports vocaux de consultation",
-          "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés",
-          "Module CR IA (add-on) : essai 90 j puis 39 € HT/mois ou 390 € HT/an — ROI dès J60"
-        ]
-      },
-      "proLight": {
-        "name": "Pro Light",
-        "badge": "Gratuit",
-        "price": "0 €",
-        "tagline": "App mobile ProLight — terrain et care pro, avec ou sans compte Web Pro.",
-        "features": [
-          "Suivi clients et agenda terrain (véto light / care pro)",
-          "Fiches & historique animaux",
-          "QR code de parrainage",
-          "Documents partagés et notes de visite",
-          "Partage de dossier avec collègues / pros externes",
-          "Rapports vocaux de consultation",
-          "Amélioration IA des rapports (+ historiques) si cabinet VetPro activé",
-          "Gratuit pour les professionnels"
-        ]
-      }
+    "title": "Offre petsFollow",
+    "lead": "L’essentiel : offre Pro (Web cabinet), Pro Light et abonnements clients.",
+    "hook": "Continuité de soins prescrite + passeport digital de l’animal, partagé entre cabinet, care pro et propriétaire.",
+    "pro": {
+      "name": "Plateforme Web PetsFollow (cabinet)",
+      "badge": "Offre Pro",
+      "price": "69 € HT / mois",
+      "setup": "Mise en place & formation : 320 € HT (one-shot)",
+      "tagline": "Le poste de pilotage du cabinet : passeport digital, messagerie, rappels, partage et suivi des activations.",
+      "features": [
+        "Passeport digital + timeline partagée (cabinet / client / care pro)",
+        "Messagerie sécurisée client ↔ cabinet + push",
+        "Rappels, prescriptions et demandes de RDV",
+        "Partage de dossier (collègues / care pro)",
+        "Suivi des activations clients et commissions partenaires",
+        "CR vocaux + IA en add-on (essai 90 j → 39 € HT/mois ou 390 € HT/an)"
+      ],
+      "invoiceNote": "Facturation hors ligne (commercial / compta) — pas de paiement SaaS cabinet via Stripe."
     },
-    "saasInvoiceNote": "Pro : abonnement et mise en place facturés hors ligne (commercial / comptabilité). Aucun paiement SaaS cabinet via Stripe.",
-    "webTitle": "Plateforme Web PetsFollow (cabinet)",
-    "webLead": "Centralise le passeport digital et les flux du cabinet soignant et administratif.",
-    "webFeatures": [
-      "Passeport digital centralisé : fiches patients, historiques, bilans",
-      "Ordonnances & observance : prescriptions et rappels sur le téléphone du client",
-      "Gestion des rappels & rendez-vous (vaccins, antiparasitaires, contrôles)",
-      "Messagerie & suivi sécurisé post-opératoire ou chronique (cabinet ↔ client)",
-      "Partage de dossier avec care pro et collègues",
-      "Suivi des activations clients et commissions partenaires",
-      "Rapports vocaux de consultation",
-      "Amélioration IA des rapports — structuré, modifiable avant enregistrement, historiques conservés"
+    "proLight": {
+      "name": "Pro Light",
+      "badge": "Gratuit",
+      "price": "0 €",
+      "tagline": "App mobile terrain / care pro — avec ou sans compte Web Pro.",
+      "features": [
+        "Agenda terrain, fiches animaux, notes de visite",
+        "Partage de dossier + QR de parrainage",
+        "CR vocaux (IA si le cabinet Pro a activé le module)"
+      ]
+    },
+    "clientsTitle": "App client (propriétaires)",
+    "clientsLead": "Le propriétaire paie le suivi de son animal (Stripe). Un abonnement = un animal.",
+    "clientFeatures": [
+      "Passeport / carnet digital toujours en poche",
+      "Messagerie avec le cabinet + rappels push",
+      "Relevés cardiaques guidés 15 / 30 / 60 s",
+      "Care / Horse / foyer inclus dès animal payant"
     ],
-    "mobileTitle": "Application mobile PetsFollow (propriétaires)",
-    "mobileLead": "La face propriétaire du passeport digital — prolongement de vos soins à domicile.",
-    "mobileFeatures": [
-      "Passeport / carnet de santé numérique : vaccins, poids, antécédents, urgences",
-      "Alertes de traitement & rappels intelligents (push)",
-      "Lien direct avec le cabinet : messagerie, renouvellement, demande de RDV",
-      "Journal de bord : poids, symptômes, alimentation, activités",
-      "Relevés cardiaques guidés 15 / 30 / 60 s"
-    ],
-    "benefitsTitle": "Pourquoi adopter l'écosystème PetsFollow ?",
-    "benefitsCabinetTitle": "Pour votre cabinet",
-    "benefitsClientsTitle": "Pour vos clients",
-    "benefitsCabinet": [
-      "Gain de temps sur les relances et le téléphone",
-      "Meilleure observance thérapeutique",
-      "Fidélisation accrue de la patientèle",
-      "Collaborez avec care pro / collègues via partage de dossier",
-      "SaaS autofinançable via le programme partenaire"
-    ],
-    "benefitsClients": [
-      "Sérénité grâce aux rappels automatisés",
-      "Passeport digital toujours en poche",
-      "Relation de confiance renforcée avec le vétérinaire",
-      "Suivi préventif optimal"
-    ],
-    "partnerTitle": "Modèle partenaire",
-    "partnerLead": "En recommandant l'app à vos clients, vous cumulez des commissions qui compensent l'abonnement Pro (règlement hors ligne).",
+    "includedLine": "Inclus quel que soit le plan : passeport, messagerie + push, relevés HR, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT.",
+    "economyTitle": "Autofinancement & engagements",
+    "partnerLead": "Les commissions sur activations clients compensent l’abonnement Pro (règlement hors ligne).",
     "partnerSteps": [
-      "Le propriétaire souscrit un plan animal (ex. 95 € TTC / 3 ans — recommandé).",
-      "Chaque activation avec le code / QR de votre cabinet génère une commission (assiette HTVA).",
-      "Les commissions sont déduites ou compensées sur votre facture SaaS (facturation externe)."
+      "Le propriétaire souscrit (ex. 95 € TTC / 3 ans — recommandé).",
+      "Chaque activation avec le code / QR cabinet génère une commission (assiette HTVA).",
+      "Les commissions sont déduites ou compensées sur la facture SaaS."
     ],
-    "partnerTip": "Ordre de grandeur : avec environ 7 activations triennales par mois, les commissions partenaires peuvent couvrir l'abonnement mensuel Pro (69 € HT).",
-    "saasTitle": "Tarification Pro (HT — facturation externe)",
-    "saasLead": "Pas de checkout Stripe pour le SaaS cabinet. Devis et factures gérés par l'équipe commerciale.",
+    "partnerTip": "≈ 7 activations triennales / mois ≈ couverture du mensuel Pro (69 € HT).",
+    "saasTitle": "Engagements SaaS Pro (HT)",
+    "saasLead": "Devis et factures gérés par l’équipe commerciale — pas de checkout Stripe cabinet.",
     "saas": {
       "setup": {
         "name": "Mise en place & formation",
         "price": "320 € HT",
-        "description": "Création du compte, configuration, formation équipe, accompagnement démarrage (one-shot)."
+        "description": "Compte, config, formation, démarrage (one-shot)."
       },
       "monthly": {
-        "name": "Abonnement mensuel",
+        "name": "Mensuel",
         "price": "69 € HT / mois",
-        "description": "Accès Pro. Engagement 12 mois."
+        "description": "Engagement 12 mois."
       },
       "annual": {
-        "name": "Abonnement annuel",
+        "name": "Annuel",
         "price": "828 € HT / an",
-        "description": "Facturation annuelle unique (12 × 69 €)."
+        "description": "12 × 69 €."
       },
       "longTerm": {
-        "name": "Engagement 3 ans",
+        "name": "3 ans",
         "price": "745,20 € HT / an",
-        "description": "−10 % vs annuel (soit 62,10 € HT / mois)."
+        "description": "−10 % vs annuel (≈ 62,10 € HT / mois)."
       }
     },
-    "saasMigration": "Migration de données depuis un ancien logiciel : sur devis (à partir de 350 € HT).",
+    "saasMigration": "Migration de données : sur devis (à partir de 350 € HT).",
     "includedTitle": "Inclus dans chaque abonnement animal (clients)",
     "includedLead": "Quel que soit le plan (mensuel, annuel ou triennal), le propriétaire dispose de :",
     "included": [
@@ -2294,9 +2254,9 @@
       "Langues FR / NL / EN / ES / ET / IT"
     ],
     "plansTitle": "Abonnements clients par animal (TTC)",
-    "plansLead": "Un abonnement par animal suivi. Paiement Stripe côté propriétaire. Mensuel = subscription only ; annuel et triennal = one_time ou subscription.",
+    "plansLead": "Un abonnement par animal suivi. Paiement Stripe côté propriétaire.",
     "recommended": "Recommandé",
-    "plansTip": "Conseil : privilégiez le Triennal (95 € / 3 ans ≈ 2,6 €/mois). Le mensuel offre la flexibilité ; l'annuel le meilleur prix à l'année.",
+    "plansTip": "Steer : Triennal (95 € / 3 ans ≈ 2,6 €/mois). Mensuel = flexibilité ; annuel = meilleur prix à l’année.",
     "plans": {
       "monthly": {
         "name": "Mensuel",
@@ -2305,8 +2265,7 @@
         "monthly": "flexibilité",
         "benefits": [
           "Sans engagement long",
-          "Toutes les fonctionnalités incluses",
-          "Renouvellement automatique mensuel"
+          "Toutes les fonctionnalités incluses"
         ]
       },
       "annual": {
@@ -2315,9 +2274,8 @@
         "period": "par an",
         "monthly": "≈ 2,9 € / mois",
         "benefits": [
-          "Meilleur prix à l'année vs mensuel",
-          "Toutes les fonctionnalités incluses",
-          "Engagement d'un an"
+          "Meilleur prix à l’année vs mensuel",
+          "Toutes les fonctionnalités incluses"
         ]
       },
       "triennial": {
@@ -2326,9 +2284,8 @@
         "period": "pour 3 ans",
         "monthly": "≈ 2,6 € / mois",
         "benefits": [
-          "Cœur d'offre — −10 % vs 3× annuel",
-          "Suivi continu sur 3 ans",
-          "Meilleur argument prix pour le foyer"
+          "Cœur d’offre — −10 % vs 3× annuel",
+          "Meilleur argument prix foyer"
         ]
       }
     },
@@ -2350,7 +2307,7 @@
         "role": "Recommandé"
       }
     },
-    "footer": "petsFollow — continuité de soins prescrite · passeport digital de l'animal · Web + mobile"
+    "footer": "petsFollow — continuité de soins prescrite · passeport digital · Web Pro + mobiles"
   },
   "components": {
     "topbar": {

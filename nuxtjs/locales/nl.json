@@ -1511,122 +1511,82 @@
   },
   "products": {
     "seoTitle": "petsFollow — Professioneel aanbod",
-    "seoDescription": "Voorgeschreven zorgcontinuïteit + digitaal paspoort: Pro (Web + cliënten) en Pro Light (terrein / care pro, gratis). Cliëntgrid en partnermodel.",
+    "seoDescription": "Pro Webplatform (praktijk), gratis Pro Light, cliëntapp. Grid €3,50 / €35 / €95 en partnermodel.",
     "backHome": "Home",
     "print": "Afdrukken / PDF",
     "badge": "Presentatieondersteuning praktijk",
-    "title": "Professioneel aanbod petsFollow",
-    "lead": "Het digitale paspoort van het dier — voorgeschreven zorgcontinuïteit tussen praktijk, zorgpros op het terrein en eigenaren (Web Pro · mobiel ProLight · mobiel Client).",
-    "positioning": "Twee oplossingen: Pro (Web SaaS + cliëntpaspoort, commerciële facturatie) en Pro Light (terrein-/care-pro-app, gratis, met of zonder Web-account). Eigenaars betalen voor dieropvolging (€3,50 / €35 / €95).",
-    "solutionsTitle": "Twee professionele oplossingen",
-    "solutionsLead": "Stem de tool af op uw praktijk: volledig verbonden kabinet, of lichte terrein-/care-pro-app.",
-    "solutions": {
-      "proComplete": {
-        "name": "Pro",
-        "badge": "Web + cliëntmobiel",
-        "price": "€69 excl. btw / maand",
-        "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
-        "tagline": "Webplatform voor de praktijk + digitaal paspoort mobiel voor uw cliënten.",
-        "features": [
-          "Gecentraliseerd digitaal paspoort en gedeelde timeline",
-          "Voorschriften, herinneringen en afspraakverzoeken",
-          "Veilige berichten cliënt ↔ praktijk + push",
-          "Dossierdelen met care pro / collega's",
-          "Partnerprogramma (commissies op cliëntactivaties)",
-          "Externe SaaS-facturatie — geen online praktijkbetaling",
-          "Vocale consultatierapporten",
-          "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard",
-          "CR IA-add-on: 90 dagen proef dan 39 € excl. btw/maand of 390 €/jaar — ROI vanaf dag 60"
-        ]
-      },
-      "proLight": {
-        "name": "Pro Light",
-        "badge": "Gratis",
-        "price": "€0",
-        "tagline": "ProLight-mobiele app — terrein en care pro, met of zonder Web Pro-account.",
-        "features": [
-          "Cliëntopvolging en terreinagenda (vet light / care pro)",
-          "Dierfiches & geschiedenis",
-          "Doorverwijzings-QR-code",
-          "Gedeelde documenten en bezoeknotities",
-          "Dossierdelen met collega's / externe pros",
-          "Vocale consultatierapporten",
-          "AI-verbetering van verslagen (+ historiek) als VetPro-kabinet geactiveerd is",
-          "Gratis voor professionals"
-        ]
-      }
+    "title": "Aanbod petsFollow",
+    "lead": "Het essentiële: Pro-aanbod (Web praktijk), Pro Light en cliëntabonnementen.",
+    "hook": "Voorgeschreven zorgcontinuïteit + digitaal paspoort van het dier, gedeeld tussen praktijk, care pro en eigenaar.",
+    "pro": {
+      "name": "PetsFollow Webplatform (praktijk)",
+      "badge": "Pro-aanbod",
+      "price": "€69 excl. btw / maand",
+      "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
+      "tagline": "Het cockpit van de praktijk: digitaal paspoort, berichten, herinneringen, delen en activatie-opvolging.",
+      "features": [
+        "Digitaal paspoort + gedeelde timeline (praktijk / cliënt / care pro)",
+        "Veilige berichten cliënt ↔ praktijk + push",
+        "Herinneringen, voorschriften en afspraakverzoeken",
+        "Dossierdelen (collega's / care pro)",
+        "Opvolging cliëntactivaties en partnercommissies",
+        "Vocale CR + IA-add-on (90 dagen proef → €39 excl. btw/maand of €390/jaar)"
+      ],
+      "invoiceNote": "Offline facturatie (sales / boekhouding) — geen praktijk-SaaS-betaling via Stripe."
     },
-    "saasInvoiceNote": "Pro: abonnement en opzet offline gefactureerd (sales / boekhouding). Geen praktijk-SaaS-betaling via Stripe.",
-    "webTitle": "PetsFollow Webplatform (praktijk)",
-    "webLead": "Centraliseert het digitale paspoort en de klinische & administratieve stromen van de praktijk.",
-    "webFeatures": [
-      "Gecentraliseerd digitaal paspoort: patiëntfiches, geschiedenis, labo's",
-      "Voorschriften & therapietrouw: herinneringen op de telefoon van de cliënt",
-      "Herinneringen & afspraken (vaccins, antiparasitica, controles)",
-      "Veilige berichten & post-op / chronische opvolging (praktijk ↔ cliënt)",
-      "Dossierdelen met care pro en collega's",
-      "Opvolging van cliëntactivaties en partnercommissies",
-      "Vocale consultatierapporten",
-      "AI-verbetering van rapporten — gestructureerd, bewerkbaar vóór opslaan, geschiedenis bewaard"
+    "proLight": {
+      "name": "Pro Light",
+      "badge": "Gratis",
+      "price": "€0",
+      "tagline": "Mobiele app terrein / care pro — met of zonder Web Pro-account.",
+      "features": [
+        "Terreinagenda, dierfiches, bezoeknotities",
+        "Dossierdelen + doorverwijzings-QR",
+        "Vocale CR (IA als het Pro-kabinet de module activeerde)"
+      ]
+    },
+    "clientsTitle": "Cliëntapp (eigenaars)",
+    "clientsLead": "De eigenaar betaalt voor dieropvolging (Stripe). Eén abonnement = één dier.",
+    "clientFeatures": [
+      "Digitaal paspoort / gezondheidsboekje altijd op zak",
+      "Berichten met de praktijk + pushherinneringen",
+      "Begeleide hartmetingen 15 / 30 / 60 s",
+      "Care / Horse / huishouden inbegrepen zodra het dier betaalt"
     ],
-    "mobileTitle": "PetsFollow mobiele app (eigenaars)",
-    "mobileLead": "De eigenaarszijde van het digitale paspoort — verlenging van uw zorg thuis.",
-    "mobileFeatures": [
-      "Digitaal paspoort / gezondheidsboekje: vaccins, gewicht, voorgeschiedenis, noodgevallen",
-      "Behandelingswaarschuwingen & slimme herinneringen (push)",
-      "Directe link met de praktijk: berichten, hernieuwingen, afspraakverzoeken",
-      "Gezondheidsdagboek: gewicht, symptomen, voeding, activiteit",
-      "Begeleide hartmetingen 15 / 30 / 60 s"
-    ],
-    "benefitsTitle": "Waarom het PetsFollow-ecosysteem adopteren?",
-    "benefitsCabinetTitle": "Voor uw praktijk",
-    "benefitsClientsTitle": "Voor uw cliënten",
-    "benefitsCabinet": [
-      "Tijdwinst op opvolgingen en telefoon",
-      "Betere therapietrouw",
-      "Sterkere cliëntloyaliteit",
-      "Samenwerken met care pro / collega's via dossierdelen",
-      "SaaS te compenseren via het partnerprogramma"
-    ],
-    "benefitsClients": [
-      "Gemoedsrust dankzij automatische herinneringen",
-      "Digitaal paspoort altijd op zak",
-      "Sterker vertrouwen met hun dierenarts",
-      "Optimale preventieve opvolging"
-    ],
-    "partnerTitle": "Partnermodel",
-    "partnerLead": "Door de app aan te bevelen verdient u commissies die het Pro-abonnement compenseren (offline verrekening).",
+    "includedLine": "Inbegrepen ongeacht het plan: paspoort, berichten + push, HR-metingen, Care/Horse-herinneringen, huishouden, FR/NL/EN/ES/ET/IT.",
+    "economyTitle": "Zelffinanciering & verbintenissen",
+    "partnerLead": "Commissies op cliëntactivaties compenseren het Pro-abonnement (offline verrekening).",
     "partnerSteps": [
-      "De eigenaar schrijft in op een dierplan (bv. €95 incl. btw / 3 jaar — aanbevolen).",
-      "Elke activatie met uw praktijcode / QR levert een commissie op (grondslag excl. btw).",
-      "Commissies worden afgetrokken of verrekend op uw SaaS-factuur (externe facturatie)."
+      "De eigenaar schrijft in (bv. €95 incl. btw / 3 jaar — aanbevolen).",
+      "Elke activatie met praktijcode / QR levert een commissie op (grondslag excl. btw).",
+      "Commissies worden afgetrokken of verrekend op de SaaS-factuur."
     ],
-    "partnerTip": "Vuistregel: ongeveer 7 driejaarlijkse activaties per maand kunnen het maandelijkse Pro-abonnement (€69 excl. btw) dekken.",
-    "saasTitle": "Pro-tarieven (excl. btw — externe facturatie)",
-    "saasLead": "Geen Stripe-checkout voor praktijk-SaaS. Offertes en facturen via het salesteam.",
+    "partnerTip": "≈ 7 driejaarlijkse activaties / maand ≈ dekt het maandelijkse Pro (€69 excl. btw).",
+    "saasTitle": "Pro SaaS-verbintenissen (excl. btw)",
+    "saasLead": "Offertes en facturen via het salesteam — geen Stripe-checkout voor de praktijk.",
     "saas": {
       "setup": {
         "name": "Opzet & opleiding",
         "price": "€320 excl. btw",
-        "description": "Accountaanmaak, configuratie, teamopleiding, go-live (one-shot)."
+        "description": "Account, config, opleiding, go-live (one-shot)."
       },
       "monthly": {
-        "name": "Maandelijks abonnement",
+        "name": "Maandelijks",
         "price": "€69 excl. btw / maand",
-        "description": "Volledige Pro-toegang. Verbintenis 12 maanden."
+        "description": "Verbintenis 12 maanden."
       },
       "annual": {
-        "name": "Jaarlijks abonnement",
+        "name": "Jaarlijks",
         "price": "€828 excl. btw / jaar",
-        "description": "Eén jaarlijkse factuur (12 × €69)."
+        "description": "12 × €69."
       },
       "longTerm": {
-        "name": "Verbintenis 3 jaar",
+        "name": "3 jaar",
         "price": "€745,20 excl. btw / jaar",
-        "description": "−10 % vs jaarlijks (dus €62,10 excl. btw / maand)."
+        "description": "−10 % vs jaarlijks (≈ €62,10 excl. btw / maand)."
       }
     },
-    "saasMigration": "Datamigratie vanuit een vorig systeem: op offerte (vanaf €350 excl. btw).",
+    "saasMigration": "Datamigratie: op offerte (vanaf €350 excl. btw).",
     "includedTitle": "Inbegrepen in elk dierabonnement (cliënten)",
     "includedLead": "Ongeacht het plan (maandelijks, jaarlijks of driejaarlijks) krijgen eigenaars:",
     "included": [
@@ -1639,9 +1599,9 @@
       "Talen FR / NL / EN / ES / ET / IT"
     ],
     "plansTitle": "Cliëntabonnementen per dier (incl. btw)",
-    "plansLead": "Eén abonnement per opgevolgd dier. Stripe-betaling aan eigenaarszijde. Maandelijks = enkel subscription; jaarlijks en driejaarlijks = one_time of subscription.",
+    "plansLead": "Eén abonnement per opgevolgd dier. Stripe-betaling aan eigenaarszijde.",
     "recommended": "Aanbevolen",
-    "plansTip": "Tip: kies voor Driejaarlijks (€95 / 3 jaar ≈ €2,6/maand). Maandelijks biedt flexibiliteit; jaarlijks de beste jaarprijs.",
+    "plansTip": "Steer: Driejaarlijks (€95 / 3 jaar ≈ €2,6/maand). Maandelijks = flexibiliteit; jaarlijks = beste jaarprijs.",
     "plans": {
       "monthly": {
         "name": "Maandelijks",
@@ -1650,8 +1610,7 @@
         "monthly": "flexibiliteit",
         "benefits": [
           "Geen lange verbintenis",
-          "Alle functies inbegrepen",
-          "Automatische maandelijkse vernieuwing"
+          "Alle functies inbegrepen"
         ]
       },
       "annual": {
@@ -1661,8 +1620,7 @@
         "monthly": "≈ €2,9 / maand",
         "benefits": [
           "Beste jaarprijs vs maandelijks",
-          "Alle functies inbegrepen",
-          "Verbintenis van één jaar"
+          "Alle functies inbegrepen"
         ]
       },
       "triennial": {
@@ -1672,7 +1630,6 @@
         "monthly": "≈ €2,6 / maand",
         "benefits": [
           "Kerkaanbod — −10 % vs 3× jaarlijks",
-          "Continue opvolging gedurende 3 jaar",
           "Sterkste prijsargument voor het huishouden"
         ]
       }
@@ -1695,7 +1652,7 @@
         "role": "Aanbevolen"
       }
     },
-    "footer": "petsFollow — voorgeschreven zorgcontinuïteit · digitaal paspoort van het dier · Web + mobiel"
+    "footer": "petsFollow — voorgeschreven zorgcontinuïteit · digitaal paspoort · Web Pro + mobiles"
   },
   "components": {
     "topbar": {

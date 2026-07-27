@@ -1511,122 +1511,82 @@
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
-    "seoDescription": "Ettekirjutatud ravi järjepidevus + digitaalne pass: Pro (veeb + kliendid) ja Pro Light (väli / care pro, tasuta). Kliendiplaanid ja partnerimudel.",
+    "seoDescription": "Pro veebiplatvorm (kliinik), tasuta Pro Light, kliendiäpp. Võrk 3,50 / 35 / 95 € ja partnerimudel.",
     "backHome": "Avaleht",
     "print": "Prindi / PDF",
     "badge": "Kliiniku esitluse tugi",
-    "title": "petsFollow professionaalne pakkumine",
-    "lead": "Looma digitaalne pass — ettekirjutatud ravi järjepidevus kabineti, välja care pro'de ja omanike vahel (Web Pro · mobiilne ProLight · mobiilne Client).",
-    "positioning": "Kaks lahendust: Pro (veebi-SaaS + klientide pass, kommertsarveldus) ja Pro Light (välja / care pro äpp, tasuta, koos Web kontoga või ilma). Omanikud maksavad loomade jälgimise eest (3,50 / 35 / 95 €).",
-    "solutionsTitle": "Kaks professionaalset lahendust",
-    "solutionsLead": "Kohandage tööriist oma praktikaga: täielik ühendatud kliinik või kerge välja / care pro äpp.",
-    "solutions": {
-      "proComplete": {
-        "name": "Pro",
-        "badge": "Veeb + kliendi mobiil",
-        "price": "69 € km-ta / kuu",
-        "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
-        "tagline": "Veebiplatvorm kliinikule + digitaalne mobiilipass teie klientidele.",
-        "features": [
-          "Tsentraliseeritud digitaalne pass ja jagatud ajajoon",
-          "Retseptid, meeldetuletused ja vastuvõtutaotlused",
-          "Turvaline sõnumside klient ↔ kliinik + push",
-          "Toimiku jagamine care pro / kolleegidega",
-          "Partneriprogramm (komisjonid aktiveerimiste pealt)",
-          "Väline SaaS-arveldus — ilma kliiniku veebimaksena",
-          "Häälelised konsultatsiooniraportid",
-          "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib",
-          "CR IA lisamoodul: 90 päeva proov, seejärel 39 € HT/kuu või 390 €/aasta — ROI alates päevast 60"
-        ]
-      },
-      "proLight": {
-        "name": "Pro Light",
-        "badge": "Tasuta",
-        "price": "0 €",
-        "tagline": "ProLight-mobiilirakendus — väli ja care pro, koos Web Pro kontoga või ilma.",
-        "features": [
-          "Klientide jälgimine ja välipäevakava (véto light / care pro)",
-          "Loomade kaardid ja ajalugu",
-          "Soovitus-QR-kood",
-          "Jagatud dokumendid ja visiidimärkmed",
-          "Toimiku jagamine kolleegide / väliste pro'dega",
-          "Häälelised konsultatsiooniraportid",
-          "AI aruandeparandus (+ ajalugu), kui VetPro kabinet on aktiveeritud",
-          "Tasuta professionaalidele"
-        ]
-      }
+    "title": "petsFollow pakkumine",
+    "lead": "Oluline: Pro pakkumine (veebikliinik), Pro Light ja klienditellimused.",
+    "hook": "Ettekirjutatud ravi järjepidevus + looma digitaalne pass, jagatud kabineti, care pro ja omaniku vahel.",
+    "pro": {
+      "name": "PetsFollow veebiplatvorm (kliinik)",
+      "badge": "Pro pakkumine",
+      "price": "69 € km-ta / kuu",
+      "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
+      "tagline": "Kliiniku juhtimislaud: digitaalne pass, sõnumside, meeldetuletused, jagamine ja aktiveerimiste jälgimine.",
+      "features": [
+        "Digitaalne pass + jagatud ajajoon (kliinik / klient / care pro)",
+        "Turvaline sõnumside klient ↔ kliinik + push",
+        "Meeldetuletused, retseptid ja vastuvõtutaotlused",
+        "Toimiku jagamine (kolleegid / care pro)",
+        "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine",
+        "Häälelised CR + IA lisamoodul (90 päeva proov → 39 € km-ta/kuu või 390 €/aasta)"
+      ],
+      "invoiceNote": "Offline arveldus (müük / raamatupidamine) — Stripe'i kaudu kliiniku SaaS-makseid ei ole."
     },
-    "saasInvoiceNote": "Pro: tellimus ja käivitamine arveldatakse offline (müük / raamatupidamine). Stripe'i kaudu kliiniku SaaS-makseid ei ole.",
-    "webTitle": "PetsFollow veebiplatvorm (kliinik)",
-    "webLead": "Tsentraliseerib digitaalse passi ning kabineti kliinilised ja administratiivsed vood.",
-    "webFeatures": [
-      "Tsentraliseeritud digitaalne pass: patsiendikaardid, ajalugu, analüüsid",
-      "Retseptid ja ravi järgimine: retseptid ja meeldetuletused kliendi telefonis",
-      "Meeldetuletused ja vastuvõtud (vaktsiinid, antiparasiidid, kontrollid)",
-      "Turvaline sõnumside ning post-op / krooniline jälgimine (kabinet ↔ klient)",
-      "Toimiku jagamine care pro ja kolleegidega",
-      "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine",
-      "Häälelised konsultatsiooniraportid",
-      "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib"
+    "proLight": {
+      "name": "Pro Light",
+      "badge": "Tasuta",
+      "price": "0 €",
+      "tagline": "Välja / care pro mobiilirakendus — koos Web Pro kontoga või ilma.",
+      "features": [
+        "Välipäevakava, loomakaardid, visiidimärkmed",
+        "Toimiku jagamine + soovitus-QR",
+        "Häälelised CR (IA kui Pro kabinet mooduli aktiveeris)"
+      ]
+    },
+    "clientsTitle": "Kliendiäpp (omanikud)",
+    "clientsLead": "Omanik maksab looma jälgimise eest (Stripe). Üks tellimus = üks loom.",
+    "clientFeatures": [
+      "Digitaalne pass / tervisekaart alati taskus",
+      "Sõnumside kliinikuga + push-meeldetuletused",
+      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s",
+      "Care / Horse / leibkond kaasatud alates maksvast loomast"
     ],
-    "mobileTitle": "PetsFollow mobiilirakendus (omanikud)",
-    "mobileLead": "Digitaalse passi omanikupoolne nägu — teie ravi jätkumine kodus.",
-    "mobileFeatures": [
-      "Digitaalne pass / tervisekaart: vaktsiinid, kaal, anamnees, hädaolukorrad",
-      "Ravihoiatused ja nutikad meeldetuletused (push)",
-      "Otselink kliinikuga: sõnumside, uuendused, vastuvõtutaotlused",
-      "Tervisepäevik: kaal, sümptomid, toit, aktiivsus",
-      "Juhendatud südamerütmi mõõtmised 15 / 30 / 60 s"
-    ],
-    "benefitsTitle": "Miks võtta kasutusele PetsFollowi ökosüsteem?",
-    "benefitsCabinetTitle": "Teie kliinikule",
-    "benefitsClientsTitle": "Teie klientidele",
-    "benefitsCabinet": [
-      "Aja kokkuhoid järelkontrollidel ja telefonil",
-      "Parem ravi järgimine",
-      "Suurem kliendilojaalsus",
-      "Tehke koostööd care pro / kolleegidega toimiku jagamise kaudu",
-      "SaaS kompenseeritav partneriprogrammiga"
-    ],
-    "benefitsClients": [
-      "Rahulik meel tänu automaatsetele meeldetuletustele",
-      "Digitaalne pass alati taskus",
-      "Tugevam usaldus oma loomaarstiga",
-      "Optimaalne ennetav jälgimine"
-    ],
-    "partnerTitle": "Partnerimudel",
-    "partnerLead": "Rakendust klientidele soovitades teenite komisjone, mis kompenseerivad Pro tellimuse (offline arveldus).",
+    "includedLine": "Kaasatud igas plaanis: pass, sõnumside + push, HR mõõtmised, Care/Horse meeldetuletused, leibkond, FR/NL/EN/ES/ET/IT.",
+    "economyTitle": "Isefinantseerimine ja kohustused",
+    "partnerLead": "Komisjonid aktiveerimistelt kompenseerivad Pro tellimuse (offline arveldus).",
     "partnerSteps": [
-      "Omanik tellib loomaplaani (nt 95 € km-ga / 3 aastat — soovitatav).",
-      "Iga aktiveerimine teie kliiniku koodi / QR-iga teenib komisjoni (alus km-ta).",
-      "Komisjonid arvestatakse maha või tasaarveldatakse teie SaaS-arvel (väline arveldus)."
+      "Omanik tellib (nt 95 € km-ga / 3 aastat — soovitatav).",
+      "Iga aktiveerimine kliiniku koodi / QR-iga teenib komisjoni (alus km-ta).",
+      "Komisjonid arvestatakse maha või tasaarveldatakse SaaS-arvel."
     ],
-    "partnerTip": "Suurusjärk: umbes 7 kolmeaastast aktiveerimist kuus võib katta Pro kuutellimuse (69 € km-ta).",
-    "saasTitle": "Pro hinnad (km-ta — väline arveldus)",
-    "saasLead": "Kliiniku SaaSile Stripe checkout'i ei ole. Pakkumised ja arved müügimeeskonna kaudu.",
+    "partnerTip": "≈ 7 kolmeaastast aktiveerimist / kuu ≈ katab Pro kuutellimuse (69 € km-ta).",
+    "saasTitle": "Pro SaaS kohustused (km-ta)",
+    "saasLead": "Pakkumised ja arved müügimeeskonna kaudu — kliiniku Stripe checkout'i ei ole.",
     "saas": {
       "setup": {
         "name": "Käivitamine ja koolitus",
         "price": "320 € km-ta",
-        "description": "Konto loomine, seadistus, meeskonnakoolitus, käivitamise tugi (one-shot)."
+        "description": "Konto, seadistus, koolitus, käivitamine (one-shot)."
       },
       "monthly": {
-        "name": "Igakuine tellimus",
+        "name": "Igakuine",
         "price": "69 € km-ta / kuu",
-        "description": "Täielik Pro juurdepääs. 12 kuu kohustus."
+        "description": "12 kuu kohustus."
       },
       "annual": {
-        "name": "Aastane tellimus",
+        "name": "Aastane",
         "price": "828 € km-ta / aasta",
-        "description": "Üks aastane arve (12 × 69 €)."
+        "description": "12 × 69 €."
       },
       "longTerm": {
-        "name": "3-aastane kohustus",
+        "name": "3 aastat",
         "price": "745,20 € km-ta / aasta",
-        "description": "−10 % vs aastane (ehk 62,10 € km-ta / kuu)."
+        "description": "−10 % vs aastane (≈ 62,10 € km-ta / kuu)."
       }
     },
-    "saasMigration": "Andmete migratsioon vanast tarkvarast: hinnapakkumisel (alates 350 € km-ta).",
+    "saasMigration": "Andmete migratsioon: hinnapakkumisel (alates 350 € km-ta).",
     "includedTitle": "Igas loomade tellimuses (kliendid)",
     "includedLead": "Olenemata plaanist (igakuine, aastane või kolmeaastane) saab omanik:",
     "included": [
@@ -1639,9 +1599,9 @@
       "Keeled FR / NL / EN / ES / ET / IT"
     ],
     "plansTitle": "Kliendi tellimused looma kohta (km-ga)",
-    "plansLead": "Üks tellimus jälgitava looma kohta. Stripe-makse omaniku poolel. Igakuine = ainult subscription; aastane ja kolmeaastane = one_time või subscription.",
+    "plansLead": "Üks tellimus jälgitava looma kohta. Stripe-makse omaniku poolel.",
     "recommended": "Soovitatav",
-    "plansTip": "Nõuanne: eelistage kolmeaastast (95 € / 3 aastat ≈ 2,6 €/kuu). Igakuine annab paindlikkuse; aastane parima aastahinna.",
+    "plansTip": "Steer: kolmeaastane (95 € / 3 aastat ≈ 2,6 €/kuu). Igakuine = paindlikkus; aastane = parim aastahind.",
     "plans": {
       "monthly": {
         "name": "Igakuine",
@@ -1650,8 +1610,7 @@
         "monthly": "paindlikkus",
         "benefits": [
           "Ilma pika kohustuseta",
-          "Kõik funktsioonid kaasatud",
-          "Automaatne igakuine uuendamine"
+          "Kõik funktsioonid kaasatud"
         ]
       },
       "annual": {
@@ -1661,8 +1620,7 @@
         "monthly": "≈ 2,9 € / kuu",
         "benefits": [
           "Parim aastahind vs igakuine",
-          "Kõik funktsioonid kaasatud",
-          "Üheaastane kohustus"
+          "Kõik funktsioonid kaasatud"
         ]
       },
       "triennial": {
@@ -1672,7 +1630,6 @@
         "monthly": "≈ 2,6 € / kuu",
         "benefits": [
           "Põhitarne — −10 % vs 3× aastane",
-          "Pidev jälgimine 3 aastat",
           "Tugevaim hinnaväide leibkonnale"
         ]
       }
@@ -1695,7 +1652,7 @@
         "role": "Soovitatav"
       }
     },
-    "footer": "petsFollow — ettekirjutatud ravi järjepidevus · looma digitaalne pass · Web + mobiil"
+    "footer": "petsFollow — ettekirjutatud ravi järjepidevus · digitaalne pass · Web Pro + mobiilid"
   },
   "components": {
     "topbar": {
