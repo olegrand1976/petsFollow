@@ -51,6 +51,10 @@
     "vet_only": "Ainult veterinaaridele",
     "client_only": "Ainult klientidele",
     "admin_only": "Ainult administraatoritele",
+    "staging_seed_disabled": "Stagingi lähtestamine on selles keskkonnas keelatud",
+    "confirm_required": "Vigane kinnitusfraas",
+    "seed_in_progress": "Lähtestamine on juba käimas",
+    "seed_failed": "Andmebaasi lähtestamine ebaõnnestus",
     "google_pro_only": "Google on reserveeritud Pro profiilidele",
     "google_client_only": "See Google'i konto on Pro profiil — kasutage veebirakendust",
     "not_your_pet": "See ei ole teie loom",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "See rida ei ole maksmiseks valmis",
     "payout_no_ready_lines": "Selles perioodis pole maksmiseks valmis ridu",
     "email_already_exists": "Selle e-postiga konto on juba olemas",
+    "prospect_already_owned": "Seda prospecti haldab juba kolleeg",
+    "cannot_release_converted": "Konverteeritud prospecti ei saa vabastada",
+    "invalid_invite_code": "Vigane sponsorikood",
+    "already_assigned": "See kabinet on juba müügiesindajale määratud",
     "already_linked": "See klient on juba selle kabinetiga seotud",
     "not_a_client": "See konto ei ole klient",
     "care_pro_only": "Ainult välitöötajatele",
@@ -130,10 +138,7 @@
     "invalid_urgency": "Kehtetu kiireloomulisus",
     "ai_module_required": "CR IA moodul pole aktiveeritud või prooviperiood lõppenud — võtke ühendust müügiesindajaga",
     "ai_module_not_found": "CR IA moodulit selle kabineti jaoks ei leitud",
-    "staging_seed_disabled": "Stagingi lähtestamine on selles keskkonnas keelatud",
-    "confirm_required": "Vigane kinnitusfraas",
-    "seed_in_progress": "Lähtestamine on juba käimas",
-    "seed_failed": "Andmebaasi lähtestamine ebaõnnestus"
+    "self_referral": "Enesesoovitamine pole lubatud"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

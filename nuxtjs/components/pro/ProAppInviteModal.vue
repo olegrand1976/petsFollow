@@ -25,7 +25,7 @@
         <ProInput
           :model-value="invite.inviteUrl"
           disabled
-          :label="$t('clients.appInvite.linkLabel')"
+          :label="hasVetRegister ? $t('clients.appInvite.linkLabelClient') : $t('clients.appInvite.linkLabel')"
           test-id="app-invite-url"
         />
         <ProButton
@@ -37,6 +37,23 @@
           <ProIcon name="content_copy" />
           {{ copied ? $t('clients.appInvite.copied') : $t('clients.appInvite.copy') }}
         </ProButton>
+        <template v-if="hasVetRegister">
+          <ProInput
+            :model-value="invite.vetRegisterUrl"
+            disabled
+            :label="$t('clients.appInvite.linkLabelCabinet')"
+            test-id="app-invite-vet-register-url"
+          />
+          <ProButton
+            type="button"
+            variant="secondary"
+            test-id="app-invite-copy-vet-register"
+            @click="copyVetRegister"
+          >
+            <ProIcon name="content_copy" />
+            {{ vetCopied ? $t('clients.appInvite.copied') : $t('clients.appInvite.copyCabinet') }}
+          </ProButton>
+        </template>
         <ProButton
           type="button"
           variant="ghost"
@@ -70,17 +87,21 @@ const title = computed(() => props.title || t('clients.appInvite.title'))
 const loading = ref(false)
 const error = ref('')
 const copied = ref(false)
+const vetCopied = ref(false)
 const copyError = ref('')
 const invite = ref<{
   code: string
   role: string
   inviteUrl: string
+  vetRegisterUrl?: string
   qrCodeDataUrl: string
   practiceName: string
   displayName: string
   qrAndroid?: { publicUrl?: string, storeUrl?: string } | null
   qrIos?: { publicUrl?: string, storeUrl?: string } | null
 } | null>(null)
+
+const hasVetRegister = computed(() => Boolean(invite.value?.vetRegisterUrl?.trim()))
 
 const hintText = computed(() => {
   switch (invite.value?.role) {
@@ -120,6 +141,7 @@ async function loadInvite() {
       code: data.code,
       role: data.role || 'vet',
       inviteUrl: data.inviteUrl,
+      vetRegisterUrl: data.vetRegisterUrl || '',
       qrCodeDataUrl: data.qrCodeDataUrl,
       practiceName: data.practiceName || '',
       displayName: data.displayName || data.vetFullName || '',
@@ -133,22 +155,32 @@ async function loadInvite() {
   }
 }
 
-async function copyLink() {
+async function copyText(url: string, mark: 'client' | 'vet') {
   copyError.value = ''
   copied.value = false
-  const url = invite.value?.inviteUrl
+  vetCopied.value = false
   if (!url) return
   try {
     await navigator.clipboard.writeText(url)
-    copied.value = true
+    if (mark === 'vet') vetCopied.value = true
+    else copied.value = true
   } catch {
     copyError.value = t('clients.appInvite.copyError')
   }
 }
 
+async function copyLink() {
+  await copyText(invite.value?.inviteUrl || '', 'client')
+}
+
+async function copyVetRegister() {
+  await copyText(invite.value?.vetRegisterUrl || '', 'vet')
+}
+
 watch(() => props.open, (isOpen) => {
   if (isOpen) {
     copied.value = false
+    vetCopied.value = false
     copyError.value = ''
     loadInvite()
   }

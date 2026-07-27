@@ -55,7 +55,11 @@
       "billing": "Payroll & catalog"
     },
     "managerAiModules": "AI CR — team",
-    "adminSupport": "Support"
+    "adminSupport": "Support",
+    "adminVetPool": "Practice pool",
+    "commercialFiliation": "Attribution",
+    "managerFiliation": "Team attribution",
+    "adminFiliation": "Attribution"
   },
   "auth": {
     "login": {
@@ -145,18 +149,9 @@
       "failed": "Registration failed",
       "consent": "I accept the {terms} and the {privacy}.",
       "consentRequired": "You must accept the terms and the privacy policy.",
-      "nearbyCommercial": {
-        "title": "Sales rep near you",
-        "hint": "Without a referral code, pick a nearby sales rep (optional).",
-        "useLocation": "Use my location",
-        "postalCode": "Postal code",
-        "searchPostal": "Search by postal code",
-        "empty": "No sales reps found nearby.",
-        "skip": "Skip — no sales rep",
-        "distance": "{km} km",
-        "geoUnsupported": "Geolocation is not available on this device.",
-        "geoDenied": "Location denied — enter a postal code instead."
-      }
+      "inviteCode": "Referral code",
+      "inviteCodeHint": "Your petsFollow sales rep code. Without a code, your practice joins the admin pool for manual assignment.",
+      "poolWithoutCode": "Without a code, your signup will go to the central pool (later assignment)."
     },
     "registerSent": {
       "brandTitle": "Check your inbox",
@@ -601,7 +596,7 @@
       "title": "App download QR code",
       "hint": "Display this QR in your waiting room or share the link. A new client who signs up via this link is automatically linked to your practice (commission).",
       "hintCarePro": "Share this QR or link. A new client who signs up grants you notes access to their record.",
-      "hintCommercial": "Share this QR or link. New clients who sign up are attributed to your commercial referral.",
+      "hintCommercial": "Two links: clients (app) and practices (Pro signup with your referral code).",
       "fallbackName": "petsFollow",
       "qrAlt": "petsFollow download QR code",
       "codeLabel": "Code:",
@@ -613,7 +608,10 @@
       "qrAndroidAlt": "Google Play QR",
       "qrIosAlt": "App Store QR",
       "android": "Android",
-      "ios": "iOS"
+      "ios": "iOS",
+      "linkLabelClient": "Client invite link",
+      "linkLabelCabinet": "Practice signup link",
+      "copyCabinet": "Copy practice link"
     }
   },
   "pets": {
@@ -1187,6 +1185,26 @@
       "searchLabel": "Search",
       "searchPlaceholder": "Subject, email or name…",
       "searchSubmit": "Search"
+    },
+    "vetPool": {
+      "title": "Unassigned practices pool",
+      "subtitle": "Signups without referral code — manual assignment with AI suggestions.",
+      "empty": "No practices waiting",
+      "colName": "Vet",
+      "colEmail": "Email",
+      "colPractice": "Practice",
+      "colCity": "City",
+      "colPostal": "Postal",
+      "colCreated": "Signed up",
+      "colActions": "Actions",
+      "suggest": "Suggestions",
+      "suggestionsTitle": "Suggestions for {name}",
+      "suggestionsEmpty": "No suggestions available",
+      "score": "Score {score}",
+      "distance": "{km} km",
+      "assignedLoad": "{n} practices",
+      "assign": "Assign",
+      "assignOk": "Practice assigned."
     }
   },
   "commissions": {
@@ -1895,7 +1913,16 @@
       "prev": "Previous",
       "next": "Next",
       "encode": "Register",
-      "daysShort": "{n} d"
+      "daysShort": "{n} d",
+      "lookupTitle": "Check before calling",
+      "lookupHint": "Search the practice. If free, claim it. If taken, do not contact them.",
+      "lookupLabel": "Name or phone",
+      "lookupAction": "Check",
+      "lookupFree": "Free prospect — you can claim it.",
+      "lookupMissing": "No prospect found — you can add it.",
+      "ownedBy": "Managed by {name}",
+      "claim": "Claim it",
+      "inactiveSince": "Inactive for {n} d"
     },
     "commissions": {
       "title": "My commissions",
@@ -2286,7 +2313,11 @@
       "subtitle": "CRM view for the team and shared directory.",
       "allCommercials": "All sales reps",
       "reassign": "Assign to",
-      "unassigned": "Unassigned"
+      "unassigned": "Unassigned",
+      "release": "Release",
+      "releaseOk": "Prospect returned to the free pool.",
+      "releaseInactive": "Release inactive (30 d)",
+      "releaseInactiveOk": "{n} prospect(s) released."
     },
     "leaderboard": {
       "title": "Team leaderboard",
@@ -2473,7 +2504,12 @@
     "download": "Download the app",
     "openApp": "Open the app",
     "failedTitle": "Invite not found",
-    "invalid": "This invite link is no longer valid."
+    "invalid": "This invite link is no longer valid.",
+    "cabinetCta": "I am a veterinary practice",
+    "brandTitleClient": "A friend invites you",
+    "subtitleClient": "Invite from {name}",
+    "autoLinkHintClient": "By signing up from this link, you will be linked to your sponsor (and possibly their practice if you don’t have one yet).",
+    "codeHintClient": "If the app does not open automatically, open it and enter this code at signup."
   },
   "team": {
     "title": "Practice team",
@@ -2562,5 +2598,32 @@
     "errorGeneric": "Could not send. Please try again.",
     "errorRateLimit": "Too many tickets recently. Try again in an hour.",
     "errorTooLarge": "Diagnostics too large. Reload the page and try again."
+  },
+  "filiation": {
+    "title": "Attribution",
+    "subtitle": {
+      "commercial": "Your assigned vets and attributed clients — effective commercial (commission).",
+      "manager": "Your team tree: commercial → vet → client, with effective payee.",
+      "admin": "Global attribution view (all branches). Filter by branch or search."
+    },
+    "search": "Search",
+    "searchPlaceholder": "Name, email, practice…",
+    "branchId": "Branch (UUID)",
+    "branchIdPlaceholder": "Filter by branchId",
+    "branch": "Branch",
+    "commercial": "Sales rep",
+    "vet": "Vet",
+    "practice": "Practice",
+    "client": "Client",
+    "inviteCode": "Invite code",
+    "sponsor": "Client sponsor",
+    "effective": "Effective",
+    "linkedAt": "Since",
+    "empty": "No attribution rows",
+    "source": {
+      "vet_assignment": "Vet assignment",
+      "client_referral": "Client referral",
+      "none": "None"
+    }
   }
 }

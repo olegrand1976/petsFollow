@@ -52,13 +52,14 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
-	httpx.WriteData(w, http.StatusOK, map[string]any{
+	proSite := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
+	payload := map[string]any{
 		"code":          inv.Code,
 		"role":          inv.Role,
 		"inviteUrl":     inviteURL,
 		"deepLink":      a.appInviteDeepLink(inv.Code),
 		"downloadUrl":   downloadURL,
-		"proSiteUrl":    strings.TrimRight(a.cfg.ProPublicSiteURL, "/"),
+		"proSiteUrl":    proSite,
 		"qrCodeDataUrl": qr,
 		"qrAndroid":     brandAssetPublicDTO(android),
 		"qrIos":         brandAssetPublicDTO(ios),
@@ -67,7 +68,12 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 		"specialty":     inv.Specialty,
 		// Compat Nuxt ProAppInviteModal
 		"vetFullName": inv.DisplayName,
-	})
+	}
+	switch inv.Role {
+	case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+		payload["vetRegisterUrl"] = proSite + "/register?invite=" + inv.Code
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
 }
 
 func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +90,7 @@ func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
-	case id.Role == kernel.RoleCarePro, id.Role == kernel.RoleCommercial, id.Role == kernel.RoleCommercialManager:
+	case id.Role == kernel.RoleCarePro, id.Role == kernel.RoleCommercial, id.Role == kernel.RoleCommercialManager, id.Role == kernel.RoleClient:
 		// ok — self
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "invite_role_denied")
@@ -137,7 +143,8 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
-	httpx.WriteData(w, http.StatusOK, map[string]any{
+	proSite := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
+	out := map[string]any{
 		"code":         inv.Code,
 		"role":         inv.Role,
 		"practiceName": inv.PracticeName,
@@ -147,9 +154,15 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 		"downloadUrl":  downloadURL,
 		"deepLink":     a.appInviteDeepLink(inv.Code),
 		"inviteUrl":    a.appInviteWebURL(inv.Code),
+		"proSiteUrl":   proSite,
 		"qrAndroid":    brandAssetPublicDTO(android),
 		"qrIos":        brandAssetPublicDTO(ios),
-	})
+	}
+	switch inv.Role {
+	case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+		out["vetRegisterUrl"] = proSite + "/register?invite=" + inv.Code
+	}
+	httpx.WriteData(w, http.StatusOK, out)
 }
 
 type claimInviteReq struct {
@@ -171,6 +184,10 @@ func (a *API) claimVetAppInvite(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "invite_not_found")
+			return
+		}
+		if errors.Is(err, store.ErrSelfReferral) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "self_referral")
 			return
 		}
 		if errors.Is(err, store.ErrValidation) {
@@ -202,7 +219,7 @@ func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) string 
 	}
 	result, err := a.store.ClaimAppInvite(r.Context(), clientUserID, code)
 	if err != nil {
-		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) || errors.Is(err, store.ErrSelfReferral) {
 			return inviteStatusIgnored
 		}
 		log.Printf("claim invite user=%s code=%s: %v", clientUserID, code, err)

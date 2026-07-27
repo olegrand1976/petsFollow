@@ -38,6 +38,8 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: t('nav.section.ops') },
   { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
   { to: '/admin/commercials', label: t('nav.adminCommercials'), icon: 'users', section: t('nav.section.salesForce') },
+  { to: '/admin/vet-pool', label: t('nav.adminVetPool'), icon: 'pets', section: t('nav.section.salesForce') },
+  { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: t('nav.section.salesForce') },
   { to: '/admin/sales-branches', label: t('nav.adminSalesBranches'), icon: 'account_tree', section: t('nav.section.salesForce') },
   { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: t('nav.section.salesForce') },
   { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.salesForce') },

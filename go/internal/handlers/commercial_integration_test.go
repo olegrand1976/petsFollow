@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -753,5 +755,170 @@ func TestCommercialManagerTeamVisibility(t *testing.T) {
 	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial-manager/prospects?commercialUserId="+uuid.NewString(), mgrTok, nil)
 	if code != http.StatusNotFound {
 		t.Fatalf("outside team filter want 404, got %d", code)
+	}
+}
+
+func TestProspectFirstEncodingClaimAndRelease(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	mgrEmail := uniqueEmail("claim-mgr")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": mgrEmail, "password": "CommercialDemo123!", "fullName": "Claim Manager", "role": "commercial_manager",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create manager %d %#v", code, env)
+	}
+	mgrID := dataMap(t, env)["userId"].(string)
+
+	aEmail := uniqueEmail("claim-a")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": aEmail, "password": "CommercialDemo123!", "fullName": "Rep A", "managerUserId": mgrID,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create A %d %#v", code, env)
+	}
+	bEmail := uniqueEmail("claim-b")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": bEmail, "password": "CommercialDemo123!", "fullName": "Rep B", "managerUserId": mgrID,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create B %d %#v", code, env)
+	}
+
+	aTok := loginToken(t, api.handler, aEmail, "CommercialDemo123!")
+	bTok := loginToken(t, api.handler, bEmail, "CommercialDemo123!")
+	mgrTok := loginToken(t, api.handler, mgrEmail, "CommercialDemo123!")
+
+	phone := fmt.Sprintf("+32470%06d", time.Now().UnixNano()%1000000)
+	practice := "Cabinet Claim " + uuid.NewString()[:8]
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", aTok, map[string]any{
+		"practiceName": practice, "contactPhone": phone, "city": "Bruxelles",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create prospect %d %#v", code, env)
+	}
+	prospectID := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/prospects/lookup?q="+phone, bTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("lookup %d %#v", code, env)
+	}
+	look := dataMap(t, env)
+	if look["status"] != "owned" {
+		t.Fatalf("want owned, got %#v", look)
+	}
+	if look["ownerName"] != "Rep A" {
+		t.Fatalf("ownerName %#v", look["ownerName"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects", bTok, map[string]any{
+		"practiceName": practice, "contactPhone": phone, "city": "Bruxelles",
+	})
+	if code != http.StatusConflict {
+		t.Fatalf("duplicate create want 409, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects/"+prospectID+"/claim", bTok, nil)
+	if code != http.StatusConflict {
+		t.Fatalf("claim owned want 409, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial-manager/prospects/"+prospectID+"/release", mgrTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("release %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/commercial/prospects/lookup?q="+url.QueryEscape(practice), bTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("lookup free %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "free" {
+		t.Fatalf("want free after release, got %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/commercial/prospects/"+prospectID+"/claim", bTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("claim free %d %#v", code, env)
+	}
+	if dataMap(t, env)["commercialUserId"] == "" {
+		t.Fatalf("expected owner after claim %#v", env)
+	}
+}
+
+func TestVetRegisterInviteCodeAndUnassignedPool(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	commEmail := uniqueEmail("invite-comm")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", adminTok, map[string]any{
+		"email": commEmail, "password": "CommercialDemo123!", "fullName": "Invite Comm",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create commercial %d %#v", code, env)
+	}
+	commID := dataMap(t, env)["userId"].(string)
+	inv, err := store.New(api.pool).EnsureAppInviteCode(context.Background(), commID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vetWith := uniqueEmail("vet-with-code")
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": vetWith, "password": "VetDemo123!", "fullName": "Véto Code",
+		"practiceName": "Cabinet Code", "consent": true, "inviteCode": inv.Code,
+	})
+	if code != http.StatusOK && code != http.StatusCreated {
+		t.Fatalf("register with code %d %#v", code, env)
+	}
+	var assigned string
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE email=$1`, vetWith).Scan(&assigned); err != nil {
+		t.Fatal(err)
+	}
+	if assigned != commID {
+		t.Fatalf("assigned=%s want %s", assigned, commID)
+	}
+
+	vetPool := uniqueEmail("vet-pool")
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": vetPool, "password": "VetDemo123!", "fullName": "Véto Pool",
+		"practiceName": "Cabinet Pool", "consent": true,
+	})
+	if code != http.StatusOK && code != http.StatusCreated {
+		t.Fatalf("register without code %d %#v", code, env)
+	}
+	if err := api.pool.QueryRow(context.Background(), `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE email=$1`, vetPool).Scan(&assigned); err != nil {
+		t.Fatal(err)
+	}
+	if assigned != "" {
+		t.Fatalf("want empty assigned for pool, got %s", assigned)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/vets/unassigned", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("unassigned list %d %#v", code, env)
+	}
+	found := false
+	switch rows := env["data"].(type) {
+	case []any:
+		for _, raw := range rows {
+			m, _ := raw.(map[string]any)
+			if m["email"] == vetPool {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("pool vet not listed %#v", env["data"])
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
+		"email": uniqueEmail("vet-bad"), "password": "VetDemo123!", "fullName": "Bad",
+		"practiceName": "X", "consent": true, "inviteCode": "INVALID1",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("bad invite want 400, got %d %#v", code, env)
 	}
 }

@@ -22,6 +22,7 @@ var (
 	ErrForbidden            = errors.New("forbidden")
 	ErrConflict             = errors.New("conflict")
 	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
+	ErrSelfReferral         = errors.New("self referral")
 	ErrAdvisoryLockBusy     = errors.New("advisory lock busy")
 )
 

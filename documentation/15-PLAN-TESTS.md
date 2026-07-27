@@ -233,6 +233,7 @@ Compte : `admin.demo@petsfollow.test`
 | D3 | P1 | Créer user | Client / véto / care_pro / commercial / manager | Création OK ; **pas** de création admin UI |
 | D4 | P1 | Care_pro admin | Créer care_pro + specialty | Login Flutter pro light OK |
 | D5 | P1 | Commercials | `/admin/commercials` CRUD + assign véto + manager | Assign persist |
+| D5b | P1 | Pool cabinets | `/admin/vet-pool` + suggestions | Assign depuis suggestion |
 | D6 | P1 | Prospects globaux | `/admin/prospects` | Liste |
 | D7 | P1 | Payments | `/admin/payments` | Entitlements / paiements |
 | D8 | P1 | Commissions véto | Close période + mark-paid | `/admin/commissions` |
@@ -256,8 +257,9 @@ Compte : `commercial.demo@petsfollow.test`
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
 | E1.1 | P0 | Overview | `/commercial` | Portfolio |
-| E1.2 | P0 | Prospects CRM | Contact → RDV → résultat | Transitions statut |
-| E1.3 | P1 | Encode véto | `/commercial/vets` inscription véto | Compte créé / assigné |
+| E1.2 | P0 | Prospects CRM | Contact → RDV → résultat + lookup/claim premier encodé | Transitions ; owned → message collègue |
+| E1.2b | P1 | Pastille inactif | Pastille rouge ≥ 30 j | Visible sur lignes stale |
+| E1.3 | P1 | Encode véto | `/commercial/vets` inscription véto | Compte créé / assigné ; 409 si déjà assigné ailleurs |
 | E1.4 | P1 | Client lié | Encode client lié cabinet | Pets / commission possibles |
 | E1.5 | P1 | Client libre | Client sans liaison crée pet | 201, `practiceId` vide ; prompt liaison ensuite |
 | E1.6 | P1 | Activer pet payant | Checkout / mock activation | Commission ledger |
@@ -275,7 +277,7 @@ Compte : `commercial.manager@petsfollow.test`
 |----|-----|-----|--------|---------|
 | E2.1 | P0 | Dashboard équipe | `/commercial-manager` | KPI équipe |
 | E2.2 | P1 | Suivi | `/commercial-manager/suivi` | RDV / relances |
-| E2.3 | P1 | Prospects équipe | `/commercial-manager/prospects` | Scope équipe |
+| E2.3 | P1 | Prospects équipe | `/commercial-manager/prospects` | Scope équipe + libérer / bulk inactifs 30 j |
 | E2.4 | P1 | Production perso | Accès `/commercial/*` | Hors tableaux équipe |
 | E2.5 | P2 | Training | `/commercial-manager/training` | UI OK |
 | E2.6 | P2 | Isolation | Commercial simple → URLs manager | Refus |
@@ -402,7 +404,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
 | H9 | P2 | Multi-cabinet | marie (Parc) vs demo (VetPlus) | Isolation données |
 | H10 | P2 | Locale emails | Changer locale → trigger email | Email dans la bonne langue |
-| H11 | P2 | Invite claim | Code invite → claim mobile | Practice + attribution commission |
+| H11 | P0 | Invite claim | Code invite → claim mobile / register | Practice / care_pro / commercial ; first-wins ; pas d’overwrite |
 | H12 | P2 | Past_due | Simuler impayé (staging Stripe) | Gate features / portal |
 
 ---
@@ -511,6 +513,68 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 
 `make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline.
 
+### Parrainage / QR (Go intégration — anti-régression)
+
+`go test ./internal/handlers/ -run 'TestParrainageControl_|TestFiliationChain_' -count=1`
+
+| ID | Cas | Attendu |
+|----|-----|---------|
+| P1 | Code durable commercial | Même code à chaque `Ensure` + `GET /me/app-invite` + `vetRegisterUrl` |
+| P2 | QR véto → register-client | `practice_clients.vet_user_id` = promoteur ; casse normalisée |
+| P3 | QR care_pro → register-client | `client_access` write_notes |
+| P4 | Invite commercial bat nearby | Referral = A malgré `commercialUserId=B` ; `invite_code` persisté |
+| P5 | Second code commercial | `already_linked` + `inviterId` = premier ; pas d’overwrite |
+| P6 | Nearby puis même invite | Backfill `invite_code` (code non perdu) |
+| P7 | Register véto | Code sales OK ; code véto → 400 ; `assignedCommercialId` seul → pool |
+| P8 | Client émet QR | `GET /me/app-invite` → 200 `role=client` ; pas de `vetRegisterUrl` ; self-claim → 400 `self_referral` |
+| P9 | Invite invalide + nearby | Pas de referral silencieux au mauvais commercial |
+| P10 | QR client → filleul | `client_referrals` + héritage commercial + cabinet si libre ; first-wins parrain |
+| P11 | QR client no-steal | Filleul déjà rattaché → lien parrain OK, pas de 2e cabinet |
+| P12 | Héritage referral parrain | Filleul hérite `commercial_referrals` du sponsor |
+| P13 | Commercial A conservé | Filleul déjà referral A + QR client → A inchangé ; lien parrain OK |
+| P14 | Soft self-referral | `TryClaimInvite` own code → `ignored` ; 0 `client_referrals` |
+| P15 | Concurrence 2 QR client | Exactement 1 `practice_clients` + 1 sponsor (FOR UPDATE) |
+
+Fichier : `go/internal/handlers/parrainage_invite_control_integration_test.go`.
+
+#### Playwright — invite / QR
+
+| Spec | Scénario |
+|------|----------|
+| `15-app-invite` | Landing `role=client` sans CTA cabinet ; modal commercial `vetRegisterUrl` |
+
+#### Filiation — 4 chaînes anti-perte (F1–F10)
+
+Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
+
+| ID | Chaîne | Cas | Attendu |
+|----|--------|-----|---------|
+| F1 | Comm→véto | Encode `POST /commercial/vets` | `assigned_commercial_id` = commercial |
+| F2 | Comm→véto | 2e commercial encode même email | **409** `already_assigned` ; assign inchangé |
+| F3 | Comm→véto | Admin unassign | assign NULL + présent dans pool `/admin/vets/unassigned` |
+| F4 | Véto→client | Client existant + `claim-invite` QR véto | `practice_clients` + `practice_id` ; `status=linked` |
+| F5 | Véto→client | Déjà lié A + reclaim / claim B / collègue même cabinet | `already_linked` reclaim A ; multi-cabinet B lié + primary = A ; collègue même practice → `already_linked` + `vet_user_id` reste A |
+| F6 | Comm→client | `POST /commercial/clients` | standalone → `commercial_referrals` ; lié → `practice_clients` + Resolve + **0** `commercial_referrals` |
+| F7 | Comm→véto→client | Invite sales → register véto → QR véto → client | `practice_clients` + `ResolveVetCommercial` = comm |
+| F8 | Comm→véto→client | Referred A + claim véto assigné A | referral **reste A** ; Resolve = A |
+| F9 | Comm→véto→client | Referred A + claim véto assigné C | referral **reste A** ; Resolve = **C** (priorité assign ≠ perte de row) |
+| F10 | Comm→véto→client | Unassign après F8 | Resolve bascule sur fallback `commercial_referrals` (= A) |
+| F10b | Comm→véto→client | Unassign après F9 (était C) | Resolve bascule sur fallback A (pas silent 0) |
+
+#### Vue filiation (API + Pro UI)
+
+`go test ./internal/handlers/ -run 'TestFiliationList_' -count=1`
+
+| Surface | Endpoint | Page |
+|---------|----------|------|
+| Commercial | `GET /commercial/filiation?q=` | `/commercial/filiation` |
+| Manager | `GET /commercial-manager/filiation?q=` (équipe + soi) | `/commercial-manager/filiation` |
+| Admin | `GET /admin/filiation?q=&branchId=&commercialId=` | `/admin/filiation` |
+
+Colonnes : commercial → véto/cabinet → client + invite + parrain + badge **Effectif** (`vet_assignment` \| `client_referral` \| `none`) = même priorité et sélection de lien que `ResolveVetCommercial` (dernier `practice_clients`, puis assign, sinon referral).
+
+Fichiers : `go/internal/store/filiation.go`, `filiation_list_integration_test.go`, `nuxtjs/components/pro/ProFiliationTable.vue`.
+
 ### Web Pro (Playwright)
 
 Répertoire : `nuxtjs/tests/e2e/specs/`
@@ -531,6 +595,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
 | `13-team-staff-smoke` | Assist / secretary /team ACL | `@p0` |
+| `14-support` | Ticket support | `@p1` |
+| `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 
 Local :
 

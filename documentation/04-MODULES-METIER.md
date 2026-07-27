@@ -32,12 +32,18 @@ Ledger véto (progressif × facteur plan) + ledger commercial (taux par plan ; a
 
 ## Commercial / sales
 
-Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (contact / RDV / résultat), commissions, payout profile (+ zone de base GPS/CP pour découverte « près de chez moi »), page pitch. Annuaire partagé `source=directory`.
+Overview, inscriptions (`/commercial/vets` : véto · client lié · client sans liaison), list vets assignés, CRM prospects (**premier encodage gagne** : lookup + claim atomique ; pastille inactif **30 j** ; libération manager), commissions, payout profile (+ zone de base GPS/CP pour découvrir le **code** d’un commercial), page pitch. Pool libre = `commercial_user_id` NULL.
 
-**Inscription sans invite** : `GET /commercials/nearby` (public, rate-limité) → véto `assignedCommercialId` / client `commercialUserId`. Commission : `assigned_commercial_id` véto prioritaire, sinon fallback `commercial_referrals`.  
-Client sans liaison : `practice_id` NULL — pets créables sans cabinet ; liaison véto demandée ensuite (messagerie / visites). Commission commerciale à l’activation si cabinet lié.  
-**Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; production manager privée (hors tableaux équipe).  
-Admin : CRUD commercials / managers, assign véto, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.
+**Code Parrain (juge cabinet)** : inscription véto `/register` avec `inviteCode` (`practice.app_invite_codes` commercial/manager) → `assigned_commercial_id` définitif. **Sans code** → pool admin `/admin/vet-pool` (suggestions zone+activité + notes Gemini). Pas de sélection « près de chez vous » à l’inscription. Encode commercial : 409 si déjà assigné à un autre.
+
+**QR client (parrainage)** : un client peut émettre `GET /me/app-invite`. Claim filleul → `practice.client_referrals` (first-wins) ; héritage commercial (referral du parrain ou `assigned_commercial` du véto référent) en **fallback** seulement ; rattachement cabinet du parrain **uniquement** si filleul libre (pas de `practice_clients`). Pas de commission au client promoteur.
+
+**Commission** : `assigned_commercial_id` véto prioritaire, sinon fallback `commercial_referrals` client. Chaîne Comm→Véto→Client : le client joint au cabinet hérite le commercial du véto pour l’accrual (`ResolveVetCommercial`) ; une row `commercial_referrals` antérieure n’est **jamais** écrasée (first-wins), même si elle n’est plus le payé effectif.
+
+**Vue filiation** : tables Pro `/commercial/filiation`, `/commercial-manager/filiation`, `/admin/filiation` (API `GET …/filiation`) — commercial → véto → client + badge Effectif (= même règle que Resolve).
+Client sans liaison : `practice_id` NULL — pets créables sans cabinet ; liaison véto demandée ensuite (messagerie / visites). Commission commerciale à l’activation si cabinet lié.
+**Responsable commercial** (`commercial_manager`) : dashboard équipe + suivi + prospects équipe (`/commercial-manager/*`) ; release single/bulk inactifs 30 j ; production manager privée (hors tableaux équipe).
+Admin : CRUD commercials / managers, assign véto, pool non assignés + suggestions IA, `manager_user_id`, prospects globaux, payouts commissions, SPIFF bonuses.
 
 ## Care & Horse
 

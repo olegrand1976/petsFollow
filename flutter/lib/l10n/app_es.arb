@@ -561,6 +561,8 @@
   "mediaVideoLabel": "Vídeo",
   "appInviteTitle": "QR de invitación app",
   "appInviteHint": "Muestre este QR o comparta el enlace. Un nuevo cliente que se registre con este enlace se vincula automáticamente.",
+  "appInviteHintClient": "Comparte este QR con un amigo. Quedará vinculado a ti (padrinazgo) y podrá unirse a tu clínica si aún no tiene una.",
+  "appInviteHintCommercial": "Dos enlaces: clientes (app) y clínicas (registro Pro con su código de patrocinio).",
   "appInviteHintShort": "Enlace de descarga y vinculación",
   "appInviteCodeLabel": "Código:",
   "appInviteCopy": "Copiar enlace",
@@ -667,5 +669,8 @@
   "supportSuccess": "Mensaje enviado. ¡Gracias!",
   "supportErrorRateLimit": "Demasiados tickets recientemente. Inténtelo en una hora.",
   "supportErrorTooLarge": "Diagnósticos demasiado grandes. Reinicie la app e inténtelo de nuevo.",
-  "supportMenu": "Soporte"
+  "supportMenu": "Soporte",
+  "appInviteHintSales": "Comparte tu código con una clínica o un cliente.",
+  "appInviteCopyVet": "Copiar enlace de alta clínica",
+  "appInviteCopyClient": "Copiar enlace de invitación cliente"
 }

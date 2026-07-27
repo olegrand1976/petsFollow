@@ -134,18 +134,14 @@ test.describe('auth — inscription et confirmation', { tag: '@p0' }, () => {
     await expect(page.locator('[data-testid="register-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
   })
 
-  test('register nearby commercial par code postal', async ({ page }) => {
+  test('register sans code → hint pool admin', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'networkidle' })
     await waitForAuthForm(page, 'register-form')
-    await expect(page.getByTestId('register-nearby-commercial')).toBeVisible()
-    // ProInput pose data-testid sur l'<input> lui-même (pas sur le wrapper).
-    await page.getByTestId('register-nearby-postal').fill('1000')
-    await page.getByTestId('register-nearby-postal-btn').click()
-    // Seed commercial.demo est à Bruxelles 1000 — résultat attendu en local après seed.
-    const nearby = page.getByTestId('register-nearby-commercial')
-    await expect(
-      nearby.locator('.nearby-commercial__option, p.pro-field-hint, p.pro-field-error').first(),
-    ).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('register-invite-code')).toBeVisible()
+    await expect(page.getByTestId('register-pool-hint')).toBeVisible()
+    await expect(page.getByTestId('register-nearby-commercial')).toHaveCount(0)
+    await page.getByTestId('register-invite-code').fill('ABC12345')
+    await expect(page.getByTestId('register-pool-hint')).toHaveCount(0)
   })
 })
 

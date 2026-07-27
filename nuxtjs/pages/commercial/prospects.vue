@@ -7,6 +7,43 @@
 
     <p v-if="actionError" class="pro-field-error pro-mb-md" role="alert">{{ actionError }}</p>
 
+    <ProCard class="pro-mb-lg" data-testid="commercial-prospect-lookup">
+      <strong>{{ $t('commercial.prospects.lookupTitle') }}</strong>
+      <p class="pro-hint">{{ $t('commercial.prospects.lookupHint') }}</p>
+      <div class="pf-lookup-row pro-mt-md">
+        <ProInput
+          v-model="lookupQ"
+          test-id="prospect-lookup-q"
+          :label="$t('commercial.prospects.lookupLabel')"
+          :placeholder="$t('commercial.prospects.searchPlaceholder')"
+        />
+        <ProButton test-id="prospect-lookup-btn" :loading="lookupLoading" @click="runLookup">
+          {{ $t('commercial.prospects.lookupAction') }}
+        </ProButton>
+      </div>
+      <p
+        v-if="lookupResult?.status === 'owned'"
+        class="pro-field-error pro-mt-md"
+        data-testid="prospect-lookup-owned"
+        role="status"
+      >
+        {{ $t('commercial.prospects.ownedBy', { name: lookupResult.ownerName || '—' }) }}
+      </p>
+      <div v-else-if="lookupResult?.status === 'free'" class="pro-mt-md" data-testid="prospect-lookup-free">
+        <p class="pro-hint">{{ $t('commercial.prospects.lookupFree') }}</p>
+        <ProButton
+          v-if="lookupResult.prospect?.id"
+          test-id="prospect-claim-btn"
+          @click="claimProspect(lookupResult.prospect.id)"
+        >
+          {{ $t('commercial.prospects.claim') }}
+        </ProButton>
+      </div>
+      <p v-else-if="lookupResult?.status === 'not_found'" class="pro-hint pro-mt-md" data-testid="prospect-lookup-missing">
+        {{ $t('commercial.prospects.lookupMissing') }}
+      </p>
+    </ProCard>
+
     <ProCard class="pro-mb-lg" data-testid="commercial-prospect-form">
       <button
         type="button"
@@ -120,7 +157,15 @@
                 <option v-for="o in outcomes" :key="o" :value="o">{{ $t(`commercial.prospects.outcome.${o}`) }}</option>
               </select>
             </td>
-            <td>{{ p.daysInStatus }}</td>
+            <td>
+              <span
+                v-if="p.inactive"
+                class="pf-inactive-dot"
+                :title="$t('commercial.prospects.inactiveSince', { n: p.inactiveDays })"
+                data-testid="prospect-inactive"
+              />
+              {{ p.daysInStatus }}
+            </td>
             <td>
               <span class="pf-notes" :title="p.notes || ''">{{ truncate(p.notes) }}</span>
             </td>
@@ -165,6 +210,11 @@
             <p class="pro-kanban-card__meta">{{ p.city || '—' }} · {{ p.contactName || p.contactEmail || '—' }}</p>
             <ProBadge variant="neutral">{{ $t(`commercial.prospects.source.${p.source || 'commercial'}`) }}</ProBadge>
             <p v-if="p.daysInStatus != null" class="pro-kanban-card__meta">
+              <span
+                v-if="p.inactive"
+                class="pf-inactive-dot"
+                :title="$t('commercial.prospects.inactiveSince', { n: p.inactiveDays })"
+              />
               {{ $t('commercial.prospects.daysShort', { n: p.daysInStatus }) }}
             </p>
             <NuxtLink
@@ -217,6 +267,9 @@ const statusFilter = ref('')
 const showCreate = ref(false)
 const loading = ref(false)
 const actionError = ref('')
+const lookupQ = ref('')
+const lookupLoading = ref(false)
+const lookupResult = ref<{ status: string, ownerName?: string, prospect?: any } | null>(null)
 const { viewMode } = useListView('commercial-prospects', 'table')
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let loadSeq = 0
@@ -300,6 +353,39 @@ watch(viewMode, () => {
 })
 watch(q, scheduleReload)
 
+async function runLookup() {
+  actionError.value = ''
+  lookupResult.value = null
+  const q = lookupQ.value.trim()
+  if (!q) return
+  lookupLoading.value = true
+  try {
+    const res: any = await $fetch('/api/commercial/prospects/lookup', { query: { q } })
+    lookupResult.value = res.data ?? res
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  } finally {
+    lookupLoading.value = false
+  }
+}
+
+async function claimProspect(id: string) {
+  actionError.value = ''
+  try {
+    await $fetch(`/api/commercial/prospects/${id}/claim`, { method: 'POST' })
+    lookupResult.value = null
+    offset.value = 0
+    await load()
+  } catch (e: any) {
+    const details = e?.data?.error?.details || e?.data?.details
+    if (details?.ownerName) {
+      actionError.value = t('commercial.prospects.ownedBy', { name: details.ownerName })
+    } else {
+      actionError.value = mapError(e)
+    }
+  }
+}
+
 async function createProspect() {
   actionError.value = ''
   const body: Record<string, unknown> = { ...form }
@@ -312,6 +398,7 @@ async function createProspect() {
     await $fetch('/api/commercial/prospects', { method: 'POST', body })
     Object.assign(form, { practiceName: '', contactName: '', contactEmail: '', contactPhone: '', city: '', notes: '', appointmentAt: '' })
     showCreate.value = false
+    lookupResult.value = null
     offset.value = 0
     if (sourceFilter.value === 'commercial') {
       await load()
@@ -320,7 +407,12 @@ async function createProspect() {
       sourceFilter.value = 'commercial'
     }
   } catch (e: any) {
-    actionError.value = mapError(e)
+    const details = e?.data?.error?.details || e?.data?.details
+    if (details?.ownerName) {
+      actionError.value = t('commercial.prospects.ownedBy', { name: details.ownerName })
+    } else {
+      actionError.value = mapError(e)
+    }
   }
 }
 
@@ -414,5 +506,20 @@ onMounted(load)
 }
 .pro-link:hover {
   text-decoration: underline;
+}
+.pf-lookup-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+.pf-inactive-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--pf-vet-alert);
+  margin-right: 0.35rem;
+  vertical-align: middle;
 }
 </style>

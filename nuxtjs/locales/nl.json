@@ -55,7 +55,11 @@
       "billing": "Loon & catalogus"
     },
     "managerAiModules": "AI CR — team",
-    "adminSupport": "Support"
+    "adminSupport": "Support",
+    "adminVetPool": "Praktijkpool",
+    "commercialFiliation": "Filiatie",
+    "managerFiliation": "Teamfiliatie",
+    "adminFiliation": "Filiatie"
   },
   "auth": {
     "login": {
@@ -145,18 +149,9 @@
       "failed": "Registratie mislukt",
       "consent": "Ik aanvaard de {terms} en het {privacy}.",
       "consentRequired": "U moet de voorwaarden en het privacybeleid aanvaarden.",
-      "nearbyCommercial": {
-        "title": "Vertegenwoordiger bij u in de buurt",
-        "hint": "Zonder referralcode kunt u een nabije vertegenwoordiger kiezen (optioneel).",
-        "useLocation": "Mijn locatie gebruiken",
-        "postalCode": "Postcode",
-        "searchPostal": "Zoeken op postcode",
-        "empty": "Geen vertegenwoordiger in de buurt gevonden.",
-        "skip": "Overslaan — geen vertegenwoordiger",
-        "distance": "{km} km",
-        "geoUnsupported": "Geolocatie is niet beschikbaar op dit apparaat.",
-        "geoDenied": "Locatie geweigerd — voer een postcode in."
-      }
+      "inviteCode": "Referral code",
+      "inviteCodeHint": "Your petsFollow sales rep code. Without a code, your practice joins the admin pool for manual assignment.",
+      "poolWithoutCode": "Without a code, your signup will go to the central pool (later assignment)."
     },
     "registerSent": {
       "brandTitle": "Controleer uw mailbox",
@@ -601,7 +596,7 @@
       "title": "QR-code app-download",
       "hint": "Toon deze QR in de wachtzaal of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch aan uw praktijk gekoppeld (vergoeding).",
       "hintCarePro": "Deel deze QR of link. Een nieuwe cliënt die zich registreert geeft u notities-toegang tot het dossier.",
-      "hintCommercial": "Deel deze QR of link. Nieuwe cliënten via deze link worden aan uw commerciële referral toegewezen.",
+      "hintCommercial": "Twee links: cliënten (app) en praktijken (Pro-registratie met uw doorverwijscode).",
       "fallbackName": "petsFollow",
       "qrAlt": "petsFollow download-QR-code",
       "codeLabel": "Code:",
@@ -613,7 +608,10 @@
       "qrAndroidAlt": "Google Play-QR",
       "qrIosAlt": "App Store-QR",
       "android": "Android",
-      "ios": "iOS"
+      "ios": "iOS",
+      "linkLabelClient": "Cliënt-uitnodigingslink",
+      "linkLabelCabinet": "Praktijk-aanmeldlink",
+      "copyCabinet": "Praktijklink kopiëren"
     }
   },
   "pets": {
@@ -1187,6 +1185,26 @@
       "searchLabel": "Zoeken",
       "searchPlaceholder": "Onderwerp, e-mail of naam…",
       "searchSubmit": "Zoeken"
+    },
+    "vetPool": {
+      "title": "Unassigned practices pool",
+      "subtitle": "Signups without referral code — manual assignment with AI suggestions.",
+      "empty": "No practices waiting",
+      "colName": "Vet",
+      "colEmail": "Email",
+      "colPractice": "Practice",
+      "colCity": "City",
+      "colPostal": "Postal",
+      "colCreated": "Signed up",
+      "colActions": "Actions",
+      "suggest": "Suggestions",
+      "suggestionsTitle": "Suggestions for {name}",
+      "suggestionsEmpty": "No suggestions available",
+      "score": "Score {score}",
+      "distance": "{km} km",
+      "assignedLoad": "{n} practices",
+      "assign": "Assign",
+      "assignOk": "Practice assigned."
     }
   },
   "commissions": {
@@ -1895,7 +1913,16 @@
       "prev": "Vorige",
       "next": "Volgende",
       "encode": "Registreren",
-      "daysShort": "{n} d"
+      "daysShort": "{n} d",
+      "lookupTitle": "Controleren vóór bellen",
+      "lookupHint": "Zoek de praktijk. Als vrij, claim hem. Als bezet, niet contacteren.",
+      "lookupLabel": "Naam of telefoon",
+      "lookupAction": "Controleren",
+      "lookupFree": "Vrij prospect — je kunt hem claimen.",
+      "lookupMissing": "Geen prospect gevonden — je kunt hem toevoegen.",
+      "ownedBy": "Beheerd door {name}",
+      "claim": "Claimen",
+      "inactiveSince": "Inactief sinds {n} d"
     },
     "commissions": {
       "title": "Mijn commissies",
@@ -2286,7 +2313,11 @@
       "subtitle": "CRM-weergave van het team en gedeelde directory.",
       "allCommercials": "Alle commercials",
       "reassign": "Toewijzen aan",
-      "unassigned": "Niet toegewezen"
+      "unassigned": "Niet toegewezen",
+      "release": "Vrijgeven",
+      "releaseOk": "Prospect terug in de vrije pool.",
+      "releaseInactive": "Inactieven vrijgeven (30 d)",
+      "releaseInactiveOk": "{n} prospect(en) vrijgegeven."
     },
     "leaderboard": {
       "title": "Teamklassement",
@@ -2473,7 +2504,12 @@
     "download": "App downloaden",
     "openApp": "App openen",
     "failedTitle": "Uitnodiging niet gevonden",
-    "invalid": "Deze uitnodigingslink is niet meer geldig."
+    "invalid": "Deze uitnodigingslink is niet meer geldig.",
+    "cabinetCta": "Ik ben een praktijk",
+    "brandTitleClient": "Een vriend nodigt je uit",
+    "subtitleClient": "Uitnodiging van {name}",
+    "autoLinkHintClient": "Door je via deze link te registreren, word je gekoppeld aan je sponsor (en eventueel diens praktijk als je er nog geen hebt).",
+    "codeHintClient": "Als de app niet automatisch opent, open hem en voer deze code in bij registratie."
   },
   "team": {
     "title": "Praktijkteam",
@@ -2562,5 +2598,32 @@
     "errorGeneric": "Verzenden mislukt. Probeer opnieuw.",
     "errorRateLimit": "Te veel tickets recent. Probeer over een uur.",
     "errorTooLarge": "Diagnostiek te groot. Herlaad de pagina en probeer opnieuw."
+  },
+  "filiation": {
+    "title": "Filiatie",
+    "subtitle": {
+      "commercial": "Uw toegewezen dierenartsen en cliënten — effectieve commercial (commissie).",
+      "manager": "Filiatie van uw team: commercial → dierenarts → cliënt, met effectieve begunstigde.",
+      "admin": "Globale filiatieweergave (alle branches). Filter op branch of zoek."
+    },
+    "search": "Zoeken",
+    "searchPlaceholder": "Naam, e-mail, praktijk…",
+    "branchId": "Branch (UUID)",
+    "branchIdPlaceholder": "Filter op branchId",
+    "branch": "Branch",
+    "commercial": "Commercial",
+    "vet": "Dierenarts",
+    "practice": "Praktijk",
+    "client": "Cliënt",
+    "inviteCode": "Uitnodigingscode",
+    "sponsor": "Cliënt-sponsor",
+    "effective": "Effectief",
+    "linkedAt": "Sinds",
+    "empty": "Geen filiatie om te tonen",
+    "source": {
+      "vet_assignment": "Dierenarts-toewijzing",
+      "client_referral": "Cliënt-referral",
+      "none": "Geen"
+    }
   }
 }

@@ -35,6 +35,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial', label: t('nav.commercialDashboard'), exact: true, icon: 'dashboard' },
   { to: '/commercial/prospects', label: t('nav.commercialProspects'), icon: 'requests', section: t('nav.section.pipeline') },
   { to: '/commercial/vets', label: t('nav.commercialVets'), icon: 'users', section: t('nav.section.pipeline') },
+  { to: '/commercial/filiation', label: t('nav.commercialFiliation'), icon: 'account_tree', section: t('nav.section.network') },
   { to: '/produits', label: t('nav.products'), icon: 'description', section: t('nav.section.offer') },
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
   { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },

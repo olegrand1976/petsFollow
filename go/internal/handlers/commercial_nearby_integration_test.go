@@ -82,7 +82,7 @@ func TestNearbyCommercialsByGPSAndPostal(t *testing.T) {
 	}
 }
 
-func TestRegisterVetWithAssignedCommercial(t *testing.T) {
+func TestRegisterVetWithInviteCode(t *testing.T) {
 	api := newTestAPI(t)
 	ctx := context.Background()
 
@@ -101,15 +101,21 @@ func TestRegisterVetWithAssignedCommercial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	inv, err := store.New(api.pool).EnsureAppInviteCode(ctx, commID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	vetEmail := fmt.Sprintf("smoke-nearby-vet+%d@petsfollow.test", time.Now().UnixNano())
 	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register", map[string]any{
-		"email":                vetEmail,
-		"password":             "VetDemo123!",
-		"fullName":             "Nearby Vet",
-		"practiceName":         "Cabinet Nearby",
-		"consent":              true,
-		"assignedCommercialId": commID,
+		"email":        vetEmail,
+		"password":     "VetDemo123!",
+		"fullName":     "Nearby Vet",
+		"practiceName": "Cabinet Nearby",
+		"consent":      true,
+		"inviteCode":   inv.Code,
+		// nearby pick alone must NOT assign
+		"assignedCommercialId": uuid.NewString(),
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("register status %d: %#v", code, env)
@@ -127,6 +133,7 @@ func TestRegisterVetWithAssignedCommercial(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
+		_, _ = api.pool.Exec(ctx, `DELETE FROM practice.app_invite_codes WHERE user_id=$1`, commID)
 		_, _ = api.pool.Exec(ctx, `
 			DELETE FROM identity.email_verification_tokens WHERE user_id IN (
 				SELECT id FROM identity.users WHERE email=$1 OR id=$2::uuid)`, vetEmail, commID)

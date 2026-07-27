@@ -1483,6 +1483,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Muestre este QR o comparta el enlace. Un nuevo cliente que se registre con este enlace se vincula automáticamente.';
 
   @override
+  String get appInviteHintClient =>
+      'Comparte este QR con un amigo. Quedará vinculado a ti (padrinazgo) y podrá unirse a tu clínica si aún no tiene una.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Dos enlaces: clientes (app) y clínicas (registro Pro con su código de patrocinio).';
+
+  @override
   String get appInviteHintShort => 'Enlace de descarga y vinculación';
 
   @override
@@ -1777,4 +1785,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportMenu => 'Soporte';
+
+  @override
+  String get appInviteHintSales =>
+      'Comparte tu código con una clínica o un cliente.';
+
+  @override
+  String get appInviteCopyVet => 'Copiar enlace de alta clínica';
+
+  @override
+  String get appInviteCopyClient => 'Copiar enlace de invitación cliente';
 }

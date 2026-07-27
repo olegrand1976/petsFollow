@@ -561,6 +561,8 @@
   "mediaVideoLabel": "Video",
   "appInviteTitle": "App-uitnodiging QR",
   "appInviteHint": "Toon deze QR of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch gekoppeld.",
+  "appInviteHintClient": "Deel deze QR met een vriend. Die wordt aan jou gekoppeld (referral) en kan jouw praktijk volgen als die er nog geen heeft.",
+  "appInviteHintCommercial": "Twee links: cliënten (app) en praktijken (Pro-registratie met uw doorverwijscode).",
   "appInviteHintShort": "Download- en koppelingslink",
   "appInviteCodeLabel": "Code:",
   "appInviteCopy": "Link kopiëren",
@@ -667,5 +669,8 @@
   "supportSuccess": "Bericht verzonden. Dank je!",
   "supportErrorRateLimit": "Te veel tickets recent. Probeer over een uur.",
   "supportErrorTooLarge": "Diagnostiek te groot. Herstart de app en probeer opnieuw.",
-  "supportMenu": "Support"
+  "supportMenu": "Support",
+  "appInviteHintSales": "Deel je sponsorcode met een praktijk of een cliënt.",
+  "appInviteCopyVet": "Kopieer praktijk-aanmeldlink",
+  "appInviteCopyClient": "Kopieer cliënt-uitnodigingslink"
 }

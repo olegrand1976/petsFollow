@@ -53,6 +53,11 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 			FROM practice.client_vet_link_requests r WHERE r.client_user_id = $1`
 		queries["vetLeads"] = `SELECT COALESCE(jsonb_agg(to_jsonb(l) ORDER BY l.created_at), '[]'::jsonb)
 			FROM practice.vet_leads l WHERE l.client_user_id = $1`
+		queries["commercialReferrals"] = `SELECT COALESCE(jsonb_agg(to_jsonb(cr) ORDER BY cr.created_at), '[]'::jsonb)
+			FROM practice.commercial_referrals cr WHERE cr.client_user_id = $1`
+		queries["clientReferrals"] = `SELECT COALESCE(jsonb_agg(to_jsonb(r) ORDER BY r.created_at), '[]'::jsonb)
+			FROM practice.client_referrals r
+			WHERE r.referred_client_user_id = $1 OR r.sponsor_client_user_id = $1`
 	}
 
 	for key, q := range queries {

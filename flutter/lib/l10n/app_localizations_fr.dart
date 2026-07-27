@@ -1483,6 +1483,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.';
 
   @override
+  String get appInviteHintClient =>
+      'Partagez ce QR avec un proche. Il sera lié à vous (parrainage) et pourra rejoindre votre cabinet s’il n’en a pas encore.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Deux liens : clients (app) et cabinets (inscription Pro avec votre code parrain).';
+
+  @override
   String get appInviteHintShort => 'Lien de téléchargement et rattachement';
 
   @override
@@ -1780,4 +1788,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportMenu => 'Support';
+
+  @override
+  String get appInviteHintSales =>
+      'Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).';
+
+  @override
+  String get appInviteCopyVet => 'Copier le lien inscription cabinet';
+
+  @override
+  String get appInviteCopyClient => 'Copier le lien invitation client';
 }

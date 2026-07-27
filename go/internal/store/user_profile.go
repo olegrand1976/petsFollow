@@ -216,6 +216,14 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM practice.practice_clients WHERE client_user_id = $1`, userID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.client_referrals
+		WHERE referred_client_user_id = $1 OR sponsor_client_user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM practice.commercial_referrals WHERE client_user_id = $1`, userID); err != nil {
+		return err
+	}
 	tag, err := tx.Exec(ctx, `DELETE FROM identity.users WHERE id = $1 AND role = 'client'`, userID)
 	if err != nil {
 		return err

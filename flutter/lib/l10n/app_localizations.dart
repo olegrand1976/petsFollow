@@ -2800,6 +2800,18 @@ abstract class AppLocalizations {
   /// **'Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.'**
   String get appInviteHint;
 
+  /// No description provided for @appInviteHintClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez ce QR avec un proche. Il sera lié à vous (parrainage) et pourra rejoindre votre cabinet s’il n’en a pas encore.'**
+  String get appInviteHintClient;
+
+  /// No description provided for @appInviteHintCommercial.
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux liens : clients (app) et cabinets (inscription Pro avec votre code parrain).'**
+  String get appInviteHintCommercial;
+
   /// No description provided for @appInviteHintShort.
   ///
   /// In fr, this message translates to:
@@ -3357,6 +3369,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Support'**
   String get supportMenu;
+
+  /// No description provided for @appInviteHintSales.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).'**
+  String get appInviteHintSales;
+
+  /// No description provided for @appInviteCopyVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien inscription cabinet'**
+  String get appInviteCopyVet;
+
+  /// No description provided for @appInviteCopyClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien invitation client'**
+  String get appInviteCopyClient;
 }
 
 class _AppLocalizationsDelegate

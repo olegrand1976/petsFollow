@@ -624,6 +624,8 @@
   "mediaVideoLabel": "Vidéo",
   "appInviteTitle": "QR invitation app",
   "appInviteHint": "Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.",
+  "appInviteHintClient": "Partagez ce QR avec un proche. Il sera lié à vous (parrainage) et pourra rejoindre votre cabinet s’il n’en a pas encore.",
+  "appInviteHintCommercial": "Deux liens : clients (app) et cabinets (inscription Pro avec votre code parrain).",
   "appInviteHintShort": "Lien de téléchargement et rattachement",
   "appInviteCodeLabel": "Code :",
   "appInviteCopy": "Copier le lien",
@@ -730,5 +732,8 @@
   "supportSuccess": "Message envoyé. Merci !",
   "supportErrorRateLimit": "Trop de tickets récemment. Réessayez dans une heure.",
   "supportErrorTooLarge": "Diagnostics trop volumineux. Relancez l'app et réessayez.",
-  "supportMenu": "Support"
+  "supportMenu": "Support",
+  "appInviteHintSales": "Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).",
+  "appInviteCopyVet": "Copier le lien inscription cabinet",
+  "appInviteCopyClient": "Copier le lien invitation client"
 }

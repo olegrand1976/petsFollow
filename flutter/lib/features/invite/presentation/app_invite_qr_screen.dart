@@ -6,7 +6,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
-/// Shows the durable app-invite QR (vet / care_pro / commercial).
+/// Shows the durable app-invite QR (vet / care_pro / commercial / client).
 class AppInviteQrScreen extends StatefulWidget {
   const AppInviteQrScreen({super.key});
 
@@ -58,8 +58,7 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
     }
   }
 
-  Future<void> _copyLink() async {
-    final url = _invite?['inviteUrl'] as String? ?? '';
+  Future<void> _copy(String url) async {
     if (url.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: url));
     if (!mounted) return;
@@ -79,6 +78,14 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
         (_invite?['vetFullName'] as String?) ??
         '';
     final code = _invite?['code'] as String? ?? '';
+    final clientUrl = _invite?['inviteUrl'] as String? ?? '';
+    final vetUrl = _invite?['vetRegisterUrl'] as String? ?? '';
+    final role = (_invite?['role'] as String? ?? '').toLowerCase();
+    final isSales = vetUrl.isNotEmpty;
+    final isClient = role == 'client';
+    final hint = isSales
+        ? l10n.appInviteHintSales
+        : (isClient ? l10n.appInviteHintClient : l10n.appInviteHint);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appInviteTitle)),
@@ -101,7 +108,10 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
               : ListView(
                   padding: const EdgeInsets.all(24),
                   children: [
-                    Text(l10n.appInviteHint, style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      hint,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     const SizedBox(height: 20),
                     if (bytes != null)
                       Center(
@@ -127,17 +137,34 @@ class _AppInviteQrScreenState extends State<AppInviteQrScreen> {
                     if (code.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
+                        key: const Key('app_invite_code'),
                         '${l10n.appInviteCodeLabel} $code',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                     const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: _copyLink,
-                      icon: const Icon(Icons.copy),
-                      label: Text(l10n.appInviteCopy),
-                    ),
+                    if (isSales) ...[
+                      FilledButton.icon(
+                        key: const Key('app_invite_copy_vet'),
+                        onPressed: () => _copy(vetUrl),
+                        icon: const Icon(Icons.storefront_outlined),
+                        label: Text(l10n.appInviteCopyVet),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        key: const Key('app_invite_copy_client'),
+                        onPressed: () => _copy(clientUrl),
+                        icon: const Icon(Icons.pets_outlined),
+                        label: Text(l10n.appInviteCopyClient),
+                      ),
+                    ] else
+                      FilledButton.icon(
+                        key: const Key('app_invite_copy'),
+                        onPressed: () => _copy(clientUrl),
+                        icon: const Icon(Icons.copy),
+                        label: Text(l10n.appInviteCopy),
+                      ),
                   ],
                 ),
     );

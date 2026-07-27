@@ -1471,6 +1471,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show this QR or share the link. A new client who signs up via this link is linked automatically.';
 
   @override
+  String get appInviteHintClient =>
+      'Share this QR with a friend. They will be linked to you (referral) and may join your practice if they don’t have one yet.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Two links: clients (app) and practices (Pro signup with your referral code).';
+
+  @override
   String get appInviteHintShort => 'Download and link invite';
 
   @override
@@ -1766,4 +1774,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportMenu => 'Support';
+
+  @override
+  String get appInviteHintSales =>
+      'Share your referral code with practices (cabinet signup) or clients (app invite).';
+
+  @override
+  String get appInviteCopyVet => 'Copy practice signup link';
+
+  @override
+  String get appInviteCopyClient => 'Copy client invite link';
 }

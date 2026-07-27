@@ -17,6 +17,7 @@
     "adminCommercialCommissions": "Paie commerciaux",
     "adminCommercialBonuses": "Bonus SPIFF",
     "adminCommercials": "Commerciaux",
+    "adminVetPool": "Pool cabinets",
     "adminProspects": "Prospects",
     "adminStripeCatalog": "Catalogue Stripe",
     "commercialDashboard": "Dashboard",
@@ -55,7 +56,10 @@
       "salesForce": "Force de vente",
       "billing": "Paie & catalogue"
     },
-    "adminSupport": "Support"
+    "adminSupport": "Support",
+    "commercialFiliation": "Filiation",
+    "managerFiliation": "Filiation équipe",
+    "adminFiliation": "Filiation"
   },
   "training": {
     "title": "Entraînement IA",
@@ -259,18 +263,9 @@
       "failed": "Inscription impossible",
       "consent": "J'accepte les {terms} et la {privacy}.",
       "consentRequired": "Vous devez accepter les conditions et la politique de confidentialité.",
-      "nearbyCommercial": {
-        "title": "Commercial près de chez vous",
-        "hint": "Sans code de parrainage, choisissez un commercial proche (optionnel).",
-        "useLocation": "Utiliser ma position",
-        "postalCode": "Code postal",
-        "searchPostal": "Rechercher par code postal",
-        "empty": "Aucun commercial trouvé à proximité.",
-        "skip": "Ne pas rattacher de commercial",
-        "distance": "{km} km",
-        "geoUnsupported": "Géolocalisation non disponible sur cet appareil.",
-        "geoDenied": "Position refusée — saisissez un code postal."
-      }
+      "inviteCode": "Code Parrain",
+      "inviteCodeHint": "Le code de votre commercial petsFollow. Sans code, votre cabinet rejoindra le pool admin pour attribution manuelle.",
+      "poolWithoutCode": "Sans code, votre inscription sera placée dans le pool central (attribution ultérieure)."
     },
     "registerSent": {
       "brandTitle": "Vérifiez votre boîte mail",
@@ -518,7 +513,16 @@
       "prev": "Précédent",
       "next": "Suivant",
       "encode": "Encoder",
-      "daysShort": "{n} j"
+      "daysShort": "{n} j",
+      "lookupTitle": "Vérifier avant d’appeler",
+      "lookupHint": "Recherchez le cabinet. S’il est libre, encodez-le. S’il est pris, ne le contactez pas.",
+      "lookupLabel": "Nom ou téléphone",
+      "lookupAction": "Vérifier",
+      "lookupFree": "Prospect libre — vous pouvez vous l’attribuer.",
+      "lookupMissing": "Aucun prospect trouvé — vous pouvez l’ajouter.",
+      "ownedBy": "Géré par {name}",
+      "claim": "Me l’attribuer",
+      "inactiveSince": "Inactif depuis {n} j"
     },
     "commissions": {
       "title": "Mes commissions",
@@ -1035,7 +1039,7 @@
       "title": "QR code téléchargement app",
       "hint": "Affichez ce QR en salle d’attente ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement à votre cabinet (rétribution).",
       "hintCarePro": "Partagez ce QR ou lien. Un nouveau client qui s’inscrit via ce lien vous accorde un accès notes sur son dossier.",
-      "hintCommercial": "Partagez ce QR ou lien. Les nouveaux clients inscrits via ce lien sont attribués à votre referral commercial.",
+      "hintCommercial": "Deux liens : clients (app) et cabinets (inscription Pro avec votre code parrain).",
       "fallbackName": "petsFollow",
       "qrAlt": "QR code de téléchargement petsFollow",
       "codeLabel": "Code :",
@@ -1047,7 +1051,10 @@
       "qrAndroidAlt": "QR Google Play",
       "qrIosAlt": "QR App Store",
       "android": "Android",
-      "ios": "iOS"
+      "ios": "iOS",
+      "linkLabelClient": "Lien invitation clients",
+      "linkLabelCabinet": "Lien inscription cabinet",
+      "copyCabinet": "Copier le lien cabinet"
     }
   },
   "pets": {
@@ -1621,6 +1628,26 @@
       "searchLabel": "Recherche",
       "searchPlaceholder": "Sujet, email ou nom…",
       "searchSubmit": "Rechercher"
+    },
+    "vetPool": {
+      "title": "Pool cabinets non assignés",
+      "subtitle": "Inscriptions sans code parrain — attribution manuelle avec suggestions IA.",
+      "empty": "Aucun cabinet en attente",
+      "colName": "Véto",
+      "colEmail": "Email",
+      "colPractice": "Cabinet",
+      "colCity": "Ville",
+      "colPostal": "CP",
+      "colCreated": "Inscription",
+      "colActions": "Actions",
+      "suggest": "Suggestions",
+      "suggestionsTitle": "Suggestions pour {name}",
+      "suggestionsEmpty": "Aucune suggestion disponible",
+      "score": "Score {score}",
+      "distance": "{km} km",
+      "assignedLoad": "{n} cabinets",
+      "assign": "Assigner",
+      "assignOk": "Cabinet assigné."
     }
   },
   "calendar": {
@@ -2400,7 +2427,11 @@
       "subtitle": "Vue CRM de l'équipe et de l'annuaire partagé.",
       "allCommercials": "Tous les commerciaux",
       "reassign": "Assigner à",
-      "unassigned": "Non assigné"
+      "unassigned": "Non assigné",
+      "release": "Libérer",
+      "releaseOk": "Prospect remis en libre.",
+      "releaseInactive": "Libérer les inactifs (30 j)",
+      "releaseInactiveOk": "{n} prospect(s) libéré(s)."
     },
     "leaderboard": {
       "title": "Classement équipe",
@@ -2472,8 +2503,13 @@
     "copyError": "Impossible de copier le code.",
     "download": "Télécharger l’application",
     "openApp": "Ouvrir l’app",
+    "cabinetCta": "Je suis un cabinet",
     "failedTitle": "Invitation introuvable",
-    "invalid": "Ce lien d’invitation n’est plus valide."
+    "invalid": "Ce lien d’invitation n’est plus valide.",
+    "brandTitleClient": "Un ami vous invite",
+    "subtitleClient": "Invitation de {name}",
+    "autoLinkHintClient": "En vous inscrivant depuis ce lien, vous serez lié à votre parrain (et éventuellement à son cabinet si vous n’en avez pas encore).",
+    "codeHintClient": "Si l’app ne s’ouvre pas automatiquement, ouvrez-la puis saisissez ce code à l’inscription."
   },
   "team": {
     "title": "Équipe du cabinet",
@@ -2562,5 +2598,32 @@
     "errorGeneric": "Envoi impossible. Réessayez.",
     "errorRateLimit": "Trop de tickets récemment. Réessayez dans une heure.",
     "errorTooLarge": "Diagnostics trop volumineux. Rechargez la page et réessayez."
+  },
+  "filiation": {
+    "title": "Filiation",
+    "subtitle": {
+      "commercial": "Vos vétos assignés et clients attribués — commercial effectif (commission).",
+      "manager": "Filiation de votre équipe : commercial → véto → client, avec payé effectif.",
+      "admin": "Vue globale de filiation (toutes branches). Filtrez par branche ou recherche."
+    },
+    "search": "Recherche",
+    "searchPlaceholder": "Nom, email, cabinet…",
+    "branchId": "Branche (UUID)",
+    "branchIdPlaceholder": "Filtrer par branchId",
+    "branch": "Branche",
+    "commercial": "Commercial",
+    "vet": "Véto",
+    "practice": "Cabinet",
+    "client": "Client",
+    "inviteCode": "Code invite",
+    "sponsor": "Parrain client",
+    "effective": "Effectif",
+    "linkedAt": "Depuis",
+    "empty": "Aucune filiation à afficher",
+    "source": {
+      "vet_assignment": "Assign véto",
+      "client_referral": "Referral client",
+      "none": "Aucun"
+    }
   }
 }

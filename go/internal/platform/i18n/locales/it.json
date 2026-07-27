@@ -51,6 +51,10 @@
     "vet_only": "Riservato ai veterinari",
     "client_only": "Riservato ai clienti",
     "admin_only": "Riservato agli amministratori",
+    "staging_seed_disabled": "Il reset staging è disabilitato in questo ambiente",
+    "confirm_required": "Frase di conferma non valida",
+    "seed_in_progress": "Un reset è già in corso",
+    "seed_failed": "Reimpostazione del database non riuscita",
     "google_pro_only": "Google riservato ai profili Pro",
     "google_client_only": "Questo account Google è un profilo Pro: utilizza l'app Web",
     "not_your_pet": "Non è il tuo animale domestico",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "Questa linea non è pronta per essere pagata",
     "payout_no_ready_lines": "Nessuna linea pronta per il pagamento durante questo periodo",
     "email_already_exists": "Esiste già un account con questa email",
+    "prospect_already_owned": "Questo prospect è già gestito da un collega",
+    "cannot_release_converted": "Impossibile liberare un prospect convertito",
+    "invalid_invite_code": "Codice sponsor non valido",
+    "already_assigned": "Questo studio è già assegnato a un commerciale",
     "already_linked": "Questo cliente è già collegato a questo studio",
     "not_a_client": "Questo account non è un cliente",
     "care_pro_only": "Riservato ai professionisti del settore",
@@ -130,10 +138,7 @@
     "invalid_thirst": "Sete non valida",
     "invalid_elimination": "Feci/urine non valide",
     "invalid_urgency": "Emergenza non valida",
-    "staging_seed_disabled": "Il reset staging è disabilitato in questo ambiente",
-    "confirm_required": "Frase di conferma non valida",
-    "seed_in_progress": "Un reset è già in corso",
-    "seed_failed": "Reimpostazione del database non riuscita"
+    "self_referral": "L’auto-referral non è consentito"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

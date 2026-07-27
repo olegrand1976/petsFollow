@@ -51,6 +51,10 @@
     "vet_only": "Vets only",
     "client_only": "Clients only",
     "admin_only": "Admins only",
+    "staging_seed_disabled": "Staging reset is disabled in this environment",
+    "confirm_required": "Invalid confirmation phrase",
+    "seed_in_progress": "A reset is already in progress",
+    "seed_failed": "Database reset failed",
     "google_pro_only": "Google reserved for Pro profiles",
     "google_client_only": "This Google account is a Pro profile — use the web app",
     "not_your_pet": "Not your pet",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "This line is not ready to pay",
     "payout_no_ready_lines": "No ready-to-pay lines in this period",
     "email_already_exists": "An account already exists with this email",
+    "prospect_already_owned": "This prospect is already managed by a colleague",
+    "cannot_release_converted": "Cannot release a converted prospect",
+    "invalid_invite_code": "Invalid referral code",
+    "already_assigned": "This practice is already assigned to a sales rep",
     "already_linked": "This client is already linked to this practice",
     "not_a_client": "This account is not a client",
     "care_pro_only": "Field professionals only",
@@ -130,10 +138,7 @@
     "invalid_urgency": "Invalid urgency",
     "ai_module_required": "AI visit-report module not activated or trial ended — contact your sales rep",
     "ai_module_not_found": "AI visit-report module not found for this practice",
-    "staging_seed_disabled": "Staging reset is disabled in this environment",
-    "confirm_required": "Invalid confirmation phrase",
-    "seed_in_progress": "A reset is already in progress",
-    "seed_failed": "Database reset failed"
+    "self_referral": "Self-referral is not allowed"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

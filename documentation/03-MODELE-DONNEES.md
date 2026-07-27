@@ -30,7 +30,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Animal | `pets.pets`, `pets.dossier_events`, `pets.weight_readings` |
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
 | Commissions | `commission_tiers`, `commission_ledger`, `commercial_commission_ledger`, payout runs/lines, `commercial_bonus_awards` |
-| Commercial | `sales.prospects` (+ assignation commercial ↔ véto, `manager_user_id`, source `directory`, RDV / contact timestamps — `000031`) ; `practice.commercial_referrals` (QR / nearby signup) ; zone base commercial `000058` |
+| Commercial | `sales.prospects` (claim `commercial_user_id` nullable = pool libre ; inactivité 30 j) ; assignation commercial ↔ véto ; `manager_user_id` ; RDV / contact — `000031` ; `practice.commercial_referrals` (QR client / nearby) ; `practice.client_referrals` (QR parrainage client→client, `000074`) ; `practice.app_invite_codes` (Code Parrain cabinet+client+véto+care_pro) ; zone base commercial `000058` ; pool admin vétos `assigned_commercial_id IS NULL` |
 | FC | `heartrate.sessions` |
 | Poids | `pets.weight_readings` (historique) ; `pets.pets.weight_kg` = dernier `POST /weights` (peut diverger si PATCH fiche animal sans lecture) |
 | Msg | `messaging.threads`, `messages`, `vet_availability` |

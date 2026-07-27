@@ -51,6 +51,10 @@
     "vet_only": "Solo veterinarios",
     "client_only": "Solo clientes",
     "admin_only": "Solo administradores",
+    "staging_seed_disabled": "El reset de staging está desactivado en este entorno",
+    "confirm_required": "Frase de confirmación no válida",
+    "seed_in_progress": "Ya hay un reset en curso",
+    "seed_failed": "Error al reiniciar la base de datos",
     "google_pro_only": "Google reservado para perfiles Pro",
     "google_client_only": "Esta cuenta de Google es un perfil Pro — use la app web",
     "not_your_pet": "No es su mascota",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "Esta línea no está lista para pagar",
     "payout_no_ready_lines": "No hay líneas listas para pagar en este periodo",
     "email_already_exists": "Ya existe una cuenta con este correo",
+    "prospect_already_owned": "Este prospecto ya lo gestiona un compañero",
+    "cannot_release_converted": "No se puede liberar un prospecto convertido",
+    "invalid_invite_code": "Código de padrino inválido",
+    "already_assigned": "Esta clínica ya está asignada a un comercial",
     "already_linked": "Este cliente ya está vinculado a esta clínica",
     "not_a_client": "Esta cuenta no es un cliente",
     "care_pro_only": "Solo profesionales de campo",
@@ -130,10 +138,7 @@
     "invalid_urgency": "Urgencia no válida",
     "ai_module_required": "Módulo CR IA no activado o prueba caducada — contacte a su comercial",
     "ai_module_not_found": "Módulo CR IA no encontrado para este centro",
-    "staging_seed_disabled": "El reset de staging está desactivado en este entorno",
-    "confirm_required": "Frase de confirmación no válida",
-    "seed_in_progress": "Ya hay un reset en curso",
-    "seed_failed": "Error al reiniciar la base de datos"
+    "self_referral": "No se permite el autopadrinazgo"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

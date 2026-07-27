@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 )
@@ -25,4 +26,9 @@ func localeOf(r *http.Request) string {
 
 func t(r *http.Request, key string, vars map[string]string) string {
 	return i18n.T(localeOf(r), key, vars)
+}
+
+func isUUID(raw string) bool {
+	_, err := uuid.Parse(raw)
+	return err == nil
 }

@@ -1478,6 +1478,14 @@ class AppLocalizationsEt extends AppLocalizations {
       'Kuvage see QR või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt.';
 
   @override
+  String get appInviteHintClient =>
+      'Jaga seda QR-koodi sõbraga. Ta seotakse sinuga (soovitus) ja võib liituda sinu kabinetiga, kui tal seda veel pole.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Kaks linki: kliendid (rakendus) ja kabinetid (Pro registreerumine teie soovituskoodiga).';
+
+  @override
   String get appInviteHintShort => 'Allalaadimise ja sidumise link';
 
   @override
@@ -1773,4 +1781,14 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get supportMenu => 'Tugi';
+
+  @override
+  String get appInviteHintSales =>
+      'Jaga oma sponsorikoodi kabineti või kliendiga.';
+
+  @override
+  String get appInviteCopyVet => 'Kopeeri kabineti registreerimislink';
+
+  @override
+  String get appInviteCopyClient => 'Kopeeri kliendi kutselink';
 }

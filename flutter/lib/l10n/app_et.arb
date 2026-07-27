@@ -561,6 +561,8 @@
   "mediaVideoLabel": "Video",
   "appInviteTitle": "Rakenduse kutse QR",
   "appInviteHint": "Kuvage see QR või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt.",
+  "appInviteHintClient": "Jaga seda QR-koodi sõbraga. Ta seotakse sinuga (soovitus) ja võib liituda sinu kabinetiga, kui tal seda veel pole.",
+  "appInviteHintCommercial": "Kaks linki: kliendid (rakendus) ja kabinetid (Pro registreerumine teie soovituskoodiga).",
   "appInviteHintShort": "Allalaadimise ja sidumise link",
   "appInviteCodeLabel": "Kood:",
   "appInviteCopy": "Kopeeri link",
@@ -667,5 +669,8 @@
   "supportSuccess": "Sõnum saadetud. Aitäh!",
   "supportErrorRateLimit": "Liiga palju pileteid hiljuti. Proovi tunni pärast.",
   "supportErrorTooLarge": "Diagnostika liiga mahukas. Taaskäivita rakendus ja proovi uuesti.",
-  "supportMenu": "Tugi"
+  "supportMenu": "Tugi",
+  "appInviteHintSales": "Jaga oma sponsorikoodi kabineti või kliendiga.",
+  "appInviteCopyVet": "Kopeeri kabineti registreerimislink",
+  "appInviteCopyClient": "Kopeeri kliendi kutselink"
 }

@@ -41,6 +41,14 @@
             >
               {{ $t('invite.openApp') }}
             </ProButton>
+            <NuxtLink
+              v-if="isCommercialInvite"
+              class="pro-btn pro-btn--secondary pro-btn--block"
+              data-testid="app-invite-cabinet-cta"
+              :to="cabinetRegisterPath"
+            >
+              {{ $t('invite.cabinetCta') }}
+            </NuxtLink>
             <a
               v-if="invite.downloadUrl"
               class="pro-btn pro-btn--secondary pro-btn--block"
@@ -83,7 +91,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-type InviteRole = 'vet' | 'care_pro' | 'commercial' | 'commercial_manager'
+type InviteRole = 'vet' | 'care_pro' | 'commercial' | 'commercial_manager' | 'client'
 
 const { t } = useI18n()
 const { mapError } = useApiError()
@@ -100,6 +108,7 @@ const invite = ref<{
   displayName: string
   downloadUrl: string
   deepLink: string
+  vetRegisterUrl?: string
   qrAndroid?: { publicUrl?: string, storeUrl?: string } | null
   qrIos?: { publicUrl?: string, storeUrl?: string } | null
 } | null>(null)
@@ -112,11 +121,24 @@ function normalizeRole(raw: unknown): InviteRole {
       return 'commercial'
     case 'commercial_manager':
       return 'commercial_manager'
+    case 'client':
+      return 'client'
     case 'vet':
+      return 'vet'
     default:
       return 'vet'
   }
 }
+
+const isCommercialInvite = computed(() => {
+  const role = invite.value?.role
+  return role === 'commercial' || role === 'commercial_manager'
+})
+
+const cabinetRegisterPath = computed(() => {
+  const code = invite.value?.code || ''
+  return `/register?invite=${encodeURIComponent(code)}`
+})
 
 const brandTitle = computed(() => {
   const role = invite.value?.role ?? 'vet'
@@ -126,6 +148,8 @@ const brandTitle = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.brandTitleCommercial')
+    case 'client':
+      return t('invite.brandTitleClient')
     case 'vet':
       return t('invite.brandTitle')
     default: {
@@ -148,6 +172,8 @@ const subtitle = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.subtitleCommercial', { name: name || 'petsFollow' })
+    case 'client':
+      return t('invite.subtitleClient', { name: name || 'petsFollow' })
     case 'vet':
       return t('invite.subtitle', {
         practice: practice || 'petsFollow',
@@ -168,6 +194,8 @@ const autoLinkHint = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.autoLinkHintCommercial')
+    case 'client':
+      return t('invite.autoLinkHintClient')
     case 'vet':
       return t('invite.autoLinkHint')
     default: {
@@ -183,6 +211,8 @@ const codeHint = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.codeHintCommercial')
+    case 'client':
+      return t('invite.codeHintClient')
     case 'care_pro':
     case 'vet':
       return t('invite.codeHint')
@@ -259,6 +289,7 @@ onMounted(async () => {
       deepLink: preconsult
         ? `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}&inviteCode=${encodeURIComponent(inviteCode)}`
         : (data.deepLink || `petsfollow://invite?code=${inviteCode}`),
+      vetRegisterUrl: data.vetRegisterUrl || '',
       qrAndroid: data.qrAndroid || null,
       qrIos: data.qrIos || null,
     }

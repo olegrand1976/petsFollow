@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -21,6 +22,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
+		pr.Get("/admin/filiation", a.adminListFiliation)
 		pr.Get("/admin/commercial-managers", a.adminListCommercialManagers)
 		pr.Get("/admin/sales-branches", a.adminListSalesBranches)
 		pr.Post("/admin/sales-branches", a.adminCreateSalesBranch)
@@ -30,6 +32,9 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Patch("/admin/commercials/{id}/manager", a.adminSetCommercialManager)
 		pr.Patch("/admin/commercials/{id}/base-location", a.adminPatchCommercialBaseLocation)
 		pr.Get("/admin/vets", a.adminListVets)
+		pr.Get("/admin/vets/unassigned", a.adminListUnassignedVets)
+		pr.Patch("/admin/vets/{id}/unassign", a.adminUnassignVet)
+		pr.Get("/admin/vets/{id}/assign-suggestions", a.adminVetAssignSuggestions)
 		pr.Post("/admin/vets", a.adminCreateVet)
 		pr.Post("/admin/clients", a.adminCreateClient)
 		pr.Post("/admin/care-pros", a.adminCreateCarePro)
@@ -47,6 +52,25 @@ func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := a.store.ListAllCommercialsAdmin(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	f := store.FiliationFilter{
+		BranchID: strings.TrimSpace(r.URL.Query().Get("branchId")),
+		Query:    strings.TrimSpace(r.URL.Query().Get("q")),
+	}
+	if cid := strings.TrimSpace(r.URL.Query().Get("commercialId")); cid != "" {
+		f.CommercialIDs = []string{cid}
+	}
+	rows, err := a.store.ListFiliation(r.Context(), f)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -306,6 +330,121 @@ func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "assigned", "vetUserId": req.VetUserID, "commercialId": commercialID})
+}
+
+func (a *API) adminListUnassignedVets(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	rows, err := a.store.ListUnassignedVets(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if rows == nil {
+		rows = []store.UnassignedVetRow{}
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) adminUnassignVet(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	vetID := chi.URLParam(r, "id")
+	if strings.TrimSpace(vetID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	if err := a.store.UnassignVetFromCommercial(r.Context(), vetID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "unassigned", "vetUserId": vetID})
+}
+
+func (a *API) adminVetAssignSuggestions(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	vetID := chi.URLParam(r, "id")
+	if strings.TrimSpace(vetID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	rows, err := a.store.SuggestCommercialsForVet(r.Context(), vetID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if rows == nil {
+		rows = []store.CommercialSuggestion{}
+	}
+	a.refineCommercialSuggestionNotes(r, rows)
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+// refineCommercialSuggestionNotes optionally asks Gemini to polish notes; failures keep deterministic notes.
+func (a *API) refineCommercialSuggestionNotes(r *http.Request, rows []store.CommercialSuggestion) {
+	if a.gemini == nil || !a.gemini.Configured() || len(rows) == 0 {
+		return
+	}
+	type noteIn struct {
+		UserID string `json:"userId"`
+		Note   string `json:"note"`
+		Score  int    `json:"score"`
+	}
+	in := make([]noteIn, 0, len(rows))
+	for _, s := range rows {
+		in = append(in, noteIn{UserID: s.UserID, Note: s.Note, Score: s.Score})
+	}
+	rawIn, err := json.Marshal(in)
+	if err != nil {
+		return
+	}
+	system := `Tu aides un admin petsFollow à assigner un cabinet à un commercial.
+Pour chaque suggestion, refine la note en 1 phrase courte, professionnelle, en français.
+Réponds UNIQUEMENT un JSON array: [{"userId":"...","note":"..."}]`
+	user := "Suggestions:\n" + string(rawIn)
+	out, err := a.gemini.GenerateJSONLite(r.Context(), system, user, 0.2)
+	if err != nil || strings.TrimSpace(out) == "" {
+		return
+	}
+	var refined []struct {
+		UserID string `json:"userId"`
+		Note   string `json:"note"`
+	}
+	if err := json.Unmarshal([]byte(out), &refined); err != nil {
+		// Strip markdown fences if present
+		trimmed := strings.TrimSpace(out)
+		if i := strings.Index(trimmed, "["); i >= 0 {
+			if j := strings.LastIndex(trimmed, "]"); j > i {
+				_ = json.Unmarshal([]byte(trimmed[i:j+1]), &refined)
+			}
+		}
+	}
+	if len(refined) == 0 {
+		return
+	}
+	byID := make(map[string]string, len(refined))
+	for _, n := range refined {
+		if n.UserID != "" && strings.TrimSpace(n.Note) != "" {
+			byID[n.UserID] = strings.TrimSpace(n.Note)
+		}
+	}
+	for i := range rows {
+		if note, ok := byID[rows[i].UserID]; ok {
+			rows[i].Note = note
+		}
+	}
 }
 
 func (a *API) adminCommercialCommissions(w http.ResponseWriter, r *http.Request) {

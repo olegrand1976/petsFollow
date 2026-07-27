@@ -51,6 +51,10 @@
     "vet_only": "Réservé aux vétérinaires",
     "client_only": "Réservé aux clients",
     "admin_only": "Réservé aux administrateurs",
+    "staging_seed_disabled": "Réinitialisation staging désactivée sur cet environnement",
+    "confirm_required": "Phrase de confirmation invalide",
+    "seed_in_progress": "Une réinitialisation est déjà en cours",
+    "seed_failed": "Échec de la réinitialisation de la base",
     "google_pro_only": "Google réservé aux profils Pro",
     "google_client_only": "Ce compte Google est un profil Pro — utilisez l'app web",
     "not_your_pet": "Ce n'est pas votre animal",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "Cette ligne n'est pas prête à être payée",
     "payout_no_ready_lines": "Aucune ligne prête à payer sur cette période",
     "email_already_exists": "Un compte existe déjà avec cet email",
+    "prospect_already_owned": "Ce prospect est déjà géré par un collègue",
+    "cannot_release_converted": "Impossible de libérer un prospect converti",
+    "invalid_invite_code": "Code parrain invalide",
+    "already_assigned": "Ce cabinet est déjà rattaché à un commercial",
     "already_linked": "Ce client est déjà rattaché à ce cabinet",
     "not_a_client": "Ce compte n'est pas un client",
     "care_pro_only": "Réservé aux professionnels terrain",
@@ -130,10 +138,7 @@
     "invalid_thirst": "Soif invalide",
     "invalid_elimination": "Selles / urines invalides",
     "invalid_urgency": "Urgence invalide",
-    "staging_seed_disabled": "Réinitialisation staging désactivée sur cet environnement",
-    "confirm_required": "Phrase de confirmation invalide",
-    "seed_in_progress": "Une réinitialisation est déjà en cours",
-    "seed_failed": "Échec de la réinitialisation de la base"
+    "self_referral": "Auto-parrainage interdit"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

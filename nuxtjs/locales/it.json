@@ -55,7 +55,11 @@
       "billing": "Paghe e catalogo"
     },
     "managerAiModules": "CR IA — team",
-    "adminSupport": "Supporto"
+    "adminSupport": "Supporto",
+    "adminVetPool": "Pool studi",
+    "commercialFiliation": "Filiazione",
+    "managerFiliation": "Filiazione team",
+    "adminFiliation": "Filiazione"
   },
   "training": {
     "title": "Allenamento AI",
@@ -259,18 +263,9 @@
       "failed": "Impossibile registrarsi",
       "consent": "Accetto {terms} e {privacy}.",
       "consentRequired": "È necessario accettare i termini e l'informativa sulla privacy.",
-      "nearbyCommercial": {
-        "title": "Commerciale vicino a te",
-        "hint": "Senza un codice di riferimento, scegli un venditore nelle vicinanze (facoltativo).",
-        "useLocation": "Usa la mia posizione",
-        "postalCode": "Codice postale",
-        "searchPostal": "Cerca per codice postale",
-        "empty": "Nessun annuncio pubblicitario trovato nelle vicinanze.",
-        "skip": "Non allegare un venditore",
-        "distance": "{km} km",
-        "geoUnsupported": "Geolocalizzazione non disponibile su questo dispositivo.",
-        "geoDenied": "Posizione negata: inserisci un codice postale."
-      }
+      "inviteCode": "Referral code",
+      "inviteCodeHint": "Your petsFollow sales rep code. Without a code, your practice joins the admin pool for manual assignment.",
+      "poolWithoutCode": "Without a code, your signup will go to the central pool (later assignment)."
     },
     "registerSent": {
       "brandTitle": "Controlla la tua casella di posta",
@@ -500,7 +495,16 @@
       "prev": "Precedente",
       "next": "Successivo",
       "encode": "Registra",
-      "daysShort": "{n} d"
+      "daysShort": "{n} d",
+      "lookupTitle": "Verifica prima di chiamare",
+      "lookupHint": "Cerca lo studio. Se libero, rivendicalo. Se preso, non contattare.",
+      "lookupLabel": "Nome o telefono",
+      "lookupAction": "Verifica",
+      "lookupFree": "Prospect libero — puoi rivendicarlo.",
+      "lookupMissing": "Nessun prospect — puoi aggiungerlo.",
+      "ownedBy": "Gestito da {name}",
+      "claim": "Rivendica",
+      "inactiveSince": "Inattivo da {n} g"
     },
     "commissions": {
       "title": "Le mie commissioni",
@@ -1035,7 +1039,7 @@
       "title": "Applicazione per scaricare codici QR",
       "hint": "Visualizza questo QR nella sala d'attesa o condividi il link. Un nuovo cliente che si registra tramite questo link viene automaticamente collegato alla vostro studio (compensazione).",
       "hintCarePro": "Condividi questo QR o collegamento. Un nuovo cliente che si registra tramite questo collegamento ti consente di accedere alle note sul suo file.",
-      "hintCommercial": "Condividi questo QR o collegamento. I nuovi clienti registrati tramite questo collegamento vengono attribuiti al tuo riferimento di vendita.",
+      "hintCommercial": "Due link: clienti (app) e cliniche (registrazione Pro con il tuo codice referral).",
       "fallbackName": "petsFollow",
       "qrAlt": "Scarica il codice QR petsFollow",
       "codeLabel": "Codice:",
@@ -1047,7 +1051,10 @@
       "qrAndroidAlt": "Google PlayQR",
       "qrIosAlt": "Negozio dell'App QR",
       "android": "Androide",
-      "ios": "iOS"
+      "ios": "iOS",
+      "linkLabelClient": "Link invito clienti",
+      "linkLabelCabinet": "Link iscrizione studio",
+      "copyCabinet": "Copia link studio"
     }
   },
   "pets": {
@@ -1613,6 +1620,26 @@
       "searchLabel": "Ricerca",
       "searchPlaceholder": "Oggetto, email o nome…",
       "searchSubmit": "Cerca"
+    },
+    "vetPool": {
+      "title": "Unassigned practices pool",
+      "subtitle": "Signups without referral code — manual assignment with AI suggestions.",
+      "empty": "No practices waiting",
+      "colName": "Vet",
+      "colEmail": "Email",
+      "colPractice": "Practice",
+      "colCity": "City",
+      "colPostal": "Postal",
+      "colCreated": "Signed up",
+      "colActions": "Actions",
+      "suggest": "Suggestions",
+      "suggestionsTitle": "Suggestions for {name}",
+      "suggestionsEmpty": "No suggestions available",
+      "score": "Score {score}",
+      "distance": "{km} km",
+      "assignedLoad": "{n} practices",
+      "assign": "Assign",
+      "assignOk": "Practice assigned."
     }
   },
   "calendar": {
@@ -2392,7 +2419,11 @@
       "subtitle": "Visualizzazione CRM del team e della directory condivisa.",
       "allCommercials": "Tutti i venditori",
       "reassign": "Assegna a",
-      "unassigned": "Non assegnato"
+      "unassigned": "Non assegnato",
+      "release": "Libera",
+      "releaseOk": "Prospect rimesso in libero.",
+      "releaseInactive": "Libera gli inattivi (30 g)",
+      "releaseInactiveOk": "{n} prospect liberato/i."
     },
     "leaderboard": {
       "title": "Classifica team",
@@ -2465,7 +2496,12 @@
     "download": "Scarica l'applicazione",
     "openApp": "Apri l'app",
     "failedTitle": "Invito non trovato",
-    "invalid": "Questo link di invito non è più valido."
+    "invalid": "Questo link di invito non è più valido.",
+    "cabinetCta": "Sono uno studio veterinario",
+    "brandTitleClient": "Un amico ti invita",
+    "subtitleClient": "Invito di {name}",
+    "autoLinkHintClient": "Iscrivendoti da questo link, sarai collegato al tuo sponsor (e eventualmente al suo studio se non ne hai ancora uno).",
+    "codeHintClient": "Se l’app non si apre automaticamente, aprila e inserisci questo codice alla registrazione."
   },
   "team": {
     "title": "Squadra solida",
@@ -2554,5 +2590,32 @@
     "errorGeneric": "Invio non riuscito. Riprova.",
     "errorRateLimit": "Troppi ticket di recente. Riprova tra un'ora.",
     "errorTooLarge": "Diagnostici troppo grandi. Ricarica la pagina e riprova."
+  },
+  "filiation": {
+    "title": "Filiazione",
+    "subtitle": {
+      "commercial": "I vostri vet assegnati e clienti attribuiti — commerciale effettivo (commissione).",
+      "manager": "Albero del team: commerciale → vet → cliente, con beneficiario effettivo.",
+      "admin": "Vista globale di filiazione (tutti i rami). Filtrate per ramo o cercate."
+    },
+    "search": "Cerca",
+    "searchPlaceholder": "Nome, email, clinica…",
+    "branchId": "Ramo (UUID)",
+    "branchIdPlaceholder": "Filtra per branchId",
+    "branch": "Ramo",
+    "commercial": "Commerciale",
+    "vet": "Veterinario",
+    "practice": "Clinica",
+    "client": "Cliente",
+    "inviteCode": "Codice invite",
+    "sponsor": "Sponsor cliente",
+    "effective": "Effettivo",
+    "linkedAt": "Dal",
+    "empty": "Nessuna filiazione",
+    "source": {
+      "vet_assignment": "Assegnazione vet",
+      "client_referral": "Referral cliente",
+      "none": "Nessuno"
+    }
   }
 }

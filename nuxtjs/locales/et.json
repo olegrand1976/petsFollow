@@ -55,7 +55,11 @@
       "billing": "Palk ja kataloog"
     },
     "managerAiModules": "AI CR — meeskond",
-    "adminSupport": "Tugi"
+    "adminSupport": "Tugi",
+    "adminVetPool": "Kabineti pool",
+    "commercialFiliation": "Seotus",
+    "managerFiliation": "Meeskonna seotus",
+    "adminFiliation": "Seotus"
   },
   "auth": {
     "login": {
@@ -145,18 +149,9 @@
       "failed": "Registreerimine ebaõnnestus",
       "consent": "Nõustun {terms} ja {privacy} tingimustega.",
       "consentRequired": "Peate nõustuma tingimuste ja privaatsuspoliitikaga.",
-      "nearbyCommercial": {
-        "title": "Müügiesindaja teie lähedal",
-        "hint": "Ilma soovituskoodita saate valida lähedase müügiesindaja (valikuline).",
-        "useLocation": "Kasuta minu asukohta",
-        "postalCode": "Postiindeks",
-        "searchPostal": "Otsi postiindeksi järgi",
-        "empty": "Lähedalt müügiesindajat ei leitud.",
-        "skip": "Jäta vahele — ilma esindajata",
-        "distance": "{km} km",
-        "geoUnsupported": "Asukoha määramine pole selles seadmes saadaval.",
-        "geoDenied": "Asukoht keelatud — sisestage postiindeks."
-      }
+      "inviteCode": "Referral code",
+      "inviteCodeHint": "Your petsFollow sales rep code. Without a code, your practice joins the admin pool for manual assignment.",
+      "poolWithoutCode": "Without a code, your signup will go to the central pool (later assignment)."
     },
     "registerSent": {
       "brandTitle": "Kontrollige oma postkasti",
@@ -601,7 +596,7 @@
       "title": "Rakenduse allalaadimise QR-kood",
       "hint": "Kuvage see QR ooteruumis või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt teie kabinetiga (tasu).",
       "hintCarePro": "Jagage seda QR-i või linki. Uus klient annab teile märkmete juurdepääsu oma toimikule.",
-      "hintCommercial": "Jagage seda QR-i või linki. Uued kliendid omistatakse teie müügireferralile.",
+      "hintCommercial": "Kaks linki: kliendid (rakendus) ja kabinetid (Pro registreerumine teie soovituskoodiga).",
       "fallbackName": "petsFollow",
       "qrAlt": "petsFollow allalaadimise QR-kood",
       "codeLabel": "Kood:",
@@ -613,7 +608,10 @@
       "qrAndroidAlt": "Google Play QR",
       "qrIosAlt": "App Store QR",
       "android": "Android",
-      "ios": "iOS"
+      "ios": "iOS",
+      "linkLabelClient": "Kliendi kutselink",
+      "linkLabelCabinet": "Kabineti registreerimislink",
+      "copyCabinet": "Kopeeri kabineti link"
     }
   },
   "pets": {
@@ -1187,6 +1185,26 @@
       "searchLabel": "Otsing",
       "searchPlaceholder": "Teema, e-post või nimi…",
       "searchSubmit": "Otsi"
+    },
+    "vetPool": {
+      "title": "Unassigned practices pool",
+      "subtitle": "Signups without referral code — manual assignment with AI suggestions.",
+      "empty": "No practices waiting",
+      "colName": "Vet",
+      "colEmail": "Email",
+      "colPractice": "Practice",
+      "colCity": "City",
+      "colPostal": "Postal",
+      "colCreated": "Signed up",
+      "colActions": "Actions",
+      "suggest": "Suggestions",
+      "suggestionsTitle": "Suggestions for {name}",
+      "suggestionsEmpty": "No suggestions available",
+      "score": "Score {score}",
+      "distance": "{km} km",
+      "assignedLoad": "{n} practices",
+      "assign": "Assign",
+      "assignOk": "Practice assigned."
     }
   },
   "commissions": {
@@ -1895,7 +1913,16 @@
       "prev": "Eelmine",
       "next": "Järgmine",
       "encode": "Registreeri",
-      "daysShort": "{n} d"
+      "daysShort": "{n} d",
+      "lookupTitle": "Kontrolli enne helistamist",
+      "lookupHint": "Otsi kabinetti. Kui vaba, võta. Kui hõivatud, ära kontakteeru.",
+      "lookupLabel": "Nimi või telefon",
+      "lookupAction": "Kontrolli",
+      "lookupFree": "Vaba prospect — saad selle võtta.",
+      "lookupMissing": "Prospecti ei leitud — saad lisada.",
+      "ownedBy": "Haldab {name}",
+      "claim": "Võta endale",
+      "inactiveSince": "Mitteaktiivne {n} p"
     },
     "commissions": {
       "title": "Minu komisjonid",
@@ -2286,7 +2313,11 @@
       "subtitle": "CRM-vaade meeskonnale ja jagatud kataloogile.",
       "allCommercials": "Kõik müügiesindajad",
       "reassign": "Määra",
-      "unassigned": "Määramata"
+      "unassigned": "Määramata",
+      "release": "Vabasta",
+      "releaseOk": "Prospect vabastatud.",
+      "releaseInactive": "Vabasta mitteaktiivsed (30 p)",
+      "releaseInactiveOk": "{n} prospect(i) vabastatud."
     },
     "leaderboard": {
       "title": "Meeskonna edetabel",
@@ -2473,7 +2504,12 @@
     "download": "Laadi rakendus alla",
     "openApp": "Ava rakendus",
     "failedTitle": "Kutset ei leitud",
-    "invalid": "See kutselink ei kehti enam."
+    "invalid": "See kutselink ei kehti enam.",
+    "cabinetCta": "Olen kabinet",
+    "brandTitleClient": "Sõber kutsub sind",
+    "subtitleClient": "Kutse kasutajalt {name}",
+    "autoLinkHintClient": "Selle lingi kaudu registreerudes seotakse sind sponsoriga (ja vajadusel tema kabinetiga, kui sul seda veel pole).",
+    "codeHintClient": "Kui äpp ei avane automaatselt, ava see ja sisesta see kood registreerimisel."
   },
   "team": {
     "title": "Kliiniku meeskond",
@@ -2562,5 +2598,32 @@
     "errorGeneric": "Saatmine ebaõnnestus. Proovi uuesti.",
     "errorRateLimit": "Liiga palju pileteid hiljuti. Proovi tunni pärast.",
     "errorTooLarge": "Diagnostika liiga mahukas. Laadi leht uuesti ja proovi uuesti."
+  },
+  "filiation": {
+    "title": "Seotus",
+    "subtitle": {
+      "commercial": "Teie määratud loomaarstid ja kliendid — tegelik müügiesindaja (komisjon).",
+      "manager": "Meeskonna seotus: müük → loomaarst → klient, tegeliku saajaga.",
+      "admin": "Globaalne seotuse vaade (kõik harud). Filtreeri haru või otsi."
+    },
+    "search": "Otsi",
+    "searchPlaceholder": "Nimi, e-post, praktika…",
+    "branchId": "Haru (UUID)",
+    "branchIdPlaceholder": "Filtreeri branchId järgi",
+    "branch": "Haru",
+    "commercial": "Müügiesindaja",
+    "vet": "Loomaarst",
+    "practice": "Praktika",
+    "client": "Klient",
+    "inviteCode": "Kutsekood",
+    "sponsor": "Kliendi sponsor",
+    "effective": "Tegelik",
+    "linkedAt": "Alates",
+    "empty": "Seotusi pole",
+    "source": {
+      "vet_assignment": "Loomaarsti määramine",
+      "client_referral": "Kliendi soovitus",
+      "none": "Puudub"
+    }
   }
 }

@@ -19,10 +19,13 @@ func (a *API) registerCommercialManagerRoutes(r chi.Router) {
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/commercial-manager/overview", a.managerOverview)
 		pr.Get("/commercial-manager/team", a.managerListTeam)
+		pr.Get("/commercial-manager/filiation", a.managerListFiliation)
 		pr.Get("/commercial-manager/team/{id}/overview", a.managerTeamMemberOverview)
 		pr.Get("/commercial-manager/prospects", a.managerListProspects)
 		pr.Patch("/commercial-manager/prospects/{id}", a.managerUpdateProspect)
 		pr.Patch("/commercial-manager/prospects/{id}/reassign", a.managerReassignProspect)
+		pr.Post("/commercial-manager/prospects/release-inactive", a.managerReleaseInactiveProspects)
+		pr.Post("/commercial-manager/prospects/{id}/release", a.managerReleaseProspect)
 		pr.Get("/commercial-manager/followups", a.managerFollowups)
 		pr.Get("/commercial-manager/leaderboard", a.managerLeaderboard)
 		pr.Get("/commercial-manager/quotas", a.managerListQuotas)
@@ -74,6 +77,29 @@ func (a *API) managerListTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, team)
+}
+
+func (a *API) managerListFiliation(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	teamIDs, err := a.store.ListTeamCommercialIDs(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	// Include manager self portfolio (managers may also encode via commercial routes).
+	scope := append([]string{id.UserID}, teamIDs...)
+	rows, err := a.store.ListFiliation(r.Context(), store.FiliationFilter{
+		CommercialIDs: scope,
+		Query:         strings.TrimSpace(r.URL.Query().Get("q")),
+	})
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }
 
 func (a *API) managerTeamMemberOverview(w http.ResponseWriter, r *http.Request) {
@@ -206,7 +232,7 @@ func (a *API) managerReassignProspect(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, store.ErrValidation) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "unassign_directory_only")
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "cannot_release_converted")
 			return
 		}
 		if err.Error() == "invalid_commercial" {
@@ -217,6 +243,39 @@ func (a *API) managerReassignProspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (a *API) managerReleaseProspect(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	if err := a.store.ReleaseProspect(r.Context(), chi.URLParam(r, "id"), id.UserID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "cannot_release_converted")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "released"})
+}
+
+func (a *API) managerReleaseInactiveProspects(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	n, err := a.store.ReleaseInactiveProspectsForManager(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"status": "released", "count": n})
 }
 
 func (a *API) managerLeaderboard(w http.ResponseWriter, r *http.Request) {

@@ -624,6 +624,8 @@
   "mediaVideoLabel": "Video",
   "appInviteTitle": "Applicazione di invito QR",
   "appInviteHint": "Visualizza questo QR o condividi il collegamento. Un nuovo cliente che si registra tramite questo link viene automaticamente collegato.",
+  "appInviteHintClient": "Condividi questo QR con un amico. Sarà collegato a te (referral) e potrà unirsi al tuo studio se non ne ha ancora uno.",
+  "appInviteHintCommercial": "Due link: clienti (app) e cliniche (registrazione Pro con il tuo codice referral).",
   "appInviteHintShort": "Link per il download e collegamento",
   "appInviteCodeLabel": "Codice:",
   "appInviteCopy": "Copia collegamento",
@@ -730,5 +732,8 @@
   "supportSuccess": "Messaggio inviato. Grazie!",
   "supportErrorRateLimit": "Troppi ticket di recente. Riprova tra un'ora.",
   "supportErrorTooLarge": "Diagnostici troppo grandi. Riavvia l'app e riprova.",
-  "supportMenu": "Supporto"
+  "supportMenu": "Supporto",
+  "appInviteHintSales": "Condividi il codice sponsor con uno studio o un cliente.",
+  "appInviteCopyVet": "Copia link iscrizione studio",
+  "appInviteCopyClient": "Copia link invito cliente"
 }

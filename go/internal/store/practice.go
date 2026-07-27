@@ -69,7 +69,7 @@ type RegisterVetInput struct {
 	AutoReplyDefault string
 	// TermsAccepted horodate le consentement CGU/privacy (RGPD art. 7).
 	TermsAccepted bool
-	// AssignedCommercialID optional nearby-commercial pick at signup.
+	// AssignedCommercialID optional commercial from invite code at signup.
 	AssignedCommercialID string
 }
 

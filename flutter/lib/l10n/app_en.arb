@@ -561,6 +561,8 @@
   "mediaVideoLabel": "Video",
   "appInviteTitle": "App invite QR",
   "appInviteHint": "Show this QR or share the link. A new client who signs up via this link is linked automatically.",
+  "appInviteHintClient": "Share this QR with a friend. They will be linked to you (referral) and may join your practice if they don’t have one yet.",
+  "appInviteHintCommercial": "Two links: clients (app) and practices (Pro signup with your referral code).",
   "appInviteHintShort": "Download and link invite",
   "appInviteCodeLabel": "Code:",
   "appInviteCopy": "Copy link",
@@ -667,5 +669,8 @@
   "supportSuccess": "Message sent. Thank you!",
   "supportErrorRateLimit": "Too many tickets recently. Try again in an hour.",
   "supportErrorTooLarge": "Diagnostics too large. Restart the app and try again.",
-  "supportMenu": "Support"
+  "supportMenu": "Support",
+  "appInviteHintSales": "Share your referral code with practices (cabinet signup) or clients (app invite).",
+  "appInviteCopyVet": "Copy practice signup link",
+  "appInviteCopyClient": "Copy client invite link"
 }

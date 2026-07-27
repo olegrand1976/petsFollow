@@ -329,7 +329,8 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		SELECT COUNT(*)::int FROM sales.prospects
 		WHERE commercial_user_id=$1
 		  AND status IN ('new','contacted','qualified')
-		  AND status_changed_at < NOW() - INTERVAL '7 days'`, commercialUserID).Scan(&staleInPipeline)
+		  AND GREATEST(status_changed_at, COALESCE(last_contacted_at, status_changed_at), updated_at)
+		      < NOW() - INTERVAL '30 days'`, commercialUserID).Scan(&staleInPipeline)
 
 	mixBps := 0
 	if paidPetsMonth > 0 {
@@ -366,7 +367,8 @@ func (s *Store) CommercialOverview(ctx context.Context, commercialUserID string)
 		FROM sales.prospects
 		WHERE commercial_user_id=$1
 		  AND status IN ('new','contacted','qualified')
-		  AND status_changed_at < NOW() - INTERVAL '7 days'
+		  AND GREATEST(status_changed_at, COALESCE(last_contacted_at, status_changed_at), updated_at)
+		      < NOW() - INTERVAL '30 days'
 		ORDER BY status_changed_at ASC
 		LIMIT 8`, commercialUserID)
 	if err == nil {

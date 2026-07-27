@@ -1232,7 +1232,9 @@ type registerReq struct {
 	PracticeName string `json:"practiceName"`
 	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
 	Consent bool `json:"consent"`
-	// AssignedCommercialID — optional nearby commercial pick (no invite code).
+	// InviteCode — code parrain commercial (practice.app_invite_codes).
+	InviteCode string `json:"inviteCode,omitempty"`
+	// AssignedCommercialID — ignored on /auth/register (assignment only via inviteCode).
 	AssignedCommercialID string `json:"assignedCommercialId,omitempty"`
 }
 
@@ -1255,15 +1257,22 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
 		return
 	}
-	assignedCommercialID := strings.TrimSpace(req.AssignedCommercialID)
-	if assignedCommercialID != "" {
-		ok, err := a.store.IsAssignableCommercial(r.Context(), assignedCommercialID)
+	assignedCommercialID := ""
+	if code := store.NormalizeInviteCode(req.InviteCode); code != "" {
+		inv, err := a.store.GetAppInviteByCode(r.Context(), code)
 		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_invite_code")
+				return
+			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		if !ok {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_commercial")
+		switch inv.Role {
+		case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+			assignedCommercialID = inv.UserID
+		default:
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_invite_code")
 			return
 		}
 	}

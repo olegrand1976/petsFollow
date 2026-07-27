@@ -51,6 +51,10 @@
     "vet_only": "Alleen voor dierenartsen",
     "client_only": "Alleen voor klanten",
     "admin_only": "Alleen voor beheerders",
+    "staging_seed_disabled": "Staging-reset is uitgeschakeld in deze omgeving",
+    "confirm_required": "Ongeldige bevestigingszin",
+    "seed_in_progress": "Er loopt al een reset",
+    "seed_failed": "Database-reset mislukt",
     "google_pro_only": "Google alleen voor Pro-profielen",
     "google_client_only": "Dit Google-account is een Pro-profiel — gebruik de webapp",
     "not_your_pet": "Dit is niet uw huisdier",
@@ -94,6 +98,10 @@
     "payout_line_not_ready": "Deze lijn is niet klaar om te betalen",
     "payout_no_ready_lines": "Geen klaarstaande lijnen in deze periode",
     "email_already_exists": "Er bestaat al een account met dit e-mailadres",
+    "prospect_already_owned": "Dit prospect wordt al beheerd door een collega",
+    "cannot_release_converted": "Kan een geconverteerd prospect niet vrijgeven",
+    "invalid_invite_code": "Ongeldige sponsorcode",
+    "already_assigned": "Deze praktijk is al toegewezen aan een commercial",
     "already_linked": "Deze klant is al gekoppeld aan deze praktijk",
     "not_a_client": "Dit account is geen klant",
     "care_pro_only": "Alleen voor veldprofessionals",
@@ -130,10 +138,7 @@
     "invalid_urgency": "Ongeldige urgentie",
     "ai_module_required": "CR IA-module niet geactiveerd of proefperiode verlopen — contacteer uw commercial",
     "ai_module_not_found": "CR IA-module niet gevonden voor dit kabinet",
-    "staging_seed_disabled": "Staging-reset is uitgeschakeld in deze omgeving",
-    "confirm_required": "Ongeldige bevestigingszin",
-    "seed_in_progress": "Er loopt al een reset",
-    "seed_failed": "Database-reset mislukt"
+    "self_referral": "Zelf-doorverwijzing is niet toegestaan"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

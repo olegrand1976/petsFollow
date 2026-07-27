@@ -1477,6 +1477,14 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toon deze QR of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch gekoppeld.';
 
   @override
+  String get appInviteHintClient =>
+      'Deel deze QR met een vriend. Die wordt aan jou gekoppeld (referral) en kan jouw praktijk volgen als die er nog geen heeft.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Twee links: cliënten (app) en praktijken (Pro-registratie met uw doorverwijscode).';
+
+  @override
   String get appInviteHintShort => 'Download- en koppelingslink';
 
   @override
@@ -1772,4 +1780,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get supportMenu => 'Support';
+
+  @override
+  String get appInviteHintSales =>
+      'Deel je sponsorcode met een praktijk of een cliënt.';
+
+  @override
+  String get appInviteCopyVet => 'Kopieer praktijk-aanmeldlink';
+
+  @override
+  String get appInviteCopyClient => 'Kopieer cliënt-uitnodigingslink';
 }

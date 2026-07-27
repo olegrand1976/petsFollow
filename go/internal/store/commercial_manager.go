@@ -221,7 +221,8 @@ func (s *Store) ListManagerTeamForPeriod(ctx context.Context, managerUserID, per
 				AND p.appointment_outcome='no_show'), 0),
 			COALESCE((SELECT COUNT(*)::int FROM sales.prospects p WHERE p.commercial_user_id=u.id
 				AND p.status IN ('contacted','qualified')
-				AND p.status_changed_at < NOW() - INTERVAL '7 days'), 0),
+				AND GREATEST(p.status_changed_at, COALESCE(p.last_contacted_at, p.status_changed_at), p.updated_at)
+				    < NOW() - INTERVAL '30 days'), 0),
 			COALESCE((SELECT SUM(l.commission_cents)::int FROM billing.commercial_commission_ledger l
 				WHERE l.commercial_user_id=u.id AND l.period_ym=$2), 0),
 			COALESCE((SELECT SUM(l.commission_cents)::int FROM billing.commercial_commission_ledger l
@@ -282,9 +283,10 @@ func (s *Store) ManagerOverview(ctx context.Context, managerUserID string) (Mana
 	var directoryStale int
 	if err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM sales.prospects
-		WHERE source='directory'
+		WHERE commercial_user_id IS NULL
 		  AND status IN ('contacted','qualified')
-		  AND status_changed_at < NOW() - INTERVAL '7 days'`).Scan(&directoryStale); err != nil {
+		  AND GREATEST(status_changed_at, COALESCE(last_contacted_at, status_changed_at), updated_at)
+		      < NOW() - INTERVAL '30 days'`).Scan(&directoryStale); err != nil {
 		return ManagerOverview{}, err
 	}
 	ov.TeamStaleInPipeline += directoryStale
@@ -299,14 +301,14 @@ func (s *Store) ManagerOverview(ctx context.Context, managerUserID string) (Mana
 func (s *Store) ListManagerProspects(ctx context.Context, managerUserID, statusFilter, commercialUserID string, upcomingOnly bool) ([]Prospect, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
-			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at,
+			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 			p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
 			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''),
 			COALESCE(u.full_name,''), COALESCE(u.email,'')
 		FROM sales.prospects p
 		LEFT JOIN identity.users u ON u.id = p.commercial_user_id
 		WHERE (
-			p.source = 'directory'
+			p.commercial_user_id IS NULL
 			OR p.commercial_user_id IN (
 				SELECT id FROM identity.users WHERE role='commercial' AND manager_user_id=$1
 			)
@@ -327,7 +329,7 @@ func (s *Store) ListManagerProspects(ctx context.Context, managerUserID, statusF
 		var p Prospect
 		var first, last, appt *time.Time
 		if err := rows.Scan(&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
-			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt,
+			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
 			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
 			&p.CommercialName, &p.CommercialEmail); err != nil {
 			return nil, err
@@ -336,6 +338,7 @@ func (s *Store) ListManagerProspects(ctx context.Context, managerUserID, statusF
 		p.LastContactedAt = last
 		p.AppointmentAt = appt
 		p.DaysInStatus = daysSince(p.StatusChangedAt)
+		applyProspectActivity(&p)
 		out = append(out, p)
 	}
 	return out, rows.Err()
@@ -348,20 +351,21 @@ func (s *Store) ListManagerFollowups(ctx context.Context, managerUserID string) 
 	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT p.id::text, COALESCE(p.commercial_user_id::text,''), p.practice_name, p.contact_name, p.contact_email, p.contact_phone,
-			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at,
+			p.city, p.notes, p.source, COALESCE(p.referring_vet_user_id::text,''), p.status, p.status_changed_at, p.created_at, p.updated_at,
 			p.first_contacted_at, p.last_contacted_at, p.appointment_at, COALESCE(p.appointment_outcome,''),
 			COALESCE(p.lost_reason,''), COALESCE(p.converted_vet_user_id::text,''),
 			COALESCE(u.full_name,''), COALESCE(u.email,'')
 		FROM sales.prospects p
 		LEFT JOIN identity.users u ON u.id = p.commercial_user_id
 		WHERE (
-			p.source = 'directory'
+			p.commercial_user_id IS NULL
 			OR p.commercial_user_id IN (
 				SELECT id FROM identity.users WHERE role='commercial' AND manager_user_id=$1
 			)
 		)
 		AND p.status IN ('contacted','qualified')
-		AND p.status_changed_at < NOW() - INTERVAL '7 days'
+		AND GREATEST(p.status_changed_at, COALESCE(p.last_contacted_at, p.status_changed_at), p.updated_at)
+		    < NOW() - INTERVAL '30 days'
 		ORDER BY p.status_changed_at ASC
 		LIMIT 100`, managerUserID)
 	if err != nil {
@@ -373,7 +377,7 @@ func (s *Store) ListManagerFollowups(ctx context.Context, managerUserID string) 
 		var p Prospect
 		var first, last, appt *time.Time
 		if err := rows.Scan(&p.ID, &p.CommercialUserID, &p.PracticeName, &p.ContactName, &p.ContactEmail, &p.ContactPhone,
-			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt,
+			&p.City, &p.Notes, &p.Source, &p.ReferringVetUserID, &p.Status, &p.StatusChangedAt, &p.CreatedAt, &p.UpdatedAt,
 			&first, &last, &appt, &p.AppointmentOutcome, &p.LostReason, &p.ConvertedVetUserID,
 			&p.CommercialName, &p.CommercialEmail); err != nil {
 			return nil, err
@@ -382,6 +386,7 @@ func (s *Store) ListManagerFollowups(ctx context.Context, managerUserID string) 
 		p.LastContactedAt = last
 		p.AppointmentAt = appt
 		p.DaysInStatus = daysSince(p.StatusChangedAt)
+		applyProspectActivity(&p)
 		stale = append(stale, p)
 	}
 	if err := rows.Err(); err != nil {

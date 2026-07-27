@@ -295,13 +295,33 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 	if err != nil {
 		return err
 	}
-	// Unassign only allowed for directory pool (avoid orphaning owned CRM rows).
+	// Unassign (release to free pool) allowed for any non-converted prospect.
 	if commercialUserID == "" {
-		if existing.Source != "directory" {
+		if existing.Status == "converted" {
 			return ErrValidation
 		}
+		if existing.CommercialUserID != "" {
+			ok, err := s.CommercialBelongsToManager(ctx, existing.CommercialUserID, managerUserID)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return ErrNotFound
+			}
+		}
+		ct, err := s.pool.Exec(ctx, `
+			UPDATE sales.prospects
+			SET commercial_user_id=NULL, updated_at=NOW()
+			WHERE id=$1 AND status <> 'converted'`, prospectID)
+		if err != nil {
+			return err
+		}
+		if ct.RowsAffected() == 0 {
+			return ErrNotFound
+		}
+		return nil
 	}
-	if existing.Source != "directory" {
+	if existing.CommercialUserID != "" {
 		ok, err := s.CommercialBelongsToManager(ctx, existing.CommercialUserID, managerUserID)
 		if err != nil {
 			return err
@@ -309,28 +329,17 @@ func (s *Store) ReassignProspectCommercial(ctx context.Context, prospectID, comm
 		if !ok {
 			return ErrNotFound
 		}
-	} else if existing.CommercialUserID != "" {
-		// Directory already claimed by another team → only that manager may reassign.
-		ok, err := s.CommercialBelongsToManager(ctx, existing.CommercialUserID, managerUserID)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return ErrNotFound
-		}
 	}
-	if commercialUserID != "" {
-		ok, err := s.CommercialBelongsToManager(ctx, commercialUserID, managerUserID)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return errors.New("invalid_commercial")
-		}
+	ok, err := s.CommercialBelongsToManager(ctx, commercialUserID, managerUserID)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("invalid_commercial")
 	}
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE sales.prospects
-		SET commercial_user_id=NULLIF($2::text,'')::uuid, updated_at=NOW()
+		SET commercial_user_id=$2::uuid, updated_at=NOW()
 		WHERE id=$1`, prospectID, commercialUserID)
 	if err != nil {
 		return err

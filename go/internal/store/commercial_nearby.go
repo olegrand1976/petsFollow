@@ -32,6 +32,7 @@ type NearbyCommercial struct {
 	City       string  `json:"city"`
 	DistanceKm float64 `json:"distanceKm,omitempty"`
 	PostalCode string  `json:"postalCode,omitempty"`
+	InviteCode string  `json:"inviteCode,omitempty"`
 }
 
 // NearbyCommercialsQuery filters discovery by GPS and/or postal code.
@@ -74,12 +75,20 @@ func (s *Store) ListNearbyCommercials(ctx context.Context, q NearbyCommercialsQu
 
 func (s *Store) listNearbyByGPS(ctx context.Context, lat, lng, radiusKm float64, limit int) ([]NearbyCommercial, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, full_name, city, postal_code, distance_km FROM (
-			SELECT id, full_name, COALESCE(base_city,'') AS city, COALESCE(base_postal_code,'') AS postal_code,
-				`+haversineKmSQL+` AS distance_km
-			FROM identity.users
-			WHERE role = 'commercial'
-			  AND base_lat IS NOT NULL AND base_lng IS NOT NULL
+		SELECT id::text, full_name, city, postal_code, distance_km, invite_code FROM (
+			SELECT u.id, u.full_name, COALESCE(u.base_city,'') AS city, COALESCE(u.base_postal_code,'') AS postal_code,
+				(6371 * acos(
+					LEAST(1.0, GREATEST(-1.0,
+						cos(radians($1)) * cos(radians(u.base_lat)) *
+						cos(radians(u.base_lng) - radians($2)) +
+						sin(radians($1)) * sin(radians(u.base_lat))
+					))
+				)) AS distance_km,
+				COALESCE(ic.code,'') AS invite_code
+			FROM identity.users u
+			LEFT JOIN practice.app_invite_codes ic ON ic.user_id = u.id
+			WHERE u.role = 'commercial'
+			  AND u.base_lat IS NOT NULL AND u.base_lng IS NOT NULL
 		) d
 		WHERE distance_km <= $3
 		ORDER BY distance_km ASC, full_name ASC
@@ -89,7 +98,7 @@ func (s *Store) listNearbyByGPS(ctx context.Context, lat, lng, radiusKm float64,
 		return nil, err
 	}
 	defer rows.Close()
-	return scanNearbyCommercials(rows, true)
+	return s.scanNearbyCommercials(ctx, rows, true)
 }
 
 func (s *Store) listNearbyByPostal(ctx context.Context, postal string, limit int) ([]NearbyCommercial, error) {
@@ -99,43 +108,49 @@ func (s *Store) listNearbyByPostal(ctx context.Context, postal string, limit int
 		prefix = prefix[:2]
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, full_name, COALESCE(base_city,''), COALESCE(base_postal_code,''),
-			0::float8 AS distance_km
-		FROM identity.users
-		WHERE role = 'commercial'
+		SELECT u.id::text, u.full_name, COALESCE(u.base_city,''), COALESCE(u.base_postal_code,''),
+			0::float8 AS distance_km, COALESCE(ic.code,'')
+		FROM identity.users u
+		LEFT JOIN practice.app_invite_codes ic ON ic.user_id = u.id
+		WHERE u.role = 'commercial'
 		  AND (
-			base_lat IS NOT NULL AND base_lng IS NOT NULL
-			OR COALESCE(base_postal_code,'') <> ''
+			u.base_lat IS NOT NULL AND u.base_lng IS NOT NULL
+			OR COALESCE(u.base_postal_code,'') <> ''
 		  )
 		  AND (
-			regexp_replace(COALESCE(base_postal_code,''), '[^0-9]', '', 'g') = $1
+			regexp_replace(COALESCE(u.base_postal_code,''), '[^0-9]', '', 'g') = $1
 			OR (
 				length($2) >= 2
-				AND left(regexp_replace(COALESCE(base_postal_code,''), '[^0-9]', '', 'g'), 2) = $2
+				AND left(regexp_replace(COALESCE(u.base_postal_code,''), '[^0-9]', '', 'g'), 2) = $2
 			)
 		  )
 		ORDER BY
-			CASE WHEN regexp_replace(COALESCE(base_postal_code,''), '[^0-9]', '', 'g') = $1 THEN 0 ELSE 1 END,
-			full_name ASC
+			CASE WHEN regexp_replace(COALESCE(u.base_postal_code,''), '[^0-9]', '', 'g') = $1 THEN 0 ELSE 1 END,
+			u.full_name ASC
 		LIMIT $3`,
 		digits, prefix, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return scanNearbyCommercials(rows, false)
+	return s.scanNearbyCommercials(ctx, rows, false)
 }
 
-func scanNearbyCommercials(rows pgx.Rows, withDistance bool) ([]NearbyCommercial, error) {
+func (s *Store) scanNearbyCommercials(ctx context.Context, rows pgx.Rows, withDistance bool) ([]NearbyCommercial, error) {
 	out := make([]NearbyCommercial, 0)
 	for rows.Next() {
 		var c NearbyCommercial
 		var dist float64
-		if err := rows.Scan(&c.UserID, &c.FullName, &c.City, &c.PostalCode, &dist); err != nil {
+		if err := rows.Scan(&c.UserID, &c.FullName, &c.City, &c.PostalCode, &dist, &c.InviteCode); err != nil {
 			return nil, err
 		}
 		if withDistance {
 			c.DistanceKm = math.Round(dist*10) / 10
+		}
+		if c.InviteCode == "" {
+			if inv, err := s.EnsureAppInviteCode(ctx, c.UserID); err == nil {
+				c.InviteCode = inv.Code
+			}
 		}
 		out = append(out, c)
 	}

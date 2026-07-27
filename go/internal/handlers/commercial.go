@@ -11,6 +11,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func (a *API) registerCommercialRoutes(r chi.Router) {
@@ -21,6 +22,7 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Get("/commercial/network", a.commercialNetwork)
 		pr.Get("/commercial/vets", a.commercialListVets)
 		pr.Get("/commercial/referrals", a.commercialListReferrals)
+		pr.Get("/commercial/filiation", a.commercialListFiliation)
 		pr.Post("/commercial/vets", a.commercialEncodeVet)
 		pr.Post("/commercial/clients", a.commercialCreateClient)
 		pr.Get("/commercial/commissions", a.commercialCommissions)
@@ -28,7 +30,9 @@ func (a *API) registerCommercialRoutes(r chi.Router) {
 		pr.Patch("/commercial/me/payout-profile", a.commercialPatchPayoutProfile)
 		pr.Patch("/commercial/me/base-location", a.commercialPatchBaseLocation)
 		pr.Get("/commercial/prospects", a.commercialListProspects)
+		pr.Get("/commercial/prospects/lookup", a.commercialLookupProspect)
 		pr.Post("/commercial/prospects", a.commercialCreateProspect)
+		pr.Post("/commercial/prospects/{id}/claim", a.commercialClaimProspect)
 		pr.Patch("/commercial/prospects/{id}", a.commercialUpdateProspect)
 		pr.Delete("/commercial/prospects/{id}", a.commercialDeleteProspect)
 	})
@@ -94,6 +98,22 @@ func (a *API) commercialListReferrals(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, rows)
 }
 
+func (a *API) commercialListFiliation(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListFiliation(r.Context(), store.FiliationFilter{
+		CommercialIDs: []string{id.UserID},
+		Query:         strings.TrimSpace(r.URL.Query().Get("q")),
+	})
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
 type encodeVetReq struct {
 	Email        string `json:"email"`
 	Password     string `json:"password"`
@@ -126,7 +146,18 @@ func (a *API) commercialEncodeVet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
 		return
 	}
-	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
+	if existing, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {
+		if existing.Role == kernel.RoleVet {
+			assigned, aerr := a.store.GetAssignedCommercialID(r.Context(), existing.ID)
+			if aerr != nil && !errors.Is(aerr, store.ErrNotFound) {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if assigned != "" && assigned != id.UserID {
+				writeErr(w, r, http.StatusConflict, "conflict", "already_assigned")
+				return
+			}
+		}
 		writeErr(w, r, http.StatusConflict, "conflict", "email_already_exists")
 		return
 	} else if !errors.Is(err, store.ErrNotFound) {
@@ -304,6 +335,32 @@ func (a *API) commercialListProspects(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, page)
 }
 
+func (a *API) commercialLookupProspect(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCommercial(w, r); !ok {
+		return
+	}
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	res, err := a.store.LookupProspect(r.Context(), q)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, res)
+}
+
+func writeProspectOwned(w http.ResponseWriter, r *http.Request, owned *store.ErrProspectOwned) {
+	writeErrDetails(w, r, http.StatusConflict, "conflict", "prospect_already_owned", map[string]any{
+		"ownerName":    owned.OwnerName,
+		"ownerUserId":  owned.OwnerUserID,
+		"prospectId":   owned.ProspectID,
+		"practiceName": owned.PracticeName,
+	})
+}
+
 func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requireCommercial(w, r)
 	if !ok {
@@ -346,10 +403,41 @@ func (a *API) commercialCreateProspect(w http.ResponseWriter, r *http.Request) {
 	}
 	prospect, err := a.store.CreateProspect(r.Context(), id.UserID, in)
 	if err != nil {
+		var owned *store.ErrProspectOwned
+		if errors.As(err, &owned) {
+			writeProspectOwned(w, r, owned)
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, prospect)
+}
+
+func (a *API) commercialClaimProspect(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercial(w, r)
+	if !ok {
+		return
+	}
+	prospect, err := a.store.ClaimProspect(r.Context(), chi.URLParam(r, "id"), id.UserID)
+	if err != nil {
+		var owned *store.ErrProspectOwned
+		if errors.As(err, &owned) {
+			writeProspectOwned(w, r, owned)
+			return
+		}
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "prospect_already_owned")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, prospect)
 }
 
 func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
@@ -361,6 +449,25 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 	existing, err := a.store.GetProspect(r.Context(), id.UserID, prospectID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
+			// May be owned by someone else — surface that when possible.
+			if other, gerr := a.store.GetProspectByID(r.Context(), prospectID); gerr == nil && other.CommercialUserID != "" && other.CommercialUserID != id.UserID {
+				name := other.CommercialName
+				if name == "" {
+					// best-effort; store already may not join name
+					writeProspectOwned(w, r, &store.ErrProspectOwned{
+						OwnerUserID:  other.CommercialUserID,
+						ProspectID:   other.ID,
+						PracticeName: other.PracticeName,
+						Prospect:     other,
+					})
+					return
+				}
+				writeProspectOwned(w, r, &store.ErrProspectOwned{
+					OwnerName: name, OwnerUserID: other.CommercialUserID,
+					ProspectID: other.ID, PracticeName: other.PracticeName, Prospect: other,
+				})
+				return
+			}
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
@@ -373,6 +480,11 @@ func (a *API) commercialUpdateProspect(w http.ResponseWriter, r *http.Request) {
 	}
 	prospect, err := a.store.UpdateProspect(r.Context(), id.UserID, prospectID, in)
 	if err != nil {
+		var owned *store.ErrProspectOwned
+		if errors.As(err, &owned) {
+			writeProspectOwned(w, r, owned)
+			return
+		}
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
