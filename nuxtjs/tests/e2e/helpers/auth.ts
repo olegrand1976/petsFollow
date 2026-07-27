@@ -82,12 +82,25 @@ export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.te
   await page.waitForURL(/\/admin/, { timeout: 20000 })
 }
 
+/** Gate commercial : si contact_phone vide (staging sans re-seed), complète le numéro démo. */
+async function completeContactPhoneIfNeeded(page: Page, phone: string) {
+  if (!page.url().includes('/complete-contact-phone')) return
+  await waitForAuthForm(page, 'complete-contact-phone-form')
+  await fillField(page, 'complete-contact-phone', phone)
+  await Promise.all([
+    page.waitForURL((url) => !url.pathname.includes('/complete-contact-phone'), { timeout: 20000 }),
+    page.getByTestId('complete-contact-phone-submit').click(),
+  ])
+}
+
 export async function loginAsCommercial(
   page: Page,
   email = 'commercial.demo@petsfollow.test',
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
+  await completeContactPhoneIfNeeded(page, '0470 12 34 56')
   await page.waitForURL((url) => /^\/commercial(?:\/|$)/.test(url.pathname), { timeout: 20000 })
 }
 
@@ -97,6 +110,8 @@ export async function loginAsCommercialManager(
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
+  await completeContactPhoneIfNeeded(page, '0472 11 22 33')
   await page.waitForURL(/\/commercial-manager/, { timeout: 20000 })
 }
 
