@@ -64,11 +64,21 @@ func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	f := store.FiliationFilter{
-		BranchID: strings.TrimSpace(r.URL.Query().Get("branchId")),
-		Query:    strings.TrimSpace(r.URL.Query().Get("q")),
+		Query: strings.TrimSpace(r.URL.Query().Get("q")),
 	}
-	if cid := strings.TrimSpace(r.URL.Query().Get("commercialId")); cid != "" {
-		f.CommercialIDs = []string{cid}
+	if raw := strings.TrimSpace(r.URL.Query().Get("branchId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		f.BranchID = raw
+	}
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		f.CommercialIDs = []string{raw}
 	}
 	rows, err := a.store.ListFiliation(r.Context(), f)
 	if err != nil {
