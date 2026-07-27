@@ -716,6 +716,13 @@
   "settings": {
     "title": "Parametri",
     "subtitle": "Foglio informativo, disponibilità e messaggi automatici.",
+    "tabsLabel": "Sezioni dei parametri",
+    "tabs": {
+      "profile": "Profilo",
+      "calendar": "Agenda",
+      "notifications": "Notifiche",
+      "account": "Account"
+    },
     "avatar": {
       "title": "Immagine del profilo",
       "change": "Cambia foto",

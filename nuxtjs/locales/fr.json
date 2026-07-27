@@ -760,6 +760,13 @@
   "settings": {
     "title": "Paramètres",
     "subtitle": "Fiche d'information, disponibilité et messages automatiques.",
+    "tabsLabel": "Sections des paramètres",
+    "tabs": {
+      "profile": "Profil",
+      "calendar": "Agenda",
+      "notifications": "Notifications",
+      "account": "Compte"
+    },
     "avatar": {
       "title": "Photo de profil",
       "change": "Changer la photo",

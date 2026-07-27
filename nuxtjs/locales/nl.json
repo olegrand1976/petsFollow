@@ -268,6 +268,13 @@
   "settings": {
     "title": "Instellingen",
     "subtitle": "Praktijkprofiel, beschikbaarheid en automatische berichten.",
+    "tabsLabel": "Instellingensecties",
+    "tabs": {
+      "profile": "Profiel",
+      "calendar": "Agenda",
+      "notifications": "Meldingen",
+      "account": "Account"
+    },
     "avatar": {
       "title": "Profielfoto",
       "change": "Foto wijzigen",
