@@ -483,6 +483,10 @@
         "nextVisit": "Volgende afspraak"
       },
       "summaryTitle": "Samenvatting",
+      "microchip": "Chipnummer",
+      "healthBookNumber": "Paspoortnummer",
+      "healthBookPdf": "Paspoort (PDF)",
+      "healthBookOpenPdf": "PDF openen",
       "timelineRecentTitle": "Recente gebeurtenissen",
       "timelineTypeHeartrate": "Hartslagmeting",
       "timelineTypeWeight": "Gewicht",

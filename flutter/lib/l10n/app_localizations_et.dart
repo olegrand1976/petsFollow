@@ -747,6 +747,46 @@ class AppLocalizationsEt extends AppLocalizations {
   String get breed => 'Tõug';
 
   @override
+  String get petMicrochipOptional => 'Kiibi number (valikuline)';
+
+  @override
+  String get petHealthBookNumberOptional => 'Tervisekaardi number (valikuline)';
+
+  @override
+  String get petHealthBookAddPages => 'Lisa tervisekaardi fotod';
+
+  @override
+  String get petHealthBookReplacePages => 'Asenda PDF (fotod)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count lehekülg(e) valitud';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'Tervisekaardi PDF lisatud';
+
+  @override
+  String get petHealthBookRemovePdf => 'Eemalda';
+
+  @override
+  String get petHealthBookOpenPdf => 'Ava tervisekaart (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Kiip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Kaart: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Lemmikloom salvestatud, kuid tervisekaarti ei õnnestunud üles laadida';
+
+  @override
   String get choosePlan => 'Valige oma plaan';
 
   @override

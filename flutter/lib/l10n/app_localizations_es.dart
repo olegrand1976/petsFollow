@@ -749,6 +749,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get breed => 'Raza';
 
   @override
+  String get petMicrochipOptional => 'N.º de chip (opcional)';
+
+  @override
+  String get petHealthBookNumberOptional => 'N.º de cartilla (opcional)';
+
+  @override
+  String get petHealthBookAddPages => 'Añadir fotos de la cartilla';
+
+  @override
+  String get petHealthBookReplacePages => 'Sustituir PDF (fotos)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count página(s) seleccionada(s)';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF de la cartilla adjunto';
+
+  @override
+  String get petHealthBookRemovePdf => 'Eliminar';
+
+  @override
+  String get petHealthBookOpenPdf => 'Abrir cartilla (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Cartilla: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Mascota guardada, pero no se pudo enviar la cartilla';
+
+  @override
   String get choosePlan => 'Elija su plan';
 
   @override

@@ -927,6 +927,10 @@
         "nextVisit": "Prossimo appuntamento"
       },
       "summaryTitle": "Riepilogo",
+      "microchip": "N. microchip",
+      "healthBookNumber": "N. libretto",
+      "healthBookPdf": "Libretto (PDF)",
+      "healthBookOpenPdf": "Apri PDF",
       "timelineRecentTitle": "Ultimi eventi",
       "timelineTypeHeartrate": "Lettura cardiaca",
       "timelineTypeWeight": "Peso",

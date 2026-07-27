@@ -280,6 +280,38 @@
   "petNameRequired": "Indiquez le nom de l’animal",
   "species": "Espèce",
   "breed": "Race",
+  "petMicrochipOptional": "N° de puce (optionnel)",
+  "petHealthBookNumberOptional": "N° de carnet (optionnel)",
+  "petHealthBookAddPages": "Ajouter des photos du carnet",
+  "petHealthBookReplacePages": "Remplacer le PDF (photos)",
+  "petHealthBookPagesCount": "{count} page(s) sélectionnée(s)",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "PDF du carnet joint",
+  "petHealthBookRemovePdf": "Supprimer",
+  "petHealthBookOpenPdf": "Ouvrir le carnet (PDF)",
+  "petMicrochipLabel": "Puce : {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Carnet : {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Animal enregistré, mais le carnet n'a pas pu être envoyé",
   "choosePlan": "Choisissez votre formule",
   "recommended": "Recommandé",
   "autoRenewTitle": "Renouveler automatiquement",

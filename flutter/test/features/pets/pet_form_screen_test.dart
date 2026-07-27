@@ -113,6 +113,9 @@ void main() {
     await tester.enterText(find.byKey(const Key('pet_form_name')), 'Rex');
     await tester.pump();
     expect(find.text(l10n.petNameRequired), findsNothing);
+    expect(find.byKey(const Key('pet_form_microchip')), findsOneWidget);
+    expect(find.byKey(const Key('pet_form_health_book_number')), findsOneWidget);
+    expect(find.byKey(const Key('pet_form_health_book_pick')), findsOneWidget);
 
     await tester.tap(saveCta);
     await tester.pump();
@@ -124,6 +127,8 @@ void main() {
     expect(createPetBody?['plan'], 'triennial');
     expect(createPetBody?['billingMode'], 'subscription');
     expect(createPetBody?['skipCheckout'], isTrue);
+    expect(createPetBody?['microchipNumber'], '');
+    expect(createPetBody?['healthBookNumber'], '');
     expect(find.byKey(const Key('pet_form_saved')), findsOneWidget);
     expect(find.text(l10n.petSavedPendingPayment), findsOneWidget);
     expect(find.byType(PetFormScreen), findsNothing);
@@ -234,6 +239,11 @@ void main() {
     await tester.enterText(find.byKey(const Key('pet_form_name')), 'Justine');
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.text('3,50 € / mois'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('3,50 € / mois'));
     await tester.pump();
 

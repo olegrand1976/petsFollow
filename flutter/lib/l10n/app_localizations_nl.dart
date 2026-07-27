@@ -748,6 +748,46 @@ class AppLocalizationsNl extends AppLocalizations {
   String get breed => 'Ras';
 
   @override
+  String get petMicrochipOptional => 'Chipnummer (optioneel)';
+
+  @override
+  String get petHealthBookNumberOptional => 'Paspoortnummer (optioneel)';
+
+  @override
+  String get petHealthBookAddPages => 'Foto\'s van het paspoort toevoegen';
+
+  @override
+  String get petHealthBookReplacePages => 'PDF vervangen (foto\'s)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count pagina(\'s) geselecteerd';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF van het paspoort bijgevoegd';
+
+  @override
+  String get petHealthBookRemovePdf => 'Verwijderen';
+
+  @override
+  String get petHealthBookOpenPdf => 'Paspoort openen (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Paspoort: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Huisdier opgeslagen, maar het paspoort kon niet worden geüpload';
+
+  @override
   String get choosePlan => 'Kies uw formule';
 
   @override

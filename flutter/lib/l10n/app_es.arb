@@ -273,6 +273,38 @@
   "petNameRequired": "Indica el nombre del animal",
   "species": "Especie",
   "breed": "Raza",
+  "petMicrochipOptional": "N.º de chip (opcional)",
+  "petHealthBookNumberOptional": "N.º de cartilla (opcional)",
+  "petHealthBookAddPages": "Añadir fotos de la cartilla",
+  "petHealthBookReplacePages": "Sustituir PDF (fotos)",
+  "petHealthBookPagesCount": "{count} página(s) seleccionada(s)",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "PDF de la cartilla adjunto",
+  "petHealthBookRemovePdf": "Eliminar",
+  "petHealthBookOpenPdf": "Abrir cartilla (PDF)",
+  "petMicrochipLabel": "Chip: {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Cartilla: {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Mascota guardada, pero no se pudo enviar la cartilla",
   "choosePlan": "Elija su plan",
   "recommended": "Recomendado",
   "autoRenewTitle": "Renovación automática",

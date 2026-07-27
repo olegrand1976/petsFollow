@@ -273,6 +273,38 @@
   "petNameRequired": "Enter the pet’s name",
   "species": "Species",
   "breed": "Breed",
+  "petMicrochipOptional": "Microchip number (optional)",
+  "petHealthBookNumberOptional": "Health booklet number (optional)",
+  "petHealthBookAddPages": "Add health booklet photos",
+  "petHealthBookReplacePages": "Replace PDF (photos)",
+  "petHealthBookPagesCount": "{count} page(s) selected",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "Health booklet PDF attached",
+  "petHealthBookRemovePdf": "Remove",
+  "petHealthBookOpenPdf": "Open health booklet (PDF)",
+  "petMicrochipLabel": "Chip: {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Booklet: {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Pet saved, but the health booklet could not be uploaded",
   "choosePlan": "Choose your plan",
   "recommended": "Recommended",
   "autoRenewTitle": "Auto-renew",

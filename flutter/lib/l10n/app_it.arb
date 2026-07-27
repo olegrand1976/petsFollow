@@ -280,6 +280,38 @@
   "petNameRequired": "Indica il nome dell’animale",
   "species": "Specie",
   "breed": "Razza",
+  "petMicrochipOptional": "N. microchip (opzionale)",
+  "petHealthBookNumberOptional": "N. libretto (opzionale)",
+  "petHealthBookAddPages": "Aggiungi foto del libretto",
+  "petHealthBookReplacePages": "Sostituisci PDF (foto)",
+  "petHealthBookPagesCount": "{count} pagina/e selezionata/e",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "PDF del libretto allegato",
+  "petHealthBookRemovePdf": "Rimuovi",
+  "petHealthBookOpenPdf": "Apri libretto (PDF)",
+  "petMicrochipLabel": "Chip: {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Libretto: {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Animale salvato, ma il libretto non è stato caricato",
   "choosePlan": "Scegli la tua formula",
   "recommended": "Raccomandato",
   "autoRenewTitle": "Rinnova automaticamente",

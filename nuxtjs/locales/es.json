@@ -483,6 +483,10 @@
         "nextVisit": "Próxima cita"
       },
       "summaryTitle": "Resumen",
+      "microchip": "N.º de chip",
+      "healthBookNumber": "N.º de cartilla",
+      "healthBookPdf": "Cartilla (PDF)",
+      "healthBookOpenPdf": "Abrir PDF",
       "timelineRecentTitle": "Últimos eventos",
       "timelineTypeHeartrate": "Lectura cardíaca",
       "timelineTypeWeight": "Peso",

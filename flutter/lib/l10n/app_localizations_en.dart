@@ -746,6 +746,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get breed => 'Breed';
 
   @override
+  String get petMicrochipOptional => 'Microchip number (optional)';
+
+  @override
+  String get petHealthBookNumberOptional => 'Health booklet number (optional)';
+
+  @override
+  String get petHealthBookAddPages => 'Add health booklet photos';
+
+  @override
+  String get petHealthBookReplacePages => 'Replace PDF (photos)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count page(s) selected';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'Health booklet PDF attached';
+
+  @override
+  String get petHealthBookRemovePdf => 'Remove';
+
+  @override
+  String get petHealthBookOpenPdf => 'Open health booklet (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Booklet: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Pet saved, but the health booklet could not be uploaded';
+
+  @override
   String get choosePlan => 'Choose your plan';
 
   @override

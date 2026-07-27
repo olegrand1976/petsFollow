@@ -59,6 +59,11 @@ type Pet struct {
 	PhotoURL      string    `json:"photoUrl"`
 	PaymentStatus string    `json:"paymentStatus"`
 	LitterTag     string    `json:"litterTag,omitempty"`
+	MicrochipNumber        string `json:"microchipNumber,omitempty"`
+	HealthBookNumber       string `json:"healthBookNumber,omitempty"`
+	HealthBookPDFURL       string `json:"healthBookPdfUrl,omitempty"` // legacy; never a public media URL
+	HealthBookPDFAttached  bool   `json:"healthBookPdfAttached,omitempty"`
+	HealthBookPDFObjectKey string `json:"-"`
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
@@ -233,8 +238,11 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	ct, err := s.pool.Exec(ctx, `
-		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$9`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag, p.OwnerUserID)
+		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8,
+			microchip_number=$9, health_book_number=$10, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$11`,
+		p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag,
+		p.MicrochipNumber, p.HealthBookNumber, p.OwnerUserID)
 	if err != nil {
 		return err
 	}
@@ -244,17 +252,55 @@ func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	return nil
 }
 
+func (s *Store) UpdatePetHealthBookPDF(ctx context.Context, petID, url, objectKey string) error {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets SET health_book_pdf_url=$2, health_book_pdf_object_key=$3, updated_at=NOW()
+		WHERE id=$1`, petID, url, objectKey)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) ClearPetHealthBookPDF(ctx context.Context, petID string) (previousObjectKey string, err error) {
+	err = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(health_book_pdf_object_key,'') FROM pets.pets WHERE id=$1`, petID).Scan(&previousObjectKey)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets SET health_book_pdf_url='', health_book_pdf_object_key='', updated_at=NOW()
+		WHERE id=$1`, petID)
+	if err != nil {
+		return "", err
+	}
+	if ct.RowsAffected() == 0 {
+		return "", ErrNotFound
+	}
+	return previousObjectKey, nil
+}
+
 func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 	var p Pet
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''), created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
-		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt)
+		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+		&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Pet{}, ErrNotFound
 	}
 	if err == nil {
+		decoratePetHealthBook(&p)
 		if ent, e := s.GetEntitlementByPetID(ctx, id); e == nil {
 			p.Entitlement = &ent
 		}
@@ -270,7 +316,9 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''), created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
 		return nil, err
@@ -284,7 +332,9 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 	rows, err := s.pool.Query(ctx, `
 		SELECT p.id::text, COALESCE(p.practice_id::text,''), p.owner_user_id::text, p.name, p.species,
 			COALESCE(p.breed,''), p.birth_date, p.weight_kg, COALESCE(p.photo_url,''),
-			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''), p.created_at,
+			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''),
+			COALESCE(p.microchip_number,''), COALESCE(p.health_book_number,''),
+			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''), p.created_at,
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -325,11 +375,13 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 		var p Pet
 		if err := rows.Scan(
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
-			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt,
+			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey, &p.CreatedAt,
 			&p.Permission,
 		); err != nil {
 			return nil, err
 		}
+		decoratePetHealthBook(&p)
 		out = append(out, p)
 	}
 	if out == nil {
@@ -351,7 +403,9 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''), created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {
 		return nil, err
@@ -364,12 +418,26 @@ func scanPets(rows pgx.Rows) ([]Pet, error) {
 	var out []Pet
 	for rows.Next() {
 		var p Pet
-		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey, &p.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
+		decoratePetHealthBook(&p)
 		out = append(out, p)
 	}
 	return out, rows.Err()
+}
+
+// decoratePetHealthBook exposes attachment via flag only — never a public media URL (PHI).
+func decoratePetHealthBook(p *Pet) {
+	if p == nil {
+		return
+	}
+	attached := strings.TrimSpace(p.HealthBookPDFObjectKey) != ""
+	p.HealthBookPDFAttached = attached
+	p.HealthBookPDFURL = ""
 }
 
 func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]Pet, error) {

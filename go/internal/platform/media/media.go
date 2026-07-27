@@ -87,7 +87,7 @@ func New(cfg config.Config) (*Bundle, error) {
 	}
 	return &Bundle{
 		Store:        st,
-		LocalHandler: DenySensitivePrefixes(handler, "visit-reports/"),
+		LocalHandler: DenySensitivePrefixes(handler, "visit-reports/", "health-books/"),
 		LocalMount:   "/media/",
 	}, nil
 }
@@ -117,7 +117,14 @@ func IsSensitiveObjectKey(objectKey string) bool {
 	objectKey = path.Clean("/" + objectKey)
 	objectKey = strings.TrimPrefix(objectKey, "/")
 	objectKey = strings.ToLower(objectKey)
-	return objectKey == "visit-reports" || strings.HasPrefix(objectKey, "visit-reports/")
+	switch {
+	case objectKey == "visit-reports", strings.HasPrefix(objectKey, "visit-reports/"):
+		return true
+	case objectKey == "health-books", strings.HasPrefix(objectKey, "health-books/"):
+		return true
+	default:
+		return false
+	}
 }
 
 func ExtForContentType(contentType string) (string, error) {

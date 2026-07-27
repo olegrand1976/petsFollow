@@ -111,6 +111,8 @@ func (s *localStore) Open(ctx context.Context, objectKey string) (io.ReadCloser,
 	}
 	ct := "application/octet-stream"
 	switch strings.ToLower(filepath.Ext(full)) {
+	case ".pdf":
+		ct = "application/pdf"
 	case ".mp3":
 		ct = "audio/mpeg"
 	case ".m4a", ".mp4":

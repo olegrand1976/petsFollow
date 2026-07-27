@@ -105,6 +105,26 @@
             <dt>{{ $t('clients.pet.columnWeight') }}</dt>
             <dd>{{ pet.weightKg }} kg</dd>
           </div>
+          <div v-if="pet.microchipNumber">
+            <dt>{{ $t('clients.pet.microchip') }}</dt>
+            <dd data-testid="pet-microchip">{{ pet.microchipNumber }}</dd>
+          </div>
+          <div v-if="pet.healthBookNumber">
+            <dt>{{ $t('clients.pet.healthBookNumber') }}</dt>
+            <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber }}</dd>
+          </div>
+          <div v-if="pet.healthBookPdfAttached">
+            <dt>{{ $t('clients.pet.healthBookPdf') }}</dt>
+            <dd>
+              <a
+                class="pro-link"
+                :href="`/api/pets/${petId}/health-book`"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="pet-health-book-pdf"
+              >{{ $t('clients.pet.healthBookOpenPdf') }}</a>
+            </dd>
+          </div>
           <div>
             <dt>{{ $t('clients.pet.summaryPlan') }}</dt>
             <dd>{{ petPlanLabel }}</dd>

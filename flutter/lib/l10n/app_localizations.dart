@@ -1492,6 +1492,72 @@ abstract class AppLocalizations {
   /// **'Race'**
   String get breed;
 
+  /// No description provided for @petMicrochipOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'N° de puce (optionnel)'**
+  String get petMicrochipOptional;
+
+  /// No description provided for @petHealthBookNumberOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'N° de carnet (optionnel)'**
+  String get petHealthBookNumberOptional;
+
+  /// No description provided for @petHealthBookAddPages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter des photos du carnet'**
+  String get petHealthBookAddPages;
+
+  /// No description provided for @petHealthBookReplacePages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer le PDF (photos)'**
+  String get petHealthBookReplacePages;
+
+  /// No description provided for @petHealthBookPagesCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} page(s) sélectionnée(s)'**
+  String petHealthBookPagesCount(int count);
+
+  /// No description provided for @petHealthBookPdfAttached.
+  ///
+  /// In fr, this message translates to:
+  /// **'PDF du carnet joint'**
+  String get petHealthBookPdfAttached;
+
+  /// No description provided for @petHealthBookRemovePdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get petHealthBookRemovePdf;
+
+  /// No description provided for @petHealthBookOpenPdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le carnet (PDF)'**
+  String get petHealthBookOpenPdf;
+
+  /// No description provided for @petMicrochipLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Puce : {number}'**
+  String petMicrochipLabel(String number);
+
+  /// No description provided for @petHealthBookNumberLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carnet : {number}'**
+  String petHealthBookNumberLabel(String number);
+
+  /// No description provided for @errorHealthBookUploadFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal enregistré, mais le carnet n\'a pas pu être envoyé'**
+  String get errorHealthBookUploadFailed;
+
   /// No description provided for @choosePlan.
   ///
   /// In fr, this message translates to:

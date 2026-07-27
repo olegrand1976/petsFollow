@@ -751,6 +751,46 @@ class AppLocalizationsIt extends AppLocalizations {
   String get breed => 'Razza';
 
   @override
+  String get petMicrochipOptional => 'N. microchip (opzionale)';
+
+  @override
+  String get petHealthBookNumberOptional => 'N. libretto (opzionale)';
+
+  @override
+  String get petHealthBookAddPages => 'Aggiungi foto del libretto';
+
+  @override
+  String get petHealthBookReplacePages => 'Sostituisci PDF (foto)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count pagina/e selezionata/e';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF del libretto allegato';
+
+  @override
+  String get petHealthBookRemovePdf => 'Rimuovi';
+
+  @override
+  String get petHealthBookOpenPdf => 'Apri libretto (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Libretto: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Animale salvato, ma il libretto non è stato caricato';
+
+  @override
   String get choosePlan => 'Scegli la tua formula';
 
   @override

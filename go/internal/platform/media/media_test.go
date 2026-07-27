@@ -107,13 +107,17 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"Visit-Reports/x",
 		"/visit-reports/x",
 		"./visit-reports/x",
+		"health-books",
+		"health-books/",
+		"health-books/p1/a.pdf",
+		"Health-Books/x",
 	}
 	for _, k := range yes {
 		if !IsSensitiveObjectKey(k) {
 			t.Fatalf("expected sensitive: %q", k)
 		}
 	}
-	no := []string{"avatars/u1.png", "pets/p1.jpg", "visit-report/x", ""}
+	no := []string{"avatars/u1.png", "pets/p1.jpg", "visit-report/x", "documents/p1/a.pdf", ""}
 	for _, k := range no {
 		if IsSensitiveObjectKey(k) {
 			t.Fatalf("expected not sensitive: %q", k)

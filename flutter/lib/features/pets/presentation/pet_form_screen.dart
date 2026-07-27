@@ -22,12 +22,15 @@ class _PetFormScreenState extends State<PetFormScreen> {
   final name = TextEditingController();
   String selectedSpecies = 'dog';
   final breed = TextEditingController();
+  final microchip = TextEditingController();
+  final healthBookNumber = TextEditingController();
   String selectedPlan = 'triennial';
   bool autoRenew = true;
   bool loading = false;
   bool _nameError = false;
   List<Map<String, dynamic>> plans = [];
   XFile? photoFile;
+  List<XFile> healthBookPages = [];
 
   @override
   void initState() {
@@ -39,6 +42,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
   void dispose() {
     name.dispose();
     breed.dispose();
+    microchip.dispose();
+    healthBookNumber.dispose();
     super.dispose();
   }
 
@@ -87,6 +92,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (file != null) setState(() => photoFile = file);
   }
 
+  Future<void> _pickHealthBookPages() async {
+    final picker = ImagePicker();
+    final files = await picker.pickMultiImage(
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
+    );
+    if (files.isEmpty) return;
+    setState(() {
+      healthBookPages = [...healthBookPages, ...files].take(10).toList();
+    });
+  }
+
   /// Monthly is subscription-only; annual/triennial allow one-time or auto-renew.
   bool get _subscriptionForced => selectedPlan == 'monthly';
 
@@ -128,6 +146,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
         'name': trimmed,
         'species': selectedSpecies,
         'breed': breed.text.trim(),
+        'microchipNumber': microchip.text.trim(),
+        'healthBookNumber': healthBookNumber.text.trim(),
         'plan': selectedPlan,
         'billingMode': billingMode,
         'skipCheckout': !payNow,
@@ -157,6 +177,21 @@ class _PetFormScreenState extends State<PetFormScreen> {
             final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(l10n.errorPhotoUploadFailed)),
+            );
+          }
+        }
+      }
+      if (healthBookPages.isNotEmpty) {
+        try {
+          await ApiClient.instance.uploadPetHealthBook(
+            petId,
+            healthBookPages.map((f) => f.path).toList(),
+          );
+        } catch (_) {
+          if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorHealthBookUploadFailed)),
             );
           }
         }
@@ -317,6 +352,50 @@ class _PetFormScreenState extends State<PetFormScreen> {
                   TextField(
                       controller: breed,
                       decoration: InputDecoration(labelText: l10n.breed)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_microchip'),
+                    controller: microchip,
+                    decoration: InputDecoration(
+                      labelText: l10n.petMicrochipOptional,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_health_book_number'),
+                    controller: healthBookNumber,
+                    decoration: InputDecoration(
+                      labelText: l10n.petHealthBookNumberOptional,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('pet_form_health_book_pick'),
+                    onPressed: loading ? null : _pickHealthBookPages,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(
+                      healthBookPages.isEmpty
+                          ? l10n.petHealthBookAddPages
+                          : l10n.petHealthBookPagesCount(healthBookPages.length),
+                    ),
+                  ),
+                  if (healthBookPages.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (var i = 0; i < healthBookPages.length; i++)
+                          InputChip(
+                            label: Text('${i + 1}'),
+                            onDeleted: () => setState(() {
+                              healthBookPages = List.of(healthBookPages)
+                                ..removeAt(i);
+                            }),
+                          ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Text(l10n.choosePlan,
                       style: Theme.of(context).textTheme.titleMedium),

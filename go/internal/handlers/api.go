@@ -57,6 +57,9 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 // TestReplaceNotifier swaps the email notifier (integration tests only).
 func (a *API) TestReplaceNotifier(n *email.Notifier) { a.notifier = n }
 
+// TestSetMedia installs a media store (integration tests only).
+func (a *API) TestSetMedia(m media.Store) { a.media = m }
+
 // TestSetOpsNotifyEmail sets OPS_NOTIFY_EMAIL (integration tests only).
 func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
@@ -160,6 +163,9 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/pets/{petID}/visits", a.createVisit)
 		pr.Put("/pets/{petID}", a.updatePet)
 		pr.Post("/pets/{petID}/photo", a.uploadPetPhoto)
+		pr.Get("/pets/{petID}/health-book", a.getPetHealthBook)
+		pr.Post("/pets/{petID}/health-book", a.uploadPetHealthBook)
+		pr.Delete("/pets/{petID}/health-book", a.deletePetHealthBook)
 		pr.Get("/pets/{petID}/documents", a.listPetDocuments)
 		pr.Post("/pets/{petID}/documents", a.uploadPetDocument)
 		pr.Delete("/pets/documents/{documentID}", a.deletePetDocument)
@@ -457,18 +463,20 @@ func (a *API) listMyPets(w http.ResponseWriter, r *http.Request) {
 }
 
 type petReq struct {
-	Name         string   `json:"name"`
-	Species      string   `json:"species"`
-	Breed        string   `json:"breed"`
-	BirthDate    *string  `json:"birthDate"`
-	WeightKg     *float64 `json:"weightKg"`
-	PhotoURL     string   `json:"photoUrl"`
-	LitterTag    string   `json:"litterTag"`
-	Plan         string   `json:"plan"`
-	BillingMode  string   `json:"billingMode"`
-	SuccessURL   string   `json:"successUrl"`
-	CancelURL    string   `json:"cancelUrl"`
-	SkipCheckout bool     `json:"skipCheckout"`
+	Name             string   `json:"name"`
+	Species          string   `json:"species"`
+	Breed            string   `json:"breed"`
+	BirthDate        *string  `json:"birthDate"`
+	WeightKg         *float64 `json:"weightKg"`
+	PhotoURL         string   `json:"photoUrl"`
+	LitterTag        string   `json:"litterTag"`
+	MicrochipNumber  *string  `json:"microchipNumber"`
+	HealthBookNumber *string  `json:"healthBookNumber"`
+	Plan             string   `json:"plan"`
+	BillingMode      string   `json:"billingMode"`
+	SuccessURL       string   `json:"successUrl"`
+	CancelURL        string   `json:"cancelUrl"`
+	SkipCheckout     bool     `json:"skipCheckout"`
 }
 
 type petsBatchReq struct {
@@ -526,6 +534,12 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		Name: name, Species: species, Breed: strings.TrimSpace(req.Breed), WeightKg: req.WeightKg,
 		PhotoURL: req.PhotoURL, LitterTag: strings.TrimSpace(req.LitterTag),
 		OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
+	}
+	if req.MicrochipNumber != nil {
+		p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+	}
+	if req.HealthBookNumber != nil {
+		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
 	}
 	if req.BirthDate != nil {
 		raw := strings.TrimSpace(*req.BirthDate)
@@ -616,6 +630,12 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 			LitterTag:   strings.TrimSpace(req.LitterTag),
 			OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
 		}
+		if req.MicrochipNumber != nil {
+			p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+		}
+		if req.HealthBookNumber != nil {
+			p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
+		}
 		if req.BirthDate != nil {
 			raw := strings.TrimSpace(*req.BirthDate)
 			if raw != "" {
@@ -674,9 +694,16 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		ID: existing.ID, Name: req.Name, Species: req.Species, Breed: req.Breed,
 		WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID,
 		LitterTag: existing.LitterTag,
+		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
+	}
+	if req.MicrochipNumber != nil {
+		p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+	}
+	if req.HealthBookNumber != nil {
+		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
 	}
 	// Champs omis : conserver les valeurs existantes (édition partielle mobile).
 	if strings.TrimSpace(req.PhotoURL) == "" {

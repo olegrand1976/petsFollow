@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
@@ -126,6 +129,29 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.errorGeneric('photo'))),
+        );
+      }
+    }
+  }
+
+  Future<void> _openHealthBookPdf() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final bytes = await ApiClient.instance.downloadPetHealthBook(pet.id);
+      if (bytes.isEmpty) throw StateError('empty pdf');
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/health-book-${pet.id}.pdf');
+      await file.writeAsBytes(bytes, flush: true);
+      final opened = await openExternalUrl(file.uri.toString());
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric('pdf'))),
         );
       }
     }
@@ -298,6 +324,28 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                 const SizedBox(height: 4),
                 Text(species, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.gold)),
                 Text(pet.breed, style: TextStyle(color: p.textMuted)),
+                if (pet.microchipNumber != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.petMicrochipLabel(pet.microchipNumber!),
+                    style: TextStyle(color: p.textMuted, fontSize: 13),
+                  ),
+                ],
+                if (pet.healthBookNumber != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.petHealthBookNumberLabel(pet.healthBookNumber!),
+                    style: TextStyle(color: p.textMuted, fontSize: 13),
+                  ),
+                ],
+                if (pet.healthBookPdfAttached) ...[
+                  TextButton.icon(
+                    key: Key('pet_health_book_open_${pet.id}'),
+                    onPressed: _openHealthBookPdf,
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: Text(l10n.petHealthBookOpenPdf),
+                  ),
+                ],
                 if (pet.weightKg != null) ...[
                   const SizedBox(height: 4),
                   Text(

@@ -483,6 +483,10 @@
         "nextVisit": "Järgmine vastuvõtt"
       },
       "summaryTitle": "Kokkuvõte",
+      "microchip": "Kiibi number",
+      "healthBookNumber": "Tervisekaardi number",
+      "healthBookPdf": "Tervisekaart (PDF)",
+      "healthBookOpenPdf": "Ava PDF",
       "timelineRecentTitle": "Viimased sündmused",
       "timelineTypeHeartrate": "Südame löögisagedus",
       "timelineTypeWeight": "Kaal",

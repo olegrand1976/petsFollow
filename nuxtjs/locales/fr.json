@@ -927,6 +927,10 @@
         "nextVisit": "Prochain RDV"
       },
       "summaryTitle": "Résumé",
+      "microchip": "N° de puce",
+      "healthBookNumber": "N° de carnet",
+      "healthBookPdf": "Carnet (PDF)",
+      "healthBookOpenPdf": "Ouvrir le PDF",
       "timelineRecentTitle": "Derniers événements",
       "timelineTypeHeartrate": "Relevé cardiaque",
       "timelineTypeWeight": "Poids",

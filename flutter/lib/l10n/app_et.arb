@@ -273,6 +273,38 @@
   "petNameRequired": "Sisesta looma nimi",
   "species": "Liik",
   "breed": "Tõug",
+  "petMicrochipOptional": "Kiibi number (valikuline)",
+  "petHealthBookNumberOptional": "Tervisekaardi number (valikuline)",
+  "petHealthBookAddPages": "Lisa tervisekaardi fotod",
+  "petHealthBookReplacePages": "Asenda PDF (fotod)",
+  "petHealthBookPagesCount": "{count} lehekülg(e) valitud",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "Tervisekaardi PDF lisatud",
+  "petHealthBookRemovePdf": "Eemalda",
+  "petHealthBookOpenPdf": "Ava tervisekaart (PDF)",
+  "petMicrochipLabel": "Kiip: {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Kaart: {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Lemmikloom salvestatud, kuid tervisekaarti ei õnnestunud üles laadida",
   "choosePlan": "Valige oma plaan",
   "recommended": "Soovitatud",
   "autoRenewTitle": "Automaatne uuendamine",

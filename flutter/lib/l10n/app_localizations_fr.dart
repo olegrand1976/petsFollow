@@ -749,6 +749,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get breed => 'Race';
 
   @override
+  String get petMicrochipOptional => 'N° de puce (optionnel)';
+
+  @override
+  String get petHealthBookNumberOptional => 'N° de carnet (optionnel)';
+
+  @override
+  String get petHealthBookAddPages => 'Ajouter des photos du carnet';
+
+  @override
+  String get petHealthBookReplacePages => 'Remplacer le PDF (photos)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count page(s) sélectionnée(s)';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF du carnet joint';
+
+  @override
+  String get petHealthBookRemovePdf => 'Supprimer';
+
+  @override
+  String get petHealthBookOpenPdf => 'Ouvrir le carnet (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Puce : $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Carnet : $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Animal enregistré, mais le carnet n\'a pas pu être envoyé';
+
+  @override
   String get choosePlan => 'Choisissez votre formule';
 
   @override

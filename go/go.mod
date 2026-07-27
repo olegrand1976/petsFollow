@@ -7,15 +7,18 @@ require (
 	firebase.google.com/go/v4 v4.15.2
 	github.com/coder/websocket v1.8.12
 	github.com/coreos/go-oidc/v3 v3.10.0
+	github.com/disintegration/imaging v1.6.2
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
+	github.com/phpdave11/gofpdf v1.4.2
 	github.com/pquerna/otp v1.5.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/stripe/stripe-go/v81 v81.4.0
 	github.com/xuri/excelize/v2 v2.9.0
 	golang.org/x/crypto v0.31.0
+	golang.org/x/image v0.23.0
 	google.golang.org/api v0.215.0
 )
 

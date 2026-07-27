@@ -817,6 +817,37 @@ class ApiClient {
     return res.data['data'] as Map<String, dynamic>;
   }
 
+  /// Multi-image health book → server builds one compressed PDF.
+  Future<Map<String, dynamic>> uploadPetHealthBook(
+    String petId,
+    List<String> filePaths,
+  ) async {
+    final files = <MultipartFile>[];
+    for (var i = 0; i < filePaths.length; i++) {
+      files.add(await MultipartFile.fromFile(
+        filePaths[i],
+        filename: 'page_$i.jpg',
+      ));
+    }
+    final form = FormData.fromMap({'files': files});
+    final res = await dio.post('/api/v1/pets/$petId/health-book', data: form);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> deletePetHealthBook(String petId) async {
+    final res = await dio.delete('/api/v1/pets/$petId/health-book');
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  /// Authenticated PDF bytes (PHI — never a public media URL).
+  Future<List<int>> downloadPetHealthBook(String petId) async {
+    final res = await dio.get<List<int>>(
+      '/api/v1/pets/$petId/health-book',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return res.data ?? const <int>[];
+  }
+
   Future<void> changePassword(String currentPassword, String newPassword) async {
     final body = <String, dynamic>{'newPassword': newPassword};
     if (currentPassword.isNotEmpty) {

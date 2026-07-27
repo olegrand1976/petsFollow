@@ -59,6 +59,10 @@ class Pet {
     this.entitlement,
     this.heartrateDurationsSec = const [60],
     this.weightKg,
+    this.microchipNumber,
+    this.healthBookNumber,
+    this.healthBookPdfUrl,
+    this.healthBookPdfAttached = false,
   });
 
   final String id;
@@ -75,6 +79,11 @@ class Pet {
   final List<int> heartrateDurationsSec;
   /// Last recorded weight (kg) from API `weightKg` / `pets.weight_kg`.
   final double? weightKg;
+  final String? microchipNumber;
+  final String? healthBookNumber;
+  /// Legacy / unused public URL — prefer [healthBookPdfAttached] + auth stream.
+  final String? healthBookPdfUrl;
+  final bool healthBookPdfAttached;
 
   /// True when the logged-in client owns this pet (billing / HR / edit).
   bool get isOwner {
@@ -151,6 +160,16 @@ class Pet {
           ? const [60]
           : rawDurations.map((e) => (e as num).toInt()).toList(),
       weightKg: (json['weightKg'] as num?)?.toDouble(),
+      microchipNumber: _optionalString(json['microchipNumber']),
+      healthBookNumber: _optionalString(json['healthBookNumber']),
+      healthBookPdfUrl: resolveMediaUrl(_optionalString(json['healthBookPdfUrl'])),
+      healthBookPdfAttached: json['healthBookPdfAttached'] == true,
     );
+  }
+
+  static String? _optionalString(dynamic v) {
+    final s = (v as String?)?.trim();
+    if (s == null || s.isEmpty) return null;
+    return s;
   }
 }

@@ -111,10 +111,11 @@ func (s *Store) CreatePetsBatchWithPendingEntitlements(ctx context.Context, item
 			p.PaymentStatus = "pending_payment"
 		}
 		err = tx.QueryRow(ctx, `
-			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag, microchip_number, health_book_number)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 			RETURNING created_at`,
 			p.ID, nullIfEmpty(strings.TrimSpace(p.PracticeID)), p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag,
+			p.MicrochipNumber, p.HealthBookNumber,
 		).Scan(&p.CreatedAt)
 		if err != nil {
 			return nil, err

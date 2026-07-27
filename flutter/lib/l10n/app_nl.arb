@@ -273,6 +273,38 @@
   "petNameRequired": "Geef de naam van het dier op",
   "species": "Soort",
   "breed": "Ras",
+  "petMicrochipOptional": "Chipnummer (optioneel)",
+  "petHealthBookNumberOptional": "Paspoortnummer (optioneel)",
+  "petHealthBookAddPages": "Foto's van het paspoort toevoegen",
+  "petHealthBookReplacePages": "PDF vervangen (foto's)",
+  "petHealthBookPagesCount": "{count} pagina('s) geselecteerd",
+  "@petHealthBookPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "petHealthBookPdfAttached": "PDF van het paspoort bijgevoegd",
+  "petHealthBookRemovePdf": "Verwijderen",
+  "petHealthBookOpenPdf": "Paspoort openen (PDF)",
+  "petMicrochipLabel": "Chip: {number}",
+  "@petMicrochipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "petHealthBookNumberLabel": "Paspoort: {number}",
+  "@petHealthBookNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHealthBookUploadFailed": "Huisdier opgeslagen, maar het paspoort kon niet worden geüpload",
   "choosePlan": "Kies uw formule",
   "recommended": "Aanbevolen",
   "autoRenewTitle": "Automatisch verlengen",

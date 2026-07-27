@@ -483,6 +483,10 @@
         "nextVisit": "Next visit"
       },
       "summaryTitle": "Summary",
+      "microchip": "Microchip number",
+      "healthBookNumber": "Health booklet number",
+      "healthBookPdf": "Health booklet (PDF)",
+      "healthBookOpenPdf": "Open PDF",
       "timelineRecentTitle": "Recent events",
       "timelineTypeHeartrate": "Heart rate reading",
       "timelineTypeWeight": "Weight",

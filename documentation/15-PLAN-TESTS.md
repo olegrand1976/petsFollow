@@ -298,6 +298,7 @@ Compte principal : `client.demo@petsfollow.test` · compte vide : `client.vide@�
 | F1.6 | P1 | Portal / resume | Billing depuis détail | Portal ou reprise session |
 | F1.7 | P1 | Deep link paiement | Retour success Stripe | État actif |
 | F1.8 | P1 | Éditer pet | Form édition | Persist |
+| F1.8b | P1 | Puce + carnet | Create/edit + multi-photos → PDF | N° optionnels ; PDF unique compressé (API) ; affiché Pro |
 | F1.9 | P2 | Kennel encode | Quick encode batch | Animaux créés (entitlement) |
 | F1.10 | P2 | Horse panel | Contacts / compétitions | CRUD OK |
 | F1.11 | P2 | Foyer / household | Home / pets liés | Affichage foyer |
