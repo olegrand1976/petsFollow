@@ -197,6 +197,16 @@
     "product_digest_intro_with_headline": "Kokkuvõte {date}: {headline}",
     "product_digest_disclaimer": "Sisemine automaatne e-kiri — mittetehniline kokkuvõte tänastest tarnetest.",
     "product_digest_fallback_name": "meeskond",
+    "staging_seed_subject": "petsFollow staging — demomandmed lähtestatakse igal pühapäeval",
+    "staging_seed_tagline": "Staging-keskkond",
+    "staging_seed_schedule": "pühapäev 08:00 (Brüsseli aeg)",
+    "staging_seed_preheader": "Staging DB-d ei laadita enam iga deploy’iga — iganädalane reset {schedule}.",
+    "staging_seed_greeting": "Tere {fullName},",
+    "staging_seed_intro": "petsFollow staging-andmebaasi ei tühjendata enam iga juurutusega.",
+    "staging_seed_detail": "Nüüdsest toimub automaatne reset iga {schedule}.\n\n• Demo kontod ja andmed taastatakse\n• Tõelised admini / müügi / juhi kontod säilitatakse\n• Ärge hoidke stagingus püsivaid testandmeid\n\nOps saab vajadusel käsitsi reseti käivitada.",
+    "staging_seed_cta": "Ava petsFollow staging",
+    "staging_seed_disclaimer": "Sisemine automaatne e-kiri — ainult eeltööstuskeskkond.",
+    "staging_seed_fallback_name": "meeskond",
     "journey": {
       "unsubscribe": "Lahku avastusteekonnast",
       "d0_welcome": {

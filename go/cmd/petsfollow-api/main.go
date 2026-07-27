@@ -25,6 +25,13 @@ func main() {
 		log.Println("migrations OK")
 		return
 	}
+	if app.IsSeedNotifyCmd(os.Args[1:]) {
+		if err := app.SeedNotifyOnly(ctx, cfg); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("seed-notify OK")
+		return
+	}
 	if app.IsSeedCmd(os.Args[1:]) {
 		if err := app.SeedOnly(ctx, cfg); err != nil {
 			log.Fatal(err)

@@ -43,8 +43,10 @@ jobs:
         run: |
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
           gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
-      - name: Postdeploy (seed + smoke)
-        run: bash infra/gcp/postdeploy.sh --seed
+      - name: Postdeploy (jobs + smoke, sans seed)
+        # Seed staging : Cloud Scheduler dimanche 08:00 Europe/Brussels (setup-seed-scheduler.sh).
+        # Reset manuel : bash infra/gcp/postdeploy.sh --seed
+        run: bash infra/gcp/postdeploy.sh
       - name: Summary
         run: |
           API_URL="$(gcloud run services describe petsfollow-api             --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}"             --format='value(status.url)' 2>/dev/null || true)"

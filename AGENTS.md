@@ -57,6 +57,8 @@ Médias (avatars / photos) : local = `./data/uploads` servi sous `/media/` ; sta
 
 Relancer les données : `make seed`
 
+**Staging GCP** : seed **hebdo** dimanche 08:00 Brussels (`make gcp-seed-scheduler`) — plus à chaque deploy. Reset manuel : `bash infra/gcp/postdeploy.sh --seed`. Annonce staff : commande `seed-notify`.
+
 ## Tests
 
 **Philosophie** : toute mutation métier = test au niveau le plus bas possible (Go intégration > Playwright `@p0` > widget Flutter). Non effet de bord (billing mock, users jetables, seed `*.petsfollow.test`). Règle Cursor : `.cursor/rules/anti-regression-quality.mdc`. Checklist P0/P1 + auto : [`documentation/15-PLAN-TESTS.md`](documentation/15-PLAN-TESTS.md).

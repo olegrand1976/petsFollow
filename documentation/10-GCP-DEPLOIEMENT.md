@@ -32,6 +32,17 @@ make gcp-smoke         # smoke contre api.petsfollow.ll-it-sc.be
 
 Pipeline GitHub : push branche `staging` → [`.github/workflows/deploy-gcp-staging.yml`](../.github/workflows/deploy-gcp-staging.yml) (WIF).
 
+### Seed DB staging
+
+Le seed **n’est plus** exécuté à chaque deploy. Remise à zéro automatique **chaque dimanche à 08:00** (`Europe/Brussels`) via Cloud Scheduler → job Cloud Run `petsfollow-seed`, puis email aux admins / commerciaux / managers (hors `*.petsfollow.test`).
+
+```bash
+./infra/gcp/setup-seed-scheduler.sh   # crée/maj le job Scheduler
+bash infra/gcp/postdeploy.sh --seed   # reset manuel immédiat (+ email si SEED_NOTIFY_STAFF)
+# Annonce seule (sans truncate) :
+# gcloud run jobs execute petsfollow-seed --region=europe-west9 --args=seed-notify --wait
+```
+
 Stripe Live : voir checklist [07-STRIPE-BILLING.md](07-STRIPE-BILLING.md) + `./infra/gcp/setup-stripe-secrets.sh`.
 
 ## DNS OVH (zone `ll-it-sc.be`)

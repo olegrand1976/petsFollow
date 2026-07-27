@@ -396,6 +396,38 @@ func (n *Notifier) SendProductDigest(to, locale, fullName, dateLabel, headline, 
 	return n.SendVetAlert(to, subject, body)
 }
 
+// SendStagingSeedNotice informs internal staff that staging demo data was (or will be) reset weekly.
+func (n *Notifier) SendStagingSeedNotice(to, locale, fullName, siteURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	vars := map[string]string{
+		"fullName": fullName,
+		"schedule": mustT(locale, "emails.staging_seed_schedule"),
+	}
+	if vars["fullName"] == "" {
+		vars["fullName"] = mustT(locale, "emails.staging_seed_fallback_name")
+	}
+	subject := mustT(locale, "emails.staging_seed_subject")
+	ctaURL := strings.TrimRight(siteURL, "/")
+	if ctaURL == "" {
+		ctaURL = strings.TrimRight(n.publicSiteURL, "/")
+	}
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.staging_seed_tagline"),
+		Greeting:        mustT(locale, "emails.staging_seed_greeting", vars),
+		Intro:           mustT(locale, "emails.staging_seed_intro", vars),
+		Detail:          mustT(locale, "emails.staging_seed_detail", vars),
+		CTALabel:        mustT(locale, "emails.staging_seed_cta"),
+		CTAURL:          ctaURL,
+		Disclaimer:      mustT(locale, "emails.staging_seed_disclaimer"),
+		Preheader:       mustT(locale, "emails.staging_seed_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendVisitPreconsult invites the client to fill the pre-consult form (and download the app if needed).
 func (n *Notifier) SendVisitPreconsult(to, locale, clientName, petName, when, practiceName, ctaURL string) error {
 	locale = i18n.NormalizeLocale(locale)

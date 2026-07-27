@@ -3,12 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/engagement/journey"
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
@@ -18,10 +20,10 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Application struct {
@@ -201,7 +203,60 @@ func SeedOnly(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 	defer pool.Close()
-	return seed.Run(ctx, pool)
+	if err := seed.Run(ctx, pool); err != nil {
+		return err
+	}
+	if cfg.SeedNotifyStaff {
+		return notifyStagingSeedStaff(ctx, pool, cfg)
+	}
+	return nil
+}
+
+// SeedNotifyOnly emails staging seed policy to staff (no DB truncate).
+func SeedNotifyOnly(ctx context.Context, cfg config.Config) error {
+	pool, err := db.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	return notifyStagingSeedStaff(ctx, pool, cfg)
+}
+
+func notifyStagingSeedStaff(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
+	st := store.New(pool)
+	recipients, err := st.ListDigestRecipients(ctx)
+	if err != nil {
+		return err
+	}
+	notifier := email.NewNotifierAuth(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.SMTPUser, cfg.SMTPPass, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
+	siteURL := strings.TrimRight(cfg.ProPublicSiteURL, "/")
+	sent := map[string]struct{}{}
+	var firstErr error
+	sendOne := func(to, locale, fullName string) {
+		to = strings.TrimSpace(to)
+		if to == "" || strings.HasSuffix(strings.ToLower(to), "@petsfollow.test") {
+			return
+		}
+		key := strings.ToLower(to)
+		if _, ok := sent[key]; ok {
+			return
+		}
+		sent[key] = struct{}{}
+		if err := notifier.SendStagingSeedNotice(to, locale, fullName, siteURL); err != nil {
+			log.Printf("seed-notify: %s: %v", to, err)
+			if firstErr == nil {
+				firstErr = err
+			}
+		}
+	}
+	for _, r := range recipients {
+		sendOne(r.Email, i18n.NormalizeLocale(r.PreferredLocale), r.FullName)
+	}
+	if ops := strings.TrimSpace(cfg.OpsNotifyEmail); ops != "" {
+		sendOne(ops, "fr", "")
+	}
+	log.Printf("seed-notify: %d recipient(s)", len(sent))
+	return firstErr
 }
 
 func IsMigrateCmd(args []string) bool {
@@ -210,4 +265,8 @@ func IsMigrateCmd(args []string) bool {
 
 func IsSeedCmd(args []string) bool {
 	return len(args) > 0 && strings.EqualFold(args[0], "seed")
+}
+
+func IsSeedNotifyCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "seed-notify")
 }

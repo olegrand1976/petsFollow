@@ -197,6 +197,16 @@
     "product_digest_intro_with_headline": "Summary for {date}: {headline}",
     "product_digest_disclaimer": "Internal automated email — non-technical summary generated from today's deliveries.",
     "product_digest_fallback_name": "team",
+    "staging_seed_subject": "petsFollow staging — demo data reset every Sunday",
+    "staging_seed_tagline": "Staging environment",
+    "staging_seed_schedule": "Sunday 08:00 (Brussels time)",
+    "staging_seed_preheader": "Staging DB is no longer reloaded on every deploy — weekly reset on {schedule}.",
+    "staging_seed_greeting": "Hello {fullName},",
+    "staging_seed_intro": "The petsFollow staging database is no longer wiped on every deployment.",
+    "staging_seed_detail": "From now on, the automatic reset runs every {schedule}.\n\n• Demo accounts and data are restored\n• Real admin / sales / manager accounts are preserved\n• Do not store lasting test data on staging\n\nOps can still trigger a manual reset if needed.",
+    "staging_seed_cta": "Open petsFollow staging",
+    "staging_seed_disclaimer": "Internal automated email — preproduction environment only.",
+    "staging_seed_fallback_name": "team",
     "journey": {
       "unsubscribe": "Unsubscribe from the discovery journey",
       "d0_welcome": {

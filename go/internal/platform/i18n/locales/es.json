@@ -197,6 +197,16 @@
     "product_digest_intro_with_headline": "Resumen del {date}: {headline}",
     "product_digest_disclaimer": "Correo interno automático — resumen no técnico generado a partir de las entregas del día.",
     "product_digest_fallback_name": "equipo",
+    "staging_seed_subject": "petsFollow staging — datos demo reiniciados cada domingo",
+    "staging_seed_tagline": "Entorno staging",
+    "staging_seed_schedule": "domingo 08:00 (hora de Bruselas)",
+    "staging_seed_preheader": "La BD staging ya no se recarga en cada deploy — reset semanal el {schedule}.",
+    "staging_seed_greeting": "Hola {fullName},",
+    "staging_seed_intro": "La base de datos de staging de petsFollow ya no se vacía en cada despliegue.",
+    "staging_seed_detail": "A partir de ahora, el reset automático tiene lugar cada {schedule}.\n\n• Se restauran las cuentas y datos de demo\n• Se conservan las cuentas reales de admin / comercial / manager\n• No guardéis datos de prueba duraderos en staging\n\nOps puede lanzar un reset manual si hace falta.",
+    "staging_seed_cta": "Abrir petsFollow staging",
+    "staging_seed_disclaimer": "Email interno automático — solo entorno de preproducción.",
+    "staging_seed_fallback_name": "equipo",
     "journey": {
       "unsubscribe": "Darse de baja del recorrido de descubrimiento",
       "d0_welcome": {

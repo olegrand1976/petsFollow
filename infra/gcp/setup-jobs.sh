@@ -19,6 +19,20 @@ trap 'rm -f "$API_ENV_FILE" "$SEED_ENV_FILE"' EXIT
 gcloud config set project "$GCP_PROJECT_ID" >/dev/null
 pf_write_api_env_file "$API_ENV_FILE" false
 pf_write_api_env_file "$SEED_ENV_FILE" true
+# Email staff après seed hebdo (admins / commerciaux / managers).
+{
+  echo "SEED_NOTIFY_STAFF: \"true\""
+} >>"$SEED_ENV_FILE"
+
+pf_seed_secrets() {
+  local secrets
+  secrets="$(pf_migrate_secrets)"
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-smtp-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},SMTP_PASS=petsfollow-smtp-password:latest"
+  fi
+  printf '%s' "$secrets"
+}
 
 echo "=== petsFollow Cloud Run Jobs — ${GCP_PROJECT_ID} ==="
 echo "Image: ${IMAGE}"
@@ -41,7 +55,7 @@ gcloud run jobs deploy petsfollow-seed \
   --set-cloudsql-instances="$CLOUDSQL_INSTANCE" \
   --vpc-connector="$CONNECTOR" --vpc-egress=private-ranges-only \
   --env-vars-file="$SEED_ENV_FILE" \
-  --set-secrets="$(pf_migrate_secrets)" \
+  --set-secrets="$(pf_seed_secrets)" \
   --command=/app/petsfollow-api --args=seed \
   --quiet
 

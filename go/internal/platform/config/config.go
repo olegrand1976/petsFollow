@@ -78,6 +78,8 @@ type Config struct {
 	AuthHealthSecret string
 	// MLMOrgEnabled exposes multi-depth downline UI; commissions remain flat until MLM billing ships.
 	MLMOrgEnabled bool
+	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging weekly reset).
+	SeedNotifyStaff bool
 }
 
 func Load() Config {
@@ -145,6 +147,7 @@ func Load() Config {
 		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
 		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:          envBool("MLM_ORG_ENABLED"),
+		SeedNotifyStaff:        envBool("SEED_NOTIFY_STAFF"),
 	}
 }
 
