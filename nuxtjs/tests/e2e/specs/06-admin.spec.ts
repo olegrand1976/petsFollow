@@ -42,7 +42,12 @@ test('admin voit page bonus SPIFF', async ({ page }) => {
   await loginAsAdmin(page)
   await page.goto('/admin/commercial-bonuses')
   await expect(page.getByTestId('admin-commercial-bonuses-page')).toBeVisible()
+  await expect(page.getByTestId('bonus-filter-period')).toBeVisible()
+  await expect(page.getByTestId('bonus-filter-trend')).toBeVisible()
   await expect(page.getByTestId('bonus-filter-status')).toBeVisible()
+  await expect(page.getByTestId('bonus-kpi-row')).toBeVisible()
+  await expect(page.getByTestId('bonus-trend-card')).toBeVisible()
+  await expect(page.getByTestId('bonus-compare-card')).toBeVisible()
 })
 
 test.describe('admin filiation', { tag: '@p1' }, () => {

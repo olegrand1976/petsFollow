@@ -597,6 +597,22 @@ func TestCommercialBonusMixAndMarkPaid(t *testing.T) {
 	if !ok || len(items) < 1 {
 		t.Fatalf("expected admin bonus items, got %#v", adminData)
 	}
+	if _, ok := adminData["trend"].([]any); !ok {
+		t.Fatalf("expected trend series, got %#v", adminData["trend"])
+	}
+	if _, ok := adminData["comparison"].([]any); !ok {
+		t.Fatalf("expected comparison, got %#v", adminData["comparison"])
+	}
+	if adminData["periodYm"] == nil || adminData["periodYm"] == "" {
+		t.Fatalf("expected periodYm, got %#v", adminData["periodYm"])
+	}
+	kpi, ok := adminData["kpi"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected kpi object, got %#v", adminData["kpi"])
+	}
+	if kpi["metCount"] == nil {
+		t.Fatalf("expected kpi.metCount, got %#v", kpi)
+	}
 
 	var mixAwardID string
 	if err := api.pool.QueryRow(ctx, `

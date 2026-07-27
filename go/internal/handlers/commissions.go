@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -385,16 +386,19 @@ func (a *API) adminListCommercialBonuses(w http.ResponseWriter, r *http.Request)
 	}
 	status := r.URL.Query().Get("status")
 	commercialID := r.URL.Query().Get("commercialId")
-	rows, err := a.store.ListCommercialBonusTrackRows(r.Context(), status, commercialID)
+	periodYM := r.URL.Query().Get("periodYm")
+	trendMonths := 6
+	if raw := r.URL.Query().Get("trendMonths"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil {
+			trendMonths = n
+		}
+	}
+	ov, err := a.store.AdminCommercialBonusesOverview(r.Context(), periodYM, status, commercialID, trendMonths)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"items":     rows,
-		"bonuses":   store.DefaultBonusRules(),
-		"planRates": store.SubscriptionPlanRates(),
-	})
+	httpx.WriteData(w, http.StatusOK, ov)
 }
 
 func (a *API) adminMarkCommercialBonusPaid(w http.ResponseWriter, r *http.Request) {
