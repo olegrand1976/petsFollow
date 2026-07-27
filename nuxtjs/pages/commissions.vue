@@ -17,7 +17,7 @@
       <ProIcon name="account_balance" />
       <div>
         <p>{{ $t('commissions.payoutIncompleteBanner') }}</p>
-        <NuxtLink to="/settings" class="pf-commissions-banner__link">
+        <NuxtLink to="/settings?tab=profile" class="pf-commissions-banner__link">
           {{ $t('commissions.payoutIncompleteLink') }}
         </NuxtLink>
       </div>

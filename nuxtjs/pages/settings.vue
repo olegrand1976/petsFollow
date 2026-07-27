@@ -5,295 +5,329 @@
       :subtitle="$t('settings.subtitle')"
     />
 
-    <ProCard :title="$t('settings.avatar.title')" class="pro-settings-card">
-      <ProAvatarUpload
-        v-model="avatarUrl"
-        :name="user?.fullName || ''"
-        upload-url="/api/me/avatar"
-        :label="$t('settings.avatar.change')"
-        :hint="$t('settings.avatar.hint')"
-        @uploaded="onAvatarUploaded"
-      />
-      <p v-if="avatarSaved" class="text-muted" role="status">{{ $t('settings.avatar.saved') }}</p>
-    </ProCard>
+    <ProSectionTabs
+      v-model="activeTab"
+      :tabs="settingsTabs"
+      :aria-label="$t('settings.tabsLabel')"
+    />
 
-    <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
-      <ProPracticeProfileForm
-        v-model="profile"
-        v-model:heartrate-durations-sec="selectedDurations"
-        show-heartrate-durations
-        @submit="saveProfile"
-      >
-        <template #actions>
-          <p v-if="profileSaved" class="text-muted" role="status">{{ $t('settings.profileSaved') }}</p>
-          <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
-          <ProButton type="submit" :loading="profileSaving" :disabled="!profileLoaded" class="pro-save-btn">
-            {{ $t('settings.saveProfile') }}
-          </ProButton>
-        </template>
-      </ProPracticeProfileForm>
-    </ProCard>
+    <div
+      v-show="activeTab === 'profile'"
+      role="tabpanel"
+      aria-labelledby="tab-profile"
+      data-testid="settings-tab-profile"
+    >
+      <ProCard :title="$t('settings.avatar.title')" class="pro-settings-card">
+        <ProAvatarUpload
+          v-model="avatarUrl"
+          :name="user?.fullName || ''"
+          upload-url="/api/me/avatar"
+          :label="$t('settings.avatar.change')"
+          :hint="$t('settings.avatar.hint')"
+          @uploaded="onAvatarUploaded"
+        />
+        <p v-if="avatarSaved" class="text-muted" role="status">{{ $t('settings.avatar.saved') }}</p>
+      </ProCard>
 
-    <ProCard :title="$t('settings.availability')" class="pro-settings-card">
-      <div class="pro-toggle" role="group" :aria-label="$t('settings.availability')">
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': status === 'available' }"
-          @click="status = 'available'"
+      <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
+        <ProPracticeProfileForm
+          v-model="profile"
+          v-model:heartrate-durations-sec="selectedDurations"
+          show-heartrate-durations
+          @submit="saveProfile"
         >
-          {{ $t('settings.available') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': status === 'unavailable' }"
-          @click="status = 'unavailable'"
-        >
-          {{ $t('settings.unavailable') }}
-        </button>
-      </div>
-      <div class="pro-field pro-field-spaced">
-        <label class="pro-label" for="auto-reply">{{ $t('settings.autoReply') }}</label>
-        <textarea
-          id="auto-reply"
-          v-model="autoReply"
-          class="pro-textarea"
-          rows="4"
-          :placeholder="$t('settings.autoReplyPlaceholder')"
-        />
-      </div>
-      <p v-if="saved" class="text-muted" role="status">{{ $t('settings.availabilitySaved') }}</p>
-      <p v-if="availabilityError" class="pro-field-error" role="alert">{{ availabilityError }}</p>
-      <ProButton class="pro-save-btn" :loading="saving" @click="save">
-        {{ $t('settings.saveAvailability') }}
-      </ProButton>
-    </ProCard>
+          <template #actions>
+            <p v-if="profileSaved" class="text-muted" role="status">{{ $t('settings.profileSaved') }}</p>
+            <p v-if="profileError" class="pro-field-error" role="alert">{{ profileError }}</p>
+            <ProButton type="submit" :loading="profileSaving" :disabled="!profileLoaded" class="pro-save-btn">
+              {{ $t('settings.saveProfile') }}
+            </ProButton>
+          </template>
+        </ProPracticeProfileForm>
+      </ProCard>
+    </div>
 
-    <ProCard id="calendar" :title="$t('settings.calendar.title')" class="pro-settings-card" data-testid="settings-calendar">
-      <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
-        {{ $t('settings.calendar.vacationsReminder') }}
-      </p>
-      <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
-      <div class="pro-field pro-field-spaced">
-        <label class="pro-label" for="slot-duration">{{ $t('settings.calendar.duration') }}</label>
-        <select id="slot-duration" v-model.number="slotDuration" class="pro-select">
-          <option :value="15">15</option>
-          <option :value="30">30</option>
-          <option :value="60">60</option>
-        </select>
-      </div>
-      <div v-for="(slot, idx) in scheduleSlots" :key="idx" class="calendar-slot-row">
-        <select v-model.number="slot.weekday" class="pro-select">
-          <option v-for="d in weekdayOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
-        </select>
-        <input v-model="slot.startTime" type="time" class="pro-input" required>
-        <input v-model="slot.endTime" type="time" class="pro-input" required>
-        <ProButton variant="ghost" type="button" @click="scheduleSlots.splice(idx, 1)">×</ProButton>
-      </div>
-      <ProButton variant="secondary" type="button" class="pro-mb-md" @click="addSlot">
-        {{ $t('settings.calendar.addSlot') }}
-      </ProButton>
-      <label class="pro-checkbox-row">
-        <input v-model="clientBookingEnabled" type="checkbox" :disabled="!scheduleSlots.length" data-testid="calendar-booking-toggle">
-        <span>{{ $t('settings.calendar.enableBooking') }}</span>
-      </label>
-      <p class="pro-settings-hint">{{ $t('settings.calendar.enableHelp') }}</p>
-      <p v-if="scheduleError" class="pro-field-error" role="alert">{{ scheduleError }}</p>
-      <p v-if="scheduleSaved" class="text-muted" role="status">{{ $t('settings.calendar.saved') }}</p>
-      <ProButton class="pro-save-btn" :loading="scheduleSaving" data-testid="calendar-schedule-save" @click="saveSchedule">
-        {{ $t('settings.calendar.save') }}
-      </ProButton>
-
-      <hr class="pro-settings-hr">
-      <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.vacationsTitle') }}</h3>
-      <label class="pro-checkbox-row">
-        <input v-model="noVacationsThisYear" type="checkbox">
-        <span>{{ $t('settings.calendar.noVacations') }}</span>
-      </label>
-      <div class="calendar-slot-row">
-        <input v-model="vacStart" type="date" class="pro-input">
-        <input v-model="vacEnd" type="date" class="pro-input">
-        <ProButton variant="secondary" type="button" :disabled="!vacStart || !vacEnd" @click="addVacation">
-          {{ $t('settings.calendar.addVacation') }}
-        </ProButton>
-      </div>
-      <ul class="calendar-vac-list">
-        <li v-for="v in vacations" :key="v.id">
-          <span>{{ v.startsOn }} → {{ v.endsOn }} {{ v.label ? `— ${v.label}` : '' }}</span>
-          <ProButton variant="ghost" type="button" @click="removeVacation(v.id)">×</ProButton>
-        </li>
-      </ul>
-    </ProCard>
-
-    <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
-      <label class="pro-checkbox-row">
-        <input v-model="emailOnMessage" type="checkbox">
-        <span>{{ $t('settings.notifications.onMessage') }}</span>
-      </label>
-      <label class="pro-checkbox-row">
-        <input v-model="emailOnHeartrate" type="checkbox">
-        <span>{{ $t('settings.notifications.onHeartrate') }}</span>
-      </label>
-      <label class="pro-checkbox-row">
-        <input v-model="emailOnVisitRequest" type="checkbox">
-        <span>{{ $t('settings.notifications.onVisitRequest') }}</span>
-      </label>
-      <p v-if="notifSaved" class="text-muted" role="status">{{ $t('settings.notifications.saved') }}</p>
-      <p v-if="notifError" class="pro-field-error" role="alert">{{ notifError }}</p>
-      <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
-        {{ $t('common.save') }}
-      </ProButton>
-    </ProCard>
-
-    <ProCard :title="$t('settings.legalLinks')" class="pro-settings-card">
-      <ProLegalFooter />
-    </ProCard>
-
-    <ProCard :title="$t('settings.password.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.password.subtitle') }}</p>
-      <ProInput
-        v-model="currentPassword"
-        :label="$t('settings.password.current')"
-        type="password"
-        autocomplete="current-password"
-        test-id="settings-current-password"
-      />
-      <ProInput
-        v-model="newPassword"
-        :label="$t('settings.password.new')"
-        type="password"
-        autocomplete="new-password"
-        test-id="settings-new-password"
-      />
-      <ProInput
-        v-model="confirmPassword"
-        :label="$t('settings.password.confirm')"
-        type="password"
-        autocomplete="new-password"
-        test-id="settings-confirm-password"
-      />
-      <p v-if="passwordSaved" class="text-muted" role="status">{{ $t('settings.password.saved') }}</p>
-      <p v-if="passwordError" class="pro-field-error" role="alert">{{ passwordError }}</p>
-      <ProButton class="pro-save-btn" :loading="passwordSaving" test-id="settings-password-save" @click="savePassword">
-        {{ $t('settings.password.save') }}
-      </ProButton>
-    </ProCard>
-
-    <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.language.subtitle') }}</p>
-      <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">
-        <button
-          v-for="loc in supportedLocales"
-          :key="loc"
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': selectedLocale === loc }"
-          :data-testid="`settings-locale-${loc}`"
-          @click="selectLocale(loc)"
-        >
-          {{ $t(`settings.language.${loc}`) }}
-        </button>
-      </div>
-      <p v-if="localeSaved" class="text-muted" role="status">{{ $t('settings.language.saved') }}</p>
-      <p v-if="localeError" class="pro-field-error" role="alert">{{ localeError }}</p>
-      <ProButton class="pro-save-btn" :loading="localeSaving" test-id="settings-locale-save" @click="saveLocale">
-        {{ $t('common.save') }}
-      </ProButton>
-    </ProCard>
-
-    <ProCard :title="$t('settings.twoFa.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.twoFa.hint') }}</p>
-
-      <p v-if="twoFactorEnabled" class="pro-2fa-status pro-2fa-status--on" role="status">
-        {{ $t('settings.twoFa.enabled') }}
-      </p>
-      <p v-else class="pro-2fa-status" role="status">{{ $t('settings.twoFa.disabled') }}</p>
-
-      <div v-if="!twoFactorEnabled && setupData" class="pro-2fa-setup">
-        <img :src="setupData.qrCodeDataUrl" :alt="$t('settings.twoFa.qrAlt')" width="200" height="200" class="pro-2fa-qr">
-        <p class="pro-settings-hint">
-          {{ $t('settings.twoFa.scanHint') }}
-          <code>{{ setupData.secret }}</code>
-        </p>
-        <ProInput
-          v-model="setupCode"
-          :label="$t('settings.twoFa.verifyCode')"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-          test-id="2fa-setup-code"
-        />
-        <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
-        <ProButton :loading="twoFactorLoading" @click="confirm2FA">
-          {{ $t('settings.twoFa.activate') }}
-        </ProButton>
-      </div>
-
-      <div v-else-if="!twoFactorEnabled" class="pro-2fa-actions">
-        <ProButton :loading="twoFactorLoading" @click="start2FASetup">
-          {{ $t('settings.twoFa.setup') }}
-        </ProButton>
-      </div>
-
-      <div v-else class="pro-2fa-disable">
-        <ProInput
-          v-model="disableCode"
-          :label="$t('auth.twoFa.codeLabel')"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-        />
-        <ProInput
-          v-model="disablePassword"
-          :label="$t('settings.twoFa.passwordOptional')"
-          type="password"
-          autocomplete="current-password"
-        />
-        <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
-        <ProButton variant="secondary" :loading="twoFactorLoading" @click="disable2FA">
-          {{ $t('settings.twoFa.disable') }}
-        </ProButton>
-      </div>
-    </ProCard>
-
-    <ProCard :title="$t('settings.privacy.title')" class="pro-settings-card">
-      <p class="pro-settings-hint">{{ $t('settings.privacy.exportHint') }}</p>
-      <ProButton variant="secondary" :loading="exporting" test-id="settings-export-data" @click="exportData">
-        {{ $t('settings.privacy.exportButton') }}
-      </ProButton>
-      <p v-if="exportError" class="pro-field-error" role="alert">{{ exportError }}</p>
-
-      <hr class="pro-settings-hr">
-      <h3 class="pro-settings-subtitle pro-danger-title">{{ $t('settings.deleteAccount.title') }}</h3>
-      <p class="pro-settings-hint">{{ $t('settings.deleteAccount.hint') }}</p>
-      <ProButton
-        v-if="!deleteConfirming"
-        variant="secondary"
-        test-id="settings-delete-account"
-        @click="deleteConfirming = true"
-      >
-        {{ $t('settings.deleteAccount.button') }}
-      </ProButton>
-      <template v-else>
-        <p class="pro-field-error" role="alert">{{ $t('settings.deleteAccount.confirmText') }}</p>
-        <div class="pro-danger-actions">
-          <ProButton
-            variant="secondary"
-            :loading="deleting"
-            test-id="settings-delete-account-confirm"
-            @click="deleteAccount"
+    <div
+      v-show="activeTab === 'calendar'"
+      role="tabpanel"
+      aria-labelledby="tab-calendar"
+      data-testid="settings-tab-calendar"
+    >
+      <ProCard :title="$t('settings.availability')" class="pro-settings-card">
+        <div class="pro-toggle" role="group" :aria-label="$t('settings.availability')">
+          <button
+            type="button"
+            class="pro-toggle-btn"
+            :class="{ 'pro-toggle-btn--active': status === 'available' }"
+            @click="status = 'available'"
           >
-            {{ $t('settings.deleteAccount.confirm') }}
-          </ProButton>
-          <ProButton variant="ghost" @click="deleteConfirming = false">
-            {{ $t('common.cancel') }}
+            {{ $t('settings.available') }}
+          </button>
+          <button
+            type="button"
+            class="pro-toggle-btn"
+            :class="{ 'pro-toggle-btn--active': status === 'unavailable' }"
+            @click="status = 'unavailable'"
+          >
+            {{ $t('settings.unavailable') }}
+          </button>
+        </div>
+        <div class="pro-field pro-field-spaced">
+          <label class="pro-label" for="auto-reply">{{ $t('settings.autoReply') }}</label>
+          <textarea
+            id="auto-reply"
+            v-model="autoReply"
+            class="pro-textarea"
+            rows="4"
+            :placeholder="$t('settings.autoReplyPlaceholder')"
+          />
+        </div>
+        <p v-if="saved" class="text-muted" role="status">{{ $t('settings.availabilitySaved') }}</p>
+        <p v-if="availabilityError" class="pro-field-error" role="alert">{{ availabilityError }}</p>
+        <ProButton class="pro-save-btn" :loading="saving" @click="save">
+          {{ $t('settings.saveAvailability') }}
+        </ProButton>
+      </ProCard>
+
+      <ProCard :title="$t('settings.calendar.title')" class="pro-settings-card" data-testid="settings-calendar">
+        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
+          {{ $t('settings.calendar.vacationsReminder') }}
+        </p>
+        <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
+        <div class="pro-field pro-field-spaced">
+          <label class="pro-label" for="slot-duration">{{ $t('settings.calendar.duration') }}</label>
+          <select id="slot-duration" v-model.number="slotDuration" class="pro-select">
+            <option :value="15">15</option>
+            <option :value="30">30</option>
+            <option :value="60">60</option>
+          </select>
+        </div>
+        <div v-for="(slot, idx) in scheduleSlots" :key="idx" class="calendar-slot-row">
+          <select v-model.number="slot.weekday" class="pro-select">
+            <option v-for="d in weekdayOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
+          <input v-model="slot.startTime" type="time" class="pro-input" required>
+          <input v-model="slot.endTime" type="time" class="pro-input" required>
+          <ProButton variant="ghost" type="button" @click="scheduleSlots.splice(idx, 1)">×</ProButton>
+        </div>
+        <ProButton variant="secondary" type="button" class="pro-mb-md" @click="addSlot">
+          {{ $t('settings.calendar.addSlot') }}
+        </ProButton>
+        <label class="pro-checkbox-row">
+          <input v-model="clientBookingEnabled" type="checkbox" :disabled="!scheduleSlots.length" data-testid="calendar-booking-toggle">
+          <span>{{ $t('settings.calendar.enableBooking') }}</span>
+        </label>
+        <p class="pro-settings-hint">{{ $t('settings.calendar.enableHelp') }}</p>
+        <p v-if="scheduleError" class="pro-field-error" role="alert">{{ scheduleError }}</p>
+        <p v-if="scheduleSaved" class="text-muted" role="status">{{ $t('settings.calendar.saved') }}</p>
+        <ProButton class="pro-save-btn" :loading="scheduleSaving" data-testid="calendar-schedule-save" @click="saveSchedule">
+          {{ $t('settings.calendar.save') }}
+        </ProButton>
+
+        <hr class="pro-settings-hr">
+        <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.vacationsTitle') }}</h3>
+        <label class="pro-checkbox-row">
+          <input v-model="noVacationsThisYear" type="checkbox">
+          <span>{{ $t('settings.calendar.noVacations') }}</span>
+        </label>
+        <div class="calendar-slot-row">
+          <input v-model="vacStart" type="date" class="pro-input">
+          <input v-model="vacEnd" type="date" class="pro-input">
+          <ProButton variant="secondary" type="button" :disabled="!vacStart || !vacEnd" @click="addVacation">
+            {{ $t('settings.calendar.addVacation') }}
           </ProButton>
         </div>
-        <p v-if="deleteError" class="pro-field-error" role="alert">{{ deleteError }}</p>
-      </template>
-    </ProCard>
+        <ul class="calendar-vac-list">
+          <li v-for="v in vacations" :key="v.id">
+            <span>{{ v.startsOn }} → {{ v.endsOn }} {{ v.label ? `— ${v.label}` : '' }}</span>
+            <ProButton variant="ghost" type="button" @click="removeVacation(v.id)">×</ProButton>
+          </li>
+        </ul>
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'notifications'"
+      role="tabpanel"
+      aria-labelledby="tab-notifications"
+      data-testid="settings-tab-notifications"
+    >
+      <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
+        <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
+        <label class="pro-checkbox-row">
+          <input v-model="emailOnMessage" type="checkbox">
+          <span>{{ $t('settings.notifications.onMessage') }}</span>
+        </label>
+        <label class="pro-checkbox-row">
+          <input v-model="emailOnHeartrate" type="checkbox">
+          <span>{{ $t('settings.notifications.onHeartrate') }}</span>
+        </label>
+        <label class="pro-checkbox-row">
+          <input v-model="emailOnVisitRequest" type="checkbox">
+          <span>{{ $t('settings.notifications.onVisitRequest') }}</span>
+        </label>
+        <p v-if="notifSaved" class="text-muted" role="status">{{ $t('settings.notifications.saved') }}</p>
+        <p v-if="notifError" class="pro-field-error" role="alert">{{ notifError }}</p>
+        <ProButton class="pro-save-btn" :loading="notifSaving" @click="saveNotifications">
+          {{ $t('common.save') }}
+        </ProButton>
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'account'"
+      role="tabpanel"
+      aria-labelledby="tab-account"
+      data-testid="settings-tab-account"
+    >
+      <ProCard :title="$t('settings.password.title')" class="pro-settings-card">
+        <p class="pro-settings-hint">{{ $t('settings.password.subtitle') }}</p>
+        <ProInput
+          v-model="currentPassword"
+          :label="$t('settings.password.current')"
+          type="password"
+          autocomplete="current-password"
+          test-id="settings-current-password"
+        />
+        <ProInput
+          v-model="newPassword"
+          :label="$t('settings.password.new')"
+          type="password"
+          autocomplete="new-password"
+          test-id="settings-new-password"
+        />
+        <ProInput
+          v-model="confirmPassword"
+          :label="$t('settings.password.confirm')"
+          type="password"
+          autocomplete="new-password"
+          test-id="settings-confirm-password"
+        />
+        <p v-if="passwordSaved" class="text-muted" role="status">{{ $t('settings.password.saved') }}</p>
+        <p v-if="passwordError" class="pro-field-error" role="alert">{{ passwordError }}</p>
+        <ProButton class="pro-save-btn" :loading="passwordSaving" test-id="settings-password-save" @click="savePassword">
+          {{ $t('settings.password.save') }}
+        </ProButton>
+      </ProCard>
+
+      <ProCard :title="$t('settings.language.title')" class="pro-settings-card">
+        <p class="pro-settings-hint">{{ $t('settings.language.subtitle') }}</p>
+        <div class="pro-toggle" role="group" :aria-label="$t('settings.language.title')">
+          <button
+            v-for="loc in supportedLocales"
+            :key="loc"
+            type="button"
+            class="pro-toggle-btn"
+            :class="{ 'pro-toggle-btn--active': selectedLocale === loc }"
+            :data-testid="`settings-locale-${loc}`"
+            @click="selectLocale(loc)"
+          >
+            {{ $t(`settings.language.${loc}`) }}
+          </button>
+        </div>
+        <p v-if="localeSaved" class="text-muted" role="status">{{ $t('settings.language.saved') }}</p>
+        <p v-if="localeError" class="pro-field-error" role="alert">{{ localeError }}</p>
+        <ProButton class="pro-save-btn" :loading="localeSaving" test-id="settings-locale-save" @click="saveLocale">
+          {{ $t('common.save') }}
+        </ProButton>
+      </ProCard>
+
+      <ProCard :title="$t('settings.twoFa.title')" class="pro-settings-card">
+        <p class="pro-settings-hint">{{ $t('settings.twoFa.hint') }}</p>
+
+        <p v-if="twoFactorEnabled" class="pro-2fa-status pro-2fa-status--on" role="status">
+          {{ $t('settings.twoFa.enabled') }}
+        </p>
+        <p v-else class="pro-2fa-status" role="status">{{ $t('settings.twoFa.disabled') }}</p>
+
+        <div v-if="!twoFactorEnabled && setupData" class="pro-2fa-setup">
+          <img :src="setupData.qrCodeDataUrl" :alt="$t('settings.twoFa.qrAlt')" width="200" height="200" class="pro-2fa-qr">
+          <p class="pro-settings-hint">
+            {{ $t('settings.twoFa.scanHint') }}
+            <code>{{ setupData.secret }}</code>
+          </p>
+          <ProInput
+            v-model="setupCode"
+            :label="$t('settings.twoFa.verifyCode')"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            test-id="2fa-setup-code"
+          />
+          <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
+          <ProButton :loading="twoFactorLoading" @click="confirm2FA">
+            {{ $t('settings.twoFa.activate') }}
+          </ProButton>
+        </div>
+
+        <div v-else-if="!twoFactorEnabled" class="pro-2fa-actions">
+          <ProButton :loading="twoFactorLoading" @click="start2FASetup">
+            {{ $t('settings.twoFa.setup') }}
+          </ProButton>
+        </div>
+
+        <div v-else class="pro-2fa-disable">
+          <ProInput
+            v-model="disableCode"
+            :label="$t('auth.twoFa.codeLabel')"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+          />
+          <ProInput
+            v-model="disablePassword"
+            :label="$t('settings.twoFa.passwordOptional')"
+            type="password"
+            autocomplete="current-password"
+          />
+          <p v-if="twoFactorError" class="pro-field-error" role="alert">{{ twoFactorError }}</p>
+          <ProButton variant="secondary" :loading="twoFactorLoading" @click="disable2FA">
+            {{ $t('settings.twoFa.disable') }}
+          </ProButton>
+        </div>
+      </ProCard>
+
+      <ProCard :title="$t('settings.privacy.title')" class="pro-settings-card">
+        <p class="pro-settings-hint">{{ $t('settings.privacy.exportHint') }}</p>
+        <ProButton variant="secondary" :loading="exporting" test-id="settings-export-data" @click="exportData">
+          {{ $t('settings.privacy.exportButton') }}
+        </ProButton>
+        <p v-if="exportError" class="pro-field-error" role="alert">{{ exportError }}</p>
+
+        <hr class="pro-settings-hr">
+        <h3 class="pro-settings-subtitle pro-danger-title">{{ $t('settings.deleteAccount.title') }}</h3>
+        <p class="pro-settings-hint">{{ $t('settings.deleteAccount.hint') }}</p>
+        <ProButton
+          v-if="!deleteConfirming"
+          variant="secondary"
+          test-id="settings-delete-account"
+          @click="deleteConfirming = true"
+        >
+          {{ $t('settings.deleteAccount.button') }}
+        </ProButton>
+        <template v-else>
+          <p class="pro-field-error" role="alert">{{ $t('settings.deleteAccount.confirmText') }}</p>
+          <div class="pro-danger-actions">
+            <ProButton
+              variant="secondary"
+              :loading="deleting"
+              test-id="settings-delete-account-confirm"
+              @click="deleteAccount"
+            >
+              {{ $t('settings.deleteAccount.confirm') }}
+            </ProButton>
+            <ProButton variant="ghost" @click="deleteConfirming = false">
+              {{ $t('common.cancel') }}
+            </ProButton>
+          </div>
+          <p v-if="deleteError" class="pro-field-error" role="alert">{{ deleteError }}</p>
+        </template>
+      </ProCard>
+
+      <ProCard :title="$t('settings.legalLinks')" class="pro-settings-card">
+        <ProLegalFooter />
+      </ProCard>
+    </div>
   </div>
 </template>
 
@@ -308,6 +342,17 @@ const { t } = useI18n()
 const { mapError } = useApiError()
 const { saveLocale: persistLocale, supportedLocales } = useLocaleSync()
 const { user, fetchUser } = useProUser()
+
+const activeTab = ref('profile')
+const settingsTabs = computed(() => [
+  { id: 'profile', label: t('settings.tabs.profile') },
+  { id: 'calendar', label: t('settings.tabs.calendar') },
+  { id: 'notifications', label: t('settings.tabs.notifications') },
+  { id: 'account', label: t('settings.tabs.account') },
+])
+
+const route = useRoute()
+const router = useRouter()
 
 const avatarUrl = ref('')
 const avatarSaved = ref(false)
@@ -396,6 +441,11 @@ function mapFromApi(data: any): PracticeProfileForm {
 }
 
 onMounted(async () => {
+  if (route.hash === '#calendar') {
+    activeTab.value = 'calendar'
+    await router.replace({ query: { ...route.query, tab: 'calendar' }, hash: '' })
+  }
+
   autoReply.value = t('settings.autoReplyDefault')
   avatarUrl.value = user.value?.avatarUrl || ''
   if (!avatarUrl.value) {

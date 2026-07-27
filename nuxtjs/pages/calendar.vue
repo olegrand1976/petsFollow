@@ -2,7 +2,7 @@
   <div data-testid="calendar-page">
     <ProPageHeader :title="$t('calendar.title')" :subtitle="$t('calendar.subtitle')">
       <template #actions>
-        <NuxtLink to="/settings#calendar" class="pro-btn pro-btn--secondary">
+        <NuxtLink to="/settings?tab=calendar" class="pro-btn pro-btn--secondary">
           {{ $t('calendar.openSettings') }}
         </NuxtLink>
       </template>
