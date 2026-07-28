@@ -132,14 +132,23 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     const putGate = new Promise<void>((resolve) => {
       releasePut = resolve
     })
+    let resolvePutDone: (() => void) | undefined
+    const putDone = new Promise<void>((resolve) => {
+      resolvePutDone = resolve
+    })
     const reportRoute = '**/api/visits/*/report'
     await page.route(reportRoute, async (route) => {
       if (route.request().method() !== 'PUT') {
         await route.continue()
         return
       }
-      await putGate
-      await route.continue()
+      try {
+        await putGate
+        await route.continue()
+      }
+      finally {
+        resolvePutDone?.()
+      }
     })
 
     try {
@@ -154,14 +163,20 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       await expect(page.getByTestId('consultation-modal')).toBeVisible()
     }
     finally {
+      // Unblock PUT first — do not unroute until continue() has finished.
       releasePut?.()
-      await page.unroute(reportRoute).catch(() => undefined)
     }
 
-    await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 20000 })
-    await expect(page.getByTestId('consultation-cancel')).toBeEnabled()
-    await page.getByTestId('consultation-cta-done').click()
-    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+    try {
+      await putDone
+      await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 20000 })
+      await expect(page.getByTestId('consultation-cancel')).toBeEnabled()
+      await page.getByTestId('consultation-cta-done').click()
+      await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+    }
+    finally {
+      await page.unroute(reportRoute).catch(() => undefined)
+    }
   })
 
   test('après CR → CTA facture et DAF (visitId query)', async ({ page }) => {
