@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestCareProLoginAndListPets(t *testing.T) {
@@ -278,5 +279,80 @@ func TestCareProReadOnlyCannotClearCoords(t *testing.T) {
 	})
 	if code != http.StatusForbidden {
 		t.Fatalf("read-only mark done: got %d %#v", code, env)
+	}
+}
+
+// Care_pro with write_notes may create a confirmed visit (consultation terrain).
+func TestCareProConfirmDirectConsultation(t *testing.T) {
+	api := newTestAPI(t)
+	tok := loginToken(t, api.handler, "vetlight.demo@petsfollow.test", "CareProDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/care-pro/pets", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v (make seed?)", code, env)
+	}
+	var spiritID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		if p["name"] == "Spirit" {
+			spiritID, _ = p["id"].(string)
+			break
+		}
+	}
+	if spiritID == "" {
+		t.Skip("Spirit not granted to vet_light")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+spiritID+"/visits", tok, map[string]any{
+		"scheduledAt":         time.Now().UTC().Format(time.RFC3339),
+		"notes":               "consultation terrain confirmDirect",
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("care_pro confirmDirect create %d %#v", code, env)
+	}
+	visit := dataMap(t, env)
+	visitID, _ := visit["id"].(string)
+	if visitID == "" {
+		t.Fatalf("no visit id %#v", env)
+	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, tok, map[string]any{
+			"status": "cancelled",
+		})
+	})
+	if visit["status"] != "confirmed" {
+		t.Fatalf("status=%v want confirmed", visit["status"])
+	}
+	if visit["consultationSession"] != true {
+		t.Fatalf("consultationSession=%v want true", visit["consultationSession"])
+	}
+	if visit["source"] != "care_pro" {
+		t.Fatalf("source=%v want care_pro", visit["source"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+spiritID+"/visits", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list visits %d %#v", code, env)
+	}
+	found := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] == visitID {
+			found = true
+			if m["consultationSession"] != true {
+				t.Fatalf("list visit consultationSession=%v", m["consultationSession"])
+			}
+			if m["source"] != "care_pro" {
+				t.Fatalf("list visit source=%v", m["source"])
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("visit %s not in list", visitID)
 	}
 }

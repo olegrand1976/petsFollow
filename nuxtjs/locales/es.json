@@ -649,6 +649,21 @@
       "linkLabelClient": "Enlace de invitación clientes",
       "linkLabelCabinet": "Enlace de alta clínica",
       "copyCabinet": "Copiar enlace clínica"
+    },
+    "consultation": {
+      "open": "Nueva consulta",
+      "title": "Nueva consulta",
+      "hint": "Seleccione la mascota y luego inicie la consulta. El informe se puede dictar (audio → transcripción).",
+      "pet": "Mascota",
+      "petPlaceholder": "Elegir una mascota…",
+      "notes": "Notas internas (opcional)",
+      "start": "Iniciar la consulta",
+      "reportHint": "Redacte o dicte el informe, luego guarde para continuar con DAF / factura.",
+      "ctaDafInvoice": "Crear receta y facturar",
+      "ctaInvoice": "Facturar directamente",
+      "ctaDone": "Terminar",
+      "loadPetsError": "No se pudieron cargar las mascotas.",
+      "markDoneError": "No se pudo terminar la consulta. Inténtelo de nuevo."
     }
   },
   "pets": {
@@ -1410,6 +1425,40 @@
       "assignedLoad": "{n} practices",
       "assign": "Assign",
       "assignOk": "Practice assigned."
+    },
+    "invoicing": {
+      "title": "Conexiones Billit",
+      "subtitle": "Seguimiento Invoice-to-partner y uso mensual por centro.",
+      "hint": "Tras el cambio en Billit (Invoice to = partner), marque el centro aquí para seguimiento ops.",
+      "empty": "Sin conexiones Billit",
+      "disabled": "Facturación Billit desactivada en la API",
+      "loadError": "No se pudieron cargar las conexiones",
+      "colPractice": "Centro",
+      "colParty": "PartyID",
+      "colStatus": "Estado",
+      "colUsage": "Uso / mes",
+      "colPartner": "Partner listed",
+      "colActions": "Acciones",
+      "notListed": "No listado",
+      "alreadyListed": "OK",
+      "markPartner": "Marcar partner",
+      "markOk": "Centro marcado partner-listed",
+      "markError": "Error al marcar",
+      "markConfirm": "¿Confirmar marcado partner-listed para « {name} »? (cambio Billit Invoice-to-partner ya hecho)",
+      "exportCsv": "Exportar CSV pendientes",
+      "exportOk": "{n} PartyID exportado(s)",
+      "kpiTotal": "{n} conexión(es)",
+      "kpiOverdue": "{n} partner atrasado (>7 d)",
+      "kpiPending": "{n} por listar en Billit",
+      "kpiQuota": "{n} cerca del cupo docs",
+      "quotaNear": "≥80%",
+      "partnerOverdue": ">7 d",
+      "markUnavailable": "No elegible (active + PartyID requeridos)",
+      "saasDraft": "Borrador SaaS",
+      "saasConfirm": "Crear un borrador de factura SaaS (88 EUR sin IVA) para {name} con la cuenta master Billit?",
+      "saasOk": "Borrador SaaS creado ({id}) — {total} EUR IVA incl.",
+      "saasError": "Error al crear el borrador SaaS",
+      "saasUnavailable": "Cuenta master Billit no configurada"
     }
   },
   "commissions": {

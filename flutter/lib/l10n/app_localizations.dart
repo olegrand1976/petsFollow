@@ -568,6 +568,36 @@ abstract class AppLocalizations {
   /// **'Finaliser'**
   String get proLightFinalizeReport;
 
+  /// No description provided for @proLightNewConsultation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle Consultation'**
+  String get proLightNewConsultation;
+
+  /// No description provided for @proLightConsultationNextTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation enregistrée — suite ?'**
+  String get proLightConsultationNextTitle;
+
+  /// No description provided for @proLightConsultationCtaDaf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une ordonnance & Facturer'**
+  String get proLightConsultationCtaDaf;
+
+  /// No description provided for @proLightConsultationCtaInvoice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturer directement'**
+  String get proLightConsultationCtaInvoice;
+
+  /// No description provided for @proLightConsultationCtaDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get proLightConsultationCtaDone;
+
   /// No description provided for @proLightReportFinal.
   ///
   /// In fr, this message translates to:

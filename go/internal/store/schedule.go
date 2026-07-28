@@ -197,7 +197,8 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng
+			COALESCE(v.address_text,''), v.lat, v.lng,
+			COALESCE(v.consultation_session, false)
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
@@ -213,7 +214,23 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 		return nil, err
 	}
 	defer rows.Close()
-	return scanVisitsFull(rows)
+	var out []Visit
+	for rows.Next() {
+		var v Visit
+		if err := rows.Scan(
+			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.PetName, &v.ClientName, &v.ClientID,
+			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	if out == nil {
+		out = []Visit{}
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID string) (bool, int, error) {
@@ -268,6 +285,7 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID string, start ti
 		SELECT COUNT(*)::int FROM visits.visits
 		WHERE practice_id = $1
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+		  AND COALESCE(consultation_session, false) = false
 		  AND ($4 = '' OR id::text <> $4)
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
@@ -346,6 +364,9 @@ func parseHM(s string) (h, m int) {
 
 func overlapsBusy(visits []Visit, start, end time.Time, defaultDur int) bool {
 	for _, v := range visits {
+		if v.ConsultationSession {
+			continue
+		}
 		busyAt := v.ScheduledAt
 		if v.Status == "reschedule_pending" && v.ProposedScheduledAt != nil {
 			busyAt = v.ProposedScheduledAt

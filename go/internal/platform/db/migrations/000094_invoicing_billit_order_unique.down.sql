@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS invoicing.idx_invoicing_documents_billit_order_id;

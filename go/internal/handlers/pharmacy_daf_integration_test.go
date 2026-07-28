@@ -302,4 +302,17 @@ func TestPharmacyDAFWithVisitID(t *testing.T) {
 	if doc["petId"] != petID {
 		t.Fatalf("petId=%v want %s", doc["petId"], petID)
 	}
+
+	// Foreign visit UUID must be rejected (ownership).
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
+		"clientUserId": ownerID,
+		"petId":        petID,
+		"visitId":      "00000000-0000-4000-8000-000000000099",
+		"items": []map[string]any{{
+			"medicationId": medID, "qty": 1, "ammNumber": "BE-VISIT-BAD",
+		}},
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("foreign visit want 400 got %d %#v", code, env)
+	}
 }

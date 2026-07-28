@@ -14,11 +14,13 @@ import (
 
 func (s *Store) GetPracticeInvoicingProfile(ctx context.Context, practiceID string) (invoicing.PracticeParty, bool, error) {
 	var p invoicing.PracticeParty
-	var legal, vat, company, email string
+	var legal, vat, company, email, street, city, postal string
 	err := s.pool.QueryRow(ctx, `
 		SELECT COALESCE(company_legal_name,''), COALESCE(vat_number,''), COALESCE(company_number,''),
-		       COALESCE(NULLIF(contact_email,''), '')
-		FROM practice.practices WHERE id = $1`, practiceID).Scan(&legal, &vat, &company, &email)
+		       COALESCE(NULLIF(contact_email,''), ''),
+		       COALESCE(address_line1,''), COALESCE(city,''), COALESCE(postal_code,'')
+		FROM practice.practices WHERE id = $1`, practiceID).Scan(
+		&legal, &vat, &company, &email, &street, &city, &postal)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return p, false, nil
@@ -31,10 +33,15 @@ func (s *Store) GetPracticeInvoicingProfile(ctx context.Context, practiceID stri
 		VATNumber:     vat,
 		CompanyNumber: company,
 		Email:         email,
+		Street:        street,
+		City:          city,
+		Postal:        postal,
+		Country:       "BE",
 	}
 	complete := strings.TrimSpace(legal) != "" &&
 		strings.TrimSpace(vat) != "" &&
-		strings.TrimSpace(company) != ""
+		strings.TrimSpace(company) != "" &&
+		strings.TrimSpace(email) != ""
 	return p, complete, nil
 }
 
@@ -95,12 +102,19 @@ func (s *Store) GetConnection(ctx context.Context, practiceID string) (invoicing
 	return c, ref, nil
 }
 
-func (s *Store) ListConnections(ctx context.Context) ([]invoicing.Connection, error) {
+func (s *Store) ListConnections(ctx context.Context, yyyymm int) ([]invoicing.Connection, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT practice_id, billit_party_id, status, invoice_to_partner, partner_listed_at,
-		       docs_included_monthly, api_secret_ref, last_error, connected_at, updated_at
-		FROM invoicing.practice_connections
-		ORDER BY updated_at DESC`)
+		SELECT c.practice_id::text,
+		       COALESCE(NULLIF(TRIM(p.company_legal_name), ''), NULLIF(TRIM(p.name), ''), ''),
+		       COALESCE(p.contact_email, ''),
+		       c.billit_party_id, c.status, c.invoice_to_partner, c.partner_listed_at,
+		       c.docs_included_monthly, c.api_secret_ref, c.last_error, c.connected_at, c.updated_at,
+		       COALESCE(u.doc_count, 0)
+		FROM invoicing.practice_connections c
+		JOIN practice.practices p ON p.id = c.practice_id
+		LEFT JOIN invoicing.usage_monthly u
+		  ON u.practice_id = c.practice_id AND u.yyyymm = $1
+		ORDER BY c.updated_at DESC`, yyyymm)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +126,10 @@ func (s *Store) ListConnections(ctx context.Context) ([]invoicing.Connection, er
 		var party, secretRef, lastErr *string
 		var partnerListed, connected *time.Time
 		if err := rows.Scan(
-			&c.PracticeID, &party, &status, &c.InvoiceToPartner, &partnerListed,
+			&c.PracticeID, &c.PracticeName, &c.ContactEmail,
+			&party, &status, &c.InvoiceToPartner, &partnerListed,
 			&c.DocsIncludedMonthly, &secretRef, &lastErr, &connected, &c.UpdatedAt,
+			&c.UsageThisMonth,
 		); err != nil {
 			return nil, err
 		}
@@ -136,12 +152,22 @@ func (s *Store) MarkPartnerListed(ctx context.Context, practiceID string) error 
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE invoicing.practice_connections
 		SET partner_listed_at = now(), updated_at = now()
-		WHERE practice_id = $1`, practiceID)
+		WHERE practice_id = $1
+		  AND status = 'active'
+		  AND billit_party_id IS NOT NULL
+		  AND TRIM(billit_party_id) <> ''`, practiceID)
 	if err != nil {
 		return err
 	}
 	if tag.RowsAffected() == 0 {
-		return invoicing.ErrNotConnected
+		_, _, getErr := s.GetConnection(ctx, practiceID)
+		if errors.Is(getErr, invoicing.ErrNotConnected) {
+			return invoicing.ErrNotConnected
+		}
+		if getErr != nil {
+			return getErr
+		}
+		return invoicing.ErrPartnerNotEligible
 	}
 	return nil
 }
@@ -151,6 +177,22 @@ func (s *Store) CreateConnectState(ctx context.Context, state, practiceID, userI
 		INSERT INTO invoicing.connect_states (state, practice_id, created_by, expires_at)
 		VALUES ($1,$2,$3,$4)`, state, practiceID, userID, expiresAt)
 	return err
+}
+
+// AssertConnectState verifies the OAuth-like state is valid without consuming it.
+func (s *Store) AssertConnectState(ctx context.Context, state, practiceID string) error {
+	var one int
+	err := s.pool.QueryRow(ctx, `
+		SELECT 1 FROM invoicing.connect_states
+		WHERE state = $1 AND practice_id = $2 AND consumed_at IS NULL AND expires_at > now()`,
+		state, practiceID).Scan(&one)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.ErrInvalidState
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Store) ConsumeConnectState(ctx context.Context, state, practiceID string) error {
@@ -168,6 +210,74 @@ func (s *Store) ConsumeConnectState(ctx context.Context, state, practiceID strin
 	return nil
 }
 
+// ConsumeConnectStateAndUpsertConnection consumes the one-time state and persists the
+// connection in the same transaction (avoids burning state if Upsert fails).
+func (s *Store) ConsumeConnectStateAndUpsertConnection(ctx context.Context, state string, c invoicing.Connection, apiSecretRef string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE invoicing.connect_states
+		SET consumed_at = now()
+		WHERE state = $1 AND practice_id = $2 AND consumed_at IS NULL AND expires_at > now()`,
+		state, c.PracticeID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.ErrInvalidState
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO invoicing.practice_connections (
+			practice_id, billit_party_id, status, invoice_to_partner, partner_listed_at,
+			docs_included_monthly, api_secret_ref, last_error, connected_at, updated_at
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())
+		ON CONFLICT (practice_id) DO UPDATE SET
+			billit_party_id = EXCLUDED.billit_party_id,
+			status = EXCLUDED.status,
+			invoice_to_partner = EXCLUDED.invoice_to_partner,
+			partner_listed_at = COALESCE(EXCLUDED.partner_listed_at, invoicing.practice_connections.partner_listed_at),
+			docs_included_monthly = EXCLUDED.docs_included_monthly,
+			api_secret_ref = CASE WHEN EXCLUDED.api_secret_ref = '' THEN invoicing.practice_connections.api_secret_ref ELSE EXCLUDED.api_secret_ref END,
+			last_error = EXCLUDED.last_error,
+			connected_at = COALESCE(EXCLUDED.connected_at, invoicing.practice_connections.connected_at),
+			updated_at = now()`,
+		c.PracticeID, nullIfEmpty(c.BillitPartyID), string(c.Status), c.InvoiceToPartner, c.PartnerListedAt,
+		c.DocsIncludedMonthly, apiSecretRef, nullIfEmpty(c.LastError), c.ConnectedAt,
+	)
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// MarkStaleSendingDocuments rejects Peppol docs stuck in sending past cutoff (frees quota slots).
+func (s *Store) MarkStaleSendingDocuments(ctx context.Context, cutoff time.Time, limit int) (int, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'rejected',
+		    peppol_status = 'stale_timeout',
+		    updated_at = now()
+		WHERE id IN (
+			SELECT id FROM invoicing.documents
+			WHERE status = 'sending'
+			  AND type IN ('invoice', 'credit_note')
+			  AND updated_at < $1
+			ORDER BY updated_at
+			LIMIT $2
+		)`, cutoff, limit)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
+}
+
 func (s *Store) CreateDocument(ctx context.Context, doc invoicing.Document, lines []invoicing.Line) (invoicing.Document, error) {
 	cp, err := json.Marshal(doc.Counterparty)
 	if err != nil {
@@ -177,6 +287,14 @@ func (s *Store) CreateDocument(ctx context.Context, doc invoicing.Document, line
 	if doc.RelatedDocumentID != "" {
 		related = doc.RelatedDocumentID
 	}
+	var visitID any
+	if doc.VisitID != "" {
+		visitID = doc.VisitID
+	}
+	var dafID any
+	if doc.DAFID != "" {
+		dafID = doc.DAFID
+	}
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -184,16 +302,20 @@ func (s *Store) CreateDocument(ctx context.Context, doc invoicing.Document, line
 	}
 	defer tx.Rollback(ctx)
 
+	source := string(doc.Source)
+	if source == "" {
+		source = string(invoicing.SourcePractice)
+	}
 	tag, err := tx.Exec(ctx, `
 		INSERT INTO invoicing.documents (
-			id, practice_id, type, status, number, billit_order_id, idempotency_key,
+			id, practice_id, type, status, source, number, billit_order_id, idempotency_key,
 			counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
-			related_document_id, created_by, created_at, updated_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+			related_document_id, visit_id, daf_id, created_by, created_at, updated_at
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
 		ON CONFLICT (practice_id, idempotency_key) DO NOTHING`,
-		doc.ID, doc.PracticeID, string(doc.Type), string(doc.Status), nullIfEmpty(doc.Number), nullIfEmpty(doc.BillitOrderID),
+		doc.ID, doc.PracticeID, string(doc.Type), string(doc.Status), source, nullIfEmpty(doc.Number), nullIfEmpty(doc.BillitOrderID),
 		doc.IdempotencyKey, cp, doc.Currency, doc.TotalExclCents, doc.TotalVATCents, doc.TotalInclCents,
-		related, nullIfEmpty(doc.CreatedBy), doc.CreatedAt, doc.UpdatedAt,
+		related, visitID, dafID, nullIfEmpty(doc.CreatedBy), doc.CreatedAt, doc.UpdatedAt,
 	)
 	if err != nil {
 		return invoicing.Document{}, err
@@ -222,33 +344,112 @@ func (s *Store) CreateDocument(ctx context.Context, doc invoicing.Document, line
 	return s.GetDocument(ctx, doc.PracticeID, doc.ID)
 }
 
-func (s *Store) ClaimDocumentForSend(ctx context.Context, practiceID, docID string) (invoicing.Document, error) {
-	tag, err := s.pool.Exec(ctx, `
-		UPDATE invoicing.documents
-		SET status = 'sending', updated_at = now()
-		WHERE id = $1 AND practice_id = $2 AND status IN ('draft', 'issued')`,
-		docID, practiceID)
+func (s *Store) ClaimDocumentForSend(ctx context.Context, practiceID, docID string, yyyymm, quotaLimit int) (invoicing.Document, invoicing.DocStatus, error) {
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return invoicing.Document{}, err
+		return invoicing.Document{}, "", err
+	}
+	defer tx.Rollback(ctx)
+
+	// Serialize Peppol sends per practice (quota check + claim).
+	var lock int
+	err = tx.QueryRow(ctx, `
+		SELECT 1 FROM invoicing.practice_connections
+		WHERE practice_id = $1 FOR UPDATE`, practiceID).Scan(&lock)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, "", invoicing.ErrNotConnected
+		}
+		return invoicing.Document{}, "", err
+	}
+
+	var typ, status string
+	var source string
+	err = tx.QueryRow(ctx, `
+		SELECT type, status, COALESCE(source, 'practice') FROM invoicing.documents
+		WHERE id = $1 AND practice_id = $2 FOR UPDATE`, docID, practiceID).Scan(&typ, &status, &source)
+	if err == nil && source == string(invoicing.SourceSaasMaster) {
+		return invoicing.Document{}, invoicing.DocStatus(status), invoicing.ErrDocNotDraft
+	}
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, "", invoicing.ErrDocNotFound
+		}
+		return invoicing.Document{}, "", err
+	}
+
+	docType := invoicing.DocType(typ)
+	prevStatus := invoicing.DocStatus(status)
+	switch {
+	case docType == invoicing.DocProforma && status == string(invoicing.StatusDraft):
+		// ok
+	case (docType == invoicing.DocInvoice || docType == invoicing.DocCreditNote) &&
+		(status == string(invoicing.StatusDraft) || status == string(invoicing.StatusRejected)):
+		// ok — rejected allows Peppol retry; issued is not a Peppol sendable state
+	case status == string(invoicing.StatusSending):
+		return invoicing.Document{}, prevStatus, invoicing.ErrSendInProgress
+	default:
+		return invoicing.Document{}, prevStatus, invoicing.ErrDocNotDraft
+	}
+
+	if invoicing.PeppolRequired(docType) && quotaLimit > 0 {
+		var usage int
+		err = tx.QueryRow(ctx, `
+			SELECT doc_count FROM invoicing.usage_monthly
+			WHERE practice_id = $1 AND yyyymm = $2
+			FOR UPDATE`, practiceID, yyyymm).Scan(&usage)
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return invoicing.Document{}, prevStatus, err
+			}
+			usage = 0
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO invoicing.usage_monthly (practice_id, yyyymm, doc_count)
+				VALUES ($1, $2, 0)
+				ON CONFLICT (practice_id, yyyymm) DO NOTHING`, practiceID, yyyymm); err != nil {
+				return invoicing.Document{}, prevStatus, err
+			}
+			err = tx.QueryRow(ctx, `
+				SELECT doc_count FROM invoicing.usage_monthly
+				WHERE practice_id = $1 AND yyyymm = $2
+				FOR UPDATE`, practiceID, yyyymm).Scan(&usage)
+			if err != nil {
+				return invoicing.Document{}, prevStatus, err
+			}
+		}
+		// Live hole fix: in-flight Peppol sends occupy a quota slot until delivered or rejected.
+		var sending int
+		err = tx.QueryRow(ctx, `
+			SELECT COUNT(*)::int FROM invoicing.documents
+			WHERE practice_id = $1
+			  AND type IN ('invoice', 'credit_note')
+			  AND status = 'sending'
+			  AND id <> $2`, practiceID, docID).Scan(&sending)
+		if err != nil {
+			return invoicing.Document{}, prevStatus, err
+		}
+		if usage+sending >= quotaLimit {
+			return invoicing.Document{}, prevStatus, invoicing.ErrDocsQuotaExceeded
+		}
+	}
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'sending',
+		    peppol_status = CASE WHEN status = 'rejected' THEN NULL ELSE peppol_status END,
+		    updated_at = now()
+		WHERE id = $1 AND practice_id = $2`, docID, practiceID)
+	if err != nil {
+		return invoicing.Document{}, prevStatus, err
 	}
 	if tag.RowsAffected() == 0 {
-		// Distinguish missing vs already sending/done
-		var status string
-		err := s.pool.QueryRow(ctx, `
-			SELECT status FROM invoicing.documents WHERE id = $1 AND practice_id = $2`,
-			docID, practiceID).Scan(&status)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return invoicing.Document{}, invoicing.ErrDocNotFound
-			}
-			return invoicing.Document{}, err
-		}
-		if status == string(invoicing.StatusSending) {
-			return invoicing.Document{}, invoicing.ErrSendInProgress
-		}
-		return invoicing.Document{}, invoicing.ErrDocNotDraft
+		return invoicing.Document{}, prevStatus, invoicing.ErrDocNotFound
 	}
-	return s.GetDocument(ctx, practiceID, docID)
+	if err := tx.Commit(ctx); err != nil {
+		return invoicing.Document{}, prevStatus, err
+	}
+	doc, err := s.GetDocument(ctx, practiceID, docID)
+	return doc, prevStatus, err
 }
 
 func (s *Store) GetDocumentByIdempotency(ctx context.Context, practiceID, key string) (invoicing.Document, error) {
@@ -268,17 +469,18 @@ func (s *Store) GetDocumentByIdempotency(ctx context.Context, practiceID, key st
 func (s *Store) GetDocument(ctx context.Context, practiceID, docID string) (invoicing.Document, error) {
 	var doc invoicing.Document
 	var typ, status string
-	var number, orderID, related, peppol, createdBy *string
+	var number, orderID, related, visitID, dafID, peppol, createdBy *string
 	var cp []byte
 	var sentAt *time.Time
+	var source string
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, practice_id, type, status, number, billit_order_id, idempotency_key,
+		SELECT id, practice_id, type, status, COALESCE(source, 'practice'), number, billit_order_id, idempotency_key,
 		       counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
-		       related_document_id, peppol_status, sent_at, created_by, created_at, updated_at
+		       related_document_id, visit_id, daf_id, peppol_status, sent_at, created_by, created_at, updated_at
 		FROM invoicing.documents WHERE id = $1 AND practice_id = $2`, docID, practiceID).Scan(
-		&doc.ID, &doc.PracticeID, &typ, &status, &number, &orderID, &doc.IdempotencyKey,
+		&doc.ID, &doc.PracticeID, &typ, &status, &source, &number, &orderID, &doc.IdempotencyKey,
 		&cp, &doc.Currency, &doc.TotalExclCents, &doc.TotalVATCents, &doc.TotalInclCents,
-		&related, &peppol, &sentAt, &createdBy, &doc.CreatedAt, &doc.UpdatedAt,
+		&related, &visitID, &dafID, &peppol, &sentAt, &createdBy, &doc.CreatedAt, &doc.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -288,6 +490,7 @@ func (s *Store) GetDocument(ctx context.Context, practiceID, docID string) (invo
 	}
 	doc.Type = invoicing.DocType(typ)
 	doc.Status = invoicing.DocStatus(status)
+	doc.Source = invoicing.DocSource(source)
 	if number != nil {
 		doc.Number = *number
 	}
@@ -296,6 +499,12 @@ func (s *Store) GetDocument(ctx context.Context, practiceID, docID string) (invo
 	}
 	if related != nil {
 		doc.RelatedDocumentID = *related
+	}
+	if visitID != nil {
+		doc.VisitID = *visitID
+	}
+	if dafID != nil {
+		doc.DAFID = *dafID
 	}
 	if peppol != nil {
 		doc.PeppolStatus = *peppol
@@ -330,6 +539,7 @@ func (s *Store) ListDocuments(ctx context.Context, practiceID string, limit int)
 	rows, err := s.pool.Query(ctx, `
 		SELECT id FROM invoicing.documents
 		WHERE practice_id = $1
+		  AND COALESCE(source, 'practice') = 'practice'
 		ORDER BY created_at DESC
 		LIMIT $2`, practiceID, limit)
 	if err != nil {
@@ -373,6 +583,116 @@ func (s *Store) UpdateDocumentExternal(ctx context.Context, practiceID, docID, o
 		return invoicing.ErrDocNotFound
 	}
 	return nil
+}
+
+// ApplyBillitWebhookStatus updates doc status by Billit order id and, on first delivered,
+// increments monthly usage in the same transaction (retry-safe with webhook forget+503).
+func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, status invoicing.DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var docID, practiceID, prev string
+	err = tx.QueryRow(ctx, `
+		SELECT id::text, practice_id::text, status
+		FROM invoicing.documents
+		WHERE billit_order_id = $1
+		FOR UPDATE`, orderID).Scan(&docID, &practiceID, &prev)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.ErrDocNotFound
+		}
+		return err
+	}
+	prevStatus := invoicing.DocStatus(prev)
+	applyStatus := invoicing.ResolveWebhookApplyStatus(prevStatus, status)
+	applyPeppol := peppolStatus
+	applySent := sentAt
+	if applyStatus != status {
+		// Transition suppressed (monotonic) — keep peppol/sent as-is.
+		applyPeppol = ""
+		applySent = nil
+	}
+	tag, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = $2,
+		    peppol_status = COALESCE(NULLIF($3,''), peppol_status),
+		    sent_at = COALESCE($4, sent_at),
+		    updated_at = now()
+		WHERE id = $1`,
+		docID, string(applyStatus), applyPeppol, applySent)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.ErrDocNotFound
+	}
+	if applyStatus == invoicing.StatusDelivered && prevStatus != invoicing.StatusDelivered {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO invoicing.usage_monthly (practice_id, yyyymm, doc_count)
+			VALUES ($1::uuid, $2, 1)
+			ON CONFLICT (practice_id, yyyymm)
+			DO UPDATE SET doc_count = invoicing.usage_monthly.doc_count + 1`,
+			practiceID, yyyymm); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
+func (s *Store) InsertWebhookEvent(ctx context.Context, provider, eventType, externalID string, payload []byte) (string, bool, error) {
+	var id string
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO invoicing.webhook_events (provider, event_type, external_id, payload)
+		VALUES ($1, NULLIF($2,''), NULLIF($3,''), $4::jsonb)
+		ON CONFLICT (provider, external_id, COALESCE(event_type, ''))
+		WHERE external_id IS NOT NULL AND external_id <> ''
+		DO NOTHING
+		RETURNING id::text`,
+		provider, eventType, externalID, string(payload),
+	).Scan(&id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", true, nil
+		}
+		return "", false, err
+	}
+	return id, false, nil
+}
+
+func (s *Store) MarkWebhookProcessed(ctx context.Context, eventID string, processErr string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE invoicing.webhook_events
+		SET processed_at = now(), error = NULLIF($2,'')
+		WHERE id = $1`,
+		eventID, processErr)
+	return err
+}
+
+func (s *Store) DeleteWebhookEvent(ctx context.Context, eventID string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM invoicing.webhook_events WHERE id = $1`, eventID)
+	return err
+}
+
+// PurgeOldWebhookEvents deletes Billit webhook audit rows older than cutoff (payloads may hold PII).
+func (s *Store) PurgeOldWebhookEvents(ctx context.Context, cutoff time.Time, limit int) (int, error) {
+	if limit <= 0 {
+		limit = 500
+	}
+	tag, err := s.pool.Exec(ctx, `
+		DELETE FROM invoicing.webhook_events
+		WHERE id IN (
+			SELECT id FROM invoicing.webhook_events
+			WHERE received_at < $1
+			ORDER BY received_at
+			LIMIT $2
+		)`, cutoff, limit)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
 }
 
 func (s *Store) IncrementUsage(ctx context.Context, practiceID string, yyyymm int) error {

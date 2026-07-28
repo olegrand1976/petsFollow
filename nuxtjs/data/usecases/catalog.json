@@ -18,7 +18,8 @@
       "items": [
         "UC-VP-01",
         "UC-VP-02",
-        "UC-VP-03"
+        "UC-VP-03",
+        "UC-VP-04"
       ]
     },
     {
@@ -214,6 +215,49 @@
         "Ouverture thread"
       ]
     },
+    "UC-VP-04": {
+      "id": "UC-VP-04",
+      "folderId": "vetpro",
+      "slug": "UC-VP-04-nouvelle-consultation",
+      "title": "Nouvelle consultation (CR → DAF / facture)",
+      "duration": "~12 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Depuis la liste clients, démarrer une consultation rapide : animal → compte-rendu → enchaînement DAF et/ou facture Billit.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging / local Web Pro.",
+        "Flags PHARMACY_ENABLED / Billit selon l’environnement (CTA masqués si off).",
+        "Client seed avec au moins un animal."
+      ],
+      "steps": [
+        "Se connecter en véto → Clients.",
+        "Sur une ligne client, cliquer Nouvelle Consultation.",
+        "Choisir l’animal (pré-sélectionné s’il n’y en a qu’un) → Démarrer.",
+        "Rédiger ou dicter le CR (audio → transcription) → Enregistrer (ou Finaliser).",
+        "Choisir :",
+        "(Optionnel) Même CTA depuis la fiche client."
+      ],
+      "expected": [
+        "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
+        "Fermeture sans enregistrement CR → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.",
+        "CR accessible immédiatement.",
+        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document).",
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture)."
+      ],
+      "checklist": [
+        "CTA liste clients",
+        "Modal + CR",
+        "CTA DAF / facture"
+      ]
+    },
     "UC-CL-01": {
       "id": "UC-CL-01",
       "folderId": "client",
@@ -360,17 +404,20 @@
         "Ouvrir une visite / créneau si présent.",
         "Marquer Fait (ou action équivalente).",
         "(Optionnel) Compte rendu : dictée (bandeau micro + Arrêter) ou fichier audio ; pas de bouton Améliorer IA ; Enregistrer / Finaliser.",
+        "Nouvelle Consultation (VetLight / farrier avec write_notes) : fiche animal → CTA → visite confirmée immédiate (source=care_pro, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou Terminer.",
         "Onglet Messages → composer vers le client partagé → envoyer (voir aussi UC-X-01 étape care_pro)."
       ],
       "expected": [
         "Application terrain distincte de l’application propriétaire.",
         "Agenda utilisable ; action « Fait » prise en compte.",
-        "Messages et CR utilisables sans confusion de boutons."
+        "Messages et CR utilisables sans confusion de boutons.",
+        "Consultation terrain créable hors créneau préexistant (visite confirmed)."
       ],
       "checklist": [
         "Login Pro Light",
         "Agenda Aujourd’hui",
-        "Marquer Fait"
+        "Marquer Fait",
+        "Nouvelle Consultation + CR"
       ]
     },
     "UC-PL-02": {

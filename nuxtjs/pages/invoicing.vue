@@ -151,7 +151,14 @@
             </select>
           </label>
           <ProInput
-            v-if="docForm.country === 'BE' || docForm.country === 'FR' || docForm.country === 'IT' || docForm.country === 'ES'"
+            v-if="docForm.country === 'BE' || docForm.country === 'FR' || docForm.country === 'IT'"
+            v-model="docForm.vatNumber"
+            test-id="invoicing-cp-vat"
+            :label="$t('invoicing.counterparty.vatNumber')"
+            required
+          />
+          <ProInput
+            v-if="docForm.country === 'ES'"
             v-model="docForm.vatNumber"
             test-id="invoicing-cp-vat"
             :label="$t('invoicing.counterparty.vatNumber')"
@@ -164,27 +171,37 @@
           <ProInput
             v-if="docForm.country === 'FR'"
             v-model="docForm.siret"
+            test-id="invoicing-cp-siret"
             :label="$t('invoicing.counterparty.siret')"
+            :required="!docForm.siren"
           />
           <ProInput
             v-if="docForm.country === 'FR'"
             v-model="docForm.siren"
+            test-id="invoicing-cp-siren"
             :label="$t('invoicing.counterparty.siren')"
+            :required="!docForm.siret"
           />
           <ProInput
             v-if="docForm.country === 'IT'"
             v-model="docForm.codiceDestinatario"
+            test-id="invoicing-cp-codice"
             :label="$t('invoicing.counterparty.codiceDestinatario')"
+            :required="!docForm.pec"
           />
           <ProInput
             v-if="docForm.country === 'IT'"
             v-model="docForm.pec"
+            test-id="invoicing-cp-pec"
             :label="$t('invoicing.counterparty.pec')"
+            :required="!docForm.codiceDestinatario"
           />
           <ProInput
             v-if="docForm.country === 'ES'"
             v-model="docForm.taxId"
+            test-id="invoicing-cp-taxid"
             :label="$t('invoicing.counterparty.taxId')"
+            :required="!docForm.vatNumber"
           />
           <ProInput v-model="docForm.street" :label="$t('invoicing.counterparty.street')" />
           <ProInput v-model="docForm.postal" :label="$t('invoicing.counterparty.postal')" />
@@ -354,8 +371,8 @@ function unwrap<T>(res: any): T {
 function canSend(doc: Document) {
   // Proforma: émission locale (issued) sans Peppol — une seule fois depuis draft.
   if (doc.type === 'proforma') return doc.status === 'draft'
-  // Invoice / credit note: brouillon, émis (retry Peppol) ou rejeté (rejeu).
-  return doc.status === 'draft' || doc.status === 'issued' || doc.status === 'rejected'
+  // Invoice / credit note: brouillon ou rejeté (rejeu Peppol) — pas issued.
+  return doc.status === 'draft' || doc.status === 'rejected'
 }
 
 function formatMoney(cents: number) {

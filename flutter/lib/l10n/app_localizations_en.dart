@@ -253,6 +253,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proLightFinalizeReport => 'Finalize';
 
   @override
+  String get proLightNewConsultation => 'New consultation';
+
+  @override
+  String get proLightConsultationNextTitle => 'Consultation saved — next?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'Create prescription & invoice';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Invoice directly';
+
+  @override
+  String get proLightConsultationCtaDone => 'Done';
+
+  @override
   String get proLightReportFinal => 'Finalized';
 
   @override

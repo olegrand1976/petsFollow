@@ -176,8 +176,9 @@ Compte : `vet.demo@petsfollow.test`
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
 | C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda |
-| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) |
+| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; close pendant save → attendre PUT puis 409=garder |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain |
+| C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` |
 
 ### C3 — Calendrier & RDV
 
@@ -224,21 +225,24 @@ Compte : `vet.demo@petsfollow.test`
 | C6.7 | P2 | CR visite Nuxt | Rapport + finalize (si UI) | Draft → final ; audio purgé |
 | C6.8 | P1 | CR multi-auteurs | Visite avec CR terrain + cabinet → `/calendar` | Liste auteurs ; peer lecture seule ; « Mon CR » éditable |
 
-### C7 — Facturation Billit (dev)
+### I7 — Facturation Billit (dev)
 
-> **UI WIP** : `/invoicing` affiche « En cours de développement » tant que `INVOICING_UI_ENABLED=false` ([`nuxtjs/utils/invoicing-ui.ts`](../nuxtjs/utils/invoicing-ui.ts)). Même flag pour les CTA Facturer (consultation, DAF). UI métier conservée derrière le flag. API Billit mock toujours testée côté Go.
+> **UI** : kill-switch [`INVOICING_UI_ENABLED`](../nuxtjs/utils/invoicing-ui.ts) (page `/invoicing` + CTA Facturer consultation/DAF). `true` = UI métier ; `false` = message WIP. API Billit mock toujours testée côté Go. (IDs **I7.*** pour éviter collision avec pharmacie C7.)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
-| C7.0 | P1 | UI WIP | `/invoicing` (flag Nuxt Billit on) | Message under-development ; pas de connect/create |
-| C7.1 | P1 | Connect mock (API) | `POST …/connect/start` + complete mock | Statut `active` |
-| C7.2 | P1 | Facture BE (API) | Créer facture pays BE + TVA + send | Document draft ; send → delivered (mock) |
-| C7.3 | P1 | Contrepartie IT (API) | Pays IT sans codice/PEC | Erreur validation ; avec codice OK |
-| C7.4 | P1 | Credit note / proforma (API) | Types `credit_note` + `proforma` | Création OK ; proforma send → `issued` |
-| C7.5 | P1 | Quota mensuel | `docs_included_monthly=1` puis 2e send ; doc déjà `sending` | 409 `docs_quota_exceeded` (usage + in-flight) |
-| C7.6 | P1 | Retry rejected | Invoice `rejected` → send | Rejeu Peppol → delivered (mock) |
+| I7.0 | P1 | UI WIP (flag off) | `/invoicing` si `INVOICING_UI_ENABLED=false` | Message under-development |
+| I7.1 | P1 | Connect mock | UI ou `POST …/connect/start` + complete | Statut `active` |
+| I7.2 | P1 | Facture BE | Créer facture BE + TVA + send | draft → delivered (mock) |
+| I7.3 | P1 | Contrepartie IT | Pays IT sans codice/PEC | Erreur validation |
+| I7.4 | P1 | Credit note / proforma | CN + `relatedDocumentId` ; proforma send | CN OK ; proforma → `issued` |
+| I7.5 | P1 | Quota mensuel | `docs_included_monthly=1` puis 2e send ; doc `sending` | 409 `docs_quota_exceeded` |
+| I7.6 | P1 | Retry rejected | Invoice `rejected` → send | Rejeu → delivered (mock) |
+| I7.7 | P1 | Admin mark-partner | `/admin/invoicing` + confirm + mark | `partnerListedAt` ; liste avec `practiceName` |
+| I7.8 | P1 | Admin alertes ops | Connexions active sans partner >7 j ; usage ≥80 % | KPI + CSV pending PartyID |
+| I7.9 | P1 | Flux A SaaS draft | Admin `POST …/saas-draft` (mock) ; mark-partner hors `active` | Doc `source=saas_master` + orderId ; 409 `partner_mark_not_eligible` |
 
-Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (C7.0 ; skip si redirect = flag Nuxt off). Auto API : Go `TestInvoicingConnectAndSendMock` / `TestInvoicingQuotaExceeded` / `TestInvoicingRejectedCanRetry` / `TestInvoicingProformaResendRefused`.
+Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (I7.1–I7.4 si UI on ; I7.0 si off). Auto API : Go `TestInvoicing*` / `TestInvoicingWebhook*` / `TestInvoicingAdminMarkPartner*` / `TestInvoicingAdminSaasDraft`.
 
 ---
 
@@ -458,8 +462,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
 | C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
-| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` | Draft avec `visitId` ; CTA Facturer masqué tant que UI WIP |
-| C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 (UI facture WIP) |
+| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` | Draft avec `visitId` ; CTA Facturer si `INVOICING_UI_ENABLED` |
+| C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 |
 
 **Ordonnances (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/ordonnances` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-ORDONNANCES.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
@@ -668,6 +672,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture | `@p0` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
@@ -708,7 +713,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 ### Go / Nuxt unit / Flutter
 
 - Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
-- Billit / invoicing : `go test ./internal/invoicing/...` (totaux, seal, `ValidateCounterparty` BE/FR/IT/ES, mapper, client `httptest`, webhook HMAC) ; intégration `TestInvoicingConnectAndSendMock` + `TestInvoicingWebhook*` ; config `TestValidateBillit*` ; Playwright UI WIP `@p1` `@invoicing` `18-invoicing.spec.ts` (C7.0)
+- Billit / invoicing : `go test ./internal/invoicing/...` + intégration `TestInvoicing*` / `TestInvoicingWebhook*` / `TestInvoicingAdminMarkPartner` ; Playwright `@p1` `@invoicing` `18-invoicing.spec.ts` (UI métier si `INVOICING_UI_ENABLED`) ; admin `/admin/invoicing` (`06-admin.spec.ts`) — checklist **I7**
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API

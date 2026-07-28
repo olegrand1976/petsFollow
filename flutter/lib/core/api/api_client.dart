@@ -1257,10 +1257,18 @@ class ApiClient {
     String petId, {
     String? notes,
     DateTime? scheduledAt,
+    bool confirmDirect = false,
+    bool silentConfirm = false,
+    bool consultationSession = false,
+    int? durationMinutes,
   }) async {
     final res = await dio.post('/api/v1/pets/$petId/visits', data: {
       if (notes != null) 'notes': notes,
       if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+      if (confirmDirect) 'confirmDirect': true,
+      if (silentConfirm) 'silentConfirm': true,
+      if (consultationSession) 'consultationSession': true,
+      if (durationMinutes != null) 'durationMinutes': durationMinutes,
     });
     return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
   }

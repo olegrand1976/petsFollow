@@ -38,15 +38,22 @@
     <!-- Étape B : CR médical (dictée Gemini via ProVisitReportPanel) -->
     <div v-else data-testid="consultation-report">
       <p class="pro-hint pro-mb-md">{{ $t('clients.consultation.reportHint') }}</p>
+      <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
       <ProVisitReportPanel
         :visit-id="visitId"
         @saved="onReportSaved"
         @finalized="onReportSaved"
+        @busy="onReportBusy"
       />
     </div>
 
     <template #footer>
-      <ProButton variant="ghost" test-id="consultation-cancel" @click="close">
+      <ProButton
+        variant="ghost"
+        test-id="consultation-cancel"
+        :disabled="reportBusy || closing"
+        @click="close"
+      >
         {{ $t('common.cancel') }}
       </ProButton>
 
@@ -64,9 +71,10 @@
       <!-- Étape C : CTA post-enregistrement -->
       <template v-else-if="reportSaved">
         <ProButton
-          v-if="pharmacyEnabled"
+          v-if="showDafCta"
           variant="secondary"
           test-id="consultation-cta-daf"
+          :disabled="closing"
           @click="goDaf"
         >
           {{ $t('clients.consultation.ctaDafInvoice') }}
@@ -74,6 +82,7 @@
         <ProButton
           v-if="invoicingUiEnabled"
           test-id="consultation-cta-invoice"
+          :disabled="closing"
           @click="goInvoice"
         >
           {{ $t('clients.consultation.ctaInvoice') }}
@@ -81,6 +90,7 @@
         <ProButton
           variant="secondary"
           test-id="consultation-cta-done"
+          :disabled="closing"
           @click="finishDone"
         >
           {{ $t('clients.consultation.ctaDone') }}
@@ -110,10 +120,12 @@ const {
   visitId,
   starting,
   reportSaved,
+  reportBusy,
   error: flowError,
   reset,
   startConsultation,
   afterSaved,
+  setReportBusy,
   discardIfUnsaved,
   markDone,
   dafWizardPath,
@@ -121,11 +133,17 @@ const {
   loadClientPets,
 } = useConsultationFlow()
 
+const { canPractice } = usePracticePerms()
+const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
+const showDafCta = computed(() => pharmacyEnabled.value && canWritePharmacy.value)
+
 const pets = ref<ConsultationPet[]>([])
 const petsLoading = ref(false)
 const loadError = ref('')
+const actionError = ref('')
 const selectedPetId = ref('')
 const notes = ref('')
+const closing = ref(false)
 
 async function loadPets() {
   if (!props.clientId) return
@@ -153,20 +171,32 @@ watch(
     reset()
     selectedPetId.value = ''
     notes.value = ''
+    actionError.value = ''
+    closing.value = false
     void loadPets()
   },
 )
 
 async function onOpenUpdate(v: boolean) {
   if (!v) {
-    await discardIfUnsaved()
-    reset()
+    if (closing.value) return
+    closing.value = true
+    try {
+      await discardIfUnsaved()
+      reset()
+      emit('update:open', false)
+    }
+    finally {
+      closing.value = false
+    }
+    return
   }
   emit('update:open', v)
 }
 
 /** Unique close path — discard/reset only via onOpenUpdate. */
 function close() {
+  if (reportBusy.value || closing.value) return
   void onOpenUpdate(false)
 }
 
@@ -188,25 +218,50 @@ function onReportSaved() {
   afterSaved()
 }
 
+function onReportBusy(busy: boolean) {
+  setReportBusy(busy)
+}
+
+/** Close modal then navigate — avoid aborting navigateTo when the modal unmounts mid-flight. */
+async function closeAndNavigate(path: string) {
+  const target = path
+  closing.value = true
+  try {
+    await discardIfUnsaved()
+    reset()
+    emit('update:open', false)
+  }
+  finally {
+    closing.value = false
+  }
+  await nextTick()
+  await navigateTo(target)
+}
+
 async function goDaf() {
-  const path = dafWizardPath()
-  await navigateTo(path)
-  void onOpenUpdate(false)
+  await closeAndNavigate(dafWizardPath())
 }
 
 async function goInvoice() {
-  const path = invoicingPath({ mode: 'direct' })
-  await navigateTo(path)
-  void onOpenUpdate(false)
+  await closeAndNavigate(invoicingPath({ mode: 'direct' }))
 }
 
 async function finishDone() {
+  actionError.value = ''
   try {
     await markDone()
+    closing.value = true
+    try {
+      await discardIfUnsaved()
+      reset()
+      emit('update:open', false)
+    }
+    finally {
+      closing.value = false
+    }
   }
-  catch {
-    // ignore — still close
+  catch (e: any) {
+    actionError.value = mapError(e) || t('clients.consultation.markDoneError')
   }
-  void onOpenUpdate(false)
 }
 </script>

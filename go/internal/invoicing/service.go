@@ -25,6 +25,12 @@ var (
 	ErrLinesRequired       = errors.New("lines_required")
 	ErrDocsQuotaExceeded   = errors.New("docs_quota_exceeded")
 	ErrSendInProgress      = errors.New("document_send_in_progress")
+	ErrRelatedDocument     = errors.New("related_document_invalid")
+	ErrOrderPersistFailed  = errors.New("order_persist_failed")
+	ErrPartnerNotEligible  = errors.New("partner_mark_not_eligible")
+	ErrMasterNotConfigured = errors.New("saas_master_not_configured")
+	// ErrGateway wraps live/mock Billit HTTP failures (mapped to HTTP 502).
+	ErrGateway = errors.New("invoicing_gateway")
 )
 
 // Store is the persistence port used by Service.
@@ -32,15 +38,21 @@ type Store interface {
 	GetPracticeInvoicingProfile(ctx context.Context, practiceID string) (PracticeParty, bool, error)
 	UpsertConnection(ctx context.Context, c Connection, apiSecretRef string) error
 	GetConnection(ctx context.Context, practiceID string) (Connection, string, error)
-	ListConnections(ctx context.Context) ([]Connection, error)
+	ListConnections(ctx context.Context, yyyymm int) ([]Connection, error)
 	MarkPartnerListed(ctx context.Context, practiceID string) error
 	CreateConnectState(ctx context.Context, state, practiceID, userID string, expiresAt time.Time) error
+	AssertConnectState(ctx context.Context, state, practiceID string) error
 	ConsumeConnectState(ctx context.Context, state, practiceID string) error
+	ConsumeConnectStateAndUpsertConnection(ctx context.Context, state string, c Connection, apiSecretRef string) error
 	CreateDocument(ctx context.Context, doc Document, lines []Line) (Document, error)
 	GetDocument(ctx context.Context, practiceID, docID string) (Document, error)
 	ListDocuments(ctx context.Context, practiceID string, limit int) ([]Document, error)
-	ClaimDocumentForSend(ctx context.Context, practiceID, docID string) (Document, error)
+	ClaimDocumentForSend(ctx context.Context, practiceID, docID string, yyyymm, quotaLimit int) (doc Document, prevStatus DocStatus, err error)
 	UpdateDocumentExternal(ctx context.Context, practiceID, docID, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time) error
+	ApplyBillitWebhookStatus(ctx context.Context, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error
+	InsertWebhookEvent(ctx context.Context, provider, eventType, externalID string, payload []byte) (eventID string, duplicate bool, err error)
+	MarkWebhookProcessed(ctx context.Context, eventID string, processErr string) error
+	DeleteWebhookEvent(ctx context.Context, eventID string) error
 	IncrementUsage(ctx context.Context, practiceID string, yyyymm int) error
 	UsageForMonth(ctx context.Context, practiceID string, yyyymm int) (int, error)
 }
@@ -156,12 +168,13 @@ func (s *Service) ConnectComplete(ctx context.Context, practiceID string, in Con
 	if in.PartyID == "" || in.APIKey == "" || in.State == "" {
 		return Connection{}, ErrInvalidState
 	}
-	if err := s.store.ConsumeConnectState(ctx, in.State, practiceID); err != nil {
+	// Validate state first without consuming — bad credentials must not burn the token.
+	if err := s.store.AssertConnectState(ctx, in.State, practiceID); err != nil {
 		return Connection{}, err
 	}
 	st, err := s.gw.CheckParty(ctx, in.PartyID, in.APIKey)
 	if err != nil {
-		return Connection{}, err
+		return Connection{}, fmt.Errorf("%w: %v", ErrGateway, err)
 	}
 	ref, err := SealAPIKey(s.cfg.BillitSecretsBackend, s.cfg.BillitSecretsKey, in.APIKey)
 	if err != nil {
@@ -172,17 +185,21 @@ func (s *Service) ConnectComplete(ctx context.Context, practiceID string, in Con
 	if st.Complete {
 		status = ConnActive
 	}
+	docsIncluded := s.cfg.BillitDefaultDocsIncluded
+	if existing, _, gerr := s.store.GetConnection(ctx, practiceID); gerr == nil && existing.DocsIncludedMonthly > 0 {
+		docsIncluded = existing.DocsIncludedMonthly
+	}
 	c := Connection{
 		PracticeID:          practiceID,
 		BillitPartyID:       in.PartyID,
 		Status:              status,
 		InvoiceToPartner:    true,
-		DocsIncludedMonthly: s.cfg.BillitDefaultDocsIncluded,
+		DocsIncludedMonthly: docsIncluded,
 		ConnectedAt:         &now,
 		HasAPISecret:        true,
 		UpdatedAt:           now,
 	}
-	if err := s.store.UpsertConnection(ctx, c, ref); err != nil {
+	if err := s.store.ConsumeConnectStateAndUpsertConnection(ctx, in.State, c, ref); err != nil {
 		return Connection{}, err
 	}
 	c.UsageThisMonth, _ = s.store.UsageForMonth(ctx, practiceID, currentYYYYMM())
@@ -203,7 +220,7 @@ func (s *Service) ConnectRefresh(ctx context.Context, practiceID string) (Connec
 	}
 	st, err := s.gw.CheckParty(ctx, c.BillitPartyID, key)
 	if err != nil {
-		return Connection{}, err
+		return Connection{}, fmt.Errorf("%w: %v", ErrGateway, err)
 	}
 	if st.Complete {
 		c.Status = ConnActive
@@ -221,11 +238,13 @@ func (s *Service) ConnectRefresh(ctx context.Context, practiceID string) (Connec
 }
 
 type CreateDocumentInput struct {
-	Type           DocType     `json:"type"`
-	IdempotencyKey string      `json:"idempotencyKey"`
+	Type           DocType      `json:"type"`
+	IdempotencyKey string       `json:"idempotencyKey"`
 	Counterparty   Counterparty `json:"counterparty"`
-	Lines          []Line      `json:"lines"`
-	RelatedID      string      `json:"relatedDocumentId"`
+	Lines          []Line       `json:"lines"`
+	RelatedID      string       `json:"relatedDocumentId"`
+	VisitID        string       `json:"visitId"`
+	DAFID          string       `json:"dafId"`
 }
 
 func (s *Service) CreateDocument(ctx context.Context, practiceID, userID string, in CreateDocumentInput) (Document, error) {
@@ -247,6 +266,39 @@ func (s *Service) CreateDocument(ctx context.Context, practiceID, userID string,
 	if len(in.Lines) == 0 {
 		return Document{}, ErrLinesRequired
 	}
+	if err := ValidateLines(in.Lines); err != nil {
+		return Document{}, err
+	}
+	in.Counterparty = NormalizeCounterparty(in.Counterparty)
+	if err := ValidateCounterparty(in.Counterparty); err != nil {
+		return Document{}, err
+	}
+	in.RelatedID = strings.TrimSpace(in.RelatedID)
+	if in.Type == DocCreditNote {
+		if in.RelatedID == "" {
+			return Document{}, ErrRelatedDocument
+		}
+	}
+	if in.RelatedID != "" {
+		related, err := s.store.GetDocument(ctx, practiceID, in.RelatedID)
+		if err != nil {
+			if errors.Is(err, ErrDocNotFound) {
+				return Document{}, ErrRelatedDocument
+			}
+			return Document{}, err
+		}
+		if in.Type == DocCreditNote && related.Type != DocInvoice {
+			return Document{}, ErrRelatedDocument
+		}
+		if in.Type == DocCreditNote {
+			switch related.Status {
+			case StatusIssued, StatusDelivered, StatusRejected:
+				// ok — avoir sur facture déjà émise / livrée / rejetée Peppol (rejeu)
+			default:
+				return Document{}, ErrRelatedDocument
+			}
+		}
+	}
 	if strings.TrimSpace(in.IdempotencyKey) == "" {
 		in.IdempotencyKey = uuid.NewString()
 	}
@@ -264,10 +316,13 @@ func (s *Service) CreateDocument(ctx context.Context, practiceID, userID string,
 		TotalVATCents:     vat,
 		TotalInclCents:    incl,
 		RelatedDocumentID: in.RelatedID,
+		VisitID:           strings.TrimSpace(in.VisitID),
+		DAFID:             strings.TrimSpace(in.DAFID),
 		CreatedBy:         userID,
 		CreatedAt:         now,
 		UpdatedAt:         now,
 		Lines:             in.Lines,
+		Source:            SourcePractice,
 	}
 	return s.store.CreateDocument(ctx, doc, in.Lines)
 }
@@ -289,67 +344,241 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 		return Document{}, ErrConnectionNotActive
 	}
 
-	doc, err := s.store.ClaimDocumentForSend(ctx, practiceID, docID)
+	yyyymm := currentYYYYMM()
+	limit := c.DocsIncludedMonthly
+	if limit <= 0 {
+		limit = s.cfg.BillitDefaultDocsIncluded
+	}
+	// Atomic claim + quota lock (serializes Peppol sends per practice).
+	doc, prevStatus, err := s.store.ClaimDocumentForSend(ctx, practiceID, docID, yyyymm, limit)
 	if err != nil {
 		return Document{}, err
 	}
-
-	yyyymm := currentYYYYMM()
-	if PeppolRequired(doc.Type) {
-		usage, uerr := s.store.UsageForMonth(ctx, practiceID, yyyymm)
-		if uerr != nil {
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, doc.BillitOrderID, StatusDraft, "", nil)
-			return Document{}, uerr
+	restore := func(orderID string, status DocStatus, peppol string) {
+		if status == "" || status == StatusSending {
+			status = StatusDraft
 		}
-		limit := c.DocsIncludedMonthly
-		if limit <= 0 {
-			limit = s.cfg.BillitDefaultDocsIncluded
-		}
-		if usage >= limit {
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, doc.BillitOrderID, StatusDraft, "", nil)
-			return Document{}, ErrDocsQuotaExceeded
-		}
+		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, status, peppol, nil)
 	}
 
 	key, err := OpenAPIKey(s.cfg.BillitSecretsBackend, s.cfg.BillitSecretsKey, ref)
 	if err != nil {
-		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, doc.BillitOrderID, StatusDraft, "", nil)
+		restore(doc.BillitOrderID, prevStatus, "")
 		return Document{}, err
 	}
 	orderID := doc.BillitOrderID
 	if orderID == "" {
 		orderID, err = s.gw.CreateDocument(ctx, c.BillitPartyID, key, doc)
 		if err != nil {
-			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, "", StatusDraft, "", nil)
-			return Document{}, err
+			restore("", prevStatus, "")
+			return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+		}
+		// Persist order id before Peppol so a crash mid-send still lets webhooks attach.
+		if err := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusSending, "order_created", nil); err != nil {
+			// Prefer rejected+orderID (webhook/support/retry) over draft without Billit link.
+			if err2 := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "order_persist_failed", nil); err2 != nil {
+				restore("", prevStatus, "")
+				return Document{}, err
+			}
+			return Document{}, fmt.Errorf("%w: %v", ErrOrderPersistFailed, err)
 		}
 	}
 	now := time.Now().UTC()
 	status := StatusIssued
 	peppol := ""
 	if PeppolRequired(doc.Type) {
-		if err := s.gw.SendPeppol(ctx, c.BillitPartyID, key, orderID); err != nil {
+		country := doc.Counterparty.Country
+		if err := s.gw.SendPeppol(ctx, c.BillitPartyID, key, orderID, country); err != nil {
 			_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
-			return Document{}, err
+			return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
 		}
-		status = StatusDelivered
-		peppol = "delivered"
-		if err := s.store.IncrementUsage(ctx, practiceID, yyyymm); err != nil {
-			return Document{}, err
+		// Mock: gateway is synchronous — delivered + usage in one TX (same path as live webhook).
+		if s.cfg.BillitMockEnabled {
+			if err := s.store.ApplyBillitWebhookStatus(ctx, orderID, StatusDelivered, "delivered", &now, yyyymm); err != nil {
+				restore(orderID, prevStatus, "")
+				return Document{}, err
+			}
+			return s.store.GetDocument(ctx, practiceID, docID)
 		}
+		// Live: stay in sending until Billit webhook confirms network delivery.
+		status = StatusSending
+		peppol = "sending"
 	}
 	if err := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, status, peppol, &now); err != nil {
+		if PeppolRequired(doc.Type) && !s.cfg.BillitMockEnabled {
+			// Peppol already accepted remotely — keep sending so the webhook can attach.
+			return Document{}, err
+		}
+		restore(orderID, prevStatus, "")
 		return Document{}, err
 	}
 	return s.store.GetDocument(ctx, practiceID, docID)
 }
 
 func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error) {
-	return s.store.ListConnections(ctx)
+	items, err := s.store.ListConnections(ctx, currentYYYYMM())
+	if err != nil {
+		return nil, err
+	}
+	enabled := s.SaasDraftEnabled()
+	for i := range items {
+		items[i].SaasDraftEnabled = enabled
+	}
+	return items, nil
 }
 
 func (s *Service) MarkPartnerListed(ctx context.Context, practiceID string) error {
+	if !s.Enabled() {
+		return ErrDisabled
+	}
 	return s.store.MarkPartnerListed(ctx, practiceID)
+}
+
+// SaasDraftEnabled reports whether Flux A master credentials are available (or mock defaults).
+func (s *Service) SaasDraftEnabled() bool {
+	if !s.Enabled() {
+		return false
+	}
+	party, key := s.masterCredentials()
+	return party != "" && key != ""
+}
+
+func (s *Service) masterCredentials() (partyID, apiKey string) {
+	partyID = strings.TrimSpace(s.cfg.BillitMasterPartyID)
+	apiKey = strings.TrimSpace(s.cfg.BillitMasterAPIKey)
+	if partyID != "" && apiKey != "" {
+		return partyID, apiKey
+	}
+	if s.cfg.BillitMockEnabled {
+		return "party_master_mock", "mock-master-key"
+	}
+	return "", ""
+}
+
+// CreateSaasDraft emits a Flux A draft invoice (LL-IT-SC master → practice) for the current month.
+// Idempotent per practice/month via key saas:{practiceId}:{yyyymm}. Does not require a Billit connect.
+func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID string) (Document, error) {
+	if !s.Enabled() {
+		return Document{}, ErrDisabled
+	}
+	partyID, apiKey := s.masterCredentials()
+	if partyID == "" || apiKey == "" {
+		return Document{}, ErrMasterNotConfigured
+	}
+	profile, complete, err := s.store.GetPracticeInvoicingProfile(ctx, practiceID)
+	if err != nil {
+		return Document{}, err
+	}
+	if !complete {
+		return Document{}, ErrProfileIncomplete
+	}
+	country := strings.ToUpper(strings.TrimSpace(profile.Country))
+	if country == "" {
+		country = "BE"
+	}
+	cp := NormalizeCounterparty(Counterparty{
+		Name:          profile.LegalName,
+		Country:       country,
+		VATNumber:     profile.VATNumber,
+		CompanyNumber: profile.CompanyNumber,
+		Email:         profile.Email,
+		Street:        profile.Street,
+		City:          profile.City,
+		Postal:        profile.Postal,
+	})
+	if err := ValidateCounterparty(cp); err != nil {
+		return Document{}, err
+	}
+	price := s.cfg.InvoicingSaasPriceEURCents
+	if price <= 0 {
+		price = 8800
+	}
+	vatPercent := 21.0
+	if country != "BE" {
+		vatPercent = 0 // other countries: HT only until fiscal rules land
+	}
+	lines := []Line{{
+		Description:        "Abonnement petsFollow Pro",
+		Quantity:           1,
+		UnitPriceExclCents: int64(price),
+		VATPercent:         vatPercent,
+	}}
+	if err := ValidateLines(lines); err != nil {
+		return Document{}, err
+	}
+	excl, vat, incl := ComputeTotals(lines)
+	yyyymm := currentYYYYMM()
+	idem := fmt.Sprintf("saas:%s:%d", practiceID, yyyymm)
+	now := time.Now().UTC()
+	doc := Document{
+		ID:             uuid.NewString(),
+		PracticeID:     practiceID,
+		Type:           DocInvoice,
+		Status:         StatusDraft,
+		Source:         SourceSaasMaster,
+		IdempotencyKey: idem,
+		Counterparty:   cp,
+		Currency:       "EUR",
+		TotalExclCents: excl,
+		TotalVATCents:  vat,
+		TotalInclCents: incl,
+		CreatedBy:      adminUserID,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		Lines:          lines,
+	}
+	saved, err := s.store.CreateDocument(ctx, doc, lines)
+	if err != nil {
+		return Document{}, err
+	}
+	if saved.BillitOrderID != "" {
+		return saved, nil
+	}
+	orderID, err := s.gw.CreateDocument(ctx, partyID, apiKey, saved)
+	if err != nil {
+		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+	}
+	if err := s.store.UpdateDocumentExternal(ctx, practiceID, saved.ID, orderID, StatusDraft, "saas_draft", nil); err != nil {
+		if err2 := s.store.UpdateDocumentExternal(ctx, practiceID, saved.ID, orderID, StatusRejected, "order_persist_failed", nil); err2 != nil {
+			return Document{}, err
+		}
+		return Document{}, fmt.Errorf("%w: %v", ErrOrderPersistFailed, err)
+	}
+	return s.store.GetDocument(ctx, practiceID, saved.ID)
+}
+
+// ApplyWebhookStatus updates a document from a Billit webhook (by order id).
+// On first transition to delivered, increments monthly electronic-doc usage (same TX).
+func (s *Service) ApplyWebhookStatus(ctx context.Context, orderID, eventType string, status DocStatus, peppolStatus string) error {
+	orderID = strings.TrimSpace(orderID)
+	if orderID == "" {
+		return ErrDocNotFound
+	}
+	var sentAt *time.Time
+	if status == StatusDelivered {
+		now := time.Now().UTC()
+		sentAt = &now
+	}
+	_ = eventType
+	return s.store.ApplyBillitWebhookStatus(ctx, orderID, status, peppolStatus, sentAt, currentYYYYMM())
+}
+
+// RecordWebhook stores the raw event for idempotency; duplicate=true if already seen.
+func (s *Service) RecordWebhook(ctx context.Context, eventType, externalID string, payload []byte) (eventID string, duplicate bool, err error) {
+	return s.store.InsertWebhookEvent(ctx, "billit", eventType, externalID, payload)
+}
+
+func (s *Service) MarkWebhookProcessed(ctx context.Context, eventID string, processErr error) error {
+	msg := ""
+	if processErr != nil {
+		msg = processErr.Error()
+	}
+	return s.store.MarkWebhookProcessed(ctx, eventID, msg)
+}
+
+// ForgetWebhook removes an event so Billit can retry (e.g. document not yet persisted).
+func (s *Service) ForgetWebhook(ctx context.Context, eventID string) error {
+	return s.store.DeleteWebhookEvent(ctx, eventID)
 }
 
 func currentYYYYMM() int {

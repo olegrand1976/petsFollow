@@ -32,12 +32,16 @@
           class="cal-chip cal-chip--row"
           :class="[
             `cal-chip--${statusVariant(v.status)}`,
-            { 'cal-chip--focus': focusVisitId === v.id },
+            {
+              'cal-chip--focus': focusVisitId === v.id,
+              'cal-chip--walkin': !!v.consultationSession,
+            },
           ]"
           :data-testid="`calendar-chip-${v.id}`"
           @click="emit('select-visit', v)"
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
+          <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }}</span>
           <span v-if="v.addressText" class="cal-chip__place" :title="v.addressText">{{ $t('calendar.placeBadge') }}</span>
         </button>

@@ -473,8 +473,9 @@
       "reportHint": "Write or dictate the report, then save to continue to DAF / invoicing.",
       "ctaDafInvoice": "Create prescription & invoice",
       "ctaInvoice": "Invoice directly",
+      "ctaDone": "Done",
       "loadPetsError": "Unable to load pets.",
-      "ctaDone": "Done"
+      "markDoneError": "Unable to complete the consultation. Please try again."
     },
     "detail": {
       "title": "Client profile",
@@ -1455,6 +1456,40 @@
       "assignedLoad": "{n} practices",
       "assign": "Assign",
       "assignOk": "Practice assigned."
+    },
+    "invoicing": {
+      "title": "Billit connections",
+      "subtitle": "Invoice-to-partner tracking and monthly usage per practice.",
+      "hint": "After Billit flips Invoice to = partner, mark the practice here for ops tracking.",
+      "empty": "No Billit connections",
+      "disabled": "Billit invoicing disabled on API",
+      "loadError": "Failed to load connections",
+      "colPractice": "Practice",
+      "colParty": "PartyID",
+      "colStatus": "Status",
+      "colUsage": "Usage / month",
+      "colPartner": "Partner listed",
+      "colActions": "Actions",
+      "notListed": "Not listed",
+      "alreadyListed": "OK",
+      "markPartner": "Mark partner",
+      "markOk": "Practice marked partner-listed",
+      "markError": "Failed to mark partner",
+      "markConfirm": "Confirm partner-listed mark for \"{name}\"? (Billit Invoice-to-partner switch already done)",
+      "exportCsv": "Export pending CSV",
+      "exportOk": "{n} PartyID(s) exported",
+      "kpiTotal": "{n} connection(s)",
+      "kpiOverdue": "{n} partner overdue (>7d)",
+      "kpiPending": "{n} to list at Billit",
+      "kpiQuota": "{n} near doc quota",
+      "quotaNear": "≥80%",
+      "partnerOverdue": ">7d",
+      "markUnavailable": "Not eligible (active + PartyID required)",
+      "saasDraft": "SaaS draft",
+      "saasConfirm": "Create a SaaS invoice draft (88 EUR excl. VAT) for {name} via the Billit master account?",
+      "saasOk": "SaaS draft created ({id}) — {total} EUR incl. VAT",
+      "saasError": "SaaS draft failed",
+      "saasUnavailable": "Billit master account not configured"
     }
   },
   "commissions": {

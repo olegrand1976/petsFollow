@@ -18,6 +18,13 @@ export type StartConsultationInput = {
   durationMinutes?: number
 }
 
+function isConsultationHasReportError(e: any): boolean {
+  const status = e?.statusCode ?? e?.status ?? e?.response?.status
+  if (status === 409) return true
+  const key = e?.data?.error?.msgKey || e?.data?.error?.code || e?.data?.error?.messageKey
+  return key === 'consultation_has_report'
+}
+
 export function useConsultationFlow() {
   const config = useRuntimeConfig()
   const pharmacyEnabled = computed(() => Boolean(config.public.pharmacyEnabled))
@@ -29,7 +36,29 @@ export function useConsultationFlow() {
   const clientId = ref('')
   const starting = ref(false)
   const reportSaved = ref(false)
+  /** True while ProVisitReportPanel save/improve/finalize/audio is in flight. */
+  const reportBusy = ref(false)
   const error = ref('')
+
+  let reportIdleWaiters: Array<() => void> = []
+
+  function notifyReportIdle() {
+    const waiters = reportIdleWaiters
+    reportIdleWaiters = []
+    for (const resolve of waiters) resolve()
+  }
+
+  function setReportBusy(busy: boolean) {
+    reportBusy.value = busy
+    if (!busy) notifyReportIdle()
+  }
+
+  function waitUntilReportIdle(): Promise<void> {
+    if (!reportBusy.value) return Promise.resolve()
+    return new Promise((resolve) => {
+      reportIdleWaiters.push(resolve)
+    })
+  }
 
   function reset() {
     visitId.value = ''
@@ -37,6 +66,8 @@ export function useConsultationFlow() {
     clientId.value = ''
     starting.value = false
     reportSaved.value = false
+    reportBusy.value = false
+    reportIdleWaiters = []
     error.value = ''
   }
 
@@ -81,8 +112,13 @@ export function useConsultationFlow() {
     }
   }
 
-  /** Cancel orphan visit if the modal closes before a CR save. */
+  /**
+   * Cancel orphan visit if the modal closes before a CR save.
+   * Waits for any in-flight CR write so we don't race the PUT;
+   * treats server 409 (consultation_has_report) as "already saved".
+   */
   async function discardIfUnsaved() {
+    await waitUntilReportIdle()
     const id = visitId.value
     if (!id || reportSaved.value) return
     try {
@@ -91,7 +127,11 @@ export function useConsultationFlow() {
         body: { status: 'cancelled' },
       })
     }
-    catch {
+    catch (e: any) {
+      if (isConsultationHasReportError(e)) {
+        reportSaved.value = true
+        return
+      }
       // best-effort cleanup
     }
   }
@@ -150,10 +190,12 @@ export function useConsultationFlow() {
     clientId,
     starting,
     reportSaved,
+    reportBusy,
     error,
     reset,
     startConsultation,
     afterSaved,
+    setReportBusy,
     discardIfUnsaved,
     markDone,
     dafWizardPath,

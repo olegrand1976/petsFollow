@@ -13,6 +13,7 @@
     "adminUsers": "Inscriptions",
     "adminClientImports": "Import clients",
     "adminPayments": "Paiements",
+    "adminInvoicing": "Facturation Billit",
     "adminCommissions": "Rétributions véto",
     "adminCommercialCommissions": "Paie commerciaux",
     "adminCommercialBonuses": "Bonus SPIFF",
@@ -42,6 +43,7 @@
     "adminAiModules": "Module CR IA",
     "commercialAiModules": "CR IA — cabinets",
     "commercialAiPlaybook": "CR IA — guide",
+    "commercialAsvMemo": "Mémo ASV",
     "commercialNetwork": "Mon réseau",
     "managerLeaderboard": "Classement",
     "managerAiModules": "CR IA — équipe",
@@ -72,8 +74,7 @@
     "usecases": "Guides de test",
     "stock": "Stock",
     "daf": "DAF",
-    "prescriptions": "Ordonnances",
-    "commercialAsvMemo": "Mémo ASV"
+    "prescriptions": "Ordonnances"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1021,7 +1022,8 @@
       "ctaDafInvoice": "Créer une ordonnance & Facturer",
       "ctaInvoice": "Facturer directement",
       "ctaDone": "Terminer",
-      "loadPetsError": "Impossible de charger les animaux."
+      "loadPetsError": "Impossible de charger les animaux.",
+      "markDoneError": "Impossible de terminer la consultation. Réessayez."
     },
     "detail": {
       "title": "Fiche client",
@@ -1696,6 +1698,40 @@
       "columnMode": "Mode",
       "columnAmount": "Montant",
       "columnStatus": "Statut"
+    },
+    "invoicing": {
+      "title": "Connexions Billit",
+      "subtitle": "Suivi Invoice-to-partner et usage mensuel des cabinets.",
+      "hint": "Après bascule côté Billit (Invoice to = partner), marquer le cabinet ici pour le suivi ops.",
+      "empty": "Aucune connexion Billit",
+      "disabled": "Facturation Billit désactivée sur l’API",
+      "loadError": "Impossible de charger les connexions",
+      "colPractice": "Cabinet",
+      "colParty": "PartyID",
+      "colStatus": "Statut",
+      "colUsage": "Usage / mois",
+      "colPartner": "Partner listed",
+      "colActions": "Actions",
+      "notListed": "Non listé",
+      "alreadyListed": "OK",
+      "markPartner": "Marquer partner",
+      "markConfirm": "Confirmer le marquage partner-listed pour « {name} » ? (bascule Billit Invoice-to-partner déjà faite)",
+      "markOk": "Cabinet marqué partner-listed",
+      "markError": "Échec du marquage",
+      "exportCsv": "Export CSV pending",
+      "exportOk": "{n} PartyID exporté(s)",
+      "kpiTotal": "{n} connexion(s)",
+      "kpiOverdue": "{n} partner en retard (>7 j)",
+      "kpiPending": "{n} à lister chez Billit",
+      "kpiQuota": "{n} près du plafond docs",
+      "quotaNear": "≥80 %",
+      "partnerOverdue": ">7 j",
+      "markUnavailable": "Non éligible (active + PartyID requis)",
+      "saasDraft": "Brouillon SaaS",
+      "saasConfirm": "Créer un brouillon facture SaaS (88 € HT) pour « {name} » via le compte master Billit ?",
+      "saasOk": "Brouillon SaaS créé ({id}) — {total} € TTC",
+      "saasError": "Échec du brouillon SaaS",
+      "saasUnavailable": "Compte master Billit non configuré"
     },
     "commissions": {
       "title": "Rétributions vétos",

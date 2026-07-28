@@ -154,10 +154,24 @@
         <p>
           <strong>{{ $t('calendar.columnWhen') }} :</strong> {{ formatWhen(selectedVisit) }}
         </p>
-        <p>
+        <p class="pro-flex-gap" style="align-items: center">
           <strong>{{ $t('calendar.columnStatus') }} :</strong>
           <ProBadge :variant="statusVariant(selectedVisit.status)">
             {{ statusLabel(selectedVisit.status) }}
+          </ProBadge>
+          <ProBadge
+            v-if="selectedVisit.consultationSession"
+            variant="warning"
+            data-testid="visit-walkin-badge"
+          >
+            {{ $t('calendar.walkInSession') }}
+          </ProBadge>
+          <ProBadge
+            v-else-if="selectedVisit.source === 'care_pro'"
+            variant="neutral"
+            data-testid="visit-care-pro-badge"
+          >
+            {{ $t('calendar.sourceCarePro') }}
           </ProBadge>
         </p>
         <p v-if="selectedVisit.preconsultStatus || preconsult" data-testid="visit-preconsult-status">
@@ -269,7 +283,7 @@
             {{ $t('calendar.rejectReschedule') }}
           </ProButton>
           <ProButton
-            v-if="selectedVisit.status === 'confirmed'"
+            v-if="selectedVisit.status === 'confirmed' && !selectedVisit.consultationSession"
             variant="secondary"
             :disabled="busyId === selectedVisit.id"
             @click="openReschedule(selectedVisit)"
@@ -521,7 +535,9 @@ async function load() {
     visits.value = cal.visits ?? []
     vacations.value = cal.vacations ?? []
     const todayCal = todayRes.data ?? todayRes
-    todayVisitCount.value = (todayCal.visits ?? []).length
+    todayVisitCount.value = (todayCal.visits ?? []).filter(
+      (v: CalendarVisit) => !v.consultationSession,
+    ).length
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {

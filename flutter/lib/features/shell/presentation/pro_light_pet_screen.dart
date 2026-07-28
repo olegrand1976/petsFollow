@@ -7,10 +7,20 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Fiche animal pour care_pro (infos, timeline, documents).
 class ProLightPetScreen extends StatefulWidget {
-  const ProLightPetScreen({super.key, required this.petId, this.petName});
+  const ProLightPetScreen({
+    super.key,
+    required this.petId,
+    this.petName,
+    this.permission,
+    this.onNewConsultation,
+  });
 
   final String petId;
   final String? petName;
+  /// ACL from list responses (getPet may omit permission).
+  final String? permission;
+  /// When set and pet allows write_notes, shows « Nouvelle Consultation ».
+  final Future<void> Function(Map<String, dynamic> pet)? onNewConsultation;
 
   @override
   State<ProLightPetScreen> createState() => _ProLightPetScreenState();
@@ -77,6 +87,29 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
     }
   }
 
+  bool get _canStartConsultation {
+    if (widget.onNewConsultation == null || _pet == null) return false;
+    final role = ApiClient.instance.userRole;
+    if (role == 'secretary') return false;
+    if (role == 'vet' || role == 'vet_assistant') return true;
+    final p = (_pet!['permission'] as String?)?.trim().isNotEmpty == true
+        ? _pet!['permission'] as String
+        : (widget.permission ?? 'read');
+    return p == 'write_notes' || p == 'full';
+  }
+
+  Future<void> _startConsultation() async {
+    final pet = _pet;
+    final cb = widget.onNewConsultation;
+    if (pet == null || cb == null) return;
+    final merged = Map<String, dynamic>.from(pet);
+    if ((merged['permission'] as String?)?.isNotEmpty != true &&
+        (widget.permission ?? '').isNotEmpty) {
+      merged['permission'] = widget.permission;
+    }
+    await cb(merged);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -85,12 +118,27 @@ class _ProLightPetScreenState extends State<ProLightPetScreen> {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          if (_canStartConsultation)
+            IconButton(
+              key: const Key('pro_light_new_consultation'),
+              tooltip: l10n.proLightNewConsultation,
+              onPressed: _startConsultation,
+              icon: const Icon(Icons.medical_services_outlined),
+            ),
           IconButton(
             onPressed: () => _load(silent: _pet != null),
             icon: const Icon(Icons.refresh),
           ),
         ],
       ),
+      floatingActionButton: _canStartConsultation
+          ? FloatingActionButton.extended(
+              key: const Key('pro_light_new_consultation_fab'),
+              onPressed: _startConsultation,
+              icon: const Icon(Icons.medical_services_outlined),
+              label: Text(l10n.proLightNewConsultation),
+            )
+          : null,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

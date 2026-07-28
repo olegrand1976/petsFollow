@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
+	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
 	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
@@ -37,9 +38,10 @@ type API struct {
 	pusher   fcm.Pusher
 	gemini   *gemini.Client
 	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
-	vetLookupRL  *httpx.RateLimiter
-	vetSuggestRL *httpx.RateLimiter
-	authPulse    *authPulse
+	vetLookupRL      *httpx.RateLimiter
+	vetSuggestRL     *httpx.RateLimiter
+	billitWebhookRL  *httpx.RateLimiter
+	authPulse        *authPulse
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -52,17 +54,20 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	}
 	var inv *invoicing.Service
 	if cfg.BillitEnabled {
-		if !cfg.BillitMockEnabled {
-			// Live client not shipped yet — ValidateBillit should have blocked boot.
-			panic("BILLIT_ENABLED without mock: live Billit gateway not implemented")
+		var gw invoicing.Gateway
+		if cfg.BillitMockEnabled {
+			gw = invoicingmock.New()
+		} else {
+			gw = billit.NewClient(cfg.BillitBaseURL)
 		}
-		inv = invoicing.NewService(st, invoicingmock.New(), cfg)
+		inv = invoicing.NewService(st, gw, cfg)
 	}
 	return &API{
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
-		vetLookupRL:  httpx.NewRateLimiter(30, time.Minute),
-		vetSuggestRL: httpx.NewRateLimiter(10, time.Minute),
-		authPulse:    newAuthPulse(),
+		vetLookupRL:     httpx.NewRateLimiter(30, time.Minute),
+		vetSuggestRL:    httpx.NewRateLimiter(10, time.Minute),
+		billitWebhookRL: httpx.NewRateLimiter(120, time.Minute),
+		authPulse:       newAuthPulse(),
 	}
 }
 
@@ -77,6 +82,9 @@ func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
 
 // TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
 func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
+
+// TestSetBillitWebhookSecret sets BILLIT_WEBHOOK_SECRET (integration tests only).
+func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
 
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
@@ -102,6 +110,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerAuthRoutes(r, authRL.Middleware)
 	a.registerBillingRoutes(r)
 	a.registerInvoicingRoutes(r)
+	a.registerInvoicingWebhookRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerBrandAssetAdminRoutes(r)
 	a.registerCommissionRoutes(r)

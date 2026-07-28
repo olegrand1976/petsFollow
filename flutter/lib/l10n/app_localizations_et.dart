@@ -254,6 +254,22 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightFinalizeReport => 'Lõpeta';
 
   @override
+  String get proLightNewConsultation => 'Uus konsultatsioon';
+
+  @override
+  String get proLightConsultationNextTitle =>
+      'Konsultatsioon salvestatud — edasi?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'Loo retsept ja arve';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Arvelda otse';
+
+  @override
+  String get proLightConsultationCtaDone => 'Lõpeta';
+
+  @override
   String get proLightReportFinal => 'Lõpetatud';
 
   @override

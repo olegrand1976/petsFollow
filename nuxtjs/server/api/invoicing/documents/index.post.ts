@@ -2,5 +2,7 @@ import { proxyApi } from '~/server/utils/api'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  return proxyApi(event, '/api/v1/practices/me/invoicing/documents', { method: 'POST', body })
+  const res = await proxyApi(event, '/api/v1/practices/me/invoicing/documents', { method: 'POST', body })
+  setResponseStatus(event, 201)
+  return res
 })

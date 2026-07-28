@@ -60,12 +60,13 @@ make nuxtjs-dev       # :3002
 Ordre pour un commercial sur staging :
 
 1. [`UC-VP-01`](01-vetpro/UC-VP-01-cockpit-cabinet.md) — cockpit cabinet  
-2. [`UC-X-01`](10-interactions/UC-X-01-messagerie-vet-client.md) — messagerie véto ↔ client *(couvre aussi VP-03)*  
-3. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé cardiaque *(couvre aussi CL-03)*  
-4. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
-5. [`UC-PL-01`](03-pro-light/UC-PL-01-agenda-terrain.md) — Pro Light  
-6. [`UC-CL-02`](02-client/UC-CL-02-activation-paiement.md) — activation payante *(si temps — **Destructif**)*  
-7. [`UC-CO-02`](04-commercial/UC-CO-02-encode-activation.md) — encode + commission *(si temps — **Destructif** ; ou `UC-X-07` pour le funnel complet)*
+2. [`UC-VP-04`](01-vetpro/UC-VP-04-nouvelle-consultation.md) — consultation rapide (CR → DAF / facture)  
+3. [`UC-X-01`](10-interactions/UC-X-01-messagerie-vet-client.md) — messagerie véto ↔ client *(couvre aussi VP-03)*  
+4. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé cardiaque *(couvre aussi CL-03)*  
+5. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
+6. [`UC-PL-01`](03-pro-light/UC-PL-01-agenda-terrain.md) — Pro Light  
+7. [`UC-CL-02`](02-client/UC-CL-02-activation-paiement.md) — activation payante *(si temps — **Destructif**)*  
+8. [`UC-CO-02`](04-commercial/UC-CO-02-encode-activation.md) — encode + commission *(si temps — **Destructif** ; ou `UC-X-07` pour le funnel complet)*
 
 ---
 
@@ -78,6 +79,7 @@ Ordre pour un commercial sur staging :
 | UC-VP-01 | [Cockpit cabinet](01-vetpro/UC-VP-01-cockpit-cabinet.md) | Démo |
 | UC-VP-02 | [Onboarding](01-vetpro/UC-VP-02-onboarding.md) | Important — **Destructif** |
 | UC-VP-03 | [Agenda & messagerie solo](01-vetpro/UC-VP-03-agenda-messagerie.md) | Démo — skip si X-01 |
+| UC-VP-04 | [Nouvelle consultation](01-vetpro/UC-VP-04-nouvelle-consultation.md) | Démo |
 
 ### Client — [`02-client/`](02-client/)
 

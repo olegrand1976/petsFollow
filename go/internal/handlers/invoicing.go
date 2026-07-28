@@ -3,10 +3,13 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
+	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
 func (a *API) registerInvoicingRoutes(r chi.Router) {
@@ -26,6 +29,7 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 		pr.Post("/practices/me/invoicing/documents/{id}/send", a.invoicingSendDocument)
 		pr.Get("/admin/invoicing/connections", a.adminInvoicingConnections)
 		pr.Post("/admin/invoicing/connections/{practiceId}/mark-partner-invoiced", a.adminInvoicingMarkPartner)
+		pr.Post("/admin/invoicing/connections/{practiceId}/saas-draft", a.adminInvoicingSaasDraft)
 	})
 }
 
@@ -113,6 +117,50 @@ func (a *API) invoicingCreateDocument(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_body")
 		return
 	}
+	req.VisitID = strings.TrimSpace(req.VisitID)
+	var visit store.Visit
+	if req.VisitID != "" {
+		var err error
+		visit, err = a.store.GetVisit(r.Context(), req.VisitID)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if visit.PracticeID != id.PracticeID {
+			writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+			return
+		}
+	}
+	req.DAFID = strings.TrimSpace(req.DAFID)
+	if req.DAFID != "" {
+		daf, err := a.store.GetDAF(r.Context(), id.PracticeID, req.DAFID)
+		if err != nil {
+			if errors.Is(err, pharmacy.ErrDAFNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "daf_mismatch", "daf_mismatch")
+				return
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		if daf.Status != "finalized" {
+			writeErr(w, r, http.StatusBadRequest, "daf_not_finalized", "daf_not_finalized")
+			return
+		}
+		if req.VisitID != "" {
+			if daf.VisitID == "" || daf.VisitID != req.VisitID {
+				writeErr(w, r, http.StatusBadRequest, "daf_visit_mismatch", "daf_visit_mismatch")
+				return
+			}
+			if daf.PetID != "" && visit.PetID != "" && daf.PetID != visit.PetID {
+				writeErr(w, r, http.StatusBadRequest, "daf_visit_mismatch", "daf_visit_mismatch")
+				return
+			}
+		}
+	}
 	doc, err := a.invoicing.CreateDocument(r.Context(), id.PracticeID, id.UserID, req)
 	if err != nil {
 		a.writeInvoicingErr(w, r, err)
@@ -171,6 +219,20 @@ func (a *API) adminInvoicingMarkPartner(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+func (a *API) adminInvoicingSaasDraft(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireAdmin(w, r)
+	if !ok {
+		return
+	}
+	practiceID := chi.URLParam(r, "practiceId")
+	doc, err := a.invoicing.CreateSaasDraft(r.Context(), practiceID, id.UserID)
+	if err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, doc)
+}
+
 func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, invoicing.ErrDisabled):
@@ -193,10 +255,24 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusBadRequest, "peppol_not_allowed", "peppol_not_allowed")
 	case errors.Is(err, invoicing.ErrInvalidType):
 		writeErr(w, r, http.StatusBadRequest, "invalid_type", "invalid_type")
+	case errors.Is(err, invoicing.ErrRelatedDocument):
+		writeErr(w, r, http.StatusBadRequest, "related_document_invalid", "related_document_invalid")
+	case errors.Is(err, invoicing.ErrOrderPersistFailed):
+		writeErr(w, r, http.StatusConflict, "order_persist_failed", "order_persist_failed")
 	case errors.Is(err, invoicing.ErrLinesRequired):
 		writeErr(w, r, http.StatusBadRequest, "lines_required", "lines_required")
+	case errors.Is(err, invoicing.ErrInvalidLines):
+		writeErr(w, r, http.StatusBadRequest, "invalid_lines", "invalid_lines")
+	case errors.Is(err, invoicing.ErrInvalidCounterparty):
+		writeErr(w, r, http.StatusBadRequest, "invalid_counterparty", "invalid_counterparty")
 	case errors.Is(err, invoicing.ErrDocsQuotaExceeded):
 		writeErr(w, r, http.StatusConflict, "docs_quota_exceeded", "docs_quota_exceeded")
+	case errors.Is(err, invoicing.ErrPartnerNotEligible):
+		writeErr(w, r, http.StatusConflict, "partner_mark_not_eligible", "partner_mark_not_eligible")
+	case errors.Is(err, invoicing.ErrMasterNotConfigured):
+		writeErr(w, r, http.StatusServiceUnavailable, "saas_master_not_configured", "saas_master_not_configured")
+	case errors.Is(err, invoicing.ErrGateway):
+		writeErr(w, r, http.StatusBadGateway, "bad_gateway", "invoicing_gateway_error")
 	default:
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 	}

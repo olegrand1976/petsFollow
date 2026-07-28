@@ -75,6 +75,67 @@ func decodeDAFItems(raw []store.DAFItemInput) []store.DAFItemInput {
 	return out
 }
 
+// validateDAFLinks ensures visit/pet/client belong to the practice and are coherent.
+func (a *API) validateDAFLinks(w http.ResponseWriter, r *http.Request, practiceID, clientUserID, petID, visitID string) bool {
+	clientUserID = strings.TrimSpace(clientUserID)
+	petID = strings.TrimSpace(petID)
+	visitID = strings.TrimSpace(visitID)
+	if visitID == "" && petID == "" && clientUserID == "" {
+		return true
+	}
+	if visitID != "" {
+		visit, err := a.store.GetVisit(r.Context(), visitID)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+				return false
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
+		if visit.PracticeID != practiceID {
+			writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+			return false
+		}
+		if petID != "" && visit.PetID != petID {
+			writeErr(w, r, http.StatusBadRequest, "visit_mismatch", "visit_mismatch")
+			return false
+		}
+		if petID == "" {
+			petID = visit.PetID
+		}
+	}
+	if petID != "" {
+		pet, err := a.store.GetPet(r.Context(), petID)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+				return false
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
+		if pet.PracticeID != practiceID {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+			return false
+		}
+		if clientUserID != "" && pet.OwnerUserID != clientUserID {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+			return false
+		}
+	} else if clientUserID != "" {
+		if _, err := a.store.GetClientByPractice(r.Context(), practiceID, clientUserID); err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+				return false
+			}
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return false
+		}
+	}
+	return true
+}
+
 func (a *API) listPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
@@ -109,6 +170,9 @@ func (a *API) createPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	if !a.validateDAFLinks(w, r, id.PracticeID, body.ClientUserID, body.PetID, body.VisitID) {
 		return
 	}
 	doc, err := a.store.CreateDAFDraft(r.Context(), id.PracticeID, id.UserID, body.ClientUserID, body.PetID, body.VisitID, body.Notes, decodeDAFItems(body.Items))
@@ -184,6 +248,9 @@ func (a *API) patchPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	if !a.validateDAFLinks(w, r, id.PracticeID, body.ClientUserID, body.PetID, body.VisitID) {
 		return
 	}
 	doc, err := a.store.ReplaceDAFDraftItems(r.Context(), id.PracticeID, chi.URLParam(r, "id"), body.ClientUserID, body.PetID, body.VisitID, body.Notes, decodeDAFItems(body.Items))

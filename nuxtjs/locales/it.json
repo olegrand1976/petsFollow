@@ -1142,6 +1142,21 @@
       "linkLabelClient": "Link invito clienti",
       "linkLabelCabinet": "Link iscrizione studio",
       "copyCabinet": "Copia link studio"
+    },
+    "consultation": {
+      "open": "Nuova consultazione",
+      "title": "Nuova consultazione",
+      "hint": "Seleziona l'animale e avvia la consultazione. Il referto può essere dettato (audio → trascrizione).",
+      "pet": "Animale",
+      "petPlaceholder": "Scegli un animale…",
+      "notes": "Note interne (opzionale)",
+      "start": "Avvia la consultazione",
+      "reportHint": "Scrivi o detta il referto, poi salva per proseguire con DAF / fattura.",
+      "ctaDafInvoice": "Crea ricetta e fattura",
+      "ctaInvoice": "Fattura direttamente",
+      "ctaDone": "Termina",
+      "loadPetsError": "Impossibile caricare gli animali.",
+      "markDoneError": "Impossibile completare la consultazione. Riprovare."
     }
   },
   "pets": {
@@ -1903,6 +1918,40 @@
       "assignedLoad": "{n} practices",
       "assign": "Assign",
       "assignOk": "Practice assigned."
+    },
+    "invoicing": {
+      "title": "Connessioni Billit",
+      "subtitle": "Tracking Invoice-to-partner e utilizzo mensile per struttura.",
+      "hint": "Dopo lo switch Billit (Invoice to = partner), contrassegna qui la struttura per il tracking ops.",
+      "empty": "Nessuna connessione Billit",
+      "disabled": "Fatturazione Billit disattivata sull’API",
+      "loadError": "Impossibile caricare le connessioni",
+      "colPractice": "Struttura",
+      "colParty": "PartyID",
+      "colStatus": "Stato",
+      "colUsage": "Uso / mese",
+      "colPartner": "Partner listed",
+      "colActions": "Azioni",
+      "notListed": "Non elencato",
+      "alreadyListed": "OK",
+      "markPartner": "Segna partner",
+      "markOk": "Struttura segnata partner-listed",
+      "markError": "Segnatura non riuscita",
+      "markConfirm": "Confermare partner-listed per « {name} »? (switch Billit Invoice-to-partner già fatto)",
+      "exportCsv": "Esporta CSV pending",
+      "exportOk": "{n} PartyID esportato/i",
+      "kpiTotal": "{n} connessione/i",
+      "kpiOverdue": "{n} partner in ritardo (>7 g)",
+      "kpiPending": "{n} da elencare su Billit",
+      "kpiQuota": "{n} vicini al tetto docs",
+      "quotaNear": "≥80%",
+      "partnerOverdue": ">7 g",
+      "markUnavailable": "Non idoneo (servono active + PartyID)",
+      "saasDraft": "Bozza SaaS",
+      "saasConfirm": "Creare una bozza fattura SaaS (88 EUR IVA esclusa) per {name} con l'account master Billit?",
+      "saasOk": "Bozza SaaS creata ({id}) — {total} EUR IVA incl.",
+      "saasError": "Creazione bozza SaaS non riuscita",
+      "saasUnavailable": "Account master Billit non configurato"
     }
   },
   "calendar": {

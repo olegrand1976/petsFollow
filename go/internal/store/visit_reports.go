@@ -155,6 +155,24 @@ func (s *Store) FinalizeVisitReport(ctx context.Context, reportID string) (Visit
 	return r, err
 }
 
+// VisitHasPersistedReport is true when any author saved content (not an empty Ensure draft).
+func (s *Store) VisitHasPersistedReport(ctx context.Context, visitID string) (bool, error) {
+	var ok bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM visits.visit_reports
+			WHERE visit_id = $1::uuid
+			  AND (
+			    status = 'final'
+			    OR length(trim(COALESCE(body_text, ''))) > 0
+			    OR length(trim(COALESCE(transcript_text, ''))) > 0
+			    OR length(trim(COALESCE(improved_text, ''))) > 0
+			    OR length(trim(COALESCE(audio_object_key, ''))) > 0
+			  )
+		)`, visitID).Scan(&ok)
+	return ok, err
+}
+
 // EnsureVisitReport returns existing or creates empty draft.
 func (s *Store) EnsureVisitReport(ctx context.Context, visitID, authorUserID string) (VisitReport, error) {
 	r, err := s.GetVisitReport(ctx, visitID, authorUserID)

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -21,6 +22,20 @@ import 'package:petsfollow_mobile/features/support/presentation/support_report_s
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+bool _isConsultationHasReportError(Object e) {
+  if (e is! DioException) return false;
+  if (e.response?.statusCode == 409) return true;
+  final data = e.response?.data;
+  if (data is Map) {
+    final err = data['error'];
+    if (err is Map) {
+      final key = (err['msgKey'] ?? err['messageKey'] ?? err['code'])?.toString();
+      return key == 'consultation_has_report';
+    }
+  }
+  return false;
+}
 
 /// Terrain shell for care_pro (vet_light, farrier, …) and cabinet `vet`.
 class ProLightShellScreen extends StatefulWidget {
@@ -161,12 +176,54 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     }
   }
 
-  void _openPet(String petId, {String? petName}) {
+  void _openPet(String petId, {String? petName, String? permission}) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ProLightPetScreen(petId: petId, petName: petName),
+        builder: (_) => ProLightPetScreen(
+          petId: petId,
+          petName: petName,
+          permission: permission,
+          onNewConsultation: _startNewConsultation,
+        ),
       ),
     );
+  }
+
+  /// Étape 1 consultation terrain : visite confirmée → CR sheet.
+  bool _consultBusy = false;
+
+  Future<void> _startNewConsultation(Map<String, dynamic> pet) async {
+    final petId = pet['id'] as String? ?? '';
+    if (petId.isEmpty || _consultBusy) return;
+    _consultBusy = true;
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final visit = await ApiClient.instance.createVisit(
+        petId,
+        scheduledAt: DateTime.now(),
+        confirmDirect: true,
+        silentConfirm: true,
+        consultationSession: true,
+        durationMinutes: 30,
+      );
+      if (!mounted) return;
+      await _load(silent: true);
+      if (!mounted) return;
+      await _openReport({
+        'id': visit.id,
+        'petId': visit.petId,
+        'permission': pet['permission'] ?? 'write_notes',
+        'clientUserId': pet['ownerUserId'],
+        'ownerUserId': pet['ownerUserId'],
+      }, showNextSteps: true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mapApiError(e, l10n))),
+      );
+    } finally {
+      _consultBusy = false;
+    }
   }
 
   void _openClientPets(Map<String, dynamic> client) {
@@ -191,19 +248,29 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                     itemBuilder: (_, i) {
                       final p = pets[i];
                       final petId = p['id'] as String? ?? '';
+                      final canConsult = _canWriteNotes(p);
                       return ListTile(
                         title: Text('${p['name'] ?? ''}'),
                         subtitle: Text('${p['species'] ?? ''}'),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (canConsult && petId.isNotEmpty)
+                              IconButton(
+                                key: Key('pro_light_client_pet_consultation_$petId'),
+                                tooltip: l10n.proLightNewConsultation,
+                                icon: const Icon(Icons.medical_services_outlined),
+                                onPressed: () => _startNewConsultation(p),
+                              ),
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
                         onTap: petId.isEmpty
                             ? null
-                            : () => Navigator.of(ctx).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => ProLightPetScreen(
-                                      petId: petId,
-                                      petName: p['name'] as String?,
-                                    ),
-                                  ),
+                            : () => _openPet(
+                                  petId,
+                                  petName: p['name'] as String?,
+                                  permission: p['permission'] as String?,
                                 ),
                       );
                     },
@@ -214,7 +281,10 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     );
   }
 
-  Future<void> _openReport(Map<String, dynamic> visit) async {
+  Future<void> _openReport(
+    Map<String, dynamic> visit, {
+    bool showNextSteps = false,
+  }) async {
     final visitId = visit['id'] as String?;
     if (visitId == null) return;
     final canWrite = _canWriteNotes(visit);
@@ -231,6 +301,14 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
           (transcript.isNotEmpty ? transcript : '');
       status = report['status'] as String? ?? 'draft';
     } catch (_) {
+      if (showNextSteps) {
+        try {
+          await ApiClient.instance.updateVisit(visitId, 'cancelled');
+        } catch (_) {
+          // best-effort cleanup
+        }
+        if (mounted) await _load(silent: true);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.proLightActionFailed)),
@@ -238,7 +316,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
       return;
     }
     if (!mounted) return;
-    await showModalBottomSheet<void>(
+    final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => _VisitReportSheet(
@@ -248,8 +326,25 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
         initialImproved: improved,
         initialStatus: status,
         canWrite: canWrite,
+        clientUserId: (visit['clientUserId'] ?? visit['ownerUserId']) as String?,
+        petId: visit['petId'] as String?,
+        showNextStepsOnSave: showNextSteps,
       ),
     );
+    // Walk-in consultation: cancel orphan visit if CR sheet closed without save.
+    if (showNextSteps && saved != true) {
+      try {
+        await ApiClient.instance.updateVisit(visitId, 'cancelled');
+      } on DioException catch (e) {
+        if (!_isConsultationHasReportError(e)) {
+          // best-effort cleanup
+        }
+        // 409 consultation_has_report → CR already persisted; keep visit.
+      } catch (_) {
+        // best-effort cleanup
+      }
+      if (mounted) await _load(silent: true);
+    }
   }
 
   void _toast(String message) {
@@ -371,7 +466,11 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
                         onTap: (row) {
                           final id = row['id'] as String?;
                           if (id == null || id.isEmpty) return;
-                          _openPet(id, petName: row['name'] as String?);
+                          _openPet(
+                            id,
+                            petName: row['name'] as String?,
+                            permission: row['permission'] as String?,
+                          );
                         },
                       ),
                       MessagingScreen(
@@ -523,6 +622,9 @@ class _VisitReportSheet extends StatefulWidget {
     required this.initialImproved,
     required this.initialStatus,
     required this.canWrite,
+    this.clientUserId,
+    this.petId,
+    this.showNextStepsOnSave = false,
   });
 
   final String visitId;
@@ -531,6 +633,9 @@ class _VisitReportSheet extends StatefulWidget {
   final String initialImproved;
   final String initialStatus;
   final bool canWrite;
+  final String? clientUserId;
+  final String? petId;
+  final bool showNextStepsOnSave;
 
   @override
   State<_VisitReportSheet> createState() => _VisitReportSheetState();
@@ -730,7 +835,12 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
     try {
       await action();
       if (!mounted) return;
-      if (popOnOk) Navigator.pop(context);
+      if (popOnOk) {
+        if (widget.showNextStepsOnSave) {
+          await _showConsultationNextSteps();
+        }
+        if (mounted) Navigator.pop(context, true);
+      }
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
@@ -741,6 +851,89 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  String get _proSiteBase {
+    const defined = String.fromEnvironment('PRO_PUBLIC_SITE_URL');
+    if (defined.isNotEmpty) return defined.replaceAll(RegExp(r'/$'), '');
+    return 'http://localhost:3002';
+  }
+
+  Future<void> _openProPath(String pathAndQuery) async {
+    final uri = Uri.parse('$_proSiteBase$pathAndQuery');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _showConsultationNextSteps() async {
+    final l10n = AppLocalizations.of(context)!;
+    final clientId = widget.clientUserId ?? '';
+    final petId = widget.petId ?? '';
+    final visitId = widget.visitId;
+    final role = ApiClient.instance.userRole;
+    final showProBilling = role == 'vet' || role == 'vet_assistant';
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.proLightConsultationNextTitle,
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                if (showProBilling) ...[
+                  FilledButton(
+                    key: const Key('pro_light_consultation_cta_daf'),
+                    onPressed: () async {
+                      final q = <String, String>{
+                        if (clientId.isNotEmpty) 'clientUserId': clientId,
+                        if (petId.isNotEmpty) 'petId': petId,
+                        'visitId': visitId,
+                      };
+                      final qs = Uri(queryParameters: q).query;
+                      await _openProPath('/daf/nouveau?$qs');
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    child: Text(l10n.proLightConsultationCtaDaf),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    key: const Key('pro_light_consultation_cta_invoice'),
+                    onPressed: () async {
+                      final q = <String, String>{
+                        if (clientId.isNotEmpty) 'clientUserId': clientId,
+                        'visitId': visitId,
+                        'mode': 'direct',
+                      };
+                      final qs = Uri(queryParameters: q).query;
+                      await _openProPath('/invoicing?$qs');
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    child: Text(l10n.proLightConsultationCtaInvoice),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                TextButton(
+                  key: const Key('pro_light_consultation_cta_done'),
+                  onPressed: () async {
+                    try {
+                      await ApiClient.instance.updateVisit(visitId, 'done');
+                    } catch (_) {}
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: Text(l10n.proLightConsultationCtaDone),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _recordingBanner(AppLocalizations l10n) {
@@ -800,7 +993,9 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
     final hint =
         _specialty == 'farrier' ? l10n.proLightReportHintFarrier : l10n.proLightReportHint;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return SafeArea(
+    return PopScope(
+      canPop: !_busy,
+      child: SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
           left: 16,
@@ -955,6 +1150,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
           ),
         ),
       ),
+    ),
     );
   }
 }

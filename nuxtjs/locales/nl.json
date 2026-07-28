@@ -473,8 +473,9 @@
       "reportHint": "Schrijf of dicteer het verslag, sla op om door te gaan naar DAF / facturatie.",
       "ctaDafInvoice": "Voorschrift & factureren",
       "ctaInvoice": "Direct factureren",
+      "ctaDone": "Afronden",
       "loadPetsError": "Dieren laden mislukt.",
-      "ctaDone": "Afronden"
+      "markDoneError": "Consultatie afronden mislukt. Probeer opnieuw."
     },
     "detail": {
       "title": "Klantdossier",
@@ -1455,6 +1456,40 @@
       "assignedLoad": "{n} practices",
       "assign": "Assign",
       "assignOk": "Practice assigned."
+    },
+    "invoicing": {
+      "title": "Billit-verbindingen",
+      "subtitle": "Invoice-to-partner-opvolging en maandelijks gebruik per praktijk.",
+      "hint": "Na omschakeling bij Billit (Invoice to = partner), markeer hier de praktijk voor ops-opvolging.",
+      "empty": "Geen Billit-verbindingen",
+      "disabled": "Billit-facturatie uitgeschakeld op de API",
+      "loadError": "Verbindingen laden mislukt",
+      "colPractice": "Praktijk",
+      "colParty": "PartyID",
+      "colStatus": "Status",
+      "colUsage": "Gebruik / maand",
+      "colPartner": "Partner listed",
+      "colActions": "Acties",
+      "notListed": "Niet gelijst",
+      "alreadyListed": "OK",
+      "markPartner": "Markeer partner",
+      "markOk": "Praktijk gemarkeerd als partner-listed",
+      "markError": "Markeren mislukt",
+      "markConfirm": "Partner-listed markeren bevestigen voor « {name} »? (Billit Invoice-to-partner al omgeschakeld)",
+      "exportCsv": "Exporteer pending CSV",
+      "exportOk": "{n} PartyID(s) geëxporteerd",
+      "kpiTotal": "{n} verbinding(en)",
+      "kpiOverdue": "{n} partner te laat (>7 d)",
+      "kpiPending": "{n} te listen bij Billit",
+      "kpiQuota": "{n} dicht bij documentquotum",
+      "quotaNear": "≥80%",
+      "partnerOverdue": ">7 d",
+      "markUnavailable": "Niet geschikt (active + PartyID vereist)",
+      "saasDraft": "SaaS-concept",
+      "saasConfirm": "SaaS-factuurconcept (88 EUR excl. btw) aanmaken voor {name} via het Billit-masteraccount?",
+      "saasOk": "SaaS-concept aangemaakt ({id}) — {total} EUR incl. btw",
+      "saasError": "SaaS-concept mislukt",
+      "saasUnavailable": "Billit-masteraccount niet geconfigureerd"
     }
   },
   "commissions": {

@@ -152,6 +152,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   saved: []
   finalized: []
+  busy: [value: boolean]
 }>()
 
 const { t } = useI18n()
@@ -169,6 +170,10 @@ const selectedReportAuthorId = ref('')
 const audioConsentOpen = ref(false)
 const audioConsentChecked = ref(false)
 const pendingAudioFile = ref<File | null>(null)
+
+watch(reportBusy, (busy) => {
+  emit('busy', busy)
+}, { immediate: true })
 
 const viewingPeerReport = computed(() => {
   if (!selectedReportAuthorId.value || reportAuthors.value.length === 0) return false
@@ -313,6 +318,7 @@ async function improveVisitReport() {
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportImproved')
     void loadVisitReports(props.visitId)
+    emit('saved')
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {

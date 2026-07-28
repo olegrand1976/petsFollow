@@ -32,6 +32,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Settings appearance Light/Dark | · | ✓ | · | `settings_appearance_test` |
 | Payment deeplink path | ✓ | · | · | `payment_deeplink_test` |
 | Pro Light CR keys | · | ✓ | · | `pro_light_cr_keys_test` (dictation/save/finalize ; no improve IA) |
+| Pro Light consultation keys | · | ✓ | · | `pro_light_consultation_keys_test` (nouvelle consultation + CTA post-CR) |
 | Pro Light nav 5 tabs | · | ✓ | · | `pro_light_shell_test` (Messages inclus care_pro) |
 | Pro Light audio consent checkbox | · | ✓ | · | `pro_light_audio_consent_test` |
 | Commercial logout key | · | ✓ | · | messaging_keys_test |

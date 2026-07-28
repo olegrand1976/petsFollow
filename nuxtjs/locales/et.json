@@ -649,6 +649,21 @@
       "linkLabelClient": "Kliendi kutselink",
       "linkLabelCabinet": "Kabineti registreerimislink",
       "copyCabinet": "Kopeeri kabineti link"
+    },
+    "consultation": {
+      "open": "Uus konsultatsioon",
+      "title": "Uus konsultatsioon",
+      "hint": "Valige loom ja alustage konsultatsiooni. Raportit saab dikteerida (heli → transkriptsioon).",
+      "pet": "Loom",
+      "petPlaceholder": "Valige loom…",
+      "notes": "Sisemised märkmed (valikuline)",
+      "start": "Alusta konsultatsiooni",
+      "reportHint": "Kirjutage või dikteerige raport, seejärel salvestage DAF / arve jätkamiseks.",
+      "ctaDafInvoice": "Loo retsept ja arvelda",
+      "ctaInvoice": "Arvelda otse",
+      "ctaDone": "Lõpeta",
+      "loadPetsError": "Loomi ei õnnestunud laadida.",
+      "markDoneError": "Konsultatsiooni ei õnnestunud lõpetada. Proovige uuesti."
     }
   },
   "pets": {
@@ -1410,6 +1425,40 @@
       "assignedLoad": "{n} practices",
       "assign": "Assign",
       "assignOk": "Practice assigned."
+    },
+    "invoicing": {
+      "title": "Billit ühendused",
+      "subtitle": "Invoice-to-partner jälgimine ja kuine kasutus kliiniku kaupa.",
+      "hint": "Pärast Billiti ümberlülitust (Invoice to = partner) märgi kliinik siin ops-jälgimiseks.",
+      "empty": "Billit ühendusi pole",
+      "disabled": "Billit arveldus on API-s välja lülitatud",
+      "loadError": "Ühenduste laadimine ebaõnnestus",
+      "colPractice": "Kliinik",
+      "colParty": "PartyID",
+      "colStatus": "Olek",
+      "colUsage": "Kasutus / kuu",
+      "colPartner": "Partner listed",
+      "colActions": "Tegevused",
+      "notListed": "Ei ole loendis",
+      "alreadyListed": "OK",
+      "markPartner": "Märgi partner",
+      "markOk": "Kliinik märgitud partner-listed",
+      "markError": "Märkimine ebaõnnestus",
+      "markConfirm": "Kinnita partner-listed märge « {name} » jaoks? (Billit Invoice-to-partner juba tehtud)",
+      "exportCsv": "Ekspordi ootel CSV",
+      "exportOk": "{n} PartyID eksporditud",
+      "kpiTotal": "{n} ühendus(t)",
+      "kpiOverdue": "{n} partner hilinenud (>7 p)",
+      "kpiPending": "{n} Billitisse lisada",
+      "kpiQuota": "{n} dokumendikvoodi lähedal",
+      "quotaNear": "≥80%",
+      "partnerOverdue": ">7 p",
+      "markUnavailable": "Ei sobi (nõutav active + PartyID)",
+      "saasDraft": "SaaS mustand",
+      "saasConfirm": "Luua SaaS arve mustand (88 EUR ilma käibemaksuta) {name} jaoks Billiti master-kontoga?",
+      "saasOk": "SaaS mustand loodud ({id}) — {total} EUR koos KM-ga",
+      "saasError": "SaaS mustandi loomine ebaõnnestus",
+      "saasUnavailable": "Billiti master-konto pole seadistatud"
     }
   },
   "commissions": {

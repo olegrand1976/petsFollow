@@ -254,6 +254,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightFinalizeReport => 'Afronden';
 
   @override
+  String get proLightNewConsultation => 'Nieuwe consultatie';
+
+  @override
+  String get proLightConsultationNextTitle =>
+      'Consultatie opgeslagen — verder?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'Voorschrift & factureren';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Direct factureren';
+
+  @override
+  String get proLightConsultationCtaDone => 'Afronden';
+
+  @override
   String get proLightReportFinal => 'Afgerond';
 
   @override

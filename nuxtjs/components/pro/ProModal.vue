@@ -3,7 +3,8 @@
     <div
       v-if="open"
       class="pro-modal"
-      data-testid="pro-modal"
+      :data-testid="testId"
+      :style="{ zIndex: String(1000 + stackDepth) }"
       @keydown.escape.prevent="close"
     >
       <div class="pro-modal__backdrop" aria-hidden="true" @click="close" />
@@ -40,14 +41,19 @@
 </template>
 
 <script setup lang="ts">
+/** Nested modals: keep body scroll locked until the last one closes. */
+let modalOpenCount = 0
+
 const props = withDefaults(
   defineProps<{
     open: boolean
     title: string
     closeLabel?: string
     size?: 'md' | 'lg'
+    /** data-testid on the root overlay (default keeps existing e2e selectors). */
+    testId?: string
   }>(),
-  { size: 'md' },
+  { size: 'md', testId: 'pro-modal' },
 )
 
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -55,6 +61,7 @@ const emit = defineEmits<{ 'update:open': [boolean] }>()
 const { t } = useI18n()
 const panelRef = ref<HTMLElement | null>(null)
 const titleId = `pro-modal-title-${useId()}`
+const stackDepth = ref(0)
 
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
 const sizeClass = computed(() => {
@@ -76,18 +83,31 @@ function close() {
 
 watch(
   () => props.open,
-  async (isOpen) => {
+  async (isOpen, wasOpen) => {
     if (!import.meta.client) return
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    if (isOpen) {
+    if (isOpen && !wasOpen) {
+      modalOpenCount += 1
+      stackDepth.value = modalOpenCount
+      document.body.style.overflow = 'hidden'
       await nextTick()
       panelRef.value?.focus()
+    }
+    else if (!isOpen && wasOpen) {
+      modalOpenCount = Math.max(0, modalOpenCount - 1)
+      stackDepth.value = 0
+      if (modalOpenCount === 0) {
+        document.body.style.overflow = ''
+      }
     }
   },
 )
 
 onBeforeUnmount(() => {
-  if (import.meta.client) document.body.style.overflow = ''
+  if (!import.meta.client) return
+  if (props.open) {
+    modalOpenCount = Math.max(0, modalOpenCount - 1)
+    if (modalOpenCount === 0) document.body.style.overflow = ''
+  }
 })
 </script>
 

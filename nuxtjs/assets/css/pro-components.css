@@ -376,6 +376,17 @@ a.pro-kpi-card:focus-visible {
 .cal-chip--danger {
   background: color-mix(in srgb, var(--pf-vet-alert) 18%, transparent);
 }
+.cal-chip--walkin {
+  border-left: 3px solid var(--pf-vet-accent);
+}
+.cal-chip__walkin {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--pf-vet-accent);
+  flex-shrink: 0;
+}
 .cal-chip--focus {
   outline: 2px solid var(--pf-vet-accent);
   outline-offset: 1px;

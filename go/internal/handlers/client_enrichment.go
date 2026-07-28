@@ -506,6 +506,10 @@ type createVisitReq struct {
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
 	RequestPreconsult bool    `json:"requestPreconsult"`
+	// SilentConfirm skips client push/email when confirming immediately (walk-in consultation).
+	SilentConfirm bool `json:"silentConfirm"`
+	// ConsultationSession marks a walk-in CR flow (excluded from agenda overlap).
+	ConsultationSession bool `json:"consultationSession"`
 }
 
 func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
@@ -532,19 +536,29 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	}
 	var scheduledAt *time.Time
 	if req.ScheduledAt != nil && *req.ScheduledAt != "" {
-		if t, err := time.Parse(time.RFC3339, *req.ScheduledAt); err == nil {
-			scheduledAt = &t
+		t, perr := time.Parse(time.RFC3339, *req.ScheduledAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_scheduled_at")
+			return
 		}
+		scheduledAt = &t
 	}
 	source := "client"
-	if id.Role == kernel.RoleCarePro || kernel.IsPracticeStaff(id.Role) {
+	switch {
+	case id.Role == kernel.RoleCarePro:
+		source = "care_pro"
+	case kernel.IsPracticeStaff(id.Role):
 		source = "vet"
 	}
+	actsAsPro := source == "vet" || source == "care_pro"
 
-	confirmDirect := source == "vet" && req.ConfirmDirect
+	confirmDirect := actsAsPro && req.ConfirmDirect
 	if confirmDirect {
+		// Practice staff with calendar.manage, pet full ACL, or care_pro terrain
+		// (write_notes already checked via requirePetAccess) may confirm immediately.
 		practiceStaff := a.allowPracticePerm(r, id, "calendar.manage") && id.PracticeID != "" && pet.PracticeID == id.PracticeID
-		if !practiceStaff {
+		careProTerrain := id.Role == kernel.RoleCarePro
+		if !practiceStaff && !careProTerrain {
 			fullOK, ferr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
 			if ferr != nil {
 				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -557,6 +571,23 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	consultationSession := actsAsPro && req.ConsultationSession
+	if consultationSession {
+		if !confirmDirect {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_requires_confirm")
+			return
+		}
+		if scheduledAt == nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_requires_schedule")
+			return
+		}
+		// Walk-in only: reject far-future slots used to bypass agenda overlap.
+		if scheduledAt.Sub(time.Now()).Abs() > 30*time.Minute {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_stale")
+			return
+		}
+	}
+
 	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -564,8 +595,11 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	}
 	// Clients always use cabinet slot duration (ignore client-supplied duration).
 	duration := slotDur
-	if source == "vet" && req.DurationMinutes != nil {
+	if actsAsPro && req.DurationMinutes != nil {
 		duration = *req.DurationMinutes
+	}
+	if duration != 15 && duration != 30 && duration != 60 {
+		duration = 30
 	}
 
 	if source == "client" {
@@ -582,8 +616,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "slot_required")
 			return
 		}
-	} else if scheduledAt != nil {
-		// Vet-created timed visits: still block vacation / overlap (slot grid optional).
+	} else if scheduledAt != nil && !consultationSession {
+		// Timed RDV: block vacation (overlap under lock in CreateVisitBooked).
+		// Walk-in consultation sessions skip vacation — terrain / cabinet immédiat.
 		if onVac, err := a.store.IsOnVacation(r.Context(), pet.PracticeID, *scheduledAt); err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
@@ -591,23 +626,17 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "on_vacation", "on_vacation")
 			return
 		}
-		if overlap, err := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *scheduledAt, duration, ""); err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		} else if overlap {
-			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
-			return
-		}
 	}
 
 	in := store.CreateVisitInput{
-		PetID:           pet.ID,
-		PracticeID:      pet.PracticeID,
-		Source:          source,
-		Notes:           req.Notes,
-		ScheduledAt:     scheduledAt,
-		DurationMinutes: &duration,
-		ConfirmDirect:   confirmDirect,
+		PetID:               pet.ID,
+		PracticeID:          pet.PracticeID,
+		Source:              source,
+		Notes:               req.Notes,
+		ScheduledAt:         scheduledAt,
+		DurationMinutes:     &duration,
+		ConfirmDirect:       confirmDirect,
+		ConsultationSession: consultationSession,
 	}
 	if req.RequestPreconsult && source == "vet" && a.allowPracticePerm(r, id, "calendar.manage") {
 		in.RequestPreconsult = true
@@ -616,7 +645,8 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		in.DurationMinutes = nil
 	}
 	var visit store.Visit
-	if source == "client" && scheduledAt != nil {
+	// Walk-in sessions skip agenda lock/overlap; timed RDV go through CreateVisitBooked.
+	if scheduledAt != nil && !consultationSession {
 		visit, err = a.store.CreateVisitBooked(r.Context(), in)
 		if err != nil {
 			if errors.Is(err, store.ErrValidation) {
@@ -636,10 +666,10 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if source == "client" {
 		a.notifyVetsVisitRequest(pet, visit)
 	}
-	if source == "vet" && !confirmDirect && visit.Status == "requested" {
+	if actsAsPro && !confirmDirect && visit.Status == "requested" {
 		a.pushVisitProposed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 	}
-	if visit.Status == "confirmed" {
+	if visit.Status == "confirmed" && !(req.SilentConfirm || in.ConsultationSession) {
 		a.onVisitConfirmed(pet, visit)
 	}
 	httpx.WriteData(w, http.StatusCreated, visit)
@@ -842,6 +872,18 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
 		}
+		// Walk-in discard must not race past a CR save (empty Ensure draft is OK to cancel).
+		if visit.ConsultationSession {
+			hasReport, herr := a.store.VisitHasPersistedReport(r.Context(), visit.ID)
+			if herr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if hasReport {
+				writeErr(w, r, http.StatusConflict, "conflict", "consultation_has_report")
+				return
+			}
+		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "cancelled")
 	case "done":
 		if !actsAsVet {
@@ -854,6 +896,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "done")
 	case "propose_reschedule":
+		if visit.ConsultationSession {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_not_reschedulable")
+			return
+		}
 		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
@@ -904,6 +950,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case "accept_reschedule":
+		if visit.ConsultationSession {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_not_reschedulable")
+			return
+		}
 		if visit.PendingActionBy == nil {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
 			return
