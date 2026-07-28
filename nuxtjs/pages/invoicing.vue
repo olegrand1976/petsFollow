@@ -15,6 +15,13 @@
 
     <template v-else>
       <p v-if="error" class="pro-alert pro-mb-md" data-testid="invoicing-error">{{ error }}</p>
+      <p
+        v-if="prefillHint"
+        class="pro-hint pro-mb-md"
+        data-testid="invoicing-consultation-context"
+      >
+        {{ prefillHint }}
+      </p>
 
       <ProCard v-if="canManageBillit" class="pro-mb-lg" data-testid="invoicing-connection">
         <div class="invoicing-conn">
@@ -106,7 +113,6 @@
 
       <ProCard v-if="isActive && canWriteDocs" class="pro-mb-lg" data-testid="invoicing-create">
         <h3 class="pro-mb-md">{{ $t('invoicing.newDocument') }}</h3>
-        <p v-if="prefillHint" class="pro-hint pro-mb-md" data-testid="invoicing-consultation-context">{{ prefillHint }}</p>
         <form class="pro-form" data-testid="invoicing-create-form" @submit.prevent="createDocument">
           <label class="pro-field">
             <span class="pro-field__label">{{ $t('invoicing.docType') }}</span>

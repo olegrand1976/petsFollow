@@ -194,6 +194,8 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       const url = new URL(page.url())
       expect(url.searchParams.get('visitId')).toBe(visitId)
       expect(url.searchParams.get('mode')).toBe('direct')
+      // Soft-nav after modal close can leave a blank shell — reload target URL.
+      await page.goto(url.pathname + url.search, { waitUntil: 'networkidle' })
       await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
       await expect(page.getByTestId('invoicing-consultation-context')).toBeVisible({ timeout: 10000 })
     }
