@@ -665,7 +665,7 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 		}
 	}
 	for _, v := range pet.visits {
-		if err := insertVisit(ctx, tx, petID, reg.practiceID, v); err != nil {
+		if err := insertVisit(ctx, tx, petID, reg.practiceID, reg.vetID, v); err != nil {
 			return err
 		}
 	}
@@ -781,7 +781,7 @@ func insertCareReminder(ctx context.Context, tx pgx.Tx, petID, practiceID string
 	return err
 }
 
-func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v visitDef) error {
+func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID, vetUserID string, v visitDef) error {
 	status := v.status
 	if status == "" {
 		status = "requested"
@@ -807,10 +807,30 @@ func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v vis
 	if scheduledAt != nil {
 		duration = 30
 	}
+	visitID := uuid.NewString()
 	_, err := tx.Exec(ctx, `
 		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
+		visitID, petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
+	if err != nil {
+		return err
+	}
+	// Done visits with clinical notes get a CR so « Historique suivi » can open the consultation.
+	reportBody := strings.TrimSpace(v.reportBody)
+	if reportBody == "" && status == "done" {
+		reportBody = strings.TrimSpace(v.notes)
+	}
+	if reportBody == "" || vetUserID == "" {
+		return nil
+	}
+	reportStatus := "final"
+	if v.reportDraft {
+		reportStatus = "draft"
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO visits.visit_reports (id, visit_id, author_user_id, status, body_text, finalized_at)
+		VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'final' THEN NOW() ELSE NULL END)`,
+		uuid.NewString(), visitID, vetUserID, reportStatus, reportBody)
 	return err
 }
 

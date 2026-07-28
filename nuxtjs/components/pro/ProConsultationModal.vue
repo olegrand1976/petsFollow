@@ -422,6 +422,12 @@ async function confirmSaveLeave() {
       return
     }
     afterSaved()
+    try {
+      await markDone()
+    }
+    catch {
+      // CR already saved — leave prompt closes even if done fails.
+    }
     leavePromptOpen.value = false
     await finishClose(false)
   }

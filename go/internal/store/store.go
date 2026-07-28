@@ -844,6 +844,8 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 // redactVisitNotes: empty visit notes / CR excerpts (no write_notes / no pets.write_clinical for staff).
 // Visit report meta (hasReport) is included for staff/care_pro (vetView) when a non-empty CR exists;
 // CR body excerpts only when !redactVisitNotes — never for client timeline or public dossier share.
+// Vet timeline includes done visits, plus confirmed visits that already have a non-empty CR
+// (walk-in save without Terminer / finalize).
 func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, includeMessages, redactVisitNotes bool) ([]TimelineItem, error) {
 	hrFilter := ""
 	if vetView {
@@ -883,7 +885,11 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
 			LIMIT 1
 		) r ON true
-		WHERE v.pet_id=$1 AND v.status='done'`
+		WHERE v.pet_id=$1
+			AND (
+				v.status = 'done'
+				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
+			)`
 	} else {
 		visitBody := "COALESCE(notes,'')"
 		if redactVisitNotes {

@@ -62,6 +62,9 @@ type visitDef struct {
 	notes       string
 	source      string
 	scheduledIn time.Duration // from now
+	// reportBody: CR text for Historique suivi (defaults to notes when status=done).
+	reportBody  string
+	reportDraft bool // default final when a report is seeded
 }
 
 type petDef struct {

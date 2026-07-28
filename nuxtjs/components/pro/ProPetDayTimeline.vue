@@ -98,7 +98,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'open-visit': [payload: { id: string }]
+  'open-visit': [payload: { id: string, scheduledAt?: string }]
 }>()
 
 const { t } = useI18n()
@@ -119,7 +119,7 @@ function iso(value: string | Date) {
 }
 
 function hasVisitReport(item: TimelineHistoryItem) {
-  return item.type === 'visit' && item.meta?.hasReport === true
+  return item.type === 'visit' && Boolean(item.meta?.hasReport)
 }
 
 function visitIdFor(item: TimelineHistoryItem) {
@@ -177,7 +177,10 @@ function buildTile(item: TimelineHistoryItem): HistoryTile {
   const reportBadge = reportStatus === 'final'
     ? t('clients.pet.timelineReportFinal')
     : t('clients.pet.timelineReportDraft')
-  const open = () => emit('open-visit', { id: visitIdFor(item) })
+  const open = () => emit('open-visit', {
+    id: visitIdFor(item),
+    scheduledAt: typeof item.createdAt === 'string' ? item.createdAt : iso(item.createdAt),
+  })
   return {
     item,
     clickable,

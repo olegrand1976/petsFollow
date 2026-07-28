@@ -53,6 +53,33 @@ func TestPetTimelineIncludesVisitReportForVetNotClient(t *testing.T) {
 	}
 }
 
+func TestPetTimelineConfirmedVisitWithReportVisible(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, clientTok)
+
+	probe := fmt.Sprintf("timeline-confirmed-cr-%d", time.Now().UnixNano())
+	visitID := createConfirmedVisitWithReport(t, api, vetTok, petID, probe, 8*time.Hour)
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("vet timeline %d %#v", code, env)
+	}
+	item := findTimelineVisit(t, env, visitID)
+	meta, _ := item["meta"].(map[string]any)
+	if meta["hasReport"] != true {
+		t.Fatalf("confirmed+CR hasReport want true got %#v", meta)
+	}
+	if meta["status"] != "confirmed" {
+		t.Fatalf("status want confirmed got %#v", meta["status"])
+	}
+	body, _ := item["body"].(string)
+	if !strings.Contains(body, probe) {
+		t.Fatalf("body %q should contain CR probe %q", body, probe)
+	}
+}
+
 func TestPetTimelineEmptyDraftReportNotHasReport(t *testing.T) {
 	api := newTestAPI(t)
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
@@ -236,6 +263,17 @@ func demoClientPetID(t *testing.T, api *testAPI, clientTok string) string {
 
 func createDoneVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration) string {
 	t.Helper()
+	visitID := createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, notes, offset, true)
+	return visitID
+}
+
+func createConfirmedVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, bodyText string, offset time.Duration) string {
+	t.Helper()
+	return createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, "", offset, false)
+}
+
+func createVisitWithOptionalReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration, markDone bool) string {
+	t.Helper()
 	var visitID string
 	for attempt := 0; attempt < 4; attempt++ {
 		when := time.Now().UTC().Add(offset + time.Duration(attempt)*time.Hour).Truncate(time.Minute).Format(time.RFC3339)
@@ -269,11 +307,13 @@ func createDoneVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, bodyTe
 		t.Fatalf("put report %d %#v", code, env)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
-		"status": "done",
-	})
-	if code != http.StatusOK {
-		t.Fatalf("mark done %d %#v", code, env)
+	if markDone {
+		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"status": "done",
+		})
+		if code != http.StatusOK {
+			t.Fatalf("mark done %d %#v", code, env)
+		}
 	}
 	return visitID
 }
