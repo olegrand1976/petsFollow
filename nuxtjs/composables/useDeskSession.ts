@@ -10,7 +10,6 @@ import {
   markAuthSessionActive,
   unwrapAuthData,
 } from '~/composables/useAuth'
-import type { ConsultationResume } from '~/composables/useActiveConsultation'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 export type DeskMember = {
@@ -344,7 +343,7 @@ export function useDeskSession() {
   }
 
   function completeUnlock(email: string, role: string | null) {
-    const { peekResumeForEmail, clearResumeForEmail, saveResumeForEmail, openResume } = useActiveConsultation()
+    const { peekResumeForEmail } = useActiveConsultation()
     const resume = peekResumeForEmail(email)
     const target = resume?.path || getLastPath(email) || (role ? homePathForRole(role) : '/dashboard')
     locked.value = false
@@ -352,38 +351,11 @@ export function useDeskSession() {
     promptMode.value = null
     pendingEmail.value = ''
     markAuthSessionActive()
+    // finishClientLoginSession → location.replace (hard reload). Leave the resume
+    // token in localStorage so ProActiveConsultationHost.tryResumeForCurrentUser
+    // can reopen after shell boot. openResume+clearResume here would wipe useState
+    // on reload and drop the token (consultation never resumes).
     finishClientLoginSession(target)
-    if (resume) {
-      scheduleResumeAfterUnlock(resume, email, openResume, clearResumeForEmail, saveResumeForEmail)
-    }
-  }
-
-  /** Wait until session cookie is back, then open resume; restore token if open fails. */
-  function scheduleResumeAfterUnlock(
-    resume: ConsultationResume,
-    email: string,
-    openResume: (t: ConsultationResume) => void,
-    clearResume: (e: string) => void,
-    saveResume: (e: string, t: ConsultationResume) => void,
-  ) {
-    let attempts = 0
-    const tryOpen = () => {
-      attempts += 1
-      if (!hasSessionCookie()) {
-        if (attempts < 40) {
-          window.setTimeout(tryOpen, 50)
-          return
-        }
-        // Timed out — keep token for a later shell bootstrap.
-        saveResume(email, resume)
-        return
-      }
-      openResume(resume)
-      clearResume(email)
-    }
-    nextTick(() => {
-      window.setTimeout(tryOpen, 0)
-    })
   }
 
   async function bootstrap() {
