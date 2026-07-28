@@ -56,10 +56,11 @@
       "ops": "Ops",
       "salesForce": "Fuerza de ventas",
       "billing": "Nómina y catálogo",
-      "activity": "Actividad",
-      "pharmacy": "Farmacia",
-      "documents": "Documentos",
-      "practice": "Clínica"
+      "day": "Jornada",
+      "patients": "Pacientes",
+      "clinic": "Clínica",
+      "finance": "Finanzas",
+      "practice": "Consulta"
     },
     "managerAiModules": "CR IA — equipo",
     "adminSupport": "Soporte",

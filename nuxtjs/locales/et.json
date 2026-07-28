@@ -56,9 +56,10 @@
       "ops": "Ops",
       "salesForce": "Müügimeeskond",
       "billing": "Palk ja kataloog",
-      "activity": "Tegevus",
-      "pharmacy": "Apteek",
-      "documents": "Dokumendid",
+      "day": "Päev",
+      "patients": "Patsiendid",
+      "clinic": "Kliinik",
+      "finance": "Rahandus",
       "practice": "Kabinet"
     },
     "managerAiModules": "AI CR — meeskond",

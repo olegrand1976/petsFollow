@@ -56,9 +56,10 @@
       "ops": "Ops",
       "salesForce": "Verkoopteam",
       "billing": "Loon & catalogus",
-      "activity": "Activiteit",
-      "pharmacy": "Apotheek",
-      "documents": "Documenten",
+      "day": "Dag",
+      "patients": "Patiënten",
+      "clinic": "Kliniek",
+      "finance": "Financiën",
       "practice": "Praktijk"
     },
     "managerAiModules": "AI CR — team",

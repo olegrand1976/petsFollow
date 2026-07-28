@@ -67,47 +67,49 @@ const navItems = computed<ProNavItem[]>(() => {
   const pharmacyOn = Boolean(runtimeConfig.public.pharmacyEnabled)
   const prescriptionsOn = Boolean(runtimeConfig.public.prescriptionsEnabled)
   const billitOn = Boolean(runtimeConfig.public.billitEnabled)
-  const activity = t('nav.section.activity')
-  const pharmacy = t('nav.section.pharmacy')
-  const documents = t('nav.section.documents')
+  const day = t('nav.section.day')
+  const patients = t('nav.section.patients')
+  const clinic = t('nav.section.clinic')
+  const finance = t('nav.section.finance')
   const practice = t('nav.section.practice')
   const tagDev = t('nav.tagDev')
 
   const items: ProNavItem[] = [
-    { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard', section: activity },
+    { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard', section: day },
   ]
-  if (canPractice('clients.read')) {
-    items.push({ to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value, section: activity })
-  }
-  if (canPractice('pets.read')) {
-    items.push({ to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value, section: activity })
-  }
   if (canPractice('calendar.manage')) {
-    items.push({ to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value, section: activity })
+    items.push({ to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value, section: day })
   }
   if (canPractice('messaging')) {
-    items.push({ to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value, section: activity })
+    items.push({ to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value, section: day })
   }
 
-  if (pharmacyOn && canPractice('pharmacy.read')) {
-    items.push(
-      { to: '/medicaments', label: t('nav.medicaments'), icon: 'medication', tag: tagDev, section: pharmacy },
-      { to: '/stock', label: t('nav.stock'), icon: 'inventory_2', tag: tagDev, section: pharmacy },
-      { to: '/daf', label: t('nav.daf'), icon: 'local_shipping', tag: tagDev, section: pharmacy },
-    )
+  if (canPractice('clients.read')) {
+    items.push({ to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value, section: patients })
+  }
+  if (canPractice('pets.read')) {
+    items.push({ to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value, section: patients })
   }
 
   if (prescriptionsOn && canPractice('pets.read')) {
-    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'clinical_notes', tag: tagDev, section: documents })
+    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'clinical_notes', tag: tagDev, section: clinic })
   }
+  if (pharmacyOn && canPractice('pharmacy.read')) {
+    items.push(
+      { to: '/medicaments', label: t('nav.medicaments'), icon: 'medication', tag: tagDev, section: clinic },
+      { to: '/stock', label: t('nav.stock'), icon: 'inventory_2', tag: tagDev, section: clinic },
+      { to: '/daf', label: t('nav.daf'), icon: 'local_shipping', tag: tagDev, section: clinic },
+    )
+  }
+
   if (billitOn && (canPractice('clients.write') || canPractice('practice.settings'))) {
-    items.push({ to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: tagDev, section: documents })
+    items.push({ to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: tagDev, section: finance })
+  }
+  if (canPractice('commissions.view')) {
+    items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments', section: finance })
   }
 
   items.push({ to: '/produits', label: t('nav.products'), icon: 'description', section: practice })
-  if (canPractice('commissions.view')) {
-    items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments', section: practice })
-  }
   items.push({ to: '/team', label: t('nav.team'), icon: 'groups', section: practice })
   if (canPractice('clients.write')) {
     items.push({ to: '/recommend', label: t('nav.recommend'), icon: 'recommend', section: practice })

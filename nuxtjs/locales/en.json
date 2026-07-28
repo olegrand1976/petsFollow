@@ -56,9 +56,10 @@
       "ops": "Ops",
       "salesForce": "Sales force",
       "billing": "Payroll & catalog",
-      "activity": "Activity",
-      "pharmacy": "Pharmacy",
-      "documents": "Documents",
+      "day": "Daily",
+      "patients": "Patients",
+      "clinic": "Clinic",
+      "finance": "Finance",
       "practice": "Practice"
     },
     "managerAiModules": "AI CR — team",

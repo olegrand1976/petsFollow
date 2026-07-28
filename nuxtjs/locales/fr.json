@@ -58,9 +58,10 @@
       "ops": "Ops",
       "salesForce": "Force de vente",
       "billing": "Paie & catalogue",
-      "activity": "Activité",
-      "pharmacy": "Pharmacie",
-      "documents": "Documents",
+      "day": "Journée",
+      "patients": "Patients",
+      "clinic": "Clinique",
+      "finance": "Finance",
       "practice": "Cabinet"
     },
     "adminSupport": "Support",
