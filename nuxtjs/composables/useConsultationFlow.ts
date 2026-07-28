@@ -1,4 +1,5 @@
 import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 /**
  * Orchestration « Nouvelle Consultation » (Nuxt Pro).
@@ -26,8 +27,8 @@ function isConsultationHasReportError(e: any): boolean {
 
 export function useConsultationFlow() {
   const config = useRuntimeConfig()
-  const pharmacyEnabled = computed(() => Boolean(config.public.pharmacyEnabled))
-  const billitEnabled = computed(() => Boolean(config.public.billitEnabled))
+  const pharmacyEnabled = computed(() => isPublicFlagOn(config.public.pharmacyEnabled))
+  const billitEnabled = computed(() => isPublicFlagOn(config.public.billitEnabled))
   const invoicingUiEnabled = INVOICING_UI_ENABLED
 
   const visitId = ref('')

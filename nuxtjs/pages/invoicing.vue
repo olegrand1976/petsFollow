@@ -278,6 +278,7 @@
 
 <script setup lang="ts">
 import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 definePageMeta({
   middleware: ['vet-only', 'practice-perm'],
@@ -285,7 +286,7 @@ definePageMeta({
 })
 
 const runtimeConfig = useRuntimeConfig()
-if (!runtimeConfig.public.billitEnabled) {
+if (!isPublicFlagOn(runtimeConfig.public.billitEnabled)) {
   await navigateTo('/dashboard')
 }
 

@@ -23,12 +23,13 @@
 
 <script setup lang="ts">
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
 const { isStagingLike } = useAppEnv()
 const runtimeConfig = useRuntimeConfig()
-const billitOn = computed(() => Boolean(runtimeConfig.public.billitEnabled))
+const billitOn = computed(() => isPublicFlagOn(runtimeConfig.public.billitEnabled))
 if (!user.value) {
   await fetchUser().catch(() => null)
 }

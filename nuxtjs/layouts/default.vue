@@ -23,6 +23,7 @@
 import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 import { isPracticeStaffRole } from '~/composables/useAuth'
 import { isDeskLockedFlag } from '~/composables/useDeskSession'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -67,9 +68,9 @@ const showNav = computed(() => {
 })
 
 const navItems = computed<ProNavItem[]>(() => {
-  const pharmacyOn = Boolean(runtimeConfig.public.pharmacyEnabled)
-  const prescriptionsOn = Boolean(runtimeConfig.public.prescriptionsEnabled)
-  const billitOn = Boolean(runtimeConfig.public.billitEnabled)
+  const pharmacyOn = isPublicFlagOn(runtimeConfig.public.pharmacyEnabled)
+  const prescriptionsOn = isPublicFlagOn(runtimeConfig.public.prescriptionsEnabled)
+  const billitOn = isPublicFlagOn(runtimeConfig.public.billitEnabled)
   const day = t('nav.section.day')
   const patients = t('nav.section.patients')
   const clinic = t('nav.section.clinic')

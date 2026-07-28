@@ -37,8 +37,19 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
+  local pharmacy_enabled billit_enabled prescriptions_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
+  # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
+  if [[ "$app_env" == "staging" ]]; then
+    pharmacy_enabled="${PHARMACY_ENABLED:-true}"
+    billit_enabled="${BILLIT_ENABLED:-true}"
+    prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
+  else
+    pharmacy_enabled="${PHARMACY_ENABLED:-false}"
+    billit_enabled="${BILLIT_ENABLED:-false}"
+    prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
+  fi
   cat >"$path" <<EOF
 HTTP_ADDR: ":8080"
 LOG_LEVEL: "info"
@@ -59,6 +70,9 @@ COMMERCIAL_CONTACT_PHONE: "${COMMERCIAL_CONTACT_PHONE:-}"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
+PHARMACY_ENABLED: "${pharmacy_enabled}"
+BILLIT_ENABLED: "${billit_enabled}"
+PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
@@ -73,13 +87,39 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
+  local pharmacy_pub billit_pub prescriptions_pub
+  local flag_lines=""
+  # Nav Pro tag « dev » : on en staging ; prod opt-in.
+  # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
+  # Clé absente → boolean bake (false en image prod).
+  if [[ "$app_env" == "staging" ]]; then
+    pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-true}"
+    billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
+    prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
+  else
+    pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-}"
+    billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-}"
+    prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
+  fi
+  if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_PHARMACY_ENABLED: \"true\"
+"
+  fi
+  if [[ "$billit_pub" == "true" || "$billit_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_BILLIT_ENABLED: \"true\"
+"
+  fi
+  if [[ "$prescriptions_pub" == "true" || "$prescriptions_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_PRESCRIPTIONS_ENABLED: \"true\"
+"
+  fi
   cat >"$path" <<EOF
 NUXT_PUBLIC_API_BASE: "${api_url}"
 NUXT_API_BASE: "${api_url}"
 NUXT_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 NUXT_PUBLIC_GOOGLE_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 NUXT_PUBLIC_APP_ENV: "${app_env}"
-HOST: "0.0.0.0"
+${flag_lines}HOST: "0.0.0.0"
 NITRO_PORT: "3000"
 NODE_OPTIONS: "--max-old-space-size=768"
 EOF
