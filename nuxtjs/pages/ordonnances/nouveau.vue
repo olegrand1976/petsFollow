@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
-definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pets.write_clinical' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.write_clinical' })
 const { t } = useI18n()
 const { mapError } = usePrescriptionError()
 const busy = ref(false)

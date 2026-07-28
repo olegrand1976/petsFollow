@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pets.read' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 const { t } = useI18n()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))

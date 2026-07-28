@@ -81,7 +81,7 @@
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
 
-definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pharmacy.write' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharmacy.write' })
 const { t } = useI18n()
 const route = useRoute()
 const invoicingUiEnabled = INVOICING_UI_ENABLED

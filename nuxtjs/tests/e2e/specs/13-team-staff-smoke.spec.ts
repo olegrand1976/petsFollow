@@ -73,7 +73,7 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
     await expect(page.getByTestId('nav-commissions')).toHaveCount(0)
     await expect(page.locator('a[href="/commissions"]')).toHaveCount(0)
-    await expect(page.getByText(/^Activité$|^Activity$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Journée$|^Daily$/i).first()).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(/^Cabinet$|^Practice$/i).first()).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('nav-clients')).toBeVisible({ timeout: 10000 })
   })
@@ -112,10 +112,7 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByTestId('clients-invitations-open')).toHaveCount(0)
   })
 
-  test('B7: secretary — factu WIP (pas d’activate Billit)', async ({ page }) => {
-    if (INVOICING_UI_ENABLED) {
-      test.skip(true, 'INVOICING_UI_ENABLED — UI métier active')
-    }
+  test('B7: secretary — factu sans activate Billit (pas practice.settings)', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
 
     await page.goto('/invoicing', { waitUntil: 'networkidle' })
@@ -123,8 +120,13 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
       test.skip(true, 'NUXT_PUBLIC_BILLIT_ENABLED off (redirect)')
     }
     await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('invoicing-under-development')).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('invoicing-connect-start')).toHaveCount(0)
+    if (!INVOICING_UI_ENABLED) {
+      await expect(page.getByTestId('invoicing-under-development')).toBeVisible({ timeout: 10000 })
+      return
+    }
+    await expect(page.getByTestId('invoicing-under-development')).toHaveCount(0)
+    await expect(page.getByTestId('invoicing-connection-readonly')).toBeVisible({ timeout: 10000 })
   })
 
   test('B8: secretary — voit onglet partages (read) sans formulaire manage', async ({ page }) => {
@@ -184,7 +186,7 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
   test('E2: vet.demo — nav commissions + sections', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
     await expect(page.getByTestId('nav-commissions')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/^Activité$|^Activity$/i).first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/^Documents$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Journée$|^Daily$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Finance$/i).first()).toBeVisible({ timeout: 10000 })
   })
 })
