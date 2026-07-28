@@ -72,6 +72,10 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 		queries["filiationEvents"] = `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
 			FROM practice.filiation_events e
 			WHERE e.commercial_user_id = $1 OR e.vet_user_id = $1 OR e.actor_user_id = $1`
+		// Factures / notes / proformas rédigés par ce pro (contreparties = données métier cabinet).
+		queries["invoicingDocuments"] = `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(d) - 'idempotency_key') ORDER BY d.created_at), '[]'::jsonb)
+			FROM invoicing.documents d WHERE d.created_by = $1`
 	}
 
 	for key, q := range queries {

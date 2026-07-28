@@ -1951,7 +1951,21 @@
       "saasConfirm": "Creare una bozza fattura SaaS (88 EUR IVA esclusa) per {name} con l'account master Billit?",
       "saasOk": "Bozza SaaS creata ({id}) — {total} EUR IVA incl.",
       "saasError": "Creazione bozza SaaS non riuscita",
-      "saasUnavailable": "Account master Billit non configurato"
+      "saasUnavailable": "Account master Billit non configurato",
+      "saasSend": "Invia SaaS",
+      "saasSendConfirm": "Inviare la fattura SaaS Peppol (master Billit) per « {name} »?",
+      "saasSendOk": "Fattura SaaS inviata — stato {status}",
+      "saasSendError": "Invio SaaS non riuscito",
+      "saasSendUnavailable": "Nessuna bozza SaaS inviabile",
+      "saasStatus": "SaaS: {status}",
+      "saasTitle": "Flux A — fatture SaaS",
+      "saasSubtitle": "Strutture con profilo fiscale BE completo (con o senza connect Billit).",
+      "saasEmpty": "Nessuna struttura SaaS idonea",
+      "colVat": "IVA",
+      "colConnect": "Billit connect",
+      "colSaas": "SaaS mese",
+      "connectYes": "Connesso",
+      "connectNo": "Senza connect"
     }
   },
   "calendar": {
@@ -2074,7 +2088,8 @@
     },
     "requestPreconsult": "Richiedi una pre-consulenza",
     "audioConsentClientCheck": "Ho ottenuto l'accordo orale da parte del cliente per la registrazione",
-    "reportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaco proposto)."
+    "reportAiProposalBanner": "Proposta di IA: convalida obbligatoria prima della finalizzazione (diagnosi/farmaco proposto).",
+    "markDone": "Termina"
   },
   "commissions": {
     "title": "Le mie ricompense",

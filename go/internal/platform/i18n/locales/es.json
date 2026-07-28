@@ -174,7 +174,11 @@
     "daf_mismatch": "Documento DAF no encontrado para este centro",
     "daf_not_finalized": "El DAF debe estar finalizado antes de facturar",
     "daf_visit_mismatch": "El DAF y la visita no coinciden",
-    "visit_mismatch": "Visita no encontrada para este centro"
+    "visit_mismatch": "Visita no encontrada para este centro",
+    "partner_mark_not_eligible": "Marcado partner no permitido (conexión active + PartyID requeridos)",
+    "saas_master_not_configured": "Cuenta master Billit no configurada (BILLIT_MASTER_*)",
+    "invalid_id": "Identificador no válido",
+    "care_pro_visit_only": "Solo permitido en visitas creadas en campo (care pro)"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

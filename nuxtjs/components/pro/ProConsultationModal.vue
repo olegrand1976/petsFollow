@@ -4,6 +4,7 @@
     size="lg"
     :title="$t('clients.consultation.title')"
     test-id="consultation-modal"
+    :prevent-close="reportBusy || closing"
     @update:open="onOpenUpdate"
   >
     <!-- Étape A : choisir l'animal puis démarrer la visite -->
@@ -179,7 +180,8 @@ watch(
 
 async function onOpenUpdate(v: boolean) {
   if (!v) {
-    if (closing.value) return
+    // Keep modal open while CR save is in flight (same as Cancel disabled).
+    if (reportBusy.value || closing.value) return
     closing.value = true
     try {
       await discardIfUnsaved()

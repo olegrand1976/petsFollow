@@ -174,7 +174,11 @@
     "daf_mismatch": "DAF-dokumenti selle praktika jaoks ei leitud",
     "daf_not_finalized": "DAF peab enne arveldamist olema lõplik",
     "daf_visit_mismatch": "DAF ja visiit ei ühti",
-    "visit_mismatch": "Visiiti selle praktika jaoks ei leitud"
+    "visit_mismatch": "Visiiti selle praktika jaoks ei leitud",
+    "partner_mark_not_eligible": "Partneri märkimine pole lubatud (nõutav active + PartyID)",
+    "saas_master_not_configured": "Billiti master-konto pole seadistatud (BILLIT_MASTER_*)",
+    "invalid_id": "Vigane identifikaator",
+    "care_pro_visit_only": "Lubatud ainult välitööna loodud visiitidele (care pro)"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

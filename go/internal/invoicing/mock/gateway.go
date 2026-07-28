@@ -6,13 +6,14 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
 )
 
 // Gateway is an in-memory Billit stand-in for local/CI.
 type Gateway struct {
-	seq atomic.Int64
-	mu  sync.Mutex
+	seq  atomic.Int64
+	mu   sync.Mutex
 	docs map[string]invoicing.Document
 }
 
@@ -36,7 +37,8 @@ func (g *Gateway) CheckParty(_ context.Context, partyID, apiKey string) (invoici
 }
 
 func (g *Gateway) CreateDocument(_ context.Context, _, _ string, doc invoicing.Document) (string, error) {
-	id := fmt.Sprintf("ord_%d", g.seq.Add(1))
+	// Globally unique — sequential ord_N collided across tests and poisoned webhook apply/usage.
+	id := fmt.Sprintf("ord_%d_%s", g.seq.Add(1), uuid.NewString())
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	doc.BillitOrderID = id
@@ -44,12 +46,13 @@ func (g *Gateway) CreateDocument(_ context.Context, _, _ string, doc invoicing.D
 	return id, nil
 }
 
-func (g *Gateway) SendPeppol(_ context.Context, _, _, externalID string) error {
+func (g *Gateway) SendPeppol(_ context.Context, _, _, externalID, _ string) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	doc, ok := g.docs[externalID]
 	if !ok {
-		return fmt.Errorf("unknown order %s", externalID)
+		// Retry after DB-only rejected state (order known to PF, not this process memory).
+		doc = invoicing.Document{BillitOrderID: externalID}
 	}
 	doc.Status = invoicing.StatusDelivered
 	doc.PeppolStatus = "delivered"

@@ -1731,7 +1731,21 @@
       "saasConfirm": "Créer un brouillon facture SaaS (88 € HT) pour « {name} » via le compte master Billit ?",
       "saasOk": "Brouillon SaaS créé ({id}) — {total} € TTC",
       "saasError": "Échec du brouillon SaaS",
-      "saasUnavailable": "Compte master Billit non configuré"
+      "saasUnavailable": "Compte master Billit non configuré",
+      "saasSend": "Envoyer SaaS",
+      "saasSendConfirm": "Envoyer la facture SaaS Peppol (master Billit) pour « {name} » ?",
+      "saasSendOk": "Facture SaaS envoyée — statut {status}",
+      "saasSendError": "Échec de l’envoi SaaS",
+      "saasSendUnavailable": "Aucun brouillon SaaS envoyable",
+      "saasStatus": "SaaS : {status}",
+      "saasTitle": "Flux A — factures SaaS",
+      "saasSubtitle": "Cabinets profil fiscal BE complet (avec ou sans connexion Billit).",
+      "saasEmpty": "Aucun cabinet éligible SaaS",
+      "colVat": "TVA",
+      "colConnect": "Billit connect",
+      "colSaas": "SaaS mois",
+      "connectYes": "Connecté",
+      "connectNo": "Sans connect"
     },
     "commissions": {
       "title": "Rétributions vétos",
@@ -2150,7 +2164,8 @@
     },
     "requestPreconsult": "Demander une pré-consultation",
     "audioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
-    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés)."
+    "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés).",
+    "markDone": "Terminer"
   },
   "commissions": {
     "title": "Mes rétributions",

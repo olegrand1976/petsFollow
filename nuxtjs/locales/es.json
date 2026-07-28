@@ -1458,7 +1458,21 @@
       "saasConfirm": "Crear un borrador de factura SaaS (88 EUR sin IVA) para {name} con la cuenta master Billit?",
       "saasOk": "Borrador SaaS creado ({id}) — {total} EUR IVA incl.",
       "saasError": "Error al crear el borrador SaaS",
-      "saasUnavailable": "Cuenta master Billit no configurada"
+      "saasUnavailable": "Cuenta master Billit no configurada",
+      "saasSend": "Enviar SaaS",
+      "saasSendConfirm": "¿Enviar la factura SaaS Peppol (master Billit) para « {name} »?",
+      "saasSendOk": "Factura SaaS enviada — estado {status}",
+      "saasSendError": "Error al enviar SaaS",
+      "saasSendUnavailable": "No hay borrador SaaS enviable",
+      "saasStatus": "SaaS: {status}",
+      "saasTitle": "Flux A — facturas SaaS",
+      "saasSubtitle": "Clínicas con perfil fiscal BE completo (con o sin connect Billit).",
+      "saasEmpty": "Ninguna clínica elegible SaaS",
+      "colVat": "IVA",
+      "colConnect": "Billit connect",
+      "colSaas": "SaaS mes",
+      "connectYes": "Conectado",
+      "connectNo": "Sin connect"
     }
   },
   "commissions": {
@@ -2541,7 +2555,8 @@
     },
     "requestPreconsult": "Solicitar preconsulta",
     "audioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
-    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación)."
+    "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación).",
+    "markDone": "Terminar"
   },
   "manager": {
     "dashboard": {

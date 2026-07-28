@@ -174,7 +174,11 @@
     "daf_mismatch": "Document DAF introuvable pour ce cabinet",
     "daf_not_finalized": "Le DAF doit être finalisé avant facturation",
     "daf_visit_mismatch": "Le DAF et la visite ne correspondent pas",
-    "visit_mismatch": "Visite introuvable pour ce cabinet"
+    "visit_mismatch": "Visite introuvable pour ce cabinet",
+    "partner_mark_not_eligible": "Marquage partner impossible (connexion active + PartyID requis)",
+    "saas_master_not_configured": "Compte Billit master non configuré (BILLIT_MASTER_*)",
+    "invalid_id": "Identifiant invalide",
+    "care_pro_visit_only": "Action réservée aux visites créées en terrain (care pro)"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

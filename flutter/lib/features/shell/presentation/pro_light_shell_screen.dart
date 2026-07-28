@@ -25,16 +25,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 bool _isConsultationHasReportError(Object e) {
   if (e is! DioException) return false;
-  if (e.response?.statusCode == 409) return true;
   final data = e.response?.data;
-  if (data is Map) {
-    final err = data['error'];
-    if (err is Map) {
-      final key = (err['msgKey'] ?? err['messageKey'] ?? err['code'])?.toString();
-      return key == 'consultation_has_report';
-    }
-  }
-  return false;
+  if (data is! Map) return false;
+  final err = data['error'];
+  if (err is! Map) return false;
+  final msgKey = (err['msgKey'] ?? err['messageKey'])?.toString();
+  if (msgKey == 'consultation_has_report') return true;
+  // Filet si msgKey absent : cancel walk-in → code conflict + 409.
+  return e.response?.statusCode == 409 && err['code']?.toString() == 'conflict';
 }
 
 /// Terrain shell for care_pro (vet_light, farrier, …) and cabinet `vet`.

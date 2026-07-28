@@ -27,6 +27,8 @@ import type { ProNavItem } from '~/components/pro/ProSidebar.vue'
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
 const { isStagingLike } = useAppEnv()
+const runtimeConfig = useRuntimeConfig()
+const billitOn = computed(() => Boolean(runtimeConfig.public.billitEnabled))
 if (!user.value) {
   await fetchUser().catch(() => null)
 }
@@ -46,9 +48,12 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/admin/filiation', label: t('nav.adminFiliation'), icon: 'account_tree', section: t('nav.section.salesForce') },
   { to: '/admin/sales-branches', label: t('nav.adminSalesBranches'), icon: 'account_tree', section: t('nav.section.salesForce') },
   { to: '/admin/prospects', label: t('nav.adminProspects'), icon: 'requests', section: t('nav.section.salesForce') },
-  { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.salesForce') },
-  { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: t('nav.section.salesForce') },
+  { to: '/admin/ai-modules', label: t('nav.adminAiModules'), icon: 'record_voice_over', section: t('nav.section.ai') },
+  { to: '/admin/training', label: t('nav.adminTraining'), icon: 'record_voice_over', section: t('nav.section.ai') },
   { to: '/admin/payments', label: t('nav.adminPayments'), icon: 'payments', section: t('nav.section.billing') },
+  ...(billitOn.value
+    ? [{ to: '/admin/invoicing', label: t('nav.adminInvoicing'), icon: 'receipt', section: t('nav.section.billing') }]
+    : []),
   { to: '/admin/stripe-catalog', label: t('nav.adminStripeCatalog'), icon: 'payments', section: t('nav.section.billing') },
   { to: '/admin/commissions', label: t('nav.adminCommissions'), icon: 'payments', section: t('nav.section.billing') },
   { to: '/admin/commercial-commissions', label: t('nav.adminCommercialCommissions'), icon: 'payments', section: t('nav.section.billing') },

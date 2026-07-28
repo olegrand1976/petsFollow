@@ -835,6 +835,18 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Care_pro may complete shared terrain visits (done) but must not cancel/reschedule
+	// cabinet or client bookings — only visits they originated (source=care_pro).
+	if id.Role == kernel.RoleCarePro {
+		switch action {
+		case "cancel", "propose_reschedule", "accept_reschedule", "reject_reschedule", "reopen", "confirm":
+			if visit.Source != "care_pro" {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "care_pro_visit_only")
+				return
+			}
+		}
+	}
+
 	var updated store.Visit
 	switch action {
 	case "confirm":

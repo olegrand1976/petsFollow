@@ -1458,7 +1458,21 @@
       "saasConfirm": "Luua SaaS arve mustand (88 EUR ilma käibemaksuta) {name} jaoks Billiti master-kontoga?",
       "saasOk": "SaaS mustand loodud ({id}) — {total} EUR koos KM-ga",
       "saasError": "SaaS mustandi loomine ebaõnnestus",
-      "saasUnavailable": "Billiti master-konto pole seadistatud"
+      "saasUnavailable": "Billiti master-konto pole seadistatud",
+      "saasSend": "Saada SaaS",
+      "saasSendConfirm": "Saata SaaS Peppol-arve (Billiti master) « {name} » jaoks?",
+      "saasSendOk": "SaaS arve saadetud — olek {status}",
+      "saasSendError": "SaaS saatmine ebaõnnestus",
+      "saasSendUnavailable": "Saadetavat SaaS mustandit pole",
+      "saasStatus": "SaaS: {status}",
+      "saasTitle": "Flux A — SaaS arved",
+      "saasSubtitle": "Kliinikud täieliku BE maksuprofiiliga (Billiti ühendusega või ilma).",
+      "saasEmpty": "Sobivat SaaS kliinikut pole",
+      "colVat": "KMKR",
+      "colConnect": "Billit ühendus",
+      "colSaas": "SaaS kuu",
+      "connectYes": "Ühendatud",
+      "connectNo": "Ilma ühenduseta"
     }
   },
   "commissions": {
@@ -2541,7 +2555,8 @@
     },
     "requestPreconsult": "Küsi eelkonsultatsiooni",
     "audioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
-    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid)."
+    "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid).",
+    "markDone": "Lõpeta"
   },
   "manager": {
     "dashboard": {

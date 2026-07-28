@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ func (s *Store) GetPracticeInvoicingProfile(ctx context.Context, practiceID stri
 		Street:        street,
 		City:          city,
 		Postal:        postal,
-		Country:       "BE",
+		Country:       invoicing.CountryFromVAT(vat),
 	}
 	complete := strings.TrimSpace(legal) != "" &&
 		strings.TrimSpace(vat) != "" &&
@@ -254,7 +255,8 @@ func (s *Store) ConsumeConnectStateAndUpsertConnection(ctx context.Context, stat
 	return tx.Commit(ctx)
 }
 
-// MarkStaleSendingDocuments rejects Peppol docs stuck in sending past cutoff (frees quota slots).
+// MarkStaleSendingDocuments rejects practice Peppol docs stuck in sending past cutoff (frees quota slots).
+// Flux A (saas_master) is ops-owned — never auto-rejected here.
 func (s *Store) MarkStaleSendingDocuments(ctx context.Context, cutoff time.Time, limit int) (int, error) {
 	if limit <= 0 {
 		limit = 200
@@ -268,6 +270,7 @@ func (s *Store) MarkStaleSendingDocuments(ctx context.Context, cutoff time.Time,
 			SELECT id FROM invoicing.documents
 			WHERE status = 'sending'
 			  AND type IN ('invoice', 'credit_note')
+			  AND COALESCE(source, 'practice') = 'practice'
 			  AND updated_at < $1
 			ORDER BY updated_at
 			LIMIT $2
@@ -418,12 +421,14 @@ func (s *Store) ClaimDocumentForSend(ctx context.Context, practiceID, docID stri
 			}
 		}
 		// Live hole fix: in-flight Peppol sends occupy a quota slot until delivered or rejected.
+		// Flux A (saas_master) must never occupy practice quota slots.
 		var sending int
 		err = tx.QueryRow(ctx, `
 			SELECT COUNT(*)::int FROM invoicing.documents
 			WHERE practice_id = $1
 			  AND type IN ('invoice', 'credit_note')
 			  AND status = 'sending'
+			  AND COALESCE(source, 'practice') = 'practice'
 			  AND id <> $2`, practiceID, docID).Scan(&sending)
 		if err != nil {
 			return invoicing.Document{}, prevStatus, err
@@ -594,12 +599,12 @@ func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, st
 	}
 	defer tx.Rollback(ctx)
 
-	var docID, practiceID, prev string
+	var docID, practiceID, prev, source string
 	err = tx.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, status
+		SELECT id::text, practice_id::text, status, COALESCE(source, 'practice')
 		FROM invoicing.documents
 		WHERE billit_order_id = $1
-		FOR UPDATE`, orderID).Scan(&docID, &practiceID, &prev)
+		FOR UPDATE`, orderID).Scan(&docID, &practiceID, &prev, &source)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return invoicing.ErrDocNotFound
@@ -629,7 +634,10 @@ func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, st
 	if tag.RowsAffected() == 0 {
 		return invoicing.ErrDocNotFound
 	}
-	if applyStatus == invoicing.StatusDelivered && prevStatus != invoicing.StatusDelivered {
+	// Flux A (saas_master) must never consume the practice Peppol monthly quota.
+	if applyStatus == invoicing.StatusDelivered &&
+		prevStatus != invoicing.StatusDelivered &&
+		source == string(invoicing.SourcePractice) {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO invoicing.usage_monthly (practice_id, yyyymm, doc_count)
 			VALUES ($1::uuid, $2, 1)
@@ -640,6 +648,81 @@ func (s *Store) ApplyBillitWebhookStatus(ctx context.Context, orderID string, st
 		}
 	}
 	return tx.Commit(ctx)
+}
+
+// ClaimEmptyBillitOrder serializes Billit order creation for a draft without an order id.
+// Stale creating_order claims (>2 min) can be reclaimed after a crash mid-gateway.
+func (s *Store) ClaimEmptyBillitOrder(ctx context.Context, practiceID, docID string) (claimed bool, err error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET peppol_status = 'creating_order', updated_at = now()
+		WHERE id = $1 AND practice_id = $2
+		  AND (billit_order_id IS NULL OR TRIM(billit_order_id) = '')
+		  AND (
+		    peppol_status IS NULL
+		    OR peppol_status = ''
+		    OR peppol_status = 'saas_draft'
+		    OR (peppol_status = 'creating_order' AND updated_at < now() - interval '2 minutes')
+		  )`, docID, practiceID)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+// ClaimSaasDocumentForSend claims a Flux A document for Peppol send (no practice connection / quota).
+func (s *Store) ClaimSaasDocumentForSend(ctx context.Context, practiceID, docID string) (invoicing.Document, invoicing.DocStatus, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return invoicing.Document{}, "", err
+	}
+	defer tx.Rollback(ctx)
+
+	var typ, status, source string
+	err = tx.QueryRow(ctx, `
+		SELECT type, status, COALESCE(source, 'practice')
+		FROM invoicing.documents
+		WHERE id = $1 AND practice_id = $2
+		FOR UPDATE`, docID, practiceID).Scan(&typ, &status, &source)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return invoicing.Document{}, "", invoicing.ErrDocNotFound
+		}
+		return invoicing.Document{}, "", err
+	}
+	prevStatus := invoicing.DocStatus(status)
+	if source != string(invoicing.SourceSaasMaster) {
+		return invoicing.Document{}, prevStatus, invoicing.ErrDocNotDraft
+	}
+	if typ != string(invoicing.DocInvoice) {
+		return invoicing.Document{}, prevStatus, invoicing.ErrPeppolNotForType
+	}
+	switch status {
+	case string(invoicing.StatusDraft), string(invoicing.StatusRejected):
+		// ok
+	case string(invoicing.StatusSending):
+		return invoicing.Document{}, prevStatus, invoicing.ErrSendInProgress
+	default:
+		return invoicing.Document{}, prevStatus, invoicing.ErrDocNotDraft
+	}
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'sending',
+		    peppol_status = CASE WHEN status = 'rejected' THEN NULL ELSE peppol_status END,
+		    updated_at = now()
+		WHERE id = $1 AND practice_id = $2`, docID, practiceID)
+	if err != nil {
+		return invoicing.Document{}, prevStatus, err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.Document{}, prevStatus, invoicing.ErrDocNotFound
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return invoicing.Document{}, prevStatus, err
+	}
+	doc, err := s.GetDocument(ctx, practiceID, docID)
+	return doc, prevStatus, err
 }
 
 func (s *Store) InsertWebhookEvent(ctx context.Context, provider, eventType, externalID string, payload []byte) (string, bool, error) {
@@ -716,4 +799,77 @@ func (s *Store) UsageForMonth(ctx context.Context, practiceID string, yyyymm int
 		return 0, err
 	}
 	return n, nil
+}
+
+// ListSaasTargets returns active BE practices with a complete fiscal profile (Flux A eligible).
+// Active = profile_completed_at set + at least one verified practice staff user.
+func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) ([]invoicing.SaasTarget, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	yyyymmKey := strconv.Itoa(yyyymm)
+	rows, err := s.pool.Query(ctx, `
+		SELECT p.id::text,
+		       COALESCE(NULLIF(TRIM(p.company_legal_name), ''), NULLIF(TRIM(p.name), ''), ''),
+		       COALESCE(p.contact_email, ''),
+		       COALESCE(p.vat_number, ''),
+		       (c.practice_id IS NOT NULL) AS has_connect,
+		       d.id::text, d.status, d.billit_order_id, d.total_incl_cents, d.peppol_status
+		FROM practice.practices p
+		LEFT JOIN invoicing.practice_connections c ON c.practice_id = p.id
+		LEFT JOIN invoicing.documents d
+		  ON d.practice_id = p.id
+		 AND d.source = 'saas_master'
+		 AND d.idempotency_key = 'saas:' || p.id::text || ':' || $1
+		WHERE p.profile_completed_at IS NOT NULL
+		  AND TRIM(COALESCE(p.company_legal_name, '')) <> ''
+		  AND TRIM(COALESCE(p.vat_number, '')) <> ''
+		  AND TRIM(COALESCE(p.company_number, '')) <> ''
+		  AND TRIM(COALESCE(p.contact_email, '')) <> ''
+		  AND UPPER(REPLACE(p.vat_number, ' ', '')) LIKE 'BE%'
+		  AND EXISTS (
+		    SELECT 1 FROM identity.users u
+		    WHERE u.practice_id = p.id
+		      AND u.role IN ('vet', 'vet_assistant', 'secretary')
+		      AND u.email_verified_at IS NOT NULL
+		  )
+		ORDER BY COALESCE(NULLIF(TRIM(p.company_legal_name), ''), p.name)
+		LIMIT $2 OFFSET $3`, yyyymmKey, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []invoicing.SaasTarget
+	for rows.Next() {
+		var t invoicing.SaasTarget
+		var docID, status, orderID, peppol *string
+		var total *int64
+		if err := rows.Scan(
+			&t.PracticeID, &t.PracticeName, &t.ContactEmail, &t.VATNumber, &t.HasBillitConnect,
+			&docID, &status, &orderID, &total, &peppol,
+		); err != nil {
+			return nil, err
+		}
+		if docID != nil && *docID != "" {
+			sum := &invoicing.SaasDocSummary{ID: *docID}
+			if status != nil {
+				sum.Status = invoicing.DocStatus(*status)
+			}
+			if orderID != nil {
+				sum.BillitOrderID = *orderID
+			}
+			if total != nil {
+				sum.TotalInclCents = *total
+			}
+			if peppol != nil {
+				sum.PeppolStatus = *peppol
+			}
+			t.SaasDocument = sum
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
 }

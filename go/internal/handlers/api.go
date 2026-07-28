@@ -86,6 +86,8 @@ func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEna
 // TestSetBillitWebhookSecret sets BILLIT_WEBHOOK_SECRET (integration tests only).
 func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
 
+func (a *API) TestSetSaasInvoicesSecret(secret string) { a.cfg.SaasInvoicesSecret = secret }
+
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
 	// Anti brute-force / spam sur les endpoints auth publics (par IP).
@@ -121,6 +123,7 @@ func (a *API) Routes(r chi.Router) {
 	a.registerAiCrModuleRoutes(r)
 	a.registerSupportRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
+	r.Post("/internal/saas-invoices/run", a.internalRunSaasInvoices)
 	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
 	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
 	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)

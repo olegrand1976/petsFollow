@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -17,6 +17,8 @@ help:
 	@echo "  make seed           seed demo"
 	@echo "  make seed-mass      densifie la DB (après seed) — volume démo prod-like"
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
+	@echo "  make api-billit-live  API Go Billit live (MOCK=false — secrets requis)"
+	@echo "  make billit-sandbox-smoke  gates webhook+routes live (doc 34)"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
 	@echo "  make flutter-dev    Flutter pets staging (émulateur) + Google Sign-In"
 	@echo "  make test-go        tests Go"
@@ -32,6 +34,7 @@ help:
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
+	@echo "  make gcp-saas-invoices-scheduler  Scheduler mensuel brouillons SaaS Flux A C1"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
@@ -84,8 +87,25 @@ seed-mass: env
 api-dev: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} go run ./cmd/petsfollow-api
 
+# API Billit live (sandbox). Exige BILLIT_WEBHOOK_SECRET + BILLIT_SECRETS_BACKEND=local_enc + BILLIT_SECRETS_KEY.
+# Ne pas confondre avec api-dev (mock on par défaut). Smoke : make billit-sandbox-smoke
+api-billit-live: env
+	@set -a && source $(ENV_FILE) && set +a; \
+	  test -n "$${BILLIT_WEBHOOK_SECRET:-}" || (echo "BILLIT_WEBHOOK_SECRET required" >&2; exit 1); \
+	  test "$${BILLIT_SECRETS_BACKEND:-}" = "local_enc" || (echo "BILLIT_SECRETS_BACKEND=local_enc required (not plain_dev)" >&2; exit 1); \
+	  test -n "$${BILLIT_SECRETS_KEY:-}" || (echo "BILLIT_SECRETS_KEY required" >&2; exit 1); \
+	  cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true \
+	  BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} \
+	  BILLIT_ENABLED=true BILLIT_MOCK_ENABLED=false \
+	  BILLIT_WEBHOOK_SECRET=$${BILLIT_WEBHOOK_SECRET} \
+	  BILLIT_SECRETS_BACKEND=local_enc BILLIT_SECRETS_KEY=$${BILLIT_SECRETS_KEY} \
+	  BILLIT_BASE_URL=$${BILLIT_BASE_URL:-https://api.billit.be} \
+	  BILLIT_RESELLER_REGISTER_URL=$${BILLIT_RESELLER_REGISTER_URL} \
+	  AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} \
+	  go run ./cmd/petsfollow-api
+
 nuxtjs-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
+	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && NUXT_PUBLIC_BILLIT_ENABLED=$${NUXT_PUBLIC_BILLIT_ENABLED:-true} NUXT_PUBLIC_PHARMACY_ENABLED=$${NUXT_PUBLIC_PHARMACY_ENABLED:-true} NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=$${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true} npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
 
 # Flavor staging (package …mobile.staging). Device physique : API_BASE=http://<LAN>:8291 make flutter-dev
 GOOGLE_SERVER_CLIENT_ID ?= 237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com
@@ -131,6 +151,10 @@ test: test-go test-nuxt test-flutter
 smoke:
 	@bash scripts/smoke-test.sh
 
+# Gates Billit live (doc 34). Refuse si MOCK=true. Optionnel: BILLIT_SMOKE_PARTY_ID + BILLIT_SMOKE_API_KEY.
+billit-sandbox-smoke:
+	@bash scripts/smoke-billit-sandbox.sh
+
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
 
@@ -148,6 +172,9 @@ gcp-setup-stripe:
 
 gcp-retention-scheduler:
 	bash infra/gcp/setup-retention-scheduler.sh
+
+gcp-saas-invoices-scheduler:
+	bash infra/gcp/setup-saas-invoices-scheduler.sh
 
 gcp-sales-branches-scheduler:
 	bash infra/gcp/setup-sales-branches-scheduler.sh

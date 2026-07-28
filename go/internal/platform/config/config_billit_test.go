@@ -13,10 +13,18 @@ func TestValidateBillitDisabledOK(t *testing.T) {
 	}
 }
 
-func TestValidateBillitLiveRefused(t *testing.T) {
-	cfg := config.Config{BillitEnabled: true, BillitMockEnabled: false}
+func TestValidateBillitLiveRequiresURLAndWebhook(t *testing.T) {
+	cfg := config.Config{BillitEnabled: true, BillitMockEnabled: false, DevSeedEnabled: true}
 	if err := cfg.ValidateBillit(); err == nil {
-		t.Fatal("expected error for live without client")
+		t.Fatal("expected error without base URL")
+	}
+	cfg.BillitBaseURL = "https://api.billit.be"
+	if err := cfg.ValidateBillit(); err == nil {
+		t.Fatal("expected error without webhook secret")
+	}
+	cfg.BillitWebhookSecret = "whsec_test"
+	if err := cfg.ValidateBillit(); err != nil {
+		t.Fatal(err)
 	}
 }
 

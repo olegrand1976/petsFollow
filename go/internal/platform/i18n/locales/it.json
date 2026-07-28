@@ -174,7 +174,11 @@
     "daf_mismatch": "Documento DAF non trovato per questo studio",
     "daf_not_finalized": "Il DAF deve essere finalizzato prima della fatturazione",
     "daf_visit_mismatch": "DAF e visita non corrispondono",
-    "visit_mismatch": "Visita non trovata per questo studio"
+    "visit_mismatch": "Visita non trovata per questo studio",
+    "partner_mark_not_eligible": "Marcatura partner non consentita (servono active + PartyID)",
+    "saas_master_not_configured": "Account master Billit non configurato (BILLIT_MASTER_*)",
+    "invalid_id": "Identificatore non valido",
+    "care_pro_visit_only": "Consentito solo sulle visite create sul campo (care pro)"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

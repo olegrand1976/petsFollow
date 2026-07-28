@@ -176,8 +176,8 @@ Compte : `vet.demo@petsfollow.test`
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
 | C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda |
-| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; close pendant save → attendre PUT puis 409=garder |
-| C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain |
+| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés (`preventClose`) ; après save → 409 `consultation_has_report` = garder |
+| C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` |
 
 ### C3 — Calendrier & RDV
@@ -240,9 +240,9 @@ Compte : `vet.demo@petsfollow.test`
 | I7.6 | P1 | Retry rejected | Invoice `rejected` → send | Rejeu → delivered (mock) |
 | I7.7 | P1 | Admin mark-partner | `/admin/invoicing` + confirm + mark | `partnerListedAt` ; liste avec `practiceName` |
 | I7.8 | P1 | Admin alertes ops | Connexions active sans partner >7 j ; usage ≥80 % | KPI + CSV pending PartyID |
-| I7.9 | P1 | Flux A SaaS draft | Admin `POST …/saas-draft` (mock) ; mark-partner hors `active` | Doc `source=saas_master` + orderId ; 409 `partner_mark_not_eligible` |
+| I7.9 | P1 | Flux A SaaS draft+send | Admin targets actifs BE (sans connect) : draft puis send ; cron C1 `limit≤50` draft-only (Brussels `yyyymm`) | Doc `saas_master` → delivered ; usage inchangé ; `POST /internal/saas-invoices/run` |
 
-Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (I7.1–I7.4 si UI on ; I7.0 si off). Auto API : Go `TestInvoicing*` / `TestInvoicingWebhook*` / `TestInvoicingAdminMarkPartner*` / `TestInvoicingAdminSaasDraft`.
+Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (I7.1–I7.4) + [`06-admin.spec.ts`](../nuxtjs/tests/e2e/specs/06-admin.spec.ts) I7.9. Auto API : Go `TestInvoicing*` / `TestInvoicingAdminSaasDraft` / `TestInvoicingAdminSaasTargetsAndCron`.
 
 ---
 
@@ -672,7 +672,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture | `@p0` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · close pendant save · CTA DAF/facture | `@p0` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |

@@ -34,9 +34,8 @@ Index des documents de référence du projet.
 | 28 | [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md) | Multi-profils care_pro, ACL partage, pro light, CR IA |
 | 29 | [29-ANALYSE-CONCURRENCE.md](29-ANALYSE-CONCURRENCE.md) | Concurrence FR/BE/ES (commerciaux) |
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
-| 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | **Plan** facturation Peppol Billit (88 € tout compris, partner Invoice to) — non implémenté |
-| 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | **Plan technique** Billit reseller (connect, API, schéma, sprints) — non implémenté |
-| 35 | [35-ORDONNANCES.md](35-ORDONNANCES.md) | Ordonnances vétérinaires (tag `dev`) — brouillons + preview PDF (`PRESCRIPTIONS_ENABLED`) |
+| 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | **Plan** facturation Peppol Billit (88 € tout compris) — socle mock + live code ; pilote sandbox ops |
+| 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | **Plan technique** Billit reseller — multi-pays, client HTTP, webhook HMAC — livré mock/CI |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

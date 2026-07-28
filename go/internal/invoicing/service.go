@@ -47,7 +47,10 @@ type Store interface {
 	CreateDocument(ctx context.Context, doc Document, lines []Line) (Document, error)
 	GetDocument(ctx context.Context, practiceID, docID string) (Document, error)
 	ListDocuments(ctx context.Context, practiceID string, limit int) ([]Document, error)
+	ClaimEmptyBillitOrder(ctx context.Context, practiceID, docID string) (claimed bool, err error)
 	ClaimDocumentForSend(ctx context.Context, practiceID, docID string, yyyymm, quotaLimit int) (doc Document, prevStatus DocStatus, err error)
+	ClaimSaasDocumentForSend(ctx context.Context, practiceID, docID string) (doc Document, prevStatus DocStatus, err error)
+	GetDocumentByIdempotency(ctx context.Context, practiceID, key string) (Document, error)
 	UpdateDocumentExternal(ctx context.Context, practiceID, docID, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time) error
 	ApplyBillitWebhookStatus(ctx context.Context, orderID string, status DocStatus, peppolStatus string, sentAt *time.Time, yyyymm int) error
 	InsertWebhookEvent(ctx context.Context, provider, eventType, externalID string, payload []byte) (eventID string, duplicate bool, err error)
@@ -55,6 +58,7 @@ type Store interface {
 	DeleteWebhookEvent(ctx context.Context, eventID string) error
 	IncrementUsage(ctx context.Context, practiceID string, yyyymm int) error
 	UsageForMonth(ctx context.Context, practiceID string, yyyymm int) (int, error)
+	ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) ([]SaasTarget, error)
 }
 
 type Service struct {
@@ -287,6 +291,10 @@ func (s *Service) CreateDocument(ctx context.Context, practiceID, userID string,
 			}
 			return Document{}, err
 		}
+		// Practice docs must not reference Flux A master invoices (wrong Peppol issuer).
+		if related.Source == SourceSaasMaster {
+			return Document{}, ErrRelatedDocument
+		}
 		if in.Type == DocCreditNote && related.Type != DocInvoice {
 			return Document{}, ErrRelatedDocument
 		}
@@ -332,7 +340,15 @@ func (s *Service) ListDocuments(ctx context.Context, practiceID string) ([]Docum
 }
 
 func (s *Service) GetDocument(ctx context.Context, practiceID, docID string) (Document, error) {
-	return s.store.GetDocument(ctx, practiceID, docID)
+	doc, err := s.store.GetDocument(ctx, practiceID, docID)
+	if err != nil {
+		return Document{}, err
+	}
+	// SaaS master invoices are ops-only — hide from practice Pro API.
+	if doc.Source == SourceSaasMaster {
+		return Document{}, ErrDocNotFound
+	}
+	return doc, nil
 }
 
 func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (Document, error) {
@@ -416,7 +432,45 @@ func (s *Service) SendDocument(ctx context.Context, practiceID, docID string) (D
 }
 
 func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error) {
-	items, err := s.store.ListConnections(ctx, currentYYYYMM())
+	yyyymm := currentYYYYMM()
+	items, err := s.store.ListConnections(ctx, yyyymm)
+	if err != nil {
+		return nil, err
+	}
+	enabled := s.SaasDraftEnabled()
+	for i := range items {
+		items[i].SaasDraftEnabled = enabled
+		key := fmt.Sprintf("saas:%s:%d", items[i].PracticeID, yyyymm)
+		if d, err := s.store.GetDocumentByIdempotency(ctx, items[i].PracticeID, key); err == nil {
+			items[i].SaasDocument = &SaasDocSummary{
+				ID:             d.ID,
+				Status:         d.Status,
+				BillitOrderID:  d.BillitOrderID,
+				TotalInclCents: d.TotalInclCents,
+				PeppolStatus:   d.PeppolStatus,
+			}
+		}
+	}
+	return items, nil
+}
+
+const (
+	defaultSaasCronLimit = 50
+	maxSaasCronLimit     = 100
+	maxSaasCronErrors    = 20
+)
+
+func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int) ([]SaasTarget, error) {
+	if !s.Enabled() {
+		return nil, ErrDisabled
+	}
+	if limit <= 0 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	items, err := s.store.ListSaasTargets(ctx, saasYYYYMM(), limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -425,6 +479,53 @@ func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error
 		items[i].SaasDraftEnabled = enabled
 	}
 	return items, nil
+}
+
+// RunMonthlySaasDrafts creates Flux A drafts for eligible practices (C1 — no Peppol send).
+// limit/offset paginate Billit order creation to avoid cron timeouts (default 50, max 100).
+func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int) (SaasDraftRunResult, error) {
+	out := SaasDraftRunResult{YYYYMM: saasYYYYMM()}
+	if !s.Enabled() {
+		return out, ErrDisabled
+	}
+	if !s.SaasDraftEnabled() {
+		return out, ErrMasterNotConfigured
+	}
+	if limit <= 0 {
+		limit = defaultSaasCronLimit
+	}
+	if limit > maxSaasCronLimit {
+		limit = maxSaasCronLimit
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	out.Limit = limit
+	out.Offset = offset
+	targets, err := s.ListSaasTargets(ctx, limit, offset)
+	if err != nil {
+		return out, err
+	}
+	out.Scanned = len(targets)
+	for _, t := range targets {
+		hadOrder := t.SaasDocument != nil && t.SaasDocument.BillitOrderID != ""
+		_, err := s.CreateSaasDraft(ctx, t.PracticeID, "")
+		if err != nil {
+			out.Failed++
+			if len(out.Errors) < maxSaasCronErrors {
+				out.Errors = append(out.Errors, t.PracticeID+": "+err.Error())
+			} else {
+				out.ErrorsTruncated = true
+			}
+			continue
+		}
+		if hadOrder {
+			out.Unchanged++
+		} else {
+			out.Drafted++
+		}
+	}
+	return out, nil
 }
 
 func (s *Service) MarkPartnerListed(ctx context.Context, practiceID string) error {
@@ -474,7 +575,14 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 	}
 	country := strings.ToUpper(strings.TrimSpace(profile.Country))
 	if country == "" {
+		country = CountryFromVAT(profile.VATNumber)
+	}
+	if country == "" {
 		country = "BE"
+	}
+	// Flux A MVP: BE VAT + 21 % only (no silent 0 % for other countries).
+	if country != "BE" {
+		return Document{}, fmt.Errorf("%w: saas_be_only", ErrInvalidCounterparty)
 	}
 	cp := NormalizeCounterparty(Counterparty{
 		Name:          profile.LegalName,
@@ -493,21 +601,17 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 	if price <= 0 {
 		price = 8800
 	}
-	vatPercent := 21.0
-	if country != "BE" {
-		vatPercent = 0 // other countries: HT only until fiscal rules land
-	}
 	lines := []Line{{
 		Description:        "Abonnement petsFollow Pro",
 		Quantity:           1,
 		UnitPriceExclCents: int64(price),
-		VATPercent:         vatPercent,
+		VATPercent:         21.0,
 	}}
 	if err := ValidateLines(lines); err != nil {
 		return Document{}, err
 	}
 	excl, vat, incl := ComputeTotals(lines)
-	yyyymm := currentYYYYMM()
+	yyyymm := saasYYYYMM()
 	idem := fmt.Sprintf("saas:%s:%d", practiceID, yyyymm)
 	now := time.Now().UTC()
 	doc := Document{
@@ -534,8 +638,27 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 	if saved.BillitOrderID != "" {
 		return saved, nil
 	}
+	claimed, err := s.store.ClaimEmptyBillitOrder(ctx, practiceID, saved.ID)
+	if err != nil {
+		return Document{}, err
+	}
+	if !claimed {
+		// Another request holds creating_order — wait briefly for billit_order_id.
+		for i := 0; i < 8; i++ {
+			d, err := s.store.GetDocument(ctx, practiceID, saved.ID)
+			if err != nil {
+				return Document{}, err
+			}
+			if d.BillitOrderID != "" {
+				return d, nil
+			}
+			time.Sleep(40 * time.Millisecond)
+		}
+		return s.store.GetDocument(ctx, practiceID, saved.ID)
+	}
 	orderID, err := s.gw.CreateDocument(ctx, partyID, apiKey, saved)
 	if err != nil {
+		_ = s.store.UpdateDocumentExternal(ctx, practiceID, saved.ID, "", StatusDraft, "saas_draft", nil)
 		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
 	}
 	if err := s.store.UpdateDocumentExternal(ctx, practiceID, saved.ID, orderID, StatusDraft, "saas_draft", nil); err != nil {
@@ -545,6 +668,119 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 		return Document{}, fmt.Errorf("%w: %v", ErrOrderPersistFailed, err)
 	}
 	return s.store.GetDocument(ctx, practiceID, saved.ID)
+}
+
+// SendSaasDocument sends a Flux A (saas_master) invoice via Billit master Peppol.
+// Does not consume the practice monthly Peppol quota (webhook usage skip already in store).
+func (s *Service) SendSaasDocument(ctx context.Context, practiceID, docID string) (Document, error) {
+	if !s.Enabled() {
+		return Document{}, ErrDisabled
+	}
+	partyID, apiKey := s.masterCredentials()
+	if partyID == "" || apiKey == "" {
+		return Document{}, ErrMasterNotConfigured
+	}
+
+	// Ensure Billit order exists while still draft/rejected (before claim → sending).
+	doc, err := s.store.GetDocument(ctx, practiceID, docID)
+	if err != nil {
+		return Document{}, err
+	}
+	if doc.Source != SourceSaasMaster {
+		return Document{}, ErrDocNotDraft
+	}
+	switch doc.Status {
+	case StatusDraft, StatusRejected:
+	case StatusSending:
+		return Document{}, ErrSendInProgress
+	default:
+		return Document{}, ErrDocNotDraft
+	}
+	if doc.BillitOrderID == "" {
+		if err := s.ensureSaasBillitOrder(ctx, practiceID, docID, partyID, apiKey, doc); err != nil {
+			return Document{}, err
+		}
+		doc, err = s.store.GetDocument(ctx, practiceID, docID)
+		if err != nil {
+			return Document{}, err
+		}
+		if doc.BillitOrderID == "" {
+			return Document{}, fmt.Errorf("%w: order_missing", ErrGateway)
+		}
+	}
+
+	doc, prevStatus, err := s.store.ClaimSaasDocumentForSend(ctx, practiceID, docID)
+	if err != nil {
+		return Document{}, err
+	}
+	restore := func(orderID string, status DocStatus, peppol string) {
+		if status == "" || status == StatusSending {
+			status = StatusDraft
+		}
+		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, status, peppol, nil)
+	}
+
+	orderID := doc.BillitOrderID
+	if orderID == "" {
+		// Should not happen after ensureSaasBillitOrder — fail closed.
+		restore("", prevStatus, "saas_draft")
+		return Document{}, fmt.Errorf("%w: order_missing", ErrGateway)
+	}
+
+	country := doc.Counterparty.Country
+	if err := s.gw.SendPeppol(ctx, partyID, apiKey, orderID, country); err != nil {
+		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "send_failed", nil)
+		return Document{}, fmt.Errorf("%w: %v", ErrGateway, err)
+	}
+	now := time.Now().UTC()
+	if s.cfg.BillitMockEnabled {
+		if err := s.store.ApplyBillitWebhookStatus(ctx, orderID, StatusDelivered, "delivered", &now, currentYYYYMM()); err != nil {
+			restore(orderID, prevStatus, "")
+			return Document{}, err
+		}
+		return s.store.GetDocument(ctx, practiceID, docID)
+	}
+	if err := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusSending, "sending", &now); err != nil {
+		// Peppol already accepted — keep sending for webhook.
+		return Document{}, err
+	}
+	return s.store.GetDocument(ctx, practiceID, docID)
+}
+
+func (s *Service) ensureSaasBillitOrder(ctx context.Context, practiceID, docID, partyID, apiKey string, doc Document) error {
+	claimed, err := s.store.ClaimEmptyBillitOrder(ctx, practiceID, docID)
+	if err != nil {
+		return err
+	}
+	if !claimed {
+		for i := 0; i < 8; i++ {
+			d, err := s.store.GetDocument(ctx, practiceID, docID)
+			if err != nil {
+				return err
+			}
+			if d.BillitOrderID != "" {
+				return nil
+			}
+			time.Sleep(40 * time.Millisecond)
+		}
+		return fmt.Errorf("%w: order_create_race", ErrGateway)
+	}
+	orderID, err := s.gw.CreateDocument(ctx, partyID, apiKey, doc)
+	if err != nil {
+		_ = s.store.UpdateDocumentExternal(ctx, practiceID, docID, "", doc.Status, "saas_draft", nil)
+		return fmt.Errorf("%w: %v", ErrGateway, err)
+	}
+	status := doc.Status
+	if status != StatusDraft && status != StatusRejected {
+		status = StatusDraft
+	}
+	if err := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, status, "saas_draft", nil); err != nil {
+		if err2 := s.store.UpdateDocumentExternal(ctx, practiceID, docID, orderID, StatusRejected, "order_persist_failed", nil); err2 != nil {
+			return err
+		}
+		return fmt.Errorf("%w: %v", ErrOrderPersistFailed, err)
+	}
+	return nil
 }
 
 // ApplyWebhookStatus updates a document from a Billit webhook (by order id).
@@ -583,5 +819,15 @@ func (s *Service) ForgetWebhook(ctx context.Context, eventID string) error {
 
 func currentYYYYMM() int {
 	t := time.Now().UTC()
+	return t.Year()*100 + int(t.Month())
+}
+
+// saasYYYYMM is the Flux A billing month in Europe/Brussels (Peppol SaaS period).
+func saasYYYYMM() int {
+	loc, err := time.LoadLocation("Europe/Brussels")
+	if err != nil {
+		return currentYYYYMM()
+	}
+	t := time.Now().In(loc)
 	return t.Year()*100 + int(t.Month())
 }

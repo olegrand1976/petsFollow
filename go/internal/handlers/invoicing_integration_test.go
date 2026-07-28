@@ -2,7 +2,9 @@ package handlers_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -464,6 +466,154 @@ func TestInvoicingQuotaCountsInFlightSending(t *testing.T) {
 	}
 }
 
+func TestInvoicingQuotaIgnoresSaasMasterSending(t *testing.T) {
+	// Flux A docs in sending must not occupy practice Peppol quota slots.
+	api := newTestAPI(t)
+	access, practiceID := registerInvoicingPractice(t, api, "inv-quota-saas")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": "party_quota_saas", "apiKey": "mock-key",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("complete %d %#v", code, env)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.practice_connections SET docs_included_monthly = 1 WHERE practice_id = $1`, practiceID); err != nil {
+		t.Fatal(err)
+	}
+	saasID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO invoicing.documents (
+			id, practice_id, type, status, source, billit_order_id, idempotency_key,
+			counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
+			peppol_status, created_at, updated_at
+		) VALUES (
+			$1, $2, 'invoice', 'sending', 'saas_master', $3, $4,
+			'{"name":"LL-IT-SC","country":"BE"}'::jsonb, 'EUR', 8800, 1848, 10648,
+			'sending', now(), now()
+		)`, saasID, practiceID, "ord_saas_inflight_"+uuid.NewString(), "saas-quota-"+uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type": "invoice",
+		"counterparty": map[string]any{
+			"name": "Practice", "country": "BE", "vatNumber": "BE0999999999",
+			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+		},
+		"lines": []map[string]any{
+			{"description": "Consult", "quantity": 1, "unitPriceExclCents": 1000, "vatPercent": 21},
+		},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create practice %d %#v", code, env)
+	}
+	practiceDocID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents/"+practiceDocID+"/send", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("practice send with saas_master sending must succeed, got %d %#v", code, env)
+	}
+}
+
+func TestInvoicingCreditNoteRejectsSaasMasterRelated(t *testing.T) {
+	api := newTestAPI(t)
+	access, practiceID := registerInvoicingPractice(t, api, "inv-cn-saas")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/start", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("start %d %#v", code, env)
+	}
+	state, _ := dataMap(t, env)["state"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/connect/complete", access, map[string]any{
+		"state": state, "partyId": "party_cn_saas", "apiKey": "mock-key",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("complete %d %#v", code, env)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	saasID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO invoicing.documents (
+			id, practice_id, type, status, source, billit_order_id, idempotency_key,
+			counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
+			peppol_status, created_at, updated_at
+		) VALUES (
+			$1, $2, 'invoice', 'delivered', 'saas_master', $3, $4,
+			'{"name":"Cabinet","country":"BE","vatNumber":"BE0123456749"}'::jsonb, 'EUR', 8800, 1848, 10648,
+			'delivered', now(), now()
+		)`, saasID, practiceID, "ord_cn_saas_"+uuid.NewString(), "saas-cn-"+uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/practices/me/invoicing/documents", access, map[string]any{
+		"type":              "credit_note",
+		"relatedDocumentId": saasID,
+		"counterparty": map[string]any{
+			"name": "Client", "country": "BE", "vatNumber": "BE0999999999",
+			"street": "Rue 1", "city": "Bruxelles", "postal": "1000",
+		},
+		"lines": []map[string]any{
+			{"description": "Avoir", "quantity": 1, "unitPriceExclCents": 1000, "vatPercent": 21},
+		},
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("CN on saas_master want 400 got %d %#v", code, env)
+	}
+	if errObj, _ := env["error"].(map[string]any); errObj["code"] != "related_document_invalid" {
+		t.Fatalf("want related_document_invalid %#v", env)
+	}
+}
+
+func TestInvoicingStaleSendingSkipsSaasMaster(t *testing.T) {
+	api := newTestAPI(t)
+	_, practiceID := registerInvoicingPractice(t, api, "inv-stale-saas")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	saasID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO invoicing.documents (
+			id, practice_id, type, status, source, billit_order_id, idempotency_key,
+			counterparty_json, currency, total_excl_cents, total_vat_cents, total_incl_cents,
+			peppol_status, created_at, updated_at
+		) VALUES (
+			$1, $2, 'invoice', 'sending', 'saas_master', $3, $4,
+			'{"name":"Cabinet","country":"BE"}'::jsonb, 'EUR', 8800, 1848, 10648,
+			'sending', now() - interval '8 days', now() - interval '8 days'
+		)`, saasID, practiceID, "ord_stale_saas_"+uuid.NewString(), "saas-stale-"+uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+
+	st := store.New(api.pool)
+	n, err := st.MarkStaleSendingDocuments(ctx, time.Now().Add(-7*24*time.Hour), 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var status, source string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT status, COALESCE(source, 'practice') FROM invoicing.documents WHERE id = $1`, saasID,
+	).Scan(&status, &source); err != nil {
+		t.Fatal(err)
+	}
+	if status != string(invoicing.StatusSending) {
+		t.Fatalf("saas_master must stay sending, got %q (mark returned %d)", status, n)
+	}
+	if source != string(invoicing.SourceSaasMaster) {
+		t.Fatalf("source=%q", source)
+	}
+}
+
 func TestInvoicingRejectedCanRetry(t *testing.T) {
 	api := newTestAPI(t)
 	access, practiceID := registerInvoicingPractice(t, api, "inv-rej")
@@ -891,7 +1041,8 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 		    contact_email = $2,
 		    address_line1 = 'Rue Demo 1',
 		    city = 'Bruxelles',
-		    postal_code = '1000'
+		    postal_code = '1000',
+		    profile_completed_at = COALESCE(profile_completed_at, NOW())
 		WHERE id = $1`, practiceID, email); err != nil {
 		t.Fatal(err)
 	}
@@ -956,7 +1107,7 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 		t.Fatalf("want same idempotent id %#v vs %#v", env, doc)
 	}
 
-	// Hidden from practice document list
+	// Hidden from practice document list + GET by id
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents", access, nil)
 	if code != http.StatusOK {
 		t.Fatalf("list docs %d %#v", code, env)
@@ -968,5 +1119,166 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 				t.Fatalf("saas doc must not appear in practice list %#v", rows)
 			}
 		}
+	}
+	docID, _ := doc["id"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/practices/me/invoicing/documents/"+docID, access, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("saas GET by id want 404 got %d %#v", code, env)
+	}
+
+	// Webhook delivered on saas_master must not burn practice Peppol quota.
+	api.api.TestSetBillitWebhookSecret(testBillitWebhookSecret)
+	orderID, _ := doc["billitOrderId"].(string)
+	var usageBefore int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(doc_count, 0) FROM invoicing.usage_monthly
+		WHERE practice_id = $1 AND yyyymm = $2`,
+		practiceID, time.Now().UTC().Year()*100+int(time.Now().UTC().Month()),
+	).Scan(&usageBefore); err != nil {
+		usageBefore = 0
+	}
+	raw, _ := json.Marshal(map[string]any{
+		"OrderID": orderID, "EventType": "OrderDelivered", "Status": "delivered",
+	})
+	code, env = postBillitWebhook(t, api.handler, testBillitWebhookSecret, raw)
+	if code != http.StatusOK {
+		t.Fatalf("saas webhook %d %#v", code, env)
+	}
+	var usageAfter int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(doc_count, 0) FROM invoicing.usage_monthly
+		WHERE practice_id = $1 AND yyyymm = $2`,
+		practiceID, time.Now().UTC().Year()*100+int(time.Now().UTC().Month()),
+	).Scan(&usageAfter); err != nil {
+		usageAfter = 0
+	}
+	if usageAfter != usageBefore {
+		t.Fatalf("saas delivered must not increment usage: before=%d after=%d", usageBefore, usageAfter)
+	}
+
+	// Option A: explicit admin send after draft (mock → delivered, still no quota burn).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/invoicing/saas-targets", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("saas-targets %d %#v", code, env)
+	}
+	var saasDocID string
+	if rows, ok := env["data"].([]any); ok {
+		for _, row := range rows {
+			m, _ := row.(map[string]any)
+			if m["practiceId"] != practiceID {
+				continue
+			}
+			sd, _ := m["saasDocument"].(map[string]any)
+			if sd == nil {
+				t.Fatalf("expected saasDocument on targets after draft %#v", m)
+			}
+			saasDocID, _ = sd["id"].(string)
+		}
+	}
+	if saasDocID == "" {
+		t.Fatal("missing saasDocument id")
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE invoicing.documents
+		SET status = 'draft', peppol_status = 'saas_draft', sent_at = NULL
+		WHERE id = $1`, saasDocID); err != nil {
+		t.Fatal(err)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/invoicing/connections/"+practiceID+"/saas-documents/"+saasDocID+"/send", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("saas send %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != string(invoicing.StatusDelivered) {
+		t.Fatalf("want delivered after saas send %#v", env)
+	}
+	var usageAfterSend int
+	if err := api.pool.QueryRow(ctx, `
+		SELECT COALESCE(doc_count, 0) FROM invoicing.usage_monthly
+		WHERE practice_id = $1 AND yyyymm = $2`,
+		practiceID, time.Now().UTC().Year()*100+int(time.Now().UTC().Month()),
+	).Scan(&usageAfterSend); err != nil {
+		usageAfterSend = 0
+	}
+	if usageAfterSend != usageBefore {
+		t.Fatalf("saas send must not increment usage: before=%d after=%d", usageBefore, usageAfterSend)
+	}
+}
+
+func TestInvoicingAdminSaasTargetsAndCron(t *testing.T) {
+	api := newTestAPI(t)
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/invoicing/saas-targets", adminTok, nil)
+	if code == http.StatusNotFound {
+		t.Skip("BILLIT_ENABLED off")
+	}
+	if code != http.StatusOK {
+		t.Fatalf("saas-targets %d %#v", code, env)
+	}
+	rows, ok := env["data"].([]any)
+	if !ok || len(rows) == 0 {
+		t.Fatalf("expected seeded BE practices as saas targets %#v", env)
+	}
+	var practiceID string
+	for _, row := range rows {
+		m, _ := row.(map[string]any)
+		if en, _ := m["saasDraftEnabled"].(bool); en {
+			practiceID, _ = m["practiceId"].(string)
+			break
+		}
+	}
+	if practiceID == "" {
+		t.Fatalf("no saasDraftEnabled target %#v", env)
+	}
+
+	secret := "test-saas-invoices-secret"
+	api.api.TestSetSaasInvoicesSecret(secret)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/saas-invoices/run", nil)
+	rec := httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("cron without secret want 401 got %d", rec.Code)
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/internal/saas-invoices/run", nil)
+	req.Header.Set("X-Saas-Invoices-Secret", secret)
+	rec = httptest.NewRecorder()
+	api.handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("cron with secret want 200 got %d %s", rec.Code, rec.Body.String())
+	}
+	var cronEnv map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&cronEnv); err != nil {
+		t.Fatal(err)
+	}
+	data := dataMap(t, cronEnv)
+	drafted, _ := data["drafted"].(float64)
+	unchanged, _ := data["unchanged"].(float64)
+	if drafted+unchanged < 1 {
+		t.Fatalf("expected at least one draft/unchanged %#v", cronEnv)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/invoicing/saas-targets", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("saas-targets after cron %d %#v", code, env)
+	}
+	found := false
+	if rows, ok := env["data"].([]any); ok {
+		for _, row := range rows {
+			m, _ := row.(map[string]any)
+			if m["practiceId"] != practiceID {
+				continue
+			}
+			sd, _ := m["saasDocument"].(map[string]any)
+			if sd == nil || sd["id"] == nil {
+				t.Fatalf("expected saasDocument after cron %#v", m)
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("practice %s missing after cron %#v", practiceID, env)
 	}
 }

@@ -71,7 +71,20 @@
                 >
                   {{ $t('calendar.rejectReschedule') }}
                 </ProButton>
-                <ProButton variant="ghost" :disabled="busyId === v.id" @click="act(v.id, 'cancel')">
+                <ProButton
+                  v-if="v.status === 'confirmed' && v.consultationSession"
+                  :disabled="busyId === v.id"
+                  data-testid="calendar-walkin-done"
+                  @click="act(v.id, 'done')"
+                >
+                  {{ $t('calendar.markDone') }}
+                </ProButton>
+                <ProButton
+                  v-if="!v.consultationSession"
+                  variant="ghost"
+                  :disabled="busyId === v.id"
+                  @click="act(v.id, 'cancel')"
+                >
                   {{ $t('calendar.cancel') }}
                 </ProButton>
               </div>
@@ -291,6 +304,15 @@
             {{ $t('calendar.proposeMove') }}
           </ProButton>
           <ProButton
+            v-if="selectedVisit.status === 'confirmed' && selectedVisit.consultationSession"
+            :disabled="busyId === selectedVisit.id"
+            data-testid="calendar-walkin-done-detail"
+            @click="actFromDetail('done')"
+          >
+            {{ $t('calendar.markDone') }}
+          </ProButton>
+          <ProButton
+            v-if="!selectedVisit.consultationSession"
             variant="ghost"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('cancel')"

@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS invoicing.idx_invoicing_webhook_provider_external_event;
+DROP INDEX IF EXISTS invoicing.idx_invoicing_webhook_provider_external;

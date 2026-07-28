@@ -110,6 +110,44 @@ type Connection struct {
 	UpdatedAt           time.Time        `json:"updatedAt"`
 	// SaasDraftEnabled is set by admin list (Flux A master available).
 	SaasDraftEnabled bool `json:"saasDraftEnabled,omitempty"`
+	// SaasDocument is the current-month Flux A invoice (if any).
+	SaasDocument *SaasDocSummary `json:"saasDocument,omitempty"`
+}
+
+// SaasDocSummary is a compact view of the monthly master→practice invoice for admin UI.
+type SaasDocSummary struct {
+	ID             string    `json:"id"`
+	Status         DocStatus `json:"status"`
+	BillitOrderID  string    `json:"billitOrderId,omitempty"`
+	TotalInclCents int64     `json:"totalInclCents"`
+	PeppolStatus   string    `json:"peppolStatus,omitempty"`
+}
+
+// SaasTarget is a practice eligible for Flux A (active BE cabinet with complete fiscal profile).
+type SaasTarget struct {
+	PracticeID          string          `json:"practiceId"`
+	PracticeName        string          `json:"practiceName,omitempty"`
+	ContactEmail        string          `json:"contactEmail,omitempty"`
+	VATNumber           string          `json:"vatNumber,omitempty"`
+	HasBillitConnect    bool            `json:"hasBillitConnect"`
+	SaasBillingEnabled  bool            `json:"saasBillingEnabled"`
+	SaasDraftEnabled    bool            `json:"saasDraftEnabled,omitempty"`
+	SaasDocument        *SaasDocSummary `json:"saasDocument,omitempty"`
+}
+
+// SaasDraftRunResult summarizes a C1 cron pass (draft only).
+type SaasDraftRunResult struct {
+	YYYYMM          int      `json:"yyyymm"`
+	Limit           int      `json:"limit"`
+	Offset          int      `json:"offset"`
+	Batches         int      `json:"batches,omitempty"`
+	Scanned         int      `json:"scanned"`
+	Drafted         int      `json:"drafted"`
+	Unchanged       int      `json:"unchanged"`
+	Failed          int      `json:"failed"`
+	Errors          []string `json:"errors,omitempty"`
+	ErrorsTruncated bool     `json:"errorsTruncated,omitempty"`
+	Done            bool     `json:"done,omitempty"` // true when all batches exhausted (all mode)
 }
 
 type PracticeParty struct {
@@ -132,10 +170,26 @@ type GatewayStatus struct {
 var (
 	ErrInvalidCounterparty = errors.New("invalid_counterparty")
 	ErrInvalidLines        = errors.New("invalid_lines")
+	ErrSaasNotEligible     = errors.New("saas_not_eligible")
+	ErrSaasBillingDisabled = errors.New("saas_billing_disabled")
 	reDigits               = regexp.MustCompile(`^\d+$`)
 	reBEVat                = regexp.MustCompile(`(?i)^BE0?\d{9,10}$`)
 	reITCodice             = regexp.MustCompile(`(?i)^[A-Z0-9]{7}$`)
 )
+
+// CountryFromVAT returns the ISO-2 prefix of a VAT number (e.g. BE0123… → BE).
+// Empty / non-prefixed VAT → "" (caller chooses default).
+func CountryFromVAT(vat string) string {
+	v := strings.ToUpper(strings.TrimSpace(vat))
+	v = strings.ReplaceAll(v, " ", "")
+	if len(v) < 2 {
+		return ""
+	}
+	if v[0] >= 'A' && v[0] <= 'Z' && v[1] >= 'A' && v[1] <= 'Z' {
+		return v[:2]
+	}
+	return ""
+}
 
 // NormalizeCounterparty trims fields and uppercases Country.
 func NormalizeCounterparty(c Counterparty) Counterparty {

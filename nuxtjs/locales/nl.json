@@ -1489,7 +1489,21 @@
       "saasConfirm": "SaaS-factuurconcept (88 EUR excl. btw) aanmaken voor {name} via het Billit-masteraccount?",
       "saasOk": "SaaS-concept aangemaakt ({id}) — {total} EUR incl. btw",
       "saasError": "SaaS-concept mislukt",
-      "saasUnavailable": "Billit-masteraccount niet geconfigureerd"
+      "saasUnavailable": "Billit-masteraccount niet geconfigureerd",
+      "saasSend": "SaaS verzenden",
+      "saasSendConfirm": "SaaS Peppol-factuur (Billit-master) verzenden voor « {name} »?",
+      "saasSendOk": "SaaS-factuur verzonden — status {status}",
+      "saasSendError": "SaaS-verzending mislukt",
+      "saasSendUnavailable": "Geen verzendbaar SaaS-concept",
+      "saasStatus": "SaaS: {status}",
+      "saasTitle": "Flux A — SaaS-facturen",
+      "saasSubtitle": "Praktijken met volledig BE-fiscaal profiel (met of zonder Billit-connect).",
+      "saasEmpty": "Geen geschikte SaaS-praktijk",
+      "colVat": "BTW",
+      "colConnect": "Billit-connect",
+      "colSaas": "SaaS-maand",
+      "connectYes": "Verbonden",
+      "connectNo": "Zonder connect"
     }
   },
   "commissions": {
@@ -2572,7 +2586,8 @@
     },
     "requestPreconsult": "Preconsultatie vragen",
     "audioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
-    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie)."
+    "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie).",
+    "markDone": "Afronden"
   },
   "manager": {
     "dashboard": {

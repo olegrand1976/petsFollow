@@ -355,4 +355,70 @@ func TestCareProConfirmDirectConsultation(t *testing.T) {
 	if !found {
 		t.Fatalf("visit %s not in list", visitID)
 	}
+
+	// Own care_pro visit: cancel allowed (orphan discard / walk-in abort).
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, tok, map[string]any{
+		"status": "cancelled",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("care_pro cancel own visit %d %#v", code, env)
+	}
+}
+
+// Care_pro with write_notes may mark a shared cabinet visit done, but must not cancel it.
+func TestCareProCannotCancelCabinetVisit(t *testing.T) {
+	api := newTestAPI(t)
+	farrierTok := loginToken(t, api.handler, "farrier.demo@petsfollow.test", "CareProDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", ownerTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("owner pets %d %#v", code, env)
+	}
+	var spiritID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		if p["name"] == "Spirit" {
+			spiritID, _ = p["id"].(string)
+			break
+		}
+	}
+	if spiritID == "" {
+		t.Skip("Spirit not found")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+spiritID+"/visits", vetTok, map[string]any{
+		"scheduledAt":     "2099-08-01T10:00:00Z",
+		"notes":           "cabinet visit — care_pro must not cancel",
+		"durationMinutes": 30,
+		"confirmDirect":   true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("vet create %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+			"status": "cancelled",
+		})
+	})
+	if dataMap(t, env)["source"] != "vet" {
+		t.Fatalf("source=%v want vet", dataMap(t, env)["source"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, farrierTok, map[string]any{
+		"status": "cancelled",
+	})
+	if code != http.StatusForbidden {
+		t.Fatalf("care_pro cancel cabinet visit want 403 got %d %#v", code, env)
+	}
+
+	// Still allowed to mark done on a shared terrain-accessible visit.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, farrierTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("care_pro mark done cabinet visit %d %#v", code, env)
+	}
 }

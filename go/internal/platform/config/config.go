@@ -101,6 +101,12 @@ type Config struct {
 	BillitDefaultDocsIncluded int
 	BillitSecretsBackend      string // local_enc | plain_dev
 	BillitSecretsKey          string
+	// InvoicingSaasPriceEURCents = SaaS Pro monthly HT in cents (Flux A draft). Default 8800 = 88 €.
+	InvoicingSaasPriceEURCents int
+	// InvoicingSaasAllowlist = UUIDs opted-in for Flux A without DB flag (comma-separated).
+	InvoicingSaasAllowlist []string
+	// SaasInvoicesSecret protège POST /internal/saas-invoices/run (cron brouillons Flux A).
+	SaasInvoicesSecret string
 	// SeedNotifyStaff emails admin/commercial/commercial_manager after seed (staging reset).
 	SeedNotifyStaff bool
 	// AdminStagingSeedEnabled enables POST /admin/staging/seed (staging only — never prod).
@@ -187,6 +193,9 @@ func Load() Config {
 		BillitDefaultDocsIncluded: envInt("BILLIT_DEFAULT_DOCS_INCLUDED", 50),
 		BillitSecretsBackend:      envOr("BILLIT_SECRETS_BACKEND", "plain_dev"),
 		BillitSecretsKey:          envOr("BILLIT_SECRETS_KEY", ""),
+		InvoicingSaasPriceEURCents: envInt("INVOICING_SAAS_PRICE_EUR_CENTS", 8800),
+		InvoicingSaasAllowlist:    envCSV("INVOICING_SAAS_ALLOWLIST"),
+		SaasInvoicesSecret:        envOr("SAAS_INVOICES_SECRET", ""),
 		SeedNotifyStaff:         envBool("SEED_NOTIFY_STAFF"),
 		AdminStagingSeedEnabled: envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}
@@ -198,7 +207,12 @@ func (c Config) ValidateBillit() error {
 		return nil
 	}
 	if !c.BillitMockEnabled {
-		return errors.New("BILLIT_ENABLED without BILLIT_MOCK_ENABLED requires a live Billit client (not implemented yet — keep BILLIT_MOCK_ENABLED=true or disable BILLIT_ENABLED)")
+		if strings.TrimSpace(c.BillitBaseURL) == "" {
+			return errors.New("BILLIT_BASE_URL required when BILLIT_MOCK_ENABLED=false")
+		}
+		if strings.TrimSpace(c.BillitWebhookSecret) == "" {
+			return errors.New("BILLIT_WEBHOOK_SECRET required when BILLIT_MOCK_ENABLED=false")
+		}
 	}
 	if c.DevSeedEnabled {
 		return nil
@@ -247,4 +261,20 @@ func envDuration(k string, def time.Duration) time.Duration {
 		}
 	}
 	return def
+}
+
+func envCSV(k string) []string {
+	raw := strings.TrimSpace(os.Getenv(k))
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }

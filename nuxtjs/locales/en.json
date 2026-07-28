@@ -1489,7 +1489,21 @@
       "saasConfirm": "Create a SaaS invoice draft (88 EUR excl. VAT) for {name} via the Billit master account?",
       "saasOk": "SaaS draft created ({id}) — {total} EUR incl. VAT",
       "saasError": "SaaS draft failed",
-      "saasUnavailable": "Billit master account not configured"
+      "saasUnavailable": "Billit master account not configured",
+      "saasSend": "Send SaaS",
+      "saasSendConfirm": "Send the SaaS Peppol invoice (Billit master) for “{name}”?",
+      "saasSendOk": "SaaS invoice sent — status {status}",
+      "saasSendError": "SaaS send failed",
+      "saasSendUnavailable": "No sendable SaaS draft",
+      "saasStatus": "SaaS: {status}",
+      "saasTitle": "Flux A — SaaS invoices",
+      "saasSubtitle": "Practices with complete BE fiscal profile (with or without Billit connect).",
+      "saasEmpty": "No eligible SaaS practice",
+      "colVat": "VAT",
+      "colConnect": "Billit connect",
+      "colSaas": "SaaS month",
+      "connectYes": "Connected",
+      "connectNo": "No connect"
     }
   },
   "commissions": {
@@ -2572,7 +2586,8 @@
     },
     "requestPreconsult": "Request a pre-consultation",
     "audioConsentClientCheck": "I have obtained the client's oral consent to record",
-    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication)."
+    "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication).",
+    "markDone": "Mark done"
   },
   "manager": {
     "dashboard": {

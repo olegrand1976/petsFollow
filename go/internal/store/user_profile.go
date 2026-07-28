@@ -229,6 +229,15 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		WHERE commercial_user_id = $1 OR vet_user_id = $1 OR actor_user_id = $1`, userID); err != nil {
 		return err
 	}
+	// Unlink authorship on practice invoices (cabinet keeps counterparty / fiscal records).
+	if _, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents SET created_by = NULL WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM invoicing.connect_states WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
 

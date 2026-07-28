@@ -174,7 +174,11 @@
     "daf_mismatch": "DAF-document niet gevonden voor deze praktijk",
     "daf_not_finalized": "De DAF moet gefinaliseerd zijn vóór facturatie",
     "daf_visit_mismatch": "DAF en bezoek komen niet overeen",
-    "visit_mismatch": "Bezoek niet gevonden voor deze praktijk"
+    "visit_mismatch": "Bezoek niet gevonden voor deze praktijk",
+    "partner_mark_not_eligible": "Partner markeren niet mogelijk (actieve verbinding + PartyID vereist)",
+    "saas_master_not_configured": "Billit-masteraccount niet geconfigureerd (BILLIT_MASTER_*)",
+    "invalid_id": "Ongeldige identifier",
+    "care_pro_visit_only": "Alleen toegestaan voor bezoeken aangemaakt in het veld (care pro)"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

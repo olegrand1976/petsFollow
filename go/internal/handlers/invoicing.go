@@ -28,8 +28,10 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 		pr.Get("/practices/me/invoicing/documents/{id}", a.invoicingGetDocument)
 		pr.Post("/practices/me/invoicing/documents/{id}/send", a.invoicingSendDocument)
 		pr.Get("/admin/invoicing/connections", a.adminInvoicingConnections)
+		pr.Get("/admin/invoicing/saas-targets", a.adminInvoicingSaasTargets)
 		pr.Post("/admin/invoicing/connections/{practiceId}/mark-partner-invoiced", a.adminInvoicingMarkPartner)
 		pr.Post("/admin/invoicing/connections/{practiceId}/saas-draft", a.adminInvoicingSaasDraft)
+		pr.Post("/admin/invoicing/connections/{practiceId}/saas-documents/{docId}/send", a.adminInvoicingSaasSend)
 	})
 }
 
@@ -207,6 +209,18 @@ func (a *API) adminInvoicingConnections(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteData(w, http.StatusOK, items)
 }
 
+func (a *API) adminInvoicingSaasTargets(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	items, err := a.invoicing.ListSaasTargets(r.Context(), 200, 0)
+	if err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
+}
+
 func (a *API) adminInvoicingMarkPartner(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
@@ -225,12 +239,34 @@ func (a *API) adminInvoicingSaasDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	practiceID := chi.URLParam(r, "practiceId")
+	if !isUUID(practiceID) {
+		writeErr(w, r, http.StatusBadRequest, "invalid_id", "invalid_id")
+		return
+	}
 	doc, err := a.invoicing.CreateSaasDraft(r.Context(), practiceID, id.UserID)
 	if err != nil {
 		a.writeInvoicingErr(w, r, err)
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, doc)
+}
+
+func (a *API) adminInvoicingSaasSend(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	practiceID := chi.URLParam(r, "practiceId")
+	docID := chi.URLParam(r, "docId")
+	if !isUUID(practiceID) || !isUUID(docID) {
+		writeErr(w, r, http.StatusBadRequest, "invalid_id", "invalid_id")
+		return
+	}
+	doc, err := a.invoicing.SendSaasDocument(r.Context(), practiceID, docID)
+	if err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, doc)
 }
 
 func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err error) {

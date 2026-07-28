@@ -124,6 +124,40 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     }
   })
 
+  test('pendant save CR → close désactivé (pas d’orphelin)', async ({ page }) => {
+    await openConsultationSetup(page)
+    await startConsultationVisit(page)
+
+    let releasePut: (() => void) | undefined
+    const putGate = new Promise<void>((resolve) => {
+      releasePut = resolve
+    })
+    await page.route('**/api/visits/*/report', async (route) => {
+      if (route.request().method() !== 'PUT') {
+        await route.continue()
+        return
+      }
+      await putGate
+      await route.continue()
+    })
+
+    await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+    const reportBody = page.getByTestId('visit-report-body')
+    await reportBody.click()
+    await reportBody.fill(`E2E busy gate ${Date.now()}`)
+    await page.getByTestId('visit-report-save').click()
+
+    await expect(page.getByTestId('consultation-cancel')).toBeDisabled({ timeout: 5000 })
+    await expect(page.getByTestId('pro-modal-close')).toBeDisabled()
+    await expect(page.getByTestId('consultation-modal')).toBeVisible()
+
+    releasePut?.()
+    await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 20000 })
+    await expect(page.getByTestId('consultation-cancel')).toBeEnabled()
+    await page.getByTestId('consultation-cta-done').click()
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+  })
+
   test('après CR → CTA facture et DAF (visitId query)', async ({ page }) => {
     await openConsultationSetup(page)
     const { id: visitId } = await startConsultationVisit(page)

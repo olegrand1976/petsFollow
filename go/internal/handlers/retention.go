@@ -54,13 +54,36 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"candidates":          len(accounts),
-		"purgedClients":       purgedClients,
-		"anonymizedPros":      anonymizedPros,
-		"failed":              failed,
-		"cutoff":              cutoff,
-		"purgedDossierShares": a.purgeExpiredDossierShares(r.Context(), ""),
+		"candidates":           len(accounts),
+		"purgedClients":        purgedClients,
+		"anonymizedPros":       anonymizedPros,
+		"failed":               failed,
+		"cutoff":               cutoff,
+		"purgedDossierShares":  a.purgeExpiredDossierShares(r.Context(), ""),
+		"purgedWebhookEvents":  a.purgeOldInvoicingWebhooks(r.Context()),
+		"rejectedStaleSending": a.rejectStaleInvoicingSending(r.Context()),
 	})
+}
+
+const invoicingWebhookRetention = 90 * 24 * time.Hour
+const invoicingSendingStale = 7 * 24 * time.Hour
+
+func (a *API) purgeOldInvoicingWebhooks(ctx context.Context) int {
+	n, err := a.store.PurgeOldWebhookEvents(ctx, time.Now().Add(-invoicingWebhookRetention), 500)
+	if err != nil {
+		fmt.Printf("retention purge: invoicing webhooks failed: %v\n", err)
+		return 0
+	}
+	return n
+}
+
+func (a *API) rejectStaleInvoicingSending(ctx context.Context) int {
+	n, err := a.store.MarkStaleSendingDocuments(ctx, time.Now().Add(-invoicingSendingStale), 200)
+	if err != nil {
+		fmt.Printf("retention purge: stale invoicing sending failed: %v\n", err)
+		return 0
+	}
+	return n
 }
 
 // purgeExpiredDossierShares supprime les partages de dossier périmés (lignes + ZIP

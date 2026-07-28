@@ -24,6 +24,7 @@
             class="pro-modal__close"
             :aria-label="resolvedCloseLabel"
             data-testid="pro-modal-close"
+            :disabled="preventClose"
             @click="close"
           >
             <ProIcon name="close" :size="22" />
@@ -50,10 +51,12 @@ const props = withDefaults(
     title: string
     closeLabel?: string
     size?: 'md' | 'lg'
+    /** When true, ignore X / Escape / backdrop close (e.g. save in flight). */
+    preventClose?: boolean
     /** data-testid on the root overlay (default keeps existing e2e selectors). */
     testId?: string
   }>(),
-  { size: 'md', testId: 'pro-modal' },
+  { size: 'md', testId: 'pro-modal', preventClose: false },
 )
 
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -78,6 +81,7 @@ const sizeClass = computed(() => {
 })
 
 function close() {
+  if (props.preventClose) return
   emit('update:open', false)
 }
 
@@ -170,7 +174,12 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-.pro-modal__close:hover {
+.pro-modal__close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pro-modal__close:hover:not(:disabled) {
   color: var(--pf-vet-primary);
   background: var(--pf-vet-bg);
 }

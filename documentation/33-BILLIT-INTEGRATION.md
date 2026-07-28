@@ -1,6 +1,6 @@
 # 33 — Plan d’implémentation Billit (facturation Peppol)
 
-**Statut** : plan — **non implémenté**.  
+**Statut** : **socle livré** (mock T0/T1 + client live + multi-pays + webhook durci) — pilote sandbox Billit ops ; Flux A SaaS admin = **brouillon + envoi Peppol master** + cron C1 draft-only paginé (`saas-targets` actifs BE / `saas-invoices/run?limit=` ; pas encore send auto).  
 **Décisions produit figées** (sessions 2026-07) :
 
 | Décision | Choix |
@@ -11,6 +11,7 @@
 | Comptes | **1 PartyID Billit / cabinet** (BCE/TVA) |
 | Payeur Billit | **LL-IT-SC** (`Invoice to` = Integration Partner) |
 | UX | Facturation **dans Pro** (Billit invisible au quotidien) |
+| Contreparties | Identifiants fiscaux **BE / FR / IT / ES** mappés vers Billit `Identifiers` |
 | Hors scope | Remplacer un PMS (Pégase…) ; Peppol sur abos animaux Stripe (B2C) |
 | Lien futur | Driver Billit = implémentation concrète de `invoices.connect` ([27](27-PHARMACIE-BELGIQUE.md)) |
 
@@ -31,6 +32,19 @@ Réfs : [07-STRIPE-BILLING](07-STRIPE-BILLING.md) · [17-POLITIQUE-TARIFAIRE](17
 - Réception Peppol achats cabinet (peut venir en v1.1 via même compte).
 - Connecteurs natifs Pégase / Mammouth / Exact.
 - Self-billing commissions.
+
+### Contreparties multi-pays (BE / FR / IT / ES)
+
+Les factures cabinet → client portent les identifiants exigés par le réseau e-facturation du pays du **client** (mappés côté API vers Billit `Customer.Identifiers`) :
+
+| Pays | Identifiants |
+|------|----------------|
+| **BE** | N° TVA (BCE optionnel en UI) |
+| **FR** | SIRET / SIREN (Factur-X / PA / Chorus) |
+| **IT** | Partita IVA + **Codice Destinatario** (7 car.) **ou** PEC (SDI) — exclusifs |
+| **ES** | NIF/CIF et/ou TVA |
+
+Détail technique : [34](34-BILLIT-RESELLER-TECH.md).
 
 ---
 
@@ -120,12 +134,12 @@ flowchart TB
 
 | # | Travail | Notes |
 |---|---------|--------|
-| 1.1 | Process manuel (ou semi-auto) : créer facture SaaS dans MyBillit | Clients = cabinets (TVA/BCE déjà en `practice.practices`) |
+| 1.1 | Admin `/admin/invoicing` : brouillon + envoi Peppol master (`saas-draft` / `…/send`) | Code livré (mock) ; live = `BILLIT_MASTER_*` + smoke |
 | 1.2 | Checklist onboarding cabinet : données société complètes | Réutilise profil payout (`vat_number`, `company_number`, adresse) |
 | 1.3 | Export mensuel cabinets actifs → file d’émission | CSV admin `/admin/payments` ou nouveau export |
 | 1.4 | Doc ops interne | Qui émet, quand, relances |
 
-**Optionnelle** : petit job `POST /internal/saas-invoices/draft` (dev only) qui pousse un draft Billit master — **pas** prioritaire.
+**Optionnelle** : cron `POST /internal/saas-invoices/run` (C1 draft-only, livré) — send Peppol auto (C2) **pas** prioritaire tant que le send manuel admin n’est pas prouvé en sandbox.
 
 **Done when** : au moins une facture SaaS Peppol réelle émise et acceptée par un cabinet pilote.
 
@@ -309,7 +323,9 @@ Règles :
 | Clés Billit | Secret Manager ; rotation runbook |
 | Webhook | HMAC / secret temps constant (`secretHeaderOK` pattern) |
 | PHI | Lignes médicaments = données santé → même discipline que DAF ; pas de log body complet |
-| Export / purge | Étendre `ExportUserData` / retention si PII contreparties stockées |
+| Export / purge | Export Pro : docs `created_by` ; anonymisation Pro : `created_by` → NULL + purge `connect_states` ; webhooks > 90 j purgés ; docs `sending` > 7 j → `rejected` (`stale_timeout`) |
+| Erreurs gateway | `ErrGateway` → HTTP 502 (`invoicing_gateway_error`) |
+| Webhook idempotence | clé = `EventID` Billit ou `sha256(body)` (pas order seul) — progression de statut appliquée |
 | CSP | Pas de script Billit tiers ; API server-side only |
 | Sous-traitance | DPA Billit + mention CGV |
 
@@ -338,7 +354,7 @@ Règles :
 
 - [ ] Cabinet pilote : crée et envoie une facture Peppol **sans** compte MyBillit au quotidien  
 - [ ] Cabinet pilote : **ne reçoit pas** de facture Billit (Invoice to = LL-IT-SC)  
-- [ ] LL-IT-SC : émet SaaS 88 € en Peppol (Flux A)  
+- [ ] LL-IT-SC : émet SaaS 88 € en Peppol (Flux A) — **code admin OK (mock)** ; smoke sandbox live restant  
 - [ ] Admin : voit usage docs et connexions  
 - [ ] `BILLIT_MOCK_ENABLED` : CI verte sans appels externes  
 - [ ] Docs tarifaires + locales + useCase alignés 88 €  
@@ -379,7 +395,8 @@ Règles :
 2. Envoyer la demande **Integration Partner + Reseller + Invoice to partner** (mail type session précédente).  
 3. Figer avec le comptable : plafond docs inclus dans les 88 €.  
 4. Brouillon CGV e-invoicing.  
-5. **Ne pas** démarrer BIL-5 UI avant retour écrit Billit sur 0.3.
+5. Exécuter la **checklist sandbox** de [34 § checklist A–F](34-BILLIT-RESELLER-TECH.md) dès R2–R5 obtenus (ne pas attendre l’UI admin).  
+6. Gate : 1 facture BE `delivered` + webhook HMAC OK avant tout pilote multi-cabinets.
 
 ---
 

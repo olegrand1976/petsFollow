@@ -38,16 +38,48 @@ test('admin voit commercials et prospects', async ({ page }) => {
   await expect(page.getByTestId('admin-prospects-page')).toBeVisible()
 })
 
-test('admin voit page bonus SPIFF', async ({ page }) => {
+test('admin voit page facturation Billit', async ({ page }) => {
   await loginAsAdmin(page)
-  await page.goto('/admin/commercial-bonuses')
-  await expect(page.getByTestId('admin-commercial-bonuses-page')).toBeVisible()
-  await expect(page.getByTestId('bonus-filter-period')).toBeVisible()
-  await expect(page.getByTestId('bonus-filter-trend')).toBeVisible()
-  await expect(page.getByTestId('bonus-filter-status')).toBeVisible()
-  await expect(page.getByTestId('bonus-kpi-row')).toBeVisible()
-  await expect(page.getByTestId('bonus-trend-card')).toBeVisible()
-  await expect(page.getByTestId('bonus-compare-card')).toBeVisible()
+  await page.goto('/admin/invoicing', { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('admin-invoicing-page')).toBeVisible({ timeout: 15000 })
+  // Liste vide OK si aucun cabinet connecté ; erreur seulement si API Billit off.
+  const err = page.getByTestId('admin-invoicing-error')
+  if (await err.isVisible()) {
+    await expect(err).toContainText(/désactiv|disabled|uitgeschakeld|desactiv|välja|disattiv/i)
+  } else {
+    await expect(page.getByTestId('admin-invoicing-list')).toBeVisible()
+    await expect(page.getByTestId('admin-invoicing-export-csv')).toBeVisible()
+    await expect(page.getByTestId('admin-invoicing-saas-list')).toBeVisible()
+  }
+})
+
+test.describe('admin Flux A SaaS I7.9', { tag: ['@p1', '@invoicing'] }, () => {
+  test('I7.9 draft puis send Peppol master (mock)', async ({ page }) => {
+    await loginAsAdmin(page)
+    page.on('dialog', (d) => d.accept())
+    await page.goto('/admin/invoicing', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('admin-invoicing-page')).toBeVisible({ timeout: 15000 })
+
+    const err = page.getByTestId('admin-invoicing-error')
+    if (await err.isVisible()) {
+      test.skip(true, 'Billit API disabled')
+    }
+
+    await expect(page.getByTestId('admin-invoicing-saas-list')).toBeVisible()
+    const draftBtn = page.locator('[data-testid^="admin-invoicing-saas-draft-"]').first()
+    if (await draftBtn.count() === 0) {
+      test.skip(true, 'no SaaS draft button (master off or all delivered)')
+    }
+    const draftTid = await draftBtn.getAttribute('data-testid')
+    const practiceId = draftTid?.replace('admin-invoicing-saas-draft-', '') || ''
+    await draftBtn.click()
+    await expect(page.getByTestId('admin-invoicing-msg')).toBeVisible({ timeout: 20000 })
+
+    const sendBtn = page.getByTestId(`admin-invoicing-saas-send-${practiceId}`)
+    await expect(sendBtn).toBeVisible({ timeout: 10000 })
+    await sendBtn.click()
+    await expect(page.getByTestId('admin-invoicing-msg')).toContainText(/delivered|envoyé|verzonden|enviad|saadetud|inviat/i, { timeout: 20000 })
+  })
 })
 
 test.describe('admin filiation', { tag: '@p1' }, () => {

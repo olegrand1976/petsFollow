@@ -19,10 +19,12 @@ export type StartConsultationInput = {
 }
 
 function isConsultationHasReportError(e: any): boolean {
+  const err = e?.data?.error
+  const msgKey = err?.msgKey || err?.messageKey
+  if (msgKey === 'consultation_has_report') return true
+  // Filet si msgKey absent : cancel walk-in → code conflict + 409.
   const status = e?.statusCode ?? e?.status ?? e?.response?.status
-  if (status === 409) return true
-  const key = e?.data?.error?.msgKey || e?.data?.error?.code || e?.data?.error?.messageKey
-  return key === 'consultation_has_report'
+  return status === 409 && err?.code === 'conflict'
 }
 
 export function useConsultationFlow() {
@@ -61,13 +63,14 @@ export function useConsultationFlow() {
   }
 
   function reset() {
+    // Unblock any discard waiting on reportBusy before clearing state.
+    reportBusy.value = false
+    notifyReportIdle()
     visitId.value = ''
     petId.value = ''
     clientId.value = ''
     starting.value = false
     reportSaved.value = false
-    reportBusy.value = false
-    reportIdleWaiters = []
     error.value = ''
   }
 

@@ -76,6 +76,9 @@ func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
 	_ = os.Setenv("BILLING_MOCK_ENABLED", "true")
 	_ = os.Setenv("BILLIT_ENABLED", "true")
 	_ = os.Setenv("BILLIT_MOCK_ENABLED", "true")
+	if os.Getenv("BILLIT_WEBHOOK_SECRET") == "" {
+		_ = os.Setenv("BILLIT_WEBHOOK_SECRET", "test-billit-webhook-secret")
+	}
 	// seed.Run refuse de tourner hors environnement seedable (allowlist APP_ENV).
 	_ = os.Setenv("APP_ENV", "test")
 	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).

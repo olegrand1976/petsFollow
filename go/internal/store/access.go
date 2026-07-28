@@ -603,6 +603,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng,
+			COALESCE(v.consultation_session, false),
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -645,7 +646,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-			&v.AddressText, &v.Lat, &v.Lng, &v.Permission,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.Permission,
 		); err != nil {
 			return nil, err
 		}
