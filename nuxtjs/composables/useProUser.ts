@@ -15,6 +15,8 @@ export type ProUser = {
   mustChangePassword?: boolean
   contactPhone?: string
   isReferenceVet?: boolean
+  /** Effective team capabilities (practice staff only) — mirrors Go TeamPermission map. */
+  practicePermissions?: Record<string, boolean>
 }
 
 type InFlight = {

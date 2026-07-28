@@ -66,6 +66,31 @@ func (a *API) allowPracticePerm(r *http.Request, id authx.Identity, capability s
 	return err == nil && ok
 }
 
+// requireAnyPracticePerm allows access when the staff member has at least one of the capabilities.
+func (a *API) requireAnyPracticePerm(w http.ResponseWriter, r *http.Request, capabilities ...string) (authx.Identity, bool) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return id, false
+	}
+	if id.PracticeID == "" || !kernel.IsPracticeStaff(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return id, false
+	}
+	for _, cap := range capabilities {
+		ok, err := a.store.TeamPermission(r.Context(), id.PracticeID, id.UserID, cap)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return id, false
+		}
+		if ok {
+			return id, true
+		}
+	}
+	writeErr(w, r, http.StatusForbidden, "forbidden", "insufficient_permission")
+	return id, false
+}
+
 // resolvePracticeInviteOwner returns the user ID that owns the practice app-invite code.
 // Practice staff need clients.write; reference vet uses self, otherwise practices.reference_vet_user_id.
 func (a *API) resolvePracticeInviteOwner(w http.ResponseWriter, r *http.Request, id authx.Identity) (string, bool) {

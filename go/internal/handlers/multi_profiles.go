@@ -183,7 +183,7 @@ func (a *API) listPetShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetShareManager(w, r, petID, id)
+	pet, ok := a.requirePetShareAccess(w, r, petID, id, "shares.read")
 	if !ok {
 		return
 	}
@@ -269,7 +269,7 @@ func (a *API) listClientShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clientID := chi.URLParam(r, "clientID")
-	if !a.requireClientShareManager(w, r, clientID, id) {
+	if !a.requireClientShareAccess(w, r, clientID, id, "shares.read") {
 		return
 	}
 	var rows []store.AccessGrant
@@ -413,7 +413,7 @@ func (a *API) resolveGrantee(w http.ResponseWriter, r *http.Request, actor authx
 	}
 }
 
-func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+func (a *API) requirePetShareAccess(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity, staffCap string) (store.Pet, bool) {
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
@@ -426,7 +426,7 @@ func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, pet
 			return store.Pet{}, false
 		}
 	default:
-		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+		if !a.checkPracticePerm(w, r, id, staffCap) {
 			return store.Pet{}, false
 		}
 		if pet.PracticeID != id.PracticeID {
@@ -437,7 +437,11 @@ func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, pet
 	return pet, true
 }
 
-func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity) bool {
+func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+	return a.requirePetShareAccess(w, r, petID, id, "shares.manage")
+}
+
+func (a *API) requireClientShareAccess(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity, staffCap string) bool {
 	switch id.Role {
 	case kernel.RoleClient:
 		if clientID != id.UserID {
@@ -445,7 +449,7 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 			return false
 		}
 	default:
-		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+		if !a.checkPracticePerm(w, r, id, staffCap) {
 			return false
 		}
 		// practice staff must have practice_clients link
@@ -467,6 +471,10 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 	return true
+}
+
+func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity) bool {
+	return a.requireClientShareAccess(w, r, clientID, id, "shares.manage")
 }
 
 func (a *API) listCareProClients(w http.ResponseWriter, r *http.Request) {

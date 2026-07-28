@@ -7,14 +7,14 @@
       fit="contain"
       :alt="name"
     />
-    <div class="pro-avatar-upload__actions">
+    <div v-if="!disabled" class="pro-avatar-upload__actions">
       <label class="pro-avatar-upload__label">
         <input
           ref="inputEl"
           type="file"
           accept="image/jpeg,image/png,image/webp"
           class="pro-avatar-upload__input"
-          :disabled="loading"
+          :disabled="loading || disabled"
           data-testid="avatar-upload-input"
           @change="onFile"
         >
@@ -34,12 +34,14 @@ const props = withDefaults(
     uploadUrl: string
     label?: string
     hint?: string
+    disabled?: boolean
   }>(),
   {
     modelValue: null,
     name: '',
     label: undefined,
     hint: undefined,
+    disabled: false,
   },
 )
 
@@ -67,6 +69,7 @@ function clearPreview() {
 }
 
 async function onFile(ev: Event) {
+  if (props.disabled) return
   const input = ev.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return

@@ -6,7 +6,12 @@
     >
       <template #actions>
         <ProBadge variant="warning" data-testid="daf-page-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
-        <ProButton variant="primary" test-id="daf-new" @click="navigateTo('/daf/nouveau')">
+        <ProButton
+          v-if="canWritePharmacy"
+          variant="primary"
+          test-id="daf-new"
+          @click="navigateTo('/daf/nouveau')"
+        >
           {{ $t('pharmacy.daf.new') }}
         </ProButton>
       </template>
@@ -52,8 +57,10 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'vet-only'] })
+definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const error = ref('')
 const items = ref<any[]>([])
 

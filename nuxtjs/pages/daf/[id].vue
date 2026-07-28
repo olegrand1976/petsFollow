@@ -15,7 +15,7 @@
           {{ $t('pharmacy.daf.openPdf') }}
         </ProButton>
         <ProButton
-          v-if="doc?.status === 'finalized'"
+          v-if="doc?.status === 'finalized' && canWritePharmacy"
           variant="ghost"
           test-id="daf-cancel-btn"
           :disabled="busy"
@@ -56,8 +56,10 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'vet-only'] })
+definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const route = useRoute()
 const busy = ref(false)
 const error = ref('')

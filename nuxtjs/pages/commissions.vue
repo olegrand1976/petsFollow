@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['vet-only', 'reference-vet-only'] })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'commissions.view' })
 
 const { t } = useI18n()
 const { formatCurrency } = useFormatters()

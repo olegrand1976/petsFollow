@@ -6,12 +6,14 @@
     />
     <div class="pro-grid-kpi">
       <ProKpi
+        v-if="canReadClients"
         icon="group"
         :value="clientCount"
         :label="$t('dashboard.activeClients')"
         to="/clients"
       />
       <ProKpi
+        v-if="canMessage"
         icon="chat"
         :value="unreadCount"
         :label="$t('dashboard.unreadMessages')"
@@ -19,11 +21,13 @@
         :variant="hasUnread ? 'alert' : 'default'"
       />
       <ProKpi
+        v-if="canReadPets"
         icon="favorite"
         :value="recentSessions"
         :label="$t('dashboard.recentSessions')"
       />
       <ProKpi
+        v-if="canManageShares"
         icon="inbox"
         :value="pendingLinks"
         :label="$t('dashboard.pendingLinks')"
@@ -31,6 +35,7 @@
         :variant="pendingLinksRaw > 0 ? 'alert' : 'default'"
       />
       <ProKpi
+        v-if="canManageCalendar"
         icon="event"
         :value="pendingVisits"
         :label="$t('dashboard.pendingVisits')"
@@ -38,6 +43,7 @@
         :variant="pendingVisitsRaw > 0 ? 'alert' : 'default'"
       />
       <ProKpi
+        v-if="canReadClients"
         icon="medical_services"
         :value="overdueCare"
         :label="$t('dashboard.overdueCare')"
@@ -48,9 +54,9 @@
     <div class="pro-grid-2 pro-mt-lg">
       <ProCard :title="$t('dashboard.quickActions')">
         <div class="pro-flex-gap">
-          <ProButton @click="navigateTo('/clients')">{{ $t('dashboard.viewClients') }}</ProButton>
-          <ProButton variant="secondary" @click="navigateTo('/calendar')">{{ $t('dashboard.viewCalendar') }}</ProButton>
-          <ProButton variant="secondary" @click="navigateTo('/messages')">{{ $t('dashboard.messaging') }}</ProButton>
+          <ProButton v-if="canReadClients" @click="navigateTo('/clients')">{{ $t('dashboard.viewClients') }}</ProButton>
+          <ProButton v-if="canManageCalendar" variant="secondary" @click="navigateTo('/calendar')">{{ $t('dashboard.viewCalendar') }}</ProButton>
+          <ProButton v-if="canMessage" variant="secondary" @click="navigateTo('/messages')">{{ $t('dashboard.messaging') }}</ProButton>
           <ProButton variant="ghost" @click="navigateTo('/settings')">{{ $t('nav.settings') }}</ProButton>
         </div>
       </ProCard>
@@ -93,13 +99,13 @@
           </p>
           <div class="pro-flex-gap pro-mt-md">
             <ProButton
-              v-if="aiModule.status === 'trial' || aiModule.status === 'expired'"
+              v-if="canManagePractice && (aiModule.status === 'trial' || aiModule.status === 'expired')"
               :disabled="aiBusy"
               @click="requestPaid"
             >
               {{ $t('dashboard.aiModule.requestPaid') }}
             </ProButton>
-            <ProButton variant="secondary" @click="navigateTo('/calendar')">
+            <ProButton v-if="canManageCalendar" variant="secondary" @click="navigateTo('/calendar')">
               {{ $t('dashboard.aiModule.openCalendar') }}
             </ProButton>
           </div>
@@ -134,6 +140,13 @@
 definePageMeta({ middleware: 'vet-only' })
 
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canReadClients = computed(() => canPractice('clients.read'))
+const canReadPets = computed(() => canPractice('pets.read'))
+const canManageShares = computed(() => canPractice('shares.manage'))
+const canManageCalendar = computed(() => canPractice('calendar.manage'))
+const canMessage = computed(() => canPractice('messaging'))
+const canManagePractice = computed(() => canPractice('practice.settings'))
 const welcomeTitle = ref(t('dashboard.title'))
 const clientCount = ref('—')
 const unreadCount = ref('—')

@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 type VetPet = {
   id: string

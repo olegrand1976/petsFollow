@@ -6,7 +6,12 @@
     >
       <template #actions>
         <ProBadge variant="warning" data-testid="ordonnances-page-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
-        <ProButton variant="primary" test-id="ordonnances-new" @click="navigateTo('/ordonnances/nouveau')">
+        <ProButton
+          v-if="canWriteClinical"
+          variant="primary"
+          test-id="ordonnances-new"
+          @click="navigateTo('/ordonnances/nouveau')"
+        >
           {{ $t('prescriptions.new') }}
         </ProButton>
       </template>
@@ -49,8 +54,10 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'vet-only'] })
+definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const { mapError } = usePrescriptionError()
 const error = ref('')
 const loading = ref(true)

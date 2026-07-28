@@ -79,7 +79,7 @@ func (a *API) listPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -96,7 +96,7 @@ func (a *API) createPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -126,7 +126,7 @@ func (a *API) previewPharmacyDAFFEFO(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -152,7 +152,7 @@ func (a *API) getPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -171,7 +171,7 @@ func (a *API) patchPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -201,7 +201,7 @@ func (a *API) finalizePharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -229,7 +229,7 @@ func (a *API) cancelPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -257,7 +257,7 @@ func (a *API) getPharmacyDAFPDF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -304,7 +304,7 @@ func (a *API) regeneratePharmacyDAFPDF(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}

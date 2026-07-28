@@ -26,7 +26,7 @@
     >
       {{ $t('calendar.reportReadOnlyPeer') }}
     </p>
-    <p v-else class="pro-hint" data-testid="visit-report-ai-banner">
+    <p v-else-if="!readonly" class="pro-hint" data-testid="visit-report-ai-banner">
       {{ $t('calendar.reportAiProposalBanner') }}
     </p>
     <textarea
@@ -36,10 +36,10 @@
       rows="6"
       data-testid="visit-report-body"
       :placeholder="$t('calendar.reportHint')"
-      :disabled="reportBusy || reportStatus === 'final' || viewingPeerReport"
-      :readonly="viewingPeerReport"
+      :disabled="reportBusy || reportLocked"
+      :readonly="reportLocked"
     />
-    <div v-if="!viewingPeerReport" class="pro-flex-gap pro-visit-report__actions">
+    <div v-if="!reportLocked" class="pro-flex-gap pro-visit-report__actions">
       <ProButton
         variant="secondary"
         :disabled="reportBusy || reportStatus === 'final'"
@@ -145,6 +145,13 @@ export type VisitReportAuthor = {
 
 const props = defineProps<{
   visitId: string
+  /** When true, hide save/improve/finalize/audio (ACL pets.write_clinical). */
+  readonly?: boolean
+}>()
+
+const emit = defineEmits<{
+  saved: []
+  finalized: []
 }>()
 
 const { t } = useI18n()
@@ -168,6 +175,10 @@ const viewingPeerReport = computed(() => {
   const selected = reportAuthors.value.find(a => a.authorUserId === selectedReportAuthorId.value)
   return Boolean(selected && !selected.mine)
 })
+
+const reportLocked = computed(() =>
+  Boolean(props.readonly) || viewingPeerReport.value || reportStatus.value === 'final',
+)
 
 const reportHistorySaved = computed(() =>
   persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
@@ -268,7 +279,7 @@ function selectReportAuthor(author: VisitReportAuthor) {
 }
 
 async function saveVisitReport() {
-  if (reportStatus.value === 'final') return
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -279,6 +290,7 @@ async function saveVisitReport() {
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
     void loadVisitReports(props.visitId)
+    emit('saved')
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
@@ -287,7 +299,7 @@ async function saveVisitReport() {
 }
 
 async function improveVisitReport() {
-  if (reportStatus.value === 'final') return
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -309,7 +321,7 @@ async function improveVisitReport() {
 }
 
 async function finalizeVisitReport() {
-  if (reportStatus.value === 'final') return
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -323,6 +335,7 @@ async function finalizeVisitReport() {
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportFinalized')
     void loadVisitReports(props.visitId)
+    emit('finalized')
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
@@ -331,7 +344,7 @@ async function finalizeVisitReport() {
 }
 
 async function onReportAudioSelected(ev: Event) {
-  if (reportStatus.value === 'final') return
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
   const input = ev.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''

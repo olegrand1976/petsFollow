@@ -147,7 +147,7 @@
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
 import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
 
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'practice.settings' })
 
 const { t } = useI18n()
 const { mapError } = useApiError()

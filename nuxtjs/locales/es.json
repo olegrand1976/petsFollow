@@ -55,7 +55,11 @@
       "portfolio": "Mi cartera",
       "ops": "Ops",
       "salesForce": "Fuerza de ventas",
-      "billing": "Nómina y catálogo"
+      "billing": "Nómina y catálogo",
+      "activity": "Actividad",
+      "pharmacy": "Farmacia",
+      "documents": "Documentos",
+      "practice": "Clínica"
     },
     "managerAiModules": "CR IA — equipo",
     "adminSupport": "Soporte",
@@ -392,7 +396,8 @@
         "5": "Viernes",
         "6": "Sábado"
       }
-    }
+    },
+    "aclDenied": "No puede editar la ficha del centro. Contacte al veterinario de referencia."
   },
   "share": {
     "petTitle": "Compartir expediente",
@@ -684,7 +689,16 @@
     "colStatus": "Estado",
     "colTotal": "Total IVA incl.",
     "send": "Enviar",
-    "errorGeneric": "Ha ocurrido un error"
+    "prefillVisit": "Vinculado a la visita",
+    "amountRequired": "Indique un importe sin IVA válido (> 0).",
+    "errorGeneric": "Ha ocurrido un error",
+    "issue": "Emitir",
+    "noSendProforma": "Proforma — sin Peppol (emitir desde borrador)",
+    "connectRestricted": "Solo el veterinario de referencia puede activar o modificar la conexión Billit.",
+    "relatedInvoice": "Factura de origen",
+    "relatedInvoicePlaceholder": "Elegir una factura…",
+    "relatedInvoiceEmpty": "No hay factura disponible — cree primero una factura.",
+    "relatedInvoiceRequired": "Seleccione la factura vinculada a esta nota de crédito."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiótico",
@@ -2730,8 +2744,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Compartidos",
-          "tip": "Gestionar el uso compartido de historiales."
+          "label": "Gestionar compartidos",
+          "tip": "Crear o revocar compartidos de historial."
+        },
+        "read": {
+          "label": "Ver compartidos",
+          "tip": "Ver quién tiene acceso (sin crear ni revocar)."
         }
       },
       "practice": {
@@ -2750,6 +2768,16 @@
         "view": {
           "label": "Ver comisiones",
           "tip": "Acceder al panel de comisiones."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "Ver farmacia",
+          "tip": "Consultar medicamentos, stock y DAF."
+        },
+        "write": {
+          "label": "Escribir farmacia",
+          "tip": "Recepciones, cuarentena, crear y finalizar DAF."
         }
       }
     }

@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'clients.write' })
 
 const { t } = useI18n()
 

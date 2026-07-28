@@ -27,7 +27,7 @@ func (a *API) searchPharmacyMedications(w http.ResponseWriter, r *http.Request) 
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	if _, ok := a.requirePracticePerm(w, r, "pets.read"); !ok {
+	if _, ok := a.requirePracticePerm(w, r, "pharmacy.read"); !ok {
 		return
 	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))

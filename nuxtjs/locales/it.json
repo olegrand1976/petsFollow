@@ -55,7 +55,11 @@
       "portfolio": "Il mio portafoglio",
       "ops": "Ops",
       "salesForce": "Forza vendita",
-      "billing": "Paghe e catalogo"
+      "billing": "Paghe e catalogo",
+      "activity": "Attività",
+      "pharmacy": "Farmacia",
+      "documents": "Documenti",
+      "practice": "Studio"
     },
     "managerAiModules": "CR IA — team",
     "adminSupport": "Supporto",
@@ -840,7 +844,8 @@
       "button": "Elimina il mio account",
       "confirmText": "Conferma la cancellazione permanente del tuo account.",
       "confirm": "Elimina definitivamente"
-    }
+    },
+    "aclDenied": "Non puoi modificare la scheda dello studio. Contatta il veterinario di riferimento."
   },
   "share": {
     "petTitle": "Condividi cartella",
@@ -1132,7 +1137,16 @@
     "colStatus": "Stato",
     "colTotal": "Totale IVA incl.",
     "send": "Invia",
-    "errorGeneric": "Si è verificato un errore"
+    "prefillVisit": "Collegato alla visita",
+    "amountRequired": "Indicare un importo IVA esclusa valido (> 0).",
+    "errorGeneric": "Si è verificato un errore",
+    "issue": "Emetti",
+    "noSendProforma": "Proforma — niente Peppol (emetti dalla bozza)",
+    "connectRestricted": "Solo il veterinario di riferimento può attivare o modificare la connessione Billit.",
+    "relatedInvoice": "Fattura di origine",
+    "relatedInvoicePlaceholder": "Scegliere una fattura…",
+    "relatedInvoiceEmpty": "Nessuna fattura disponibile — creare prima una fattura.",
+    "relatedInvoiceRequired": "Selezionare la fattura collegata a questa nota di credito."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotico",
@@ -2730,8 +2744,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Condivisioni",
-          "tip": "Gestire le condivisioni di cartella animale."
+          "label": "Gestire condivisioni",
+          "tip": "Creare o revocare condivisioni di cartella."
+        },
+        "read": {
+          "label": "Vedere condivisioni",
+          "tip": "Vedere chi ha accesso (senza creare o revocare)."
         }
       },
       "practice": {
@@ -2750,6 +2768,16 @@
         "view": {
           "label": "Vedere le commissioni",
           "tip": "Accedere al pannello commissioni."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "Vedere farmacia",
+          "tip": "Consultare farmaci, stock e DAF."
+        },
+        "write": {
+          "label": "Scrivere farmacia",
+          "tip": "Ricezioni, quarantena, creare e finalizzare DAF."
         }
       }
     }

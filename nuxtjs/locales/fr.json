@@ -57,7 +57,11 @@
       "portfolio": "Mon portefeuille",
       "ops": "Ops",
       "salesForce": "Force de vente",
-      "billing": "Paie & catalogue"
+      "billing": "Paie & catalogue",
+      "activity": "Activité",
+      "pharmacy": "Pharmacie",
+      "documents": "Documents",
+      "practice": "Cabinet"
     },
     "adminSupport": "Support",
     "commercialFiliation": "Filiation",
@@ -884,7 +888,8 @@
       "button": "Supprimer mon compte",
       "confirmText": "Confirmez la suppression définitive de votre compte.",
       "confirm": "Supprimer définitivement"
-    }
+    },
+    "aclDenied": "Vous n’avez pas le droit de modifier la fiche cabinet. Contactez le vétérinaire de référence."
   },
   "share": {
     "petTitle": "Partager le dossier",
@@ -956,6 +961,20 @@
     "kanbanMulti": "Multi-animaux",
     "sendAppLink": "Envoyer l'app",
     "sendingAppLink": "Envoi…",
+    "consultation": {
+      "open": "Nouvelle Consultation",
+      "title": "Nouvelle consultation",
+      "hint": "Sélectionnez l'animal puis démarrez la consultation. Le compte-rendu pourra être dicté (audio → transcription).",
+      "pet": "Animal",
+      "petPlaceholder": "Choisir un animal…",
+      "notes": "Notes internes (optionnel)",
+      "start": "Démarrer la consultation",
+      "reportHint": "Rédigez ou dictez le compte-rendu, puis enregistrez pour enchaîner sur DAF / facture.",
+      "ctaDafInvoice": "Créer une ordonnance & Facturer",
+      "ctaInvoice": "Facturer directement",
+      "ctaDone": "Terminer",
+      "loadPetsError": "Impossible de charger les animaux."
+    },
     "detail": {
       "title": "Fiche client",
       "subtitle": "Animaux et dossier du client.",
@@ -1176,7 +1195,42 @@
     "colStatus": "Statut",
     "colTotal": "Total TTC",
     "send": "Envoyer",
-    "errorGeneric": "Une erreur est survenue"
+    "errorGeneric": "Une erreur est survenue",
+    "create": "Créer la facture",
+    "lineDescription": "Ligne — libellé",
+    "lineAmountExcl": "Montant HT (€)",
+    "counterparty": {
+      "name": "Client",
+      "country": "Pays",
+      "vatNumber": "N° TVA",
+      "companyNumber": "BCE (optionnel)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 car.)",
+      "pec": "PEC (email certifié)",
+      "taxId": "NIF / CIF",
+      "street": "Rue",
+      "postal": "Code postal",
+      "city": "Ville"
+    },
+    "prefillFromDaf": "Prérempli depuis un DAF",
+    "prefillDirect": "Facturation directe après consultation",
+    "prefillDafLines": "{n} ligne(s) DAF",
+    "prefillVisit": "Lié à la visite",
+    "amountRequired": "Indiquez un montant HT valide (> 0).",
+    "newDocument": "Nouveau document",
+    "docType": "Type de document",
+    "typeInvoice": "Facture",
+    "typeCreditNote": "Note de crédit",
+    "typeProforma": "Proforma / devis",
+    "createDocument": "Créer le document",
+    "noSendProforma": "Proforma — pas d’envoi Peppol (émettre depuis le brouillon)",
+    "issue": "Émettre",
+    "connectRestricted": "Seul le vétérinaire de référence peut activer ou modifier la connexion Billit.",
+    "relatedInvoice": "Facture d’origine",
+    "relatedInvoicePlaceholder": "Choisir une facture…",
+    "relatedInvoiceEmpty": "Aucune facture disponible — créez d’abord une facture.",
+    "relatedInvoiceRequired": "Sélectionnez la facture liée à cette note de crédit."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotique",
@@ -1251,7 +1305,12 @@
       "vamregDuration": "Durée (jours)",
       "previewTitle": "Allocation FEFO prévue",
       "error": "Action DAF impossible.",
-      "legalExpiry": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg."
+      "legalExpiry": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg.",
+      "contextBanner": "Contexte consultation : {context}",
+      "contextClient": "Client",
+      "contextPet": "Animal",
+      "contextVisit": "Visite liée",
+      "goInvoice": "Facturer"
     }
   },
   "recommend": {
@@ -2774,8 +2833,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Partages",
-          "tip": "Gérer les partages de dossier animal vers d’autres acteurs."
+          "label": "Gérer les partages",
+          "tip": "Créer ou révoquer les partages de dossier / fiche client."
+        },
+        "read": {
+          "label": "Voir les partages",
+          "tip": "Consulter qui a accès aux dossiers (sans créer ni révoquer)."
         }
       },
       "practice": {
@@ -2794,6 +2857,16 @@
         "view": {
           "label": "Voir les commissions",
           "tip": "Accéder au tableau des commissions du cabinet."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "Voir la pharmacie",
+          "tip": "Accéder aux médicaments, stock et DAF en lecture."
+        },
+        "write": {
+          "label": "Écrire la pharmacie",
+          "tip": "Réceptions stock, quarantaine, création et finalisation DAF."
         }
       }
     }

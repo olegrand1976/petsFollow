@@ -30,7 +30,7 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 }
 
 func (a *API) invoicingGetConnection(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	id, ok := a.requireAnyPracticePerm(w, r, "clients.write", "practice.settings")
 	if !ok {
 		return
 	}
@@ -38,6 +38,10 @@ func (a *API) invoicingGetConnection(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
+	}
+	// PartyID réservé aux gestionnaires Billit (practice.settings) — pas aux seuls clients.write.
+	if !a.allowPracticePerm(r, id, "practice.settings") {
+		c.BillitPartyID = ""
 	}
 	httpx.WriteData(w, http.StatusOK, c)
 }

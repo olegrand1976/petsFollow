@@ -29,7 +29,9 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 		"pets.read": true, "pets.write_clinical": true,
 		"heartrate.validate": true, "messaging": true,
 		"calendar.manage": true, "care.manage": true,
-		"shares.manage": true, "practice.settings": true,
+		"shares.read": true, "shares.manage": true,
+		"pharmacy.read": true, "pharmacy.write": true,
+		"practice.settings": true,
 		"team.manage": true, "commissions.view": true,
 	}
 	switch role {
@@ -46,7 +48,9 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 			"pets.read": true, "pets.write_clinical": true,
 			"heartrate.validate": false, "messaging": true,
 			"calendar.manage": true, "care.manage": true,
-			"shares.manage": false, "practice.settings": false,
+			"shares.read": true, "shares.manage": false,
+			"pharmacy.read": true, "pharmacy.write": true,
+			"practice.settings": false,
 			"team.manage": false, "commissions.view": false,
 		}
 	case TeamRoleSecretary:
@@ -55,7 +59,9 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 			"pets.read": true, "pets.write_clinical": false,
 			"heartrate.validate": false, "messaging": true,
 			"calendar.manage": true, "care.manage": false,
-			"shares.manage": false, "practice.settings": false,
+			"shares.read": true, "shares.manage": false,
+			"pharmacy.read": true, "pharmacy.write": false,
+			"practice.settings": false,
 			"team.manage": false, "commissions.view": false,
 		}
 	default:
@@ -81,7 +87,8 @@ func hardDeniedCapabilities(role TeamRole) map[string]bool {
 	switch role {
 	case TeamRoleSecretary:
 		return map[string]bool{
-			"pets.write_clinical": true, "heartrate.validate": true,
+			"pets.write_clinical": true, "pharmacy.write": true,
+			"heartrate.validate": true,
 			"shares.manage": true, "practice.settings": true,
 			"team.manage": true, "commissions.view": true,
 		}
@@ -102,11 +109,30 @@ func hardDeniedCapabilities(role TeamRole) map[string]bool {
 func mergeTeamPermissions(role TeamRole, override map[string]bool) map[string]bool {
 	out := DefaultTeamPermissions(role)
 	denied := hardDeniedCapabilities(role)
+	_, pharmacyWriteInOverride := override["pharmacy.write"]
 	for k, v := range override {
 		if v && denied[k] {
 			continue
 		}
 		out[k] = v
+	}
+	// Compat overrides pré-pharmacy.* : un toggle pets.write_clinical seul
+	// pilotait aussi stock/DAF — on réplique tant que pharmacy.write n’est pas explicite.
+	if !pharmacyWriteInOverride {
+		if v, ok := override["pets.write_clinical"]; ok {
+			if v && denied["pharmacy.write"] {
+				out["pharmacy.write"] = false
+			} else {
+				out["pharmacy.write"] = v
+			}
+		}
+	}
+	// Write/manage imply the matching read capability.
+	if out["shares.manage"] {
+		out["shares.read"] = true
+	}
+	if out["pharmacy.write"] {
+		out["pharmacy.read"] = true
 	}
 	return out
 }
@@ -210,6 +236,16 @@ func (s *Store) HasActivePracticeStaffAccess(ctx context.Context, practiceID, us
 }
 
 func (s *Store) TeamPermission(ctx context.Context, practiceID, userID, capability string) (bool, error) {
+	perms, err := s.PracticePermissions(ctx, practiceID, userID)
+	if err != nil {
+		return false, err
+	}
+	return perms[capability], nil
+}
+
+// PracticePermissions returns the effective capability map for a practice staff member.
+// Empty map when the user has no active staff access on the practice.
+func (s *Store) PracticePermissions(ctx context.Context, practiceID, userID string) (map[string]bool, error) {
 	var role TeamRole
 	var raw []byte
 	err := s.pool.QueryRow(ctx, `
@@ -219,22 +255,22 @@ func (s *Store) TeamPermission(ctx context.Context, practiceID, userID, capabili
 	if errors.Is(err, pgx.ErrNoRows) {
 		ok, aerr := s.HasActivePracticeStaffAccess(ctx, practiceID, userID)
 		if aerr != nil {
-			return false, aerr
+			return nil, aerr
 		}
 		if !ok {
-			return false, nil
+			return map[string]bool{}, nil
 		}
 		// Legacy solo vet without any team_members row
-		return DefaultTeamPermissions(TeamRoleReferenceVet)[capability], nil
+		return DefaultTeamPermissions(TeamRoleReferenceVet), nil
 	}
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	var override map[string]bool
 	if len(raw) > 0 && string(raw) != "null" {
 		_ = json.Unmarshal(raw, &override)
 	}
-	return mergeTeamPermissions(role, override)[capability], nil
+	return mergeTeamPermissions(role, override), nil
 }
 
 func teamRoleToKernel(r TeamRole) kernel.Role {

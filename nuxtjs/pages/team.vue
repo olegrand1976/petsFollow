@@ -2,7 +2,7 @@
   <div data-testid="vet-team-page">
     <ProPageHeader :title="$t('team.title')" :subtitle="$t('team.subtitle')" />
 
-    <ProCard v-if="isReference" class="pro-mb-lg">
+    <ProCard v-if="canManageTeam" class="pro-mb-lg">
       <h3 class="pro-mb-md">{{ $t('team.inviteTitle') }}</h3>
       <form class="pro-form" @submit.prevent="invite">
         <ProInput v-model="form.email" type="email" :label="$t('team.email')" required />
@@ -29,7 +29,7 @@
             <th>{{ $t('team.columnEmail') }}</th>
             <th>{{ $t('team.columnRole') }}</th>
             <th>{{ $t('team.columnRights') }}</th>
-            <th v-if="isReference" />
+            <th v-if="canManageTeam" />
           </tr>
         </thead>
         <tbody>
@@ -38,7 +38,7 @@
             <td>{{ m.email }}</td>
             <td>{{ roleLabel(m.teamRole) }}</td>
             <td>
-              <div v-if="isReference && m.teamRole !== 'reference_vet'" class="team-perms" data-testid="team-perms">
+              <div v-if="canManageTeam && m.teamRole !== 'reference_vet'" class="team-perms" data-testid="team-perms">
                 <label
                   v-for="key in TEAM_PERM_KEYS"
                   :key="key"
@@ -59,7 +59,7 @@
               </div>
               <span v-else class="pro-hint">{{ $t('team.defaults') }}</span>
             </td>
-            <td v-if="isReference">
+            <td v-if="canManageTeam">
               <ProButton
                 v-if="m.teamRole !== 'reference_vet'"
                 variant="ghost"
@@ -88,7 +88,10 @@ const TEAM_PERM_KEYS = [
   'messaging',
   'calendar.manage',
   'care.manage',
+  'shares.read',
   'shares.manage',
+  'pharmacy.read',
+  'pharmacy.write',
   'practice.settings',
   'team.manage',
   'commissions.view',
@@ -99,6 +102,7 @@ type TeamPermKey = (typeof TEAM_PERM_KEYS)[number]
 const HARD_DENIED: Record<string, ReadonlySet<string>> = {
   secretary: new Set([
     'pets.write_clinical',
+    'pharmacy.write',
     'heartrate.validate',
     'shares.manage',
     'practice.settings',
@@ -124,7 +128,9 @@ type TeamMember = {
 }
 
 const { t, te } = useI18n()
-const { user, fetchUser } = useProUser()
+const { fetchUser } = useProUser()
+const { canPractice } = usePracticePerms()
+const canManageTeam = computed(() => canPractice('team.manage'))
 const members = ref<TeamMember[]>([])
 const saving = ref(false)
 const inviteMsg = ref('')
@@ -134,8 +140,6 @@ const form = reactive({
   password: '',
   teamRole: 'vet_assistant',
 })
-
-const isReference = computed(() => !!(user.value as { isReferenceVet?: boolean } | null)?.isReferenceVet)
 
 function roleLabel(role: string) {
   const map: Record<string, string> = {
@@ -167,7 +171,7 @@ function isHardDenied(role: string, key: string) {
 }
 
 async function load() {
-  await fetchUser()
+  await fetchUser(true)
   const res = await $fetch<{ data?: TeamMember[] } | TeamMember[]>('/api/vet/team')
   members.value = Array.isArray(res) ? res : (res.data ?? [])
 }

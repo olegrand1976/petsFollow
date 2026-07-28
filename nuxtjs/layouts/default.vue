@@ -24,6 +24,8 @@ import { isDeskLockedFlag } from '~/composables/useDeskSession'
 const route = useRoute()
 const { t } = useI18n()
 const { user, fetchUser } = useProUser()
+const { canPractice } = usePracticePerms()
+const runtimeConfig = useRuntimeConfig()
 const desk = useDeskSession()
 const deskLocked = computed(() => desk.locked.value)
 const deskUiBlocked = computed(() => desk.uiBlocked.value)
@@ -61,32 +63,57 @@ const showNav = computed(() => {
   return !isBareShellPath(route.path)
 })
 
-const runtimeConfig = useRuntimeConfig()
-
 const navItems = computed<ProNavItem[]>(() => {
+  const pharmacyOn = Boolean(runtimeConfig.public.pharmacyEnabled)
   const prescriptionsOn = Boolean(runtimeConfig.public.prescriptionsEnabled)
+  const billitOn = Boolean(runtimeConfig.public.billitEnabled)
+  const activity = t('nav.section.activity')
+  const pharmacy = t('nav.section.pharmacy')
+  const documents = t('nav.section.documents')
+  const practice = t('nav.section.practice')
+  const tagDev = t('nav.tagDev')
+
   const items: ProNavItem[] = [
-    { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
-    { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
-    { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
-    { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
-    { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
+    { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard', section: activity },
   ]
-  if (prescriptionsOn) {
-    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'medication', tag: t('nav.tagDev') })
+  if (canPractice('clients.read')) {
+    items.push({ to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value, section: activity })
   }
-  items.push(
-    { to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: t('nav.tagDev') },
-    { to: '/produits', label: t('nav.products'), icon: 'description' },
-  )
-  if (user.value?.isReferenceVet === true) {
-    items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments' })
+  if (canPractice('pets.read')) {
+    items.push({ to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value, section: activity })
   }
-  items.push(
-    { to: '/team', label: t('nav.team'), icon: 'groups' },
-    { to: '/recommend', label: t('nav.recommend'), icon: 'recommend' },
-    { to: '/settings', label: t('nav.settings'), icon: 'settings' },
-  )
+  if (canPractice('calendar.manage')) {
+    items.push({ to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value, section: activity })
+  }
+  if (canPractice('messaging')) {
+    items.push({ to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value, section: activity })
+  }
+
+  if (pharmacyOn && canPractice('pharmacy.read')) {
+    items.push(
+      { to: '/medicaments', label: t('nav.medicaments'), icon: 'medication', tag: tagDev, section: pharmacy },
+      { to: '/stock', label: t('nav.stock'), icon: 'inventory_2', tag: tagDev, section: pharmacy },
+      { to: '/daf', label: t('nav.daf'), icon: 'local_shipping', tag: tagDev, section: pharmacy },
+    )
+  }
+
+  if (prescriptionsOn && canPractice('pets.read')) {
+    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'clinical_notes', tag: tagDev, section: documents })
+  }
+  if (billitOn && (canPractice('clients.write') || canPractice('practice.settings'))) {
+    items.push({ to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: tagDev, section: documents })
+  }
+
+  items.push({ to: '/produits', label: t('nav.products'), icon: 'description', section: practice })
+  if (canPractice('commissions.view')) {
+    items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments', section: practice })
+  }
+  items.push({ to: '/team', label: t('nav.team'), icon: 'groups', section: practice })
+  if (canPractice('clients.write')) {
+    items.push({ to: '/recommend', label: t('nav.recommend'), icon: 'recommend', section: practice })
+  }
+  items.push({ to: '/settings', label: t('nav.settings'), icon: 'settings', section: practice })
+
   return items
 })
 

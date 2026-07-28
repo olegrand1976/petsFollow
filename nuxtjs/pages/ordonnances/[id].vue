@@ -10,7 +10,7 @@
           {{ $t('prescriptions.openPdf') }}
         </ProButton>
         <ProButton
-          v-if="doc?.status === 'draft'"
+          v-if="canEditDraft"
           variant="primary"
           test-id="ordonnances-save"
           :disabled="busy"
@@ -19,7 +19,7 @@
           {{ busy ? $t('prescriptions.loading') : $t('prescriptions.save') }}
         </ProButton>
         <ProButton
-          v-if="doc?.status === 'draft'"
+          v-if="canEditDraft"
           variant="ghost"
           test-id="ordonnances-delete"
           :disabled="busy"
@@ -38,7 +38,7 @@
         {{ doc.practiceName }} · {{ doc.veterinaryName }} · {{ doc.ownerName }}
         · {{ doc.countryCode }} · {{ doc.paperFormat }}
       </p>
-      <div v-if="doc.status === 'draft'" class="rx-edit">
+      <div v-if="canEditDraft" class="rx-edit">
         <label class="pro-label">{{ $t('prescriptions.paperFormat') }}</label>
         <select v-model="paperFormat" class="pro-input" style="max-width:8rem" data-testid="ordonnances-format">
           <option value="A4">A4</option>
@@ -57,7 +57,7 @@
 
     <ProCard v-if="doc">
       <div v-for="(line, idx) in lines" :key="idx" class="rx-line" :data-testid="`ordonnances-line-${idx}`">
-        <template v-if="doc.status === 'draft'">
+        <template v-if="canEditDraft">
           <input v-model="line.name" class="pro-input" :placeholder="$t('prescriptions.medName')" />
           <input v-model="line.dosage" class="pro-input" :placeholder="$t('prescriptions.dosage')" />
           <input v-model="line.form" class="pro-input" :placeholder="$t('prescriptions.form')" />
@@ -76,7 +76,7 @@
         </template>
       </div>
       <ProButton
-        v-if="doc.status === 'draft'"
+        v-if="canEditDraft"
         variant="secondary"
         test-id="ordonnances-add-line"
         @click="lines.push(emptyLine())"
@@ -88,8 +88,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'vet-only'] })
+definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
 const { mapError } = usePrescriptionError()
 const route = useRoute()
 const busy = ref(false)
@@ -100,6 +101,7 @@ const notes = ref('')
 const paperFormat = ref('A4')
 const validUntil = ref('')
 const lines = ref<any[]>([])
+const canEditDraft = computed(() => doc.value?.status === 'draft' && canPractice('pets.write_clinical'))
 
 function unwrap(res: any) {
   return res?.data ?? res

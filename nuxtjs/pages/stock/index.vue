@@ -38,7 +38,7 @@
       </button>
     </div>
 
-    <ProCard class="pro-mb-lg" data-testid="stock-receipt">
+    <ProCard v-if="canWritePharmacy" class="pro-mb-lg" data-testid="stock-receipt">
       <h3 class="pro-mb-sm">{{ $t('pharmacy.stock.receiptTitle') }}</h3>
       <div class="stock-form">
         <div>
@@ -113,7 +113,7 @@
             </td>
             <td class="stock-row-actions">
               <ProButton
-                v-if="row.status === 'active'"
+                v-if="canWritePharmacy && row.status === 'active'"
                 variant="secondary"
                 :test-id="`stock-quarantine-${row.id}`"
                 :disabled="busy"
@@ -122,6 +122,7 @@
                 {{ $t('pharmacy.stock.quarantine') }}
               </ProButton>
               <ProButton
+                v-if="canWritePharmacy"
                 variant="ghost"
                 :test-id="`stock-waste-${row.id}`"
                 :disabled="busy"
@@ -140,9 +141,11 @@
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
-definePageMeta({ middleware: ['auth', 'vet-only'] })
+definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const busy = ref(false)
 const error = ref('')
 const softWarn = ref(false)

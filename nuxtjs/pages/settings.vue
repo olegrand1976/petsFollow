@@ -29,7 +29,12 @@
         <p v-if="avatarSaved" class="text-muted" role="status">{{ $t('settings.avatar.saved') }}</p>
       </ProCard>
 
-      <ProCard :title="$t('settings.profileCard')" class="pro-settings-card">
+      <ProCard
+        v-if="canManagePractice"
+        :title="$t('settings.profileCard')"
+        class="pro-settings-card"
+        data-testid="settings-practice-profile"
+      >
         <ProPracticeProfileForm
           v-model="profile"
           v-model:heartrate-durations-sec="selectedDurations"
@@ -45,6 +50,13 @@
           </template>
         </ProPracticeProfileForm>
       </ProCard>
+      <p
+        v-else
+        class="pro-hint pro-mb-md"
+        data-testid="settings-practice-profile-denied"
+      >
+        {{ $t('settings.aclDenied') }}
+      </p>
     </div>
 
     <div
@@ -53,7 +65,12 @@
       aria-labelledby="tab-calendar"
       data-testid="settings-tab-calendar"
     >
-      <ProCard :title="$t('settings.availability')" class="pro-settings-card">
+      <ProCard
+        v-if="canMessage"
+        :title="$t('settings.availability')"
+        class="pro-settings-card"
+        data-testid="settings-availability"
+      >
         <div class="pro-toggle" role="group" :aria-label="$t('settings.availability')">
           <button
             type="button"
@@ -89,8 +106,12 @@
         </ProButton>
       </ProCard>
 
-      <ProCard :title="$t('settings.calendar.title')" class="pro-settings-card" data-testid="settings-calendar">
-        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
+      <ProCard
+        v-if="canManageCalendar"
+        :title="$t('settings.calendar.title')"
+        class="pro-settings-card"
+        data-testid="settings-calendar"
+      >        <p v-if="!vacationsConfigured" class="pro-inline-feedback" role="status">
           {{ $t('settings.calendar.vacationsReminder') }}
         </p>
         <p class="pro-settings-hint">{{ $t('settings.calendar.slotsHint') }}</p>
@@ -152,8 +173,11 @@
       aria-labelledby="tab-notifications"
       data-testid="settings-tab-notifications"
     >
-      <ProCard :title="$t('settings.notifications.title')" class="pro-settings-card">
-        <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
+      <ProCard
+        v-if="canMessage"
+        :title="$t('settings.notifications.title')"
+        class="pro-settings-card"
+      >        <p class="pro-settings-hint">{{ $t('settings.notifications.subtitle') }}</p>
         <label class="pro-checkbox-row">
           <input v-model="emailOnMessage" type="checkbox">
           <span>{{ $t('settings.notifications.onMessage') }}</span>
@@ -342,14 +366,25 @@ const { t } = useI18n()
 const { mapError } = useApiError()
 const { saveLocale: persistLocale, supportedLocales } = useLocaleSync()
 const { user, fetchUser } = useProUser()
+const { canPractice } = usePracticePerms()
+const canManagePractice = computed(() => canPractice('practice.settings'))
+const canManageCalendar = computed(() => canPractice('calendar.manage'))
+const canMessage = computed(() => canPractice('messaging'))
 
 const activeTab = ref('profile')
-const settingsTabs = computed(() => [
-  { id: 'profile', label: t('settings.tabs.profile') },
-  { id: 'calendar', label: t('settings.tabs.calendar') },
-  { id: 'notifications', label: t('settings.tabs.notifications') },
-  { id: 'account', label: t('settings.tabs.account') },
-])
+const settingsTabs = computed(() => {
+  const tabs = [
+    { id: 'profile', label: t('settings.tabs.profile') },
+  ]
+  if (canManageCalendar.value || canMessage.value) {
+    tabs.push({ id: 'calendar', label: t('settings.tabs.calendar') })
+  }
+  if (canMessage.value) {
+    tabs.push({ id: 'notifications', label: t('settings.tabs.notifications') })
+  }
+  tabs.push({ id: 'account', label: t('settings.tabs.account') })
+  return tabs
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -441,7 +476,7 @@ function mapFromApi(data: any): PracticeProfileForm {
 }
 
 onMounted(async () => {
-  if (route.hash === '#calendar') {
+  if (route.hash === '#calendar' && (canManageCalendar.value || canMessage.value)) {
     activeTab.value = 'calendar'
     await router.replace({ query: { ...route.query, tab: 'calendar' }, hash: '' })
   }
@@ -455,23 +490,27 @@ onMounted(async () => {
     } catch { /* ignore */ }
   }
 
-  try {
-    const res: any = await $fetch('/api/vet/profile')
-    const data = res.data ?? res
-    profile.value = mapFromApi(data)
-    const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
-    selectedDurations.value = durations.length ? durations : [60]
-    profileLoaded.value = true
-  } catch (e: any) {
-    profileError.value = mapError(e) || t('settings.profileLoadFailed')
+  if (canManagePractice.value) {
+    try {
+      const res: any = await $fetch('/api/vet/profile')
+      const data = res.data ?? res
+      profile.value = mapFromApi(data)
+      const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
+      selectedDurations.value = durations.length ? durations : [60]
+      profileLoaded.value = true
+    } catch (e: any) {
+      profileError.value = mapError(e) || t('settings.profileLoadFailed')
+    }
   }
 
-  try {
-    const avail: any = await $fetch('/api/vet/availability')
-    const data = avail.data ?? avail
-    status.value = data.status ?? status.value
-    autoReply.value = data.autoReply || autoReply.value
-  } catch { /* ignore */ }
+  if (canMessage.value) {
+    try {
+      const avail: any = await $fetch('/api/vet/availability')
+      const data = avail.data ?? avail
+      status.value = data.status ?? status.value
+      autoReply.value = data.autoReply || autoReply.value
+    } catch { /* ignore */ }
+  }
 
   const preferred = user.value?.preferredLocale as AppLocale | undefined
   if (preferred && supportedLocales.includes(preferred)) {
@@ -483,32 +522,36 @@ onMounted(async () => {
     twoFactorEnabled.value = (tfa.data ?? tfa).enabled === true
   } catch { /* ignore */ }
 
-  try {
-    const prefs: any = await $fetch('/api/vet/notification-preferences')
-    const data = prefs.data ?? prefs
-    emailOnMessage.value = data.emailOnMessage !== false
-    emailOnHeartrate.value = data.emailOnHeartrate !== false
-    emailOnVisitRequest.value = data.emailOnVisitRequest !== false
-  } catch { /* ignore */ }
+  if (canMessage.value) {
+    try {
+      const prefs: any = await $fetch('/api/vet/notification-preferences')
+      const data = prefs.data ?? prefs
+      emailOnMessage.value = data.emailOnMessage !== false
+      emailOnHeartrate.value = data.emailOnHeartrate !== false
+      emailOnVisitRequest.value = data.emailOnVisitRequest !== false
+    } catch { /* ignore */ }
+  }
 
-  try {
-    const [schedRes, vacRes]: any[] = await Promise.all([
-      $fetch('/api/vet/schedule'),
-      $fetch('/api/vet/vacations'),
-    ])
-    const sched = schedRes.data ?? schedRes
-    scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
-      weekday: s.weekday,
-      startTime: s.startTime,
-      endTime: s.endTime,
-    }))
-    slotDuration.value = sched.slotDurationMinutes || 30
-    clientBookingEnabled.value = !!sched.clientBookingEnabled
-    vacationsConfigured.value = !!sched.vacationsConfiguredForYear
-    noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
-    vacations.value = vacRes.data ?? vacRes ?? []
-  } catch (e: any) {
-    scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
+  if (canManageCalendar.value) {
+    try {
+      const [schedRes, vacRes]: any[] = await Promise.all([
+        $fetch('/api/vet/schedule'),
+        $fetch('/api/vet/vacations'),
+      ])
+      const sched = schedRes.data ?? schedRes
+      scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
+        weekday: s.weekday,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      }))
+      slotDuration.value = sched.slotDurationMinutes || 30
+      clientBookingEnabled.value = !!sched.clientBookingEnabled
+      vacationsConfigured.value = !!sched.vacationsConfiguredForYear
+      noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
+      vacations.value = vacRes.data ?? vacRes ?? []
+    } catch (e: any) {
+      scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
+    }
   }
 })
 

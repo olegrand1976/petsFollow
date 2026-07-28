@@ -11,6 +11,7 @@
     >
       <template #actions>
         <ProButton
+          v-if="canWriteClients"
           variant="secondary"
           class="pro-btn--icon"
           test-id="client-app-invite-open"
@@ -20,7 +21,7 @@
           <ProIcon name="qr_code_2" :size="22" />
         </ProButton>
         <ProButton
-          v-if="client"
+          v-if="client && canWriteClients"
           :disabled="sendingAppLink"
           :loading="sendingAppLink"
           data-testid="send-app-link"
@@ -29,11 +30,24 @@
           <ProIcon name="smartphone" />
           {{ $t('clients.detail.sendAppLink') }}
         </ProButton>
+        <ProButton
+          v-if="client && canWriteClinical"
+          variant="secondary"
+          test-id="client-new-consultation"
+          @click="consultationOpen = true"
+        >
+          <ProIcon name="medical_services" />
+          {{ $t('clients.consultation.open') }}
+        </ProButton>
       </template>
     </ProPageHeader>
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
     <p v-if="petsLoadError" class="pro-field-error" role="alert">{{ petsLoadError }}</p>
     <ProAppInviteModal v-model:open="appInviteOpen" />
+    <ProConsultationModal
+      v-model:open="consultationOpen"
+      :client-id="clientId"
+    />
 
     <div v-if="overview" class="pro-grid-kpi" data-testid="client-kpi-strip">
       <ProKpi
@@ -74,7 +88,7 @@
         icon="group"
         :value="overview.shareCount"
         :label="$t('clients.detail.kpi.shares')"
-        :to="`/clients/${clientId}?tab=sharing`"
+        :to="canReadShares ? `/clients/${clientId}?tab=sharing` : undefined"
       />
     </div>
     <p v-if="overview?.upcomingVisitAt" class="pro-hint pro-mb-md" data-testid="client-upcoming-visit">
@@ -125,7 +139,7 @@
     <div v-show="activeTab === 'sharing'" role="tabpanel" aria-labelledby="tab-sharing" data-testid="client-tab-sharing">
       <ProCard :title="$t('share.clientTitle')" data-testid="client-shares-card">
         <p class="pro-hint pro-mb-md">{{ $t('share.clientHint') }}</p>
-        <form class="pro-pet-inline-form" @submit.prevent="addClientShare">
+        <form v-if="canManageShares" class="pro-pet-inline-form" @submit.prevent="addClientShare">
           <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" required />
           <select v-model="sharePermission" class="pro-input" data-testid="client-share-permission">
             <option value="read">{{ $t('share.permRead') }}</option>
@@ -158,7 +172,12 @@
               <td>{{ s.permission }}</td>
               <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
               <td>
-                <ProButton variant="ghost" :disabled="shareBusy" @click="revokeClientShare(s.granteeUserId)">
+                <ProButton
+                  v-if="canManageShares"
+                  variant="ghost"
+                  :disabled="shareBusy"
+                  @click="revokeClientShare(s.granteeUserId)"
+                >
                   {{ $t('share.revoke') }}
                 </ProButton>
               </td>
@@ -190,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'clients.read' })
 
 type ClientRow = {
   userId: string
@@ -212,6 +231,11 @@ type ClientOverview = {
 
 const { t } = useI18n()
 const { mapError } = useApiError()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canManageShares = computed(() => canPractice('shares.manage'))
+const canReadShares = computed(() => canPractice('shares.read'))
+const canWriteClients = computed(() => canPractice('clients.write'))
 const route = useRoute()
 
 const clientId = route.params.clientId as string
@@ -222,6 +246,7 @@ const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
 const appInviteOpen = ref(false)
+const consultationOpen = ref(false)
 const clientShares = ref<any[]>([])
 const shareEmail = ref('')
 const sharePermission = ref('write_notes')
@@ -256,11 +281,20 @@ function petRowStatusVariant(p: any): 'success' | 'warning' | 'danger' | 'neutra
 
 const clientSubtitle = computed(() => client.value?.email || t('clients.detail.subtitle'))
 
-const clientTabs = computed(() => [
-  { id: 'pets', label: t('clients.detail.tabs.pets'), count: overview.value?.petCount || pets.value.length || undefined },
-  { id: 'sharing', label: t('clients.detail.tabs.sharing'), count: overview.value?.shareCount || undefined },
-  { id: 'identity', label: t('clients.detail.tabs.identity') },
-])
+const clientTabs = computed(() => {
+  const tabs = [
+    { id: 'pets', label: t('clients.detail.tabs.pets'), count: overview.value?.petCount || pets.value.length || undefined },
+    { id: 'identity', label: t('clients.detail.tabs.identity') },
+  ]
+  if (canReadShares.value) {
+    tabs.splice(1, 0, {
+      id: 'sharing',
+      label: t('clients.detail.tabs.sharing'),
+      count: overview.value?.shareCount || undefined,
+    })
+  }
+  return tabs
+})
 
 async function loadClientShares() {
   const res: any = await $fetch(`/api/clients/${clientId}/shares`)
@@ -359,7 +393,9 @@ onMounted(async () => {
     petsLoadError.value = mapError(e) || t('clients.loadError')
   }
   try {
-    await loadClientShares()
+    if (canReadShares.value) {
+      await loadClientShares()
+    }
   } catch {
     clientShares.value = []
   }

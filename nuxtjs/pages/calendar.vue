@@ -318,7 +318,7 @@
 <script setup lang="ts">
 import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
 
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'calendar.manage' })
 
 type CalendarViewMode = 'week' | 'month'
 

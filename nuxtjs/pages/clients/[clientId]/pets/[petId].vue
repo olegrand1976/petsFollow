@@ -17,6 +17,7 @@
         <div class="pro-pet-header-actions">
           <ProBadge v-if="isPrimaryPractice" variant="success">{{ $t('clients.pet.primaryBadge') }}</ProBadge>
           <ProButton
+            v-if="canMessage"
             variant="secondary"
             test-id="pet-open-messages"
             :disabled="messagingBusy"
@@ -88,6 +89,7 @@
           :upload-url="`/api/pets/${petId}/photo`"
           :label="$t('clients.pet.photoChange')"
           :hint="$t('clients.pet.photoHint')"
+          :disabled="!canWriteClinical"
           @uploaded="onPetPhotoUploaded"
         />
       </ProCard>
@@ -306,7 +308,7 @@
       data-testid="pet-tab-care"
     >
       <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="createCare">
+      <form v-if="canManageCare" class="pro-pet-inline-form" @submit.prevent="createCare">
         <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
         <select v-model="careDraft.type" class="pro-input" :aria-label="$t('clients.pet.careType')">
           <option value="vaccination">{{ $t('clients.pet.careTypeVaccination') }}</option>
@@ -344,7 +346,7 @@
             </td>
             <td>{{ c.status }}</td>
             <td>
-              <div v-if="c.status === 'pending'" class="pro-flex-gap">
+              <div v-if="canManageCare && c.status === 'pending'" class="pro-flex-gap">
                 <ProButton :disabled="careBusy" @click="markCareDone(c.id)">{{ $t('clients.pet.careDone') }}</ProButton>
                 <ProButton variant="ghost" :disabled="careBusy" @click="postponeCare(c.id, 7)">{{ $t('clients.pet.carePostpone') }}</ProButton>
               </div>
@@ -355,7 +357,7 @@
       </ProCard>
 
       <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
+      <form v-if="canManageCalendar" class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
         <label class="pro-checkbox-label" data-testid="visit-request-preconsult">
@@ -394,7 +396,7 @@
             </td>
             <td>
               <div class="pro-flex-gap">
-                <template v-if="v.status === 'requested' && v.pendingActionBy === 'vet'">
+                <template v-if="canManageCalendar && v.status === 'requested' && v.pendingActionBy === 'vet'">
                   <label class="pro-checkbox-label" data-testid="visit-confirm-request-preconsult">
                     <input
                       v-model="confirmPreconsultByVisit[v.id]"
@@ -411,14 +413,14 @@
                   </ProButton>
                 </template>
                 <ProButton
-                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'accept_reschedule')"
                 >
                   {{ $t('calendar.acceptReschedule') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
                   variant="ghost"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'reject_reschedule')"
@@ -434,14 +436,14 @@
                   {{ $t('calendar.reportTitle') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'confirmed'"
+                  v-if="canManageCalendar && v.status === 'confirmed'"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'done')"
                 >
                   {{ $t('clients.pet.visitDone') }}
                 </ProButton>
                 <ProButton
-                  v-if="v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending'"
+                  v-if="canManageCalendar && (v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending')"
                   variant="ghost"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'cancel')"
@@ -463,7 +465,7 @@
       data-testid="pet-tab-documents"
     >
       <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="uploadDocument">
+      <form v-if="canWriteClinical" class="pro-pet-inline-form" @submit.prevent="uploadDocument">
         <input
           ref="docInputEl"
           type="file"
@@ -514,7 +516,12 @@
                 <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer" class="pro-link-btn">
                   {{ $t('clients.pet.documentOpen') }}
                 </a>
-                <ProButton variant="ghost" :disabled="docBusy" @click="deleteDocument(d.id)">
+                <ProButton
+                  v-if="canWriteClinical"
+                  variant="ghost"
+                  :disabled="docBusy"
+                  @click="deleteDocument(d.id)"
+                >
                   {{ $t('common.delete') }}
                 </ProButton>
               </div>
@@ -533,7 +540,7 @@
     >
       <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
       <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
-      <form class="pro-pet-inline-form" @submit.prevent="addPetShare">
+      <form v-if="canManageShares" class="pro-pet-inline-form" @submit.prevent="addPetShare">
         <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
           <option value="">{{ $t('share.colleaguePlaceholder') }}</option>
           <option v-for="c in colleagues" :key="c.userId" :value="c.userId">
@@ -574,7 +581,12 @@
             <td>{{ s.permission }}</td>
             <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
             <td>
-              <ProButton variant="ghost" :disabled="shareBusy" @click="revokePetShare(s.granteeUserId)">
+              <ProButton
+                v-if="canManageShares"
+                variant="ghost"
+                :disabled="shareBusy"
+                @click="revokePetShare(s.granteeUserId)"
+              >
                 {{ $t('share.revoke') }}
               </ProButton>
             </td>
@@ -592,6 +604,7 @@
       <ProVisitReportPanel
         v-if="visitReportId"
         :visit-id="visitReportId"
+        :readonly="!canWriteClinical"
       />
       <p class="pro-hint pro-mb-md">
         <NuxtLink
@@ -607,9 +620,18 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 const route = useRoute()
+const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canManageCare = computed(() => canPractice('care.manage'))
+const canManageCalendar = computed(() => canPractice('calendar.manage'))
+const canManageShares = computed(() => canPractice('shares.manage'))
+const canReadShares = computed(() => canPractice('shares.read'))
+const canMessage = computed(() => canPractice('messaging'))
+const canValidateHR = computed(() => canPractice('heartrate.validate'))
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
 const pet = ref<any>(null)
@@ -651,19 +673,23 @@ const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
 const { formatDate } = useFormatters()
-const { t } = useI18n()
 const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNavBadges } = useNavBadges()
 const router = useRouter()
 
-const petTabs = computed(() => [
-  { id: 'overview', label: t('clients.pet.tabs.overview') },
-  { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
-  { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
-  { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
-  { id: 'sharing', label: t('clients.pet.tabs.sharing') },
-])
+const petTabs = computed(() => {
+  const tabs = [
+    { id: 'overview', label: t('clients.pet.tabs.overview') },
+    { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
+    { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
+    { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
+  ]
+  if (canReadShares.value) {
+    tabs.push({ id: 'sharing', label: t('clients.pet.tabs.sharing') })
+  }
+  return tabs
+})
 
 const petPlanLabel = computed(() => {
   const code = pet.value?.entitlement?.planCode || pet.value?.planCode
@@ -752,7 +778,7 @@ async function loadSessions(markSeenAfter = false) {
   }
   highlightedNewIds.value = next
   sessions.value = list
-  if (markSeenAfter && hadNew) {
+  if (markSeenAfter && hadNew && canValidateHR.value) {
     try {
       await $fetch(`/api/pets/${petId}/heartrate/seen`, { method: 'POST' })
       await refreshNavBadges()
@@ -1099,9 +1125,11 @@ onMounted(async () => {
     const docsP = loadDocuments().catch((e: any) => {
       docError.value = mapError(e)
     })
-    const sharesP = loadPetShares().catch(() => {
-      petShares.value = []
-    })
+    const sharesP = canReadShares.value
+      ? loadPetShares().catch(() => {
+          petShares.value = []
+        })
+      : Promise.resolve()
 
     const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []

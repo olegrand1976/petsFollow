@@ -71,6 +71,8 @@ export type ProNavIcon =
   | 'receipt'
   | 'medication'
   | 'inventory_2'
+  | 'local_shipping'
+  | 'clinical_notes'
 
 export type ProNavItem = {
   to: string
@@ -136,6 +138,8 @@ const icons: Record<ProNavIcon, string> = {
   receipt: 'receipt_long',
   medication: 'medication',
   inventory_2: 'inventory_2',
+  local_shipping: 'local_shipping',
+  clinical_notes: 'clinical_notes',
 }
 
 function iconName(name: ProNavIcon) {
@@ -150,6 +154,10 @@ function navTestId(to: string) {
   if (to === '/requests') return 'nav-requests'
   if (to === '/invoicing') return 'nav-invoicing'
   if (to === '/ordonnances') return 'nav-ordonnances'
+  if (to === '/medicaments') return 'nav-medicaments'
+  if (to === '/stock') return 'nav-stock'
+  if (to === '/daf') return 'nav-daf'
+  if (to === '/commissions') return 'nav-commissions'
   return undefined
 }
 

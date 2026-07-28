@@ -55,7 +55,11 @@
       "portfolio": "My portfolio",
       "ops": "Ops",
       "salesForce": "Sales force",
-      "billing": "Payroll & catalog"
+      "billing": "Payroll & catalog",
+      "activity": "Activity",
+      "pharmacy": "Pharmacy",
+      "documents": "Documents",
+      "practice": "Practice"
     },
     "managerAiModules": "AI CR — team",
     "adminSupport": "Support",
@@ -392,7 +396,8 @@
         "5": "Friday",
         "6": "Saturday"
       }
-    }
+    },
+    "aclDenied": "You cannot edit the practice profile. Contact the reference veterinarian."
   },
   "share": {
     "petTitle": "Share pet record",
@@ -454,6 +459,20 @@
     "kanbanMulti": "Multi-pet",
     "sendAppLink": "Send app",
     "sendingAppLink": "Sending…",
+    "consultation": {
+      "open": "New consultation",
+      "title": "New consultation",
+      "hint": "Select the pet then start the consultation. The report can be dictated (audio → transcription).",
+      "pet": "Pet",
+      "petPlaceholder": "Choose a pet…",
+      "notes": "Internal notes (optional)",
+      "start": "Start consultation",
+      "reportHint": "Write or dictate the report, then save to continue to DAF / invoicing.",
+      "ctaDafInvoice": "Create prescription & invoice",
+      "ctaInvoice": "Invoice directly",
+      "loadPetsError": "Unable to load pets.",
+      "ctaDone": "Done"
+    },
     "detail": {
       "title": "Client profile",
       "subtitle": "Pets and client record.",
@@ -684,7 +703,42 @@
     "colStatus": "Status",
     "colTotal": "Total incl. VAT",
     "send": "Send",
-    "errorGeneric": "Something went wrong"
+    "errorGeneric": "Something went wrong",
+    "create": "Create invoice",
+    "lineDescription": "Line — description",
+    "lineAmountExcl": "Amount excl. VAT (€)",
+    "counterparty": {
+      "name": "Customer",
+      "country": "Country",
+      "vatNumber": "VAT number",
+      "companyNumber": "Company number (optional)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 chars)",
+      "pec": "PEC (certified email)",
+      "taxId": "NIF / CIF",
+      "street": "Street",
+      "postal": "Postal code",
+      "city": "City"
+    },
+    "prefillFromDaf": "Prefill from a DAF",
+    "prefillDirect": "Direct invoicing after consultation",
+    "prefillDafLines": "{n} DAF line(s)",
+    "prefillVisit": "Linked to the visit",
+    "amountRequired": "Enter a valid excl. VAT amount (> 0).",
+    "newDocument": "New document",
+    "docType": "Document type",
+    "typeInvoice": "Invoice",
+    "typeCreditNote": "Credit note",
+    "typeProforma": "Proforma / quote",
+    "createDocument": "Create document",
+    "noSendProforma": "Proforma — no Peppol send (issue from draft)",
+    "issue": "Issue",
+    "connectRestricted": "Only the reference veterinarian can activate or change the Billit connection.",
+    "relatedInvoice": "Original invoice",
+    "relatedInvoicePlaceholder": "Select an invoice…",
+    "relatedInvoiceEmpty": "No invoice available — create an invoice first.",
+    "relatedInvoiceRequired": "Select the invoice linked to this credit note."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotic",
@@ -759,7 +813,12 @@
       "vamregDuration": "Duration (days)",
       "previewTitle": "Planned FEFO allocation",
       "error": "DAF action failed.",
-      "legalExpiry": "Finalize requires lot + MA number; antibiotics need VAMReg payload."
+      "legalExpiry": "Finalize requires lot + MA number; antibiotics need VAMReg payload.",
+      "contextBanner": "Consultation context: {context}",
+      "contextClient": "Client",
+      "contextPet": "Pet",
+      "contextVisit": "Linked visit",
+      "goInvoice": "Invoice"
     }
   },
   "recommend": {
@@ -2730,8 +2789,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Shares",
-          "tip": "Manage pet-record shares with other actors."
+          "label": "Manage shares",
+          "tip": "Create or revoke pet/client record shares."
+        },
+        "read": {
+          "label": "View shares",
+          "tip": "See who has access to records (without creating or revoking)."
         }
       },
       "practice": {
@@ -2750,6 +2813,16 @@
         "view": {
           "label": "View commissions",
           "tip": "Access the practice commissions board."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "View pharmacy",
+          "tip": "Read medications, stock and DAF."
+        },
+        "write": {
+          "label": "Write pharmacy",
+          "tip": "Stock receipts, quarantine, create and finalize DAF."
         }
       }
     }

@@ -68,6 +68,79 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
   })
 
+  test('B2: secretary — nav sans commissions, sections présentes', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await expect(page.getByTestId('nav-commissions')).toHaveCount(0)
+    await expect(page.locator('a[href="/commissions"]')).toHaveCount(0)
+    await expect(page.getByText(/^Activité$|^Activity$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Cabinet$|^Practice$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('nav-clients')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('B3: secretary — /ordonnances/nouveau redirect (no write_clinical)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/ordonnances/nouveau', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL((url) => !url.pathname.includes('/ordonnances/nouveau'), { timeout: 15000 })
+    await expect(page).toHaveURL(/dashboard/, { timeout: 10000 })
+  })
+
+  test('B4: secretary — pas de CTA nouveau ordonnances', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/ordonnances', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('ordonnances-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('ordonnances-new')).toHaveCount(0)
+  })
+
+  test('B5: secretary — pas de CTA consultation (no write_clinical)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('create-client-open')).toBeVisible({ timeout: 10000 })
+    // Seed VetPlus : au moins un client — sinon le count CTA serait vrai à vide.
+    await expect(page.locator('table tbody tr, .pro-kanban-card').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-testid^="new-consultation-"]')).toHaveCount(0)
+  })
+
+  test('B6: secretary — settings sans fiche cabinet, sans invitations', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/settings', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('settings-practice-profile-denied')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('settings-practice-profile')).toHaveCount(0)
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('clients-invitations-open')).toHaveCount(0)
+  })
+
+  test('B7: secretary — factu readonly connect (pas d’activate Billit)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    const probe = await page.request.get('/api/invoicing/connection')
+    if (probe.status() === 404) {
+      test.skip(true, 'BILLIT_ENABLED off')
+    }
+    expect(probe.status(), await probe.text()).toBe(200)
+    const body = await probe.json()
+    const data = body?.data ?? body
+    expect(data?.billitPartyId ?? '').toBe('')
+
+    await page.goto('/invoicing', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('invoicing-connection-readonly')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('invoicing-connect-start')).toHaveCount(0)
+  })
+
+  test('B8: secretary — voit onglet partages (read) sans formulaire manage', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    const profile = page.locator('[data-testid^="client-profile-"]').first()
+    await expect(profile).toBeVisible({ timeout: 15000 })
+    await profile.click()
+    await expect(page.getByTestId('section-tab-sharing')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('section-tab-sharing').click()
+    await expect(page.getByTestId('client-shares-card')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('client-share-permission')).toHaveCount(0)
+  })
+
   test('C: assist — /commissions redirected, /team OK', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.assist@petsfollow.test')
 
@@ -107,5 +180,12 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await page.goto('/commissions', { waitUntil: 'networkidle' })
     await expect(page).toHaveURL(/commissions/)
     await expect(page.getByTestId('vet-commissions-page')).toBeVisible({ timeout: 15000 })
+  })
+
+  test('E2: vet.demo — nav commissions + sections', async ({ page }) => {
+    await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
+    await expect(page.getByTestId('nav-commissions')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Activité$|^Activity$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Documents$/i).first()).toBeVisible({ timeout: 10000 })
   })
 })

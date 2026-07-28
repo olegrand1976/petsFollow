@@ -11,7 +11,7 @@
 
     <p v-if="error" class="pro-alert pro-mb-md" data-testid="invoicing-error">{{ error }}</p>
 
-    <ProCard class="pro-mb-lg" data-testid="invoicing-connection">
+    <ProCard v-if="canManageBillit" class="pro-mb-lg" data-testid="invoicing-connection">
       <div class="invoicing-conn">
         <div>
           <h3 class="pro-mb-sm">{{ $t('invoicing.connectionTitle') }}</h3>
@@ -66,10 +66,21 @@
         @submit.prevent="completeConnect"
       >
         <p class="pro-hint pro-mb-md">{{ $t('invoicing.completeHint') }}</p>
-        <ProInput v-model="completeForm.state" :label="$t('invoicing.state')" required />
-        <ProInput v-model="completeForm.partyId" :label="$t('invoicing.partyId')" required />
+        <ProInput
+          v-model="completeForm.state"
+          test-id="invoicing-complete-state"
+          :label="$t('invoicing.state')"
+          required
+        />
+        <ProInput
+          v-model="completeForm.partyId"
+          test-id="invoicing-complete-party"
+          :label="$t('invoicing.partyId')"
+          required
+        />
         <ProInput
           v-model="completeForm.apiKey"
+          test-id="invoicing-complete-apikey"
           type="password"
           :label="$t('invoicing.apiKey')"
           required
@@ -79,13 +90,122 @@
         </ProButton>
       </form>
     </ProCard>
+    <ProCard v-else class="pro-mb-lg" data-testid="invoicing-connection-readonly">
+      <h3 class="pro-mb-sm">{{ $t('invoicing.connectionTitle') }}</h3>
+      <p class="pro-hint">
+        {{ $t('invoicing.status') }}:
+        <ProBadge :variant="statusVariant">{{ connection?.status || '…' }}</ProBadge>
+      </p>
+      <p class="pro-hint">{{ $t('invoicing.connectRestricted') }}</p>
+    </ProCard>
 
-    <ProCard v-if="isActive" data-testid="invoicing-documents">
+    <ProCard v-if="isActive && canWriteDocs" class="pro-mb-lg" data-testid="invoicing-create">
+      <h3 class="pro-mb-md">{{ $t('invoicing.newDocument') }}</h3>
+      <p v-if="prefillHint" class="pro-hint pro-mb-md" data-testid="invoicing-consultation-context">{{ prefillHint }}</p>
+      <form class="pro-form" data-testid="invoicing-create-form" @submit.prevent="createDocument">
+        <label class="pro-field">
+          <span class="pro-field__label">{{ $t('invoicing.docType') }}</span>
+          <select v-model="docForm.type" class="pro-input" data-testid="invoicing-doc-type" required>
+            <option value="invoice">{{ $t('invoicing.typeInvoice') }}</option>
+            <option value="credit_note">{{ $t('invoicing.typeCreditNote') }}</option>
+            <option value="proforma">{{ $t('invoicing.typeProforma') }}</option>
+          </select>
+        </label>
+        <label v-if="docForm.type === 'credit_note'" class="pro-field">
+          <span class="pro-field__label">{{ $t('invoicing.relatedInvoice') }}</span>
+          <select
+            v-model="docForm.relatedDocumentId"
+            class="pro-input"
+            data-testid="invoicing-related-invoice"
+            required
+          >
+            <option value="" disabled>{{ $t('invoicing.relatedInvoicePlaceholder') }}</option>
+            <option
+              v-for="inv in invoiceOptions"
+              :key="inv.id"
+              :value="inv.id"
+            >
+              {{ inv.label }}
+            </option>
+          </select>
+          <p v-if="!invoiceOptions.length" class="pro-hint">{{ $t('invoicing.relatedInvoiceEmpty') }}</p>
+        </label>
+        <ProInput
+          v-model="docForm.name"
+          test-id="invoicing-cp-name"
+          :label="$t('invoicing.counterparty.name')"
+          required
+        />
+        <label class="pro-field">
+          <span class="pro-field__label">{{ $t('invoicing.counterparty.country') }}</span>
+          <select v-model="docForm.country" class="pro-input" data-testid="invoicing-country" required>
+            <option value="BE">BE</option>
+            <option value="FR">FR</option>
+            <option value="IT">IT</option>
+            <option value="ES">ES</option>
+          </select>
+        </label>
+        <ProInput
+          v-if="docForm.country === 'BE' || docForm.country === 'FR' || docForm.country === 'IT' || docForm.country === 'ES'"
+          v-model="docForm.vatNumber"
+          test-id="invoicing-cp-vat"
+          :label="$t('invoicing.counterparty.vatNumber')"
+        />
+        <ProInput
+          v-if="docForm.country === 'BE'"
+          v-model="docForm.companyNumber"
+          :label="$t('invoicing.counterparty.companyNumber')"
+        />
+        <ProInput
+          v-if="docForm.country === 'FR'"
+          v-model="docForm.siret"
+          :label="$t('invoicing.counterparty.siret')"
+        />
+        <ProInput
+          v-if="docForm.country === 'FR'"
+          v-model="docForm.siren"
+          :label="$t('invoicing.counterparty.siren')"
+        />
+        <ProInput
+          v-if="docForm.country === 'IT'"
+          v-model="docForm.codiceDestinatario"
+          :label="$t('invoicing.counterparty.codiceDestinatario')"
+        />
+        <ProInput
+          v-if="docForm.country === 'IT'"
+          v-model="docForm.pec"
+          :label="$t('invoicing.counterparty.pec')"
+        />
+        <ProInput
+          v-if="docForm.country === 'ES'"
+          v-model="docForm.taxId"
+          :label="$t('invoicing.counterparty.taxId')"
+        />
+        <ProInput v-model="docForm.street" :label="$t('invoicing.counterparty.street')" />
+        <ProInput v-model="docForm.postal" :label="$t('invoicing.counterparty.postal')" />
+        <ProInput v-model="docForm.city" :label="$t('invoicing.counterparty.city')" />
+        <ProInput
+          v-model="docForm.lineDesc"
+          test-id="invoicing-line-desc"
+          :label="$t('invoicing.lineDescription')"
+          required
+        />
+        <ProInput
+          v-model="docForm.lineAmount"
+          test-id="invoicing-line-amount"
+          type="number"
+          :label="$t('invoicing.lineAmountExcl')"
+          required
+        />
+        <ProButton type="submit" test-id="invoicing-new-doc" :disabled="busy">
+          {{ $t('invoicing.createDocument') }}
+        </ProButton>
+      </form>
+    </ProCard>
+
+    <ProCard v-if="isActive && canWriteDocs" data-testid="invoicing-documents">
       <div class="invoicing-docs-head pro-mb-md">
         <h3>{{ $t('invoicing.documentsTitle') }}</h3>
-        <ProButton test-id="invoicing-new-doc" :disabled="busy" @click="createSampleInvoice">
-          {{ $t('invoicing.newInvoice') }}
-        </ProButton>
       </div>
       <ProEmptyState v-if="!documents.length" :title="$t('invoicing.emptyDocs')" />
       <ProTable v-else>
@@ -107,12 +227,13 @@
             <td>{{ formatMoney(doc.totalInclCents) }}</td>
             <td>
               <ProButton
-                v-if="doc.status === 'draft' || doc.status === 'issued'"
+                v-if="canSend(doc)"
                 variant="secondary"
+                :test-id="`invoicing-send-${doc.id}`"
                 :disabled="busy"
                 @click="sendDoc(doc.id)"
               >
-                {{ $t('invoicing.send') }}
+                {{ doc.type === 'proforma' ? $t('invoicing.issue') : $t('invoicing.send') }}
               </ProButton>
             </td>
           </tr>
@@ -127,6 +248,16 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: ['vet-only', 'practice-perm'],
+  practicePermAny: ['clients.write', 'practice.settings'],
+})
+
+const runtimeConfig = useRuntimeConfig()
+if (!runtimeConfig.public.billitEnabled) {
+  await navigateTo('/dashboard')
+}
+
 type Connection = {
   practiceId: string
   billitPartyId?: string
@@ -141,20 +272,55 @@ type Document = {
   status: string
   peppolStatus?: string
   totalInclCents: number
+  counterparty?: { name?: string }
+  number?: string
 }
 
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canManageBillit = computed(() => canPractice('practice.settings'))
+const canWriteDocs = computed(() => canPractice('clients.write'))
+const route = useRoute()
 const connection = ref<Connection | null>(null)
 const documents = ref<Document[]>([])
 const busy = ref(false)
 const error = ref('')
 const resellerUrl = ref('')
 const showCompleteForm = ref(false)
+const prefillHint = ref('')
 const completeForm = reactive({
   state: '',
   partyId: '',
   apiKey: '',
 })
+const docForm = reactive({
+  type: 'invoice' as 'invoice' | 'credit_note' | 'proforma',
+  relatedDocumentId: '',
+  name: '',
+  country: 'BE',
+  vatNumber: '',
+  companyNumber: '',
+  siret: '',
+  siren: '',
+  codiceDestinatario: '',
+  pec: '',
+  taxId: '',
+  street: '',
+  postal: '',
+  city: '',
+  lineDesc: '',
+  lineAmount: '',
+})
+
+const queryClientId = computed(() => String(route.query.clientUserId || ''))
+const queryDafId = computed(() => String(route.query.dafId || ''))
+const queryVisitId = computed(() => String(route.query.visitId || ''))
+const queryMode = computed(() => String(route.query.mode || ''))
+
+function applyLineDescDefaultIfEmpty() {
+  if (queryClientId.value || queryDafId.value || queryVisitId.value) return
+  if (!docForm.lineDesc) docForm.lineDesc = 'Consultation'
+}
 
 const isActive = computed(() => connection.value?.status === 'active')
 const pendingRegistration = computed(() => connection.value?.status === 'pending_registration')
@@ -174,9 +340,30 @@ function unwrap<T>(res: any): T {
   return (res?.data ?? res) as T
 }
 
+function canSend(doc: Document) {
+  // Proforma: émission locale (issued) sans Peppol — une seule fois depuis draft.
+  if (doc.type === 'proforma') return doc.status === 'draft'
+  // Invoice / credit note: brouillon, émis (retry Peppol) ou rejeté (rejeu).
+  return doc.status === 'draft' || doc.status === 'issued' || doc.status === 'rejected'
+}
+
 function formatMoney(cents: number) {
   return `${(cents / 100).toFixed(2)} €`
 }
+
+const invoiceOptions = computed(() =>
+  documents.value
+    .filter((d) => d.type === 'invoice')
+    .map((d) => ({
+      id: d.id,
+      label: [
+        d.number || d.id.slice(0, 8),
+        d.counterparty?.name,
+        formatMoney(d.totalInclCents),
+        d.status,
+      ].filter(Boolean).join(' · '),
+    })),
+)
 
 async function loadConnection() {
   const res = await $fetch('/api/invoicing/connection')
@@ -184,7 +371,7 @@ async function loadConnection() {
 }
 
 async function loadDocuments() {
-  if (!isActive.value) {
+  if (!isActive.value || !canWriteDocs.value) {
     documents.value = []
     return
   }
@@ -247,32 +434,51 @@ async function refreshConnection() {
   }
 }
 
-async function createSampleInvoice() {
+async function createDocument() {
   busy.value = true
   error.value = ''
   try {
+    const excl = Math.round(Number(docForm.lineAmount) * 100)
+    if (!Number.isFinite(excl) || excl <= 0) {
+      error.value = t('invoicing.amountRequired')
+      return
+    }
+    if (docForm.type === 'credit_note' && !docForm.relatedDocumentId) {
+      error.value = t('invoicing.relatedInvoiceRequired')
+      return
+    }
+    const vatPercent = docForm.country === 'IT' ? 22 : docForm.country === 'ES' ? 21 : 21
     await $fetch('/api/invoicing/documents', {
       method: 'POST',
       body: {
-        type: 'invoice',
+        type: docForm.type,
+        relatedDocumentId: docForm.type === 'credit_note' ? docForm.relatedDocumentId : undefined,
+        visitId: queryVisitId.value || undefined,
         counterparty: {
-          name: 'Client démo',
-          vatNumber: 'BE0123456789',
-          street: 'Rue de la Loi 1',
-          city: 'Bruxelles',
-          postal: '1000',
-          country: 'BE',
+          name: docForm.name,
+          country: docForm.country,
+          vatNumber: docForm.vatNumber || undefined,
+          companyNumber: docForm.companyNumber || undefined,
+          siret: docForm.siret || undefined,
+          siren: docForm.siren || undefined,
+          codiceDestinatario: docForm.codiceDestinatario || undefined,
+          pec: docForm.pec || undefined,
+          taxId: docForm.taxId || undefined,
+          street: docForm.street || undefined,
+          city: docForm.city || undefined,
+          postal: docForm.postal || undefined,
         },
         lines: [
           {
-            description: 'Consultation',
+            description: docForm.lineDesc,
             quantity: 1,
-            unitPriceExclCents: 5000,
-            vatPercent: 21,
+            unitPriceExclCents: excl,
+            vatPercent,
           },
         ],
       },
     })
+    docForm.relatedDocumentId = ''
     await loadDocuments()
   } catch (e: any) {
     error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
@@ -299,10 +505,58 @@ onMounted(async () => {
   try {
     await loadConnection()
     await loadDocuments()
+    await applyConsultationPrefill()
+    applyLineDescDefaultIfEmpty()
   } catch (e: any) {
     error.value = e?.data?.error?.message || e?.message || t('invoicing.errorGeneric')
   }
 })
+
+async function applyConsultationPrefill() {
+  if (!queryClientId.value && !queryDafId.value && !queryVisitId.value) return
+  const hints: string[] = []
+  if (queryMode.value === 'fromDaf') hints.push(t('invoicing.prefillFromDaf'))
+  else if (queryMode.value === 'direct') hints.push(t('invoicing.prefillDirect'))
+  if (queryVisitId.value) hints.push(t('invoicing.prefillVisit'))
+
+  if (queryClientId.value) {
+    try {
+      const res = await $fetch(`/api/clients/${queryClientId.value}`)
+      const c: any = unwrap(res)
+      if (c?.fullName) {
+        docForm.name = c.fullName
+        hints.push(c.fullName)
+      }
+    }
+    catch {
+      // ignore — keep form empty until user fills
+    }
+  }
+
+  if (queryDafId.value) {
+    try {
+      const res = await $fetch(`/api/vet/pharmacy/daf/${queryDafId.value}`)
+      const doc: any = unwrap(res)
+      const items = Array.isArray(doc?.items) ? doc.items : []
+      if (items.length) {
+        docForm.lineDesc = items
+          .map((it: any) => `${it.medicationName || 'Médicament'} × ${it.qty}`)
+          .join(', ')
+          .slice(0, 200)
+        hints.push(t('invoicing.prefillDafLines', { n: items.length }))
+      }
+      if (doc?.clientName && !docForm.name) {
+        docForm.name = doc.clientName
+      }
+    }
+    catch {
+      // DAF optional if pharmacy off
+    }
+  }
+
+  if (!docForm.lineDesc) docForm.lineDesc = t('invoicing.lineDescription')
+  prefillHint.value = hints.filter(Boolean).join(' · ')
+}
 </script>
 
 <style scoped>

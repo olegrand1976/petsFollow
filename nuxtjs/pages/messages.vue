@@ -120,7 +120,7 @@
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'messaging' })
 
 const route = useRoute()
 const { t } = useI18n()

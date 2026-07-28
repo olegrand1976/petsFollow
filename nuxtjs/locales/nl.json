@@ -55,7 +55,11 @@
       "portfolio": "Mijn portefeuille",
       "ops": "Ops",
       "salesForce": "Verkoopteam",
-      "billing": "Loon & catalogus"
+      "billing": "Loon & catalogus",
+      "activity": "Activiteit",
+      "pharmacy": "Apotheek",
+      "documents": "Documenten",
+      "practice": "Praktijk"
     },
     "managerAiModules": "AI CR — team",
     "adminSupport": "Support",
@@ -392,7 +396,8 @@
         "5": "Vrijdag",
         "6": "Zaterdag"
       }
-    }
+    },
+    "aclDenied": "U mag het praktijkprofiel niet wijzigen. Neem contact op met de referentieveterinair."
   },
   "share": {
     "petTitle": "Dossier delen",
@@ -454,6 +459,20 @@
     "kanbanMulti": "Meerdere dieren",
     "sendAppLink": "App sturen",
     "sendingAppLink": "Verzenden…",
+    "consultation": {
+      "open": "Nieuwe consultatie",
+      "title": "Nieuwe consultatie",
+      "hint": "Selecteer het dier en start de consultatie. Het verslag kan worden gedicteerd (audio → transcriptie).",
+      "pet": "Dier",
+      "petPlaceholder": "Kies een dier…",
+      "notes": "Interne notities (optioneel)",
+      "start": "Consultatie starten",
+      "reportHint": "Schrijf of dicteer het verslag, sla op om door te gaan naar DAF / facturatie.",
+      "ctaDafInvoice": "Voorschrift & factureren",
+      "ctaInvoice": "Direct factureren",
+      "loadPetsError": "Dieren laden mislukt.",
+      "ctaDone": "Afronden"
+    },
     "detail": {
       "title": "Klantdossier",
       "subtitle": "Dieren en klantdossier.",
@@ -684,7 +703,42 @@
     "colStatus": "Status",
     "colTotal": "Totaal incl. btw",
     "send": "Verzenden",
-    "errorGeneric": "Er is iets misgegaan"
+    "errorGeneric": "Er is iets misgegaan",
+    "create": "Factuur aanmaken",
+    "lineDescription": "Regel — omschrijving",
+    "lineAmountExcl": "Bedrag excl. btw (€)",
+    "counterparty": {
+      "name": "Klant",
+      "country": "Land",
+      "vatNumber": "Btw-nummer",
+      "companyNumber": "Ondernemingsnummer (optioneel)",
+      "siret": "SIRET",
+      "siren": "SIREN",
+      "codiceDestinatario": "Codice Destinatario (7 tekens)",
+      "pec": "PEC (gecertificeerde e-mail)",
+      "taxId": "NIF / CIF",
+      "street": "Straat",
+      "postal": "Postcode",
+      "city": "Stad"
+    },
+    "prefillFromDaf": "Vooraf ingevuld vanuit DAF",
+    "prefillDirect": "Directe facturatie na consultatie",
+    "prefillDafLines": "{n} DAF-regel(s)",
+    "prefillVisit": "Gekoppeld aan het bezoek",
+    "amountRequired": "Geef een geldig bedrag excl. btw op (> 0).",
+    "newDocument": "Nieuw document",
+    "docType": "Documenttype",
+    "typeInvoice": "Factuur",
+    "typeCreditNote": "Creditnota",
+    "typeProforma": "Proforma / offerte",
+    "createDocument": "Document aanmaken",
+    "noSendProforma": "Proforma — geen Peppol (uitgeven vanuit concept)",
+    "issue": "Uitgeven",
+    "connectRestricted": "Alleen de referentieveterinair kan de Billit-koppeling activeren of wijzigen.",
+    "relatedInvoice": "Originele factuur",
+    "relatedInvoicePlaceholder": "Kies een factuur…",
+    "relatedInvoiceEmpty": "Geen factuur beschikbaar — maak eerst een factuur.",
+    "relatedInvoiceRequired": "Selecteer de factuur gekoppeld aan deze creditnota."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotica",
@@ -759,7 +813,12 @@
       "vamregDuration": "Duur (dagen)",
       "previewTitle": "Geplande FEFO-toewijzing",
       "error": "DAF-actie mislukt.",
-      "legalExpiry": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload."
+      "legalExpiry": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload.",
+      "contextBanner": "Consultatiecontext: {context}",
+      "contextClient": "Klant",
+      "contextPet": "Dier",
+      "contextVisit": "Gekoppelde visit",
+      "goInvoice": "Factureren"
     }
   },
   "recommend": {
@@ -2730,8 +2789,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Delen",
-          "tip": "Delen van dierdossiers met andere actoren beheren."
+          "label": "Delen beheren",
+          "tip": "Dossierdelen aanmaken of intrekken."
+        },
+        "read": {
+          "label": "Delen bekijken",
+          "tip": "Zien wie toegang heeft (zonder aanmaken of intrekken)."
         }
       },
       "practice": {
@@ -2750,6 +2813,16 @@
         "view": {
           "label": "Commissies bekijken",
           "tip": "Toegang tot het commissieoverzicht."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "Apotheek bekijken",
+          "tip": "Medicijnen, voorraad en DAF raadplegen."
+        },
+        "write": {
+          "label": "Apotheek schrijven",
+          "tip": "Ontvangsten, quarantaine, DAF aanmaken/finaliseren."
         }
       }
     }

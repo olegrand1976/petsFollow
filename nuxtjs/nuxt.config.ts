@@ -35,6 +35,9 @@ export default defineNuxtConfig({
       appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'local',
       /** Pharmacie cabinet (CNK / stock / DAF) — mirror PHARMACY_ENABLED. */
       pharmacyEnabled: process.env.NUXT_PUBLIC_PHARMACY_ENABLED === 'true' || process.env.NUXT_PUBLIC_PHARMACY_ENABLED === '1',
+      /** Facturation Billit — mirror BILLIT_ENABLED (opt-in). */
+      billitEnabled: process.env.NUXT_PUBLIC_BILLIT_ENABLED === 'true' || process.env.NUXT_PUBLIC_BILLIT_ENABLED === '1',
+      /** Ordonnances (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
       prescriptionsEnabled: process.env.NUXT_PUBLIC_PRESCRIPTIONS_ENABLED === 'true' || process.env.NUXT_PUBLIC_PRESCRIPTIONS_ENABLED === '1',
     },
   },

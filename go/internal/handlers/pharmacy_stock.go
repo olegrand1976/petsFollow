@@ -60,7 +60,7 @@ func (a *API) getPharmacySettings(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -76,7 +76,7 @@ func (a *API) patchPharmacySettings(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -130,7 +130,7 @@ func (a *API) listPharmacyDeposits(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -150,7 +150,7 @@ func (a *API) createPharmacyDeposit(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -178,7 +178,7 @@ func (a *API) listPharmacyBatches(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -200,7 +200,7 @@ func (a *API) receivePharmacyBatch(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -250,7 +250,7 @@ func (a *API) adjustPharmacyBatch(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -279,7 +279,7 @@ func (a *API) quarantinePharmacyBatch(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -302,7 +302,7 @@ func (a *API) wastePharmacyBatch(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
 	if !ok {
 		return
 	}
@@ -332,7 +332,7 @@ func (a *API) getPharmacyExpirySummary(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -348,7 +348,7 @@ func (a *API) listPharmacyMovements(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}
@@ -368,7 +368,7 @@ func (a *API) exportPharmacyBatchesCSV(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePharmacyEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
 	if !ok {
 		return
 	}

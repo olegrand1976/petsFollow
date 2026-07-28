@@ -3,6 +3,7 @@
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')">
       <template #actions>
         <ProButton
+          v-if="canWriteClients"
           test-id="clients-app-invite-open"
           variant="secondary"
           class="pro-btn--icon"
@@ -12,6 +13,7 @@
           <ProIcon name="qr_code_2" :size="22" />
         </ProButton>
         <ProButton
+          v-if="canManageShares"
           test-id="clients-invitations-open"
           variant="secondary"
           class="pro-btn--icon clients-invites-btn"
@@ -29,6 +31,7 @@
           </ProBadge>
         </ProButton>
         <ProButton
+          v-if="canWriteClients"
           test-id="create-client-open"
           class="pro-btn--icon"
           :aria-label="$t('clients.create.open')"
@@ -42,6 +45,11 @@
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
 
     <ProAppInviteModal v-model:open="appInviteOpen" />
+
+    <ProConsultationModal
+      v-model:open="consultationOpen"
+      :client-id="consultationClientId"
+    />
 
     <ProModal v-model:open="invitationsOpen" size="lg" :title="$t('clients.invitations.title')">
       <p v-if="inviteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ inviteError }}</p>
@@ -172,8 +180,23 @@
             <td>{{ c.petCount }}</td>
             <td>
               <div class="pro-client-actions">
-                <NuxtLink :to="`/clients/${c.userId}`">{{ $t('common.profile') }}</NuxtLink>
+                <NuxtLink
+                  :to="`/clients/${c.userId}`"
+                  :data-testid="`client-profile-${c.userId}`"
+                >
+                  {{ $t('common.profile') }}
+                </NuxtLink>
                 <button
+                  v-if="canWriteClinical"
+                  type="button"
+                  class="pro-link-btn"
+                  :data-testid="`new-consultation-${c.userId}`"
+                  @click="openConsultation(c.userId)"
+                >
+                  {{ $t('clients.consultation.open') }}
+                </button>
+                <button
+                  v-if="canWriteClients"
                   type="button"
                   class="pro-link-btn"
                   :disabled="sendingId === c.userId"
@@ -208,6 +231,16 @@
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
             <button
+              v-if="canWriteClinical"
+              type="button"
+              class="pro-link-btn pro-kanban-card__action"
+              :data-testid="`new-consultation-kanban-${c.userId}`"
+              @click.prevent="openConsultation(c.userId)"
+            >
+              {{ $t('clients.consultation.open') }}
+            </button>
+            <button
+              v-if="canWriteClients"
               type="button"
               class="pro-link-btn pro-kanban-card__action"
               :disabled="sendingId === c.userId"
@@ -223,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'clients.read' })
 
 type ClientRow = {
   userId: string
@@ -235,6 +268,10 @@ type ClientRow = {
 
 const route = useRoute()
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canWriteClients = computed(() => canPractice('clients.write'))
+const canManageShares = computed(() => canPractice('shares.manage'))
 const { compareStrings } = useFormatters()
 const { mapError } = useApiError()
 const { refresh: refreshNavBadges } = useNavBadges()
@@ -250,9 +287,16 @@ const { viewMode } = useListView('pf-clients-view', 'table')
 
 const invitationsOpen = ref(false)
 const appInviteOpen = ref(false)
+const consultationOpen = ref(false)
+const consultationClientId = ref('')
 const linkRequests = ref<any[]>([])
 const busyInviteId = ref('')
 const inviteError = ref('')
+
+function openConsultation(clientUserId: string) {
+  consultationClientId.value = clientUserId
+  consultationOpen.value = true
+}
 
 function asClientList(raw: unknown): ClientRow[] {
   const list = Array.isArray((raw as any)?.data)
@@ -399,6 +443,10 @@ const kanbanColumns = computed(() => [
 ])
 
 async function loadLinkRequests() {
+  if (!canManageShares.value) {
+    linkRequests.value = []
+    return
+  }
   inviteError.value = ''
   try {
     const res: any = await $fetch('/api/vet/link-requests')
@@ -437,7 +485,7 @@ async function rejectLink(id: string) {
 
 onMounted(async () => {
   await Promise.all([loadClients(), loadLinkRequests()])
-  if (route.query.invitations === '1' || linkRequests.value.length > 0) {
+  if (canManageShares.value && (route.query.invitations === '1' || linkRequests.value.length > 0)) {
     invitationsOpen.value = true
   }
 })

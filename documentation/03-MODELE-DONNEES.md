@@ -25,8 +25,8 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Domaine | Tables |
 |---------|--------|
 | Auth | `identity.users` (+ `professional_specialty` pour `care_pro`), `email_verification_tokens`, `password_reset_tokens` |
-| Cabinet | `practice.practices`, `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations` |
-| ACL pets | `pets.pet_access` (partage dossier) |
+| Cabinet | `practice.practices`, `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations`, `team_members` (rôles + JSON `permissions` — caps `shares.read`/`shares.manage`, `pharmacy.read`/`pharmacy.write`, etc. via `DefaultTeamPermissions`) |
+| ACL pets | `pets.pet_access` (partage dossier) — lecture staff = `shares.read`, mutation = `shares.manage` |
 | Import | `practice.client_import_jobs`, `client_import_rows` (+ grants `000029`) |
 | Animal | `pets.pets`, `pets.dossier_events`, `pets.weight_readings` |
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
@@ -36,7 +36,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Poids | `pets.weight_readings` (historique) ; `pets.pets.weight_kg` = dernier `POST /weights` (peut diverger si PATCH fiche animal sans lecture) |
 | Msg | `messaging.threads`, `messages`, `vet_availability` |
 | Discovery | `discovery.progress`, `discovery.email_journey`, `discovery.email_sends` |
-| Pharmacie | `pharmacy.ref_medications` ; `practice_settings` ; `medication_deposits` ; `medication_batches` (`lot_number` non vide, `expires_on`) ; `stock_movements` (`daf_id` + `daf_item_id` obligatoires si `reason` ∈ {daf, daf_cancel} — `000087`/`000088`) ; `daf_documents` / `daf_items` / `daf_sequences` |
+| Pharmacie | `pharmacy.ref_medications` ; `practice_settings` ; `medication_deposits` ; `medication_batches` (`lot_number` non vide, `expires_on`) ; `stock_movements` (`daf_id` + `daf_item_id` obligatoires si `reason` ∈ {daf, daf_cancel} — `000087`/`000088`) ; `daf_documents` / `daf_items` / `daf_sequences` — API gated `pharmacy.read` / `pharmacy.write` (indépendant de `pets.write_clinical` une fois la clé pharma présente dans l’override ; sinon miroir legacy clinique) |
 | Ordonnances (dev) | `prescriptions.prescriptions` — `status` draft\|signed\|sent\|archived ; `medications` JSONB ; `paper_format` A4\|A5 ; `date_issued` NULL en V1 (posé à la signature phase 2) ; `signature_id` / `pdf_*` réservés phase 2 (`000091`) |
 
 ## Entitlements

@@ -3,12 +3,14 @@ package store
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -378,6 +380,16 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		out["profileComplete"] = complete
 		if ref, _ := s.IsReferenceVet(ctx, u.PracticeID, userID); ref {
 			out["isReferenceVet"] = true
+		}
+		if kernel.IsPracticeStaff(u.Role) {
+			perms, perr := s.PracticePermissions(ctx, u.PracticeID, userID)
+			if perr != nil {
+				// Ne pas faire échouer /me : la nav Nuxt fail-open tant que la clé est absente.
+				log.Printf("GetUserMe practicePermissions user=%s practice=%s: %v", userID, u.PracticeID, perr)
+			} else {
+				// Toujours exposer la map (même vide) pour que le client distingue « erreur » vs « aucun droit ».
+				out["practicePermissions"] = perms
+			}
 		}
 	}
 	return out, nil

@@ -55,7 +55,11 @@
       "portfolio": "Minu portfell",
       "ops": "Ops",
       "salesForce": "Müügimeeskond",
-      "billing": "Palk ja kataloog"
+      "billing": "Palk ja kataloog",
+      "activity": "Tegevus",
+      "pharmacy": "Apteek",
+      "documents": "Dokumendid",
+      "practice": "Kabinet"
     },
     "managerAiModules": "AI CR — meeskond",
     "adminSupport": "Tugi",
@@ -392,7 +396,8 @@
         "5": "Reede",
         "6": "Laupäev"
       }
-    }
+    },
+    "aclDenied": "Teil pole õigust kabineti profiili muuta. Võtke ühendust peaveterinaariga."
   },
   "share": {
     "petTitle": "Jaga lemmiklooma kaarti",
@@ -684,7 +689,16 @@
     "colStatus": "Olek",
     "colTotal": "Kokku koos KM-ga",
     "send": "Saada",
-    "errorGeneric": "Midagi läks valesti"
+    "prefillVisit": "Seotud visiidiga",
+    "amountRequired": "Sisesta kehtiv summa ilma käibemaksuta (> 0).",
+    "errorGeneric": "Midagi läks valesti",
+    "issue": "Väljasta",
+    "noSendProforma": "Proforma — Peppoli pole (väljasta mustandist)",
+    "connectRestricted": "Ainult peaveterinaar saab Billiti ühendust aktiveerida või muuta.",
+    "relatedInvoice": "Algne arve",
+    "relatedInvoicePlaceholder": "Vali arve…",
+    "relatedInvoiceEmpty": "Arveid pole — looge esmalt arve.",
+    "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve."
   },
   "pharmacy": {
     "antibioticWarning": "Antibiootikum",
@@ -2730,8 +2744,12 @@
       },
       "shares": {
         "manage": {
-          "label": "Jagamine",
-          "tip": "Loomatoimikute jagamise haldamine."
+          "label": "Jagamiste haldus",
+          "tip": "Loo või tühista ajaloo jagamised."
+        },
+        "read": {
+          "label": "Jagamiste vaatamine",
+          "tip": "Vaata, kellel on juurdepääs (ilma loomise/tühistamiseta)."
         }
       },
       "practice": {
@@ -2750,6 +2768,16 @@
         "view": {
           "label": "Komisjonide vaatamine",
           "tip": "Juurdepääs komisjonide ülevaatele."
+        }
+      },
+      "pharmacy": {
+        "read": {
+          "label": "Apteegi vaatamine",
+          "tip": "Ravimid, varu ja DAF lugemiseks."
+        },
+        "write": {
+          "label": "Apteegi kirjutamine",
+          "tip": "Vastuvõtud, karantiin, DAF loomine/lõpetamine."
         }
       }
     }
