@@ -30,6 +30,7 @@ func (a *API) registerInvoicingRoutes(r chi.Router) {
 		pr.Get("/admin/invoicing/connections", a.adminInvoicingConnections)
 		pr.Get("/admin/invoicing/saas-targets", a.adminInvoicingSaasTargets)
 		pr.Post("/admin/invoicing/connections/{practiceId}/mark-partner-invoiced", a.adminInvoicingMarkPartner)
+		pr.Post("/admin/invoicing/practices/{practiceId}/saas-billing", a.adminInvoicingSaasBilling)
 		pr.Post("/admin/invoicing/connections/{practiceId}/saas-draft", a.adminInvoicingSaasDraft)
 		pr.Post("/admin/invoicing/connections/{practiceId}/saas-documents/{docId}/send", a.adminInvoicingSaasSend)
 	})
@@ -213,7 +214,7 @@ func (a *API) adminInvoicingSaasTargets(w http.ResponseWriter, r *http.Request) 
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
-	items, err := a.invoicing.ListSaasTargets(r.Context(), 200, 0)
+	items, err := a.invoicing.ListSaasTargets(r.Context(), 200, 0, false)
 	if err != nil {
 		a.writeInvoicingErr(w, r, err)
 		return
@@ -249,6 +250,29 @@ func (a *API) adminInvoicingSaasDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, doc)
+}
+
+func (a *API) adminInvoicingSaasBilling(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	practiceID := chi.URLParam(r, "practiceId")
+	if !isUUID(practiceID) {
+		writeErr(w, r, http.StatusBadRequest, "invalid_id", "invalid_id")
+		return
+	}
+	var body struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if err := httpx.DecodeJSON(r, &body); err != nil || body.Enabled == nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "enabled_required")
+		return
+	}
+	if err := a.invoicing.SetSaasBillingEnabled(r.Context(), practiceID, *body.Enabled); err != nil {
+		a.writeInvoicingErr(w, r, err)
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"practiceId": practiceID, "saasBillingEnabled": *body.Enabled})
 }
 
 func (a *API) adminInvoicingSaasSend(w http.ResponseWriter, r *http.Request) {
@@ -307,6 +331,10 @@ func (a *API) writeInvoicingErr(w http.ResponseWriter, r *http.Request, err erro
 		writeErr(w, r, http.StatusConflict, "partner_mark_not_eligible", "partner_mark_not_eligible")
 	case errors.Is(err, invoicing.ErrMasterNotConfigured):
 		writeErr(w, r, http.StatusServiceUnavailable, "saas_master_not_configured", "saas_master_not_configured")
+	case errors.Is(err, invoicing.ErrSaasNotEligible):
+		writeErr(w, r, http.StatusConflict, "saas_not_eligible", "saas_not_eligible")
+	case errors.Is(err, invoicing.ErrSaasBillingDisabled):
+		writeErr(w, r, http.StatusConflict, "saas_billing_disabled", "saas_billing_disabled")
 	case errors.Is(err, invoicing.ErrGateway):
 		writeErr(w, r, http.StatusBadGateway, "bad_gateway", "invoicing_gateway_error")
 	default:

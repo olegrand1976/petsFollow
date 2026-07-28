@@ -240,7 +240,7 @@ Compte : `vet.demo@petsfollow.test`
 | I7.6 | P1 | Retry rejected | Invoice `rejected` → send | Rejeu → delivered (mock) |
 | I7.7 | P1 | Admin mark-partner | `/admin/invoicing` + confirm + mark | `partnerListedAt` ; liste avec `practiceName` |
 | I7.8 | P1 | Admin alertes ops | Connexions active sans partner >7 j ; usage ≥80 % | KPI + CSV pending PartyID |
-| I7.9 | P1 | Flux A SaaS draft+send | Admin targets actifs BE (sans connect) : draft puis send ; cron C1 `limit≤50` draft-only (Brussels `yyyymm`) | Doc `saas_master` → delivered ; usage inchangé ; `POST /internal/saas-invoices/run` |
+| I7.9 | P1 | Flux A SaaS draft+send | Opt-in + draft puis send ; cron C1 boucle batches (Brussels) | Doc `saas_master` → delivered ; usage inchangé ; `POST /internal/saas-invoices/run` |
 
 Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (I7.1–I7.4) + [`06-admin.spec.ts`](../nuxtjs/tests/e2e/specs/06-admin.spec.ts) I7.9. Auto API : Go `TestInvoicing*` / `TestInvoicingAdminSaasDraft` / `TestInvoicingAdminSaasTargetsAndCron`.
 

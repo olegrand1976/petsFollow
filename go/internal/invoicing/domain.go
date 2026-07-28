@@ -170,8 +170,6 @@ type GatewayStatus struct {
 var (
 	ErrInvalidCounterparty = errors.New("invalid_counterparty")
 	ErrInvalidLines        = errors.New("invalid_lines")
-	ErrSaasNotEligible     = errors.New("saas_not_eligible")
-	ErrSaasBillingDisabled = errors.New("saas_billing_disabled")
 	reDigits               = regexp.MustCompile(`^\d+$`)
 	reBEVat                = regexp.MustCompile(`(?i)^BE0?\d{9,10}$`)
 	reITCodice             = regexp.MustCompile(`(?i)^[A-Z0-9]{7}$`)

@@ -29,6 +29,8 @@ var (
 	ErrOrderPersistFailed  = errors.New("order_persist_failed")
 	ErrPartnerNotEligible  = errors.New("partner_mark_not_eligible")
 	ErrMasterNotConfigured = errors.New("saas_master_not_configured")
+	ErrSaasNotEligible     = errors.New("saas_not_eligible")
+	ErrSaasBillingDisabled = errors.New("saas_billing_disabled")
 	// ErrGateway wraps live/mock Billit HTTP failures (mapped to HTTP 502).
 	ErrGateway = errors.New("invoicing_gateway")
 )
@@ -58,7 +60,9 @@ type Store interface {
 	DeleteWebhookEvent(ctx context.Context, eventID string) error
 	IncrementUsage(ctx context.Context, practiceID string, yyyymm int) error
 	UsageForMonth(ctx context.Context, practiceID string, yyyymm int) (int, error)
-	ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) ([]SaasTarget, error)
+	ListSaasTargets(ctx context.Context, yyyymm, limit, offset int, optedInOnly bool, allowlist []string) ([]SaasTarget, error)
+	IsSaasEligible(ctx context.Context, practiceID string, allowlist []string) (eligible, billingEnabled bool, err error)
+	SetSaasBillingEnabled(ctx context.Context, practiceID string, enabled bool) error
 }
 
 type Service struct {
@@ -455,12 +459,18 @@ func (s *Service) ListAdminConnections(ctx context.Context) ([]Connection, error
 }
 
 const (
-	defaultSaasCronLimit = 50
-	maxSaasCronLimit     = 100
-	maxSaasCronErrors    = 20
+	defaultSaasCronLimit   = 50
+	maxSaasCronLimit       = 100
+	maxSaasCronErrors      = 20
+	maxSaasCronBatches     = 40 // 40×50 = 2000 practices max per cron call
 )
 
-func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int) ([]SaasTarget, error) {
+func (s *Service) saasAllowlist() []string {
+	return s.cfg.InvoicingSaasAllowlist
+}
+
+// ListSaasTargets returns Flux A candidates. optedInOnly=true for cron (billing flag / allowlist).
+func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int, optedInOnly bool) ([]SaasTarget, error) {
 	if !s.Enabled() {
 		return nil, ErrDisabled
 	}
@@ -470,7 +480,7 @@ func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int) ([]Saa
 	if offset < 0 {
 		offset = 0
 	}
-	items, err := s.store.ListSaasTargets(ctx, saasYYYYMM(), limit, offset)
+	items, err := s.store.ListSaasTargets(ctx, saasYYYYMM(), limit, offset, optedInOnly, s.saasAllowlist())
 	if err != nil {
 		return nil, err
 	}
@@ -481,9 +491,9 @@ func (s *Service) ListSaasTargets(ctx context.Context, limit, offset int) ([]Saa
 	return items, nil
 }
 
-// RunMonthlySaasDrafts creates Flux A drafts for eligible practices (C1 — no Peppol send).
-// limit/offset paginate Billit order creation to avoid cron timeouts (default 50, max 100).
-func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int) (SaasDraftRunResult, error) {
+// RunMonthlySaasDrafts creates Flux A drafts for opted-in practices (C1 — no Peppol send).
+// When all=true, loops offset batches until a short page (scanned < limit) or max batches.
+func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int, all bool) (SaasDraftRunResult, error) {
 	out := SaasDraftRunResult{YYYYMM: saasYYYYMM()}
 	if !s.Enabled() {
 		return out, ErrDisabled
@@ -502,30 +512,91 @@ func (s *Service) RunMonthlySaasDrafts(ctx context.Context, limit, offset int) (
 	}
 	out.Limit = limit
 	out.Offset = offset
-	targets, err := s.ListSaasTargets(ctx, limit, offset)
-	if err != nil {
-		return out, err
-	}
-	out.Scanned = len(targets)
-	for _, t := range targets {
-		hadOrder := t.SaasDocument != nil && t.SaasDocument.BillitOrderID != ""
-		_, err := s.CreateSaasDraft(ctx, t.PracticeID, "")
+
+	runBatch := func(off int) (SaasDraftRunResult, error) {
+		batch := SaasDraftRunResult{YYYYMM: out.YYYYMM, Limit: limit, Offset: off}
+		targets, err := s.ListSaasTargets(ctx, limit, off, true)
 		if err != nil {
-			out.Failed++
+			return batch, err
+		}
+		batch.Scanned = len(targets)
+		for _, t := range targets {
+			hadOrder := t.SaasDocument != nil && t.SaasDocument.BillitOrderID != ""
+			_, err := s.CreateSaasDraft(ctx, t.PracticeID, "")
+			if err != nil {
+				batch.Failed++
+				if len(batch.Errors) < maxSaasCronErrors {
+					batch.Errors = append(batch.Errors, t.PracticeID+": "+err.Error())
+				} else {
+					batch.ErrorsTruncated = true
+				}
+				continue
+			}
+			if hadOrder {
+				batch.Unchanged++
+			} else {
+				batch.Drafted++
+			}
+		}
+		return batch, nil
+	}
+
+	if !all {
+		batch, err := runBatch(offset)
+		if err != nil {
+			return out, err
+		}
+		batch.Batches = 1
+		batch.Done = batch.Scanned < limit
+		return batch, nil
+	}
+
+	off := offset
+	for i := 0; i < maxSaasCronBatches; i++ {
+		batch, err := runBatch(off)
+		if err != nil {
+			return out, err
+		}
+		out.Batches++
+		out.Scanned += batch.Scanned
+		out.Drafted += batch.Drafted
+		out.Unchanged += batch.Unchanged
+		out.Failed += batch.Failed
+		for _, e := range batch.Errors {
 			if len(out.Errors) < maxSaasCronErrors {
-				out.Errors = append(out.Errors, t.PracticeID+": "+err.Error())
+				out.Errors = append(out.Errors, e)
 			} else {
 				out.ErrorsTruncated = true
 			}
-			continue
 		}
-		if hadOrder {
-			out.Unchanged++
-		} else {
-			out.Drafted++
+		if batch.ErrorsTruncated {
+			out.ErrorsTruncated = true
 		}
+		if batch.Scanned < limit {
+			out.Done = true
+			break
+		}
+		off += limit
+	}
+	out.Offset = offset
+	if !out.Done && out.Batches >= maxSaasCronBatches {
+		out.Done = false
 	}
 	return out, nil
+}
+
+func (s *Service) SetSaasBillingEnabled(ctx context.Context, practiceID string, enabled bool) error {
+	if !s.Enabled() {
+		return ErrDisabled
+	}
+	eligible, _, err := s.store.IsSaasEligible(ctx, practiceID, nil)
+	if err != nil {
+		return err
+	}
+	if !eligible {
+		return ErrSaasNotEligible
+	}
+	return s.store.SetSaasBillingEnabled(ctx, practiceID, enabled)
 }
 
 func (s *Service) MarkPartnerListed(ctx context.Context, practiceID string) error {
@@ -572,6 +643,16 @@ func (s *Service) CreateSaasDraft(ctx context.Context, practiceID, adminUserID s
 	}
 	if !complete {
 		return Document{}, ErrProfileIncomplete
+	}
+	eligible, billingOn, err := s.store.IsSaasEligible(ctx, practiceID, s.saasAllowlist())
+	if err != nil {
+		return Document{}, err
+	}
+	if !eligible {
+		return Document{}, ErrSaasNotEligible
+	}
+	if !billingOn {
+		return Document{}, ErrSaasBillingDisabled
 	}
 	country := strings.ToUpper(strings.TrimSpace(profile.Country))
 	if country == "" {

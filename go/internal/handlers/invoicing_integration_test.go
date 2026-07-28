@@ -1042,7 +1042,8 @@ func TestInvoicingAdminSaasDraft(t *testing.T) {
 		    address_line1 = 'Rue Demo 1',
 		    city = 'Bruxelles',
 		    postal_code = '1000',
-		    profile_completed_at = COALESCE(profile_completed_at, NOW())
+		    profile_completed_at = COALESCE(profile_completed_at, NOW()),
+		    saas_billing_enabled = TRUE
 		WHERE id = $1`, practiceID, email); err != nil {
 		t.Fatal(err)
 	}

@@ -1959,13 +1959,18 @@
       "saasSendUnavailable": "Nessuna bozza SaaS inviabile",
       "saasStatus": "SaaS: {status}",
       "saasTitle": "Flux A — fatture SaaS",
-      "saasSubtitle": "Strutture con profilo fiscale BE completo (con o senza connect Billit).",
+      "saasSubtitle": "Strutture BE attive — opt-in, poi bozza / invio via master Billit.",
       "saasEmpty": "Nessuna struttura SaaS idonea",
       "colVat": "IVA",
       "colConnect": "Billit connect",
       "colSaas": "SaaS mese",
       "connectYes": "Connesso",
-      "connectNo": "Senza connect"
+      "connectNo": "Senza connect",
+      "saasBillingOff": "Flux A non attivo per questa struttura (opt-in obbligatorio)",
+      "saasEnable": "Attiva Flux A",
+      "saasEnableConfirm": "Attivare la fatturazione SaaS (Flux A) per « {name} »? Il cron mensile creerà bozze.",
+      "saasEnableOk": "Flux A attivato per questa struttura",
+      "saasEnableError": "Attivazione Flux A non riuscita"
     }
   },
   "calendar": {

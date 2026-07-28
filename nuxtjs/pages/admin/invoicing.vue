@@ -180,6 +180,15 @@
             <td>
               <div class="pro-field-inline-wrap">
                 <ProButton
+                  v-if="!c.saasBillingEnabled"
+                  variant="secondary"
+                  :disabled="busyId === c.practiceId"
+                  :test-id="`admin-invoicing-saas-enable-${c.practiceId}`"
+                  @click="enableSaasBilling(c)"
+                >
+                  {{ $t('admin.invoicing.saasEnable') }}
+                </ProButton>
+                <ProButton
                   v-if="canCreateSaasDraft(c)"
                   variant="secondary"
                   :disabled="busyId === c.practiceId"
@@ -239,6 +248,7 @@ type SaasTarget = {
   contactEmail?: string
   vatNumber?: string
   hasBillitConnect?: boolean
+  saasBillingEnabled?: boolean
   saasDraftEnabled?: boolean
   saasDocument?: SaasDoc
 }
@@ -384,6 +394,10 @@ async function createSaasDraft(c: SaasTarget) {
     error.value = t('admin.invoicing.saasUnavailable')
     return
   }
+  if (!c.saasBillingEnabled) {
+    error.value = t('admin.invoicing.saasBillingOff')
+    return
+  }
   const label = c.practiceName || shortId(c.practiceId)
   if (!confirm(t('admin.invoicing.saasConfirm', { name: label }))) return
   busyId.value = c.practiceId
@@ -407,14 +421,14 @@ async function createSaasDraft(c: SaasTarget) {
 }
 
 function canCreateSaasDraft(c: SaasTarget) {
-  if (!c.saasDraftEnabled) return false
+  if (!c.saasDraftEnabled || !c.saasBillingEnabled) return false
   const st = c.saasDocument?.status
   if (!st) return true
   return st === 'draft' || st === 'rejected'
 }
 
 function canSendSaas(c: SaasTarget) {
-  if (!c.saasDraftEnabled || !c.saasDocument?.id) return false
+  if (!c.saasDraftEnabled || !c.saasBillingEnabled || !c.saasDocument?.id) return false
   return c.saasDocument.status === 'draft' || c.saasDocument.status === 'rejected'
 }
 
@@ -426,6 +440,26 @@ function saasStatusVariant(status: string): 'success' | 'warning' | 'danger' | '
     case 'rejected':
     case 'cancelled': return 'danger'
     default: return 'neutral'
+  }
+}
+
+async function enableSaasBilling(c: SaasTarget) {
+  const label = c.practiceName || shortId(c.practiceId)
+  if (!confirm(t('admin.invoicing.saasEnableConfirm', { name: label }))) return
+  busyId.value = c.practiceId
+  error.value = ''
+  msg.value = ''
+  try {
+    await $fetch(`/api/admin/invoicing/practices/${encodeURIComponent(c.practiceId)}/saas-billing`, {
+      method: 'POST',
+      body: { enabled: true },
+    })
+    msg.value = t('admin.invoicing.saasEnableOk')
+    await load()
+  } catch (e: any) {
+    error.value = e?.data?.error?.message || e?.message || t('admin.invoicing.saasEnableError')
+  } finally {
+    busyId.value = ''
   }
 }
 

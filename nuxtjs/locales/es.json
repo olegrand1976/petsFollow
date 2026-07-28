@@ -1466,13 +1466,18 @@
       "saasSendUnavailable": "No hay borrador SaaS enviable",
       "saasStatus": "SaaS: {status}",
       "saasTitle": "Flux A — facturas SaaS",
-      "saasSubtitle": "Clínicas con perfil fiscal BE completo (con o sin connect Billit).",
+      "saasSubtitle": "Clínicas BE activas — activar opt-in, luego borrador / envío master Billit.",
       "saasEmpty": "Ninguna clínica elegible SaaS",
       "colVat": "IVA",
       "colConnect": "Billit connect",
       "colSaas": "SaaS mes",
       "connectYes": "Conectado",
-      "connectNo": "Sin connect"
+      "connectNo": "Sin connect",
+      "saasBillingOff": "Flux A no activado para esta clínica (opt-in obligatorio)",
+      "saasEnable": "Activar Flux A",
+      "saasEnableConfirm": "¿Activar facturación SaaS (Flux A) para « {name} »? El cron mensual creará borradores.",
+      "saasEnableOk": "Flux A activado para esta clínica",
+      "saasEnableError": "Error al activar Flux A"
     }
   },
   "commissions": {

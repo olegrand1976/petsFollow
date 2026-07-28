@@ -802,13 +802,16 @@ func (s *Store) UsageForMonth(ctx context.Context, practiceID string, yyyymm int
 }
 
 // ListSaasTargets returns active BE practices with a complete fiscal profile (Flux A eligible).
-// Active = profile_completed_at set + at least one verified practice staff user.
-func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) ([]invoicing.SaasTarget, error) {
+// Active = profile_completed_at + verified staff. optedInOnly filters saas_billing_enabled / allowlist.
+func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int, optedInOnly bool, allowlist []string) ([]invoicing.SaasTarget, error) {
 	if limit <= 0 {
 		limit = 200
 	}
 	if offset < 0 {
 		offset = 0
+	}
+	if allowlist == nil {
+		allowlist = []string{}
 	}
 	yyyymmKey := strconv.Itoa(yyyymm)
 	rows, err := s.pool.Query(ctx, `
@@ -817,6 +820,7 @@ func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) 
 		       COALESCE(p.contact_email, ''),
 		       COALESCE(p.vat_number, ''),
 		       (c.practice_id IS NOT NULL) AS has_connect,
+		       (p.saas_billing_enabled OR p.id = ANY($4::uuid[])) AS saas_billing_enabled,
 		       d.id::text, d.status, d.billit_order_id, d.total_incl_cents, d.peppol_status
 		FROM practice.practices p
 		LEFT JOIN invoicing.practice_connections c ON c.practice_id = p.id
@@ -836,8 +840,13 @@ func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) 
 		      AND u.role IN ('vet', 'vet_assistant', 'secretary')
 		      AND u.email_verified_at IS NOT NULL
 		  )
+		  AND (
+		    NOT $5::bool
+		    OR p.saas_billing_enabled
+		    OR p.id = ANY($4::uuid[])
+		  )
 		ORDER BY COALESCE(NULLIF(TRIM(p.company_legal_name), ''), p.name)
-		LIMIT $2 OFFSET $3`, yyyymmKey, limit, offset)
+		LIMIT $2 OFFSET $3`, yyyymmKey, limit, offset, allowlist, optedInOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -849,6 +858,7 @@ func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) 
 		var total *int64
 		if err := rows.Scan(
 			&t.PracticeID, &t.PracticeName, &t.ContactEmail, &t.VATNumber, &t.HasBillitConnect,
+			&t.SaasBillingEnabled,
 			&docID, &status, &orderID, &total, &peppol,
 		); err != nil {
 			return nil, err
@@ -872,4 +882,49 @@ func (s *Store) ListSaasTargets(ctx context.Context, yyyymm, limit, offset int) 
 		out = append(out, t)
 	}
 	return out, rows.Err()
+}
+
+// IsSaasEligible reports fiscal/active BE readiness and whether Flux A billing is opted-in.
+func (s *Store) IsSaasEligible(ctx context.Context, practiceID string, allowlist []string) (eligible, billingEnabled bool, err error) {
+	if allowlist == nil {
+		allowlist = []string{}
+	}
+	err = s.pool.QueryRow(ctx, `
+		SELECT
+		  (
+		    p.profile_completed_at IS NOT NULL
+		    AND TRIM(COALESCE(p.company_legal_name, '')) <> ''
+		    AND TRIM(COALESCE(p.vat_number, '')) <> ''
+		    AND TRIM(COALESCE(p.company_number, '')) <> ''
+		    AND TRIM(COALESCE(p.contact_email, '')) <> ''
+		    AND UPPER(REPLACE(p.vat_number, ' ', '')) LIKE 'BE%'
+		    AND EXISTS (
+		      SELECT 1 FROM identity.users u
+		      WHERE u.practice_id = p.id
+		        AND u.role IN ('vet', 'vet_assistant', 'secretary')
+		        AND u.email_verified_at IS NOT NULL
+		    )
+		  ) AS eligible,
+		  (p.saas_billing_enabled OR p.id = ANY($2::uuid[])) AS billing_enabled
+		FROM practice.practices p
+		WHERE p.id = $1`, practiceID, allowlist).Scan(&eligible, &billingEnabled)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, false, nil
+		}
+		return false, false, err
+	}
+	return eligible, billingEnabled, nil
+}
+
+func (s *Store) SetSaasBillingEnabled(ctx context.Context, practiceID string, enabled bool) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE practice.practices SET saas_billing_enabled = $2 WHERE id = $1`, practiceID, enabled)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return invoicing.ErrSaasNotEligible
+	}
+	return nil
 }

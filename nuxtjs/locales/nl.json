@@ -1497,13 +1497,18 @@
       "saasSendUnavailable": "Geen verzendbaar SaaS-concept",
       "saasStatus": "SaaS: {status}",
       "saasTitle": "Flux A — SaaS-facturen",
-      "saasSubtitle": "Praktijken met volledig BE-fiscaal profiel (met of zonder Billit-connect).",
+      "saasSubtitle": "Actieve BE-praktijken — opt-in, daarna concept / verzending via Billit-master.",
       "saasEmpty": "Geen geschikte SaaS-praktijk",
       "colVat": "BTW",
       "colConnect": "Billit-connect",
       "colSaas": "SaaS-maand",
       "connectYes": "Verbonden",
-      "connectNo": "Zonder connect"
+      "connectNo": "Zonder connect",
+      "saasBillingOff": "Flux A niet geactiveerd voor deze praktijk (opt-in vereist)",
+      "saasEnable": "Flux A activeren",
+      "saasEnableConfirm": "SaaS-facturatie (Flux A) activeren voor “{name}”? De maandelijkse cron maakt concepten.",
+      "saasEnableOk": "Flux A geactiveerd voor deze praktijk",
+      "saasEnableError": "Flux A activeren mislukt"
     }
   },
   "commissions": {

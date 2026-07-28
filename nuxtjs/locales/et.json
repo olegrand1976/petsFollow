@@ -1466,13 +1466,18 @@
       "saasSendUnavailable": "Saadetavat SaaS mustandit pole",
       "saasStatus": "SaaS: {status}",
       "saasTitle": "Flux A — SaaS arved",
-      "saasSubtitle": "Kliinikud täieliku BE maksuprofiiliga (Billiti ühendusega või ilma).",
+      "saasSubtitle": "Aktiivsed BE kliinikud — opt-in, seejärel mustand / saatmine Billit masteriga.",
       "saasEmpty": "Sobivat SaaS kliinikut pole",
       "colVat": "KMKR",
       "colConnect": "Billit ühendus",
       "colSaas": "SaaS kuu",
       "connectYes": "Ühendatud",
-      "connectNo": "Ilma ühenduseta"
+      "connectNo": "Ilma ühenduseta",
+      "saasBillingOff": "Flux A pole selle kliiniku jaoks aktiveeritud (opt-in nõutav)",
+      "saasEnable": "Aktiveeri Flux A",
+      "saasEnableConfirm": "Aktiveeri SaaS-arveldus (Flux A) „{name}” jaoks? Igakuine cron loob mustandid.",
+      "saasEnableOk": "Flux A aktiveeritud",
+      "saasEnableError": "Flux A aktiveerimine ebaõnnestus"
     }
   },
   "commissions": {

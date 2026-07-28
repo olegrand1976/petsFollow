@@ -1,6 +1,6 @@
 # 33 — Plan d’implémentation Billit (facturation Peppol)
 
-**Statut** : **socle livré** (mock T0/T1 + client live + multi-pays + webhook durci) — pilote sandbox Billit ops ; Flux A SaaS admin = **brouillon + envoi Peppol master** + cron C1 draft-only paginé (`saas-targets` actifs BE / `saas-invoices/run?limit=` ; pas encore send auto).  
+**Statut** : **socle livré** (mock T0/T1 + client live + multi-pays + webhook durci) — pilote sandbox Billit ops ; Flux A SaaS = **opt-in + brouillon + envoi Peppol master** + cron C1 draft-only bouclé (`saas-targets` / `saas-invoices/run` ; smoke `make billit-saas-master-smoke` ; pas encore send auto).  
 **Décisions produit figées** (sessions 2026-07) :
 
 | Décision | Choix |

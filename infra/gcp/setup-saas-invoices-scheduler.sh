@@ -15,7 +15,7 @@ gcloud config set project "$GCP_PROJECT_ID" >/dev/null
 
 SECRET_NAME="petsfollow-saas-invoices-secret"
 JOB_NAME="petsfollow-saas-invoices"
-# 1er du mois 06:00 Brussels — draft only (API cap 50/appel ; ?offset= pour batches) ; envoi Peppol manuel admin.
+# 1er du mois 06:00 Brussels — draft only (API boucle batches limit=50 ; opted-in only) ; envoi Peppol manuel admin.
 SCHEDULE="0 6 1 * *"
 TZ="Europe/Brussels"
 API_URL="${PUBLIC_API_URL%/}"

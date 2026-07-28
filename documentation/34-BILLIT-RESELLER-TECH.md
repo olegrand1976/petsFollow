@@ -507,17 +507,20 @@ Pas d’API Billit publique garantie pour basculer *Invoice to* → **outil admi
 
 **MVP livré** (draft + send Peppol master Billit + cron C1 draft-only) :
 
-1. Cabinet **actif** BE : `profile_completed_at` + staff vérifié (`vet` / `vet_assistant` / `secretary`) + profil fiscal complet (raison sociale + TVA + n° entreprise + email).  
-2. Admin Pro `/admin/invoicing` — section **Flux A** (`GET …/saas-targets`, avec ou sans connect Billit) :  
+1. Cabinet **actif** BE : `profile_completed_at` + staff vérifié + profil fiscal complet.  
+2. **Opt-in** `saas_billing_enabled` (admin « Activer Flux A ») ou `INVOICING_SAAS_ALLOWLIST` — requis pour draft/cron.  
+3. Admin Pro `/admin/invoicing` — section **Flux A** (`GET …/saas-targets`) :  
+   - **Activer Flux A** → `POST …/practices/{id}/saas-billing`  
    - **Brouillon SaaS** → `POST …/saas-draft`  
    - **Envoyer SaaS** → `POST …/saas-documents/{docId}/send`  
-3. Cron mensuel C1 : `POST /api/v1/internal/saas-invoices/run?limit=50&offset=0` + `X-Saas-Invoices-Secret` (`SAAS_INVOICES_SECRET`) — brouillons uniquement (cap **50**/appel, max 100 ; `offset` pour batches) ; mois = **Europe/Brussels** ; send reste manuel. Scheduler : `make gcp-saas-invoices-scheduler`.  
-4. Document `source=saas_master`, idempotence `saas:{practiceId}:{yyyymm}` (Brussels), montant `INVOICING_SAAS_PRICE_EUR_CENTS` (défaut **8800**).  
-5. Credentials : `BILLIT_MASTER_*` (live) ; mock → defaults.  
-6. Docs SaaS invisibles Pro ; webhook/send sans brûler quota cabinet.  
-7. MVP **BE only**.
+4. Cron mensuel C1 : `POST /api/v1/internal/saas-invoices/run` + `X-Saas-Invoices-Secret` — **boucle** batches (`limit` défaut 50) jusqu’à `scanned < limit` (`done=true`) ; `?batch=1&offset=` pour un lot ; mois = **Europe/Brussels**. Scheduler : `make gcp-saas-invoices-scheduler`.  
+5. Document `source=saas_master`, idempotence `saas:{practiceId}:{yyyymm}` (Brussels), montant `INVOICING_SAAS_PRICE_EUR_CENTS` (défaut **8800**).  
+6. Credentials : `BILLIT_MASTER_*` (live) ; mock → defaults.  
+7. Docs SaaS invisibles Pro ; webhook/send sans brûler quota cabinet.  
+8. MVP **BE only**.  
+9. Smoke live 1 cabinet : `make billit-saas-master-smoke` (+ `BILLIT_SMOKE_SAAS_SEND=1` pour Peppol).
 
-Reste hors MVP : cron **send** auto (C2), multi-pays, email ops, flag « payant » dédié (filtre actif = profil complété + staff vérifié).
+Reste hors MVP : cron **send** auto (C2), multi-pays, email ops.
 
 ---
 

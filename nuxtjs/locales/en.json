@@ -1497,13 +1497,18 @@
       "saasSendUnavailable": "No sendable SaaS draft",
       "saasStatus": "SaaS: {status}",
       "saasTitle": "Flux A — SaaS invoices",
-      "saasSubtitle": "Practices with complete BE fiscal profile (with or without Billit connect).",
+      "saasSubtitle": "Active BE practices — enable opt-in, then draft / send via Billit master.",
       "saasEmpty": "No eligible SaaS practice",
       "colVat": "VAT",
       "colConnect": "Billit connect",
       "colSaas": "SaaS month",
       "connectYes": "Connected",
-      "connectNo": "No connect"
+      "connectNo": "No connect",
+      "saasBillingOff": "Flux A not enabled for this practice (opt-in required)",
+      "saasEnable": "Enable Flux A",
+      "saasEnableConfirm": "Enable SaaS billing (Flux A) for “{name}”? The monthly cron will create drafts.",
+      "saasEnableOk": "Flux A enabled for this practice",
+      "saasEnableError": "Failed to enable Flux A"
     }
   },
   "commissions": {

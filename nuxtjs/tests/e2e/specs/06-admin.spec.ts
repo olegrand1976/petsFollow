@@ -66,6 +66,11 @@ test.describe('admin Flux A SaaS I7.9', { tag: ['@p1', '@invoicing'] }, () => {
     }
 
     await expect(page.getByTestId('admin-invoicing-saas-list')).toBeVisible()
+    const enableBtn = page.locator('[data-testid^="admin-invoicing-saas-enable-"]').first()
+    if (await enableBtn.count() > 0) {
+      await enableBtn.click()
+      await expect(page.getByTestId('admin-invoicing-msg')).toBeVisible({ timeout: 20000 })
+    }
     const draftBtn = page.locator('[data-testid^="admin-invoicing-saas-draft-"]').first()
     if (await draftBtn.count() === 0) {
       test.skip(true, 'no SaaS draft button (master off or all delivered)')

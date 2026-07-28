@@ -477,14 +477,14 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 		INSERT INTO practice.practices (
 			id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at,
 			company_legal_name, vat_number, company_number, legal_form, billing_same_as_practice,
-			payout_iban, payout_bic, payout_account_holder
+			payout_iban, payout_bic, payout_account_holder, saas_billing_enabled
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END,
-			$11, $12, $13, $14, TRUE, $15, $16, $17
+			$11, $12, $13, $14, TRUE, $15, $16, $17, $18
 		)`,
 		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile,
 		payoutLegalName(p), payoutVAT(p), payoutCompanyNumber(p), payoutLegalForm(p),
-		payoutIBAN(p), "GEBABEBB", payoutHolder(p)); err != nil {
+		payoutIBAN(p), "GEBABEBB", payoutHolder(p), !p.incompleteProfile); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `

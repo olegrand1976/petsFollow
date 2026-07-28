@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -19,6 +19,7 @@ help:
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
 	@echo "  make api-billit-live  API Go Billit live (MOCK=false — secrets requis)"
 	@echo "  make billit-sandbox-smoke  gates webhook+routes live (doc 34)"
+	@echo "  make billit-saas-master-smoke  Flux A draft (+send) via BILLIT_MASTER_*"
 	@echo "  make nuxtjs-dev     Web Pro Nuxt (autre terminal, port 3002)"
 	@echo "  make flutter-dev    Flutter pets staging (émulateur) + Google Sign-In"
 	@echo "  make test-go        tests Go"
@@ -154,6 +155,10 @@ smoke:
 # Gates Billit live (doc 34). Refuse si MOCK=true. Optionnel: BILLIT_SMOKE_PARTY_ID + BILLIT_SMOKE_API_KEY.
 billit-sandbox-smoke:
 	@bash scripts/smoke-billit-sandbox.sh
+
+# Flux A live : 1 cabinet draft master (+ send si BILLIT_SMOKE_SAAS_SEND=1).
+billit-saas-master-smoke:
+	@bash scripts/smoke-billit-saas-master.sh
 
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
