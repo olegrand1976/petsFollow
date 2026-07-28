@@ -330,6 +330,44 @@ func (s *Store) UpdateVisitStatus(ctx context.Context, id, status string) (Visit
 	return s.GetVisit(ctx, id)
 }
 
+// CancelStaleConsultationOrphans cancels walk-in visits still confirmed after olderThan
+// with no persisted CR (empty Ensure draft counts as orphan). Predicate shared with
+// VisitHasPersistedReport via sqlVisitReportIsPersisted.
+func (s *Store) CancelStaleConsultationOrphans(ctx context.Context, olderThan time.Time, limit int) (int, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	tag, err := s.pool.Exec(ctx, `
+		WITH stale AS (
+			SELECT v.id
+			FROM visits.visits v
+			WHERE COALESCE(v.consultation_session, false) = true
+			  AND v.status = 'confirmed'
+			  AND v.scheduled_at IS NOT NULL
+			  AND v.scheduled_at < $1
+			  AND NOT EXISTS (
+				SELECT 1 FROM visits.visit_reports r
+				WHERE r.visit_id = v.id
+				  AND `+sqlVisitReportIsPersisted+`
+			  )
+			ORDER BY v.scheduled_at ASC
+			LIMIT $2
+		)
+		UPDATE visits.visits v
+		SET status = 'cancelled',
+			proposed_scheduled_at = NULL,
+			pending_action_by = NULL,
+			status_before_reschedule = NULL
+		FROM stale
+		WHERE v.id = stale.id`,
+		olderThan, limit,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
+}
+
 func (s *Store) ConfirmVisit(ctx context.Context, id string) (Visit, error) {
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE visits.visits

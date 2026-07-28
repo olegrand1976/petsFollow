@@ -17,23 +17,12 @@ import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_scr
 import 'package:petsfollow_mobile/features/messaging/presentation/messaging_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
+import 'package:petsfollow_mobile/features/shell/consultation_errors.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/pro_light_pet_screen.dart';
 import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-bool _isConsultationHasReportError(Object e) {
-  if (e is! DioException) return false;
-  final data = e.response?.data;
-  if (data is! Map) return false;
-  final err = data['error'];
-  if (err is! Map) return false;
-  final msgKey = (err['msgKey'] ?? err['messageKey'])?.toString();
-  if (msgKey == 'consultation_has_report') return true;
-  // Filet si msgKey absent : cancel walk-in → code conflict + 409.
-  return e.response?.statusCode == 409 && err['code']?.toString() == 'conflict';
-}
 
 /// Terrain shell for care_pro (vet_light, farrier, …) and cabinet `vet`.
 class ProLightShellScreen extends StatefulWidget {
@@ -317,6 +306,10 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      // No swipe/barrier dismiss: blocks cancel-vs-PUT race while _busy
+      // (PopScope still allows system back when idle).
+      isDismissible: false,
+      enableDrag: false,
       builder: (ctx) => _VisitReportSheet(
         visitId: visitId,
         initialText: initialText,
@@ -334,7 +327,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
       try {
         await ApiClient.instance.updateVisit(visitId, 'cancelled');
       } on DioException catch (e) {
-        if (!_isConsultationHasReportError(e)) {
+        if (!isConsultationHasReportError(e)) {
           // best-effort cleanup
         }
         // 409 consultation_has_report → CR already persisted; keep visit.

@@ -13,6 +13,9 @@ import (
 )
 
 const retentionInactivity = 3 * 365 * 24 * time.Hour // « 3 ans d'inactivité » des textes légaux
+// Min age before a walk-in without CR can be cancelled. Effective delay is this age
+// plus the next daily retention cron (03:30 — infra/gcp/setup-retention-scheduler.sh).
+const consultationOrphanMaxAge = 6 * time.Hour
 
 // secretHeaderOK compare un secret de header interne en temps constant.
 func secretHeaderOK(r *http.Request, header, secret string) bool {
@@ -54,14 +57,15 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"candidates":           len(accounts),
-		"purgedClients":        purgedClients,
-		"anonymizedPros":       anonymizedPros,
-		"failed":               failed,
-		"cutoff":               cutoff,
-		"purgedDossierShares":  a.purgeExpiredDossierShares(r.Context(), ""),
-		"purgedWebhookEvents":  a.purgeOldInvoicingWebhooks(r.Context()),
-		"rejectedStaleSending": a.rejectStaleInvoicingSending(r.Context()),
+		"candidates":                     len(accounts),
+		"purgedClients":                  purgedClients,
+		"anonymizedPros":                 anonymizedPros,
+		"failed":                         failed,
+		"cutoff":                         cutoff,
+		"purgedDossierShares":            a.purgeExpiredDossierShares(r.Context(), ""),
+		"purgedWebhookEvents":            a.purgeOldInvoicingWebhooks(r.Context()),
+		"rejectedStaleSending":           a.rejectStaleInvoicingSending(r.Context()),
+		"cancelledStaleConsultations":    a.cancelStaleConsultationOrphans(r.Context()),
 	})
 }
 
@@ -81,6 +85,15 @@ func (a *API) rejectStaleInvoicingSending(ctx context.Context) int {
 	n, err := a.store.MarkStaleSendingDocuments(ctx, time.Now().Add(-invoicingSendingStale), 200)
 	if err != nil {
 		fmt.Printf("retention purge: stale invoicing sending failed: %v\n", err)
+		return 0
+	}
+	return n
+}
+
+func (a *API) cancelStaleConsultationOrphans(ctx context.Context) int {
+	n, err := a.store.CancelStaleConsultationOrphans(ctx, time.Now().Add(-consultationOrphanMaxAge), 200)
+	if err != nil {
+		fmt.Printf("retention purge: stale consultations failed: %v\n", err)
 		return 0
 	}
 	return n

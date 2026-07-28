@@ -292,6 +292,12 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Walk-in: closing the medical loop marks the visit done (CTA Terminer stays idempotent).
+	if visit.ConsultationSession && visit.Status == "confirmed" {
+		if _, derr := a.store.UpdateVisitStatus(r.Context(), visit.ID, "done"); derr != nil {
+			fmt.Printf("finalizeVisitReport: auto-done walk-in %s: %v\n", visit.ID, derr)
+		}
+	}
 	report.AudioURL = ""
 	report.AudioObjectKey = ""
 	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageFinalize)

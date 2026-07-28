@@ -21,10 +21,7 @@ export type StartConsultationInput = {
 function isConsultationHasReportError(e: any): boolean {
   const err = e?.data?.error
   const msgKey = err?.msgKey || err?.messageKey
-  if (msgKey === 'consultation_has_report') return true
-  // Filet si msgKey absent : cancel walk-in → code conflict + 409.
-  const status = e?.statusCode ?? e?.status ?? e?.response?.status
-  return status === 409 && err?.code === 'conflict'
+  return msgKey === 'consultation_has_report'
 }
 
 export function useConsultationFlow() {

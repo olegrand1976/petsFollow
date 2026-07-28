@@ -1,9 +1,12 @@
 package handlers_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
 // Walk-in consultationSession must not block (nor be blocked by) a normal booked slot.
@@ -263,5 +266,166 @@ func TestConsultationSessionNotReschedulable(t *testing.T) {
 	})
 	if code != http.StatusBadRequest {
 		t.Fatalf("reschedule walk-in want 400 got %d %#v", code, env)
+	}
+}
+
+func TestConsultationSessionFinalizeMarksDone(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         now,
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"notes":               "finalize auto-done",
+	})
+	if code == http.StatusBadRequest {
+		t.Skipf("consultation create blocked: %#v", env)
+	}
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": "CR finalisable",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put report %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list visits %d %#v", code, env)
+	}
+	found := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] == visitID {
+			found = true
+			if m["status"] != "done" {
+				t.Fatalf("after finalize status=%v want done", m["status"])
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("visit %s not listed", visitID)
+	}
+
+	// CTA Terminer must stay idempotent after auto-done.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("idempotent done want 200 got %d %#v", code, env)
+	}
+}
+
+func TestConsultationSessionOrphanPurge(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         now,
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"notes":               "orphan purge target",
+	})
+	if code == http.StatusBadRequest {
+		t.Skipf("consultation create blocked: %#v", env)
+	}
+	if code != http.StatusCreated {
+		t.Fatalf("create orphan %d %#v", code, env)
+	}
+	orphanID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         now,
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"notes":               "has CR — must not purge",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create with CR %d %#v", code, env)
+	}
+	keptID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+keptID, vetTok, map[string]any{
+			"status": "done",
+		})
+	})
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+keptID+"/report", vetTok, map[string]any{
+		"bodyText": "contenu à conserver",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put report kept %d %#v", code, env)
+	}
+
+	ctx := context.Background()
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE visits.visits SET scheduled_at = NOW() - INTERVAL '7 hours' WHERE id = $1`, orphanID); err != nil {
+		t.Fatalf("backdate orphan: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE visits.visits SET scheduled_at = NOW() - INTERVAL '7 hours' WHERE id = $1`, keptID); err != nil {
+		t.Fatalf("backdate kept: %v", err)
+	}
+
+	st := store.New(api.pool)
+	n, err := st.CancelStaleConsultationOrphans(ctx, time.Now().Add(-6*time.Hour), 50)
+	if err != nil {
+		t.Fatalf("purge: %v", err)
+	}
+	if n < 1 {
+		t.Fatalf("purge cancelled=%d want ≥1", n)
+	}
+
+	var orphanStatus, keptStatus string
+	if err := api.pool.QueryRow(ctx, `SELECT status FROM visits.visits WHERE id=$1`, orphanID).Scan(&orphanStatus); err != nil {
+		t.Fatalf("orphan status: %v", err)
+	}
+	if orphanStatus != "cancelled" {
+		t.Fatalf("orphan status=%s want cancelled", orphanStatus)
+	}
+	if err := api.pool.QueryRow(ctx, `SELECT status FROM visits.visits WHERE id=$1`, keptID).Scan(&keptStatus); err != nil {
+		t.Fatalf("kept status: %v", err)
+	}
+	if keptStatus != "confirmed" {
+		t.Fatalf("kept status=%s want confirmed (has CR)", keptStatus)
 	}
 }

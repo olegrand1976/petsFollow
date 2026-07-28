@@ -176,9 +176,9 @@ Compte : `vet.demo@petsfollow.test`
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
 | C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda |
-| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés (`preventClose`) ; après save → 409 `consultation_has_report` = garder |
+| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
-| C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` |
+| C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
 
 ### C3 — Calendrier & RDV
 

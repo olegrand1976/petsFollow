@@ -132,7 +132,8 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     const putGate = new Promise<void>((resolve) => {
       releasePut = resolve
     })
-    await page.route('**/api/visits/*/report', async (route) => {
+    const reportRoute = '**/api/visits/*/report'
+    await page.route(reportRoute, async (route) => {
       if (route.request().method() !== 'PUT') {
         await route.continue()
         return
@@ -141,17 +142,22 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       await route.continue()
     })
 
-    await expect(page.getByTestId('visit-report-panel')).toBeVisible()
-    const reportBody = page.getByTestId('visit-report-body')
-    await reportBody.click()
-    await reportBody.fill(`E2E busy gate ${Date.now()}`)
-    await page.getByTestId('visit-report-save').click()
+    try {
+      await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+      const reportBody = page.getByTestId('visit-report-body')
+      await reportBody.click()
+      await reportBody.fill(`E2E busy gate ${Date.now()}`)
+      await page.getByTestId('visit-report-save').click()
 
-    await expect(page.getByTestId('consultation-cancel')).toBeDisabled({ timeout: 5000 })
-    await expect(page.getByTestId('pro-modal-close')).toBeDisabled()
-    await expect(page.getByTestId('consultation-modal')).toBeVisible()
+      await expect(page.getByTestId('consultation-cancel')).toBeDisabled({ timeout: 5000 })
+      await expect(page.getByTestId('pro-modal-close')).toBeDisabled()
+      await expect(page.getByTestId('consultation-modal')).toBeVisible()
+    }
+    finally {
+      releasePut?.()
+      await page.unroute(reportRoute).catch(() => undefined)
+    }
 
-    releasePut?.()
     await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('consultation-cancel')).toBeEnabled()
     await page.getByTestId('consultation-cta-done').click()
@@ -174,6 +180,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       expect(url.searchParams.get('visitId')).toBe(visitId)
       expect(url.searchParams.get('mode')).toBe('direct')
       await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('invoicing-consultation-context')).toBeVisible({ timeout: 10000 })
     }
 
     // Nouvelle consultation pour le CTA DAF (session déjà authentifiée).

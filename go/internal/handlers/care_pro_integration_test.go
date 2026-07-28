@@ -413,6 +413,11 @@ func TestCareProCannotCancelCabinetVisit(t *testing.T) {
 	if code != http.StatusForbidden {
 		t.Fatalf("care_pro cancel cabinet visit want 403 got %d %#v", code, env)
 	}
+	if errObj, _ := env["error"].(map[string]any); errObj != nil {
+		if errObj["msgKey"] != "care_pro_visit_only" {
+			t.Fatalf("msgKey=%v want care_pro_visit_only %#v", errObj["msgKey"], env)
+		}
+	}
 
 	// Still allowed to mark done on a shared terrain-accessible visit.
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, farrierTok, map[string]any{

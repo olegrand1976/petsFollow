@@ -155,20 +155,24 @@ func (s *Store) FinalizeVisitReport(ctx context.Context, reportID string) (Visit
 	return r, err
 }
 
+// sqlVisitReportIsPersisted — predicate on alias `r` (visits.visit_reports):
+// any author content beyond an empty Ensure draft.
+const sqlVisitReportIsPersisted = `(
+  r.status = 'final'
+  OR length(trim(COALESCE(r.body_text, ''))) > 0
+  OR length(trim(COALESCE(r.transcript_text, ''))) > 0
+  OR length(trim(COALESCE(r.improved_text, ''))) > 0
+  OR length(trim(COALESCE(r.audio_object_key, ''))) > 0
+)`
+
 // VisitHasPersistedReport is true when any author saved content (not an empty Ensure draft).
 func (s *Store) VisitHasPersistedReport(ctx context.Context, visitID string) (bool, error) {
 	var ok bool
 	err := s.pool.QueryRow(ctx, `
 		SELECT EXISTS (
-			SELECT 1 FROM visits.visit_reports
-			WHERE visit_id = $1::uuid
-			  AND (
-			    status = 'final'
-			    OR length(trim(COALESCE(body_text, ''))) > 0
-			    OR length(trim(COALESCE(transcript_text, ''))) > 0
-			    OR length(trim(COALESCE(improved_text, ''))) > 0
-			    OR length(trim(COALESCE(audio_object_key, ''))) > 0
-			  )
+			SELECT 1 FROM visits.visit_reports r
+			WHERE r.visit_id = $1::uuid
+			  AND `+sqlVisitReportIsPersisted+`
 		)`, visitID).Scan(&ok)
 	return ok, err
 }

@@ -902,6 +902,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 			return
 		}
+		if visit.Status == "done" {
+			updated = visit
+			break
+		}
 		if visit.Status != "confirmed" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
