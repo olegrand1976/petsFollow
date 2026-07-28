@@ -178,7 +178,8 @@
     "partner_mark_not_eligible": "Marquage partner impossible (connexion active + PartyID requis)",
     "saas_master_not_configured": "Compte Billit master non configuré (BILLIT_MASTER_*)",
     "invalid_id": "Identifiant invalide",
-    "care_pro_visit_only": "Action réservée aux visites créées en terrain (care pro)"
+    "care_pro_visit_only": "Action réservée aux visites créées en terrain (care pro)",
+    "pet_not_in_practice": "Animal non rattaché à ce cabinet"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",

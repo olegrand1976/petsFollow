@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -505,6 +506,7 @@ type createVisitReq struct {
 	Notes             string  `json:"notes"`
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
+	VisitTypeID       *string `json:"visitTypeId"`
 	RequestPreconsult bool    `json:"requestPreconsult"`
 	// SilentConfirm skips client push/email when confirming immediately (walk-in consultation).
 	SilentConfirm bool `json:"silentConfirm"`
@@ -593,12 +595,36 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// Clients always use cabinet slot duration (ignore client-supplied duration).
+	// Clients always use cabinet slot duration (ignore client-supplied duration / type).
 	duration := slotDur
-	if actsAsPro && req.DurationMinutes != nil {
-		duration = *req.DurationMinutes
+	var visitTypeID *string
+	if actsAsPro {
+		if req.VisitTypeID != nil && strings.TrimSpace(*req.VisitTypeID) != "" {
+			vt, verr := a.store.GetVisitType(r.Context(), pet.PracticeID, strings.TrimSpace(*req.VisitTypeID))
+			if verr != nil {
+				if errors.Is(verr, store.ErrNotFound) {
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_visit_type")
+					return
+				}
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if !vt.IsActive {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "visit_type_inactive")
+				return
+			}
+			duration = vt.DurationMinutes
+			idCopy := vt.ID
+			visitTypeID = &idCopy
+		} else if req.DurationMinutes != nil {
+			duration = *req.DurationMinutes
+		}
 	}
-	if duration != 15 && duration != 30 && duration != 60 {
+	if _, err := store.NormalizeVisitDuration(duration); err != nil {
+		if actsAsPro {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_duration")
+			return
+		}
 		duration = 30
 	}
 
@@ -635,6 +661,7 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		Notes:               req.Notes,
 		ScheduledAt:         scheduledAt,
 		DurationMinutes:     &duration,
+		VisitTypeID:         visitTypeID,
 		ConfirmDirect:       confirmDirect,
 		ConsultationSession: consultationSession,
 	}
@@ -735,6 +762,66 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = a.store.AttachPreconsultStatuses(r.Context(), visits)
 	httpx.WriteData(w, http.StatusOK, visits)
+}
+
+func (a *API) listVetConsultations(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
+		return
+	}
+	q := r.URL.Query()
+	f := store.ListConsultationsFilter{
+		Status: strings.TrimSpace(q.Get("status")),
+		Query:  strings.TrimSpace(q.Get("q")),
+	}
+	switch f.Status {
+	case "", "confirmed", "done", "cancelled", "requested", "reschedule_pending":
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+		return
+	}
+	if raw := strings.TrimSpace(q.Get("from")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_from")
+			return
+		}
+		f.From = &t
+	}
+	if raw := strings.TrimSpace(q.Get("to")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_to")
+			return
+		}
+		f.To = &t
+	}
+	if raw := strings.TrimSpace(q.Get("hasAudio")); raw != "" {
+		v := raw == "1" || strings.EqualFold(raw, "true")
+		f.HasAudio = &v
+	}
+	if raw := strings.TrimSpace(q.Get("limit")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_limit")
+			return
+		}
+		f.Limit = n
+	}
+	if raw := strings.TrimSpace(q.Get("offset")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_offset")
+			return
+		}
+		f.Offset = n
+	}
+	items, err := a.store.ListPracticeConsultations(r.Context(), id.PracticeID, f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
 }
 
 func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {

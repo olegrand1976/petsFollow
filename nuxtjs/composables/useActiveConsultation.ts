@@ -45,6 +45,10 @@ function writeResumeMap(map: ResumeMap) {
   }
 }
 
+function isFresh(token: ConsultationResume): boolean {
+  return Date.now() - (token.updatedAt || 0) <= TTL_MS
+}
+
 export function useActiveConsultation() {
   const open = useState('pf-consult-open', () => false)
   const clientId = useState('pf-consult-client-id', () => '')
@@ -94,18 +98,26 @@ export function useActiveConsultation() {
     writeResumeMap(map)
   }
 
-  /** Read + delete resume token (true consume). */
-  function consumeResumeForEmail(email: string): ConsultationResume | null {
+  /** Read without deleting (desk unlock / shell bootstrap). */
+  function peekResumeForEmail(email: string): ConsultationResume | null {
     if (!email) return null
     const map = readResumeMap()
     const key = email.toLowerCase()
     const token = map[key]
     if (!token?.visitId || !token.clientId) return null
-    delete map[key]
-    writeResumeMap(map)
-    if (Date.now() - (token.updatedAt || 0) > TTL_MS) {
+    if (!isFresh(token)) {
+      delete map[key]
+      writeResumeMap(map)
       return null
     }
+    return token
+  }
+
+  /** Read + delete resume token. Prefer peek + clear after successful openResume. */
+  function consumeResumeForEmail(email: string): ConsultationResume | null {
+    const token = peekResumeForEmail(email)
+    if (!token) return null
+    clearResumeForEmail(email)
     return token
   }
 
@@ -123,39 +135,36 @@ export function useActiveConsultation() {
     return null
   }
 
-  async function autosaveAndRemember(email: string | undefined, path: string): Promise<boolean> {
-    let flushOk = true
-    if (flushHandler) {
-      try {
-        await flushHandler()
-      }
-      catch {
-        flushOk = false
-      }
+  /** Tab hide: flush CR only — do not write resume token (desk lock owns that). */
+  async function autosaveOnly(): Promise<boolean> {
+    if (!flushHandler) return true
+    try {
+      await flushHandler()
+      return true
     }
-    const snap = resolveSnap()
-    if (email && snap?.visitId && snap.clientId) {
-      saveResumeForEmail(email, {
-        visitId: snap.visitId,
-        clientId: snap.clientId,
-        petId: snap.petId || '',
-        path: path || '/',
-        updatedAt: Date.now(),
-      })
+    catch {
+      return false
     }
-    return flushOk
+  }
+
+  async function runFlushWithRetry(): Promise<boolean> {
+    let ok = await autosaveOnly()
+    if (!ok) {
+      ok = await autosaveOnly()
+    }
+    return ok
   }
 
   /**
    * Desk lock/switch: persist then clear UI so another profile cannot see the modal.
    * Always set suspendDiscard when a visit was in progress (even if snapshot race).
+   * Returns false if CR flush failed after retry (caller may still lock for security).
    */
-  async function flushBeforeSuspend(email: string | undefined, path: string) {
+  async function flushBeforeSuspend(email: string | undefined, path: string): Promise<boolean> {
     const hadOpenConsult = Boolean(open.value && (resolveSnap()?.visitId || resumeVisitId.value))
-    await autosaveAndRemember(email, path)
+    const flushOk = await runFlushWithRetry()
     const snap = resolveSnap()
     if (email && snap?.visitId && snap.clientId) {
-      // Re-save after flush (snapshot may have been updated by forceSave path).
       saveResumeForEmail(email, {
         visitId: snap.visitId,
         clientId: snap.clientId,
@@ -166,7 +175,6 @@ export function useActiveConsultation() {
       suspendDiscard.value = true
     }
     else if (hadOpenConsult) {
-      // Snapshot race: still skip orphan cancel on unmount.
       suspendDiscard.value = true
     }
     open.value = false
@@ -174,6 +182,7 @@ export function useActiveConsultation() {
     resumeVisitId.value = ''
     resumePetId.value = ''
     activeSnapshot = null
+    return flushOk
   }
 
   function syncActiveVisit(snap: { visitId: string, clientId: string, petId: string } | null) {
@@ -182,6 +191,16 @@ export function useActiveConsultation() {
 
   function getActiveVisitSnapshot() {
     return activeSnapshot
+  }
+
+  /** After login/shell hydrate: reopen suspended consult for this email once. */
+  function tryResumeForCurrentUser(email: string | undefined | null) {
+    if (!email || open.value) return false
+    const token = peekResumeForEmail(email)
+    if (!token) return false
+    openResume(token)
+    clearResumeForEmail(email)
+    return true
   }
 
   return {
@@ -198,8 +217,10 @@ export function useActiveConsultation() {
     close,
     saveResumeForEmail,
     clearResumeForEmail,
+    peekResumeForEmail,
     consumeResumeForEmail,
     flushBeforeSuspend,
-    autosaveAndRemember,
+    autosaveOnly,
+    tryResumeForCurrentUser,
   }
 }

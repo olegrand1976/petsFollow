@@ -35,8 +35,10 @@
             {
               'cal-chip--focus': focusVisitId === v.id,
               'cal-chip--walkin': !!v.consultationSession,
+              'cal-chip--typed': !!v.visitTypeColor,
             },
           ]"
+          :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
           :data-testid="`calendar-chip-${v.id}`"
           @click="emit('select-visit', v)"
         >

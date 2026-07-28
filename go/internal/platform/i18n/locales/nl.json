@@ -178,7 +178,8 @@
     "partner_mark_not_eligible": "Partner markeren niet mogelijk (actieve verbinding + PartyID vereist)",
     "saas_master_not_configured": "Billit-masteraccount niet geconfigureerd (BILLIT_MASTER_*)",
     "invalid_id": "Ongeldige identifier",
-    "care_pro_visit_only": "Alleen toegestaan voor bezoeken aangemaakt in het veld (care pro)"
+    "care_pro_visit_only": "Alleen toegestaan voor bezoeken aangemaakt in het veld (care pro)",
+    "pet_not_in_practice": "Dier hoort niet bij deze praktijk"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

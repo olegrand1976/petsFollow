@@ -164,6 +164,58 @@
             <ProButton variant="ghost" type="button" @click="removeVacation(v.id)">×</ProButton>
           </li>
         </ul>
+
+        <hr class="pro-settings-hr">
+        <h3 class="pro-settings-subtitle">{{ $t('settings.calendar.visitTypesTitle') }}</h3>
+        <p class="pro-settings-hint">{{ $t('settings.calendar.visitTypesHint') }}</p>
+        <div
+          v-for="(vt, idx) in visitTypes"
+          :key="vt.id || `new-${idx}`"
+          class="visit-type-row"
+          data-testid="settings-visit-type-row"
+        >
+          <span class="visit-type-row__swatch" :style="{ background: vt.color }" aria-hidden="true" />
+          <input
+            v-model="vt.name"
+            type="text"
+            class="pro-input"
+            :placeholder="$t('settings.calendar.visitTypeName')"
+            required
+          >
+          <input
+            v-model.number="vt.durationMinutes"
+            type="number"
+            class="pro-input visit-type-row__duration"
+            min="5"
+            max="480"
+            step="5"
+            :aria-label="$t('settings.calendar.visitTypeDuration')"
+          >
+          <input
+            v-model="vt.color"
+            type="color"
+            class="visit-type-row__color"
+            :aria-label="$t('settings.calendar.visitTypeColor')"
+          >
+          <label class="pro-checkbox-row visit-type-row__active">
+            <input v-model="vt.isActive" type="checkbox">
+            <span>{{ $t('settings.calendar.visitTypeActive') }}</span>
+          </label>
+          <ProButton variant="ghost" type="button" @click="visitTypes.splice(idx, 1)">×</ProButton>
+        </div>
+        <ProButton variant="secondary" type="button" class="pro-mb-md" data-testid="settings-visit-type-add" @click="addVisitType">
+          {{ $t('settings.calendar.addVisitType') }}
+        </ProButton>
+        <p v-if="visitTypesError" class="pro-field-error" role="alert">{{ visitTypesError }}</p>
+        <p v-if="visitTypesSaved" class="text-muted" role="status">{{ $t('settings.calendar.visitTypesSaved') }}</p>
+        <ProButton
+          class="pro-save-btn"
+          :loading="visitTypesSaving"
+          data-testid="settings-visit-types-save"
+          @click="saveVisitTypes"
+        >
+          {{ $t('settings.calendar.saveVisitTypes') }}
+        </ProButton>
       </ProCard>
     </div>
 
@@ -438,6 +490,19 @@ const scheduleSaving = ref(false)
 const scheduleSaved = ref(false)
 const scheduleError = ref('')
 
+type VisitTypeDraft = {
+  id?: string
+  name: string
+  durationMinutes: number
+  color: string
+  isActive: boolean
+  sortOrder: number
+}
+const visitTypes = ref<VisitTypeDraft[]>([])
+const visitTypesSaving = ref(false)
+const visitTypesSaved = ref(false)
+const visitTypesError = ref('')
+
 const weekdayOptions = computed(() => [
   { value: 1, label: t('settings.calendar.weekday.1') },
   { value: 2, label: t('settings.calendar.weekday.2') },
@@ -450,6 +515,63 @@ const weekdayOptions = computed(() => [
 
 function addSlot() {
   scheduleSlots.value.push({ weekday: 1, startTime: '09:00', endTime: '12:00' })
+}
+
+function addVisitType() {
+  const palette = ['#2A9D8F', '#E9C46A', '#E76F51', '#264653', '#457B9D', '#F4A261']
+  visitTypes.value.push({
+    name: '',
+    durationMinutes: slotDuration.value || 30,
+    color: palette[visitTypes.value.length % palette.length],
+    isActive: true,
+    sortOrder: visitTypes.value.length,
+  })
+}
+
+async function saveVisitTypes() {
+  visitTypesSaving.value = true
+  visitTypesSaved.value = false
+  visitTypesError.value = ''
+  try {
+    for (const vt of visitTypes.value) {
+      if (!String(vt.name || '').trim()) {
+        visitTypesError.value = t('settings.calendar.visitTypeNameRequired')
+        return
+      }
+      const dur = Number(vt.durationMinutes)
+      if (!Number.isFinite(dur) || dur < 5 || dur > 480) {
+        visitTypesError.value = t('settings.calendar.visitTypeDurationInvalid')
+        return
+      }
+    }
+    const res: any = await $fetch('/api/vet/visit-types', {
+      method: 'PUT',
+      body: {
+        items: visitTypes.value.map((vt, i) => ({
+          id: vt.id || undefined,
+          name: vt.name.trim(),
+          durationMinutes: Number(vt.durationMinutes),
+          color: vt.color,
+          isActive: vt.isActive !== false,
+          sortOrder: i,
+        })),
+      },
+    })
+    const items = res.data ?? res ?? []
+    visitTypes.value = (Array.isArray(items) ? items : []).map((vt: any, i: number) => ({
+      id: vt.id,
+      name: vt.name || '',
+      durationMinutes: vt.durationMinutes || 30,
+      color: vt.color || '#2A9D8F',
+      isActive: vt.isActive !== false,
+      sortOrder: vt.sortOrder ?? i,
+    }))
+    visitTypesSaved.value = true
+  } catch (e: any) {
+    visitTypesError.value = mapError(e) || t('settings.calendar.visitTypesSaveFailed')
+  } finally {
+    visitTypesSaving.value = false
+  }
 }
 
 watch(scheduleSlots, (slots) => {
@@ -534,9 +656,10 @@ onMounted(async () => {
 
   if (canManageCalendar.value) {
     try {
-      const [schedRes, vacRes]: any[] = await Promise.all([
+      const [schedRes, vacRes, typesRes]: any[] = await Promise.all([
         $fetch('/api/vet/schedule'),
         $fetch('/api/vet/vacations'),
+        $fetch('/api/vet/visit-types'),
       ])
       const sched = schedRes.data ?? schedRes
       scheduleSlots.value = (sched.slots ?? []).map((s: any) => ({
@@ -549,6 +672,15 @@ onMounted(async () => {
       vacationsConfigured.value = !!sched.vacationsConfiguredForYear
       noVacationsThisYear.value = !!sched.vacationsDeclaredYear && sched.vacationsDeclaredYear >= new Date().getFullYear()
       vacations.value = vacRes.data ?? vacRes ?? []
+      const types = typesRes.data ?? typesRes ?? []
+      visitTypes.value = (Array.isArray(types) ? types : []).map((vt: any, i: number) => ({
+        id: vt.id,
+        name: vt.name || '',
+        durationMinutes: vt.durationMinutes || 30,
+        color: vt.color || '#2A9D8F',
+        isActive: vt.isActive !== false,
+        sortOrder: vt.sortOrder ?? i,
+      }))
     } catch (e: any) {
       scheduleError.value = mapError(e) || t('settings.calendar.loadFailed')
     }
@@ -841,6 +973,35 @@ async function disable2FA() {
   align-items: center;
   padding: 0.35rem 0;
   border-bottom: 1px solid var(--pf-vet-border);
+}
+.visit-type-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.visit-type-row__swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--pf-vet-border);
+  flex-shrink: 0;
+}
+.visit-type-row__duration {
+  max-width: 5.5rem;
+}
+.visit-type-row__color {
+  width: 2.5rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.visit-type-row__active {
+  margin: 0;
 }
 .pro-settings-hr {
   border: 0;

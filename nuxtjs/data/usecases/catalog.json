@@ -247,7 +247,9 @@
       ],
       "expected": [
         "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
-        "Fermeture sans enregistrement CR → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.",
+        "Fermeture sans enregistrement CR → confirm Enregistrer / Annuler la consultation / Rester ; Annuler → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.",
+        "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible).",
+        "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
         "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document).",
         "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture)."

@@ -15,6 +15,9 @@ export type CalendarVisit = {
   lat?: number
   lng?: number
   preconsultStatus?: string
+  visitTypeId?: string
+  visitTypeName?: string
+  visitTypeColor?: string
 }
 
 export type CalendarVacation = {

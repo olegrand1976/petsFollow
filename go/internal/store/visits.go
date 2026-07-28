@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,6 +30,10 @@ type Visit struct {
 	AddressText         string     `json:"addressText,omitempty"`
 	Lat                 *float64   `json:"lat,omitempty"`
 	Lng                 *float64   `json:"lng,omitempty"`
+	// Visit type (optional catalogue entry); name/color hydrated on calendar lists.
+	VisitTypeID    string `json:"visitTypeId,omitempty"`
+	VisitTypeName  string `json:"visitTypeName,omitempty"`
+	VisitTypeColor string `json:"visitTypeColor,omitempty"`
 	// PreconsultStatus is pending|submitted|skipped when an intake exists.
 	PreconsultStatus string `json:"preconsultStatus,omitempty"`
 	// RequestPreconsult: VetPro opted in to send public preconsult questionnaire.
@@ -46,6 +51,7 @@ type CreateVisitInput struct {
 	Notes             string
 	ScheduledAt       *time.Time
 	DurationMinutes   *int
+	VisitTypeID       *string
 	// ConfirmDirect: vet/care_pro creates already confirmed (skip client approval).
 	ConfirmDirect bool
 	// RequestPreconsult: when confirmed, send public preconsult questionnaire.
@@ -91,6 +97,148 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 	}
 	defer rows.Close()
 	return scanVisitsFull(rows)
+}
+
+// ConsultationListItem is a walk-in consultation with report summary flags (no audio keys).
+type ConsultationListItem struct {
+	Visit
+	HasReport    bool   `json:"hasReport"`
+	HasAudio     bool   `json:"hasAudio"`
+	ReportStatus string `json:"reportStatus,omitempty"`
+}
+
+// ListConsultationsFilter filters practice walk-in consultations.
+type ListConsultationsFilter struct {
+	Status   string
+	Query    string
+	From     *time.Time
+	To       *time.Time
+	HasAudio *bool
+	Limit    int
+	Offset   int
+}
+
+// ListPracticeConsultations returns consultation_session visits newest first.
+func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string, f ListConsultationsFilter) ([]ConsultationListItem, error) {
+	limit := f.Limit
+	if limit <= 0 || limit > 200 {
+		limit = 200
+	}
+	offset := f.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	args := []any{practiceID}
+	where := []string{
+		`v.practice_id = $1`,
+		`COALESCE(v.consultation_session, false) = true`,
+	}
+	argN := 2
+
+	if status := strings.TrimSpace(f.Status); status != "" {
+		where = append(where, fmt.Sprintf(`v.status = $%d`, argN))
+		args = append(args, status)
+		argN++
+	}
+	if q := strings.TrimSpace(f.Query); q != "" {
+		where = append(where, fmt.Sprintf(
+			`(p.name ILIKE $%d OR u.full_name ILIKE $%d OR COALESCE(u.email,'') ILIKE $%d OR COALESCE(v.notes,'') ILIKE $%d)`,
+			argN, argN, argN, argN,
+		))
+		args = append(args, "%"+q+"%")
+		argN++
+	}
+	if f.From != nil {
+		where = append(where, fmt.Sprintf(`COALESCE(v.scheduled_at, v.created_at) >= $%d`, argN))
+		args = append(args, *f.From)
+		argN++
+	}
+	if f.To != nil {
+		where = append(where, fmt.Sprintf(`COALESCE(v.scheduled_at, v.created_at) <= $%d`, argN))
+		args = append(args, *f.To)
+		argN++
+	}
+	if f.HasAudio != nil {
+		if *f.HasAudio {
+			where = append(where, `EXISTS (
+				SELECT 1 FROM visits.visit_reports r
+				WHERE r.visit_id = v.id AND r.status = 'draft'
+				  AND length(trim(COALESCE(r.audio_object_key, ''))) > 0
+			)`)
+		} else {
+			where = append(where, `NOT EXISTS (
+				SELECT 1 FROM visits.visit_reports r
+				WHERE r.visit_id = v.id AND r.status = 'draft'
+				  AND length(trim(COALESCE(r.audio_object_key, ''))) > 0
+			)`)
+		}
+	}
+
+	args = append(args, limit, offset)
+	limitPh := argN
+	offsetPh := argN + 1
+
+	q := fmt.Sprintf(`
+		SELECT v.id::text, v.pet_id::text, v.practice_id::text, v.scheduled_at, v.status,
+			COALESCE(v.notes,''), v.source, v.created_at,
+			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
+			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
+			COALESCE(v.address_text,''), v.lat, v.lng, COALESCE(v.consultation_session, false),
+			EXISTS (
+				SELECT 1 FROM visits.visit_reports r
+				WHERE r.visit_id = v.id AND %s
+			) AS has_report,
+			EXISTS (
+				SELECT 1 FROM visits.visit_reports r
+				WHERE r.visit_id = v.id AND r.status = 'draft'
+				  AND length(trim(COALESCE(r.audio_object_key, ''))) > 0
+			) AS has_audio,
+			COALESCE((
+				SELECT CASE
+					WHEN bool_or(r.status = 'final') THEN 'final'
+					WHEN bool_or(%s) THEN 'draft'
+					ELSE ''
+				END
+				FROM visits.visit_reports r
+				WHERE r.visit_id = v.id
+			), '') AS report_status
+		FROM visits.visits v
+		JOIN pets.pets p ON p.id = v.pet_id
+		JOIN identity.users u ON u.id = p.owner_user_id
+		WHERE %s
+		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
+		LIMIT $%d OFFSET $%d`,
+		sqlVisitReportIsPersisted, sqlVisitReportIsPersisted, strings.Join(where, " AND "),
+		limitPh, offsetPh,
+	)
+
+	rows, err := s.pool.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []ConsultationListItem
+	for rows.Next() {
+		var item ConsultationListItem
+		var v Visit
+		if err := rows.Scan(
+			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.PetName, &v.ClientName, &v.ClientID,
+			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&item.HasReport, &item.HasAudio, &item.ReportStatus,
+		); err != nil {
+			return nil, err
+		}
+		item.Visit = v
+		out = append(out, item)
+	}
+	if out == nil {
+		out = []ConsultationListItem{}
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID string) ([]Visit, error) {
@@ -154,13 +302,14 @@ func (s *Store) CreateVisit(ctx context.Context, in CreateVisitInput) (Visit, er
 	}
 	var v Visit
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession,
+			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
+			COALESCE(visit_type_id::text,'')`,
+		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
 	return v, err
 }
 
@@ -230,13 +379,14 @@ func (s *Store) CreateVisitBooked(ctx context.Context, in CreateVisitInput) (Vis
 	id := uuid.NewString()
 	var v Visit
 	err = tx.QueryRow(ctx, `
-		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, duration_minutes, pending_action_by, request_preconsult, consultation_session, visit_type_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
-			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)`,
-		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession,
+			duration_minutes, proposed_scheduled_at, pending_action_by, COALESCE(request_preconsult,false), COALESCE(consultation_session,false),
+			COALESCE(visit_type_id::text,'')`,
+		id, in.PetID, in.PracticeID, in.ScheduledAt, status, in.Notes, in.Source, in.DurationMinutes, pending, in.RequestPreconsult, in.ConsultationSession, in.VisitTypeID,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
-		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession)
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy, &v.RequestPreconsult, &v.ConsultationSession, &v.VisitTypeID)
 	if err != nil {
 		return Visit{}, err
 	}

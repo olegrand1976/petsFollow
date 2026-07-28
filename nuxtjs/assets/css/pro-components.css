@@ -449,6 +449,18 @@ a.pro-kpi-card:focus-visible {
 .cal-chip--walkin {
   border-left: 3px solid var(--pf-vet-accent);
 }
+.cal-chip--typed {
+  background: color-mix(in srgb, var(--cal-type-color, var(--pf-vet-accent)) 22%, transparent);
+  border-left: 3px solid var(--cal-type-color, var(--pf-vet-accent));
+}
+.cal-chip__type {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--cal-type-color, var(--pf-vet-primary)) 80%, #000);
+  flex-shrink: 0;
+}
 .cal-chip__walkin {
   font-size: 0.6rem;
   font-weight: 700;

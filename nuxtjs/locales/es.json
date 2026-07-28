@@ -399,7 +399,19 @@
         "4": "Jueves",
         "5": "Viernes",
         "6": "Sábado"
-      }
+      },
+      "visitTypesTitle": "Tipos de cita",
+      "visitTypesHint": "Defina los tipos al crear una cita (duración y color en el calendario).",
+      "visitTypeName": "Nombre del tipo",
+      "visitTypeDuration": "Duración (minutos)",
+      "visitTypeColor": "Color",
+      "visitTypeActive": "Activo",
+      "addVisitType": "Añadir un tipo",
+      "saveVisitTypes": "Guardar tipos",
+      "visitTypesSaved": "Tipos de cita guardados.",
+      "visitTypesSaveFailed": "No se pudieron guardar los tipos.",
+      "visitTypeNameRequired": "Cada tipo debe tener un nombre.",
+      "visitTypeDurationInvalid": "Duración no válida (5 a 480 minutos)."
     },
     "aclDenied": "No puede editar la ficha del centro. Contacte al veterinario de referencia."
   },
@@ -701,6 +713,7 @@
     "audioLoading": "Cargando el audio…",
     "audioError": "Audio no disponible (finalizado o ausente).",
     "loadError": "No se pueden cargar las consultas.",
+    "limitHint": "Se muestran las 200 consultas más recientes. Ajuste los filtros para acotar.",
     "reportFinal": "Finalizado",
     "reportDraft": "Borrador",
     "status": {
@@ -878,7 +891,7 @@
     "title": "Panel",
     "welcome": "Hola, {name}",
     "subtitle": "Resumen de su actividad en petsFollow Pro.",
-    "activeClients": "Clientes activos",
+    "activeClients": "Clientes",
     "unreadMessages": "Mensajes no leídos",
     "recentSessions": "Lecturas recientes (7 d)",
     "pendingLinks": "Invitaciones pendientes",
@@ -917,7 +930,16 @@
         "ux": "Flujo poco claro",
         "other": "Otro"
       }
-    }
+    },
+    "unreadHeartrate": "FC sin revisar",
+    "todayTitle": "Hoy",
+    "todayEmptyTitle": "Sin citas hoy",
+    "todayEmptyDescription": "Nada planificado para hoy.",
+    "queueTitle": "Por hacer",
+    "queueEmptyTitle": "Nada pendiente",
+    "queueEmptyDescription": "Sin citas, mensajes ni invitaciones pendientes.",
+    "queueLinkRequests": "1 invitación de cliente",
+    "queueLinkRequestsPlural": "{count} invitaciones de clientes"
   },
   "messages": {
     "title": "Mensajería",
@@ -937,7 +959,16 @@
     "attach": "Adjuntar",
     "attachPhoto": "Foto",
     "attachVideo": "Vídeo",
-    "sending": "Enviando…"
+    "sending": "Enviando…",
+    "lastExchangeAt": "Último intercambio: {date}",
+    "newConversation": "Nueva conversación",
+    "loadingPets": "Cargando animales…",
+    "noPets": "Este cliente aún no tiene animal. Añade uno para conversar.",
+    "pickPetTitle": "Elegir un animal",
+    "pickPetHint": "Conversación con {name}",
+    "pickPet": "Animal",
+    "pickPetPlaceholder": "Seleccionar un animal",
+    "startConversation": "Abrir conversación"
   },
   "admin": {
     "stripeCatalog": {
@@ -2057,7 +2088,8 @@
     "not_configured": "El inicio de sesión con Google no está configurado.",
     "internal": "Error interno del servidor",
     "not_ready": "Servicio no disponible",
-    "generic": "Se ha producido un error"
+    "generic": "Se ha producido un error",
+    "pet_not_in_practice": "El animal no está vinculado a esta clínica"
   },
   "commercial": {
     "dashboard": {
@@ -2488,6 +2520,21 @@
   "calendar": {
     "title": "Calendario",
     "subtitle": "Solicitudes de cita y agenda de la clínica.",
+    "newAppointment": "+ Nueva cita",
+    "newAppointmentDay": "Día",
+    "newAppointmentTime": "Hora",
+    "newAppointmentCreated": "Cita creada.",
+    "newAppointmentFailed": "No se pudo crear la cita.",
+    "newAppointmentLoadFailed": "No se pudieron cargar los datos del formulario.",
+    "selectClient": "Elegir un cliente…",
+    "selectPet": "Elegir un animal…",
+    "visitType": "Tipo de cita",
+    "visitTypeNone": "Sin tipo (duración manual)",
+    "durationMinutes": "Duración (min)",
+    "durationFromType": "Duración definida por el tipo seleccionado.",
+    "dayAgenda": "Agenda del día",
+    "dayAgendaEmpty": "Ninguna cita ese día.",
+    "freeSlot": "Libre — {minutes} min",
     "openSettings": "Horarios y vacaciones",
     "bookingDisabledHint": "La reserva del cliente vía app está desactivada. Actívela en Ajustes.",
     "pendingTitle": "Por tratar",
@@ -2528,6 +2575,18 @@
     "reportFinal": "Informe finalizado (solo lectura)",
     "reportFinalized": "Informe finalizado",
     "transcribeAudio": "Audio → texto",
+    "dictateAudio": "Dictar",
+    "recordingInProgress": "Grabación en curso",
+    "recordingStop": "Detener",
+    "micPermissionDenied": "Micrófono denegado — compruebe los permisos del navegador.",
+    "reportVisitDate": "Fecha de la visita",
+    "reportDatePrefix": "Fecha del",
+    "reportHowItWorksTitle": "¿Cómo funciona?",
+    "reportHowItWorksStep1": "Dicte (botón « Dictar ») o importe un archivo de audio.",
+    "reportHowItWorksStep2": "Confirme el consentimiento oral del cliente antes de grabar.",
+    "reportHowItWorksStep3": "Guarde el informe.",
+    "reportHowItWorksStep4": "Mejórelo con IA si hace falta.",
+    "reportHowItWorksStep5": "Finalice y continúe con una receta/DAF o una factura.",
     "audioConsent": "El audio sirve para redactar el informe. Confirme el consentimiento oral. Se elimina al finalizar.",
     "audioConsentTitle": "Consentimiento de audio",
     "audioConsentAccept": "Acepto",

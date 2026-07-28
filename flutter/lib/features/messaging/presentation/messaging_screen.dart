@@ -15,6 +15,7 @@ import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/messaging/message_media_upload.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:video_compress/video_compress.dart';
@@ -32,16 +33,22 @@ class MessagingScreen extends StatefulWidget {
   });
 
   final bool embedded;
+
   /// When embedded in IndexedStack, true while the Messages tab is selected.
   final bool active;
+
   /// Prefill pet when composing from a pet fiche.
   final String? initialPetId;
+
   /// Practice staff (vet / assistant / secretary) — no client vet-link gate.
   final bool staffMode;
+
   /// Optional preloaded clients for staff compose (`id` / `fullName`).
   final List<Map<String, dynamic>> staffClients;
+
   /// Optional preloaded pets for staff compose (`id` / `name` / `ownerUserId`).
   final List<Map<String, dynamic>> staffPets;
+
   /// Total unread across threads (for shell nav badge).
   final ValueChanged<int>? onUnreadTotalChanged;
 
@@ -49,7 +56,8 @@ class MessagingScreen extends StatefulWidget {
   State<MessagingScreen> createState() => _MessagingScreenState();
 }
 
-class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingObserver {
+class _MessagingScreenState extends State<MessagingScreen>
+    with WidgetsBindingObserver {
   static const _pollInterval = Duration(seconds: 4);
 
   List<MessageThread> threads = [];
@@ -61,6 +69,8 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
   bool sending = false;
   bool _refreshing = false;
   bool _hasLinkedVets = true;
+  List<Pet> _clientPets = [];
+  bool _autoComposeAttempted = false;
   Timer? _pollTimer;
 
   @override
@@ -75,7 +85,18 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
       if (!mounted) return;
       _consumePendingPushThread();
       if (widget.active) _startPolling();
+      _maybeAutoComposeClient();
     });
+  }
+
+  /// Client mode only: when the thread list is empty but the client already has
+  /// linked vets, jump straight into the compose wizard instead of an empty screen.
+  /// Guarded by [_autoComposeAttempted] so it only ever fires once per screen instance.
+  void _maybeAutoComposeClient() {
+    if (widget.staffMode || _autoComposeAttempted) return;
+    if (!_hasLinkedVets || threads.isNotEmpty || _clientPets.isEmpty) return;
+    _autoComposeAttempted = true;
+    _composeConversationClient();
   }
 
   void _consumePendingPushThread() {
@@ -168,9 +189,18 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
         currentUserId = me['userId'] as String? ?? me['id'] as String?;
       }
       List<VetLink> vets = [];
+      List<Pet> clientPets = _clientPets;
       if (!widget.staffMode) {
         try {
           vets = await ApiClient.instance.getMyVets();
+        } catch (_) {}
+        try {
+          final rawPets = await ApiClient.instance.getPets();
+          clientPets = rawPets
+              .whereType<Map>()
+              .map((e) => Pet.fromJson(Map<String, dynamic>.from(e)))
+              .where((p) => p.isActive)
+              .toList();
         } catch (_) {}
       }
       final rawThreads = await ApiClient.instance.getMessageThreads();
@@ -188,7 +218,8 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
       }).toList();
       var nextThreadId = threadId;
       if (enriched.isNotEmpty &&
-          (nextThreadId == null || !enriched.any((t) => t.id == nextThreadId))) {
+          (nextThreadId == null ||
+              !enriched.any((t) => t.id == nextThreadId))) {
         final preferredPet = widget.initialPetId?.trim();
         if (preferredPet != null && preferredPet.isNotEmpty) {
           nextThreadId = enriched
@@ -206,6 +237,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
       if (!mounted) return;
       setState(() {
         _hasLinkedVets = widget.staffMode || vets.isNotEmpty;
+        _clientPets = clientPets;
         threads = enriched;
         threadId = nextThreadId;
         messages = nextMessages;
@@ -426,7 +458,8 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     if (bestPath != null) {
       return (
         path: bestPath!,
-        filename: messageMediaUploadBasename(bestPath!, fromCompressedOutput: true),
+        filename:
+            messageMediaUploadBasename(bestPath!, fromCompressedOutput: true),
       );
     }
     if (originalSize <= kMaxMessageMediaBytes) {
@@ -508,6 +541,9 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
     final p = PetsPalette.of(context);
     final timeFmt = DateFormat.Hm(Localizations.localeOf(context).toString());
 
+    final noPetsClient =
+        !widget.staffMode && _hasLinkedVets && _clientPets.isEmpty;
+
     final chatArea = !_hasLinkedVets
         ? _MessagingLocked(
             onLinkVet: () async {
@@ -520,126 +556,150 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
             },
           )
         : threadId == null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.noThreads, style: TextStyle(color: p.textMuted)),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      key: const Key('message_compose_empty_btn'),
-                      onPressed: _composeConversation,
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: Text(l10n.messageNewConversation),
+            ? (noPetsClient
+                ? _MessagingNoPets(onAdd: _openPetForm)
+                : Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.noThreads,
+                            style: TextStyle(color: p.textMuted)),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          key: const Key('message_compose_empty_btn'),
+                          onPressed: _composeConversation,
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          label: Text(l10n.messageNewConversation),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-        : Column(
-            children: [
-              Expanded(
-                child: messages.isEmpty
-                    ? Center(child: Text(l10n.messageNoMessagesYet, style: TextStyle(color: p.textMuted)))
-                    : ListView.builder(
-                        reverse: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        itemCount: messages.length,
-                        itemBuilder: (_, i) {
-                          final m = messages[messages.length - 1 - i];
-                          final isMine = m.senderUserId == currentUserId;
-                          return Align(
-                            alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                              decoration: BoxDecoration(
-                                color: isMine
-                                    ? AppColors.primary.withValues(alpha: 0.85)
-                                    : p.surfaceElevated,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(16),
-                                  topRight: const Radius.circular(16),
-                                  bottomLeft: Radius.circular(isMine ? 16 : 4),
-                                  bottomRight: Radius.circular(isMine ? 4 : 16),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (m.hasMedia) ...[
-                                    _MessageMedia(
-                                      message: m,
-                                      isMine: isMine,
-                                      onOpen: () => _openMedia(m.mediaUrl!),
-                                      l10n: l10n,
-                                    ),
-                                    if (m.body.isNotEmpty) const SizedBox(height: 8),
-                                  ],
-                                  if (m.body.isNotEmpty)
-                                    Text(
-                                      m.body,
-                                      style: TextStyle(
-                                        color: isMine ? AppColors.bg : null,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    timeFmt.format(m.createdAt),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: isMine
-                                          ? AppColors.bg.withValues(alpha: 0.7)
-                                          : p.textMuted,
+                  ))
+            : Column(
+                children: [
+                  Expanded(
+                    child: messages.isEmpty
+                        ? Center(
+                            child: Text(l10n.messageNoMessagesYet,
+                                style: TextStyle(color: p.textMuted)))
+                        : ListView.builder(
+                            reverse: true,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            itemCount: messages.length,
+                            itemBuilder: (_, i) {
+                              final m = messages[messages.length - 1 - i];
+                              final isMine = m.senderUserId == currentUserId;
+                              return Align(
+                                alignment: isMine
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                              0.75),
+                                  decoration: BoxDecoration(
+                                    color: isMine
+                                        ? AppColors.primary
+                                            .withValues(alpha: 0.85)
+                                        : p.surfaceElevated,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft:
+                                          Radius.circular(isMine ? 16 : 4),
+                                      bottomRight:
+                                          Radius.circular(isMine ? 4 : 16),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  8,
-                  8,
-                  8,
-                  composerBottomPadding(context, embedded: widget.embedded),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      key: const Key('message_attach_btn'),
-                      tooltip: l10n.attachMedia,
-                      onPressed: sending ? null : _showAttachSheet,
-                      icon: const Icon(Icons.attach_file),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (m.hasMedia) ...[
+                                        _MessageMedia(
+                                          message: m,
+                                          isMine: isMine,
+                                          onOpen: () => _openMedia(m.mediaUrl!),
+                                          l10n: l10n,
+                                        ),
+                                        if (m.body.isNotEmpty)
+                                          const SizedBox(height: 8),
+                                      ],
+                                      if (m.body.isNotEmpty)
+                                        Text(
+                                          m.body,
+                                          style: TextStyle(
+                                            color: isMine ? AppColors.bg : null,
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        timeFmt.format(m.createdAt),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: isMine
+                                              ? AppColors.bg
+                                                  .withValues(alpha: 0.7)
+                                              : p.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      8,
+                      8,
+                      composerBottomPadding(context, embedded: widget.embedded),
                     ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('message_draft'),
-                        controller: draft,
-                        decoration: InputDecoration(
-                          hintText: l10n.vetMessaging,
-                          border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          key: const Key('message_attach_btn'),
+                          tooltip: l10n.attachMedia,
+                          onPressed: sending ? null : _showAttachSheet,
+                          icon: const Icon(Icons.attach_file),
                         ),
-                        onSubmitted: (_) => send(),
-                      ),
+                        Expanded(
+                          child: TextField(
+                            key: const Key('message_draft'),
+                            controller: draft,
+                            decoration: InputDecoration(
+                              hintText: l10n.vetMessaging,
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                            onSubmitted: (_) => send(),
+                          ),
+                        ),
+                        IconButton(
+                          key: const Key('message_send_btn'),
+                          onPressed: sending ? null : send,
+                          icon: sending
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.send),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      key: const Key('message_send_btn'),
-                      onPressed: sending ? null : send,
-                      icon: sending
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.send),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
+                  ),
+                ],
+              );
 
     final content = loading
         ? const Center(child: CircularProgressIndicator())
@@ -657,7 +717,8 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                             return ListTile(
                               dense: true,
                               selected: selected,
-                              title: Text(t.displayLabel, maxLines: 2, overflow: TextOverflow.ellipsis),
+                              title: Text(t.displayLabel,
+                                  maxLines: 2, overflow: TextOverflow.ellipsis),
                               onTap: () => selectThread(t.id),
                             );
                           },
@@ -670,7 +731,7 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
 
     // Icon-only FAB — extended + long labels covered the attach/send row on
     // narrow phones (blocked taps in widget tests and production UX).
-    final composeFab = _hasLinkedVets
+    final composeFab = _hasLinkedVets && !(threadId == null && noPetsClient)
         ? FloatingActionButton(
             key: const Key('message_compose_fab'),
             tooltip: l10n.messageNewConversation,
@@ -693,13 +754,26 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
       );
     }
     final selectedThread = threads.where((t) => t.id == threadId).firstOrNull;
-    final appBarTitle = selectedThread != null ? selectedThread.displayLabel : l10n.vetMessaging;
+    final appBarTitle = selectedThread != null
+        ? selectedThread.displayLabel
+        : l10n.vetMessaging;
     return Scaffold(
       appBar: AppBar(title: Text(appBarTitle)),
       floatingActionButton: composeFab,
       body: content,
     );
   }
+
+  Future<void> _openPetForm() => openPetFormAndFollowUp(
+        context,
+        hasLinkedVets: _hasLinkedVets,
+        onReload: () async {
+          await initThreads();
+          if (!mounted) return;
+          _autoComposeAttempted = false;
+          _maybeAutoComposeClient();
+        },
+      );
 
   Future<void> _composeConversation() async {
     if (widget.staffMode) {
@@ -786,9 +860,11 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.messageComposeTitle, style: Theme.of(ctx).textTheme.titleMedium),
+                    Text(l10n.messageComposeTitle,
+                        style: Theme.of(ctx).textTheme.titleMedium),
                     const SizedBox(height: 12),
-                    Text(l10n.messageChooseClient, style: Theme.of(ctx).textTheme.labelLarge),
+                    Text(l10n.messageChooseClient,
+                        style: Theme.of(ctx).textTheme.labelLarge),
                     const SizedBox(height: 8),
                     ...clients.map((c) {
                       final id = clientIdOf(c);
@@ -809,14 +885,16 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                           final next = petsForClient(id);
                           if (selectedPetId == null ||
                               !next.any((p) => p['id'] == selectedPetId)) {
-                            selectedPetId =
-                                next.length == 1 ? next.first['id'] as String? : null;
+                            selectedPetId = next.length == 1
+                                ? next.first['id'] as String?
+                                : null;
                           }
                         }),
                       );
                     }),
                     const SizedBox(height: 8),
-                    Text(l10n.messageChoosePetOptional, style: Theme.of(ctx).textTheme.labelLarge),
+                    Text(l10n.messageChoosePetOptional,
+                        style: Theme.of(ctx).textTheme.labelLarge),
                     const SizedBox(height: 8),
                     ListTile(
                       key: const Key('message_compose_pet_none'),
@@ -830,7 +908,9 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                       onTap: () => setModal(() => selectedPetId = null),
                     ),
                     if (visiblePets.isEmpty)
-                      Text(l10n.emptyPetsTitle, style: TextStyle(color: PetsPalette.of(ctx).textMuted))
+                      Text(l10n.emptyPetsTitle,
+                          style:
+                              TextStyle(color: PetsPalette.of(ctx).textMuted))
                     else
                       ...visiblePets.map((pet) {
                         final pid = pet['id'] as String? ?? '';
@@ -850,9 +930,10 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                     const SizedBox(height: 16),
                     FilledButton(
                       key: const Key('message_compose_confirm'),
-                      onPressed: selectedClientId == null || selectedClientId!.isEmpty
-                          ? null
-                          : () => Navigator.pop(ctx, true),
+                      onPressed:
+                          selectedClientId == null || selectedClientId!.isEmpty
+                              ? null
+                              : () => Navigator.pop(ctx, true),
                       child: Text(l10n.messageStartConversation),
                     ),
                   ],
@@ -895,23 +976,24 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
           .toList();
       if (!mounted) return;
       if (vets.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.noVets)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.noVets)));
         return;
       }
       if (pets.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.emptyPetsTitle)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.emptyPetsTitle)));
         return;
       }
       VetLink? selectedVet = vets.length == 1 ? vets.first : null;
       List<Pet> petsForVet(VetLink? vet) {
         if (vet == null) return pets;
-        return pets
-            .where((p) {
-              final pid = p.practiceId?.trim() ?? '';
-              return pid.isEmpty || pid == vet.practiceId;
-            })
-            .toList();
+        return pets.where((p) {
+          final pid = p.practiceId?.trim() ?? '';
+          return pid.isEmpty || pid == vet.practiceId;
+        }).toList();
       }
+
       Pet? selectedPet;
       final initial = widget.initialPetId != null
           ? pets.where((p) => p.id == widget.initialPetId).firstOrNull
@@ -941,9 +1023,11 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.messageComposeTitle, style: Theme.of(ctx).textTheme.titleMedium),
+                    Text(l10n.messageComposeTitle,
+                        style: Theme.of(ctx).textTheme.titleMedium),
                     const SizedBox(height: 12),
-                    Text(l10n.messageChoosePro, style: Theme.of(ctx).textTheme.labelLarge),
+                    Text(l10n.messageChoosePro,
+                        style: Theme.of(ctx).textTheme.labelLarge),
                     const SizedBox(height: 8),
                     ...vets.map(
                       (v) => ListTile(
@@ -954,22 +1038,30 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
                               : Icons.radio_button_off,
                           color: AppColors.primary,
                         ),
-                        title: Text(v.practiceName.isNotEmpty ? v.practiceName : v.vetFullName),
-                        subtitle: v.vetFullName.isNotEmpty ? Text(v.vetFullName) : null,
+                        title: Text(v.practiceName.isNotEmpty
+                            ? v.practiceName
+                            : v.vetFullName),
+                        subtitle: v.vetFullName.isNotEmpty
+                            ? Text(v.vetFullName)
+                            : null,
                         onTap: () => setModal(() {
                           selectedVet = v;
                           final next = petsForVet(v);
-                          if (selectedPet == null || !next.any((p) => p.id == selectedPet!.id)) {
+                          if (selectedPet == null ||
+                              !next.any((p) => p.id == selectedPet!.id)) {
                             selectedPet = next.length == 1 ? next.first : null;
                           }
                         }),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(l10n.messageChoosePet, style: Theme.of(ctx).textTheme.labelLarge),
+                    Text(l10n.messageChoosePet,
+                        style: Theme.of(ctx).textTheme.labelLarge),
                     const SizedBox(height: 8),
                     if (visiblePets.isEmpty)
-                      Text(l10n.emptyPetsTitle, style: TextStyle(color: PetsPalette.of(ctx).textMuted))
+                      Text(l10n.emptyPetsTitle,
+                          style:
+                              TextStyle(color: PetsPalette.of(ctx).textMuted))
                     else
                       ...visiblePets.map(
                         (pet) => ListTile(
@@ -999,7 +1091,10 @@ class _MessagingScreenState extends State<MessagingScreen> with WidgetsBindingOb
           );
         },
       );
-      if (confirmed != true || selectedVet == null || selectedPet == null || !mounted) {
+      if (confirmed != true ||
+          selectedVet == null ||
+          selectedPet == null ||
+          !mounted) {
         return;
       }
       final thread = await ApiClient.instance.ensureMessageThread(
@@ -1064,6 +1159,46 @@ class _MessagingLocked extends StatelessWidget {
   }
 }
 
+class _MessagingNoPets extends StatelessWidget {
+  const _MessagingNoPets({required this.onAdd});
+
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.pets,
+                size: 48, color: AppColors.gold.withValues(alpha: 0.8)),
+            const SizedBox(height: 16),
+            Text(l10n.emptyPetsTitle,
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(
+              l10n.emptyPetsBody,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: p.textMuted, height: 1.35),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              key: const Key('message_add_pet_cta'),
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.newPet),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MessageMedia extends StatelessWidget {
   const _MessageMedia({
     required this.message,
@@ -1086,16 +1221,20 @@ class _MessageMedia extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
           decoration: BoxDecoration(
-            color: (isMine ? AppColors.bg : AppColors.primary).withValues(alpha: 0.12),
+            color: (isMine ? AppColors.bg : AppColors.primary)
+                .withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
-              Icon(Icons.play_circle_outline, size: 40, color: isMine ? AppColors.bg : AppColors.primary),
+              Icon(Icons.play_circle_outline,
+                  size: 40, color: isMine ? AppColors.bg : AppColors.primary),
               const SizedBox(height: 4),
               Text(
                 l10n.mediaVideoLabel,
-                style: TextStyle(color: isMine ? AppColors.bg : null, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    color: isMine ? AppColors.bg : null,
+                    fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -1113,7 +1252,9 @@ class _MessageMedia extends StatelessWidget {
           height: 180,
           errorBuilder: (_, __, ___) => SizedBox(
             height: 80,
-            child: Center(child: Text(l10n.openMedia, style: TextStyle(color: isMine ? AppColors.bg : null))),
+            child: Center(
+                child: Text(l10n.openMedia,
+                    style: TextStyle(color: isMine ? AppColors.bg : null))),
           ),
         ),
       ),

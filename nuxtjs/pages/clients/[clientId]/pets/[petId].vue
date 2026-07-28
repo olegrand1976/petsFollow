@@ -373,6 +373,23 @@
       <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
       <form v-if="canManageCalendar" class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
+        <select v-model="visitDraft.visitTypeId" class="pro-select" :aria-label="$t('calendar.visitType')" data-testid="pet-visit-type">
+          <option value="">{{ $t('calendar.visitTypeNone') }}</option>
+          <option v-for="vt in visitTypes" :key="vt.id" :value="vt.id">
+            {{ vt.name }} ({{ vt.durationMinutes }} min)
+          </option>
+        </select>
+        <input
+          v-model.number="visitDraft.durationMinutes"
+          class="pro-input"
+          type="number"
+          min="5"
+          max="480"
+          step="5"
+          :disabled="!!visitDraft.visitTypeId"
+          :aria-label="$t('calendar.durationMinutes')"
+          data-testid="pet-visit-duration"
+        >
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
         <label class="pro-checkbox-label" data-testid="visit-request-preconsult">
           <input v-model="visitDraft.requestPreconsult" type="checkbox" class="pro-checkbox">
@@ -682,7 +699,23 @@ const shareExpiresDays = ref('')
 const shareBusy = ref(false)
 const shareError = ref('')
 const careDraft = reactive({ title: '', type: 'vaccination' })
-const visitDraft = reactive({ scheduledAt: '', notes: '', requestPreconsult: false })
+const visitDraft = reactive({
+  scheduledAt: '',
+  notes: '',
+  requestPreconsult: false,
+  visitTypeId: '',
+  durationMinutes: 30,
+})
+const visitTypes = ref<{ id: string; name: string; durationMinutes: number }[]>([])
+
+watch(
+  () => visitDraft.visitTypeId,
+  (id) => {
+    if (!id) return
+    const vt = visitTypes.value.find((x) => x.id === id)
+    if (vt) visitDraft.durationMinutes = vt.durationMinutes
+  },
+)
 const confirmPreconsultByVisit = reactive<Record<string, boolean>>({})
 const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
@@ -1081,18 +1114,26 @@ async function proposeVisit(confirmDirect: boolean) {
   if (!visitDraft.scheduledAt) return
   visitBusy.value = true
   try {
+    const body: Record<string, unknown> = {
+      notes: visitDraft.notes,
+      confirmDirect,
+      requestPreconsult: visitDraft.requestPreconsult,
+      scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
+    }
+    if (visitDraft.visitTypeId) {
+      body.visitTypeId = visitDraft.visitTypeId
+    } else {
+      body.durationMinutes = Number(visitDraft.durationMinutes) || 30
+    }
     await $fetch(`/api/pets/${petId}/visits`, {
       method: 'POST',
-      body: {
-        notes: visitDraft.notes,
-        confirmDirect,
-        requestPreconsult: visitDraft.requestPreconsult,
-        scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
-      },
+      body,
     })
     visitDraft.notes = ''
     visitDraft.scheduledAt = ''
     visitDraft.requestPreconsult = false
+    visitDraft.visitTypeId = ''
+    visitDraft.durationMinutes = 30
     await loadCareAndVisits()
   } finally {
     visitBusy.value = false
@@ -1148,6 +1189,22 @@ onMounted(async () => {
           petShares.value = []
         })
       : Promise.resolve()
+    const typesP = canManageCalendar.value
+      ? $fetch('/api/vet/visit-types?active=1')
+          .then((res: any) => {
+            const list = res.data ?? res ?? []
+            visitTypes.value = (Array.isArray(list) ? list : [])
+              .filter((vt: any) => vt?.id)
+              .map((vt: any) => ({
+                id: vt.id,
+                name: vt.name,
+                durationMinutes: vt.durationMinutes || 30,
+              }))
+          })
+          .catch(() => {
+            visitTypes.value = []
+          })
+      : Promise.resolve()
 
     const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []
@@ -1157,7 +1214,7 @@ onMounted(async () => {
       loadSessions(true).catch(() => {})
     }, 8000)
 
-    await Promise.all([careVisitsP, docsP, sharesP])
+    await Promise.all([careVisitsP, docsP, sharesP, typesP])
   } catch (e: any) {
     pageError.value = mapError(e)
   }

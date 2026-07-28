@@ -24,7 +24,7 @@ describe('useActiveConsultation resume isolation', () => {
     vi.resetModules()
   })
 
-  it('stores and consumes resume per email without cross-user leak', async () => {
+  it('peek keeps token; consume deletes it; no cross-user leak', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
     a.saveResumeForEmail('vet.demo@petsfollow.test', {
@@ -34,11 +34,12 @@ describe('useActiveConsultation resume isolation', () => {
       path: '/clients',
       updatedAt: Date.now(),
     })
-    expect(a.consumeResumeForEmail('vet.colleague@petsfollow.test')).toBeNull()
+    expect(a.peekResumeForEmail('vet.colleague@petsfollow.test')).toBeNull()
+    const peeked = a.peekResumeForEmail('vet.demo@petsfollow.test')
+    expect(peeked?.visitId).toBe('visit-a')
+    expect(a.peekResumeForEmail('vet.demo@petsfollow.test')?.visitId).toBe('visit-a')
     const token = a.consumeResumeForEmail('vet.demo@petsfollow.test')
     expect(token?.visitId).toBe('visit-a')
-    expect(token?.clientId).toBe('client-a')
-    // True consume: second read is empty.
     expect(a.consumeResumeForEmail('vet.demo@petsfollow.test')).toBeNull()
   })
 
@@ -54,18 +55,19 @@ describe('useActiveConsultation resume isolation', () => {
     }))
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
-    expect(a.consumeResumeForEmail('vet.demo@petsfollow.test')).toBeNull()
-    // Expired entry removed from storage.
+    expect(a.peekResumeForEmail('vet.demo@petsfollow.test')).toBeNull()
     expect(store.get('pf_consult_resume')).toBe('{}')
   })
 
-  it('flushBeforeSuspend sets suspendDiscard even without snapshot when open', async () => {
+  it('flushBeforeSuspend sets suspendDiscard and writes resume only then', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
     a.open.value = true
     a.clientId.value = 'client-a'
     a.resumeVisitId.value = 'visit-a'
     a.resumePetId.value = 'pet-a'
+    await a.autosaveOnly()
+    expect(store.get('pf_consult_resume')).toBeUndefined()
     await a.flushBeforeSuspend('vet.demo@petsfollow.test', '/clients')
     expect(a.suspendDiscard.value).toBe(true)
     expect(a.open.value).toBe(false)
@@ -74,24 +76,20 @@ describe('useActiveConsultation resume isolation', () => {
     expect(token['vet.demo@petsfollow.test']?.visitId).toBe('visit-a')
   })
 
-  it('openForClient sets preferred pet without visit resume', async () => {
+  it('tryResumeForCurrentUser opens once and clears token', async () => {
     const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
     const a = useActiveConsultation()
-    a.resumeVisitId.value = 'stale-visit'
-    a.openForClient('client-b', 'pet-b')
+    a.saveResumeForEmail('vet.demo@petsfollow.test', {
+      visitId: 'visit-b',
+      clientId: 'client-b',
+      petId: 'pet-b',
+      path: '/clients',
+      updatedAt: Date.now(),
+    })
+    expect(a.tryResumeForCurrentUser('vet.demo@petsfollow.test')).toBe(true)
     expect(a.open.value).toBe(true)
-    expect(a.clientId.value).toBe('client-b')
-    expect(a.resumePetId.value).toBe('pet-b')
-    expect(a.resumeVisitId.value).toBe('')
-  })
-
-  it('openForClient without preferred pet clears resumePetId', async () => {
-    const { useActiveConsultation } = await import('../../composables/useActiveConsultation')
-    const a = useActiveConsultation()
-    a.resumePetId.value = 'pet-old'
-    a.openForClient('client-c')
-    expect(a.clientId.value).toBe('client-c')
-    expect(a.resumePetId.value).toBe('')
-    expect(a.resumeVisitId.value).toBe('')
+    expect(a.resumeVisitId.value).toBe('visit-b')
+    expect(a.peekResumeForEmail('vet.demo@petsfollow.test')).toBeNull()
+    expect(a.tryResumeForCurrentUser('vet.demo@petsfollow.test')).toBe(false)
   })
 })

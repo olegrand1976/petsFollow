@@ -399,7 +399,19 @@
         "4": "Donderdag",
         "5": "Vrijdag",
         "6": "Zaterdag"
-      }
+      },
+      "visitTypesTitle": "Afspraaktypes",
+      "visitTypesHint": "Definieer types bij het maken van een afspraak (duur en kalenderkleur).",
+      "visitTypeName": "Naam van het type",
+      "visitTypeDuration": "Duur (minuten)",
+      "visitTypeColor": "Kleur",
+      "visitTypeActive": "Actief",
+      "addVisitType": "Type toevoegen",
+      "saveVisitTypes": "Types opslaan",
+      "visitTypesSaved": "Afspraaktypes opgeslagen.",
+      "visitTypesSaveFailed": "Types opslaan mislukt.",
+      "visitTypeNameRequired": "Elk type moet een naam hebben.",
+      "visitTypeDurationInvalid": "Ongeldige duur (5 tot 480 minuten)."
     },
     "aclDenied": "U mag het praktijkprofiel niet wijzigen. Neem contact op met de referentieveterinair."
   },
@@ -701,6 +713,7 @@
     "audioLoading": "Audio laden…",
     "audioError": "Audio niet beschikbaar (afgerond of ontbreekt).",
     "loadError": "Consultaties kunnen niet worden geladen.",
+    "limitHint": "Weergave beperkt tot de 200 meest recente consultaties. Verfijn de filters.",
     "reportFinal": "Afgerond",
     "reportDraft": "Concept",
     "status": {
@@ -909,7 +922,7 @@
     "title": "Dashboard",
     "welcome": "Hallo, {name}",
     "subtitle": "Overzicht van uw petsFollow Pro-activiteit.",
-    "activeClients": "Actieve klanten",
+    "activeClients": "Klanten",
     "unreadMessages": "Ongelezen berichten",
     "recentSessions": "Recente metingen (7 d)",
     "pendingLinks": "Openstaande uitnodigingen",
@@ -948,7 +961,16 @@
         "ux": "Onduidelijke flow",
         "other": "Andere"
       }
-    }
+    },
+    "unreadHeartrate": "Ongelezen hartslag",
+    "todayTitle": "Vandaag",
+    "todayEmptyTitle": "Geen afspraken vandaag",
+    "todayEmptyDescription": "Niets gepland voor vandaag.",
+    "queueTitle": "Te doen",
+    "queueEmptyTitle": "Niets openstaand",
+    "queueEmptyDescription": "Geen openstaande afspraken, berichten of uitnodigingen.",
+    "queueLinkRequests": "1 klantuitnodiging",
+    "queueLinkRequestsPlural": "{count} klantuitnodigingen"
   },
   "messages": {
     "title": "Berichten",
@@ -968,7 +990,16 @@
     "attach": "Bijvoegen",
     "attachPhoto": "Foto",
     "attachVideo": "Video",
-    "sending": "Verzenden…"
+    "sending": "Verzenden…",
+    "lastExchangeAt": "Laatste uitwisseling: {date}",
+    "newConversation": "Nieuw gesprek",
+    "loadingPets": "Dieren laden…",
+    "noPets": "Deze klant heeft nog geen dier. Voeg er een toe om te chatten.",
+    "pickPetTitle": "Kies een dier",
+    "pickPetHint": "Gesprek met {name}",
+    "pickPet": "Dier",
+    "pickPetPlaceholder": "Selecteer een dier",
+    "startConversation": "Gesprek openen"
   },
   "admin": {
     "stripeCatalog": {
@@ -2088,7 +2119,8 @@
     "not_configured": "Google-aanmelding is niet geconfigureerd.",
     "internal": "Interne serverfout",
     "not_ready": "Service niet gereed",
-    "generic": "Er is een fout opgetreden"
+    "generic": "Er is een fout opgetreden",
+    "pet_not_in_practice": "Dier hoort niet bij deze praktijk"
   },
   "commercial": {
     "dashboard": {
@@ -2519,6 +2551,21 @@
   "calendar": {
     "title": "Agenda",
     "subtitle": "Afspraakaanvragen en praktijkplanning.",
+    "newAppointment": "+ Nieuwe afspraak",
+    "newAppointmentDay": "Dag",
+    "newAppointmentTime": "Uur",
+    "newAppointmentCreated": "Afspraak aangemaakt.",
+    "newAppointmentFailed": "Afspraak aanmaken mislukt.",
+    "newAppointmentLoadFailed": "Formuliergegevens laden mislukt.",
+    "selectClient": "Kies een cliënt…",
+    "selectPet": "Kies een dier…",
+    "visitType": "Type afspraak",
+    "visitTypeNone": "Zonder type (handmatige duur)",
+    "durationMinutes": "Duur (min)",
+    "durationFromType": "Duur bepaald door het geselecteerde type.",
+    "dayAgenda": "Agenda van de dag",
+    "dayAgendaEmpty": "Geen afspraken op deze dag.",
+    "freeSlot": "Vrij — {minutes} min",
     "openSettings": "Uren & vakantie",
     "bookingDisabledHint": "Online reserveren via de app is uitgeschakeld. Activeer dit in Instellingen.",
     "pendingTitle": "Te behandelen",
@@ -2559,6 +2606,18 @@
     "reportFinal": "Verslag gefinaliseerd (alleen-lezen)",
     "reportFinalized": "Verslag gefinaliseerd",
     "transcribeAudio": "Audio → tekst",
+    "dictateAudio": "Dicteren",
+    "recordingInProgress": "Opname bezig",
+    "recordingStop": "Stoppen",
+    "micPermissionDenied": "Microfoon geweigerd — controleer de browsermachtigingen.",
+    "reportVisitDate": "Bezoekdatum",
+    "reportDatePrefix": "Datum van",
+    "reportHowItWorksTitle": "Hoe werkt het?",
+    "reportHowItWorksStep1": "Dicteer (knop « Dicteren ») of importeer een audiobestand.",
+    "reportHowItWorksStep2": "Bevestig de mondelinge toestemming van de cliënt vóór de opname.",
+    "reportHowItWorksStep3": "Sla het verslag op.",
+    "reportHowItWorksStep4": "Verbeter het met AI indien nodig.",
+    "reportHowItWorksStep5": "Finaliseer, ga daarna verder met een voorschrift/DAF of een factuur.",
     "audioConsent": "Audio dient om het verslag te maken. Bevestig mondelinge toestemming. Wordt verwijderd bij finalisatie.",
     "audioConsentTitle": "Audiotoestemming",
     "audioConsentAccept": "Ik ga akkoord",

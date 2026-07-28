@@ -14,9 +14,11 @@
             input-id="messages-client-search-input"
             :placeholder="$t('messages.searchPlaceholder')"
             :min-chars="1"
+            :disabled="searchLocked"
             :search-fn="searchClients"
             @select="onClientSelect"
           />
+          <p v-if="startingClientId && !petPickerOpen" class="pro-hint" role="status">{{ $t('messages.loadingPets') }}</p>
         </div>
         <ProEmptyState
           v-if="!visibleThreads.length"
@@ -32,9 +34,18 @@
           :data-testid="`thread-${t.id}`"
           @click="select(t)"
         >
-          <strong>{{ threadLabel(t) }}</strong>
+          <span class="pro-chat__thread-top">
+            <strong>{{ clientLabel(t) }}</strong>
+            <span v-if="t.petName" class="pro-chat__thread-pet">{{ t.petName }}</span>
+          </span>
           <span v-if="t.lastMessagePreview" class="pro-chat__thread-preview">{{ t.lastMessagePreview }}</span>
-          <ProBadge v-if="t.unreadCount > 0" variant="warning">{{ unreadLabel(t.unreadCount) }}</ProBadge>
+          <span class="pro-chat__thread-meta">
+            <span v-if="t.lastMessageAt" class="pro-chat__thread-date">
+              {{ $t('messages.lastExchangeAt', { date: formatThreadDate(t.lastMessageAt) }) }}
+            </span>
+            <span v-else class="pro-chat__thread-date">{{ $t('messages.newConversation') }}</span>
+            <ProBadge v-if="t.unreadCount > 0" variant="warning">{{ unreadLabel(t.unreadCount) }}</ProBadge>
+          </span>
         </button>
       </aside>
       <section class="pro-chat__messages">
@@ -114,6 +125,41 @@
         />
       </section>
     </div>
+
+    <ProModal
+      :open="petPickerOpen"
+      :title="$t('messages.pickPetTitle')"
+      test-id="messages-pet-picker"
+      :prevent-close="startingClientId !== ''"
+      @update:open="(v) => { if (!v) closePetPicker() }"
+    >
+      <p class="pro-hint">{{ $t('messages.pickPetHint', { name: pendingClientLabel }) }}</p>
+      <div class="pro-field">
+        <label class="pro-label" for="messages-pet-select">{{ $t('messages.pickPet') }}</label>
+        <select
+          id="messages-pet-select"
+          v-model="selectedPetId"
+          class="pro-select"
+          data-testid="messages-pet-select"
+        >
+          <option value="" disabled>{{ $t('messages.pickPetPlaceholder') }}</option>
+          <option v-for="p in petPickerPets" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+      </div>
+      <template #footer>
+        <ProButton variant="secondary" type="button" :disabled="startingClientId !== ''" @click="closePetPicker">
+          {{ $t('common.cancel') }}
+        </ProButton>
+        <ProButton
+          type="button"
+          data-testid="messages-pet-picker-confirm"
+          :disabled="!selectedPetId || startingClientId !== ''"
+          @click="confirmPetPick"
+        >
+          {{ $t('messages.startConversation') }}
+        </ProButton>
+      </template>
+    </ProModal>
   </div>
 </template>
 
@@ -122,13 +168,29 @@ import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'messaging' })
 
+type ClientRow = {
+  userId: string
+  email?: string
+  fullName?: string
+  avatarUrl?: string
+  petCount?: number
+}
+
+type PetRow = {
+  id: string
+  name: string
+  species?: string
+}
+
 const route = useRoute()
 const { t } = useI18n()
 const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNotif } = useProNotifications()
+const { formatDate } = useFormatters()
 
 const threads = ref<any[]>([])
+const clients = ref<ClientRow[]>([])
 const messages = ref<any[]>([])
 const active = ref<any>(null)
 const clientSearch = ref<ProComboboxItem | null>(null)
@@ -139,28 +201,51 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const refreshing = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
+const petPickerOpen = ref(false)
+const petPickerPets = ref<PetRow[]>([])
+const petPickerClient = ref<ClientRow | null>(null)
+const selectedPetId = ref('')
+const startingClientId = ref('')
+
 const POLL_MS = 4_000
 const MAX_MEDIA_BYTES = 25 * 1024 * 1024
 
 const vetUserId = computed(() => user.value?.userId ?? user.value?.id ?? '')
+const pendingClientLabel = computed(() => petPickerClient.value ? clientDisplayName(petPickerClient.value) : '')
+const searchLocked = computed(() => Boolean(startingClientId.value) || petPickerOpen.value)
 
-function threadLabel(thread: any) {
+function clientLabel(thread: any) {
   return thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' })
 }
 
-function hasMessage(thread: any) {
-  return Boolean(String(thread?.lastMessagePreview ?? '').trim())
+function threadLabel(thread: any) {
+  const name = clientLabel(thread)
+  return thread.petName ? `${name} · ${thread.petName}` : name
+}
+
+function formatThreadDate(value?: string | null) {
+  if (!value) return ''
+  return formatDate(value)
+}
+
+function isInProgressThread(thread: any) {
+  return Boolean(thread?.lastMessageAt)
+    || Boolean(String(thread?.lastMessagePreview ?? '').trim())
 }
 
 const visibleThreads = computed(() => {
   const activeId = active.value?.id
   const filtered = threads.value.filter(
-    (t) => hasMessage(t) || (activeId != null && t.id === activeId),
+    (t) => isInProgressThread(t) || (activeId != null && t.id === activeId),
   )
   return [...filtered].sort((a, b) => {
     const aUnread = (a.unreadCount ?? 0) > 0 ? 1 : 0
     const bUnread = (b.unreadCount ?? 0) > 0 ? 1 : 0
-    return bUnread - aUnread
+    if (aUnread !== bUnread) return bUnread - aUnread
+    const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0
+    const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0
+    if (aTime !== bTime) return bTime - aTime
+    return String(a.id ?? '').localeCompare(String(b.id ?? ''))
   })
 })
 
@@ -168,29 +253,116 @@ function unreadLabel(count: number) {
   return count > 1 ? t('messages.unreadPlural', { count }) : t('messages.unread', { count })
 }
 
+function clientDisplayName(c: ClientRow) {
+  return c.fullName || c.email || ''
+}
+
+function asClientList(raw: unknown): ClientRow[] {
+  const list = Array.isArray((raw as any)?.data) ? (raw as any).data : Array.isArray(raw) ? raw : []
+  return list.filter((c: any) => c?.userId) as ClientRow[]
+}
+
+async function loadClients() {
+  try {
+    const res: any = await $fetch('/api/clients')
+    clients.value = asClientList(res)
+  } catch {
+    clients.value = []
+  }
+}
+
 async function searchClients(q: string): Promise<ProComboboxItem[]> {
   const needle = q.trim().toLowerCase()
   if (!needle) return []
-  return threads.value
-    .filter((t) => {
-      const name = String(t.clientName ?? '').toLowerCase()
-      const email = String(t.clientEmail ?? '').toLowerCase()
+  return clients.value
+    .filter((c) => {
+      const name = String(c.fullName ?? '').toLowerCase()
+      const email = String(c.email ?? '').toLowerCase()
       return name.includes(needle) || email.includes(needle)
     })
     .slice(0, 20)
-    .map((t) => ({
-      id: t.id,
-      label: threadLabel(t),
-      hint: t.clientEmail || t.lastMessagePreview || undefined,
-      badge: (t.unreadCount ?? 0) > 0 ? unreadLabel(t.unreadCount) : undefined,
-      raw: t,
+    .map((c) => ({
+      id: c.userId,
+      label: clientDisplayName(c),
+      hint: c.email,
+      raw: c,
     }))
 }
 
+function asPetList(raw: unknown): PetRow[] {
+  const list = Array.isArray((raw as any)?.data) ? (raw as any).data : Array.isArray(raw) ? raw : []
+  return list.filter((p: any) => p?.id) as PetRow[]
+}
+
 async function onClientSelect(item: ProComboboxItem) {
-  const thread = item.raw ?? threads.value.find((t) => t.id === item.id)
-  if (thread) await select(thread)
+  if (searchLocked.value) return
+  const client = (item.raw as ClientRow | undefined) ?? clients.value.find((c) => c.userId === item.id)
   clientSearch.value = null
+  if (!client) return
+  await startConversation(client)
+}
+
+async function startConversation(client: ClientRow) {
+  actionError.value = ''
+  startingClientId.value = client.userId
+  try {
+    const res: any = await $fetch(`/api/clients/${client.userId}/pets`)
+    const pets = asPetList(res?.data ?? res)
+    if (pets.length === 0) {
+      actionError.value = t('messages.noPets')
+      return
+    }
+    if (pets.length === 1) {
+      await ensureAndOpenThread(client.userId, pets[0]!.id)
+      return
+    }
+    petPickerClient.value = client
+    petPickerPets.value = pets
+    selectedPetId.value = ''
+    petPickerOpen.value = true
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  } finally {
+    startingClientId.value = ''
+  }
+}
+
+function closePetPicker() {
+  if (startingClientId.value) return
+  petPickerOpen.value = false
+  petPickerClient.value = null
+  petPickerPets.value = []
+  selectedPetId.value = ''
+}
+
+async function confirmPetPick() {
+  const client = petPickerClient.value
+  if (!client || !selectedPetId.value) return
+  const petId = selectedPetId.value
+  startingClientId.value = client.userId
+  actionError.value = ''
+  try {
+    await ensureAndOpenThread(client.userId, petId)
+    petPickerOpen.value = false
+    petPickerClient.value = null
+    petPickerPets.value = []
+    selectedPetId.value = ''
+  } catch (e: any) {
+    actionError.value = mapError(e)
+  } finally {
+    startingClientId.value = ''
+  }
+}
+
+async function ensureAndOpenThread(clientUserId: string, petId: string) {
+  const res: any = await $fetch('/api/messaging/threads', {
+    method: 'POST',
+    body: { clientUserId, petId },
+  })
+  const created = res?.data ?? res
+  await loadThreads()
+  const thread = threads.value.find((item) => item?.id === created?.id) ?? created
+  if (thread) await select(thread)
 }
 
 function isVetMessage(msg: any) {
@@ -297,7 +469,7 @@ onMounted(async () => {
   try {
     await fetchUser()
   } catch { /* ignore */ }
-  await loadThreads()
+  await Promise.all([loadThreads(), loadClients()])
   await openThreadFromQuery()
   if (import.meta.client) {
     document.addEventListener('visibilitychange', onVisibility)
@@ -418,12 +590,38 @@ async function onFileSelected(event: Event) {
   border-bottom: 1px solid var(--pf-vet-border);
 }
 
+.pro-chat__thread-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pro-chat__thread-pet {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--pf-vet-text-muted);
+}
+
 .pro-chat__thread-preview {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.8125rem;
   color: var(--pf-vet-text-muted);
   font-weight: 400;
+}
+
+.pro-chat__thread-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.pro-chat__thread-date {
+  font-size: 0.75rem;
+  color: var(--pf-vet-text-muted);
 }
 
 .pro-chat__media-img {

@@ -198,10 +198,14 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng,
-			COALESCE(v.consultation_session, false)
+			COALESCE(v.consultation_session, false),
+			COALESCE(v.visit_type_id::text, ''),
+			COALESCE(vt.name, ''),
+			COALESCE(vt.color, '')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
 		WHERE v.practice_id = $1
 		  AND v.status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND (
@@ -222,6 +226,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor,
 		); err != nil {
 			return nil, err
 		}

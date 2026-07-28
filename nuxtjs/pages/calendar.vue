@@ -2,6 +2,9 @@
   <div data-testid="calendar-page">
     <ProPageHeader :title="$t('calendar.title')" :subtitle="$t('calendar.subtitle')">
       <template #actions>
+        <ProButton data-testid="calendar-new-appointment" @click="openNewAppointment()">
+          {{ $t('calendar.newAppointment') }}
+        </ProButton>
         <NuxtLink to="/settings?tab=calendar" class="pro-btn pro-btn--secondary">
           {{ $t('calendar.openSettings') }}
         </NuxtLink>
@@ -166,6 +169,19 @@
         <p>
           <strong>{{ $t('calendar.columnWhen') }} :</strong> {{ formatWhen(selectedVisit) }}
         </p>
+        <p v-if="selectedVisit.visitTypeName" data-testid="visit-type-label">
+          <strong>{{ $t('calendar.visitType') }} :</strong>
+          <span
+            v-if="selectedVisit.visitTypeColor"
+            class="visit-type-dot"
+            :style="{ background: selectedVisit.visitTypeColor }"
+            aria-hidden="true"
+          />
+          {{ selectedVisit.visitTypeName }}
+          <span v-if="selectedVisit.durationMinutes" class="text-muted">
+            ({{ selectedVisit.durationMinutes }} min)
+          </span>
+        </p>
         <p class="pro-flex-gap" style="align-items: center">
           <strong>{{ $t('calendar.columnStatus') }} :</strong>
           <ProBadge :variant="statusVariant(selectedVisit.status)">
@@ -263,7 +279,7 @@
         <div class="pro-field pro-mb-md">
           <ProVisitReportPanel
             :visit-id="selectedVisit.id"
-            :visit-scheduled-at="selectedVisit.scheduledAt"
+            :visit-scheduled-at="selectedVisit.scheduledAt || selectedVisit.proposedScheduledAt"
           />
         </div>
         <div class="pro-flex-gap create-client-actions">
@@ -348,6 +364,13 @@
         </div>
       </form>
     </ProModal>
+
+    <ProNewAppointmentModal
+      v-model:open="newApptOpen"
+      :visits="visits"
+      :default-day="newApptDay"
+      @created="onAppointmentCreated"
+    />
   </div>
 </template>
 
@@ -369,6 +392,7 @@ const {
   monthGridRange,
   visitDisplayAt,
   statusVariant,
+  dayKey,
 } = useCalendarGrid()
 
 const pending = ref<CalendarVisit[]>([])
@@ -381,6 +405,18 @@ const busyId = ref('')
 const requestPreconsult = ref(false)
 const focusVisitId = ref('')
 const anchorDate = ref(startOfDay(new Date()))
+const newApptOpen = ref(false)
+const newApptDay = ref('')
+
+function openNewAppointment(day?: Date) {
+  newApptDay.value = day ? dayKey(startOfDay(day)) : dayKey(startOfDay(new Date()))
+  newApptOpen.value = true
+}
+
+async function onAppointmentCreated() {
+  actionSuccess.value = t('calendar.newAppointmentCreated')
+  await load()
+}
 
 const viewMode = ref<CalendarViewMode>('week')
 if (import.meta.client) {
@@ -807,6 +843,14 @@ watch(
 }
 .visit-detail p {
   margin: 0.4rem 0;
+}
+.visit-type-dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  margin: 0 0.35rem 0 0.15rem;
+  vertical-align: middle;
 }
 .preconsult-answers {
   margin: 0.75rem 0 1rem;

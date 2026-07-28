@@ -32,7 +32,25 @@ test('recherche client ouvre une conversation', { tag: '@p0' }, async ({ page })
   const option = page.getByTestId('pro-combobox-list').locator('[role="option"]').first()
   await expect(option).toBeVisible({ timeout: 5000 })
   await option.click()
-  await expect(page.locator('.pro-chat__thread-btn--active')).toBeVisible()
+
+  // New flow: client → pet picker (if multiple pets) → ensure thread
+  const petModal = page.getByTestId('messages-pet-picker')
+  const activeThread = page.locator('.pro-chat__thread-btn--active')
+  await Promise.race([
+    petModal.waitFor({ state: 'visible', timeout: 10000 }),
+    activeThread.waitFor({ state: 'visible', timeout: 10000 }),
+  ])
+  if (await petModal.isVisible().catch(() => false)) {
+    const petSelect = page.getByTestId('messages-pet-select')
+    await expect(petSelect).toBeVisible()
+    const options = petSelect.locator('option:not([disabled])')
+    await expect(options.first()).toBeAttached()
+    const value = await options.first().getAttribute('value')
+    if (value) await petSelect.selectOption(value)
+    await page.getByTestId('messages-pet-picker-confirm').click()
+  }
+
+  await expect(activeThread).toBeVisible({ timeout: 10000 })
 })
 
 test('deep-link thread depuis query', { tag: '@p0' }, async ({ page }) => {

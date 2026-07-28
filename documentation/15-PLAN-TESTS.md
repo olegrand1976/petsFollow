@@ -175,10 +175,12 @@ Compte : `vet.demo@petsfollow.test`
 | C2.10 | P2 | Parrainage | `/recommend` | Flux confrère |
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
-| C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda |
+| C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda ; close → confirm Enregistrer/Annuler |
 | C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
+| C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres | Client + animal + date ; lien Écouter si `hasAudio` (draft) ; ouvrir CR |
+| C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
 
 ### C3 — Calendrier & RDV
 
@@ -672,7 +674,8 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · close pendant save · CTA DAF/facture | `@p0` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
+| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
@@ -684,7 +687,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |
 | `13-team-staff-smoke` | Assist / secretary ACL + shares.read + pharmacy caps + factu readonly | `@p0` |
-| `13b-desk-switch` | Switch poste partagé + veille (lock overlay) | `@p0` |
+| `13b-desk-switch` | Switch poste partagé + veille (lock overlay) + reprise consultation mid-veille (scénario G) | `@p0` |
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 | `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |

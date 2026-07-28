@@ -9,18 +9,19 @@ import (
 )
 
 type ThreadSummary struct {
-	ID                 string `json:"id"`
-	PracticeID         string `json:"practiceId"`
-	ClientUserID       string `json:"clientUserId"`
-	VetUserID          string `json:"vetUserId"`
-	PetID              string `json:"petId"`
-	ClientName         string `json:"clientName"`
-	ClientEmail        string `json:"clientEmail"`
-	PracticeName       string `json:"practiceName,omitempty"`
-	VetFullName        string `json:"vetFullName,omitempty"`
-	PetName            string `json:"petName,omitempty"`
-	LastMessagePreview string `json:"lastMessagePreview"`
-	UnreadCount        int    `json:"unreadCount"`
+	ID                 string     `json:"id"`
+	PracticeID         string     `json:"practiceId"`
+	ClientUserID       string     `json:"clientUserId"`
+	VetUserID          string     `json:"vetUserId"`
+	PetID              string     `json:"petId"`
+	ClientName         string     `json:"clientName"`
+	ClientEmail        string     `json:"clientEmail"`
+	PracticeName       string     `json:"practiceName,omitempty"`
+	VetFullName        string     `json:"vetFullName,omitempty"`
+	PetName            string     `json:"petName,omitempty"`
+	LastMessagePreview string     `json:"lastMessagePreview"`
+	LastMessageAt      *time.Time `json:"lastMessageAt,omitempty"`
+	UnreadCount        int        `json:"unreadCount"`
 }
 
 type VetOverview struct {
@@ -168,6 +169,11 @@ const threadSummarySelect = `
 				FROM messaging.messages m
 				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
 			), ''),
+			(
+				SELECT m.created_at
+				FROM messaging.messages m
+				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+			),
 			COALESCE((
 				SELECT COUNT(*)::int FROM messaging.messages m
 				WHERE m.thread_id = t.id AND m.sender_user_id = t.client_user_id AND m.read_at IS NULL
@@ -179,7 +185,10 @@ const threadSummarySelect = `
 func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]ThreadSummary, error) {
 	rows, err := s.pool.Query(ctx, threadSummarySelect+`
 		WHERE t.vet_user_id = $1
-		ORDER BY t.created_at DESC`, vetID)
+		ORDER BY (
+			SELECT m.created_at FROM messaging.messages m
+			WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+		) DESC NULLS LAST, t.created_at DESC`, vetID)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +200,10 @@ func (s *Store) ListThreadSummariesForVet(ctx context.Context, vetID string) ([]
 func (s *Store) ListThreadSummariesForPractice(ctx context.Context, practiceID string) ([]ThreadSummary, error) {
 	rows, err := s.pool.Query(ctx, threadSummarySelect+`
 		WHERE t.practice_id = $1
-		ORDER BY t.created_at DESC`, practiceID)
+		ORDER BY (
+			SELECT m.created_at FROM messaging.messages m
+			WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+		) DESC NULLS LAST, t.created_at DESC`, practiceID)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +229,11 @@ func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID s
 				FROM messaging.messages m
 				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
 			), ''),
+			(
+				SELECT m.created_at
+				FROM messaging.messages m
+				WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+			),
 			COALESCE((
 				SELECT COUNT(*)::int FROM messaging.messages m
 				WHERE m.thread_id = t.id AND m.sender_user_id <> $1 AND m.read_at IS NULL
@@ -226,7 +243,10 @@ func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID s
 		LEFT JOIN identity.users v ON v.id = t.vet_user_id
 		LEFT JOIN pets.pets p ON p.id = t.pet_id
 		WHERE t.client_user_id = $1
-		ORDER BY t.created_at DESC`, clientUserID)
+		ORDER BY (
+			SELECT m.created_at FROM messaging.messages m
+			WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1
+		) DESC NULLS LAST, t.created_at DESC`, clientUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +257,7 @@ func (s *Store) ListThreadSummariesForClient(ctx context.Context, clientUserID s
 		if err := rows.Scan(
 			&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID,
 			&t.PracticeName, &t.VetFullName, &t.PetName,
-			&t.LastMessagePreview, &t.UnreadCount,
+			&t.LastMessagePreview, &t.LastMessageAt, &t.UnreadCount,
 		); err != nil {
 			return nil, err
 		}
@@ -253,7 +273,7 @@ func scanThreadSummaries(rows pgx.Rows) ([]ThreadSummary, error) {
 		if err := rows.Scan(
 			&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID,
 			&t.ClientName, &t.ClientEmail, &t.PetName,
-			&t.LastMessagePreview, &t.UnreadCount,
+			&t.LastMessagePreview, &t.LastMessageAt, &t.UnreadCount,
 		); err != nil {
 			return nil, err
 		}

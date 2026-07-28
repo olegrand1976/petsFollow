@@ -125,6 +125,8 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
       { timeout: 20000 },
     )
     await page.getByTestId('consultation-cancel').click()
+    await expect(page.getByTestId('consultation-leave-prompt')).toBeVisible({ timeout: 5000 })
+    await page.getByTestId('consultation-leave-discard').click()
     const cancelled = await cancelRes
     expect([200, 204]).toContain(cancelled.status())
     await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,19 +11,20 @@ import (
 )
 
 type VisitReport struct {
-	ID                    string     `json:"id"`
-	VisitID               string     `json:"visitId"`
-	AuthorUserID          string     `json:"authorUserId"`
-	Status                string     `json:"status"`
-	BodyText              string     `json:"bodyText"`
-	AudioURL              string     `json:"audioUrl,omitempty"`
-	AudioObjectKey        string     `json:"-"`
-	TranscriptText        string     `json:"transcriptText,omitempty"`
-	ImprovedText          string     `json:"improvedText,omitempty"`
-	ClientAudioConsentAt  *time.Time `json:"clientAudioConsentAt,omitempty"`
-	CreatedAt             time.Time  `json:"createdAt"`
-	UpdatedAt             time.Time  `json:"updatedAt"`
-	FinalizedAt           *time.Time `json:"finalizedAt,omitempty"`
+	ID                   string     `json:"id"`
+	VisitID              string     `json:"visitId"`
+	AuthorUserID         string     `json:"authorUserId"`
+	Status               string     `json:"status"`
+	BodyText             string     `json:"bodyText"`
+	AudioURL             string     `json:"audioUrl,omitempty"`
+	AudioObjectKey       string     `json:"-"`
+	HasAudio             bool       `json:"hasAudio"`
+	TranscriptText       string     `json:"transcriptText,omitempty"`
+	ImprovedText         string     `json:"improvedText,omitempty"`
+	ClientAudioConsentAt *time.Time `json:"clientAudioConsentAt,omitempty"`
+	CreatedAt            time.Time  `json:"createdAt"`
+	UpdatedAt            time.Time  `json:"updatedAt"`
+	FinalizedAt          *time.Time `json:"finalizedAt,omitempty"`
 }
 
 const visitReportReturning = `
@@ -37,6 +39,9 @@ func scanVisitReport(row pgx.Row) (VisitReport, error) {
 		&r.AudioURL, &r.AudioObjectKey, &r.TranscriptText, &r.ImprovedText,
 		&r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
 	)
+	if err == nil {
+		r.HasAudio = strings.TrimSpace(r.AudioObjectKey) != ""
+	}
 	return r, err
 }
 
@@ -224,6 +229,7 @@ func (s *Store) ListVisitReportsForVisit(ctx context.Context, visitID, viewerUse
 		); err != nil {
 			return nil, err
 		}
+		r.HasAudio = strings.TrimSpace(r.AudioObjectKey) != ""
 		sum.VisitReport = r
 		sum.Mine = r.AuthorUserID == viewerUserID
 		out = append(out, sum)
@@ -232,4 +238,20 @@ func (s *Store) ListVisitReportsForVisit(ctx context.Context, visitID, viewerUse
 		out = []VisitReportSummary{}
 	}
 	return out, rows.Err()
+}
+
+// GetVisitReportWithAudio returns any draft report for the visit that still has audio stored.
+func (s *Store) GetVisitReportWithAudio(ctx context.Context, visitID string) (VisitReport, error) {
+	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
+		SELECT `+visitReportReturning+`
+		FROM visits.visit_reports
+		WHERE visit_id = $1::uuid
+		  AND status = 'draft'
+		  AND length(trim(COALESCE(audio_object_key, ''))) > 0
+		ORDER BY updated_at DESC
+		LIMIT 1`, visitID))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VisitReport{}, ErrNotFound
+	}
+	return r, err
 }

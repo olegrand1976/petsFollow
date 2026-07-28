@@ -205,4 +205,57 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     const stillLocked = await page.evaluate(() => sessionStorage.getItem('pf_desk_locked'))
     expect(stillLocked).toBeNull()
   })
+
+  test('G: veille mid-consultation → unlock même user reprend le modal', async ({ page }) => {
+    await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+    await page.evaluate(() => {
+      ;(window as any).__PF_DESK_IDLE_MS = 60_000
+      const w = window as Window & {
+        __PF_DESK_SET_ROSTER?: (m: Array<{ email: string, fullName: string, teamRole: string }>) => void
+      }
+      w.__PF_DESK_SET_ROSTER?.([
+        { email: 'vet.demo@petsfollow.test', fullName: 'Vet Demo', teamRole: 'vet' },
+        { email: 'vet.colleague@petsfollow.test', fullName: 'Colleague', teamRole: 'vet' },
+      ])
+    })
+
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await dismissProModals(page)
+    const search = page.getByPlaceholder(/nom ou email|name or email|naam of e-mail/i)
+    await search.fill('Sophie')
+    await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })
+    const cta = page.locator('[data-testid^="new-consultation-"]').first()
+    await cta.click()
+    await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+    const petSelect = page.getByTestId('consultation-pet-select')
+    await expect(petSelect).toBeEnabled({ timeout: 10000 })
+    const options = petSelect.locator('option:not([disabled])')
+    await options.first().waitFor({ state: 'attached', timeout: 10000 })
+    const value = await options.first().getAttribute('value')
+    if (value) await petSelect.selectOption(value)
+    await page.getByTestId('consultation-start').click()
+    await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('visit-report-body').fill(`Desk resume CR ${Date.now()}`)
+
+    await page.evaluate(() => {
+      const w = window as Window & { __PF_DESK_FORCE_LOCK?: () => void }
+      w.__PF_DESK_FORCE_LOCK?.()
+    })
+    await expect(page.getByTestId('pro-desk-lock')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0)
+
+    // Autosave may be in-flight before tokens cleared — wait for lock settle.
+    await page.waitForTimeout(500)
+    await unlockWithPassword(page)
+    await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
+    await expect(page.getByTestId('consultation-report')).toBeVisible()
+    // Prefer save leave if body was flushed; otherwise discard.
+    await page.getByTestId('consultation-cancel').click()
+    const leavePrompt = page.getByTestId('consultation-leave-prompt')
+    if (await leavePrompt.isVisible().catch(() => false)) {
+      await page.getByTestId('consultation-leave-discard').click()
+    }
+    await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
+  })
 })

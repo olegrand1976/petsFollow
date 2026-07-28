@@ -117,6 +117,19 @@ func (a *API) ensureThreadStaff(w http.ResponseWriter, r *http.Request, id authx
 		return
 	}
 	petID := strings.TrimSpace(req.PetID)
+	if petID != "" {
+		inPractice := false
+		for _, p := range pets {
+			if p.ID == petID {
+				inPractice = true
+				break
+			}
+		}
+		if !inPractice {
+			writeErr(w, r, http.StatusForbidden, "forbidden", "pet_not_in_practice")
+			return
+		}
+	}
 	thread, err := a.store.GetOrCreateThreadForPet(r.Context(), id.PracticeID, clientID, id.UserID, petID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

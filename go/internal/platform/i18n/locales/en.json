@@ -178,7 +178,8 @@
     "partner_mark_not_eligible": "Partner mark not allowed (active connection + PartyID required)",
     "saas_master_not_configured": "Billit master account not configured (BILLIT_MASTER_*)",
     "invalid_id": "Invalid identifier",
-    "care_pro_visit_only": "Only allowed on visits created in the field (care pro)"
+    "care_pro_visit_only": "Only allowed on visits created in the field (care pro)",
+    "pet_not_in_practice": "Pet is not linked to this practice"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

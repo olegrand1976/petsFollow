@@ -125,17 +125,32 @@
                   @click="playAudio(row)"
                 />
                 <ProIconAction
-                  v-if="canWriteClinical"
+                  v-if="canReadPets"
                   icon="description"
                   :label="$t('consultations.openReport')"
                   :test-id="`consultation-open-cr-${row.id}`"
                   @click="openReport(row)"
                 />
+                <NuxtLink
+                  v-else-if="row.clientId && row.petId"
+                  :to="`/clients/${row.clientId}/pets/${row.petId}`"
+                  class="pro-link"
+                  :data-testid="`consultation-pet-link-${row.id}`"
+                >
+                  {{ $t('common.profile') }}
+                </NuxtLink>
               </div>
             </td>
           </tr>
         </tbody>
       </ProTable>
+      <p
+        v-if="rows.length >= 200"
+        class="pro-hint"
+        data-testid="consultations-limit-hint"
+      >
+        {{ $t('consultations.limitHint') }}
+      </p>
     </ProCard>
 
     <ProModal
@@ -147,6 +162,7 @@
       <ProVisitReportPanel
         v-if="selectedVisitId"
         :visit-id="selectedVisitId"
+        :visit-scheduled-at="selectedVisitScheduledAt || undefined"
         :readonly="!canWriteClinical"
       />
     </ProModal>
@@ -193,6 +209,7 @@ const { t, locale } = useI18n()
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canReadPets = computed(() => canPractice('pets.read'))
 
 const rows = ref<ConsultationRow[]>([])
 const loadError = ref('')
@@ -205,6 +222,7 @@ const loading = ref(false)
 
 const reportOpen = ref(false)
 const selectedVisitId = ref('')
+const selectedVisitScheduledAt = ref('')
 const audioOpen = ref(false)
 const audioUrl = ref('')
 const audioLoading = ref(false)
@@ -320,8 +338,9 @@ function scheduleLoad() {
 watch([query, statusFilter, fromDate, toDate, audioOnly], scheduleLoad)
 
 function openReport(row: ConsultationRow) {
-  if (!canWriteClinical.value) return
+  if (!canReadPets.value) return
   selectedVisitId.value = row.id
+  selectedVisitScheduledAt.value = row.scheduledAt || row.createdAt || ''
   reportOpen.value = true
 }
 

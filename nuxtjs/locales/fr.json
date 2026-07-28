@@ -906,6 +906,18 @@
       "vacationsReminder": "Rappel : indiquez vos vacances pour l'année en cours (ou cochez « aucune vacance »).",
       "noVacations": "Aucune vacance cette année",
       "addVacation": "Ajouter",
+      "visitTypesTitle": "Types de rendez-vous",
+      "visitTypesHint": "Définissez les types proposés à la création d'un RDV (durée et couleur calendrier).",
+      "visitTypeName": "Nom du type",
+      "visitTypeDuration": "Durée (minutes)",
+      "visitTypeColor": "Couleur",
+      "visitTypeActive": "Actif",
+      "addVisitType": "Ajouter un type",
+      "saveVisitTypes": "Enregistrer les types",
+      "visitTypesSaved": "Types de RDV enregistrés.",
+      "visitTypesSaveFailed": "Enregistrement des types impossible.",
+      "visitTypeNameRequired": "Chaque type doit avoir un nom.",
+      "visitTypeDurationInvalid": "Durée invalide (5 à 480 minutes).",
       "weekday": {
         "0": "Dimanche",
         "1": "Lundi",
@@ -1239,6 +1251,7 @@
     "audioLoading": "Chargement de l'audio…",
     "audioError": "Audio indisponible (finalisé ou absent).",
     "loadError": "Impossible de charger les consultations.",
+    "limitHint": "Affichage limité aux 200 consultations les plus récentes. Affinez les filtres pour affiner.",
     "reportFinal": "Finalisé",
     "reportDraft": "Brouillon",
     "status": {
@@ -1447,7 +1460,7 @@
     "title": "Dashboard",
     "welcome": "Bonjour, {name}",
     "subtitle": "Vue d'ensemble de votre activité petsFollow Pro.",
-    "activeClients": "Clients actifs",
+    "activeClients": "Clients",
     "unreadMessages": "Messages non lus",
     "recentSessions": "Relevés récents (7 j)",
     "pendingLinks": "Invitations en attente",
@@ -1486,7 +1499,16 @@
         "ux": "Parcours peu clair",
         "other": "Autre"
       }
-    }
+    },
+    "unreadHeartrate": "FC non vues",
+    "todayTitle": "Aujourd'hui",
+    "todayEmptyTitle": "Aucun RDV aujourd’hui",
+    "todayEmptyDescription": "Rien de planifié pour cette journée.",
+    "queueTitle": "À traiter",
+    "queueEmptyTitle": "Rien en attente",
+    "queueEmptyDescription": "Pas de RDV, message ou invitation à traiter.",
+    "queueLinkRequests": "1 invitation client",
+    "queueLinkRequestsPlural": "{count} invitations clients"
   },
   "messages": {
     "title": "Messagerie",
@@ -1506,7 +1528,16 @@
     "attach": "Joindre",
     "attachPhoto": "Photo",
     "attachVideo": "Vidéo",
-    "sending": "Envoi…"
+    "sending": "Envoi…",
+    "lastExchangeAt": "Dernier échange : {date}",
+    "newConversation": "Nouvelle conversation",
+    "loadingPets": "Chargement des animaux…",
+    "noPets": "Ce client n’a pas encore d’animal. Ajoutez-en un pour démarrer une conversation.",
+    "pickPetTitle": "Choisir un animal",
+    "pickPetHint": "Conversation avec {name}",
+    "pickPet": "Animal",
+    "pickPetPlaceholder": "Sélectionner un animal",
+    "startConversation": "Ouvrir la conversation"
   },
   "admin": {
     "stripeCatalog": {
@@ -2097,6 +2128,21 @@
   "calendar": {
     "title": "Calendrier",
     "subtitle": "Demandes de rendez-vous et agenda du cabinet.",
+    "newAppointment": "+ Nouveau RDV",
+    "newAppointmentDay": "Jour",
+    "newAppointmentTime": "Heure",
+    "newAppointmentCreated": "Rendez-vous créé.",
+    "newAppointmentFailed": "Création du rendez-vous impossible.",
+    "newAppointmentLoadFailed": "Impossible de charger les données du formulaire.",
+    "selectClient": "Choisir un client…",
+    "selectPet": "Choisir un animal…",
+    "visitType": "Type de RDV",
+    "visitTypeNone": "Sans type (durée manuelle)",
+    "durationMinutes": "Durée (min)",
+    "durationFromType": "Durée définie par le type sélectionné.",
+    "dayAgenda": "Agenda du jour",
+    "dayAgendaEmpty": "Aucun rendez-vous ce jour-là.",
+    "freeSlot": "Libre — {minutes} min",
     "openSettings": "Horaires & vacances",
     "bookingDisabledHint": "La réservation client via l'app est désactivée. Activez-la dans Paramètres.",
     "pendingTitle": "À traiter",
@@ -2810,7 +2856,8 @@
     "not_configured": "Connexion Google non configurée.",
     "internal": "Erreur interne du serveur",
     "not_ready": "Service non prêt",
-    "generic": "Une erreur est survenue"
+    "generic": "Une erreur est survenue",
+    "pet_not_in_practice": "Animal non rattaché à ce cabinet"
   },
   "manager": {
     "dashboard": {

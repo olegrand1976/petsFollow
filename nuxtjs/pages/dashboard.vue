@@ -23,8 +23,10 @@
       <ProKpi
         v-if="canReadPets"
         icon="favorite"
-        :value="recentSessions"
-        :label="$t('dashboard.recentSessions')"
+        :value="unreadHeartrate"
+        :label="$t('dashboard.unreadHeartrate')"
+        to="/pets"
+        :variant="unreadHeartrateRaw > 0 ? 'alert' : 'default'"
       />
       <ProKpi
         v-if="canManageShares"
@@ -42,101 +44,53 @@
         to="/calendar"
         :variant="pendingVisitsRaw > 0 ? 'alert' : 'default'"
       />
-      <ProKpi
-        v-if="canReadClients"
-        icon="medical_services"
-        :value="overdueCare"
-        :label="$t('dashboard.overdueCare')"
-        to="/clients"
-        :variant="overdueCareRaw > 0 ? 'alert' : 'default'"
-      />
     </div>
     <div class="pro-grid-2 pro-mt-lg">
-      <ProCard :title="$t('dashboard.quickActions')">
-        <div class="pro-flex-gap">
-          <ProButton v-if="canReadClients" @click="navigateTo('/clients')">{{ $t('dashboard.viewClients') }}</ProButton>
-          <ProButton v-if="canManageCalendar" variant="secondary" @click="navigateTo('/calendar')">{{ $t('dashboard.viewCalendar') }}</ProButton>
-          <ProButton v-if="canMessage" variant="secondary" @click="navigateTo('/messages')">{{ $t('dashboard.messaging') }}</ProButton>
-          <ProButton variant="ghost" @click="navigateTo('/settings')">{{ $t('nav.settings') }}</ProButton>
-        </div>
+      <ProCard v-if="canManageCalendar" :title="$t('dashboard.todayTitle')" data-testid="dashboard-today">
+        <ProEmptyState
+          v-if="!todayVisits.length"
+          :title="$t('dashboard.todayEmptyTitle')"
+          :description="$t('dashboard.todayEmptyDescription')"
+        />
+        <ul v-else class="pro-dashboard-list">
+          <li v-for="v in todayVisits" :key="v.id" class="pro-dashboard-list__item">
+            <NuxtLink :to="`/calendar?visit=${v.id}`" class="pro-dashboard-list__link">
+              <span class="pro-dashboard-list__main">
+                <strong>{{ formatVisitTime(v) }}</strong>
+                <span>{{ v.clientName }}<template v-if="v.petName"> · {{ v.petName }}</template></span>
+              </span>
+              <ProBadge :variant="statusVariant(v.status)">{{ $t(`calendar.status.${v.status}`) }}</ProBadge>
+            </NuxtLink>
+          </li>
+        </ul>
       </ProCard>
-      <ProCard :title="$t('dashboard.aiModule.title')" data-testid="dashboard-ai-module">
-        <template v-if="aiLoading">
-          <p class="text-muted">…</p>
-        </template>
-        <template v-else-if="aiModule?.status === 'none' || !aiModule">
-          <p class="text-muted">{{ $t('dashboard.aiModule.inactive') }}</p>
-        </template>
-        <template v-else>
-          <p v-if="aiModule.status === 'trial'" class="pro-hint">
-            {{ $t('dashboard.aiModule.trial', { days: aiModule.daysRemainingTrial }) }}
-          </p>
-          <p v-else-if="aiModule.status === 'active'" class="pro-hint">
-            {{ $t('dashboard.aiModule.active') }}
-          </p>
-          <p v-else-if="aiModule.status === 'disabled'" class="pro-hint pro-hint--error">
-            {{ $t('dashboard.aiModule.disabled') }}
-          </p>
-          <p v-else class="pro-hint pro-hint--error">
-            {{ $t('dashboard.aiModule.expired') }}
-          </p>
-          <div v-if="aiRoi?.unlocked" class="ai-roi pro-mt-md" data-testid="dashboard-ai-roi">
-            <p class="ai-roi__hero">
-              <strong>{{ aiRoi.minutesSaved }}</strong>
-              {{ $t('dashboard.aiModule.minutesSaved') }}
-            </p>
-            <p class="text-muted">
-              ≈ {{ (aiRoi.netEuroCents / 100).toFixed(0) }} €
-              {{ $t('dashboard.aiModule.euroNet') }}
-              <span class="pro-hint">({{ $t('dashboard.aiModule.disclaimer') }})</span>
-            </p>
-          </div>
-          <p v-else-if="aiModule.roiUnlocked && !aiRoi" class="pro-hint pro-mt-md">
-            {{ $t('dashboard.aiModule.roiUnavailable') }}
-          </p>
-          <p v-else-if="aiModule.allowed && !aiModule.roiUnlocked" class="pro-hint pro-mt-md">
-            {{ $t('dashboard.aiModule.roiLocked', { day: Math.max(0, 60 - (aiModule.daysSinceActivation || 0)) }) }}
-          </p>
-          <div class="pro-flex-gap pro-mt-md">
-            <ProButton
-              v-if="canManagePractice && (aiModule.status === 'trial' || aiModule.status === 'expired')"
-              :disabled="aiBusy"
-              @click="requestPaid"
-            >
-              {{ $t('dashboard.aiModule.requestPaid') }}
-            </ProButton>
-            <ProButton v-if="canManageCalendar" variant="secondary" @click="navigateTo('/calendar')">
-              {{ $t('dashboard.aiModule.openCalendar') }}
-            </ProButton>
-          </div>
-          <form v-if="aiModule.allowed" class="pro-form pro-mt-md" @submit.prevent="sendFeedback">
-            <label class="pro-label" for="ai-nps">{{ $t('dashboard.aiModule.npsLabel') }}</label>
-            <input id="ai-nps" v-model.number="nps" class="pro-input" type="number" min="0" max="10" required>
-            <fieldset class="pro-mt-sm">
-              <legend class="pro-label">{{ $t('dashboard.aiModule.frictionTagsLabel') }}</legend>
-              <div class="ai-friction-tags">
-                <label
-                  v-for="tag in frictionTagOptions"
-                  :key="tag"
-                  class="ai-friction-tags__item"
-                >
-                  <input v-model="frictionTags" type="checkbox" :value="tag">
-                  {{ $t(`dashboard.aiModule.frictionTag.${tag}`) }}
-                </label>
-              </div>
-            </fieldset>
-            <ProButton type="submit" variant="ghost" :disabled="aiBusy">
-              {{ $t('dashboard.aiModule.sendFeedback') }}
-            </ProButton>
-          </form>
-          <p v-if="aiMsg" class="pro-hint">{{ aiMsg }}</p>
-        </template>
+
+      <ProCard :title="$t('dashboard.queueTitle')" data-testid="dashboard-queue">
+        <ProEmptyState
+          v-if="!queueItems.length"
+          :title="$t('dashboard.queueEmptyTitle')"
+          :description="$t('dashboard.queueEmptyDescription')"
+        />
+        <ul v-else class="pro-dashboard-list">
+          <li v-for="item in queueItems" :key="item.key" class="pro-dashboard-list__item">
+            <NuxtLink :to="item.to" class="pro-dashboard-list__link">
+              <ProIcon :name="item.icon" :size="20" class="pro-dashboard-list__icon" />
+              <span class="pro-dashboard-list__main">
+                <strong>{{ item.label }}</strong>
+                <span v-if="item.meta">{{ item.meta }}</span>
+              </span>
+              <ProBadge v-if="item.badge" variant="warning">{{ item.badge }}</ProBadge>
+            </NuxtLink>
+          </li>
+        </ul>
       </ProCard>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { CalendarVisit } from '~/composables/useCalendarGrid'
+
 definePageMeta({ middleware: 'vet-only' })
 
 const { t } = useI18n()
@@ -146,84 +100,129 @@ const canReadPets = computed(() => canPractice('pets.read'))
 const canManageShares = computed(() => canPractice('shares.manage'))
 const canManageCalendar = computed(() => canPractice('calendar.manage'))
 const canMessage = computed(() => canPractice('messaging'))
-const canManagePractice = computed(() => canPractice('practice.settings'))
 const welcomeTitle = ref(t('dashboard.title'))
 const clientCount = ref('—')
 const unreadCount = ref('—')
-const recentSessions = ref('—')
+const unreadHeartrate = ref('—')
 const pendingLinks = ref('—')
 const pendingVisits = ref('—')
-const overdueCare = ref('—')
 const unreadRaw = ref(0)
 const pendingLinksRaw = ref(0)
 const pendingVisitsRaw = ref(0)
-const overdueCareRaw = ref(0)
+const unreadHeartrateRaw = ref(0)
 const { fetchUser } = useProUser()
-const { mapError } = useApiError()
+const { formatTime } = useFormatters()
+const { statusVariant } = useCalendarGrid()
 
 const hasUnread = computed(() => unreadRaw.value > 0)
 
-const aiLoading = ref(true)
-const aiBusy = ref(false)
-const aiModule = ref<any>(null)
-const aiRoi = ref<any>(null)
-const nps = ref(9)
-const frictionTags = ref<string[]>([])
-const frictionTagOptions = ['audio', 'quality', 'time', 'ux', 'other'] as const
-const aiMsg = ref('')
+const todayVisits = ref<CalendarVisit[]>([])
+const pendingCalendarVisits = ref<CalendarVisit[]>([])
+const unreadThreads = ref<any[]>([])
 
-async function loadAi() {
-  aiLoading.value = true
-  try {
-    const res: any = await $fetch('/api/me/ai-module')
-    aiModule.value = res.data ?? res
-  } catch {
-    aiModule.value = { status: 'none' }
-    aiRoi.value = null
-    aiLoading.value = false
-    return
-  }
-  if (aiModule.value?.roiUnlocked) {
-    try {
-      const roiRes: any = await $fetch('/api/me/ai-module/roi')
-      aiRoi.value = roiRes.data ?? roiRes
-    } catch {
-      aiRoi.value = null
+type QueueItem = {
+  key: string
+  to: string
+  icon: string
+  label: string
+  meta?: string
+  badge?: string
+}
+
+function formatVisitTime(v: CalendarVisit) {
+  const at = v.scheduledAt || v.proposedScheduledAt
+  return at ? formatTime(at) : t('calendar.unscheduled')
+}
+
+function threadClientLabel(thread: any) {
+  return thread.clientName || t('common.clientFallback', { id: thread.clientUserId?.slice(0, 8) ?? '' })
+}
+
+const queueItems = computed<QueueItem[]>(() => {
+  const items: QueueItem[] = []
+  if (canManageCalendar.value) {
+    for (const v of pendingCalendarVisits.value) {
+      items.push({
+        key: `visit-${v.id}`,
+        to: `/calendar?visit=${v.id}`,
+        icon: 'event',
+        label: v.clientName
+          ? `${v.clientName}${v.petName ? ' · ' + v.petName : ''}`
+          : t('calendar.unscheduled'),
+        meta: t(`calendar.status.${v.status}`),
+      })
     }
-  } else {
-    aiRoi.value = null
   }
-  aiLoading.value = false
-}
-
-async function requestPaid() {
-  aiBusy.value = true
-  aiMsg.value = ''
-  try {
-    await $fetch('/api/me/ai-module/request-paid', { method: 'POST' })
-    aiMsg.value = t('dashboard.aiModule.requestSent')
-  } catch (e: any) {
-    aiMsg.value = mapError(e)
-  } finally {
-    aiBusy.value = false
+  if (canMessage.value) {
+    for (const th of unreadThreads.value) {
+      items.push({
+        key: `thread-${th.id}`,
+        to: `/messages?thread=${th.id}`,
+        icon: 'chat',
+        label: threadClientLabel(th),
+        meta: th.lastMessagePreview || undefined,
+        badge: String(th.unreadCount),
+      })
+    }
   }
-}
-
-async function sendFeedback() {
-  aiBusy.value = true
-  aiMsg.value = ''
-  try {
-    await $fetch('/api/me/ai-module/feedback', {
-      method: 'POST',
-      body: { nps: nps.value, source: 'in_app', comment: '', frictionTags: frictionTags.value },
+  if (canManageShares.value && pendingLinksRaw.value > 0) {
+    items.push({
+      key: 'link-requests',
+      to: '/clients?invitations=1',
+      icon: 'mail',
+      label: pendingLinksRaw.value > 1
+        ? t('dashboard.queueLinkRequestsPlural', { count: pendingLinksRaw.value })
+        : t('dashboard.queueLinkRequests', { count: pendingLinksRaw.value }),
     })
-    aiMsg.value = t('dashboard.aiModule.feedbackOk')
-    frictionTags.value = []
-  } catch (e: any) {
-    aiMsg.value = mapError(e)
-  } finally {
-    aiBusy.value = false
   }
+  return items
+})
+
+function toLocalRFC3339(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const offMin = -d.getTimezoneOffset()
+  const sign = offMin >= 0 ? '+' : '-'
+  const abs = Math.abs(offMin)
+  const oh = pad(Math.floor(abs / 60))
+  const om = pad(abs % 60)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${oh}:${om}`
+}
+
+async function loadCalendar() {
+  if (!canManageCalendar.value) return
+  const day0 = new Date()
+  day0.setHours(0, 0, 0, 0)
+  const day1 = new Date(day0)
+  day1.setDate(day1.getDate() + 1)
+  try {
+    const res: any = await $fetch(
+      `/api/vet/calendar?from=${encodeURIComponent(toLocalRFC3339(day0))}&to=${encodeURIComponent(toLocalRFC3339(day1))}`,
+    )
+    const cal = res.data ?? res
+    todayVisits.value = [...(cal.visits ?? [])].sort((a: CalendarVisit, b: CalendarVisit) => {
+      const aAt = a.scheduledAt || a.proposedScheduledAt || ''
+      const bAt = b.scheduledAt || b.proposedScheduledAt || ''
+      return aAt.localeCompare(bAt)
+    })
+    pendingCalendarVisits.value = (cal.pending ?? []).slice(0, 8)
+  } catch { /* ignore */ }
+}
+
+async function loadUnreadThreads() {
+  if (!canMessage.value) return
+  try {
+    const res: any = await $fetch('/api/messaging/threads')
+    const list = Array.isArray(res?.data ?? res) ? (res.data ?? res) : []
+    unreadThreads.value = list
+      .filter((th: any) => (th?.unreadCount ?? 0) > 0)
+      .sort((a: any, b: any) => {
+        const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0
+        const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0
+        return bTime - aTime
+      })
+      .slice(0, 5)
+  } catch { /* ignore */ }
 }
 
 onMounted(async () => {
@@ -232,42 +231,81 @@ onMounted(async () => {
     const name = me?.fullName
     if (name) welcomeTitle.value = t('dashboard.welcome', { name: name.split(' ')[0] })
   } catch { /* ignore */ }
-  try {
-    const res: any = await $fetch('/api/vet/overview')
-    const data = res.data ?? res
-    clientCount.value = String(data.clientCount ?? 0)
-    unreadRaw.value = Number(data.unreadMessages ?? 0)
-    unreadCount.value = String(unreadRaw.value)
-    recentSessions.value = String(data.recentSessions7d ?? 0)
-    pendingLinksRaw.value = Number(data.pendingLinkRequests ?? 0)
-    pendingLinks.value = String(pendingLinksRaw.value)
-    pendingVisitsRaw.value = Number(data.pendingVisits ?? 0)
-    pendingVisits.value = String(pendingVisitsRaw.value)
-    overdueCareRaw.value = Number(data.overdueCareCount ?? 0)
-    overdueCare.value = String(overdueCareRaw.value)
-  } catch { /* ignore */ }
-  void loadAi()
+
+  // Overview is gated by clients.read on the API — skip if unavailable.
+  if (canReadClients.value) {
+    try {
+      const res: any = await $fetch('/api/vet/overview')
+      const data = res.data ?? res
+      clientCount.value = String(data.clientCount ?? 0)
+      if (canMessage.value) {
+        unreadRaw.value = Number(data.unreadMessages ?? 0)
+        unreadCount.value = String(unreadRaw.value)
+      }
+      if (canReadPets.value) {
+        unreadHeartrateRaw.value = Number(data.unreadHeartrate ?? 0)
+        unreadHeartrate.value = String(unreadHeartrateRaw.value)
+      }
+      if (canManageShares.value) {
+        pendingLinksRaw.value = Number(data.pendingLinkRequests ?? 0)
+        pendingLinks.value = String(pendingLinksRaw.value)
+      }
+      if (canManageCalendar.value) {
+        pendingVisitsRaw.value = Number(data.pendingVisits ?? 0)
+        pendingVisits.value = String(pendingVisitsRaw.value)
+      }
+    } catch { /* ignore */ }
+  }
+
+  await Promise.all([loadCalendar(), loadUnreadThreads()])
 })
 </script>
 
 <style scoped>
-.ai-roi__hero {
-  font-size: 1.25rem;
-  margin: 0 0 0.35rem;
-}
-.ai-roi__hero strong {
-  font-size: 1.75rem;
-}
-.ai-friction-tags {
+.pro-dashboard-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin: 0.35rem 0 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 22rem;
+  overflow-y: auto;
 }
-.ai-friction-tags__item {
-  display: inline-flex;
+
+.pro-dashboard-list__link {
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.9rem;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--pf-vet-radius);
+  background: var(--pf-vet-bg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.pro-dashboard-list__link:hover {
+  background: color-mix(in srgb, var(--pf-vet-accent) 10%, var(--pf-vet-bg));
+}
+
+.pro-dashboard-list__icon {
+  flex: none;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-dashboard-list__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pro-dashboard-list__main span {
+  font-size: 0.8125rem;
+  color: var(--pf-vet-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

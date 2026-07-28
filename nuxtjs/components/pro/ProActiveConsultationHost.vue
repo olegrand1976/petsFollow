@@ -15,7 +15,6 @@ import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 const active = useActiveConsultation()
 const { user } = useProUser()
-const route = useRoute()
 const open = active.open
 const clientId = active.clientId
 const resumeVisitId = active.resumeVisitId
@@ -32,14 +31,24 @@ function onClosed() {
 
 function onVisibility() {
   if (document.visibilityState !== 'hidden') return
-  // Tab sleep / background: autosave only — do not tear down the modal.
-  void active.autosaveAndRemember(user.value?.email, route.fullPath || route.path)
+  // Tab sleep: autosave CR only — resume token is owned by desk lock/switch.
+  void active.autosaveOnly()
 }
+
+watch(
+  () => user.value?.email,
+  (email) => {
+    if (!email || active.open.value) return
+    active.tryResumeForCurrentUser(email)
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   if (!import.meta.client) return
   document.addEventListener('visibilitychange', onVisibility)
   window.addEventListener('pagehide', onVisibility)
+  active.tryResumeForCurrentUser(user.value?.email)
 })
 
 onBeforeUnmount(() => {

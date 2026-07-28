@@ -399,7 +399,19 @@
         "4": "Neljapäev",
         "5": "Reede",
         "6": "Laupäev"
-      }
+      },
+      "visitTypesTitle": "Vastuvõtu tüübid",
+      "visitTypesHint": "Määrake tüübid vastuvõtu loomisel (kestus ja kalendri värv).",
+      "visitTypeName": "Tüübi nimi",
+      "visitTypeDuration": "Kestus (minutit)",
+      "visitTypeColor": "Värv",
+      "visitTypeActive": "Aktiivne",
+      "addVisitType": "Lisa tüüp",
+      "saveVisitTypes": "Salvesta tüübid",
+      "visitTypesSaved": "Vastuvõtu tüübid salvestatud.",
+      "visitTypesSaveFailed": "Tüüpide salvestamine ebaõnnestus.",
+      "visitTypeNameRequired": "Igal tüübil peab olema nimi.",
+      "visitTypeDurationInvalid": "Vigane kestus (5–480 minutit)."
     },
     "aclDenied": "Teil pole õigust kabineti profiili muuta. Võtke ühendust peaveterinaariga."
   },
@@ -701,6 +713,7 @@
     "audioLoading": "Heli laadimine…",
     "audioError": "Heli pole saadaval (lõpetatud või puudub).",
     "loadError": "Konsultatsioone ei õnnestu laadida.",
+    "limitHint": "Kuvatakse kuni 200 uusimat konsultatsiooni. Täpsustage filtreid.",
     "reportFinal": "Lõpetatud",
     "reportDraft": "Mustand",
     "status": {
@@ -878,7 +891,7 @@
     "title": "Töölaud",
     "welcome": "Tere, {name}",
     "subtitle": "Ülevaade teie petsFollow Pro tegevusest.",
-    "activeClients": "Aktiivsed kliendid",
+    "activeClients": "Kliendid",
     "unreadMessages": "Lugemata sõnumid",
     "recentSessions": "Hiljutised mõõtmised (7 p)",
     "pendingLinks": "Ootel kutsed",
@@ -917,7 +930,16 @@
         "ux": "Ebaselge voog",
         "other": "Muu"
       }
-    }
+    },
+    "unreadHeartrate": "Lugemata südamekloppimine",
+    "todayTitle": "Täna",
+    "todayEmptyTitle": "Täna visiite pole",
+    "todayEmptyDescription": "Tänaseks midagi planeeritud ei ole.",
+    "queueTitle": "Teha",
+    "queueEmptyTitle": "Kõik korras",
+    "queueEmptyDescription": "Ootel visiite, sõnumeid ega kutseid pole.",
+    "queueLinkRequests": "1 kliendi kutse",
+    "queueLinkRequestsPlural": "{count} kliendi kutset"
   },
   "messages": {
     "title": "Sõnumid",
@@ -937,7 +959,16 @@
     "attach": "Lisa manus",
     "attachPhoto": "Foto",
     "attachVideo": "Video",
-    "sending": "Saatmine…"
+    "sending": "Saatmine…",
+    "lastExchangeAt": "Viimane suhtlus: {date}",
+    "newConversation": "Uus vestlus",
+    "loadingPets": "Loomade laadimine…",
+    "noPets": "Sellel kliendil pole veel looma. Lisa üks vestluse alustamiseks.",
+    "pickPetTitle": "Vali loom",
+    "pickPetHint": "Vestlus kasutajaga {name}",
+    "pickPet": "Loom",
+    "pickPetPlaceholder": "Vali loom",
+    "startConversation": "Ava vestlus"
   },
   "admin": {
     "stripeCatalog": {
@@ -2057,7 +2088,8 @@
     "not_configured": "Google’i sisselogimine pole seadistatud.",
     "internal": "Sisemine serveri viga",
     "not_ready": "Teenus ei ole valmis",
-    "generic": "Ilmnes viga"
+    "generic": "Ilmnes viga",
+    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga"
   },
   "commercial": {
     "dashboard": {
@@ -2488,6 +2520,21 @@
   "calendar": {
     "title": "Kalender",
     "subtitle": "Vastuvõtutaotlused ja kabineti ajakava.",
+    "newAppointment": "+ Uus vastuvõtt",
+    "newAppointmentDay": "Päev",
+    "newAppointmentTime": "Kellaaeg",
+    "newAppointmentCreated": "Vastuvõtt loodud.",
+    "newAppointmentFailed": "Vastuvõtu loomine ebaõnnestus.",
+    "newAppointmentLoadFailed": "Vormi andmete laadimine ebaõnnestus.",
+    "selectClient": "Vali klient…",
+    "selectPet": "Vali loom…",
+    "visitType": "Vastuvõtu tüüp",
+    "visitTypeNone": "Ilma tüübita (käsitsi kestus)",
+    "durationMinutes": "Kestus (min)",
+    "durationFromType": "Kestus määratud valitud tüübiga.",
+    "dayAgenda": "Päeva ajakava",
+    "dayAgendaEmpty": "Sellel päeval vastuvõtte pole.",
+    "freeSlot": "Vaba — {minutes} min",
     "openSettings": "Tööajad ja puhkused",
     "bookingDisabledHint": "Kliendi broneerimine rakenduse kaudu on keelatud. Luba see seadetes.",
     "pendingTitle": "Ülevaatamiseks",
@@ -2528,6 +2575,18 @@
     "reportFinal": "Raport lõplik (ainult lugemine)",
     "reportFinalized": "Raport lõpetatud",
     "transcribeAudio": "Audio → tekst",
+    "dictateAudio": "Dikteeri",
+    "recordingInProgress": "Salvestamine käib",
+    "recordingStop": "Peata",
+    "micPermissionDenied": "Mikrofon keelatud — kontrollige brauseri õigusi.",
+    "reportVisitDate": "Visiidi kuupäev",
+    "reportDatePrefix": "Kuupäev",
+    "reportHowItWorksTitle": "Kuidas see töötab?",
+    "reportHowItWorksStep1": "Dikteerige (nupp « Dikteeri ») või importige helifail.",
+    "reportHowItWorksStep2": "Kinnitage kliendi suuline nõusolek enne salvestamist.",
+    "reportHowItWorksStep3": "Salvestage aruanne.",
+    "reportHowItWorksStep4": "Parandage seda vajadusel tehisintellektiga.",
+    "reportHowItWorksStep5": "Lõpetage, seejärel jätkake retsepti/DAF-i või arvega.",
     "audioConsent": "Helifaili kasutatakse aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Kustutatakse lõpetamisel.",
     "audioConsentTitle": "Helisalvestuse nõusolek",
     "audioConsentAccept": "Nõustun",

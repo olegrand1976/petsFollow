@@ -1,6 +1,19 @@
 <template>
   <div class="pro-visit-report" data-testid="visit-report-panel">
     <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
+    <p v-if="visitDateLabel" class="pro-hint" data-testid="visit-report-date">
+      {{ $t('calendar.reportVisitDate') }} : {{ visitDateLabel }}
+    </p>
+    <details class="visit-report-howto" data-testid="visit-report-howto">
+      <summary>{{ $t('calendar.reportHowItWorksTitle') }}</summary>
+      <ol>
+        <li>{{ $t('calendar.reportHowItWorksStep1') }}</li>
+        <li>{{ $t('calendar.reportHowItWorksStep2') }}</li>
+        <li>{{ $t('calendar.reportHowItWorksStep3') }}</li>
+        <li>{{ $t('calendar.reportHowItWorksStep4') }}</li>
+        <li>{{ $t('calendar.reportHowItWorksStep5') }}</li>
+      </ol>
+    </details>
     <div
       v-if="reportAuthors.length > 1"
       class="pro-flex-gap visit-report-authors"
@@ -36,10 +49,28 @@
       rows="6"
       data-testid="visit-report-body"
       :placeholder="$t('calendar.reportHint')"
-      :disabled="reportBusy || reportLocked"
+      :disabled="reportBusy || reportLocked || dictating"
       :readonly="reportLocked"
     />
-    <div v-if="!reportLocked" class="pro-flex-gap pro-visit-report__actions">
+    <div
+      v-if="dictating"
+      class="visit-report-recording"
+      data-testid="visit-report-recording-banner"
+    >
+      <ProIcon name="mic" :size="24" class="visit-report-recording__mic" />
+      <div class="visit-report-recording__info">
+        <strong>{{ $t('calendar.recordingInProgress') }}</strong>
+        <span data-testid="visit-report-recording-clock">{{ dictationClock }}</span>
+      </div>
+      <ProButton
+        variant="secondary"
+        test-id="visit-report-dictate-stop"
+        @click="stopDictation"
+      >
+        {{ $t('calendar.recordingStop') }}
+      </ProButton>
+    </div>
+    <div v-else-if="!reportLocked" class="pro-flex-gap pro-visit-report__actions">
       <ProButton
         variant="secondary"
         :disabled="reportBusy || reportStatus === 'final'"
@@ -62,6 +93,16 @@
         @click="finalizeVisitReport"
       >
         {{ $t('calendar.finalizeReport') }}
+      </ProButton>
+      <ProButton
+        v-if="reportStatus !== 'final'"
+        variant="secondary"
+        :disabled="reportBusy"
+        test-id="visit-report-dictate"
+        @click="onDictateClick"
+      >
+        <ProIcon name="mic" :size="16" />
+        {{ $t('calendar.dictateAudio') }}
       </ProButton>
       <label
         v-if="reportStatus !== 'final'"
@@ -147,6 +188,8 @@ const props = defineProps<{
   visitId: string
   /** When true, hide save/improve/finalize/audio (ACL pets.write_clinical). */
   readonly?: boolean
+  /** Visit date shown under the title and used to prefix the report body ("Date du : …"). */
+  visitScheduledAt?: string
 }>()
 
 const emit = defineEmits<{
@@ -157,6 +200,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { mapError } = useApiError()
+const { formatDate } = useFormatters()
 
 const reportBody = ref('')
 const reportPersistedBody = ref('')
@@ -170,10 +214,39 @@ const selectedReportAuthorId = ref('')
 const audioConsentOpen = ref(false)
 const audioConsentChecked = ref(false)
 const pendingAudioFile = ref<File | null>(null)
+/** Which action the client-audio-consent modal is gating: file upload or live dictation. */
+const pendingAction = ref<'file' | 'dictate' | null>(null)
+
+const dictating = ref(false)
+const dictationSeconds = ref(0)
+const MAX_DICTATION_SECONDS = 10 * 60
+let dictationTimer: ReturnType<typeof setInterval> | null = null
+let mediaRecorder: MediaRecorder | null = null
+let mediaStream: MediaStream | null = null
+let recordChunks: Blob[] = []
+/** In-flight Stop → transcribe; flush waits on this to avoid overwriting the transcript. */
+let stopDictationInFlight: Promise<void> | null = null
 
 watch(reportBusy, (busy) => {
   emit('busy', busy)
 }, { immediate: true })
+
+function waitUntilReportIdle(timeoutMs = 90_000): Promise<void> {
+  if (!reportBusy.value) return Promise.resolve()
+  return new Promise((resolve) => {
+    const stop = watch(reportBusy, (busy) => {
+      if (!busy) {
+        stop()
+        clearTimeout(timer)
+        resolve()
+      }
+    })
+    const timer = setTimeout(() => {
+      stop()
+      resolve()
+    }, timeoutMs)
+  })
+}
 
 const viewingPeerReport = computed(() => {
   if (!selectedReportAuthorId.value || reportAuthors.value.length === 0) return false
@@ -188,6 +261,26 @@ const reportLocked = computed(() =>
 const reportHistorySaved = computed(() =>
   persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
 )
+
+const visitDateLabel = computed(() =>
+  props.visitScheduledAt ? formatDate(props.visitScheduledAt) : '',
+)
+
+const dictationClock = computed(() => {
+  const m = Math.floor(dictationSeconds.value / 60).toString().padStart(2, '0')
+  const s = (dictationSeconds.value % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+})
+
+/** Prepends "Date du : …" once real content exists — idempotent (checked via includes()). */
+function applyDatePrefixIfNeeded() {
+  if (!visitDateLabel.value) return
+  const body = reportBody.value
+  if (!body.trim()) return
+  const prefix = `${t('calendar.reportDatePrefix')} : ${visitDateLabel.value}`
+  if (body.includes(prefix)) return
+  reportBody.value = `${prefix}\n\n${body}`
+}
 
 function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   const mapped = mapVisitReportFields(data)
@@ -283,8 +376,9 @@ function selectReportAuthor(author: VisitReportAuthor) {
   applyPeerReport(author)
 }
 
-async function saveVisitReport() {
-  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+async function saveVisitReport(): Promise<boolean> {
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return false
+  applyDatePrefixIfNeeded()
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -296,15 +390,65 @@ async function saveVisitReport() {
     reportMsg.value = t('calendar.reportSaved')
     void loadVisitReports(props.visitId)
     emit('saved')
+    return true
   } catch (e: any) {
     reportMsg.value = mapError(e)
+    return false
   } finally {
     reportBusy.value = false
   }
 }
 
+/**
+ * Leave-guard save: if still recording, discard audio (keep local body).
+ * If Stop→transcribe is already running, wait for it before PUT.
+ */
+async function forceSave(): Promise<boolean> {
+  if (dictating.value && !stopDictationInFlight) {
+    await discardDictation()
+  } else if (stopDictationInFlight) {
+    await stopDictationInFlight
+  }
+  await waitUntilReportIdle()
+  if (!reportBody.value.trim()) return false
+  return saveVisitReport()
+}
+
+/**
+ * Desk/visibility flush: finalize in-progress dictation (transcribe) then save.
+ * Empty body after that is OK (visit still exists for resume).
+ */
+async function flushForSuspend(): Promise<boolean> {
+  if (dictating.value || stopDictationInFlight) {
+    try {
+      await stopDictation()
+    } catch {
+      await discardDictation()
+      return false
+    }
+  }
+  await waitUntilReportIdle()
+  if (!reportBody.value.trim()) return true
+  return saveVisitReport()
+}
+
+function isDirty(): boolean {
+  return reportBody.value !== reportPersistedBody.value || dictating.value
+}
+
+function currentBody(): string {
+  return reportBody.value
+}
+
+function isDictating(): boolean {
+  return dictating.value
+}
+
+defineExpose({ forceSave, flushForSuspend, isDirty, currentBody, isDictating })
+
 async function improveVisitReport() {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+  applyDatePrefixIfNeeded()
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -328,6 +472,7 @@ async function improveVisitReport() {
 
 async function finalizeVisitReport() {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+  applyDatePrefixIfNeeded()
   reportBusy.value = true
   reportMsg.value = ''
   try {
@@ -356,34 +501,55 @@ async function onReportAudioSelected(ev: Event) {
   input.value = ''
   if (!file) return
   pendingAudioFile.value = file
+  pendingAction.value = 'file'
+  audioConsentChecked.value = false
+  audioConsentOpen.value = true
+}
+
+function onDictateClick() {
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final' || dictating.value) return
+  pendingAction.value = 'dictate'
   audioConsentChecked.value = false
   audioConsentOpen.value = true
 }
 
 function cancelAudioConsent() {
   pendingAudioFile.value = null
+  pendingAction.value = null
   audioConsentChecked.value = false
   audioConsentOpen.value = false
 }
 
 async function acceptAudioConsent() {
   if (!audioConsentChecked.value) return
+  const action = pendingAction.value
   const file = pendingAudioFile.value
   pendingAudioFile.value = null
+  pendingAction.value = null
   audioConsentOpen.value = false
   audioConsentChecked.value = false
-  if (!file || reportStatus.value === 'final') return
+  if (reportStatus.value === 'final') return
+  if (action === 'dictate') {
+    await startDictation()
+    return
+  }
+  if (!file) return
+  await transcribeAudio(file, file.name)
+}
+
+async function transcribeAudio(file: File | Blob, filename: string) {
   reportBusy.value = true
   reportMsg.value = ''
   try {
     const form = new FormData()
-    form.append('audio', file, file.name)
+    form.append('audio', file, filename)
     form.append('clientAudioConsent', 'true')
     const res: any = await $fetch(`/api/visits/${props.visitId}/report/transcribe`, {
       method: 'POST',
       body: form,
     })
     applyReportPayload(res.data ?? res)
+    applyDatePrefixIfNeeded()
     reportMsg.value = t('calendar.reportTranscribed')
     void loadVisitReports(props.visitId)
   } catch (e: any) {
@@ -393,9 +559,122 @@ async function acceptAudioConsent() {
   }
 }
 
+function stopMediaStream() {
+  mediaStream?.getTracks().forEach(track => track.stop())
+  mediaStream = null
+}
+
+function stopDictationTimer() {
+  if (dictationTimer) clearInterval(dictationTimer)
+  dictationTimer = null
+  dictationSeconds.value = 0
+}
+
+async function startDictation() {
+  recordChunks = []
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch {
+    reportMsg.value = t('calendar.micPermissionDenied')
+    return
+  }
+  try {
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : ''))
+    mediaRecorder = mime
+      ? new MediaRecorder(mediaStream, { mimeType: mime })
+      : new MediaRecorder(mediaStream)
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data?.size) recordChunks.push(e.data)
+    }
+    mediaRecorder.start(1000)
+  } catch {
+    stopMediaStream()
+    mediaRecorder = null
+    reportMsg.value = t('calendar.micPermissionDenied')
+    return
+  }
+  dictationSeconds.value = 0
+  dictationTimer = setInterval(() => {
+    dictationSeconds.value++
+    if (dictationSeconds.value >= MAX_DICTATION_SECONDS) {
+      void stopDictation()
+    }
+  }, 1000)
+  dictating.value = true
+}
+
+async function stopDictation() {
+  if (stopDictationInFlight) return stopDictationInFlight
+  stopDictationInFlight = (async () => {
+    const recorder = mediaRecorder
+    if (!recorder || recorder.state === 'inactive') {
+      stopDictationTimer()
+      dictating.value = false
+      stopMediaStream()
+      return
+    }
+    // Mark busy before releasing dictating so flush can't slip into the gap.
+    reportBusy.value = true
+    const blob = await new Promise<Blob | null>((resolve) => {
+      recorder.onstop = () => {
+        resolve(recordChunks.length ? new Blob(recordChunks, { type: recorder.mimeType || 'audio/webm' }) : null)
+      }
+      try {
+        recorder.stop()
+      } catch {
+        resolve(null)
+      }
+    })
+    mediaRecorder = null
+    stopDictationTimer()
+    dictating.value = false
+    stopMediaStream()
+    if (!blob) {
+      reportBusy.value = false
+      return
+    }
+    const ext = blob.type.includes('mp4') ? 'm4a' : 'webm'
+    // transcribeAudio owns reportBusy from here (sets true again + clears in finally).
+    await transcribeAudio(blob, `dictation.${ext}`)
+  })().finally(() => {
+    stopDictationInFlight = null
+  })
+  return stopDictationInFlight
+}
+
+async function discardDictation() {
+  stopDictationTimer()
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop() } catch { /* already stopped */ }
+  }
+  mediaRecorder = null
+  recordChunks = []
+  dictating.value = false
+  stopMediaStream()
+  // If a Stop→transcribe was already in flight, don't cancel the HTTP call —
+  // forceSave awaits it separately when dictating is false.
+}
+
+onBeforeUnmount(() => {
+  // Desk suspend already ran flushForSuspend (stop+transcribe). Don't discard mid-flight.
+  const { suspendDiscard } = useActiveConsultation()
+  if (suspendDiscard.value) {
+    stopMediaStream()
+    return
+  }
+  void discardDictation()
+})
+
 watch(
   () => props.visitId,
-  (id) => {
+  async (id, prev) => {
+    if (prev && dictating.value) {
+      await discardDictation()
+    }
     if (id) void hydrateVisitReports(id)
   },
   { immediate: true },
@@ -403,6 +682,55 @@ watch(
 </script>
 
 <style scoped>
+.visit-report-howto {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  padding: 0.5rem 0.85rem;
+  background: var(--pf-vet-bg, #f8fafc);
+}
+
+.visit-report-howto > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
+}
+
+.visit-report-howto ol {
+  margin: 0.5rem 0 0.25rem;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.visit-report-recording {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--pf-vet-radius, 8px);
+  background: color-mix(in srgb, var(--pf-vet-alert) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pf-vet-alert) 40%, transparent);
+}
+
+.visit-report-recording__mic {
+  color: var(--pf-vet-alert);
+  animation: pf-visit-report-pulse 0.9s ease-in-out infinite;
+}
+
+.visit-report-recording__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  color: var(--pf-vet-alert);
+}
+
+@keyframes pf-visit-report-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
 .visit-report-authors {
   margin-bottom: 0.5rem;
   flex-wrap: wrap;

@@ -178,7 +178,8 @@
     "partner_mark_not_eligible": "Marcatura partner non consentita (servono active + PartyID)",
     "saas_master_not_configured": "Account master Billit non configurato (BILLIT_MASTER_*)",
     "invalid_id": "Identificatore non valido",
-    "care_pro_visit_only": "Consentito solo sulle visite create sul campo (care pro)"
+    "care_pro_visit_only": "Consentito solo sulle visite create sul campo (care pro)",
+    "pet_not_in_practice": "L'animale non è collegato a questo studio"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

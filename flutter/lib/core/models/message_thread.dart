@@ -12,6 +12,7 @@ class MessageThread {
     this.vetName,
     this.clientName,
     this.lastMessagePreview,
+    this.lastMessageAt,
     this.unreadCount = 0,
   });
 
@@ -25,6 +26,7 @@ class MessageThread {
   final String? vetName;
   final String? clientName;
   final String? lastMessagePreview;
+  final DateTime? lastMessageAt;
   final int unreadCount;
 
   /// Client shell: practice · pet. Staff shell: client · pet (or client alone).
@@ -52,6 +54,7 @@ class MessageThread {
     String? vetName,
     String? clientName,
     String? lastMessagePreview,
+    DateTime? lastMessageAt,
     int? unreadCount,
   }) {
     return MessageThread(
@@ -65,6 +68,7 @@ class MessageThread {
       vetName: vetName ?? this.vetName,
       clientName: clientName ?? this.clientName,
       lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
     );
   }
@@ -81,6 +85,9 @@ class MessageThread {
       vetName: json['vetFullName'] as String?,
       clientName: json['clientName'] as String?,
       lastMessagePreview: json['lastMessagePreview'] as String?,
+      lastMessageAt: json['lastMessageAt'] != null
+          ? DateTime.tryParse(json['lastMessageAt'] as String)
+          : null,
       unreadCount: json['unreadCount'] as int? ?? 0,
     );
   }

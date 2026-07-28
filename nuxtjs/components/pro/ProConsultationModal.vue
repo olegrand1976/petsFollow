@@ -145,8 +145,10 @@ import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 type ReportPanelExpose = {
   forceSave: () => Promise<boolean>
+  flushForSuspend: () => Promise<boolean>
   isDirty: () => boolean
   currentBody: () => string
+  isDictating: () => boolean
 }
 
 const props = defineProps<{
@@ -241,6 +243,27 @@ function applyResume() {
     petId: props.resumePetId || '',
   })
   void hydrateResumeSchedule(props.resumeVisitId, props.resumePetId || '')
+  void hydrateResumeSaved(props.resumeVisitId)
+}
+
+/** Mark reportSaved when server already has persisted CR (avoid orphan cancel on leave). */
+async function hydrateResumeSaved(id: string) {
+  try {
+    const res: any = await $fetch(`/api/visits/${id}/report`)
+    const data = (res?.data ?? res) as Record<string, unknown> | null
+    if (!data) return
+    const hasContent = Boolean(
+      String(data.bodyText || '').trim()
+      || String(data.transcriptText || '').trim()
+      || String(data.improvedText || '').trim()
+      || data.hasAudio === true
+      || data.status === 'final',
+    )
+    if (hasContent) reportSaved.value = true
+  }
+  catch {
+    /* leave-guard still protected by 409 consultation_has_report */
+  }
 }
 
 /** No GET /visits/:id — resolve date via pet visit list when possible. */
@@ -298,9 +321,7 @@ watch(
 async function flushReport() {
   const panel = reportPanelRef.value
   if (!visitId.value || !panel) return
-  // Prefer dirty body; also force-save non-empty so desk resume keeps server draft.
-  if (!panel.currentBody().trim()) return
-  const ok = await panel.forceSave()
+  const ok = await panel.flushForSuspend()
   if (!ok) {
     throw new Error('consultation_flush_failed')
   }

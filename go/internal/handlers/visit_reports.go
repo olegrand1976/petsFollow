@@ -167,6 +167,7 @@ func (a *API) listVisitReports(w http.ResponseWriter, r *http.Request) {
 			"status":               item.Status,
 			"bodyText":             item.BodyText,
 			"audioUrl":             item.AudioURL,
+			"hasAudio":             item.HasAudio,
 			"transcriptText":       item.TranscriptText,
 			"improvedText":         item.ImprovedText,
 			"clientAudioConsentAt": item.ClientAudioConsentAt,
@@ -222,12 +223,29 @@ func (a *API) getVisitReportAudio(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 		return
 	}
+	// Clinical PHI: stream only for write_notes ACL (vet / assistant / care_pro write).
+	// Secretary (pets.read only) must not hear draft audio — same policy as CR body excerpt.
 	if !a.canAccessVisitReport(w, r, id, visit, store.PermWriteNotes, true) {
 		return
 	}
-	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+	report, err := a.store.GetVisitReportWithAudio(r.Context(), visitID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
+			// Distinguish finalized (audio purged) from never uploaded.
+			mine, gerr := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+			if gerr == nil && mine.Status == "final" {
+				writeErr(w, r, http.StatusGone, "gone", "report_finalized")
+				return
+			}
+			reports, lerr := a.store.ListVisitReportsForVisit(r.Context(), visitID, id.UserID)
+			if lerr == nil {
+				for _, sum := range reports {
+					if sum.Status == "final" {
+						writeErr(w, r, http.StatusGone, "gone", "report_finalized")
+						return
+					}
+				}
+			}
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
@@ -599,6 +617,7 @@ func normalizeAudioMIME(ct string) string {
 
 // redactVisitReportAudio hides public audio URLs from API clients (PHI).
 func redactVisitReportAudio(r store.VisitReport) store.VisitReport {
+	r.HasAudio = strings.TrimSpace(r.AudioObjectKey) != "" || r.HasAudio
 	r.AudioURL = ""
 	r.AudioObjectKey = ""
 	return r

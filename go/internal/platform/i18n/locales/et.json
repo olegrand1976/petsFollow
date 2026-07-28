@@ -178,7 +178,8 @@
     "partner_mark_not_eligible": "Partneri märkimine pole lubatud (nõutav active + PartyID)",
     "saas_master_not_configured": "Billiti master-konto pole seadistatud (BILLIT_MASTER_*)",
     "invalid_id": "Vigane identifikaator",
-    "care_pro_visit_only": "Lubatud ainult välitööna loodud visiitidele (care pro)"
+    "care_pro_visit_only": "Lubatud ainult välitööna loodud visiitidele (care pro)",
+    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

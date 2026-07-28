@@ -399,7 +399,19 @@
         "4": "Thursday",
         "5": "Friday",
         "6": "Saturday"
-      }
+      },
+      "visitTypesTitle": "Appointment types",
+      "visitTypesHint": "Define types offered when creating an appointment (duration and calendar color).",
+      "visitTypeName": "Type name",
+      "visitTypeDuration": "Duration (minutes)",
+      "visitTypeColor": "Color",
+      "visitTypeActive": "Active",
+      "addVisitType": "Add a type",
+      "saveVisitTypes": "Save types",
+      "visitTypesSaved": "Appointment types saved.",
+      "visitTypesSaveFailed": "Could not save appointment types.",
+      "visitTypeNameRequired": "Each type must have a name.",
+      "visitTypeDurationInvalid": "Invalid duration (5 to 480 minutes)."
     },
     "aclDenied": "You cannot edit the practice profile. Contact the reference veterinarian."
   },
@@ -701,6 +713,7 @@
     "audioLoading": "Loading audio…",
     "audioError": "Audio unavailable (finalized or missing).",
     "loadError": "Unable to load consultations.",
+    "limitHint": "Showing the 200 most recent consultations. Narrow the filters to refine.",
     "reportFinal": "Finalized",
     "reportDraft": "Draft",
     "status": {
@@ -909,7 +922,7 @@
     "title": "Dashboard",
     "welcome": "Hello, {name}",
     "subtitle": "Overview of your petsFollow Pro activity.",
-    "activeClients": "Active clients",
+    "activeClients": "Clients",
     "unreadMessages": "Unread messages",
     "recentSessions": "Recent readings (7 d)",
     "pendingLinks": "Pending invitations",
@@ -948,7 +961,16 @@
         "ux": "Unclear flow",
         "other": "Other"
       }
-    }
+    },
+    "unreadHeartrate": "Unread heart rates",
+    "todayTitle": "Today",
+    "todayEmptyTitle": "No visits today",
+    "todayEmptyDescription": "Nothing scheduled for today.",
+    "queueTitle": "To do",
+    "queueEmptyTitle": "All clear",
+    "queueEmptyDescription": "No pending visits, messages or invitations.",
+    "queueLinkRequests": "1 client invitation",
+    "queueLinkRequestsPlural": "{count} client invitations"
   },
   "messages": {
     "title": "Messaging",
@@ -968,7 +990,16 @@
     "attach": "Attach",
     "attachPhoto": "Photo",
     "attachVideo": "Video",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "lastExchangeAt": "Last exchange: {date}",
+    "newConversation": "New conversation",
+    "loadingPets": "Loading pets…",
+    "noPets": "This client has no pet yet. Add one to start a conversation.",
+    "pickPetTitle": "Choose a pet",
+    "pickPetHint": "Conversation with {name}",
+    "pickPet": "Pet",
+    "pickPetPlaceholder": "Select a pet",
+    "startConversation": "Open conversation"
   },
   "admin": {
     "stripeCatalog": {
@@ -2088,7 +2119,8 @@
     "not_configured": "Google sign-in is not configured.",
     "internal": "Internal server error",
     "not_ready": "Service not ready",
-    "generic": "An error occurred"
+    "generic": "An error occurred",
+    "pet_not_in_practice": "Pet is not linked to this practice"
   },
   "commercial": {
     "dashboard": {
@@ -2519,6 +2551,21 @@
   "calendar": {
     "title": "Calendar",
     "subtitle": "Appointment requests and practice schedule.",
+    "newAppointment": "+ New appointment",
+    "newAppointmentDay": "Day",
+    "newAppointmentTime": "Time",
+    "newAppointmentCreated": "Appointment created.",
+    "newAppointmentFailed": "Could not create the appointment.",
+    "newAppointmentLoadFailed": "Could not load the form data.",
+    "selectClient": "Choose a client…",
+    "selectPet": "Choose a pet…",
+    "visitType": "Appointment type",
+    "visitTypeNone": "No type (manual duration)",
+    "durationMinutes": "Duration (min)",
+    "durationFromType": "Duration set by the selected type.",
+    "dayAgenda": "Day agenda",
+    "dayAgendaEmpty": "No appointments on this day.",
+    "freeSlot": "Free — {minutes} min",
     "openSettings": "Hours & vacations",
     "bookingDisabledHint": "Client booking via the app is disabled. Enable it in Settings.",
     "pendingTitle": "To review",
