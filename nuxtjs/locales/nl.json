@@ -65,7 +65,8 @@
     "adminFiliation": "Filiatie",
     "usecases": "Testgidsen",
     "stock": "Voorraad",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Voorschriften"
   },
   "auth": {
     "login": {
@@ -2686,34 +2687,70 @@
     "revoke": "Intrekken",
     "perms": {
       "clients": {
-        "read": { "label": "Cliënten bekijken", "tip": "Toegang tot de cliëntenlijst en dossiers van de praktijk." },
-        "write": { "label": "Cliënten bewerken", "tip": "Cliëntdossiers aanmaken of wijzigen." }
+        "read": {
+          "label": "Cliënten bekijken",
+          "tip": "Toegang tot de cliëntenlijst en dossiers van de praktijk."
+        },
+        "write": {
+          "label": "Cliënten bewerken",
+          "tip": "Cliëntdossiers aanmaken of wijzigen."
+        }
       },
       "pets": {
-        "read": { "label": "Dieren bekijken", "tip": "Toegang tot dierdossiers (zonder klinisch schrijven)." },
-        "write_clinical": { "label": "Klinisch schrijven", "tip": "Klinische notities, validaties en medische handelingen." }
+        "read": {
+          "label": "Dieren bekijken",
+          "tip": "Toegang tot dierdossiers (zonder klinisch schrijven)."
+        },
+        "write_clinical": {
+          "label": "Klinisch schrijven",
+          "tip": "Klinische notities, validaties en medische handelingen."
+        }
       },
       "heartrate": {
-        "validate": { "label": "HF valideren", "tip": "Hartslagmetingen valideren." }
+        "validate": {
+          "label": "HF valideren",
+          "tip": "Hartslagmetingen valideren."
+        }
       },
-      "messaging": { "label": "Berichten", "tip": "Berichten met cliënten lezen en sturen." },
+      "messaging": {
+        "label": "Berichten",
+        "tip": "Berichten met cliënten lezen en sturen."
+      },
       "calendar": {
-        "manage": { "label": "Agenda", "tip": "Afspraken en de praktijkagenda beheren." }
+        "manage": {
+          "label": "Agenda",
+          "tip": "Afspraken en de praktijkagenda beheren."
+        }
       },
       "care": {
-        "manage": { "label": "Zorg & herinneringen", "tip": "Zorgplannen, Care-herinneringen en opvolging beheren." }
+        "manage": {
+          "label": "Zorg & herinneringen",
+          "tip": "Zorgplannen, Care-herinneringen en opvolging beheren."
+        }
       },
       "shares": {
-        "manage": { "label": "Delen", "tip": "Delen van dierdossiers met andere actoren beheren." }
+        "manage": {
+          "label": "Delen",
+          "tip": "Delen van dierdossiers met andere actoren beheren."
+        }
       },
       "practice": {
-        "settings": { "label": "Praktijkinstellingen", "tip": "Instellingen van de praktijk wijzigen." }
+        "settings": {
+          "label": "Praktijkinstellingen",
+          "tip": "Instellingen van de praktijk wijzigen."
+        }
       },
       "team": {
-        "manage": { "label": "Team beheren", "tip": "Leden uitnodigen, rechten wijzigen of intrekken." }
+        "manage": {
+          "label": "Team beheren",
+          "tip": "Leden uitnodigen, rechten wijzigen of intrekken."
+        }
       },
       "commissions": {
-        "view": { "label": "Commissies bekijken", "tip": "Toegang tot het commissieoverzicht." }
+        "view": {
+          "label": "Commissies bekijken",
+          "tip": "Toegang tot het commissieoverzicht."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Pro-account aanmaken",
     "productsLink": "Bekijk het aanbod van petsFollow",
     "commercialPhone": "Telefoon sales: {phone}"
+  },
+  "prescriptions": {
+    "title": "Voorschriften",
+    "subtitle": "Concepten van veterinaire voorschriften (PDF-voorbeeld)",
+    "v1Hint": "Dev-module: alleen concept + PDF-voorbeeld. Handtekening en delen via dossier in fase 2.",
+    "new": "Nieuw voorschrift",
+    "empty": "Geen voorschriften",
+    "colPet": "Dier",
+    "colOwner": "Eigenaar",
+    "colStatus": "Status",
+    "colDate": "Aangemaakt",
+    "statusDraft": "Concept",
+    "statusSigned": "Ondertekend",
+    "statusSent": "Verzonden",
+    "statusArchived": "Gearchiveerd",
+    "wizardTitle": "Nieuw voorschrift",
+    "wizardSubtitle": "Selecteer dier en medicijnen",
+    "pet": "Dier",
+    "petSearch": "Zoek een dier…",
+    "paperFormat": "Papierformaat",
+    "validUntil": "Geldig tot",
+    "notes": "Notities",
+    "medName": "Medicijn",
+    "dosage": "Dosering",
+    "form": "Vorm",
+    "quantity": "Hoeveelheid",
+    "posology": "Posologie",
+    "withdrawal": "Wachttijd",
+    "addLine": "Regel toevoegen",
+    "saveDraft": "Concept opslaan",
+    "openPdf": "PDF bekijken",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "deleteConfirm": "Dit concept verwijderen?",
+    "loading": "Laden…",
+    "removeLine": "Regel verwijderen",
+    "errorGeneric": "Er is iets misgegaan.",
+    "errorDisabled": "De module voorschriften is uitgeschakeld.",
+    "errorForbidden": "Actie niet toegestaan.",
+    "errorMedications": "Ongeldige of ontbrekende medicijnen.",
+    "errorFormat": "Ongeldig papierformaat (A4 of A5).",
+    "errorNotFound": "Voorschrift niet gevonden.",
+    "errorNotDraft": "Alleen concepten kunnen worden bewerkt.",
+    "errorPayload": "Inhoud te groot (notities of medicijnen)."
   }
 }

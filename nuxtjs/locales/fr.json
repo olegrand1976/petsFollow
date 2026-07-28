@@ -65,7 +65,8 @@
     "adminFiliation": "Filiation",
     "usecases": "Guides de test",
     "stock": "Stock",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Ordonnances"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -2730,34 +2731,70 @@
     "revoke": "Révoquer",
     "perms": {
       "clients": {
-        "read": { "label": "Voir les clients", "tip": "Accès à la liste et aux fiches clients du cabinet." },
-        "write": { "label": "Modifier les clients", "tip": "Créer ou modifier les fiches clients." }
+        "read": {
+          "label": "Voir les clients",
+          "tip": "Accès à la liste et aux fiches clients du cabinet."
+        },
+        "write": {
+          "label": "Modifier les clients",
+          "tip": "Créer ou modifier les fiches clients."
+        }
       },
       "pets": {
-        "read": { "label": "Voir les animaux", "tip": "Accès aux dossiers animaux (hors écriture clinique)." },
-        "write_clinical": { "label": "Écriture clinique", "tip": "Saisir notes cliniques, validations et actes médicaux." }
+        "read": {
+          "label": "Voir les animaux",
+          "tip": "Accès aux dossiers animaux (hors écriture clinique)."
+        },
+        "write_clinical": {
+          "label": "Écriture clinique",
+          "tip": "Saisir notes cliniques, validations et actes médicaux."
+        }
       },
       "heartrate": {
-        "validate": { "label": "Valider la FC", "tip": "Valider les relevés de fréquence cardiaque." }
+        "validate": {
+          "label": "Valider la FC",
+          "tip": "Valider les relevés de fréquence cardiaque."
+        }
       },
-      "messaging": { "label": "Messagerie", "tip": "Lire et envoyer des messages avec les clients." },
+      "messaging": {
+        "label": "Messagerie",
+        "tip": "Lire et envoyer des messages avec les clients."
+      },
       "calendar": {
-        "manage": { "label": "Agenda", "tip": "Gérer les rendez-vous et le calendrier du cabinet." }
+        "manage": {
+          "label": "Agenda",
+          "tip": "Gérer les rendez-vous et le calendrier du cabinet."
+        }
       },
       "care": {
-        "manage": { "label": "Soins & rappels", "tip": "Gérer les soins, rappels Care et suivis associés." }
+        "manage": {
+          "label": "Soins & rappels",
+          "tip": "Gérer les soins, rappels Care et suivis associés."
+        }
       },
       "shares": {
-        "manage": { "label": "Partages", "tip": "Gérer les partages de dossier animal vers d’autres acteurs." }
+        "manage": {
+          "label": "Partages",
+          "tip": "Gérer les partages de dossier animal vers d’autres acteurs."
+        }
       },
       "practice": {
-        "settings": { "label": "Paramètres cabinet", "tip": "Modifier les réglages du cabinet." }
+        "settings": {
+          "label": "Paramètres cabinet",
+          "tip": "Modifier les réglages du cabinet."
+        }
       },
       "team": {
-        "manage": { "label": "Gérer l’équipe", "tip": "Inviter, modifier les droits ou révoquer des membres." }
+        "manage": {
+          "label": "Gérer l’équipe",
+          "tip": "Inviter, modifier les droits ou révoquer des membres."
+        }
       },
       "commissions": {
-        "view": { "label": "Voir les commissions", "tip": "Accéder au tableau des commissions du cabinet." }
+        "view": {
+          "label": "Voir les commissions",
+          "tip": "Accéder au tableau des commissions du cabinet."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Créer un compte professionnel",
     "productsLink": "Voir l’offre petsFollow",
     "commercialPhone": "Tél. commercial : {phone}"
+  },
+  "prescriptions": {
+    "title": "Ordonnances",
+    "subtitle": "Brouillons d'ordonnances vétérinaires (aperçu PDF)",
+    "v1Hint": "Module en développement : brouillon + prévisualisation PDF uniquement. Signature et partage dossier animal en phase 2.",
+    "new": "Nouvelle ordonnance",
+    "empty": "Aucune ordonnance",
+    "colPet": "Animal",
+    "colOwner": "Propriétaire",
+    "colStatus": "Statut",
+    "colDate": "Créée le",
+    "statusDraft": "Brouillon",
+    "statusSigned": "Signée",
+    "statusSent": "Envoyée",
+    "statusArchived": "Archivée",
+    "wizardTitle": "Nouvelle ordonnance",
+    "wizardSubtitle": "Renseigner l'animal et les médicaments",
+    "pet": "Animal",
+    "petSearch": "Rechercher un animal…",
+    "paperFormat": "Format papier",
+    "validUntil": "Valable jusqu'au",
+    "notes": "Notes",
+    "medName": "Médicament",
+    "dosage": "Dosage",
+    "form": "Forme",
+    "quantity": "Quantité",
+    "posology": "Posologie",
+    "withdrawal": "Délai d'attente",
+    "addLine": "Ajouter une ligne",
+    "saveDraft": "Enregistrer le brouillon",
+    "openPdf": "Prévisualiser PDF",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer ce brouillon ?",
+    "loading": "Chargement…",
+    "removeLine": "Retirer la ligne",
+    "errorGeneric": "Une erreur est survenue.",
+    "errorDisabled": "Le module ordonnances est désactivé.",
+    "errorForbidden": "Action non autorisée.",
+    "errorMedications": "Médicaments invalides ou manquants.",
+    "errorFormat": "Format papier invalide (A4 ou A5).",
+    "errorNotFound": "Ordonnance introuvable.",
+    "errorNotDraft": "Seuls les brouillons sont modifiables.",
+    "errorPayload": "Contenu trop volumineux (notes ou médicaments)."
   }
 }

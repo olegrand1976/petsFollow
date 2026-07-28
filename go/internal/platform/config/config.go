@@ -86,6 +86,9 @@ type Config struct {
 	PharmacyEnabled bool
 	// PharmacyExpirySecret protège POST /internal/pharmacy/expiry-run.
 	PharmacyExpirySecret string
+	// PrescriptionsEnabled enables veterinary prescription drafts + PDF preview — default off.
+	PrescriptionsEnabled bool
+
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
 	// BillitMockEnabled uses the mock gateway (local/CI) — never call Billit live.
@@ -171,6 +174,8 @@ func Load() Config {
 		MLMOrgEnabled:           envBool("MLM_ORG_ENABLED"),
 		PharmacyEnabled:         envBool("PHARMACY_ENABLED"),
 		PharmacyExpirySecret:    envOr("PHARMACY_EXPIRY_SECRET", ""),
+		PrescriptionsEnabled:    envBool("PRESCRIPTIONS_ENABLED"),
+
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
 		BillitEnabled:           envBool("BILLIT_ENABLED"),
 		BillitMockEnabled:       envBool("BILLIT_MOCK_ENABLED"),

@@ -126,6 +126,8 @@ func IsSensitiveObjectKey(objectKey string) bool {
 		return true
 	case objectKey == "daf", strings.HasPrefix(objectKey, "daf/"):
 		return true
+	case objectKey == "prescriptions", strings.HasPrefix(objectKey, "prescriptions/"):
+		return true
 	default:
 		return false
 	}

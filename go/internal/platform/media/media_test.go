@@ -118,6 +118,9 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"daf",
 		"daf/",
 		"daf/p1/d1.pdf",
+		"prescriptions",
+		"prescriptions/",
+		"prescriptions/p1/r1.pdf",
 	}
 	for _, k := range yes {
 		if !IsSensitiveObjectKey(k) {

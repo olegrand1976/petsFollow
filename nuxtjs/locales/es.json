@@ -65,7 +65,8 @@
     "adminFiliation": "Filación",
     "usecases": "Guías de prueba",
     "stock": "Stock",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Recetas"
   },
   "auth": {
     "login": {
@@ -2686,34 +2687,70 @@
     "revoke": "Revocar",
     "perms": {
       "clients": {
-        "read": { "label": "Ver clientes", "tip": "Acceso a la lista y fichas de clientes de la clínica." },
-        "write": { "label": "Editar clientes", "tip": "Crear o modificar fichas de clientes." }
+        "read": {
+          "label": "Ver clientes",
+          "tip": "Acceso a la lista y fichas de clientes de la clínica."
+        },
+        "write": {
+          "label": "Editar clientes",
+          "tip": "Crear o modificar fichas de clientes."
+        }
       },
       "pets": {
-        "read": { "label": "Ver animales", "tip": "Acceso a historiales (sin escritura clínica)." },
-        "write_clinical": { "label": "Escritura clínica", "tip": "Notas clínicas, validaciones y actos médicos." }
+        "read": {
+          "label": "Ver animales",
+          "tip": "Acceso a historiales (sin escritura clínica)."
+        },
+        "write_clinical": {
+          "label": "Escritura clínica",
+          "tip": "Notas clínicas, validaciones y actos médicos."
+        }
       },
       "heartrate": {
-        "validate": { "label": "Validar FC", "tip": "Validar lecturas de frecuencia cardíaca." }
+        "validate": {
+          "label": "Validar FC",
+          "tip": "Validar lecturas de frecuencia cardíaca."
+        }
       },
-      "messaging": { "label": "Mensajería", "tip": "Leer y enviar mensajes con los clientes." },
+      "messaging": {
+        "label": "Mensajería",
+        "tip": "Leer y enviar mensajes con los clientes."
+      },
       "calendar": {
-        "manage": { "label": "Agenda", "tip": "Gestionar citas y el calendario de la clínica." }
+        "manage": {
+          "label": "Agenda",
+          "tip": "Gestionar citas y el calendario de la clínica."
+        }
       },
       "care": {
-        "manage": { "label": "Cuidados y recordatorios", "tip": "Gestionar cuidados, recordatorios Care y seguimientos." }
+        "manage": {
+          "label": "Cuidados y recordatorios",
+          "tip": "Gestionar cuidados, recordatorios Care y seguimientos."
+        }
       },
       "shares": {
-        "manage": { "label": "Compartidos", "tip": "Gestionar el uso compartido de historiales." }
+        "manage": {
+          "label": "Compartidos",
+          "tip": "Gestionar el uso compartido de historiales."
+        }
       },
       "practice": {
-        "settings": { "label": "Ajustes de clínica", "tip": "Modificar la configuración de la clínica." }
+        "settings": {
+          "label": "Ajustes de clínica",
+          "tip": "Modificar la configuración de la clínica."
+        }
       },
       "team": {
-        "manage": { "label": "Gestionar equipo", "tip": "Invitar, editar derechos o revocar miembros." }
+        "manage": {
+          "label": "Gestionar equipo",
+          "tip": "Invitar, editar derechos o revocar miembros."
+        }
       },
       "commissions": {
-        "view": { "label": "Ver comisiones", "tip": "Acceder al panel de comisiones." }
+        "view": {
+          "label": "Ver comisiones",
+          "tip": "Acceder al panel de comisiones."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Crear una cuenta profesional",
     "productsLink": "Ver la oferta de petsFollow",
     "commercialPhone": "Teléfono comercial: {phone}"
+  },
+  "prescriptions": {
+    "title": "Recetas",
+    "subtitle": "Borradores de recetas veterinarias (vista previa PDF)",
+    "v1Hint": "Módulo en desarrollo: solo borrador + vista previa PDF. Firma y compartir ficha en fase 2.",
+    "new": "Nueva receta",
+    "empty": "Sin recetas",
+    "colPet": "Animal",
+    "colOwner": "Propietario",
+    "colStatus": "Estado",
+    "colDate": "Creada",
+    "statusDraft": "Borrador",
+    "statusSigned": "Firmada",
+    "statusSent": "Enviada",
+    "statusArchived": "Archivada",
+    "wizardTitle": "Nueva receta",
+    "wizardSubtitle": "Seleccione el animal y los medicamentos",
+    "pet": "Animal",
+    "petSearch": "Buscar un animal…",
+    "paperFormat": "Formato de papel",
+    "validUntil": "Válida hasta",
+    "notes": "Notas",
+    "medName": "Medicamento",
+    "dosage": "Dosis",
+    "form": "Forma",
+    "quantity": "Cantidad",
+    "posology": "Posología",
+    "withdrawal": "Periodo de espera",
+    "addLine": "Añadir línea",
+    "saveDraft": "Guardar borrador",
+    "openPdf": "Vista previa PDF",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar este borrador?",
+    "loading": "Cargando…",
+    "removeLine": "Quitar línea",
+    "errorGeneric": "Se ha producido un error.",
+    "errorDisabled": "El módulo de recetas está desactivado.",
+    "errorForbidden": "Acción no permitida.",
+    "errorMedications": "Medicamentos inválidos o ausentes.",
+    "errorFormat": "Formato de papel inválido (A4 o A5).",
+    "errorNotFound": "Receta no encontrada.",
+    "errorNotDraft": "Solo se pueden editar los borradores.",
+    "errorPayload": "Contenido demasiado grande (notas o medicamentos)."
   }
 }

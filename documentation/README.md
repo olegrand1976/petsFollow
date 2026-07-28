@@ -36,6 +36,7 @@ Index des documents de référence du projet.
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
 | 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | **Plan** facturation Peppol Billit (88 € tout compris, partner Invoice to) — non implémenté |
 | 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | **Plan technique** Billit reseller (connect, API, schéma, sprints) — non implémenté |
+| 35 | [35-ORDONNANCES.md](35-ORDONNANCES.md) | Ordonnances vétérinaires (tag `dev`) — brouillons + preview PDF (`PRESCRIPTIONS_ENABLED`) |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

@@ -122,6 +122,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPharmacyMedicationRoutes(pr)
 		a.registerPharmacyStockRoutes(pr)
 		a.registerPharmacyDAFRoutes(pr)
+		a.registerPrescriptionRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)

@@ -35,6 +35,7 @@ export default defineNuxtConfig({
       appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'local',
       /** Pharmacie cabinet (CNK / stock / DAF) — mirror PHARMACY_ENABLED. */
       pharmacyEnabled: process.env.NUXT_PUBLIC_PHARMACY_ENABLED === 'true' || process.env.NUXT_PUBLIC_PHARMACY_ENABLED === '1',
+      prescriptionsEnabled: process.env.NUXT_PUBLIC_PRESCRIPTIONS_ENABLED === 'true' || process.env.NUXT_PUBLIC_PRESCRIPTIONS_ENABLED === '1',
     },
   },
   routeRules: {

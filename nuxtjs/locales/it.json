@@ -65,7 +65,8 @@
     "adminFiliation": "Filiazione",
     "usecases": "Guide di test",
     "stock": "Stock",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Ricette"
   },
   "training": {
     "title": "Allenamento AI",
@@ -2686,34 +2687,70 @@
     "revoke": "Revocare",
     "perms": {
       "clients": {
-        "read": { "label": "Vedere i clienti", "tip": "Accesso all’elenco e alle schede clienti della struttura." },
-        "write": { "label": "Modificare i clienti", "tip": "Creare o modificare le schede clienti." }
+        "read": {
+          "label": "Vedere i clienti",
+          "tip": "Accesso all’elenco e alle schede clienti della struttura."
+        },
+        "write": {
+          "label": "Modificare i clienti",
+          "tip": "Creare o modificare le schede clienti."
+        }
       },
       "pets": {
-        "read": { "label": "Vedere gli animali", "tip": "Accesso alle cartelle animali (senza scrittura clinica)." },
-        "write_clinical": { "label": "Scrittura clinica", "tip": "Note cliniche, validazioni e atti medici." }
+        "read": {
+          "label": "Vedere gli animali",
+          "tip": "Accesso alle cartelle animali (senza scrittura clinica)."
+        },
+        "write_clinical": {
+          "label": "Scrittura clinica",
+          "tip": "Note cliniche, validazioni e atti medici."
+        }
       },
       "heartrate": {
-        "validate": { "label": "Validare FC", "tip": "Validare le letture della frequenza cardiaca." }
+        "validate": {
+          "label": "Validare FC",
+          "tip": "Validare le letture della frequenza cardiaca."
+        }
       },
-      "messaging": { "label": "Messaggistica", "tip": "Leggere e inviare messaggi con i clienti." },
+      "messaging": {
+        "label": "Messaggistica",
+        "tip": "Leggere e inviare messaggi con i clienti."
+      },
       "calendar": {
-        "manage": { "label": "Agenda", "tip": "Gestire appuntamenti e calendario della struttura." }
+        "manage": {
+          "label": "Agenda",
+          "tip": "Gestire appuntamenti e calendario della struttura."
+        }
       },
       "care": {
-        "manage": { "label": "Cure e promemoria", "tip": "Gestire cure, promemoria Care e follow-up." }
+        "manage": {
+          "label": "Cure e promemoria",
+          "tip": "Gestire cure, promemoria Care e follow-up."
+        }
       },
       "shares": {
-        "manage": { "label": "Condivisioni", "tip": "Gestire le condivisioni di cartella animale." }
+        "manage": {
+          "label": "Condivisioni",
+          "tip": "Gestire le condivisioni di cartella animale."
+        }
       },
       "practice": {
-        "settings": { "label": "Impostazioni struttura", "tip": "Modificare le impostazioni della struttura." }
+        "settings": {
+          "label": "Impostazioni struttura",
+          "tip": "Modificare le impostazioni della struttura."
+        }
       },
       "team": {
-        "manage": { "label": "Gestire il team", "tip": "Invitare, modificare i diritti o revocare membri." }
+        "manage": {
+          "label": "Gestire il team",
+          "tip": "Invitare, modificare i diritti o revocare membri."
+        }
       },
       "commissions": {
-        "view": { "label": "Vedere le commissioni", "tip": "Accedere al pannello commissioni." }
+        "view": {
+          "label": "Vedere le commissioni",
+          "tip": "Accedere al pannello commissioni."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Crea un account professionale",
     "productsLink": "Scopri l’offerta petsFollow",
     "commercialPhone": "Telefono commerciale: {phone}"
+  },
+  "prescriptions": {
+    "title": "Ricette",
+    "subtitle": "Bozze di ricette veterinarie (anteprima PDF)",
+    "v1Hint": "Modulo in sviluppo: solo bozza + anteprima PDF. Firma e condivisione cartella in fase 2.",
+    "new": "Nuova ricetta",
+    "empty": "Nessuna ricetta",
+    "colPet": "Animale",
+    "colOwner": "Proprietario",
+    "colStatus": "Stato",
+    "colDate": "Creata",
+    "statusDraft": "Bozza",
+    "statusSigned": "Firmata",
+    "statusSent": "Inviata",
+    "statusArchived": "Archiviata",
+    "wizardTitle": "Nuova ricetta",
+    "wizardSubtitle": "Seleziona animale e farmaci",
+    "pet": "Animale",
+    "petSearch": "Cerca un animale…",
+    "paperFormat": "Formato carta",
+    "validUntil": "Valida fino al",
+    "notes": "Note",
+    "medName": "Farmaco",
+    "dosage": "Dosaggio",
+    "form": "Forma",
+    "quantity": "Quantità",
+    "posology": "Posologia",
+    "withdrawal": "Tempo di sospensione",
+    "addLine": "Aggiungi riga",
+    "saveDraft": "Salva bozza",
+    "openPdf": "Anteprima PDF",
+    "save": "Salva",
+    "delete": "Elimina",
+    "deleteConfirm": "Eliminare questa bozza?",
+    "loading": "Caricamento…",
+    "removeLine": "Rimuovi riga",
+    "errorGeneric": "Si è verificato un errore.",
+    "errorDisabled": "Il modulo ricette è disattivato.",
+    "errorForbidden": "Azione non consentita.",
+    "errorMedications": "Farmaci non validi o mancanti.",
+    "errorFormat": "Formato carta non valido (A4 o A5).",
+    "errorNotFound": "Ricetta non trovata.",
+    "errorNotDraft": "Solo le bozze sono modificabili.",
+    "errorPayload": "Contenuto troppo grande (note o farmaci)."
   }
 }

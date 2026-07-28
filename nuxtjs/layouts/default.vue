@@ -61,16 +61,24 @@ const showNav = computed(() => {
   return !isBareShellPath(route.path)
 })
 
+const runtimeConfig = useRuntimeConfig()
+
 const navItems = computed<ProNavItem[]>(() => {
+  const prescriptionsOn = Boolean(runtimeConfig.public.prescriptionsEnabled)
   const items: ProNavItem[] = [
     { to: '/dashboard', label: t('nav.dashboard'), exact: true, icon: 'dashboard' },
     { to: '/clients', label: t('nav.clients'), icon: 'clients', badge: clientsBadge.value },
     { to: '/pets', label: t('nav.pets'), icon: 'pets', badge: petsBadge.value },
     { to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value },
     { to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value },
+  ]
+  if (prescriptionsOn) {
+    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'medication', tag: t('nav.tagDev') })
+  }
+  items.push(
     { to: '/invoicing', label: t('nav.invoicing'), icon: 'receipt', tag: t('nav.tagDev') },
     { to: '/produits', label: t('nav.products'), icon: 'description' },
-  ]
+  )
   if (user.value?.isReferenceVet === true) {
     items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments' })
   }

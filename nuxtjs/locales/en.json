@@ -65,7 +65,8 @@
     "adminFiliation": "Attribution",
     "usecases": "Test guides",
     "stock": "Stock",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Prescriptions"
   },
   "auth": {
     "login": {
@@ -2686,34 +2687,70 @@
     "revoke": "Revoke",
     "perms": {
       "clients": {
-        "read": { "label": "View clients", "tip": "Access the practice client list and profiles." },
-        "write": { "label": "Edit clients", "tip": "Create or update client records." }
+        "read": {
+          "label": "View clients",
+          "tip": "Access the practice client list and profiles."
+        },
+        "write": {
+          "label": "Edit clients",
+          "tip": "Create or update client records."
+        }
       },
       "pets": {
-        "read": { "label": "View pets", "tip": "Access pet records (no clinical write)." },
-        "write_clinical": { "label": "Clinical write", "tip": "Enter clinical notes, validations and medical acts." }
+        "read": {
+          "label": "View pets",
+          "tip": "Access pet records (no clinical write)."
+        },
+        "write_clinical": {
+          "label": "Clinical write",
+          "tip": "Enter clinical notes, validations and medical acts."
+        }
       },
       "heartrate": {
-        "validate": { "label": "Validate HR", "tip": "Validate heart-rate readings." }
+        "validate": {
+          "label": "Validate HR",
+          "tip": "Validate heart-rate readings."
+        }
       },
-      "messaging": { "label": "Messaging", "tip": "Read and send messages with clients." },
+      "messaging": {
+        "label": "Messaging",
+        "tip": "Read and send messages with clients."
+      },
       "calendar": {
-        "manage": { "label": "Calendar", "tip": "Manage appointments and the practice calendar." }
+        "manage": {
+          "label": "Calendar",
+          "tip": "Manage appointments and the practice calendar."
+        }
       },
       "care": {
-        "manage": { "label": "Care & reminders", "tip": "Manage care plans, Care reminders and related follow-ups." }
+        "manage": {
+          "label": "Care & reminders",
+          "tip": "Manage care plans, Care reminders and related follow-ups."
+        }
       },
       "shares": {
-        "manage": { "label": "Shares", "tip": "Manage pet-record shares with other actors." }
+        "manage": {
+          "label": "Shares",
+          "tip": "Manage pet-record shares with other actors."
+        }
       },
       "practice": {
-        "settings": { "label": "Practice settings", "tip": "Change practice settings." }
+        "settings": {
+          "label": "Practice settings",
+          "tip": "Change practice settings."
+        }
       },
       "team": {
-        "manage": { "label": "Manage team", "tip": "Invite members, edit rights or revoke access." }
+        "manage": {
+          "label": "Manage team",
+          "tip": "Invite members, edit rights or revoke access."
+        }
       },
       "commissions": {
-        "view": { "label": "View commissions", "tip": "Access the practice commissions board." }
+        "view": {
+          "label": "View commissions",
+          "tip": "Access the practice commissions board."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Create a professional account",
     "productsLink": "See the petsFollow offer",
     "commercialPhone": "Sales phone: {phone}"
+  },
+  "prescriptions": {
+    "title": "Prescriptions",
+    "subtitle": "Veterinary prescription drafts (PDF preview)",
+    "v1Hint": "Dev module: draft + PDF preview only. Signature and pet record sharing come in phase 2.",
+    "new": "New prescription",
+    "empty": "No prescriptions",
+    "colPet": "Pet",
+    "colOwner": "Owner",
+    "colStatus": "Status",
+    "colDate": "Created",
+    "statusDraft": "Draft",
+    "statusSigned": "Signed",
+    "statusSent": "Sent",
+    "statusArchived": "Archived",
+    "wizardTitle": "New prescription",
+    "wizardSubtitle": "Select the pet and medications",
+    "pet": "Pet",
+    "petSearch": "Search a pet…",
+    "paperFormat": "Paper format",
+    "validUntil": "Valid until",
+    "notes": "Notes",
+    "medName": "Medication",
+    "dosage": "Dosage",
+    "form": "Form",
+    "quantity": "Quantity",
+    "posology": "Posology",
+    "withdrawal": "Withdrawal period",
+    "addLine": "Add line",
+    "saveDraft": "Save draft",
+    "openPdf": "Preview PDF",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this draft?",
+    "loading": "Loading…",
+    "removeLine": "Remove line",
+    "errorGeneric": "Something went wrong.",
+    "errorDisabled": "The prescriptions module is disabled.",
+    "errorForbidden": "Action not allowed.",
+    "errorMedications": "Invalid or missing medications.",
+    "errorFormat": "Invalid paper format (A4 or A5).",
+    "errorNotFound": "Prescription not found.",
+    "errorNotDraft": "Only drafts can be edited.",
+    "errorPayload": "Payload too large (notes or medications)."
   }
 }

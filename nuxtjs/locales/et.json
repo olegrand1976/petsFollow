@@ -65,7 +65,8 @@
     "adminFiliation": "Seotus",
     "usecases": "Testijuhendid",
     "stock": "Varu",
-    "daf": "DAF"
+    "daf": "DAF",
+    "prescriptions": "Retseptid"
   },
   "auth": {
     "login": {
@@ -2686,34 +2687,70 @@
     "revoke": "Tühista",
     "perms": {
       "clients": {
-        "read": { "label": "Klientide vaatamine", "tip": "Juurdepääs kliiniku klientide nimekirjale ja kaartidele." },
-        "write": { "label": "Klientide muutmine", "tip": "Klientide kaartide loomine või muutmine." }
+        "read": {
+          "label": "Klientide vaatamine",
+          "tip": "Juurdepääs kliiniku klientide nimekirjale ja kaartidele."
+        },
+        "write": {
+          "label": "Klientide muutmine",
+          "tip": "Klientide kaartide loomine või muutmine."
+        }
       },
       "pets": {
-        "read": { "label": "Loomade vaatamine", "tip": "Juurdepääs loomade toimikutele (ilma kliinilise kirjutuseta)." },
-        "write_clinical": { "label": "Kliiniline kirjutamine", "tip": "Kliinilised märkmed, kinnitused ja meditsiinitoimingud." }
+        "read": {
+          "label": "Loomade vaatamine",
+          "tip": "Juurdepääs loomade toimikutele (ilma kliinilise kirjutuseta)."
+        },
+        "write_clinical": {
+          "label": "Kliiniline kirjutamine",
+          "tip": "Kliinilised märkmed, kinnitused ja meditsiinitoimingud."
+        }
       },
       "heartrate": {
-        "validate": { "label": "SK kinnitamine", "tip": "Südame löögisageduse näitude kinnitamine." }
+        "validate": {
+          "label": "SK kinnitamine",
+          "tip": "Südame löögisageduse näitude kinnitamine."
+        }
       },
-      "messaging": { "label": "Sõnumid", "tip": "Klientidega sõnumite lugemine ja saatmine." },
+      "messaging": {
+        "label": "Sõnumid",
+        "tip": "Klientidega sõnumite lugemine ja saatmine."
+      },
       "calendar": {
-        "manage": { "label": "Kalender", "tip": "Vastuvõttude ja kliiniku kalendri haldamine." }
+        "manage": {
+          "label": "Kalender",
+          "tip": "Vastuvõttude ja kliiniku kalendri haldamine."
+        }
       },
       "care": {
-        "manage": { "label": "Hooldus ja meeldetuletused", "tip": "Hoolduste, Care-meeldetuletuste ja jälgimise haldamine." }
+        "manage": {
+          "label": "Hooldus ja meeldetuletused",
+          "tip": "Hoolduste, Care-meeldetuletuste ja jälgimise haldamine."
+        }
       },
       "shares": {
-        "manage": { "label": "Jagamine", "tip": "Loomatoimikute jagamise haldamine." }
+        "manage": {
+          "label": "Jagamine",
+          "tip": "Loomatoimikute jagamise haldamine."
+        }
       },
       "practice": {
-        "settings": { "label": "Kliiniku seaded", "tip": "Kliiniku seadete muutmine." }
+        "settings": {
+          "label": "Kliiniku seaded",
+          "tip": "Kliiniku seadete muutmine."
+        }
       },
       "team": {
-        "manage": { "label": "Meeskonna haldus", "tip": "Liikmete kutsumine, õiguste muutmine või tühistamine." }
+        "manage": {
+          "label": "Meeskonna haldus",
+          "tip": "Liikmete kutsumine, õiguste muutmine või tühistamine."
+        }
       },
       "commissions": {
-        "view": { "label": "Komisjonide vaatamine", "tip": "Juurdepääs komisjonide ülevaatele." }
+        "view": {
+          "label": "Komisjonide vaatamine",
+          "tip": "Juurdepääs komisjonide ülevaatele."
+        }
       }
     }
   },
@@ -2914,5 +2951,49 @@
     "registerCta": "Loo professionaalne konto",
     "productsLink": "Vaata petsFollow pakkumist",
     "commercialPhone": "Müügiesindaja telefon: {phone}"
+  },
+  "prescriptions": {
+    "title": "Retseptid",
+    "subtitle": "Veterinaarretseptide mustandid (PDF eelvaade)",
+    "v1Hint": "Arendusmoodul: ainult mustand + PDF eelvaade. Allkiri ja jagamine 2. faasis.",
+    "new": "Uus retsept",
+    "empty": "Retsepte pole",
+    "colPet": "Loom",
+    "colOwner": "Omanik",
+    "colStatus": "Olek",
+    "colDate": "Loodud",
+    "statusDraft": "Mustand",
+    "statusSigned": "Allkirjastatud",
+    "statusSent": "Saadetud",
+    "statusArchived": "Arhiveeritud",
+    "wizardTitle": "Uus retsept",
+    "wizardSubtitle": "Vali loom ja ravimid",
+    "pet": "Loom",
+    "petSearch": "Otsi looma…",
+    "paperFormat": "Paberiformaat",
+    "validUntil": "Kehtib kuni",
+    "notes": "Märkused",
+    "medName": "Ravim",
+    "dosage": "Annus",
+    "form": "Vorm",
+    "quantity": "Kogus",
+    "posology": "Annustamine",
+    "withdrawal": "Ooteaeg",
+    "addLine": "Lisa rida",
+    "saveDraft": "Salvesta mustand",
+    "openPdf": "PDF eelvaade",
+    "save": "Salvesta",
+    "delete": "Kustuta",
+    "deleteConfirm": "Kustutada see mustand?",
+    "loading": "Laadimine…",
+    "removeLine": "Eemalda rida",
+    "errorGeneric": "Midagi läks valesti.",
+    "errorDisabled": "Retseptide moodul on välja lülitatud.",
+    "errorForbidden": "Tegevus pole lubatud.",
+    "errorMedications": "Kehtetud või puuduvad ravimid.",
+    "errorFormat": "Vigane paberiformaat (A4 või A5).",
+    "errorNotFound": "Retsepti ei leitud.",
+    "errorNotDraft": "Muuta saab ainult mustandeid.",
+    "errorPayload": "Sisu on liiga mahukas (märkmed või ravimid)."
   }
 }
