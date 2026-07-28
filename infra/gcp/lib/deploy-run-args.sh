@@ -41,14 +41,25 @@ pf_write_api_env_file() {
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
+  local billit_mock="false"
+  local billit_secrets_backend=""
   if [[ "$app_env" == "staging" ]]; then
     pharmacy_enabled="${PHARMACY_ENABLED:-true}"
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
+    # Billit tag-dev : mock gateway (pas d’appels live). local_enc + clé via pf_api_secrets.
+    if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
+      billit_mock="${BILLIT_MOCK_ENABLED:-true}"
+      billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
+    fi
   else
     pharmacy_enabled="${PHARMACY_ENABLED:-false}"
     billit_enabled="${BILLIT_ENABLED:-false}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
+    billit_mock="${BILLIT_MOCK_ENABLED:-false}"
+    if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
+      billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
+    fi
   fi
   cat >"$path" <<EOF
 HTTP_ADDR: ":8080"
@@ -72,6 +83,7 @@ PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
 BILLIT_ENABLED: "${billit_enabled}"
+BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
@@ -80,6 +92,11 @@ GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
 GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 EOF
+  if [[ -n "$billit_secrets_backend" ]]; then
+    cat >>"$path" <<EOF
+BILLIT_SECRETS_BACKEND: "${billit_secrets_backend}"
+EOF
+  fi
 }
 
 pf_write_frontend_env_file() {
@@ -169,6 +186,13 @@ pf_api_secrets() {
   if gcloud secrets versions access latest \
     --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
+  fi
+  # Billit local_enc (staging tag-dev mock / live) — clé dédiée si présente, sinon JWT.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-billit-secrets-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-billit-secrets-key:latest"
+  else
+    secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-jwt-signing-key:latest"
   fi
   printf '%s' "$secrets"
 }
