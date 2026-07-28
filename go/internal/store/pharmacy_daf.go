@@ -281,7 +281,19 @@ func (s *Store) GetDAF(ctx context.Context, practiceID, dafID string) (DAFDocume
 }
 
 func (s *Store) listDAFItems(ctx context.Context, dafID string) ([]DAFItem, error) {
-	rows, err := s.pool.Query(ctx, `
+	return s.listDAFItemsQuerier(ctx, s.pool, dafID)
+}
+
+func (s *Store) listDAFItemsTx(ctx context.Context, tx pgx.Tx, dafID string) ([]DAFItem, error) {
+	return s.listDAFItemsQuerier(ctx, tx, dafID)
+}
+
+type dafItemsQuerier interface {
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+}
+
+func (s *Store) listDAFItemsQuerier(ctx context.Context, q dafItemsQuerier, dafID string) ([]DAFItem, error) {
+	rows, err := q.Query(ctx, `
 		SELECT i.id::text, i.daf_id::text, i.medication_id::text, m.cnk, m.name,
 		       COALESCE(i.batch_id::text,''), COALESCE(b.lot_number,''), COALESCE(b.expires_on::text,''),
 		       COALESCE(i.deposit_id::text,''), i.qty::float8, i.unit, COALESCE(i.amm_number,''),
@@ -444,7 +456,7 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 		if len(payload) == 0 {
 			payload = json.RawMessage(`{}`)
 		}
-		allocs, err := s.allocateFEFOTx(ctx, tx, practiceID, req.MedicationID, req.DepositID, req.Qty, userID, "", today)
+		allocs, err := s.allocateFEFOTx(ctx, tx, practiceID, req.MedicationID, req.DepositID, req.Qty, today)
 		if err != nil {
 			return DAFDocument{}, err
 		}
@@ -460,14 +472,7 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 			); err != nil {
 				return DAFDocument{}, err
 			}
-			// Link last movement(s) for this batch without daf_item_id — update most recent daf movement
-			if _, err := tx.Exec(ctx, `
-				UPDATE pharmacy.stock_movements SET daf_item_id = $1
-				WHERE id = (
-					SELECT id FROM pharmacy.stock_movements
-					WHERE practice_id = $2 AND batch_id = $3 AND reason = 'daf' AND daf_item_id IS NULL
-					ORDER BY created_at DESC LIMIT 1
-				)`, itemID, practiceID, al.BatchID); err != nil {
+			if err := s.insertDAFStockMovement(ctx, tx, practiceID, al.BatchID, dafID, itemID, userID, "daf", "", -al.Qty); err != nil {
 				return DAFDocument{}, err
 			}
 			sort++
@@ -515,28 +520,33 @@ func (s *Store) CancelDAF(ctx context.Context, practiceID, dafID, userID, reason
 	if status != "finalized" {
 		return DAFDocument{}, pharmacy.ErrDAFNotFinalized
 	}
-	items, err := s.listDAFItems(ctx, dafID)
+	items, err := s.listDAFItemsTx(ctx, tx, dafID)
 	if err != nil {
 		return DAFDocument{}, err
 	}
-	if restock {
-		for _, it := range items {
-			if it.BatchID == "" {
-				continue
-			}
+	for _, it := range items {
+		if it.BatchID == "" {
+			continue
+		}
+		delta := 0.0
+		if restock {
+			delta = it.Qty
 			if _, err := tx.Exec(ctx, `
 				UPDATE pharmacy.medication_batches
 				SET qty_on_hand = qty_on_hand + $3, updated_at = now()
 				WHERE practice_id = $1 AND id = $2`, practiceID, it.BatchID, it.Qty); err != nil {
 				return DAFDocument{}, err
 			}
-			if _, err := tx.Exec(ctx, `
-				INSERT INTO pharmacy.stock_movements (id, practice_id, batch_id, delta, reason, daf_item_id, reason_detail, created_by)
-				VALUES ($1,$2,$3,$4,'daf_cancel',$5,$6,$7)`,
-				uuid.NewString(), practiceID, it.BatchID, it.Qty, it.ID, nullIfEmpty(reason), nullIfEmpty(userID),
-			); err != nil {
-				return DAFDocument{}, err
+		}
+		detail := strings.TrimSpace(reason)
+		if !restock {
+			if detail != "" {
+				detail = detail + " "
 			}
+			detail += "no_restock"
+		}
+		if err := s.insertDAFStockMovement(ctx, tx, practiceID, it.BatchID, dafID, it.ID, userID, "daf_cancel", detail, delta); err != nil {
+			return DAFDocument{}, err
 		}
 	}
 	if _, err := tx.Exec(ctx, `

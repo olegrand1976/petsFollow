@@ -47,6 +47,8 @@ func (a *API) writeDAFErr(w http.ResponseWriter, r *http.Request, err error) boo
 		writeErr(w, r, http.StatusBadRequest, "daf_vamreg_incomplete", "daf_vamreg_incomplete")
 	case errors.Is(err, pharmacy.ErrDAFAlreadyHasPDF):
 		writeErr(w, r, http.StatusConflict, "daf_pdf_immutable", "daf_pdf_immutable")
+	case errors.Is(err, pharmacy.ErrDAFTraceRequired):
+		writeErr(w, r, http.StatusBadRequest, "daf_trace_required", "daf_trace_required")
 	case errors.Is(err, pharmacy.ErrStockInsufficient):
 		writeErr(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient")
 	case errors.Is(err, pharmacy.ErrStockUnavailableValidLots):

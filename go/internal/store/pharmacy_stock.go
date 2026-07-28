@@ -62,8 +62,17 @@ type StockMovement struct {
 	Delta        float64 `json:"delta"`
 	Reason       string  `json:"reason"`
 	ReasonDetail string  `json:"reasonDetail,omitempty"`
+	DafID        string  `json:"dafId,omitempty"`
+	DafItemID    string  `json:"dafItemId,omitempty"`
+	LotNumber    string  `json:"lotNumber,omitempty"`
+	ExpiresOn    string  `json:"expiresOn,omitempty"`
 	CreatedBy    string  `json:"createdBy,omitempty"`
 	CreatedAt    string  `json:"createdAt"`
+}
+
+type ListMovementsFilter struct {
+	DafID string
+	Limit int
 }
 
 type ExpirySummary struct {
@@ -546,7 +555,8 @@ func (s *Store) WasteBatch(ctx context.Context, practiceID, batchID, userID, was
 	return s.GetMedicationBatch(ctx, practiceID, batchID)
 }
 
-// AllocateFEFO locks valid lots and decrements qty (reason=daf). Used by DAF finalize and tests.
+// AllocateFEFO locks valid lots, decrements qty, and writes reason=adjust ledger rows
+// (not reason=daf — DAF exits must go through FinalizeDAF with daf_id + daf_item_id).
 func (s *Store) AllocateFEFO(ctx context.Context, practiceID, medicationID, depositID string, qty float64, userID string, today time.Time) ([]pharmacy.AllocationLine, error) {
 	if qty <= 0 {
 		return nil, ErrValidation
@@ -556,14 +566,24 @@ func (s *Store) AllocateFEFO(ctx context.Context, practiceID, medicationID, depo
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
-	lines, err := s.allocateFEFOTx(ctx, tx, practiceID, medicationID, depositID, qty, userID, "", today)
+	lines, err := s.allocateFEFOTx(ctx, tx, practiceID, medicationID, depositID, qty, today)
 	if err != nil {
 		return nil, err
+	}
+	for _, al := range lines {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO pharmacy.stock_movements (
+				id, practice_id, batch_id, delta, reason, reason_detail, created_by
+			) VALUES ($1,$2,$3,$4,'adjust','fefo_allocate',$5)`,
+			uuid.NewString(), practiceID, al.BatchID, -al.Qty, nullIfEmpty(userID),
+		); err != nil {
+			return nil, err
+		}
 	}
 	return lines, tx.Commit(ctx)
 }
 
-func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medicationID, depositID string, qty float64, userID, dafItemID string, today time.Time) ([]pharmacy.AllocationLine, error) {
+func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medicationID, depositID string, qty float64, today time.Time) ([]pharmacy.AllocationLine, error) {
 	tod := pharmacy.BrusselsToday(today)
 	rows, err := tx.Query(ctx, `
 		SELECT id::text, lot_number, expires_on, qty_on_hand::float8
@@ -627,13 +647,6 @@ func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medic
 			WHERE id = $1 AND practice_id = $2 AND qty_on_hand >= $3`, l.id, practiceID, take); err != nil {
 			return nil, err
 		}
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO pharmacy.stock_movements (id, practice_id, batch_id, delta, reason, daf_item_id, created_by)
-			VALUES ($1,$2,$3,$4,'daf',$5,$6)`,
-			uuid.NewString(), practiceID, l.id, -take, nullIfEmpty(dafItemID), nullIfEmpty(userID),
-		); err != nil {
-			return nil, err
-		}
 		lines = append(lines, pharmacy.AllocationLine{BatchID: l.id, Qty: take, ExpiresOn: l.exp, LotNumber: l.lot})
 		remaining -= take
 	}
@@ -641,6 +654,23 @@ func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medic
 		return nil, pharmacy.ErrStockInsufficient
 	}
 	return lines, nil
+}
+
+func (s *Store) insertDAFStockMovement(ctx context.Context, tx pgx.Tx, practiceID, batchID, dafID, dafItemID, userID, reason, reasonDetail string, delta float64) error {
+	if reason != "daf" && reason != "daf_cancel" {
+		return ErrValidation
+	}
+	if strings.TrimSpace(dafID) == "" || strings.TrimSpace(dafItemID) == "" {
+		return pharmacy.ErrDAFTraceRequired
+	}
+	_, err := tx.Exec(ctx, `
+		INSERT INTO pharmacy.stock_movements (
+			id, practice_id, batch_id, delta, reason, reason_detail, daf_id, daf_item_id, created_by
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		uuid.NewString(), practiceID, batchID, delta, reason, nullIfEmpty(reasonDetail),
+		dafID, dafItemID, nullIfEmpty(userID),
+	)
+	return err
 }
 
 func (s *Store) AutoQuarantineExpiredBatches(ctx context.Context, practiceID string, today time.Time) (int, []string, error) {
@@ -692,17 +722,23 @@ func (s *Store) ListPracticesWithPharmacySettings(ctx context.Context) ([]string
 	return out, rows.Err()
 }
 
-func (s *Store) ListStockMovements(ctx context.Context, practiceID string, limit int) ([]StockMovement, error) {
+func (s *Store) ListStockMovements(ctx context.Context, practiceID string, filter ListMovementsFilter) ([]StockMovement, error) {
+	limit := filter.Limit
 	if limit <= 0 || limit > 200 {
 		limit = 50
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, batch_id::text, delta::float8, reason,
-		       COALESCE(reason_detail,''), COALESCE(created_by::text,''), created_at::text
-		FROM pharmacy.stock_movements
-		WHERE practice_id = $1
-		ORDER BY created_at DESC
-		LIMIT $2`, practiceID, limit)
+		SELECT m.id::text, m.practice_id::text, m.batch_id::text, m.delta::float8, m.reason,
+		       COALESCE(m.reason_detail,''),
+		       COALESCE(m.daf_id::text,''), COALESCE(m.daf_item_id::text,''),
+		       COALESCE(b.lot_number,''), COALESCE(b.expires_on::text,''),
+		       COALESCE(m.created_by::text,''), m.created_at::text
+		FROM pharmacy.stock_movements m
+		JOIN pharmacy.medication_batches b ON b.id = m.batch_id
+		WHERE m.practice_id = $1
+		  AND ($2 = '' OR m.daf_id::text = $2)
+		ORDER BY m.created_at DESC
+		LIMIT $3`, practiceID, strings.TrimSpace(filter.DafID), limit)
 	if err != nil {
 		return nil, err
 	}
@@ -710,7 +746,10 @@ func (s *Store) ListStockMovements(ctx context.Context, practiceID string, limit
 	var out []StockMovement
 	for rows.Next() {
 		var m StockMovement
-		if err := rows.Scan(&m.ID, &m.PracticeID, &m.BatchID, &m.Delta, &m.Reason, &m.ReasonDetail, &m.CreatedBy, &m.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&m.ID, &m.PracticeID, &m.BatchID, &m.Delta, &m.Reason, &m.ReasonDetail,
+			&m.DafID, &m.DafItemID, &m.LotNumber, &m.ExpiresOn, &m.CreatedBy, &m.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

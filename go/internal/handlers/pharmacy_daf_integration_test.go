@@ -97,6 +97,32 @@ func TestPharmacyDAFFinalizeCancelPDF(t *testing.T) {
 	}
 	num1 := fin["dafNumber"]
 
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/movements?dafId="+dafID+"&limit=20", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("movements %d %#v", code, env)
+	}
+	movData, _ := env["data"].(map[string]any)
+	movItems, _ := movData["items"].([]any)
+	if len(movItems) < 1 {
+		t.Fatalf("expected daf-linked movements %#v", env)
+	}
+	mov0, _ := movItems[0].(map[string]any)
+	if mov0["dafId"] != dafID {
+		t.Fatalf("movement dafId %#v", mov0)
+	}
+	if mov0["dafItemId"] == nil || mov0["dafItemId"] == "" {
+		t.Fatalf("missing dafItemId %#v", mov0)
+	}
+	if mov0["lotNumber"] != "DAF-LOT-1" {
+		t.Fatalf("lot on movement %#v", mov0)
+	}
+	if mov0["reason"] != "daf" {
+		t.Fatalf("reason %#v", mov0)
+	}
+	if mov0["delta"].(float64) != -2 {
+		t.Fatalf("expected delta -2 %#v", mov0)
+	}
+
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
 		"items": []map[string]any{{"medicationId": medID, "qty": 1, "ammNumber": "BE-V-DEMO-2"}},
 	})
@@ -135,5 +161,67 @@ func TestPharmacyDAFFinalizeCancelPDF(t *testing.T) {
 	}
 	if dataMap(t, env)["status"] != "cancelled" {
 		t.Fatalf("cancel status %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/movements?dafId="+dafID+"&limit=50", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("movements after cancel %d %#v", code, env)
+	}
+	movData, _ = env["data"].(map[string]any)
+	movItems, _ = movData["items"].([]any)
+	var sawCancel bool
+	for _, raw := range movItems {
+		m, _ := raw.(map[string]any)
+		if m["reason"] == "daf_cancel" && m["dafId"] == dafID && m["dafItemId"] != "" {
+			sawCancel = true
+			break
+		}
+	}
+	if !sawCancel {
+		t.Fatalf("expected daf_cancel movement linked to daf %#v", env)
+	}
+
+	// Annulation sans restock → mouvement delta=0 toujours tracé.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
+		"medicationId": medID, "lotNumber": "DAF-LOT-NR", "expiresOn": exp, "qty": 3,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("receipt nr %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
+		"items": []map[string]any{{"medicationId": medID, "qty": 1, "ammNumber": "BE-V-NR"}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("draft nr %d %#v", code, env)
+	}
+	dafNR := dataMap(t, env)["id"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafNR+"/finalize", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize nr %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafNR+"/cancel", tok, map[string]any{
+		"reason": "demo", "restock": false,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("cancel nr %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/movements?dafId="+dafNR+"&limit=20", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("movements nr %d %#v", code, env)
+	}
+	movData, _ = env["data"].(map[string]any)
+	movItems, _ = movData["items"].([]any)
+	var sawZeroCancel bool
+	for _, raw := range movItems {
+		m, _ := raw.(map[string]any)
+		if m["reason"] == "daf_cancel" && m["dafId"] == dafNR {
+			if m["delta"].(float64) != 0 {
+				t.Fatalf("no_restock cancel want delta 0 %#v", m)
+			}
+			sawZeroCancel = true
+		}
+	}
+	if !sawZeroCancel {
+		t.Fatalf("expected delta=0 daf_cancel %#v", env)
 	}
 }

@@ -42,6 +42,8 @@ func (a *API) writePharmacyErr(w http.ResponseWriter, r *http.Request, err error
 		writeErr(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient")
 	case errors.Is(err, pharmacy.ErrStockUnavailableValidLots):
 		writeErr(w, r, http.StatusConflict, "stock_unavailable_valid_lots", "stock_unavailable_valid_lots")
+	case errors.Is(err, pharmacy.ErrDAFTraceRequired):
+		writeErr(w, r, http.StatusBadRequest, "daf_trace_required", "daf_trace_required")
 	case errors.Is(err, pharmacy.ErrBatchNotFound):
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 	case errors.Is(err, store.ErrValidation):
@@ -351,7 +353,10 @@ func (a *API) listPharmacyMovements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	items, err := a.store.ListStockMovements(r.Context(), id.PracticeID, limit)
+	items, err := a.store.ListStockMovements(r.Context(), id.PracticeID, store.ListMovementsFilter{
+		DafID: strings.TrimSpace(r.URL.Query().Get("dafId")),
+		Limit: limit,
+	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
