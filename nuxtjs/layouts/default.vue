@@ -99,8 +99,11 @@ onMounted(async () => {
   // Owner du cycle desk : layout (survit au démontage topbar en veille).
   if (isDeskLockedFlag() || deskLocked.value) {
     await desk.bootstrap()
-    stopPolling()
-    return
+    // Flag stale + session active ⇒ bootstrap a levé la veille : continuer l'init.
+    if (desk.locked.value || isDeskLockedFlag()) {
+      stopPolling()
+      return
+    }
   }
   if (!user.value) {
     try {

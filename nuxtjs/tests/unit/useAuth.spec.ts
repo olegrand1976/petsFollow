@@ -125,6 +125,7 @@ describe('useAuth helpers', () => {
     const prevWindow = globalThis.window
     vi.stubGlobal('window', { location: { replace } })
     const store = new Map<string, string>()
+    store.set('pf_desk_locked', '1')
     vi.stubGlobal('sessionStorage', {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => { store.set(k, v) },
@@ -133,6 +134,7 @@ describe('useAuth helpers', () => {
     try {
       finishClientLoginSession()
       expect(isWithinPostLoginGrace()).toBe(true)
+      expect(store.has('pf_desk_locked')).toBe(false)
       expect(replace).toHaveBeenCalledWith(AUTH_POST_LOGIN_RELOAD_PATH)
       finishClientLoginSession('/dashboard')
       expect(replace).toHaveBeenCalledWith('/dashboard')

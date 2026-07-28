@@ -281,6 +281,15 @@ function safeInternalPath(path: string): string {
  */
 export function finishClientLoginSession(path: string = AUTH_POST_LOGIN_RELOAD_PATH) {
   markAuthSessionActive()
+  // Purge flag veille poste partagé (clé alignée sur useDeskSession LOCKED_KEY) :
+  // /login n'utilise pas le layout Pro, donc abandonToLogin n'a pas forcément tourné.
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      sessionStorage.removeItem('pf_desk_locked')
+    } catch {
+      /* private mode / quota */
+    }
+  }
   const target = safeInternalPath(path)
   // typeof window : OK en SPA / tests ; absent en SSR Nitro.
   // replace : évite /login dans l'historique (retour → re-redirect).

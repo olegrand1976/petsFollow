@@ -1,6 +1,7 @@
 import {
   clearAuthTokens,
   finishClientLoginSession,
+  hasSessionCookie,
   homePathForRole,
   isAuthSuccess,
   isMFAChallenge,
@@ -343,7 +344,18 @@ export function useDeskSession() {
 
   async function bootstrap() {
     if (!import.meta.client) return
-    if (isDeskLockedFlag()) {
+    // Login frais via /login (layout:false) peut laisser pf_desk_locked stale :
+    // session httpOnly présente ⇒ ce n'est plus une veille, ne pas re-demander le MDP.
+    // !locked : évite de lever une veille volontaire pendant await clearAuthTokens()
+    // (flag déjà posé, cookies pas encore purgés — remount layout / double mount).
+    if (isDeskLockedFlag() && hasSessionCookie() && !locked.value) {
+      setDeskLockedFlag(false)
+      locked.value = false
+      if (promptMode.value === 'lock' || promptMode.value === 'switch') {
+        promptMode.value = null
+      }
+      pendingEmail.value = ''
+    } else if (isDeskLockedFlag()) {
       locked.value = true
       promptMode.value = 'lock'
       loadRosterFromCache()

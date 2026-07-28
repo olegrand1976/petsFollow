@@ -187,4 +187,22 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('pro-desk-lock')).toHaveCount(0)
     await expect(page.getByTestId('pro-topbar')).toBeVisible()
   })
+
+  test('F: login via /login with stale pf_desk_locked — no immediate veille', async ({ page }) => {
+    // Simule une veille précédente (flag sessionStorage) puis login classique :
+    // ne doit PAS re-afficher l'overlay MDP juste après la 1re connexion.
+    await page.goto('/login', { waitUntil: 'networkidle' })
+    await page.evaluate(() => {
+      sessionStorage.setItem('pf_desk_locked', '1')
+    })
+
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    await expect(page.getByTestId('pro-desk-lock')).toHaveCount(0)
+    await expect(page.getByTestId('pro-topbar')).toBeVisible({ timeout: 20000 })
+    const stillLocked = await page.evaluate(() => sessionStorage.getItem('pf_desk_locked'))
+    expect(stillLocked).toBeNull()
+  })
 })
