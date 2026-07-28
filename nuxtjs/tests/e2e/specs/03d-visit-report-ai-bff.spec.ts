@@ -42,22 +42,25 @@ test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
     const petId = String(pets?.[0]?.id || '')
     expect(petId, 'seed pet attendu').toBeTruthy()
 
-    const when = new Date(
-      Date.now() + 4 * 60 * 60 * 1000 + Math.floor(Math.random() * 40) * 60_000,
-    ).toISOString()
-    const createRes = await page.request.post(`/api/pets/${petId}/visits`, {
-      data: {
-        notes: `e2e bff improve ${Date.now()}`,
-        confirmDirect: true,
-        consultationSession: true,
-        scheduledAt: when,
-        durationMinutes: 30,
-      },
-    })
-    // 409 slot_taken : retry géré ci-dessous inutile — on exige une visite.
-    expect([200, 201], await createRes.text()).toContain(createRes.status())
-    const visitId = unwrapId(await createRes.json())
-    expect(visitId).toBeTruthy()
+    // RDV confirmé (pas walk-in) : consultationSession + scheduledAt futur → 400 stale.
+    let visitId = ''
+    for (let attempt = 0; attempt < 4 && !visitId; attempt++) {
+      const when = new Date(
+        Date.now() + (4 + attempt) * 60 * 60 * 1000 + Math.floor(Math.random() * 40) * 60_000,
+      ).toISOString()
+      const createRes = await page.request.post(`/api/pets/${petId}/visits`, {
+        data: {
+          notes: `e2e bff improve ${Date.now()}`,
+          confirmDirect: true,
+          scheduledAt: when,
+          durationMinutes: 30,
+        },
+      })
+      if (createRes.status() === 409) continue
+      expect([200, 201], await createRes.text()).toContain(createRes.status())
+      visitId = unwrapId(await createRes.json())
+    }
+    expect(visitId, 'visite créée').toBeTruthy()
 
     const putRes = await page.request.put(`/api/visits/${visitId}/report`, {
       data: { bodyText: `E2E improve BFF ${Date.now()}\nAnamnese courte pour IA.` },
