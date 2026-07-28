@@ -64,10 +64,13 @@ async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> 
 }
 
 test('pet detail — CR IA ouvert depuis Soins & RDV', { tag: '@p0' }, async ({ page }) => {
-  test.setTimeout(60000)
+  test.setTimeout(90000)
   const { clientId, petId } = await demoClientAndPet()
   const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
-  const when = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString()
+  // Unique slot: +3h + jitter — avoids slot_taken 409 on Playwright retry / parallel runs.
+  const when = new Date(
+    Date.now() + 3 * 60 * 60 * 1000 + Math.floor(Math.random() * 50) * 60_000,
+  ).toISOString()
   const create = await fetch(`${API}/api/v1/pets/${petId}/visits`, {
     method: 'POST',
     headers: {
@@ -80,12 +83,17 @@ test('pet detail — CR IA ouvert depuis Soins & RDV', { tag: '@p0' }, async ({ 
       scheduledAt: when,
     }),
   })
-  if (!create.ok) throw new Error(`create visit ${create.status}`)
+  // 409 slot_taken: a prior attempt (or seed) already holds a nearby slot — still open CR.
+  if (!create.ok && create.status !== 409) {
+    throw new Error(`create visit ${create.status}`)
+  }
 
   await loginAsVet(page)
   await page.goto(`/clients/${clientId}/pets/${petId}?tab=care`)
   await expect(page.getByTestId('pet-tab-care')).toBeVisible({ timeout: 15000 })
-  await page.getByTestId('pet-visit-report-open').first().click()
+  const openReport = page.getByTestId('pet-visit-report-open').first()
+  await expect(openReport).toBeVisible({ timeout: 30000 })
+  await openReport.click()
   await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('visit-report-body')).toBeVisible()
   await expect(page.getByTestId('visit-report-improve')).toBeVisible()

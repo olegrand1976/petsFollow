@@ -1091,6 +1091,18 @@ onMounted(async () => {
     pet.value = petRes.data ?? petRes
     petPhotoUrl.value = pet.value?.photoUrl || ''
 
+    // Care/visits must not wait on HR sessions — demo pets can have large histories
+    // and staging Cloud Run e2e times out waiting for pet-visit-report-open.
+    const careVisitsP = loadCareAndVisits().catch((e: any) => {
+      pageError.value = mapError(e)
+    })
+    const docsP = loadDocuments().catch((e: any) => {
+      docError.value = mapError(e)
+    })
+    const sharesP = loadPetShares().catch(() => {
+      petShares.value = []
+    })
+
     const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []
     await loadSessions(true)
@@ -1098,27 +1110,10 @@ onMounted(async () => {
     sessionsPollTimer = setInterval(() => {
       loadSessions(true).catch(() => {})
     }, 8000)
+
+    await Promise.all([careVisitsP, docsP, sharesP])
   } catch (e: any) {
     pageError.value = mapError(e)
-    return
-  }
-
-  try {
-    await loadCareAndVisits()
-  } catch (e: any) {
-    pageError.value = mapError(e)
-  }
-
-  try {
-    await loadDocuments()
-  } catch (e: any) {
-    docError.value = mapError(e)
-  }
-
-  try {
-    await loadPetShares()
-  } catch {
-    petShares.value = []
   }
 })
 
