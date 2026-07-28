@@ -8,7 +8,10 @@
         <main class="pro-main main">
           <div class="pro-main-inner">
             <!-- Lock / switch : démonter la page pour ne pas laisser de PHI dans le DOM. -->
-            <slot v-if="!deskUiBlocked" />
+            <template v-if="!deskUiBlocked">
+              <slot />
+              <ProActiveConsultationHost />
+            </template>
           </div>
         </main>
       </div>
@@ -80,6 +83,7 @@ const navItems = computed<ProNavItem[]>(() => {
   ]
   if (canPractice('calendar.manage')) {
     items.push({ to: '/calendar', label: t('nav.calendar'), icon: 'calendar', badge: calendarBadge.value, section: day })
+    items.push({ to: '/consultations', label: t('nav.consultations'), icon: 'clinical_notes', section: day })
   }
   if (canPractice('messaging')) {
     items.push({ to: '/messages', label: t('nav.messages'), icon: 'messages', badge: messagesBadge.value, section: day })
@@ -163,7 +167,7 @@ watch(() => route.fullPath, () => {
 })
 
 watch(() => route.path, (path) => {
-  if (path === '/calendar' || path === '/clients' || path === '/dashboard' || path === '/pets') {
+  if (path === '/calendar' || path === '/consultations' || path === '/clients' || path === '/dashboard' || path === '/pets') {
     loadNavBadges()
   }
 })

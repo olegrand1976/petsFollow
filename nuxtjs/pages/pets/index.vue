@@ -44,6 +44,7 @@
             <th>{{ $t('pets.columnLastVisit') }}</th>
             <th>{{ $t('pets.columnLastHeartRate') }}</th>
             <th>{{ $t('pets.columnOwner') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -53,7 +54,7 @@
                 <NuxtLink
                   :to="`/clients/${p.ownerUserId}/pets/${p.id}`"
                   class="pro-name-link"
-                  data-testid="pet-fiche-link"
+                  data-testid="pet-name-link"
                 >
                   <ProAvatar :src="p.photoUrl" :name="p.name" />
                   <span>{{ p.name }}</span>
@@ -79,6 +80,23 @@
               <template v-else>{{ $t('common.dash') }}</template>
             </td>
             <td>{{ p.ownerName }}</td>
+            <td>
+              <div class="pro-client-actions">
+                <ProIconAction
+                  icon="pets"
+                  :label="$t('common.profile')"
+                  :to="`/clients/${p.ownerUserId}/pets/${p.id}`"
+                  :test-id="`pet-fiche-action-${p.id}`"
+                />
+                <ProIconAction
+                  v-if="canWriteClinical"
+                  icon="medical_services"
+                  :label="$t('clients.consultation.open')"
+                  :test-id="`new-consultation-pet-${p.id}`"
+                  @click="openConsultation(p.ownerUserId, p.id)"
+                />
+              </div>
+            </td>
           </tr>
         </tbody>
       </ProTable>
@@ -108,12 +126,19 @@ const { t, te } = useI18n()
 const { formatDate } = useFormatters()
 const { mapError } = useApiError()
 const { petsBadge, refresh: refreshNavBadges } = useNavBadges()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const activeConsult = useActiveConsultation()
 
 const pets = ref<VetPet[]>([])
 const loadError = ref('')
 const query = ref('')
 const speciesFilter = ref('all')
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+function openConsultation(ownerUserId: string, petId: string) {
+  activeConsult.openForClient(ownerUserId, petId)
+}
 
 function speciesLabel(species: string) {
   const key = `common.species.${species}`

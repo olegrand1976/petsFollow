@@ -4,7 +4,7 @@
     size="lg"
     :title="$t('clients.consultation.title')"
     test-id="consultation-modal"
-    :prevent-close="reportBusy || closing"
+    :prevent-close="reportBusy || closing || leavePromptOpen"
     @update:open="onOpenUpdate"
   >
     <!-- Étape A : choisir l'animal puis démarrer la visite -->
@@ -20,7 +20,7 @@
           v-model="selectedPetId"
           class="pro-select"
           data-testid="consultation-pet-select"
-          :disabled="petsLoading || starting"
+          :disabled="petsLoading || starting || !!resumeVisitId"
         >
           <option value="" disabled>{{ $t('clients.consultation.petPlaceholder') }}</option>
           <option v-for="p in pets" :key="p.id" :value="p.id">
@@ -36,12 +36,14 @@
       />
     </div>
 
-    <!-- Étape B : CR médical (dictée Gemini via ProVisitReportPanel) -->
+    <!-- Étape B : CR médical -->
     <div v-else data-testid="consultation-report">
       <p class="pro-hint pro-mb-md">{{ $t('clients.consultation.reportHint') }}</p>
       <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
       <ProVisitReportPanel
+        ref="reportPanelRef"
         :visit-id="visitId"
+        :visit-scheduled-at="scheduledAt"
         @saved="onReportSaved"
         @finalized="onReportSaved"
         @busy="onReportBusy"
@@ -69,7 +71,6 @@
         </ProButton>
       </template>
 
-      <!-- Étape C : CTA post-enregistrement -->
       <template v-else-if="reportSaved">
         <ProButton
           v-if="showDafCta"
@@ -99,27 +100,79 @@
       </template>
     </template>
   </ProModal>
+
+  <ProModal
+    :open="leavePromptOpen"
+    size="sm"
+    :title="$t('clients.consultation.leaveTitle')"
+    test-id="consultation-leave-prompt"
+    :prevent-close="leaveBusy"
+    @update:open="onLeavePromptOpen"
+  >
+    <p class="pro-hint">{{ $t('clients.consultation.leaveHint') }}</p>
+    <p v-if="leaveError" class="pro-error" role="alert">{{ leaveError }}</p>
+    <template #footer>
+      <ProButton
+        variant="ghost"
+        test-id="consultation-leave-stay"
+        :disabled="leaveBusy"
+        @click="leavePromptOpen = false"
+      >
+        {{ $t('clients.consultation.leaveStay') }}
+      </ProButton>
+      <ProButton
+        variant="secondary"
+        test-id="consultation-leave-discard"
+        :disabled="leaveBusy"
+        @click="confirmDiscardLeave"
+      >
+        {{ $t('clients.consultation.leaveDiscard') }}
+      </ProButton>
+      <ProButton
+        test-id="consultation-leave-save"
+        :loading="leaveBusy"
+        @click="confirmSaveLeave"
+      >
+        {{ $t('clients.consultation.leaveSave') }}
+      </ProButton>
+    </template>
+  </ProModal>
 </template>
 
 <script setup lang="ts">
 import type { ConsultationPet } from '~/composables/useConsultationFlow'
+import { useActiveConsultation } from '~/composables/useActiveConsultation'
+
+type ReportPanelExpose = {
+  forceSave: () => Promise<boolean>
+  isDirty: () => boolean
+  currentBody: () => string
+}
 
 const props = defineProps<{
   open: boolean
   clientId: string
+  /** Reprise après veille : visite déjà créée. */
+  resumeVisitId?: string
+  resumePetId?: string
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  closed: []
 }>()
 
 const { t } = useI18n()
 const { mapError } = useApiError()
+const active = useActiveConsultation()
 const {
   pharmacyEnabled,
   billitEnabled,
   invoicingUiEnabled,
   visitId,
+  petId,
+  clientId: flowClientId,
+  scheduledAt,
   starting,
   reportSaved,
   reportBusy,
@@ -147,6 +200,11 @@ const actionError = ref('')
 const selectedPetId = ref('')
 const notes = ref('')
 const closing = ref(false)
+const leavePromptOpen = ref(false)
+const leaveBusy = ref(false)
+const leaveError = ref('')
+const reportPanelRef = ref<ReportPanelExpose | null>(null)
+const { user } = useProUser()
 
 async function loadPets() {
   if (!props.clientId) return
@@ -154,7 +212,10 @@ async function loadPets() {
   loadError.value = ''
   try {
     pets.value = await loadClientPets(props.clientId)
-    if (pets.value.length === 1) {
+    if (props.resumePetId) {
+      selectedPetId.value = props.resumePetId
+    }
+    else if (pets.value.length === 1) {
       selectedPetId.value = pets.value[0].id
     }
   }
@@ -167,51 +228,202 @@ async function loadPets() {
   }
 }
 
+function applyResume() {
+  if (!props.resumeVisitId) return
+  visitId.value = props.resumeVisitId
+  petId.value = props.resumePetId || ''
+  flowClientId.value = props.clientId
+  selectedPetId.value = props.resumePetId || ''
+  reportSaved.value = false
+  active.syncActiveVisit({
+    visitId: props.resumeVisitId,
+    clientId: props.clientId,
+    petId: props.resumePetId || '',
+  })
+  void hydrateResumeSchedule(props.resumeVisitId, props.resumePetId || '')
+}
+
+/** No GET /visits/:id — resolve date via pet visit list when possible. */
+async function hydrateResumeSchedule(id: string, petHint: string) {
+  if (!petHint) return
+  try {
+    const res: any = await $fetch(`/api/pets/${petHint}/visits`)
+    const list = Array.isArray(res?.data ?? res) ? (res.data ?? res) : []
+    const visit = list.find((v: any) => v?.id === id)
+    const at = visit?.scheduledAt || visit?.proposedScheduledAt || visit?.createdAt || ''
+    if (at) scheduledAt.value = String(at)
+  } catch {
+    /* date label optional on resume */
+  }
+}
+
 watch(
-  () => [props.open, props.clientId] as const,
-  ([open]) => {
-    if (!open) return
+  () => [props.open, props.clientId, props.resumeVisitId] as const,
+  ([isOpen]) => {
+    if (!isOpen) return
     reset()
     selectedPetId.value = ''
     notes.value = ''
     actionError.value = ''
     closing.value = false
+    leavePromptOpen.value = false
+    leaveError.value = ''
+    if (props.resumeVisitId) {
+      applyResume()
+    }
     void loadPets()
   },
 )
 
+/** Prefer pet from openForClient without tearing down an in-progress visit. */
+watch(
+  () => props.resumePetId,
+  (petId) => {
+    if (!props.open || props.resumeVisitId || visitId.value) return
+    if (petId) selectedPetId.value = petId
+  },
+)
+
+watch(
+  () => [props.open, visitId.value, props.clientId, petId.value || selectedPetId.value] as const,
+  ([isOpen, vid, cid, pid]) => {
+    if (!isOpen || !vid || !cid) {
+      active.syncActiveVisit(null)
+      return
+    }
+    active.syncActiveVisit({ visitId: vid, clientId: cid, petId: String(pid || '') })
+  },
+)
+
+async function flushReport() {
+  const panel = reportPanelRef.value
+  if (!visitId.value || !panel) return
+  // Prefer dirty body; also force-save non-empty so desk resume keeps server draft.
+  if (!panel.currentBody().trim()) return
+  const ok = await panel.forceSave()
+  if (!ok) {
+    throw new Error('consultation_flush_failed')
+  }
+}
+
+onMounted(() => {
+  active.registerFlush(flushReport)
+})
+
+onBeforeUnmount(() => {
+  active.registerFlush(null)
+  active.syncActiveVisit(null)
+  if (active.suspendDiscard.value) {
+    // Desk lock / visibility — do not cancel the visit.
+    active.suspendDiscard.value = false
+    reset()
+    return
+  }
+})
+
+onBeforeRouteLeave((_to, _from, next) => {
+  if (!props.open || !visitId.value || reportSaved.value) {
+    next()
+    return
+  }
+  leavePromptOpen.value = true
+  next(false)
+})
+
+async function finishClose(discard: boolean) {
+  closing.value = true
+  try {
+    if (discard) {
+      await discardIfUnsaved()
+    }
+    const email = user.value?.email
+    if (email) active.clearResumeForEmail(email)
+    reset()
+    active.syncActiveVisit(null)
+    emit('update:open', false)
+    emit('closed')
+  }
+  finally {
+    closing.value = false
+  }
+}
+
 async function onOpenUpdate(v: boolean) {
   if (!v) {
-    // Keep modal open while CR save is in flight (same as Cancel disabled).
-    if (reportBusy.value || closing.value) return
-    closing.value = true
-    try {
-      await discardIfUnsaved()
-      reset()
-      emit('update:open', false)
+    if (reportBusy.value || closing.value || leaveBusy.value) return
+    if (visitId.value && !reportSaved.value) {
+      leaveError.value = ''
+      leavePromptOpen.value = true
+      return
     }
-    finally {
-      closing.value = false
-    }
+    await finishClose(true)
     return
   }
   emit('update:open', v)
 }
 
-/** Unique close path — discard/reset only via onOpenUpdate. */
+function onLeavePromptOpen(v: boolean) {
+  if (!v && !leaveBusy.value) leavePromptOpen.value = false
+}
+
 function close() {
   if (reportBusy.value || closing.value) return
   void onOpenUpdate(false)
 }
 
+async function confirmDiscardLeave() {
+  leaveBusy.value = true
+  leaveError.value = ''
+  try {
+    leavePromptOpen.value = false
+    await finishClose(true)
+  }
+  finally {
+    leaveBusy.value = false
+  }
+}
+
+async function confirmSaveLeave() {
+  leaveBusy.value = true
+  leaveError.value = ''
+  try {
+    const panel = reportPanelRef.value
+    if (!panel) {
+      leaveError.value = t('clients.consultation.leaveSaveEmpty')
+      return
+    }
+    const ok = await panel.forceSave()
+    if (!ok) {
+      leaveError.value = t('clients.consultation.leaveSaveEmpty')
+      return
+    }
+    afterSaved()
+    leavePromptOpen.value = false
+    await finishClose(false)
+  }
+  catch (e: any) {
+    leaveError.value = mapError(e) || t('clients.consultation.leaveSaveEmpty')
+  }
+  finally {
+    leaveBusy.value = false
+  }
+}
+
 async function start() {
   if (!selectedPetId.value || !props.clientId) return
   try {
-    await startConsultation({
+    const id = await startConsultation({
       clientId: props.clientId,
       petId: selectedPetId.value,
       notes: notes.value,
     })
+    if (id) {
+      active.syncActiveVisit({
+        visitId: id,
+        clientId: props.clientId,
+        petId: selectedPetId.value,
+      })
+    }
   }
   catch {
     // error already on flowError
@@ -226,14 +438,17 @@ function onReportBusy(busy: boolean) {
   setReportBusy(busy)
 }
 
-/** Close modal then navigate — avoid aborting navigateTo when the modal unmounts mid-flight. */
 async function closeAndNavigate(path: string) {
   const target = path
   closing.value = true
   try {
     await discardIfUnsaved()
+    const email = user.value?.email
+    if (email) active.clearResumeForEmail(email)
     reset()
+    active.syncActiveVisit(null)
     emit('update:open', false)
+    emit('closed')
   }
   finally {
     closing.value = false
@@ -257,8 +472,12 @@ async function finishDone() {
     closing.value = true
     try {
       await discardIfUnsaved()
+      const email = user.value?.email
+      if (email) active.clearResumeForEmail(email)
       reset()
+      active.syncActiveVisit(null)
       emit('update:open', false)
+      emit('closed')
     }
     finally {
       closing.value = false

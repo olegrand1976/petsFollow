@@ -33,6 +33,8 @@ export function useConsultationFlow() {
   const visitId = ref('')
   const petId = ref('')
   const clientId = ref('')
+  /** ISO date of the visit — used by ProVisitReportPanel to show/prefix "Date du : …". */
+  const scheduledAt = ref('')
   const starting = ref(false)
   const reportSaved = ref(false)
   /** True while ProVisitReportPanel save/improve/finalize/audio is in flight. */
@@ -66,6 +68,7 @@ export function useConsultationFlow() {
     visitId.value = ''
     petId.value = ''
     clientId.value = ''
+    scheduledAt.value = ''
     starting.value = false
     reportSaved.value = false
     error.value = ''
@@ -80,7 +83,8 @@ export function useConsultationFlow() {
     clientId.value = input.clientId
     petId.value = input.petId
     try {
-      const scheduledAt = new Date().toISOString()
+      const scheduledAtIso = new Date().toISOString()
+      scheduledAt.value = scheduledAtIso
       const duration = [15, 30, 60].includes(input.durationMinutes ?? 0)
         ? input.durationMinutes
         : 30
@@ -90,7 +94,7 @@ export function useConsultationFlow() {
           confirmDirect: true,
           silentConfirm: true,
           consultationSession: true,
-          scheduledAt,
+          scheduledAt: scheduledAtIso,
           durationMinutes: duration,
           notes: input.notes?.trim() || undefined,
         },
@@ -188,6 +192,7 @@ export function useConsultationFlow() {
     visitId,
     petId,
     clientId,
+    scheduledAt,
     starting,
     reportSaved,
     reportBusy,
