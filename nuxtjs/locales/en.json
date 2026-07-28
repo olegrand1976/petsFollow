@@ -1706,64 +1706,80 @@
   "index": {
     "login": "Sign in",
     "registerCta": "Sign up",
-    "badge": "Digital passport · Web Pro · Pro Light · Owner app",
-    "heroTitle": "Your patients' digital passport, shared across all caregivers",
-    "heroLead": "Prescribed care continuity: one living shared record between practice, field care pros and owners.",
+    "badge": "Prescribed care continuity",
+    "heroTitleLine1": "Not just another software.",
+    "heroTitleLine2": "Prescribed care continuity, shared.",
+    "heroLead": "We keep the link between your practice, the owner and animal health professionals through a shared digital passport.",
     "heroCta": "Create my professional account",
     "heroLogin": "I already have an account",
-    "cards": {
-      "heartrate": {
-        "title": "Pro Light field",
-        "text": "Notes, visit reports and docs for vet light and care pros"
+    "actors": {
+      "passport": "Digital passport",
+      "cabinet": {
+        "title": "Practice",
+        "text": "Pro — pilots"
       },
-      "messaging": {
-        "title": "Owner link",
-        "text": "Secure messaging practice ↔ client"
+      "care": {
+        "title": "Care pros",
+        "text": "Pro Light — documents"
       },
-      "records": {
-        "title": "Shared passport",
-        "text": "One living multi-actor record per animal"
+      "owner": {
+        "title": "Owner",
+        "text": "App — follows & pays"
       }
     },
-    "featuresTitle": "Why choose petsFollow Pro?",
-    "features": {
-      "heartrate": {
-        "title": "Prescribed follow-up",
-        "text": "Guided heart-rate checks and Care/Horse reminders — owners follow what you prescribe."
+    "problemTitle": "After the consult, follow-up falls apart",
+    "problemLead": "Isolated PMS records, WhatsApp threads, scattered field notes. Between appointments, the animal has no shared thread of care.",
+    "passportTitle": "One shared passport, three faces",
+    "passportLead": "One living record circulates across every actor — complementary to your PMS, not another software to install.",
+    "faces": {
+      "pro": {
+        "role": "Pro · Web",
+        "title": "The practice pilots",
+        "text": "You prescribe the follow-up, read the timeline and stay linked to the household — the passport control seat."
       },
-      "alerts": {
-        "title": "Multi-actor passport",
-        "text": "Practice, care pro and household on the same animal — a shared digital passport, not a silo."
+      "proLight": {
+        "role": "Pro Light · Mobile",
+        "title": "The field documents",
+        "text": "Vet light and care pros add notes, visit reports and docs on the same animal — no inter-pro chat."
       },
-      "messaging": {
-        "title": "Owner link",
-        "text": "Secure messaging and timeline with your clients. Configurable availability."
-      },
-      "partner": {
-        "title": "Partner model",
-        "text": "Pro Light is free. Pro is invoiced offline — self-funding via client commissions."
-      },
-      "security": {
-        "title": "Data & roles",
-        "text": "Compliant hosting, role-based ACL, controlled record sharing — no inter-pro chat."
-      },
-      "onboarding": {
-        "title": "Field & care pro",
-        "text": "Free Pro Light: agenda, notes, visit reports, docs and record sharing with colleagues or external pros."
+      "owner": {
+        "role": "Owner app · Mobile",
+        "title": "The owner follows",
+        "text": "Messages, Care/Horse reminders, readings — the household observes what you prescribed."
       }
     },
-    "ctaTitle": "Join petsFollow Pro today",
-    "ctaText": "Two offers: free Pro Light (field / care pro), or Pro (Web + client app) with commercial invoicing. Your clients pay for their pets' digital passport.",
+    "continuityTitle": "Prescribed continuity",
+    "continuityLead": "You prescribe. The household observes. The field documents. The practice sees it all again.",
+    "steps": {
+      "prescribe": {
+        "title": "Prescribe",
+        "text": "The veterinarian defines follow-up in the digital passport."
+      },
+      "observe": {
+        "title": "Observe",
+        "text": "The owner follows reminders, messages and readings in the app."
+      },
+      "document": {
+        "title": "Document",
+        "text": "Field pros add notes, visit reports and docs via Pro Light."
+      },
+      "retrieve": {
+        "title": "Retrieve",
+        "text": "At the next consult, the practice reads the full thread."
+      }
+    },
+    "ctaTitle": "Open your practice passport",
+    "ctaText": "Create your Pro account — or start free with Pro Light in the field. Your clients pay for their pets' follow-up.",
     "ctaButton": "Start registration",
     "productsLink": "Products",
-    "productsTitle": "Professional offer — 2 solutions",
-    "productsLead": "Choose Pro (practice Web + client passport) or Pro Light (field / care pro app, free). Owners then subscribe to monitoring for their pets.",
+    "productsTitle": "How the passport takes shape",
+    "productsLead": "Two professional faces, one owner subscription. Complementary to your PMS — not a second practice software.",
     "productsCta": "Create my account",
     "solutions": {
       "proComplete": {
         "price": "€834.71 excl. VAT / year",
         "title": "Pro",
-        "text": "Web SaaS platform + client mobile app. Digital passport, messaging, records and loyalty.",
+        "text": "Web control seat for the passport + client mobile app. Messaging, timeline, sharing and loyalty.",
         "features": [
           "Digital passport & shared timeline",
           "Secure messaging + push (practice ↔ client)",
@@ -1778,7 +1794,7 @@
       "proLight": {
         "price": "Free",
         "title": "Pro Light",
-        "text": "ProLight mobile app: field and care pro — pet files, notes, visit reports, referral QR. With or without a Web Pro account.",
+        "text": "Field / care pro mobile app — notes, visit reports, docs and sharing on the passport. With or without a Web Pro account.",
         "features": [
           "Field agenda & client records",
           "Pet history",
@@ -1791,7 +1807,7 @@
       }
     },
     "clientPlansTitle": "What your clients pay",
-    "clientPlansLead": "Three plans per pet — full digital passport included once the subscription is active.",
+    "clientPlansLead": "The owner funds their pet's passport — three plans, everything included once the subscription is active.",
     "productHighlights": {
       "monthly": {
         "price": "€3.50 / month",
