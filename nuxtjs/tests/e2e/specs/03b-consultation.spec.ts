@@ -4,9 +4,12 @@ import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
 
 /** /clients peut ouvrir un ProModal (invitations) qui bloque les clics. */
 async function dismissProModals(page: Page) {
+  // La modale invitations s'ouvre après le fetch des link requests (onMounted),
+  // parfois après le premier check : laisser une courte fenêtre d'apparition.
+  await page.getByTestId('pro-modal').first()
+    .waitFor({ state: 'visible', timeout: 1500 })
+    .catch(() => undefined)
   for (let i = 0; i < 3; i++) {
-    const modal = page.getByTestId('pro-modal').or(page.getByTestId('consultation-modal'))
-    if ((await modal.count()) === 0) return
     // Only dismiss invitation-style modals before opening consultation.
     const inviteOnly = page.getByTestId('pro-modal')
     if ((await inviteOnly.count()) === 0) return
@@ -40,7 +43,14 @@ async function openConsultationSetup(page: Page) {
 
   const cta = page.locator('[data-testid^="new-consultation-"]').first()
   await expect(cta).toBeVisible({ timeout: 10000 })
-  await cta.click()
+  try {
+    await cta.click({ timeout: 5000 })
+  }
+  catch {
+    // Modale invitations apparue entre-temps : backdrop intercepte le clic.
+    await dismissProModals(page)
+    await cta.click()
+  }
 
   await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
   await expect(page.getByTestId('consultation-setup')).toBeVisible()
@@ -48,6 +58,8 @@ async function openConsultationSetup(page: Page) {
   const petSelect = page.getByTestId('consultation-pet-select')
   await expect(petSelect).toBeEnabled({ timeout: 10000 })
   const options = petSelect.locator('option:not([disabled])')
+  // Les options arrivent après le fetch des animaux : attendre le rendu.
+  await options.first().waitFor({ state: 'attached', timeout: 10000 }).catch(() => undefined)
   const n = await options.count()
   if (n >= 1) {
     const value = await options.first().getAttribute('value')

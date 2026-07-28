@@ -42,7 +42,7 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | Stock / FEFO / péremption | ✅ | Store + API + `/stock` + expiry-run |
 | DAF / PDF + lien mouvements | ✅ | finalize/cancel écrivent `daf_id`+`daf_item_id` ; `GET /movements?dafId=` |
 | Workers VAMReg / invoices.connect | ⬜ | Pas d’Asynq |
-| Scheduler expiry | 🟡 | Endpoint `expiry-run` ✅ · script GCP → S6 |
+| Scheduler expiry | ✅ | `make gcp-pharmacy-expiry-scheduler` (04:00 Brussels) |
 | Tests Go pharmacie | ✅ | Unit bands + FEFO + intégration stock/DAF/trace |
 | Playwright P0 pharmacie | ✅ | `17-pharmacy-stock-daf.spec.ts` (@p0 @pharmacy) — quality CI ; hors post-deploy Cloud Run |
 | Staging `PHARMACY_ENABLED` | ⬜ | Local / CI quality ; pilote Cloud Run → S6 |
@@ -133,11 +133,9 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 ### 1.6 Encore non démarré — ⬜
 
 - Workers Asynq, VAMReg, invoices.connect
-- Script scheduler GCP `expiry-run`
 - Import AFMPS national complet
-- Playwright `@p0` pharmacie
 - Use case commercial `UC-*` pharmacie
-- Activation staging Cloud Run (`PHARMACY_ENABLED` + `pg_trgm` + secret expiry)
+- Activation staging Cloud Run (`PHARMACY_ENABLED` + `pg_trgm`)
 
 ---
 
@@ -252,9 +250,9 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | Digest hebdo + notify auto-quarantaine | ✅ (via `SendVetAlert`) |
 | Export CSV | ✅ |
 | Tests intégration péremption / receipt expiré | ✅ |
-| Script scheduler GCP | ⬜ → S6 |
+| Script scheduler GCP | ✅ `infra/gcp/setup-pharmacy-expiry-scheduler.sh` |
 
-**Done when** : pas de sortie périmé ; waste seul chemin ; expiry-run idempotent ; bandes UI — **atteint** (scheduler GCP reporté S6).
+**Done when** : pas de sortie périmé ; waste seul chemin ; expiry-run idempotent ; bandes UI — **atteint** (scheduler GCP ✅).
 
 ---
 
@@ -338,8 +336,9 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 - [ ] Import CNK exécuté
 - [ ] `PHARMACY_ENABLED=true` (pilote)
 - [ ] Nav Médicaments + tag **`dev`** visible
-- [ ] Secrets expiry (+ VAMReg / invoices selon sprint)
-- [ ] Scheduler `expiry-run` (Europe/Brussels)
+- [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)
+- [x] Scheduler `expiry-run` (Europe/Brussels 04:00, `make gcp-pharmacy-expiry-scheduler`)
+- [ ] Secrets VAMReg / invoices selon sprint
 - [ ] Redis si workers ON
 - [ ] GCS PDF DAF
 - [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize

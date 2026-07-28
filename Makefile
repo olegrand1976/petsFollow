@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -37,6 +37,7 @@ help:
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
 	@echo "  make gcp-saas-invoices-scheduler  Scheduler mensuel brouillons SaaS Flux A C1"
 	@echo "  make gcp-sales-branches-scheduler  Scheduler 10h/18h auto-branches (SALES_BRANCHES_AUTO_SECRET=…)"
+	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
 	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
@@ -183,6 +184,9 @@ gcp-saas-invoices-scheduler:
 
 gcp-sales-branches-scheduler:
 	bash infra/gcp/setup-sales-branches-scheduler.sh
+
+gcp-pharmacy-expiry-scheduler:
+	bash infra/gcp/setup-pharmacy-expiry-scheduler.sh
 
 # Alias obsolète → suppression du job Scheduler (plus de reset auto).
 gcp-seed-scheduler: gcp-delete-seed-scheduler

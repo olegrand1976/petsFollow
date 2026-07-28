@@ -125,6 +125,11 @@ pf_api_secrets() {
     --secret=petsfollow-saas-invoices-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},SAAS_INVOICES_SECRET=petsfollow-saas-invoices-secret:latest"
   fi
+  # Sans ce secret, /internal/pharmacy/expiry-run répond 401 : pas d'auto-quarantaine.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
+  fi
   printf '%s' "$secrets"
 }
 

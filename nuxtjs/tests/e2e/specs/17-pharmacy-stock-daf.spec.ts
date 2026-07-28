@@ -76,17 +76,30 @@ test.describe('pharmacy stock + DAF trace', { tag: ['@p0', '@pharmacy'] }, () =>
     const dafId = String((await jsonBody(draft)).data?.id ?? '')
     expect(dafId).toBeTruthy()
 
+    // FEFO peut servir le reliquat d'un run précédent (même péremption, plus
+    // ancien) : prédire l'allocation réelle plutôt que supposer une base vierge.
+    const preview = await page.request.post('/api/vet/pharmacy/daf/preview-fefo', {
+      data: { items: [{ medicationId: medId, qty: 2, unit: 'box' }] },
+    })
+    expect(preview.status(), await preview.text()).toBe(200)
+    const previewBody = await preview.json() as { data?: { lines?: Array<{ lotNumber?: string }> } }
+    const expectedLots = (previewBody.data?.lines ?? []).map((l) => String(l.lotNumber ?? ''))
+    expect(expectedLots.length).toBeGreaterThanOrEqual(1)
+    expect(expectedLots.every(Boolean)).toBe(true)
+
     const finalize = await page.request.post(`/api/vet/pharmacy/daf/${dafId}/finalize`)
     expect(finalize.status(), await finalize.text()).toBe(200)
 
     const mov = await page.request.get(`/api/vet/pharmacy/movements?dafId=${encodeURIComponent(dafId)}&limit=20`)
     expect(mov.status()).toBe(200)
     const movItems = (await jsonBody(mov)).data?.items ?? []
-    expect(movItems.length).toBeGreaterThanOrEqual(1)
-    const linked = movItems.find((m) => m.reason === 'daf' && m.dafId === dafId)
-    expect(linked).toBeTruthy()
-    expect(linked?.dafItemId).toBeTruthy()
-    expect(linked?.lotNumber).toBe(lot)
-    expect(Number(linked?.delta)).toBe(-2)
+    const linked = movItems.filter((m) => m.reason === 'daf' && m.dafId === dafId)
+    expect(linked.length).toBeGreaterThanOrEqual(1)
+    for (const m of linked) {
+      expect(m.dafItemId).toBeTruthy()
+      expect(expectedLots).toContain(String(m.lotNumber))
+    }
+    const totalDelta = linked.reduce((sum, m) => sum + Number(m.delta), 0)
+    expect(totalDelta).toBe(-2)
   })
 })
