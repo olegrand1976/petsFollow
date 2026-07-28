@@ -49,7 +49,7 @@
       rows="6"
       data-testid="visit-report-body"
       :placeholder="$t('calendar.reportHint')"
-      :disabled="reportBusy || reportLocked || dictating"
+      :disabled="reportBusy || reportLocked || dictating || hydrating"
       :readonly="reportLocked"
     />
     <div
@@ -73,14 +73,14 @@
     <div v-else-if="!reportLocked" class="pro-flex-gap pro-visit-report__actions">
       <ProButton
         variant="secondary"
-        :disabled="reportBusy || reportStatus === 'final'"
+        :disabled="reportBusy || hydrating || reportStatus === 'final'"
         test-id="visit-report-save"
         @click="saveVisitReport"
       >
         {{ $t('calendar.saveReport') }}
       </ProButton>
       <ProButton
-        :disabled="reportBusy || reportStatus === 'final'"
+        :disabled="reportBusy || hydrating || reportStatus === 'final'"
         test-id="visit-report-improve"
         @click="improveVisitReport"
       >
@@ -88,7 +88,7 @@
       </ProButton>
       <ProButton
         variant="secondary"
-        :disabled="reportBusy || reportStatus === 'final' || !reportBody.trim()"
+        :disabled="reportBusy || hydrating || reportStatus === 'final' || !reportBody.trim()"
         test-id="visit-report-finalize"
         @click="finalizeVisitReport"
       >
@@ -97,7 +97,7 @@
       <ProButton
         v-if="reportStatus !== 'final'"
         variant="secondary"
-        :disabled="reportBusy"
+        :disabled="reportBusy || hydrating"
         test-id="visit-report-dictate"
         @click="onDictateClick"
       >
@@ -209,6 +209,9 @@ const reportTranscript = ref('')
 const reportImproved = ref('')
 const reportStatus = ref('')
 const reportBusy = ref(false)
+/** True while initial/visit switch hydrate runs — locks textarea so fill cannot race GET. */
+const hydrating = ref(false)
+let hydrateSeq = 0
 const reportMsg = ref('')
 const reportAuthors = ref<VisitReportAuthor[]>([])
 const selectedReportAuthorId = ref('')
@@ -330,6 +333,8 @@ async function loadVisitReport(visitId: string) {
 }
 
 async function hydrateVisitReports(visitId: string) {
+  const seq = ++hydrateSeq
+  hydrating.value = true
   reportBody.value = ''
   reportPersistedBody.value = ''
   reportTranscript.value = ''
@@ -339,33 +344,54 @@ async function hydrateVisitReports(visitId: string) {
   reportAuthors.value = []
   selectedReportAuthorId.value = ''
 
-  let minePayload: Record<string, unknown> | null = null
   try {
-    const res: any = await $fetch(`/api/visits/${visitId}/report`)
-    minePayload = (res.data ?? res) as Record<string, unknown>
-  } catch {
-    minePayload = null
-  }
+    let minePayload: Record<string, unknown> | null = null
+    try {
+      const res: any = await $fetch(`/api/visits/${visitId}/report`)
+      minePayload = (res.data ?? res) as Record<string, unknown>
+    }
+    catch {
+      minePayload = null
+    }
 
-  await loadVisitReports(visitId)
+    await loadVisitReports(visitId)
 
-  const mine = reportAuthors.value.find(a => a.mine)
-  const peerWithContent = reportAuthors.value.find(a => !a.mine && reportHasContent(a))
+    if (seq !== hydrateSeq || props.visitId !== visitId) {
+      return
+    }
 
-  if (mine && reportHasContent(mine)) {
-    selectedReportAuthorId.value = mine.authorUserId || ''
+    const mine = reportAuthors.value.find(a => a.mine)
+    const peerWithContent = reportAuthors.value.find(a => !a.mine && reportHasContent(a))
+    const mineFromGet = minePayload ? mapVisitReportFields(minePayload) : null
+    const mineGetHasContent = Boolean(
+      mineFromGet
+      && (
+        mineFromGet.bodyText.trim()
+        || mineFromGet.transcriptText.trim()
+        || mineFromGet.improvedText.trim()
+      ),
+    )
+
+    if (mine && reportHasContent(mine)) {
+      selectedReportAuthorId.value = mine.authorUserId || ''
+      // Prefer list row if GET /report failed or returned empty while /reports has content.
+      if (mineGetHasContent) applyReportPayload(minePayload)
+      else applyPeerReport(mine)
+      return
+    }
+    if (peerWithContent) {
+      selectedReportAuthorId.value = peerWithContent.authorUserId || ''
+      applyPeerReport(peerWithContent)
+      return
+    }
+    if (mine?.authorUserId) {
+      selectedReportAuthorId.value = mine.authorUserId
+    }
     applyReportPayload(minePayload)
-    return
   }
-  if (peerWithContent) {
-    selectedReportAuthorId.value = peerWithContent.authorUserId || ''
-    applyPeerReport(peerWithContent)
-    return
+  finally {
+    if (seq === hydrateSeq) hydrating.value = false
   }
-  if (mine?.authorUserId) {
-    selectedReportAuthorId.value = mine.authorUserId
-  }
-  applyReportPayload(minePayload)
 }
 
 function selectReportAuthor(author: VisitReportAuthor) {
@@ -680,7 +706,11 @@ watch(
     if (prev && dictating.value) {
       await discardDictation()
     }
-    if (id) void hydrateVisitReports(id)
+    if (id) await hydrateVisitReports(id)
+    else {
+      hydrateSeq += 1
+      hydrating.value = false
+    }
   },
   { immediate: true },
 )
