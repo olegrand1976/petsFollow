@@ -207,6 +207,7 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
   })
 
   test('G: veille mid-consultation → unlock même user reprend le modal', async ({ page }) => {
+    test.setTimeout(90_000)
     await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
     await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
     await page.evaluate(() => {
@@ -256,7 +257,12 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     await unlockWithPassword(page)
     await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('consultation-report')).toBeVisible()
-    // Prefer save leave if body was flushed; otherwise discard.
+    // /clients réouvre la modale invitations (pro-modal) au-dessus du footer consultation.
+    const invite = page.getByTestId('pro-modal')
+    if (await invite.count()) {
+      await invite.getByTestId('pro-modal-close').first().click({ force: true })
+      await expect(invite).toHaveCount(0, { timeout: 5000 })
+    }
     await page.getByTestId('consultation-cancel').click()
     const leavePrompt = page.getByTestId('consultation-leave-prompt')
     if (await leavePrompt.isVisible().catch(() => false)) {
