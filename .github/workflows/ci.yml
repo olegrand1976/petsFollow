@@ -22,6 +22,10 @@ env:
   # Preview Nuxt = HTTP : cookies auth non-Secure (évite flakes Playwright).
   AUTH_COOKIE_SECURE: "0"
   PHARMACY_ENABLED: "true"
+  BILLIT_ENABLED: "true"
+  BILLIT_MOCK_ENABLED: "true"
+  NUXT_PUBLIC_BILLIT_ENABLED: "true"
+  NUXT_PUBLIC_PHARMACY_ENABLED: "true"
 
 jobs:
   backend:

@@ -81,7 +81,7 @@
           {{ $t('clients.consultation.ctaDafInvoice') }}
         </ProButton>
         <ProButton
-          v-if="invoicingUiEnabled"
+          v-if="showInvoiceCta"
           test-id="consultation-cta-invoice"
           :disabled="closing"
           @click="goInvoice"
@@ -117,6 +117,7 @@ const { t } = useI18n()
 const { mapError } = useApiError()
 const {
   pharmacyEnabled,
+  billitEnabled,
   invoicingUiEnabled,
   visitId,
   starting,
@@ -137,6 +138,7 @@ const {
 const { canPractice } = usePracticePerms()
 const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const showDafCta = computed(() => pharmacyEnabled.value && canWritePharmacy.value)
+const showInvoiceCta = computed(() => invoicingUiEnabled && billitEnabled.value)
 
 const pets = ref<ConsultationPet[]>([])
 const petsLoading = ref(false)
