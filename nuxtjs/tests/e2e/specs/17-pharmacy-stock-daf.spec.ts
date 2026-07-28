@@ -40,7 +40,8 @@ test.describe('pharmacy stock + DAF trace', { tag: ['@p0', '@pharmacy'] }, () =>
     expect(status).toBe(200)
     await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
 
-    const search = await page.request.get('/api/vet/pharmacy/medications/search?q=amoxi&limit=5')
+    // Non-antibiotique : finalize n'exige pas vamregPayload (seed Vaccin Rage Demo).
+    const search = await page.request.get('/api/vet/pharmacy/medications/search?q=vaccin&limit=5')
     if (search.status() === 404) {
       test.skip(true, 'PHARMACY_ENABLED off')
     }
@@ -48,7 +49,7 @@ test.describe('pharmacy stock + DAF trace', { tag: ['@p0', '@pharmacy'] }, () =>
     const searchEnv = await jsonBody(search)
     const items = searchEnv.data?.items ?? []
     const medId = typeof items[0]?.id === 'string' ? items[0].id : ''
-    expect(medId, 'seed CNK Amoxicilline Vet Demo').toBeTruthy()
+    expect(medId, 'seed CNK Vaccin Rage Demo').toBeTruthy()
 
     const expiresOn = brusselsYMD(120)
     const lot = `E2E-LOT-${Date.now()}`
