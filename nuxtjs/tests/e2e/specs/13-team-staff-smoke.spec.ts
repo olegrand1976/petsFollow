@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { login, fillField, waitForAuthForm } from '../helpers/auth'
+import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
 
 const STAFF_PASSWORD = 'VetDemo123!'
 /** Mot de passe post-invite (mustChangePassword) — stable pour rejouer le smoke. */
@@ -111,20 +112,18 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByTestId('clients-invitations-open')).toHaveCount(0)
   })
 
-  test('B7: secretary — factu readonly connect (pas d’activate Billit)', async ({ page }) => {
-    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
-    const probe = await page.request.get('/api/invoicing/connection')
-    if (probe.status() === 404) {
-      test.skip(true, 'BILLIT_ENABLED off')
+  test('B7: secretary — factu WIP (pas d’activate Billit)', async ({ page }) => {
+    if (INVOICING_UI_ENABLED) {
+      test.skip(true, 'INVOICING_UI_ENABLED — UI métier active')
     }
-    expect(probe.status(), await probe.text()).toBe(200)
-    const body = await probe.json()
-    const data = body?.data ?? body
-    expect(data?.billitPartyId ?? '').toBe('')
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
 
     await page.goto('/invoicing', { waitUntil: 'networkidle' })
+    if (!page.url().includes('/invoicing')) {
+      test.skip(true, 'NUXT_PUBLIC_BILLIT_ENABLED off (redirect)')
+    }
     await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('invoicing-connection-readonly')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('invoicing-under-development')).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('invoicing-connect-start')).toHaveCount(0)
   })
 

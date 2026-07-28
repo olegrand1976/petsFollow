@@ -1118,6 +1118,7 @@
   "invoicing": {
     "title": "Fatturazione",
     "subtitle": "Emissione di fatture, note di credito e preventivi (Peppol).",
+    "underDevelopment": "In fase di sviluppo",
     "wip": "Attiva la connessione Billit (mock in locale) per creare fatture di test.",
     "connectionTitle": "Connessione Billit",
     "status": "Stato",
@@ -1145,7 +1146,7 @@
     "connectRestricted": "Solo il veterinario di riferimento può attivare o modificare la connessione Billit.",
     "relatedInvoice": "Fattura di origine",
     "relatedInvoicePlaceholder": "Scegliere una fattura…",
-    "relatedInvoiceEmpty": "Nessuna fattura disponibile — creare prima una fattura.",
+    "relatedInvoiceEmpty": "Nessuna fattura emessa/consegnata — inviare prima una fattura.",
     "relatedInvoiceRequired": "Selezionare la fattura collegata a questa nota di credito."
   },
   "pharmacy": {
@@ -1879,6 +1880,9 @@
     "moreCount": "+{n}",
     "vacation": "Chiusura",
     "visitDetail": "Dettagli dell'appuntamento",
+    "walkInSession": "Consultazione immediata",
+    "walkInShort": "Walk-in",
+    "sourceCarePro": "Campo (Pro Light)",
     "address": "Indirizzo/località",
     "saveAddress": "Salva indirizzo",
     "addressSaved": "Indirizzo registrato",

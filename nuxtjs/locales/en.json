@@ -684,6 +684,7 @@
   "invoicing": {
     "title": "Invoicing",
     "subtitle": "Issue invoices, credit notes and quotes (Peppol).",
+    "underDevelopment": "Under development",
     "wip": "Activate the Billit connection (mock locally) to create and send test invoices.",
     "connectionTitle": "Billit connection",
     "status": "Status",
@@ -737,7 +738,7 @@
     "connectRestricted": "Only the reference veterinarian can activate or change the Billit connection.",
     "relatedInvoice": "Original invoice",
     "relatedInvoicePlaceholder": "Select an invoice…",
-    "relatedInvoiceEmpty": "No invoice available — create an invoice first.",
+    "relatedInvoiceEmpty": "No issued/delivered invoice available — send an invoice first.",
     "relatedInvoiceRequired": "Select the invoice linked to this credit note."
   },
   "pharmacy": {
@@ -2391,6 +2392,9 @@
     "moreCount": "+{n}",
     "vacation": "Closed",
     "visitDetail": "Appointment details",
+    "walkInSession": "Walk-in consultation",
+    "walkInShort": "Walk-in",
+    "sourceCarePro": "Field (Pro Light)",
     "address": "Address / location",
     "saveAddress": "Save address",
     "addressSaved": "Address saved",

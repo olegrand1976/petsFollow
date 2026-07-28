@@ -66,7 +66,7 @@
       <ProButton variant="secondary" test-id="daf-save-draft" :disabled="busy || !canSubmit" @click="saveDraft">{{ $t('pharmacy.daf.saveDraft') }}</ProButton>
       <ProButton variant="primary" test-id="daf-finalize-btn" :disabled="busy || !canSubmit" @click="finalize">{{ $t('pharmacy.daf.finalize') }}</ProButton>
       <ProButton
-        v-if="finalizedDafId"
+        v-if="finalizedDafId && invoicingUiEnabled"
         test-id="daf-go-invoice"
         :disabled="busy"
         @click="goInvoice"
@@ -79,10 +79,12 @@
 
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
+import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
 
 definePageMeta({ middleware: ['auth', 'vet-only', 'practice-perm'], practicePerm: 'pharmacy.write' })
 const { t } = useI18n()
 const route = useRoute()
+const invoicingUiEnabled = INVOICING_UI_ENABLED
 const busy = ref(false)
 const error = ref('')
 const preview = ref<any[]>([])

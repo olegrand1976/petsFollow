@@ -1176,6 +1176,7 @@
   "invoicing": {
     "title": "Facturation",
     "subtitle": "Émission de factures, notes de crédit et devis (Peppol).",
+    "underDevelopment": "En cours de développement",
     "wip": "Activez la connexion Billit (mode mock en local) pour créer et envoyer des factures de test.",
     "connectionTitle": "Connexion Billit",
     "status": "Statut",
@@ -1229,7 +1230,7 @@
     "connectRestricted": "Seul le vétérinaire de référence peut activer ou modifier la connexion Billit.",
     "relatedInvoice": "Facture d’origine",
     "relatedInvoicePlaceholder": "Choisir une facture…",
-    "relatedInvoiceEmpty": "Aucune facture disponible — créez d’abord une facture.",
+    "relatedInvoiceEmpty": "Aucune facture émise/livrée disponible — envoyez d’abord une facture.",
     "relatedInvoiceRequired": "Sélectionnez la facture liée à cette note de crédit."
   },
   "pharmacy": {
@@ -1968,6 +1969,9 @@
     "moreCount": "+{n}",
     "vacation": "Fermeture",
     "visitDetail": "Détail du rendez-vous",
+    "walkInSession": "Consultation immédiate",
+    "walkInShort": "Walk-in",
+    "sourceCarePro": "Terrain (Pro Light)",
     "address": "Adresse / lieu",
     "saveAddress": "Enregistrer l'adresse",
     "addressSaved": "Adresse enregistrée",

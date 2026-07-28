@@ -670,6 +670,7 @@
   "invoicing": {
     "title": "Arveldamine",
     "subtitle": "Arved, kreeditarved ja pakkumised (Peppol).",
+    "underDevelopment": "Arendamisel",
     "wip": "Aktiveerige Billit’i ühendus (mock kohalikult), et luua testarveid.",
     "connectionTitle": "Billit’i ühendus",
     "status": "Olek",
@@ -697,7 +698,7 @@
     "connectRestricted": "Ainult peaveterinaar saab Billiti ühendust aktiveerida või muuta.",
     "relatedInvoice": "Algne arve",
     "relatedInvoicePlaceholder": "Vali arve…",
-    "relatedInvoiceEmpty": "Arveid pole — looge esmalt arve.",
+    "relatedInvoiceEmpty": "Väljastatud/kohale toimetatud arvet pole — saatke esmalt arve.",
     "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve."
   },
   "pharmacy": {
@@ -2346,6 +2347,9 @@
     "moreCount": "+{n}",
     "vacation": "Suletud",
     "visitDetail": "Vastuvõtu üksikasjad",
+    "walkInSession": "Kohene konsultatsioon",
+    "walkInShort": "Walk-in",
+    "sourceCarePro": "Välitöö (Pro Light)",
     "address": "Aadress / asukoht",
     "saveAddress": "Salvesta aadress",
     "addressSaved": "Aadress salvestatud",

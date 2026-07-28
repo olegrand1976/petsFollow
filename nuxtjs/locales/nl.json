@@ -684,6 +684,7 @@
   "invoicing": {
     "title": "Facturatie",
     "subtitle": "Facturen, creditnota’s en offertes (Peppol).",
+    "underDevelopment": "In ontwikkeling",
     "wip": "Activeer de Billit-verbinding (mock lokaal) om testfacturen te maken.",
     "connectionTitle": "Billit-verbinding",
     "status": "Status",
@@ -737,7 +738,7 @@
     "connectRestricted": "Alleen de referentieveterinair kan de Billit-koppeling activeren of wijzigen.",
     "relatedInvoice": "Originele factuur",
     "relatedInvoicePlaceholder": "Kies een factuur…",
-    "relatedInvoiceEmpty": "Geen factuur beschikbaar — maak eerst een factuur.",
+    "relatedInvoiceEmpty": "Geen uitgegeven/geleverde factuur — stuur eerst een factuur.",
     "relatedInvoiceRequired": "Selecteer de factuur gekoppeld aan deze creditnota."
   },
   "pharmacy": {
@@ -2391,6 +2392,9 @@
     "moreCount": "+{n}",
     "vacation": "Gesloten",
     "visitDetail": "Afspraakdetails",
+    "walkInSession": "Directe consultatie",
+    "walkInShort": "Walk-in",
+    "sourceCarePro": "Terrein (Pro Light)",
     "address": "Adres / locatie",
     "saveAddress": "Adres opslaan",
     "addressSaved": "Adres opgeslagen",
