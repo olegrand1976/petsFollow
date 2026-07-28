@@ -175,9 +175,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.10 | P2 | Parrainage | `/recommend` | Flux confrère |
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
-| C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda |
-| C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) |
-| C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain |
+| C2.13 | P1 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` → CR | Panel CR ; CTA DAF / facture |
 
 ### C3 — Calendrier & RDV
 
@@ -231,11 +229,6 @@ Compte : `vet.demo@petsfollow.test`
 | C7.1 | P1 | Connect mock | `/invoicing` → activer → lier PartyID/clé mock | Statut `active` |
 | C7.2 | P1 | Facture BE | Créer facture pays BE + TVA | Document draft ; send → delivered (mock) |
 | C7.3 | P1 | Contrepartie IT | Pays IT sans codice/PEC | Erreur validation ; avec codice OK |
-| C7.4 | P1 | Credit note / proforma | Types `credit_note` + `proforma` | Création OK ; proforma sans bouton send Peppol |
-| C7.5 | P1 | Quota mensuel | `docs_included_monthly=1` puis 2e send ; doc déjà `sending` | 409 `docs_quota_exceeded` (usage + in-flight) |
-| C7.6 | P1 | Retry rejected | Invoice `rejected` → send | Rejeu Peppol → delivered (mock) |
-
-Auto : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests/e2e/specs/18-invoicing.spec.ts) (skip si `BILLIT_ENABLED` off) ; Go `TestInvoicingQuotaExceeded` / `TestInvoicingRejectedCanRetry` / `TestInvoicingProformaResendRefused`.
 
 ---
 
@@ -455,8 +448,6 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
 | C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
-| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` | Draft avec `visitId` ; CTA Facturer → `/invoicing` |
-| C7.5 | P1 | Facture liée à la visite | `/invoicing?visitId=…` + POST document | `documents.visit_id` persisté ; mismatch → 400 |
 
 **Ordonnances (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/ordonnances` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-ORDONNANCES.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
@@ -705,7 +696,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 ### Go / Nuxt unit / Flutter
 
 - Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
-- Billit / invoicing : `go test ./internal/invoicing/...` (totaux, seal, `ValidateCounterparty` BE/FR/IT/ES, mapper, client `httptest`, webhook HMAC) ; intégration `TestInvoicingConnectAndSendMock` + `TestInvoicingWebhook*` ; config `TestValidateBillit*` ; Playwright `@p1` `@invoicing` `18-invoicing.spec.ts`
+- Billit / invoicing : `go test ./internal/invoicing/...` (totaux, seal, `ValidateCounterparty` BE/FR/IT/ES, mapper, client `httptest`, webhook HMAC) ; intégration `TestInvoicingConnectAndSendMock` + `TestInvoicingWebhook*` ; config `TestValidateBillit*`
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API
