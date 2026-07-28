@@ -124,7 +124,7 @@
         "mockCommissions": "Commissioni Studio",
         "mockMessage": "Ultimo messaggio ricevuto (Charly)",
         "mockStatus": "Archiviato",
-        "footer": "Tariffa Cabinet: 69€ IVA esclusa/mese + setup 320€ IVA esclusa (fatturazione esterna)"
+        "footer": "Tariffa Cabinet: 834,71€ IVA esclusa / anno + setup 320€ IVA esclusa (fatturazione esterna)"
       },
       "s06": {
         "title": "VetPro — Funzionalità chiave",
@@ -251,7 +251,7 @@
           }
         ],
         "financeLabel": "MODELLO FINANZIARIO",
-        "financeVetPro": "69€ IVA esclusa/mese",
+        "financeVetPro": "834,71€ IVA esclusa / anno",
         "financeVetLight": "GRATUITO",
         "financeClient": "Abo animale",
         "footer": "Una copertura funzionale chiara per ogni membro del team."
@@ -375,7 +375,7 @@
         "c2Desc": "Creazione della tua area di test in 2 minuti durante la sessione.",
         "c3Title": "Sala d'attesa",
         "c3Desc": "Supporto dedicato + Kit di visualizzazione per la sala d'attesa in omaggio.",
-        "cta": "Convalidare il Setup VetPro (320€ IVA esclusa + 69€ IVA esclusa/mese)",
+        "cta": "Convalidare il Setup VetPro (320€ IVA esclusa + 834,71€ IVA esclusa / anno)",
         "footerLeft": "petsFollow Pro — Continuità delle cure sotto la supervisione del veterinario",
         "footerRight": "www.petsfollow.com"
       }

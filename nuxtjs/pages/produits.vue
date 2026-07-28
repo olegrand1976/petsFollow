@@ -345,9 +345,7 @@ function printPage() {
 }
 
 .pf-products-pro__summary-row--featured {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  margin: 0 -0.75rem;
+  padding: 0.85rem 0.75rem;
   border-radius: 8px;
   background: rgba(42, 157, 143, 0.06);
   border-bottom-color: transparent;

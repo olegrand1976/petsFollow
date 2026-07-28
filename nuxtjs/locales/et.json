@@ -1586,7 +1586,7 @@
     "sheetTitle": "Mõista oma teenistust",
     "detailsSummary": "Määrade tabel ja boonused",
     "kpiRateBase": "Põhimäär (aste)",
-    "kpiRateHeart": "Miinimummäär",
+    "kpiRateHeart": "Põhipakkumise määr",
     "lineStatus": {
       "accruing": "Kogunemas",
       "missing_info": "Info puudub",

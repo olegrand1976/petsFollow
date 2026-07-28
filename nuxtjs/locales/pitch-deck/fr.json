@@ -112,7 +112,7 @@
         "mockCommissions": "Commissions Cabinet",
         "mockMessage": "Dernier message reçu (Charly)",
         "mockStatus": "Classé",
-        "footer": "Tarif Cabinet : 69 € HT/mois + setup 320 € HT (facturation externe)"
+        "footer": "Tarif Cabinet : 834,71 € HTVA / an + setup 320 € HTVA (facturation externe)"
       },
       "s06": {
         "title": "VetPro — Fonctionnalités Clés",
@@ -209,7 +209,7 @@
           { "feature": "Relevé cardiaque au doigt (si prescrit)", "vetPro": "✓ (Lecture)", "vetLight": "—", "client": "✓ (Mesure)" }
         ],
         "financeLabel": "Modèle financier",
-        "financeVetPro": "69 € HT/mois",
+        "financeVetPro": "834,71 € HTVA / an",
         "financeVetLight": "GRATUIT",
         "financeClient": "Abo animal",
         "footer": "Une couverture fonctionnelle claire pour chaque membre de l'équipe."
@@ -333,7 +333,7 @@
         "c2Desc": "Création de votre espace cabinet de test en 2 minutes en séance.",
         "c3Title": "Kit Salle d'Attente",
         "c3Desc": "Support dédié + Kit d'affichage pour la salle d'attente offert.",
-        "cta": "Valider le Setup VetPro (320 € HT + 69 € HT/mois)",
+        "cta": "Valider le Setup VetPro (320 € HTVA + 834,71 € HTVA / an)",
         "footerLeft": "petsFollow Pro — Continuité de soins encadrée par le vétérinaire",
         "footerRight": "www.petsfollow.com"
       }

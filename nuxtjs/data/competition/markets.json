@@ -1,17 +1,17 @@
 {
   "lastReviewedAt": "2026-07-26",
   "analystNote": {
-    "fr": "Lecture concurrentielle FR / BE / ES au 26/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») — exception notable BE : Pégase/ByVets publie un catalogue (~856 € HTVA/an) ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C logiciel : continuité de soins prescrite via Web Pro · mobile ProLight · mobile Client, Pro à 69 € HT/mois, client 3,50 / 35 / 95 €, Care/Horse inclus, relevés FC en feature, 6 langues.",
-    "en": "Competitive read for FR / BE / ES as of 2026-07-26: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”) — notable BE exception: Pégase/ByVets publishes a list price (~€856 excl. VAT/year); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C software: vet-prescribed care continuity via Web Pro · mobile ProLight · mobile Client, Pro at €69 excl. VAT/month, owner plans €3.50 / €35 / €95, Care/Horse included, heart-rate as a feature, 6 languages."
+    "fr": "Lecture concurrentielle FR / BE / ES au 26/07/2026 : marchés vétérinaires fragmentés (PMS historiques) + apps propriétaires et wearables grand public. Les prix cabinet sont souvent opaques (« sur devis ») — exception notable BE : Pégase/ByVets publie un catalogue (~856 € HTVA/an) ; le consommateur compare surtout GPS / colliers. petsFollow se distingue par un positionnement B2B2C logiciel : continuité de soins prescrite via Web Pro · mobile ProLight · mobile Client, Pro à 834,71 € HTVA/an, client 3,50 / 35 / 95 €, Care/Horse inclus, relevés FC en feature, 6 langues.",
+    "en": "Competitive read for FR / BE / ES as of 2026-07-26: fragmented vet software (legacy PMS) plus consumer owner apps and wearables. Practice pricing is often opaque (“on quote”) — notable BE exception: Pégase/ByVets publishes a list price (~€856 excl. VAT/year); pet owners mainly compare GPS/collars. petsFollow’s differentiation is B2B2C software: vet-prescribed care continuity via Web Pro · mobile ProLight · mobile Client, Pro at €834.71 excl. VAT/year, owner plans €3.50 / €35 / €95, Care/Horse included, heart-rate as a feature, 6 languages."
   },
   "petsFollowBanner": {
     "fr": {
       "title": "petsFollow — continuité de soins prescrite · Web + mobile",
-      "body": "Pro 69 € HT/mois + setup ; client 3,50 / 35 / 95 € ; Web Pro · ProLight · Client ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET/IT"
+      "body": "Pro 834,71 € HTVA/an + setup ; client 3,50 / 35 / 95 € ; Web Pro · ProLight · Client ; Care/Horse inclus ; B2B2C ; FR/NL/EN/ES/ET/IT"
     },
     "en": {
       "title": "petsFollow — vet-prescribed care continuity · Web + mobile",
-      "body": "Pro €69 excl. VAT/month + setup; owner €3.50 / €35 / €95; Web Pro · ProLight · Client; Care/Horse included; B2B2C; FR/NL/EN/ES/ET/IT"
+      "body": "Pro €834.71 excl. VAT/year + setup; owner €3.50 / €35 / €95; Web Pro · ProLight · Client; Care/Horse included; B2B2C; FR/NL/EN/ES/ET/IT"
     }
   },
   "markets": {
@@ -30,8 +30,8 @@
           "en": "Sticky PMS habits; owner “another app” fatigue; GPS players (Tractive, Invoxia) own “pet monitoring” mindshare. Risk of confusion with pure teleconsultation."
         },
         "petsFollowAngle": {
-          "fr": "Angle cabinet : Web Pro · Pro Light · app client, prescrit par le véto, Pro 69 € HT/mois facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 6 langues.",
-          "en": "Practice angle: Web Pro · Pro Light · owner app, vet-prescribed, Pro €69 excl. VAT/month billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 6 languages."
+          "fr": "Angle cabinet : Web Pro · Pro Light · app client, prescrit par le véto, Pro 834,71 € HTVA/an facturé hors ligne, client autofinance via 3,50/35/95 €, Care/Horse inclus, 6 langues.",
+          "en": "Practice angle: Web Pro · Pro Light · owner app, vet-prescribed, Pro €834.71 excl. VAT/year billed offline, owner self-funds via €3.50/€35/€95, Care/Horse included, 6 languages."
         }
       },
       "products": [
@@ -89,8 +89,8 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "petsFollow complète le PMS : continuité B2B2C Web + mobile, prix Pro lisible (69 € HT), engagement propriétaire via abonnement animal.",
-              "en": "petsFollow complements the PMS: B2B2C care continuity without hardware, clear Pro price (€69 excl. VAT), owner engagement via pet subscription."
+              "fr": "petsFollow complète le PMS : continuité B2B2C Web + mobile, prix Pro lisible (834,71 € HTVA/an), engagement propriétaire via abonnement animal.",
+              "en": "petsFollow complements the PMS: B2B2C care continuity without hardware, clear Pro price (€834.71 excl. VAT/year), owner engagement via pet subscription."
             },
             "watchouts": {
               "fr": "Ne pas se positionner en remplacement PMS ; viser l’intégration / coexistence et le parcours prescrit.",
@@ -361,8 +361,8 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "petsFollow se vend comme couche clinique ciblée (cardio) à 69 € HT, sans projet de migration PMS.",
-              "en": "petsFollow sells as a focused clinical layer (cardio) at €69 excl. VAT, without a PMS migration project."
+              "fr": "petsFollow se vend comme couche clinique ciblée (cardio) à 834,71 € HTVA/an, sans projet de migration PMS.",
+              "en": "petsFollow sells as a focused clinical layer (cardio) at €834.71 excl. VAT/year, without a PMS migration project."
             },
             "watchouts": {
               "fr": "Si le cabinet cherche « une seule app pour tout », le discours all-in-one peut freiner l’add-on.",
@@ -391,8 +391,8 @@
           "en": "Strong dependence on IDEXX/Animana ecosystems and the ByVets cooperative on the French-speaking side; long cycles; small market so word-of-mouth is critical."
         },
         "petsFollowAngle": {
-          "fr": "6 langues natives (dont NL) ; B2B2C Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; Care/Horse inclus.",
-          "en": "6 native languages (incl. NL); B2B2C Web + mobile; Pro €69 excl. VAT; owner €3.50/€35/€95; Care/Horse included."
+          "fr": "6 langues natives (dont NL) ; B2B2C Web + mobile ; Pro 834,71 € HTVA/an ; client 3,50/35/95 € ; Care/Horse inclus.",
+          "en": "6 native languages (incl. NL); B2B2C Web + mobile; Pro €834.71 excl. VAT/year; owner €3.50/€35/€95; Care/Horse included."
         }
       },
       "products": [
@@ -525,8 +525,8 @@
               "en": "Avoid “we replace your software” messaging."
             },
             "talkTrack": {
-              "fr": "« Gardez Vetup ; petsFollow ajoute la continuité prescrite Web + mobile — 69 € HT/mois, clients dès 3,50 €. »",
-              "en": "“Keep Vetup; petsFollow adds prescribed Web + mobile care continuity — €69 excl. VAT/month, owners from €3.50.”"
+              "fr": "« Gardez Vetup ; petsFollow ajoute la continuité prescrite Web + mobile — 834,71 € HTVA/an, clients dès 3,50 €. »",
+              "en": "“Keep Vetup; petsFollow adds prescribed Web + mobile care continuity — €834.71 excl. VAT/year, owners from €3.50.”"
             }
           }
         },
@@ -584,8 +584,8 @@
           },
           "petsFollowCompare": {
             "wins": {
-              "fr": "Complément clinique : continuité prescrite Web + mobile, prix Pro 69 € HT/mois, client dès 3,50 €, FR/NL natifs — sans toucher à Pégase.",
-              "en": "Clinical add-on: prescribed Web + mobile continuity, Pro €69 excl. VAT/month, owners from €3.50, native FR/NL — without touching Pégase."
+              "fr": "Complément clinique : continuité prescrite Web + mobile, prix Pro 834,71 € HTVA/an, client dès 3,50 €, FR/NL natifs — sans toucher à Pégase.",
+              "en": "Clinical add-on: prescribed Web + mobile continuity, Pro €834.71 excl. VAT/year, owners from €3.50, native FR/NL — without touching Pégase."
             },
             "watchouts": {
               "fr": "Ancrage coopérative et bouche-à-oreille forts ; éviter le discours « on remplace votre logiciel » ; app desktop ≠ parcours propriétaire.",
@@ -748,8 +748,8 @@
           "en": "Uneven purchasing power; low-cost app competition; regional sales cycles (Madrid/Barcelona vs rest)."
         },
         "petsFollowAngle": {
-          "fr": "Locale ES native ; Web + mobile ; Pro 69 € HT ; client 3,50/35/95 € ; B2B2C prescrit ; Care/Horse inclus.",
-          "en": "Native ES locale; Web + mobile; Pro €69 excl. VAT; owner €3.50/€35/€95; prescribed B2B2C; Care/Horse included."
+          "fr": "Locale ES native ; Web + mobile ; Pro 834,71 € HTVA/an ; client 3,50/35/95 € ; B2B2C prescrit ; Care/Horse inclus.",
+          "en": "Native ES locale; Web + mobile; Pro €834.71 excl. VAT/year; owner €3.50/€35/€95; prescribed B2B2C; Care/Horse included."
         }
       },
       "products": [
@@ -882,8 +882,8 @@
               "en": "Practices mid-cloud-migration saturate the IT calendar."
             },
             "talkTrack": {
-              "fr": "« No sustituimos su PMS : añadimos seguimiento cardíaco B2B2C a 69 € HT/mes. »",
-              "en": "“We don’t replace your PMS: we add B2B2C care continuity at €69 excl. VAT/month.”"
+              "fr": "« No sustituimos su PMS : añadimos seguimiento cardíaco B2B2C a 834,71 € HTVA/año. »",
+              "en": "“We don’t replace your PMS: we add B2B2C care continuity at €834.71 excl. VAT/year.”"
             }
           }
         },
@@ -1069,8 +1069,8 @@
               "en": "One-off remote clinician access — different from longitudinal follow-up prescribed by the treating practice."
             },
             "pricing": {
-              "fr": "Pay-per-consult côté owner ; pas de forfait Pro cabinet transparent type 69 € HT.",
-              "en": "Owner pay-per-consult; no transparent Pro practice fee like €69 excl. VAT."
+              "fr": "Pay-per-consult côté owner ; pas de forfait Pro cabinet transparent type 834,71 € HTVA/an.",
+              "en": "Owner pay-per-consult; no transparent Pro practice fee like €834.71 excl. VAT/year."
             }
           },
           "petsFollowCompare": {

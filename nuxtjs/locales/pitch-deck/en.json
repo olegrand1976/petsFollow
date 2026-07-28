@@ -112,7 +112,7 @@
         "mockCommissions": "Practice Commissions",
         "mockMessage": "Latest message received (Charly)",
         "mockStatus": "Filed",
-        "footer": "Practice pricing: 69 € excl. VAT/month + setup 320 € excl. VAT (external billing)"
+        "footer": "Practice pricing: €834.71 excl. VAT / year + setup €320 excl. VAT (external billing)"
       },
       "s06": {
         "title": "VetPro — Key Features",
@@ -209,7 +209,7 @@
           { "feature": "Fingertip heart rate (if prescribed)", "vetPro": "✓ (Read)", "vetLight": "—", "client": "✓ (Measure)" }
         ],
         "financeLabel": "Financial model",
-        "financeVetPro": "69 € excl. VAT/month",
+        "financeVetPro": "€834.71 excl. VAT / year",
         "financeVetLight": "FREE",
         "financeClient": "Pet subscription",
         "footer": "Clear functional coverage for every team member."
@@ -333,7 +333,7 @@
         "c2Desc": "Create your test practice space in 2 minutes during the meeting.",
         "c3Title": "Waiting Room Kit",
         "c3Desc": "Dedicated support + waiting room display kit included.",
-        "cta": "Confirm VetPro Setup (320 € excl. VAT + 69 € excl. VAT/month)",
+        "cta": "Confirm VetPro Setup (€320 excl. VAT + €834.71 excl. VAT / year)",
         "footerLeft": "petsFollow Pro — Care continuity guided by the vet",
         "footerRight": "www.petsfollow.com"
       }

@@ -112,7 +112,7 @@
         "mockCommissions": "Kliiniku Komisjonid",
         "mockMessage": "Viimane saadud sõnum (Charly)",
         "mockStatus": "Klassifitseeritud",
-        "footer": "Kliiniku hind: 69 € ilma KM/kuu + setup 320 € ilma KM (väline arveldus)"
+        "footer": "Kliiniku hind: 834,71 € ilma KM / aasta + setup 320 € ilma KM (väline arveldus)"
       },
       "s06": {
         "title": "VetPro — Põhifunktsioonid",
@@ -209,7 +209,7 @@
           { "feature": "Pulss sõrmega (kui ette nähtud)", "vetPro": "✓ (Lugemine)", "vetLight": "—", "client": "✓ (Mõõtmine)" }
         ],
         "financeLabel": "Finantsmudel",
-        "financeVetPro": "69 € ilma KM/kuu",
+        "financeVetPro": "834,71 € ilma KM / aasta",
         "financeVetLight": "TASUTA",
         "financeClient": "Looma tellimus",
         "footer": "Selge funktsionaalne katvus iga meeskonnaliikme jaoks."
@@ -333,7 +333,7 @@
         "c2Desc": "Testkliiniku ruumi loomine 2 minutiga kohtumisel.",
         "c3Title": "Ooteruumi Komplekt",
         "c3Desc": "Pühendatud tugi + ooteruumi reklaamikomplekt kaasas.",
-        "cta": "Kinnita VetPro Setup (320 € ilma KM + 69 € ilma KM/kuu)",
+        "cta": "Kinnita VetPro Setup (320 € ilma KM + 834,71 € ilma KM / aasta)",
         "footerLeft": "petsFollow Pro — Hooldusjätkuvus veterinaari juhtimisel",
         "footerRight": "www.petsfollow.com"
       }

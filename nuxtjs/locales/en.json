@@ -1617,7 +1617,7 @@
     "sheetTitle": "Understand my earnings",
     "detailsSummary": "Rate grid and bonuses",
     "kpiRateBase": "Base rate (tier)",
-    "kpiRateHeart": "Minimum rate",
+    "kpiRateHeart": "Core offer rate",
     "lineStatus": {
       "accruing": "Accruing",
       "missing_info": "Missing info",

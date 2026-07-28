@@ -72,4 +72,4 @@ Statuts intake : `pending` → `submitted` (ou `skipped` réservé).
 
 ## Hors scope
 
-Deferred deep link Play Store natif, SMS, rappel J-1, templates par espèce, abonnement facturé « VetPro 69 € ».
+Deferred deep link Play Store natif, SMS, rappel J-1, templates par espèce, abonnement facturé « VetPro 834,71 € HTVA / an ».

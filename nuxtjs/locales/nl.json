@@ -1617,7 +1617,7 @@
     "sheetTitle": "Mijn vergoeding begrijpen",
     "detailsSummary": "Tariefraster en bonussen",
     "kpiRateBase": "Basistarief (schaal)",
-    "kpiRateHeart": "Minimumtarief",
+    "kpiRateHeart": "Kerntarief (triennial)",
     "lineStatus": {
       "accruing": "Lopend",
       "missing_info": "Info ontbreekt",

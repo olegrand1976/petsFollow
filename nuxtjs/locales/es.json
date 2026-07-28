@@ -1586,7 +1586,7 @@
     "sheetTitle": "Entender mi retribución",
     "detailsSummary": "Tabla de tasas y bonificaciones",
     "kpiRateBase": "Tasa base (tramo)",
-    "kpiRateHeart": "Tasa mínima",
+    "kpiRateHeart": "Tasa oferta principal",
     "lineStatus": {
       "accruing": "En curso",
       "missing_info": "Datos incompletos",

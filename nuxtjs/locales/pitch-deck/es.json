@@ -112,7 +112,7 @@
         "mockCommissions": "Comisiones Consulta",
         "mockMessage": "Último mensaje recibido (Charly)",
         "mockStatus": "Clasificado",
-        "footer": "Tarifa Consulta: 69 € sin IVA/mes + setup 320 € sin IVA (facturación externa)"
+        "footer": "Tarifa Consulta: 834,71 € sin IVA / año + setup 320 € sin IVA (facturación externa)"
       },
       "s06": {
         "title": "VetPro — Funcionalidades Clave",
@@ -209,7 +209,7 @@
           { "feature": "Frecuencia cardíaca al dedo (si prescrito)", "vetPro": "✓ (Lectura)", "vetLight": "—", "client": "✓ (Medición)" }
         ],
         "financeLabel": "Modelo financiero",
-        "financeVetPro": "69 € sin IVA/mes",
+        "financeVetPro": "834,71 € sin IVA / año",
         "financeVetLight": "GRATIS",
         "financeClient": "Suscripción animal",
         "footer": "Una cobertura funcional clara para cada miembro del equipo."
@@ -333,7 +333,7 @@
         "c2Desc": "Creación de su espacio consulta de prueba en 2 minutos en la reunión.",
         "c3Title": "Kit Sala de Espera",
         "c3Desc": "Soporte dedicado + kit de cartelería para sala de espera incluido.",
-        "cta": "Validar Setup VetPro (320 € sin IVA + 69 € sin IVA/mes)",
+        "cta": "Validar Setup VetPro (320 € sin IVA + 834,71 € sin IVA / año)",
         "footerLeft": "petsFollow Pro — Continuidad de cuidados guiada por el veterinario",
         "footerRight": "www.petsfollow.com"
       }
