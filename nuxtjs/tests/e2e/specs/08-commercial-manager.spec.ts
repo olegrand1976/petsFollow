@@ -15,12 +15,16 @@ test('responsable commercial voit suivi et prospects équipe', async ({ page }) 
   await expect(page.getByTestId('manager-prospects-page')).toBeVisible()
 })
 
-test('responsable commercial ouvre le mémo ASV', async ({ page }) => {
+test('responsable commercial ouvre le mémo ASV et la plaquette', async ({ page }) => {
   await loginAsCommercialManager(page)
   await expect(page.getByTestId('nav-commercial-asv-memo')).toBeVisible()
+  await expect(page.getByTestId('nav-commercial-brochure')).toBeVisible()
   await page.goto('/commercial/asv-memo', { waitUntil: 'domcontentloaded' })
   await expect(page.getByTestId('commercial-asv-memo')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('asv-memo-print')).toBeVisible()
+  await page.goto('/commercial/brochure', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByTestId('commercial-brochure')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('brochure-print')).toBeVisible()
   await expect(page.getByTestId('nav-commercial-settings')).toBeVisible()
 })
 

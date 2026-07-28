@@ -87,6 +87,17 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 Local : Pro **http://localhost:3002** · API **http://localhost:8291**  
 (`make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`)
 
+## Plaquette cabinet (leave-behind véto / ASV)
+
+Support produit imprimable en PDF depuis l’espace commercial (ou responsable) : **`/commercial/brochure`**.
+
+| Quand | Usage |
+|-------|--------|
+| Fin de visite cabinet | Imprimer / Enregistrer en PDF → laisser au véto (et copie standard) |
+| Relance e-mail | Bouton « Envoyer par e-mail » — **joindre le PDF** généré côté navigateur (le lien auth n’est pas ouvert aux vétos) |
+
+Focus : « pas un logiciel de plus » · continuité prescrite · passeport partagé 3 acteurs · features GA · offre compacte · bandeau ASV (mémo dédié à part). Nav Offre + CTA depuis `/commercial/pitch`.
+
 ## Mémo ASV (leave-behind 10 min)
 
 Fiche adressée à l’**ASV / accueil**, imprimable en PDF depuis l’espace commercial (ou responsable) : **`/commercial/asv-memo`**.

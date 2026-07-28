@@ -42,6 +42,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
   { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },
   { to: '/commercial/asv-memo', label: t('nav.commercialAsvMemo'), icon: 'support_agent', section: t('nav.section.offer') },
+  { to: '/commercial/brochure', label: t('nav.commercialBrochure'), icon: 'picture_as_pdf', section: t('nav.section.offer') },
   { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics', section: t('nav.section.offer') },
   ...(isStagingLike.value
     ? [usecasesNavItem(t('nav.usecases'), t('nav.section.offer'))]

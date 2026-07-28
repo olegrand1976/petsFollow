@@ -66,6 +66,8 @@ Care / Horse / foyer / encodage élevage : **inclus** dès entitlement animal ac
 - Playbook : [21-GTM-COMMERCIAL.md](21-GTM-COMMERCIAL.md)
 - Grille & commissions : [17](17-POLITIQUE-TARIFAIRE.md), [18](18-FICHE-COMMISSION-VETO.md), [19](19-FICHE-COMMISSION-COMMERCIAL.md)
 - Page Pro pitch : `/commercial/pitch` (`ProCommissionSheet`)
+- **Plaquette cabinet** (leave-behind véto / ASV, imprimable PDF) : `/commercial/brochure`
+- Mémo ASV 10 min : `/commercial/asv-memo`
 
 ## Interdits pitch
 

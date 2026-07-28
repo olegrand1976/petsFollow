@@ -66,6 +66,7 @@ export type ProNavIcon =
   | 'hub'
   | 'account_tree'
   | 'support_agent'
+  | 'picture_as_pdf'
   | 'groups'
   | 'checklist'
   | 'receipt'
@@ -133,6 +134,7 @@ const icons: Record<ProNavIcon, string> = {
   hub: 'hub',
   account_tree: 'account_tree',
   support_agent: 'support_agent',
+  picture_as_pdf: 'picture_as_pdf',
   groups: 'groups',
   checklist: 'checklist',
   receipt: 'receipt_long',
