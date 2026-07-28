@@ -224,7 +224,7 @@ Compte : `vet.demo@petsfollow.test`
 | C6.4 | P1 | Share client | Partage fiche client | Clients listés pro light |
 | C6.5 | P2 | Permissions | read vs write_notes vs full | Notes / messages masqués selon ACL |
 | C6.6 | P2 | Révoquer share | DELETE share | Disparaît côté care_pro |
-| C6.7 | P1 | CR visite Nuxt (IA BFF) | PUT report → POST improve → finalize (BFF Nuxt) | Routes enregistrées (pas 404 Nitro « Page not found ») ; 200/402/503 métier OK ; audio purgé si finalize 200 |
+| C6.7 | P1 | CR visite Nuxt (IA BFF) | PUT report → POST `report-improve` → `report-finalize` (BFF Nuxt) | Routes enregistrées **et matchées** (pas 404 Nitro « Page not found ») ; 200/402/503 métier OK ; audio purgé si finalize 200 |
 
 Auto : Playwright `@p1` [`03d-visit-report-ai-bff.spec.ts`](../nuxtjs/tests/e2e/specs/03d-visit-report-ai-bff.spec.ts).
 | C6.8 | P1 | CR multi-auteurs | Visite avec CR terrain + cabinet → `/calendar` | Liste auteurs ; peer lecture seule ; « Mon CR » éditable |
@@ -678,7 +678,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `03-clients` | Recherche client | `@p0` |
 | `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
 | `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR | `@p1` |
-| `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report/improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
+| `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |

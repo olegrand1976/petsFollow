@@ -2,12 +2,13 @@ import { test, expect } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
 
 /**
- * Anti-régression Nitro : conflit fichier/dossier
- * (`report.put.ts` + `report/`) masquait POST …/report/improve|finalize|transcribe
- * → 404 « Page not found » côté BFF (HAR prod).
+ * Anti-régression BFF CR IA.
  *
- * On assert que la route BFF existe (pas le succès Gemini).
- * Statuts métier OK : 200, 402 (module IA), 503 (Gemini off).
+ * Historique : nested `…/report/improve` était enregistré dans Nitro mais
+ * non matché au runtime (leaf `…/report` GET/PUT) → 404 « Page not found ».
+ * Les actions POST sont aplaties : `/report-improve`, `/report-finalize`, `/report-transcribe`.
+ *
+ * Assert route vivante (pas succès Gemini) : 200 / 402 / 503.
  */
 
 /** Payload Nitro (pas l’enveloppe Go `{ error: { code } }`). */
@@ -21,7 +22,6 @@ function isNuxtPageNotFound(status: number, body: unknown): boolean {
   }
   const msg = `${o.statusMessage || ''} ${o.message || ''}`
   if (/page not found/i.test(msg)) return true
-  // Nuxt : `"error": true` (bool) ; Go : `"error": { code, ... }`
   return o.error === true && o.statusCode === 404
 }
 
@@ -31,18 +31,25 @@ function unwrapId(body: unknown): string {
 }
 
 test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
-  test('POST report/improve + finalize ne renvoient pas 404 Nitro', async ({ page }) => {
+  test('POST report-improve + report-finalize ne renvoient pas 404 Nitro', async ({ page }) => {
     test.setTimeout(90000)
     await loginAsVet(page)
 
+    // Pet hors client.demo (évite de polluer l’historique de 09-pet-detail).
     const petsRes = await page.request.get('/api/vet/pets')
     expect(petsRes.status(), await petsRes.text()).toBe(200)
     const petsBody = await petsRes.json()
-    const pets = (petsBody?.data ?? petsBody) as Array<{ id?: string }>
-    const petId = String(pets?.[0]?.id || '')
-    expect(petId, 'seed pet attendu').toBeTruthy()
+    const pets = (petsBody?.data ?? petsBody) as Array<{
+      id?: string
+      name?: string
+      ownerName?: string
+    }>
+    const pet = pets.find(p =>
+      /max/i.test(String(p.name || '')) && /paul/i.test(String(p.ownerName || '')),
+    ) || pets.find(p => /max/i.test(String(p.name || '')))
+    const petId = String(pet?.id || '')
+    expect(petId, 'pet Max (Paul) seed').toBeTruthy()
 
-    // RDV confirmé (pas walk-in) : consultationSession + scheduledAt futur → 400 stale.
     let visitId = ''
     for (let attempt = 0; attempt < 4 && !visitId; attempt++) {
       const when = new Date(
@@ -62,37 +69,37 @@ test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
     }
     expect(visitId, 'visite créée').toBeTruthy()
 
-    const putRes = await page.request.put(`/api/visits/${visitId}/report`, {
-      data: { bodyText: `E2E improve BFF ${Date.now()}\nAnamnese courte pour IA.` },
-    })
-    expect(putRes.status(), await putRes.text()).toBe(200)
+    try {
+      const putRes = await page.request.put(`/api/visits/${visitId}/report`, {
+        data: { bodyText: `E2E improve BFF ${Date.now()}\nAnamnese courte pour IA.` },
+      })
+      expect(putRes.status(), await putRes.text()).toBe(200)
 
-    const improveRes = await page.request.post(`/api/visits/${visitId}/report/improve`)
-    const improveBody = await improveRes.json().catch(() => null)
-    expect(
-      isNuxtPageNotFound(improveRes.status(), improveBody),
-      `improve ne doit pas être 404 Nitro, got ${improveRes.status()} ${JSON.stringify(improveBody)}`,
-    ).toBe(false)
-    expect([200, 402, 503]).toContain(improveRes.status())
+      const improveRes = await page.request.post(`/api/visits/${visitId}/report-improve`)
+      const improveBody = await improveRes.json().catch(() => null)
+      expect(
+        isNuxtPageNotFound(improveRes.status(), improveBody),
+        `report-improve ne doit pas être 404 Nitro, got ${improveRes.status()} ${JSON.stringify(improveBody)}`,
+      ).toBe(false)
+      expect([200, 402, 503]).toContain(improveRes.status())
 
-    const finalizeRes = await page.request.post(`/api/visits/${visitId}/report/finalize`)
-    const finalizeBody = await finalizeRes.json().catch(() => null)
-    expect(
-      isNuxtPageNotFound(finalizeRes.status(), finalizeBody),
-      `finalize ne doit pas être 404 Nitro, got ${finalizeRes.status()} ${JSON.stringify(finalizeBody)}`,
-    ).toBe(false)
-    // 200 finalisé · 402 module · 503 Gemini · 409 déjà final (si improve a finalisé) · 400 body vide
-    expect([200, 400, 402, 409, 503]).toContain(finalizeRes.status())
+      const finalizeRes = await page.request.post(`/api/visits/${visitId}/report-finalize`)
+      const finalizeBody = await finalizeRes.json().catch(() => null)
+      expect(
+        isNuxtPageNotFound(finalizeRes.status(), finalizeBody),
+        `report-finalize ne doit pas être 404 Nitro, got ${finalizeRes.status()} ${JSON.stringify(finalizeBody)}`,
+      ).toBe(false)
+      expect([200, 400, 402, 409, 503]).toContain(finalizeRes.status())
 
-    // Nested me/ai-module/* : même classe de conflit fichier/dossier.
-    const roiRes = await page.request.get('/api/me/ai-module/roi')
-    const roiBody = await roiRes.json().catch(() => null)
-    expect(
-      isNuxtPageNotFound(roiRes.status(), roiBody),
-      `ai-module/roi ne doit pas être 404 Nitro, got ${roiRes.status()} ${JSON.stringify(roiBody)}`,
-    ).toBe(false)
-
-    // Cleanup walk-in
-    await page.request.patch(`/api/visits/${visitId}`, { data: { status: 'cancelled' } }).catch(() => undefined)
+      const roiRes = await page.request.get('/api/me/ai-module/roi')
+      const roiBody = await roiRes.json().catch(() => null)
+      expect(
+        isNuxtPageNotFound(roiRes.status(), roiBody),
+        `ai-module/roi ne doit pas être 404 Nitro, got ${roiRes.status()} ${JSON.stringify(roiBody)}`,
+      ).toBe(false)
+    }
+    finally {
+      await page.request.patch(`/api/visits/${visitId}`, { data: { status: 'cancelled' } }).catch(() => undefined)
+    }
   })
 })

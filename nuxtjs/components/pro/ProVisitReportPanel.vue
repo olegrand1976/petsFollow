@@ -487,7 +487,9 @@ async function improveVisitReport() {
       method: 'PUT',
       body: { bodyText: reportBody.value },
     })
-    const res: any = await $fetch(`/api/visits/${props.visitId}/report/improve`, {
+    // Flat BFF path: nested …/report/improve is registered but not matched by rou3
+    // when …/report (GET/PUT) is also a leaf — see 03d-visit-report-ai-bff.
+    const res: any = await $fetch(`/api/visits/${props.visitId}/report-improve`, {
       method: 'POST',
     })
     applyReportPayload(res.data ?? res)
@@ -511,7 +513,7 @@ async function finalizeVisitReport() {
       method: 'PUT',
       body: { bodyText: reportBody.value },
     })
-    const res: any = await $fetch(`/api/visits/${props.visitId}/report/finalize`, {
+    const res: any = await $fetch(`/api/visits/${props.visitId}/report-finalize`, {
       method: 'POST',
     })
     applyReportPayload(res.data ?? res)
@@ -575,7 +577,7 @@ async function transcribeAudio(file: File | Blob, filename: string) {
     const form = new FormData()
     form.append('audio', file, filename)
     form.append('clientAudioConsent', 'true')
-    const res: any = await $fetch(`/api/visits/${props.visitId}/report/transcribe`, {
+    const res: any = await $fetch(`/api/visits/${props.visitId}/report-transcribe`, {
       method: 'POST',
       body: form,
     })
