@@ -175,6 +175,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.10 | P2 | Parrainage | `/recommend` | Flux confrère |
 | C2.11 | P2 | Produits | `/produits` | Plans 3,50 / 35 / 95 ; pas d’addons vendus |
 | C2.12 | P2 | Commissions véto | `/commissions` | Ledger lisible |
+| C2.13 | P1 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` → CR | Panel CR ; CTA DAF / facture |
 
 ### C3 — Calendrier & RDV
 
@@ -220,6 +221,14 @@ Compte : `vet.demo@petsfollow.test`
 | C6.6 | P2 | Révoquer share | DELETE share | Disparaît côté care_pro |
 | C6.7 | P2 | CR visite Nuxt | Rapport + finalize (si UI) | Draft → final ; audio purgé |
 | C6.8 | P1 | CR multi-auteurs | Visite avec CR terrain + cabinet → `/calendar` | Liste auteurs ; peer lecture seule ; « Mon CR » éditable |
+
+### C7 — Facturation Billit (dev)
+
+| ID | Pri | Cas | Étapes | Attendu |
+|----|-----|-----|--------|---------|
+| C7.1 | P1 | Connect mock | `/invoicing` → activer → lier PartyID/clé mock | Statut `active` |
+| C7.2 | P1 | Facture BE | Créer facture pays BE + TVA | Document draft ; send → delivered (mock) |
+| C7.3 | P1 | Contrepartie IT | Pays IT sans codice/PEC | Erreur validation ; avec codice OK |
 
 ---
 
@@ -432,7 +441,22 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
 | I9 | Offre sync | Landing `#produits` + `/produits` | Même prix / inclus |
 
-**Pharmacie BE (dev)** : stock + DAF/PDF sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` / `TestPharmacyDAF*` ([28](28-PLAN-STOCK-PEREMPTION.md)) ; Playwright P0 et workers VAMReg encore hors scope. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
+**Pharmacie BE (dev)** : stock + DAF/PDF sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` / `TestPharmacyDAF*` + Playwright `@p0` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts) (quality CI ; exclu du post-deploy Cloud Run tant que S6) ; workers VAMReg encore hors scope. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
+
+| ID | Prio | Cas | Attendu |
+|----|------|-----|---------|
+| C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
+| C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
+| C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
+
+**Ordonnances (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/ordonnances` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-ORDONNANCES.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
+
+| ID | Prio | Cas | Attendu |
+|----|------|-----|---------|
+| C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
+| C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
+| C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
+| C8.4 | P2 | Refus signature V1 | `PATCH` avec `status=signed` → 400 |
 
 ---
 
@@ -670,6 +694,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 ### Go / Nuxt unit / Flutter
 
 - Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
+- Billit / invoicing : `go test ./internal/invoicing/...` (totaux, seal, `ValidateCounterparty` BE/FR/IT/ES, mapper, client `httptest`, webhook HMAC) ; intégration `TestInvoicingConnectAndSendMock` + `TestInvoicingWebhook*` ; config `TestValidateBillit*`
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
 - Dist Android / Play : `flutter test` obligatoire avant build (`SKIP_TESTS=1` pour override conscient) — pas le smoke API

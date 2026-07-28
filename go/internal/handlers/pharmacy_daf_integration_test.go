@@ -225,3 +225,81 @@ func TestPharmacyDAFFinalizeCancelPDF(t *testing.T) {
 		t.Fatalf("expected delta=0 daf_cancel %#v", env)
 	}
 }
+
+func TestPharmacyDAFWithVisitID(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	ctx := context.Background()
+	st := store.New(api.pool)
+	medID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
+		CNK: "2999010", Name: "DAF Visit Link Med", IsActive: true,
+	})
+	if err != nil {
+		t.Fatalf("med: %v", err)
+	}
+
+	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pets", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	var petID, ownerID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		if p["name"] == "Rex" || p["name"] == "Bella" || p["name"] == "Spirit" {
+			petID, _ = p["id"].(string)
+			ownerID, _ = p["ownerUserId"].(string)
+			if petID != "" {
+				break
+			}
+		}
+	}
+	if petID == "" {
+		// fallback first pet
+		if rows, ok := env["data"].([]any); ok && len(rows) > 0 {
+			p, _ := rows[0].(map[string]any)
+			petID, _ = p["id"].(string)
+			ownerID, _ = p["ownerUserId"].(string)
+		}
+	}
+	if petID == "" {
+		t.Skip("no pets seeded")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", tok, map[string]any{
+		"scheduledAt":     "2099-04-21T11:00:00Z",
+		"notes":           "daf visit link",
+		"durationMinutes": 30,
+		"confirmDirect":   true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, tok, map[string]any{"status": "cancelled"})
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
+		"clientUserId": ownerID,
+		"petId":        petID,
+		"visitId":      visitID,
+		"notes":        "from consultation",
+		"items": []map[string]any{{
+			"medicationId": medID, "qty": 1, "ammNumber": "BE-VISIT-1",
+		}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("draft with visit %d %#v", code, env)
+	}
+	doc := dataMap(t, env)
+	if doc["visitId"] != visitID {
+		t.Fatalf("visitId=%v want %s", doc["visitId"], visitID)
+	}
+	if ownerID != "" && doc["clientUserId"] != ownerID {
+		t.Fatalf("clientUserId=%v want %s", doc["clientUserId"], ownerID)
+	}
+	if doc["petId"] != petID {
+		t.Fatalf("petId=%v want %s", doc["petId"], petID)
+	}
+}

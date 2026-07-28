@@ -22,6 +22,7 @@ type DAFDocument struct {
 	Status                string    `json:"status"`
 	ClientUserID          string    `json:"clientUserId,omitempty"`
 	PetID                 string    `json:"petId,omitempty"`
+	VisitID               string    `json:"visitId,omitempty"`
 	PrescriberUserID      string    `json:"prescriberUserId"`
 	PrescriberName        string    `json:"prescriberName,omitempty"`
 	ClientName            string    `json:"clientName,omitempty"`
@@ -94,7 +95,7 @@ func (s *Store) GetRefMedication(ctx context.Context, id string) (RefMedication,
 	return m, err
 }
 
-func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID string, clientUserID, petID, notes string, items []DAFItemInput) (DAFDocument, error) {
+func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID string, clientUserID, petID, visitID, notes string, items []DAFItemInput) (DAFDocument, error) {
 	if len(items) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
 	}
@@ -108,9 +109,9 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 	docID := uuid.NewString()
 	_, err = tx.Exec(ctx, `
 		INSERT INTO pharmacy.daf_documents (
-			id, practice_id, daf_year, status, client_user_id, pet_id, prescriber_user_id, notes
-		) VALUES ($1,$2,$3,'draft',NULLIF($4,'')::uuid,NULLIF($5,'')::uuid,$6,NULLIF($7,''))`,
-		docID, practiceID, year, clientUserID, petID, prescriberID, strings.TrimSpace(notes),
+			id, practice_id, daf_year, status, client_user_id, pet_id, visit_id, prescriber_user_id, notes
+		) VALUES ($1,$2,$3,'draft',NULLIF($4,'')::uuid,NULLIF($5,'')::uuid,NULLIF($6,'')::uuid,$7,NULLIF($8,''))`,
+		docID, practiceID, year, clientUserID, petID, visitID, prescriberID, strings.TrimSpace(notes),
 	)
 	if err != nil {
 		return DAFDocument{}, err
@@ -151,7 +152,7 @@ func (s *Store) insertDAFItemTx(ctx context.Context, tx pgx.Tx, dafID string, it
 	return err
 }
 
-func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID string, clientUserID, petID, notes string, items []DAFItemInput) (DAFDocument, error) {
+func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID string, clientUserID, petID, visitID, notes string, items []DAFItemInput) (DAFDocument, error) {
 	if len(items) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
 	}
@@ -180,9 +181,10 @@ func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID stri
 		UPDATE pharmacy.daf_documents SET
 			client_user_id = NULLIF($3,'')::uuid,
 			pet_id = NULLIF($4,'')::uuid,
-			notes = NULLIF($5,''),
+			visit_id = NULLIF($5,'')::uuid,
+			notes = NULLIF($6,''),
 			updated_at = now()
-		WHERE practice_id = $1 AND id = $2`, practiceID, dafID, clientUserID, petID, strings.TrimSpace(notes),
+		WHERE practice_id = $1 AND id = $2`, practiceID, dafID, clientUserID, petID, visitID, strings.TrimSpace(notes),
 	); err != nil {
 		return DAFDocument{}, err
 	}
@@ -200,7 +202,7 @@ func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID stri
 func (s *Store) ListDAF(ctx context.Context, practiceID, status string, year int) ([]DAFDocument, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT d.id::text, d.practice_id::text, d.daf_year, d.daf_number, d.status,
-		       COALESCE(d.client_user_id::text,''), COALESCE(d.pet_id::text,''),
+		       COALESCE(d.client_user_id::text,''), COALESCE(d.pet_id::text,''), COALESCE(d.visit_id::text,''),
 		       d.prescriber_user_id::text, COALESCE(u.full_name,''),
 		       COALESCE(d.notes,''), COALESCE(d.issued_at::text,''), COALESCE(d.finalized_at::text,''),
 		       d.has_antibiotic, d.vamreg_status, d.invoices_export_status, d.created_at::text,
@@ -222,7 +224,7 @@ func (s *Store) ListDAF(ctx context.Context, practiceID, status string, year int
 		var num *int64
 		if err := rows.Scan(
 			&d.ID, &d.PracticeID, &d.DAFYear, &num, &d.Status,
-			&d.ClientUserID, &d.PetID, &d.PrescriberUserID, &d.PrescriberName,
+			&d.ClientUserID, &d.PetID, &d.VisitID, &d.PrescriberUserID, &d.PrescriberName,
 			&d.Notes, &d.IssuedAt, &d.FinalizedAt, &d.HasAntibiotic, &d.VamregStatus,
 			&d.InvoicesExportStatus, &d.CreatedAt, &d.PDFObjectKey,
 		); err != nil {
@@ -242,7 +244,7 @@ func (s *Store) GetDAF(ctx context.Context, practiceID, dafID string) (DAFDocume
 	var num *int64
 	err := s.pool.QueryRow(ctx, `
 		SELECT d.id::text, d.practice_id::text, d.daf_year, d.daf_number, d.status,
-		       COALESCE(d.client_user_id::text,''), COALESCE(d.pet_id::text,''),
+		       COALESCE(d.client_user_id::text,''), COALESCE(d.pet_id::text,''), COALESCE(d.visit_id::text,''),
 		       d.prescriber_user_id::text, COALESCE(u.full_name,''),
 		       COALESCE(c.full_name,''), COALESCE(p.name,''), COALESCE(pr.name,''),
 		       COALESCE(d.notes,''), COALESCE(d.issued_at::text,''), COALESCE(d.finalized_at::text,''),
@@ -256,7 +258,7 @@ func (s *Store) GetDAF(ctx context.Context, practiceID, dafID string) (DAFDocume
 		JOIN practice.practices pr ON pr.id = d.practice_id
 		WHERE d.practice_id = $1 AND d.id = $2`, practiceID, dafID).Scan(
 		&d.ID, &d.PracticeID, &d.DAFYear, &num, &d.Status,
-		&d.ClientUserID, &d.PetID, &d.PrescriberUserID, &d.PrescriberName,
+		&d.ClientUserID, &d.PetID, &d.VisitID, &d.PrescriberUserID, &d.PrescriberName,
 		&d.ClientName, &d.PetName, &d.PracticeName,
 		&d.Notes, &d.IssuedAt, &d.FinalizedAt, &d.CancelledAt, &d.CancelReason,
 		&d.PDFObjectKey, &d.PDFSHA256, &d.HasAntibiotic, &d.VamregStatus,

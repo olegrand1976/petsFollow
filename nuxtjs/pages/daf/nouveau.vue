@@ -11,6 +11,10 @@
 
     <p v-if="error" class="pro-alert" data-testid="daf-wizard-error">{{ error }}</p>
 
+    <ProCard v-if="contextLabel" class="pro-mb-lg" data-testid="daf-consultation-context">
+      <p class="pro-hint">{{ contextLabel }}</p>
+    </ProCard>
+
     <ProCard class="pro-mb-lg">
       <div v-for="(line, idx) in lines" :key="idx" class="daf-line" :data-testid="`daf-line-${idx}`">
         <div>
@@ -61,6 +65,14 @@
       <ProButton variant="secondary" test-id="daf-preview-btn" :disabled="busy" @click="runPreview">{{ $t('pharmacy.daf.preview') }}</ProButton>
       <ProButton variant="secondary" test-id="daf-save-draft" :disabled="busy || !canSubmit" @click="saveDraft">{{ $t('pharmacy.daf.saveDraft') }}</ProButton>
       <ProButton variant="primary" test-id="daf-finalize-btn" :disabled="busy || !canSubmit" @click="finalize">{{ $t('pharmacy.daf.finalize') }}</ProButton>
+      <ProButton
+        v-if="finalizedDafId"
+        test-id="daf-go-invoice"
+        :disabled="busy"
+        @click="goInvoice"
+      >
+        {{ $t('pharmacy.daf.goInvoice') }}
+      </ProButton>
     </div>
   </div>
 </template>
@@ -70,9 +82,28 @@ import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
 definePageMeta({ middleware: ['auth', 'vet-only'] })
 const { t } = useI18n()
+const route = useRoute()
 const busy = ref(false)
 const error = ref('')
 const preview = ref<any[]>([])
+const finalizedDafId = ref('')
+const contextClientName = ref('')
+const contextPetName = ref('')
+
+const clientUserId = computed(() => String(route.query.clientUserId || ''))
+const petId = computed(() => String(route.query.petId || ''))
+const visitId = computed(() => String(route.query.visitId || ''))
+
+const contextLabel = computed(() => {
+  if (!clientUserId.value && !petId.value && !visitId.value) return ''
+  const parts: string[] = []
+  if (contextClientName.value) parts.push(contextClientName.value)
+  else if (clientUserId.value) parts.push(t('pharmacy.daf.contextClient'))
+  if (contextPetName.value) parts.push(contextPetName.value)
+  else if (petId.value) parts.push(t('pharmacy.daf.contextPet'))
+  if (visitId.value) parts.push(t('pharmacy.daf.contextVisit'))
+  return t('pharmacy.daf.contextBanner', { context: parts.join(' · ') })
+})
 
 type Line = {
   med: ProComboboxItem | null
@@ -100,6 +131,35 @@ const canSubmit = computed(() =>
 function unwrap(res: any) {
   return res?.data ?? res
 }
+
+async function loadContext() {
+  if (clientUserId.value) {
+    try {
+      const res = await $fetch<any>(`/api/clients/${clientUserId.value}`)
+      const c = unwrap(res)
+      contextClientName.value = c?.fullName || c?.email || ''
+    }
+    catch {
+      contextClientName.value = ''
+    }
+  }
+  if (petId.value && clientUserId.value) {
+    try {
+      const res = await $fetch<any>(`/api/clients/${clientUserId.value}/pets`)
+      const pets = unwrap(res)
+      const list = Array.isArray(pets) ? pets : []
+      const pet = list.find((p: any) => p.id === petId.value)
+      contextPetName.value = pet?.name || ''
+    }
+    catch {
+      contextPetName.value = ''
+    }
+  }
+}
+
+onMounted(() => {
+  void loadContext()
+})
 
 async function searchMedications(q: string): Promise<ProComboboxItem[]> {
   const res = await $fetch<any>('/api/vet/pharmacy/medications/search', { query: { q, limit: '20' } })
@@ -132,6 +192,15 @@ function buildItems() {
   })
 }
 
+function draftBody() {
+  return {
+    clientUserId: clientUserId.value || undefined,
+    petId: petId.value || undefined,
+    visitId: visitId.value || undefined,
+    items: buildItems(),
+  }
+}
+
 async function runPreview() {
   busy.value = true
   error.value = ''
@@ -151,7 +220,7 @@ async function saveDraft() {
   busy.value = true
   error.value = ''
   try {
-    const res = await $fetch<any>('/api/vet/pharmacy/daf', { method: 'POST', body: { items: buildItems() } })
+    const res = await $fetch<any>('/api/vet/pharmacy/daf', { method: 'POST', body: draftBody() })
     const doc = unwrap(res)
     await navigateTo(`/daf/${doc.id}`)
   }
@@ -167,12 +236,12 @@ async function finalize() {
   busy.value = true
   error.value = ''
   try {
-    const res = await $fetch<any>('/api/vet/pharmacy/daf', { method: 'POST', body: { items: buildItems() } })
+    const res = await $fetch<any>('/api/vet/pharmacy/daf', { method: 'POST', body: draftBody() })
     const doc = unwrap(res)
     const fin = await $fetch<any>(`/api/vet/pharmacy/daf/${doc.id}/finalize`, { method: 'POST', body: {} })
     const out = unwrap(fin)
     const id = out?.id || out?.daf?.id || doc.id
-    await navigateTo(`/daf/${id}`)
+    finalizedDafId.value = id
   }
   catch (e: any) {
     error.value = e?.data?.error?.code || t('pharmacy.daf.error')
@@ -180,6 +249,15 @@ async function finalize() {
   finally {
     busy.value = false
   }
+}
+
+async function goInvoice() {
+  const q = new URLSearchParams()
+  if (clientUserId.value) q.set('clientUserId', clientUserId.value)
+  if (visitId.value) q.set('visitId', visitId.value)
+  if (finalizedDafId.value) q.set('dafId', finalizedDafId.value)
+  q.set('mode', 'fromDaf')
+  await navigateTo(`/invoicing?${q.toString()}`)
 }
 </script>
 

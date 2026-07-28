@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -84,10 +85,32 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedProfilesTeamModules(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
 	logSummary()
+	return nil
+}
+
+func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
+	for _, row := range []store.RefMedicationUpsert{
+		{CNK: "2712345", Name: "Amoxicilline Vet Demo", ATCCode: "J01CA04", IsAntibiotic: true, IsActive: true, PharmaceuticalForm: "cp"},
+		{CNK: "2899999", Name: "Vaccin Rage Demo", IsAntibiotic: false, IsActive: true},
+	} {
+		if _, err := st.UpsertRefMedication(ctx, row); err != nil {
+			// Schema absent (migrate incomplete) — non-fatal for legacy envs.
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				log.Printf("seed pharmacy meds skipped (undefined table): %v", err)
+				return nil
+			}
+			return fmt.Errorf("pharmacy med %s: %w", row.CNK, err)
+		}
+	}
+	log.Println("Pharmacie démo : CNK 2712345 / 2899999")
 	return nil
 }
 

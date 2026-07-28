@@ -4,7 +4,7 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut global | **~65 % Phase 1** — S0 ✅ · S1–S3 ✅ (~95 %) · S4–S6 ⬜ |
+| Statut global | **~68 % Phase 1** — S0 ✅ · S1–S3 ✅ · traçabilité DAF + lot nonempty + e2e P0 ✅ · S4–S6 ⬜ |
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Dernière revue | 2026-07-27 (S3 DAF livré) |
 | Prochaine action | **Sprint 4** — worker VAMReg (Asynq) **ou** S6 ops si pilote staging |
@@ -30,21 +30,22 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 
 ---
 
-## 0. Tableau de bord (contrôle 2026-07-27)
+## 0. Tableau de bord (contrôle 2026-07-28)
 
 | Domaine | Avancement | Preuve / écart |
 |---------|------------|----------------|
 | Spec & décisions produit | ✅ | Docs 27 + 28 |
 | Prérequis monorepo | 🟡 | Redis/GCS/API OK — Asynq / PDF DAF non branchés |
 | Nav tag `dev` + `/medicaments` | ✅ | `layouts/default.vue` + `ProSidebar.tag` |
-| Schéma SQL `pharmacy` | ✅ | `ref_medications` + stock (deposits/batches/movements/settings) |
+| Schéma SQL `pharmacy` | ✅ | `ref_medications` + stock + DAF + `000087` trace + `000088` lot nonempty |
 | Search CNK (API + BFF + UI) | ✅ | Tests Go verts |
 | Stock / FEFO / péremption | ✅ | Store + API + `/stock` + expiry-run |
-| DAF / PDF | ✅ | draft/finalize/cancel + PDF media |
+| DAF / PDF + lien mouvements | ✅ | finalize/cancel écrivent `daf_id`+`daf_item_id` ; `GET /movements?dafId=` |
 | Workers VAMReg / invoices.connect | ⬜ | Pas d’Asynq |
 | Scheduler expiry | 🟡 | Endpoint `expiry-run` ✅ · script GCP → S6 |
-| Tests Go pharmacie | ✅ | Unit bands + FEFO store + intégration stock/search · Playwright P0 ⬜ |
-| Staging `PHARMACY_ENABLED` | ⬜ | Local only (`.env.example` / `api-dev`) |
+| Tests Go pharmacie | ✅ | Unit bands + FEFO + intégration stock/DAF/trace |
+| Playwright P0 pharmacie | ✅ | `17-pharmacy-stock-daf.spec.ts` (@p0 @pharmacy) — quality CI ; hors post-deploy Cloud Run |
+| Staging `PHARMACY_ENABLED` | ⬜ | Local / CI quality ; pilote Cloud Run → S6 |
 | **Collision migration `000082`** | ⚠️ | Coexistent `000082_invoicing_billit` **et** `000082_pharmacy_ref_drop_unused_fts` — stock = **`000083+`** |
 
 **Progression par sprint (effort estimé Phase 1)**
@@ -72,7 +73,7 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | Plan stock + péremption + légal | ce document |
 | Entrée index docs | [README.md](README.md) §27–28 |
 | Mention module | [04-MODULES-METIER.md](04-MODULES-METIER.md) (« spec — non livré ») |
-| Mention schéma | [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md) (`pharmacy` = Spec) |
+| Mention schéma | [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md) (`pharmacy` = livré sous flag) |
 | Décisions §11 figées | Seuils **90/60/30**, auto-quarantaine, waste manuel, FEFO strict, digest lundi, tag menu **dev** |
 | Canvas plan | `plan-stock-peremption.canvas.tsx` |
 
@@ -306,7 +307,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | `setup-pharmacy-expiry-scheduler.sh` | ⬜ |
 | Secrets SM + env Cloud Run | ⬜ |
 | Smoke staging pilote | ⬜ |
-| Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ⬜ |
+| Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ✅ C7.1–C7.3 + e2e `17-pharmacy-stock-daf` (@p0 @pharmacy) |
 | Use case commercial + `make usecases-sync` si démo | ⬜ |
 | Option : retirer tag `dev` (ou flag) à la GA | ⬜ |
 
@@ -321,9 +322,9 @@ Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
 | Zone | Routes clés | Statut |
 |------|-------------|--------|
 | Médicaments | `GET /medications/search` | ✅ |
-| Dépôts / lots / mouvements | CRUD + adjust / quarantine / waste | ✅ |
+| Dépôts / lots / mouvements | CRUD + adjust / quarantine / waste ; `GET /movements?dafId=` | ✅ |
 | Expiry | `GET /expiry/summary` · `PATCH /settings` | ✅ |
-| DAF | draft / finalize / cancel / PDF | ✅ |
+| DAF | draft / finalize / cancel / PDF ; sorties liées `daf_id`+`daf_item_id` | ✅ |
 | Interne | `POST /internal/pharmacy/expiry-run` | ✅ |
 
 Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_expired` · `batch_quarantined` · `invalid_expiry_on_receipt`.

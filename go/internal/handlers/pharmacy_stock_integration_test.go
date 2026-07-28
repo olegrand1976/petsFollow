@@ -60,6 +60,16 @@ func TestPharmacyStockReceiptAndWaste(t *testing.T) {
 		t.Fatalf("expired receipt want 400 got %d %#v", code, env)
 	}
 
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
+		"medicationId": medID,
+		"lotNumber":    "   ",
+		"expiresOn":    exp,
+		"qty":          1,
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("blank lot want 400 got %d %#v", code, env)
+	}
+
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/expiry/summary", tok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("summary %d %#v", code, env)

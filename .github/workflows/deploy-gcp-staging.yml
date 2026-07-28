@@ -95,6 +95,6 @@ jobs:
           if ! curl -fsS --max-time 10 "${FE_URL}/" >/dev/null 2>&1; then
             FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
           fi
-          # Suite complète web Pro (auth → commercial → team). Specs flaky : tag @flaky hors gate.
+          # Suite web Pro hors @flaky. @pharmacy exclu tant que PHARMACY_ENABLED+seed CNK absents sur Cloud Run (S6).
           echo "PLAYWRIGHT_BASE_URL=${FE_URL} PETSFOLLOW_API_URL=${PETSFOLLOW_API_URL}"
-          PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert @flaky
+          PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert '@flaky|@pharmacy'

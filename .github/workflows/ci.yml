@@ -21,6 +21,7 @@ env:
   PETSFOLLOW_PUBLIC_SITE_URL: http://localhost:3002
   # Preview Nuxt = HTTP : cookies auth non-Secure (évite flakes Playwright).
   AUTH_COOKIE_SECURE: "0"
+  PHARMACY_ENABLED: "true"
 
 jobs:
   backend:

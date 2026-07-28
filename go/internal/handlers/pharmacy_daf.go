@@ -103,6 +103,7 @@ func (a *API) createPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ClientUserID string               `json:"clientUserId"`
 		PetID        string               `json:"petId"`
+		VisitID      string               `json:"visitId"`
 		Notes        string               `json:"notes"`
 		Items        []store.DAFItemInput `json:"items"`
 	}
@@ -110,7 +111,7 @@ func (a *API) createPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
 		return
 	}
-	doc, err := a.store.CreateDAFDraft(r.Context(), id.PracticeID, id.UserID, body.ClientUserID, body.PetID, body.Notes, decodeDAFItems(body.Items))
+	doc, err := a.store.CreateDAFDraft(r.Context(), id.PracticeID, id.UserID, body.ClientUserID, body.PetID, body.VisitID, body.Notes, decodeDAFItems(body.Items))
 	if err != nil {
 		if a.writeDAFErr(w, r, err) {
 			return
@@ -177,6 +178,7 @@ func (a *API) patchPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ClientUserID string               `json:"clientUserId"`
 		PetID        string               `json:"petId"`
+		VisitID      string               `json:"visitId"`
 		Notes        string               `json:"notes"`
 		Items        []store.DAFItemInput `json:"items"`
 	}
@@ -184,7 +186,7 @@ func (a *API) patchPharmacyDAF(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
 		return
 	}
-	doc, err := a.store.ReplaceDAFDraftItems(r.Context(), id.PracticeID, chi.URLParam(r, "id"), body.ClientUserID, body.PetID, body.Notes, decodeDAFItems(body.Items))
+	doc, err := a.store.ReplaceDAFDraftItems(r.Context(), id.PracticeID, chi.URLParam(r, "id"), body.ClientUserID, body.PetID, body.VisitID, body.Notes, decodeDAFItems(body.Items))
 	if err != nil {
 		if a.writeDAFErr(w, r, err) {
 			return
