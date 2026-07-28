@@ -71,8 +71,10 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
 
     const lock = page.getByTestId('pro-desk-lock')
     await expect(lock).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('')
 
     await page.getByTestId('pro-desk-lock-user-secretary.demo@petsfollow.test').click()
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('')
     await unlockWithPassword(page)
   })
 
@@ -89,6 +91,7 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
 
     const lock = page.getByTestId('pro-desk-lock')
     await expect(lock).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('')
     await expect(page.getByTestId('pro-desk-lock-email')).toContainText('secretary.demo@petsfollow.test')
 
     await unlockWithPassword(page)
@@ -115,6 +118,10 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     const lock = page.getByTestId('pro-desk-lock')
     await expect(lock).toBeVisible({ timeout: 10000 })
 
+    // Saisie partielle puis Annuler → veille : zone MDP toujours vidée.
+    await fillField(page, 'pro-desk-lock-password', 'partial-secret')
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('partial-secret')
+
     // JWT httpOnly purged via BFF logout — pf_session marker must be gone.
     await expect.poll(async () => {
       return page.evaluate(() => document.cookie.split(';').some((c) => c.trim().startsWith('pf_session=')))
@@ -130,6 +137,54 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     // Cancel after purge ≠ restore précédent : on reste en veille.
     await expect(lock).toBeVisible()
     await expect(page.getByTestId('pro-desk-lock-login')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('')
     await expect(page.getByTestId('pro-topbar')).toHaveCount(0)
+  })
+
+  test('D: cancel switch immediately — no silent restore (race purge)', async ({ page }) => {
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    await page.goto('/dashboard', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('pro-desk-switcher')).toBeVisible({ timeout: 15000 })
+    await dismissProModals(page)
+
+    await page.getByTestId('pro-desk-user-secretary.demo@petsfollow.test').click()
+    const lock = page.getByTestId('pro-desk-lock')
+    await expect(lock).toBeVisible({ timeout: 10000 })
+
+    // Annuler immédiatement (purge logout peut encore tourner) → veille, pas restore.
+    await page.getByTestId('pro-desk-lock-cancel').click()
+    await expect(lock).toBeVisible()
+    await expect(page.getByTestId('pro-desk-lock-login')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('pro-desk-lock-password')).toHaveValue('')
+    await expect(page.getByTestId('pro-topbar')).toHaveCount(0)
+  })
+
+  test('E: solo roster — idle does not lock + switcher hidden', async ({ page }) => {
+    const { status } = await login(page, 'vet.demo@petsfollow.test', STAFF_PASSWORD)
+    expect(status).toBe(200)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 20000 })
+
+    await page.goto('/dashboard', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('pro-desk-switcher')).toBeVisible({ timeout: 15000 })
+    await dismissProModals(page)
+
+    await page.evaluate(() => {
+      const w = window as Window & {
+        __PF_DESK_IDLE_MS?: number
+        __PF_DESK_SET_ROSTER?: (m: Array<{ email: string; fullName: string; teamRole: string }>) => void
+      }
+      w.__PF_DESK_IDLE_MS = 400
+      w.__PF_DESK_SET_ROSTER?.([
+        { email: 'vet.demo@petsfollow.test', fullName: 'Vet Solo', teamRole: 'vet' },
+      ])
+    })
+
+    await expect(page.getByTestId('pro-desk-switcher')).toHaveCount(0)
+    await page.waitForTimeout(900)
+    await expect(page.getByTestId('pro-desk-lock')).toHaveCount(0)
+    await expect(page.getByTestId('pro-topbar')).toBeVisible()
   })
 })

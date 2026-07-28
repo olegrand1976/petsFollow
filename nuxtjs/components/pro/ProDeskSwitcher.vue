@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="members.length"
+    v-if="members.length > 1"
     class="pro-desk-switcher"
     role="group"
     :aria-label="$t('desk.ariaSwitcher')"

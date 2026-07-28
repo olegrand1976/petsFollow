@@ -478,7 +478,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L4 | P1 | Révoquer | Statut revoked |
 | L5 | P2 | Non-référence | Invite refusé |
 | L6 | P0 | Labels ACL lisibles | Droits i18n + tooltips (pas de clés brutes `clients.read`) |
-| L7 | P0 | Switch poste + veille | Header avatars équipe ; idle / force lock → overlay MDP ; restore lastPath |
+| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle/force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
 
 ## M — Concurrence commerciale
 

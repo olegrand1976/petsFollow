@@ -100,6 +100,8 @@ export function useDeskSession() {
   /** True when overlay covers the app (lock or switch) — stop polling / hide PHI. */
   const uiBlocked = computed(() => locked.value || promptMode.value === 'switch' || promptMode.value === 'lock')
   const enabled = computed(() => isPracticeStaffRole(user.value?.role) || locked.value)
+  /** Poste partagé : veille idle + switcher seulement si l’équipe a ≥ 2 comptes. */
+  const sharedDesk = computed(() => roster.value.length > 1)
 
   function loadRosterFromCache(practiceId?: string) {
     const cache = readJson<RosterCache | null>(ROSTER_KEY, null)
@@ -115,6 +117,7 @@ export function useDeskSession() {
       members,
       updatedAt: Date.now(),
     } satisfies RosterCache)
+    syncIdleWatch()
   }
 
   function lastPaths(): Record<string, string> {
@@ -157,6 +160,7 @@ export function useDeskSession() {
       persistRoster(user.value.practiceId, members)
     } catch {
       loadRosterFromCache(user.value.practiceId)
+      syncIdleWatch()
     }
   }
 
@@ -169,6 +173,11 @@ export function useDeskSession() {
 
   function bumpIdle() {
     if (!import.meta.client || locked.value || promptMode.value || !isPracticeStaffRole(user.value?.role)) return
+    // Solo cabinet : pas de veille applicative (poste non partagé).
+    if (!sharedDesk.value) {
+      clearIdleTimer()
+      return
+    }
     clearIdleTimer()
     idleTimer = setTimeout(() => {
       void lock()
@@ -180,7 +189,11 @@ export function useDeskSession() {
   }
 
   function startIdleWatch() {
-    if (!import.meta.client || idleStarted) {
+    if (!import.meta.client || !sharedDesk.value) {
+      clearIdleTimer()
+      return
+    }
+    if (idleStarted) {
       bumpIdle()
       return
     }
@@ -201,6 +214,19 @@ export function useDeskSession() {
       window.removeEventListener(ev, onActivity)
     }
     clearIdleTimer()
+  }
+
+  /** Démarre ou coupe le timer selon roster (≥2) + rôle + pas déjà en veille. */
+  function syncIdleWatch() {
+    if (!import.meta.client || locked.value || promptMode.value) {
+      clearIdleTimer()
+      return
+    }
+    if (!isPracticeStaffRole(user.value?.role) || !sharedDesk.value) {
+      stopIdleWatch()
+      return
+    }
+    startIdleWatch()
   }
 
   async function lock() {
@@ -224,27 +250,24 @@ export function useDeskSession() {
   /** Switch = suspend session (comme veille) : autre onglet ne doit plus voir le JWT précédent. */
   async function openSwitch(email: string) {
     if (!email || email.toLowerCase() === user.value?.email?.toLowerCase()) return
+    if (!sharedDesk.value) return
     rememberCurrentPath()
     clearIdleTimer()
     const practiceId = user.value?.practiceId
     pendingEmail.value = email
-    promptMode.value = 'switch'
-    loadRosterFromCache(practiceId)
-    // Purge JWT avant d’afficher le lock — sinon pf_session part trop tôt vs httpOnly.
-    await clearAuthTokens()
+    // locked AVANT purge — Annuler ne doit jamais restaurer sans re-auth (race logout).
     locked.value = true
     setDeskLockedFlag(true)
+    promptMode.value = 'switch'
+    loadRosterFromCache(practiceId)
+    await clearAuthTokens()
   }
 
   function cancelPrompt() {
-    // Après openSwitch la session est déjà purgée → bascule en veille (re-auth obligatoire).
-    if (locked.value) {
-      promptMode.value = 'lock'
-      return
-    }
-    promptMode.value = null
-    pendingEmail.value = ''
-    bumpIdle()
+    // Annuler switch ≠ restore : veille + re-auth obligatoire (même si purge encore en cours).
+    locked.value = true
+    setDeskLockedFlag(true)
+    promptMode.value = 'lock'
   }
 
   /** Exit veille without unlocking a profile — full login page. */
@@ -333,7 +356,7 @@ export function useDeskSession() {
     }
     loadRosterFromCache(user.value.practiceId)
     await refreshRoster()
-    startIdleWatch()
+    syncIdleWatch()
     rememberCurrentPath()
   }
 
@@ -341,9 +364,19 @@ export function useDeskSession() {
     void lock()
   }
 
+  /** E2E : forcer un roster (ex. solo) et resync le timer idle. */
+  function setRosterForTests(members: DeskMember[]) {
+    roster.value = Array.isArray(members) ? members : []
+    syncIdleWatch()
+  }
+
   if (import.meta.client) {
-    const w = window as Window & { __PF_DESK_FORCE_LOCK?: () => void }
+    const w = window as Window & {
+      __PF_DESK_FORCE_LOCK?: () => void
+      __PF_DESK_SET_ROSTER?: (members: DeskMember[]) => void
+    }
     w.__PF_DESK_FORCE_LOCK = forceLockForTests
+    w.__PF_DESK_SET_ROSTER = setRosterForTests
   }
 
   return {
@@ -353,6 +386,7 @@ export function useDeskSession() {
     pendingEmail,
     uiBlocked,
     enabled,
+    sharedDesk,
     refreshRoster,
     rememberCurrentPath,
     openSwitch,
@@ -366,6 +400,8 @@ export function useDeskSession() {
     startIdleWatch,
     stopIdleWatch,
     bumpIdle,
+    syncIdleWatch,
     forceLockForTests,
+    setRosterForTests,
   }
 }

@@ -26,20 +26,26 @@
             class="pro-desk-lock__member"
             :class="{ 'pro-desk-lock__member--selected': selectedEmail === m.email }"
             :data-testid="`pro-desk-lock-user-${m.email}`"
-            @click="selectedEmail = m.email"
+            @click="selectMember(m.email)"
           >
             <ProAvatar :name="m.fullName" size="sm" />
             <span class="pro-desk-lock__member-name">{{ m.fullName }}</span>
           </button>
         </div>
 
-        <form v-if="step === 'credentials'" class="pro-desk-lock__form" data-testid="pro-desk-lock-form" @submit.prevent="submitPassword">
+        <form
+          v-if="step === 'credentials'"
+          :key="credentialsKey"
+          class="pro-desk-lock__form"
+          data-testid="pro-desk-lock-form"
+          @submit.prevent="submitPassword"
+        >
           <p class="pro-desk-lock__email" data-testid="pro-desk-lock-email">{{ selectedEmail }}</p>
           <ProInput
             v-model="password"
             type="password"
             :label="$t('desk.password')"
-            autocomplete="current-password"
+            autocomplete="new-password"
             required
             revealable
             test-id="pro-desk-lock-password"
@@ -108,30 +114,41 @@ const step = ref<'credentials' | '2fa'>('credentials')
 const loading = ref(false)
 const error = ref('')
 const selectedEmail = ref('')
+/** Remount credentials form on every veille/switch entry (clear DOM + defeat autofill). */
+const credentialsKey = ref(0)
 
 const promptMode = computed(() => desk.promptMode.value)
 const roster = computed(() => desk.roster.value)
 const visible = computed(() => promptMode.value === 'lock' || promptMode.value === 'switch')
 
+function resetCredentials(bumpKey: boolean) {
+  password.value = ''
+  totpCode.value = ''
+  mfaToken.value = ''
+  step.value = 'credentials'
+  error.value = ''
+  if (bumpKey) credentialsKey.value += 1
+}
+
 watch(
   () => [promptMode.value, desk.pendingEmail.value] as const,
   ([mode, email]) => {
     if (!mode) {
-      password.value = ''
-      totpCode.value = ''
-      mfaToken.value = ''
-      step.value = 'credentials'
-      error.value = ''
+      resetCredentials(false)
       return
     }
     selectedEmail.value = email || roster.value[0]?.email || ''
-    password.value = ''
-    totpCode.value = ''
-    step.value = 'credentials'
-    error.value = ''
+    // Toujours reset MDP à l’entrée veille / switch (y compris switch → cancel → veille).
+    resetCredentials(true)
   },
   { immediate: true },
 )
+
+function selectMember(email: string) {
+  if (selectedEmail.value === email) return
+  selectedEmail.value = email
+  resetCredentials(true)
+}
 
 function onCancel() {
   desk.cancelPrompt()
