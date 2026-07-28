@@ -314,11 +314,10 @@ const docForm = reactive({
 
 const queryClientId = computed(() => String(route.query.clientUserId || ''))
 const queryDafId = computed(() => String(route.query.dafId || ''))
-const queryVisitId = computed(() => String(route.query.visitId || ''))
 const queryMode = computed(() => String(route.query.mode || ''))
 
 function applyLineDescDefaultIfEmpty() {
-  if (queryClientId.value || queryDafId.value || queryVisitId.value) return
+  if (queryClientId.value || queryDafId.value) return
   if (!docForm.lineDesc) docForm.lineDesc = 'Consultation'
 }
 
@@ -453,7 +452,6 @@ async function createDocument() {
       body: {
         type: docForm.type,
         relatedDocumentId: docForm.type === 'credit_note' ? docForm.relatedDocumentId : undefined,
-        visitId: queryVisitId.value || undefined,
         counterparty: {
           name: docForm.name,
           country: docForm.country,
@@ -513,11 +511,10 @@ onMounted(async () => {
 })
 
 async function applyConsultationPrefill() {
-  if (!queryClientId.value && !queryDafId.value && !queryVisitId.value) return
+  if (!queryClientId.value && !queryDafId.value) return
   const hints: string[] = []
   if (queryMode.value === 'fromDaf') hints.push(t('invoicing.prefillFromDaf'))
   else if (queryMode.value === 'direct') hints.push(t('invoicing.prefillDirect'))
-  if (queryVisitId.value) hints.push(t('invoicing.prefillVisit'))
 
   if (queryClientId.value) {
     try {
