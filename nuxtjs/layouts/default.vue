@@ -71,6 +71,7 @@ const navItems = computed<ProNavItem[]>(() => {
   const patients = t('nav.section.patients')
   const clinic = t('nav.section.clinic')
   const finance = t('nav.section.finance')
+  const offer = t('nav.section.offer')
   const practice = t('nav.section.practice')
   const tagDev = t('nav.tagDev')
 
@@ -109,11 +110,12 @@ const navItems = computed<ProNavItem[]>(() => {
     items.push({ to: '/commissions', label: t('nav.commissions'), icon: 'payments', section: finance })
   }
 
-  items.push({ to: '/produits', label: t('nav.products'), icon: 'description', section: practice })
-  items.push({ to: '/team', label: t('nav.team'), icon: 'groups', section: practice })
+  items.push({ to: '/produits', label: t('nav.products'), icon: 'description', section: offer })
   if (canPractice('clients.write')) {
-    items.push({ to: '/recommend', label: t('nav.recommend'), icon: 'recommend', section: practice })
+    items.push({ to: '/recommend', label: t('nav.recommend'), icon: 'recommend', section: offer })
   }
+
+  items.push({ to: '/team', label: t('nav.team'), icon: 'groups', section: practice })
   items.push({ to: '/settings', label: t('nav.settings'), icon: 'settings', section: practice })
 
   return items
