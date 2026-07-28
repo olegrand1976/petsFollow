@@ -280,6 +280,8 @@ async function hydrateResumeSchedule(id: string, petHint: string) {
   }
 }
 
+// immediate: host monte le modal avec v-if="clientId" déjà open=true —
+// sans ça, loadPets ne part jamais au premier open walk-in.
 watch(
   () => [props.open, props.clientId, props.resumeVisitId] as const,
   ([isOpen]) => {
@@ -296,6 +298,7 @@ watch(
     }
     void loadPets()
   },
+  { immediate: true },
 )
 
 /** Prefer pet from openForClient without tearing down an in-progress visit. */

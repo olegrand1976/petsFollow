@@ -226,14 +226,20 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
     await search.fill('Sophie')
     await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })
     const cta = page.locator('[data-testid^="new-consultation-"]').first()
+    const petsRes = page.waitForResponse(
+      (r) => /\/api\/clients\/[^/]+\/pets\b/.test(r.url()) && r.request().method() === 'GET',
+      { timeout: 15000 },
+    )
     await cta.click()
     await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+    expect((await petsRes).status()).toBe(200)
     const petSelect = page.getByTestId('consultation-pet-select')
-    await expect(petSelect).toBeEnabled({ timeout: 10000 })
+    await expect(petSelect).toBeEnabled({ timeout: 15000 })
     const options = petSelect.locator('option:not([disabled])')
-    await options.first().waitFor({ state: 'attached', timeout: 10000 })
+    await options.first().waitFor({ state: 'attached', timeout: 15000 })
     const value = await options.first().getAttribute('value')
-    if (value) await petSelect.selectOption(value)
+    expect(value).toBeTruthy()
+    await petSelect.selectOption(value!)
     await page.getByTestId('consultation-start').click()
     await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
     await page.getByTestId('visit-report-body').fill(`Desk resume CR ${Date.now()}`)

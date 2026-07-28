@@ -43,6 +43,10 @@ async function openConsultationSetup(page: Page) {
 
   const cta = page.locator('[data-testid^="new-consultation-"]').first()
   await expect(cta).toBeVisible({ timeout: 10000 })
+  const petsRes = page.waitForResponse(
+    (r) => /\/api\/clients\/[^/]+\/pets\b/.test(r.url()) && r.request().method() === 'GET',
+    { timeout: 15000 },
+  )
   try {
     await cta.click({ timeout: 5000 })
   }
@@ -55,17 +59,16 @@ async function openConsultationSetup(page: Page) {
   await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
   await expect(page.getByTestId('consultation-setup')).toBeVisible()
 
+  const petsOk = await petsRes
+  expect(petsOk.status()).toBe(200)
   const petSelect = page.getByTestId('consultation-pet-select')
-  await expect(petSelect).toBeEnabled({ timeout: 10000 })
+  await expect(petSelect).toBeEnabled({ timeout: 15000 })
   const options = petSelect.locator('option:not([disabled])')
-  // Les options arrivent après le fetch des animaux : attendre le rendu.
-  await options.first().waitFor({ state: 'attached', timeout: 10000 }).catch(() => undefined)
-  const n = await options.count()
-  if (n >= 1) {
-    const value = await options.first().getAttribute('value')
-    if (value) await petSelect.selectOption(value)
-  }
-  await expect(page.getByTestId('consultation-start')).toBeEnabled()
+  await options.first().waitFor({ state: 'attached', timeout: 15000 })
+  const value = await options.first().getAttribute('value')
+  expect(value).toBeTruthy()
+  await petSelect.selectOption(value!)
+  await expect(page.getByTestId('consultation-start')).toBeEnabled({ timeout: 10000 })
 }
 
 async function startConsultationVisit(page: Page): Promise<{ id: string }> {
