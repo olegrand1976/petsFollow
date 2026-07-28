@@ -792,13 +792,22 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Practice staff: CanAccessPet grants any level for same-practice members; clinical
+	// bodies (visit notes + CR excerpts) stay behind pets.write_clinical.
+	if canNotes && kernel.IsPracticeStaff(id.Role) && !a.allowPracticePerm(r, id, "pets.write_clinical") {
+		canNotes = false
+	}
 	canFull, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermFull)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// Messages: full (or owner/practice vet — CanAccessPet grants any level) only; write_notes alone is not enough.
+	// Messages: care_pro needs pet ACL full; practice staff uses team capability "messaging"
+	// (CanAccessPet grants any level for same-practice members).
 	includeMessages := canFull
+	if kernel.IsPracticeStaff(id.Role) {
+		includeMessages = a.allowPracticePerm(r, id, "messaging")
+	}
 	redactVisitNotes := !canNotes
 	items, err := a.store.PetTimelineFiltered(r.Context(), petID, vetView, includeMessages, redactVisitNotes)
 	if err != nil {

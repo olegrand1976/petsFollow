@@ -61,3 +61,6 @@ code {
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
 }
+
+.pro-mb-md { margin-bottom: 1rem; }
+.pro-mb-lg { margin-bottom: 1.25rem; }

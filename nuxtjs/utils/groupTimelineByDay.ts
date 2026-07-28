@@ -4,6 +4,7 @@ export type TimelineDayItem = {
   title?: string
   body?: string
   createdAt: string | Date
+  meta?: Record<string, unknown>
 }
 
 export type TimelineDayGroup<T extends TimelineDayItem = TimelineDayItem> = {

@@ -839,13 +839,11 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 	return out, rows.Err()
 }
 
-func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]TimelineItem, error) {
-	return s.PetTimelineFiltered(ctx, petID, vetView, true, false)
-}
-
 // PetTimelineFiltered builds the pet timeline.
 // includeMessages: messaging bodies for this pet's thread.
-// redactVisitNotes: replace visit notes with empty body (ACL read-only).
+// redactVisitNotes: empty visit notes / CR excerpts (no write_notes / no pets.write_clinical for staff).
+// Visit report meta (hasReport) is included for staff/care_pro (vetView) when a non-empty CR exists;
+// CR body excerpts only when !redactVisitNotes — never for client timeline or public dossier share.
 func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, includeMessages, redactVisitNotes bool) ([]TimelineItem, error) {
 	hrFilter := ""
 	if vetView {
@@ -853,9 +851,54 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 	} else {
 		hrFilter = " AND status IN ('pending_validation','validated')"
 	}
-	visitBody := "COALESCE(notes,'')"
-	if redactVisitNotes {
-		visitBody = "''"
+
+	var visitBranch string
+	if vetView {
+		// Prefer non-empty CR excerpt over visit notes; redact body when ACL forbids clinical text.
+		visitBody := "''"
+		if !redactVisitNotes {
+			visitBody = `
+			CASE
+				WHEN r.id IS NOT NULL THEN left(r.body_text, 280)
+				WHEN btrim(COALESCE(v.notes, '')) <> '' THEN COALESCE(v.notes, '')
+				ELSE ''
+			END`
+		}
+		visitBranch = `
+		SELECT v.id::text, 'visit', 'Visite', ` + visitBody + `,
+			COALESCE(v.scheduled_at, v.created_at),
+			jsonb_build_object(
+				'status', v.status,
+				'source', v.source,
+				'visitId', v.id::text,
+				'hasReport', (r.id IS NOT NULL),
+				'reportStatus', COALESCE(r.status, '')
+			)
+		FROM visits.visits v
+		LEFT JOIN LATERAL (
+			SELECT id, status, body_text
+			FROM visits.visit_reports
+			WHERE visit_id = v.id
+				AND btrim(COALESCE(body_text, '')) <> ''
+			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
+			LIMIT 1
+		) r ON true
+		WHERE v.pet_id=$1 AND v.status='done'`
+	} else {
+		visitBody := "COALESCE(notes,'')"
+		if redactVisitNotes {
+			visitBody = "''"
+		}
+		visitBranch = `
+		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
+			jsonb_build_object(
+				'status', status,
+				'source', source,
+				'visitId', id::text,
+				'hasReport', false,
+				'reportStatus', ''
+			)
+		FROM visits.visits WHERE pet_id=$1 AND status='done'`
 	}
 	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque',
@@ -883,10 +926,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		UNION ALL
 		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
 		FROM care.reminders WHERE pet_id=$1 AND status='done'
-		UNION ALL
-		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
-			jsonb_build_object('status', status, 'source', source)
-		FROM visits.visits WHERE pet_id=$1 AND status='done'`
+		UNION ALL` + visitBranch
 	if includeMessages {
 		q += `
 		UNION ALL
