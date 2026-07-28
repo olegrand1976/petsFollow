@@ -90,6 +90,7 @@ async function startConsultationVisit(page: Page): Promise<{ id: string }> {
 async function saveConsultationReport(page: Page) {
   await expect(page.getByTestId('visit-report-panel')).toBeVisible()
   const reportBody = page.getByTestId('visit-report-body')
+  await expect(reportBody).toBeEnabled({ timeout: 20000 })
   await reportBody.click()
   await reportBody.fill(`E2E consultation CR ${Date.now()}`)
   await page.getByTestId('visit-report-save').click()
@@ -171,6 +172,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     try {
       await expect(page.getByTestId('visit-report-panel')).toBeVisible()
       const reportBody = page.getByTestId('visit-report-body')
+      await expect(reportBody).toBeEnabled({ timeout: 20000 })
       await reportBody.click()
       await reportBody.fill(`E2E busy gate ${Date.now()}`)
       await page.getByTestId('visit-report-save').click()
