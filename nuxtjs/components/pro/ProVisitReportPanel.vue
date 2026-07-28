@@ -172,6 +172,7 @@
 
 <script setup lang="ts">
 import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
+import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 export type VisitReportAuthor = {
   id?: string
@@ -400,14 +401,18 @@ async function saveVisitReport(): Promise<boolean> {
 }
 
 /**
- * Leave-guard save: if still recording, discard audio (keep local body).
+ * Leave-guard save: finalize in-progress dictation (transcribe) then require body.
  * If Stop→transcribe is already running, wait for it before PUT.
  */
 async function forceSave(): Promise<boolean> {
-  if (dictating.value && !stopDictationInFlight) {
-    await discardDictation()
-  } else if (stopDictationInFlight) {
-    await stopDictationInFlight
+  if (dictating.value || stopDictationInFlight) {
+    try {
+      await stopDictation()
+    }
+    catch {
+      await discardDictation()
+      return false
+    }
   }
   await waitUntilReportIdle()
   if (!reportBody.value.trim()) return false
