@@ -1617,7 +1617,7 @@
     "sheetTitle": "Understand my earnings",
     "detailsSummary": "Rate grid and bonuses",
     "kpiRateBase": "Base rate (tier)",
-    "kpiRateHeart": "Current rate",
+    "kpiRateHeart": "Minimum rate",
     "lineStatus": {
       "accruing": "Accruing",
       "missing_info": "Missing info",
@@ -1761,7 +1761,7 @@
     "productsCta": "Create my account",
     "solutions": {
       "proComplete": {
-        "price": "€69 excl. VAT / month",
+        "price": "€834.71 excl. VAT / year",
         "title": "Pro",
         "text": "Web SaaS platform + client mobile app. Digital passport, messaging, records and loyalty.",
         "features": [
@@ -1823,8 +1823,8 @@
     "pro": {
       "name": "PetsFollow Web platform (practice)",
       "badge": "Pro offer",
-      "price": "€69 excl. VAT / month",
-      "setup": "Setup & training: €320 excl. VAT (one-shot)",
+      "price": "€834.71 excl. VAT / year",
+      "setup": "≈ €69.56 excl. VAT / month · setup & training: €320 excl. VAT (one-shot)",
       "tagline": "The practice cockpit: digital passport, messaging, reminders, sharing and activation tracking.",
       "features": [
         "Digital passport + shared timeline (practice / client / care pro)",
@@ -1863,29 +1863,24 @@
       "Each activation with the practice code / QR earns a commission (excl. VAT base).",
       "Commissions are deducted or offset on the SaaS invoice."
     ],
-    "partnerTip": "≈ 7 triennial activations / month ≈ covers the Pro monthly (€69 excl. VAT).",
+    "partnerTip": "≈ 8 triennial activations / month ≈ covers the Pro monthly equivalent (≈ €69.56 excl. VAT).",
     "saasTitle": "Pro SaaS commitments (excl. VAT)",
-    "saasLead": "Quotes and invoices handled by the sales team — no practice Stripe checkout.",
+    "saasLead": "Quotes and invoices handled by the sales team — no practice Stripe checkout. Steer: 3-year commitment.",
     "saas": {
       "setup": {
         "name": "Setup & training",
         "price": "€320 excl. VAT",
         "description": "Account, config, training, go-live (one-shot)."
       },
-      "monthly": {
-        "name": "Monthly",
-        "price": "€69 excl. VAT / month",
-        "description": "12-month commitment."
-      },
       "annual": {
         "name": "Annual",
-        "price": "€828 excl. VAT / year",
-        "description": "12 × €69."
+        "price": "€834.71 excl. VAT / year",
+        "description": "≈ €69.56 excl. VAT / month."
       },
       "longTerm": {
-        "name": "3 years",
-        "price": "€745.20 excl. VAT / year",
-        "description": "−10% vs annual (≈ €62.10 excl. VAT / month)."
+        "name": "Triennial",
+        "price": "€2,253.72 excl. VAT / 3 years",
+        "description": "−10% vs 3× annual — save €250.41 (≈ €62.60 excl. VAT / month)."
       }
     },
     "saasMigration": "Data migration: on quote (from €350 excl. VAT).",

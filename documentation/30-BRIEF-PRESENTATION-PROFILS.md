@@ -38,7 +38,7 @@ Trois faces complémentaires :
 
 | Solution | Qui | Surface | Tarif |
 |----------|-----|---------|-------|
-| **VetPro** | Cabinet / vétérinaire | **App Web** SaaS (Nuxt Pro) | **69 € HT/mois** + setup **320 € HT** (facture hors ligne) |
+| **VetPro** | Cabinet / vétérinaire | **App Web** SaaS (Nuxt Pro) | **834,71 € HTVA/an** (ou **2 253,72 € / 3 ans**) + setup **320 € HTVA** (facture hors ligne) |
 | **VetLight** | Véto terrain (et pros santé associés) | **App mobile** Flutter **Pro Light** | **Gratuit** |
 | **Client** | Propriétaire d’animal | **App mobile** Flutter **pets** | **3,50 € / mois** · **35 € / an** · **95 € / 3 ans** (TTC, Stripe) |
 
@@ -120,7 +120,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 
 ### Tarif VetPro
 
-- **69 € HT / mois**
+- **834,71 € HTVA / an** (ou **2 253,72 € HTVA / 3 ans**, −10 %)
 - Setup **320 € HT**
 - Facturation **externe** (pas Stripe cabinet)
 - Objectif commercial terrain : **activer des pets payants** (commission à chaque activation ; SPIFF mix triennial)
@@ -265,7 +265,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 ### Au vétérinaire (VetPro + VetLight)
 
-> « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. VetPro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. »
+> « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. VetPro à 834,71 € HTVA/an (facture hors ligne ; −10 % en triennal), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. »
 
 ### Au propriétaire (via le véto)
 

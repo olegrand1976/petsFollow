@@ -1617,7 +1617,7 @@
     "sheetTitle": "Mijn vergoeding begrijpen",
     "detailsSummary": "Tariefraster en bonussen",
     "kpiRateBase": "Basistarief (schaal)",
-    "kpiRateHeart": "Huidig tarief",
+    "kpiRateHeart": "Minimumtarief",
     "lineStatus": {
       "accruing": "Lopend",
       "missing_info": "Info ontbreekt",
@@ -1761,7 +1761,7 @@
     "productsCta": "Mijn account aanmaken",
     "solutions": {
       "proComplete": {
-        "price": "€69 excl. btw / maand",
+        "price": "€834,71 excl. btw / jaar",
         "title": "Pro",
         "text": "Web SaaS-platform + mobiele app voor cliënten. Digitaal paspoort, berichten, dossiers en loyaliteit.",
         "features": [
@@ -1823,8 +1823,8 @@
     "pro": {
       "name": "PetsFollow Webplatform (praktijk)",
       "badge": "Pro-aanbod",
-      "price": "€69 excl. btw / maand",
-      "setup": "Opzet & opleiding: €320 excl. btw (one-shot)",
+      "price": "€834,71 excl. btw / jaar",
+      "setup": "≈ €69,56 excl. btw / maand · opzet & opleiding: €320 excl. btw (one-shot)",
       "tagline": "Het cockpit van de praktijk: digitaal paspoort, berichten, herinneringen, delen en activatie-opvolging.",
       "features": [
         "Digitaal paspoort + gedeelde timeline (praktijk / cliënt / care pro)",
@@ -1863,29 +1863,24 @@
       "Elke activatie met praktijcode / QR levert een commissie op (grondslag excl. btw).",
       "Commissies worden afgetrokken of verrekend op de SaaS-factuur."
     ],
-    "partnerTip": "≈ 7 driejaarlijkse activaties / maand ≈ dekt het maandelijkse Pro (€69 excl. btw).",
+    "partnerTip": "≈ 8 driejaarlijkse activaties / maand ≈ dekt het Pro-maandequivalent (≈ €69,56 excl. btw).",
     "saasTitle": "Pro SaaS-verbintenissen (excl. btw)",
-    "saasLead": "Offertes en facturen via het salesteam — geen Stripe-checkout voor de praktijk.",
+    "saasLead": "Offertes en facturen via het salesteam — geen Stripe-checkout voor de praktijk. Steer: verbintenis 3 jaar.",
     "saas": {
       "setup": {
         "name": "Opzet & opleiding",
         "price": "€320 excl. btw",
         "description": "Account, config, opleiding, go-live (one-shot)."
       },
-      "monthly": {
-        "name": "Maandelijks",
-        "price": "€69 excl. btw / maand",
-        "description": "Verbintenis 12 maanden."
-      },
       "annual": {
         "name": "Jaarlijks",
-        "price": "€828 excl. btw / jaar",
-        "description": "12 × €69."
+        "price": "€834,71 excl. btw / jaar",
+        "description": "≈ €69,56 excl. btw / maand."
       },
       "longTerm": {
-        "name": "3 jaar",
-        "price": "€745,20 excl. btw / jaar",
-        "description": "−10 % vs jaarlijks (≈ €62,10 excl. btw / maand)."
+        "name": "Driejaarlijks",
+        "price": "€2.253,72 excl. btw / 3 jaar",
+        "description": "−10 % vs 3× jaarlijks — besparing €250,41 (≈ €62,60 excl. btw / maand)."
       }
     },
     "saasMigration": "Datamigratie: op offerte (vanaf €350 excl. btw).",

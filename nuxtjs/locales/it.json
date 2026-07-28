@@ -2210,7 +2210,7 @@
     "kpiClients": "Clienti paganti",
     "kpiRate": "Tasso base attuale",
     "kpiRateBase": "Tariffa base (livello)",
-    "kpiRateHeart": "Tasso attuale",
+    "kpiRateHeart": "Tasso minimo",
     "kpiMonth": "Guadagno del mese",
     "kpiLifetime": "Totale vinto",
     "gainsTitle": "Vincite e bonus indicativi",
@@ -2422,7 +2422,7 @@
     "productsCta": "Crea il mio account",
     "solutions": {
       "proComplete": {
-        "price": "69€ IVA esclusa / mese",
+        "price": "834,71 € IVA esclusa / anno",
         "title": "Pro",
         "text": "Piattaforma Web SaaS + app mobile clienti. Passaporto digitale, messaggistica, fascicoli e fidelizzazione.",
         "features": [
@@ -2484,8 +2484,8 @@
     "pro": {
       "name": "Piattaforma Web PetsFollow (studio)",
       "badge": "Offerta Pro",
-      "price": "69 € IVA esclusa / mese",
-      "setup": "Implementazione e formazione: 320 € IVA esclusa (one-shot)",
+      "price": "834,71 € IVA esclusa / anno",
+      "setup": "≈ 69,56 € IVA esclusa / mese · implementazione e formazione: 320 € IVA esclusa (one-shot)",
       "tagline": "Il cockpit dello studio: passaporto digitale, messaggistica, promemoria, condivisione e monitoraggio attivazioni.",
       "features": [
         "Passaporto digitale + timeline condivisa (studio / cliente / care pro)",
@@ -2524,29 +2524,24 @@
       "Ogni attivazione con codice / QR studio genera una commissione (base IVA esclusa).",
       "Le commissioni sono detratte o compensate sulla fattura SaaS."
     ],
-    "partnerTip": "≈ 7 attivazioni triennali / mese ≈ coprono il mensile Pro (69 € IVA esclusa).",
+    "partnerTip": "≈ 8 attivazioni triennali / mese ≈ coprono l’equivalente mensile Pro (≈ 69,56 € IVA esclusa).",
     "saasTitle": "Impegni SaaS Pro (IVA esclusa)",
-    "saasLead": "Preventivi e fatture dal team commerciale — nessun checkout Stripe studio.",
+    "saasLead": "Preventivi e fatture dal team commerciale — nessun checkout Stripe studio. Steer: impegno a 3 anni.",
     "saas": {
       "setup": {
         "name": "Implementazione e formazione",
         "price": "320 € IVA esclusa",
         "description": "Account, config, formazione, avvio (one-shot)."
       },
-      "monthly": {
-        "name": "Mensile",
-        "price": "69 € IVA esclusa / mese",
-        "description": "Impegno 12 mesi."
-      },
       "annual": {
         "name": "Annuale",
-        "price": "828 € IVA esclusa / anno",
-        "description": "12 × 69 €."
+        "price": "834,71 € IVA esclusa / anno",
+        "description": "≈ 69,56 € IVA esclusa / mese."
       },
       "longTerm": {
-        "name": "3 anni",
-        "price": "745,20 € IVA esclusa / anno",
-        "description": "−10 % vs annuale (≈ 62,10 € IVA esclusa / mese)."
+        "name": "Triennale",
+        "price": "2 253,72 € IVA esclusa / 3 anni",
+        "description": "−10 % vs 3× annuale — risparmio 250,41 € (≈ 62,60 € IVA esclusa / mese)."
       }
     },
     "saasMigration": "Migrazione dati: su preventivo (da 350 € IVA esclusa).",

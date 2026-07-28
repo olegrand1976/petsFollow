@@ -1586,7 +1586,7 @@
     "sheetTitle": "Mõista oma teenistust",
     "detailsSummary": "Määrade tabel ja boonused",
     "kpiRateBase": "Põhimäär (aste)",
-    "kpiRateHeart": "Praegune määr",
+    "kpiRateHeart": "Miinimummäär",
     "lineStatus": {
       "accruing": "Kogunemas",
       "missing_info": "Info puudub",
@@ -1730,7 +1730,7 @@
     "productsCta": "Loo konto",
     "solutions": {
       "proComplete": {
-        "price": "69 € km-ta / kuu",
+        "price": "834,71 € km-ta / aasta",
         "title": "Pro",
         "text": "Veebi-SaaS + klientide mobiilirakendus. Digitaalne pass, sõnumside, toimikud ja lojaalsus.",
         "features": [
@@ -1792,8 +1792,8 @@
     "pro": {
       "name": "PetsFollow veebiplatvorm (kliinik)",
       "badge": "Pro pakkumine",
-      "price": "69 € km-ta / kuu",
-      "setup": "Käivitamine ja koolitus: 320 € km-ta (one-shot)",
+      "price": "834,71 € km-ta / aasta",
+      "setup": "≈ 69,56 € km-ta / kuu · käivitamine ja koolitus: 320 € km-ta (one-shot)",
       "tagline": "Kliiniku juhtimislaud: digitaalne pass, sõnumside, meeldetuletused, jagamine ja aktiveerimiste jälgimine.",
       "features": [
         "Digitaalne pass + jagatud ajajoon (kliinik / klient / care pro)",
@@ -1832,29 +1832,24 @@
       "Iga aktiveerimine kliiniku koodi / QR-iga teenib komisjoni (alus km-ta).",
       "Komisjonid arvestatakse maha või tasaarveldatakse SaaS-arvel."
     ],
-    "partnerTip": "≈ 7 kolmeaastast aktiveerimist / kuu ≈ katab Pro kuutellimuse (69 € km-ta).",
+    "partnerTip": "≈ 8 kolmeaastast aktiveerimist / kuu ≈ katab Pro kuu ekvivalendi (≈ 69,56 € km-ta).",
     "saasTitle": "Pro SaaS kohustused (km-ta)",
-    "saasLead": "Pakkumised ja arved müügimeeskonna kaudu — kliiniku Stripe checkout'i ei ole.",
+    "saasLead": "Pakkumised ja arved müügimeeskonna kaudu — kliiniku Stripe checkout'i ei ole. Steer: 3-aastane kohustus.",
     "saas": {
       "setup": {
         "name": "Käivitamine ja koolitus",
         "price": "320 € km-ta",
         "description": "Konto, seadistus, koolitus, käivitamine (one-shot)."
       },
-      "monthly": {
-        "name": "Igakuine",
-        "price": "69 € km-ta / kuu",
-        "description": "12 kuu kohustus."
-      },
       "annual": {
         "name": "Aastane",
-        "price": "828 € km-ta / aasta",
-        "description": "12 × 69 €."
+        "price": "834,71 € km-ta / aasta",
+        "description": "≈ 69,56 € km-ta / kuu."
       },
       "longTerm": {
-        "name": "3 aastat",
-        "price": "745,20 € km-ta / aasta",
-        "description": "−10 % vs aastane (≈ 62,10 € km-ta / kuu)."
+        "name": "Kolmeaastane",
+        "price": "2 253,72 € km-ta / 3 aastat",
+        "description": "−10 % vs 3× aastane — kokkuhoid 250,41 € (≈ 62,60 € km-ta / kuu)."
       }
     },
     "saasMigration": "Andmete migratsioon: hinnapakkumisel (alates 350 € km-ta).",

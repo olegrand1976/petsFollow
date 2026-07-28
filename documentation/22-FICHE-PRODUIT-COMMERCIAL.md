@@ -12,7 +12,7 @@ Le relevé cardiaque (tap, 15 / 30 / 60 s dans l’app) est une **feature** parm
 
 | Qui | Rôle | Surface | Tarif |
 |-----|------|---------|-------|
-| Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **69 € HT/mois** + setup 320 € HT — **facturation externe** |
+| Cabinet véto | Prescripteur (B2B) | **Pro** (Web SaaS) | **834,71 € HTVA / an** (ou **2 253,72 € / 3 ans**, −10 %) + setup 320 € HTVA — **facturation externe** |
 | Cabinet véto | Add-on CR IA | Dictée / improve Gemini | **39 € HT/mois** ou **390 € HT/an** — essai **90 j**, ROI dès J60 — [32](32-MODULE-IA-CR.md) |
 | Pro terrain | App mobile ProLight | **Pro Light** (Flutter, avec ou sans compte Web Pro) | **Gratuit** (CR IA si cabinet activé) |
 | Propriétaire | Payeur (B2B2C) | App mobile pets | 3,50 / 35 / 95 € TTC (Stripe) |
@@ -61,7 +61,7 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 
 | Audience | Script |
 |----------|--------|
-| **Véto (30 s)** | « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. Pro 69 € HT/mois (hors ligne), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. » |
+| **Véto (30 s)** | « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. Pro 834,71 € HTVA / an (hors ligne ; −10 % en triennal), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. » |
 | **Client (via véto)** | « Le passeport digital de votre animal — messages avec le cabinet, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. » |
 | **Vous (interne)** | « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = passeport multi-acteurs · Web + 2 mobiles. » |
 

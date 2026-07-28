@@ -24,9 +24,10 @@ alwaysApply: true
 
 | Élément | Attendu (réf. actuelle) |
 |---------|-------------------------|
-| Plans TTC | **3,50 € / mois** · **35 € / an** · **95 € / 3 ans** |
-| Steer | Triennial recommandé (−10 % vs 3× Annual) |
-| Mensuel | abonnement Stripe only ; flexibilité (≈ 42 €/an > annuel) |
+| SaaS Pro HTVA | **834,71 € / an** · **2 253,72 € / 3 ans** (−10 % vs 3× annuel) · setup **320 €** — **pas de mensuel** |
+| Plans clients TTC | **3,50 € / mois** · **35 € / an** · **95 € / 3 ans** |
+| Steer | Triennial recommandé (−10 % vs 3× Annual) — clients **et** SaaS Pro |
+| Mensuel client | abonnement Stripe only ; flexibilité (≈ 42 €/an > annuel) |
 | Addons | **plus vendus** — toutes features ouvertes dès entitlement animal actif |
 | Inclus | relevés 15/30/60 s, messagerie + push, timeline, rappels Care/Horse, foyer, FR/NL/EN/ES/ET/IT |
 

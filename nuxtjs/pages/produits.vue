@@ -92,8 +92,16 @@
       <h3 class="pf-products-pro__subsection">{{ $t('products.saasTitle') }}</h3>
       <p class="pro-hint">{{ $t('products.saasLead') }}</p>
       <div class="pf-products-pro__summary">
-        <div v-for="row in saasRows" :key="row.key" class="pf-products-pro__summary-row">
-          <strong>{{ row.name }}</strong>
+        <div
+          v-for="row in saasRows"
+          :key="row.key"
+          class="pf-products-pro__summary-row"
+          :class="{ 'pf-products-pro__summary-row--featured': row.featured }"
+        >
+          <strong>
+            {{ row.name }}
+            <ProBadge v-if="row.featured" variant="success">{{ $t('products.recommended') }}</ProBadge>
+          </strong>
           <span>{{ row.price }}</span>
           <span class="text-muted">{{ row.description }}</span>
         </div>
@@ -127,11 +135,12 @@ const clientFeatures = computed(() => listFrom('products.clientFeatures'))
 const partnerSteps = computed(() => listFrom('products.partnerSteps'))
 
 const saasRows = computed(() =>
-  (['setup', 'monthly', 'annual', 'longTerm'] as const).map((key) => ({
+  (['setup', 'annual', 'longTerm'] as const).map((key) => ({
     key,
     name: t(`products.saas.${key}.name`),
     price: t(`products.saas.${key}.price`),
     description: t(`products.saas.${key}.description`),
+    featured: key === 'longTerm',
   })),
 )
 
@@ -333,6 +342,22 @@ function printPage() {
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--pf-vet-border);
   align-items: baseline;
+}
+
+.pf-products-pro__summary-row--featured {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  margin: 0 -0.75rem;
+  border-radius: 8px;
+  background: rgba(42, 157, 143, 0.06);
+  border-bottom-color: transparent;
+}
+
+.pf-products-pro__summary-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .pf-products-pro__summary-row:last-child {

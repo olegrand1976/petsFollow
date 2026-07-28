@@ -16,7 +16,7 @@ Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie 
 
 **Vocabulaire** : **passeport digital** = identité produit (dossier vivant multi-acteurs). « Carnet de santé » = alias UI côté propriétaire, pas le positionnement canon.
 
-**Pro** (app **Web** + apps mobiles) facturé **hors ligne** (69 € HT/mois + setup) ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
+**Pro** (app **Web** + apps mobiles) facturé **hors ligne** (834,71 € HTVA/an + setup, ou 2 253,72 € / 3 ans) ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
 
 Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit.
 

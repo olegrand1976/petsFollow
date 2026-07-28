@@ -1586,7 +1586,7 @@
     "sheetTitle": "Entender mi retribución",
     "detailsSummary": "Tabla de tasas y bonificaciones",
     "kpiRateBase": "Tasa base (tramo)",
-    "kpiRateHeart": "Tasa actual",
+    "kpiRateHeart": "Tasa mínima",
     "lineStatus": {
       "accruing": "En curso",
       "missing_info": "Datos incompletos",
@@ -1730,7 +1730,7 @@
     "productsCta": "Crear mi cuenta",
     "solutions": {
       "proComplete": {
-        "price": "69 € sin IVA / mes",
+        "price": "834,71 € sin IVA / año",
         "title": "Pro",
         "text": "Plataforma Web SaaS + app móvil clientes. Pasaporte digital, mensajería, historiales y fidelización.",
         "features": [
@@ -1792,8 +1792,8 @@
     "pro": {
       "name": "Plataforma Web PetsFollow (clínica)",
       "badge": "Oferta Pro",
-      "price": "69 € sin IVA / mes",
-      "setup": "Puesta en marcha y formación: 320 € sin IVA (one-shot)",
+      "price": "834,71 € sin IVA / año",
+      "setup": "≈ 69,56 € sin IVA / mes · puesta en marcha y formación: 320 € sin IVA (one-shot)",
       "tagline": "El puesto de mando de la clínica: pasaporte digital, mensajería, recordatorios, compartición y seguimiento de activaciones.",
       "features": [
         "Pasaporte digital + timeline compartida (clínica / cliente / care pro)",
@@ -1832,29 +1832,24 @@
       "Cada activación con el código / QR de la clínica genera una comisión (base sin IVA).",
       "Las comisiones se deducen o compensan en la factura SaaS."
     ],
-    "partnerTip": "≈ 7 activaciones trienales / mes ≈ cubren el mensual Pro (69 € sin IVA).",
+    "partnerTip": "≈ 8 activaciones trienales / mes ≈ cubren el equivalente mensual Pro (≈ 69,56 € sin IVA).",
     "saasTitle": "Compromisos SaaS Pro (sin IVA)",
-    "saasLead": "Presupuestos y facturas por el equipo comercial — sin checkout Stripe de clínica.",
+    "saasLead": "Presupuestos y facturas por el equipo comercial — sin checkout Stripe de clínica. Steer: compromiso a 3 años.",
     "saas": {
       "setup": {
         "name": "Puesta en marcha y formación",
         "price": "320 € sin IVA",
         "description": "Cuenta, config, formación, arranque (one-shot)."
       },
-      "monthly": {
-        "name": "Mensual",
-        "price": "69 € sin IVA / mes",
-        "description": "Compromiso 12 meses."
-      },
       "annual": {
         "name": "Anual",
-        "price": "828 € sin IVA / año",
-        "description": "12 × 69 €."
+        "price": "834,71 € sin IVA / año",
+        "description": "≈ 69,56 € sin IVA / mes."
       },
       "longTerm": {
-        "name": "3 años",
-        "price": "745,20 € sin IVA / año",
-        "description": "−10 % vs anual (≈ 62,10 € sin IVA / mes)."
+        "name": "Trienal",
+        "price": "2 253,72 € sin IVA / 3 años",
+        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes)."
       }
     },
     "saasMigration": "Migración de datos: bajo presupuesto (desde 350 € sin IVA).",

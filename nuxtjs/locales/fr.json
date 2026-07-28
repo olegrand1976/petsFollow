@@ -1251,7 +1251,7 @@
     "audioLoading": "Chargement de l'audio…",
     "audioError": "Audio indisponible (finalisé ou absent).",
     "loadError": "Impossible de charger les consultations.",
-    "limitHint": "Affichage limité aux 200 consultations les plus récentes. Affinez les filtres pour affiner.",
+    "limitHint": "Affichage limité aux 200 consultations les plus récentes. Affinez les filtres pour réduire le résultat.",
     "reportFinal": "Finalisé",
     "reportDraft": "Brouillon",
     "status": {
@@ -2286,7 +2286,7 @@
     "kpiClients": "Clients payants",
     "kpiRate": "Taux de base actuel",
     "kpiRateBase": "Taux de base (palier)",
-    "kpiRateHeart": "Taux actuel",
+    "kpiRateHeart": "Taux minimum",
     "kpiMonth": "Gains du mois",
     "kpiLifetime": "Total gagné",
     "gainsTitle": "Gains indicatifs & bonus",
@@ -2498,7 +2498,7 @@
     "productsCta": "Créer mon compte",
     "solutions": {
       "proComplete": {
-        "price": "69 € HT / mois",
+        "price": "834,71 € HTVA / an",
         "title": "Pro",
         "text": "Plateforme Web SaaS + application mobile clients. Passeport digital, messagerie, dossiers et fidélisation.",
         "features": [
@@ -2560,8 +2560,8 @@
     "pro": {
       "name": "Plateforme Web PetsFollow (cabinet)",
       "badge": "Offre Pro",
-      "price": "69 € HT / mois",
-      "setup": "Mise en place & formation : 320 € HT (one-shot)",
+      "price": "834,71 € HTVA / an",
+      "setup": "≈ 69,56 € HTVA / mois · mise en place & formation : 320 € HTVA (one-shot)",
       "tagline": "Le poste de pilotage du cabinet : passeport digital, messagerie, rappels, partage et suivi des activations.",
       "features": [
         "Passeport digital + timeline partagée (cabinet / client / care pro)",
@@ -2569,7 +2569,7 @@
         "Rappels, prescriptions et demandes de RDV",
         "Partage de dossier (collègues / care pro)",
         "Suivi des activations clients et commissions partenaires",
-        "CR vocaux + IA en add-on (essai 90 j → 39 € HT/mois ou 390 € HT/an)"
+        "CR vocaux + IA en add-on (essai 90 j → 39 € HTVA/mois ou 390 € HTVA/an)"
       ],
       "invoiceNote": "Facturation hors ligne (commercial / compta) — pas de paiement SaaS cabinet via Stripe."
     },
@@ -2600,32 +2600,27 @@
       "Chaque activation avec le code / QR cabinet génère une commission (assiette HTVA).",
       "Les commissions sont déduites ou compensées sur la facture SaaS."
     ],
-    "partnerTip": "≈ 7 activations triennales / mois ≈ couverture du mensuel Pro (69 € HT).",
-    "saasTitle": "Engagements SaaS Pro (HT)",
-    "saasLead": "Devis et factures gérés par l’équipe commerciale — pas de checkout Stripe cabinet.",
+    "partnerTip": "≈ 8 activations triennales / mois ≈ couverture de l’équivalent mensuel Pro (≈ 69,56 € HTVA).",
+    "saasTitle": "Engagements SaaS Pro (HTVA)",
+    "saasLead": "Devis et factures gérés par l’équipe commerciale — pas de checkout Stripe cabinet. Steer : engagement 3 ans.",
     "saas": {
       "setup": {
         "name": "Mise en place & formation",
-        "price": "320 € HT",
+        "price": "320 € HTVA",
         "description": "Compte, config, formation, démarrage (one-shot)."
-      },
-      "monthly": {
-        "name": "Mensuel",
-        "price": "69 € HT / mois",
-        "description": "Engagement 12 mois."
       },
       "annual": {
         "name": "Annuel",
-        "price": "828 € HT / an",
-        "description": "12 × 69 €."
+        "price": "834,71 € HTVA / an",
+        "description": "≈ 69,56 € HTVA / mois."
       },
       "longTerm": {
-        "name": "3 ans",
-        "price": "745,20 € HT / an",
-        "description": "−10 % vs annuel (≈ 62,10 € HT / mois)."
+        "name": "Triennal",
+        "price": "2 253,72 € HTVA / 3 ans",
+        "description": "−10 % vs 3× annuel — économie 250,41 € (≈ 62,60 € HTVA / mois)."
       }
     },
-    "saasMigration": "Migration de données : sur devis (à partir de 350 € HT).",
+    "saasMigration": "Migration de données : sur devis (à partir de 350 € HTVA).",
     "includedTitle": "Inclus dans chaque abonnement animal (clients)",
     "includedLead": "Quel que soit le plan (mensuel, annuel ou triennal), le propriétaire dispose de :",
     "included": [
