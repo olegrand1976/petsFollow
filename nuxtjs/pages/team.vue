@@ -60,13 +60,13 @@
               <span v-else class="pro-hint">{{ $t('team.defaults') }}</span>
             </td>
             <td v-if="canManageTeam">
-              <ProButton
+              <ProIconAction
                 v-if="m.teamRole !== 'reference_vet'"
-                variant="ghost"
+                icon="person_off"
+                variant="danger"
+                :label="$t('team.revoke')"
                 @click="revoke(m.id)"
-              >
-                {{ $t('team.revoke') }}
-              </ProButton>
+              />
             </td>
           </tr>
         </tbody>
@@ -201,6 +201,7 @@ async function togglePerm(m: TeamMember, key: string, checked: boolean) {
 }
 
 async function revoke(id: string) {
+  if (!window.confirm(t('team.revokeConfirm'))) return
   await $fetch(`/api/vet/team/${id}`, { method: 'DELETE' })
   await load()
 }

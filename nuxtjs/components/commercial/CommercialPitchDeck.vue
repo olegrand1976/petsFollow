@@ -62,7 +62,7 @@
                 <p>{{ s.vetLightDesc }}</p>
               </div>
               <div class="pf-card">
-                <div class="pf-card__title"><ProIcon name="smartphone" :size="18" class="pf-teal" />{{ s.clientTitle }}</div>
+                <div class="pf-card__title"><ProIcon name="devices" :size="18" class="pf-teal" />{{ s.clientTitle }}</div>
                 <p>{{ s.clientDesc }}</p>
               </div>
             </div>
@@ -166,7 +166,7 @@
                 <span class="pf-muted pf-small">{{ s.flowHint }}</span>
               </div>
               <div class="pf-card pf-card--elev pf-center pf-card--border-sage">
-                <div class="pf-icon-circle pf-icon-circle--sage-solid"><ProIcon name="smartphone" :size="22" /></div>
+                <div class="pf-icon-circle pf-icon-circle--sage-solid"><ProIcon name="devices" :size="22" /></div>
                 <h4>{{ s.clientTitle }}</h4>
                 <p class="pf-muted">{{ s.clientDesc }}</p>
                 <span class="pf-chip pf-chip--sage">{{ s.clientBadge }}</span>

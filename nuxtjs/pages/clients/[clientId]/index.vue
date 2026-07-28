@@ -27,14 +27,14 @@
           data-testid="send-app-link"
           @click="sendAppLink"
         >
-          <ProIcon name="smartphone" />
+          <ProIcon name="qr_code_2" />
           {{ $t('clients.detail.sendAppLink') }}
         </ProButton>
         <ProButton
           v-if="client && canWriteClinical"
           variant="secondary"
           test-id="client-new-consultation"
-          @click="consultationOpen = true"
+          @click="openConsultation"
         >
           <ProIcon name="medical_services" />
           {{ $t('clients.consultation.open') }}
@@ -44,10 +44,6 @@
     <p v-if="appLinkFeedback" class="pro-inline-feedback" role="status">{{ appLinkFeedback }}</p>
     <p v-if="petsLoadError" class="pro-field-error" role="alert">{{ petsLoadError }}</p>
     <ProAppInviteModal v-model:open="appInviteOpen" />
-    <ProConsultationModal
-      v-model:open="consultationOpen"
-      :client-id="clientId"
-    />
 
     <div v-if="overview" class="pro-grid-kpi" data-testid="client-kpi-strip">
       <ProKpi
@@ -246,8 +242,12 @@ const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
 const appInviteOpen = ref(false)
-const consultationOpen = ref(false)
+const activeConsult = useActiveConsultation()
 const clientShares = ref<any[]>([])
+
+function openConsultation() {
+  activeConsult.openForClient(clientId)
+}
 const shareEmail = ref('')
 const sharePermission = ref('write_notes')
 const shareExpiresDays = ref('')

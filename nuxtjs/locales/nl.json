@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Klanten",
+    "consultations": "Consultaties",
     "pets": "Dieren",
     "recommend": "Praktijk aanbevelen",
     "messages": "Berichten",
@@ -475,7 +476,13 @@
       "ctaInvoice": "Direct factureren",
       "ctaDone": "Afronden",
       "loadPetsError": "Dieren laden mislukt.",
-      "markDoneError": "Consultatie afronden mislukt. Probeer opnieuw."
+      "markDoneError": "Consultatie afronden mislukt. Probeer opnieuw.",
+      "leaveTitle": "Consultatie verlaten?",
+      "leaveHint": "Het verslag opslaan of deze consultatie annuleren?",
+      "leaveStay": "Blijven",
+      "leaveDiscard": "Consultatie annuleren",
+      "leaveSave": "Opslaan",
+      "leaveSaveEmpty": "Schrijf het verslag vóór het opslaan, of annuleer de consultatie."
     },
     "detail": {
       "title": "Klantdossier",
@@ -573,6 +580,9 @@
       "timelineTitle": "Opvolgingsgeschiedenis",
       "timelineEmptyTitle": "Lege geschiedenis",
       "timelineEmptyDescription": "Geen opvolgingsgebeurtenissen voor dit dier.",
+      "timelineOpenReport": "Verslag bekijken",
+      "timelineReportFinal": "Definitief verslag",
+      "timelineReportDraft": "Conceptverslag",
       "openReportInCalendar": "Openen in agenda",
       "photoTitle": "Foto van het dier",
       "photoChange": "Foto wijzigen",
@@ -597,6 +607,7 @@
       "visitScheduledAt": "Geplande datum",
       "visitConfirm": "Bevestigen",
       "visitCancel": "Annuleren",
+      "visitCancelConfirm": "Deze afspraak annuleren?",
       "visitDone": "Afronden",
       "visitStatus": "Status",
       "visitSource": "Bron",
@@ -664,6 +675,40 @@
       "linkLabelClient": "Cliënt-uitnodigingslink",
       "linkLabelCabinet": "Praktijk-aanmeldlink",
       "copyCabinet": "Praktijklink kopiëren"
+    }
+  },
+  "consultations": {
+    "title": "Consultaties",
+    "subtitle": "Geschiedenis van kliniekconsultaties (walk-in), van nieuw naar oud.",
+    "search": "Zoeken",
+    "searchPlaceholder": "Cliënt of dier…",
+    "statusFilter": "Status",
+    "statusAll": "Alle",
+    "from": "Van",
+    "to": "Tot",
+    "audioOnly": "Audio beschikbaar",
+    "emptyTitle": "Geen consultaties",
+    "emptyDescription": "Consultaties gestart via Cliënten verschijnen hier.",
+    "columnDate": "Datum",
+    "columnClient": "Cliënt",
+    "columnPet": "Dier",
+    "columnStatus": "Status",
+    "columnReport": "Verslag",
+    "listen": "Beluisteren",
+    "openReport": "Verslag openen",
+    "reportModalTitle": "Consultatieverslag",
+    "audioModalTitle": "Consultatie-audio",
+    "audioLoading": "Audio laden…",
+    "audioError": "Audio niet beschikbaar (afgerond of ontbreekt).",
+    "loadError": "Consultaties kunnen niet worden geladen.",
+    "reportFinal": "Afgerond",
+    "reportDraft": "Concept",
+    "status": {
+      "confirmed": "Bezig",
+      "done": "Voltooid",
+      "cancelled": "Geannuleerd",
+      "requested": "Aangevraagd",
+      "reschedule_pending": "Herplannen"
     }
   },
   "pets": {
@@ -2531,8 +2576,10 @@
     "columnStatus": "Status",
     "confirm": "Bevestigen",
     "cancel": "Annuleren",
+    "cancelConfirm": "Deze afspraak annuleren?",
     "acceptReschedule": "Verplaatsing aanvaarden",
     "rejectReschedule": "Weigeren",
+    "rejectRescheduleConfirm": "Deze voorgestelde verplaatsing weigeren?",
     "proposeMove": "Ander moment voorstellen",
     "newSlot": "Nieuw moment",
     "sendPropose": "Naar cliënt sturen",
@@ -2851,6 +2898,7 @@
     "columnRights": "Rechten",
     "defaults": "Rolstandaarden",
     "revoke": "Intrekken",
+    "revokeConfirm": "Toegang van dit teamlid intrekken?",
     "perms": {
       "clients": {
         "read": {

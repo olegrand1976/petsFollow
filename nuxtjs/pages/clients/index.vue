@@ -46,11 +46,6 @@
 
     <ProAppInviteModal v-model:open="appInviteOpen" />
 
-    <ProConsultationModal
-      v-model:open="consultationOpen"
-      :client-id="consultationClientId"
-    />
-
     <ProModal v-model:open="invitationsOpen" size="lg" :title="$t('clients.invitations.title')">
       <p v-if="inviteError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">{{ inviteError }}</p>
       <ProEmptyState
@@ -167,44 +162,40 @@
             <th>{{ $t('clients.columnClient') }}</th>
             <th>{{ $t('clients.columnEmail') }}</th>
             <th>{{ $t('clients.columnPets') }}</th>
-            <th />
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="c in filtered" :key="c.userId">
             <td>
-              <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
-              {{ c.fullName }}
+              <NuxtLink
+                :to="`/clients/${c.userId}`"
+                class="pro-name-link"
+                :data-testid="`client-profile-${c.userId}`"
+              >
+                <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
+                {{ c.fullName }}
+              </NuxtLink>
             </td>
             <td>{{ c.email }}</td>
             <td>{{ c.petCount }}</td>
             <td>
               <div class="pro-client-actions">
-                <NuxtLink
-                  :to="`/clients/${c.userId}`"
-                  :data-testid="`client-profile-${c.userId}`"
-                >
-                  {{ $t('common.profile') }}
-                </NuxtLink>
-                <button
+                <ProIconAction
                   v-if="canWriteClinical"
-                  type="button"
-                  class="pro-link-btn"
-                  :data-testid="`new-consultation-${c.userId}`"
+                  icon="medical_services"
+                  :label="$t('clients.consultation.open')"
+                  :test-id="`new-consultation-${c.userId}`"
                   @click="openConsultation(c.userId)"
-                >
-                  {{ $t('clients.consultation.open') }}
-                </button>
-                <button
+                />
+                <ProIconAction
                   v-if="canWriteClients"
-                  type="button"
-                  class="pro-link-btn"
+                  icon="send"
+                  :label="sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink')"
                   :disabled="sendingId === c.userId"
-                  :data-testid="`send-app-link-${c.userId}`"
+                  :test-id="`send-app-link-${c.userId}`"
                   @click="sendAppLink(c)"
-                >
-                  {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
-                </button>
+                />
               </div>
             </td>
           </tr>
@@ -230,24 +221,22 @@
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
-            <button
-              v-if="canWriteClinical"
-              type="button"
-              class="pro-link-btn pro-kanban-card__action"
-              :data-testid="`new-consultation-kanban-${c.userId}`"
-              @click.prevent="openConsultation(c.userId)"
-            >
-              {{ $t('clients.consultation.open') }}
-            </button>
-            <button
-              v-if="canWriteClients"
-              type="button"
-              class="pro-link-btn pro-kanban-card__action"
-              :disabled="sendingId === c.userId"
-              @click.prevent="sendAppLink(c)"
-            >
-              {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
-            </button>
+            <div class="pro-client-actions pro-kanban-card__actions">
+              <ProIconAction
+                v-if="canWriteClinical"
+                icon="medical_services"
+                :label="$t('clients.consultation.open')"
+                :test-id="`new-consultation-kanban-${c.userId}`"
+                @click.prevent="openConsultation(c.userId)"
+              />
+              <ProIconAction
+                v-if="canWriteClients"
+                icon="send"
+                :label="sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink')"
+                :disabled="sendingId === c.userId"
+                @click.prevent="sendAppLink(c)"
+              />
+            </div>
           </NuxtLink>
         </ProKanbanColumn>
       </ProKanban>
@@ -287,15 +276,14 @@ const { viewMode } = useListView('pf-clients-view', 'table')
 
 const invitationsOpen = ref(false)
 const appInviteOpen = ref(false)
-const consultationOpen = ref(false)
-const consultationClientId = ref('')
 const linkRequests = ref<any[]>([])
 const busyInviteId = ref('')
 const inviteError = ref('')
 
+const activeConsult = useActiveConsultation()
+
 function openConsultation(clientUserId: string) {
-  consultationClientId.value = clientUserId
-  consultationOpen.value = true
+  activeConsult.openForClient(clientUserId)
 }
 
 function asClientList(raw: unknown): ClientRow[] {
@@ -521,27 +509,11 @@ onMounted(async () => {
 .pro-client-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.25rem;
   align-items: center;
 }
-.pro-link-btn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--pf-vet-accent);
-  font: inherit;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-}
-.pro-link-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-.pro-kanban-card__action {
-  display: block;
+.pro-kanban-card__actions {
   margin-top: 0.5rem;
-  text-align: left;
 }
 .pro-inline-feedback {
   margin: 0 0 1rem;

@@ -36,7 +36,7 @@
           <p>{{ $t('index.cards.messaging.text') }}</p>
         </div>
         <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay2">
-          <ProIcon name="smartphone" class="pro-landing__card-icon" :size="24" />
+          <ProIcon name="devices" class="pro-landing__card-icon" :size="24" />
           <strong>{{ $t('index.cards.heartrate.title') }}</strong>
           <p>{{ $t('index.cards.heartrate.text') }}</p>
         </div>
@@ -123,7 +123,7 @@ function listFrom(key: string): string[] {
 const features = [
   { key: 'alerts', icon: 'folder_shared' },
   { key: 'messaging', icon: 'chat' },
-  { key: 'onboarding', icon: 'smartphone' },
+  { key: 'onboarding', icon: 'devices' },
   { key: 'heartrate', icon: 'favorite' },
   { key: 'partner', icon: 'handshake' },
   { key: 'security', icon: 'lock' },

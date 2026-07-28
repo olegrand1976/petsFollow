@@ -168,7 +168,11 @@
         </div>
       </details>
 
-      <ProPetDayTimeline :items="timeline" class="pro-mb-lg" />
+      <ProPetDayTimeline
+        :items="timeline"
+        class="pro-mb-lg"
+        @open-visit="openVisitReport"
+      />
     </div>
 
     <div
@@ -347,8 +351,18 @@
             <td>{{ c.status }}</td>
             <td>
               <div v-if="canManageCare && c.status === 'pending'" class="pro-flex-gap">
-                <ProButton :disabled="careBusy" @click="markCareDone(c.id)">{{ $t('clients.pet.careDone') }}</ProButton>
-                <ProButton variant="ghost" :disabled="careBusy" @click="postponeCare(c.id, 7)">{{ $t('clients.pet.carePostpone') }}</ProButton>
+                <ProIconAction
+                  icon="task_alt"
+                  :label="$t('clients.pet.careDone')"
+                  :disabled="careBusy"
+                  @click="markCareDone(c.id)"
+                />
+                <ProIconAction
+                  icon="schedule"
+                  :label="$t('clients.pet.carePostpone')"
+                  :disabled="careBusy"
+                  @click="postponeCare(c.id, 7)"
+                />
               </div>
             </td>
           </tr>
@@ -405,51 +419,48 @@
                     >
                     {{ $t('clients.pet.visitRequestPreconsult') }}
                   </label>
-                  <ProButton
+                  <ProIconAction
+                    icon="check"
+                    :label="$t('clients.pet.visitConfirm')"
                     :disabled="visitBusy"
                     @click="visitAction(v.id, 'confirm')"
-                  >
-                    {{ $t('clients.pet.visitConfirm') }}
-                  </ProButton>
+                  />
                 </template>
-                <ProButton
+                <ProIconAction
                   v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  icon="event_available"
+                  :label="$t('calendar.acceptReschedule')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'accept_reschedule')"
-                >
-                  {{ $t('calendar.acceptReschedule') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
-                  variant="ghost"
+                  icon="close"
+                  :label="$t('calendar.rejectReschedule')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'reject_reschedule')"
-                >
-                  {{ $t('calendar.rejectReschedule') }}
-                </ProButton>
-                <ProButton
-                  variant="secondary"
-                  test-id="pet-visit-report-open"
+                />
+                <ProIconAction
+                  icon="description"
+                  :label="$t('calendar.reportTitle')"
+                  :test-id="`pet-visit-report-open-${v.id}`"
                   @click="openVisitReport(v)"
-                >
-                  <ProIcon name="description" :size="18" />
-                  {{ $t('calendar.reportTitle') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="canManageCalendar && v.status === 'confirmed'"
+                  icon="task_alt"
+                  :label="$t('clients.pet.visitDone')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'done')"
-                >
-                  {{ $t('clients.pet.visitDone') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="canManageCalendar && (v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending')"
-                  variant="ghost"
+                  icon="cancel"
+                  variant="danger"
+                  :label="$t('clients.pet.visitCancel')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'cancel')"
-                >
-                  {{ $t('clients.pet.visitCancel') }}
-                </ProButton>
+                />
               </div>
             </td>
           </tr>
@@ -513,17 +524,19 @@
             <td>{{ d.uploaderName || $t('common.dash') }}</td>
             <td>
               <div class="pro-flex-gap">
-                <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer" class="pro-link-btn">
-                  {{ $t('clients.pet.documentOpen') }}
-                </a>
-                <ProButton
+                <ProIconAction
+                  icon="open_in_new"
+                  :label="$t('clients.pet.documentOpen')"
+                  :href="d.fileUrl"
+                />
+                <ProIconAction
                   v-if="canWriteClinical"
-                  variant="ghost"
+                  icon="delete"
+                  variant="danger"
+                  :label="$t('common.delete')"
                   :disabled="docBusy"
                   @click="deleteDocument(d.id)"
-                >
-                  {{ $t('common.delete') }}
-                </ProButton>
+                />
               </div>
             </td>
           </tr>
@@ -604,6 +617,7 @@
       <ProVisitReportPanel
         v-if="visitReportId"
         :visit-id="visitReportId"
+        :visit-scheduled-at="visitReportScheduledAt"
         :readonly="!canWriteClinical"
       />
       <p class="pro-hint pro-mb-md">
@@ -650,6 +664,7 @@ const careBusy = ref(false)
 const visitBusy = ref(false)
 const visitReportOpen = ref(false)
 const visitReportId = ref('')
+const visitReportScheduledAt = ref('')
 const messagingBusy = ref(false)
 const messagingError = ref('')
 const pageError = ref('')
@@ -1085,6 +1100,8 @@ async function proposeVisit(confirmDirect: boolean) {
 }
 
 async function visitAction(id: string, action: string) {
+  if (action === 'cancel' && !window.confirm(t('clients.pet.visitCancelConfirm'))) return
+  if (action === 'reject_reschedule' && !window.confirm(t('calendar.rejectRescheduleConfirm'))) return
   visitBusy.value = true
   pageError.value = ''
   try {
@@ -1104,8 +1121,9 @@ async function visitAction(id: string, action: string) {
   }
 }
 
-function openVisitReport(v: { id: string }) {
+function openVisitReport(v: { id: string, scheduledAt?: string, createdAt?: string }) {
   visitReportId.value = v.id
+  visitReportScheduledAt.value = v.scheduledAt || v.createdAt || ''
   visitReportOpen.value = true
 }
 

@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Client)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2: Client Mobile App",
             "desc": "The user sends a message or performs a fingertip heart rate reading (if prescribed by the practitioner)."
           },

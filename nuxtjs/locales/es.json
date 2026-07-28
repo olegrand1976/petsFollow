@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Panel",
     "clients": "Clientes",
+    "consultations": "Consultas",
     "pets": "Animales",
     "recommend": "Recomendar una clínica",
     "messages": "Mensajería",
@@ -558,6 +559,9 @@
       "timelineTitle": "Historial de seguimiento",
       "timelineEmptyTitle": "Historial vacío",
       "timelineEmptyDescription": "No hay eventos de seguimiento para esta mascota.",
+      "timelineOpenReport": "Ver informe de visita",
+      "timelineReportFinal": "Informe final",
+      "timelineReportDraft": "Borrador",
       "openReportInCalendar": "Abrir en la agenda",
       "photoTitle": "Foto de la mascota",
       "photoChange": "Cambiar foto",
@@ -582,6 +586,7 @@
       "visitScheduledAt": "Fecha programada",
       "visitConfirm": "Confirmar",
       "visitCancel": "Cancelar",
+      "visitCancelConfirm": "¿Cancelar esta cita?",
       "visitDone": "Marcar como hecha",
       "visitStatus": "Estado",
       "visitSource": "Origen",
@@ -663,7 +668,47 @@
       "ctaInvoice": "Facturar directamente",
       "ctaDone": "Terminar",
       "loadPetsError": "No se pudieron cargar las mascotas.",
-      "markDoneError": "No se pudo terminar la consulta. Inténtelo de nuevo."
+      "markDoneError": "No se pudo terminar la consulta. Inténtelo de nuevo.",
+      "leaveTitle": "¿Salir de la consulta?",
+      "leaveHint": "¿Guardar el informe o cancelar esta consulta?",
+      "leaveStay": "Quedarse",
+      "leaveDiscard": "Cancelar la consulta",
+      "leaveSave": "Guardar",
+      "leaveSaveEmpty": "Redacte el informe antes de guardar, o cancele la consulta."
+    }
+  },
+  "consultations": {
+    "title": "Consultas",
+    "subtitle": "Historial de consultas clínicas (sin cita), de más reciente a más antigua.",
+    "search": "Búsqueda",
+    "searchPlaceholder": "Cliente o animal…",
+    "statusFilter": "Estado",
+    "statusAll": "Todos",
+    "from": "Desde",
+    "to": "Hasta",
+    "audioOnly": "Audio disponible",
+    "emptyTitle": "Ninguna consulta",
+    "emptyDescription": "Las consultas iniciadas desde Clientes aparecerán aquí.",
+    "columnDate": "Fecha",
+    "columnClient": "Cliente",
+    "columnPet": "Animal",
+    "columnStatus": "Estado",
+    "columnReport": "Informe",
+    "listen": "Escuchar",
+    "openReport": "Abrir informe",
+    "reportModalTitle": "Informe de visita",
+    "audioModalTitle": "Audio de la consulta",
+    "audioLoading": "Cargando el audio…",
+    "audioError": "Audio no disponible (finalizado o ausente).",
+    "loadError": "No se pueden cargar las consultas.",
+    "reportFinal": "Finalizado",
+    "reportDraft": "Borrador",
+    "status": {
+      "confirmed": "En curso",
+      "done": "Terminada",
+      "cancelled": "Cancelada",
+      "requested": "Solicitada",
+      "reschedule_pending": "Reprogramación"
     }
   },
   "pets": {
@@ -2500,8 +2545,10 @@
     "columnStatus": "Estado",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
+    "cancelConfirm": "¿Cancelar esta cita?",
     "acceptReschedule": "Aceptar cambio",
     "rejectReschedule": "Rechazar",
+    "rejectRescheduleConfirm": "¿Rechazar este cambio propuesto?",
     "proposeMove": "Proponer otro horario",
     "newSlot": "Nuevo horario",
     "sendPropose": "Enviar al cliente",
@@ -2820,6 +2867,7 @@
     "columnRights": "Derechos",
     "defaults": "Valores del rol",
     "revoke": "Revocar",
+    "revokeConfirm": "¿Revocar el acceso de este miembro?",
     "perms": {
       "clients": {
         "read": {

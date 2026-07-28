@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clienti",
+    "consultations": "Consultazioni",
     "pets": "Pet",
     "recommend": "Raccomandare uno studio",
     "messages": "Messaggistica",
@@ -1061,6 +1062,9 @@
       "timelineTitle": "Cronologia monitorata",
       "timelineEmptyTitle": "Storia vuota",
       "timelineEmptyDescription": "Nessun evento successivo per questo animale.",
+      "timelineOpenReport": "Vedi referto",
+      "timelineReportFinal": "Referto finale",
+      "timelineReportDraft": "Bozza referto",
       "openReportInCalendar": "Apri nell’agenda",
       "photoTitle": "Foto dell'animale",
       "photoChange": "Cambia foto",
@@ -1085,6 +1089,7 @@
       "visitScheduledAt": "Data prevista",
       "visitConfirm": "Confermare",
       "visitCancel": "Cancellare",
+      "visitCancelConfirm": "Annullare questo appuntamento?",
       "visitDone": "Per finire",
       "visitStatus": "Stato",
       "visitSource": "Fonte",
@@ -1156,7 +1161,47 @@
       "ctaInvoice": "Fattura direttamente",
       "ctaDone": "Termina",
       "loadPetsError": "Impossibile caricare gli animali.",
-      "markDoneError": "Impossibile completare la consultazione. Riprovare."
+      "markDoneError": "Impossibile completare la consultazione. Riprovare.",
+      "leaveTitle": "Uscire dalla consultazione?",
+      "leaveHint": "Salvare il referto o annullare questa consultazione?",
+      "leaveStay": "Rimanere",
+      "leaveDiscard": "Annulla consultazione",
+      "leaveSave": "Salva",
+      "leaveSaveEmpty": "Redigi il referto prima di salvare, oppure annulla la consultazione."
+    }
+  },
+  "consultations": {
+    "title": "Consultazioni",
+    "subtitle": "Cronologia delle consultazioni in clinica (walk-in), dalla più recente alla più vecchia.",
+    "search": "Ricerca",
+    "searchPlaceholder": "Cliente o animale…",
+    "statusFilter": "Stato",
+    "statusAll": "Tutti",
+    "from": "Dal",
+    "to": "Al",
+    "audioOnly": "Audio disponibile",
+    "emptyTitle": "Nessuna consultazione",
+    "emptyDescription": "Le consultazioni avviate da Clienti appariranno qui.",
+    "columnDate": "Data",
+    "columnClient": "Cliente",
+    "columnPet": "Animale",
+    "columnStatus": "Stato",
+    "columnReport": "Referto",
+    "listen": "Ascolta",
+    "openReport": "Apri referto",
+    "reportModalTitle": "Referto",
+    "audioModalTitle": "Audio consultazione",
+    "audioLoading": "Caricamento audio…",
+    "audioError": "Audio non disponibile (finalizzato o assente).",
+    "loadError": "Impossibile caricare le consultazioni.",
+    "reportFinal": "Finalizzato",
+    "reportDraft": "Bozza",
+    "status": {
+      "confirmed": "In corso",
+      "done": "Terminata",
+      "cancelled": "Annullata",
+      "requested": "Richiesta",
+      "reschedule_pending": "Ripianificazione"
     }
   },
   "pets": {
@@ -2033,8 +2078,10 @@
     "columnStatus": "Stato",
     "confirm": "Confermare",
     "cancel": "Cancellare",
+    "cancelConfirm": "Annullare questo appuntamento?",
     "acceptReschedule": "Accetta la mossa",
     "rejectReschedule": "Rifiutare",
+    "rejectRescheduleConfirm": "Rifiutare questo spostamento proposto?",
     "proposeMove": "Suggerisci un altro programma",
     "newSlot": "Nuova nicchia",
     "sendPropose": "Invia al cliente",
@@ -2820,6 +2867,7 @@
     "columnRights": "Diritti",
     "defaults": "Difetti del ruolo",
     "revoke": "Revocare",
+    "revokeConfirm": "Revocare l’accesso di questo membro?",
     "perms": {
       "clients": {
         "read": {

@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Töölaud",
     "clients": "Kliendid",
+    "consultations": "Konsultatsioonid",
     "pets": "Lemmikloomad",
     "recommend": "Soovita praktikat",
     "messages": "Sõnumid",
@@ -558,6 +559,9 @@
       "timelineTitle": "Jälgimise ajalugu",
       "timelineEmptyTitle": "Tühi ajalugu",
       "timelineEmptyDescription": "Selle lemmiklooma kohta jälgimissündmusi pole.",
+      "timelineOpenReport": "Vaata visiidiaruannet",
+      "timelineReportFinal": "Lõplik aruanne",
+      "timelineReportDraft": "Mustand",
       "openReportInCalendar": "Ava kalendris",
       "photoTitle": "Lemmiklooma foto",
       "photoChange": "Muuda fotot",
@@ -582,6 +586,7 @@
       "visitScheduledAt": "Planeeritud kuupäev",
       "visitConfirm": "Kinnita",
       "visitCancel": "Tühista",
+      "visitCancelConfirm": "Tühistada see vastuvõtt?",
       "visitDone": "Märgi tehtuks",
       "visitStatus": "Olek",
       "visitSource": "Allikas",
@@ -663,7 +668,47 @@
       "ctaInvoice": "Arvelda otse",
       "ctaDone": "Lõpeta",
       "loadPetsError": "Loomi ei õnnestunud laadida.",
-      "markDoneError": "Konsultatsiooni ei õnnestunud lõpetada. Proovige uuesti."
+      "markDoneError": "Konsultatsiooni ei õnnestunud lõpetada. Proovige uuesti.",
+      "leaveTitle": "Lahkuda konsultatsioonist?",
+      "leaveHint": "Salvestada visiidiraport või tühistada see konsultatsioon?",
+      "leaveStay": "Jääda",
+      "leaveDiscard": "Tühista konsultatsioon",
+      "leaveSave": "Salvesta",
+      "leaveSaveEmpty": "Kirjutage visiidiraport enne salvestamist või tühistage konsultatsioon."
+    }
+  },
+  "consultations": {
+    "title": "Konsultatsioonid",
+    "subtitle": "Kliiniku konsultatsioonide ajalugu (walk-in), uusimast vanimani.",
+    "search": "Otsing",
+    "searchPlaceholder": "Klient või loom…",
+    "statusFilter": "Olek",
+    "statusAll": "Kõik",
+    "from": "Alates",
+    "to": "Kuni",
+    "audioOnly": "Heli saadaval",
+    "emptyTitle": "Konsultatsioone pole",
+    "emptyDescription": "Klientide juurest alustatud konsultatsioonid ilmuvad siia.",
+    "columnDate": "Kuupäev",
+    "columnClient": "Klient",
+    "columnPet": "Loom",
+    "columnStatus": "Olek",
+    "columnReport": "Raport",
+    "listen": "Kuula",
+    "openReport": "Ava raport",
+    "reportModalTitle": "Visiidiraport",
+    "audioModalTitle": "Konsultatsiooni heli",
+    "audioLoading": "Heli laadimine…",
+    "audioError": "Heli pole saadaval (lõpetatud või puudub).",
+    "loadError": "Konsultatsioone ei õnnestu laadida.",
+    "reportFinal": "Lõpetatud",
+    "reportDraft": "Mustand",
+    "status": {
+      "confirmed": "Käimas",
+      "done": "Lõpetatud",
+      "cancelled": "Tühistatud",
+      "requested": "Taotletud",
+      "reschedule_pending": "Ümberplaneerimine"
     }
   },
   "pets": {
@@ -2500,8 +2545,10 @@
     "columnStatus": "Olek",
     "confirm": "Kinnita",
     "cancel": "Tühista",
+    "cancelConfirm": "Tühistada see vastuvõtt?",
     "acceptReschedule": "Nõustu ümberplaneerimisega",
     "rejectReschedule": "Keeldu",
+    "rejectRescheduleConfirm": "Keelduda sellest ümberplaneerimise ettepanekust?",
     "proposeMove": "Paku teist aega",
     "newSlot": "Uus aeg",
     "sendPropose": "Saada kliendile",
@@ -2820,6 +2867,7 @@
     "columnRights": "Õigused",
     "defaults": "Rolli vaikimisi",
     "revoke": "Tühista",
+    "revokeConfirm": "Tühistada selle liikme juurdepääs?",
     "perms": {
       "clients": {
         "read": {

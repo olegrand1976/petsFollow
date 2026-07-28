@@ -91,13 +91,78 @@ test('pet detail — CR IA ouvert depuis Soins & RDV', { tag: '@p0' }, async ({ 
   await loginAsVet(page)
   await page.goto(`/clients/${clientId}/pets/${petId}?tab=care`)
   await expect(page.getByTestId('pet-tab-care')).toBeVisible({ timeout: 15000 })
-  const openReport = page.getByTestId('pet-visit-report-open').first()
+  const openReport = page.locator('[data-testid^="pet-visit-report-open"]').first()
   await expect(openReport).toBeVisible({ timeout: 30000 })
   await openReport.click()
   await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('visit-report-body')).toBeVisible()
   await expect(page.getByTestId('visit-report-improve')).toBeVisible()
   await expect(page.getByTestId('visit-report-audio')).toBeAttached()
+})
+
+test('pet detail — CR visualisable depuis l’historique', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(90000)
+  const { clientId, petId } = await demoClientAndPet()
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  const probe = `e2e history cr ${Date.now()}`
+  const headers = {
+    Authorization: `Bearer ${vetTok}`,
+    'Content-Type': 'application/json',
+  }
+
+  let visitId = ''
+  for (let attempt = 0; attempt < 4 && !visitId; attempt++) {
+    const when = new Date(
+      Date.now() + (5 + attempt) * 60 * 60 * 1000 + Math.floor(Math.random() * 50) * 60_000,
+    ).toISOString()
+    const create = await fetch(`${API}/api/v1/pets/${petId}/visits`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        notes: '',
+        confirmDirect: true,
+        scheduledAt: when,
+      }),
+    })
+    if (create.ok) {
+      visitId = (await create.json()).data.id as string
+      break
+    }
+    // 409 slot_taken: retry with another slot (parallel / Playwright retry).
+    if (create.status !== 409) {
+      throw new Error(`create visit ${create.status}`)
+    }
+  }
+  if (!visitId) {
+    throw new Error('create visit: all slot retries failed (409)')
+  }
+
+  const putReport = await fetch(`${API}/api/v1/visits/${visitId}/report`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ bodyText: probe }),
+  })
+  if (!putReport.ok) {
+    throw new Error(`put report ${putReport.status}`)
+  }
+  const done = await fetch(`${API}/api/v1/visits/${visitId}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status: 'done' }),
+  })
+  if (!done.ok) {
+    throw new Error(`mark done ${done.status}`)
+  }
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+  await expect(page.getByTestId('pet-timeline-card')).toBeVisible({ timeout: 15000 })
+  const historyTile = page.getByTestId('pet-history-visit-report').first()
+  await expect(historyTile).toBeVisible({ timeout: 30000 })
+  await expect(historyTile).toContainText(probe)
+  await historyTile.click()
+  await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('visit-report-body')).toBeVisible()
 })
 
 test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {

@@ -49,44 +49,43 @@
             </td>
             <td>
               <div class="pro-flex-gap">
-                <ProButton
+                <ProIconAction
                   v-if="v.status === 'requested' && v.pendingActionBy === 'vet'"
+                  icon="check"
+                  :label="$t('calendar.confirm')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'confirm')"
-                >
-                  {{ $t('calendar.confirm') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  icon="event_available"
+                  :label="$t('calendar.acceptReschedule')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'accept_reschedule')"
-                >
-                  {{ $t('calendar.acceptReschedule') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
-                  variant="ghost"
+                  icon="close"
+                  :label="$t('calendar.rejectReschedule')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'reject_reschedule')"
-                >
-                  {{ $t('calendar.rejectReschedule') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="v.status === 'confirmed' && v.consultationSession"
+                  icon="task_alt"
+                  :label="$t('calendar.markDone')"
                   :disabled="busyId === v.id"
-                  data-testid="calendar-walkin-done"
+                  test-id="calendar-walkin-done"
                   @click="act(v.id, 'done')"
-                >
-                  {{ $t('calendar.markDone') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="!v.consultationSession"
-                  variant="ghost"
+                  icon="cancel"
+                  variant="danger"
+                  :label="$t('calendar.cancel')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'cancel')"
-                >
-                  {{ $t('calendar.cancel') }}
-                </ProButton>
+                />
               </div>
             </td>
           </tr>
@@ -262,7 +261,10 @@
           <p v-if="addressMsg" class="pro-hint">{{ addressMsg }}</p>
         </div>
         <div class="pro-field pro-mb-md">
-          <ProVisitReportPanel :visit-id="selectedVisit.id" />
+          <ProVisitReportPanel
+            :visit-id="selectedVisit.id"
+            :visit-scheduled-at="selectedVisit.scheduledAt"
+          />
         </div>
         <div class="pro-flex-gap create-client-actions">
           <label
@@ -273,52 +275,50 @@
             <input v-model="requestPreconsult" type="checkbox" class="pro-checkbox">
             {{ $t('calendar.requestPreconsult') }}
           </label>
-          <ProButton
+          <ProIconAction
             v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
+            icon="check"
+            :label="$t('calendar.confirm')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('confirm')"
-          >
-            {{ $t('calendar.confirm') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
+            icon="event_available"
+            :label="$t('calendar.acceptReschedule')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('accept_reschedule')"
-          >
-            {{ $t('calendar.acceptReschedule') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
-            variant="ghost"
+            icon="close"
+            :label="$t('calendar.rejectReschedule')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('reject_reschedule')"
-          >
-            {{ $t('calendar.rejectReschedule') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'confirmed' && !selectedVisit.consultationSession"
-            variant="secondary"
+            icon="event"
+            :label="$t('calendar.proposeMove')"
             :disabled="busyId === selectedVisit.id"
             @click="openReschedule(selectedVisit)"
-          >
-            {{ $t('calendar.proposeMove') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'confirmed' && selectedVisit.consultationSession"
+            icon="task_alt"
+            :label="$t('calendar.markDone')"
             :disabled="busyId === selectedVisit.id"
-            data-testid="calendar-walkin-done-detail"
+            test-id="calendar-walkin-done-detail"
             @click="actFromDetail('done')"
-          >
-            {{ $t('calendar.markDone') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="!selectedVisit.consultationSession"
-            variant="ghost"
+            icon="cancel"
+            variant="danger"
+            :label="$t('calendar.cancel')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('cancel')"
-          >
-            {{ $t('calendar.cancel') }}
-          </ProButton>
+          />
         </div>
       </div>
     </ProModal>
@@ -569,6 +569,8 @@ async function load() {
 }
 
 async function act(id: string, action: string) {
+  if (action === 'cancel' && !window.confirm(t('calendar.cancelConfirm'))) return
+  if (action === 'reject_reschedule' && !window.confirm(t('calendar.rejectRescheduleConfirm'))) return
   busyId.value = id
   actionError.value = ''
   try {

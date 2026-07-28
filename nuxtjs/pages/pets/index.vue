@@ -44,15 +44,20 @@
             <th>{{ $t('pets.columnLastVisit') }}</th>
             <th>{{ $t('pets.columnLastHeartRate') }}</th>
             <th>{{ $t('pets.columnOwner') }}</th>
-            <th />
           </tr>
         </thead>
         <tbody>
           <tr v-for="p in filtered" :key="p.id" :data-testid="`pet-row-${p.id}`">
             <td>
               <div class="pets-name-cell">
-                <ProAvatar :src="p.photoUrl" :name="p.name" />
-                <span>{{ p.name }}</span>
+                <NuxtLink
+                  :to="`/clients/${p.ownerUserId}/pets/${p.id}`"
+                  class="pro-name-link"
+                  data-testid="pet-fiche-link"
+                >
+                  <ProAvatar :src="p.photoUrl" :name="p.name" />
+                  <span>{{ p.name }}</span>
+                </NuxtLink>
                 <ProBadge
                   v-if="(p.unreadHeartrateCount ?? 0) > 0"
                   variant="danger"
@@ -74,11 +79,6 @@
               <template v-else>{{ $t('common.dash') }}</template>
             </td>
             <td>{{ p.ownerName }}</td>
-            <td>
-              <NuxtLink :to="`/clients/${p.ownerUserId}/pets/${p.id}`" data-testid="pet-fiche-link">
-                {{ $t('common.profile') }}
-              </NuxtLink>
-            </td>
           </tr>
         </tbody>
       </ProTable>

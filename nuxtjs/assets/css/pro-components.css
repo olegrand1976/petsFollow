@@ -76,6 +76,76 @@
 
 .pro-btn--block { width: 100%; }
 
+.pro-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--pf-vet-radius-lg);
+  background: transparent;
+  color: var(--pf-vet-accent);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.pro-icon-action:hover:not(:disabled):not(.pro-icon-action--disabled) {
+  background: var(--pf-vet-bg);
+  box-shadow: var(--pf-vet-shadow-sm);
+}
+
+.pro-icon-action:focus-visible {
+  outline: 2px solid var(--pf-vet-accent);
+  outline-offset: 2px;
+}
+
+.pro-icon-action:disabled,
+.pro-icon-action--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pro-icon-action--ghost {
+  color: var(--pf-vet-accent);
+}
+
+.pro-icon-action--danger {
+  color: var(--pf-vet-alert);
+}
+
+.pro-icon-action--danger:hover:not(:disabled):not(.pro-icon-action--disabled) {
+  background: color-mix(in srgb, var(--pf-vet-alert) 12%, var(--pf-vet-surface));
+}
+
+.pro-icon-action--danger:focus-visible {
+  outline-color: var(--pf-vet-alert);
+}
+
+.pro-name-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.pro-name-link:hover {
+  color: var(--pf-vet-accent);
+  text-decoration: underline;
+}
+
+.pro-name-link:focus-visible {
+  outline: 2px solid var(--pf-vet-accent);
+  outline-offset: 2px;
+  border-radius: var(--pf-vet-radius);
+}
+
 .pro-badge {
   display: inline-flex;
   align-items: center;
@@ -518,6 +588,7 @@ a.pro-kpi-card:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   align-items: stretch;
+  margin-bottom: 1.25rem;
 }
 
 .pro-grid-2 {
