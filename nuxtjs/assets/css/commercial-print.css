@@ -1,0 +1,25 @@
+/* Shared print rules for commercial leave-behind pages (playbook, ASV memo, …). */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .pro-topbar,
+  .pro-sidebar,
+  .pro-app-shell > .pro-sidebar,
+  aside.pro-sidebar {
+    display: none !important;
+  }
+
+  .pro-app-shell {
+    display: block !important;
+  }
+
+  .pro-app-body,
+  .pro-main,
+  .pro-main-inner {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

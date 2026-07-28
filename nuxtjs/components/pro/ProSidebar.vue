@@ -147,6 +147,7 @@ function iconName(name: ProNavIcon) {
 }
 
 function navTestId(to: string) {
+  // Stable aliases for existing e2e selectors.
   if (to === '/calendar') return 'nav-calendar'
   if (to === '/clients') return 'nav-clients'
   if (to === '/pets') return 'nav-pets'
@@ -158,7 +159,12 @@ function navTestId(to: string) {
   if (to === '/stock') return 'nav-stock'
   if (to === '/daf') return 'nav-daf'
   if (to === '/commissions') return 'nav-commissions'
-  return undefined
+  const slug = to
+    .replace(/^\//, '')
+    .replace(/\//g, '-')
+    .replace(/[^a-z0-9-]/gi, '')
+    .toLowerCase()
+  return slug ? `nav-${slug}` : undefined
 }
 
 function badgeTestId(to: string) {

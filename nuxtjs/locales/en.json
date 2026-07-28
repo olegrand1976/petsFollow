@@ -60,7 +60,8 @@
       "patients": "Patients",
       "clinic": "Clinic",
       "finance": "Finance",
-      "practice": "Practice"
+      "practice": "Practice",
+      "account": "Account"
     },
     "managerAiModules": "AI CR — team",
     "adminSupport": "Support",
@@ -71,7 +72,8 @@
     "usecases": "Test guides",
     "stock": "Stock",
     "daf": "DAF",
-    "prescriptions": "Prescriptions"
+    "prescriptions": "Prescriptions",
+    "commercialAsvMemo": "ASV memo"
   },
   "auth": {
     "login": {
@@ -2321,6 +2323,51 @@
       "loadError": "Unable to load network",
       "downlineEmpty": "No downline yet",
       "downlineEmptyDesc": "Your downline will appear here after recruitment."
+    },
+    "asvMemo": {
+      "title": "ASV memo",
+      "subtitle": "10-minute leave-behind for reception — printable / PDF",
+      "copyLink": "Copy link",
+      "mailto": "Send by email",
+      "print": "Print / PDF",
+      "linkCopied": "Link copied",
+      "mailSubject": "petsFollow — ASV memo (10 min)",
+      "mailBodyPdf": "Hello,\n\nPlease find the petsFollow memo sheet for veterinary assistants / reception (print or save as PDF from the commercial space).\n\nGoal: 10 minutes to see what changes at the front desk.\n\nBest regards,",
+      "ctaHint": "Leave-behind for the ASV — 10 min, printable as PDF.",
+      "ctaOpen": "Open ASV memo",
+      "badge": "Leave-behind · 10 minutes · front desk",
+      "docTitle": "petsFollow for veterinary assistants — what changes in your day",
+      "promise": "Ten minutes to see how petsFollow eases the front desk: fewer scattered calls, fewer manual follow-ups, a clear clients / calendar / messages cockpit — without touching the medical record.",
+      "painTitle": "Your reality today",
+      "pain1": "Personal SMS, scattered emails and unlogged walk-in calls overload reception.",
+      "pain2": "Out-of-hours questions keep coming when the practice is closed.",
+      "pain3": "Appointment reminders and vaccine / treatment recalls still go through the phone.",
+      "pain4": "On the shared front-desk PC, switching profiles is slow and weakly secured.",
+      "gainTitle": "What changes for you",
+      "gain1": "Messaging sorted by animal / file: photos and questions in the right thread — not on the front-desk phone.",
+      "gain2": "Unavailable / closed mode: owners see the practice is not responding — fewer off-hours solicitations.",
+      "gain3": "Appointment request from the client app → you confirm; the owner is notified (push + email).",
+      "gain4": "Pre-consultation: reason and urgency already in the file before arrival — fewer phone intakes.",
+      "gain5": "Care reminders on the owner side (vaccines, treatments): fewer “please call for the booster” calls.",
+      "gain6": "Front-desk switch: ASV ↔ vet profile in seconds, each recovers their last screen.",
+      "notTitle": "What you do not do",
+      "notBody": "The secretary / ASV role covers clients, calendar and messaging — not clinical writing. petsFollow does not turn you into a “second vet”: it organises client relations while the veterinarian keeps the medical side.",
+      "demoTitle": "Flash demo in 3 steps (at the front desk)",
+      "demo1": "Messaging: open an animal thread, show sorted photos / questions.",
+      "demo2": "Calendar: a client appointment request to confirm, then owner notification.",
+      "demo3": "Desk switch: change profile on the same shared PC.",
+      "objectionsTitle": "Flash objections",
+      "obj1q": "“Is this extra work for the ASV?”",
+      "obj1a": "On the contrary: it reduces calls and scattered messages by putting them on one screen.",
+      "obj2q": "“Does it replace the emergency phone?”",
+      "obj2a": "No. Emergencies stay on the phone. petsFollow takes everyday questions, confirmations and reminders off the front desk.",
+      "obj3q": "“Our clients are not digital.”",
+      "obj3a": "Those who are already ease the desk; others keep the phone. You gain on digital volume without losing the rest.",
+      "obj4q": "“What about confidentiality / who sees what?”",
+      "obj4a": "Role-based rights: reception has what it needs to welcome and schedule, without clinical notes.",
+      "takeawayTitle": "Line to remember",
+      "takeawayBody": "“petsFollow does not replace the emergency phone: it takes questions, confirmations and reminders that clog the front desk off the ASV, while the owner follows care and appointments in the app.”",
+      "footer": "Ask for a 10-minute demo at the front desk. petsFollow — prescribed care continuity · digital passport."
     }
   },
   "commissionSheet": {

@@ -15,6 +15,15 @@ test('responsable commercial voit suivi et prospects équipe', async ({ page }) 
   await expect(page.getByTestId('manager-prospects-page')).toBeVisible()
 })
 
+test('responsable commercial ouvre le mémo ASV', async ({ page }) => {
+  await loginAsCommercialManager(page)
+  await expect(page.getByTestId('nav-commercial-asv-memo')).toBeVisible()
+  await page.goto('/commercial/asv-memo', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByTestId('commercial-asv-memo')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('asv-memo-print')).toBeVisible()
+  await expect(page.getByTestId('nav-commercial-settings')).toBeVisible()
+})
+
 test.describe('manager filiation', { tag: '@p1' }, () => {
   test('responsable ouvre la page filiation', async ({ page }) => {
     await loginAsCommercialManager(page)

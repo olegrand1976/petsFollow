@@ -212,6 +212,15 @@ a.pro-kpi-card:focus-visible {
   margin-bottom: 1.5rem;
 }
 
+/* Match base `h1` when titleTag is `p` (print leave-behind toolbars). */
+.pro-page-header__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+
 .pro-page-header__subtitle {
   margin: 0.35rem 0 0;
   color: var(--pf-vet-text-muted);

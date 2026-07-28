@@ -60,7 +60,8 @@
       "patients": "Patsiendid",
       "clinic": "Kliinik",
       "finance": "Rahandus",
-      "practice": "Kabinet"
+      "practice": "Kabinet",
+      "account": "Konto"
     },
     "managerAiModules": "AI CR — meeskond",
     "adminSupport": "Tugi",
@@ -71,7 +72,8 @@
     "usecases": "Testijuhendid",
     "stock": "Varu",
     "daf": "DAF",
-    "prescriptions": "Retseptid"
+    "prescriptions": "Retseptid",
+    "commercialAsvMemo": "ASV memo"
   },
   "auth": {
     "login": {
@@ -2276,6 +2278,51 @@
       "loadError": "Võrgustiku laadimine ebaõnnestus",
       "downlineEmpty": "No downline yet",
       "downlineEmptyDesc": "Your downline will appear here after recruitment."
+    },
+    "asvMemo": {
+      "title": "ASV memo",
+      "subtitle": "10-minutiline memo vastuvõtule — prinditav / PDF",
+      "copyLink": "Kopeeri link",
+      "mailto": "Saada e-postiga",
+      "print": "Prindi / PDF",
+      "linkCopied": "Link kopeeritud",
+      "mailSubject": "petsFollow — ASV memo (10 min)",
+      "mailBodyPdf": "Tere,\n\nSiin on petsFollowi memo ASV / vastuvõtu jaoks (prindi või salvesta PDF-ina müügialalt).\n\nEesmärk: 10 minutit, et näha, mis vastuvõtus muutub.\n\nLugupidamisega,",
+      "ctaHint": "Leave-behind ASV-le — 10 min, prinditav PDF-ina.",
+      "ctaOpen": "Ava ASV memo",
+      "badge": "Leave-behind · 10 minutit · vastuvõtt",
+      "docTitle": "petsFollow ASV-le — mis muutub teie päevas",
+      "promise": "Kümme minutit, et näha, kuidas petsFollow kergendab vastuvõttu: vähem hajutatud kõnesid, vähem käsitsi meeldetuletusi, selge klientide / kalendri / sõnumite kokpit — meditsiinilist toimikut puudutamata.",
+      "painTitle": "Teie tegelikkus täna",
+      "pain1": "Isiklikud SMS-id, hajutatud e-kirjad ja registreerimata kõned koormavad vastuvõttu.",
+      "pain2": "Väljaspool lahtiolekuaegu tulevad küsimused edasi, kui kabinet on suletud.",
+      "pain3": "Vastuvõtu meeldetuletused ning vaktsiini- / ravikuuri meeldetuletused käivad endiselt telefoni teel.",
+      "pain4": "Jagatud vastuvõtu arvutil on profiili vahetamine aeglane ja nõrgalt turvatud.",
+      "gainTitle": "Mis teie jaoks muutub",
+      "gain1": "Sõnumid looma / toimiku järgi: fotod ja küsimused õiges lõimes — mitte vastuvõtu telefonis.",
+      "gain2": "Režiim pole saadaval / suletud: klient näeb, et kabinet ei vasta — vähem väljaspool aegu pöördumisi.",
+      "gain3": "Vastuvõtu taotlus kliendirakendusest → te kinnitate; omanik saab teavituse (push + e-post).",
+      "gain4": "Eelkonsultatsioon: põhjus ja kiireloomulisus juba toimikus enne saabumist — vähem telefoni-intakeke.",
+      "gain5": "Care meeldetuletused omaniku poolel (vaktsiinid, ravikuurid): vähem kõnesid « palun helistage korduseks ».",
+      "gain6": "Vastuvõtu vahetus: ASV ↔ loomaarsti profiil sekunditega, igaüks leiab oma ekraani.",
+      "notTitle": "Mida te ei tee",
+      "notBody": "Sekretäri / ASV roll hõlmab kliente, kalendrit ja sõnumeid — mitte kliinilist kirjutamist. petsFollow ei tee teist « teisest loomaarstist »: see korrastab kliendisuhet, meditsiin jääb loomaarstile.",
+      "demoTitle": "Välkdemo 3 sammuga (vastuvõtus)",
+      "demo1": "Sõnumid: avage looma lõim, näidake sorteeritud fotosid / küsimusi.",
+      "demo2": "Kalender: kliendi vastuvõtu taotlus kinnitamiseks, seejärel omaniku teavitus.",
+      "demo3": "Desk switch: vahetage profiili samal jagatud arvutil.",
+      "objectionsTitle": "Välk-vastuväited",
+      "obj1q": "« Kas see on ASV-le lisatöö? »",
+      "obj1a": "Vastupidi: see vähendab kõnesid ja hajutatud sõnumeid, pannes need ühele ekraanile.",
+      "obj2q": "« Kas see asendab hädaabitelefoni? »",
+      "obj2a": "Ei. Hädaolukord jääb telefonile. petsFollow võtab vastuvõtult ära igapäevased küsimused, kinnitused ja meeldetuletused.",
+      "obj3q": "« Meie kliendid ei ole digitaalsed. »",
+      "obj3a": "Need, kes on, kergendavad juba vastuvõttu; teised hoiavad telefoni. Te võidate digitaalses mahus ülejäänut kaotamata.",
+      "obj4q": "« Aga konfidentsiaalsus / kes mida näeb? »",
+      "obj4a": "Õigused rolli järgi: vastuvõtul on vajalik vastuvõtmiseks ja planeerimiseks, ilma kliiniliste märkusteta.",
+      "takeawayTitle": "Lause meelde jätmiseks",
+      "takeawayBody": "« petsFollow ei asenda hädaabitelefoni: see vabastab ASV küsimustest, kinnitustest ja meeldetuletustest, mis vastuvõttu üle koormavad, samal ajal kui omanik jälgib hooldust ja vastuvõtte rakenduses. »",
+      "footer": "Paluge 10-minutilist demot vastuvõtus. petsFollow — ettekirjutatud hoolduse järjepidevus · digitaalne pass."
     }
   },
   "commissionSheet": {

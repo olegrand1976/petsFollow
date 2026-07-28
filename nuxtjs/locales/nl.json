@@ -60,7 +60,8 @@
       "patients": "Patiënten",
       "clinic": "Kliniek",
       "finance": "Financiën",
-      "practice": "Praktijk"
+      "practice": "Praktijk",
+      "account": "Account"
     },
     "managerAiModules": "AI CR — team",
     "adminSupport": "Support",
@@ -71,7 +72,8 @@
     "usecases": "Testgidsen",
     "stock": "Voorraad",
     "daf": "DAF",
-    "prescriptions": "Voorschriften"
+    "prescriptions": "Voorschriften",
+    "commercialAsvMemo": "ASV-memo"
   },
   "auth": {
     "login": {
@@ -2321,6 +2323,51 @@
       "loadError": "Netwerk laden mislukt",
       "downlineEmpty": "Nog geen downline",
       "downlineEmptyDesc": "Uw downline verschijnt hier na rekrutering."
+    },
+    "asvMemo": {
+      "title": "ASV-memo",
+      "subtitle": "Leave-behind van 10 minuten voor de balie — printbaar / PDF",
+      "copyLink": "Link kopiëren",
+      "mailto": "Per e-mail sturen",
+      "print": "Afdrukken / PDF",
+      "linkCopied": "Link gekopieerd",
+      "mailSubject": "petsFollow — ASV-memo (10 min)",
+      "mailBodyPdf": "Hallo,\n\nHierbij de petsFollow-memofiche voor ASV / balie (print of opslaan als PDF vanuit de commerciële ruimte).\n\nDoel: in 10 minuten zien wat er verandert aan de balie.\n\nMet vriendelijke groet,",
+      "ctaHint": "Leave-behind voor de ASV — 10 min, printbaar als PDF.",
+      "ctaOpen": "ASV-memo openen",
+      "badge": "Leave-behind · 10 minuten · balie",
+      "docTitle": "petsFollow voor de ASV — wat verandert in uw dag",
+      "promise": "Tien minuten om te zien hoe petsFollow de balie ontlast: minder verspreide oproepen, minder manuele opvolging, een duidelijk cockpit klanten / agenda / berichten — zonder het medisch dossier aan te raken.",
+      "painTitle": "Uw realiteit vandaag",
+      "pain1": "Persoonlijke sms’en, verspreide mails en niet-gelogde oproepen overbelasten de balie.",
+      "pain2": "Vragen buiten de openingsuren blijven binnenkomen terwijl de praktijk dicht is.",
+      "pain3": "Afspraakherinneringen en vaccin-/behandelingsopvolging lopen nog via de telefoon.",
+      "pain4": "Op de gedeelde balie-pc is van profiel wisselen traag en weinig beveiligd.",
+      "gainTitle": "Wat verandert voor u",
+      "gain1": "Berichten per dier / dossier: foto’s en vragen in de juiste thread — niet op de telefoon van de balie.",
+      "gain2": "Modus niet beschikbaar / gesloten: de klant ziet dat de praktijk niet antwoort — minder vragen buiten uren.",
+      "gain3": "Afspraakaanvraag via de klantapp → u bevestigt; de eigenaar wordt genotificeerd (push + e-mail).",
+      "gain4": "Preconsultatie: reden en urgentie al in het dossier vóór aankomst — minder telefonische intakes.",
+      "gain5": "Care-herinneringen bij de eigenaar (vaccins, behandelingen): minder “bel even voor de herhaling”-oproepen.",
+      "gain6": "Balie-switch: ASV ↔ dierenarts-profiel in seconden, ieder hervindt zijn scherm.",
+      "notTitle": "Wat u niet doet",
+      "notBody": "De rol secretariaat / ASV dekt klanten, agenda en berichten — geen klinisch schrijven. petsFollow maakt van u geen “tweede dierenarts”: het ordent de klantrelatie terwijl de dierenarts het medische behoudt.",
+      "demoTitle": "Flash-demo in 3 stappen (aan de balie)",
+      "demo1": "Berichten: open een dierthread, toon gesorteerde foto’s / vragen.",
+      "demo2": "Agenda: een klantafspraakaanvraag bevestigen, daarna notificatie naar de eigenaar.",
+      "demo3": "Desk switch: van profiel wisselen op dezelfde gedeelde pc.",
+      "objectionsTitle": "Flash-bezwaren",
+      "obj1q": "“Is dit extra werk voor de ASV?”",
+      "obj1a": "Integendeel: het vermindert oproepen en verspreide berichten door ze op één scherm te zetten.",
+      "obj2q": "“Vervangt dit de noodtelefoon?”",
+      "obj2a": "Nee. Nood blijft de telefoon. petsFollow haalt dagelijkse vragen, bevestigingen en herinneringen van de balie.",
+      "obj3q": "“Onze klanten zijn niet digitaal.”",
+      "obj3a": "Wie digitaal is, ontlast al de balie; anderen houden de telefoon. U wint op digitaal volume zonder de rest te verliezen.",
+      "obj4q": "“En vertrouwelijkheid / wie ziet wat?”",
+      "obj4a": "Rechten per rol: de balie heeft wat nodig is om te ontvangen en plannen, zonder klinische notities.",
+      "takeawayTitle": "Zin om te onthouden",
+      "takeawayBody": "“petsFollow vervangt de noodtelefoon niet: het ontlast de ASV van vragen, bevestigingen en herinneringen die de balie verzadigen, terwijl de eigenaar zorg en afspraken in de app volgt.”",
+      "footer": "Vraag een demo van 10 minuten aan de balie. petsFollow — voorgeschreven zorgcontinuïteit · digitaal paspoort."
     }
   },
   "commissionSheet": {

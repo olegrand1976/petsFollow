@@ -60,7 +60,8 @@
       "patients": "Pacientes",
       "clinic": "Clínica",
       "finance": "Finanzas",
-      "practice": "Consulta"
+      "practice": "Consulta",
+      "account": "Cuenta"
     },
     "managerAiModules": "CR IA — equipo",
     "adminSupport": "Soporte",
@@ -71,7 +72,8 @@
     "usecases": "Guías de prueba",
     "stock": "Stock",
     "daf": "DAF",
-    "prescriptions": "Recetas"
+    "prescriptions": "Recetas",
+    "commercialAsvMemo": "Memo ASV"
   },
   "auth": {
     "login": {
@@ -2276,6 +2278,51 @@
       "loadError": "No se pudo cargar la red",
       "downlineEmpty": "Sin downline",
       "downlineEmptyDesc": "Su downline aparecerá aquí tras el reclutamiento."
+    },
+    "asvMemo": {
+      "title": "Memo ASV",
+      "subtitle": "Ficha de 10 minutos para recepción — imprimible / PDF",
+      "copyLink": "Copiar enlace",
+      "mailto": "Enviar por e-mail",
+      "print": "Imprimir / PDF",
+      "linkCopied": "Enlace copiado",
+      "mailSubject": "petsFollow — memo ASV (10 min)",
+      "mailBodyPdf": "Hola,\n\nAquí tienes la ficha memo petsFollow para ASV / recepción (imprimir o guardar como PDF desde el espacio comercial).\n\nObjetivo: 10 minutos para ver qué cambia en el mostrador.\n\nSaludos,",
+      "ctaHint": "Leave-behind para la ASV — 10 min, imprimible en PDF.",
+      "ctaOpen": "Abrir memo ASV",
+      "badge": "Leave-behind · 10 minutos · recepción",
+      "docTitle": "petsFollow para la ASV — qué cambia en su día",
+      "promise": "Diez minutos para ver cómo petsFollow alivia la recepción: menos llamadas dispersas, menos seguimientos manuales, un cockpit claro clientes / agenda / mensajes — sin tocar la historia clínica.",
+      "painTitle": "Su realidad hoy",
+      "pain1": "SMS personales, correos dispersos y llamadas no registradas saturan la recepción.",
+      "pain2": "Las preguntas fuera de horario siguen llegando cuando la clínica está cerrada.",
+      "pain3": "Recordatorios de cita y vacunas / tratamientos siguen pasando por el teléfono.",
+      "pain4": "En el PC compartido de recepción, cambiar de perfil es lento y poco seguro.",
+      "gainTitle": "Qué cambia para usted",
+      "gain1": "Mensajería ordenada por animal / expediente: fotos y preguntas en el hilo correcto — no en el teléfono de recepción.",
+      "gain2": "Modo no disponible / cerrado: el cliente ve que la clínica no responde — menos solicitudes fuera de horario.",
+      "gain3": "Solicitud de cita desde la app cliente → usted confirma; el propietario es notificado (push + e-mail).",
+      "gain4": "Preconsulta: motivo y urgencia ya en el expediente antes de llegar — menos intakes telefónicos.",
+      "gain5": "Recordatorios Care del propietario (vacunas, tratamientos): menos llamadas « hay que llamar para el refuerzo ».",
+      "gain6": "Cambio de puesto: perfil ASV ↔ vet en segundos, cada uno recupera su pantalla.",
+      "notTitle": "Lo que usted no hace",
+      "notBody": "El rol secretaría / ASV cubre clientes, agenda y mensajería — no escritura clínica. petsFollow no le convierte en un « segundo vet »: organiza la relación con el cliente mientras el veterinario guarda lo médico.",
+      "demoTitle": "Demo flash en 3 gestos (en recepción)",
+      "demo1": "Mensajería: abrir un hilo de animal, mostrar fotos / preguntas ordenadas.",
+      "demo2": "Agenda: una solicitud de cita cliente a confirmar, luego notificación al propietario.",
+      "demo3": "Desk switch: cambiar de perfil en el mismo PC compartido.",
+      "objectionsTitle": "Objeciones flash",
+      "obj1q": "« ¿Es más trabajo para la ASV? »",
+      "obj1a": "Al contrario: reduce llamadas y mensajes dispersos al reunirlos en una sola pantalla.",
+      "obj2q": "« ¿Sustituye el teléfono de urgencias? »",
+      "obj2a": "No. La urgencia sigue siendo el teléfono. petsFollow descarga de la recepción las preguntas, confirmaciones y recordatorios del día a día.",
+      "obj3q": "« Nuestros clientes no son digitales. »",
+      "obj3a": "Los que sí lo son ya alivian la recepción; los demás mantienen el teléfono. Gana en volumen digital sin perder el resto.",
+      "obj4q": "« ¿Y la confidencialidad / quién ve qué? »",
+      "obj4a": "Derechos por rol: recepción tiene lo necesario para recibir y planificar, sin notas clínicas.",
+      "takeawayTitle": "Frase para recordar",
+      "takeawayBody": "« petsFollow no sustituye el teléfono de urgencias: descarga a la ASV de las preguntas, confirmaciones y recordatorios que saturan la recepción, mientras el propietario sigue cuidados y citas en la app. »",
+      "footer": "Pida una demo de 10 minutos en recepción. petsFollow — continuidad de cuidados prescrita · pasaporte digital."
     }
   },
   "commissionSheet": {

@@ -12,6 +12,13 @@
       </ProButton>
     </ProCard>
 
+    <ProCard class="pro-mb-lg" data-testid="pitch-asv-memo-cta">
+      <p class="pro-hint">{{ $t('commercial.asvMemo.ctaHint') }}</p>
+      <ProButton test-id="pitch-open-asv-memo" @click="navigateTo('/commercial/asv-memo')">
+        {{ $t('commercial.asvMemo.ctaOpen') }}
+      </ProButton>
+    </ProCard>
+
     <ProCard class="pro-mb-lg" data-testid="pitch-competition-cta">
       <p class="pro-hint">{{ $t('competition.subtitle') }}</p>
       <ProButton test-id="pitch-open-competition" @click="navigateTo('/commercial/competition')">

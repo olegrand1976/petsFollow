@@ -41,6 +41,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/produits', label: t('nav.products'), icon: 'description', section: t('nav.section.offer') },
   { to: '/commercial/pitch', label: t('nav.commercialPitch'), icon: 'campaign', section: t('nav.section.offer') },
   { to: '/commercial/pitch-deck', label: t('pitchDeck.ui.navLabel'), icon: 'slideshow', section: t('nav.section.offer') },
+  { to: '/commercial/asv-memo', label: t('nav.commercialAsvMemo'), icon: 'support_agent', section: t('nav.section.offer') },
   { to: '/commercial/competition', label: t('nav.commercialCompetition'), icon: 'analytics', section: t('nav.section.offer') },
   ...(isStagingLike.value
     ? [usecasesNavItem(t('nav.usecases'), t('nav.section.offer'))]
@@ -50,6 +51,7 @@ const navItems = computed<ProNavItem[]>(() => [
   { to: '/commercial/ai-cr-playbook', label: t('nav.commercialAiPlaybook'), icon: 'description', section: t('nav.section.ai') },
   { to: '/commercial', label: t('nav.managerPortfolio'), icon: 'users', section: t('nav.section.portfolio') },
   { to: '/commercial/network', label: t('nav.commercialNetwork'), icon: 'account_tree', section: t('nav.section.network') },
+  { to: '/commercial/settings', label: t('nav.commercialSettings'), icon: 'settings', section: t('nav.section.account') },
 ])
 
 onMounted(() => {

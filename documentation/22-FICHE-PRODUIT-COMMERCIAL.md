@@ -87,6 +87,18 @@ Détail 30 jours + SPIFF → [21](21-GTM-COMMERCIAL.md).
 Local : Pro **http://localhost:3002** · API **http://localhost:8291**  
 (`make up-infra && make migrate && make seed && make api-dev` + `make nuxtjs-dev`)
 
+## Mémo ASV (leave-behind 10 min)
+
+Fiche adressée à l’**ASV / accueil**, imprimable en PDF depuis l’espace commercial (ou responsable) : **`/commercial/asv-memo`**.
+
+| Quand | Usage |
+|-------|--------|
+| ASV présente en démo | Laisser lire / annoter pendant que le véto voit le cockpit clinique |
+| Suite de visite cabinet | Imprimer / Enregistrer en PDF → laisser au standard |
+| Relance e-mail | Bouton « Envoyer par e-mail » (joindre le PDF généré côté navigateur) |
+
+Focus : soulagement du standard (messagerie, RDV, préconsult, Care, switch poste) — **pas** le tarif SaaS cabinet au centre. Nav Offre (commercial + manager) + CTA depuis `/commercial/pitch`.
+
 ## Interdits (à bien comprendre)
 
 Un cabinet **commence forcément à 0 animal payant** — c’est normal. Ce qui est interdit, c’est de **confondre inscription et revenu**.
