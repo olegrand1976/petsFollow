@@ -17,7 +17,9 @@
       <div class="pharmacy-legal__body">
         <p>{{ $t('pharmacy.legal.fefo') }}</p>
         <p>{{ $t('pharmacy.legal.expiry') }}</p>
+        <p>{{ $t('pharmacy.legal.quarantine') }}</p>
         <p>{{ $t('pharmacy.legal.waste') }}</p>
+        <p>{{ $t('pharmacy.legal.careVsStock') }}</p>
       </div>
     </details>
 

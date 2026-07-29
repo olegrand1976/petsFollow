@@ -71,7 +71,7 @@
     "managerFiliation": "Team attribution",
     "adminFiliation": "Attribution",
     "usecases": "Test guides",
-    "stock": "Stock",
+    "stock": "Practice stock",
     "daf": "DAF",
     "prescriptions": "Prescriptions",
     "commercialAsvMemo": "ASV memo",
@@ -825,11 +825,13 @@
       "vamreg": "Antibiotics: VAMReg declaration and required fields before DAF finalisation.",
       "expiry": "Expiry: 90 / 60 / 30 day thresholds; expired lots are auto-quarantined (daily job).",
       "waste": "Only a waste declaration (destruction or supplier return) permanently removes the lot from stock.",
-      "dafFinalize": "Finalize requires lot + MA number; antibiotics need VAMReg payload."
+      "dafFinalize": "Finalize requires lot + MA number; antibiotics need VAMReg payload.",
+      "quarantine": "Quarantine: physically separate expired or suspect lots from active stock before destruction or supplier return.",
+      "careVsStock": "Practice stock ≠ client Care medication reminders: this screen is cabinet physical stock only."
     },
     "stock": {
       "title": "Practice stock",
-      "subtitle": "Lots, expiry (90/60/30) and movements — FEFO.",
+      "subtitle": "Cabinet physical lots, expiry (90/60/30) and movements — FEFO (≠ client Care).",
       "export": "Export CSV",
       "receiptTitle": "Stock receipt",
       "medication": "Medication",
@@ -880,7 +882,8 @@
       "invCancelled": "Inventory cancelled.",
       "errorInv": "Inventory failed.",
       "errorReorderLoad": "Could not load reorder alerts.",
-      "errorInvLoad": "Could not load the open inventory session."
+      "errorInvLoad": "Could not load the open inventory session.",
+      "quarantineConfirm": "Quarantine this lot? Physically separate it from active stock, then declare waste (destruction or supplier return)."
     },
     "daf": {
       "title": "DAF documents",

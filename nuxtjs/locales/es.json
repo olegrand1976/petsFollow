@@ -71,7 +71,7 @@
     "managerFiliation": "Filación equipo",
     "adminFiliation": "Filación",
     "usecases": "Guías de prueba",
-    "stock": "Stock",
+    "stock": "Stock gabinete",
     "daf": "DAF",
     "prescriptions": "Recetas",
     "commercialAsvMemo": "Memo ASV",
@@ -799,11 +799,13 @@
       "vamreg": "Antibióticos: declaración VAMReg y campos obligatorios antes de finalizar el DAF.",
       "expiry": "Caducidad: umbrales 90 / 60 / 30 días; los lotes caducados pasan a cuarentena automáticamente (job diario).",
       "waste": "Solo una declaración waste (destrucción o devolución) saca definitivamente el lote del stock.",
-      "dafFinalize": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg."
+      "dafFinalize": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg.",
+      "quarantine": "Cuarentena: separe físicamente los lotes caducados o sospechosos del stock activo antes de destruir o devolver.",
+      "careVsStock": "Stock del gabinete ≠ recordatorios Care del cliente: esta pantalla es solo stock físico del gabinete."
     },
     "stock": {
       "title": "Stock del gabinete",
-      "subtitle": "Lotes, caducidad (90/60/30) y movimientos — FEFO.",
+      "subtitle": "Lotes físicos del gabinete, caducidad (90/60/30) y movimientos — FEFO (≠ Care cliente).",
       "export": "Exportar CSV",
       "receiptTitle": "Entrada de stock",
       "medication": "Medicamento",
@@ -854,7 +856,8 @@
       "invCancelled": "Inventario cancelado.",
       "errorInv": "Inventario imposible.",
       "errorReorderLoad": "No se pudieron cargar las alertas de reposición.",
-      "errorInvLoad": "No se pudo cargar el inventario abierto."
+      "errorInvLoad": "No se pudo cargar el inventario abierto.",
+      "quarantineConfirm": "¿Poner este lote en cuarentena? Sepárelo físicamente del stock activo y declare waste (destrucción o devolución)."
     },
     "daf": {
       "title": "Documentos DAF",

@@ -4,10 +4,10 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut global | **~90 % Phase 1** — S0–S4 ✅ · S5 ⏸ (reseller Billit) · S6 🟡 (~80 %) |
+| Statut global | **~92 % Phase 1** — S0–S4 ✅ · S5 ⏸ (reseller Billit) · S6 ✅ (smoke staging) |
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
-| Dernière revue | 2026-07-29 (S6 smoke staging ✅ après merge PR #3 + job `petsfollow-seed`) |
+| Dernière revue | 2026-07-29 (Prio 2 polish : digests skip/lundi + copy quarantaine / Stock cabinet) |
 | Prochaine action | **S5** dès accès reseller Billit (**P0-2** — en attente, pas de code) ; Phase 2.F / 4.A–B / 4.E / Phase 5 attend P0 ; GA tag `dev` = décision produit |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
@@ -60,8 +60,8 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | S3 DAF + PDF | 20 % | ~95 % | ~19 % |
 | S4 VAMReg | 15 % | ~95 % | ~14 % |
 | S5 invoices.connect | 10 % | 0 % (gelé) | 0 % |
-| S6 Ops staging | 10 % | ~80 % | ~8 % |
-| **Total** | 100 % | | **~90 %** |
+| S6 Ops staging | 10 % | 100 % | 10 % |
+| **Total** | 100 % | | **~92 %** |
 
 ---
 
@@ -132,12 +132,15 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | Gate antibiotique VAMReg | `pharmacy/vamreg.go` (worker = S4) |
 | Tests | `TestPharmacyDAFFinalizeCancelPDF` + unit PDF/VAMReg |
 
-### 1.6 Encore non démarré — ⬜
+### 1.6 Hors Phase 1 / en attente partenaires — ⏸
 
-- Workers Asynq, VAMReg, invoices.connect
-- Import AFMPS national complet
-- Use case commercial `UC-*` pharmacie
-- Activation staging Cloud Run (`PHARMACY_ENABLED` + `pg_trgm`)
+| Item | Statut | Note |
+|------|--------|------|
+| Workers Asynq VAMReg | 🟡 | Dry-run sync défaut ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` |
+| invoices.connect (S5) | ⏸ | Gelé jusqu’à reseller Billit (**P0-2**) |
+| Import AFMPS / CNK national | ⏸ | **P0-3** |
+| Use case commercial pharmacie | ✅ | [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
+| Staging `PHARMACY_ENABLED` + smoke S6 | ✅ | Cloud Run + `make smoke-pharmacy-s6-staging` |
 
 ---
 
@@ -192,7 +195,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | `000082_pharmacy_ref_drop_unused_fts` | cleanup index FTS draft | ✅ (⚠️ même préfixe 000082 que Billit) |
 | `000083_pharmacy_stock` | deposits, batches(+status), movements, `practice_settings` | ✅ |
 | `000084_pharmacy_daf` | sequences, documents, items | ✅ |
-| `000085_pharmacy_jobs_audit` | `job_audit` | ⬜ |
+| `000107_pharmacy_jobs_audit` | `job_audit` (ex-cible `000085` renumérotée) | ✅ |
 
 > **Attention** : `000082_invoicing_billit` coexiste déjà. Ne **pas** réutiliser `000082` pour le stock — démarrer à **`000083_pharmacy_stock`**.
 
@@ -324,7 +327,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 
 ---
 
-## 6. Surfaces API (à créer) — ⬜
+## 6. Surfaces API — ✅ (Phase 1 + Phase 2.A–E)
 
 Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
 
@@ -332,8 +335,9 @@ Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
 |------|-------------|--------|
 | Médicaments | `GET /medications/search` | ✅ |
 | Dépôts / lots / mouvements | CRUD + adjust / quarantine / waste ; `GET /movements?dafId=` | ✅ |
-| Expiry | `GET /expiry/summary` · `PATCH /settings` | ✅ |
+| Expiry | `GET /expiry/summary` · `PATCH /settings` · digest skip vide / jour ISO | ✅ |
 | DAF | draft / finalize / cancel / PDF ; sorties liées `daf_id`+`daf_item_id` | ✅ |
+| Pricing / réassort / commandes / inventaire | Phase 2.A–E | ✅ |
 | Interne | `POST /internal/pharmacy/expiry-run` | ✅ |
 
 Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_expired` · `batch_quarantined` · `invalid_expiry_on_receipt`.
@@ -343,17 +347,17 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 ## 7. Checklist ops staging
 
 - [x] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
-- [ ] Migrations `000081`+ appliquées
-- [ ] Import CNK exécuté
-- [ ] `PHARMACY_ENABLED=true` (pilote)
-- [ ] Nav Médicaments + tag **`dev`** visible
+- [x] Migrations `000081`+ / chaîne pharmacie `000107`+ appliquées (staging via job seed)
+- [ ] Import CNK national complet (⏸ **P0-3** — seed démo suffit pour pilote)
+- [x] `PHARMACY_ENABLED=true` (défaut staging Cloud Run)
+- [x] Nav Médicaments + tag **`dev`** visible
 - [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)
 - [x] Scheduler `expiry-run` (Europe/Brussels 04:00, `make gcp-pharmacy-expiry-scheduler`)
 - [x] Env Cloud Run `VAMREG_DRY_RUN=true` · `PHARMACY_WORKERS_ENABLED=false` (sync)
 - [ ] Secret `petsfollow-vamreg-api-key` (optionnel dry-run ; requis P0-1 live)
 - [ ] Redis si `PHARMACY_WORKERS_ENABLED=true`
-- [ ] GCS PDF DAF
-- [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize → VAMReg `sent` (dry-run)
+- [x] GCS PDF DAF (media sensible)
+- [x] Smoke S6 : `make smoke-pharmacy-s6-staging` (VAMReg dry-run `sent`)
 
 ---
 
@@ -378,9 +382,9 @@ Les items ci-dessous ne sont **plus** un fourre-tout « ❌ » : ils sont planif
 
 | Risque | Mitigation | Statut mitigation |
 |--------|------------|-------------------|
-| Digests bruyants | Skip si vide ; lundi only | ⬜ (à coder) |
-| Séparation physique oubliée | Copy UI quarantaine | ⬜ |
-| Confusion Care vs stock | Libellés « Stock cabinet » | ⬜ |
+| Digests bruyants | Skip si vide ; lundi only (`shouldSendPharmacyExpiryDigest` + job 04:00) | ✅ |
+| Séparation physique oubliée | Copy UI quarantaine + confirm + digest / notify | ✅ |
+| Confusion Care vs stock | Libellés « Stock cabinet » (nav + page + bloc légal) | ✅ |
 | Numéros migration 27 obsolètes | Ce plan impose **000081+** | ✅ |
 
 ---
@@ -398,4 +402,4 @@ Les items ci-dessous ne sont **plus** un fourre-tout « ❌ » : ils sont planif
 | GCP | [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT.md) |
 | AFMPS DAF | https://www.afmps.be/fr/usage_veterinaire/medicaments/medicaments/distribution_et_delivrance/documents_veterinaires |
 
-**Prochaine action concrète** : **S6** smoke staging pilote (checklist §7, stock/DAF/VAMReg dry-run) ; **S5 / BIL-9** dès accès reseller Billit (P0-2).
+**Prochaine action concrète** : **S5 / BIL-9** dès accès reseller Billit (**P0-2**) ; pas de code Phase 2.F / 4.A–B–E / Phase 5 / GA sans P0.

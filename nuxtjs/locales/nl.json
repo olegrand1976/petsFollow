@@ -71,7 +71,7 @@
     "managerFiliation": "Teamfiliatie",
     "adminFiliation": "Filiatie",
     "usecases": "Testgidsen",
-    "stock": "Voorraad",
+    "stock": "Praktijkvoorraad",
     "daf": "DAF",
     "prescriptions": "Voorschriften",
     "commercialAsvMemo": "ASV-memo",
@@ -825,11 +825,13 @@
       "vamreg": "Antibiotica: VAMReg-aangifte en verplichte velden vóór DAF-finalisatie.",
       "expiry": "Verval: drempels 90 / 60 / 30 dagen; verlopen partijen gaan automatisch in quarantaine (dagelijkse job).",
       "waste": "Alleen een waste-declaratie (vernietiging of retour leverancier) haalt de partij definitief uit de voorraad.",
-      "dafFinalize": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload."
+      "dafFinalize": "Finalize vereist partij + VHB; antibiotica vereisen VAMReg-payload.",
+      "quarantine": "Quarantaine: scheid verlopen of verdachte partijen fysiek van de actieve voorraad vóór vernietiging of retour.",
+      "careVsStock": "Praktijkvoorraad ≠ Care-herinneringen voor cliënten: dit scherm is enkel fysieke kabinetvoorraad."
     },
     "stock": {
       "title": "Praktijkvoorraad",
-      "subtitle": "Partijen, verval (90/60/30) en bewegingen — FEFO.",
+      "subtitle": "Fysieke kabinetpartijen, verval (90/60/30) en bewegingen — FEFO (≠ Care-cliënt).",
       "export": "CSV exporteren",
       "receiptTitle": "Voorraadontvangst",
       "medication": "Geneesmiddel",
@@ -880,7 +882,8 @@
       "invCancelled": "Inventaris geannuleerd.",
       "errorInv": "Inventaris mislukt.",
       "errorReorderLoad": "Herkantelingswaarschuwingen laden mislukt.",
-      "errorInvLoad": "Open inventaris laden mislukt."
+      "errorInvLoad": "Open inventaris laden mislukt.",
+      "quarantineConfirm": "Deze partij in quarantaine zetten? Scheid ze fysiek van de actieve voorraad, verklaar daarna waste (vernietiging of retour)."
     },
     "daf": {
       "title": "DAF-documenten",

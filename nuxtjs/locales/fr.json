@@ -74,7 +74,7 @@
     "managerFiliation": "Filiation équipe",
     "adminFiliation": "Filiation",
     "usecases": "Guides de test",
-    "stock": "Stock",
+    "stock": "Stock cabinet",
     "daf": "DAF",
     "prescriptions": "Ordonnances",
     "adminRuntimeFlags": "Flags runtime"
@@ -1437,11 +1437,13 @@
       "vamreg": "Antibiotiques : déclaration VAMReg et champs obligatoires avant finalisation DAF.",
       "expiry": "Péremption : seuils 90 / 60 / 30 jours ; lots périmés mis en quarantaine automatiquement (job quotidien).",
       "waste": "Seule une déclaration waste (destruction ou retour fournisseur) sort définitivement le lot du stock.",
-      "dafFinalize": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg."
+      "dafFinalize": "Finalize : lot + AMM obligatoires ; antibiotiques exigent le payload VAMReg.",
+      "quarantine": "Quarantaine : séparez physiquement les lots périmés ou suspects du stock actif avant toute destruction ou retour fournisseur.",
+      "careVsStock": "Stock cabinet ≠ rappels médicaments client (Care) : ici uniquement le stock physique du cabinet."
     },
     "stock": {
       "title": "Stock cabinet",
-      "subtitle": "Lots, péremption (90/60/30) et mouvements — FEFO.",
+      "subtitle": "Lots physiques du cabinet, péremption (90/60/30) et mouvements — FEFO (≠ Care client).",
       "export": "Exporter CSV",
       "receiptTitle": "Entrée de stock",
       "medication": "Médicament",
@@ -1492,7 +1494,8 @@
       "invCancelled": "Inventaire annulé.",
       "errorInv": "Inventaire impossible.",
       "errorReorderLoad": "Impossible de charger les alertes réassort.",
-      "errorInvLoad": "Impossible de charger l’inventaire ouvert."
+      "errorInvLoad": "Impossible de charger l’inventaire ouvert.",
+      "quarantineConfirm": "Mettre ce lot en quarantaine ? Séparez-le physiquement du stock actif, puis déclarez un waste (destruction ou retour fournisseur)."
     },
     "daf": {
       "title": "Documents DAF",
