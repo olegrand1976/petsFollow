@@ -71,7 +71,7 @@
     "managerFiliation": "Meeskonna seotus",
     "adminFiliation": "Seotus",
     "usecases": "Testijuhendid",
-    "stock": "Varu",
+    "stock": "Kabineti varu",
     "daf": "DAF",
     "prescriptions": "Retseptid",
     "commercialAsvMemo": "ASV memo",
@@ -799,11 +799,13 @@
       "vamreg": "Antibiootikumid: VAMReg deklaratsioon ja kohustuslikud väljad enne DAF lõpetamist.",
       "expiry": "Aegumine: läved 90 / 60 / 30 päeva; aegunud partiid lähevad automaatselt karantiini (igapäevane töö).",
       "waste": "Ainult waste-deklaratsioon (hävitamine või tagastus) eemaldab partii lõplikult laost.",
-      "dafFinalize": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg."
+      "dafFinalize": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg.",
+      "quarantine": "Karantiin: eraldage aegunud või kahtlased partiid füüsiliselt aktiivsest laost enne hävitamist või tagastust.",
+      "careVsStock": "Kabineti varu ≠ kliendi Care ravimimeeldetuletused: see ekraan on ainult kabineti füüsiline ladu."
     },
     "stock": {
       "title": "Kabineti varu",
-      "subtitle": "Partiid, aegumine (90/60/30) ja liikumised — FEFO.",
+      "subtitle": "Kabineti füüsilised partiid, aegumine (90/60/30) ja liikumised — FEFO (≠ Care klient).",
       "export": "Ekspordi CSV",
       "receiptTitle": "Lao sissetulek",
       "medication": "Ravim",
@@ -854,7 +856,8 @@
       "invCancelled": "Inventuur tühistatud.",
       "errorInv": "Inventuur ebaõnnestus.",
       "errorReorderLoad": "Ümbervarustuse hoiatusi ei õnnestunud laadida.",
-      "errorInvLoad": "Avatud inventuuri ei õnnestunud laadida."
+      "errorInvLoad": "Avatud inventuuri ei õnnestunud laadida.",
+      "quarantineConfirm": "Panna see partii karantiini? Eraldage see füüsiliselt aktiivsest laost, seejärel deklareerige waste (hävitamine või tagastus)."
     },
     "daf": {
       "title": "DAF dokumendid",

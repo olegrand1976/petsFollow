@@ -71,7 +71,7 @@
     "managerFiliation": "Filiazione team",
     "adminFiliation": "Filiazione",
     "usecases": "Guide di test",
-    "stock": "Stock",
+    "stock": "Stock ambulatorio",
     "daf": "DAF",
     "prescriptions": "Ricette",
     "commercialAsvMemo": "Memo ASV",
@@ -1366,11 +1366,13 @@
       "vamreg": "Antibiotici: dichiarazione VAMReg e campi obbligatori prima della finalizzazione DAF.",
       "expiry": "Scadenza: soglie 90 / 60 / 30 giorni; i lotti scaduti vanno in quarantena automaticamente (job giornaliero).",
       "waste": "Solo una dichiarazione waste (distruzione o reso) rimuove definitivamente il lotto dallo stock.",
-      "dafFinalize": "Finalize richiede lotto + AMM; antibiotici richiedono payload VAMReg."
+      "dafFinalize": "Finalize richiede lotto + AMM; antibiotici richiedono payload VAMReg.",
+      "quarantine": "Quarantena: separate fisicamente i lotti scaduti o sospetti dallo stock attivo prima di distruzione o reso.",
+      "careVsStock": "Stock ambulatorio ≠ promemoria Care del cliente: questa schermata è solo stock fisico dell'ambulatorio."
     },
     "stock": {
       "title": "Stock ambulatorio",
-      "subtitle": "Lotti, scadenza (90/60/30) e movimenti — FEFO.",
+      "subtitle": "Lotti fisici ambulatorio, scadenza (90/60/30) e movimenti — FEFO (≠ Care cliente).",
       "export": "Esporta CSV",
       "receiptTitle": "Entrata stock",
       "medication": "Farmaco",
@@ -1421,7 +1423,8 @@
       "invCancelled": "Inventario annullato.",
       "errorInv": "Inventario non riuscito.",
       "errorReorderLoad": "Impossibile caricare gli avvisi di riordino.",
-      "errorInvLoad": "Impossibile caricare l’inventario aperto."
+      "errorInvLoad": "Impossibile caricare l’inventario aperto.",
+      "quarantineConfirm": "Mettere questo lotto in quarantena? Separatelo fisicamente dallo stock attivo, poi dichiarate waste (distruzione o reso)."
     },
     "daf": {
       "title": "Documenti DAF",

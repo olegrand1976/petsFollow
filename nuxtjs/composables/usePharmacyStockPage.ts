@@ -366,6 +366,7 @@ export function usePharmacyStockPage() {
   }
 
   async function quarantine(id: string) {
+    if (!confirm(t('pharmacy.stock.quarantineConfirm'))) return
     busyBatchAction.value = true
     error.value = ''
     try {

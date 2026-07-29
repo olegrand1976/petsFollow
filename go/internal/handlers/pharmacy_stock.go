@@ -453,23 +453,23 @@ func (a *API) internalPharmacyExpiryRun(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
-		sendDigest := settings.ExpiryDigestEnabled && (body.ForceDigest || weekday == settings.ExpiryDigestWeekday)
-		if sendDigest && a.notifier != nil {
-			sum, err := a.store.ExpirySummary(r.Context(), practiceID)
-			if err != nil {
-				continue
-			}
-			if sum.Critical+sum.Expired+sum.Quarantine+sum.Return+sum.Soon == 0 {
-				continue
-			}
-			emails, _ := a.store.ListPracticeVetEmails(r.Context(), practiceID)
-			subj := "[petsFollow] Digest péremption stock cabinet"
-			bodyTxt := fmt.Sprintf("Critique=%d · À retourner=%d · Attention=%d · Périmé=%d · Quarantaine=%d\nOuvrez /stock pour agir.",
-				sum.Critical, sum.Return, sum.Soon, sum.Expired, sum.Quarantine)
-			for _, to := range emails {
-				_ = a.notifier.SendVetAlert(to, subj, bodyTxt)
-				digestsSent++
-			}
+		if a.notifier == nil {
+			continue
+		}
+		sum, err := a.store.ExpirySummary(r.Context(), practiceID)
+		if err != nil {
+			continue
+		}
+		if !shouldSendPharmacyExpiryDigest(settings.ExpiryDigestEnabled, body.ForceDigest, weekday, settings.ExpiryDigestWeekday, sum) {
+			continue
+		}
+		emails, _ := a.store.ListPracticeVetEmails(r.Context(), practiceID)
+		subj := "[petsFollow] Digest péremption stock cabinet"
+		bodyTxt := fmt.Sprintf("Critique=%d · À retourner=%d · Attention=%d · Périmé=%d · Quarantaine=%d\nOuvrez /stock pour agir. Lots en quarantaine : séparez-les physiquement puis déclarez un waste.",
+			sum.Critical, sum.Return, sum.Soon, sum.Expired, sum.Quarantine)
+		for _, to := range emails {
+			_ = a.notifier.SendVetAlert(to, subj, bodyTxt)
+			digestsSent++
 		}
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
