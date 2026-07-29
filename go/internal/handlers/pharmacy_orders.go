@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -167,6 +168,10 @@ func (a *API) sendPharmacyOrder(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
 		return
 	}
+	if a.pharmacyOrderSendRL != nil && !a.pharmacyOrderSendRL.Allow("po-send-practice:"+id.PracticeID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
 	orderID := chi.URLParam(r, "id")
 	var body struct {
 		ToEmail    string `json:"toEmail"`
@@ -188,25 +193,17 @@ func (a *API) sendPharmacyOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	to := strings.TrimSpace(body.ToEmail)
-	if to == "" && body.SupplierID != "" {
-		su, err := a.store.GetSupplier(r.Context(), id.PracticeID, body.SupplierID)
-		if err == nil {
-			to = su.Email
+	to, supplierID, err := a.resolvePurchaseOrderSendTo(r.Context(), id.PracticeID, order, body.ToEmail, body.SupplierID)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+			return
 		}
-	}
-	if to == "" && order.SupplierID != "" {
-		su, err := a.store.GetSupplier(r.Context(), id.PracticeID, order.SupplierID)
-		if err == nil {
-			to = su.Email
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusBadRequest, "supplier_email_required", "supplier_email_required")
+			return
 		}
-	}
-	if to == "" {
-		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
-		return
-	}
-	if _, err := mail.ParseAddress(to); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	if a.notifier == nil {
@@ -214,7 +211,7 @@ func (a *API) sendPharmacyOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err = a.store.SendPurchaseOrderLocked(r.Context(), id.PracticeID, orderID, to, body.SupplierID, func(o store.PurchaseOrder) error {
+	order, err = a.store.SendPurchaseOrderLocked(r.Context(), id.PracticeID, orderID, to, supplierID, func(o store.PurchaseOrder) error {
 		csv := store.FormatPurchaseOrderCSV(o)
 		var rowsHTML strings.Builder
 		rowsHTML.WriteString("<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\"><tr><th>CNK</th><th>Médicament</th><th>Qté</th><th>Unité</th></tr>")
@@ -244,6 +241,68 @@ func (a *API) sendPharmacyOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, order)
+}
+
+// resolvePurchaseOrderSendTo forces toEmail to a practice supplier address (anti-spam).
+// Empty toEmail → supplier email from body.SupplierID or order.SupplierID.
+func (a *API) resolvePurchaseOrderSendTo(ctx context.Context, practiceID string, order store.PurchaseOrder, toEmail, supplierID string) (to, resolvedSupplierID string, err error) {
+	toEmail = strings.TrimSpace(toEmail)
+	supplierID = strings.TrimSpace(supplierID)
+	if supplierID == "" {
+		supplierID = strings.TrimSpace(order.SupplierID)
+	}
+
+	suppliers, err := a.store.ListSuppliers(ctx, practiceID)
+	if err != nil {
+		return "", "", err
+	}
+	if len(suppliers) == 0 {
+		return "", "", store.ErrNotFound
+	}
+
+	byEmail := map[string]store.Supplier{}
+	for _, su := range suppliers {
+		em := strings.ToLower(strings.TrimSpace(su.Email))
+		if em != "" {
+			byEmail[em] = su
+		}
+	}
+
+	if supplierID != "" {
+		su, gerr := a.store.GetSupplier(ctx, practiceID, supplierID)
+		if gerr != nil {
+			if errors.Is(gerr, store.ErrNotFound) {
+				return "", "", store.ErrValidation
+			}
+			return "", "", gerr
+		}
+		suEmail := strings.TrimSpace(su.Email)
+		if suEmail == "" {
+			return "", "", store.ErrNotFound
+		}
+		if toEmail == "" {
+			return suEmail, su.ID, nil
+		}
+		if !strings.EqualFold(toEmail, suEmail) {
+			return "", "", store.ErrValidation
+		}
+		if _, err := mail.ParseAddress(toEmail); err != nil {
+			return "", "", store.ErrValidation
+		}
+		return toEmail, su.ID, nil
+	}
+
+	if toEmail == "" {
+		return "", "", store.ErrValidation
+	}
+	if _, err := mail.ParseAddress(toEmail); err != nil {
+		return "", "", store.ErrValidation
+	}
+	su, ok := byEmail[strings.ToLower(toEmail)]
+	if !ok {
+		return "", "", store.ErrValidation
+	}
+	return toEmail, su.ID, nil
 }
 
 func (a *API) createPharmacyDeliveryNote(w http.ResponseWriter, r *http.Request) {

@@ -57,7 +57,15 @@ func TestPharmacyPlanCoverage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("med: %v", err)
 		}
-		code, env := doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/reorder-thresholds", tok, map[string]any{
+		suEmail := "nil-smtp-" + suffix + "@petsfollow.test"
+		code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/suppliers", tok, map[string]any{
+			"name": "Nil SMTP " + suffix, "email": suEmail,
+		})
+		if code != http.StatusOK {
+			t.Fatalf("supplier %d %#v", code, env)
+		}
+		suID, _ := dataMap(t, env)["id"].(string)
+		code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/reorder-thresholds", tok, map[string]any{
 			"medicationId": medID, "minQty": 10_000,
 		})
 		if code != http.StatusOK {
@@ -65,6 +73,7 @@ func TestPharmacyPlanCoverage(t *testing.T) {
 		}
 		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders", tok, map[string]any{
 			"fromAlerts": true,
+			"supplierId": suID,
 		})
 		if code != http.StatusCreated {
 			t.Fatalf("order %d %#v", code, env)
@@ -76,7 +85,8 @@ func TestPharmacyPlanCoverage(t *testing.T) {
 		})
 
 		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders/"+orderID+"/send", tok, map[string]any{
-			"toEmail": "fournisseur@petsfollow.test",
+			"toEmail":    suEmail,
+			"supplierId": suID,
 		})
 		if code != http.StatusBadGateway {
 			t.Fatalf("send without notifier want 502 got %d %#v", code, env)

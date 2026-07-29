@@ -399,7 +399,10 @@ func (a *API) exportPharmacyBatchesCSV(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("cnk;name;lot;deposit;expires_on;qty;unit;status;band\n"))
 	for _, b := range items {
 		line := fmt.Sprintf("%s;%s;%s;%s;%s;%g;%s;%s;%s\n",
-			b.MedicationCNK, b.MedicationName, b.LotNumber, b.DepositCode, b.ExpiresOn, b.QtyOnHand, b.Unit, b.Status, b.ExpiryBand)
+			store.CSVEscape(b.MedicationCNK), store.CSVEscape(b.MedicationName),
+			store.CSVEscape(b.LotNumber), store.CSVEscape(b.DepositCode),
+			store.CSVEscape(b.ExpiresOn), b.QtyOnHand, store.CSVEscape(b.Unit),
+			store.CSVEscape(b.Status), store.CSVEscape(b.ExpiryBand))
 		_, _ = w.Write([]byte(line))
 	}
 }

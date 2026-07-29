@@ -25,8 +25,21 @@ func TestPharmacyOrdersAndDeliveryNote(t *testing.T) {
 	}
 	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
 
+	supplierEmail := fmt.Sprintf("fournisseur-%s@petsfollow.test", suffix)
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/suppliers", tok, map[string]any{
+		"name":  "Alcyon Smoke " + suffix,
+		"email": supplierEmail,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("supplier %d %#v", code, env)
+	}
+	supplierID, _ := dataMap(t, env)["id"].(string)
+	if supplierID == "" {
+		t.Fatal("missing supplier id")
+	}
+
 	// Seuil élevé → alerte même si du stock résiduel existe d'un run précédent.
-	code, env := doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/reorder-thresholds", tok, map[string]any{
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/reorder-thresholds", tok, map[string]any{
 		"medicationId": medID, "minQty": 10_000,
 	})
 	if code != http.StatusOK {
@@ -35,6 +48,7 @@ func TestPharmacyOrdersAndDeliveryNote(t *testing.T) {
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders", tok, map[string]any{
 		"fromAlerts": true,
+		"supplierId": supplierID,
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create order %d %#v", code, env)
@@ -45,7 +59,15 @@ func TestPharmacyOrdersAndDeliveryNote(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders/"+orderID+"/send", tok, map[string]any{
-		"toEmail": "fournisseur@petsfollow.test",
+		"toEmail": "random-spam@example.com",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("arbitrary toEmail want 400 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders/"+orderID+"/send", tok, map[string]any{
+		"toEmail":    supplierEmail,
+		"supplierId": supplierID,
 	})
 	if code != http.StatusOK {
 		t.Fatalf("send order %d %#v", code, env)
@@ -116,12 +138,13 @@ func TestPharmacyOrdersAndDeliveryNote(t *testing.T) {
 	practiceID, _ := dataMap(t, env)["practiceId"].(string)
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE pharmacy.purchase_orders
-		SET to_email = 'fournisseur@petsfollow.test', updated_at = now()
-		WHERE practice_id = $1 AND id = $2 AND status = 'draft'`, practiceID, claimOrderID); err != nil {
+		SET to_email = $3, updated_at = now()
+		WHERE practice_id = $1 AND id = $2 AND status = 'draft'`, practiceID, claimOrderID, supplierEmail); err != nil {
 		t.Fatalf("force soft-claim: %v", err)
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/orders/"+claimOrderID+"/send", tok, map[string]any{
-		"toEmail": "fournisseur@petsfollow.test",
+		"toEmail":    supplierEmail,
+		"supplierId": supplierID,
 	})
 	if code != http.StatusConflict {
 		t.Fatalf("fresh soft-claim want 409 order_send_in_progress got %d %#v", code, env)
@@ -132,12 +155,12 @@ func TestPharmacyOrdersAndDeliveryNote(t *testing.T) {
 	// Stale claim (past TTL): store reclaim + sendFn OK → sent (HTTP path still needs SMTP).
 	if _, err := api.pool.Exec(ctx, `
 		UPDATE pharmacy.purchase_orders
-		SET to_email = 'fournisseur@petsfollow.test',
+		SET to_email = $3,
 		    updated_at = now() - interval '3 minutes'
-		WHERE practice_id = $1 AND id = $2 AND status = 'draft'`, practiceID, claimOrderID); err != nil {
+		WHERE practice_id = $1 AND id = $2 AND status = 'draft'`, practiceID, claimOrderID, supplierEmail); err != nil {
 		t.Fatalf("stale soft-claim: %v", err)
 	}
-	staleMarked, err := st.SendPurchaseOrderLocked(ctx, practiceID, claimOrderID, "fournisseur@petsfollow.test", "", func(o store.PurchaseOrder) error {
+	staleMarked, err := st.SendPurchaseOrderLocked(ctx, practiceID, claimOrderID, supplierEmail, supplierID, func(o store.PurchaseOrder) error {
 		return nil
 	})
 	if err != nil {
