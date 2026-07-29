@@ -1926,7 +1926,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get consultationAvailableCta => 'Disponibile';
 
   @override
-  String get consultationPendingCta => 'In attesa';
+  String get consultationPendingCta => 'Bozza';
 
   @override
   String get sendConsultationToVet => 'Invia a un veterinario';

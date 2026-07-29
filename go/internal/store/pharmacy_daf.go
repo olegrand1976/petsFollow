@@ -14,50 +14,53 @@ import (
 )
 
 type DAFDocument struct {
-	ID                    string    `json:"id"`
-	PracticeID            string    `json:"practiceId"`
-	DAFYear               int       `json:"dafYear"`
-	DAFNumber             *int64    `json:"dafNumber,omitempty"`
-	DisplayNumber         string    `json:"displayNumber,omitempty"`
-	Status                string    `json:"status"`
-	ClientUserID          string    `json:"clientUserId,omitempty"`
-	PetID                 string    `json:"petId,omitempty"`
-	VisitID               string    `json:"visitId,omitempty"`
-	PrescriberUserID      string    `json:"prescriberUserId"`
-	PrescriberName        string    `json:"prescriberName,omitempty"`
-	ClientName            string    `json:"clientName,omitempty"`
-	PetName               string    `json:"petName,omitempty"`
-	PracticeName          string    `json:"practiceName,omitempty"`
-	Notes                 string    `json:"notes,omitempty"`
-	IssuedAt              string    `json:"issuedAt,omitempty"`
-	FinalizedAt           string    `json:"finalizedAt,omitempty"`
-	CancelledAt           string    `json:"cancelledAt,omitempty"`
-	CancelReason          string    `json:"cancelReason,omitempty"`
-	PDFObjectKey          string    `json:"pdfObjectKey,omitempty"`
-	PDFSHA256             string    `json:"pdfSha256,omitempty"`
-	HasAntibiotic          bool      `json:"hasAntibiotic"`
-	VamregStatus          string    `json:"vamregStatus"`
-	InvoicesExportStatus  string    `json:"invoicesExportStatus"`
-	Items                 []DAFItem `json:"items,omitempty"`
-	CreatedAt             string    `json:"createdAt,omitempty"`
+	ID                   string    `json:"id"`
+	PracticeID           string    `json:"practiceId"`
+	DAFYear              int       `json:"dafYear"`
+	DAFNumber            *int64    `json:"dafNumber,omitempty"`
+	DisplayNumber        string    `json:"displayNumber,omitempty"`
+	Status               string    `json:"status"`
+	ClientUserID         string    `json:"clientUserId,omitempty"`
+	PetID                string    `json:"petId,omitempty"`
+	VisitID              string    `json:"visitId,omitempty"`
+	PrescriberUserID     string    `json:"prescriberUserId"`
+	PrescriberName       string    `json:"prescriberName,omitempty"`
+	ClientName           string    `json:"clientName,omitempty"`
+	PetName              string    `json:"petName,omitempty"`
+	PracticeName         string    `json:"practiceName,omitempty"`
+	Notes                string    `json:"notes,omitempty"`
+	IssuedAt             string    `json:"issuedAt,omitempty"`
+	FinalizedAt          string    `json:"finalizedAt,omitempty"`
+	CancelledAt          string    `json:"cancelledAt,omitempty"`
+	CancelReason         string    `json:"cancelReason,omitempty"`
+	PDFObjectKey         string    `json:"pdfObjectKey,omitempty"`
+	PDFSHA256            string    `json:"pdfSha256,omitempty"`
+	HasAntibiotic        bool      `json:"hasAntibiotic"`
+	VamregStatus         string    `json:"vamregStatus"`
+	InvoicesExportStatus string    `json:"invoicesExportStatus"`
+	Items                []DAFItem `json:"items,omitempty"`
+	CreatedAt            string    `json:"createdAt,omitempty"`
 }
 
 type DAFItem struct {
-	ID             string          `json:"id"`
-	DAFID          string          `json:"dafId"`
-	MedicationID   string          `json:"medicationId"`
-	MedicationCNK  string          `json:"medicationCnk,omitempty"`
-	MedicationName string          `json:"medicationName,omitempty"`
-	BatchID        string          `json:"batchId,omitempty"`
-	LotNumber      string          `json:"lotNumber,omitempty"`
-	ExpiresOn      string          `json:"expiresOn,omitempty"`
-	DepositID      string          `json:"depositId,omitempty"`
-	Qty            float64         `json:"qty"`
-	Unit           string          `json:"unit"`
-	AMMNumber      string          `json:"ammNumber"`
-	IsAntibiotic   bool            `json:"isAntibiotic"`
-	VamregPayload  json.RawMessage `json:"vamregPayload,omitempty"`
-	SortOrder      int             `json:"sortOrder"`
+	ID                 string          `json:"id"`
+	DAFID              string          `json:"dafId"`
+	MedicationID       string          `json:"medicationId"`
+	MedicationCNK      string          `json:"medicationCnk,omitempty"`
+	MedicationName     string          `json:"medicationName,omitempty"`
+	BatchID            string          `json:"batchId,omitempty"`
+	LotNumber          string          `json:"lotNumber,omitempty"`
+	ExpiresOn          string          `json:"expiresOn,omitempty"`
+	DepositID          string          `json:"depositId,omitempty"`
+	Qty                float64         `json:"qty"`
+	Unit               string          `json:"unit"`
+	AMMNumber          string          `json:"ammNumber"`
+	IsAntibiotic       bool            `json:"isAntibiotic"`
+	WithdrawalMeatDays *int            `json:"withdrawalMeatDays,omitempty"`
+	WithdrawalMilkDays *int            `json:"withdrawalMilkDays,omitempty"`
+	WithdrawalEggsDays *int            `json:"withdrawalEggsDays,omitempty"`
+	VamregPayload      json.RawMessage `json:"vamregPayload,omitempty"`
+	SortOrder          int             `json:"sortOrder"`
 }
 
 type DAFItemInput struct {
@@ -84,15 +87,90 @@ func (s *Store) GetRefMedication(ctx context.Context, id string) (RefMedication,
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, cnk, name,
 		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
-		       is_antibiotic, is_active
+		       is_antibiotic, is_active,
+		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
 		FROM pharmacy.ref_medications WHERE id = $1`, id).Scan(
 		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RefMedication{}, ErrNotFound
 	}
 	m.ATCCode, m.PharmaceuticalForm, m.PackSize = atc, form, pack
 	return m, err
+}
+
+// GetRefMedicationForPractice returns national ref merged with practice overlay (withdrawal / ban).
+func (s *Store) GetRefMedicationForPractice(ctx context.Context, practiceID, medicationID string) (RefMedication, error) {
+	if strings.TrimSpace(practiceID) == "" {
+		return s.GetRefMedication(ctx, medicationID)
+	}
+	var m RefMedication
+	var atc, form, pack string
+	err := s.pool.QueryRow(ctx, `
+		SELECT m.id::text, m.cnk, m.name,
+		       COALESCE(m.atc_code, ''), COALESCE(m.pharmaceutical_form, ''), COALESCE(m.pack_size, ''),
+		       m.is_antibiotic, m.is_active,
+		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_meat_days ELSE m.withdrawal_meat_days END,
+		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_milk_days ELSE m.withdrawal_milk_days END,
+		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_eggs_days ELSE m.withdrawal_eggs_days END,
+		       CASE WHEN o.medication_id IS NOT NULL THEN o.food_chain_banned ELSE m.food_chain_banned END
+		FROM pharmacy.ref_medications m
+		LEFT JOIN pharmacy.medication_practice_attrs o
+		  ON o.medication_id = m.id AND o.practice_id = $2::uuid
+		WHERE m.id = $1`, medicationID, practiceID).Scan(
+		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return RefMedication{}, ErrNotFound
+	}
+	m.ATCCode, m.PharmaceuticalForm, m.PackSize = atc, form, pack
+	return m, err
+}
+
+// UpsertPracticeMedicationWithdrawal sets practice-scoped withdrawal / food-chain ban (never mutates national ref).
+func (s *Store) UpsertPracticeMedicationWithdrawal(ctx context.Context, practiceID, medicationID string, meat, milk, eggs *int, banned *bool, setMeat, setMilk, setEggs, setBanned bool) (RefMedication, error) {
+	if strings.TrimSpace(practiceID) == "" || strings.TrimSpace(medicationID) == "" {
+		return RefMedication{}, ErrValidation
+	}
+	for _, d := range []*int{meat, milk, eggs} {
+		if d != nil && *d < 0 {
+			return RefMedication{}, ErrValidation
+		}
+	}
+	var active bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT is_active FROM pharmacy.ref_medications WHERE id = $1`, medicationID).Scan(&active)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return RefMedication{}, ErrNotFound
+	}
+	if err != nil {
+		return RefMedication{}, err
+	}
+	if !active {
+		return RefMedication{}, ErrNotFound
+	}
+	bannedVal := false
+	if banned != nil {
+		bannedVal = *banned
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO pharmacy.medication_practice_attrs (
+			practice_id, medication_id, withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days,
+			food_chain_banned, updated_at
+		) VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, now())
+		ON CONFLICT (practice_id, medication_id) DO UPDATE SET
+			withdrawal_meat_days = CASE WHEN $7 THEN EXCLUDED.withdrawal_meat_days ELSE pharmacy.medication_practice_attrs.withdrawal_meat_days END,
+			withdrawal_milk_days = CASE WHEN $8 THEN EXCLUDED.withdrawal_milk_days ELSE pharmacy.medication_practice_attrs.withdrawal_milk_days END,
+			withdrawal_eggs_days = CASE WHEN $9 THEN EXCLUDED.withdrawal_eggs_days ELSE pharmacy.medication_practice_attrs.withdrawal_eggs_days END,
+			food_chain_banned = CASE WHEN $10 THEN EXCLUDED.food_chain_banned ELSE pharmacy.medication_practice_attrs.food_chain_banned END,
+			updated_at = now()`,
+		practiceID, medicationID, meat, milk, eggs, bannedVal, setMeat, setMilk, setEggs, setBanned)
+	if err != nil {
+		return RefMedication{}, err
+	}
+	return s.GetRefMedicationForPractice(ctx, practiceID, medicationID)
 }
 
 func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID string, clientUserID, petID, visitID, notes string, items []DAFItemInput) (DAFDocument, error) {
@@ -117,7 +195,7 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 		return DAFDocument{}, err
 	}
 	for i, it := range items {
-		if err := s.insertDAFItemTx(ctx, tx, docID, it, i); err != nil {
+		if err := s.insertDAFItemTx(ctx, tx, practiceID, docID, it, i); err != nil {
 			return DAFDocument{}, err
 		}
 	}
@@ -127,14 +205,19 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 	return s.GetDAF(ctx, practiceID, docID)
 }
 
-func (s *Store) insertDAFItemTx(ctx context.Context, tx pgx.Tx, dafID string, it DAFItemInput, sort int) error {
+func (s *Store) insertDAFItemTx(ctx context.Context, tx pgx.Tx, practiceID, dafID string, it DAFItemInput, sort int) error {
 	if it.Qty <= 0 || strings.TrimSpace(it.MedicationID) == "" {
 		return ErrValidation
 	}
 	if it.Unit == "" {
 		it.Unit = "unit"
 	}
-	med, err := s.GetRefMedication(ctx, it.MedicationID)
+	if strings.TrimSpace(it.DepositID) != "" {
+		if err := s.assertDepositInPracticeTx(ctx, tx, practiceID, it.DepositID); err != nil {
+			return err
+		}
+	}
+	med, err := s.GetRefMedicationForPractice(ctx, practiceID, it.MedicationID)
 	if err != nil {
 		return err
 	}
@@ -144,10 +227,12 @@ func (s *Store) insertDAFItemTx(ctx context.Context, tx pgx.Tx, dafID string, it
 	}
 	_, err = tx.Exec(ctx, `
 		INSERT INTO pharmacy.daf_items (
-			id, daf_id, medication_id, deposit_id, qty, unit, amm_number, is_antibiotic, vamreg_payload, sort_order
-		) VALUES ($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7,$8,$9::jsonb,$10)`,
+			id, daf_id, medication_id, deposit_id, qty, unit, amm_number, is_antibiotic, vamreg_payload, sort_order,
+			withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days
+		) VALUES ($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13)`,
 		uuid.NewString(), dafID, it.MedicationID, it.DepositID, it.Qty, it.Unit,
 		strings.TrimSpace(it.AMMNumber), med.IsAntibiotic, string(payload), sort,
+		med.WithdrawalMeatDays, med.WithdrawalMilkDays, med.WithdrawalEggsDays,
 	)
 	return err
 }
@@ -189,7 +274,7 @@ func (s *Store) ReplaceDAFDraftItems(ctx context.Context, practiceID, dafID stri
 		return DAFDocument{}, err
 	}
 	for i, it := range items {
-		if err := s.insertDAFItemTx(ctx, tx, dafID, it, i); err != nil {
+		if err := s.insertDAFItemTx(ctx, tx, practiceID, dafID, it, i); err != nil {
 			return DAFDocument{}, err
 		}
 	}
@@ -299,7 +384,8 @@ func (s *Store) listDAFItemsQuerier(ctx context.Context, q dafItemsQuerier, dafI
 		SELECT i.id::text, i.daf_id::text, i.medication_id::text, m.cnk, m.name,
 		       COALESCE(i.batch_id::text,''), COALESCE(b.lot_number,''), COALESCE(b.expires_on::text,''),
 		       COALESCE(i.deposit_id::text,''), i.qty::float8, i.unit, COALESCE(i.amm_number,''),
-		       i.is_antibiotic, i.vamreg_payload, i.sort_order
+		       i.is_antibiotic, i.vamreg_payload, i.sort_order,
+		       i.withdrawal_meat_days, i.withdrawal_milk_days, i.withdrawal_eggs_days
 		FROM pharmacy.daf_items i
 		JOIN pharmacy.ref_medications m ON m.id = i.medication_id
 		LEFT JOIN pharmacy.medication_batches b ON b.id = i.batch_id
@@ -317,6 +403,7 @@ func (s *Store) listDAFItemsQuerier(ctx context.Context, q dafItemsQuerier, dafI
 			&it.ID, &it.DAFID, &it.MedicationID, &it.MedicationCNK, &it.MedicationName,
 			&it.BatchID, &it.LotNumber, &it.ExpiresOn, &it.DepositID, &it.Qty, &it.Unit,
 			&it.AMMNumber, &it.IsAntibiotic, &payload, &it.SortOrder,
+			&it.WithdrawalMeatDays, &it.WithdrawalMilkDays, &it.WithdrawalEggsDays,
 		); err != nil {
 			return nil, err
 		}
@@ -329,10 +416,21 @@ func (s *Store) listDAFItemsQuerier(ctx context.Context, q dafItemsQuerier, dafI
 // PreviewFEFOAllocation simulates FEFO without mutating stock.
 func (s *Store) PreviewFEFOAllocation(ctx context.Context, practiceID string, items []DAFItemInput, today time.Time) ([]FEFOPreviewLine, error) {
 	tod := pharmacy.BrusselsToday(today)
+	todStr := tod.Format("2006-01-02")
+	settings, err := s.GetPharmacySettings(ctx, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	allowExpired := !settings.BlockExpiredOnDAF
 	var out []FEFOPreviewLine
 	for _, it := range items {
 		if it.Qty <= 0 {
 			return nil, ErrValidation
+		}
+		if strings.TrimSpace(it.DepositID) != "" {
+			if err := s.assertDepositInPractice(ctx, practiceID, it.DepositID); err != nil {
+				return nil, err
+			}
 		}
 		med, err := s.GetRefMedication(ctx, it.MedicationID)
 		if err != nil {
@@ -342,10 +440,11 @@ func (s *Store) PreviewFEFOAllocation(ctx context.Context, practiceID string, it
 			SELECT id::text, lot_number, expires_on, qty_on_hand::float8
 			FROM pharmacy.medication_batches
 			WHERE practice_id = $1 AND medication_id = $2
-			  AND status = 'active' AND qty_on_hand > 0 AND expires_on >= $3::date
-			  AND ($4 = '' OR deposit_id::text = $4)
+			  AND status = 'active' AND qty_on_hand > 0
+			  AND ($3::bool OR expires_on >= $4::date)
+			  AND ($5 = '' OR deposit_id::text = $5)
 			ORDER BY expires_on ASC, created_at ASC`,
-			practiceID, it.MedicationID, tod.Format("2006-01-02"), it.DepositID)
+			practiceID, it.MedicationID, allowExpired, todStr, it.DepositID)
 		if err != nil {
 			return nil, err
 		}
@@ -393,9 +492,10 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 
 	var status string
 	var year int
+	var petID string
 	err = tx.QueryRow(ctx, `
-		SELECT status, daf_year FROM pharmacy.daf_documents
-		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, dafID).Scan(&status, &year)
+		SELECT status, daf_year, COALESCE(pet_id::text,'') FROM pharmacy.daf_documents
+		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, dafID).Scan(&status, &year, &petID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return DAFDocument{}, pharmacy.ErrDAFNotFound
 	}
@@ -412,6 +512,15 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 	}
 	if len(draftItems) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
+	}
+
+	if err := s.validateDAFFoodChain(ctx, practiceID, petID, draftItems); err != nil {
+		return DAFDocument{}, err
+	}
+
+	settings, err := s.GetPharmacySettings(ctx, practiceID)
+	if err != nil {
+		return DAFDocument{}, err
 	}
 
 	hasAB := false
@@ -458,7 +567,7 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 		if len(payload) == 0 {
 			payload = json.RawMessage(`{}`)
 		}
-		allocs, err := s.allocateFEFOTx(ctx, tx, practiceID, req.MedicationID, req.DepositID, req.Qty, today)
+		allocs, err := s.allocateFEFOTx(ctx, tx, practiceID, req.MedicationID, req.DepositID, req.Qty, today, settings.BlockExpiredOnDAF)
 		if err != nil {
 			return DAFDocument{}, err
 		}
@@ -467,10 +576,12 @@ func (s *Store) FinalizeDAF(ctx context.Context, practiceID, dafID, userID strin
 			if _, err := tx.Exec(ctx, `
 				INSERT INTO pharmacy.daf_items (
 					id, daf_id, medication_id, batch_id, deposit_id, qty, unit, amm_number,
-					is_antibiotic, vamreg_payload, sort_order
-				) VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid,$6,$7,$8,$9,$10::jsonb,$11)`,
+					is_antibiotic, vamreg_payload, sort_order,
+					withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days
+				) VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid,$6,$7,$8,$9,$10::jsonb,$11,$12,$13,$14)`,
 				itemID, dafID, req.MedicationID, al.BatchID, req.DepositID, al.Qty, req.Unit,
 				req.AMMNumber, req.IsAntibiotic, string(payload), sort,
+				req.WithdrawalMeatDays, req.WithdrawalMilkDays, req.WithdrawalEggsDays,
 			); err != nil {
 				return DAFDocument{}, err
 			}
@@ -509,10 +620,12 @@ func (s *Store) CancelDAF(ctx context.Context, practiceID, dafID, userID, reason
 	}
 	defer tx.Rollback(ctx)
 
-	var status string
+	var status, vamregStatus string
+	var hasAB bool
 	err = tx.QueryRow(ctx, `
-		SELECT status FROM pharmacy.daf_documents
-		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, dafID).Scan(&status)
+		SELECT status, COALESCE(vamreg_status, 'n/a'), has_antibiotic
+		FROM pharmacy.daf_documents
+		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, dafID).Scan(&status, &vamregStatus, &hasAB)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return DAFDocument{}, pharmacy.ErrDAFNotFound
 	}
@@ -521,6 +634,14 @@ func (s *Store) CancelDAF(ctx context.Context, practiceID, dafID, userID, reason
 	}
 	if status != "finalized" {
 		return DAFDocument{}, pharmacy.ErrDAFNotFinalized
+	}
+	// No VAMReg retract yet — block cancel while pending/sent to avoid orphan authority records
+	// or races with an in-flight declaration worker.
+	if hasAB && (vamregStatus == "sent" || vamregStatus == "pending") {
+		if vamregStatus == "sent" {
+			return DAFDocument{}, pharmacy.ErrDAFVAMRegAlreadySent
+		}
+		return DAFDocument{}, pharmacy.ErrDAFVAMRegInFlight
 	}
 	items, err := s.listDAFItemsTx(ctx, tx, dafID)
 	if err != nil {
@@ -584,6 +705,73 @@ func (s *Store) SetDAFPDFMeta(ctx context.Context, practiceID, dafID, objectKey,
 			return pharmacy.ErrDAFAlreadyHasPDF
 		}
 		return fmt.Errorf("pdf meta update failed")
+	}
+	return nil
+}
+
+func (s *Store) validateDAFFoodChain(ctx context.Context, practiceID, petID string, items []DAFItem) error {
+	if strings.TrimSpace(petID) == "" {
+		return nil
+	}
+	status, err := s.GetPetFoodChainStatus(ctx, petID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	switch status {
+	case "", "companion":
+		return nil
+	case "food_producing", "excluded_from_food_chain":
+		// continue
+	default:
+		return nil
+	}
+	for _, it := range items {
+		med, err := s.GetRefMedicationForPractice(ctx, practiceID, it.MedicationID)
+		if err != nil {
+			return err
+		}
+		if med.FoodChainBanned && status == "food_producing" {
+			return pharmacy.ErrFoodChainBannedMedication
+		}
+		if status == "food_producing" {
+			if it.WithdrawalMeatDays == nil || it.WithdrawalMilkDays == nil || it.WithdrawalEggsDays == nil {
+				return pharmacy.ErrFoodChainWithdrawalRequired
+			}
+		}
+	}
+	return nil
+}
+
+// GetPetFoodChainStatus returns companion | food_producing | excluded_from_food_chain.
+func (s *Store) GetPetFoodChainStatus(ctx context.Context, petID string) (string, error) {
+	var st string
+	err := s.pool.QueryRow(ctx, `
+		SELECT food_chain_status FROM pets.pets WHERE id = $1`, petID).Scan(&st)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return st, err
+}
+
+// SetPetFoodChainStatus updates the animal food-chain classification (vet practice).
+func (s *Store) SetPetFoodChainStatus(ctx context.Context, practiceID, petID, status string) error {
+	status = strings.TrimSpace(status)
+	switch status {
+	case "companion", "food_producing", "excluded_from_food_chain":
+	default:
+		return ErrValidation
+	}
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets SET food_chain_status = $3
+		WHERE id = $2 AND practice_id = $1`, practiceID, petID, status)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
 	}
 	return nil
 }

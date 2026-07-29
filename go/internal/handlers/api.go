@@ -17,6 +17,7 @@ import (
 	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
+	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
@@ -28,20 +29,23 @@ import (
 )
 
 type API struct {
-	store      *store.Store
-	tokens     *authx.TokenIssuer
-	cfg        config.Config
-	notifier   *email.Notifier
-	billing    *billing.Service
-	invoicing  *invoicing.Service
-	media      media.Store
-	pusher   fcm.Pusher
-	gemini   *gemini.Client
+	store     *store.Store
+	tokens    *authx.TokenIssuer
+	cfg       config.Config
+	notifier  *email.Notifier
+	billing   *billing.Service
+	invoicing *invoicing.Service
+	media     media.Store
+	pusher    fcm.Pusher
+	gemini    *gemini.Client
+	vamreg    *pharmacy.VamregDeclarer
+	vamregQ   VamregEnqueuer
 	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
-	vetLookupRL      *httpx.RateLimiter
-	vetSuggestRL     *httpx.RateLimiter
-	billitWebhookRL  *httpx.RateLimiter
-	authPulse        *authPulse
+	vetLookupRL         *httpx.RateLimiter
+	vetSuggestRL        *httpx.RateLimiter
+	billitWebhookRL     *httpx.RateLimiter
+	pharmacyOrderSendRL *httpx.RateLimiter
+	authPulse           *authPulse
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -62,13 +66,17 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		}
 		inv = invoicing.NewService(st, gw, cfg)
 	}
-	return &API{
+	vamregDecl := pharmacy.NewVamregDeclarer(st, cfg.VamregBaseURL, cfg.VamregAPIKey, cfg.VamregDryRun)
+	a := &API{
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
-		vetLookupRL:     httpx.NewRateLimiter(30, time.Minute),
-		vetSuggestRL:    httpx.NewRateLimiter(10, time.Minute),
-		billitWebhookRL: httpx.NewRateLimiter(120, time.Minute),
-		authPulse:       newAuthPulse(),
+		vamreg: vamregDecl, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
+		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
+		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
+		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),
+		pharmacyOrderSendRL: httpx.NewRateLimiter(10, time.Minute),
+		authPulse:           newAuthPulse(),
 	}
+	return a
 }
 
 // TestReplaceNotifier swaps the email notifier (integration tests only).
@@ -135,6 +143,8 @@ func (a *API) Routes(r chi.Router) {
 		pr.Use(a.requireTermsAcceptedMiddleware)
 		a.registerPharmacyMedicationRoutes(pr)
 		a.registerPharmacyStockRoutes(pr)
+		a.registerPharmacyOrderRoutes(pr)
+		a.registerPharmacyInventoryRoutes(pr)
 		a.registerPharmacyDAFRoutes(pr)
 		a.registerPrescriptionRoutes(pr)
 		pr.Get("/me", a.me)
@@ -379,7 +389,6 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteData(w, http.StatusOK, client)
 }
-
 
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
@@ -730,7 +739,7 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	p := store.Pet{
 		ID: existing.ID, Name: req.Name, Species: req.Species, Breed: req.Breed,
 		WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID,
-		LitterTag: existing.LitterTag,
+		LitterTag:       existing.LitterTag,
 		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
@@ -970,7 +979,6 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
 }
-
 
 // heartRateDeltaAlert reports whether bpm rose by at least the species delta
 // versus the last validated reading. Unsupported species → false, nil.

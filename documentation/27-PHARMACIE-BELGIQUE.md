@@ -494,9 +494,8 @@ Champs TVA / prix unitaires : hors Phase 1 pharmacie pure — le connecteur envo
 | `VAMREG_BASE_URL` | API autorités / passerelle |
 | `VAMREG_API_KEY` / cert | Auth (détail selon contrat officiel) |
 | `VAMREG_DRY_RUN` | Stub local / staging sans appel réel |
-| `PHARMACY_WORKERS_ENABLED` | Démarre Asynq server |
-| `ASYNQ_REDIS_ADDR` | Défaut = `REDIS_ADDR` |
-| `ASYNQ_KEY_PREFIX` | Défaut `petsfollow:asynq:` |
+| `PHARMACY_WORKERS_ENABLED` | Démarre Asynq server (sinon enqueue **inline** avec timeout détaché) |
+| Redis | Isolation staging/prod via **DB Redis** dans `REDIS_ADDR` (pas de key prefix Asynq) |
 
 Handler :
 
@@ -518,9 +517,6 @@ PHARMACY_WORKERS_ENABLED=false
 # Redis (déjà présent)
 REDIS_ADDR=localhost:6382
 REDIS_KEY_PREFIX=petsfollow:
-
-# Asynq
-ASYNQ_KEY_PREFIX=petsfollow:asynq:
 
 # VAMReg
 VAMREG_DRY_RUN=true
@@ -552,10 +548,10 @@ Redis / GCS : déjà documentés dans [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT
 Option retenue pour la mise en place :
 
 1. Image unique `petsfollow-api`.
-2. Service Run `petsfollow-worker` : commande `workers` (Asynq only), mêmes secrets Redis + VAMReg + invoices.
-3. API HTTP : `PHARMACY_WORKERS_ENABLED=false` (enqueue seul).
+2. **Défaut staging/prod** : `PHARMACY_WORKERS_ENABLED=false` → déclaration VAMReg en **sync** dans le process API (`syncVamregEnqueue`) + `VAMREG_DRY_RUN=true` jusqu’à P0-1.
+3. Opt-in Asynq : `PHARMACY_WORKERS_ENABLED=true` (même image, Redis) — remplace l’enqueue sync ; service worker séparé possible plus tard.
 
-Local : `make api-dev` peut co-héberger workers si flag `true` (DX simplifiée).
+Local : `make api-dev` pose `VAMREG_DRY_RUN=true` ; workers off sauf flag explicite.
 
 ---
 

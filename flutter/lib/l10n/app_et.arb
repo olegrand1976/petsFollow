@@ -721,7 +721,7 @@
   "consultationReportFallback": "Aruanne",
   "consultationReportEmpty": "(tühi)",
   "consultationAvailableCta": "Saadaval",
-  "consultationPendingCta": "Ootel",
+  "consultationPendingCta": "Mustand",
   "sendConsultationToVet": "Saada loomaarstile",
   "sendConsultationEmailLabel": "Loomaarsti e-post",
   "sendConsultationEmailHint": "vet@kliinik.ee",

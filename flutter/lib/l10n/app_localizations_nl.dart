@@ -1918,7 +1918,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get consultationAvailableCta => 'Beschikbaar';
 
   @override
-  String get consultationPendingCta => 'In afwachting';
+  String get consultationPendingCta => 'Concept';
 
   @override
   String get sendConsultationToVet => 'Naar een dierenarts sturen';

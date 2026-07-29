@@ -896,6 +896,8 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 	} else {
 		// Client / dossier: hasReport only for finalized CR (opens client consultation).
 		// reportStatus may be draft|final (existence signal only); never leak draft body.
+		// Include confirmed visits that already have a persisted CR so draft/final CTAs appear
+		// before Terminer / even if finalize auto-done was skipped.
 		visitBody := "COALESCE(notes,'')"
 		if redactVisitNotes {
 			visitBody = "''"
@@ -913,12 +915,17 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		FROM visits.visits v
 		LEFT JOIN LATERAL (
 			SELECT id, status
-			FROM visits.visit_reports
-			WHERE visit_id = v.id
+			FROM visits.visit_reports r
+			WHERE r.visit_id = v.id
+			  AND ` + sqlVisitReportIsPersisted + `
 			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
 			LIMIT 1
 		) r ON true
-		WHERE v.pet_id=$1 AND v.status='done' AND v.deleted_at IS NULL`
+		WHERE v.pet_id=$1 AND v.deleted_at IS NULL
+			AND (
+				v.status = 'done'
+				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
+			)`
 	}
 	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque',

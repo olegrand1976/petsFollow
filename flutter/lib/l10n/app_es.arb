@@ -721,7 +721,7 @@
   "consultationReportFallback": "Informe",
   "consultationReportEmpty": "(vacío)",
   "consultationAvailableCta": "Disponible",
-  "consultationPendingCta": "En espera",
+  "consultationPendingCta": "Borrador",
   "sendConsultationToVet": "Enviar a un veterinario",
   "sendConsultationEmailLabel": "Email del veterinario",
   "sendConsultationEmailHint": "vet@clinica.es",

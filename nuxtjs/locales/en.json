@@ -854,7 +854,32 @@
       "bandQuarantine": "Quarantine",
       "errorLoad": "Could not load stock.",
       "errorReceive": "Receipt rejected.",
-      "errorAction": "Action failed."
+      "errorAction": "Action failed.",
+      "reorderTitle": "Reorder alerts",
+      "reorderHint": "Stock below threshold — create an order and email the supplier.",
+      "reorderOnHand": "On hand",
+      "reorderMin": "Min",
+      "orderEmail": "Supplier email",
+      "orderCreateSend": "Email order",
+      "orderSent": "Order sent.",
+      "errorOrder": "Could not send order.",
+      "blNumber": "Delivery note # (optional)",
+      "supplierName": "Supplier (optional)",
+      "invTitle": "Annual inventory",
+      "invHint": "Snapshot of active / quarantine lots — enter physical counts then close to apply variances.",
+      "invStart": "Start inventory",
+      "invClose": "Close and adjust",
+      "invCancel": "Cancel",
+      "invExport": "Export CSV",
+      "invSystem": "System",
+      "invCounted": "Counted",
+      "invProgress": "{counted} / {total} lines counted",
+      "invStarted": "Inventory opened.",
+      "invClosed": "Inventory closed — variances applied.",
+      "invCancelled": "Inventory cancelled.",
+      "errorInv": "Inventory failed.",
+      "errorReorderLoad": "Could not load reorder alerts.",
+      "errorInvLoad": "Could not load the open inventory session."
     },
     "daf": {
       "title": "DAF documents",
@@ -887,7 +912,41 @@
       "contextClient": "Client",
       "contextPet": "Pet",
       "contextVisit": "Linked visit",
-      "goInvoice": "Invoice"
+      "goInvoice": "Invoice",
+      "vamregLabel": "VAMReg",
+      "vamregRetry": "Retry VAMReg",
+      "vamregStatus": {
+        "pending": "Pending",
+        "sent": "Declared",
+        "failed": "Failed",
+        "na": "N/A"
+      }
+    },
+    "errors": {
+      "daf_vamreg_already_sent": "Cannot cancel: VAMReg declaration already sent.",
+      "daf_vamreg_in_flight": "Cannot cancel: VAMReg declaration in progress — retry later.",
+      "daf_vamreg_incomplete": "Incomplete VAMReg fields (species, indication, duration).",
+      "daf_vamreg_not_applicable": "VAMReg not applicable for this DAF.",
+      "daf_not_draft": "DAF is no longer a draft.",
+      "daf_not_finalized": "DAF is not finalized.",
+      "daf_empty": "Add at least one medication line.",
+      "daf_amm_required": "MA number (AMM) is required.",
+      "daf_pdf_immutable": "DAF PDF already generated.",
+      "daf_trace_required": "Lot traceability missing.",
+      "food_chain_withdrawal_required": "Withdrawal periods (meat/milk/eggs) required for food-producing animals.",
+      "food_chain_banned_medication": "Medication banned for the food chain.",
+      "stock_insufficient": "Insufficient stock.",
+      "stock_unavailable_valid_lots": "No valid lots available (FEFO).",
+      "batch_expired": "Batch expired.",
+      "batch_quarantined": "Batch quarantined.",
+      "batch_wasted": "This lot was destroyed — create a new lot for receipt.",
+      "invalid_expiry_on_receipt": "Invalid expiry date.",
+      "delivery_note_exists": "This delivery-note number already exists.",
+      "order_not_draft": "Order is no longer a draft.",
+      "email_send_failed": "Email send failed.",
+      "vamreg_enqueue_failed": "Could not retry VAMReg.",
+      "not_found": "Not found.",
+      "validation_error": "Invalid data."
     }
   },
   "recommend": {
@@ -2043,17 +2102,17 @@
     "terms": {
       "title": "Terms of use",
       "link": "Terms",
-      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, heart-rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}ll-it-sc.be."
+      "body": "These terms govern the use of petsFollow Pro by veterinarians and the mobile app by pet owners. The app enables prescribed follow-up (messaging, Care/Horse reminders, heart-rate readings) and communication with the practice. Subscription and addon payments are processed by Stripe. Contact: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privacy policy",
       "link": "Privacy",
-      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}ll-it-sc.be."
+      "body": "petsFollow processes personal data to provide animal care continuity: identity (name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (Firebase Cloud Messaging), payment data processed by Stripe. Purposes: account, monitoring, messaging, notifications, visit reports, billing. AI processing: Google Gemini is used to improve visit reports, import client files and power the sales pitch training (audio processed in real time, not retained by Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform hosting. Retention: account lifetime then erasure; inactive accounts purged after 3 years; visit report audio kept as long as the record. GDPR rights (access, rectification, erasure, portability): settings (export your data, delete account), or support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Legal notice",
       "link": "Legal notice",
-      "body": "Publisher: LL-IT-SC / petsFollow. Contact: support{'@'}ll-it-sc.be. Hosting: Google Cloud Platform (GDPR-compliant)."
+      "body": "Publisher: LL-IT-SC / petsFollow. Contact: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (GDPR-compliant)."
     },
     "navAria": "Legal"
   },
@@ -2689,7 +2748,7 @@
     "reportAuthorPeer": "Other author",
     "reportReadOnlyPeer": "Report from another professional — read-only. Switch back to “My report” to edit yours.",
     "reportHint": "Visit notes…",
-    "saveReport": "Save report",
+    "saveReport": "Save",
     "improveReport": "Improve (AI)",
     "reportSaved": "Report saved",
     "reportImproved": "Report improved",
@@ -2703,12 +2762,10 @@
     "micPermissionDenied": "Microphone denied — check your browser permissions.",
     "reportVisitDate": "Visit date",
     "reportDatePrefix": "Date",
-    "reportHowItWorksTitle": "How does it work?",
-    "reportHowItWorksStep1": "Dictate (\"Dictate\" button) or import an audio file.",
-    "reportHowItWorksStep2": "Confirm the client's oral consent before recording.",
-    "reportHowItWorksStep3": "Save the report.",
-    "reportHowItWorksStep4": "Improve it with AI if needed.",
-    "reportHowItWorksStep5": "Finalize, then continue to a prescription/DAF or an invoice.",
+    "reportHowItWorksTitle": "Help",
+    "reportHowItWorksStep1": "Dictate or type notes on the left (client consent for audio).",
+    "reportHowItWorksStep2": "Improve with AI on the right, then tweak if needed.",
+    "reportHowItWorksStep3": "Save, finalize, then continue to DAF or invoice.",
     "audioConsent": "Audio is used to draft the report. Confirm the client's oral consent. Deleted on finalize.",
     "audioConsentTitle": "Audio consent",
     "audioConsentAccept": "I agree",
@@ -2793,12 +2850,22 @@
     "audioToText": "Audio → text",
     "reportEditSource": "Edit text",
     "reportPreview": "Preview",
-    "reportVersionTranscript": "v0 — Transcript",
-    "reportVersionImproved": "v1 — AI improved",
-    "reportVersionSaved": "v2 — Saved version",
+    "reportVersionTranscript": "Original transcript",
+    "reportVersionImproved": "AI proposal",
+    "reportVersionSaved": "Last saved version",
     "reportVersionEmpty": "None",
-    "reportRestore": "Restore",
-    "reportVersionsTitle": "Report versions"
+    "reportRestore": "Restore to editor",
+    "reportVersionsTitle": "Version history",
+    "reportFlowHint": "Notes on the left → report on the right → Save.",
+    "reportPaneNotesTitle": "Notes / dictation",
+    "reportPaneNotesSubtitle": "Type or dictate the consultation.",
+    "reportPaneCrTitle": "Visit report",
+    "reportPaneCrSubtitle": "Improve with AI or edit manually.",
+    "reportTranscriptHint": "Dictation or raw notes…",
+    "reportDirtyHint": "Unsaved changes.",
+    "reportDiscardEdits": "Discard changes",
+    "reportStatusFinal": "Finalized",
+    "reportStatusDraft": "Draft"
   },
   "manager": {
     "dashboard": {

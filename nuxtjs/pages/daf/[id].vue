@@ -30,7 +30,21 @@
 
     <ProCard v-if="doc">
       <p class="pro-hint">{{ doc.practiceName }} · {{ doc.prescriberName }}</p>
-      <p v-if="doc.hasAntibiotic" class="pro-hint">VAMReg: {{ doc.vamregStatus }}</p>
+      <div v-if="doc.hasAntibiotic" class="pro-daf-vamreg" data-testid="daf-vamreg-panel">
+        <p class="pro-hint">
+          {{ $t('pharmacy.daf.vamregLabel') }}:
+          <strong data-testid="daf-vamreg-status">{{ vamregLabel(doc.vamregStatus) }}</strong>
+        </p>
+        <ProButton
+          v-if="canWritePharmacy && (doc.vamregStatus === 'pending' || doc.vamregStatus === 'failed')"
+          variant="secondary"
+          test-id="daf-vamreg-retry"
+          :disabled="busy"
+          @click="retryVamreg"
+        >
+          {{ $t('pharmacy.daf.vamregRetry') }}
+        </ProButton>
+      </div>
       <table class="pro-table">
         <thead>
           <tr>
@@ -58,6 +72,9 @@
 <script setup lang="ts">
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 const { t } = useI18n()
+function pharmacyErr(e: any, fallbackKey: string): string {
+  return pharmacyErrorMessage(t, e, fallbackKey)
+}
 const { canPractice } = usePracticePerms()
 const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const route = useRoute()
@@ -76,6 +93,14 @@ function statusLabel(s?: string) {
   return s || ''
 }
 
+function vamregLabel(s?: string) {
+  if (s === 'pending') return t('pharmacy.daf.vamregStatus.pending')
+  if (s === 'sent') return t('pharmacy.daf.vamregStatus.sent')
+  if (s === 'failed') return t('pharmacy.daf.vamregStatus.failed')
+  if (s === 'n/a') return t('pharmacy.daf.vamregStatus.na')
+  return s || ''
+}
+
 async function load() {
   const res = await $fetch<any>(`/api/vet/pharmacy/daf/${route.params.id}`)
   doc.value = unwrap(res)
@@ -83,6 +108,23 @@ async function load() {
 
 function openPdf() {
   window.open(`/api/vet/pharmacy/daf/${route.params.id}/pdf`, '_blank')
+}
+
+async function retryVamreg() {
+  busy.value = true
+  error.value = ''
+  try {
+    const res = await $fetch<any>(`/api/vet/pharmacy/daf/${route.params.id}/vamreg/retry`, {
+      method: 'POST',
+    })
+    doc.value = unwrap(res)
+  }
+  catch (e: any) {
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
+  }
+  finally {
+    busy.value = false
+  }
 }
 
 async function cancel() {
@@ -97,7 +139,7 @@ async function cancel() {
     doc.value = unwrap(res)
   }
   catch (e: any) {
-    error.value = e?.data?.error?.code || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
   finally {
     busy.value = false
@@ -109,7 +151,7 @@ onMounted(async () => {
     await load()
   }
   catch (e: any) {
-    error.value = e?.data?.error?.message || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
 })
 </script>

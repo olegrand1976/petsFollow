@@ -342,6 +342,89 @@ func TestConsultationSessionFinalizeMarksDone(t *testing.T) {
 	}
 }
 
+func TestFinalizeBookedVisitAutoDoneForClientTimeline(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+	// Booked visit (not walk-in): historically stayed confirmed after finalize.
+	slot := time.Now().UTC().Add(-2 * time.Hour).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":     slot,
+		"durationMinutes": 30,
+		"confirmDirect":   true,
+		"silentConfirm":   true,
+		"notes":           "booked finalize auto-done",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, vetTok, nil)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": "CR RDV finalisable",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put report %d %#v", code, env)
+	}
+
+	// Draft must already surface on client timeline (confirmed + persisted CR).
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client timeline draft %d %#v", code, env)
+	}
+	draftItem := findTimelineVisit(t, env, visitID)
+	draftMeta, _ := draftItem["meta"].(map[string]any)
+	if draftMeta["reportStatus"] != "draft" {
+		t.Fatalf("draft reportStatus want draft got %#v", draftMeta)
+	}
+	if draftMeta["hasReport"] == true {
+		t.Fatalf("draft must not set hasReport %#v", draftMeta)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list visits %d %#v", code, env)
+	}
+	found := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] == visitID {
+			found = true
+			if m["status"] != "done" {
+				t.Fatalf("after finalize status=%v want done", m["status"])
+			}
+			if m["hasFinalReport"] != true {
+				t.Fatalf("hasFinalReport want true %#v", m)
+			}
+			if m["reportStatus"] != "final" {
+				t.Fatalf("reportStatus want final %#v", m)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("visit %s not listed for client", visitID)
+	}
+}
+
 func TestMarkDoneAutoFinalizesDraftReportForClient(t *testing.T) {
 	api := newTestAPI(t)
 	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")

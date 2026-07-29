@@ -200,6 +200,41 @@ func purgeClientOwnedDataExec(ctx context.Context, tx pgx.Tx, userID string) err
 			return err
 		}
 	}
+	return redactPharmacyUserDataExec(ctx, tx, userID)
+}
+
+// redactPharmacyUserDataExec clears pharmacy PII / PHI trails tied to a user while
+// keeping practice operational records (DAF numbers, stock, orders).
+func redactPharmacyUserDataExec(ctx context.Context, tx pgx.Tx, userID string) error {
+	if _, err := tx.Exec(ctx, `
+		UPDATE pharmacy.job_audit ja
+		SET request_json = '{}'::jsonb,
+		    response_json = NULL,
+		    error = CASE WHEN COALESCE(error,'') = '' THEN error ELSE 'redacted' END
+		FROM pharmacy.daf_documents d
+		WHERE ja.entity_id = d.id
+		  AND ja.job_type = 'vamreg'
+		  AND (d.prescriber_user_id = $1 OR d.client_user_id = $1)`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE pharmacy.daf_documents
+		SET client_user_id = NULL, updated_at = now()
+		WHERE client_user_id = $1`, userID); err != nil {
+		return err
+	}
+	for _, q := range []string{
+		`UPDATE pharmacy.purchase_orders SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.delivery_notes SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.inventory_sessions SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.inventory_sessions SET closed_by = NULL WHERE closed_by = $1`,
+		`UPDATE pharmacy.stock_movements SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.medication_prices SET updated_by = NULL WHERE updated_by = $1`,
+	} {
+		if _, err := tx.Exec(ctx, q, userID); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -270,6 +305,9 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	}
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM invoicing.connect_states WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
+	if err := redactPharmacyUserDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

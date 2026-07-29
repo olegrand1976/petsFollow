@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
@@ -17,9 +18,10 @@ func TestPharmacyStockReceiptAndWaste(t *testing.T) {
 	api := newTestAPI(t)
 	ctx := context.Background()
 	st := store.New(api.pool)
+	suffix := uuid.NewString()[:8]
 
 	medID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
-		CNK: "2888002", Name: "Stock API Demo", IsActive: true,
+		CNK: "2888" + suffix[:4], Name: "Stock API Demo " + suffix, IsActive: true,
 	})
 	if err != nil {
 		t.Fatalf("med: %v", err)
@@ -33,9 +35,10 @@ func TestPharmacyStockReceiptAndWaste(t *testing.T) {
 	}
 
 	exp := time.Now().AddDate(0, 0, 120).Format("2006-01-02")
+	lot := "LOT-API-" + suffix
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
 		"medicationId": medID,
-		"lotNumber":    "LOT-API-1",
+		"lotNumber":    lot,
 		"expiresOn":    exp,
 		"qty":          10,
 		"unit":         "box",
@@ -52,7 +55,7 @@ func TestPharmacyStockReceiptAndWaste(t *testing.T) {
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
 		"medicationId": medID,
-		"lotNumber":    "LOT-OLD",
+		"lotNumber":    "LOT-OLD-" + suffix,
 		"expiresOn":    time.Now().AddDate(0, 0, -3).Format("2006-01-02"),
 		"qty":          1,
 	})
@@ -81,6 +84,27 @@ func TestPharmacyStockReceiptAndWaste(t *testing.T) {
 	})
 	if code != http.StatusOK {
 		t.Fatalf("waste %d %#v", code, env)
+	}
+
+	// Waste remaining stock → status wasted; same lot receipt must not resurrect.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches/"+batchID+"/waste", tok, map[string]any{
+		"reason": "destroyed",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("waste remainder %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
+		"medicationId": medID,
+		"lotNumber":    lot,
+		"expiresOn":    exp,
+		"qty":          1,
+		"unit":         "box",
+	})
+	if code != http.StatusConflict {
+		t.Fatalf("receipt on wasted lot want 409 got %d %#v", code, env)
+	}
+	if errObj, _ := env["error"].(map[string]any); errObj["code"] != "batch_wasted" {
+		t.Fatalf("want batch_wasted got %#v", env)
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/internal/pharmacy/expiry-run", bytes.NewBufferString(`{"forceDigest":false}`))

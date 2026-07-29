@@ -1910,7 +1910,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get consultationAvailableCta => 'Available';
 
   @override
-  String get consultationPendingCta => 'Pending';
+  String get consultationPendingCta => 'Draft';
 
   @override
   String get sendConsultationToVet => 'Send to a veterinarian';

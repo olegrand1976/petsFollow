@@ -89,6 +89,17 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 		"invoicingDocuments": `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(d) - 'idempotency_key') ORDER BY d.created_at), '[]'::jsonb)
 			FROM invoicing.documents d WHERE d.created_by = $1`,
+		"pharmacyDafAsClient": `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(d) - 'pdf_object_key') ORDER BY d.created_at), '[]'::jsonb)
+			FROM pharmacy.daf_documents d WHERE d.client_user_id = $1`,
+		"pharmacyDafAsPetOwner": `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(d) - 'pdf_object_key') ORDER BY d.created_at), '[]'::jsonb)
+			FROM pharmacy.daf_documents d
+			JOIN pets.pets p ON p.id = d.pet_id
+			WHERE p.owner_user_id = $1`,
+		"pharmacyDafAsPrescriber": `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(d) - 'pdf_object_key') ORDER BY d.created_at), '[]'::jsonb)
+			FROM pharmacy.daf_documents d WHERE d.prescriber_user_id = $1`,
 	}
 
 	for key, q := range queries {

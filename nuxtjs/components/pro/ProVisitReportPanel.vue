@@ -1,6 +1,22 @@
 <template>
   <div class="pro-visit-report" data-testid="visit-report-panel">
-    <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
+    <div class="pro-flex-gap visit-report-title-row">
+      <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
+      <ProBadge
+        v-if="reportStatus === 'final'"
+        variant="success"
+        data-testid="visit-report-status-badge"
+      >
+        {{ $t('calendar.reportStatusFinal') }}
+      </ProBadge>
+      <ProBadge
+        v-else-if="reportStatus === 'draft' && reportPersistedBody.trim()"
+        variant="warning"
+        data-testid="visit-report-status-badge"
+      >
+        {{ $t('calendar.reportStatusDraft') }}
+      </ProBadge>
+    </div>
     <p v-if="visitDateLabel" class="pro-hint" data-testid="visit-report-date">
       {{ $t('calendar.reportVisitDate') }} : {{ visitDateLabel }}
     </p>
@@ -771,6 +787,18 @@ watch(
 </script>
 
 <style scoped>
+.visit-report-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.visit-report-title-row .pro-label {
+  margin-bottom: 0;
+}
+
 .visit-report-howto {
   margin-bottom: 0.75rem;
   border: 1px solid var(--pf-vet-border);

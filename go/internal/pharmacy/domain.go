@@ -12,6 +12,7 @@ var (
 	ErrBatchQuarantined          = errors.New("batch_quarantined")
 	ErrInvalidExpiryOnReceipt    = errors.New("invalid_expiry_on_receipt")
 	ErrBatchNotFound             = errors.New("batch_not_found")
+	ErrBatchWasted               = errors.New("batch_wasted")
 	ErrDAFTraceRequired          = errors.New("daf_trace_required")
 )
 

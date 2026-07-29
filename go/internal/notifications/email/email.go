@@ -1,13 +1,18 @@
 package email
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"mime"
+	"mime/multipart"
 	"net"
 	"net/smtp"
+	"net/textproto"
 	"strings"
 	"time"
 
@@ -74,10 +79,15 @@ func (n *Notifier) isDevSMTP() bool {
 }
 
 func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
-	addr := fmt.Sprintf("%s:%d", n.host, n.port)
 	encodedSubject := mime.QEncoding.Encode("UTF-8", subject)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
 		n.from, to, encodedSubject, body)
+	return n.deliverSMTP(to, []byte(msg), softFail)
+}
+
+// deliverSMTP dials SMTP with shared auth / soft-fail / logging policy.
+func (n *Notifier) deliverSMTP(to string, msg []byte, softFail bool) error {
+	addr := fmt.Sprintf("%s:%d", n.host, n.port)
 	mailFrom := envelopeFrom(n.from)
 
 	// USER set without PASS (staging secret missing) — fail fast, do not dial OVH.
@@ -94,7 +104,7 @@ func (n *Notifier) sendHTML(to, subject, body string, softFail bool) error {
 	if n.user != "" {
 		authUser, authPass = n.user, n.pass
 	}
-	if err := sendMailTimeout(addr, authUser, authPass, mailFrom, []string{to}, []byte(msg), smtpOpTimeout); err != nil {
+	if err := sendMailTimeout(addr, authUser, authPass, mailFrom, []string{to}, msg, smtpOpTimeout); err != nil {
 		if n.isDevSMTP() {
 			log.Printf("email send (mailhog/dev): %v", err)
 		} else {
@@ -211,6 +221,94 @@ func (n *Notifier) SendVetAlert(to, subject, body string) error {
 	return n.sendHTML(to, subject, body, true)
 }
 
+// SendVetAlertWithCSV sends an HTML alert plus a CSV attachment (reorder / supplier order).
+// Unlike soft alert digests, SMTP failures are returned (except mailhog/dev soft-fail)
+// so callers can avoid marking a purchase order as sent when delivery failed.
+func (n *Notifier) SendVetAlertWithCSV(to, subject, htmlBody, filename string, csv []byte) error {
+	return n.sendHTMLWithCSV(to, subject, htmlBody, filename, csv, false)
+}
+
+func (n *Notifier) sendHTMLWithCSV(to, subject, htmlBody, filename string, csv []byte, softFail bool) error {
+	if strings.TrimSpace(filename) == "" {
+		filename = "order.csv"
+	}
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	hw, err := mw.CreatePart(textproto.MIMEHeader{
+		"Content-Type":              {"text/html; charset=UTF-8"},
+		"Content-Transfer-Encoding": {"base64"},
+	})
+	if err != nil {
+		return err
+	}
+	if err := writeBase64Wrapped(hw, []byte(htmlBody)); err != nil {
+		return err
+	}
+	aw, err := mw.CreatePart(textproto.MIMEHeader{
+		"Content-Type":              {"text/csv; charset=UTF-8"},
+		"Content-Transfer-Encoding": {"base64"},
+		"Content-Disposition":       {fmt.Sprintf(`attachment; filename="%s"`, filename)},
+	})
+	if err != nil {
+		return err
+	}
+	if err := writeBase64Wrapped(aw, csv); err != nil {
+		return err
+	}
+	if err := mw.Close(); err != nil {
+		return err
+	}
+
+	encodedSubject := mime.QEncoding.Encode("UTF-8", subject)
+	var msg bytes.Buffer
+	fmt.Fprintf(&msg, "From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\n", n.from, to, encodedSubject)
+	fmt.Fprintf(&msg, "Content-Type: multipart/mixed; boundary=%s\r\n\r\n", mw.Boundary())
+	msg.Write(body.Bytes())
+	return n.deliverSMTP(to, msg.Bytes(), softFail)
+}
+
+// writeBase64Wrapped encodes data as RFC 2045 base64 (≤76 cols + CRLF).
+func writeBase64Wrapped(w io.Writer, data []byte) error {
+	enc := base64.NewEncoder(base64.StdEncoding, &base64LineBreaker{w: w, max: 76})
+	if _, err := enc.Write(data); err != nil {
+		_ = enc.Close()
+		return err
+	}
+	return enc.Close()
+}
+
+// base64LineBreaker inserts CRLF every max bytes (RFC 2045 / SMTP line limits).
+type base64LineBreaker struct {
+	w   io.Writer
+	col int
+	max int
+}
+
+func (b *base64LineBreaker) Write(p []byte) (int, error) {
+	n := 0
+	for len(p) > 0 {
+		if b.col >= b.max {
+			if _, err := b.w.Write([]byte("\r\n")); err != nil {
+				return n, err
+			}
+			b.col = 0
+		}
+		space := b.max - b.col
+		chunk := p
+		if len(chunk) > space {
+			chunk = p[:space]
+		}
+		wn, err := b.w.Write(chunk)
+		n += wn
+		b.col += wn
+		p = p[wn:]
+		if err != nil {
+			return n, err
+		}
+	}
+	return n, nil
+}
+
 // SendCritical delivers an ops/alert email and returns SMTP errors (no soft-fail in prod).
 func (n *Notifier) SendCritical(to, subject, body string) error {
 	return n.sendHTML(to, subject, body, false)
@@ -233,16 +331,16 @@ func (n *Notifier) SendConfirmRegistration(to, locale, fullName, confirmURL stri
 	vars := map[string]string{"fullName": fullName}
 	subject := i18n.T(locale, "emails.confirm_registration_subject", nil)
 	body := renderBrandedEmail(brandedEmailContent{
-		Lang:       locale,
-		Tagline:    mustT(locale, "emails.confirm_registration_tagline"),
-		Greeting:   mustT(locale, "emails.confirm_registration_greeting", vars),
-		Intro:      mustT(locale, "emails.confirm_registration_intro"),
-		CTALabel:   mustT(locale, "emails.confirm_registration_cta"),
-		CTAURL:     confirmURL,
-		Expiry:     mustT(locale, "emails.confirm_registration_expiry"),
-		Disclaimer: mustT(locale, "emails.confirm_registration_disclaimer"),
-		Preheader:  mustT(locale, "emails.confirm_registration_preheader"),
-		Brand:      n.brandURLs(),
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.confirm_registration_tagline"),
+		Greeting:        mustT(locale, "emails.confirm_registration_greeting", vars),
+		Intro:           mustT(locale, "emails.confirm_registration_intro"),
+		CTALabel:        mustT(locale, "emails.confirm_registration_cta"),
+		CTAURL:          confirmURL,
+		Expiry:          mustT(locale, "emails.confirm_registration_expiry"),
+		Disclaimer:      mustT(locale, "emails.confirm_registration_disclaimer"),
+		Preheader:       mustT(locale, "emails.confirm_registration_preheader"),
+		Brand:           n.brandURLs(),
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
@@ -255,16 +353,16 @@ func (n *Notifier) SendPasswordReset(to, locale, fullName, resetURL string) erro
 	vars := map[string]string{"fullName": fullName}
 	subject := mustT(locale, "emails.password_reset_subject")
 	body := renderBrandedEmail(brandedEmailContent{
-		Lang:       locale,
-		Tagline:    mustT(locale, "emails.password_reset_tagline"),
-		Greeting:   mustT(locale, "emails.password_reset_greeting", vars),
-		Intro:      mustT(locale, "emails.password_reset_intro"),
-		CTALabel:   mustT(locale, "emails.password_reset_cta"),
-		CTAURL:     resetURL,
-		Expiry:     mustT(locale, "emails.password_reset_expiry"),
-		Disclaimer: mustT(locale, "emails.password_reset_disclaimer"),
-		Preheader:  mustT(locale, "emails.password_reset_preheader"),
-		Brand:      n.brandURLs(),
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.password_reset_tagline"),
+		Greeting:        mustT(locale, "emails.password_reset_greeting", vars),
+		Intro:           mustT(locale, "emails.password_reset_intro"),
+		CTALabel:        mustT(locale, "emails.password_reset_cta"),
+		CTAURL:          resetURL,
+		Expiry:          mustT(locale, "emails.password_reset_expiry"),
+		Disclaimer:      mustT(locale, "emails.password_reset_disclaimer"),
+		Preheader:       mustT(locale, "emails.password_reset_preheader"),
+		Brand:           n.brandURLs(),
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
@@ -276,13 +374,13 @@ func (n *Notifier) SendHeartrateValidated(to, locale string, bpm int) error {
 	vars := map[string]string{"bpm": fmt.Sprintf("%d", bpm)}
 	subject := mustT(locale, "emails.heartrate_validated_subject")
 	body := renderBrandedEmail(brandedEmailContent{
-		Lang:       locale,
-		Tagline:    mustT(locale, "emails.heartrate_validated_tagline"),
-		Greeting:   mustT(locale, "emails.heartrate_validated_greeting"),
-		Intro:      mustT(locale, "emails.heartrate_validated_intro", vars),
-		Disclaimer: mustT(locale, "emails.heartrate_validated_disclaimer"),
-		Preheader:  mustT(locale, "emails.heartrate_validated_preheader", vars),
-		Brand:      n.brandURLs(),
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.heartrate_validated_tagline"),
+		Greeting:        mustT(locale, "emails.heartrate_validated_greeting"),
+		Intro:           mustT(locale, "emails.heartrate_validated_intro", vars),
+		Disclaimer:      mustT(locale, "emails.heartrate_validated_disclaimer"),
+		Preheader:       mustT(locale, "emails.heartrate_validated_preheader", vars),
+		Brand:           n.brandURLs(),
 		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
 		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
 	})
@@ -366,13 +464,13 @@ func (n *Notifier) SendPetDossierShare(
 ) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{
-		"petName":          petName,
-		"clientName":       clientName,
-		"commercialName":   commercialName,
-		"commercialPhone":  commercialPhone,
-		"commercialEmail":  commercialEmail,
-		"registerUrl":      registerURL,
-		"siteUrl":          siteURL,
+		"petName":         petName,
+		"clientName":      clientName,
+		"commercialName":  commercialName,
+		"commercialPhone": commercialPhone,
+		"commercialEmail": commercialEmail,
+		"registerUrl":     registerURL,
+		"siteUrl":         siteURL,
 	}
 	if vars["commercialName"] == "" {
 		vars["commercialName"] = "petsFollow"
@@ -412,13 +510,13 @@ func (n *Notifier) SendConsultationShare(
 ) error {
 	locale = i18n.NormalizeLocale(locale)
 	vars := map[string]string{
-		"petName":          petName,
-		"clientName":       clientName,
-		"commercialName":   commercialName,
-		"commercialPhone":  commercialPhone,
-		"commercialEmail":  commercialEmail,
-		"registerUrl":      registerURL,
-		"siteUrl":          siteURL,
+		"petName":         petName,
+		"clientName":      clientName,
+		"commercialName":  commercialName,
+		"commercialPhone": commercialPhone,
+		"commercialEmail": commercialEmail,
+		"registerUrl":     registerURL,
+		"siteUrl":         siteURL,
 	}
 	if vars["commercialName"] == "" {
 		vars["commercialName"] = "petsFollow"
@@ -678,8 +776,9 @@ func (n *Notifier) SendAiCrAdhesionStep(to, locale, fullName, stepKey, ctaURL st
 
 // SendJourneyStep sends one client discovery/loyalty drip email.
 // vars may include:
-//   "_omitDetail=1" — suppress soft-upsell detail block
-//   "_introNear=1"  — use intro_near when present (d330 annual near renewal)
+//
+//	"_omitDetail=1" — suppress soft-upsell detail block
+//	"_introNear=1"  — use intro_near when present (d330 annual near renewal)
 func (n *Notifier) SendJourneyStep(to, locale, fullName, stepKey, ctaURL, unsubscribeURL string, vars map[string]string) error {
 	locale = i18n.NormalizeLocale(locale)
 	if vars == nil {

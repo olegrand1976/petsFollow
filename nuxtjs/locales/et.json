@@ -828,7 +828,32 @@
       "bandQuarantine": "Karantiin",
       "errorLoad": "Varu laadimine ebaõnnestus.",
       "errorReceive": "Sissetulek keelduti.",
-      "errorAction": "Toiming ebaõnnestus."
+      "errorAction": "Toiming ebaõnnestus.",
+      "reorderTitle": "Täiendamise hoiatused",
+      "reorderHint": "Varu alla piiri — loo tellimus ja saada tarnijale.",
+      "reorderOnHand": "Laos",
+      "reorderMin": "Lävi",
+      "orderEmail": "Tarnija e-post",
+      "orderCreateSend": "Telli e-postiga",
+      "orderSent": "Tellimus saadetud.",
+      "errorOrder": "Tellimust ei saanud saata.",
+      "blNumber": "Saatelehe nr (valikuline)",
+      "supplierName": "Tarnija (valikuline)",
+      "invTitle": "Aastane inventuur",
+      "invHint": "Aktiivsete / karantiini partiide hetktõmmis — sisestage füüsilised kogused ja sulgege erinevuste rakendamiseks.",
+      "invStart": "Alusta inventuuri",
+      "invClose": "Sulge ja kohanda",
+      "invCancel": "Tühista",
+      "invExport": "CSV eksport",
+      "invSystem": "Süsteem",
+      "invCounted": "Loetud",
+      "invProgress": "{counted} / {total} rida loetud",
+      "invStarted": "Inventuur avatud.",
+      "invClosed": "Inventuur suletud — erinevused rakendatud.",
+      "invCancelled": "Inventuur tühistatud.",
+      "errorInv": "Inventuur ebaõnnestus.",
+      "errorReorderLoad": "Ümbervarustuse hoiatusi ei õnnestunud laadida.",
+      "errorInvLoad": "Avatud inventuuri ei õnnestunud laadida."
     },
     "daf": {
       "title": "DAF dokumendid",
@@ -856,7 +881,41 @@
       "vamregDuration": "Kestus (päeva)",
       "previewTitle": "Planeeritud FEFO jaotus",
       "error": "DAF toiming ebaõnnestus.",
-      "legalExpiry": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg."
+      "legalExpiry": "Lõpetamine nõuab partiid + AMM; antibiootikumid vajavad VAMReg.",
+      "vamregLabel": "VAMReg",
+      "vamregRetry": "Proovi VAMReg uuesti",
+      "vamregStatus": {
+        "pending": "Ootel",
+        "sent": "Deklareeritud",
+        "failed": "Ebaõnnestus",
+        "na": "N/A"
+      }
+    },
+    "errors": {
+      "daf_vamreg_already_sent": "Tühistamine võimatu: VAMReg deklaratsioon on juba saadetud.",
+      "daf_vamreg_in_flight": "Tühistamine võimatu: VAMReg deklaratsioon on pooleli — proovige hiljem.",
+      "daf_vamreg_incomplete": "Incomplete VAMReg fields (species, indication, duration).",
+      "daf_vamreg_not_applicable": "VAMReg not applicable for this DAF.",
+      "daf_not_draft": "DAF is no longer a draft.",
+      "daf_not_finalized": "DAF is not finalized.",
+      "daf_empty": "Add at least one medication line.",
+      "daf_amm_required": "MA number (AMM) is required.",
+      "daf_pdf_immutable": "DAF PDF already generated.",
+      "daf_trace_required": "Lot traceability missing.",
+      "food_chain_withdrawal_required": "Withdrawal periods (meat/milk/eggs) required for food-producing animals.",
+      "food_chain_banned_medication": "Medication banned for the food chain.",
+      "stock_insufficient": "Insufficient stock.",
+      "stock_unavailable_valid_lots": "No valid lots available (FEFO).",
+      "batch_expired": "Batch expired.",
+      "batch_quarantined": "Batch quarantined.",
+      "batch_wasted": "This lot was destroyed — create a new lot for receipt.",
+      "invalid_expiry_on_receipt": "Invalid expiry date.",
+      "delivery_note_exists": "This delivery-note number already exists.",
+      "order_not_draft": "Order is no longer a draft.",
+      "email_send_failed": "Email send failed.",
+      "vamreg_enqueue_failed": "Could not retry VAMReg.",
+      "not_found": "Not found.",
+      "validation_error": "Invalid data."
     }
   },
   "recommend": {
@@ -2012,17 +2071,17 @@
     "terms": {
       "title": "Kasutustingimused",
       "link": "Tingimused",
-      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}ll-it-sc.be."
+      "body": "Need tingimused reguleerivad petsFollow Pro kasutamist veterinaaride poolt ja mobiilirakenduse kasutamist lemmikloomade omanike poolt. Rakendus võimaldab ettekirjutatud jälgimist (sõnumid, Care/Horse meeldetuletused, südame löögisageduse mõõtmised) ja suhtlust kabinetiga. Tellimuste ja lisandmoodulite maksed töötleb Stripe. Kontakt: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privaatsuspoliitika",
       "link": "Privaatsus",
-      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}ll-it-sc.be."
+      "body": "petsFollow töötleb isikuandmeid loomade ravi järjepidevuse teenuse pakkumiseks: identiteet (nimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia kabinetiga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste tokenid (Firebase Cloud Messaging), Stripe’i töödeldud makseandmed. Eesmärgid: konto, jälgimine, sõnumid, teavitused, visiidiaruanded, arveldus. AI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks, kliendifailide impordiks ja müügipitchi treeninguks (heli töödeldakse reaalajas, Google seda ei säilita). Partnerid: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platformi majutus. Säilitamine: konto kehtivuse ajal, seejärel kustutamine; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul. GDPR-õigused (juurdepääs, parandamine, kustutamine, ülekantavus): seaded (andmete eksport, konto kustutamine) või support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Õigusteave",
       "link": "Õigusteave",
-      "body": "Väljaandja: LL-IT-SC / petsFollow. Kontakt: support{'@'}ll-it-sc.be. Majutus: Google Cloud Platform (GDPR-nõuetele vastav)."
+      "body": "Väljaandja: LL-IT-SC / petsFollow. Kontakt: support{'@'}petsfollow.app. Majutus: Google Cloud Platform (GDPR-nõuetele vastav)."
     },
     "navAria": "Õiguslik"
   },
@@ -2658,7 +2717,7 @@
     "reportAuthorPeer": "Teine autor",
     "reportReadOnlyPeer": "Teise spetsialisti raport — ainult lugemiseks. Mine tagasi « Minu raport », et enda oma muuta.",
     "reportHint": "Külastuse märkmed…",
-    "saveReport": "Salvesta raport",
+    "saveReport": "Salvesta",
     "improveReport": "Paranda (AI)",
     "reportSaved": "Raport salvestatud",
     "reportImproved": "Raport parandatud",
@@ -2672,12 +2731,10 @@
     "micPermissionDenied": "Mikrofon keelatud — kontrollige brauseri õigusi.",
     "reportVisitDate": "Visiidi kuupäev",
     "reportDatePrefix": "Kuupäev",
-    "reportHowItWorksTitle": "Kuidas see töötab?",
-    "reportHowItWorksStep1": "Dikteerige (nupp « Dikteeri ») või importige helifail.",
-    "reportHowItWorksStep2": "Kinnitage kliendi suuline nõusolek enne salvestamist.",
-    "reportHowItWorksStep3": "Salvestage aruanne.",
-    "reportHowItWorksStep4": "Parandage seda vajadusel tehisintellektiga.",
-    "reportHowItWorksStep5": "Lõpetage, seejärel jätkake retsepti/DAF-i või arvega.",
+    "reportHowItWorksTitle": "Abi",
+    "reportHowItWorksStep1": "Dikteerige või kirjutage märkmed vasakule (kliendi nõusolek helile).",
+    "reportHowItWorksStep2": "Parandage AI-ga paremal, seejärel kohandage vajadusel.",
+    "reportHowItWorksStep3": "Salvestage, vormistage ja jätkake DAF või arve juurde.",
     "audioConsent": "Helifaili kasutatakse aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Kustutatakse lõpetamisel.",
     "audioConsentTitle": "Helisalvestuse nõusolek",
     "audioConsentAccept": "Nõustun",
@@ -2762,12 +2819,22 @@
     "audioToText": "Audio → tekst",
     "reportEditSource": "Muuda teksti",
     "reportPreview": "Eelvaade",
-    "reportVersionTranscript": "v0 — Transkriptsioon",
-    "reportVersionImproved": "v1 — AI täiendus",
-    "reportVersionSaved": "v2 — Salvestatud versioon",
+    "reportVersionTranscript": "Algne transkriptsioon",
+    "reportVersionImproved": "AI ettepanek",
+    "reportVersionSaved": "Viimati salvestatud versioon",
     "reportVersionEmpty": "Puudub",
-    "reportRestore": "Taasta",
-    "reportVersionsTitle": "Raporti versioonid"
+    "reportRestore": "Taasta redaktorisse",
+    "reportVersionsTitle": "Versiooniajalugu",
+    "reportFlowHint": "Märkmed vasakul → aruanne paremal → Salvesta.",
+    "reportPaneNotesTitle": "Märkmed / dikteerimine",
+    "reportPaneNotesSubtitle": "Kirjutage või dikteerige konsultatsioon.",
+    "reportPaneCrTitle": "Külastusaruanne",
+    "reportPaneCrSubtitle": "Parandage AI-ga või muutke käsitsi.",
+    "reportTranscriptHint": "Dikteering või toored märkmed…",
+    "reportDirtyHint": "Salvestamata muudatused.",
+    "reportDiscardEdits": "Tühista muudatused",
+    "reportStatusFinal": "Lõplik",
+    "reportStatusDraft": "Mustand"
   },
   "manager": {
     "dashboard": {
