@@ -720,6 +720,7 @@
   },
   "consultationReportFallback": "Verslag",
   "consultationReportEmpty": "(leeg)",
+  "consultationReportUnavailable": "Geen verslag beschikbaar voor dit bezoek.",
   "sendConsultationToVet": "Naar een dierenarts sturen",
   "sendConsultationEmailLabel": "E-mail van de dierenarts",
   "sendConsultationEmailHint": "vet@kliniek.be",

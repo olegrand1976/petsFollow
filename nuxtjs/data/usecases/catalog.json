@@ -407,7 +407,7 @@
         "Ouvrir une visite / créneau si présent.",
         "Marquer Fait (ou action équivalente).",
         "(Optionnel) Compte rendu : dictée (bandeau micro + Arrêter) ou fichier audio ; pas de bouton Améliorer IA ; Enregistrer / Finaliser.",
-        "Nouvelle Consultation (VetLight / farrier avec write_notes) : fiche animal → CTA → visite confirmée immédiate (source=care_pro, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou Terminer.",
+        "Nouvelle Consultation (VetLight / farrier avec write_notes) : fiche animal → CTA → visite confirmée immédiate (source=care_pro, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou Terminer (finalise le brouillon CR non vide pour le client).",
         "Onglet Messages → composer vers le client partagé → envoyer (voir aussi UC-X-01 étape care_pro)."
       ],
       "expected": [
@@ -1131,7 +1131,7 @@
       ],
       "prerequisites": [
         "Seed + app client + API + SMTP (MailHog local ou staging).",
-        "Au moins une visite avec CR finalisé pour un animal actif de client.demo (sinon créer une consultation Pro / Pro Light puis finaliser).",
+        "Au moins une visite avec CR finalisé pour un animal actif de client.demo (sinon créer une consultation Pro / Pro Light puis Enregistrer + Terminer — le mark-done finalise le brouillon non vide ; ou bouton Finaliser explicite).",
         "Distinct de UC-X-08 (dossier complet ZIP)."
       ],
       "steps": [

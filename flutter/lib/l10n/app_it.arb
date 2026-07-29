@@ -783,6 +783,7 @@
   },
   "consultationReportFallback": "Referto",
   "consultationReportEmpty": "(vuoto)",
+  "consultationReportUnavailable": "Nessun referto disponibile per questa visita.",
   "sendConsultationToVet": "Invia a un veterinario",
   "sendConsultationEmailLabel": "Email del veterinario",
   "sendConsultationEmailHint": "vet@clinica.it",

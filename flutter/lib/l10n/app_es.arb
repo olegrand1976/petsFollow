@@ -720,6 +720,7 @@
   },
   "consultationReportFallback": "Informe",
   "consultationReportEmpty": "(vacío)",
+  "consultationReportUnavailable": "No hay informe disponible para esta visita.",
   "sendConsultationToVet": "Enviar a un veterinario",
   "sendConsultationEmailLabel": "Email del veterinario",
   "sendConsultationEmailHint": "vet@clinica.es",

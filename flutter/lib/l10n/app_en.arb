@@ -720,6 +720,7 @@
   },
   "consultationReportFallback": "Report",
   "consultationReportEmpty": "(empty)",
+  "consultationReportUnavailable": "No visit report available for this visit.",
   "sendConsultationToVet": "Send to a veterinarian",
   "sendConsultationEmailLabel": "Veterinarian email",
   "sendConsultationEmailHint": "vet@clinic.com",

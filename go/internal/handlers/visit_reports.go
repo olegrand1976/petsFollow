@@ -649,3 +649,25 @@ func (a *API) purgeVisitReportAudio(ctx context.Context, report store.VisitRepor
 	}
 	return nil
 }
+
+// finalizePersistedDraftReports closes the medical loop: draft CRs with body → final
+// so the pet owner can open / share the consultation. Audio is purged first (RGPD).
+func (a *API) finalizePersistedDraftReports(ctx context.Context, visit store.Visit, actorUserID string) error {
+	reports, err := a.store.ListDraftVisitReportsWithBody(ctx, visit.ID)
+	if err != nil {
+		return err
+	}
+	for _, report := range reports {
+		if err := a.purgeVisitReportAudio(ctx, report); err != nil {
+			return err
+		}
+		if _, err := a.store.FinalizeVisitReport(ctx, report.ID); err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				continue // raced to final elsewhere
+			}
+			return err
+		}
+		a.trackAiCrUsage(visit.PracticeID, actorUserID, visit.ID, store.AiCrUsageFinalize)
+	}
+	return nil
+}

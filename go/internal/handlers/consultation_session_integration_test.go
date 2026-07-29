@@ -2,7 +2,9 @@ package handlers_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -337,6 +339,224 @@ func TestConsultationSessionFinalizeMarksDone(t *testing.T) {
 	})
 	if code != http.StatusOK {
 		t.Fatalf("idempotent done want 200 got %d %#v", code, env)
+	}
+}
+
+func TestMarkDoneAutoFinalizesDraftReportForClient(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         now,
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+		"notes":               "mark-done auto-finalize",
+	})
+	if code == http.StatusBadRequest {
+		t.Skipf("consultation create blocked: %#v", env)
+	}
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, vetTok, nil)
+	})
+
+	probe := fmt.Sprintf("auto-final-cr-%d", time.Now().UnixNano())
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": probe,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put report %d %#v", code, env)
+	}
+
+	// Terminer without explicit Finaliser — must finalize draft for client access.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("mark done %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "done" {
+		t.Fatalf("status=%v want done", dataMap(t, env)["status"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client visits %d %#v", code, env)
+	}
+	foundFlag := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] == visitID {
+			foundFlag = m["hasFinalReport"] == true
+			break
+		}
+	}
+	if !foundFlag {
+		t.Fatalf("expected hasFinalReport after mark-done %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("timeline %d %#v", code, env)
+	}
+	item := findTimelineVisit(t, env, visitID)
+	meta, _ := item["meta"].(map[string]any)
+	if meta["hasReport"] != true {
+		t.Fatalf("timeline hasReport want true got %#v", meta)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/client-consultation", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client consultation %d %#v", code, env)
+	}
+	reports, _ := dataMap(t, env)["reports"].([]any)
+	if len(reports) == 0 {
+		t.Fatalf("expected finalized reports %#v", env)
+	}
+	body, _ := reports[0].(map[string]any)["bodyText"].(string)
+	if !strings.Contains(body, probe) {
+		t.Fatalf("body %q want probe %q", body, probe)
+	}
+}
+
+func TestIdempotentDoneFinalizesOrphanDraft(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, clientTok)
+
+	probe := fmt.Sprintf("orphan-draft-%d", time.Now().UnixNano())
+	// SQL done + draft CR (legacy orphan) — Terminer idempotent must finalize.
+	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 11*time.Hour)
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("idempotent done %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client visits %d %#v", code, env)
+	}
+	foundFlag := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] == visitID {
+			foundFlag = m["hasFinalReport"] == true
+			break
+		}
+	}
+	if !foundFlag {
+		t.Fatalf("expected hasFinalReport after idempotent done %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/client-consultation", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client consultation %d %#v", code, env)
+	}
+	reports, _ := dataMap(t, env)["reports"].([]any)
+	if len(reports) == 0 {
+		t.Fatalf("expected finalized reports %#v", env)
+	}
+	body, _ := reports[0].(map[string]any)["bodyText"].(string)
+	if !strings.Contains(body, probe) {
+		t.Fatalf("body %q want probe %q", body, probe)
+	}
+}
+
+func TestListVisitsDoesNotFinalizeOrphanDraft(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, clientTok)
+
+	probe := fmt.Sprintf("no-heal-get-%d", time.Now().UnixNano())
+	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 12*time.Hour)
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client visits %d %#v", code, env)
+	}
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] != visitID {
+			continue
+		}
+		if m["hasFinalReport"] == true {
+			t.Fatalf("GET listVisits must not finalize orphan draft %#v", m)
+		}
+		break
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/client-consultation", clientTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("orphan draft want 404 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("timeline %d %#v", code, env)
+	}
+	item := findTimelineVisit(t, env, visitID)
+	meta, _ := item["meta"].(map[string]any)
+	if meta["hasReport"] == true {
+		t.Fatalf("timeline must not expose hasReport for orphan draft %#v", meta)
+	}
+}
+
+func TestInvalidDoneDoesNotFinalizeDraft(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, clientTok)
+
+	probe := fmt.Sprintf("invalid-done-%d", time.Now().UnixNano())
+	visitID := createConfirmedVisitWithReport(t, api, vetTok, petID, probe, 13*time.Hour)
+
+	// Force requested so PATCH done is invalid_status — must not finalize.
+	_, err := api.pool.Exec(context.Background(), `
+		UPDATE visits.visits SET status = 'requested', pending_action_by = 'vet' WHERE id = $1::uuid`, visitID)
+	if err != nil {
+		t.Fatalf("sql set requested: %v", err)
+	}
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+		"status": "done",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("invalid done want 400 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/report", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get report %d %#v", code, env)
+	}
+	if dataMap(t, env)["status"] != "draft" {
+		t.Fatalf("draft must stay draft after invalid done, got %#v", dataMap(t, env)["status"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/client-consultation", clientTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("client consultation want 404 got %d %#v", code, env)
 	}
 }
 

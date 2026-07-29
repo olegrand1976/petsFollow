@@ -64,13 +64,9 @@ func TestPetTimelineClientHasReportOnFinalCR(t *testing.T) {
 	petID := demoClientPetID(t, api, clientTok)
 
 	probe := fmt.Sprintf("timeline-final-cr-%d", time.Now().UnixNano())
-	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 9*time.Hour)
-	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("finalize %d %#v", code, env)
-	}
+	visitID := createDoneVisitWithFinalReport(t, api, vetTok, petID, probe, "", 9*time.Hour)
 
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("client timeline %d %#v", code, env)
 	}
@@ -96,13 +92,9 @@ func TestPetTimelineNonOwnerStripsHasReport(t *testing.T) {
 	petID := demoClientPetID(t, api, ownerTok)
 
 	probe := fmt.Sprintf("timeline-share-cr-%d", time.Now().UnixNano())
-	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 10*time.Hour)
-	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("finalize %d %#v", code, env)
-	}
+	visitID := createDoneVisitWithFinalReport(t, api, vetTok, petID, probe, "", 10*time.Hour)
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/shares", ownerTok, map[string]any{
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/shares", ownerTok, map[string]any{
 		"email":      "client.marie@petsfollow.test",
 		"permission": "read",
 	})
@@ -344,16 +336,22 @@ func demoClientPetID(t *testing.T, api *testAPI, clientTok string) string {
 
 func createDoneVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration) string {
 	t.Helper()
-	visitID := createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, notes, offset, true)
-	return visitID
+	// SQL mark-done keeps draft CR (orphan path) — for timeline draft assertions.
+	return createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, notes, offset, true, false)
+}
+
+func createDoneVisitWithFinalReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration) string {
+	t.Helper()
+	// PATCH done via API auto-finalizes non-empty draft CRs.
+	return createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, notes, offset, true, true)
 }
 
 func createConfirmedVisitWithReport(t *testing.T, api *testAPI, vetTok, petID, bodyText string, offset time.Duration) string {
 	t.Helper()
-	return createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, "", offset, false)
+	return createVisitWithOptionalReport(t, api, vetTok, petID, bodyText, "", offset, false, false)
 }
 
-func createVisitWithOptionalReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration, markDone bool) string {
+func createVisitWithOptionalReport(t *testing.T, api *testAPI, vetTok, petID, bodyText, notes string, offset time.Duration, markDone, markDoneViaAPI bool) string {
 	t.Helper()
 	var visitID string
 	for attempt := 0; attempt < 4; attempt++ {
@@ -389,11 +387,19 @@ func createVisitWithOptionalReport(t *testing.T, api *testAPI, vetTok, petID, bo
 	}
 
 	if markDone {
-		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
-			"status": "done",
-		})
-		if code != http.StatusOK {
-			t.Fatalf("mark done %d %#v", code, env)
+		if markDoneViaAPI {
+			code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, vetTok, map[string]any{
+				"status": "done",
+			})
+			if code != http.StatusOK {
+				t.Fatalf("mark done %d %#v", code, env)
+			}
+		} else {
+			_, err := api.pool.Exec(context.Background(), `
+				UPDATE visits.visits SET status = 'done' WHERE id = $1::uuid`, visitID)
+			if err != nil {
+				t.Fatalf("sql mark done: %v", err)
+			}
 		}
 	}
 	return visitID

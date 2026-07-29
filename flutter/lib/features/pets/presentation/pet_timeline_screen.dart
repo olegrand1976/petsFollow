@@ -452,6 +452,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                           final visitId = type == 'visit' ? _timelineVisitId(m) : null;
                           // Filet: timeline meta.hasReport when not already under Consultations.
                           final openReport = visitId != null && _timelineHasFinalReport(m);
+                          final isVisit = type == 'visit' && visitId != null;
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
@@ -478,7 +479,17 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 ].join(' · '),
                               ),
                               trailing: openReport ? const Icon(Icons.chevron_right) : null,
-                              onTap: openReport ? () => _openConsultation(visitId) : null,
+                              onTap: !isVisit
+                                  ? null
+                                  : openReport
+                                      ? () => _openConsultation(visitId)
+                                      : () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(l10n.consultationReportUnavailable),
+                                            ),
+                                          );
+                                        },
                             ),
                           );
                         }),

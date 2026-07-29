@@ -783,6 +783,7 @@
   },
   "consultationReportFallback": "Compte-rendu",
   "consultationReportEmpty": "(vide)",
+  "consultationReportUnavailable": "Aucun compte-rendu disponible pour cette visite.",
   "sendConsultationToVet": "Envoyer à un vétérinaire",
   "sendConsultationEmailLabel": "E-mail du vétérinaire",
   "sendConsultationEmailHint": "vet@cabinet.be",

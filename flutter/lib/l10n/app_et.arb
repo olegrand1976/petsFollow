@@ -720,6 +720,7 @@
   },
   "consultationReportFallback": "Aruanne",
   "consultationReportEmpty": "(tühi)",
+  "consultationReportUnavailable": "Selle visiidi kohta aruannet pole.",
   "sendConsultationToVet": "Saada loomaarstile",
   "sendConsultationEmailLabel": "Loomaarsti e-post",
   "sendConsultationEmailHint": "vet@kliinik.ee",

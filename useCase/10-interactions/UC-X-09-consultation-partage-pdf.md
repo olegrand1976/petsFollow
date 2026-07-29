@@ -23,7 +23,7 @@ Montrer qu’un propriétaire peut **ouvrir le compte-rendu finalisé** d’une 
 ## Prérequis
 
 - Seed + app client + API + SMTP (MailHog local ou staging).
-- Au moins une visite avec **CR finalisé** pour un animal actif de `client.demo` (sinon créer une consultation Pro / Pro Light puis finaliser).
+- Au moins une visite avec **CR finalisé** pour un animal actif de `client.demo` (sinon créer une consultation Pro / Pro Light puis **Enregistrer** + **Terminer** — le mark-done finalise le brouillon non vide ; ou bouton Finaliser explicite).
 - Distinct de UC-X-08 (dossier complet ZIP).
 
 ## Étapes

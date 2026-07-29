@@ -996,6 +996,14 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 			return
 		}
+		// Only finalize on a valid Terminer transition (confirmed→done) or idempotent already-done.
+		// Never mutate CR/audio on invalid_status (requested/cancelled/…).
+		if visit.Status == "confirmed" || visit.Status == "done" {
+			if ferr := a.finalizePersistedDraftReports(r.Context(), visit, id.UserID); ferr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "report_finalize_failed")
+				return
+			}
+		}
 		if visit.Status == "done" {
 			updated = visit
 			break

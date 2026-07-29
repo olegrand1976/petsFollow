@@ -30,7 +30,7 @@ Se connecter en care pro / VetLight, voir l’agenda du jour et marquer une visi
 4. Ouvrir une visite / créneau si présent.
 5. Marquer **Fait** (ou action équivalente).
 6. (Optionnel) Compte rendu : dictée (bandeau micro + Arrêter) ou fichier audio ; **pas** de bouton Améliorer IA ; Enregistrer / Finaliser.
-7. **Nouvelle Consultation** (VetLight / farrier avec `write_notes`) : fiche animal → CTA → visite confirmée immédiate (`source=care_pro`, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou Terminer.
+7. **Nouvelle Consultation** (VetLight / farrier avec `write_notes`) : fiche animal → CTA → visite confirmée immédiate (`source=care_pro`, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou **Terminer** (finalise le brouillon CR non vide pour le client).
 8. Onglet **Messages** → composer vers le client partagé → envoyer (voir aussi `UC-X-01` étape care_pro).
 
 ## Résultat attendu

@@ -32,6 +32,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 5. Choisir :
    - **Créer une ordonnance & Facturer** → wizard DAF prérempli (client / animal / visite) → finaliser → **Facturer**.
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
+   - **ou Terminer** → visite `done` + finalisation auto des brouillons CR non vides (visible côté app client).
 6. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**.
 
 ## Résultat attendu

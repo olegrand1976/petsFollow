@@ -1923,6 +1923,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get consultationReportEmpty => '(vuoto)';
 
   @override
+  String get consultationReportUnavailable =>
+      'Nessun referto disponibile per questa visita.';
+
+  @override
   String get sendConsultationToVet => 'Invia a un veterinario';
 
   @override

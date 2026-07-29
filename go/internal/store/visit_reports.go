@@ -337,6 +337,33 @@ func (s *Store) ListFinalVisitReportsForClient(ctx context.Context, visitID stri
 	return out, rows.Err()
 }
 
+// ListDraftVisitReportsWithBody returns draft CRs with non-empty body (ready to finalize for client).
+func (s *Store) ListDraftVisitReportsWithBody(ctx context.Context, visitID string) ([]VisitReport, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT `+visitReportReturning+`
+		FROM visits.visit_reports
+		WHERE visit_id = $1::uuid
+		  AND status = 'draft'
+		  AND length(trim(COALESCE(body_text, ''))) > 0
+		ORDER BY updated_at ASC`, visitID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []VisitReport
+	for rows.Next() {
+		r, err := scanVisitReport(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	if out == nil {
+		out = []VisitReport{}
+	}
+	return out, rows.Err()
+}
+
 // GetVisitReportWithAudio returns any draft report for the visit that still has audio stored.
 func (s *Store) GetVisitReportWithAudio(ctx context.Context, visitID string) (VisitReport, error) {
 	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
