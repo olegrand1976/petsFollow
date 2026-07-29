@@ -34,4 +34,7 @@ class DiscoveryProgress {
   }
 
   bool isCardCompleted(int dayIndex) => completedCards.contains(cardKeyForDay(dayIndex));
+
+  /// True when every journey stage has been marked complete.
+  bool get isJourneyComplete => journeyDays.every(isCardCompleted);
 }
