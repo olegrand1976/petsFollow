@@ -21,6 +21,7 @@ Contrôle rapide ops : métriques, utilisateurs, commercials, inbox support.
 
 - Staging Web.
 - Usage **interne** (pas nécessairement en démo client final).
+- Compte seed multi-profils (`admin` + `client` + `vet` VetPlus) — bascule profil possible dans la topbar.
 
 ## Étapes
 
@@ -30,6 +31,7 @@ Contrôle rapide ops : métriques, utilisateurs, commercials, inbox support.
 4. Ouvrir **Commerciaux** : liste + assignations lisibles.
 5. Ouvrir **Support** : liste des tickets ; ouvrir un ticket si présent.
 6. (Optionnel) Paiements / commissions — lecture seule.
+7. (Optionnel) Menu profil → basculer vers **vet** (VetPlus) puis revenir **admin**.
 
 ## Résultat attendu
 

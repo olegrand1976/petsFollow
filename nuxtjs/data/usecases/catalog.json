@@ -600,7 +600,8 @@
       ],
       "prerequisites": [
         "Staging Web.",
-        "Usage interne (pas nécessairement en démo client final)."
+        "Usage interne (pas nécessairement en démo client final).",
+        "Compte seed multi-profils (admin + client + vet VetPlus) — bascule profil possible dans la topbar."
       ],
       "steps": [
         "Se connecter avec admin.demo.",
@@ -608,7 +609,8 @@
         "Ouvrir Utilisateurs : filtres / rôles visibles.",
         "Ouvrir Commerciaux : liste + assignations lisibles.",
         "Ouvrir Support : liste des tickets ; ouvrir un ticket si présent.",
-        "(Optionnel) Paiements / commissions — lecture seule."
+        "(Optionnel) Paiements / commissions — lecture seule.",
+        "(Optionnel) Menu profil → basculer vers vet (VetPlus) puis revenir admin."
       ],
       "expected": [
         "Accès admin sans erreur.",

@@ -1,8 +1,12 @@
 package handlers_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
+
+	"github.com/olegrand1976/petsFollow/go/internal/seed"
+	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
 
 func TestDevRoleSupportAndBillingGate(t *testing.T) {
@@ -98,6 +102,13 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 
 func TestDevProfileSwitchToVet(t *testing.T) {
 	api := newTestAPI(t)
+	st := store.New(api.pool)
+	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+		t.Fatalf("ensure ops vet profiles: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
+	})
 	devTok := loginToken(t, api.handler, "dev.demo@petsfollow.test", "AdminDemo123!")
 
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", devTok, nil)
@@ -136,6 +147,67 @@ func TestDevProfileSwitchToVet(t *testing.T) {
 	tok, _ := data["accessToken"].(string)
 	if tok == "" {
 		t.Fatalf("expected new access token after switch: %#v", data)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("me after switch %d %#v", code, env)
+	}
+	if dataMap(t, env)["role"] != "vet" {
+		t.Fatalf("expected role vet after switch, got %#v", dataMap(t, env)["role"])
+	}
+}
+
+func TestAdminProfileSwitchToVet(t *testing.T) {
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+		t.Fatalf("ensure ops vet profiles: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
+	})
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list profiles %d %#v", code, env)
+	}
+	raw := env["data"]
+	list, ok := raw.([]any)
+	if !ok {
+		if m, mok := raw.(map[string]any); mok {
+			list, _ = m["profiles"].([]any)
+		}
+	}
+	if len(list) < 2 {
+		t.Fatalf("expected multi profiles for admin, got %#v", env)
+	}
+	var vetProfileID string
+	roles := map[string]bool{}
+	for _, it := range list {
+		m, _ := it.(map[string]any)
+		role, _ := m["role"].(string)
+		roles[role] = true
+		if role == "vet" {
+			vetProfileID, _ = m["id"].(string)
+		}
+	}
+	if !roles["admin"] || !roles["vet"] {
+		t.Fatalf("admin seed expected admin+vet profiles, got %#v", list)
+	}
+	if vetProfileID == "" {
+		t.Fatalf("admin missing vet profile: %#v", list)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/profiles/switch", adminTok, map[string]any{
+		"profileId": vetProfileID,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("switch to vet %d %#v", code, env)
+	}
+	tok, _ := dataMap(t, env)["accessToken"].(string)
+	if tok == "" {
+		t.Fatalf("expected access token after switch: %#v", env)
 	}
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
 	if code != http.StatusOK {

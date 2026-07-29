@@ -44,10 +44,10 @@ func IsPracticeStaff(role Role) bool {
 	return role == RoleVet || role == RoleVetAssistant || role == RoleSecretary
 }
 
-// IsProRole reports roles that get an automatic personal (client) profile on registration.
+// IsProRole reports roles that get an automatic personal (client) profile on registration / EnsureUserProfiles.
 func IsProRole(role Role) bool {
 	return role == RoleVet || role == RoleCarePro || role == RoleCommercial || role == RoleCommercialManager ||
-		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev
+		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev || role == RoleAdmin
 }
 
 func ValidSpecialty(s ProfessionalSpecialty) bool {
@@ -120,4 +120,3 @@ func IsHeartRateDeltaAlert(currentBPM int, previousBPM *int, delta int) bool {
 	}
 	return currentBPM-*previousBPM >= delta
 }
-
