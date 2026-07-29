@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Recetas",
     "commercialAsvMemo": "Memo ASV",
-    "commercialBrochure": "Folleto clínica"
+    "commercialBrochure": "Folleto clínica",
+    "adminRuntimeFlags": "Flags runtime"
   },
   "auth": {
     "login": {
@@ -1092,7 +1093,9 @@
       "stagingSeedOk": "Base staging reiniciada. {n} email(s) al staff enviados.",
       "stagingSeedOkNoEmail": "Base staging reiniciada (ningún email al staff).",
       "stagingSeedFail": "Fallo al reiniciar.",
-      "stagingSeedStatusFail": "No se pudo comprobar si el reset staging está disponible."
+      "stagingSeedStatusFail": "No se pudo comprobar si el reset staging está disponible.",
+      "devTitle": "Ops soporte IT",
+      "devSubtitle": "Tickets, cuentas y diagnóstico (sin facturación)."
     },
     "users": {
       "title": "Registros",
@@ -1545,7 +1548,15 @@
       "loadError": "No se pudieron cargar los tickets de soporte.",
       "searchLabel": "Buscar",
       "searchPlaceholder": "Asunto, email o nombre…",
-      "searchSubmit": "Buscar"
+      "searchSubmit": "Buscar",
+      "statsOpen": "Abiertos",
+      "statsInProgress": "En curso",
+      "statsResolved": "Resueltos",
+      "statsClosed": "Cerrados",
+      "statsOpen24h": "Abiertos > 24 h",
+      "statsOpen7d": "Abiertos > 7 d",
+      "filterAllSources": "Todas las fuentes",
+      "patchError": "No se pudo cambiar el estado."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -1619,6 +1630,14 @@
       "saasEnableConfirm": "¿Activar facturación SaaS (Flux A) para « {name} »? El cron mensual creará borradores.",
       "saasEnableOk": "Flux A activado para esta clínica",
       "saasEnableError": "Error al activar Flux A"
+    },
+    "runtimeFlags": {
+      "title": "Flags runtime",
+      "subtitle": "Configuración de la app (solo lectura, sin secretos).",
+      "empty": "Sin flags.",
+      "loadError": "No se pudieron cargar los flags.",
+      "colFlag": "Flag",
+      "colValue": "Valor"
     }
   },
   "commissions": {
@@ -2010,7 +2029,19 @@
       "profileMenu": "Menú de perfil",
       "settings": "Ajustes",
       "themeDark": "Activar modo oscuro",
-      "themeLight": "Activar modo claro"
+      "themeLight": "Activar modo claro",
+      "switchProfile": "Cambiar perfil",
+      "activeProfile": "Activo",
+      "switchProfileError": "Error al cambiar de perfil.",
+      "profileRole_dev": "DEV soporte",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Veterinario",
+      "profileRole_vet_assistant": "Asistente",
+      "profileRole_secretary": "Secretaría",
+      "profileRole_commercial": "Comercial",
+      "profileRole_commercial_manager": "Manager comercial",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Cliente"
     },
     "table": {
       "emptyTitle": "Sin datos"
@@ -2833,8 +2864,7 @@
     "reportTranscriptHint": "Dictado o notas en bruto…",
     "reportDirtyHint": "Cambios sin guardar.",
     "reportDiscardEdits": "Descartar cambios",
-    "reportStatusFinal": "Finalizado",
-    "reportStatusDraft": "Borrador"
+    "reportStatusFinal": "Finalizado"
   },
   "manager": {
     "dashboard": {

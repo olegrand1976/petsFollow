@@ -188,7 +188,7 @@ func (s *Store) AttachProfile(ctx context.Context, actorUserID, targetUserID str
 	if actorUserID == targetUserID {
 		return Profile{}, ErrCannotModifyOwnProfiles
 	}
-	if !kernel.ValidRole(in.Role) || in.Role == kernel.RoleAdmin {
+	if !kernel.ValidRole(in.Role) || in.Role == kernel.RoleAdmin || in.Role == kernel.RoleDev {
 		return Profile{}, ErrValidation
 	}
 	if in.Role == kernel.RoleCarePro {

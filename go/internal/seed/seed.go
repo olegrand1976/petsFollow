@@ -45,6 +45,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedAdmin(ctx, tx); err != nil {
 		return err
 	}
+	if err := seedDev(ctx, tx); err != nil {
+		return err
+	}
 	for _, practice := range demoPractices {
 		if err := seedPractice(ctx, tx, practice); err != nil {
 			return fmt.Errorf("practice %q: %w", practice.name, err)
@@ -90,6 +93,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	if err := seedProfilesTeamModules(ctx, pool, st); err != nil {
+		return err
+	}
+	if err := seedDevVetProfile(ctx, pool, st); err != nil {
 		return err
 	}
 	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
@@ -481,6 +487,68 @@ func seedAdmin(ctx context.Context, tx pgx.Tx) error {
 			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
 			must_change_password = false`,
 		uuid.NewString(), string(hash))
+	return err
+}
+
+func seedDev(ctx context.Context, tx pgx.Tx) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordDev), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, 'dev.demo@petsfollow.test', $2, 'Dev Support IT', 'dev', NULL, NOW(), false)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'dev',
+			practice_id = NULL,
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			must_change_password = false`,
+		uuid.NewString(), string(hash))
+	return err
+}
+
+// seedDevVetProfile ajoute un profil vet VetPlus au compte DEV (switch démo support).
+func seedDevVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	var devID, practiceID string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users WHERE email = 'dev.demo@petsfollow.test'`).Scan(&devID)
+	if err != nil {
+		return fmt.Errorf("dev.demo: %w", err)
+	}
+	if err := st.EnsureUserProfiles(ctx, devID); err != nil {
+		return fmt.Errorf("dev profiles: %w", err)
+	}
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&practiceID)
+	if err != nil {
+		return fmt.Errorf("vetplus practice for dev profile: %w", err)
+	}
+	var profileID string
+	err = pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.profiles WHERE user_id = $1 AND role = 'vet'`, devID).Scan(&profileID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		profileID = uuid.NewString()
+		_, err = pool.Exec(ctx, `
+			INSERT INTO identity.profiles (id, user_id, role, practice_id, professional_specialty, created_at)
+			VALUES ($1, $2, 'vet', $3, NULL, NOW())`, profileID, devID, practiceID)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO practice.team_members (id, practice_id, user_id, profile_id, team_role, status)
+		VALUES ($1, $2, $3, $4, 'vet', 'active')
+		ON CONFLICT (practice_id, user_id) DO UPDATE SET
+			profile_id = EXCLUDED.profile_id,
+			team_role = EXCLUDED.team_role,
+			status = 'active'`,
+		uuid.NewString(), practiceID, devID, profileID)
 	return err
 }
 
@@ -1020,6 +1088,7 @@ func logSummary() {
 	// largement lisible que la base) — voir AGENTS.md.
 	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
 	log.Println("Admin  : admin.demo@petsfollow.test")
+	log.Println("DEV    : dev.demo@petsfollow.test (support IT — switch profils client/vet)")
 	log.Println("Manager: commercial.manager@petsfollow.test")
 	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
 	log.Println("Commerc: commercial.demo2@petsfollow.test (vet.parc assigné, 5 prospects Nord, rattaché manager)")

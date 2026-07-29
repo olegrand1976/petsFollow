@@ -6,6 +6,7 @@ const (
 	RoleVet               Role = "vet"
 	RoleClient            Role = "client"
 	RoleAdmin             Role = "admin"
+	RoleDev               Role = "dev"
 	RoleCommercial        Role = "commercial"
 	RoleCommercialManager Role = "commercial_manager"
 	RoleCarePro           Role = "care_pro"
@@ -26,11 +27,16 @@ const (
 
 func ValidRole(role Role) bool {
 	switch role {
-	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
+	case RoleVet, RoleClient, RoleAdmin, RoleDev, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
 		return true
 	default:
 		return false
 	}
+}
+
+// IsOpsRole reports platform ops roles (admin full + DEV support IT).
+func IsOpsRole(role Role) bool {
+	return role == RoleAdmin || role == RoleDev
 }
 
 // IsPracticeStaff reports whether the role belongs to a veterinary practice team.
@@ -41,7 +47,7 @@ func IsPracticeStaff(role Role) bool {
 // IsProRole reports roles that get an automatic personal (client) profile on registration.
 func IsProRole(role Role) bool {
 	return role == RoleVet || role == RoleCarePro || role == RoleCommercial || role == RoleCommercialManager ||
-		role == RoleVetAssistant || role == RoleSecretary
+		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev
 }
 
 func ValidSpecialty(s ProfessionalSpecialty) bool {

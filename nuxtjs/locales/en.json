@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Prescriptions",
     "commercialAsvMemo": "ASV memo",
-    "commercialBrochure": "Practice brochure"
+    "commercialBrochure": "Practice brochure",
+    "adminRuntimeFlags": "Runtime flags"
   },
   "auth": {
     "login": {
@@ -1123,7 +1124,9 @@
       "stagingSeedOk": "Staging database reset. {n} staff email(s) sent.",
       "stagingSeedOkNoEmail": "Staging database reset (no staff email sent).",
       "stagingSeedFail": "Reset failed.",
-      "stagingSeedStatusFail": "Could not check whether staging reset is available."
+      "stagingSeedStatusFail": "Could not check whether staging reset is available.",
+      "devTitle": "IT support ops",
+      "devSubtitle": "Tickets, accounts and diagnostics (no billing)."
     },
     "users": {
       "title": "Registrations",
@@ -1576,7 +1579,15 @@
       "loadError": "Could not load support tickets.",
       "searchLabel": "Search",
       "searchPlaceholder": "Subject, email or name…",
-      "searchSubmit": "Search"
+      "searchSubmit": "Search",
+      "statsOpen": "Open",
+      "statsInProgress": "In progress",
+      "statsResolved": "Resolved",
+      "statsClosed": "Closed",
+      "statsOpen24h": "Open > 24h",
+      "statsOpen7d": "Open > 7d",
+      "filterAllSources": "All sources",
+      "patchError": "Could not update status."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -1650,6 +1661,14 @@
       "saasEnableConfirm": "Enable SaaS billing (Flux A) for “{name}”? The monthly cron will create drafts.",
       "saasEnableOk": "Flux A enabled for this practice",
       "saasEnableError": "Failed to enable Flux A"
+    },
+    "runtimeFlags": {
+      "title": "Runtime flags",
+      "subtitle": "Application configuration (read-only, no secrets).",
+      "empty": "No flags.",
+      "loadError": "Could not load flags.",
+      "colFlag": "Flag",
+      "colValue": "Value"
     }
   },
   "commissions": {
@@ -2041,7 +2060,19 @@
       "profileMenu": "Profile menu",
       "settings": "Settings",
       "themeDark": "Enable dark mode",
-      "themeLight": "Enable light mode"
+      "themeLight": "Enable light mode",
+      "switchProfile": "Switch profile",
+      "activeProfile": "Active",
+      "switchProfileError": "Profile switch failed.",
+      "profileRole_dev": "DEV support",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Vet",
+      "profileRole_vet_assistant": "Assistant",
+      "profileRole_secretary": "Secretary",
+      "profileRole_commercial": "Sales",
+      "profileRole_commercial_manager": "Sales manager",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Client"
     },
     "table": {
       "emptyTitle": "No data"
@@ -2864,8 +2895,7 @@
     "reportTranscriptHint": "Dictation or raw notes…",
     "reportDirtyHint": "Unsaved changes.",
     "reportDiscardEdits": "Discard changes",
-    "reportStatusFinal": "Finalized",
-    "reportStatusDraft": "Draft"
+    "reportStatusFinal": "Finalized"
   },
   "manager": {
     "dashboard": {

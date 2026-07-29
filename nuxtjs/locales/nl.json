@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Voorschriften",
     "commercialAsvMemo": "ASV-memo",
-    "commercialBrochure": "Praktijkfolder"
+    "commercialBrochure": "Praktijkfolder",
+    "adminRuntimeFlags": "Runtime flags"
   },
   "auth": {
     "login": {
@@ -1123,7 +1124,9 @@
       "stagingSeedOk": "Staging-database gereset. {n} staff-e-mail(s) verzonden.",
       "stagingSeedOkNoEmail": "Staging-database gereset (geen staff-e-mail verzonden).",
       "stagingSeedFail": "Reset mislukt.",
-      "stagingSeedStatusFail": "Kon niet controleren of staging-reset beschikbaar is."
+      "stagingSeedStatusFail": "Kon niet controleren of staging-reset beschikbaar is.",
+      "devTitle": "IT-support ops",
+      "devSubtitle": "Tickets, accounts en diagnostiek (zonder billing)."
     },
     "users": {
       "title": "Registraties",
@@ -1576,7 +1579,15 @@
       "loadError": "Supporttickets laden mislukt.",
       "searchLabel": "Zoeken",
       "searchPlaceholder": "Onderwerp, e-mail of naam…",
-      "searchSubmit": "Zoeken"
+      "searchSubmit": "Zoeken",
+      "statsOpen": "Open",
+      "statsInProgress": "In behandeling",
+      "statsResolved": "Opgelost",
+      "statsClosed": "Gesloten",
+      "statsOpen24h": "Open > 24 u",
+      "statsOpen7d": "Open > 7 d",
+      "filterAllSources": "Alle bronnen",
+      "patchError": "Status kon niet worden gewijzigd."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -1650,6 +1661,14 @@
       "saasEnableConfirm": "SaaS-facturatie (Flux A) activeren voor “{name}”? De maandelijkse cron maakt concepten.",
       "saasEnableOk": "Flux A geactiveerd voor deze praktijk",
       "saasEnableError": "Flux A activeren mislukt"
+    },
+    "runtimeFlags": {
+      "title": "Runtime flags",
+      "subtitle": "Applicatieconfiguratie (alleen-lezen, zonder secrets).",
+      "empty": "Geen flags.",
+      "loadError": "Flags laden mislukt.",
+      "colFlag": "Flag",
+      "colValue": "Waarde"
     }
   },
   "commissions": {
@@ -2041,7 +2060,19 @@
       "profileMenu": "Profielmenu",
       "settings": "Instellingen",
       "themeDark": "Donkere modus inschakelen",
-      "themeLight": "Lichte modus inschakelen"
+      "themeLight": "Lichte modus inschakelen",
+      "switchProfile": "Profiel wisselen",
+      "activeProfile": "Actief",
+      "switchProfileError": "Profielwissel mislukt.",
+      "profileRole_dev": "DEV support",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Dierenarts",
+      "profileRole_vet_assistant": "Assistent",
+      "profileRole_secretary": "Secretariaat",
+      "profileRole_commercial": "Commercieel",
+      "profileRole_commercial_manager": "Commercieel manager",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Klant"
     },
     "table": {
       "emptyTitle": "Geen gegevens"
@@ -2864,8 +2895,7 @@
     "reportTranscriptHint": "Dictee of ruwe notities…",
     "reportDirtyHint": "Niet-opgeslagen wijzigingen.",
     "reportDiscardEdits": "Wijzigingen annuleren",
-    "reportStatusFinal": "Afgerond",
-    "reportStatusDraft": "Concept"
+    "reportStatusFinal": "Afgerond"
   },
   "manager": {
     "dashboard": {

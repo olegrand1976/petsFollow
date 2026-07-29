@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin-only' })
+definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
 const { t } = useI18n()
 

@@ -76,7 +76,8 @@
     "usecases": "Guides de test",
     "stock": "Stock",
     "daf": "DAF",
-    "prescriptions": "Ordonnances"
+    "prescriptions": "Ordonnances",
+    "adminRuntimeFlags": "Flags runtime"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1735,7 +1736,9 @@
       "stagingSeedOk": "Base staging réinitialisée. {n} email(s) staff envoyé(s).",
       "stagingSeedOkNoEmail": "Base staging réinitialisée (aucun email staff envoyé).",
       "stagingSeedFail": "Échec de la réinitialisation.",
-      "stagingSeedStatusFail": "Impossible de vérifier si le reset staging est disponible."
+      "stagingSeedStatusFail": "Impossible de vérifier si le reset staging est disponible.",
+      "devTitle": "Ops support IT",
+      "devSubtitle": "Tickets, comptes et outils de diagnostic (sans billing)."
     },
     "users": {
       "title": "Inscriptions",
@@ -2241,7 +2244,15 @@
       "loadError": "Impossible de charger les tickets support.",
       "searchLabel": "Recherche",
       "searchPlaceholder": "Sujet, email ou nom…",
-      "searchSubmit": "Rechercher"
+      "searchSubmit": "Rechercher",
+      "statsOpen": "Ouverts",
+      "statsInProgress": "En cours",
+      "statsResolved": "Résolus",
+      "statsClosed": "Fermés",
+      "statsOpen24h": "Ouverts > 24 h",
+      "statsOpen7d": "Ouverts > 7 j",
+      "filterAllSources": "Toutes les sources",
+      "patchError": "Impossible de changer le statut."
     },
     "vetPool": {
       "title": "Pool cabinets non assignés",
@@ -2262,6 +2273,14 @@
       "assignedLoad": "{n} cabinets",
       "assign": "Assigner",
       "assignOk": "Cabinet assigné."
+    },
+    "runtimeFlags": {
+      "title": "Flags runtime",
+      "subtitle": "Configuration applicative (lecture seule, sans secrets).",
+      "empty": "Aucun flag.",
+      "loadError": "Impossible de charger les flags.",
+      "colFlag": "Flag",
+      "colValue": "Valeur"
     }
   },
   "calendar": {
@@ -2430,8 +2449,7 @@
     "reportTranscriptHint": "Dictée ou notes brutes…",
     "reportDirtyHint": "Modifications non enregistrées.",
     "reportDiscardEdits": "Annuler les modifications",
-    "reportStatusFinal": "Finalisé",
-    "reportStatusDraft": "Brouillon"
+    "reportStatusFinal": "Finalisé"
   },
   "commissions": {
     "title": "Mes rétributions",
@@ -2869,7 +2887,19 @@
       "profileMenu": "Menu profil",
       "settings": "Paramètres",
       "themeDark": "Activer le mode sombre",
-      "themeLight": "Activer le mode clair"
+      "themeLight": "Activer le mode clair",
+      "switchProfile": "Changer de profil",
+      "activeProfile": "Actif",
+      "switchProfileError": "Échec du changement de profil.",
+      "profileRole_dev": "DEV support",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Véto",
+      "profileRole_vet_assistant": "Assistant",
+      "profileRole_secretary": "Secrétaire",
+      "profileRole_commercial": "Commercial",
+      "profileRole_commercial_manager": "Manager commercial",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Client"
     },
     "table": {
       "emptyTitle": "Aucune donnée"
