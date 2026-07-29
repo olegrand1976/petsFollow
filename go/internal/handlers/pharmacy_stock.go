@@ -453,7 +453,8 @@ func (a *API) internalPharmacyExpiryRun(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
-		if a.notifier == nil || (!settings.ExpiryDigestEnabled && !body.ForceDigest) {
+		// Pré-filtres alignés sur shouldSendPharmacyExpiryDigest (évite ExpirySummary inutile).
+		if a.notifier == nil || !shouldQueryPharmacyExpiryDigest(settings.ExpiryDigestEnabled, body.ForceDigest, weekday, settings.ExpiryDigestWeekday) {
 			continue
 		}
 		sum, err := a.store.ExpirySummary(r.Context(), practiceID)

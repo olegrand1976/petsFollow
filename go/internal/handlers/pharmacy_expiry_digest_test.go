@@ -36,3 +36,27 @@ func TestShouldSendPharmacyExpiryDigest(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldQueryPharmacyExpiryDigest(t *testing.T) {
+	cases := []struct {
+		name       string
+		enabled    bool
+		force      bool
+		weekday    int
+		configured int
+		want       bool
+	}{
+		{"disabled", false, true, 1, 1, false},
+		{"monday", true, false, 1, 1, true},
+		{"tuesday", true, false, 2, 1, false},
+		{"force midweek", true, true, 3, 1, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := shouldQueryPharmacyExpiryDigest(tc.enabled, tc.force, tc.weekday, tc.configured)
+			if got != tc.want {
+				t.Fatalf("got %v want %v", got, tc.want)
+			}
+		})
+	}
+}
