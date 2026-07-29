@@ -1472,6 +1472,9 @@
       "reorderOnHand": "En stock",
       "reorderMin": "Seuil",
       "orderEmail": "E-mail fournisseur",
+      "orderSupplier": "Fournisseur",
+      "orderSupplierPlaceholder": "Choisir un fournisseur…",
+      "orderSupplierName": "Nom fournisseur",
       "orderCreateSend": "Commander par e-mail",
       "orderSent": "Commande envoyée.",
       "errorOrder": "Envoi commande impossible.",
@@ -1558,7 +1561,8 @@
       "email_send_failed": "Échec d’envoi e-mail.",
       "vamreg_enqueue_failed": "Impossible de relancer VAMReg.",
       "not_found": "Ressource introuvable.",
-      "validation_error": "Données invalides."
+      "validation_error": "Données invalides.",
+      "supplier_email_required": "E-mail fournisseur manquant."
     }
   },
   "recommend": {

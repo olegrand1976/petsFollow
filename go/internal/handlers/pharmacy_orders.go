@@ -245,27 +245,12 @@ func (a *API) sendPharmacyOrder(w http.ResponseWriter, r *http.Request) {
 
 // resolvePurchaseOrderSendTo forces toEmail to a practice supplier address (anti-spam).
 // Empty toEmail → supplier email from body.SupplierID or order.SupplierID.
+// When supplierID is known, only GetSupplier is used (no full list).
 func (a *API) resolvePurchaseOrderSendTo(ctx context.Context, practiceID string, order store.PurchaseOrder, toEmail, supplierID string) (to, resolvedSupplierID string, err error) {
 	toEmail = strings.TrimSpace(toEmail)
 	supplierID = strings.TrimSpace(supplierID)
 	if supplierID == "" {
 		supplierID = strings.TrimSpace(order.SupplierID)
-	}
-
-	suppliers, err := a.store.ListSuppliers(ctx, practiceID)
-	if err != nil {
-		return "", "", err
-	}
-	if len(suppliers) == 0 {
-		return "", "", store.ErrNotFound
-	}
-
-	byEmail := map[string]store.Supplier{}
-	for _, su := range suppliers {
-		em := strings.ToLower(strings.TrimSpace(su.Email))
-		if em != "" {
-			byEmail[em] = su
-		}
 	}
 
 	if supplierID != "" {
@@ -280,13 +265,13 @@ func (a *API) resolvePurchaseOrderSendTo(ctx context.Context, practiceID string,
 		if suEmail == "" {
 			return "", "", store.ErrNotFound
 		}
+		if _, perr := mail.ParseAddress(suEmail); perr != nil {
+			return "", "", store.ErrValidation
+		}
 		if toEmail == "" {
 			return suEmail, su.ID, nil
 		}
 		if !strings.EqualFold(toEmail, suEmail) {
-			return "", "", store.ErrValidation
-		}
-		if _, err := mail.ParseAddress(toEmail); err != nil {
 			return "", "", store.ErrValidation
 		}
 		return toEmail, su.ID, nil
@@ -298,11 +283,20 @@ func (a *API) resolvePurchaseOrderSendTo(ctx context.Context, practiceID string,
 	if _, err := mail.ParseAddress(toEmail); err != nil {
 		return "", "", store.ErrValidation
 	}
-	su, ok := byEmail[strings.ToLower(toEmail)]
-	if !ok {
-		return "", "", store.ErrValidation
+	suppliers, err := a.store.ListSuppliers(ctx, practiceID)
+	if err != nil {
+		return "", "", err
 	}
-	return toEmail, su.ID, nil
+	if len(suppliers) == 0 {
+		return "", "", store.ErrNotFound
+	}
+	for _, su := range suppliers {
+		em := strings.TrimSpace(su.Email)
+		if strings.EqualFold(em, toEmail) {
+			return em, su.ID, nil
+		}
+	}
+	return "", "", store.ErrValidation
 }
 
 func (a *API) createPharmacyDeliveryNote(w http.ResponseWriter, r *http.Request) {
