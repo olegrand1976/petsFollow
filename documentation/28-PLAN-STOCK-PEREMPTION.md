@@ -7,8 +7,8 @@
 | Statut global | **~90 % Phase 1** — S0–S4 ✅ · S5 ⏸ (reseller Billit) · S6 🟡 (~80 %) |
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
-| Dernière revue | 2026-07-29 (S6 : VAMReg/workers env Cloud Run + secret optionnel) |
-| Prochaine action | **S6** re-seed staging + `PETSFOLLOW_API_URL=… bash scripts/smoke-pharmacy-s6.sh` ; **S5** dès accès reseller Billit (**P0-2** — en attente, pas de code) ; Phase 2.F / 4.A–B attend P0 |
+| Dernière revue | 2026-07-29 (S6 smoke staging ✅ après merge PR #3 + job `petsfollow-seed`) |
+| Prochaine action | **S5** dès accès reseller Billit (**P0-2** — en attente, pas de code) ; Phase 2.F / 4.A–B / 4.E / Phase 5 attend P0 ; GA tag `dev` = décision produit |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
 
@@ -314,7 +314,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | Env `VAMREG_DRY_RUN` + `PHARMACY_WORKERS_ENABLED` Cloud Run | ✅ (`deploy-run-args.sh`) |
 | Secret optionnel `petsfollow-vamreg-api-key` → `VAMREG_API_KEY` | ✅ (branché si présent) |
 | `pg_trgm` Cloud SQL | ✅ vérifié 2026-07-29 (search trigram staging OK) |
-| Smoke staging pilote stock/DAF/VAMReg dry-run | 🟡 MVP `make smoke-staging` ✅ · chemin pharmacie : script `scripts/smoke-pharmacy-s6.sh` vert **local** ; staging ⬜ catalogue `ref_medications` vide (seed staging fail / import-cnk) |
+| Smoke staging pilote stock/DAF/VAMReg dry-run | ✅ MVP + `make smoke-pharmacy-s6-staging` (`vamregStatus=sent`, CNK demo) — seed via job Cloud Run `petsfollow-seed` (admin API seed reste ⛔ owner SQL) |
 | Smoke DAF→Billit | ⏸ (après reseller) |
 | Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ✅ C7.1–C7.15 + e2e `17-pharmacy-stock-daf` |
 | Use case commercial + `make usecases-sync` | ✅ [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
