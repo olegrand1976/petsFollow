@@ -48,6 +48,8 @@ type ReminderLine struct {
 	Due   string
 }
 
+// TimelineLine is dossier-PDF only (When / Title / Body).
+// No hasReport / visitId — public dossier must never grow a consultation CTA.
 type TimelineLine struct {
 	When  string
 	Title string

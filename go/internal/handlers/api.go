@@ -823,6 +823,7 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	stripClientConsultationFlags(items, pet.OwnerUserID, id.UserID, id.Role)
 	httpx.WriteData(w, http.StatusOK, items)
 }
 

@@ -44,12 +44,87 @@ func TestPetTimelineIncludesVisitReportForVetNotClient(t *testing.T) {
 	}
 	clientItem := findTimelineVisit(t, env, visitID)
 	clientMeta, _ := clientItem["meta"].(map[string]any)
-	if clientMeta != nil && clientMeta["hasReport"] == true {
-		t.Fatalf("client must not see hasReport %#v", clientMeta)
+	// Draft CR: client must not get hasReport (final-only).
+	if clientMeta == nil {
+		t.Fatalf("client visit meta missing %#v", clientItem)
+	}
+	if clientMeta["hasReport"] == true {
+		t.Fatalf("client must not see hasReport for draft %#v", clientMeta)
 	}
 	clientBody, _ := clientItem["body"].(string)
 	if strings.Contains(clientBody, probe) {
 		t.Fatalf("client body must not leak CR: %q", clientBody)
+	}
+}
+
+func TestPetTimelineClientHasReportOnFinalCR(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, clientTok)
+
+	probe := fmt.Sprintf("timeline-final-cr-%d", time.Now().UnixNano())
+	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 9*time.Hour)
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("client timeline %d %#v", code, env)
+	}
+	clientItem := findTimelineVisit(t, env, visitID)
+	clientMeta, _ := clientItem["meta"].(map[string]any)
+	if clientMeta["hasReport"] != true {
+		t.Fatalf("client hasReport want true got %#v", clientMeta)
+	}
+	if clientMeta["reportStatus"] != "final" {
+		t.Fatalf("client reportStatus want final got %#v", clientMeta["reportStatus"])
+	}
+	clientBody, _ := clientItem["body"].(string)
+	if strings.Contains(clientBody, probe) {
+		t.Fatalf("client body must not leak CR text: %q", clientBody)
+	}
+}
+
+func TestPetTimelineNonOwnerStripsHasReport(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	ownerTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	granteeTok := loginToken(t, api.handler, "client.marie@petsfollow.test", "ClientDemo123!")
+	petID := demoClientPetID(t, api, ownerTok)
+
+	probe := fmt.Sprintf("timeline-share-cr-%d", time.Now().UnixNano())
+	visitID := createDoneVisitWithReport(t, api, vetTok, petID, probe, "", 10*time.Hour)
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/finalize", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/shares", ownerTok, map[string]any{
+		"email":      "client.marie@petsfollow.test",
+		"permission": "read",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("share create %d %#v", code, env)
+	}
+	granteeID, _ := dataMap(t, env)["granteeUserId"].(string)
+	t.Cleanup(func() {
+		if granteeID != "" {
+			_, _ = doAuthJSON(t, api.handler, http.MethodDelete,
+				"/api/v1/pets/"+petID+"/shares/"+granteeID, ownerTok, nil)
+		}
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/timeline", granteeTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("grantee timeline %d %#v", code, env)
+	}
+	item := findTimelineVisit(t, env, visitID)
+	meta, _ := item["meta"].(map[string]any)
+	if meta != nil && meta["hasReport"] == true {
+		t.Fatalf("non-owner must not see hasReport %#v", meta)
 	}
 }
 

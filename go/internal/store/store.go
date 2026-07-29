@@ -893,20 +893,32 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
 			)`
 	} else {
+		// Client / dossier: expose hasReport only for finalized CR (opens client consultation).
+		// Body stays redacted when redactVisitNotes; never leak draft CR text to clients.
 		visitBody := "COALESCE(notes,'')"
 		if redactVisitNotes {
 			visitBody = "''"
 		}
 		visitBranch = `
-		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
+		SELECT v.id::text, 'visit', 'Visite', ` + visitBody + `,
+			COALESCE(v.scheduled_at, v.created_at),
 			jsonb_build_object(
-				'status', status,
-				'source', source,
-				'visitId', id::text,
-				'hasReport', false,
-				'reportStatus', ''
+				'status', v.status,
+				'source', v.source,
+				'visitId', v.id::text,
+				'hasReport', (r.id IS NOT NULL AND r.status = 'final'),
+				'reportStatus', COALESCE(r.status, '')
 			)
-		FROM visits.visits WHERE pet_id=$1 AND status='done' AND deleted_at IS NULL`
+		FROM visits.visits v
+		LEFT JOIN LATERAL (
+			SELECT id, status
+			FROM visits.visit_reports
+			WHERE visit_id = v.id
+				AND status = 'final'
+			ORDER BY updated_at DESC
+			LIMIT 1
+		) r ON true
+		WHERE v.pet_id=$1 AND v.status='done' AND v.deleted_at IS NULL`
 	}
 	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque',

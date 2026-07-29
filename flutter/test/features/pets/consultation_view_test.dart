@@ -142,6 +142,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('timeline_section_consultations')), findsOneWidget);
     await tester.tap(find.byKey(const Key('visit_consultation_tile_$visitId')));
     await tester.pumpAndSettle();
 
@@ -158,6 +159,245 @@ void main() {
 
     expect(postedEmail, 'vet.externe@petsfollow.test');
     expect(find.text(AppLocalizationsFr().sendConsultationSuccess), findsOneWidget);
+  });
+
+  testWidgets('dedupes visit with CR from Historique section', (tester) async {
+    ApiClient.instance.dio.interceptors.remove(mockInterceptor);
+    mockInterceptor = InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final path = options.uri.path.isNotEmpty ? options.uri.path : options.path;
+        if (options.method == 'GET' && path.contains('/heartrate/sessions')) {
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: {'data': []}),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/visits')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'petId': petId,
+                    'status': 'done',
+                    'scheduledAt': '2026-01-10T10:00:00Z',
+                    'hasFinalReport': true,
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/timeline')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'type': 'visit',
+                    'title': 'Visite',
+                    'body': '',
+                    'createdAt': '2026-01-10T10:00:00Z',
+                    'meta': {
+                      'visitId': visitId,
+                      'hasReport': true,
+                      'reportStatus': 'final',
+                    },
+                  },
+                  {
+                    'id': 'hr-1',
+                    'type': 'heartrate',
+                    'title': 'Relevé',
+                    'body': 'BPM: 72',
+                    'createdAt': '2026-01-09T10:00:00Z',
+                    'meta': {},
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' &&
+            (path.endsWith('/pets/$petId') || path.contains('/pets/$petId?'))) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': {
+                  'id': petId,
+                  'name': 'Bella',
+                  'ownerUserId': 'user-1',
+                  'canWriteNotes': true,
+                },
+              },
+            ),
+          );
+          return;
+        }
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            error: 'unmocked ${options.method} $path',
+          ),
+        );
+      },
+    );
+    ApiClient.instance.dio.interceptors.add(mockInterceptor);
+
+    await pumpApp(
+      tester,
+      home: const PetTimelineScreen(petId: petId, petName: 'Bella', canWriteNotes: false),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byKey(const Key('timeline_section_consultations')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
+    // Duplicate visit row must not appear under Historique.
+    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
+    expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsNothing);
+
+    // Historique is collapsed when Consultations is present — expand to assert HR row.
+    await tester.ensureVisible(find.byKey(const Key('timeline_section_history')));
+    await tester.tap(find.byKey(const Key('timeline_section_history')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('timeline_item_hr-1')), findsOneWidget);
+    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
+  });
+
+  testWidgets('historique visit opens CR when ListVisits lacks hasFinalReport', (tester) async {
+    ApiClient.instance.dio.interceptors.remove(mockInterceptor);
+    mockInterceptor = InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final path = options.uri.path.isNotEmpty ? options.uri.path : options.path;
+        if (options.method == 'GET' && path.contains('/heartrate/sessions')) {
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: {'data': []}),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/visits')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'petId': petId,
+                    'status': 'done',
+                    'scheduledAt': '2026-01-10T10:00:00Z',
+                    'hasFinalReport': false,
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/timeline')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'type': 'visit',
+                    'title': 'Visite',
+                    'body': '',
+                    'createdAt': '2026-01-10T10:00:00Z',
+                    'meta': {
+                      'visitId': visitId,
+                      'hasReport': true,
+                      'reportStatus': 'final',
+                    },
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' &&
+            (path.endsWith('/pets/$petId') || path.contains('/pets/$petId?'))) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': {
+                  'id': petId,
+                  'name': 'Bella',
+                  'ownerUserId': 'user-1',
+                  'canWriteNotes': true,
+                },
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/client-consultation')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': {
+                  'visitId': visitId,
+                  'petId': petId,
+                  'petName': 'Bella',
+                  'practiceName': 'VetPlus',
+                  'status': 'done',
+                  'scheduledAt': '2026-01-10T10:00:00Z',
+                  'reports': [
+                    {
+                      'id': 'r1',
+                      'authorName': 'Dr Demo',
+                      'bodyText': 'Examen clinique OK.',
+                      'finalizedAt': '2026-01-10T11:00:00Z',
+                    },
+                  ],
+                },
+              },
+            ),
+          );
+          return;
+        }
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            error: 'unmocked ${options.method} $path',
+          ),
+        );
+      },
+    );
+    ApiClient.instance.dio.interceptors.add(mockInterceptor);
+
+    await pumpApp(
+      tester,
+      home: const PetTimelineScreen(petId: petId, petName: 'Bella', canWriteNotes: false),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsNothing);
+    expect(find.byKey(const Key('timeline_section_history')), findsOneWidget);
+    expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('timeline_visit_report_$visitId')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Examen clinique OK'), findsOneWidget);
   });
 
   testWidgets('consultation view loads reports', (tester) async {
