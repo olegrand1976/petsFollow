@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -756,17 +757,53 @@ func (s *Store) GetPetFoodChainStatus(ctx context.Context, petID string) (string
 	return st, err
 }
 
-// SetPetFoodChainStatus updates the animal food-chain classification (vet practice).
-func (s *Store) SetPetFoodChainStatus(ctx context.Context, practiceID, petID, status string) error {
-	status = strings.TrimSpace(status)
-	switch status {
-	case "companion", "food_producing", "excluded_from_food_chain":
-	default:
+// GetPetDomicileLocation returns the housing / stable location text.
+func (s *Store) GetPetDomicileLocation(ctx context.Context, petID string) (string, error) {
+	var loc string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(domicile_location,'') FROM pets.pets WHERE id = $1`, petID).Scan(&loc)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return loc, err
+}
+
+const maxPetDomicileRunes = 500
+
+func clipDomicileLocation(s string) string {
+	s = strings.TrimSpace(s)
+	if utf8.RuneCountInString(s) <= maxPetDomicileRunes {
+		return s
+	}
+	return string([]rune(s)[:maxPetDomicileRunes])
+}
+
+// SetPetRegulatoryFields atomically updates food-chain status and/or domicile (vet practice).
+// At least one of status / domicile must be non-nil.
+func (s *Store) SetPetRegulatoryFields(ctx context.Context, practiceID, petID string, status, domicile *string) error {
+	if status == nil && domicile == nil {
 		return ErrValidation
 	}
+	var stVal any
+	if status != nil {
+		v := strings.TrimSpace(*status)
+		switch v {
+		case "companion", "food_producing", "excluded_from_food_chain":
+			stVal = v
+		default:
+			return ErrValidation
+		}
+	}
+	var domVal any
+	if domicile != nil {
+		domVal = clipDomicileLocation(*domicile)
+	}
 	tag, err := s.pool.Exec(ctx, `
-		UPDATE pets.pets SET food_chain_status = $3
-		WHERE id = $2 AND practice_id = $1`, practiceID, petID, status)
+		UPDATE pets.pets SET
+			food_chain_status = COALESCE($3::text, food_chain_status),
+			domicile_location = COALESCE($4::text, domicile_location),
+			updated_at = NOW()
+		WHERE id = $2 AND practice_id = $1`, practiceID, petID, stVal, domVal)
 	if err != nil {
 		return err
 	}
@@ -774,4 +811,14 @@ func (s *Store) SetPetFoodChainStatus(ctx context.Context, practiceID, petID, st
 		return ErrNotFound
 	}
 	return nil
+}
+
+// SetPetFoodChainStatus updates the animal food-chain classification (vet practice).
+func (s *Store) SetPetFoodChainStatus(ctx context.Context, practiceID, petID, status string) error {
+	return s.SetPetRegulatoryFields(ctx, practiceID, petID, &status, nil)
+}
+
+// SetPetDomicileLocation updates housing location for a practice pet (vet).
+func (s *Store) SetPetDomicileLocation(ctx context.Context, practiceID, petID, location string) error {
+	return s.SetPetRegulatoryFields(ctx, practiceID, petID, nil, &location)
 }

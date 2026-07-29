@@ -784,6 +784,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petHealthBookNumberOptional => 'Health booklet number (optional)';
 
   @override
+  String get petDomicileLocation => 'Domicile / stable';
+
+  @override
+  String get petDomicileHint => 'e.g. Willow Stable — Brussels';
+
+  @override
+  String get petFoodChainStatus => 'Food-chain status';
+
+  @override
+  String get petFoodChainCompanion => 'Companion animal (not for food)';
+
+  @override
+  String get petFoodChainFoodProducing => 'Food-producing animal';
+
+  @override
+  String get petFoodChainExcluded => 'Excluded from the food chain';
+
+  @override
   String get petHealthBookAddPages => 'Add health booklet photos';
 
   @override
@@ -982,6 +1000,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speciesHorse => 'Horse';
+
+  @override
+  String get speciesDonkey => 'Donkey';
+
+  @override
+  String get speciesCattle => 'Cattle';
+
+  @override
+  String get speciesSheep => 'Sheep';
+
+  @override
+  String get speciesGoat => 'Goat';
+
+  @override
+  String get speciesPig => 'Pig';
+
+  @override
+  String get speciesPoultry => 'Poultry';
+
+  @override
+  String get speciesRabbit => 'Rabbit';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Llama';
 
   @override
   String get speciesOther => 'Other';

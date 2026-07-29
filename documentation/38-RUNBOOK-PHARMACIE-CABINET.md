@@ -21,7 +21,7 @@ Secrets optionnels : `PHARMACY_EXPIRY_SECRET` (job péremption), `VAMREG_API_KEY
 2. **Réassort** — seuils → alertes → commande e-mail CSV fournisseur.
 3. **Inventaire** — démarrer session → compter toutes les lignes → clôturer (écarts → adjust). Export CSV registre.
 4. **DAF** — `/daf/nouveau` : lignes + AMM ; antibiotique → espèce / indication / durée ; finaliser → PDF + VAMReg dry-run.
-5. **Chaîne alimentaire** — animal de rente : `PATCH …/pets/{id}/food-chain` → `food_producing` ; médicaments avec temps d’attente V/L/O renseignés sinon finalize bloqué.
+5. **Chaîne alimentaire / domicile** — `PATCH …/pets/{id}/food-chain` (perm `pets.write_clinical`, **hors** gate pharmacy) accepte `{ foodChainStatus?, domicileLocation? }` en **un seul UPDATE**. Animal de rente : temps d’attente V/L/O requis sinon finalize bloqué. Espèces UI domicile/statut : cheval, âne, bovin, ovin, caprin, porcin, volaille, lapin, alpaga, lama — fiche Pro, wizard DAF et PDF. Création client : rente (bovin/ovin/caprin/porcin/volaille/alpaga/lama) → défaut `food_producing`.
 6. **Temps d’attente** — `PATCH …/medications/{id}/withdrawal` (viande / lait / œufs jours) ; snapshot sur lignes DAF + PDF.
 
 ## Quarantaine / waste

@@ -106,7 +106,7 @@
         <dl class="pro-pet-summary">
           <div>
             <dt>{{ $t('pets.columnSpecies') }}</dt>
-            <dd>{{ pet.species || $t('common.dash') }}</dd>
+            <dd>{{ speciesLabel(pet.species) }}</dd>
           </div>
           <div>
             <dt>{{ $t('pets.columnBreed') }}</dt>
@@ -147,6 +147,54 @@
             </dd>
           </div>
         </dl>
+      </ProCard>
+      <ProCard
+        v-if="pet && isFoodChainSpecies(pet.species)"
+        :title="$t('clients.pet.horseRegulatoryTitle')"
+        class="pro-mb-lg"
+        data-testid="pet-horse-regulatory"
+      >
+        <p class="pro-hint pro-mb-md">{{ $t('clients.pet.horseRegulatoryHint') }}</p>
+        <div class="pro-pet-horse-reg">
+          <div>
+            <label class="pro-label" for="pet-food-chain">{{ $t('clients.pet.foodChainStatus') }}</label>
+            <select
+              id="pet-food-chain"
+              v-model="horseFoodChain"
+              class="pro-input"
+              data-testid="pet-food-chain"
+              :disabled="!canWriteClinical || horseRegSaving"
+            >
+              <option value="companion">{{ $t('clients.pet.foodChainCompanion') }}</option>
+              <option value="food_producing">{{ $t('clients.pet.foodChainFoodProducing') }}</option>
+              <option value="excluded_from_food_chain">{{ $t('clients.pet.foodChainExcluded') }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="pro-label" for="pet-domicile">{{ $t('clients.pet.domicileLocation') }}</label>
+            <input
+              id="pet-domicile"
+              v-model="horseDomicile"
+              class="pro-input"
+              type="text"
+              maxlength="500"
+              :placeholder="$t('clients.pet.domicilePlaceholder')"
+              data-testid="pet-domicile"
+              :disabled="!canWriteClinical || horseRegSaving"
+            >
+          </div>
+        </div>
+        <p v-if="horseRegError" class="pro-alert" data-testid="pet-horse-reg-error">{{ horseRegError }}</p>
+        <p v-if="horseRegSaved" class="pro-hint" data-testid="pet-horse-reg-saved">{{ $t('clients.pet.horseRegulatorySaved') }}</p>
+        <ProButton
+          v-if="canWriteClinical"
+          class="pro-mt-md"
+          test-id="pet-horse-reg-save"
+          :disabled="horseRegSaving || !horseRegDirty"
+          @click="saveHorseRegulatory"
+        >
+          {{ $t('common.save') }}
+        </ProButton>
       </ProCard>
       <details
         v-if="hasChartData || hasWeightChartData"
@@ -660,10 +708,12 @@
 </template>
 
 <script setup lang="ts">
+import { isFoodChainSpecies } from '~/utils/pet-species'
+
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 const route = useRoute()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canManageCare = computed(() => canPractice('care.manage'))
@@ -676,12 +726,23 @@ const activeConsult = useActiveConsultation()
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
 
+function speciesLabel(species: string | null | undefined) {
+  if (!species) return t('common.dash')
+  const key = `common.species.${species}`
+  return te(key) ? t(key) : species
+}
+
 function openConsultation() {
   if (!canWriteClinical.value) return
   activeConsult.openForClient(clientId, petId)
 }
 const pet = ref<any>(null)
 const petPhotoUrl = ref('')
+const horseFoodChain = ref('companion')
+const horseDomicile = ref('')
+const horseRegSaving = ref(false)
+const horseRegError = ref('')
+const horseRegSaved = ref(false)
 const sessions = ref<any[]>([])
 const weights = ref<any[]>([])
 const timeline = ref<any[]>([])
@@ -879,7 +940,7 @@ function careTypeLabel(type: string) {
 
 const petSubtitle = computed(() => {
   if (!pet.value) return ''
-  return [pet.value.species, pet.value.breed].filter(Boolean).join(' · ')
+  return [speciesLabel(pet.value.species), pet.value.breed].filter(Boolean).join(' · ')
 })
 
 const isPrimaryPractice = computed(() => {
@@ -949,6 +1010,42 @@ const weightChartDates = computed(() => weightChartReadings.value.map(w => w.rec
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }
   petPhotoUrl.value = data?.photoUrl || petPhotoUrl.value
+}
+
+const horseRegDirty = computed(() => {
+  if (!pet.value || !isFoodChainSpecies(pet.value.species)) return false
+  const curStatus = pet.value.foodChainStatus || 'companion'
+  const curDom = pet.value.domicileLocation || ''
+  return horseFoodChain.value !== curStatus || horseDomicile.value !== curDom
+})
+
+async function saveHorseRegulatory() {
+  if (!canWriteClinical.value || !pet.value) return
+  horseRegSaving.value = true
+  horseRegError.value = ''
+  horseRegSaved.value = false
+  try {
+    const res: any = await $fetch(`/api/vet/pets/${petId}/food-chain`, {
+      method: 'PATCH',
+      body: {
+        foodChainStatus: horseFoodChain.value,
+        domicileLocation: horseDomicile.value,
+      },
+    })
+    const data = res?.data ?? res
+    pet.value = {
+      ...pet.value,
+      foodChainStatus: data?.foodChainStatus ?? horseFoodChain.value,
+      domicileLocation: data?.domicileLocation ?? horseDomicile.value,
+    }
+    horseFoodChain.value = pet.value.foodChainStatus || 'companion'
+    horseDomicile.value = pet.value.domicileLocation || ''
+    horseRegSaved.value = true
+  } catch (e: any) {
+    horseRegError.value = mapError(e)
+  } finally {
+    horseRegSaving.value = false
+  }
 }
 
 function isCareOverdue(c: any) {
@@ -1190,6 +1287,8 @@ onMounted(async () => {
     const petRes: any = await $fetch(`/api/pets/${petId}`)
     pet.value = petRes.data ?? petRes
     petPhotoUrl.value = pet.value?.photoUrl || ''
+    horseFoodChain.value = pet.value?.foodChainStatus || 'companion'
+    horseDomicile.value = pet.value?.domicileLocation || ''
 
     // Care/visits must not wait on HR sessions — demo pets can have large histories
     // and staging Cloud Run e2e times out waiting for pet-visit-report-open.
@@ -1257,6 +1356,15 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
   margin: 0;
+}
+.pro-pet-horse-reg {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .pro-pet-horse-reg {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .pro-pet-summary dt {
   font-size: 0.8rem;

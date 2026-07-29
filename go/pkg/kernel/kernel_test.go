@@ -16,8 +16,37 @@ func TestSupportsHeartRateControl(t *testing.T) {
 	if !SupportsHeartRateControl("dog") || !SupportsHeartRateControl("cat") || !SupportsHeartRateControl("horse") {
 		t.Fatal("expected dog/cat/horse supported")
 	}
-	if SupportsHeartRateControl("other") || SupportsHeartRateControl("") {
-		t.Fatal("expected other/empty unsupported")
+	if SupportsHeartRateControl("other") || SupportsHeartRateControl("") || SupportsHeartRateControl("cattle") {
+		t.Fatal("expected other/empty/cattle unsupported")
+	}
+}
+
+func TestIsFoodChainSpecies(t *testing.T) {
+	for _, sp := range []string{"horse", "donkey", "cattle", "sheep", "goat", "pig", "poultry", "rabbit", "alpaca", "llama"} {
+		if !IsFoodChainSpecies(sp) {
+			t.Fatalf("expected %s food-chain", sp)
+		}
+	}
+	if IsFoodChainSpecies("dog") || IsFoodChainSpecies("cat") || IsFoodChainSpecies("other") {
+		t.Fatal("expected companion species not food-chain UI")
+	}
+}
+
+func TestDefaultFoodChainStatus(t *testing.T) {
+	if got := DefaultFoodChainStatus("cattle"); got != "food_producing" {
+		t.Fatalf("cattle: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("alpaca"); got != "food_producing" {
+		t.Fatalf("alpaca: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("horse"); got != "companion" {
+		t.Fatalf("horse: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("rabbit"); got != "companion" {
+		t.Fatalf("rabbit: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("dog"); got != "companion" {
+		t.Fatalf("dog: got %q", got)
 	}
 }
 

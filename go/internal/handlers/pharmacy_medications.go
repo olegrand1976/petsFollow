@@ -132,22 +132,25 @@ func (a *API) patchPharmacyMedicationWithdrawal(w http.ResponseWriter, r *http.R
 }
 
 func (a *API) patchVetPetFoodChain(w http.ResponseWriter, r *http.Request) {
-	if !a.requirePharmacyEnabled(w, r) {
-		return
-	}
-	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
+	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
 	if !ok {
 		return
 	}
 	var body struct {
-		FoodChainStatus string `json:"foodChainStatus"`
+		FoodChainStatus  *string `json:"foodChainStatus"`
+		DomicileLocation *string `json:"domicileLocation"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
 		return
 	}
+	if body.FoodChainStatus == nil && body.DomicileLocation == nil {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		return
+	}
 	petID := chi.URLParam(r, "petID")
-	if err := a.store.SetPetFoodChainStatus(r.Context(), id.PracticeID, petID, body.FoodChainStatus); err != nil {
+	// PATCH /food-chain also accepts domicileLocation (dossier réglementaire cheval / DAF).
+	if err := a.store.SetPetRegulatoryFields(r.Context(), id.PracticeID, petID, body.FoodChainStatus, body.DomicileLocation); err != nil {
 		if errors.Is(err, store.ErrValidation) {
 			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
 			return
@@ -160,5 +163,8 @@ func (a *API) patchVetPetFoodChain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	st, _ := a.store.GetPetFoodChainStatus(r.Context(), petID)
-	httpx.WriteData(w, http.StatusOK, map[string]string{"id": petID, "foodChainStatus": st})
+	loc, _ := a.store.GetPetDomicileLocation(r.Context(), petID)
+	httpx.WriteData(w, http.StatusOK, map[string]string{
+		"id": petID, "foodChainStatus": st, "domicileLocation": loc,
+	})
 }

@@ -11,15 +11,16 @@ import (
 
 // DAFPDFInput is the printable DAF content (lot + AMM required on each line).
 type DAFPDFInput struct {
-	DisplayNumber   string
-	PracticeName    string
-	Prescriber      string
-	ClientName      string
-	PetName         string
-	FoodChainStatus string // companion | food_producing | excluded_from_food_chain
-	IssuedAt        time.Time
-	Notes           string
-	Lines           []DAFPDFLine
+	DisplayNumber    string
+	PracticeName     string
+	Prescriber       string
+	ClientName       string
+	PetName          string
+	FoodChainStatus  string // companion | food_producing | excluded_from_food_chain
+	DomicileLocation string
+	IssuedAt         time.Time
+	Notes            string
+	Lines            []DAFPDFLine
 }
 
 type DAFPDFLine struct {
@@ -59,16 +60,22 @@ func BuildDAFPDF(in DAFPDFInput) ([]byte, error) {
 		pdf.Cell(0, 7, fmt.Sprintf("Animal : %s", in.PetName))
 		pdf.Ln(6)
 	}
-	if in.FoodChainStatus != "" && in.FoodChainStatus != "companion" {
+	if in.DomicileLocation != "" {
+		pdf.MultiCell(0, 5, fmt.Sprintf("Domicile / ecurie : %s", in.DomicileLocation), "", "", false)
+		pdf.Ln(2)
+	}
+	if in.FoodChainStatus != "" {
 		label := in.FoodChainStatus
 		switch in.FoodChainStatus {
+		case "companion":
+			label = "animal de compagnie (hors chaine alimentaire)"
 		case "food_producing":
 			label = "animal de rente / chaine alimentaire"
 		case "excluded_from_food_chain":
 			label = "exclu de la chaine alimentaire"
 		}
-		pdf.Cell(0, 7, fmt.Sprintf("Statut chaine alimentaire : %s", label))
-		pdf.Ln(6)
+		pdf.MultiCell(0, 5, fmt.Sprintf("Statut chaine alimentaire : %s", label), "", "", false)
+		pdf.Ln(2)
 	}
 	pdf.Cell(0, 7, fmt.Sprintf("Emis le : %s", in.IssuedAt.Format("2006-01-02 15:04")))
 	pdf.Ln(10)

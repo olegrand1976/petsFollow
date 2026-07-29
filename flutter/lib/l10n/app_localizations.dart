@@ -1564,6 +1564,42 @@ abstract class AppLocalizations {
   /// **'N° de carnet (optionnel)'**
   String get petHealthBookNumberOptional;
 
+  /// No description provided for @petDomicileLocation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Domicile / écurie'**
+  String get petDomicileLocation;
+
+  /// No description provided for @petDomicileHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. Écurie des Saules — Bruxelles'**
+  String get petDomicileHint;
+
+  /// No description provided for @petFoodChainStatus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut chaîne alimentaire'**
+  String get petFoodChainStatus;
+
+  /// No description provided for @petFoodChainCompanion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal de compagnie (hors chaîne)'**
+  String get petFoodChainCompanion;
+
+  /// No description provided for @petFoodChainFoodProducing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal de rente / chaîne alimentaire'**
+  String get petFoodChainFoodProducing;
+
+  /// No description provided for @petFoodChainExcluded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exclu de la chaîne alimentaire'**
+  String get petFoodChainExcluded;
+
   /// No description provided for @petHealthBookAddPages.
   ///
   /// In fr, this message translates to:
@@ -1899,6 +1935,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cheval'**
   String get speciesHorse;
+
+  /// No description provided for @speciesDonkey.
+  ///
+  /// In fr, this message translates to:
+  /// **'Âne'**
+  String get speciesDonkey;
+
+  /// No description provided for @speciesCattle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bovin'**
+  String get speciesCattle;
+
+  /// No description provided for @speciesSheep.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ovin'**
+  String get speciesSheep;
+
+  /// No description provided for @speciesGoat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Caprin'**
+  String get speciesGoat;
+
+  /// No description provided for @speciesPig.
+  ///
+  /// In fr, this message translates to:
+  /// **'Porcin'**
+  String get speciesPig;
+
+  /// No description provided for @speciesPoultry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Volaille'**
+  String get speciesPoultry;
+
+  /// No description provided for @speciesRabbit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lapin'**
+  String get speciesRabbit;
+
+  /// No description provided for @speciesAlpaca.
+  ///
+  /// In fr, this message translates to:
+  /// **'Alpaga'**
+  String get speciesAlpaca;
+
+  /// No description provided for @speciesLlama.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lama'**
+  String get speciesLlama;
 
   /// No description provided for @speciesOther.
   ///
@@ -3619,7 +3709,7 @@ abstract class AppLocalizations {
   /// No description provided for @consultationPendingCta.
   ///
   /// In fr, this message translates to:
-  /// **'En attente'**
+  /// **'Brouillon'**
   String get consultationPendingCta;
 
   /// No description provided for @sendConsultationToVet.

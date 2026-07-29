@@ -24,6 +24,16 @@ func (c *Client) GenerateJSONLite(ctx context.Context, system, userPrompt string
 
 // GenerateTextWithMedia sends text + binary media (e.g. audio) to Gemini generateContent.
 func (c *Client) GenerateTextWithMedia(ctx context.Context, system, userPrompt, mimeType string, data []byte, temperature float64) (string, error) {
+	return c.generateWithMedia(ctx, c.Model, system, userPrompt, mimeType, data, temperature, false)
+}
+
+// GenerateJSONWithMedia sends binary media and forces JSON response (compendium PDF extract).
+func (c *Client) GenerateJSONWithMedia(ctx context.Context, system, userPrompt, mimeType string, data []byte, temperature float64) (string, error) {
+	model := c.effectiveLite()
+	return c.generateWithMedia(ctx, model, system, userPrompt, mimeType, data, temperature, true)
+}
+
+func (c *Client) generateWithMedia(ctx context.Context, model, system, userPrompt, mimeType string, data []byte, temperature float64, forceJSON bool) (string, error) {
 	if !c.Configured() {
 		return "", fmt.Errorf("gemini_not_configured")
 	}
@@ -33,7 +43,6 @@ func (c *Client) GenerateTextWithMedia(ctx context.Context, system, userPrompt, 
 	if temperature < 0 {
 		temperature = 0.2
 	}
-	model := c.Model
 	if model == "" {
 		model = defaultModel
 	}
@@ -44,13 +53,17 @@ func (c *Client) GenerateTextWithMedia(ctx context.Context, system, userPrompt, 
 			"data":     base64.StdEncoding.EncodeToString(data),
 		}},
 	}
+	genCfg := map[string]any{
+		"temperature": temperature,
+	}
+	if forceJSON {
+		genCfg["responseMimeType"] = "application/json"
+	}
 	body := map[string]any{
 		"contents": []map[string]any{
 			{"role": "user", "parts": parts},
 		},
-		"generationConfig": map[string]any{
-			"temperature": temperature,
-		},
+		"generationConfig": genCfg,
 	}
 	if strings.TrimSpace(system) != "" {
 		body["systemInstruction"] = map[string]any{

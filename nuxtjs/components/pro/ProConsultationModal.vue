@@ -1,15 +1,15 @@
 <template>
   <ProModal
     :open="open"
-    size="xl"
+    :size="visitId ? 'full' : 'md'"
     :title="$t('clients.consultation.title')"
     test-id="consultation-modal"
     :prevent-close="reportBusy || closing || leavePromptOpen"
     @update:open="onOpenUpdate"
   >
     <!-- Étape A : choisir l'animal puis démarrer la visite -->
-    <div v-if="!visitId" class="pro-form" data-testid="consultation-setup">
-      <p class="pro-hint pro-mb-md">{{ $t('clients.consultation.hint') }}</p>
+    <div v-if="!visitId" class="consultation-setup pro-form" data-testid="consultation-setup">
+      <p class="pro-hint">{{ $t('clients.consultation.hint') }}</p>
       <p v-if="loadError" class="pro-error" role="alert">{{ loadError }}</p>
       <p v-if="flowError" class="pro-error" role="alert">{{ flowError }}</p>
 
@@ -37,11 +37,11 @@
     </div>
 
     <!-- Étape B : CR médical -->
-    <div v-else data-testid="consultation-report">
-      <p class="pro-hint pro-mb-md">{{ $t('clients.consultation.reportHint') }}</p>
+    <div v-else class="consultation-report" data-testid="consultation-report">
       <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
       <ProVisitReportPanel
         ref="reportPanelRef"
+        fill-height
         :visit-id="visitId"
         :visit-scheduled-at="scheduledAt"
         @saved="onReportSaved"
@@ -103,7 +103,7 @@
 
   <ProModal
     :open="leavePromptOpen"
-    size="sm"
+    size="md"
     :title="$t('clients.consultation.leaveTitle')"
     test-id="consultation-leave-prompt"
     :prevent-close="leaveBusy"
@@ -518,3 +518,19 @@ async function finishDone() {
   }
 }
 </script>
+
+<style scoped>
+.consultation-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.consultation-report {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+</style>

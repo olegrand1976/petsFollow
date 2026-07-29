@@ -50,7 +50,7 @@ const props = withDefaults(
     open: boolean
     title: string
     closeLabel?: string
-    size?: 'md' | 'lg' | 'xl'
+    size?: 'md' | 'lg' | 'xl' | 'full'
     /** When true, ignore X / Escape / backdrop close (e.g. save in flight). */
     preventClose?: boolean
     /** data-testid on the root overlay (default keeps existing e2e selectors). */
@@ -69,6 +69,8 @@ const stackDepth = ref(0)
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 'full':
+      return 'pro-modal__panel--full'
     case 'xl':
       return 'pro-modal__panel--xl'
     case 'lg':
@@ -137,9 +139,11 @@ onBeforeUnmount(() => {
 .pro-modal__panel {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 28rem);
   max-height: min(90vh, 40rem);
-  overflow: auto;
+  overflow: hidden;
   background: var(--pf-vet-surface);
   border-radius: var(--pf-vet-radius);
   box-shadow: var(--pf-vet-shadow-md);
@@ -155,7 +159,27 @@ onBeforeUnmount(() => {
   max-height: min(92vh, 52rem);
 }
 
+.pro-modal__panel--full {
+  width: min(98vw, 90rem);
+  height: 96vh;
+  max-height: 96vh;
+}
+
+@media (max-width: 720px) {
+  .pro-modal:has(.pro-modal__panel--full) {
+    padding: 0.5rem;
+  }
+
+  .pro-modal__panel--full {
+    width: 100%;
+    height: 96vh;
+    max-height: 96vh;
+    border-radius: var(--pf-vet-radius);
+  }
+}
+
 .pro-modal__header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -192,13 +216,26 @@ onBeforeUnmount(() => {
 }
 
 .pro-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding: 0.75rem 1.25rem 1.25rem;
 }
 
+.pro-modal__panel--full .pro-modal__body {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0.75rem;
+}
+
 .pro-modal__footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0 1.25rem 1.25rem;
+  padding: 0.75rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--pf-vet-border);
+  background: var(--pf-vet-surface);
 }
 </style>

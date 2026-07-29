@@ -216,7 +216,7 @@
     "password_reset_expiry": "See link aegub 1 tunni pärast.",
     "password_reset_disclaimer": "Kui te seda lähtestamist ei taotlenud, ignoreerige seda e-kirja. Teie parool jääb muutmata.",
     "heartrate_validated_subject": "petsFollow Pro — Südame löögisageduse mõõtmine kinnitatud",
-    "heartrate_validated_tagline": "Veterinaarne südame jälgimine",
+    "heartrate_validated_tagline": "Veterinaarne südame rütmi mõõtmine",
     "heartrate_validated_preheader": "Südame löögisageduse mõõtmine kinnitati — BPM {bpm}.",
     "heartrate_validated_greeting": "Tere,",
     "heartrate_validated_intro": "Patsiendi jaoks kinnitati südame löögisageduse mõõtmine. BPM: {bpm}.",

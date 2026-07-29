@@ -21,10 +21,9 @@
             <label class="pro-label" for="species-filter">{{ $t('pets.speciesFilter') }}</label>
             <select id="species-filter" v-model="speciesFilter" class="pro-select" data-testid="pets-species-filter">
               <option value="all">{{ $t('pets.speciesAll') }}</option>
-              <option value="dog">{{ $t('common.species.dog') }}</option>
-              <option value="cat">{{ $t('common.species.cat') }}</option>
-              <option value="horse">{{ $t('common.species.horse') }}</option>
-              <option value="other">{{ $t('common.species.other') }}</option>
+              <option v-for="code in petSpeciesCodes" :key="code" :value="code">
+                {{ $t(`common.species.${code}`) }}
+              </option>
             </select>
           </div>
         </template>
@@ -105,6 +104,8 @@
 </template>
 
 <script setup lang="ts">
+import { PET_SPECIES_CODES } from '~/utils/pet-species'
+
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 type VetPet = {
@@ -129,6 +130,7 @@ const { petsBadge, refresh: refreshNavBadges } = useNavBadges()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const activeConsult = useActiveConsultation()
+const petSpeciesCodes = PET_SPECIES_CODES
 
 const pets = ref<VetPet[]>([])
 const loadError = ref('')

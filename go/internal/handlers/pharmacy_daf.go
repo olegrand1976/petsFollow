@@ -549,19 +549,22 @@ func (a *API) ensureDAFPDF(r *http.Request, practiceID, dafID string) error {
 		})
 	}
 	foodChain := ""
+	domicile := ""
 	if doc.PetID != "" {
 		foodChain, _ = a.store.GetPetFoodChainStatus(r.Context(), doc.PetID)
+		domicile, _ = a.store.GetPetDomicileLocation(r.Context(), doc.PetID)
 	}
 	pdfBytes, err := pharmacy.BuildDAFPDF(pharmacy.DAFPDFInput{
-		DisplayNumber:   doc.DisplayNumber,
-		PracticeName:    doc.PracticeName,
-		Prescriber:      doc.PrescriberName,
-		ClientName:      doc.ClientName,
-		PetName:         doc.PetName,
-		FoodChainStatus: foodChain,
-		IssuedAt:        issued,
-		Notes:           doc.Notes,
-		Lines:           lines,
+		DisplayNumber:    doc.DisplayNumber,
+		PracticeName:     doc.PracticeName,
+		Prescriber:       doc.PrescriberName,
+		ClientName:       doc.ClientName,
+		PetName:          doc.PetName,
+		FoodChainStatus:  foodChain,
+		DomicileLocation: domicile,
+		IssuedAt:         issued,
+		Notes:            doc.Notes,
+		Lines:            lines,
 	})
 	if err != nil {
 		return err

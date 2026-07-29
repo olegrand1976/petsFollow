@@ -1,32 +1,13 @@
 <template>
-  <div class="pro-visit-report" data-testid="visit-report-panel">
-    <div class="pro-visit-report__head">
-      <div>
-        <label class="pro-label">{{ $t('calendar.reportTitle') }}</label>
-        <p v-if="visitDateLabel" class="pro-hint" data-testid="visit-report-date">
-          {{ $t('calendar.reportVisitDate') }} : {{ visitDateLabel }}
-        </p>
-        <p class="pro-hint" data-testid="visit-report-flow-hint">
-          {{ $t('calendar.reportFlowHint') }}
-        </p>
-      </div>
-      <ProBadge
-        v-if="reportStatus === 'final'"
-        variant="success"
-        data-testid="visit-report-status-final"
-      >
-        {{ $t('calendar.reportStatusFinal') }}
-      </ProBadge>
-    </div>
-
-    <details class="visit-report-howto" data-testid="visit-report-howto">
-      <summary>{{ $t('calendar.reportHowItWorksTitle') }}</summary>
-      <ol>
-        <li>{{ $t('calendar.reportHowItWorksStep1') }}</li>
-        <li>{{ $t('calendar.reportHowItWorksStep2') }}</li>
-        <li>{{ $t('calendar.reportHowItWorksStep3') }}</li>
-      </ol>
-    </details>
+  <div
+    class="pro-visit-report"
+    :class="{ 'pro-visit-report--fill': fillHeight }"
+    data-testid="visit-report-panel"
+  >
+    <ProVisitReportHead
+      :visit-date-label="visitDateLabel"
+      :report-status="reportStatus"
+    />
 
     <div
       v-if="reportAuthors.length > 1"
@@ -136,7 +117,7 @@
         </header>
         <p
           v-if="!readonly && !viewingPeerReport"
-          class="pro-hint"
+          class="pro-hint visit-report-pane__ai-hint"
           data-testid="visit-report-ai-banner"
         >
           {{ $t('calendar.reportAiProposalBanner') }}
@@ -287,13 +268,21 @@ export type VisitReportAuthor = {
   improvedText?: string
 }
 
-const props = defineProps<{
-  visitId: string
-  /** When true, hide save/improve/finalize/audio (ACL pets.write_clinical). */
-  readonly?: boolean
-  /** Visit date shown under the title and used to prefix the report body ("Date du : …"). */
-  visitScheduledAt?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    visitId: string
+    /** When true, hide save/improve/finalize/audio (ACL pets.write_clinical). */
+    readonly?: boolean
+    /** Visit date shown under the title and used to prefix the report body ("Date du : …"). */
+    visitScheduledAt?: string
+    /**
+     * Stretch notes/CR panes to fill a tall host (consultation `full` modal).
+     * Default compact — calendar / history / pet modals must not inherit fill min-heights.
+     */
+    fillHeight?: boolean
+  }>(),
+  { fillHeight: false },
+)
 
 const emit = defineEmits<{
   saved: []
@@ -913,40 +902,17 @@ watch(
 </script>
 
 <style scoped>
-.pro-visit-report__head {
+.pro-visit-report {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.visit-report-howto {
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius, 8px);
-  padding: 0.5rem 0.85rem;
-  background: var(--pf-vet-bg, #f8fafc);
-}
-
-.visit-report-howto > summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--pf-vet-primary);
-}
-
-.visit-report-howto ol {
-  margin: 0.5rem 0 0.25rem;
-  padding-left: 1.25rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 0;
 }
 
 .visit-report-split {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
-  margin-top: 0.5rem;
 }
 
 @media (min-width: 900px) {
@@ -969,11 +935,16 @@ watch(
 }
 
 .visit-report-pane__header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.visit-report-pane__header .pro-hint {
+  margin: 0.15rem 0 0;
 }
 
 .visit-report-pane__title {
@@ -986,6 +957,11 @@ watch(
   flex-wrap: wrap;
 }
 
+.visit-report-pane__ai-hint {
+  flex-shrink: 0;
+  margin: 0;
+}
+
 .visit-report-pane__textarea {
   min-height: 280px;
   width: 100%;
@@ -994,6 +970,7 @@ watch(
 }
 
 .visit-report-recording {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1021,11 +998,12 @@ watch(
 }
 
 .visit-report-authors {
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
 .pro-visit-report__footer {
+  flex-shrink: 0;
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -1033,7 +1011,7 @@ watch(
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.85rem;
+  margin-top: 0.25rem;
   padding: 0.75rem 0 0.15rem;
   background: linear-gradient(to top, var(--pf-vet-surface, #fff) 70%, transparent);
 }
@@ -1047,7 +1025,8 @@ watch(
 }
 
 .visit-report-history {
-  margin-top: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
   border: 1px solid var(--pf-vet-border);
   border-radius: var(--pf-vet-radius, 8px);
   padding: 0.65rem 0.85rem;
@@ -1098,5 +1077,41 @@ watch(
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Consultation full modal only — do not inflate calendar / history / pet hosts. */
+.pro-visit-report--fill {
+  flex: 1 1 auto;
+}
+
+.pro-visit-report--fill .visit-report-split {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pro-visit-report--fill .visit-report-pane__textarea {
+  flex: 1 1 auto;
+  min-height: 16rem;
+  resize: none;
+}
+
+.pro-visit-report--fill :deep(.pro-md-report) {
+  flex: 1 1 auto;
+  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pro-visit-report--fill :deep(.pro-md-report__textarea),
+.pro-visit-report--fill :deep(.pro-md-report__preview) {
+  flex: 1 1 auto;
+  min-height: 16rem;
+  resize: none;
+}
+
+.pro-visit-report--fill .pro-visit-report__footer {
+  position: static;
+  background: transparent;
 }
 </style>

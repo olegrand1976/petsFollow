@@ -9,10 +9,18 @@ import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 const _horseCareTypes = {'farrier', 'fecal_egg'};
 
 class HorseHealthPanel extends StatefulWidget {
-  const HorseHealthPanel({super.key, required this.petId, required this.petName});
+  const HorseHealthPanel({
+    super.key,
+    required this.petId,
+    required this.petName,
+    this.foodChainStatus,
+    this.domicileLocation,
+  });
 
   final String petId;
   final String petName;
+  final String? foodChainStatus;
+  final String? domicileLocation;
 
   @override
   State<HorseHealthPanel> createState() => _HorseHealthPanelState();
@@ -85,6 +93,22 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
       default:
         return reminder.title;
     }
+  }
+
+  String _foodChainLabel(AppLocalizations l10n) {
+    final status = widget.foodChainStatus ?? '';
+    return switch (status) {
+      'food_producing' => l10n.petFoodChainFoodProducing,
+      'excluded_from_food_chain' => l10n.petFoodChainExcluded,
+      'companion' => l10n.petFoodChainCompanion,
+      _ => status,
+    };
+  }
+
+  String _foodChainSubtitle(AppLocalizations l10n) {
+    final label = _foodChainLabel(l10n);
+    if (label.isEmpty) return l10n.petFoodChainStatus;
+    return '${l10n.petFoodChainStatus}: $label';
   }
 
   Future<void> _addContact() async {
@@ -169,6 +193,27 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.horseHealthTitle, style: Theme.of(context).textTheme.titleMedium),
+        if ((widget.domicileLocation ?? '').isNotEmpty ||
+            (widget.foodChainStatus ?? '').isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Card(
+            key: const Key('horse_regulatory_card'),
+            child: ListTile(
+              leading: const Icon(Icons.home_work_outlined),
+              title: Text(
+                (widget.domicileLocation ?? '').isEmpty
+                    ? l10n.petFoodChainStatus
+                    : widget.domicileLocation!,
+              ),
+              subtitle: Text(
+                (widget.domicileLocation ?? '').isEmpty
+                    ? _foodChainLabel(l10n)
+                    : _foodChainSubtitle(l10n),
+                style: TextStyle(color: p.textMuted),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         if (loading)
           const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -21,6 +22,7 @@ class _PetEditScreenState extends State<PetEditScreen> {
   late final TextEditingController breed;
   late final TextEditingController microchip;
   late final TextEditingController healthBookNumber;
+  late final TextEditingController domicile;
   late String selectedSpecies;
   List<XFile> healthBookPages = [];
   bool saving = false;
@@ -36,8 +38,10 @@ class _PetEditScreenState extends State<PetEditScreen> {
     microchip = TextEditingController(text: widget.pet.microchipNumber ?? '');
     healthBookNumber =
         TextEditingController(text: widget.pet.healthBookNumber ?? '');
+    domicile =
+        TextEditingController(text: widget.pet.domicileLocation ?? '');
     healthBookPdfAttached = widget.pet.healthBookPdfAttached;
-    const known = ['dog', 'cat', 'horse', 'other'];
+    const known = kPetSpeciesCodes;
     selectedSpecies =
         known.contains(widget.pet.species) ? widget.pet.species : 'other';
   }
@@ -48,6 +52,7 @@ class _PetEditScreenState extends State<PetEditScreen> {
     breed.dispose();
     microchip.dispose();
     healthBookNumber.dispose();
+    domicile.dispose();
     super.dispose();
   }
 
@@ -98,6 +103,9 @@ class _PetEditScreenState extends State<PetEditScreen> {
         'breed': breed.text.trim(),
         'microchipNumber': microchip.text.trim(),
         'healthBookNumber': healthBookNumber.text.trim(),
+        // Always send: clear domicile when leaving food-chain species.
+        'domicileLocation':
+            isFoodChainSpecies(selectedSpecies) ? domicile.text.trim() : '',
       });
       if (healthBookPages.isNotEmpty) {
         try {
@@ -117,6 +125,19 @@ class _PetEditScreenState extends State<PetEditScreen> {
       setState(() => error = 'save');
     } finally {
       if (mounted) setState(() => saving = false);
+    }
+  }
+
+  String _foodChainLabel(AppLocalizations l10n, String status) {
+    switch (status) {
+      case 'food_producing':
+        return l10n.petFoodChainFoodProducing;
+      case 'excluded_from_food_chain':
+        return l10n.petFoodChainExcluded;
+      case 'companion':
+        return l10n.petFoodChainCompanion;
+      default:
+        return status;
     }
   }
 
@@ -141,10 +162,11 @@ class _PetEditScreenState extends State<PetEditScreen> {
               initialValue: selectedSpecies,
               decoration: InputDecoration(labelText: l10n.species),
               items: [
-                DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
-                DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
-                DropdownMenuItem(value: 'horse', child: Text(l10n.speciesHorse)),
-                DropdownMenuItem(value: 'other', child: Text(l10n.speciesOther)),
+                for (final code in kPetSpeciesCodes)
+                  DropdownMenuItem(
+                    value: code,
+                    child: Text(speciesLabel(l10n, code)),
+                  ),
               ],
               onChanged: (v) => setState(() => selectedSpecies = v ?? 'other'),
             ),
@@ -166,6 +188,25 @@ class _PetEditScreenState extends State<PetEditScreen> {
               decoration:
                   InputDecoration(labelText: l10n.petHealthBookNumberOptional),
             ),
+            if (isFoodChainSpecies(selectedSpecies)) ...[
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('pet_edit_domicile'),
+                controller: domicile,
+                maxLength: 500,
+                decoration: InputDecoration(
+                  labelText: l10n.petDomicileLocation,
+                  hintText: l10n.petDomicileHint,
+                ),
+              ),
+              if ((widget.pet.foodChainStatus ?? '').isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${l10n.petFoodChainStatus}: ${_foodChainLabel(l10n, widget.pet.foodChainStatus!)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
             const SizedBox(height: 12),
             if (hasPdf)
               ListTile(

@@ -249,6 +249,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		heartrate.sessions, pets.weight_readings, pets.dossier_events, pets.pets,
 		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
 		practice.client_import_rows, practice.client_import_jobs,
+		pharmacy.compendium_import_rows, pharmacy.compendium_import_jobs,
 		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
 		practice.commercial_referrals,
 		practice.practice_clients, practice.practices CASCADE`); err != nil {
@@ -678,9 +679,9 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 	reg.clientIDs[c.email] = clientID
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, terms_accepted_at)
-		VALUES ($1, $2, $3, $4, 'client', $5, NOW(), NOW())`,
-		clientID, c.email, clientHash, c.fullName, reg.practiceID); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, terms_accepted_at, contact_phone)
+		VALUES ($1, $2, $3, $4, 'client', $5, NOW(), NOW(), $6)`,
+		clientID, c.email, clientHash, c.fullName, reg.practiceID, c.contactPhone); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -1215,6 +1216,16 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 			SELECT $1, $2, $3, CURRENT_DATE - 30, 'CSO régional', 'Wavre', 'Clear round'
 			WHERE NOT EXISTS (SELECT 1 FROM care.competitions WHERE pet_id=$2 AND title='CSO régional')`,
 			uuid.NewString(), spiritID, ownerID)
+		_, _ = pool.Exec(ctx, `
+			UPDATE pets.pets
+			SET domicile_location = CASE WHEN COALESCE(domicile_location,'') = '' THEN 'Écurie VetPlus Demo — Bruxelles' ELSE domicile_location END,
+			    food_chain_status = CASE
+					WHEN food_chain_status = 'companion'
+					 AND COALESCE(domicile_location,'') = ''
+					THEN 'excluded_from_food_chain'
+					ELSE food_chain_status
+				END
+			WHERE id = $1`, spiritID)
 		_, _ = pool.Exec(ctx, `
 			UPDATE visits.visits SET lat = 50.8503, lng = 4.3517, address_text = COALESCE(NULLIF(address_text,''), 'Écurie démo — Bruxelles')
 			WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'`, spiritID)

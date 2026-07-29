@@ -786,6 +786,24 @@ class AppLocalizationsEt extends AppLocalizations {
   String get petHealthBookNumberOptional => 'Tervisekaardi number (valikuline)';
 
   @override
+  String get petDomicileLocation => 'Elukoht / tall';
+
+  @override
+  String get petDomicileHint => 'Nt. Paju tall — Brüssel';
+
+  @override
+  String get petFoodChainStatus => 'Toiduahela staatus';
+
+  @override
+  String get petFoodChainCompanion => 'Lemmikloom (väljaspool toiduahelat)';
+
+  @override
+  String get petFoodChainFoodProducing => 'Tootmisloom / toiduahel';
+
+  @override
+  String get petFoodChainExcluded => 'Toiduahelast välja arvatud';
+
+  @override
   String get petHealthBookAddPages => 'Lisa tervisekaardi fotod';
 
   @override
@@ -986,7 +1004,34 @@ class AppLocalizationsEt extends AppLocalizations {
   String get speciesCat => 'Kass';
 
   @override
-  String get speciesHorse => 'Horse';
+  String get speciesHorse => 'Hobune';
+
+  @override
+  String get speciesDonkey => 'Eesel';
+
+  @override
+  String get speciesCattle => 'Veis';
+
+  @override
+  String get speciesSheep => 'Lammas';
+
+  @override
+  String get speciesGoat => 'Kits';
+
+  @override
+  String get speciesPig => 'Siga';
+
+  @override
+  String get speciesPoultry => 'Linnuliha';
+
+  @override
+  String get speciesRabbit => 'Küülik';
+
+  @override
+  String get speciesAlpaca => 'Alpaka';
+
+  @override
+  String get speciesLlama => 'Laama';
 
   @override
   String get speciesOther => 'Muu';
