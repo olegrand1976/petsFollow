@@ -7,7 +7,7 @@
 | Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 4.C/4.D/4.F ✅ · S6 ✅ (smoke staging) · 2.F / S5 / Phase 3 gelés (P0) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
-| Dernière revue | 2026-07-29 (S6 env VAMReg/workers Cloud Run) |
+| Dernière revue | 2026-07-29 (client VAMReg AFMPS readonly — [39](39-VAMREG-AFMPS-READONLY.md)) |
 
 **Hors scope** (retour véto clinique / offline) : normes vitals, templates dentaires UGent, canvas protocoles, mode offline Flutter — backlog séparé.
 
@@ -19,7 +19,7 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 
 | ID | Livrable | Owner | Statut | Critère de sortie |
 |----|----------|-------|--------|-------------------|
-| P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | ⬜ Ouvert | Credentials SM + env test |
+| P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | 🟡 Client **readonly** listes OK ([39](39-VAMREG-AFMPS-READONLY.md)) · write déclaration + credentials live encore ouverts | Credentials SM + env test + ICD write |
 | P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente — aucun chantier S5/Phase 3 tant que credentials absents** | Credentials reseller → débloque S5 + Phase 3 |
 | P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit | ⬜ Ouvert | Pipeline `import-cnk` prod-ready |
 | P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | ⬜ Ouvert | Spec figée avant Phase 4.B |

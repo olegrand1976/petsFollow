@@ -12,6 +12,8 @@ import (
 )
 
 // VamregClient posts antibiotic declarations (or dry-runs).
+// Live declaration HTTP contract is not covered by the FAMHP readonly ICD
+// (v20260701 software-house GET lists) — see VamregAFMPSClient for reference lists.
 type VamregClient struct {
 	BaseURL    string
 	APIKey     string
@@ -46,6 +48,7 @@ type VamregDeclareResult struct {
 
 // Declare sends the payload or returns a dry-run success without network I/O.
 // Live mode (!DryRun) requires BaseURL — empty URL is an error, never a silent dry-run.
+// Auth/path here are provisional until FAMHP provides the write ICD (readonly lists → VamregAFMPSClient).
 func (c *VamregClient) Declare(ctx context.Context, req VamregDeclareRequest) (VamregDeclareResult, error) {
 	if c == nil || c.DryRun {
 		return VamregDeclareResult{
