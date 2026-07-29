@@ -471,6 +471,11 @@ func csvEscape(s string) string {
 	return s
 }
 
+// CSVEscape escapes a CSV field for semicolon-separated pharmacy exports.
+func CSVEscape(s string) string {
+	return csvEscape(s)
+}
+
 // ReceiveDeliveryNote creates a BL and receives each line into stock (FEFO receipt rules).
 // Empty noteNumber → server-generated MANUAL-<uuid8> (idempotent client retries still unique).
 func (s *Store) ReceiveDeliveryNote(ctx context.Context, practiceID, userID string, noteNumber, supplierID, supplierName, notes string, lines []DeliveryNoteItemInput, today time.Time) (DeliveryNote, error) {
