@@ -44,6 +44,28 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 		t.Fatalf("dev staging seed expected 403, got %d %#v", code, env)
 	}
 
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/metrics/overview", devTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("dev metrics expected 403, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/commercials", devTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("dev list commercials expected 403, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/commercials", devTok, map[string]any{
+		"email": "dev-should-fail@petsfollow.test", "fullName": "Nope", "password": "VetDemo123!",
+	})
+	if code != http.StatusForbidden {
+		t.Fatalf("dev create commercial expected 403, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/brand-assets", devTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("dev brand-assets expected 403, got %d %#v", code, env)
+	}
+
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/payments", adminTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("admin payments %d %#v", code, env)

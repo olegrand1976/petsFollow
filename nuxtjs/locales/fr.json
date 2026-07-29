@@ -2252,7 +2252,8 @@
       "statsOpen24h": "Ouverts > 24 h",
       "statsOpen7d": "Ouverts > 7 j",
       "filterAllSources": "Toutes les sources",
-      "patchError": "Impossible de changer le statut."
+      "patchError": "Impossible de changer le statut.",
+      "kanbanTruncated": "Kanban tronqué : {shown}/{total} tickets (plafond {limit}). Affinez les filtres ou passez en tableau."
     },
     "vetPool": {
       "title": "Pool cabinets non assignés",

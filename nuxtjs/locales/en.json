@@ -1587,7 +1587,8 @@
       "statsOpen24h": "Open > 24h",
       "statsOpen7d": "Open > 7d",
       "filterAllSources": "All sources",
-      "patchError": "Could not update status."
+      "patchError": "Could not update status.",
+      "kanbanTruncated": "Kanban truncated: {shown}/{total} tickets (cap {limit}). Refine filters or switch to table view."
     },
     "vetPool": {
       "title": "Unassigned practices pool",

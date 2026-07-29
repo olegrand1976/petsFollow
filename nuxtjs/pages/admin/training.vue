@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
+definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { formatDate } = useFormatters()
 

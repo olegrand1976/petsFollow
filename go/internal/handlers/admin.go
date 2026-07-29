@@ -52,7 +52,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 }
 
 func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListAllCommercialsAdmin(r.Context())
@@ -64,7 +64,7 @@ func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	f := store.FiliationFilter{}
@@ -92,7 +92,7 @@ func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListFiliationEvents(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	f := store.FiliationEventFilter{}
@@ -127,7 +127,7 @@ func (a *API) adminListFiliationEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListSalesBranches(r.Context())
@@ -147,7 +147,7 @@ func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminRunSalesBranchesAuto(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	result, err := a.runSalesBranchesAuto(r.Context())
@@ -170,7 +170,7 @@ type createBranchReq struct {
 }
 
 func (a *API) adminCreateSalesBranch(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	var req createBranchReq
@@ -199,7 +199,7 @@ type setBranchReq struct {
 }
 
 func (a *API) adminSetCommercialBranch(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -220,7 +220,7 @@ func (a *API) adminSetCommercialBranch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListCommercialManagers(r.Context())
@@ -244,7 +244,7 @@ type createCommercialReq struct {
 }
 
 func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	var req createCommercialReq
@@ -320,7 +320,7 @@ type setManagerReq struct {
 }
 
 func (a *API) adminSetCommercialManager(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -352,7 +352,7 @@ type baseLocationReq struct {
 }
 
 func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -385,7 +385,7 @@ func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Re
 }
 
 func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
-	adminID, ok := a.requireAdminOrDev(w, r)
+	adminID, ok := a.requireAdmin(w, r)
 	if !ok {
 		return
 	}
@@ -411,7 +411,7 @@ func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListUnassignedVets(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListUnassignedVets(r.Context())
@@ -426,7 +426,7 @@ func (a *API) adminListUnassignedVets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminUnassignVet(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	vetID := chi.URLParam(r, "id")
@@ -446,7 +446,7 @@ func (a *API) adminUnassignVet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminVetAssignSuggestions(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	vetID := chi.URLParam(r, "id")
@@ -547,7 +547,7 @@ func (a *API) adminCommercialCommissions(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *API) adminListProspects(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	status := r.URL.Query().Get("status")
@@ -572,7 +572,9 @@ func (a *API) requireAdmin(w http.ResponseWriter, r *http.Request) (authx.Identi
 	return id, true
 }
 
-// requireAdminOrDev allows admin (full ops) and DEV (support IT, sans billing/seed).
+// requireAdminOrDev allows admin and DEV for support-IT surfaces only
+// (users list, support tickets, runtime flags). Sales mutations, metrics/billing
+// and staging seed stay requireAdmin.
 func (a *API) requireAdminOrDev(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || !kernel.IsOpsRole(id.Role) {
@@ -583,7 +585,7 @@ func (a *API) requireAdminOrDev(w http.ResponseWriter, r *http.Request) (authx.I
 }
 
 func (a *API) adminMetricsOverview(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdminOrDev(w, r); !ok {
+	if _, ok := a.requireAdmin(w, r); !ok {
 		return
 	}
 	from, to := parseAdminRange(r)

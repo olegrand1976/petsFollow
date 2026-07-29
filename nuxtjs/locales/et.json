@@ -1556,7 +1556,8 @@
       "statsOpen24h": "Avatud > 24 h",
       "statsOpen7d": "Avatud > 7 p",
       "filterAllSources": "Kõik allikad",
-      "patchError": "Oleku muutmine ebaõnnestus."
+      "patchError": "Oleku muutmine ebaõnnestus.",
+      "kanbanTruncated": "Kanban kärbitud: {shown}/{total} piletit (limiit {limit}). Täpsustage filtreid või kasutage tabelit."
     },
     "vetPool": {
       "title": "Unassigned practices pool",

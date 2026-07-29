@@ -2123,7 +2123,8 @@
       "statsOpen24h": "Aperti > 24 h",
       "statsOpen7d": "Aperti > 7 g",
       "filterAllSources": "Tutte le fonti",
-      "patchError": "Impossibile aggiornare lo stato."
+      "patchError": "Impossibile aggiornare lo stato.",
+      "kanbanTruncated": "Kanban troncato: {shown}/{total} ticket (limite {limit}). Affina i filtri o passa alla tabella."
     },
     "vetPool": {
       "title": "Unassigned practices pool",

@@ -1556,7 +1556,8 @@
       "statsOpen24h": "Abiertos > 24 h",
       "statsOpen7d": "Abiertos > 7 d",
       "filterAllSources": "Todas las fuentes",
-      "patchError": "No se pudo cambiar el estado."
+      "patchError": "No se pudo cambiar el estado.",
+      "kanbanTruncated": "Kanban truncado: {shown}/{total} tickets (límite {limit}). Ajuste filtros o use la tabla."
     },
     "vetPool": {
       "title": "Unassigned practices pool",

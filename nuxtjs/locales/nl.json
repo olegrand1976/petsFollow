@@ -1587,7 +1587,8 @@
       "statsOpen24h": "Open > 24 u",
       "statsOpen7d": "Open > 7 d",
       "filterAllSources": "Alle bronnen",
-      "patchError": "Status kon niet worden gewijzigd."
+      "patchError": "Status kon niet worden gewijzigd.",
+      "kanbanTruncated": "Kanban ingekort: {shown}/{total} tickets (limiet {limit}). Verfijn filters of schakel naar tabel."
     },
     "vetPool": {
       "title": "Unassigned practices pool",

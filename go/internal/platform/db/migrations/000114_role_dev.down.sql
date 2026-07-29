@@ -1,5 +1,6 @@
+-- Drop DEV accounts rather than elevating them to admin.
 DELETE FROM identity.profiles WHERE role = 'dev';
-UPDATE identity.users SET role = 'admin' WHERE role = 'dev';
+DELETE FROM identity.users WHERE role = 'dev';
 
 ALTER TABLE identity.users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE identity.users

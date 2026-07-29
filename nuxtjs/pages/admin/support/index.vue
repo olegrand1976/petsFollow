@@ -66,6 +66,14 @@
         </template>
       </ProListToolbar>
 
+      <p
+        v-if="viewMode === 'kanban' && total > KANBAN_LIMIT"
+        class="text-muted"
+        data-testid="admin-support-kanban-truncated"
+      >
+        {{ $t('admin.support.kanbanTruncated', { shown: rows.length, total, limit: KANBAN_LIMIT }) }}
+      </p>
+
       <ProTable v-if="viewMode === 'table'" :empty="!rows.length && !loadError" :empty-title="$t('admin.support.empty')">
         <thead>
           <tr>

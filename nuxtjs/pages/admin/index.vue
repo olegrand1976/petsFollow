@@ -173,9 +173,8 @@ async function runStagingSeed() {
 }
 
 onMounted(async () => {
-  const metricsRes: any = await $fetch('/api/admin/metrics')
-  metrics.value = metricsRes.data
   if (isDevRole.value) {
+    // Pas d'appel metrics (billing) — support stats only.
     try {
       const statsRes: any = await $fetch('/api/admin/support/stats')
       supportStats.value = statsRes.data ?? statsRes
@@ -184,6 +183,8 @@ onMounted(async () => {
     }
     return
   }
+  const metricsRes: any = await $fetch('/api/admin/metrics')
+  metrics.value = metricsRes.data
   try {
     const seedStatus: any = await $fetch('/api/admin/staging/seed')
     stagingSeedEnabled.value = !!seedStatus?.data?.enabled

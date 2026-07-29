@@ -209,7 +209,7 @@ func (a *API) attachProfileFor(w http.ResponseWriter, r *http.Request, actor aut
 }
 
 func (a *API) adminAttachProfile(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireAdminOrDev(w, r)
+	id, ok := a.requireAdmin(w, r)
 	if !ok {
 		return
 	}
