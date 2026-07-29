@@ -316,3 +316,140 @@ func TestPharmacyDAFWithVisitID(t *testing.T) {
 		t.Fatalf("foreign visit want 400 got %d %#v", code, env)
 	}
 }
+
+func TestPharmacyDAFVAMRegDryRun(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("VAMREG_DRY_RUN", "true")
+	api := newTestAPI(t)
+	bundle, err := media.New(config.Config{
+		MediaLocalDir: t.TempDir(),
+		APIPublicURL:  "http://localhost:8291",
+	})
+	if err != nil {
+		t.Fatalf("media: %v", err)
+	}
+	api.api.TestSetMedia(bundle.Store)
+
+	ctx := context.Background()
+	st := store.New(api.pool)
+	abID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
+		CNK: "2999011", Name: "VAMReg AB Med", IsActive: true, IsAntibiotic: true,
+	})
+	if err != nil {
+		t.Fatalf("med: %v", err)
+	}
+
+	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	exp := time.Now().AddDate(0, 0, 120).Format("2006-01-02")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
+		"medicationId": abID, "lotNumber": "VAM-LOT-1", "expiresOn": exp, "qty": 5,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("receipt %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
+		"items": []map[string]any{{
+			"medicationId": abID, "qty": 1, "ammNumber": "BE-VAM-1",
+			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 7},
+		}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("draft %d %#v", code, env)
+	}
+	dafID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafID+"/finalize", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+	doc := dataMap(t, env)
+	if doc["vamregStatus"] != "sent" {
+		t.Fatalf("vamregStatus=%v want sent (dry-run sync)", doc["vamregStatus"])
+	}
+	if doc["hasAntibiotic"] != true {
+		t.Fatalf("hasAntibiotic=%v", doc["hasAntibiotic"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/daf/"+dafID+"/vamreg/audits", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("audits %d %#v", code, env)
+	}
+	rows, _ := env["data"].([]any)
+	if len(rows) < 1 {
+		t.Fatalf("want audit rows, got %#v", env)
+	}
+
+	// Cancel blocked once VAMReg sent.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafID+"/cancel", tok, map[string]any{
+		"reason": "e2e", "restock": true,
+	})
+	if code != http.StatusConflict {
+		t.Fatalf("cancel after sent want 409 got %d %#v", code, env)
+	}
+	errObj, _ := env["error"].(map[string]any)
+	if errObj["code"] != "daf_vamreg_already_sent" {
+		t.Fatalf("want daf_vamreg_already_sent got %#v", env)
+	}
+}
+
+func TestPharmacyDAFCancelBlockedWhileVAMRegPending(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("VAMREG_DRY_RUN", "true")
+	api := newTestAPI(t)
+	ctx := context.Background()
+	st := store.New(api.pool)
+	abID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
+		CNK: "2999012", Name: "VAMReg Pending Med", IsActive: true, IsAntibiotic: true,
+	})
+	if err != nil {
+		t.Fatalf("med: %v", err)
+	}
+	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	exp := time.Now().AddDate(0, 0, 120).Format("2006-01-02")
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/batches", tok, map[string]any{
+		"medicationId": abID, "lotNumber": "VAM-PEND-1", "expiresOn": exp, "qty": 3,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("receipt %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf", tok, map[string]any{
+		"items": []map[string]any{{
+			"medicationId": abID, "qty": 1, "ammNumber": "BE-PEND-1",
+			"vamregPayload": map[string]any{"species": "dog", "indication": "infection", "durationDays": 5},
+		}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("draft %d %#v", code, env)
+	}
+	dafID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafID+"/finalize", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("finalize %d %#v", code, env)
+	}
+	doc := dataMap(t, env)
+	if nested, ok := doc["daf"].(map[string]any); ok {
+		doc = nested
+	}
+	practiceID, _ := doc["practiceId"].(string)
+	if practiceID == "" {
+		t.Fatalf("missing practiceId %#v", doc)
+	}
+	// Dry-run marks sent; force pending via SQL to exercise in-flight cancel guard.
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE pharmacy.daf_documents SET vamreg_status = 'pending'
+		WHERE practice_id = $1 AND id = $2`, practiceID, dafID); err != nil {
+		t.Fatalf("force pending: %v", err)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/"+dafID+"/cancel", tok, map[string]any{
+		"reason": "race", "restock": true,
+	})
+	if code != http.StatusConflict {
+		t.Fatalf("cancel pending want 409 got %d %#v", code, env)
+	}
+	errObj, _ := env["error"].(map[string]any)
+	if errObj["code"] != "daf_vamreg_in_flight" {
+		t.Fatalf("want daf_vamreg_in_flight got %#v", env)
+	}
+}

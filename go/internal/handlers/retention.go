@@ -26,6 +26,10 @@ func secretHeaderOK(r *http.Request, header, secret string) bool {
 // internalRunRetentionPurge — job cron (RGPD) : purge les comptes inactifs depuis 3 ans.
 // Clients : effacement complet (DB + médias + abonnements). Pros : anonymisation.
 // Protégé par le header X-Retention-Secret (env RETENTION_PURGE_SECRET).
+//
+// Pharmacie (Phase 4.F) : le schéma `pharmacy.*` (lots, mouvements, DAF, job_audit,
+// inventaires) n’est PAS touché par ce job — conservation typique 5 ans registres
+// médicaments (UE 2019/6 / BE). Pas de DELETE cascade depuis users vers pharmacy.
 func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) {
 	if !secretHeaderOK(r, "X-Retention-Secret", a.cfg.RetentionPurgeSecret) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")

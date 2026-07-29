@@ -193,6 +193,55 @@
   color: var(--pf-vet-text-muted);
 }
 
+.pro-topbar__profiles {
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pf-vet-border);
+}
+
+.pro-topbar__dropdown-section {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pf-vet-text-muted);
+}
+
+.pro-topbar__profile-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0.2rem 0;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--pf-vet-radius-sm, 6px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pro-topbar__profile-switch:hover:not(:disabled) {
+  background: var(--pf-vet-bg);
+  border-color: var(--pf-vet-border);
+}
+
+.pro-topbar__profile-switch.is-active,
+.pro-topbar__profile-switch:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.pro-topbar__profile-error {
+  margin: 0.35rem 0 0;
+  color: var(--pf-vet-alert);
+  font-size: 0.8125rem;
+}
+
 .pro-topbar__dropdown-link {
   display: block;
   padding: 0.5rem 0;

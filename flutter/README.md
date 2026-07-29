@@ -7,7 +7,7 @@ App mobile client (face **pets**). Auth centralisée via l'API Go + PostgreSQL �
 | Flavor | Package | Canal | Commande |
 |--------|---------|-------|----------|
 | **staging** (défaut) | `be.llitsc.petsfollow_mobile.staging` | Firebase App Distribution (testeurs) | `make flutter-dev` · `make firebase-android-dist` |
-| **prod** | `be.llitsc.petsfollow_mobile` | Google Play (futur) | `API_BASE=https://… make play-android-bundle` |
+| **prod** | `be.llitsc.petsfollow_mobile` | Google Play | `make play-android-bundle-internal` (API staging) · `make play-android-bundle-prod` (API `api.petsfollow.app`) |
 
 - Runtime : toujours **`--flavor X` + `--dart-define=FLAVOR=X` + `--dart-define=APP_ENV=X`** (même valeur). `AppEnv.validate()` refuse un mismatch ou un release Android sans define.
 - Bandeau **STAGING** si canal staging.
@@ -79,6 +79,8 @@ App Android Tester pour installer les builds invités.
 
 ## Google Play (Android App Bundle — flavor prod)
 
+**AAB** = *Android App Bundle* : fichier d’upload Play Console (produit par la commande ci-dessous). Distinct de l’APK staging Firebase App Distribution.
+
 Prérequis :
 
 1. Générer un upload keystore (une seule fois) :
@@ -89,14 +91,21 @@ Prérequis :
 2. Copier `flutter/android/key.properties.example` → `flutter/android/key.properties` et renseigner mots de passe / alias (`storeFile=upload-keystore.jks` par défaut, relatif à `flutter/android/`).
 3. Enregistrer les SHA-1/256 (upload + Play App Signing) dans Firebase / Google Cloud OAuth Android (**package prod**).
 
-Build AAB :
+Build AAB — deux cibles (package Play **prod** dans les deux cas) :
 
 ```bash
-API_BASE=https://… make play-android-bundle
+# Internal testing — API staging actuelle (seedable)
+make play-android-bundle-internal
+
+# Piste Production — API prod (après deploy GCP main / api.petsfollow.app)
+make play-android-bundle-prod
 # → flutter/build/app/outputs/bundle/prodRelease/app-prod-release.aab
 ```
 
-`API_BASE` HTTPS est **obligatoire** (pas de défaut silencieux vers le Cloud Run staging).
+URLs canoniques : [`infra/play/api-bases.sh`](../infra/play/api-bases.sh).  
+`API_BASE` HTTPS obligatoire ; l’API staging exige `ALLOW_STAGING_API=1` (inclus dans `play-android-bundle-internal`).
 
 Privacy policy (Play Console) : https://petsfollow.ll-it-sc.be/legal/privacy  
+Contact support : **support@petsfollow.app**  
+Deploy GCP prod (préparé, pas encore auto sur main) : [`documentation/10-GCP-DEPLOIEMENT.md`](../documentation/10-GCP-DEPLOIEMENT.md) § Production  
 Checklist complète : [`documentation/26-PLAY-STORE.md`](../documentation/26-PLAY-STORE.md)

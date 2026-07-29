@@ -21,7 +21,7 @@ func (a *API) registerBrandAssetAdminRoutes(r chi.Router) {
 }
 
 func (a *API) adminListBrandAssets(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	items, err := a.store.ListBrandAssets(r.Context())
@@ -42,7 +42,7 @@ func brandAssetKeyOK(key string) bool {
 }
 
 func (a *API) adminUploadBrandAsset(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	key := chi.URLParam(r, "key")
@@ -69,7 +69,7 @@ type patchBrandAssetReq struct {
 }
 
 func (a *API) adminPatchBrandAsset(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	key := chi.URLParam(r, "key")

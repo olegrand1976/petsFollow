@@ -199,6 +199,50 @@ func (s *Store) EnsureDefaultDeposit(ctx context.Context, practiceID string) (Me
 	return s.CreateMedicationDeposit(ctx, practiceID, "Principal", "MAIN", true)
 }
 
+func (s *Store) assertDepositInPractice(ctx context.Context, practiceID, depositID string) error {
+	depositID = strings.TrimSpace(depositID)
+	if depositID == "" {
+		return nil
+	}
+	if _, err := uuid.Parse(depositID); err != nil {
+		return ErrValidation
+	}
+	var ok bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM pharmacy.medication_deposits WHERE id = $1::uuid AND practice_id = $2::uuid
+		)`, depositID, practiceID).Scan(&ok)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrValidation
+	}
+	return nil
+}
+
+func (s *Store) assertDepositInPracticeTx(ctx context.Context, tx pgx.Tx, practiceID, depositID string) error {
+	depositID = strings.TrimSpace(depositID)
+	if depositID == "" {
+		return nil
+	}
+	if _, err := uuid.Parse(depositID); err != nil {
+		return ErrValidation
+	}
+	var ok bool
+	err := tx.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM pharmacy.medication_deposits WHERE id = $1::uuid AND practice_id = $2::uuid
+		)`, depositID, practiceID).Scan(&ok)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrValidation
+	}
+	return nil
+}
+
 func (s *Store) CreateMedicationDeposit(ctx context.Context, practiceID, name, code string, isDefault bool) (MedicationDeposit, error) {
 	name = strings.TrimSpace(name)
 	code = strings.ToUpper(strings.TrimSpace(code))
@@ -265,6 +309,8 @@ func (s *Store) ReceiveMedicationBatch(ctx context.Context, in ReceiptInput, set
 			return MedicationBatch{}, false, err
 		}
 		in.DepositID = dep.ID
+	} else if err := s.assertDepositInPractice(ctx, in.PracticeID, in.DepositID); err != nil {
+		return MedicationBatch{}, false, err
 	}
 
 	tx, err := s.pool.Begin(ctx)
@@ -282,15 +328,15 @@ func (s *Store) ReceiveMedicationBatch(ctx context.Context, in ReceiptInput, set
 		ON CONFLICT (practice_id, deposit_id, medication_id, lot_number, expires_on)
 		DO UPDATE SET
 			qty_on_hand = pharmacy.medication_batches.qty_on_hand + EXCLUDED.qty_on_hand,
-			status = CASE
-				WHEN pharmacy.medication_batches.status = 'wasted' THEN 'active'
-				ELSE pharmacy.medication_batches.status
-			END,
 			updated_at = now()
+		WHERE pharmacy.medication_batches.status <> 'wasted'
 		RETURNING id::text`,
 		batchID, in.PracticeID, in.DepositID, in.MedicationID, strings.TrimSpace(in.LotNumber),
 		exp.Format("2006-01-02"), in.Qty, in.Unit,
 	).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return MedicationBatch{}, false, pharmacy.ErrBatchWasted
+	}
 	if err != nil {
 		return MedicationBatch{}, false, err
 	}
@@ -418,6 +464,10 @@ func (s *Store) ExpirySummary(ctx context.Context, practiceID string) (ExpirySum
 }
 
 func (s *Store) AdjustBatchQty(ctx context.Context, practiceID, batchID, userID string, delta float64, detail string, settings PharmacySettings, today time.Time) (MedicationBatch, error) {
+	return s.adjustBatchQty(ctx, practiceID, batchID, userID, delta, detail, "", settings, today)
+}
+
+func (s *Store) adjustBatchQty(ctx context.Context, practiceID, batchID, userID string, delta float64, detail, inventorySessionID string, settings PharmacySettings, today time.Time) (MedicationBatch, error) {
 	if delta == 0 {
 		return MedicationBatch{}, ErrValidation
 	}
@@ -426,52 +476,59 @@ func (s *Store) AdjustBatchQty(ctx context.Context, practiceID, batchID, userID 
 		return MedicationBatch{}, err
 	}
 	defer tx.Rollback(ctx)
-
-	var status string
-	var exp time.Time
-	var qty float64
-	err = tx.QueryRow(ctx, `
-		SELECT status, expires_on, qty_on_hand::float8
-		FROM pharmacy.medication_batches
-		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, batchID).Scan(&status, &exp, &qty)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return MedicationBatch{}, pharmacy.ErrBatchNotFound
-	}
-	if err != nil {
-		return MedicationBatch{}, err
-	}
-	if status == "quarantine" && delta < 0 {
-		return MedicationBatch{}, pharmacy.ErrBatchQuarantined
-	}
-	if status == "wasted" {
-		return MedicationBatch{}, pharmacy.ErrBatchNotFound
-	}
-	tod := pharmacy.BrusselsToday(today)
-	if delta < 0 && settings.BlockExpiredOnAdjustOut {
-		if exp.Before(tod) {
-			return MedicationBatch{}, pharmacy.ErrBatchExpired
-		}
-	}
-	newQty := qty + delta
-	if newQty < 0 {
-		return MedicationBatch{}, pharmacy.ErrStockInsufficient
-	}
-	if _, err := tx.Exec(ctx, `
-		UPDATE pharmacy.medication_batches SET qty_on_hand = $3, updated_at = now()
-		WHERE practice_id = $1 AND id = $2`, practiceID, batchID, newQty); err != nil {
-		return MedicationBatch{}, err
-	}
-	if _, err := tx.Exec(ctx, `
-		INSERT INTO pharmacy.stock_movements (id, practice_id, batch_id, delta, reason, reason_detail, created_by)
-		VALUES ($1,$2,$3,$4,'adjust',$5,$6)`,
-		uuid.NewString(), practiceID, batchID, delta, nullIfEmpty(detail), nullIfEmpty(userID),
-	); err != nil {
+	if err := s.adjustBatchQtyTx(ctx, tx, practiceID, batchID, userID, delta, detail, inventorySessionID, settings, today); err != nil {
 		return MedicationBatch{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return MedicationBatch{}, err
 	}
 	return s.GetMedicationBatch(ctx, practiceID, batchID)
+}
+
+func (s *Store) adjustBatchQtyTx(ctx context.Context, tx pgx.Tx, practiceID, batchID, userID string, delta float64, detail, inventorySessionID string, settings PharmacySettings, today time.Time) error {
+	if delta == 0 {
+		return ErrValidation
+	}
+	var status string
+	var exp time.Time
+	var qty float64
+	err := tx.QueryRow(ctx, `
+		SELECT status, expires_on, qty_on_hand::float8
+		FROM pharmacy.medication_batches
+		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, batchID).Scan(&status, &exp, &qty)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return pharmacy.ErrBatchNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if status == "quarantine" && delta < 0 && strings.TrimSpace(inventorySessionID) == "" {
+		return pharmacy.ErrBatchQuarantined
+	}
+	if status == "wasted" {
+		return pharmacy.ErrBatchNotFound
+	}
+	tod := pharmacy.BrusselsToday(today)
+	if delta < 0 && settings.BlockExpiredOnAdjustOut {
+		if exp.Before(tod) {
+			return pharmacy.ErrBatchExpired
+		}
+	}
+	newQty := qty + delta
+	if newQty < 0 {
+		return pharmacy.ErrStockInsufficient
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE pharmacy.medication_batches SET qty_on_hand = $3, updated_at = now()
+		WHERE practice_id = $1 AND id = $2`, practiceID, batchID, newQty); err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO pharmacy.stock_movements (id, practice_id, batch_id, delta, reason, reason_detail, created_by, inventory_session_id)
+		VALUES ($1,$2,$3,$4,'adjust',$5,$6,NULLIF($7,'')::uuid)`,
+		uuid.NewString(), practiceID, batchID, delta, nullIfEmpty(detail), nullIfEmpty(userID), strings.TrimSpace(inventorySessionID),
+	)
+	return err
 }
 
 func (s *Store) QuarantineBatch(ctx context.Context, practiceID, batchID, userID, reason string) (MedicationBatch, error) {
@@ -561,12 +618,16 @@ func (s *Store) AllocateFEFO(ctx context.Context, practiceID, medicationID, depo
 	if qty <= 0 {
 		return nil, ErrValidation
 	}
+	settings, err := s.GetPharmacySettings(ctx, practiceID)
+	if err != nil {
+		return nil, err
+	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
-	lines, err := s.allocateFEFOTx(ctx, tx, practiceID, medicationID, depositID, qty, today)
+	lines, err := s.allocateFEFOTx(ctx, tx, practiceID, medicationID, depositID, qty, today, settings.BlockExpiredOnAdjustOut)
 	if err != nil {
 		return nil, err
 	}
@@ -583,16 +644,19 @@ func (s *Store) AllocateFEFO(ctx context.Context, practiceID, medicationID, depo
 	return lines, tx.Commit(ctx)
 }
 
-func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medicationID, depositID string, qty float64, today time.Time) ([]pharmacy.AllocationLine, error) {
+func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medicationID, depositID string, qty float64, today time.Time, blockExpired bool) ([]pharmacy.AllocationLine, error) {
 	tod := pharmacy.BrusselsToday(today)
+	todStr := tod.Format("2006-01-02")
+	allowExpired := !blockExpired
 	rows, err := tx.Query(ctx, `
 		SELECT id::text, lot_number, expires_on, qty_on_hand::float8
 		FROM pharmacy.medication_batches
 		WHERE practice_id = $1 AND medication_id = $2
-		  AND status = 'active' AND qty_on_hand > 0 AND expires_on >= $3::date
-		  AND ($4 = '' OR deposit_id::text = $4)
+		  AND status = 'active' AND qty_on_hand > 0
+		  AND ($3::bool OR expires_on >= $4::date)
+		  AND ($5 = '' OR deposit_id::text = $5)
 		ORDER BY expires_on ASC, created_at ASC
-		FOR UPDATE`, practiceID, medicationID, tod.Format("2006-01-02"), depositID)
+		FOR UPDATE`, practiceID, medicationID, allowExpired, todStr, depositID)
 	if err != nil {
 		return nil, err
 	}
@@ -620,13 +684,17 @@ func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medic
 		total += l.qty
 	}
 	if total < qty {
-		var invalid float64
-		_ = tx.QueryRow(ctx, `
-			SELECT COALESCE(SUM(qty_on_hand),0)::float8 FROM pharmacy.medication_batches
-			WHERE practice_id = $1 AND medication_id = $2 AND qty_on_hand > 0
-			  AND (status <> 'active' OR expires_on < $3::date)`,
-			practiceID, medicationID, tod.Format("2006-01-02")).Scan(&invalid)
-		if invalid > 0 && total == 0 {
+		if blockExpired {
+			var invalid float64
+			_ = tx.QueryRow(ctx, `
+				SELECT COALESCE(SUM(qty_on_hand),0)::float8 FROM pharmacy.medication_batches
+				WHERE practice_id = $1 AND medication_id = $2 AND qty_on_hand > 0
+				  AND (status <> 'active' OR expires_on < $3::date)`,
+				practiceID, medicationID, todStr).Scan(&invalid)
+			if invalid > 0 && total == 0 {
+				return nil, pharmacy.ErrStockUnavailableValidLots
+			}
+		} else if total == 0 {
 			return nil, pharmacy.ErrStockUnavailableValidLots
 		}
 		return nil, pharmacy.ErrStockInsufficient

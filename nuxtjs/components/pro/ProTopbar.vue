@@ -97,6 +97,27 @@
         <div class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
           <p class="pro-topbar__dropdown-title">{{ userName }}</p>
           <p class="pro-topbar__dropdown-email">{{ userEmail }}</p>
+          <div
+            v-if="switchableProfiles.length > 1"
+            class="pro-topbar__profiles"
+            data-testid="pro-profile-switcher"
+          >
+            <p class="pro-topbar__dropdown-section">{{ $t('components.topbar.switchProfile') }}</p>
+            <button
+              v-for="p in switchableProfiles"
+              :key="p.id"
+              type="button"
+              class="pro-topbar__profile-switch"
+              :class="{ 'is-active': p.active }"
+              :disabled="p.active || profileSwitchBusy"
+              :data-testid="`pro-profile-switch-${p.role}`"
+              @click="switchToProfile(p)"
+            >
+              <span>{{ profileRoleLabel(p.role) }}</span>
+              <ProBadge v-if="p.active" variant="success">{{ $t('components.topbar.activeProfile') }}</ProBadge>
+            </button>
+            <p v-if="profileSwitchError" class="pro-topbar__profile-error" role="alert">{{ profileSwitchError }}</p>
+          </div>
           <NuxtLink
             v-if="settingsLink"
             :to="settingsLink"
@@ -120,7 +141,14 @@
 </template>
 
 <script setup lang="ts">
-import { isPracticeStaffRole } from '~/composables/useAuth'
+import { homePathForRole, isPracticeStaffRole, isProRole } from '~/composables/useAuth'
+
+type ProfileRow = {
+  id: string
+  role: string
+  active?: boolean
+  practiceId?: string
+}
 
 const props = withDefaults(
   defineProps<{
@@ -153,6 +181,9 @@ const {
 } = useProNotifications()
 
 const notifOpen = ref(false)
+const profiles = ref<ProfileRow[]>([])
+const profileSwitchBusy = ref(false)
+const profileSwitchError = ref('')
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
@@ -162,12 +193,17 @@ const showStagingTag = computed(() => isStaging.value && !!user.value)
 const showDeskSwitcher = computed(
   () => props.showDeskSwitcher !== false && isPracticeStaffRole(user.value?.role),
 )
+/** Nuxt Pro : uniquement les profils compatibles face Pro (pas client Flutter). */
+const switchableProfiles = computed(() =>
+  profiles.value.filter((p) => isProRole(p.role)),
+)
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
   try {
     await fetchUser()
   } catch { /* 401 handled by middleware */ }
+  void loadProfiles()
   // Idle/bootstrap owned by layout — topbar only renders switcher.
   if (props.showNotifications && !desk.uiBlocked.value) {
     await refreshNotif()
@@ -226,4 +262,42 @@ function onDocClick(e: MouseEvent) {
     closeProfileDetails()
   }
 }
+
+async function loadProfiles() {
+  try {
+    const res: any = await $fetch('/api/me/profiles')
+    const data = res?.data ?? res
+    profiles.value = Array.isArray(data) ? data : (data?.profiles ?? data?.items ?? [])
+  } catch {
+    profiles.value = []
+  }
+}
+
+function profileRoleLabel(role: string) {
+  const key = `components.topbar.profileRole_${role}`
+  const label = t(key)
+  return label === key ? role : label
+}
+
+async function switchToProfile(p: ProfileRow) {
+  if (p.active || profileSwitchBusy.value) return
+  profileSwitchBusy.value = true
+  profileSwitchError.value = ''
+  try {
+    await $fetch('/api/me/profiles/switch', {
+      method: 'POST',
+      body: { profileId: p.id },
+    })
+    closeProfileDetails()
+    await fetchUser().catch(() => null)
+    await loadProfiles()
+    const role = user.value?.role || p.role
+    await navigateTo(homePathForRole(role, { profileComplete: user.value?.profileComplete }))
+  } catch {
+    profileSwitchError.value = t('components.topbar.switchProfileError')
+  } finally {
+    profileSwitchBusy.value = false
+  }
+}
 </script>
+

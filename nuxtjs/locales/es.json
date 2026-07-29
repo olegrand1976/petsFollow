@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Recetas",
     "commercialAsvMemo": "Memo ASV",
-    "commercialBrochure": "Folleto clínica"
+    "commercialBrochure": "Folleto clínica",
+    "adminRuntimeFlags": "Flags runtime"
   },
   "auth": {
     "login": {
@@ -828,7 +829,32 @@
       "bandQuarantine": "Cuarentena",
       "errorLoad": "No se pudo cargar el stock.",
       "errorReceive": "Entrada rechazada.",
-      "errorAction": "Acción imposible."
+      "errorAction": "Acción imposible.",
+      "reorderTitle": "Alertas de reposición",
+      "reorderHint": "Stock bajo el umbral — cree un pedido y envíelo al proveedor.",
+      "reorderOnHand": "En stock",
+      "reorderMin": "Umbral",
+      "orderEmail": "Email proveedor",
+      "orderCreateSend": "Pedir por email",
+      "orderSent": "Pedido enviado.",
+      "errorOrder": "No se pudo enviar el pedido.",
+      "blNumber": "Nº albarán (opcional)",
+      "supplierName": "Proveedor (opcional)",
+      "invTitle": "Inventario anual",
+      "invHint": "Instantánea de lotes activos / cuarentena — introduzca conteos físicos y cierre para aplicar diferencias.",
+      "invStart": "Iniciar inventario",
+      "invClose": "Cerrar y ajustar",
+      "invCancel": "Cancelar",
+      "invExport": "Exportar CSV",
+      "invSystem": "Teórico",
+      "invCounted": "Contado",
+      "invProgress": "{counted} / {total} líneas contadas",
+      "invStarted": "Inventario abierto.",
+      "invClosed": "Inventario cerrado — diferencias aplicadas.",
+      "invCancelled": "Inventario cancelado.",
+      "errorInv": "Inventario imposible.",
+      "errorReorderLoad": "No se pudieron cargar las alertas de reposición.",
+      "errorInvLoad": "No se pudo cargar el inventario abierto."
     },
     "daf": {
       "title": "Documentos DAF",
@@ -856,7 +882,41 @@
       "vamregDuration": "Duración (días)",
       "previewTitle": "Asignación FEFO prevista",
       "error": "Acción DAF imposible.",
-      "legalExpiry": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg."
+      "legalExpiry": "Finalize exige lote + AMM; antibióticos requieren payload VAMReg.",
+      "vamregLabel": "VAMReg",
+      "vamregRetry": "Reintentar VAMReg",
+      "vamregStatus": {
+        "pending": "Pendiente",
+        "sent": "Declarado",
+        "failed": "Error",
+        "na": "N/D"
+      }
+    },
+    "errors": {
+      "daf_vamreg_already_sent": "No se puede anular: declaración VAMReg ya enviada.",
+      "daf_vamreg_in_flight": "No se puede anular: declaración VAMReg en curso — reintente más tarde.",
+      "daf_vamreg_incomplete": "Incomplete VAMReg fields (species, indication, duration).",
+      "daf_vamreg_not_applicable": "VAMReg not applicable for this DAF.",
+      "daf_not_draft": "DAF is no longer a draft.",
+      "daf_not_finalized": "DAF is not finalized.",
+      "daf_empty": "Add at least one medication line.",
+      "daf_amm_required": "MA number (AMM) is required.",
+      "daf_pdf_immutable": "DAF PDF already generated.",
+      "daf_trace_required": "Lot traceability missing.",
+      "food_chain_withdrawal_required": "Withdrawal periods (meat/milk/eggs) required for food-producing animals.",
+      "food_chain_banned_medication": "Medication banned for the food chain.",
+      "stock_insufficient": "Insufficient stock.",
+      "stock_unavailable_valid_lots": "No valid lots available (FEFO).",
+      "batch_expired": "Batch expired.",
+      "batch_quarantined": "Batch quarantined.",
+      "batch_wasted": "This lot was destroyed — create a new lot for receipt.",
+      "invalid_expiry_on_receipt": "Invalid expiry date.",
+      "delivery_note_exists": "This delivery-note number already exists.",
+      "order_not_draft": "Order is no longer a draft.",
+      "email_send_failed": "Email send failed.",
+      "vamreg_enqueue_failed": "Could not retry VAMReg.",
+      "not_found": "Not found.",
+      "validation_error": "Invalid data."
     }
   },
   "recommend": {
@@ -1033,7 +1093,9 @@
       "stagingSeedOk": "Base staging reiniciada. {n} email(s) al staff enviados.",
       "stagingSeedOkNoEmail": "Base staging reiniciada (ningún email al staff).",
       "stagingSeedFail": "Fallo al reiniciar.",
-      "stagingSeedStatusFail": "No se pudo comprobar si el reset staging está disponible."
+      "stagingSeedStatusFail": "No se pudo comprobar si el reset staging está disponible.",
+      "devTitle": "Ops soporte IT",
+      "devSubtitle": "Tickets, cuentas y diagnóstico (sin facturación)."
     },
     "users": {
       "title": "Registros",
@@ -1486,7 +1548,15 @@
       "loadError": "No se pudieron cargar los tickets de soporte.",
       "searchLabel": "Buscar",
       "searchPlaceholder": "Asunto, email o nombre…",
-      "searchSubmit": "Buscar"
+      "searchSubmit": "Buscar",
+      "statsOpen": "Abiertos",
+      "statsInProgress": "En curso",
+      "statsResolved": "Resueltos",
+      "statsClosed": "Cerrados",
+      "statsOpen24h": "Abiertos > 24 h",
+      "statsOpen7d": "Abiertos > 7 d",
+      "filterAllSources": "Todas las fuentes",
+      "patchError": "No se pudo cambiar el estado."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -1560,6 +1630,14 @@
       "saasEnableConfirm": "¿Activar facturación SaaS (Flux A) para « {name} »? El cron mensual creará borradores.",
       "saasEnableOk": "Flux A activado para esta clínica",
       "saasEnableError": "Error al activar Flux A"
+    },
+    "runtimeFlags": {
+      "title": "Flags runtime",
+      "subtitle": "Configuración de la app (solo lectura, sin secretos).",
+      "empty": "Sin flags.",
+      "loadError": "No se pudieron cargar los flags.",
+      "colFlag": "Flag",
+      "colValue": "Valor"
     }
   },
   "commissions": {
@@ -1951,7 +2029,19 @@
       "profileMenu": "Menú de perfil",
       "settings": "Ajustes",
       "themeDark": "Activar modo oscuro",
-      "themeLight": "Activar modo claro"
+      "themeLight": "Activar modo claro",
+      "switchProfile": "Cambiar perfil",
+      "activeProfile": "Activo",
+      "switchProfileError": "Error al cambiar de perfil.",
+      "profileRole_dev": "DEV soporte",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Veterinario",
+      "profileRole_vet_assistant": "Asistente",
+      "profileRole_secretary": "Secretaría",
+      "profileRole_commercial": "Comercial",
+      "profileRole_commercial_manager": "Manager comercial",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Cliente"
     },
     "table": {
       "emptyTitle": "Sin datos"
@@ -2012,17 +2102,17 @@
     "terms": {
       "title": "Condiciones de uso",
       "link": "Condiciones",
-      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas cardíacas) y la comunicación con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}ll-it-sc.be."
+      "body": "Estas condiciones rigen el uso de petsFollow Pro por parte de los veterinarios y de la app móvil por parte de los propietarios. La aplicación permite el seguimiento prescrito (mensajería, recordatorios Care/Horse, lecturas cardíacas) y la comunicación con la clínica. Los pagos de suscripción y addons se procesan con Stripe. Contacto: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Política de privacidad",
       "link": "Privacidad",
-      "body": "petsFollow trata datos personales para la continuidad de cuidados animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o support{'@'}ll-it-sc.be."
+      "body": "petsFollow trata datos personales para la continuidad de cuidados animal: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (Firebase Cloud Messaging), datos de pago tratados por Stripe. Finalidades: cuenta, seguimiento, mensajería, notificaciones, informes de visita, facturación. Tratamiento IA: Google Gemini se utiliza para mejorar los informes de visita, importar ficheros de clientes y el entrenamiento de pitch comercial (audio procesado en tiempo real, no conservado por Google). Socios: Google (Sign-In, FCM, Gemini), Stripe, alojamiento Google Cloud Platform. Conservación: vida de la cuenta y posterior borrado; cuentas inactivas purgadas tras 3 años; audio de informes conservado mientras exista el expediente. Derechos RGPD (acceso, rectificación, supresión, portabilidad): ajustes (exportar sus datos, eliminar cuenta) o support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Aviso legal",
       "link": "Aviso legal",
-      "body": "Editor: LL-IT-SC / petsFollow. Contacto: support{'@'}ll-it-sc.be. Alojamiento: Google Cloud Platform (conforme al RGPD)."
+      "body": "Editor: LL-IT-SC / petsFollow. Contacto: support{'@'}petsfollow.app. Alojamiento: Google Cloud Platform (conforme al RGPD)."
     },
     "navAria": "Legal"
   },
@@ -2658,7 +2748,7 @@
     "reportAuthorPeer": "Otro autor",
     "reportReadOnlyPeer": "Informe de otro profesional — solo lectura. Vuelva a « Mi informe » para editar el suyo.",
     "reportHint": "Notas de visita…",
-    "saveReport": "Guardar informe",
+    "saveReport": "Guardar",
     "improveReport": "Mejorar (IA)",
     "reportSaved": "Informe guardado",
     "reportImproved": "Informe mejorado",
@@ -2672,12 +2762,10 @@
     "micPermissionDenied": "Micrófono denegado — compruebe los permisos del navegador.",
     "reportVisitDate": "Fecha de la visita",
     "reportDatePrefix": "Fecha del",
-    "reportHowItWorksTitle": "¿Cómo funciona?",
-    "reportHowItWorksStep1": "Dicte (botón « Dictar ») o importe un archivo de audio.",
-    "reportHowItWorksStep2": "Confirme el consentimiento oral del cliente antes de grabar.",
-    "reportHowItWorksStep3": "Guarde el informe.",
-    "reportHowItWorksStep4": "Mejórelo con IA si hace falta.",
-    "reportHowItWorksStep5": "Finalice y continúe con una receta/DAF o una factura.",
+    "reportHowItWorksTitle": "Ayuda",
+    "reportHowItWorksStep1": "Dicte o escriba notas a la izquierda (consentimiento del cliente para el audio).",
+    "reportHowItWorksStep2": "Mejore con IA a la derecha y retoque si hace falta.",
+    "reportHowItWorksStep3": "Guarde, finalice y continúe con DAF o factura.",
     "audioConsent": "El audio sirve para redactar el informe. Confirme el consentimiento oral. Se elimina al finalizar.",
     "audioConsentTitle": "Consentimiento de audio",
     "audioConsentAccept": "Acepto",
@@ -2762,12 +2850,21 @@
     "audioToText": "Audio → texto",
     "reportEditSource": "Editar texto",
     "reportPreview": "Vista previa",
-    "reportVersionTranscript": "v0 — Transcripción",
-    "reportVersionImproved": "v1 — Mejora IA",
-    "reportVersionSaved": "v2 — Versión guardada",
+    "reportVersionTranscript": "Transcripción original",
+    "reportVersionImproved": "Propuesta IA",
+    "reportVersionSaved": "Última versión guardada",
     "reportVersionEmpty": "Ninguna",
-    "reportRestore": "Restaurar",
-    "reportVersionsTitle": "Versiones del informe"
+    "reportRestore": "Restaurar en el editor",
+    "reportVersionsTitle": "Historial de versiones",
+    "reportFlowHint": "Notas a la izquierda → informe a la derecha → Guardar.",
+    "reportPaneNotesTitle": "Notas / dictado",
+    "reportPaneNotesSubtitle": "Escriba o dicte la consulta.",
+    "reportPaneCrTitle": "Informe",
+    "reportPaneCrSubtitle": "Mejore con IA o edite manualmente.",
+    "reportTranscriptHint": "Dictado o notas en bruto…",
+    "reportDirtyHint": "Cambios sin guardar.",
+    "reportDiscardEdits": "Descartar cambios",
+    "reportStatusFinal": "Finalizado"
   },
   "manager": {
     "dashboard": {

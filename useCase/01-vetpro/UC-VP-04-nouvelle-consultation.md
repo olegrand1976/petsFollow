@@ -28,7 +28,12 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 1. Se connecter en véto → **Clients**.
 2. Sur une ligne client, cliquer **Nouvelle Consultation**.
 3. Choisir l’animal (pré-sélectionné depuis **Animaux** ou la **fiche animal**, ou s’il n’y en a qu’un) → **Démarrer**.
-4. Rédiger ou dicter le CR (audio → transcription) → **Enregistrer** (ou Finaliser).
+4. Écran CR split :
+   - **Gauche — Notes / dictée** : écrire ou dicter (consentement audio) / importer un fichier.
+   - **Droite — Compte-rendu** : **Améliorer (IA)** (source = notes si présentes, sinon le CR) ou éditer manuellement ; aperçu markdown après IA.
+   - **Annuler les modifications** (footer panel) restaure le dernier enregistrement **sans** fermer la consultation ; **Annuler** (footer modal) quitte la consult (confirm leave).
+   - Historique des versions (replié) : transcription d’origine → proposition IA → dernière version enregistrée ; restore vers la bonne pane.
+   - **Enregistrer** (ou Finaliser).
 5. Choisir :
    - **Créer une ordonnance & Facturer** → wizard DAF prérempli (client / animal / visite) → finaliser → **Facturer**.
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
@@ -44,6 +49,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - CR accessible immédiatement.
 - Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document).
 - E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture).
+- E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).
 
 ## Checklist
 
@@ -63,4 +69,4 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 
 ---
 
-*Réf. QA : C2.13, C7.4*
+*Réf. QA : C2.13, C2.19–C2.22, C7.4*

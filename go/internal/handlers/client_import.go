@@ -27,7 +27,7 @@ func (a *API) registerClientImportRoutes(r chi.Router) {
 }
 
 func (a *API) adminCreateClientImport(w http.ResponseWriter, r *http.Request) {
-	admin, ok := a.requireAdmin(w, r)
+	admin, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
@@ -92,7 +92,7 @@ func (a *API) adminCreateClientImport(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListClientImports(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	items, err := a.store.ListClientImportJobs(r.Context(), 50)
@@ -104,7 +104,7 @@ func (a *API) adminListClientImports(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminGetClientImport(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -121,7 +121,7 @@ func (a *API) adminGetClientImport(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminSuggestClientImportMapping(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -183,7 +183,7 @@ type putMappingReq struct {
 }
 
 func (a *API) adminPutClientImportMapping(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -229,7 +229,7 @@ type patchImportRowReq struct {
 }
 
 func (a *API) adminPatchClientImportRow(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	jobID := chi.URLParam(r, "id")
@@ -261,7 +261,7 @@ func (a *API) adminPatchClientImportRow(w http.ResponseWriter, r *http.Request) 
 }
 
 func (a *API) adminCommitClientImport(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -282,7 +282,7 @@ func (a *API) adminCommitClientImport(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminDownloadClientImportCredentials(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")

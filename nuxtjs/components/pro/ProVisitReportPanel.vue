@@ -1,19 +1,33 @@
 <template>
   <div class="pro-visit-report" data-testid="visit-report-panel">
-    <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
-    <p v-if="visitDateLabel" class="pro-hint" data-testid="visit-report-date">
-      {{ $t('calendar.reportVisitDate') }} : {{ visitDateLabel }}
-    </p>
+    <div class="pro-visit-report__head">
+      <div>
+        <label class="pro-label">{{ $t('calendar.reportTitle') }}</label>
+        <p v-if="visitDateLabel" class="pro-hint" data-testid="visit-report-date">
+          {{ $t('calendar.reportVisitDate') }} : {{ visitDateLabel }}
+        </p>
+        <p class="pro-hint" data-testid="visit-report-flow-hint">
+          {{ $t('calendar.reportFlowHint') }}
+        </p>
+      </div>
+      <ProBadge
+        v-if="reportStatus === 'final'"
+        variant="success"
+        data-testid="visit-report-status-final"
+      >
+        {{ $t('calendar.reportStatusFinal') }}
+      </ProBadge>
+    </div>
+
     <details class="visit-report-howto" data-testid="visit-report-howto">
       <summary>{{ $t('calendar.reportHowItWorksTitle') }}</summary>
       <ol>
         <li>{{ $t('calendar.reportHowItWorksStep1') }}</li>
         <li>{{ $t('calendar.reportHowItWorksStep2') }}</li>
         <li>{{ $t('calendar.reportHowItWorksStep3') }}</li>
-        <li>{{ $t('calendar.reportHowItWorksStep4') }}</li>
-        <li>{{ $t('calendar.reportHowItWorksStep5') }}</li>
       </ol>
     </details>
+
     <div
       v-if="reportAuthors.length > 1"
       class="pro-flex-gap visit-report-authors"
@@ -39,94 +53,120 @@
     >
       {{ $t('calendar.reportReadOnlyPeer') }}
     </p>
-    <p v-else-if="!readonly" class="pro-hint" data-testid="visit-report-ai-banner">
-      {{ $t('calendar.reportAiProposalBanner') }}
-    </p>
-    <ProMarkdownReportEditor
-      v-model="reportBody"
-      input-id="visit-report-body"
-      :placeholder="$t('calendar.reportHint')"
-      :disabled="reportBusy || reportLocked || dictating || hydrating"
-      :readonly="reportLocked"
-      :prefer-preview-tick="preferMarkdownPreviewTick"
-    />
-    <div
-      v-if="dictating"
-      class="visit-report-recording"
-      data-testid="visit-report-recording-banner"
+
+    <div class="visit-report-split">
+      <!-- Left: notes / dictation -->
+      <section class="visit-report-pane" data-testid="visit-report-pane-left">
+        <header class="visit-report-pane__header">
+          <div>
+            <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneNotesTitle') }}</h3>
+            <p class="pro-hint">{{ $t('calendar.reportPaneNotesSubtitle') }}</p>
+          </div>
+          <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+            <ProButton
+              :disabled="reportBusy || hydrating"
+              test-id="visit-report-dictate"
+              @click="onDictateClick"
+            >
+              <ProIcon name="mic" :size="16" />
+              {{ $t('calendar.dictateAudio') }}
+            </ProButton>
+            <ProButton
+              variant="secondary"
+              :disabled="reportBusy || hydrating"
+              test-id="visit-report-audio-btn"
+              @click="openAudioPicker"
+            >
+              <ProIcon name="upload_file" :size="16" />
+              {{ $t('calendar.audioToText') }}
+            </ProButton>
+          </div>
+        </header>
+
+        <div
+          v-if="dictating"
+          class="visit-report-recording"
+          data-testid="visit-report-recording-banner"
+        >
+          <ProIcon name="mic" :size="24" class="visit-report-recording__mic" />
+          <div class="visit-report-recording__info">
+            <strong>{{ $t('calendar.recordingInProgress') }}</strong>
+            <span data-testid="visit-report-recording-clock">{{ dictationClock }}</span>
+          </div>
+          <ProButton
+            variant="secondary"
+            test-id="visit-report-dictate-stop"
+            @click="stopDictation"
+          >
+            {{ $t('calendar.recordingStop') }}
+          </ProButton>
+        </div>
+
+        <label class="visually-hidden" for="visit-report-transcript">{{ $t('calendar.reportPaneNotesTitle') }}</label>
+        <textarea
+          id="visit-report-transcript"
+          v-model="reportTranscript"
+          class="pro-input visit-report-pane__textarea"
+          rows="12"
+          data-testid="visit-report-transcript"
+          :placeholder="$t('calendar.reportTranscriptHint')"
+          :disabled="reportBusy || reportLocked || dictating || hydrating"
+          :readonly="reportLocked"
+        />
+      </section>
+
+      <!-- Right: CR / AI -->
+      <section class="visit-report-pane" data-testid="visit-report-pane-right">
+        <header class="visit-report-pane__header">
+          <div>
+            <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneCrTitle') }}</h3>
+            <p class="pro-hint">{{ $t('calendar.reportPaneCrSubtitle') }}</p>
+          </div>
+          <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+            <ProButton
+              :disabled="reportBusy || hydrating || !canImprove"
+              :loading="reportBusy && improveInFlight"
+              test-id="visit-report-improve"
+              @click="improveVisitReport"
+            >
+              <ProIcon name="auto_awesome" :size="16" />
+              {{ $t('calendar.improveReport') }}
+            </ProButton>
+          </div>
+        </header>
+        <p
+          v-if="!readonly && !viewingPeerReport"
+          class="pro-hint"
+          data-testid="visit-report-ai-banner"
+        >
+          {{ $t('calendar.reportAiProposalBanner') }}
+        </p>
+        <ProMarkdownReportEditor
+          v-model="reportBody"
+          input-id="visit-report-body"
+          textarea-test-id="visit-report-body"
+          editor-test-id="visit-report-editor"
+          test-id-prefix="visit-report"
+          :placeholder="$t('calendar.reportHint')"
+          :disabled="reportBusy || reportLocked || dictating || hydrating"
+          :readonly="reportLocked"
+          :prefer-preview-tick="preferMarkdownPreviewTick"
+        />
+      </section>
+    </div>
+
+    <input
+      ref="audioFileInput"
+      type="file"
+      accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
+      class="pro-visit-report__file"
+      data-testid="visit-report-audio"
+      :disabled="reportBusy"
+      @change="onReportAudioSelected"
     >
-      <ProIcon name="mic" :size="24" class="visit-report-recording__mic" />
-      <div class="visit-report-recording__info">
-        <strong>{{ $t('calendar.recordingInProgress') }}</strong>
-        <span data-testid="visit-report-recording-clock">{{ dictationClock }}</span>
-      </div>
-      <ProButton
-        variant="secondary"
-        test-id="visit-report-dictate-stop"
-        @click="stopDictation"
-      >
-        {{ $t('calendar.recordingStop') }}
-      </ProButton>
-    </div>
-    <div v-else-if="!reportLocked" class="pro-flex-gap pro-visit-report__actions">
-      <ProButton
-        variant="secondary"
-        :disabled="reportBusy || hydrating || reportStatus === 'final'"
-        test-id="visit-report-save"
-        @click="saveVisitReport"
-      >
-        {{ $t('calendar.saveReport') }}
-      </ProButton>
-      <ProButton
-        :disabled="reportBusy || hydrating || reportStatus === 'final'"
-        test-id="visit-report-improve"
-        @click="improveVisitReport"
-      >
-        {{ $t('calendar.improveReport') }}
-      </ProButton>
-      <ProButton
-        variant="secondary"
-        :disabled="reportBusy || hydrating || reportStatus === 'final' || !reportBody.trim()"
-        test-id="visit-report-finalize"
-        @click="finalizeVisitReport"
-      >
-        {{ $t('calendar.finalizeReport') }}
-      </ProButton>
-      <ProButton
-        v-if="reportStatus !== 'final'"
-        variant="secondary"
-        :disabled="reportBusy || hydrating"
-        test-id="visit-report-dictate"
-        @click="onDictateClick"
-      >
-        <ProIcon name="mic" :size="16" />
-        {{ $t('calendar.dictateAudio') }}
-      </ProButton>
-      <ProButton
-        v-if="reportStatus !== 'final'"
-        variant="secondary"
-        :disabled="reportBusy || hydrating"
-        test-id="visit-report-audio-btn"
-        @click="openAudioPicker"
-      >
-        <ProIcon name="upload_file" :size="16" />
-        {{ $t('calendar.audioToText') }}
-      </ProButton>
-      <input
-        ref="audioFileInput"
-        type="file"
-        accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
-        class="pro-visit-report__file"
-        data-testid="visit-report-audio"
-        :disabled="reportBusy"
-        @change="onReportAudioSelected"
-      >
-    </div>
-    <p v-if="reportStatus === 'final'" class="pro-hint">{{ $t('calendar.reportFinal') }}</p>
-    <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg">{{ reportMsg }}</p>
+
     <details
       class="visit-report-history"
-      open
       data-testid="visit-report-history"
     >
       <summary>{{ $t('calendar.reportVersionsTitle') }}</summary>
@@ -134,25 +174,25 @@
         <div class="pro-flex-gap visit-report-history__head">
           <h4>{{ $t('calendar.reportVersionTranscript') }}</h4>
           <ProButton
-            v-if="reportTranscript && !reportLocked"
+            v-if="reportPersistedTranscript && !reportLocked && !dictating"
             variant="ghost"
             test-id="visit-report-restore-v0"
-            @click="restoreVersion(reportTranscript)"
+            @click="restoreTranscriptVersion"
           >
             {{ $t('calendar.reportRestore') }}
           </ProButton>
         </div>
-        <pre v-if="reportTranscript" class="visit-report-history__text">{{ reportTranscript }}</pre>
+        <pre v-if="reportPersistedTranscript" class="visit-report-history__text">{{ reportPersistedTranscript }}</pre>
         <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
       </div>
       <div class="visit-report-history__block" data-testid="visit-report-v1">
         <div class="pro-flex-gap visit-report-history__head">
           <h4>{{ $t('calendar.reportVersionImproved') }}</h4>
           <ProButton
-            v-if="reportImproved && !reportLocked"
+            v-if="reportImproved && !reportLocked && !dictating"
             variant="ghost"
             test-id="visit-report-restore-v1"
-            @click="restoreVersion(reportImproved)"
+            @click="restoreImprovedVersion"
           >
             {{ $t('calendar.reportRestore') }}
           </ProButton>
@@ -162,10 +202,46 @@
       </div>
       <div class="visit-report-history__block" data-testid="visit-report-v2">
         <h4>{{ $t('calendar.reportVersionSaved') }}</h4>
-        <pre v-if="reportPersistedBody.trim()" class="visit-report-history__text">{{ reportPersistedBody }}</pre>
+        <pre v-if="historySavedBody" class="visit-report-history__text">{{ historySavedBody }}</pre>
         <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
       </div>
     </details>
+
+    <p v-if="dirty && !reportLocked" class="pro-hint" data-testid="visit-report-dirty-hint">
+      {{ $t('calendar.reportDirtyHint') }}
+    </p>
+    <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg" role="alert">{{ reportMsg }}</p>
+
+    <div
+      v-if="!reportLocked"
+      class="pro-visit-report__footer"
+      data-testid="visit-report-footer"
+    >
+      <ProButton
+        variant="ghost"
+        :disabled="reportBusy || hydrating || dictating || !dirty"
+        test-id="visit-report-cancel"
+        @click="cancelEdits"
+      >
+        {{ $t('calendar.reportDiscardEdits') }}
+      </ProButton>
+      <ProButton
+        variant="secondary"
+        :disabled="reportBusy || hydrating || dictating || reportStatus === 'final' || !reportBody.trim()"
+        test-id="visit-report-finalize"
+        @click="finalizeVisitReport"
+      >
+        {{ $t('calendar.finalizeReport') }}
+      </ProButton>
+      <ProButton
+        :disabled="reportBusy || hydrating || dictating || reportStatus === 'final' || !dirty"
+        :loading="reportBusy && saveInFlight"
+        test-id="visit-report-save"
+        @click="saveVisitReport"
+      >
+        {{ $t('calendar.saveReport') }}
+      </ProButton>
+    </div>
 
     <ProModal v-model:open="audioConsentOpen" :title="$t('calendar.audioConsentTitle')">
       <p class="pro-hint">{{ $t('calendar.audioConsent') }}</p>
@@ -195,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { mapVisitReportFields } from '~/utils/visitReport'
+import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
 import { normalizeReportText } from '~/utils/safeMarkdown'
 import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
@@ -232,9 +308,12 @@ const { formatDate } = useFormatters()
 const reportBody = ref('')
 const reportPersistedBody = ref('')
 const reportTranscript = ref('')
+const reportPersistedTranscript = ref('')
 const reportImproved = ref('')
 const reportStatus = ref('')
 const reportBusy = ref(false)
+const saveInFlight = ref(false)
+const improveInFlight = ref(false)
 /** True while initial/visit switch hydrate runs — locks textarea so fill cannot race GET. */
 const hydrating = ref(false)
 let hydrateSeq = 0
@@ -299,10 +378,40 @@ const visitDateLabel = computed(() =>
   props.visitScheduledAt ? formatDate(props.visitScheduledAt) : '',
 )
 
-function restoreVersion(text: string) {
+const historySavedBody = computed(() =>
+  persistedHistoryBody(
+    reportPersistedBody.value,
+    reportPersistedTranscript.value,
+    reportImproved.value,
+  ),
+)
+
+const dirty = computed(() =>
+  reportBody.value !== reportPersistedBody.value
+  || reportTranscript.value !== reportPersistedTranscript.value
+  || dictating.value,
+)
+
+const canImprove = computed(() =>
+  Boolean(reportTranscript.value.trim() || reportBody.value.trim()),
+)
+
+function restoreTranscriptVersion() {
   if (reportLocked.value) return
-  reportBody.value = text
+  reportTranscript.value = reportPersistedTranscript.value
+}
+
+function restoreImprovedVersion() {
+  if (reportLocked.value) return
+  reportBody.value = reportImproved.value
   showMarkdownPreview()
+}
+
+function cancelEdits() {
+  if (reportLocked.value || reportBusy.value || dictating.value) return
+  reportBody.value = reportPersistedBody.value
+  reportTranscript.value = reportPersistedTranscript.value
+  reportMsg.value = ''
 }
 
 function openAudioPicker() {
@@ -331,6 +440,7 @@ function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   reportBody.value = mapped.bodyText
   reportPersistedBody.value = mapped.bodyText
   reportTranscript.value = mapped.transcriptText
+  reportPersistedTranscript.value = mapped.transcriptText
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
 }
@@ -345,11 +455,18 @@ function reportHasContent(author: VisitReportAuthor | null | undefined) {
 }
 
 function applyPeerReport(author: VisitReportAuthor) {
-  reportBody.value = author.bodyText || ''
-  reportPersistedBody.value = author.bodyText || ''
-  reportTranscript.value = author.transcriptText || ''
-  reportImproved.value = author.improvedText || ''
-  reportStatus.value = author.status || ''
+  const mapped = mapVisitReportFields({
+    bodyText: author.bodyText,
+    transcriptText: author.transcriptText,
+    improvedText: author.improvedText,
+    status: author.status,
+  })
+  reportBody.value = mapped.bodyText
+  reportPersistedBody.value = mapped.bodyText
+  reportTranscript.value = mapped.transcriptText
+  reportPersistedTranscript.value = mapped.transcriptText
+  reportImproved.value = mapped.improvedText
+  reportStatus.value = mapped.status
 }
 
 async function loadVisitReports(visitId: string) {
@@ -378,6 +495,7 @@ async function hydrateVisitReports(visitId: string) {
   reportBody.value = ''
   reportPersistedBody.value = ''
   reportTranscript.value = ''
+  reportPersistedTranscript.value = ''
   reportImproved.value = ''
   reportStatus.value = ''
   reportMsg.value = ''
@@ -447,11 +565,16 @@ async function saveVisitReport(): Promise<boolean> {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return false
   applyDatePrefixIfNeeded()
   reportBusy.value = true
+  saveInFlight.value = true
   reportMsg.value = ''
   try {
+    const transcript = normalizeReportText(reportTranscript.value)
     const res: any = await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: normalizeReportText(reportBody.value) },
+      body: {
+        bodyText: normalizeReportText(reportBody.value),
+        transcriptText: transcript,
+      },
     })
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
@@ -462,6 +585,7 @@ async function saveVisitReport(): Promise<boolean> {
     reportMsg.value = mapError(e)
     return false
   } finally {
+    saveInFlight.value = false
     reportBusy.value = false
   }
 }
@@ -481,7 +605,10 @@ async function forceSave(): Promise<boolean> {
     }
   }
   await waitUntilReportIdle()
-  if (!reportBody.value.trim()) return false
+  if (!reportBody.value.trim() && !reportTranscript.value.trim()) return false
+  if (!reportBody.value.trim() && reportTranscript.value.trim()) {
+    reportBody.value = reportTranscript.value
+  }
   return saveVisitReport()
 }
 
@@ -499,12 +626,15 @@ async function flushForSuspend(): Promise<boolean> {
     }
   }
   await waitUntilReportIdle()
-  if (!reportBody.value.trim()) return true
+  if (!reportBody.value.trim() && !reportTranscript.value.trim()) return true
+  if (!reportBody.value.trim() && reportTranscript.value.trim()) {
+    reportBody.value = reportTranscript.value
+  }
   return saveVisitReport()
 }
 
 function isDirty(): boolean {
-  return reportBody.value !== reportPersistedBody.value || dictating.value
+  return dirty.value
 }
 
 function currentBody(): string {
@@ -519,18 +649,29 @@ defineExpose({ forceSave, flushForSuspend, isDirty, currentBody, isDictating })
 
 async function improveVisitReport() {
   if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final') return
+  const sourceRaw = reportTranscript.value.trim() || reportBody.value.trim()
+  if (!sourceRaw) return
   applyDatePrefixIfNeeded()
   reportBusy.value = true
+  improveInFlight.value = true
   reportMsg.value = ''
   try {
-    await $fetch(`/api/visits/${props.visitId}/report`, {
+    // Persist both panes as-is (do NOT overwrite body with transcript — avoid data loss if IA fails).
+    const putRes: any = await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: normalizeReportText(reportBody.value) },
+      body: {
+        bodyText: normalizeReportText(reportBody.value),
+        transcriptText: normalizeReportText(reportTranscript.value),
+      },
     })
+    // Resync persisted* so a later improve failure does not leave a false dirty / stale hydrate.
+    applyReportPayload(putRes.data ?? putRes)
+    emit('saved')
     // Flat BFF path: nested …/report/improve is registered but not matched by rou3
     // when …/report (GET/PUT) is also a leaf — see 03d-visit-report-ai-bff.
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-improve`, {
       method: 'POST',
+      body: { sourceText: normalizeReportText(sourceRaw) },
     })
     applyReportPayload(res.data ?? res)
     showMarkdownPreview()
@@ -540,6 +681,7 @@ async function improveVisitReport() {
   } catch (e: any) {
     reportMsg.value = mapError(e)
   } finally {
+    improveInFlight.value = false
     reportBusy.value = false
   }
 }
@@ -552,7 +694,10 @@ async function finalizeVisitReport() {
   try {
     await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: normalizeReportText(reportBody.value) },
+      body: {
+        bodyText: normalizeReportText(reportBody.value),
+        transcriptText: normalizeReportText(reportTranscript.value),
+      },
     })
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-finalize`, {
       method: 'POST',
@@ -627,7 +772,6 @@ async function transcribeAudio(file: File | Blob, filename: string, durationSec 
     })
     applyReportPayload(res.data ?? res)
     applyDatePrefixIfNeeded()
-    showMarkdownPreview()
     reportMsg.value = t('calendar.reportTranscribed')
     void loadVisitReports(props.visitId)
   } catch (e: any) {
@@ -695,8 +839,6 @@ async function stopDictation() {
       stopMediaStream()
       return
     }
-    // Mark busy before releasing dictating so flush can't slip into the gap.
-    reportBusy.value = true
     const blob = await new Promise<Blob | null>((resolve) => {
       recorder.onstop = () => {
         resolve(recordChunks.length ? new Blob(recordChunks, { type: recorder.mimeType || 'audio/webm' }) : null)
@@ -771,6 +913,14 @@ watch(
 </script>
 
 <style scoped>
+.pro-visit-report__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
 .visit-report-howto {
   margin-bottom: 0.75rem;
   border: 1px solid var(--pf-vet-border);
@@ -792,11 +942,61 @@ watch(
   line-height: 1.5;
 }
 
+.visit-report-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 900px) {
+  .visit-report-split {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.visit-report-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-surface, #fff);
+  box-shadow: var(--pf-vet-shadow-sm, none);
+  min-height: 0;
+}
+
+.visit-report-pane__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.visit-report-pane__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--pf-vet-primary);
+}
+
+.visit-report-pane__toolbar {
+  flex-wrap: wrap;
+}
+
+.visit-report-pane__textarea {
+  min-height: 280px;
+  width: 100%;
+  resize: vertical;
+  flex: 1;
+}
+
 .visit-report-recording {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 0.5rem;
   padding: 0.75rem 0.9rem;
   border-radius: var(--pf-vet-radius, 8px);
   background: color-mix(in srgb, var(--pf-vet-alert) 12%, transparent);
@@ -825,23 +1025,17 @@ watch(
   flex-wrap: wrap;
 }
 
-.pro-visit-report__actions {
-  margin-top: 0.5rem;
+.pro-visit-report__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
   flex-wrap: wrap;
-}
-
-.pro-visit-report__audio {
-  cursor: pointer;
-}
-
-.visit-report-history__head {
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
-
-.visit-report-history__head h4 {
-  margin: 0;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0 0.15rem;
+  background: linear-gradient(to top, var(--pf-vet-surface, #fff) 70%, transparent);
 }
 
 .pro-visit-report__file {
@@ -853,7 +1047,7 @@ watch(
 }
 
 .visit-report-history {
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
   border: 1px solid var(--pf-vet-border);
   border-radius: var(--pf-vet-radius, 8px);
   padding: 0.65rem 0.85rem;
@@ -864,6 +1058,16 @@ watch(
   cursor: pointer;
   font-weight: 600;
   color: var(--pf-vet-primary);
+}
+
+.visit-report-history__head {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.visit-report-history__head h4 {
+  margin: 0;
 }
 
 .visit-report-history__block {
@@ -878,8 +1082,21 @@ watch(
 .visit-report-history__text {
   margin: 0;
   white-space: pre-wrap;
-  font-family: inherit;
+  word-break: break-word;
   font-size: 0.85rem;
-  line-height: 1.4;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

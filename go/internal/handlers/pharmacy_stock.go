@@ -28,6 +28,11 @@ func (a *API) registerPharmacyStockRoutes(pr chi.Router) {
 	pr.Post("/vet/pharmacy/batches/{id}/waste", a.wastePharmacyBatch)
 	pr.Get("/vet/pharmacy/expiry/summary", a.getPharmacyExpirySummary)
 	pr.Get("/vet/pharmacy/movements", a.listPharmacyMovements)
+	pr.Get("/vet/pharmacy/prices", a.listPharmacyPrices)
+	pr.Put("/vet/pharmacy/prices/{medicationId}", a.putPharmacyPrice)
+	pr.Get("/vet/pharmacy/prices/{medicationId}", a.getPharmacyPrice)
+	pr.Put("/vet/pharmacy/reorder-thresholds", a.putPharmacyReorderThreshold)
+	pr.Get("/vet/pharmacy/reorder-alerts", a.listPharmacyReorderAlerts)
 }
 
 func (a *API) writePharmacyErr(w http.ResponseWriter, r *http.Request, err error) bool {
@@ -46,6 +51,12 @@ func (a *API) writePharmacyErr(w http.ResponseWriter, r *http.Request, err error
 		writeErr(w, r, http.StatusBadRequest, "daf_trace_required", "daf_trace_required")
 	case errors.Is(err, pharmacy.ErrBatchNotFound):
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+	case errors.Is(err, pharmacy.ErrBatchWasted):
+		writeErr(w, r, http.StatusConflict, "batch_wasted", "batch_wasted")
+	case errors.Is(err, pharmacy.ErrFoodChainWithdrawalRequired):
+		writeErr(w, r, http.StatusBadRequest, "food_chain_withdrawal_required", "food_chain_withdrawal_required")
+	case errors.Is(err, pharmacy.ErrFoodChainBannedMedication):
+		writeErr(w, r, http.StatusConflict, "food_chain_banned_medication", "food_chain_banned_medication")
 	case errors.Is(err, store.ErrValidation):
 		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
 	case errors.Is(err, store.ErrConflict):
@@ -104,6 +115,12 @@ func (a *API) patchPharmacySettings(w http.ResponseWriter, r *http.Request) {
 	}
 	if v, ok := body["allowExpiredReceipt"].(bool); ok {
 		st.AllowExpiredReceipt = v
+	}
+	if v, ok := body["blockExpiredOnDaf"].(bool); ok {
+		st.BlockExpiredOnDAF = v
+	}
+	if v, ok := body["blockExpiredOnAdjustOut"].(bool); ok {
+		st.BlockExpiredOnAdjustOut = v
 	}
 	if v, ok := body["autoQuarantineExpired"].(bool); ok {
 		st.AutoQuarantineExpired = v
@@ -458,4 +475,122 @@ func (a *API) internalPharmacyExpiryRun(w http.ResponseWriter, r *http.Request) 
 		"notifyEmails":      notifySent,
 		"digestEmails":      digestsSent,
 	})
+}
+
+func (a *API) listPharmacyPrices(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListMedicationPrices(r.Context(), id.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if rows == nil {
+		rows = []store.MedicationPrice{}
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) getPharmacyPrice(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	p, err := a.store.GetMedicationPrice(r.Context(), id.PracticeID, chi.URLParam(r, "medicationId"))
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, p)
+}
+
+func (a *API) putPharmacyPrice(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
+	if !ok {
+		return
+	}
+	var body struct {
+		PurchasePriceCents int     `json:"purchasePriceCents"`
+		SellPriceCents     int     `json:"sellPriceCents"`
+		VATPercent         float64 `json:"vatPercent"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	if body.VATPercent == 0 {
+		body.VATPercent = 21
+	}
+	p, err := a.store.UpsertMedicationPrice(r.Context(), id.PracticeID, chi.URLParam(r, "medicationId"), id.UserID,
+		body.PurchasePriceCents, body.SellPriceCents, body.VATPercent)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if a.writePharmacyErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, p)
+}
+
+func (a *API) putPharmacyReorderThreshold(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
+	if !ok {
+		return
+	}
+	var body struct {
+		MedicationID string  `json:"medicationId"`
+		DepositID    string  `json:"depositId"`
+		MinQty       float64 `json:"minQty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	th, err := a.store.UpsertReorderThreshold(r.Context(), id.PracticeID, body.MedicationID, body.DepositID, body.MinQty)
+	if err != nil {
+		if a.writePharmacyErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, th)
+}
+
+func (a *API) listPharmacyReorderAlerts(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListReorderAlerts(r.Context(), id.PracticeID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if rows == nil {
+		rows = []store.ReorderAlert{}
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }

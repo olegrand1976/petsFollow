@@ -4,10 +4,11 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut global | **~68 % Phase 1** — S0 ✅ · S1–S3 ✅ · traçabilité DAF + lot nonempty + e2e P0 ✅ · S4–S6 ⬜ |
+| Statut global | **~90 % Phase 1** — S0–S4 ✅ · S5 ⏸ (reseller Billit) · S6 🟡 (~80 %) |
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
-| Dernière revue | 2026-07-27 (S3 DAF livré) |
-| Prochaine action | **Sprint 4** — worker VAMReg (Asynq) **ou** S6 ops si pilote staging |
+| Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
+| Dernière revue | 2026-07-29 (S6 : VAMReg/workers env Cloud Run + secret optionnel) |
+| Prochaine action | **S6** smoke staging pilote (stock/DAF/VAMReg dry-run) ; **S5** dès accès reseller Billit (P0-2) ; Phase 2.F / 4.A–B attend P0 |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
 
@@ -41,12 +42,13 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | Search CNK (API + BFF + UI) | ✅ | Tests Go verts |
 | Stock / FEFO / péremption | ✅ | Store + API + `/stock` + expiry-run |
 | DAF / PDF + lien mouvements | ✅ | finalize/cancel écrivent `daf_id`+`daf_item_id` ; `GET /movements?dafId=` |
-| Workers VAMReg / invoices.connect | ⬜ | Pas d’Asynq |
+| Workers VAMReg / invoices.connect | 🟡 | VAMReg dry-run **sync** (défaut) ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` ; invoices.connect = S5 gelé |
 | Scheduler expiry | ✅ | `make gcp-pharmacy-expiry-scheduler` (04:00 Brussels) |
-| Tests Go pharmacie | ✅ | Unit bands + FEFO + intégration stock/DAF/trace |
+| Tests Go pharmacie | ✅ | Unit bands + FEFO + intégration stock/DAF/trace + VAMReg dry-run |
 | Playwright P0 pharmacie | ✅ | `17-pharmacy-stock-daf.spec.ts` (@p0 @pharmacy) — quality CI ; hors post-deploy Cloud Run |
-| Staging `PHARMACY_ENABLED` | ⬜ | Local / CI quality ; pilote Cloud Run → S6 |
+| Staging `PHARMACY_ENABLED` | ✅ | Défaut true si `APP_ENV=staging` (`deploy-run-args.sh`) + `VAMREG_DRY_RUN` |
 | **Collision migration `000082`** | ⚠️ | Coexistent `000082_invoicing_billit` **et** `000082_pharmacy_ref_drop_unused_fts` — stock = **`000083+`** |
+| Collision `000100`/`000101` pharmacie | ✅ | Chaîne pharmacie → **`000107`–`000112`** (visit/consultation gardent 100/101) |
 
 **Progression par sprint (effort estimé Phase 1)**
 
@@ -56,10 +58,10 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | S1 CNK | 15 % | ~95 % | ~14 % |
 | S2 Stock + péremption | 25 % | ~95 % | ~24 % |
 | S3 DAF + PDF | 20 % | ~95 % | ~19 % |
-| S4 VAMReg | 15 % | 0 % | 0 % |
-| S5 invoices.connect | 10 % | 0 % | 0 % |
-| S6 Ops staging | 10 % | 0 % | 0 % |
-| **Total** | 100 % | | **~62–65 %** |
+| S4 VAMReg | 15 % | ~95 % | ~14 % |
+| S5 invoices.connect | 10 % | 0 % (gelé) | 0 % |
+| S6 Ops staging | 10 % | ~80 % | ~8 % |
+| **Total** | 100 % | | **~90 %** |
 
 ---
 
@@ -272,44 +274,53 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 
 ---
 
-### Sprint 4 — Worker VAMReg — ⬜ 0 %
+### Sprint 4 — Worker VAMReg — ✅ ~95 %
 
 | Tâche | Statut |
 |-------|--------|
-| Migration **`000085_pharmacy_jobs_audit`** | ⬜ |
-| Dépendance Asynq + `internal/workers` | ⬜ |
-| Handler VAMReg + dry-run + retry | ⬜ |
-| `PHARMACY_WORKERS_ENABLED` | ⬜ |
-| UI statut + retry | ⬜ |
+| Migration **`000107_pharmacy_jobs_audit`** (ex-000100, évite collision `visit_soft_delete`) | ✅ |
+| Dépendance Asynq + `internal/workers` | ✅ (opt-in `PHARMACY_WORKERS_ENABLED`) |
+| Handler VAMReg + dry-run + retry | ✅ sync dry-run par défaut ; Asynq si workers ON |
+| `PHARMACY_WORKERS_ENABLED` / `VAMREG_DRY_RUN` | ✅ |
+| UI statut + retry `/daf/[id]` | ✅ |
+| Tests | ✅ unit + `TestPharmacyDAFVAMRegDryRun` |
 
-**Done when** : dry-run OK ; échec → retries → `failed` ; succès → `sent`.
+**Done when** : dry-run OK ; échec → retries → `failed` ; succès → `sent` — **atteint** (dry-run). API live = Phase 4.A / P0-1.
 
 ---
 
-### Sprint 5 — invoices.connect — ⬜ 0 %
+### Sprint 5 — invoices.connect — ⏸ **GELÉ** (accès reseller Billit)
+
+> **Bloquant** : P0-2 dans [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md). Ne pas démarrer BIL-9 / DAF→Billit tant que les credentials reseller ne sont pas en Secret Manager. Voir [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) § Phase 5.
 
 | Tâche | Statut |
 |-------|--------|
-| Gateway + task Asynq + webhook HMAC | ⬜ |
-| Contrat JSON figé avec facturation | ⬜ |
-| UI statut export | ⬜ |
+| Accès reseller Billit | 🟡 En attente |
+| Gateway + task Asynq + webhook HMAC | ⏸ |
+| Contrat JSON figé avec facturation | ⏸ |
+| UI statut export | ⏸ |
 
-**Done when** : mock HTTP vert ; idempotence.
+**Done when** : reseller OK + mock/live HTTP vert ; idempotence `daf_id`.
 
 ---
 
-### Sprint 6 — Ops staging & filet QA — ⬜ 0 %
+### Sprint 6 — Ops staging & filet QA — 🟡 ~80 %
 
 | Tâche | Statut |
 |-------|--------|
-| `setup-pharmacy-expiry-scheduler.sh` | ⬜ |
-| Secrets SM + env Cloud Run | ⬜ |
-| Smoke staging pilote | ⬜ |
-| Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ✅ C7.1–C7.3 + e2e `17-pharmacy-stock-daf` (@p0 @pharmacy) |
-| Use case commercial + `make usecases-sync` si démo | ⬜ |
-| Option : retirer tag `dev` (ou flag) à la GA | ⬜ |
+| `setup-pharmacy-expiry-scheduler.sh` | ✅ |
+| Flags staging `PHARMACY_ENABLED` (défaut true dans `deploy-run-args.sh`) | ✅ |
+| Secrets SM + env Cloud Run (expiry) | ✅ |
+| Env `VAMREG_DRY_RUN` + `PHARMACY_WORKERS_ENABLED` Cloud Run | ✅ (`deploy-run-args.sh`) |
+| Secret optionnel `petsfollow-vamreg-api-key` → `VAMREG_API_KEY` | ✅ (branché si présent) |
+| `pg_trgm` Cloud SQL | 🟡 à vérifier à migrate (doc 10) |
+| Smoke staging pilote stock/DAF/VAMReg dry-run | ⬜ manuel |
+| Smoke DAF→Billit | ⏸ (après reseller) |
+| Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ✅ C7.1–C7.15 + e2e `17-pharmacy-stock-daf` |
+| Use case commercial + `make usecases-sync` | ✅ [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
+| Option : retirer tag `dev` (ou flag) à la GA | ⬜ → Phase 6 ([37](37-ROADMAP-STOCK-FACTURATION.md)) |
 
-**Done when** : checklist §7 verte.
+**Done when (chemin stock)** : checklist §7 verte hors facture + smoke staging. Facture = hors done tant que reseller absent.
 
 ---
 
@@ -338,25 +349,28 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 - [ ] Nav Médicaments + tag **`dev`** visible
 - [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)
 - [x] Scheduler `expiry-run` (Europe/Brussels 04:00, `make gcp-pharmacy-expiry-scheduler`)
-- [ ] Secrets VAMReg / invoices selon sprint
-- [ ] Redis si workers ON
+- [x] Env Cloud Run `VAMREG_DRY_RUN=true` · `PHARMACY_WORKERS_ENABLED=false` (sync)
+- [ ] Secret `petsfollow-vamreg-api-key` (optionnel dry-run ; requis P0-1 live)
+- [ ] Redis si `PHARMACY_WORKERS_ENABLED=true`
 - [ ] GCS PDF DAF
-- [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize
+- [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize → VAMReg `sent` (dry-run)
 
 ---
 
-## 8. Hors Phase 1 — ❌
+## 8. Hors Phase 1 — voir roadmap étendue
 
-| Item | Note |
-|------|------|
-| Flutter client / stock proprio | Care ≠ pharmacie |
-| BUD post-ouverture | Backlog |
-| Scan Datamatrix | Backlog |
-| Override FEFO documenté | Backlog |
-| Inventaire guidé annuel | Export CSV dès S2 ; UI guidée P1.1 |
-| Stripe sur lignes DAF | Non |
-| Multi-cabinet cross-practice | Non |
-| Remplacement logiciel DAF certifié | Non |
+Les items ci-dessous ne sont **plus** un fourre-tout « ❌ » : ils sont planifiés dans [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md).
+
+| Item | Où |
+|------|-----|
+| Prix catalogue, seuils réassort, **commandes e-mail + BL + inventaire** ✅, CNK national ⏸ P0-3 | Phase 2 ([37](37-ROADMAP-STOCK-FACTURATION.md) · 2.A–2.E livrés) |
+| DAF → Billit auto, avoirs, reporting marge | Phase 3 (après reseller) |
+| Stupéfiants, temps d’attente, chaîne alimentaire, VAMReg live | Phase 4 |
+| Grossistes EDI, Bigame, Vetcompendium | Phase 5 |
+| GA / retrait tag `dev` | Phase 6 |
+| Flutter client / stock proprio | Care ≠ pharmacie (hors roadmap) |
+| Stripe sur lignes DAF | Non (Billit) |
+| Remplacement logiciel DAF certifié | Trajectoire P0-7 |
 
 ---
 
@@ -376,10 +390,12 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 | Doc | Lien |
 |-----|------|
 | Spec détaillée | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
+| Roadmap Phases 0–6 | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) |
+| Billit / BIL-9 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) |
 | Modules | [04-MODULES-METIER.md](04-MODULES-METIER.md) |
 | Modèle | [03-MODELE-DONNEES.md](03-MODELE-DONNEES.md) |
 | Tests | [15-PLAN-TESTS.md](15-PLAN-TESTS.md) |
 | GCP | [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT.md) |
 | AFMPS DAF | https://www.afmps.be/fr/usage_veterinaire/medicaments/medicaments/distribution_et_delivrance/documents_veterinaires |
 
-**Prochaine action concrète** : **Sprint 4** — Asynq VAMReg (retry UI) ; Billit / invoices.connect restent hors priorité pharmacie.
+**Prochaine action concrète** : **S6** smoke staging pilote (checklist §7, stock/DAF/VAMReg dry-run) ; **S5 / BIL-9** dès accès reseller Billit (P0-2).

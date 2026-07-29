@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -19,6 +20,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/admin/metrics/overview", a.adminMetricsOverview)
+		pr.Get("/admin/runtime-flags", a.adminRuntimeFlags)
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
@@ -50,7 +52,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 }
 
 func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListAllCommercialsAdmin(r.Context())
@@ -62,7 +64,7 @@ func (a *API) adminListCommercials(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	f := store.FiliationFilter{}
@@ -90,7 +92,7 @@ func (a *API) adminListFiliation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListFiliationEvents(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	f := store.FiliationEventFilter{}
@@ -125,7 +127,7 @@ func (a *API) adminListFiliationEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListSalesBranches(r.Context())
@@ -145,7 +147,7 @@ func (a *API) adminListSalesBranches(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminRunSalesBranchesAuto(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	result, err := a.runSalesBranchesAuto(r.Context())
@@ -168,7 +170,7 @@ type createBranchReq struct {
 }
 
 func (a *API) adminCreateSalesBranch(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	var req createBranchReq
@@ -197,7 +199,7 @@ type setBranchReq struct {
 }
 
 func (a *API) adminSetCommercialBranch(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -218,7 +220,7 @@ func (a *API) adminSetCommercialBranch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListCommercialManagers(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListCommercialManagers(r.Context())
@@ -242,7 +244,7 @@ type createCommercialReq struct {
 }
 
 func (a *API) adminCreateCommercial(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	var req createCommercialReq
@@ -318,7 +320,7 @@ type setManagerReq struct {
 }
 
 func (a *API) adminSetCommercialManager(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -350,7 +352,7 @@ type baseLocationReq struct {
 }
 
 func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	commercialID := chi.URLParam(r, "id")
@@ -383,7 +385,7 @@ func (a *API) adminPatchCommercialBaseLocation(w http.ResponseWriter, r *http.Re
 }
 
 func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
-	adminID, ok := a.requireAdmin(w, r)
+	adminID, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
@@ -409,7 +411,7 @@ func (a *API) adminAssignVet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListUnassignedVets(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListUnassignedVets(r.Context())
@@ -424,7 +426,7 @@ func (a *API) adminListUnassignedVets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminUnassignVet(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	vetID := chi.URLParam(r, "id")
@@ -444,7 +446,7 @@ func (a *API) adminUnassignVet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminVetAssignSuggestions(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	vetID := chi.URLParam(r, "id")
@@ -545,7 +547,7 @@ func (a *API) adminCommercialCommissions(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *API) adminListProspects(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	status := r.URL.Query().Get("status")
@@ -570,8 +572,18 @@ func (a *API) requireAdmin(w http.ResponseWriter, r *http.Request) (authx.Identi
 	return id, true
 }
 
+// requireAdminOrDev allows admin (full ops) and DEV (support IT, sans billing/seed).
+func (a *API) requireAdminOrDev(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || !kernel.IsOpsRole(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "ops_only")
+		return authx.Identity{}, false
+	}
+	return id, true
+}
+
 func (a *API) adminMetricsOverview(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	from, to := parseAdminRange(r)
@@ -583,8 +595,29 @@ func (a *API) adminMetricsOverview(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, m)
 }
 
+func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"appEnv":                 strings.TrimSpace(os.Getenv("APP_ENV")),
+		"devSeedEnabled":         a.cfg.DevSeedEnabled,
+		"adminStagingSeedEnabled": a.cfg.AdminStagingSeedEnabled,
+		"billingMockEnabled":     a.cfg.BillingMockEnabled,
+		"fcmEnabled":             a.cfg.FCMEnabled,
+		"pharmacyEnabled":        a.cfg.PharmacyEnabled,
+		"pharmacyWorkersEnabled": a.cfg.PharmacyWorkersEnabled,
+		"prescriptionsEnabled":   a.cfg.PrescriptionsEnabled,
+		"billitEnabled":          a.cfg.BillitEnabled,
+		"billitMockEnabled":      a.cfg.BillitMockEnabled,
+		"mlmOrgEnabled":          a.cfg.MLMOrgEnabled,
+		"careProPublicRegister":  a.cfg.CareProPublicRegister,
+		"vamregDryRun":           a.cfg.VamregDryRun,
+	})
+}
+
 func (a *API) adminListUsers(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	from, to := parseAdminRange(r)

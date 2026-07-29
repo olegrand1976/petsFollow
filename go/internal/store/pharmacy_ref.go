@@ -23,6 +23,10 @@ type RefMedication struct {
 	PackSize            string          `json:"packSize,omitempty"`
 	IsAntibiotic        bool            `json:"isAntibiotic"`
 	IsActive            bool            `json:"isActive"`
+	WithdrawalMeatDays  *int            `json:"withdrawalMeatDays,omitempty"`
+	WithdrawalMilkDays  *int            `json:"withdrawalMilkDays,omitempty"`
+	WithdrawalEggsDays  *int            `json:"withdrawalEggsDays,omitempty"`
+	FoodChainBanned     bool            `json:"foodChainBanned,omitempty"`
 	AFMPSMeta           json.RawMessage `json:"afmpsMeta,omitempty"`
 	UpdatedAt           string          `json:"updatedAt,omitempty"`
 }
@@ -69,7 +73,8 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, cnk, name,
 		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
-		       is_antibiotic, is_active
+		       is_antibiotic, is_active,
+		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
 		FROM pharmacy.ref_medications
 		WHERE is_active
 		  AND (
@@ -93,7 +98,8 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 	for rows.Next() {
 		var m RefMedication
 		var atc, form, pack string
-		if err := rows.Scan(&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive); err != nil {
+		if err := rows.Scan(&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+			&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned); err != nil {
 			return nil, err
 		}
 		m.ATCCode = atc

@@ -181,6 +181,10 @@ Compte : `vet.demo@petsfollow.test`
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
 | C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR ; supprimer → hors liste (`deleted_at`) ; player modal affiche durée persistée |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
+| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body`) ; Améliorer disabled si notes **et** CR vides (source = notes sinon CR) ; footer Annuler les modifications / Enregistrer / Finaliser |
+| C2.20 | P1 | CR transcription → versions | hint-transcribe / edit notes → improve → restore | v0 transcript · v1 IA · restore cible pane ; re-improve écrase v1 |
+| C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
+| C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
 
 ### C3 — Calendrier & RDV
 
@@ -460,7 +464,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | I8 | Charte Pro | Pas de thème dark Flutter dans Nuxt | Tokens `--pf-vet-*` |
 | I9 | Offre sync | Landing `#produits` + `/produits` | Même prix / inclus |
 
-**Pharmacie BE (dev)** : stock + DAF/PDF sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` / `TestPharmacyDAF*` + Playwright `@p0` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts) (quality CI ; exclu du post-deploy Cloud Run tant que S6) ; workers VAMReg encore hors scope. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
+**Pharmacie BE (dev)** : stock + DAF/PDF + VAMReg dry-run + prix/seuils/commandes/BL/inventaire + chaîne alimentaire sous flag `PHARMACY_ENABLED` — tests Go `TestPharmacy*` (dont `TestPharmacyPlanCoverage`) + Playwright `@p0`/`@p1` `@pharmacy` [`17-pharmacy-stock-daf.spec.ts`](../nuxtjs/tests/e2e/specs/17-pharmacy-stock-daf.spec.ts). Roadmap : [37](37-ROADMAP-STOCK-FACTURATION.md). DAF→Billit (BIL-9) **gelé** (gate `EnqueueInvoicesConnect`) jusqu’accès reseller. Simulation 10 ans ([16](16-ADMIN-SIMULATION-10ANS.md)) hors scope.
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
@@ -469,6 +473,16 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
 | C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` | Draft avec `visitId` ; CTA Facturer si `INVOICING_UI_ENABLED` |
 | C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 |
+| C7.6 | P1 | VAMReg dry-run à finalize antibiotique | `TestPharmacyDAFVAMRegDryRun` | `vamregStatus=sent` ; lignes `job_audit` |
+| C7.7 | P1 | Prix + alerte réassort | `PUT …/prices` · `PUT …/reorder-thresholds` · `GET …/reorder-alerts` | Seuil &lt; stock → alerte |
+| C7.8 | P1 | Commande réassort + BL | `TestPharmacyOrdersAndDeliveryNote` | Order `fromAlerts` → send e-mail ; `POST …/delivery-notes` 201 |
+| C7.9 | P1 | Inventaire annuel | `TestPharmacyInventorySession` + e2e `@pharmacy` | Session open → count → close applique adjust |
+| C7.10 | P1 | Chaîne alimentaire + temps d’attente | `TestPharmacyFoodChainAndWithdrawal` | `food_producing` sans V/L/O → 400 ; snapshot après finalize |
+| C7.11 | P1 | VAMReg dry-run e2e + BL/réassort | `17-pharmacy-stock-daf.spec.ts` (@p1 @pharmacy) | Antibio → `vamregStatus=sent` ; delivery-note ; reorder alert |
+| C7.12 | P1 | Couverture plan ✅ (guards) | `TestPharmacyPlanCoverage` + `TestEnqueueInvoicesConnectResellerGate` | Prix GET ; send sans notifier → 502 ; suppliers ; BL `MANUAL-*` ; dépôt étranger 400 ; inventaire CSV ; retry VAMReg `pending` → `daf_vamreg_in_flight` ; ban food-chain ; FK users→pharmacy ≠ CASCADE ; gate Billit reseller |
+| C7.13 | P1 | UI `/stock` + prix/BL/CSV e2e | `17-pharmacy-stock-daf.spec.ts` (@p1 @pharmacy) | Shell bands/receipt/inventory/dev-badge ; PUT/GET prices ; BL vide → `MANUAL-*` ; export CSV inventaire |
+| C7.14 | P1 | Lots wasted non ressuscités | `TestPharmacyStockReceiptAndWaste` | Receipt même clé après waste → `batch_wasted` |
+| C7.15 | P1 | Overlay withdrawal practice | `TestPharmacyFoodChainAndWithdrawal` | PATCH withdrawal n’altère pas `ref_medications` national |
 
 **Ordonnances (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/ordonnances` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-ORDONNANCES.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
@@ -703,6 +717,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
 | `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
+| `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |

@@ -4,10 +4,46 @@ Checklist pour un passage **complet** de l’app Flutter **prod** `be.llitsc.pet
 
 Le canal **testeurs** est distinct : flavor **staging** (`be.llitsc.petsfollow_mobile.staging`) via Firebase App Distribution — voir [`flutter/README.md`](../flutter/README.md).
 
+### Lexique rapide
+
+| Terme | Signification |
+|-------|----------------|
+| **AAB** | *Android App Bundle* — fichier à uploader dans la Play Console (pas un APK). Produit par `make play-android-bundle`. |
+| **APK staging** | Build testeurs Firebase App Distribution (`make firebase-android-dist`), package `.staging`. |
+| **Internal testing** | Piste Play réservée à quelques testeurs (smoke avant Production). |
+| **Production** | Boutique publique — exige listing, Data Safety, et idéalement une **API prod** non seedable. |
+
 Privacy policy URL (obligatoire listing) : **https://petsfollow.ll-it-sc.be/legal/privacy**  
 CGU : https://petsfollow.ll-it-sc.be/legal/terms  
 Mentions : https://petsfollow.ll-it-sc.be/legal/mentions  
-Support : **support@ll-it-sc.be**
+Support : **support@petsfollow.app**
+
+---
+
+## 0. Déblocage des prérequis (état actuel)
+
+| Bloqueur | Action |
+|----------|--------|
+| **Signing** | Créer une fois `flutter/android/upload-keystore.jks` + `key.properties` (gitignored). Backup sécurisé hors git (mots de passe + `.jks`). Sans ça, le script refuse le build. |
+| **API** | **Internal** : staging `https://api.petsfollow.ll-it-sc.be` via `make play-android-bundle-internal`. **Production** Play : `https://api.petsfollow.app` via `make play-android-bundle-prod` (après deploy GCP prod / branche `main`). URLs canoniques : [`infra/play/api-bases.sh`](../infra/play/api-bases.sh). |
+| **Email support** | Listing + légal app/web : `support@petsfollow.app` (boîte à provisionner côté mail). |
+| **Assets Console** | Icône 512×512 (ex. depuis `brand/emblem/generated/petsfollow-emblem-1024.png`), feature graphic 1024×500, ≥2 screenshots. |
+| **SHA Play** | Après le 1er upload AAB : ajouter le certificat *App Signing by Google Play* dans Firebase / OAuth Android (package prod). |
+
+### Générer le keystore (une seule fois)
+
+```bash
+keytool -genkey -v -keystore flutter/android/upload-keystore.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+cp flutter/android/key.properties.example flutter/android/key.properties
+# Éditer storePassword / keyPassword / keyAlias (storeFile=upload-keystore.jks par défaut)
+```
+
+Empreintes à coller dans Firebase / Cloud Console :
+
+```bash
+keytool -list -v -keystore flutter/android/upload-keystore.jks -alias upload
+```
 
 ---
 
@@ -22,34 +58,26 @@ Support : **support@ll-it-sc.be**
 | Signing release | `flutter/android/key.properties` + `upload-keystore.jks` (gitignored) |
 | AAB | `API_BASE=https://… make play-android-bundle` |
 | Dart defines | `--dart-define=FLAVOR=prod` **et** `APP_ENV=prod` (mêmes valeurs ; `AppEnv.validate`) |
-| `API_BASE` release | `https://…` obligatoire (pas de défaut staging) |
+| `API_BASE` release | `https://…` obligatoire (pas de défaut silencieux) |
+| Staging API | autorisée seulement avec `ALLOW_STAGING_API=1` (warning explicite) |
 | `allowBackup` | `false` + règles XML |
 | `AD_ID` | retiré (`tools:node="remove"`) — déclarer « Non » Advertising ID |
 | Suppression compte | in-app (Profil) + API `DELETE /api/v1/me` |
 
-### Générer le keystore upload
+### Build AAB (prod package)
+
+| Piste Play | Commande | API |
+|------------|----------|-----|
+| **Internal testing** | `make play-android-bundle-internal` | staging (seedable) — `ALLOW_STAGING_API=1` automatique |
+| **Production** | `make play-android-bundle-prod` | `https://api.petsfollow.app` |
 
 ```bash
-keytool -genkey -v -keystore flutter/android/upload-keystore.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-cp flutter/android/key.properties.example flutter/android/key.properties
-# Éditer storePassword / keyPassword / keyAlias (storeFile=upload-keystore.jks par défaut)
-```
-
-Afficher les empreintes à coller dans Firebase / Cloud Console :
-
-```bash
-keytool -list -v -keystore flutter/android/upload-keystore.jks -alias upload
-```
-
-Après le **premier** upload Play, récupérer aussi le certificat **App Signing by Google Play** (Play Console → App integrity) et l’ajouter comme SHA Firebase / client OAuth Android (**package prod**).
-
-### Build AAB (prod)
-
-```bash
-API_BASE=https://… make play-android-bundle
 # → flutter/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+make play-android-bundle-internal   # aujourd’hui
+make play-android-bundle-prod       # dès que GCP prod + DNS api.petsfollow.app sont up
 ```
+
+Override manuel : `API_BASE=https://… make play-android-bundle` (staging exige `ALLOW_STAGING_API=1`).
 
 Firebase App Distribution (APK **staging** testeurs) : `make firebase-android-dist`.
 
@@ -79,7 +107,7 @@ Google peut exiger un **Closed testing** (≥ 12 testeurs, ≥ 14 jours) avant P
 | Feature graphic 1024×500 | Visuel marketing |
 | Screenshots téléphone | ≥ 2 (login, home, relevé, soins, messagerie) |
 | Catégorie | Médical / Santé & fitness (animaux) |
-| Email contact | support@ll-it-sc.be |
+| Email contact | support@petsfollow.app |
 | Privacy policy | https://petsfollow.ll-it-sc.be/legal/privacy |
 | Site | https://petsfollow.ll-it-sc.be |
 
@@ -127,7 +155,7 @@ Justifier comme fonctionnalités **cœur** (pas one-time).
 ## 6. Suppression de compte (politique Play)
 
 - **In-app** : Profil → Supprimer le compte (déjà livré).
-- **Web / email** : indiquer sur la privacy policy et éventuellement une page dédiée ; contact `support@ll-it-sc.be` pour demande hors app.
+- **Web / email** : indiquer sur la privacy policy et éventuellement une page dédiée ; contact `support@petsfollow.app` pour demande hors app.
 - Dans Play Console → App content → Account deletion : décrire le chemin in-app + URL privacy / email.
 
 ---
@@ -161,12 +189,13 @@ Dans App content : déclarer les achats numériques / abonnements selon le quest
 
 ```text
 1. keystore + key.properties + SHA Firebase (package prod)
-2. API_BASE=https://… make play-android-bundle   # flavor prod
+2. make play-android-bundle-internal   # AAB → API staging
+   # puis, après GCP prod : make play-android-bundle-prod
 3. Upload AAB → Internal testing (smoke)
 4. Closed testing (si requis) + notes de version
 5. Remplir Data Safety, Content rating, Account deletion, Ads ID = No
-6. Store listing + screenshots + privacy URL
-7. Production → Review Google
+6. Store listing + screenshots + privacy URL (contact support@petsfollow.app)
+7. Production store → AAB buildé avec make play-android-bundle-prod → Review Google
 ```
 
 Canal testeurs (indépendant de Play) : `make firebase-android-dist` (flavor staging).
@@ -182,3 +211,4 @@ Canal testeurs (indépendant de Play) : `make firebase-android-dist` (flavor sta
 - [ ] Suppression de compte fonctionne
 - [ ] Pas de demande de permission AD_ID
 - [ ] Notifications (POST_NOTIFICATIONS) demandées au runtime
+- [ ] Contact / légal affichent `support@petsfollow.app`

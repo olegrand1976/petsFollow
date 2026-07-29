@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   const role = await resolveProRole()
-  if (role === 'admin') {
+  if (role === 'admin' || role === 'dev') {
     setPageLayout('admin')
     return
   }

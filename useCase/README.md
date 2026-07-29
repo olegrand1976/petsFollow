@@ -60,7 +60,8 @@ make nuxtjs-dev       # :3002
 Ordre pour un commercial sur staging :
 
 1. [`UC-VP-01`](01-vetpro/UC-VP-01-cockpit-cabinet.md) — cockpit cabinet  
-2. [`UC-VP-04`](01-vetpro/UC-VP-04-nouvelle-consultation.md) — consultation rapide (CR → DAF / facture)  
+2. [`UC-VP-04`](01-vetpro/UC-VP-04-nouvelle-consultation.md) — consultation rapide (CR → DAF / facture)
+3. [`UC-VP-05`](01-vetpro/UC-VP-05-pharmacie-stock-daf.md) — pharmacie stock → DAF → VAMReg (tag `dev`)
 3. [`UC-X-01`](10-interactions/UC-X-01-messagerie-vet-client.md) — messagerie véto ↔ client *(couvre aussi VP-03)*  
 4. [`UC-X-02`](10-interactions/UC-X-02-fc-client-vers-pro.md) — relevé cardiaque *(couvre aussi CL-03)*  
 5. [`UC-X-05`](10-interactions/UC-X-05-partage-care-pro.md) — partage terrain  
@@ -80,6 +81,7 @@ Ordre pour un commercial sur staging :
 | UC-VP-02 | [Onboarding](01-vetpro/UC-VP-02-onboarding.md) | Important — **Destructif** |
 | UC-VP-03 | [Agenda & messagerie solo](01-vetpro/UC-VP-03-agenda-messagerie.md) | Démo — skip si X-01 |
 | UC-VP-04 | [Nouvelle consultation](01-vetpro/UC-VP-04-nouvelle-consultation.md) | Démo |
+| UC-VP-05 | [Pharmacie stock → DAF → VAMReg](01-vetpro/UC-VP-05-pharmacie-stock-daf.md) | Important — tag `dev` |
 
 ### Client — [`02-client/`](02-client/)
 

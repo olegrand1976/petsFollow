@@ -84,7 +84,18 @@ Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle, 
 
 Flux Flutter Pro Light : **accord oral client (checkbox)** → dictée (bandeau micro + Arrêter) / fichier audio → transcription Gemini → édition → **Enregistrer** / **Finaliser**. L’action « Améliorer (IA) » reste sur **Web Pro** uniquement.
 
-Flux Web : édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
+**Web Pro** (`ProVisitReportPanel`) — layout split friendly :
+
+| Zone | Rôle |
+|------|------|
+| Gauche | Notes / dictée (`transcript_text`) — écrire, dicter, upload audio |
+| Droite | Compte-rendu (`body_text`) — Améliorer (IA) depuis la gauche, édition manuelle, preview markdown |
+| Bas | Historique replié : transcription d’origine → proposition IA → dernière version enregistrée |
+| Footer sticky | Annuler (discard dirty) · Finaliser · Enregistrer |
+
+`PUT /visits/{id}/report` accepte `bodyText` et optionnellement `transcriptText` (notes gauche persistées). `POST …/report/improve` accepte optionnellement `sourceText` (source IA sans écraser le body au préalable).
+
+Flux Web : édition notes → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
 
 **Entitlement module** (add-on VetPro, essai 90 j, 39 € HT/mois ou 390 € HT/an) : `transcribe` / `improve` gated par `practice.ai_cr_modules` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
 
@@ -93,7 +104,7 @@ Sections CR vétérinaire (improve) :
 - Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
 - Care_pro : templates specialty (farrier/physio/…) sans section médication véto
 
-Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`) et Flutter Pro Light.
+Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
 Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 `POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.

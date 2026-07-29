@@ -83,6 +83,9 @@ import { INVOICING_UI_ENABLED } from '~/utils/invoicing-ui'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharmacy.write' })
 const { t } = useI18n()
+function pharmacyErr(e: any, fallbackKey: string): string {
+  return pharmacyErrorMessage(t, e, fallbackKey)
+}
 const route = useRoute()
 const invoicingUiEnabled = INVOICING_UI_ENABLED
 const busy = ref(false)
@@ -211,7 +214,7 @@ async function runPreview() {
     preview.value = unwrap(res)?.lines ?? []
   }
   catch (e: any) {
-    error.value = e?.data?.error?.code || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
   finally {
     busy.value = false
@@ -227,7 +230,7 @@ async function saveDraft() {
     await navigateTo(`/daf/${doc.id}`)
   }
   catch (e: any) {
-    error.value = e?.data?.error?.code || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
   finally {
     busy.value = false
@@ -246,7 +249,7 @@ async function finalize() {
     finalizedDafId.value = id
   }
   catch (e: any) {
-    error.value = e?.data?.error?.code || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
   finally {
     busy.value = false

@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -28,10 +28,13 @@ help:
 	@echo "  make test-auth      garde-fou login/forgot (Go + Vitest)"
 	@echo "  make smoke          smoke API MVP"
 	@echo "  make gcp-deploy     Cloud Build staging"
+	@echo "  make gcp-deploy-prod  Cloud Build production (cloudbuild-prod.yaml — SQL FIXME garde-fou)"
 	@echo "  make firebase-flutter-setup  apps Firebase Android/iOS (staging + prod)"
 	@echo "  make firebase-google-signin-android  SHA → Firebase (FLAVOR=staging|prod)"
 	@echo "  make firebase-android-dist   APK staging → App Distribution (petsfollow-testers)"
-	@echo "  make play-android-bundle     AAB prod → Google Play (API_BASE=https://… requis)"
+	@echo "  make play-android-bundle-internal  AAB Play + API staging (Internal testing)"
+	@echo "  make play-android-bundle-prod      AAB Play + API prod (api.petsfollow.app)"
+	@echo "  make play-android-bundle     AAB Play (API_BASE=https://… requis)"
 	@echo "  make gcp-setup-stripe        secrets Stripe GCP (placeholders + instructions)"
 	@echo "  make gcp-delete-seed-scheduler  supprime le Scheduler seed hebdo (reset = admin Pro)"
 	@echo "  make gcp-retention-scheduler  Scheduler quotidien purge RGPD (RETENTION_PURGE_SECRET=…)"
@@ -87,7 +90,7 @@ seed-mass: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
 
 # API Billit live (sandbox). Exige BILLIT_WEBHOOK_SECRET + BILLIT_SECRETS_BACKEND=local_enc + BILLIT_SECRETS_KEY.
 # Ne pas confondre avec api-dev (mock on par défaut). Smoke : make billit-sandbox-smoke
@@ -198,6 +201,11 @@ gcp-deploy:
 	@echo "→ Préférer push branche staging (CI + smoke + Playwright). Deploy nu = hors filet."
 	gcloud builds submit --config=infra/gcp/cloudbuild.yaml .
 
+# Production : préférer workflow_dispatch deploy-gcp-prod.yml. Garde-fou SQL FIXME dans le YAML.
+gcp-deploy-prod:
+	@echo "→ Deploy prod (services *-prod). Prérequis : SQL/DNS/secrets — doc 10-GCP § Production."
+	gcloud builds submit --config=infra/gcp/cloudbuild-prod.yaml .
+
 gcp-domain:
 	bash infra/gcp/setup-custom-domain.sh
 
@@ -212,7 +220,18 @@ firebase-google-signin-android:
 firebase-android-dist:
 	bash infra/firebase/distribute-android.sh
 
+# Generic : API_BASE=https://… make play-android-bundle
 play-android-bundle:
 	bash infra/play/build-play-bundle.sh
+
+# Play Internal testing — package prod, API staging (seedable).
+play-android-bundle-internal:
+	@set -a; source infra/play/api-bases.sh; set +a; \
+	ALLOW_STAGING_API=1 API_BASE="$${PETSFOLLOW_API_STAGING}" bash infra/play/build-play-bundle.sh
+
+# Play Production track — API prod (après deploy main / GCP prod).
+play-android-bundle-prod:
+	@set -a; source infra/play/api-bases.sh; set +a; \
+	API_BASE="$${PETSFOLLOW_API_PROD}" bash infra/play/build-play-bundle.sh
 
 gcp-smoke: smoke-staging

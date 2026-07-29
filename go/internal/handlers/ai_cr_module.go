@@ -194,7 +194,7 @@ func (a *API) requestMyAiModulePaid(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListAiModules(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListAiCrModules(r.Context())
@@ -210,7 +210,7 @@ func (a *API) adminListAiModules(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminActivateAiModule(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireAdmin(w, r)
+	id, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
@@ -218,7 +218,7 @@ func (a *API) adminActivateAiModule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminConvertAiModule(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	a.convertAiModuleFor(w, r, chi.URLParam(r, "practiceID"))
@@ -231,7 +231,7 @@ type patchAiModuleReq struct {
 }
 
 func (a *API) adminPatchAiModule(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	practiceID := chi.URLParam(r, "practiceID")

@@ -108,7 +108,7 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminCreateClient(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	req, ok := a.decodeCreateClient(w, r)
@@ -145,7 +145,7 @@ type createCareProAdminReq struct {
 }
 
 func (a *API) adminCreateCarePro(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	var req createCareProAdminReq
@@ -185,7 +185,7 @@ func (a *API) adminCreateCarePro(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminCreateVet(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	var req createVetAdminReq
@@ -230,7 +230,7 @@ func (a *API) adminCreateVet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListVets(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	rows, err := a.store.ListVetsForAdmin(r.Context())

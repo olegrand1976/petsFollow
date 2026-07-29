@@ -3,12 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/engagement/journey"
@@ -22,6 +24,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/internal/workers"
 )
 
 type Application struct {
@@ -29,6 +32,8 @@ type Application struct {
 	router        chi.Router
 	cfg           config.Config
 	journeyCancel context.CancelFunc
+	asynqServer   *asynq.Server
+	asynqClient   *asynq.Client
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
@@ -51,6 +56,9 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	cfg.JWTSigningKey = key
 	if err := cfg.ValidateBillit(); err != nil {
+		return nil, err
+	}
+	if err := cfg.ValidateVamreg(); err != nil {
 		return nil, err
 	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
@@ -81,6 +89,28 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
 
+	var asynqClient *asynq.Client
+	var asynqServer *asynq.Server
+	if cfg.PharmacyWorkersEnabled {
+		client, err := workers.NewAsynqClient(cfg.RedisAddr)
+		if err != nil {
+			log.Printf("pharmacy workers: asynq unavailable (%v) — keeping inline VAMReg enqueue", err)
+		} else {
+			asynqClient = client
+			api.SetVamregEnqueuer(&workers.VamregEnqueue{Client: asynqClient})
+			asynqServer = workers.NewAsynqServer(cfg.RedisAddr)
+			if asynqServer != nil {
+				mux := asynq.NewServeMux()
+				workers.RegisterVamregHandler(mux, api.VamregDeclarer())
+				go func() {
+					if err := asynqServer.Run(mux); err != nil {
+						log.Printf("asynq server exited: %v", err)
+					}
+				}()
+			}
+		}
+	}
+
 	r := httpx.NewBaseRouter()
 	r.Use(selectiveTimeout)
 	r.Use(corsMiddleware(corsAllowedOrigins(cfg)))
@@ -105,7 +135,10 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	go jr.Start(journeyCtx)
 
-	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil
+	return &Application{
+		pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel,
+		asynqServer: asynqServer, asynqClient: asynqClient,
+	}, nil
 }
 
 // corsAllowedOrigins : allowlist depuis CORS_ALLOWED_ORIGINS, sinon le site Pro public.
@@ -183,6 +216,12 @@ func (a *Application) Handler() http.Handler { return a.router }
 func (a *Application) Close() {
 	if a.journeyCancel != nil {
 		a.journeyCancel()
+	}
+	if a.asynqServer != nil {
+		a.asynqServer.Shutdown()
+	}
+	if a.asynqClient != nil {
+		_ = a.asynqClient.Close()
 	}
 	if a.pool != nil {
 		a.pool.Close()

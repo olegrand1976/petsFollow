@@ -48,15 +48,27 @@ func scanVisitReport(row pgx.Row) (VisitReport, error) {
 }
 
 func (s *Store) UpsertVisitReport(ctx context.Context, visitID, authorUserID, bodyText string) (VisitReport, error) {
+	return s.UpsertVisitReportFields(ctx, visitID, authorUserID, bodyText, nil)
+}
+
+// UpsertVisitReportFields upserts body_text and optionally transcript_text (when transcript != nil).
+func (s *Store) UpsertVisitReportFields(ctx context.Context, visitID, authorUserID, bodyText string, transcript *string) (VisitReport, error) {
 	id := uuid.NewString()
+	var transcriptVal any
+	updateTranscript := transcript != nil
+	if updateTranscript {
+		transcriptVal = *transcript
+	}
 	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
-		INSERT INTO visits.visit_reports (id, visit_id, author_user_id, status, body_text)
-		VALUES ($1, $2, $3, 'draft', $4)
+		INSERT INTO visits.visit_reports (id, visit_id, author_user_id, status, body_text, transcript_text)
+		VALUES ($1, $2, $3, 'draft', $4, COALESCE($5, ''))
 		ON CONFLICT (visit_id, author_user_id) DO UPDATE
-			SET body_text = EXCLUDED.body_text, updated_at = NOW()
+			SET body_text = EXCLUDED.body_text,
+				transcript_text = CASE WHEN $6 THEN COALESCE($5, '') ELSE visits.visit_reports.transcript_text END,
+				updated_at = NOW()
 			WHERE visits.visit_reports.status = 'draft'
 		RETURNING `+visitReportReturning,
-		id, visitID, authorUserID, bodyText))
+		id, visitID, authorUserID, bodyText, transcriptVal, updateTranscript))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return VisitReport{}, ErrConflict
 	}

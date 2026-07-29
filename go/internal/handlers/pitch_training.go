@@ -623,7 +623,7 @@ func (a *API) managerPatchPitchSimNote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListPitchScripts(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	list, err := a.store.ListAdminPitchScripts(r.Context())
@@ -635,7 +635,7 @@ func (a *API) adminListPitchScripts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminCreatePitchScript(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	var body store.PitchScript
@@ -660,7 +660,7 @@ func (a *API) adminCreatePitchScript(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminPatchPitchScript(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	existing, err := a.store.GetPitchScript(r.Context(), chi.URLParam(r, "id"))
@@ -702,7 +702,7 @@ func (a *API) adminPatchPitchScript(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListAgentPromptVersions(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	kind := chi.URLParam(r, "kind")
@@ -719,7 +719,7 @@ func (a *API) adminListAgentPromptVersions(w http.ResponseWriter, r *http.Reques
 }
 
 func (a *API) adminCreateAgentPromptVersion(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireAdmin(w, r)
+	id, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
@@ -742,7 +742,7 @@ func (a *API) adminCreateAgentPromptVersion(w http.ResponseWriter, r *http.Reque
 }
 
 func (a *API) adminRestoreAgentPromptVersion(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requireAdmin(w, r)
+	id, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
@@ -755,7 +755,7 @@ func (a *API) adminRestoreAgentPromptVersion(w http.ResponseWriter, r *http.Requ
 }
 
 func (a *API) adminListAnalyzerRuns(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	list, err := a.store.ListAnalyzerRuns(r.Context(), 50)
@@ -767,7 +767,7 @@ func (a *API) adminListAnalyzerRuns(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListPitchFeedback(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	list, err := a.store.ListRecentPitchFeedback(r.Context(), 100)

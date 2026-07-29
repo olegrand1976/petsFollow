@@ -9,7 +9,21 @@ Projet partagé : `premedica-prod-2025` · région Run : `europe-west9` · LB : 
 
 Infra partagée : Cloud SQL `premedica-db-staging` (DB `petsfollow`), Redis VM `shared-redis` (DB **14**), VPC connector `premedica-connector`. Pattern domaine = LB Premedica + Serverless NEG (comme Kore).
 
-**Pharmacie** : la migration `000081` exige l’extension PostgreSQL **`pg_trgm`**. Sur Cloud SQL, la créer une fois (rôle `cloudsqlsuperuser` / console GCP → Extensions) si le job migrate échoue sur `CREATE EXTENSION`.
+**Pharmacie (S6)** — voir aussi [28](28-PLAN-STOCK-PEREMPTION.md) · [37](37-ROADMAP-STOCK-FACTURATION.md) :
+
+Migrations pharmacie récentes (ordre) : `000107` jobs_audit → `000108` pricing/reorder → `000109` orders/BL → `000110` inventaire → `000111` withdrawal → `000112` food_chain (après `000100` visit_soft_delete / `000101` consultation_share). Si une base locale a déjà appliqué d’anciens numéros `000100_pharmacy_*` / `000103–106`, préférer DB propre ou `seed` reset. La migration `000081` exige **`pg_trgm`**.
+
+| Élément | Staging | Notes |
+|---------|---------|--------|
+| Extension **`pg_trgm`** | Une fois sur Cloud SQL (`cloudsqlsuperuser` / Extensions) | Requis migrate `000081+` |
+| `PHARMACY_ENABLED` | `true` (défaut `deploy-run-args` si `APP_ENV=staging`) | Prod = opt-in `false` |
+| `VAMREG_DRY_RUN` | `true` (défaut) | Jusqu’à P0-1 credentials |
+| `PHARMACY_WORKERS_ENABLED` | `false` (défaut) | Enqueue **inline** (timeout détaché) ; `true` = Asynq + Redis |
+| Secret `petsfollow-pharmacy-expiry-secret` | Branché si présent | `make gcp-pharmacy-expiry-scheduler` |
+| Secret `petsfollow-vamreg-api-key` | Optionnel | → `VAMREG_API_KEY` ; inutile en dry-run |
+| Smoke pilote | Manuel | Receipt → DAF finalize antibio → `vamregStatus=sent` (dry-run) |
+
+DAF→Billit (S5) **gelé** tant que reseller Billit absent.
 
 ## Prérequis
 
@@ -79,3 +93,41 @@ PETSFOLLOW_API_URL=https://petsfollow-api-a7ako2njea-od.a.run.app make gcp-smoke
 ```
 
 Les certificats managés restent en `PROVISIONING` tant que les enregistrements A OVH ne pointent pas vers `${LB_IP}`.
+
+---
+
+## Production (branche `main`)
+
+Objectif : API/site **non seedables** pour la piste Play Production et le futur site `petsfollow.app`.
+
+| Face | Service Cloud Run | Domaine cible |
+|------|-------------------|---------------|
+| Pro (Nuxt) | `petsfollow-nuxtjs-prod` | https://petsfollow.app |
+| API (Go) | `petsfollow-api-prod` | https://api.petsfollow.app |
+
+Fichiers déjà en repo (ne pas oublier au go-live) :
+
+| Fichier | Rôle |
+|---------|------|
+| [`.github/workflows/deploy-gcp-prod.yml`](../.github/workflows/deploy-gcp-prod.yml) | CI deploy prod — **workflow_dispatch seulement** ; décommenter `push: branches: [main]` pour activer |
+| [`infra/gcp/cloudbuild-prod.yaml`](../infra/gcp/cloudbuild-prod.yaml) | Build + deploy `APP_ENV=production`, seed off, modules tag-dev off ; garde-fou SQL `FIXME` / refuse staging SQL |
+| [`infra/gcp/lib/gcp-env-prod.sh`](../infra/gcp/lib/gcp-env-prod.sh) | Overrides domaines / services `*-prod` / Redis DB 15 |
+| [`infra/play/api-bases.sh`](../infra/play/api-bases.sh) | URLs Play : staging vs `api.petsfollow.app` |
+| `make play-android-bundle-prod` | AAB Play pointant l’API prod |
+| `make gcp-deploy-prod` | Cloud Build prod manuel (même config) |
+
+### Checklist avant d’activer le push `main`
+
+1. **Cloud SQL** prod (instance ≠ `premedica-db-staging`) + **secrets SM dédiés** (ne pas réutiliser `petsfollow-database-url` staging sans review) — remplacer `_CLOUDSQL_INSTANCE` / `FIXME` dans `cloudbuild-prod.yaml` et `gcp-env-prod.sh` ; adapter `pf_api_secrets` / noms SM si secrets séparés.
+2. **Bucket GCS** médias prod (`petsfollow-media-prod` ou équivalent) + IAM SA Run.
+3. **DNS** `petsfollow.app` + `api.petsfollow.app` → LB + cert managé (NEG/backends `*-prod`).
+4. Smoke `https://api.petsfollow.app/health` + login démo **non-seed** (comptes réels / bootstrap one-shot).
+5. Décommenter dans `deploy-gcp-prod.yml` :
+   ```yaml
+   push:
+     branches: [main]
+   ```
+6. Rebuild Play : `make play-android-bundle-prod` → upload piste Production (ou Internal smoke d’abord).
+7. Privacy / listing : garder `petsfollow.ll-it-sc.be/legal/*` tant que le site prod n’expose pas `/legal` ; ensuite aligner `LegalUrls` Flutter + Play Console.
+
+Staging reste sur push `staging` → [`deploy-gcp-staging.yml`](../.github/workflows/deploy-gcp-staging.yml) — **ne pas** mutualiser les services Run ni la DB.

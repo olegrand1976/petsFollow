@@ -3,6 +3,7 @@ package pharmacy
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/phpdave11/gofpdf"
@@ -10,25 +11,29 @@ import (
 
 // DAFPDFInput is the printable DAF content (lot + AMM required on each line).
 type DAFPDFInput struct {
-	DisplayNumber string
-	PracticeName  string
-	Prescriber    string
-	ClientName    string
-	PetName       string
-	IssuedAt      time.Time
-	Notes         string
-	Lines         []DAFPDFLine
+	DisplayNumber   string
+	PracticeName    string
+	Prescriber      string
+	ClientName      string
+	PetName         string
+	FoodChainStatus string // companion | food_producing | excluded_from_food_chain
+	IssuedAt        time.Time
+	Notes           string
+	Lines           []DAFPDFLine
 }
 
 type DAFPDFLine struct {
-	Medication string
-	CNK        string
-	AMM        string
-	Lot        string
-	ExpiresOn  string
-	Qty        string
-	Unit       string
-	Antibiotic bool
+	Medication          string
+	CNK                 string
+	AMM                 string
+	Lot                 string
+	ExpiresOn           string
+	Qty                 string
+	Unit                string
+	Antibiotic          bool
+	WithdrawalMeatDays  *int
+	WithdrawalMilkDays  *int
+	WithdrawalEggsDays  *int
 }
 
 // BuildDAFPDF renders a simple AFMPS-oriented DAF PDF.
@@ -54,6 +59,17 @@ func BuildDAFPDF(in DAFPDFInput) ([]byte, error) {
 		pdf.Cell(0, 7, fmt.Sprintf("Animal : %s", in.PetName))
 		pdf.Ln(6)
 	}
+	if in.FoodChainStatus != "" && in.FoodChainStatus != "companion" {
+		label := in.FoodChainStatus
+		switch in.FoodChainStatus {
+		case "food_producing":
+			label = "animal de rente / chaine alimentaire"
+		case "excluded_from_food_chain":
+			label = "exclu de la chaine alimentaire"
+		}
+		pdf.Cell(0, 7, fmt.Sprintf("Statut chaine alimentaire : %s", label))
+		pdf.Ln(6)
+	}
 	pdf.Cell(0, 7, fmt.Sprintf("Emis le : %s", in.IssuedAt.Format("2006-01-02 15:04")))
 	pdf.Ln(10)
 	if in.Notes != "" {
@@ -62,13 +78,14 @@ func BuildDAFPDF(in DAFPDFInput) ([]byte, error) {
 	}
 
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(55, 7, "Medicament", "1", 0, "", false, 0, "")
-	pdf.CellFormat(25, 7, "AMM", "1", 0, "", false, 0, "")
-	pdf.CellFormat(25, 7, "Lot", "1", 0, "", false, 0, "")
-	pdf.CellFormat(25, 7, "DLC", "1", 0, "", false, 0, "")
-	pdf.CellFormat(30, 7, "Qte", "1", 0, "", false, 0, "")
-	pdf.CellFormat(20, 7, "AB", "1", 1, "", false, 0, "")
-	pdf.SetFont("Arial", "", 9)
+	pdf.CellFormat(45, 7, "Medicament", "1", 0, "", false, 0, "")
+	pdf.CellFormat(22, 7, "AMM", "1", 0, "", false, 0, "")
+	pdf.CellFormat(22, 7, "Lot", "1", 0, "", false, 0, "")
+	pdf.CellFormat(22, 7, "DLC", "1", 0, "", false, 0, "")
+	pdf.CellFormat(25, 7, "Qte", "1", 0, "", false, 0, "")
+	pdf.CellFormat(18, 7, "AB", "1", 0, "", false, 0, "")
+	pdf.CellFormat(36, 7, "Attente V/L/O", "1", 1, "", false, 0, "")
+	pdf.SetFont("Arial", "", 8)
 	for _, l := range in.Lines {
 		name := l.Medication
 		if l.CNK != "" {
@@ -78,16 +95,17 @@ func BuildDAFPDF(in DAFPDFInput) ([]byte, error) {
 		if l.Antibiotic {
 			ab = "oui"
 		}
-		pdf.CellFormat(55, 7, truncatePDF(name, 34), "1", 0, "", false, 0, "")
-		pdf.CellFormat(25, 7, truncatePDF(l.AMM, 14), "1", 0, "", false, 0, "")
-		pdf.CellFormat(25, 7, truncatePDF(l.Lot, 14), "1", 0, "", false, 0, "")
-		pdf.CellFormat(25, 7, l.ExpiresOn, "1", 0, "", false, 0, "")
-		pdf.CellFormat(30, 7, l.Qty+" "+l.Unit, "1", 0, "", false, 0, "")
-		pdf.CellFormat(20, 7, ab, "1", 1, "", false, 0, "")
+		pdf.CellFormat(45, 7, truncatePDF(name, 28), "1", 0, "", false, 0, "")
+		pdf.CellFormat(22, 7, truncatePDF(l.AMM, 12), "1", 0, "", false, 0, "")
+		pdf.CellFormat(22, 7, truncatePDF(l.Lot, 12), "1", 0, "", false, 0, "")
+		pdf.CellFormat(22, 7, l.ExpiresOn, "1", 0, "", false, 0, "")
+		pdf.CellFormat(25, 7, l.Qty+" "+l.Unit, "1", 0, "", false, 0, "")
+		pdf.CellFormat(18, 7, ab, "1", 0, "", false, 0, "")
+		pdf.CellFormat(36, 7, formatWithdrawal(l), "1", 1, "", false, 0, "")
 	}
 	pdf.Ln(8)
 	pdf.SetFont("Arial", "I", 8)
-	pdf.MultiCell(0, 4, "Mentions AFMPS : numero de lot et numero d'AMM obligatoires. DLC indiquee a titre informatif. Document genere par petsFollow — ne remplace pas un logiciel DAF certifie.", "", "", false)
+	pdf.MultiCell(0, 4, "Mentions AFMPS : numero de lot et numero d'AMM obligatoires. Temps d'attente V/L/O = viande / lait / oeufs (jours). DLC indiquee a titre informatif. Document genere par petsFollow — ne remplace pas un logiciel DAF certifie.", "", "", false)
 
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
@@ -101,4 +119,24 @@ func truncatePDF(s string, n int) string {
 		return s
 	}
 	return s[:n-1] + "."
+}
+
+func formatWithdrawal(l DAFPDFLine) string {
+	parts := make([]string, 0, 3)
+	if l.WithdrawalMeatDays != nil {
+		parts = append(parts, fmt.Sprintf("V:%d", *l.WithdrawalMeatDays))
+	} else {
+		parts = append(parts, "V:-")
+	}
+	if l.WithdrawalMilkDays != nil {
+		parts = append(parts, fmt.Sprintf("L:%d", *l.WithdrawalMilkDays))
+	} else {
+		parts = append(parts, "L:-")
+	}
+	if l.WithdrawalEggsDays != nil {
+		parts = append(parts, fmt.Sprintf("O:%d", *l.WithdrawalEggsDays))
+	} else {
+		parts = append(parts, "O:-")
+	}
+	return strings.Join(parts, " ")
 }

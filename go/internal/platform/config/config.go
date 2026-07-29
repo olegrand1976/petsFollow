@@ -9,22 +9,22 @@ import (
 )
 
 type Config struct {
-	HTTPAddr                       string
-	DatabaseURL                    string
-	RedisAddr                      string
-	RedisKeyPrefix                 string
-	JWTSigningKey                  string
-	JWTAccessTTL                   time.Duration
-	JWTRefreshTTL                  time.Duration
-	LogLevel                       string
-	MigrateOnBoot                  bool
-	DevSeedEnabled                 bool
-	SMTPHost                       string
-	SMTPPort                       int
-	SMTPFrom                       string
+	HTTPAddr       string
+	DatabaseURL    string
+	RedisAddr      string
+	RedisKeyPrefix string
+	JWTSigningKey  string
+	JWTAccessTTL   time.Duration
+	JWTRefreshTTL  time.Duration
+	LogLevel       string
+	MigrateOnBoot  bool
+	DevSeedEnabled bool
+	SMTPHost       string
+	SMTPPort       int
+	SMTPFrom       string
 	// SMTPUser / SMTPPass — auth PLAIN (OVH :587). Vides = MailHog / relay ouvert.
-	SMTPUser string
-	SMTPPass string
+	SMTPUser                       string
+	SMTPPass                       string
 	HeartRateSeconds               int
 	StripeSecretKey                string
 	StripeWebhookSecret            string
@@ -86,13 +86,19 @@ type Config struct {
 	PharmacyEnabled bool
 	// PharmacyExpirySecret protège POST /internal/pharmacy/expiry-run.
 	PharmacyExpirySecret string
+	// PharmacyWorkersEnabled starts Asynq server + enqueue for VAMReg (and future invoices.connect).
+	PharmacyWorkersEnabled bool
+	// VamregDryRun skips real HTTP (default true until credentials).
+	VamregDryRun  bool
+	VamregBaseURL string
+	VamregAPIKey  string
 	// PrescriptionsEnabled enables veterinary prescription drafts + PDF preview — default off.
 	PrescriptionsEnabled bool
 
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
 	// BillitMockEnabled uses the mock gateway (local/CI) — never call Billit live.
-	BillitMockEnabled bool
+	BillitMockEnabled         bool
 	BillitBaseURL             string
 	BillitMasterPartyID       string
 	BillitMasterAPIKey        string
@@ -149,55 +155,59 @@ func Load() Config {
 		APIPublicURL:                   envOr("PETSFOLLOW_API_PUBLIC_URL", "http://localhost:8291"),
 		ProPublicSiteURL:               envOr("PETSFOLLOW_PUBLIC_SITE_URL", "http://localhost:3002"),
 		// Mock billing uniquement sur opt-in explicite — jamais inféré de l'absence de clé Stripe.
-		BillingMockEnabled:             envBool("BILLING_MOCK_ENABLED"),
-		GoogleOAuthClientID:            envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
-		GCSMediaBucket:                 envOr("GCS_MEDIA_BUCKET", ""),
-		MediaLocalDir:                  envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
-		LLITWebsiteURL:                 envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
-		PetsAppDownloadURL:             envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
+		BillingMockEnabled:  envBool("BILLING_MOCK_ENABLED"),
+		GoogleOAuthClientID: envOr("GOOGLE_OAUTH_CLIENT_ID", ""),
+		GCSMediaBucket:      envOr("GCS_MEDIA_BUCKET", ""),
+		MediaLocalDir:       envOr("MEDIA_LOCAL_DIR", "./data/uploads"),
+		LLITWebsiteURL:      envOr("LLIT_WEBSITE_URL", "https://ll-it-sc.be"),
+		PetsAppDownloadURL:  envOr("PETS_APP_DOWNLOAD_URL", "https://appdistribution.firebase.google.com/testerapps/1:237481297060:android:cfda5c59a08bfd6dc9d231"),
 		// FCM enabled by default; ADC (GOOGLE_APPLICATION_CREDENTIALS / Cloud Run SA) required to actually send.
-		FCMEnabled:           envBoolDefault("FCM_ENABLED", true),
-		JourneyEmailEnabled:  envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
-		JourneyEmailInterval: envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
-		GeminiAPIKey:         envOr("GEMINI_API_KEY", ""),
-		GeminiModel:          envOr("GEMINI_MODEL", "gemini-3.6-flash"),
-		GeminiLiteModel:      envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
-		GeminiLiveModel:      envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
-		PitchAnalyzerSecret:  envOr("PITCH_ANALYZER_SECRET", ""),
-		ProductDigestSecret:  envOr("PRODUCT_DIGEST_SECRET", ""),
-		VertexProject:        envOr("VERTEX_PROJECT", ""),
-		VertexLocation:       envOr("VERTEX_LOCATION", "europe-west9"),
-		CareProPublicRegister: envBool("CARE_PRO_PUBLIC_REGISTER"),
-		AuthRateLimitPerMin:   envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
-		CORSAllowedOrigins:    envOr("CORS_ALLOWED_ORIGINS", ""),
-		RetentionPurgeSecret:      envOr("RETENTION_PURGE_SECRET", ""),
-		SalesBranchesAutoSecret:   envOr("SALES_BRANCHES_AUTO_SECRET", ""),
-		AiModuleFrictionSecret:    envOr("AI_MODULE_FRICTION_SECRET", ""),
-		OpsNotifyEmail:         envOr("OPS_NOTIFY_EMAIL", ""),
-		CommercialContactPhone: envOr("COMMERCIAL_CONTACT_PHONE", ""),
-		SupportInboxEmail:      envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
-		AuthHealthSecret:       envOr("AUTH_HEALTH_SECRET", ""),
+		FCMEnabled:              envBoolDefault("FCM_ENABLED", true),
+		JourneyEmailEnabled:     envBoolDefault("JOURNEY_EMAIL_ENABLED", true),
+		JourneyEmailInterval:    envDuration("JOURNEY_EMAIL_INTERVAL", time.Hour),
+		GeminiAPIKey:            envOr("GEMINI_API_KEY", ""),
+		GeminiModel:             envOr("GEMINI_MODEL", "gemini-3.6-flash"),
+		GeminiLiteModel:         envOr("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite"),
+		GeminiLiveModel:         envOr("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-09-2025"),
+		PitchAnalyzerSecret:     envOr("PITCH_ANALYZER_SECRET", ""),
+		ProductDigestSecret:     envOr("PRODUCT_DIGEST_SECRET", ""),
+		VertexProject:           envOr("VERTEX_PROJECT", ""),
+		VertexLocation:          envOr("VERTEX_LOCATION", "europe-west9"),
+		CareProPublicRegister:   envBool("CARE_PRO_PUBLIC_REGISTER"),
+		AuthRateLimitPerMin:     envInt("AUTH_RATE_LIMIT_PER_MIN", 60),
+		CORSAllowedOrigins:      envOr("CORS_ALLOWED_ORIGINS", ""),
+		RetentionPurgeSecret:    envOr("RETENTION_PURGE_SECRET", ""),
+		SalesBranchesAutoSecret: envOr("SALES_BRANCHES_AUTO_SECRET", ""),
+		AiModuleFrictionSecret:  envOr("AI_MODULE_FRICTION_SECRET", ""),
+		OpsNotifyEmail:          envOr("OPS_NOTIFY_EMAIL", ""),
+		CommercialContactPhone:  envOr("COMMERCIAL_CONTACT_PHONE", ""),
+		SupportInboxEmail:       envOr("SUPPORT_INBOX_EMAIL", "support@petsfollow.app"),
+		AuthHealthSecret:        envOr("AUTH_HEALTH_SECRET", ""),
 		MLMOrgEnabled:           envBool("MLM_ORG_ENABLED"),
 		PharmacyEnabled:         envBool("PHARMACY_ENABLED"),
 		PharmacyExpirySecret:    envOr("PHARMACY_EXPIRY_SECRET", ""),
+		PharmacyWorkersEnabled:  envBool("PHARMACY_WORKERS_ENABLED"),
+		VamregDryRun:            envBoolDefault("VAMREG_DRY_RUN", true),
+		VamregBaseURL:           envOr("VAMREG_BASE_URL", ""),
+		VamregAPIKey:            envOr("VAMREG_API_KEY", ""),
 		PrescriptionsEnabled:    envBool("PRESCRIPTIONS_ENABLED"),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
-		BillitEnabled:           envBool("BILLIT_ENABLED"),
-		BillitMockEnabled:       envBool("BILLIT_MOCK_ENABLED"),
-		BillitBaseURL:           envOr("BILLIT_BASE_URL", "https://api.billit.be"),
-		BillitMasterPartyID:     envOr("BILLIT_MASTER_PARTY_ID", ""),
-		BillitMasterAPIKey:      envOr("BILLIT_MASTER_API_KEY", ""),
-		BillitResellerRegisterURL: envOr("BILLIT_RESELLER_REGISTER_URL", "https://my.billit.be/account/PetsFollow/Register"),
-		BillitWebhookSecret:       envOr("BILLIT_WEBHOOK_SECRET", ""),
-		BillitDefaultDocsIncluded: envInt("BILLIT_DEFAULT_DOCS_INCLUDED", 50),
-		BillitSecretsBackend:      envOr("BILLIT_SECRETS_BACKEND", "plain_dev"),
-		BillitSecretsKey:          envOr("BILLIT_SECRETS_KEY", ""),
+		BillitEnabled:              envBool("BILLIT_ENABLED"),
+		BillitMockEnabled:          envBool("BILLIT_MOCK_ENABLED"),
+		BillitBaseURL:              envOr("BILLIT_BASE_URL", "https://api.billit.be"),
+		BillitMasterPartyID:        envOr("BILLIT_MASTER_PARTY_ID", ""),
+		BillitMasterAPIKey:         envOr("BILLIT_MASTER_API_KEY", ""),
+		BillitResellerRegisterURL:  envOr("BILLIT_RESELLER_REGISTER_URL", "https://my.billit.be/account/PetsFollow/Register"),
+		BillitWebhookSecret:        envOr("BILLIT_WEBHOOK_SECRET", ""),
+		BillitDefaultDocsIncluded:  envInt("BILLIT_DEFAULT_DOCS_INCLUDED", 50),
+		BillitSecretsBackend:       envOr("BILLIT_SECRETS_BACKEND", "plain_dev"),
+		BillitSecretsKey:           envOr("BILLIT_SECRETS_KEY", ""),
 		InvoicingSaasPriceEURCents: envInt("INVOICING_SAAS_PRICE_EUR_CENTS", 8800),
-		InvoicingSaasAllowlist:    envCSV("INVOICING_SAAS_ALLOWLIST"),
-		SaasInvoicesSecret:        envOr("SAAS_INVOICES_SECRET", ""),
-		SeedNotifyStaff:         envBool("SEED_NOTIFY_STAFF"),
-		AdminStagingSeedEnabled: envBool("ADMIN_STAGING_SEED_ENABLED"),
+		InvoicingSaasAllowlist:     envCSV("INVOICING_SAAS_ALLOWLIST"),
+		SaasInvoicesSecret:         envOr("SAAS_INVOICES_SECRET", ""),
+		SeedNotifyStaff:            envBool("SEED_NOTIFY_STAFF"),
+		AdminStagingSeedEnabled:    envBool("ADMIN_STAGING_SEED_ENABLED"),
 	}
 }
 
@@ -222,6 +232,17 @@ func (c Config) ValidateBillit() error {
 	}
 	if c.BillitSecretsBackend == "local_enc" && strings.TrimSpace(c.BillitSecretsKey) == "" {
 		return errors.New("BILLIT_SECRETS_KEY required when BILLIT_SECRETS_BACKEND=local_enc")
+	}
+	return nil
+}
+
+// ValidateVamreg refuses live VAMReg without a gateway URL (never silent dry-run).
+func (c Config) ValidateVamreg() error {
+	if c.VamregDryRun {
+		return nil
+	}
+	if strings.TrimSpace(c.VamregBaseURL) == "" {
+		return errors.New("VAMREG_BASE_URL required when VAMREG_DRY_RUN=false")
 	}
 	return nil
 }

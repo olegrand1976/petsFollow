@@ -55,13 +55,19 @@ export function isPracticeStaffRole(role: string | null | undefined): boolean {
 
 /** Rôles autorisés sur la face Pro (Nuxt). */
 export function isProRole(role: string | null | undefined): boolean {
-  return role === 'admin' || isPracticeStaffRole(role) || isSalesForceRole(role)
+  return role === 'admin' || role === 'dev' || isPracticeStaffRole(role) || isSalesForceRole(role)
+}
+
+/** Ops plateforme : admin full + DEV support IT. */
+export function isOpsRole(role: string | null | undefined): boolean {
+  return role === 'admin' || role === 'dev'
 }
 
 /** Home post-login / post-change-password pour un rôle Pro. */
 export function homePathForRole(role: string | null | undefined, opts?: { profileComplete?: boolean | null }): string {
   switch (role) {
     case 'admin':
+    case 'dev':
       return '/admin'
     case 'commercial_manager':
       return '/commercial-manager'

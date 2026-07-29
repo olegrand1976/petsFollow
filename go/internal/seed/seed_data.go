@@ -11,6 +11,7 @@ const (
 	passwordVet        = "VetDemo123!"
 	passwordClient     = "ClientDemo123!"
 	passwordAdmin      = "AdminDemo123!"
+	passwordDev        = "DevDemo123!"
 	passwordCommercial = "CommercialDemo123!"
 	passwordCarePro    = "CareProDemo123!"
 
