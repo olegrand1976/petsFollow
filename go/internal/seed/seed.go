@@ -95,7 +95,7 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedProfilesTeamModules(ctx, pool, st); err != nil {
 		return err
 	}
-	if err := seedDevVetProfile(ctx, pool, st); err != nil {
+	if err := EnsureDemoOpsVetProfiles(ctx, pool, st); err != nil {
 		return err
 	}
 	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
@@ -509,32 +509,40 @@ func seedDev(ctx context.Context, tx pgx.Tx) error {
 	return err
 }
 
-// seedDevVetProfile ajoute un profil vet VetPlus au compte DEV (switch démo support).
-func seedDevVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
-	var devID, practiceID string
-	err := pool.QueryRow(ctx, `
-		SELECT id::text FROM identity.users WHERE email = 'dev.demo@petsfollow.test'`).Scan(&devID)
-	if err != nil {
-		return fmt.Errorf("dev.demo: %w", err)
+// EnsureDemoOpsVetProfiles is idempotent — used by seed.Run and integration tests.
+func EnsureDemoOpsVetProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	if err := seedOpsDemoVetProfile(ctx, pool, st, "dev.demo@petsfollow.test"); err != nil {
+		return err
 	}
-	if err := st.EnsureUserProfiles(ctx, devID); err != nil {
-		return fmt.Errorf("dev profiles: %w", err)
+	return seedOpsDemoVetProfile(ctx, pool, st, "admin.demo@petsfollow.test")
+}
+
+// seedOpsDemoVetProfile attache EnsureUserProfiles + profil vet VetPlus + team_members.
+func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store, email string) error {
+	var userID, practiceID string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users WHERE email = $1`, email).Scan(&userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", email, err)
+	}
+	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+		return fmt.Errorf("%s profiles: %w", email, err)
 	}
 	err = pool.QueryRow(ctx, `
 		SELECT p.id::text FROM practice.practices p
 		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
 		LIMIT 1`).Scan(&practiceID)
 	if err != nil {
-		return fmt.Errorf("vetplus practice for dev profile: %w", err)
+		return fmt.Errorf("vetplus practice for %s profile: %w", email, err)
 	}
 	var profileID string
 	err = pool.QueryRow(ctx, `
-		SELECT id::text FROM identity.profiles WHERE user_id = $1 AND role = 'vet'`, devID).Scan(&profileID)
+		SELECT id::text FROM identity.profiles WHERE user_id = $1 AND role = 'vet'`, userID).Scan(&profileID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		profileID = uuid.NewString()
 		_, err = pool.Exec(ctx, `
 			INSERT INTO identity.profiles (id, user_id, role, practice_id, professional_specialty, created_at)
-			VALUES ($1, $2, 'vet', $3, NULL, NOW())`, profileID, devID, practiceID)
+			VALUES ($1, $2, 'vet', $3, NULL, NOW())`, profileID, userID, practiceID)
 		if err != nil {
 			return err
 		}
@@ -548,7 +556,7 @@ func seedDevVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store)
 			profile_id = EXCLUDED.profile_id,
 			team_role = EXCLUDED.team_role,
 			status = 'active'`,
-		uuid.NewString(), practiceID, devID, profileID)
+		uuid.NewString(), practiceID, userID, profileID)
 	return err
 }
 
@@ -1087,7 +1095,7 @@ func logSummary() {
 	// Les mots de passe démo restent hors des logs (Cloud Run staging est plus
 	// largement lisible que la base) — voir AGENTS.md.
 	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
-	log.Println("Admin  : admin.demo@petsfollow.test")
+	log.Println("Admin  : admin.demo@petsfollow.test (switch profils client/vet)")
 	log.Println("DEV    : dev.demo@petsfollow.test (support IT — switch profils client/vet)")
 	log.Println("Manager: commercial.manager@petsfollow.test")
 	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
