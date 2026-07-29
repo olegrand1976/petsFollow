@@ -176,8 +176,9 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
       headers: { Authorization: `Bearer ${vetTok}` },
       body: form,
     })
-    expect(tr.status, await tr.text()).toBe(200)
-    const trBody = await tr.json()
+    const trText = await tr.text()
+    expect(tr.status, trText).toBe(200)
+    const trBody = JSON.parse(trText) as { data?: { hasAudio?: boolean; audioDurationSec?: number } }
     expect(trBody.data?.hasAudio).toBe(true)
     expect(trBody.data?.audioDurationSec).toBe(154)
 

@@ -1,7 +1,26 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
 
 const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
+
+/** Invitation / overlay ProModal can intercept the CTA click on Cloud Run. */
+async function dismissProModals(page: Page) {
+  await page.getByTestId('pro-modal').first()
+    .waitFor({ state: 'visible', timeout: 1500 })
+    .catch(() => undefined)
+  for (let i = 0; i < 3; i++) {
+    const inviteOnly = page.getByTestId('pro-modal')
+    if ((await inviteOnly.count()) === 0) return
+    const close = page.getByTestId('pro-modal-close')
+    if ((await close.count()) > 0) {
+      await close.first().click({ force: true })
+    }
+    else {
+      await page.keyboard.press('Escape')
+    }
+    await expect(inviteOnly).toHaveCount(0, { timeout: 5000 }).catch(() => undefined)
+  }
+}
 
 async function apiLogin(email: string, password: string): Promise<string> {
   const res = await fetch(`${API}/api/v1/auth/login`, {
@@ -169,13 +188,22 @@ test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
   await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await page.goto(`/clients/${clientId}/pets/${petId}`, { waitUntil: 'networkidle' })
   await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
-  await expect(page.getByTestId('pet-new-consultation')).toBeVisible()
-  await page.getByTestId('pet-new-consultation').click()
-  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+  await dismissProModals(page)
+  const cta = page.getByTestId('pet-new-consultation')
+  await expect(cta).toBeVisible({ timeout: 15000 })
+  await expect(cta).toBeEnabled()
+  try {
+    await cta.click({ timeout: 5000 })
+  }
+  catch {
+    await dismissProModals(page)
+    await cta.click()
+  }
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
   const petSelect = page.getByTestId('consultation-pet-select')
-  await expect(petSelect).toBeEnabled({ timeout: 10000 })
+  await expect(petSelect).toBeEnabled({ timeout: 15000 })
   await expect(petSelect).toHaveValue(petId)
 })
 
