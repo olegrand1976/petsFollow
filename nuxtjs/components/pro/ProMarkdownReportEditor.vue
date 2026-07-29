@@ -1,9 +1,9 @@
 <template>
-  <div class="pro-md-report" data-testid="visit-report-editor">
+  <div class="pro-md-report" :data-testid="editorTestId">
     <div class="pro-flex-gap pro-md-report__tabs">
       <ProButton
         :variant="mode === 'preview' ? 'primary' : 'secondary'"
-        test-id="visit-report-preview-tab"
+        :test-id="`${testIdPrefix}-preview-tab`"
         :disabled="disabled"
         @click="mode = 'preview'"
       >
@@ -11,7 +11,7 @@
       </ProButton>
       <ProButton
         :variant="mode === 'edit' ? 'primary' : 'secondary'"
-        test-id="visit-report-edit-tab"
+        :test-id="`${testIdPrefix}-edit-tab`"
         :disabled="disabled"
         @click="mode = 'edit'"
       >
@@ -20,8 +20,8 @@
     </div>
     <div
       v-if="mode === 'preview'"
-      class="pro-md-report__preview pro-input"
-      data-testid="visit-report-preview"
+      class="pro-input pro-md-report__preview"
+      :data-testid="`${testIdPrefix}-preview`"
       v-html="safeHtml"
     />
     <textarea
@@ -29,7 +29,7 @@
       :id="inputId"
       class="pro-input pro-md-report__textarea"
       rows="14"
-      data-testid="visit-report-body"
+      :data-testid="textareaTestId"
       :value="modelValue"
       :placeholder="placeholder"
       :disabled="disabled"
@@ -49,6 +49,9 @@ const props = withDefaults(
     disabled?: boolean
     readonly?: boolean
     inputId?: string
+    textareaTestId?: string
+    editorTestId?: string
+    testIdPrefix?: string
     /**
      * Incrementing tick forces preview mode (boolean preferPreview alone would not
      * re-fire the watcher when already true after a second improve/transcribe).
@@ -60,6 +63,9 @@ const props = withDefaults(
     disabled: false,
     readonly: false,
     inputId: 'visit-report-body',
+    textareaTestId: 'visit-report-body',
+    editorTestId: 'visit-report-editor',
+    testIdPrefix: 'visit-report',
     preferPreviewTick: 0,
   },
 )
@@ -90,7 +96,7 @@ function onInput(ev: Event) {
 
 .pro-md-report__textarea,
 .pro-md-report__preview {
-  min-height: 42vh;
+  min-height: 280px;
   width: 100%;
   resize: vertical;
 }

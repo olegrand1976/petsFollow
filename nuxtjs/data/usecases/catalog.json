@@ -243,7 +243,7 @@
         "Se connecter en véto → Clients.",
         "Sur une ligne client, cliquer Nouvelle Consultation.",
         "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer.",
-        "Rédiger ou dicter le CR (audio → transcription) → Enregistrer (ou Finaliser).",
+        "Écran CR split :",
         "Choisir :",
         "(Optionnel) Même CTA depuis la fiche client ou la fiche animal."
       ],
@@ -254,7 +254,8 @@
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
         "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document).",
-        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture)."
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture).",
+        "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
       ],
       "checklist": [
         "CTA liste clients",
