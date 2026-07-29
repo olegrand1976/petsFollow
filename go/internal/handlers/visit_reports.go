@@ -28,7 +28,13 @@ type visitLocationReq struct {
 }
 
 type visitReportBodyReq struct {
-	BodyText string `json:"bodyText"`
+	BodyText       string  `json:"bodyText"`
+	TranscriptText *string `json:"transcriptText,omitempty"`
+}
+
+type visitReportImproveReq struct {
+	// Optional override: improve from this text without requiring a prior PUT that overwrites body.
+	SourceText string `json:"sourceText,omitempty"`
 }
 
 func (a *API) updateVisitLocation(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +206,13 @@ func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	report, err := a.store.UpsertVisitReport(r.Context(), visitID, id.UserID, gemini.NormalizeVisitReportText(req.BodyText))
+	body := gemini.NormalizeVisitReportText(req.BodyText)
+	var transcript *string
+	if req.TranscriptText != nil {
+		normalized := gemini.NormalizeVisitReportText(*req.TranscriptText)
+		transcript = &normalized
+	}
+	report, err := a.store.UpsertVisitReportFields(r.Context(), visitID, id.UserID, body, transcript)
 	if err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
@@ -357,7 +369,15 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 		return
 	}
-	source := gemini.NormalizeVisitReportText(report.BodyText)
+	var improveReq visitReportImproveReq
+	if err := httpx.DecodeJSON(r, &improveReq); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	source := gemini.NormalizeVisitReportText(improveReq.SourceText)
+	if strings.TrimSpace(source) == "" {
+		source = gemini.NormalizeVisitReportText(report.BodyText)
+	}
 	if strings.TrimSpace(source) == "" {
 		source = gemini.NormalizeVisitReportText(report.TranscriptText)
 	}
@@ -508,8 +528,8 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	transcript := hint
-	if transcript == "" {
+	transcript := gemini.NormalizeVisitReportText(hint)
+	if strings.TrimSpace(hint) == "" {
 		system := `Tu transcris un compte-rendu vocal vétérinaire ou de soin animalier.
 Retourne uniquement le texte transcrit, clair, en français (ou la langue parlée). N'invente pas de faits médicaux absents de l'audio.`
 		userPrompt := "Transcris cet enregistrement de visite."
@@ -520,7 +540,7 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
 		}
-		transcript = strings.TrimSpace(out)
+		transcript = gemini.NormalizeVisitReportText(strings.TrimSpace(out))
 		if transcript == "" {
 			a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageError)
 			_ = a.purgeVisitReportAudio(r.Context(), report)

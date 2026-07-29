@@ -89,10 +89,13 @@ async function startConsultationVisit(page: Page): Promise<{ id: string }> {
 
 async function saveConsultationReport(page: Page) {
   await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+  await expect(page.getByTestId('visit-report-pane-left')).toBeVisible()
+  await expect(page.getByTestId('visit-report-pane-right')).toBeVisible()
   const reportBody = page.getByTestId('visit-report-body')
   await expect(reportBody).toBeEnabled({ timeout: 20000 })
   await reportBody.click()
   await reportBody.fill(`E2E consultation CR ${Date.now()}`)
+  await expect(page.getByTestId('visit-report-save')).toBeEnabled()
   await page.getByTestId('visit-report-save').click()
   await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
 }

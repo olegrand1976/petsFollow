@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { mapVisitReportFields, persistedHistoryBody } from '../../utils/visitReport'
 import { normalizeReportText, renderSafeMarkdown } from '../../utils/safeMarkdown'
 
+/** Shared escape / hostile corpus (aligned with Go normalize tests). */
+export const REPORT_ESCAPE_CORPUS
+  = 'Notes "quotes" \'apos\' «guillemets» back\\slash &amp; <script>alert(1)</script>\n'
+    + '**bold**\n- item\n'
+    + 'emoji 🐶 accents été\u0000\u0001'
+
 describe('mapVisitReportFields', () => {
   it('returns empty fields for null payload', () => {
     expect(mapVisitReportFields(null)).toEqual({
@@ -57,12 +63,23 @@ describe('persistedHistoryBody', () => {
 
   it('ignores empty persisted body', () => {
     expect(persistedHistoryBody('', 'raw', 'ai')).toBe('')
+    expect(persistedHistoryBody('', 'raw', 'ai')).toBe('')
   })
 })
 
 describe('safeMarkdown', () => {
   it('strips NUL and control chars', () => {
     expect(normalizeReportText('a\u0000b\u0001c')).toBe('abc')
+  })
+
+  it('preserves quotes backslash entities accents emoji', () => {
+    const cleaned = normalizeReportText(REPORT_ESCAPE_CORPUS)
+    expect(cleaned).not.toMatch(/\u0000|\u0001/)
+    expect(cleaned).toContain('"quotes"')
+    expect(cleaned).toContain('back\\slash')
+    expect(cleaned).toContain('&amp;')
+    expect(cleaned).toContain('été')
+    expect(cleaned).toContain('🐶')
   })
 
   it('renders bold markdown safely', () => {
@@ -75,6 +92,13 @@ describe('safeMarkdown', () => {
   it('strips script tags from malicious markdown/html', () => {
     const html = renderSafeMarkdown('ok <script>alert(1)</script> **x**')
     expect(html.toLowerCase()).not.toContain('<script')
+    expect(html).toContain('<strong>')
+  })
+
+  it('strips onerror-style payloads from corpus preview', () => {
+    const html = renderSafeMarkdown(REPORT_ESCAPE_CORPUS)
+    expect(html.toLowerCase()).not.toContain('<script')
+    expect(html.toLowerCase()).not.toContain('onerror')
     expect(html).toContain('<strong>')
   })
 })
