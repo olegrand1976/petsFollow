@@ -1667,7 +1667,7 @@
       "addonRevenue": "CA addons",
       "commercialDue": "Commissions commerciales",
       "stagingSeedTitle": "Réinitialiser la DB staging",
-      "stagingSeedWarn": "Action irréversible : truncate des données démo et re-seed. Les comptes admin / commercial / manager réels sont conservés.",
+      "stagingSeedWarn": "Action irréversible : truncate des données démo et re-seed. Conservés : comptes admin / commercial / manager, tickets support, client b.murgo1976@gmail.com (+ données liées).",
       "stagingSeedHint": "Pour confirmer, saisissez exactement : {phrase}",
       "stagingSeedConfirmLabel": "Phrase de confirmation",
       "stagingSeedConfirmDialog": "Confirmer le reset complet de la base staging ?",

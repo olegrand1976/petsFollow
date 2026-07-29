@@ -1024,7 +1024,7 @@
       "addonRevenue": "Ingresos por complementos",
       "commercialDue": "Comisiones comerciales",
       "stagingSeedTitle": "Reiniciar BD staging",
-      "stagingSeedWarn": "Irreversible: trunca datos demo y vuelve a seed. Se conservan cuentas reales admin / comercial / manager.",
+      "stagingSeedWarn": "Irreversible: trunca datos demo y vuelve a seed. Se conservan: cuentas admin / comercial / manager, tickets de soporte, cliente b.murgo1976@gmail.com (+ datos relacionados).",
       "stagingSeedHint": "Para confirmar, escribe exactamente: {phrase}",
       "stagingSeedConfirmLabel": "Frase de confirmación",
       "stagingSeedConfirmDialog": "¿Confirmar el reset completo de la base staging?",

@@ -41,6 +41,8 @@ Le seed **n’est plus** exécuté à chaque deploy ni via Scheduler. Remise à 
 1. **Admin Pro** → tableau de bord → zone danger (saisie `RESET STAGING`) — API `POST /api/v1/admin/staging/seed` (flag `ADMIN_STAGING_SEED_ENABLED`).
 2. **CLI** : `bash infra/gcp/postdeploy.sh --seed` (job Cloud Run `petsfollow-seed`).
 
+**Conservé au reset** : tickets support (`ops.support_tickets` + replies) ; comptes admin / commercial / commercial_manager ; client staging `b.murgo1976@gmail.com` (compte + pets / messagerie / liens cabinet / billing, rebranchés sur les cabinets démo re-seedés par nom).
+
 ```bash
 make gcp-delete-seed-scheduler        # retire le job Scheduler hebdo s’il existe encore
 bash infra/gcp/postdeploy.sh --seed   # reset CLI (+ email si SEED_NOTIFY_STAFF)

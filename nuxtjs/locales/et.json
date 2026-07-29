@@ -1024,7 +1024,7 @@
       "addonRevenue": "Lisade tulu",
       "commercialDue": "Müügikomisjonid",
       "stagingSeedTitle": "Lähtesta staging-andmebaas",
-      "stagingSeedWarn": "Pöördumatu: tühjendab demoandmed ja seedib uuesti. Tõelised admini / müügi / juhi kontod säilitatakse.",
+      "stagingSeedWarn": "Pöördumatu: tühjendab demoandmed ja seedib uuesti. Säilitatakse: admini / müügi / juhi kontod, tugipiletid, klient b.murgo1976@gmail.com (+ seotud andmed).",
       "stagingSeedHint": "Kinnitamiseks sisesta täpselt: {phrase}",
       "stagingSeedConfirmLabel": "Kinnitusfraas",
       "stagingSeedConfirmDialog": "Kinnitada staging-andmebaasi täielik lähtestamine?",

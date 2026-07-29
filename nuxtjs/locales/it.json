@@ -1591,7 +1591,7 @@
       "addonRevenue": "Componenti aggiuntivi della CA",
       "commercialDue": "Commissioni commerciali",
       "stagingSeedTitle": "Reimposta DB staging",
-      "stagingSeedWarn": "Irreversibile: tronca i dati demo e riesegue il seed. Gli account reali admin / commerciale / manager sono conservati.",
+      "stagingSeedWarn": "Irreversibile: tronca i dati demo e riesegue il seed. Conservati: account admin / commerciale / manager, ticket di supporto, cliente b.murgo1976@gmail.com (+ dati collegati).",
       "stagingSeedHint": "Per confermare, digita esattamente: {phrase}",
       "stagingSeedConfirmLabel": "Frase di conferma",
       "stagingSeedConfirmDialog": "Confermare il reset completo del database staging?",

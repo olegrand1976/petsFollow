@@ -35,6 +35,10 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	defer func() { _ = tx.Rollback(context.Background()) }()
 
+	snap, err := snapshotPreserveClients(ctx, tx)
+	if err != nil {
+		return fmt.Errorf("preserve client snapshot: %w", err)
+	}
 	if err := truncateAll(ctx, tx); err != nil {
 		return err
 	}
@@ -48,6 +52,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	if err := seedCommercial(ctx, tx); err != nil {
 		return err
+	}
+	if err := restorePreserveClients(ctx, tx, snap); err != nil {
+		return fmt.Errorf("preserve client restore: %w", err)
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
@@ -187,6 +194,16 @@ func payoutHolder(p practiceDef) string {
 // protectedSalesRoles are never deleted by seed (staging real accounts + demos).
 var protectedSalesRoles = []string{"admin", "commercial", "commercial_manager"}
 
+// preserveClientEmails are staging real clients whose account + owned graph survive seed.Run.
+var preserveClientEmails = []string{"b.murgo1976@gmail.com"}
+
+// SetPreserveClientEmailsForTest overrides the preserve list (integration tests only).
+func SetPreserveClientEmailsForTest(emails []string) func() {
+	prev := preserveClientEmails
+	preserveClientEmails = append([]string(nil), emails...)
+	return func() { preserveClientEmails = prev }
+}
+
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
@@ -208,6 +225,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
+	// ops.support_tickets (+ replies) are intentionally NOT truncated: staging support inbox must survive resets.
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.commercial_bonus_awards,
 		billing.addon_entitlements, sales.prospects,
@@ -218,7 +236,7 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
 		discovery.email_sends, discovery.email_journey, discovery.progress,
-		ops.auth_alerts, ops.support_ticket_replies, ops.support_tickets,
+		ops.auth_alerts,
 		ops.product_digest_sends, ops.product_digests,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
@@ -244,7 +262,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	_, err := tx.Exec(ctx, `
 		DELETE FROM identity.users
-		WHERE role <> ALL($1::text[])`, protectedSalesRoles)
+		WHERE role <> ALL($1::text[])
+		  AND email <> ALL($2::text[])`, protectedSalesRoles, preserveClientEmails)
 	return err
 }
 

@@ -740,7 +740,7 @@ gcloud run services update-traffic petsfollow-nuxtjs --to-revisions=PREV=100 --r
 
 ### Go / Nuxt unit / Flutter
 
-- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
+- Go unit + intégration : `make test-go` — CI backend avec Postgres + migrate/seed (plus de skip DB) ; alertes auth : `TestSMTPConfirmFailCreatesSystemAlertTicket` ; reset staging admin : `TestAdminStagingSeed*` ; seed preserve : `TestSeedPreservesSupportTickets` / `TestSeedPreservesClientGraph` / `TestSeedPreservesProtectedRoles` ; densification démo : `TestSeedMass` (`make seed-mass` après `make seed`, emails `mass.*@petsfollow.test`)
 - Billit / invoicing : `go test ./internal/invoicing/...` + intégration `TestInvoicing*` / `TestInvoicingWebhook*` / `TestInvoicingAdminMarkPartner` ; Playwright `@p1` `@invoicing` `18-invoicing.spec.ts` (UI métier si `INVOICING_UI_ENABLED`) ; admin `/admin/invoicing` (`06-admin.spec.ts`) — checklist **I7**
 - Nuxt unit : `make test-nuxt` (Vitest) — inclus dans `make test`
 - Flutter unit/widget : `make test-flutter` ; smoke API : `make test-flutter-smoke` (opt-in, hors CI PR)
