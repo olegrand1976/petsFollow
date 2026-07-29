@@ -84,7 +84,8 @@ export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.te
 
 /** Ops support IT (même MDP seed que admin — passwordDev = passwordAdmin). */
 export async function loginAsDev(page: Page, email = 'dev.demo@petsfollow.test', password = 'AdminDemo123!') {
-  await login(page, email, password)
+  const { status } = await login(page, email, password)
+  expect(status, `login ${email}`).toBe(200)
   await page.waitForURL(/\/admin/, { timeout: 20000 })
 }
 
