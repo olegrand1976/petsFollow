@@ -261,7 +261,8 @@ type ClientFinalReport struct {
 }
 
 // AttachFinalReportFlags sets HasFinalReport and ReportStatus (final|draft) on owner visit lists.
-// Prefer final over draft when both exist; never loads body_text.
+// Prefer final over draft when both exist; draft only if persisted content (not empty Ensure).
+// Never loads body_text into the visit payload.
 func (s *Store) AttachFinalReportFlags(ctx context.Context, visits []Visit) error {
 	if len(visits) == 0 {
 		return nil
@@ -274,10 +275,10 @@ func (s *Store) AttachFinalReportFlags(ctx context.Context, visits []Visit) erro
 		SELECT visit_id::text,
 			CASE
 				WHEN bool_or(status = 'final') THEN 'final'
-				WHEN bool_or(status = 'draft') THEN 'draft'
+				WHEN bool_or(status = 'draft' AND `+sqlVisitReportIsPersisted+`) THEN 'draft'
 				ELSE ''
 			END AS report_status
-		FROM visits.visit_reports
+		FROM visits.visit_reports r
 		WHERE visit_id = ANY($1::uuid[])
 		GROUP BY visit_id`, ids)
 	if err != nil {

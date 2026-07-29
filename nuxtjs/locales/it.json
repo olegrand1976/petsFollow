@@ -2354,7 +2354,8 @@
     "reportTranscriptHint": "Dettatura o note grezze…",
     "reportDirtyHint": "Modifiche non salvate.",
     "reportDiscardEdits": "Annulla modifiche",
-    "reportStatusFinal": "Finalizzato"
+    "reportStatusFinal": "Finalizzato",
+    "reportStatusDraft": "Bozza"
   },
   "commissions": {
     "title": "Le mie ricompense",

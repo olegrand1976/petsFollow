@@ -1922,7 +1922,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get consultationAvailableCta => 'Disponible';
 
   @override
-  String get consultationPendingCta => 'En espera';
+  String get consultationPendingCta => 'Borrador';
 
   @override
   String get sendConsultationToVet => 'Enviar a un veterinario';

@@ -1919,7 +1919,7 @@ class AppLocalizationsEt extends AppLocalizations {
   String get consultationAvailableCta => 'Saadaval';
 
   @override
-  String get consultationPendingCta => 'Ootel';
+  String get consultationPendingCta => 'Mustand';
 
   @override
   String get sendConsultationToVet => 'Saada loomaarstile';

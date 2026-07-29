@@ -2833,7 +2833,8 @@
     "reportTranscriptHint": "Dikteering või toored märkmed…",
     "reportDirtyHint": "Salvestamata muudatused.",
     "reportDiscardEdits": "Tühista muudatused",
-    "reportStatusFinal": "Lõplik"
+    "reportStatusFinal": "Lõplik",
+    "reportStatusDraft": "Mustand"
   },
   "manager": {
     "dashboard": {

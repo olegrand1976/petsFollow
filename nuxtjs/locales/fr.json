@@ -2430,7 +2430,8 @@
     "reportTranscriptHint": "Dictée ou notes brutes…",
     "reportDirtyHint": "Modifications non enregistrées.",
     "reportDiscardEdits": "Annuler les modifications",
-    "reportStatusFinal": "Finalisé"
+    "reportStatusFinal": "Finalisé",
+    "reportStatusDraft": "Brouillon"
   },
   "commissions": {
     "title": "Mes rétributions",

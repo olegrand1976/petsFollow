@@ -37,7 +37,7 @@
             <div class="pro-pet-history__title-row">
               <strong class="pro-pet-history__title">{{ tile.title }}</strong>
               <ProBadge
-                v-if="tile.clickable"
+                v-if="tile.reportStatus === 'final' || tile.reportStatus === 'draft'"
                 :variant="tile.reportStatus === 'final' ? 'success' : 'warning'"
                 data-testid="pet-history-report-badge"
               >

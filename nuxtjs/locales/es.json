@@ -2833,7 +2833,8 @@
     "reportTranscriptHint": "Dictado o notas en bruto…",
     "reportDirtyHint": "Cambios sin guardar.",
     "reportDiscardEdits": "Descartar cambios",
-    "reportStatusFinal": "Finalizado"
+    "reportStatusFinal": "Finalizado",
+    "reportStatusDraft": "Borrador"
   },
   "manager": {
     "dashboard": {

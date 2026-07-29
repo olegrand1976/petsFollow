@@ -2864,7 +2864,8 @@
     "reportTranscriptHint": "Dictation or raw notes…",
     "reportDirtyHint": "Unsaved changes.",
     "reportDiscardEdits": "Discard changes",
-    "reportStatusFinal": "Finalized"
+    "reportStatusFinal": "Finalized",
+    "reportStatusDraft": "Draft"
   },
   "manager": {
     "dashboard": {

@@ -2864,7 +2864,8 @@
     "reportTranscriptHint": "Dictee of ruwe notities…",
     "reportDirtyHint": "Niet-opgeslagen wijzigingen.",
     "reportDiscardEdits": "Wijzigingen annuleren",
-    "reportStatusFinal": "Afgerond"
+    "reportStatusFinal": "Afgerond",
+    "reportStatusDraft": "Concept"
   },
   "manager": {
     "dashboard": {

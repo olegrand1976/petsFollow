@@ -784,7 +784,7 @@
   "consultationReportFallback": "Compte-rendu",
   "consultationReportEmpty": "(vide)",
   "consultationAvailableCta": "Disponible",
-  "consultationPendingCta": "En attente",
+  "consultationPendingCta": "Brouillon",
   "sendConsultationToVet": "Envoyer à un vétérinaire",
   "sendConsultationEmailLabel": "E-mail du vétérinaire",
   "sendConsultationEmailHint": "vet@cabinet.be",

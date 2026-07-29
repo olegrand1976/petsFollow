@@ -784,7 +784,7 @@
   "consultationReportFallback": "Referto",
   "consultationReportEmpty": "(vuoto)",
   "consultationAvailableCta": "Disponibile",
-  "consultationPendingCta": "In attesa",
+  "consultationPendingCta": "Bozza",
   "sendConsultationToVet": "Invia a un veterinario",
   "sendConsultationEmailLabel": "Email del veterinario",
   "sendConsultationEmailHint": "vet@clinica.it",

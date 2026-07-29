@@ -721,7 +721,7 @@
   "consultationReportFallback": "Report",
   "consultationReportEmpty": "(empty)",
   "consultationAvailableCta": "Available",
-  "consultationPendingCta": "Pending",
+  "consultationPendingCta": "Draft",
   "sendConsultationToVet": "Send to a veterinarian",
   "sendConsultationEmailLabel": "Veterinarian email",
   "sendConsultationEmailHint": "vet@clinic.com",
