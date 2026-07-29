@@ -88,10 +88,14 @@ type Config struct {
 	PharmacyExpirySecret string
 	// PharmacyWorkersEnabled starts Asynq server + enqueue for VAMReg (and future invoices.connect).
 	PharmacyWorkersEnabled bool
-	// VamregDryRun skips real HTTP (default true until credentials).
+	// VamregDryRun skips real declaration HTTP (default true until write credentials).
 	VamregDryRun  bool
 	VamregBaseURL string
 	VamregAPIKey  string
+	// VamregAfmps* — FAMHP readonly reference lists (ICD software-house, FAMHP-SEC-KEY).
+	// Separate from VamregBaseURL/APIKey (declaration gateway) to avoid auth/path collisions.
+	VamregAfmpsBaseURL string
+	VamregAfmpsAPIKey  string
 	// PrescriptionsEnabled enables veterinary prescription drafts + PDF preview — default off.
 	PrescriptionsEnabled bool
 
@@ -190,6 +194,8 @@ func Load() Config {
 		VamregDryRun:            envBoolDefault("VAMREG_DRY_RUN", true),
 		VamregBaseURL:           envOr("VAMREG_BASE_URL", ""),
 		VamregAPIKey:            envOr("VAMREG_API_KEY", ""),
+		VamregAfmpsBaseURL:      envOr("VAMREG_AFMPS_BASE_URL", ""),
+		VamregAfmpsAPIKey:       envOr("VAMREG_AFMPS_API_KEY", ""),
 		PrescriptionsEnabled:    envBool("PRESCRIPTIONS_ENABLED"),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
@@ -237,6 +243,7 @@ func (c Config) ValidateBillit() error {
 }
 
 // ValidateVamreg refuses live VAMReg without a gateway URL and API key (never silent dry-run).
+// Also rejects using the AFMPS readonly lists base URL as a declaration gateway.
 func (c Config) ValidateVamreg() error {
 	if c.VamregDryRun {
 		return nil
@@ -247,7 +254,25 @@ func (c Config) ValidateVamreg() error {
 	if strings.TrimSpace(c.VamregAPIKey) == "" {
 		return errors.New("VAMREG_API_KEY required when VAMREG_DRY_RUN=false")
 	}
+	if vamregBaseURLLooksLikeAFMPSReadonlyLists(c.VamregBaseURL) {
+		return errors.New("VAMREG_BASE_URL must not be the AFMPS readonly /vamreg/api host when VAMREG_DRY_RUN=false (use VAMREG_AFMPS_* for lists)")
+	}
 	return nil
+}
+
+// vamregBaseURLLooksLikeAFMPSReadonlyLists detects the FAMHP software-house lists host
+// (ICD readonly) so it cannot be reused as the provisional declaration POST base.
+func vamregBaseURLLooksLikeAFMPSReadonlyLists(base string) bool {
+	u := strings.ToLower(strings.TrimSpace(base))
+	u = strings.TrimRight(u, "/")
+	if strings.Contains(u, "fagg-afmps.be") && strings.Contains(u, "/vamreg/api") {
+		return true
+	}
+	// Bare path coincidence with default lists base.
+	if strings.HasSuffix(u, "/vamreg/api") {
+		return true
+	}
+	return false
 }
 
 func envOr(k, def string) string {

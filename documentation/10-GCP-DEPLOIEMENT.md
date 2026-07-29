@@ -17,10 +17,12 @@ Migrations pharmacie récentes (ordre) : `000107` jobs_audit → `000108` pricin
 |---------|---------|--------|
 | Extension **`pg_trgm`** | Une fois sur Cloud SQL (`cloudsqlsuperuser` / Extensions) | Requis migrate `000081+` |
 | `PHARMACY_ENABLED` | `true` (défaut `deploy-run-args` si `APP_ENV=staging`) | Prod = opt-in `false` |
-| `VAMREG_DRY_RUN` | `true` (défaut) | Jusqu’à P0-1 credentials |
+| `VAMREG_DRY_RUN` | **forcé `true`** (staging + prod) | Déclarations dry-run jusqu’à ICD write + P0-1 ; pas `false` avec clé listes |
+| `VAMREG_AFMPS_BASE_URL` | `https://app.fagg-afmps.be/vamreg/api` | Listes readonly ICD |
 | `PHARMACY_WORKERS_ENABLED` | `false` (défaut) | Enqueue **inline** (timeout détaché) ; `true` = Asynq + Redis |
 | Secret `petsfollow-pharmacy-expiry-secret` | Branché si présent | `make gcp-pharmacy-expiry-scheduler` |
-| Secret `petsfollow-vamreg-api-key` | Optionnel | → `VAMREG_API_KEY` ; inutile en dry-run |
+| Secret `petsfollow-vamreg-afmps-api-key` | → `VAMREG_AFMPS_API_KEY` | Listes GET (`FAMHP-SEC-KEY`) ; `./infra/gcp/setup-vamreg-afmps-secret.sh` |
+| Secret `petsfollow-vamreg-api-key` | **Non monté** tant que dry-run | Write déclarant futur (P0-1) — voir [39](39-VAMREG-AFMPS-READONLY.md) |
 | Smoke pilote | Manuel | Receipt → DAF finalize antibio → `vamregStatus=sent` (dry-run) |
 
 DAF→Billit (S5) **gelé** tant que reseller Billit absent.
@@ -129,5 +131,11 @@ Fichiers déjà en repo (ne pas oublier au go-live) :
    ```
 6. Rebuild Play : `make play-android-bundle-prod` → upload piste Production (ou Internal smoke d’abord).
 7. Privacy / listing : garder `petsfollow.ll-it-sc.be/legal/*` tant que le site prod n’expose pas `/legal` ; ensuite aligner `LegalUrls` Flutter + Play Console.
+
+**VAMReg / AFMPS (prod)** — même politique que staging ([39](39-VAMREG-AFMPS-READONLY.md)) :
+
+- `pf_write_api_env_file` force `VAMREG_DRY_RUN=true` et pose `VAMREG_AFMPS_BASE_URL`.
+- `pf_api_secrets` monte `petsfollow-vamreg-afmps-api-key` → `VAMREG_AFMPS_API_KEY` (pas de `VAMREG_API_KEY` write tant que dry-run).
+- Au go-live prod : réutiliser le secret SM (ou clone dédié) + `./infra/gcp/setup-vamreg-afmps-secret.sh --attach-run` sur `petsfollow-api-prod` si le service existe déjà hors Cloud Build.
 
 Staging reste sur push `staging` → [`deploy-gcp-staging.yml`](../.github/workflows/deploy-gcp-staging.yml) — **ne pas** mutualiser les services Run ni la DB.

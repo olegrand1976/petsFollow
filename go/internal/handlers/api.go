@@ -29,17 +29,18 @@ import (
 )
 
 type API struct {
-	store     *store.Store
-	tokens    *authx.TokenIssuer
-	cfg       config.Config
-	notifier  *email.Notifier
-	billing   *billing.Service
-	invoicing *invoicing.Service
-	media     media.Store
-	pusher    fcm.Pusher
-	gemini    *gemini.Client
-	vamreg    *pharmacy.VamregDeclarer
-	vamregQ   VamregEnqueuer
+	store       *store.Store
+	tokens      *authx.TokenIssuer
+	cfg         config.Config
+	notifier    *email.Notifier
+	billing     *billing.Service
+	invoicing   *invoicing.Service
+	media       media.Store
+	pusher      fcm.Pusher
+	gemini      *gemini.Client
+	vamreg      *pharmacy.VamregDeclarer
+	vamregAFMPS *pharmacy.VamregAFMPSClient
+	vamregQ     VamregEnqueuer
 	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
 	vetLookupRL         *httpx.RateLimiter
 	vetSuggestRL        *httpx.RateLimiter
@@ -67,9 +68,13 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		inv = invoicing.NewService(st, gw, cfg)
 	}
 	vamregDecl := pharmacy.NewVamregDeclarer(st, cfg.VamregBaseURL, cfg.VamregAPIKey, cfg.VamregDryRun)
+	var vamregAFMPS *pharmacy.VamregAFMPSClient
+	if strings.TrimSpace(cfg.VamregAfmpsAPIKey) != "" {
+		vamregAFMPS = pharmacy.NewVamregAFMPSClient(cfg.VamregAfmpsBaseURL, cfg.VamregAfmpsAPIKey)
+	}
 	a := &API{
 		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
-		vamreg: vamregDecl, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
+		vamreg: vamregDecl, vamregAFMPS: vamregAFMPS, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
 		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
 		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
 		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),

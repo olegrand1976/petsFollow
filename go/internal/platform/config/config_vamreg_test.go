@@ -34,3 +34,22 @@ func TestValidateVamregLiveRequiresAPIKey(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestValidateVamregLiveRejectsAFMPSListsBase(t *testing.T) {
+	cfg := config.Config{
+		VamregDryRun:  false,
+		VamregBaseURL: "https://app.fagg-afmps.be/vamreg/api",
+		VamregAPIKey:  "secret",
+	}
+	if err := cfg.ValidateVamreg(); err == nil {
+		t.Fatal("want AFMPS lists collision error")
+	}
+	cfg.VamregBaseURL = "https://app.fagg-afmps.be/vamreg/api/"
+	if err := cfg.ValidateVamreg(); err == nil {
+		t.Fatal("want trailing-slash collision error")
+	}
+	cfg.VamregBaseURL = "https://declare.example/v1"
+	if err := cfg.ValidateVamreg(); err != nil {
+		t.Fatal(err)
+	}
+}
