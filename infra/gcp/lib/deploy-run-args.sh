@@ -82,8 +82,10 @@ PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
-# VAMReg dry-run jusqu’à P0-1 ; workers Asynq opt-in (sinon enqueue sync dans l’API).
-VAMREG_DRY_RUN: "${VAMREG_DRY_RUN:-true}"
+# Déclarations DAF : dry-run FORCÉ (staging + prod). Une clé software-house (listes)
+# ne permet pas le live declare — voir documentation/39-VAMREG-AFMPS-READONLY.md.
+# Live declare = ICD write + credentials déclarant + retirer ce forçage volontairement.
+VAMREG_DRY_RUN: "true"
 PHARMACY_WORKERS_ENABLED: "${PHARMACY_WORKERS_ENABLED:-false}"
 BILLIT_ENABLED: "${billit_enabled}"
 BILLIT_MOCK_ENABLED: "${billit_mock}"
@@ -100,6 +102,10 @@ EOF
 VAMREG_BASE_URL: "${VAMREG_BASE_URL}"
 EOF
   fi
+  # Readonly AFMPS reference lists (ICD software-house) — séparée de VAMREG_BASE_URL (déclaration).
+  cat >>"$path" <<EOF
+VAMREG_AFMPS_BASE_URL: "${VAMREG_AFMPS_BASE_URL:-https://app.fagg-afmps.be/vamreg/api}"
+EOF
   if [[ -n "$billit_secrets_backend" ]]; then
     cat >>"$path" <<EOF
 BILLIT_SECRETS_BACKEND: "${billit_secrets_backend}"
@@ -195,10 +201,16 @@ pf_api_secrets() {
     --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
   fi
-  # VAMReg live (P0-1) — absent = dry-run OK ; sync enqueue n'a pas besoin de la clé.
+  # VAMReg déclaration live (P0-1 write) — NE PAS monter tant que VAMREG_DRY_RUN forcé true.
+  # La clé software-house va dans petsfollow-vamreg-afmps-api-key (listes), pas ici.
   if gcloud secrets versions access latest \
     --secret=petsfollow-vamreg-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
-    secrets="${secrets},VAMREG_API_KEY=petsfollow-vamreg-api-key:latest"
+    echo "→ Note: petsfollow-vamreg-api-key présent mais non monté (déclarations dry-run)" >&2
+  fi
+  # VAMReg AFMPS readonly (ICD software-house, FAMHP-SEC-KEY) — staging et prod.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-vamreg-afmps-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},VAMREG_AFMPS_API_KEY=petsfollow-vamreg-afmps-api-key:latest"
   fi
   # Billit local_enc (staging tag-dev mock / live) — clé dédiée si présente, sinon JWT.
   if gcloud secrets versions access latest \

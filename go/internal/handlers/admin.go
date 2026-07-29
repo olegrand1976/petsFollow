@@ -602,19 +602,21 @@ func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"appEnv":                 strings.TrimSpace(os.Getenv("APP_ENV")),
-		"devSeedEnabled":         a.cfg.DevSeedEnabled,
+		"appEnv":                  strings.TrimSpace(os.Getenv("APP_ENV")),
+		"devSeedEnabled":          a.cfg.DevSeedEnabled,
 		"adminStagingSeedEnabled": a.cfg.AdminStagingSeedEnabled,
-		"billingMockEnabled":     a.cfg.BillingMockEnabled,
-		"fcmEnabled":             a.cfg.FCMEnabled,
-		"pharmacyEnabled":        a.cfg.PharmacyEnabled,
-		"pharmacyWorkersEnabled": a.cfg.PharmacyWorkersEnabled,
-		"prescriptionsEnabled":   a.cfg.PrescriptionsEnabled,
-		"billitEnabled":          a.cfg.BillitEnabled,
-		"billitMockEnabled":      a.cfg.BillitMockEnabled,
-		"mlmOrgEnabled":          a.cfg.MLMOrgEnabled,
-		"careProPublicRegister":  a.cfg.CareProPublicRegister,
-		"vamregDryRun":           a.cfg.VamregDryRun,
+		"billingMockEnabled":      a.cfg.BillingMockEnabled,
+		"fcmEnabled":              a.cfg.FCMEnabled,
+		"pharmacyEnabled":         a.cfg.PharmacyEnabled,
+		"pharmacyWorkersEnabled":  a.cfg.PharmacyWorkersEnabled,
+		"prescriptionsEnabled":    a.cfg.PrescriptionsEnabled,
+		"billitEnabled":           a.cfg.BillitEnabled,
+		"billitMockEnabled":       a.cfg.BillitMockEnabled,
+		"mlmOrgEnabled":           a.cfg.MLMOrgEnabled,
+		"careProPublicRegister":   a.cfg.CareProPublicRegister,
+		"vamregDryRun":            a.cfg.VamregDryRun,
+		"vamregAfmpsConfigured":   strings.TrimSpace(a.cfg.VamregAfmpsAPIKey) != "",
+		"vamregAfmpsBaseURL":      a.cfg.VamregAfmpsBaseURL,
 	})
 }
 
