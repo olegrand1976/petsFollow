@@ -102,6 +102,13 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 
 func TestDevProfileSwitchToVet(t *testing.T) {
 	api := newTestAPI(t)
+	st := store.New(api.pool)
+	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+		t.Fatalf("ensure ops vet profiles: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
+	})
 	devTok := loginToken(t, api.handler, "dev.demo@petsfollow.test", "AdminDemo123!")
 
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", devTok, nil)
@@ -156,6 +163,9 @@ func TestAdminProfileSwitchToVet(t *testing.T) {
 	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
 		t.Fatalf("ensure ops vet profiles: %v", err)
 	}
+	t.Cleanup(func() {
+		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
+	})
 	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
 
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", adminTok, nil)

@@ -518,6 +518,7 @@ func EnsureDemoOpsVetProfiles(ctx context.Context, pool *pgxpool.Pool, st *store
 }
 
 // seedOpsDemoVetProfile attache EnsureUserProfiles + profil vet VetPlus + team_members.
+// Réactive toujours le profil ops (admin|dev) : les tests de switch partagent la DB seedée.
 func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store, email string) error {
 	var userID, practiceID string
 	err := pool.QueryRow(ctx, `
@@ -557,6 +558,30 @@ func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.St
 			team_role = EXCLUDED.team_role,
 			status = 'active'`,
 		uuid.NewString(), practiceID, userID, profileID)
+	if err != nil {
+		return err
+	}
+	return restoreOpsDemoActiveProfile(ctx, pool, userID)
+}
+
+// restoreOpsDemoActiveProfile force le profil admin|dev actif (users.role + active_profile_id).
+func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
+	var opsProfileID, opsRole string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text, role::text FROM identity.profiles
+		WHERE user_id = $1 AND role IN ('admin', 'dev')
+		ORDER BY CASE role WHEN 'admin' THEN 0 WHEN 'dev' THEN 1 ELSE 2 END
+		LIMIT 1`, userID).Scan(&opsProfileID, &opsRole)
+	if err != nil {
+		return fmt.Errorf("ops profile for %s: %w", userID, err)
+	}
+	_, err = pool.Exec(ctx, `
+		UPDATE identity.users SET
+			active_profile_id = $2::uuid,
+			role = $3,
+			practice_id = NULL,
+			professional_specialty = NULL
+		WHERE id = $1`, userID, opsProfileID, opsRole)
 	return err
 }
 
