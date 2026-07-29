@@ -42,6 +42,8 @@ type Visit struct {
 	ConsultationSession bool `json:"consultationSession,omitempty"`
 	// HasFinalReport: at least one visit_reports row with status=final (client list enrichment).
 	HasFinalReport bool `json:"hasFinalReport,omitempty"`
+	// ReportStatus: owner-only enrichment — "final" | "draft" (never draft body text).
+	ReportStatus string `json:"reportStatus,omitempty"`
 	// Permission is set for care_pro list responses (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 }

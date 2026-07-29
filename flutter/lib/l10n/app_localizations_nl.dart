@@ -1915,8 +1915,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get consultationReportEmpty => '(leeg)';
 
   @override
-  String get consultationReportUnavailable =>
-      'Geen verslag beschikbaar voor dit bezoek.';
+  String get consultationAvailableCta => 'Beschikbaar';
+
+  @override
+  String get consultationPendingCta => 'In afwachting';
 
   @override
   String get sendConsultationToVet => 'Naar een dierenarts sturen';

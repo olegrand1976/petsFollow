@@ -41,6 +41,7 @@ void main() {
                     'status': 'done',
                     'scheduledAt': '2026-01-10T10:00:00Z',
                     'hasFinalReport': true,
+                    'reportStatus': 'final',
                     'consultationSession': true,
                   },
                 ],
@@ -142,6 +143,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsOneWidget);
     expect(find.byKey(const Key('timeline_section_consultations')), findsOneWidget);
     final consultationsTile = tester.widget<ExpansionTile>(
       find.byKey(const Key('timeline_section_consultations')),
@@ -151,7 +153,7 @@ void main() {
       find.byKey(const Key('timeline_section_history')),
     );
     expect(historyTile.initiallyExpanded, isFalse);
-    await tester.tap(find.byKey(const Key('visit_consultation_tile_$visitId')));
+    await tester.tap(find.byKey(const Key('visit_consultation_cta_$visitId')));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Examen clinique OK'), findsOneWidget);
@@ -492,12 +494,129 @@ void main() {
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsNothing);
     expect(find.byKey(const Key('timeline_section_history')), findsOneWidget);
     expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('timeline_visit_report_$visitId')));
+    expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('visit_consultation_cta_$visitId')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Examen clinique OK'), findsOneWidget);
   });
 
-  testWidgets('historique visit without CR shows unavailable snackbar', (tester) async {
+  testWidgets('draft consultation shows disabled pending CTA', (tester) async {
+    ApiClient.instance.dio.interceptors.remove(mockInterceptor);
+    mockInterceptor = InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final path = options.uri.path.isNotEmpty ? options.uri.path : options.path;
+        if (options.method == 'GET' && path.contains('/heartrate/sessions')) {
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: {'data': []}),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/visits')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'petId': petId,
+                    'status': 'done',
+                    'scheduledAt': '2026-01-10T10:00:00Z',
+                    'hasFinalReport': false,
+                    'reportStatus': 'draft',
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/timeline')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': visitId,
+                    'type': 'visit',
+                    'title': 'Visite',
+                    'body': '',
+                    'createdAt': '2026-01-10T10:00:00Z',
+                    'meta': {
+                      'visitId': visitId,
+                      'hasReport': false,
+                      'reportStatus': 'draft',
+                    },
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' &&
+            (path.endsWith('/pets/$petId') || path.contains('/pets/$petId?'))) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': {
+                  'id': petId,
+                  'name': 'Bella',
+                  'ownerUserId': 'user-1',
+                  'canWriteNotes': true,
+                },
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/client-consultation')) {
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              error: 'should not open draft consultation',
+            ),
+          );
+          return;
+        }
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            error: 'unmocked ${options.method} $path',
+          ),
+        );
+      },
+    );
+    ApiClient.instance.dio.interceptors.add(mockInterceptor);
+
+    await pumpApp(
+      tester,
+      home: const PetTimelineScreen(petId: petId, petName: 'Bella', canWriteNotes: false),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_pending_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsNothing);
+    expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsNothing);
+    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
+
+    final pending = tester.widget<TextButton>(
+      find.byKey(const Key('visit_consultation_pending_$visitId')),
+    );
+    expect(pending.onPressed, isNull);
+    await tester.tap(find.byKey(const Key('visit_consultation_pending_$visitId')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Examen clinique'), findsNothing);
+  });
+
+  testWidgets('historique visit without CR is not tappable', (tester) async {
     ApiClient.instance.dio.interceptors.remove(mockInterceptor);
     mockInterceptor = InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -588,9 +707,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('timeline_item_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsNothing);
+    expect(find.byKey(const Key('visit_consultation_pending_$visitId')), findsNothing);
     await tester.tap(find.byKey(const Key('timeline_item_$visitId')));
     await tester.pump();
-    expect(find.textContaining('Aucun compte-rendu disponible'), findsOneWidget);
+    expect(find.textContaining('Aucun compte-rendu disponible'), findsNothing);
   });
 
   testWidgets('consultation view loads reports', (tester) async {

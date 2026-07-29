@@ -1916,8 +1916,10 @@ class AppLocalizationsEt extends AppLocalizations {
   String get consultationReportEmpty => '(tühi)';
 
   @override
-  String get consultationReportUnavailable =>
-      'Selle visiidi kohta aruannet pole.';
+  String get consultationAvailableCta => 'Saadaval';
+
+  @override
+  String get consultationPendingCta => 'Ootel';
 
   @override
   String get sendConsultationToVet => 'Saada loomaarstile';

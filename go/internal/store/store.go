@@ -21,6 +21,7 @@ var (
 	ErrValidation           = errors.New("validation")
 	ErrForbidden            = errors.New("forbidden")
 	ErrConflict             = errors.New("conflict")
+	ErrInventoryIncomplete  = errors.New("inventory_incomplete")
 	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
 	ErrSelfReferral         = errors.New("self referral")
 	ErrAdvisoryLockBusy     = errors.New("advisory lock busy")
@@ -893,8 +894,8 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
 			)`
 	} else {
-		// Client / dossier: expose hasReport only for finalized CR (opens client consultation).
-		// Body stays redacted when redactVisitNotes; never leak draft CR text to clients.
+		// Client / dossier: hasReport only for finalized CR (opens client consultation).
+		// reportStatus may be draft|final (existence signal only); never leak draft body.
 		visitBody := "COALESCE(notes,'')"
 		if redactVisitNotes {
 			visitBody = "''"
@@ -914,8 +915,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			SELECT id, status
 			FROM visits.visit_reports
 			WHERE visit_id = v.id
-				AND status = 'final'
-			ORDER BY updated_at DESC
+			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
 			LIMIT 1
 		) r ON true
 		WHERE v.pet_id=$1 AND v.status='done' AND v.deleted_at IS NULL`

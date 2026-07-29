@@ -229,6 +229,43 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     return meta is Map && meta['hasReport'] == true;
   }
 
+  String _timelineReportStatus(Map<String, dynamic> m) {
+    final meta = m['meta'];
+    if (meta is! Map) return '';
+    return (meta['reportStatus']?.toString() ?? '').trim();
+  }
+
+  Widget? _consultationCta({
+    required AppLocalizations l10n,
+    required String visitId,
+    required bool available,
+    required bool pending,
+  }) {
+    if (available) {
+      return TextButton(
+        key: Key('visit_consultation_cta_$visitId'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: () => _openConsultation(visitId),
+        child: Text(l10n.consultationAvailableCta),
+      );
+    }
+    if (pending) {
+      return TextButton(
+        key: Key('visit_consultation_pending_$visitId'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: null,
+        child: Text(l10n.consultationPendingCta),
+      );
+    }
+    return null;
+  }
+
   void _openConsultation(String visitId) {
     Navigator.push<void>(
       context,
@@ -300,8 +337,10 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final upcoming = visits.where((v) => v.isUpcoming).toList();
-    final pastWithReport = visits.where((v) => v.hasFinalReport).toList();
-    final consultationIds = {for (final v in pastWithReport) v.id};
+    // Past visits only — avoid doubling confirmed walk-ins still in « À venir ».
+    final consultationVisits =
+        visits.where((v) => !v.isUpcoming && v.hasConsultationSignal).toList();
+    final consultationIds = {for (final v in consultationVisits) v.id};
     // Visits already under « Consultations » — drop dead duplicates from Historique.
     final historyItems = items.where((m) {
       final type = m['type'] as String? ?? 'event';
@@ -409,13 +448,13 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                           ),
                       ],
                     ),
-                  if (pastWithReport.isNotEmpty)
+                  if (consultationVisits.isNotEmpty)
                     _TimelineSection(
                       sectionKey: const Key('timeline_section_consultations'),
-                      title: '${l10n.consultationsHistory} (${pastWithReport.length})',
+                      title: '${l10n.consultationsHistory} (${consultationVisits.length})',
                       initiallyExpanded: true,
                       children: [
-                        for (final v in pastWithReport)
+                        for (final v in consultationVisits)
                           Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
@@ -426,8 +465,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                               ),
                               title: Text(l10n.consultationTitle),
                               subtitle: Text(dateFmt.format(v.displayDate)),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => _openConsultation(v.id),
+                              trailing: _consultationCta(
+                                l10n: l10n,
+                                visitId: v.id,
+                                available: v.consultationAvailable,
+                                pending: v.consultationPending,
+                              ),
                             ),
                           ),
                       ],
@@ -437,7 +480,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                     title: historyItems.isEmpty
                         ? l10n.history
                         : '${l10n.history} (${historyItems.length})',
-                    initiallyExpanded: pastWithReport.isEmpty,
+                    initiallyExpanded: consultationVisits.isEmpty,
                     children: [
                       if (historyItems.isEmpty)
                         Padding(
@@ -450,16 +493,20 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                           final createdAt = DateTime.tryParse(m['createdAt'] as String? ?? '');
                           final rowId = m['id']?.toString() ?? type;
                           final visitId = type == 'visit' ? _timelineVisitId(m) : null;
-                          // Filet: timeline meta.hasReport when not already under Consultations.
+                          final reportStatus = visitId != null ? _timelineReportStatus(m) : '';
+                          // Filet: timeline meta when not already under Consultations.
                           final openReport = visitId != null && _timelineHasFinalReport(m);
-                          final isVisit = type == 'visit' && visitId != null;
+                          final pendingReport =
+                              visitId != null && !openReport && reportStatus == 'draft';
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               key: Key(
                                 openReport
                                     ? 'timeline_visit_report_$visitId'
-                                    : 'timeline_item_$rowId',
+                                    : pendingReport
+                                        ? 'timeline_visit_pending_$visitId'
+                                        : 'timeline_item_$rowId',
                               ),
                               leading: CircleAvatar(
                                 backgroundColor:
@@ -478,18 +525,14 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                     m['body'] as String,
                                 ].join(' · '),
                               ),
-                              trailing: openReport ? const Icon(Icons.chevron_right) : null,
-                              onTap: !isVisit
+                              trailing: visitId == null
                                   ? null
-                                  : openReport
-                                      ? () => _openConsultation(visitId)
-                                      : () {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(l10n.consultationReportUnavailable),
-                                            ),
-                                          );
-                                        },
+                                  : _consultationCta(
+                                      l10n: l10n,
+                                      visitId: visitId,
+                                      available: openReport,
+                                      pending: pendingReport,
+                                    ),
                             ),
                           );
                         }),

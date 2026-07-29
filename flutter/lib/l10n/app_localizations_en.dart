@@ -1907,8 +1907,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get consultationReportEmpty => '(empty)';
 
   @override
-  String get consultationReportUnavailable =>
-      'No visit report available for this visit.';
+  String get consultationAvailableCta => 'Available';
+
+  @override
+  String get consultationPendingCta => 'Pending';
 
   @override
   String get sendConsultationToVet => 'Send to a veterinarian';

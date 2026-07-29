@@ -1923,8 +1923,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get consultationReportEmpty => '(vide)';
 
   @override
-  String get consultationReportUnavailable =>
-      'Aucun compte-rendu disponible pour cette visite.';
+  String get consultationAvailableCta => 'Disponible';
+
+  @override
+  String get consultationPendingCta => 'En attente';
 
   @override
   String get sendConsultationToVet => 'Envoyer à un vétérinaire';

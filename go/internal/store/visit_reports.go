@@ -260,7 +260,8 @@ type ClientFinalReport struct {
 	FinalizedAt *time.Time `json:"finalizedAt,omitempty"`
 }
 
-// AttachFinalReportFlags sets HasFinalReport on each visit that has at least one final CR.
+// AttachFinalReportFlags sets HasFinalReport and ReportStatus (final|draft) on owner visit lists.
+// Prefer final over draft when both exist; never loads body_text.
 func (s *Store) AttachFinalReportFlags(ctx context.Context, visits []Visit) error {
 	if len(visits) == 0 {
 		return nil
@@ -270,27 +271,39 @@ func (s *Store) AttachFinalReportFlags(ctx context.Context, visits []Visit) erro
 		ids[i] = v.ID
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT visit_id::text
+		SELECT visit_id::text,
+			CASE
+				WHEN bool_or(status = 'final') THEN 'final'
+				WHEN bool_or(status = 'draft') THEN 'draft'
+				ELSE ''
+			END AS report_status
 		FROM visits.visit_reports
-		WHERE visit_id = ANY($1::uuid[]) AND status = 'final'
+		WHERE visit_id = ANY($1::uuid[])
 		GROUP BY visit_id`, ids)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	has := map[string]struct{}{}
+	statusByVisit := map[string]string{}
 	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
+		var id, st string
+		if err := rows.Scan(&id, &st); err != nil {
 			return err
 		}
-		has[id] = struct{}{}
+		if st != "" {
+			statusByVisit[id] = st
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return err
 	}
 	for i := range visits {
-		if _, ok := has[visits[i].ID]; ok {
+		st, ok := statusByVisit[visits[i].ID]
+		if !ok {
+			continue
+		}
+		visits[i].ReportStatus = st
+		if st == "final" {
 			visits[i].HasFinalReport = true
 		}
 	}

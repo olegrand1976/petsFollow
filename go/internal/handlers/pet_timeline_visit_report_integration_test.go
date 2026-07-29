@@ -44,12 +44,15 @@ func TestPetTimelineIncludesVisitReportForVetNotClient(t *testing.T) {
 	}
 	clientItem := findTimelineVisit(t, env, visitID)
 	clientMeta, _ := clientItem["meta"].(map[string]any)
-	// Draft CR: client must not get hasReport (final-only).
+	// Draft CR: hasReport stays false (open gate) but reportStatus signals pending.
 	if clientMeta == nil {
 		t.Fatalf("client visit meta missing %#v", clientItem)
 	}
 	if clientMeta["hasReport"] == true {
 		t.Fatalf("client must not see hasReport for draft %#v", clientMeta)
+	}
+	if clientMeta["reportStatus"] != "draft" {
+		t.Fatalf("client reportStatus want draft got %#v", clientMeta["reportStatus"])
 	}
 	clientBody, _ := clientItem["body"].(string)
 	if strings.Contains(clientBody, probe) {

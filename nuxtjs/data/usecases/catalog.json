@@ -1136,7 +1136,7 @@
       ],
       "steps": [
         "App client — login client.demo → fiche animal → Historique des visites.",
-        "Dans Consultations, ouvrir une visite avec compte-rendu.",
+        "Dans Consultations : bouton Disponible (cliquable) si CR finalisé, ou En attente (désactivé) si brouillon côté cabinet — ouvrir via le CTA disponible.",
         "Vérifier l’affichage : méta visite + section(s) CR (tous les auteurs finalisés).",
         "Appuyer sur Envoyer à un vétérinaire → avertissement PHI + e-mail + consentement obligatoire → confirmer.",
         "Ouvrir l’e-mail : marketing petsFollow, CTA inscription, téléphone commercial, lien 24 h.",
@@ -1145,11 +1145,12 @@
       ],
       "expected": [
         "Snackbar succès côté client.",
-        "Brouillons non visibles / non partageables.",
+        "Brouillons non lisibles / non partageables ; signal En attente seulement (pas de contenu).",
         "PDF téléchargeable avant expiry ; 410 après 24 h."
       ],
       "checklist": [
-        "Liste consultations cliquable",
+        "CTA disponible (final) cliquable",
+        "CTA en attente (draft) désactivé",
         "Lecture CR multi-auteurs",
         "Consentement PHI",
         "E-mail + tél. commercial",

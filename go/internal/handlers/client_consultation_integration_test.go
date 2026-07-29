@@ -77,15 +77,20 @@ func TestClientConsultationReadAndShare(t *testing.T) {
 		t.Fatalf("list visits %d %#v", code, env)
 	}
 	foundFlag := false
+	foundStatus := ""
 	for _, row := range env["data"].([]any) {
 		m, _ := row.(map[string]any)
 		if m["id"] == visitID {
 			foundFlag = m["hasFinalReport"] == true
+			foundStatus, _ = m["reportStatus"].(string)
 			break
 		}
 	}
 	if !foundFlag {
 		t.Fatalf("expected hasFinalReport on visit %s %#v", visitID, env)
+	}
+	if foundStatus != "final" {
+		t.Fatalf("expected reportStatus=final on visit %s got %q %#v", visitID, foundStatus, env)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/visits/"+visitID+"/client-consultation", clientTok, nil)
@@ -198,5 +203,28 @@ func TestClientConsultationDraftExcluded(t *testing.T) {
 	})
 	if code != http.StatusNotFound {
 		t.Fatalf("share draft want 404 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/visits", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list visits %d %#v", code, env)
+	}
+	foundDraft := false
+	for _, row := range env["data"].([]any) {
+		m, _ := row.(map[string]any)
+		if m["id"] != visitID {
+			continue
+		}
+		if m["hasFinalReport"] == true {
+			t.Fatalf("draft must not set hasFinalReport %#v", m)
+		}
+		if m["reportStatus"] != "draft" {
+			t.Fatalf("draft ListVisits reportStatus want draft got %#v", m)
+		}
+		foundDraft = true
+		break
+	}
+	if !foundDraft {
+		t.Fatalf("expected visit %s with reportStatus=draft %#v", visitID, env)
 	}
 }

@@ -3610,11 +3610,17 @@ abstract class AppLocalizations {
   /// **'(vide)'**
   String get consultationReportEmpty;
 
-  /// No description provided for @consultationReportUnavailable.
+  /// No description provided for @consultationAvailableCta.
   ///
   /// In fr, this message translates to:
-  /// **'Aucun compte-rendu disponible pour cette visite.'**
-  String get consultationReportUnavailable;
+  /// **'Disponible'**
+  String get consultationAvailableCta;
+
+  /// No description provided for @consultationPendingCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get consultationPendingCta;
 
   /// No description provided for @sendConsultationToVet.
   ///

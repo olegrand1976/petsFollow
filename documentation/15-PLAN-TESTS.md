@@ -435,7 +435,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | H4 | P1 | Link-request | Flutter invite → Pro accept | Relation active ; pets possibles |
 | H5 | P1 | Share → care_pro | Vet share → farrier | Agenda/fiche ; notes selon permission |
 | H13 | P1 | Envoi dossier animal → pro | Client Flutter → e-mail pro → `/dossier/{token}` | ZIP (PDF + docs + carnet) ; marketing + tél. commercial ; expiry 24 h ; UC-X-08 |
-| H14 | P1 | Consultation client + partage PDF | Historique Flutter → CR final → e-mail → `/consultation/{token}` | PDF CR brandé ; multi-auteurs finaux ; expiry 24 h ; UC-X-09 |
+| H14 | P1 | Consultation client + partage PDF | Historique Flutter → CTA disponible (final) / en attente (draft) → CR final → e-mail → `/consultation/{token}` | PDF CR brandé ; multi-auteurs finaux ; expiry 24 h ; UC-X-09 |
 | H6 | P1 | Billing → features | Checkout pet | Entitlement → FC + messaging + Care/Horse ; commission activation |
 | H7 | P1 | Care overdue | Pro crée → client postpone/done | Dashboard véto sync |
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
@@ -605,10 +605,11 @@ Surface publique `/dossier/{token}` : `Referrer-Policy: no-referrer` et `X-Robot
 | Non-owner / non-client | 403 |
 | Create + meta + download PDF | magic `%PDF-` ; marketing |
 | Expiry | GET meta → 410 |
-| ListVisits | `hasFinalReport: true` sur la visite |
+| ListVisits | `hasFinalReport: true` + `reportStatus: final` (owner) ; draft → `reportStatus: draft` sans `hasFinalReport` |
+| Timeline client | `meta.hasReport` final-only ; `meta.reportStatus` draft\|final owner ; strip non-owner |
 
-Flutter widget : `consultation_view_test` (ExpansionTile initiallyExpanded · dédup · filet meta · share) · Playwright mocké : `17-consultation-public.spec.ts` · UC : `UC-X-09`.
-Go timeline : `TestPetTimelineClientHasReportOnFinalCR` · `TestPetTimelineNonOwnerStripsHasReport` · `TestClearTimelineMeta` / `stripClientConsultationFlags*`.
+Flutter widget : `consultation_view_test` (CTA disponible/en attente · ExpansionTile · dédup · filet meta · share) · Playwright mocké : `17-consultation-public.spec.ts` · UC : `UC-X-09`.
+Go timeline : `TestPetTimelineIncludesVisitReportForVetNotClient` (draft → `reportStatus`) · `TestPetTimelineClientHasReportOnFinalCR` · `TestPetTimelineNonOwnerStripsHasReport` · `TestClearTimelineMeta` / `stripClientConsultationFlags*`.
 
 Surface publique `/consultation/{token}` : mêmes headers noindex / no-referrer que `/dossier/**`. Purge : retention job + préfixe media `consultation-shares/`.
 
