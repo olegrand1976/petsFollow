@@ -36,13 +36,13 @@ Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire �
 | Domaine | Avancement | Preuve / écart |
 |---------|------------|----------------|
 | Spec & décisions produit | ✅ | Docs 27 + 28 |
-| Prérequis monorepo | 🟡 | Redis/GCS/API OK — Asynq / PDF DAF non branchés |
+| Prérequis monorepo | ✅ | Redis/GCS/API · VAMReg dry-run sync + Asynq opt-in · PDF DAF GCS |
 | Nav tag `dev` + `/medicaments` | ✅ | `layouts/default.vue` + `ProSidebar.tag` |
-| Schéma SQL `pharmacy` | ✅ | `ref_medications` + stock + DAF + `000087` trace + `000088` lot nonempty |
-| Search CNK (API + BFF + UI) | ✅ | Tests Go verts |
-| Stock / FEFO / péremption | ✅ | Store + API + `/stock` + expiry-run |
+| Schéma SQL `pharmacy` | ✅ | `ref_medications` + stock + DAF + jobs/pricing/orders/inventory (`000107+`) |
+| Search CNK (API + BFF + UI) | ✅ | Tests Go verts · `pg_trgm` staging OK |
+| Stock / FEFO / péremption | ✅ | Store + API + `/stock` (composable + composants) + expiry-run |
 | DAF / PDF + lien mouvements | ✅ | finalize/cancel écrivent `daf_id`+`daf_item_id` ; `GET /movements?dafId=` |
-| Workers VAMReg / invoices.connect | 🟡 | VAMReg dry-run **sync** (défaut) ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` ; invoices.connect = S5 gelé |
+| Workers VAMReg / invoices.connect | 🟡 | VAMReg dry-run **sync** (défaut) ; Asynq opt-in `PHARMACY_WORKERS_ENABLED` ; invoices.connect = S5 gelé (P0-2) |
 | Scheduler expiry | ✅ | `make gcp-pharmacy-expiry-scheduler` (04:00 Brussels) |
 | Tests Go pharmacie | ✅ | Unit bands + FEFO + intégration stock/DAF/trace + VAMReg dry-run |
 | Playwright P0 pharmacie | ✅ | `17-pharmacy-stock-daf.spec.ts` (@p0 @pharmacy) — quality CI ; hors post-deploy Cloud Run |

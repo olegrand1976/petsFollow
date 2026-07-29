@@ -316,56 +316,40 @@ func (s *Store) MarkPurchaseOrderSent(ctx context.Context, practiceID, orderID, 
 	return s.GetPurchaseOrder(ctx, practiceID, orderID)
 }
 
-// SendPurchaseOrderLocked claims the draft (short FOR UPDATE), releases the TX,
-// runs sendFn (SMTP) outside any row lock, then marks sent. Concurrent sends on
-// the same order use try-advisory-lock (busy → ErrConflict, no pool wait).
+// SendPurchaseOrderLocked soft-claims the draft (sets to_email under FOR UPDATE),
+// releases the TX, runs sendFn (SMTP) without holding a pool advisory lock, then marks sent.
+// Concurrent senders on the same order hit ErrConflict after the soft-claim.
 func (s *Store) SendPurchaseOrderLocked(ctx context.Context, practiceID, orderID, toEmail, supplierID string, sendFn func(PurchaseOrder) error) (PurchaseOrder, error) {
 	toEmail = strings.TrimSpace(toEmail)
 	if toEmail == "" || !strings.Contains(toEmail, "@") {
 		return PurchaseOrder{}, ErrValidation
 	}
 
-	var lockKey int64
-	if err := s.pool.QueryRow(ctx, `SELECT hashtext($1)::bigint`, "pharmacy-po-send:"+orderID).Scan(&lockKey); err != nil {
-		return PurchaseOrder{}, err
-	}
-
-	var out PurchaseOrder
-	err := s.TryWithAdvisoryLock(ctx, lockKey, func(ctx context.Context) error {
-		order, err := s.claimPurchaseOrderDraft(ctx, practiceID, orderID)
-		if err != nil {
-			return err
-		}
-		if sendFn != nil {
-			if err := sendFn(order); err != nil {
-				return err
-			}
-		}
-		marked, err := s.MarkPurchaseOrderSent(ctx, practiceID, orderID, toEmail, supplierID)
-		if err != nil {
-			// SMTP already succeeded: tolerate concurrent mark / race → return current sent row.
-			cur, getErr := s.GetPurchaseOrder(ctx, practiceID, orderID)
-			if getErr == nil && cur.Status == "sent" {
-				out = cur
-				return nil
-			}
-			log.Printf("pharmacy: mark purchase order sent after SMTP failed practice=%s order=%s: %v", practiceID, orderID, err)
-			return err
-		}
-		out = marked
-		return nil
-	})
-	if errors.Is(err, ErrAdvisoryLockBusy) {
-		return PurchaseOrder{}, ErrConflict
-	}
+	order, err := s.softClaimPurchaseOrderSend(ctx, practiceID, orderID, toEmail, supplierID)
 	if err != nil {
 		return PurchaseOrder{}, err
 	}
-	return out, nil
+	if sendFn != nil {
+		if err := sendFn(order); err != nil {
+			_ = s.clearPurchaseOrderSendClaim(ctx, practiceID, orderID, toEmail)
+			return PurchaseOrder{}, err
+		}
+	}
+	marked, err := s.MarkPurchaseOrderSent(ctx, practiceID, orderID, toEmail, supplierID)
+	if err != nil {
+		cur, getErr := s.GetPurchaseOrder(ctx, practiceID, orderID)
+		if getErr == nil && cur.Status == "sent" {
+			return cur, nil
+		}
+		log.Printf("pharmacy: mark purchase order sent after SMTP failed practice=%s order=%s: %v", practiceID, orderID, err)
+		return PurchaseOrder{}, err
+	}
+	return marked, nil
 }
 
-// claimPurchaseOrderDraft FOR UPDATE-checks draft status then commits (releases the row lock).
-func (s *Store) claimPurchaseOrderDraft(ctx context.Context, practiceID, orderID string) (PurchaseOrder, error) {
+// softClaimPurchaseOrderSend locks the draft row briefly, reserves to_email (+ optional supplier), commits.
+// Another in-flight send (to_email already set) → ErrConflict until cleared or marked sent.
+func (s *Store) softClaimPurchaseOrderSend(ctx context.Context, practiceID, orderID, toEmail, supplierID string) (PurchaseOrder, error) {
 	order, err := s.GetPurchaseOrder(ctx, practiceID, orderID)
 	if err != nil {
 		return PurchaseOrder{}, err
@@ -373,16 +357,17 @@ func (s *Store) claimPurchaseOrderDraft(ctx context.Context, practiceID, orderID
 	if order.Status != "draft" {
 		return PurchaseOrder{}, ErrNotFound
 	}
+
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return PurchaseOrder{}, err
 	}
 	defer tx.Rollback(ctx)
 
-	var status string
+	var status, existingTo string
 	err = tx.QueryRow(ctx, `
-		SELECT status FROM pharmacy.purchase_orders
-		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, orderID).Scan(&status)
+		SELECT status, COALESCE(to_email,'') FROM pharmacy.purchase_orders
+		WHERE practice_id = $1 AND id = $2 FOR UPDATE`, practiceID, orderID).Scan(&status, &existingTo)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PurchaseOrder{}, ErrNotFound
 	}
@@ -392,10 +377,42 @@ func (s *Store) claimPurchaseOrderDraft(ctx context.Context, practiceID, orderID
 	if status != "draft" {
 		return PurchaseOrder{}, ErrNotFound
 	}
+	if strings.TrimSpace(existingTo) != "" {
+		return PurchaseOrder{}, ErrConflict
+	}
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE pharmacy.purchase_orders
+		SET to_email = $3,
+		    supplier_id = COALESCE(NULLIF($4,'')::uuid, supplier_id),
+		    updated_at = now()
+		WHERE practice_id = $1 AND id = $2 AND status = 'draft'
+		  AND (to_email IS NULL OR trim(to_email) = '')`,
+		practiceID, orderID, toEmail, strings.TrimSpace(supplierID))
+	if err != nil {
+		return PurchaseOrder{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return PurchaseOrder{}, ErrConflict
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return PurchaseOrder{}, err
 	}
+	order.ToEmail = toEmail
+	if sid := strings.TrimSpace(supplierID); sid != "" {
+		order.SupplierID = sid
+	}
 	return order, nil
+}
+
+func (s *Store) clearPurchaseOrderSendClaim(ctx context.Context, practiceID, orderID, toEmail string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE pharmacy.purchase_orders
+		SET to_email = '', updated_at = now()
+		WHERE practice_id = $1 AND id = $2 AND status = 'draft'
+		  AND lower(trim(COALESCE(to_email,''))) = lower(trim($3))`,
+		practiceID, orderID, toEmail)
+	return err
 }
 
 // FormatPurchaseOrderCSV builds a simple CSV for supplier email.

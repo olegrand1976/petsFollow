@@ -77,3 +77,7 @@ defineEmits<{
   count: [lineId: string, event: Event]
 }>()
 </script>
+
+<style scoped>
+.stock-form__actions { display: flex; align-items: end; gap: 0.5rem; flex-wrap: wrap; }
+</style>

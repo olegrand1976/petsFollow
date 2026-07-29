@@ -35,7 +35,7 @@
       :alerts="reorderAlerts"
       :email="orderEmail"
       :msg="orderMsg"
-      :busy="busy"
+      :busy="busyOrder"
       @update:email="orderEmail = $event"
       @send="createAndSendOrder"
     />
@@ -45,7 +45,7 @@
       :session="invSession"
       :counts="invCounts"
       :msg="invMsg"
-      :busy="busy"
+      :busy="busyInventory"
       @start="startInventory"
       @close="closeInventory"
       @cancel="cancelInventory"
@@ -55,20 +55,19 @@
 
     <PharmacyStockReceiptCard
       v-if="canWritePharmacy"
-      :receipt="receipt"
-      :selected-med="selectedMed"
-      :busy="busy"
+      v-model:receipt="receipt"
+      v-model:selected-med="selectedMed"
+      :busy="busyReceipt"
       :can-receive="canReceive"
       :soft-warn="softWarn"
       :search-fn="searchMedications"
-      @update:selected-med="selectedMed = $event"
       @receive="receive"
     />
 
     <PharmacyStockBatchesTable
       :batches="batches"
       :query="q"
-      :busy="busy"
+      :busy="busy || busyBatchAction"
       :can-write="canWritePharmacy"
       :band-variant="bandVariant"
       :band-label="bandLabel"
@@ -87,6 +86,10 @@ definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharm
 const {
   canWritePharmacy,
   busy,
+  busyReceipt,
+  busyOrder,
+  busyInventory,
+  busyBatchAction,
   error,
   softWarn,
   bandFilter,
@@ -142,39 +145,4 @@ onMounted(refresh)
   gap: 0.35rem;
 }
 .pharmacy-legal__body p { margin: 0; font-size: 0.9rem; color: var(--pf-vet-muted); }
-:deep(.stock-bands) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-:deep(.stock-band) {
-  border: 1px solid var(--pf-vet-border);
-  border-radius: 8px;
-  background: var(--pf-vet-surface);
-  padding: 0.65rem 0.75rem;
-  text-align: left;
-  cursor: pointer;
-}
-:deep(.stock-band--active) { outline: 2px solid var(--pf-vet-primary); }
-:deep(.stock-band__label) { display: block; font-size: 0.75rem; color: var(--pf-vet-muted); }
-:deep(.stock-band__n) { font-size: 1.25rem; }
-:deep(.stock-form) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 0.75rem;
-  align-items: end;
-}
-:deep(.stock-form__actions) { display: flex; align-items: end; gap: 0.5rem; flex-wrap: wrap; }
-:deep(.stock-toolbar) {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-:deep(.stock-row-actions) {
-  display: flex;
-  gap: 0.35rem;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
 </style>

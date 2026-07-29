@@ -23,3 +23,23 @@ defineProps<{
 }>()
 defineEmits<{ select: [key: string] }>()
 </script>
+
+<style scoped>
+.stock-bands {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.stock-band {
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 8px;
+  background: var(--pf-vet-surface);
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+.stock-band--active { outline: 2px solid var(--pf-vet-primary); }
+.stock-band__label { display: block; font-size: 0.75rem; color: var(--pf-vet-muted); }
+.stock-band__n { font-size: 1.25rem; }
+</style>

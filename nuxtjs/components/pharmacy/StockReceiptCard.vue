@@ -14,11 +14,10 @@
         <label class="pro-label" for="stock-med">{{ $t('pharmacy.stock.medication') }}</label>
         <ProCombobox
           input-id="stock-med"
-          :model-value="selectedMed"
+          v-model="selectedMed"
           :placeholder="$t('pharmacy.medicaments.searchPlaceholder')"
           :search-fn="searchFn"
           data-testid="stock-med-search"
-          @update:model-value="$emit('update:selectedMed', $event)"
         />
       </div>
       <div>
@@ -46,22 +45,32 @@
 <script setup lang="ts">
 import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 
+export type StockReceiptForm = {
+  lotNumber: string
+  expiresOn: string
+  qty: number
+  noteNumber: string
+  supplierName: string
+}
+
+const receipt = defineModel<StockReceiptForm>('receipt', { required: true })
+const selectedMed = defineModel<ProComboboxItem | null>('selectedMed', { required: true })
+
 defineProps<{
-  receipt: {
-    lotNumber: string
-    expiresOn: string
-    qty: number
-    noteNumber: string
-    supplierName: string
-  }
-  selectedMed: ProComboboxItem | null
   busy: boolean
   canReceive: boolean
   softWarn: boolean
   searchFn: (q: string) => Promise<ProComboboxItem[]>
 }>()
-defineEmits<{
-  receive: []
-  'update:selectedMed': [value: ProComboboxItem | null]
-}>()
+defineEmits<{ receive: [] }>()
 </script>
+
+<style scoped>
+.stock-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+.stock-form__actions { display: flex; align-items: end; gap: 0.5rem; flex-wrap: wrap; }
+</style>

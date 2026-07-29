@@ -62,3 +62,13 @@ defineEmits<{
   send: []
 }>()
 </script>
+
+<style scoped>
+.stock-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+.stock-form__actions { display: flex; align-items: end; gap: 0.5rem; flex-wrap: wrap; }
+</style>

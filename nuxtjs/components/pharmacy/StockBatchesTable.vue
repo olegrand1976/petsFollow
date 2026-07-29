@@ -84,3 +84,17 @@ defineEmits<{
   waste: [id: string]
 }>()
 </script>
+
+<style scoped>
+.stock-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.stock-row-actions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+</style>

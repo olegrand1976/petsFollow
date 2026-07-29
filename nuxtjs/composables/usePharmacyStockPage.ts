@@ -61,6 +61,10 @@ export function usePharmacyStockPage() {
   }
 
   const busy = ref(false)
+  const busyReceipt = ref(false)
+  const busyOrder = ref(false)
+  const busyInventory = ref(false)
+  const busyBatchAction = ref(false)
   const error = ref('')
   const softWarn = ref(false)
   const bandFilter = ref('all')
@@ -187,7 +191,7 @@ export function usePharmacyStockPage() {
   }
 
   async function startInventory() {
-    busy.value = true
+    busyInventory.value = true
     error.value = ''
     invMsg.value = ''
     try {
@@ -204,7 +208,7 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorInv')
     }
     finally {
-      busy.value = false
+      busyInventory.value = false
     }
   }
 
@@ -230,7 +234,7 @@ export function usePharmacyStockPage() {
 
   async function closeInventory() {
     if (!invSession.value?.id) return
-    busy.value = true
+    busyInventory.value = true
     error.value = ''
     try {
       const counts = (invSession.value.lines || []).map(ln => ({
@@ -249,13 +253,13 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorInv')
     }
     finally {
-      busy.value = false
+      busyInventory.value = false
     }
   }
 
   async function cancelInventory() {
     if (!invSession.value?.id) return
-    busy.value = true
+    busyInventory.value = true
     try {
       await $fetch(`/api/vet/pharmacy/inventory/sessions/${invSession.value.id}/cancel`, { method: 'POST' })
       invSession.value = null
@@ -266,7 +270,7 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorInv')
     }
     finally {
-      busy.value = false
+      busyInventory.value = false
     }
   }
 
@@ -299,7 +303,7 @@ export function usePharmacyStockPage() {
 
   async function createAndSendOrder() {
     if (!orderEmail.value) return
-    busy.value = true
+    busyOrder.value = true
     error.value = ''
     orderMsg.value = ''
     try {
@@ -320,13 +324,13 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorOrder')
     }
     finally {
-      busy.value = false
+      busyOrder.value = false
     }
   }
 
   async function receive() {
     if (!canReceive.value || !selectedMed.value) return
-    busy.value = true
+    busyReceipt.value = true
     error.value = ''
     softWarn.value = false
     try {
@@ -357,12 +361,12 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorReceive')
     }
     finally {
-      busy.value = false
+      busyReceipt.value = false
     }
   }
 
   async function quarantine(id: string) {
-    busy.value = true
+    busyBatchAction.value = true
     error.value = ''
     try {
       await $fetch(`/api/vet/pharmacy/batches/${id}/quarantine`, { method: 'POST', body: { reason: 'manual' } })
@@ -372,13 +376,13 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorAction')
     }
     finally {
-      busy.value = false
+      busyBatchAction.value = false
     }
   }
 
   async function waste(id: string) {
     if (!confirm(t('pharmacy.stock.wasteConfirm'))) return
-    busy.value = true
+    busyBatchAction.value = true
     error.value = ''
     try {
       await $fetch(`/api/vet/pharmacy/batches/${id}/waste`, { method: 'POST', body: { reason: 'expired' } })
@@ -388,7 +392,7 @@ export function usePharmacyStockPage() {
       error.value = pharmacyErr(e, 'pharmacy.stock.errorAction')
     }
     finally {
-      busy.value = false
+      busyBatchAction.value = false
     }
   }
 
@@ -399,6 +403,10 @@ export function usePharmacyStockPage() {
   return {
     canWritePharmacy,
     busy,
+    busyReceipt,
+    busyOrder,
+    busyInventory,
+    busyBatchAction,
     error,
     softWarn,
     bandFilter,
