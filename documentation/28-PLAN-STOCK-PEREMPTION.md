@@ -195,7 +195,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | `000082_pharmacy_ref_drop_unused_fts` | cleanup index FTS draft | ✅ (⚠️ même préfixe 000082 que Billit) |
 | `000083_pharmacy_stock` | deposits, batches(+status), movements, `practice_settings` | ✅ |
 | `000084_pharmacy_daf` | sequences, documents, items | ✅ |
-| `000085_pharmacy_jobs_audit` | `job_audit` | ⬜ |
+| `000107_pharmacy_jobs_audit` | `job_audit` (ex-cible `000085` renumérotée) | ✅ |
 
 > **Attention** : `000082_invoicing_billit` coexiste déjà. Ne **pas** réutiliser `000082` pour le stock — démarrer à **`000083_pharmacy_stock`**.
 
@@ -327,7 +327,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 
 ---
 
-## 6. Surfaces API (à créer) — ⬜
+## 6. Surfaces API — ✅ (Phase 1 + Phase 2.A–E)
 
 Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
 
@@ -335,8 +335,9 @@ Préfixe `/api/v1/vet/pharmacy/…` + BFF Nuxt.
 |------|-------------|--------|
 | Médicaments | `GET /medications/search` | ✅ |
 | Dépôts / lots / mouvements | CRUD + adjust / quarantine / waste ; `GET /movements?dafId=` | ✅ |
-| Expiry | `GET /expiry/summary` · `PATCH /settings` | ✅ |
+| Expiry | `GET /expiry/summary` · `PATCH /settings` · digest skip vide / jour ISO | ✅ |
 | DAF | draft / finalize / cancel / PDF ; sorties liées `daf_id`+`daf_item_id` | ✅ |
+| Pricing / réassort / commandes / inventaire | Phase 2.A–E | ✅ |
 | Interne | `POST /internal/pharmacy/expiry-run` | ✅ |
 
 Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_expired` · `batch_quarantined` · `invalid_expiry_on_receipt`.
@@ -346,17 +347,17 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 ## 7. Checklist ops staging
 
 - [x] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
-- [ ] Migrations `000081`+ appliquées
-- [ ] Import CNK exécuté
-- [ ] `PHARMACY_ENABLED=true` (pilote)
-- [ ] Nav Médicaments + tag **`dev`** visible
+- [x] Migrations `000081`+ / chaîne pharmacie `000107`+ appliquées (staging via job seed)
+- [ ] Import CNK national complet (⏸ **P0-3** — seed démo suffit pour pilote)
+- [x] `PHARMACY_ENABLED=true` (défaut staging Cloud Run)
+- [x] Nav Médicaments + tag **`dev`** visible
 - [x] Secrets expiry (`PHARMACY_EXPIRY_SECRET` / `petsfollow-pharmacy-expiry-secret`)
 - [x] Scheduler `expiry-run` (Europe/Brussels 04:00, `make gcp-pharmacy-expiry-scheduler`)
 - [x] Env Cloud Run `VAMREG_DRY_RUN=true` · `PHARMACY_WORKERS_ENABLED=false` (sync)
 - [ ] Secret `petsfollow-vamreg-api-key` (optionnel dry-run ; requis P0-1 live)
 - [ ] Redis si `PHARMACY_WORKERS_ENABLED=true`
-- [ ] GCS PDF DAF
-- [ ] Smoke : receipt court-daté → badge → waste → lot OK → DAF finalize → VAMReg `sent` (dry-run)
+- [x] GCS PDF DAF (media sensible)
+- [x] Smoke S6 : `make smoke-pharmacy-s6-staging` (VAMReg dry-run `sent`)
 
 ---
 
