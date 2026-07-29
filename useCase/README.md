@@ -134,6 +134,7 @@ Ordre pour un commercial sur staging :
 | UC-X-06 | [Continuité Care](10-interactions/UC-X-06-care-continuity.md) | Important |
 | UC-X-07 | [Funnel commercial complet](10-interactions/UC-X-07-funnel-commercial-complet.md) | Démo — **Destructif** |
 | UC-X-08 | [Envoi dossier animal → pro (lien 24 h)](10-interactions/UC-X-08-envoi-dossier-pro.md) | Démo |
+| UC-X-09 | [Consultation client → partage PDF (lien 24 h)](10-interactions/UC-X-09-consultation-partage-pdf.md) | Démo |
 
 ---
 

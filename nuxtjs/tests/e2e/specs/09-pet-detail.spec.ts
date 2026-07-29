@@ -165,7 +165,20 @@ test('pet detail — CR visualisable depuis l’historique', { tag: '@p0' }, asy
   await expect(page.getByTestId('visit-report-body')).toBeVisible()
 })
 
-test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {
+test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-new-consultation')).toBeVisible()
+  await page.getByTestId('pet-new-consultation').click()
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+  const petSelect = page.getByTestId('consultation-pet-select')
+  await expect(petSelect).toBeEnabled({ timeout: 10000 })
+  await expect(petSelect).toHaveValue(petId)
+})
+
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
   await seedHeartRateComment(petId)

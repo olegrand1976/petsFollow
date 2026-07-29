@@ -17,6 +17,15 @@
         <div class="pro-pet-header-actions">
           <ProBadge v-if="isPrimaryPractice" variant="success">{{ $t('clients.pet.primaryBadge') }}</ProBadge>
           <ProButton
+            v-if="canWriteClinical"
+            variant="primary"
+            test-id="pet-new-consultation"
+            @click="openConsultation"
+          >
+            <ProIcon name="medical_services" :size="18" />
+            {{ $t('clients.consultation.open') }}
+          </ProButton>
+          <ProButton
             v-if="canMessage"
             variant="secondary"
             test-id="pet-open-messages"
@@ -663,8 +672,14 @@ const canManageShares = computed(() => canPractice('shares.manage'))
 const canReadShares = computed(() => canPractice('shares.read'))
 const canMessage = computed(() => canPractice('messaging'))
 const canValidateHR = computed(() => canPractice('heartrate.validate'))
+const activeConsult = useActiveConsultation()
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
+
+function openConsultation() {
+  if (!canWriteClinical.value) return
+  activeConsult.openForClient(clientId, petId)
+}
 const pet = ref<any>(null)
 const petPhotoUrl = ref('')
 const sessions = ref<any[]>([])

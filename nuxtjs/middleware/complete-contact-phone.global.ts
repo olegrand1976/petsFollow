@@ -14,6 +14,7 @@ const SKIP_PREFIXES = [
   '/invite',
   '/preconsult',
   '/dossier',
+  '/consultation',
 ]
 
 function isUnauthorized(e: unknown): boolean {

@@ -45,10 +45,11 @@ gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
   --role="roles/storage.objectViewer" \
   --quiet >/dev/null 2>&1 || true
 
-# Filet de secours sur les ZIP de partage de dossier (PHI) : le token expire à 24 h
-# et la purge applicative les efface, mais si les deux échouent le bucket nettoie.
+# Filet de secours sur les packs de partage PHI (dossier ZIP + consultation PDF) :
+# le token expire à 24 h et la purge applicative les efface, mais si les deux échouent
+# le bucket nettoie.
 # --lifecycle-file remplace TOUTES les règles : on fusionne avec l'existant.
-echo "→ Lifecycle : suppression de dossier-shares/** au-delà de 2 jours (merge)"
+echo "→ Lifecycle : suppression de dossier-shares/** et consultation-shares/** au-delà de 2 jours (merge)"
 LIFECYCLE_FILE="$(mktemp)"
 trap 'rm -f "$LIFECYCLE_FILE"' EXIT
 python3 - "$BUCKET" "$GCP_PROJECT_ID" "$LIFECYCLE_FILE" <<'PY'
@@ -57,7 +58,7 @@ import json, subprocess, sys
 bucket, project, out = sys.argv[1], sys.argv[2], sys.argv[3]
 desired = {
     "action": {"type": "Delete"},
-    "condition": {"age": 2, "matchesPrefix": ["dossier-shares/"]},
+    "condition": {"age": 2, "matchesPrefix": ["dossier-shares/", "consultation-shares/"]},
 }
 
 raw = subprocess.check_output(
@@ -72,19 +73,23 @@ meta = json.loads(raw)
 lifecycle = meta.get("lifecycle") or meta.get("lifecycle_config") or {}
 rules = list(lifecycle.get("rule") or [])
 
-def is_dossier_shares_rule(rule: dict) -> bool:
+def is_phi_share_lifecycle_rule(rule: dict) -> bool:
     cond = rule.get("condition") or {}
     prefixes = cond.get("matchesPrefix") or []
-    return prefixes == ["dossier-shares/"] or (
-        isinstance(prefixes, list) and "dossier-shares/" in prefixes and len(prefixes) == 1
+    if not isinstance(prefixes, list):
+        return False
+    # Ancienne règle dossier-only ou règle fusionnée actuelle.
+    return set(prefixes) in (
+        {"dossier-shares/"},
+        {"dossier-shares/", "consultation-shares/"},
     )
 
-kept = [r for r in rules if not is_dossier_shares_rule(r)]
+kept = [r for r in rules if not is_phi_share_lifecycle_rule(r)]
 kept.append(desired)
 payload = {"rule": kept}
 with open(out, "w", encoding="utf-8") as f:
     json.dump(payload, f)
-print(f"  {len(kept)} règle(s) lifecycle (dont dossier-shares/)")
+print(f"  {len(kept)} règle(s) lifecycle (dont dossier-shares/ + consultation-shares/)")
 PY
 gcloud storage buckets update "gs://${BUCKET}" \
   --project="$GCP_PROJECT_ID" \

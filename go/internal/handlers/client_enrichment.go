@@ -498,6 +498,13 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 			visits[i].Notes = ""
 		}
 	}
+	// hasFinalReport drives the client consultation CTA — owner-only (share/read are owner-gated).
+	if id.Role == kernel.RoleClient && pet.OwnerUserID == id.UserID {
+		if err := a.store.AttachFinalReportFlags(r.Context(), visits); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	}
 	httpx.WriteData(w, http.StatusOK, visits)
 }
 

@@ -3543,6 +3543,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'J\'accepte de partager ces données de santé avec ce professionnel.'**
   String get sendDossierPhiConsent;
+
+  /// No description provided for @consultationsHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultations'**
+  String get consultationsHistory;
+
+  /// No description provided for @consultationTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation'**
+  String get consultationTitle;
+
+  /// No description provided for @consultationTitleWithPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation — {petName}'**
+  String consultationTitleWithPet(String petName);
+
+  /// No description provided for @consultationVisitMeta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visite'**
+  String get consultationVisitMeta;
+
+  /// No description provided for @consultationReportBy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte-rendu par {author}'**
+  String consultationReportBy(String author);
+
+  /// No description provided for @consultationReportFallback.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte-rendu'**
+  String get consultationReportFallback;
+
+  /// No description provided for @consultationReportEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'(vide)'**
+  String get consultationReportEmpty;
+
+  /// No description provided for @sendConsultationToVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer à un vétérinaire'**
+  String get sendConsultationToVet;
+
+  /// No description provided for @sendConsultationEmailLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail du vétérinaire'**
+  String get sendConsultationEmailLabel;
+
+  /// No description provided for @sendConsultationEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'vet@cabinet.be'**
+  String get sendConsultationEmailHint;
+
+  /// No description provided for @sendConsultationConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get sendConsultationConfirm;
+
+  /// No description provided for @sendConsultationSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation envoyée — lien valable 24 h.'**
+  String get sendConsultationSuccess;
+
+  /// No description provided for @sendConsultationInvalidEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail invalide.'**
+  String get sendConsultationInvalidEmail;
+
+  /// No description provided for @sendConsultationPhiWarning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte-rendu contient des données de santé. Le lien reste valable 24 h et n\'importe qui le possédant pourra télécharger le PDF.'**
+  String get sendConsultationPhiWarning;
+
+  /// No description provided for @sendConsultationPhiConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte de partager ce compte-rendu avec ce vétérinaire.'**
+  String get sendConsultationPhiConsent;
 }
 
 class _AppLocalizationsDelegate

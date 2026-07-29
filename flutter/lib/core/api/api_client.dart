@@ -638,10 +638,13 @@ class ApiClient {
     String? filename,
     String? hint,
     bool clientAudioConsent = false,
+    int? audioDurationSec,
   }) async {
     final form = FormData.fromMap({
       if (hint != null && hint.trim().isNotEmpty) 'hint': hint.trim(),
       'clientAudioConsent': clientAudioConsent ? 'true' : 'false',
+      if (audioDurationSec != null && audioDurationSec > 0)
+        'audioDurationSec': '$audioDurationSec',
       'audio': await MultipartFile.fromFile(
         filePath,
         filename: filename ?? filePath.split('/').last,
@@ -953,6 +956,21 @@ class ApiClient {
   Future<Map<String, dynamic>> sendPetDossierShare(String petId, String email) async {
     final res = await dio.post(
       '/api/v1/pets/$petId/dossier-shares',
+      data: {'email': email.trim()},
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  /// Finalized consultation report(s) for the pet owner.
+  Future<Map<String, dynamic>> getClientConsultation(String visitId) async {
+    final res = await dio.get('/api/v1/visits/$visitId/client-consultation');
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  /// Send a 24h PDF download link for a finalized consultation to a vet.
+  Future<Map<String, dynamic>> sendConsultationShare(String visitId, String email) async {
+    final res = await dio.post(
+      '/api/v1/visits/$visitId/consultation-shares',
       data: {'email': email.trim()},
     );
     return _asMap(res.data is Map ? res.data['data'] : null);

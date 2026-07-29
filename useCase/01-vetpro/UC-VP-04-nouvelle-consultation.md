@@ -27,18 +27,18 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 
 1. Se connecter en véto → **Clients**.
 2. Sur une ligne client, cliquer **Nouvelle Consultation**.
-3. Choisir l’animal (pré-sélectionné s’il n’y en a qu’un) → **Démarrer**.
+3. Choisir l’animal (pré-sélectionné depuis **Animaux** ou la **fiche animal**, ou s’il n’y en a qu’un) → **Démarrer**.
 4. Rédiger ou dicter le CR (audio → transcription) → **Enregistrer** (ou Finaliser).
 5. Choisir :
    - **Créer une ordonnance & Facturer** → wizard DAF prérempli (client / animal / visite) → finaliser → **Facturer**.
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
-6. (Optionnel) Même CTA depuis la fiche client.
+6. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**.
 
 ## Résultat attendu
 
 - Visite créée en `confirmed` sans friction agenda (session walk-in : **n’occupe pas** un créneau client ; hors congés cabinet ; `source=care_pro` en terrain).
 - Fermeture sans enregistrement CR → **confirm** Enregistrer / Annuler la consultation / Rester ; Annuler → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.
-- Historique cabinet : `/consultations` (date décroissante, filtres, audio draft si disponible).
+- Historique cabinet : `/consultations` (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
 - Veille / switch profil : autosave CR + reprise de la consultation pour le **même** utilisateur.
 - CR accessible immédiatement.
 - Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document).

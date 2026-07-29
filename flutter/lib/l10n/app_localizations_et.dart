@@ -1875,4 +1875,56 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get sendDossierPhiConsent =>
       'Nõustun jagama neid terviseandmeid selle spetsialistiga.';
+
+  @override
+  String get consultationsHistory => 'Konsultatsioonid';
+
+  @override
+  String get consultationTitle => 'Konsultatsioon';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Konsultatsioon — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Külastus';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Aruanne: $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Aruanne';
+
+  @override
+  String get consultationReportEmpty => '(tühi)';
+
+  @override
+  String get sendConsultationToVet => 'Saada loomaarstile';
+
+  @override
+  String get sendConsultationEmailLabel => 'Loomaarsti e-post';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@kliinik.ee';
+
+  @override
+  String get sendConsultationConfirm => 'Saada';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Konsultatsioon saadetud — link kehtib 24 tundi.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Vigane e-posti aadress.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'See aruanne sisaldab terviseandmeid. Link kehtib 24 tundi ja igaüks, kellel see on, saab PDF-i alla laadida.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Nõustun jagama seda aruannet selle loomaarstiga.';
 }

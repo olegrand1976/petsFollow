@@ -698,5 +698,30 @@
   "sendDossierSuccess": "Dossier verstuurd — link 24 uur geldig.",
   "sendDossierInvalidEmail": "Ongeldig e-mailadres.",
   "sendDossierPhiWarning": "Dit dossier bevat gezondheidsgegevens: consultverslagen, gezondheidsboekje en documenten. De link blijft 24 uur geldig en iedereen die hem heeft, kan ze inkijken.",
-  "sendDossierPhiConsent": "Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen."
+  "sendDossierPhiConsent": "Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen.",
+  "consultationsHistory": "Consultaties",
+  "consultationTitle": "Consultatie",
+  "consultationTitleWithPet": "Consultatie — {petName}",
+  "@consultationTitleWithPet": {
+    "placeholders": {
+      "petName": { "type": "String" }
+    }
+  },
+  "consultationVisitMeta": "Bezoek",
+  "consultationReportBy": "Verslag door {author}",
+  "@consultationReportBy": {
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+  "consultationReportFallback": "Verslag",
+  "consultationReportEmpty": "(leeg)",
+  "sendConsultationToVet": "Naar een dierenarts sturen",
+  "sendConsultationEmailLabel": "E-mail van de dierenarts",
+  "sendConsultationEmailHint": "vet@kliniek.be",
+  "sendConsultationConfirm": "Versturen",
+  "sendConsultationSuccess": "Consultatie verstuurd — link 24 uur geldig.",
+  "sendConsultationInvalidEmail": "Ongeldig e-mailadres.",
+  "sendConsultationPhiWarning": "Dit verslag bevat gezondheidsgegevens. De link blijft 24 uur geldig en iedereen die hem heeft, kan de PDF downloaden.",
+  "sendConsultationPhiConsent": "Ik ga ermee akkoord dit verslag met deze dierenarts te delen."
 }

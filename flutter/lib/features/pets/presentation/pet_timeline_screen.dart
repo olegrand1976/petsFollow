@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/consultation_view_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -270,6 +271,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final upcoming = visits.where((v) => v.isUpcoming).toList();
+    final pastWithReport = visits.where((v) => v.hasFinalReport).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.visitHistory)),
@@ -362,6 +364,37 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 ),
                             ],
                           ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  if (pastWithReport.isNotEmpty) ...[
+                    Text(l10n.consultationsHistory, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ...pastWithReport.map(
+                      (v) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          key: Key('visit_consultation_tile_${v.id}'),
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                            child: Icon(Icons.description_outlined, color: AppColors.primary, size: 20),
+                          ),
+                          title: Text(l10n.consultationTitle),
+                          subtitle: Text(dateFmt.format(v.displayDate)),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.push<void>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ConsultationViewScreen(
+                                  visitId: v.id,
+                                  petName: widget.petName,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),

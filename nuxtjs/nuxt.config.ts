@@ -57,6 +57,12 @@ export default defineNuxtConfig({
         'X-Robots-Tag': 'noindex, nofollow',
       },
     },
+    '/consultation/**': {
+      headers: {
+        'Referrer-Policy': 'no-referrer',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+    },
     '/**': {
       headers: {
         'X-Frame-Options': 'DENY',

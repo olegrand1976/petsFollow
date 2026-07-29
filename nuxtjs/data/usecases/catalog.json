@@ -94,7 +94,8 @@
         "UC-X-05",
         "UC-X-06",
         "UC-X-07",
-        "UC-X-08"
+        "UC-X-08",
+        "UC-X-09"
       ]
     }
   ],
@@ -240,15 +241,15 @@
       "steps": [
         "Se connecter en véto → Clients.",
         "Sur une ligne client, cliquer Nouvelle Consultation.",
-        "Choisir l’animal (pré-sélectionné s’il n’y en a qu’un) → Démarrer.",
+        "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer.",
         "Rédiger ou dicter le CR (audio → transcription) → Enregistrer (ou Finaliser).",
         "Choisir :",
-        "(Optionnel) Même CTA depuis la fiche client."
+        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal."
       ],
       "expected": [
         "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
         "Fermeture sans enregistrement CR → confirm Enregistrer / Annuler la consultation / Rester ; Annuler → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.",
-        "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible).",
+        "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).",
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
         "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document).",
@@ -1093,6 +1094,66 @@
         "Téléphone commercial visible (mail + PDF)",
         "ZIP + dossier.pdf",
         "Visites avec pro consulté",
+        "Expiry 24 h"
+      ]
+    },
+    "UC-X-09": {
+      "id": "UC-X-09",
+      "folderId": "interactions",
+      "slug": "UC-X-09-consultation-partage-pdf",
+      "title": "Client visualise / partage une consultation (PDF 24 h)",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "",
+      "destructive": false,
+      "objective": "Montrer qu’un propriétaire peut ouvrir le compte-rendu finalisé d’une visite dans l’app, puis l’envoyer à un vétérinaire hors plateforme via un lien magique 24 h pour télécharger un PDF brandé petsFollow (promo + contact commercial).",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Véto (auteur CR)",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Destinataire",
+          "account": "boîte MailHog / e-mail test",
+          "password": "—"
+        },
+        {
+          "role": "Commercial (contexte)",
+          "account": "commercial.demo@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Seed + app client + API + SMTP (MailHog local ou staging).",
+        "Au moins une visite avec CR finalisé pour un animal actif de client.demo (sinon créer une consultation Pro / Pro Light puis finaliser).",
+        "Distinct de UC-X-08 (dossier complet ZIP)."
+      ],
+      "steps": [
+        "App client — login client.demo → fiche animal → Historique des visites.",
+        "Dans Consultations, ouvrir une visite avec compte-rendu.",
+        "Vérifier l’affichage : méta visite + section(s) CR (tous les auteurs finalisés).",
+        "Appuyer sur Envoyer à un vétérinaire → avertissement PHI + e-mail + consentement obligatoire → confirmer.",
+        "Ouvrir l’e-mail : marketing petsFollow, CTA inscription, téléphone commercial, lien 24 h.",
+        "Ouvrir /consultation/... → Télécharger le PDF → vérifier en-tête petsFollow + corps CR + bandeau commercial.",
+        "(Optionnel) Forcer l’expiration → page « lien expiré »."
+      ],
+      "expected": [
+        "Snackbar succès côté client.",
+        "Brouillons non visibles / non partageables.",
+        "PDF téléchargeable avant expiry ; 410 après 24 h."
+      ],
+      "checklist": [
+        "Liste consultations cliquable",
+        "Lecture CR multi-auteurs",
+        "Consentement PHI",
+        "E-mail + tél. commercial",
+        "PDF brandé",
         "Expiry 24 h"
       ]
     }

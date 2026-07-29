@@ -175,6 +175,17 @@ func (s *Store) GetPracticeHeartRateDurations(ctx context.Context, practiceID st
 	return int32SliceToInts(durations), nil
 }
 
+// GetPracticeName returns the practice display name or ErrNotFound.
+func (s *Store) GetPracticeName(ctx context.Context, practiceID string) (string, error) {
+	var name string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(name,'') FROM practice.practices WHERE id = $1`, practiceID).Scan(&name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return name, err
+}
+
 func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {

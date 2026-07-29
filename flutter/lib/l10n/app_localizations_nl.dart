@@ -1874,4 +1874,56 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get sendDossierPhiConsent =>
       'Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen.';
+
+  @override
+  String get consultationsHistory => 'Consultaties';
+
+  @override
+  String get consultationTitle => 'Consultatie';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consultatie — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Bezoek';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Verslag door $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Verslag';
+
+  @override
+  String get consultationReportEmpty => '(leeg)';
+
+  @override
+  String get sendConsultationToVet => 'Naar een dierenarts sturen';
+
+  @override
+  String get sendConsultationEmailLabel => 'E-mail van de dierenarts';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@kliniek.be';
+
+  @override
+  String get sendConsultationConfirm => 'Versturen';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consultatie verstuurd — link 24 uur geldig.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Ongeldig e-mailadres.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'Dit verslag bevat gezondheidsgegevens. De link blijft 24 uur geldig en iedereen die hem heeft, kan de PDF downloaden.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Ik ga ermee akkoord dit verslag met deze dierenarts te delen.';
 }

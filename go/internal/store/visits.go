@@ -40,6 +40,8 @@ type Visit struct {
 	RequestPreconsult bool `json:"requestPreconsult,omitempty"`
 	// ConsultationSession: walk-in CR flow — excluded from agenda overlap / slot busy.
 	ConsultationSession bool `json:"consultationSession,omitempty"`
+	// HasFinalReport: at least one visit_reports row with status=final (client list enrichment).
+	HasFinalReport bool `json:"hasFinalReport,omitempty"`
 	// Permission is set for care_pro list responses (read | write_notes | full).
 	Permission string `json:"permission,omitempty"`
 }
@@ -102,9 +104,10 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 // ConsultationListItem is a walk-in consultation with report summary flags (no audio keys).
 type ConsultationListItem struct {
 	Visit
-	HasReport    bool   `json:"hasReport"`
-	HasAudio     bool   `json:"hasAudio"`
-	ReportStatus string `json:"reportStatus,omitempty"`
+	HasReport        bool   `json:"hasReport"`
+	HasAudio         bool   `json:"hasAudio"`
+	AudioDurationSec int    `json:"audioDurationSec,omitempty"`
+	ReportStatus     string `json:"reportStatus,omitempty"`
 }
 
 // ListConsultationsFilter filters practice walk-in consultations.
@@ -196,6 +199,13 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 				  AND length(trim(COALESCE(r.audio_object_key, ''))) > 0
 			) AS has_audio,
 			COALESCE((
+				SELECT MAX(r.audio_duration_sec)
+				FROM visits.visit_reports r
+				WHERE r.visit_id = v.id
+				  AND r.audio_duration_sec IS NOT NULL
+				  AND r.audio_duration_sec > 0
+			), 0) AS audio_duration_sec,
+			COALESCE((
 				SELECT CASE
 					WHEN bool_or(r.status = 'final') THEN 'final'
 					WHEN bool_or(%s) THEN 'draft'
@@ -229,7 +239,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
-			&item.HasReport, &item.HasAudio, &item.ReportStatus,
+			&item.HasReport, &item.HasAudio, &item.AudioDurationSec, &item.ReportStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -404,7 +414,7 @@ func (s *Store) GetVisit(ctx context.Context, id string) (Visit, error) {
 		SELECT id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
 			duration_minutes, proposed_scheduled_at, pending_action_by,
 			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)
-		FROM visits.visits WHERE id = $1`, id,
+		FROM visits.visits WHERE id = $1 AND deleted_at IS NULL`, id,
 	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
 		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession)
@@ -457,17 +467,22 @@ func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string,
 // SoftDeleteVisit marks a visit as soft-deleted (hidden from consultations history).
 // Allowed for walk-in consultations regardless of status / persisted CR.
 func (s *Store) SoftDeleteVisit(ctx context.Context, id string) (Visit, error) {
-	tag, err := s.pool.Exec(ctx, `
+	var v Visit
+	err := s.pool.QueryRow(ctx, `
 		UPDATE visits.visits
 		SET deleted_at = now()
-		WHERE id = $1 AND deleted_at IS NULL`, id)
-	if err != nil {
-		return Visit{}, err
-	}
-	if tag.RowsAffected() == 0 {
+		WHERE id = $1 AND deleted_at IS NULL
+		RETURNING id::text, pet_id::text, practice_id::text, scheduled_at, status, COALESCE(notes,''), source, created_at,
+			duration_minutes, proposed_scheduled_at, pending_action_by,
+			COALESCE(address_text,''), lat, lng, COALESCE(request_preconsult,false), COALESCE(consultation_session,false)`,
+		id,
+	).Scan(&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+		&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+		&v.AddressText, &v.Lat, &v.Lng, &v.RequestPreconsult, &v.ConsultationSession)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return Visit{}, ErrNotFound
 	}
-	return s.GetVisit(ctx, id)
+	return v, err
 }
 
 func (s *Store) UpdateVisitStatus(ctx context.Context, id, status string) (Visit, error) {

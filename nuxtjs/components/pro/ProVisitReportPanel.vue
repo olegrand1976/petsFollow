@@ -197,6 +197,7 @@
 <script setup lang="ts">
 import { mapVisitReportFields } from '~/utils/visitReport'
 import { normalizeReportText } from '~/utils/safeMarkdown'
+import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 export type VisitReportAuthor = {
@@ -607,16 +608,19 @@ async function acceptAudioConsent() {
     return
   }
   if (!file) return
-  await transcribeAudio(file, file.name)
+  await transcribeAudio(file, file.name, await probeAudioDurationSec(file))
 }
 
-async function transcribeAudio(file: File | Blob, filename: string) {
+async function transcribeAudio(file: File | Blob, filename: string, durationSec = 0) {
   reportBusy.value = true
   reportMsg.value = ''
   try {
     const form = new FormData()
     form.append('audio', file, filename)
     form.append('clientAudioConsent', 'true')
+    if (durationSec > 0) {
+      form.append('audioDurationSec', String(durationSec))
+    }
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-transcribe`, {
       method: 'POST',
       body: form,
@@ -703,6 +707,8 @@ async function stopDictation() {
         resolve(null)
       }
     })
+    // Capture duration before clearing the live clock.
+    const recordedSec = dictationSeconds.value
     mediaRecorder = null
     stopDictationTimer()
     dictating.value = false
@@ -712,8 +718,13 @@ async function stopDictation() {
       return
     }
     const ext = blob.type.includes('mp4') ? 'm4a' : 'webm'
+    // Prefer live clock; fall back to blob metadata (often missing on MediaRecorder webm).
+    let durationSec = recordedSec
+    if (durationSec <= 0) {
+      durationSec = await probeAudioDurationSec(blob)
+    }
     // transcribeAudio owns reportBusy from here (sets true again + clears in finally).
-    await transcribeAudio(blob, `dictation.${ext}`)
+    await transcribeAudio(blob, `dictation.${ext}`, durationSec)
   })().finally(() => {
     stopDictationInFlight = null
   })

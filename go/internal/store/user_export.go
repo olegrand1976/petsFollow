@@ -64,6 +64,9 @@ func (s *Store) ExportUserData(ctx context.Context, userID string, fullClientExp
 		queries["dossierShares"] = `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(t) - 'object_key' - 'token') ORDER BY t.created_at), '[]'::jsonb)
 			FROM pets.dossier_share_tokens t WHERE t.owner_user_id = $1`
+		queries["consultationShares"] = `SELECT COALESCE(jsonb_agg(
+			(to_jsonb(t) - 'object_key' - 'token') ORDER BY t.created_at), '[]'::jsonb)
+			FROM pets.consultation_share_tokens t WHERE t.owner_user_id = $1`
 		queries["prescriptions"] = `SELECT COALESCE(jsonb_agg(
 			(to_jsonb(rx) - 'pdf_object_key' - 'pdf_sha256' - 'signature_id') ORDER BY rx.created_at), '[]'::jsonb)
 			FROM prescriptions.prescriptions rx WHERE rx.owner_id = $1`

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -464,10 +465,14 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	objectKey := fmt.Sprintf("visit-reports/%s/%s-%s", visitID, uuid.NewString(), safeName)
 	ct := header.Header.Get("Content-Type")
-	if ct == "" {
+	baseCT := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+	if baseCT == "" || baseCT == "application/octet-stream" {
 		ct = mimeFromFilename(safeName)
 	}
 	ct = normalizeAudioMIME(ct)
+	if ct == "" {
+		ct = normalizeAudioMIME(mimeFromFilename(safeName))
+	}
 	if ct == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_audio_type")
 		return
@@ -483,7 +488,13 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	// Do not expose public /media URL for PHI audio — store key only; stream via authenticated GET.
 	_ = url
-	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, "", objectKey)
+	durationSec := 0
+	if raw := strings.TrimSpace(r.FormValue("audioDurationSec")); raw != "" {
+		if n, perr := strconv.Atoi(raw); perr == nil && n > 0 {
+			durationSec = n
+		}
+	}
+	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, "", objectKey, durationSec)
 	if err != nil {
 		_ = a.media.Delete(r.Context(), objectKey)
 		if errors.Is(err, store.ErrNotFound) {

@@ -698,5 +698,30 @@
   "sendDossierSuccess": "Historial enviado — enlace válido 24 h.",
   "sendDossierInvalidEmail": "Email no válido.",
   "sendDossierPhiWarning": "Este historial contiene datos de salud: informes de visita, cartilla sanitaria y documentos. El enlace es válido 24 h y cualquiera que lo tenga podrá consultarlos.",
-  "sendDossierPhiConsent": "Acepto compartir estos datos de salud con este profesional."
+  "sendDossierPhiConsent": "Acepto compartir estos datos de salud con este profesional.",
+  "consultationsHistory": "Consultas",
+  "consultationTitle": "Consulta",
+  "consultationTitleWithPet": "Consulta — {petName}",
+  "@consultationTitleWithPet": {
+    "placeholders": {
+      "petName": { "type": "String" }
+    }
+  },
+  "consultationVisitMeta": "Visita",
+  "consultationReportBy": "Informe de {author}",
+  "@consultationReportBy": {
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+  "consultationReportFallback": "Informe",
+  "consultationReportEmpty": "(vacío)",
+  "sendConsultationToVet": "Enviar a un veterinario",
+  "sendConsultationEmailLabel": "Email del veterinario",
+  "sendConsultationEmailHint": "vet@clinica.es",
+  "sendConsultationConfirm": "Enviar",
+  "sendConsultationSuccess": "Consulta enviada — enlace válido 24 h.",
+  "sendConsultationInvalidEmail": "Email no válido.",
+  "sendConsultationPhiWarning": "Este informe contiene datos de salud. El enlace es válido 24 h y cualquiera que lo tenga podrá descargar el PDF.",
+  "sendConsultationPhiConsent": "Acepto compartir este informe con este veterinario."
 }

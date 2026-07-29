@@ -761,5 +761,30 @@
   "sendDossierSuccess": "Dossier envoyé — lien valable 24 h.",
   "sendDossierInvalidEmail": "Adresse e-mail invalide.",
   "sendDossierPhiWarning": "Ce dossier contient des données de santé : comptes rendus de visite, carnet de santé et documents. Le lien reste valable 24 h et n'importe qui le possédant pourra les consulter.",
-  "sendDossierPhiConsent": "J'accepte de partager ces données de santé avec ce professionnel."
+  "sendDossierPhiConsent": "J'accepte de partager ces données de santé avec ce professionnel.",
+  "consultationsHistory": "Consultations",
+  "consultationTitle": "Consultation",
+  "consultationTitleWithPet": "Consultation — {petName}",
+  "@consultationTitleWithPet": {
+    "placeholders": {
+      "petName": { "type": "String" }
+    }
+  },
+  "consultationVisitMeta": "Visite",
+  "consultationReportBy": "Compte-rendu par {author}",
+  "@consultationReportBy": {
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+  "consultationReportFallback": "Compte-rendu",
+  "consultationReportEmpty": "(vide)",
+  "sendConsultationToVet": "Envoyer à un vétérinaire",
+  "sendConsultationEmailLabel": "E-mail du vétérinaire",
+  "sendConsultationEmailHint": "vet@cabinet.be",
+  "sendConsultationConfirm": "Envoyer",
+  "sendConsultationSuccess": "Consultation envoyée — lien valable 24 h.",
+  "sendConsultationInvalidEmail": "Adresse e-mail invalide.",
+  "sendConsultationPhiWarning": "Ce compte-rendu contient des données de santé. Le lien reste valable 24 h et n'importe qui le possédant pourra télécharger le PDF.",
+  "sendConsultationPhiConsent": "J'accepte de partager ce compte-rendu avec ce vétérinaire."
 }

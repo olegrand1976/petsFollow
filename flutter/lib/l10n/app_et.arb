@@ -698,5 +698,30 @@
   "sendDossierSuccess": "Toimik saadetud — link kehtib 24 tundi.",
   "sendDossierInvalidEmail": "Vigane e-posti aadress.",
   "sendDossierPhiWarning": "See toimik sisaldab terviseandmeid: visiidiaruanded, tervisekaart ja dokumendid. Link kehtib 24 tundi ja igaüks, kellel see on, pääseb neile ligi.",
-  "sendDossierPhiConsent": "Nõustun jagama neid terviseandmeid selle spetsialistiga."
+  "sendDossierPhiConsent": "Nõustun jagama neid terviseandmeid selle spetsialistiga.",
+  "consultationsHistory": "Konsultatsioonid",
+  "consultationTitle": "Konsultatsioon",
+  "consultationTitleWithPet": "Konsultatsioon — {petName}",
+  "@consultationTitleWithPet": {
+    "placeholders": {
+      "petName": { "type": "String" }
+    }
+  },
+  "consultationVisitMeta": "Külastus",
+  "consultationReportBy": "Aruanne: {author}",
+  "@consultationReportBy": {
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+  "consultationReportFallback": "Aruanne",
+  "consultationReportEmpty": "(tühi)",
+  "sendConsultationToVet": "Saada loomaarstile",
+  "sendConsultationEmailLabel": "Loomaarsti e-post",
+  "sendConsultationEmailHint": "vet@kliinik.ee",
+  "sendConsultationConfirm": "Saada",
+  "sendConsultationSuccess": "Konsultatsioon saadetud — link kehtib 24 tundi.",
+  "sendConsultationInvalidEmail": "Vigane e-posti aadress.",
+  "sendConsultationPhiWarning": "See aruanne sisaldab terviseandmeid. Link kehtib 24 tundi ja igaüks, kellel see on, saab PDF-i alla laadida.",
+  "sendConsultationPhiConsent": "Nõustun jagama seda aruannet selle loomaarstiga."
 }

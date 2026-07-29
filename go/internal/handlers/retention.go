@@ -63,6 +63,7 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 		"failed":                         failed,
 		"cutoff":                         cutoff,
 		"purgedDossierShares":            a.purgeExpiredDossierShares(r.Context(), ""),
+		"purgedConsultationShares":       a.purgeExpiredConsultationShares(r.Context(), ""),
 		"purgedWebhookEvents":            a.purgeOldInvoicingWebhooks(r.Context()),
 		"rejectedStaleSending":           a.rejectStaleInvoicingSending(r.Context()),
 		"cancelledStaleConsultations":    a.cancelStaleConsultationOrphans(r.Context()),

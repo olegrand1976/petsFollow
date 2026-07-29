@@ -1878,4 +1878,56 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get sendDossierPhiConsent =>
       'Acepto compartir estos datos de salud con este profesional.';
+
+  @override
+  String get consultationsHistory => 'Consultas';
+
+  @override
+  String get consultationTitle => 'Consulta';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consulta — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Visita';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Informe de $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Informe';
+
+  @override
+  String get consultationReportEmpty => '(vacío)';
+
+  @override
+  String get sendConsultationToVet => 'Enviar a un veterinario';
+
+  @override
+  String get sendConsultationEmailLabel => 'Email del veterinario';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@clinica.es';
+
+  @override
+  String get sendConsultationConfirm => 'Enviar';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consulta enviada — enlace válido 24 h.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Email no válido.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'Este informe contiene datos de salud. El enlace es válido 24 h y cualquiera que lo tenga podrá descargar el PDF.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Acepto compartir este informe con este veterinario.';
 }

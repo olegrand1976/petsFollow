@@ -1866,4 +1866,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sendDossierPhiConsent =>
       'I agree to share this health data with this professional.';
+
+  @override
+  String get consultationsHistory => 'Consultations';
+
+  @override
+  String get consultationTitle => 'Consultation';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consultation — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Visit';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Report by $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Report';
+
+  @override
+  String get consultationReportEmpty => '(empty)';
+
+  @override
+  String get sendConsultationToVet => 'Send to a veterinarian';
+
+  @override
+  String get sendConsultationEmailLabel => 'Veterinarian email';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@clinic.com';
+
+  @override
+  String get sendConsultationConfirm => 'Send';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consultation sent — link valid for 24h.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Invalid email address.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'This report contains health data. The link stays valid for 24h and anyone holding it can download the PDF.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'I agree to share this report with this veterinarian.';
 }

@@ -8,6 +8,7 @@ class Visit {
     this.notes,
     this.source,
     this.consultationSession = false,
+    this.hasFinalReport = false,
     this.createdAt,
     this.proposedScheduledAt,
     this.pendingActionBy,
@@ -23,6 +24,7 @@ class Visit {
   final String? notes;
   final String? source;
   final bool consultationSession;
+  final bool hasFinalReport;
   final DateTime? createdAt;
   final DateTime? proposedScheduledAt;
   final String? pendingActionBy;
@@ -55,6 +57,7 @@ class Visit {
       notes: json['notes'] as String?,
       source: json['source'] as String?,
       consultationSession: json['consultationSession'] == true,
+      hasFinalReport: json['hasFinalReport'] == true,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,

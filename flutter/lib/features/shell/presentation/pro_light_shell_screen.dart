@@ -515,13 +515,17 @@ class _SettingsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final specialty = ApiClient.instance.userSpecialty ?? '';
+    // Pas de libellé « titre » pour le profil véto (cabinet ou vet_light).
+    final showSpecialty =
+        specialty.isNotEmpty && specialty != 'vet_light';
     return ListView(
       children: [
-        ListTile(
-          leading: const Icon(Icons.badge_outlined),
-          title: Text(l10n.proLightSpecialty),
-          subtitle: Text(specialty.isEmpty ? '—' : proLightSpecialtyLabel(l10n, specialty)),
-        ),
+        if (showSpecialty)
+          ListTile(
+            leading: const Icon(Icons.badge_outlined),
+            title: Text(l10n.proLightSpecialty),
+            subtitle: Text(proLightSpecialtyLabel(l10n, specialty)),
+          ),
         ListTile(
           leading: const Icon(Icons.person_outline),
           title: Text(l10n.myData),
@@ -770,6 +774,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
   Future<void> _toggleDictation() async {
     if (_recording) {
       final path = await _recorder.stop();
+      final recordedSec = _recordingSeconds;
       _stopRecordingTimer();
       setState(() => _recording = false);
       if (path == null || path.isEmpty) return;
@@ -778,6 +783,7 @@ class _VisitReportSheetState extends State<_VisitReportSheet>
         path,
         filename: 'dictation.m4a',
         clientAudioConsent: true,
+        audioDurationSec: recordedSec > 0 ? recordedSec : null,
       );
       if (!mounted) return;
       await _applyTranscript(transcribed);

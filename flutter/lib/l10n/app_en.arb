@@ -698,5 +698,30 @@
   "sendDossierSuccess": "File sent — link valid for 24h.",
   "sendDossierInvalidEmail": "Invalid email address.",
   "sendDossierPhiWarning": "This file contains health data: visit reports, health book and documents. The link stays valid for 24h and anyone holding it can open them.",
-  "sendDossierPhiConsent": "I agree to share this health data with this professional."
+  "sendDossierPhiConsent": "I agree to share this health data with this professional.",
+  "consultationsHistory": "Consultations",
+  "consultationTitle": "Consultation",
+  "consultationTitleWithPet": "Consultation — {petName}",
+  "@consultationTitleWithPet": {
+    "placeholders": {
+      "petName": { "type": "String" }
+    }
+  },
+  "consultationVisitMeta": "Visit",
+  "consultationReportBy": "Report by {author}",
+  "@consultationReportBy": {
+    "placeholders": {
+      "author": { "type": "String" }
+    }
+  },
+  "consultationReportFallback": "Report",
+  "consultationReportEmpty": "(empty)",
+  "sendConsultationToVet": "Send to a veterinarian",
+  "sendConsultationEmailLabel": "Veterinarian email",
+  "sendConsultationEmailHint": "vet@clinic.com",
+  "sendConsultationConfirm": "Send",
+  "sendConsultationSuccess": "Consultation sent — link valid for 24h.",
+  "sendConsultationInvalidEmail": "Invalid email address.",
+  "sendConsultationPhiWarning": "This report contains health data. The link stays valid for 24h and anyone holding it can download the PDF.",
+  "sendConsultationPhiConsent": "I agree to share this report with this veterinarian."
 }

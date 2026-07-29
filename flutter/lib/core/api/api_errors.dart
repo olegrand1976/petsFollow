@@ -21,7 +21,17 @@ String mapApiError(Object e, AppLocalizations l10n) {
           case 'invalid_image_type':
             return l10n.errorInvalidMediaType;
           case 'payment_required':
+          case 'pet_inactive':
             return l10n.errorPaymentRequired;
+          case 'consultation_share_limit':
+          case 'dossier_share_limit':
+            final apiMsg = err['message']?.toString();
+            if (apiMsg != null &&
+                apiMsg.isNotEmpty &&
+                !apiMsg.startsWith('errors.')) {
+              return apiMsg;
+            }
+            return l10n.errorGeneric('share');
           case 'ai_module_required':
             return l10n.proLightAiModuleRequired;
           case 'invalid_weight':

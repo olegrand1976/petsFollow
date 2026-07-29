@@ -1882,4 +1882,56 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get sendDossierPhiConsent =>
       'J\'accepte de partager ces données de santé avec ce professionnel.';
+
+  @override
+  String get consultationsHistory => 'Consultations';
+
+  @override
+  String get consultationTitle => 'Consultation';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consultation — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Visite';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Compte-rendu par $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Compte-rendu';
+
+  @override
+  String get consultationReportEmpty => '(vide)';
+
+  @override
+  String get sendConsultationToVet => 'Envoyer à un vétérinaire';
+
+  @override
+  String get sendConsultationEmailLabel => 'E-mail du vétérinaire';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@cabinet.be';
+
+  @override
+  String get sendConsultationConfirm => 'Envoyer';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consultation envoyée — lien valable 24 h.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Adresse e-mail invalide.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'Ce compte-rendu contient des données de santé. Le lien reste valable 24 h et n\'importe qui le possédant pourra télécharger le PDF.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'J\'accepte de partager ce compte-rendu avec ce vétérinaire.';
 }

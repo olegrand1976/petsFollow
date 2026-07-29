@@ -179,7 +179,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
-| C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) ; ouvrir CR ; supprimer → hors liste (`deleted_at`) |
+| C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR ; supprimer → hors liste (`deleted_at`) ; player modal affiche durée persistée |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
 
 ### C3 — Calendrier & RDV
@@ -435,6 +435,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | H4 | P1 | Link-request | Flutter invite → Pro accept | Relation active ; pets possibles |
 | H5 | P1 | Share → care_pro | Vet share → farrier | Agenda/fiche ; notes selon permission |
 | H13 | P1 | Envoi dossier animal → pro | Client Flutter → e-mail pro → `/dossier/{token}` | ZIP (PDF + docs + carnet) ; marketing + tél. commercial ; expiry 24 h ; UC-X-08 |
+| H14 | P1 | Consultation client + partage PDF | Historique Flutter → CR final → e-mail → `/consultation/{token}` | PDF CR brandé ; multi-auteurs finaux ; expiry 24 h ; UC-X-09 |
 | H6 | P1 | Billing → features | Checkout pet | Entitlement → FC + messaging + Care/Horse ; commission activation |
 | H7 | P1 | Care overdue | Pro crée → client postpone/done | Dashboard véto sync |
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
@@ -592,6 +593,24 @@ Flutter widget : `pet_send_dossier_test` (envoi bloqué tant que le consentement
 
 Surface publique `/dossier/{token}` : `Referrer-Policy: no-referrer` et `X-Robots-Tag: noindex, nofollow` (`routeRules`) — sans ça un clic vers `/register` fuiterait le token dans le `Referer`. Purge des partages périmés : job quotidien `POST /internal/retention/run` (`make gcp-retention-scheduler`) + lifecycle GCS 2 jours sur `dossier-shares/`.
 
+### Consultation client + partage PDF (Go intégration — H14)
+
+`go test ./internal/handlers/ -run 'ClientConsultation' -count=1`
+`go test ./internal/platform/consultationpdf/ -count=1`
+
+| Cas | Attendu |
+|-----|---------|
+| Owner GET client-consultation | reports `final` uniquement ; multi-auteurs |
+| Draft only | 404 `consultation_not_found` |
+| Non-owner / non-client | 403 |
+| Create + meta + download PDF | magic `%PDF-` ; marketing |
+| Expiry | GET meta → 410 |
+| ListVisits | `hasFinalReport: true` sur la visite |
+
+Flutter widget : `consultation_view_test` · Playwright mocké : `17-consultation-public.spec.ts` · UC : `UC-X-09`.
+
+Surface publique `/consultation/{token}` : mêmes headers noindex / no-referrer que `/dossier/**`. Purge : retention job + préfixe media `consultation-shares/`.
+
 ### Parrainage / QR (Go intégration — anti-régression)
 
 `go test ./internal/handlers/ -run 'TestParrainageControl_|TestFiliationChain_' -count=1`
@@ -677,7 +696,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
 | `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
-| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete | `@p1` |
+| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
@@ -685,7 +704,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `07-commercial` | Login commercial → overview / prospects / pitch / mémo ASV / filiation | `@p1` (filiation) |
 | `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
-| `09-pet-detail` | Fiche animal, shares, commentaire relevé HR | `@p0` (parcours chart/HR) |
+| `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR | `@p0` (parcours chart/HR) + `@p1` CTA |
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |

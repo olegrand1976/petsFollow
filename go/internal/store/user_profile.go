@@ -153,6 +153,10 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		return a, err
 	}
 	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(object_key,'') FROM pets.consultation_share_tokens WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaObjectKeys, `
 		SELECT COALESCE(pdf_object_key,'') FROM prescriptions.prescriptions WHERE owner_id=$1`); err != nil {
 		return a, err
 	}

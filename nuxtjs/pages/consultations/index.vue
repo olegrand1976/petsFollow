@@ -120,10 +120,17 @@
                 <ProIconAction
                   v-if="canWriteClinical && row.hasAudio"
                   icon="play_arrow"
-                  :label="$t('consultations.listen')"
+                  :label="audioListenLabel(row)"
                   :test-id="`consultation-audio-${row.id}`"
                   @click="playAudio(row)"
                 />
+                <span
+                  v-if="row.audioDurationSec"
+                  class="consultations-audio-duration"
+                  :data-testid="`consultation-audio-duration-${row.id}`"
+                >
+                  {{ formatAudioClock(row.audioDurationSec) }}
+                </span>
                 <ProIconAction
                   v-if="canReadPets"
                   icon="description"
@@ -206,19 +213,29 @@
     >
       <p v-if="audioError" class="pro-error" role="alert">{{ audioError }}</p>
       <p v-else-if="audioLoading" class="pro-hint">{{ $t('consultations.audioLoading') }}</p>
-      <audio
-        v-if="audioUrl"
-        :src="audioUrl"
-        controls
-        autoplay
-        class="consultations-audio"
-        data-testid="consultation-audio-player"
-      />
+      <template v-else-if="audioUrl">
+        <p
+          v-if="audioDurationSec > 0"
+          class="pro-hint"
+          data-testid="consultation-audio-duration-label"
+        >
+          {{ $t('consultations.audioDuration', { duration: formatAudioClock(audioDurationSec) }) }}
+        </p>
+        <audio
+          :src="audioUrl"
+          controls
+          autoplay
+          class="consultations-audio"
+          data-testid="consultation-audio-player"
+        />
+      </template>
     </ProModal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { formatAudioClock } from '~/utils/audioDuration'
+
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'calendar.manage' })
 
 type ConsultationRow = {
@@ -232,6 +249,7 @@ type ConsultationRow = {
   createdAt: string
   hasReport?: boolean
   hasAudio?: boolean
+  audioDurationSec?: number
   reportStatus?: string
 }
 
@@ -258,6 +276,7 @@ const audioOpen = ref(false)
 const audioUrl = ref('')
 const audioLoading = ref(false)
 const audioError = ref('')
+const audioDurationSec = ref(0)
 
 const deleteOpen = ref(false)
 const deleteBusy = ref(false)
@@ -405,6 +424,13 @@ function openReport(row: ConsultationRow) {
   reportOpen.value = true
 }
 
+function audioListenLabel(row: ConsultationRow) {
+  const base = t('consultations.listen')
+  const sec = Number(row.audioDurationSec) || 0
+  if (sec <= 0) return base
+  return `${base} (${formatAudioClock(sec)})`
+}
+
 function revokeAudioUrl() {
   if (audioUrl.value) {
     URL.revokeObjectURL(audioUrl.value)
@@ -416,6 +442,7 @@ function onAudioModalOpen(v: boolean) {
   if (!v) {
     revokeAudioUrl()
     audioError.value = ''
+    audioDurationSec.value = 0
   }
 }
 
@@ -423,6 +450,7 @@ async function playAudio(row: ConsultationRow) {
   if (!canWriteClinical.value) return
   audioError.value = ''
   audioLoading.value = true
+  audioDurationSec.value = Number(row.audioDurationSec) || 0
   revokeAudioUrl()
   audioOpen.value = true
   try {
@@ -440,7 +468,11 @@ async function playAudio(row: ConsultationRow) {
       }
       return
     }
-    audioUrl.value = URL.createObjectURL(blob)
+    // Prefer server Content-Type; fall back so WebM dictation still plays.
+    const typed = blob.type && !blob.type.includes('octet-stream') && !blob.type.includes('json')
+      ? blob
+      : new Blob([blob], { type: 'audio/webm' })
+    audioUrl.value = URL.createObjectURL(typed)
   }
   catch (e: any) {
     audioError.value = mapError(e) || t('consultations.audioError')
@@ -461,5 +493,11 @@ onBeforeUnmount(() => {
 .consultations-audio {
   width: 100%;
   margin-top: 0.5rem;
+}
+.consultations-audio-duration {
+  font-size: 0.85rem;
+  color: var(--pf-vet-muted, #64748b);
+  font-variant-numeric: tabular-nums;
+  align-self: center;
 }
 </style>
