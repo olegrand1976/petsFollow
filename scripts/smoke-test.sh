@@ -20,6 +20,10 @@ echo "$REFRESHED" | python3 -c "import sys,json; d=json.load(sys.stdin)['data'];
 CLIENT=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"client.demo@petsfollow.test","password":"ClientDemo123!"}')
 CLIENT_TOKEN=$(echo "$CLIENT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+# Staging may lag seed terms backfill after consent gate — accept-terms is idempotent.
+curl -sf -X POST "$API/api/v1/me/accept-terms" \
+  -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"consent":true}' >/dev/null
 
 ADMIN=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"admin.demo@petsfollow.test","password":"AdminDemo123!"}')
