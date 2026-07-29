@@ -788,6 +788,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petHealthBookNumberOptional => 'N. libretto (opzionale)';
 
   @override
+  String get petDomicileLocation => 'Domicilio / scuderia';
+
+  @override
+  String get petDomicileHint => 'Es. Scuderia dei Salici — Bruxelles';
+
+  @override
+  String get petFoodChainStatus => 'Stato catena alimentare';
+
+  @override
+  String get petFoodChainCompanion => 'Animale da compagnia (fuori catena)';
+
+  @override
+  String get petFoodChainFoodProducing =>
+      'Animale da reddito / catena alimentare';
+
+  @override
+  String get petFoodChainExcluded => 'Escluso dalla catena alimentare';
+
+  @override
   String get petHealthBookAddPages => 'Aggiungi foto del libretto';
 
   @override
@@ -989,6 +1008,33 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get speciesHorse => 'Cavallo';
+
+  @override
+  String get speciesDonkey => 'Asino';
+
+  @override
+  String get speciesCattle => 'Bovino';
+
+  @override
+  String get speciesSheep => 'Ovino';
+
+  @override
+  String get speciesGoat => 'Caprino';
+
+  @override
+  String get speciesPig => 'Suino';
+
+  @override
+  String get speciesPoultry => 'Pollame';
+
+  @override
+  String get speciesRabbit => 'Coniglio';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Llama';
 
   @override
   String get speciesOther => 'Altro';

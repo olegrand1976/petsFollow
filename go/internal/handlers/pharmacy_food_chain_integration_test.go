@@ -73,10 +73,26 @@ func TestPharmacyFoodChainAndWithdrawal(t *testing.T) {
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/vet/pets/"+petID+"/food-chain", tok, map[string]any{
-		"foodChainStatus": "food_producing",
+		"foodChainStatus":  "food_producing",
+		"domicileLocation": "Écurie Test DAF — Bruxelles",
 	})
 	if code != http.StatusOK {
 		t.Fatalf("food-chain %d %#v", code, env)
+	}
+	got := dataMap(t, env)
+	if got["foodChainStatus"] != "food_producing" {
+		t.Fatalf("status %#v", got)
+	}
+	if got["domicileLocation"] != "Écurie Test DAF — Bruxelles" {
+		t.Fatalf("domicile %#v", got)
+	}
+	getCode, getEnv := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID, tok, nil)
+	if getCode != http.StatusOK {
+		t.Fatalf("get pet %d %#v", getCode, getEnv)
+	}
+	petData := dataMap(t, getEnv)
+	if petData["foodChainStatus"] != "food_producing" || petData["domicileLocation"] != "Écurie Test DAF — Bruxelles" {
+		t.Fatalf("pet payload missing regulatory fields %#v", petData)
 	}
 
 	exp := time.Now().AddDate(0, 0, 200).Format("2006-01-02")

@@ -7,6 +7,7 @@ import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
@@ -140,18 +141,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
     }
   }
 
-  String _speciesLabel(AppLocalizations l10n, String species) {
-    switch (species) {
-      case 'dog':
-        return l10n.speciesDog;
-      case 'cat':
-        return l10n.speciesCat;
-      case 'horse':
-        return l10n.speciesHorse;
-      default:
-        return l10n.speciesOther;
-    }
-  }
+  String _speciesLabel(AppLocalizations l10n, String species) =>
+      speciesLabel(l10n, species);
 
   Future<void> _changePhoto() async {
     final l10n = AppLocalizations.of(context)!;
@@ -448,7 +439,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
               pet.species == 'horse' &&
               FeatureModulesController.instance.horse) ...[
             const SizedBox(height: 24),
-            HorseHealthPanel(petId: pet.id, petName: pet.name),
+            HorseHealthPanel(
+              petId: pet.id,
+              petName: pet.name,
+              foodChainStatus: pet.foodChainStatus,
+              domicileLocation: pet.domicileLocation,
+            ),
           ],
           if (hrPoints.isNotEmpty || weightPoints.isNotEmpty) ...[
             const SizedBox(height: 24),

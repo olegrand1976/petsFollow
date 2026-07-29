@@ -21,6 +21,7 @@ import (
 const (
 	maxMicrochipLen        = 64
 	maxHealthBookNumberLen = 64
+	maxDomicileLocationLen = 500
 )
 
 func clipPetIDField(s string, maxRunes int) string {

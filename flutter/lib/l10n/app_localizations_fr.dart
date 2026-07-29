@@ -788,6 +788,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get petHealthBookNumberOptional => 'N° de carnet (optionnel)';
 
   @override
+  String get petDomicileLocation => 'Domicile / écurie';
+
+  @override
+  String get petDomicileHint => 'Ex. Écurie des Saules — Bruxelles';
+
+  @override
+  String get petFoodChainStatus => 'Statut chaîne alimentaire';
+
+  @override
+  String get petFoodChainCompanion => 'Animal de compagnie (hors chaîne)';
+
+  @override
+  String get petFoodChainFoodProducing =>
+      'Animal de rente / chaîne alimentaire';
+
+  @override
+  String get petFoodChainExcluded => 'Exclu de la chaîne alimentaire';
+
+  @override
   String get petHealthBookAddPages => 'Ajouter des photos du carnet';
 
   @override
@@ -989,6 +1008,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get speciesHorse => 'Cheval';
+
+  @override
+  String get speciesDonkey => 'Âne';
+
+  @override
+  String get speciesCattle => 'Bovin';
+
+  @override
+  String get speciesSheep => 'Ovin';
+
+  @override
+  String get speciesGoat => 'Caprin';
+
+  @override
+  String get speciesPig => 'Porcin';
+
+  @override
+  String get speciesPoultry => 'Volaille';
+
+  @override
+  String get speciesRabbit => 'Lapin';
+
+  @override
+  String get speciesAlpaca => 'Alpaga';
+
+  @override
+  String get speciesLlama => 'Lama';
 
   @override
   String get speciesOther => 'Autre';

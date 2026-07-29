@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
@@ -191,6 +192,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/vet/clients/{clientID}/link", a.linkExistingVetClient)
 		pr.Get("/vet/colleagues", a.listPracticeColleagues)
 		pr.Get("/clients/{clientID}", a.getClient)
+		pr.Patch("/clients/{clientID}", a.patchClient)
 		pr.Get("/clients/{clientID}/overview", a.getClientOverview)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
@@ -395,6 +397,46 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, client)
 }
 
+type patchClientReq struct {
+	ContactPhone *string `json:"contactPhone"`
+}
+
+func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
+		return
+	}
+	var req patchClientReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if req.ContactPhone == nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
+		return
+	}
+	phone := strings.TrimSpace(*req.ContactPhone)
+	if utf8.RuneCountInString(phone) > 40 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
+		return
+	}
+	clientID := chi.URLParam(r, "clientID")
+	if err := a.store.UpdateClientContactPhoneByPractice(r.Context(), id.PracticeID, clientID, phone); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, clientID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, client)
+}
+
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
 	if !ok {
@@ -532,6 +574,7 @@ type petReq struct {
 	LitterTag        string   `json:"litterTag"`
 	MicrochipNumber  *string  `json:"microchipNumber"`
 	HealthBookNumber *string  `json:"healthBookNumber"`
+	DomicileLocation *string  `json:"domicileLocation"`
 	Plan             string   `json:"plan"`
 	BillingMode      string   `json:"billingMode"`
 	SuccessURL       string   `json:"successUrl"`
@@ -746,6 +789,7 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID,
 		LitterTag:       existing.LitterTag,
 		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
+		DomicileLocation: existing.DomicileLocation,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
@@ -755,6 +799,12 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.HealthBookNumber != nil {
 		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
+	}
+	if req.DomicileLocation != nil {
+		p.DomicileLocation = clipPetIDField(*req.DomicileLocation, maxDomicileLocationLen)
+	} else if strings.TrimSpace(req.Species) != "" && req.Species != "horse" && existing.Species == "horse" {
+		// Species left horse without explicit domicile → drop stale stable location.
+		p.DomicileLocation = ""
 	}
 	// Champs omis : conserver les valeurs existantes (édition partielle mobile).
 	if strings.TrimSpace(req.PhotoURL) == "" {

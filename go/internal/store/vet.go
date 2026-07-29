@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -48,17 +49,37 @@ type ClientOverview struct {
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
 	var c ClientSummary
 	err := s.pool.QueryRow(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1 AND pc.client_user_id = $2
-		GROUP BY u.id, u.email, u.full_name, u.avatar_url`, practiceID, clientID).Scan(
-		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount)
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url, u.contact_phone`, practiceID, clientID).Scan(
+		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ClientSummary{}, ErrNotFound
 	}
 	return c, err
+}
+
+// UpdateClientContactPhoneByPractice updates contact_phone for a client linked to the practice.
+// Empty phone clears the field. Returns ErrNotFound if the client is not linked.
+func (s *Store) UpdateClientContactPhoneByPractice(ctx context.Context, practiceID, clientID, contactPhone string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE identity.users u
+		SET contact_phone = $3
+		FROM practice.practice_clients pc
+		WHERE u.id = pc.client_user_id
+			AND pc.practice_id = $1
+			AND pc.client_user_id = $2
+			AND u.role = 'client'`, practiceID, clientID, strings.TrimSpace(contactPhone))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *Store) GetClientOverview(ctx context.Context, practiceID, clientID string) (ClientOverview, error) {

@@ -787,6 +787,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get petHealthBookNumberOptional => 'N.º de cartilla (opcional)';
 
   @override
+  String get petDomicileLocation => 'Domicilio / cuadra';
+
+  @override
+  String get petDomicileHint => 'Ej. Cuadra de los Sauces — Bruselas';
+
+  @override
+  String get petFoodChainStatus => 'Estado cadena alimentaria';
+
+  @override
+  String get petFoodChainCompanion => 'Animal de compañía (fuera de cadena)';
+
+  @override
+  String get petFoodChainFoodProducing =>
+      'Animal de renta / cadena alimentaria';
+
+  @override
+  String get petFoodChainExcluded => 'Excluido de la cadena alimentaria';
+
+  @override
   String get petHealthBookAddPages => 'Añadir fotos de la cartilla';
 
   @override
@@ -987,6 +1006,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get speciesHorse => 'Caballo';
+
+  @override
+  String get speciesDonkey => 'Asno';
+
+  @override
+  String get speciesCattle => 'Bovino';
+
+  @override
+  String get speciesSheep => 'Ovino';
+
+  @override
+  String get speciesGoat => 'Caprino';
+
+  @override
+  String get speciesPig => 'Porcino';
+
+  @override
+  String get speciesPoultry => 'Aves de corral';
+
+  @override
+  String get speciesRabbit => 'Conejo';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Llama';
 
   @override
   String get speciesOther => 'Otro';

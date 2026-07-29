@@ -63,6 +63,8 @@ class Pet {
     this.healthBookNumber,
     this.healthBookPdfUrl,
     this.healthBookPdfAttached = false,
+    this.foodChainStatus,
+    this.domicileLocation,
   });
 
   final String id;
@@ -84,6 +86,9 @@ class Pet {
   /// Legacy / unused public URL — prefer [healthBookPdfAttached] + auth stream.
   final String? healthBookPdfUrl;
   final bool healthBookPdfAttached;
+  /// companion | food_producing | excluded_from_food_chain
+  final String? foodChainStatus;
+  final String? domicileLocation;
 
   /// True when the logged-in client owns this pet (billing / HR / edit).
   bool get isOwner {
@@ -164,6 +169,8 @@ class Pet {
       healthBookNumber: _optionalString(json['healthBookNumber']),
       healthBookPdfUrl: resolveMediaUrl(_optionalString(json['healthBookPdfUrl'])),
       healthBookPdfAttached: json['healthBookPdfAttached'] == true,
+      foodChainStatus: _optionalString(json['foodChainStatus']),
+      domicileLocation: _optionalString(json['domicileLocation']),
     );
   }
 

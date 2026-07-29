@@ -19,6 +19,9 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | View / share consultation PDF | · | ✓ | · | `consultation_view_test` (CTA disponible/en attente sur Consultations + card Visite ; entrée menu fiche `pet_consultations_*` ; CR + share) |
 | New pet → save without payment / pay CTA | · | ✓ | ✓ | `pet_form_screen_test` sticky save + skipCheckout + pop/snackbar ; smoke create→list |
 | Edit pet → puce + n° carnet | · | ✓ | · | `pet_edit_screen_test` PUT microchip/healthBook |
+| Edit horse → domicile | · | ✓ | · | `pet_edit_screen_test` PUT domicileLocation |
+| Edit cattle → domicile (rente) | · | ✓ | · | `pet_edit_screen_test` PUT domicileLocation |
+| Pet species labels (rente) | ✓ | · | · | `pet_species_test` |
 | New pet → sans cabinet (post-save link vet) | · | ✓ | · | `PetCreateResult` + snack host ; dialog Home seulement si déjà des vétos (`hasLinkedVets`) ; sinon bandeau |
 | New pet → createPet parse envelope | ✓ | · | · | `create_pet_api_test` _asMap + entitlement |
 | Kennel quick encode → POST /pets/batch | · | ✓ | · | `kennel_quick_encode_test` submit + empty skip + post-save link dialog |

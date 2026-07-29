@@ -787,6 +787,24 @@ class AppLocalizationsNl extends AppLocalizations {
   String get petHealthBookNumberOptional => 'Paspoortnummer (optioneel)';
 
   @override
+  String get petDomicileLocation => 'Domicilie / stal';
+
+  @override
+  String get petDomicileHint => 'Bv. Stal De Wilgen — Brussel';
+
+  @override
+  String get petFoodChainStatus => 'Status voedselketen';
+
+  @override
+  String get petFoodChainCompanion => 'Gezelschapsdier (buiten voedselketen)';
+
+  @override
+  String get petFoodChainFoodProducing => 'Productiedier / voedselketen';
+
+  @override
+  String get petFoodChainExcluded => 'Uitgesloten van de voedselketen';
+
+  @override
   String get petHealthBookAddPages => 'Foto\'s van het paspoort toevoegen';
 
   @override
@@ -987,6 +1005,33 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get speciesHorse => 'Paard';
+
+  @override
+  String get speciesDonkey => 'Ezel';
+
+  @override
+  String get speciesCattle => 'Rund';
+
+  @override
+  String get speciesSheep => 'Schaap';
+
+  @override
+  String get speciesGoat => 'Geit';
+
+  @override
+  String get speciesPig => 'Varken';
+
+  @override
+  String get speciesPoultry => 'Pluimvee';
+
+  @override
+  String get speciesRabbit => 'Konijn';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Lama';
 
   @override
   String get speciesOther => 'Anders';

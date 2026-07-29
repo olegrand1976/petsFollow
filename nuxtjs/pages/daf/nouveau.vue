@@ -11,8 +11,18 @@
 
     <p v-if="error" class="pro-alert" data-testid="daf-wizard-error">{{ error }}</p>
 
-    <ProCard v-if="contextLabel" class="pro-mb-lg" data-testid="daf-consultation-context">
-      <p class="pro-hint">{{ contextLabel }}</p>
+    <ProCard v-if="contextLabel || petRegulatoryLabel" class="pro-mb-lg" data-testid="daf-consultation-context">
+      <p v-if="contextLabel" class="pro-hint">{{ contextLabel }}</p>
+      <dl v-if="petRegulatoryLabel" class="daf-pet-reg" data-testid="daf-pet-regulatory">
+        <div>
+          <dt>{{ $t('clients.pet.foodChainStatus') }}</dt>
+          <dd>{{ petFoodChainLabel }}</dd>
+        </div>
+        <div v-if="petDomicile">
+          <dt>{{ $t('clients.pet.domicileLocation') }}</dt>
+          <dd>{{ petDomicile }}</dd>
+        </div>
+      </dl>
     </ProCard>
 
     <ProCard class="pro-mb-lg">
@@ -94,10 +104,27 @@ const preview = ref<any[]>([])
 const finalizedDafId = ref('')
 const contextClientName = ref('')
 const contextPetName = ref('')
+const petFoodChain = ref('')
+const petDomicile = ref('')
 
 const clientUserId = computed(() => String(route.query.clientUserId || ''))
 const petId = computed(() => String(route.query.petId || ''))
 const visitId = computed(() => String(route.query.visitId || ''))
+
+const petFoodChainLabel = computed(() => {
+  switch (petFoodChain.value) {
+    case 'food_producing':
+      return t('clients.pet.foodChainFoodProducing')
+    case 'excluded_from_food_chain':
+      return t('clients.pet.foodChainExcluded')
+    case 'companion':
+      return t('clients.pet.foodChainCompanion')
+    default:
+      return ''
+  }
+})
+
+const petRegulatoryLabel = computed(() => Boolean(petFoodChainLabel.value || petDomicile.value))
 
 const contextLabel = computed(() => {
   if (!clientUserId.value && !petId.value && !visitId.value) return ''
@@ -148,16 +175,16 @@ async function loadContext() {
       contextClientName.value = ''
     }
   }
-  if (petId.value && clientUserId.value) {
+  if (petId.value) {
     try {
-      const res = await $fetch<any>(`/api/clients/${clientUserId.value}/pets`)
-      const pets = unwrap(res)
-      const list = Array.isArray(pets) ? pets : []
-      const pet = list.find((p: any) => p.id === petId.value)
-      contextPetName.value = pet?.name || ''
+      const res = await $fetch<any>(`/api/pets/${petId.value}`)
+      const pet = unwrap(res)
+      if (!contextPetName.value) contextPetName.value = pet?.name || ''
+      petFoodChain.value = pet?.foodChainStatus || ''
+      petDomicile.value = pet?.domicileLocation || ''
     }
     catch {
-      contextPetName.value = ''
+      /* keep list-based name if any */
     }
   }
 }
@@ -274,6 +301,21 @@ async function goInvoice() {
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--pf-vet-border);
+}
+.daf-pet-reg {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+}
+.daf-pet-reg dt {
+  font-size: 0.8rem;
+  color: var(--pf-vet-muted, #64748b);
+  margin: 0 0 0.2rem;
+}
+.daf-pet-reg dd {
+  margin: 0;
+  font-weight: 600;
 }
 .daf-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 </style>
