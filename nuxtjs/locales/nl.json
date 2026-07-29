@@ -854,7 +854,32 @@
       "bandQuarantine": "Quarantaine",
       "errorLoad": "Voorraad laden mislukt.",
       "errorReceive": "Ontvangst geweigerd.",
-      "errorAction": "Actie mislukt."
+      "errorAction": "Actie mislukt.",
+      "reorderTitle": "Herbevoorrading",
+      "reorderHint": "Voorraad onder drempel — maak een bestelling en mail de leverancier.",
+      "reorderOnHand": "Op voorraad",
+      "reorderMin": "Drempel",
+      "orderEmail": "E-mail leverancier",
+      "orderCreateSend": "Bestelling mailen",
+      "orderSent": "Bestelling verzonden.",
+      "errorOrder": "Bestelling mislukt.",
+      "blNumber": "Leveringsbon nr. (optioneel)",
+      "supplierName": "Leverancier (optioneel)",
+      "invTitle": "Jaarlijkse inventaris",
+      "invHint": "Snapshot van actieve / quarantaine lots — voer fysieke tellingen in en sluit af om verschillen toe te passen.",
+      "invStart": "Inventaris starten",
+      "invClose": "Afsluiten en bijwerken",
+      "invCancel": "Annuleren",
+      "invExport": "CSV-export",
+      "invSystem": "Systeem",
+      "invCounted": "Geteld",
+      "invProgress": "{counted} / {total} regels geteld",
+      "invStarted": "Inventaris geopend.",
+      "invClosed": "Inventaris afgesloten — verschillen toegepast.",
+      "invCancelled": "Inventaris geannuleerd.",
+      "errorInv": "Inventaris mislukt.",
+      "errorReorderLoad": "Herkantelingswaarschuwingen laden mislukt.",
+      "errorInvLoad": "Open inventaris laden mislukt."
     },
     "daf": {
       "title": "DAF-documenten",
@@ -887,7 +912,41 @@
       "contextClient": "Klant",
       "contextPet": "Dier",
       "contextVisit": "Gekoppelde visit",
-      "goInvoice": "Factureren"
+      "goInvoice": "Factureren",
+      "vamregLabel": "VAMReg",
+      "vamregRetry": "VAMReg opnieuw",
+      "vamregStatus": {
+        "pending": "In afwachting",
+        "sent": "Gemeld",
+        "failed": "Mislukt",
+        "na": "N.v.t."
+      }
+    },
+    "errors": {
+      "daf_vamreg_already_sent": "Annuleren onmogelijk: VAMReg-aangifte al verzonden.",
+      "daf_vamreg_in_flight": "Annuleren onmogelijk: VAMReg-aangifte bezig — later opnieuw.",
+      "daf_vamreg_incomplete": "Incomplete VAMReg fields (species, indication, duration).",
+      "daf_vamreg_not_applicable": "VAMReg not applicable for this DAF.",
+      "daf_not_draft": "DAF is no longer a draft.",
+      "daf_not_finalized": "DAF is not finalized.",
+      "daf_empty": "Add at least one medication line.",
+      "daf_amm_required": "MA number (AMM) is required.",
+      "daf_pdf_immutable": "DAF PDF already generated.",
+      "daf_trace_required": "Lot traceability missing.",
+      "food_chain_withdrawal_required": "Withdrawal periods (meat/milk/eggs) required for food-producing animals.",
+      "food_chain_banned_medication": "Medication banned for the food chain.",
+      "stock_insufficient": "Insufficient stock.",
+      "stock_unavailable_valid_lots": "No valid lots available (FEFO).",
+      "batch_expired": "Batch expired.",
+      "batch_quarantined": "Batch quarantined.",
+      "batch_wasted": "This lot was destroyed — create a new lot for receipt.",
+      "invalid_expiry_on_receipt": "Invalid expiry date.",
+      "delivery_note_exists": "This delivery-note number already exists.",
+      "order_not_draft": "Order is no longer a draft.",
+      "email_send_failed": "Email send failed.",
+      "vamreg_enqueue_failed": "Could not retry VAMReg.",
+      "not_found": "Not found.",
+      "validation_error": "Invalid data."
     }
   },
   "recommend": {
@@ -2043,17 +2102,17 @@
     "terms": {
       "title": "Gebruiksvoorwaarden",
       "link": "Voorwaarden",
-      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, hartslagmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}ll-it-sc.be."
+      "body": "Deze voorwaarden regelen het gebruik van petsFollow Pro door dierenartsen en de mobiele app door eigenaars. De app biedt voorgeschreven opvolging (berichten, Care/Horse, hartslagmetingen) en communicatie met de praktijk. Abonnements- en addonbetalingen verlopen via Stripe. Contact: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Privacybeleid",
       "link": "Privacy",
-      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}ll-it-sc.be."
+      "body": "petsFollow verwerkt persoonsgegevens voor zorgcontinuïteit van dieren: identiteit (naam, e-mail), huisdiergegevens (naam, soort, ras, foto's), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (Firebase Cloud Messaging), betalingsgegevens via Stripe. Doeleinden: account, monitoring, berichten, notificaties, bezoekverslagen, facturatie. AI-verwerking: Google Gemini wordt gebruikt voor het verbeteren van bezoekverslagen, het importeren van klantbestanden en de pitchtraining (audio in realtime verwerkt, niet bewaard door Google). Partners: Google (Sign-In, FCM, Gemini), Stripe, Google Cloud Platform. Bewaring: levensduur van het account, daarna wissing; inactieve accounts worden na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat. AVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): instellingen (gegevens exporteren, account verwijderen) of support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Juridische vermeldingen",
       "link": "Juridische vermeldingen",
-      "body": "Uitgever: LL-IT-SC / petsFollow. Contact: support{'@'}ll-it-sc.be. Hosting: Google Cloud Platform (AVG-conform)."
+      "body": "Uitgever: LL-IT-SC / petsFollow. Contact: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (AVG-conform)."
     },
     "navAria": "Juridisch"
   },
@@ -2689,7 +2748,7 @@
     "reportAuthorPeer": "Andere auteur",
     "reportReadOnlyPeer": "Verslag van een andere professional — alleen lezen. Schakel terug naar « Mijn verslag » om het uwe te bewerken.",
     "reportHint": "Bezoeknotities…",
-    "saveReport": "Verslag opslaan",
+    "saveReport": "Opslaan",
     "improveReport": "Verbeteren (IA)",
     "reportSaved": "Verslag opgeslagen",
     "reportImproved": "Verslag verbeterd",
@@ -2703,12 +2762,10 @@
     "micPermissionDenied": "Microfoon geweigerd — controleer de browsermachtigingen.",
     "reportVisitDate": "Bezoekdatum",
     "reportDatePrefix": "Datum van",
-    "reportHowItWorksTitle": "Hoe werkt het?",
-    "reportHowItWorksStep1": "Dicteer (knop « Dicteren ») of importeer een audiobestand.",
-    "reportHowItWorksStep2": "Bevestig de mondelinge toestemming van de cliënt vóór de opname.",
-    "reportHowItWorksStep3": "Sla het verslag op.",
-    "reportHowItWorksStep4": "Verbeter het met AI indien nodig.",
-    "reportHowItWorksStep5": "Finaliseer, ga daarna verder met een voorschrift/DAF of een factuur.",
+    "reportHowItWorksTitle": "Hulp",
+    "reportHowItWorksStep1": "Dicteer of typ notities links (klanttoestemming voor audio).",
+    "reportHowItWorksStep2": "Verbeter met AI rechts, pas daarna bij indien nodig.",
+    "reportHowItWorksStep3": "Opslaan, finaliseren, daarna DAF of factuur.",
     "audioConsent": "Audio dient om het verslag te maken. Bevestig mondelinge toestemming. Wordt verwijderd bij finalisatie.",
     "audioConsentTitle": "Audiotoestemming",
     "audioConsentAccept": "Ik ga akkoord",
@@ -2793,12 +2850,21 @@
     "audioToText": "Audio → tekst",
     "reportEditSource": "Tekst bewerken",
     "reportPreview": "Voorbeeld",
-    "reportVersionTranscript": "v0 — Transcriptie",
-    "reportVersionImproved": "v1 — AI-verbetering",
-    "reportVersionSaved": "v2 — Opgeslagen versie",
+    "reportVersionTranscript": "Originele transcriptie",
+    "reportVersionImproved": "AI-voorstel",
+    "reportVersionSaved": "Laatst opgeslagen versie",
     "reportVersionEmpty": "Geen",
-    "reportRestore": "Herstellen",
-    "reportVersionsTitle": "Verslagversies"
+    "reportRestore": "Terugzetten in editor",
+    "reportVersionsTitle": "Versiegeschiedenis",
+    "reportFlowHint": "Notities links → verslag rechts → Opslaan.",
+    "reportPaneNotesTitle": "Notities / dictee",
+    "reportPaneNotesSubtitle": "Typ of dicteer de consultatie.",
+    "reportPaneCrTitle": "Verslag",
+    "reportPaneCrSubtitle": "Verbeter met AI of bewerk handmatig.",
+    "reportTranscriptHint": "Dictee of ruwe notities…",
+    "reportDirtyHint": "Niet-opgeslagen wijzigingen.",
+    "reportDiscardEdits": "Wijzigingen annuleren",
+    "reportStatusFinal": "Afgerond"
   },
   "manager": {
     "dashboard": {

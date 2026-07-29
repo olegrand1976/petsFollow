@@ -1395,7 +1395,32 @@
       "bandQuarantine": "Quarantena",
       "errorLoad": "Impossibile caricare lo stock.",
       "errorReceive": "Entrata rifiutata.",
-      "errorAction": "Azione non riuscita."
+      "errorAction": "Azione non riuscita.",
+      "reorderTitle": "Alert rifornimento",
+      "reorderHint": "Scorte sotto soglia — crea un ordine e invialo al fornitore.",
+      "reorderOnHand": "In stock",
+      "reorderMin": "Soglia",
+      "orderEmail": "Email fornitore",
+      "orderCreateSend": "Ordina via email",
+      "orderSent": "Ordine inviato.",
+      "errorOrder": "Invio ordine non riuscito.",
+      "blNumber": "N. DDT (opzionale)",
+      "supplierName": "Fornitore (opzionale)",
+      "invTitle": "Inventario annuale",
+      "invHint": "Snapshot dei lotti attivi / quarantena — inserire i conteggi fisici e chiudere per applicare le differenze.",
+      "invStart": "Avvia inventario",
+      "invClose": "Chiudi e rettifica",
+      "invCancel": "Annulla",
+      "invExport": "Esporta CSV",
+      "invSystem": "Teorico",
+      "invCounted": "Contato",
+      "invProgress": "{counted} / {total} righe contate",
+      "invStarted": "Inventario aperto.",
+      "invClosed": "Inventario chiuso — differenze applicate.",
+      "invCancelled": "Inventario annullato.",
+      "errorInv": "Inventario non riuscito.",
+      "errorReorderLoad": "Impossibile caricare gli avvisi di riordino.",
+      "errorInvLoad": "Impossibile caricare l’inventario aperto."
     },
     "daf": {
       "title": "Documenti DAF",
@@ -1423,7 +1448,41 @@
       "vamregDuration": "Durata (giorni)",
       "previewTitle": "Allocazione FEFO prevista",
       "error": "Azione DAF non riuscita.",
-      "legalExpiry": "Finalize richiede lotto + AMM; antibiotici richiedono payload VAMReg."
+      "legalExpiry": "Finalize richiede lotto + AMM; antibiotici richiedono payload VAMReg.",
+      "vamregLabel": "VAMReg",
+      "vamregRetry": "Riprova VAMReg",
+      "vamregStatus": {
+        "pending": "In attesa",
+        "sent": "Dichiarato",
+        "failed": "Fallito",
+        "na": "N/D"
+      }
+    },
+    "errors": {
+      "daf_vamreg_already_sent": "Impossibile annullare: dichiarazione VAMReg già inviata.",
+      "daf_vamreg_in_flight": "Impossibile annullare: dichiarazione VAMReg in corso — riprovare più tardi.",
+      "daf_vamreg_incomplete": "Incomplete VAMReg fields (species, indication, duration).",
+      "daf_vamreg_not_applicable": "VAMReg not applicable for this DAF.",
+      "daf_not_draft": "DAF is no longer a draft.",
+      "daf_not_finalized": "DAF is not finalized.",
+      "daf_empty": "Add at least one medication line.",
+      "daf_amm_required": "MA number (AMM) is required.",
+      "daf_pdf_immutable": "DAF PDF already generated.",
+      "daf_trace_required": "Lot traceability missing.",
+      "food_chain_withdrawal_required": "Withdrawal periods (meat/milk/eggs) required for food-producing animals.",
+      "food_chain_banned_medication": "Medication banned for the food chain.",
+      "stock_insufficient": "Insufficient stock.",
+      "stock_unavailable_valid_lots": "No valid lots available (FEFO).",
+      "batch_expired": "Batch expired.",
+      "batch_quarantined": "Batch quarantined.",
+      "batch_wasted": "This lot was destroyed — create a new lot for receipt.",
+      "invalid_expiry_on_receipt": "Invalid expiry date.",
+      "delivery_note_exists": "This delivery-note number already exists.",
+      "order_not_draft": "Order is no longer a draft.",
+      "email_send_failed": "Email send failed.",
+      "vamreg_enqueue_failed": "Could not retry VAMReg.",
+      "not_found": "Not found.",
+      "validation_error": "Invalid data."
     }
   },
   "recommend": {
@@ -2179,7 +2238,7 @@
     "reportAuthorPeer": "Altro autore",
     "reportReadOnlyPeer": "CR di un altro professionista — sola lettura. Torna a « Il mio CR » per modificare il tuo.",
     "reportHint": "Note di visita...",
-    "saveReport": "Salva CR",
+    "saveReport": "Salva",
     "improveReport": "Migliora (AI)",
     "reportSaved": "Rapporto registrato",
     "reportImproved": "Reportistica migliorata",
@@ -2193,12 +2252,10 @@
     "micPermissionDenied": "Microfono rifiutato — verificare i permessi del browser.",
     "reportVisitDate": "Data della visita",
     "reportDatePrefix": "Data del",
-    "reportHowItWorksTitle": "Come funziona?",
-    "reportHowItWorksStep1": "Dettate (pulsante « Detta ») o importate un file audio.",
-    "reportHowItWorksStep2": "Confermate il consenso orale del cliente prima della registrazione.",
-    "reportHowItWorksStep3": "Salvate il referto.",
-    "reportHowItWorksStep4": "Miglioratelo con l'IA se necessario.",
-    "reportHowItWorksStep5": "Finalizzate, poi proseguite con una ricetta/DAF o una fattura.",
+    "reportHowItWorksTitle": "Aiuto",
+    "reportHowItWorksStep1": "Detta o scrivi le note a sinistra (consenso del cliente per l’audio).",
+    "reportHowItWorksStep2": "Migliora con l’IA a destra, poi ritocca se serve.",
+    "reportHowItWorksStep3": "Salva, finalizza, poi prosegui con DAF o fattura.",
     "audioConsent": "L'audio viene utilizzato per scrivere il CR. Confermare l'accordo orale del cliente. Eliminato al momento della finalizzazione.",
     "audioConsentTitle": "Consenso audio",
     "audioConsentAccept": "Accetto",
@@ -2283,12 +2340,21 @@
     "audioToText": "Audio → testo",
     "reportEditSource": "Modifica testo",
     "reportPreview": "Anteprima",
-    "reportVersionTranscript": "v0 — Trascrizione",
-    "reportVersionImproved": "v1 — Miglioramento IA",
-    "reportVersionSaved": "v2 — Versione salvata",
+    "reportVersionTranscript": "Trascrizione originale",
+    "reportVersionImproved": "Proposta IA",
+    "reportVersionSaved": "Ultima versione salvata",
     "reportVersionEmpty": "Nessuna",
-    "reportRestore": "Ripristina",
-    "reportVersionsTitle": "Versioni del referto"
+    "reportRestore": "Ripristina nell’editor",
+    "reportVersionsTitle": "Cronologia versioni",
+    "reportFlowHint": "Note a sinistra → referto a destra → Salva.",
+    "reportPaneNotesTitle": "Note / dettatura",
+    "reportPaneNotesSubtitle": "Scrivi o detta la consultazione.",
+    "reportPaneCrTitle": "Referto",
+    "reportPaneCrSubtitle": "Migliora con l’IA o modifica manualmente.",
+    "reportTranscriptHint": "Dettatura o note grezze…",
+    "reportDirtyHint": "Modifiche non salvate.",
+    "reportDiscardEdits": "Annulla modifiche",
+    "reportStatusFinal": "Finalizzato"
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -2787,17 +2853,17 @@
     "terms": {
       "title": "Condizioni generali d'uso",
       "link": "CGU",
-      "body": "I presenti termini regolano l'uso di petsFollow Pro da parte dei veterinari e l'applicazione mobile da parte dei proprietari. L'app consente il monitoraggio prescritto (messaggistica, promemoria per la cura/il cavallo, letture cardiache) e la comunicazione con lo studio. I pagamenti per abbonamenti e componenti aggiuntivi vengono elaborati da Stripe. L'utente si impegna a utilizzare il servizio in conformità con lo scopo previsto. Contatto: supporto{'@'}ll-it-sc.be."
+      "body": "I presenti termini regolano l'uso di petsFollow Pro da parte dei veterinari e l'applicazione mobile da parte dei proprietari. L'app consente il monitoraggio prescritto (messaggistica, promemoria per la cura/il cavallo, letture cardiache) e la comunicazione con lo studio. I pagamenti per abbonamenti e componenti aggiuntivi vengono elaborati da Stripe. L'utente si impegna a utilizzare il servizio in conformità con lo scopo previsto. Contatto: support{'@'}petsfollow.app."
     },
     "privacy": {
       "title": "Informativa sulla privacy",
       "link": "Riservatezza",
-      "body": "petsFollow tratta i dati personali per garantire la continuità della cura degli animali: identità (nome, e-mail), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media con lo studio, rapporti sulle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (Firebase Cloud Messaging), dati di pagamento elaborati da Stripe. Finalità: account, monitoraggio, messaggistica, notifiche, report, fatturazione. Elaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite, importare file dei clienti e corsi di formazione commerciale (audio elaborato in tempo reale, non archiviato da Google). Partner: Google (Sign-In, FCM, Gemini), Stripe, hosting Google Cloud Platform. Conservazione: durata dell'account poi cancellazione; account inattivi eliminati dopo 3 anni; registrazioni audio delle relazioni conservate per tutta la durata del fascicolo. Diritti GDPR (accesso, rettifica, cancellazione, portabilità): impostazioni (esportazione dei tuoi dati, cancellazione dell'account) o supporto{'@'}ll-it-sc.be."
+      "body": "petsFollow tratta i dati personali per garantire la continuità della cura degli animali: identità (nome, e-mail), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media con lo studio, rapporti sulle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell'assistenza), token di notifica (Firebase Cloud Messaging), dati di pagamento elaborati da Stripe. Finalità: account, monitoraggio, messaggistica, notifiche, report, fatturazione. Elaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite, importare file dei clienti e corsi di formazione commerciale (audio elaborato in tempo reale, non archiviato da Google). Partner: Google (Sign-In, FCM, Gemini), Stripe, hosting Google Cloud Platform. Conservazione: durata dell'account poi cancellazione; account inattivi eliminati dopo 3 anni; registrazioni audio delle relazioni conservate per tutta la durata del fascicolo. Diritti GDPR (accesso, rettifica, cancellazione, portabilità): impostazioni (esportazione dei tuoi dati, cancellazione dell'account) o support{'@'}petsfollow.app."
     },
     "mentions": {
       "title": "Avvisi legali",
       "link": "Avvisi legali",
-      "body": "Editore: LL-IT-SC / petsFollow. Contatto: supporto{'@'}ll-it-sc.be. Hosting: Google Cloud Platform (conformità GDPR). Direttore della pubblicazione: petsFollow."
+      "body": "Editore: LL-IT-SC / petsFollow. Contatto: support{'@'}petsfollow.app. Hosting: Google Cloud Platform (conformità GDPR). Direttore della pubblicazione: petsFollow."
     },
     "navAria": "Avvisi legali"
   },

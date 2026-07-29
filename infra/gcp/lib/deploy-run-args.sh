@@ -75,13 +75,16 @@ SMTP_PORT: "587"
 SMTP_FROM: "petsFollow <noreply@petsfollow.app>"
 SMTP_USER: "noreply@petsfollow.app"
 OPS_NOTIFY_EMAIL: "${OPS_NOTIFY_EMAIL:-o.legrand1976@gmail.com}"
-SUPPORT_INBOX_EMAIL: "${SUPPORT_INBOX_EMAIL:-o.legrand1976@gmail.com}"
+SUPPORT_INBOX_EMAIL: "${SUPPORT_INBOX_EMAIL:-support@petsfollow.app}"
 # Fallback téléphone commercial (mail/PDF envoi dossier) si profil commercial vide.
 COMMERCIAL_CONTACT_PHONE: "${COMMERCIAL_CONTACT_PHONE:-}"
 PETSFOLLOW_PUBLIC_SITE_URL: "${PUBLIC_SITE_URL}"
 PETSFOLLOW_API_PUBLIC_URL: "${PUBLIC_API_URL}"
 BILLING_MOCK_ENABLED: "${billing_mock}"
 PHARMACY_ENABLED: "${pharmacy_enabled}"
+# VAMReg dry-run jusqu’à P0-1 ; workers Asynq opt-in (sinon enqueue sync dans l’API).
+VAMREG_DRY_RUN: "${VAMREG_DRY_RUN:-true}"
+PHARMACY_WORKERS_ENABLED: "${PHARMACY_WORKERS_ENABLED:-false}"
 BILLIT_ENABLED: "${billit_enabled}"
 BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
@@ -92,6 +95,11 @@ GEMINI_LITE_MODEL: "${GEMINI_LITE_MODEL:-gemini-3.5-flash-lite}"
 GEMINI_LIVE_MODEL: "${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-09-2025}"
 GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
 EOF
+  if [[ -n "${VAMREG_BASE_URL:-}" ]]; then
+    cat >>"$path" <<EOF
+VAMREG_BASE_URL: "${VAMREG_BASE_URL}"
+EOF
+  fi
   if [[ -n "$billit_secrets_backend" ]]; then
     cat >>"$path" <<EOF
 BILLIT_SECRETS_BACKEND: "${billit_secrets_backend}"
@@ -186,6 +194,11 @@ pf_api_secrets() {
   if gcloud secrets versions access latest \
     --secret=petsfollow-pharmacy-expiry-secret --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     secrets="${secrets},PHARMACY_EXPIRY_SECRET=petsfollow-pharmacy-expiry-secret:latest"
+  fi
+  # VAMReg live (P0-1) — absent = dry-run OK ; sync enqueue n'a pas besoin de la clé.
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-vamreg-api-key --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},VAMREG_API_KEY=petsfollow-vamreg-api-key:latest"
   fi
   # Billit local_enc (staging tag-dev mock / live) — clé dédiée si présente, sinon JWT.
   if gcloud secrets versions access latest \

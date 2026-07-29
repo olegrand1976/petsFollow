@@ -59,6 +59,9 @@
 <script setup lang="ts">
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pharmacy.read' })
 const { t } = useI18n()
+function pharmacyErr(e: any, fallbackKey: string): string {
+  return pharmacyErrorMessage(t, e, fallbackKey)
+}
 const { canPractice } = usePracticePerms()
 const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const error = ref('')
@@ -87,7 +90,7 @@ onMounted(async () => {
     items.value = unwrap(res)?.items ?? []
   }
   catch (e: any) {
-    error.value = e?.data?.error?.message || t('pharmacy.daf.error')
+    error.value = pharmacyErr(e, 'pharmacy.daf.error')
   }
 })
 </script>

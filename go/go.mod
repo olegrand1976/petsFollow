@@ -11,9 +11,11 @@ require (
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
+	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/phpdave11/gofpdf v1.4.2
 	github.com/pquerna/otp v1.5.0
+	github.com/redis/go-redis/v9 v9.0.3
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/stripe/stripe-go/v81 v81.4.0
 	github.com/xuri/excelize/v2 v2.9.0
@@ -41,6 +43,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/envoyproxy/go-control-plane v0.13.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -59,6 +62,8 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect

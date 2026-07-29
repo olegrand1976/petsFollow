@@ -226,3 +226,88 @@ func TestRGPDAcceptTermsProvisionedClient(t *testing.T) {
 		t.Fatalf("pets after accept want 200 got %d %#v", code, env)
 	}
 }
+
+// DELETE /me client redacts pharmacy.job_audit payloads linked via DAF.client_user_id.
+func TestRGPDDeleteClientRedactsPharmacyJobAudit(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	ctx := context.Background()
+
+	email := uniqueEmail("rgpd-pharm-client")
+	password := "ClientPass123!"
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": email, "password": password, "fullName": "RGPD Pharm",
+		"consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := ""
+	const prefix = "/confirm-email?token="
+	if len(confirmPath) > len(prefix) {
+		token = confirmPath[len(prefix):]
+	}
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{"token": token})
+	if code != http.StatusOK {
+		t.Fatalf("confirm %d %#v", code, env)
+	}
+	access, _ := dataMap(t, env)["accessToken"].(string)
+	if access == "" {
+		access = loginToken(t, api.handler, email, password)
+	}
+	var clientID string
+	if err := api.pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email=$1`, email).Scan(&clientID); err != nil {
+		t.Fatal(err)
+	}
+
+	var vetID, practiceID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT id::text, practice_id::text FROM identity.users WHERE email='vet.demo@petsfollow.test'`).
+		Scan(&vetID, &practiceID); err != nil {
+		t.Fatal(err)
+	}
+
+	dafID := uuid.NewString()
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.daf_documents (
+			id, practice_id, daf_year, status, client_user_id, prescriber_user_id,
+			has_antibiotic, vamreg_status
+		) VALUES ($1,$2,EXTRACT(YEAR FROM now())::int,'draft',$3,$4,true,'pending')`,
+		dafID, practiceID, clientID, vetID); err != nil {
+		t.Fatalf("insert daf: %v", err)
+	}
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO pharmacy.job_audit (
+			id, practice_id, job_type, entity_id, attempt, status, request_json, error
+		) VALUES ($1,$2,'vamreg',$3,1,'failed',$4::jsonb,'boom')`,
+		uuid.NewString(), practiceID, dafID,
+		`{"species":"dog","ownerEmail":"secret@petsfollow.test"}`); err != nil {
+		t.Fatalf("insert audit: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/me", access, nil)
+	if code != http.StatusOK {
+		t.Fatalf("DELETE /me %d %#v", code, env)
+	}
+
+	var reqJSON, errMsg string
+	var clientLeft *string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT ja.request_json::text, COALESCE(ja.error,''), d.client_user_id::text
+		FROM pharmacy.job_audit ja
+		JOIN pharmacy.daf_documents d ON d.id = ja.entity_id
+		WHERE ja.entity_id = $1 AND ja.job_type = 'vamreg'
+		LIMIT 1`, dafID).Scan(&reqJSON, &errMsg, &clientLeft); err != nil {
+		t.Fatal(err)
+	}
+	if reqJSON != "{}" {
+		t.Fatalf("want redacted request_json {}, got %s", reqJSON)
+	}
+	if errMsg != "redacted" {
+		t.Fatalf("want error redacted, got %q", errMsg)
+	}
+	if clientLeft != nil {
+		t.Fatalf("client_user_id must be cleared, got %v", clientLeft)
+	}
+}

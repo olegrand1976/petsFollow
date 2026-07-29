@@ -283,9 +283,13 @@ Clés `invoicing.*` dans les **6** locales Nuxt (+ emails si notifs).
 
 ---
 
-### Phase 5 — Branche pharmacie / DAF (ultérieure)
+### Phase 5 — Branche pharmacie / DAF (BIL-9) — **go dès accès reseller**
 
-Quand [27](27-PHARMACIE-BELGIQUE.md) part :
+> **Statut** : ⏸ **gelé** jusqu’aux accès **reseller Billit** (Phase 0 / P0-2).  
+> Pas de date fixe — démarrer S5 pharmacie + [37 Phase 3](37-ROADMAP-STOCK-FACTURATION.md) **immédiatement** après credentials SM + env staging.  
+> Suivi stock : [28 Sprint 5](28-PLAN-STOCK-PEREMPTION.md) · roadmap [37](37-ROADMAP-STOCK-FACTURATION.md).
+
+Quand reseller OK **et** [27](27-PHARMACIE-BELGIQUE.md) / DAF opérationnels :
 
 - Worker Asynq `invoices.connect` → **même** `InvoicesGateway` Billit  
 - Payload DAF → lignes document (prix côté catalogue practice ou saisie)  
@@ -344,9 +348,9 @@ Règles :
 | BIL-6 | NC + pro forma + statuts Peppol | 3 | 5 j |
 | BIL-7 | Admin usage + alertes plafond | 4 | 3 j |
 | BIL-8 | Tests Go + Playwright + plan tests + UC | 3–4 | 5 j |
-| BIL-9 | Driver DAF → Billit | 5 | avec pharmacie |
+| BIL-9 | Driver DAF → Billit | 5 | **Bloqué** : accès reseller ; puis avec pharmacie S5 |
 
-**Total ordre de grandeur** (hors Phase 0 & 5) : **~6–8 semaines** 1 dev senior à temps plein, après signature partner.
+**Total ordre de grandeur** (hors Phase 0 & 5) : **~6–8 semaines** 1 dev senior à temps plein, après signature partner / reseller.
 
 ---
 
@@ -384,7 +388,7 @@ Règles :
 4. Phase 2–3 staging → pilote 2 cabinets
 5. Feature flag prod progressive
 6. Phase 4 un mois puis généralisation
-7. Phase 5 avec pharmacie
+7. Phase 5 (BIL-9) dès accès reseller + pharmacie S5
 ```
 
 ---
@@ -392,11 +396,12 @@ Règles :
 ## 10. Actions immédiates (cette semaine)
 
 1. Créer compte Billit LL-IT-SC.  
-2. Envoyer la demande **Integration Partner + Reseller + Invoice to partner** (mail type session précédente).  
+2. Envoyer / relancer la demande **Integration Partner + Reseller + Invoice to partner** — **bloque BIL-9**.  
 3. Figer avec le comptable : plafond docs inclus dans les 88 €.  
 4. Brouillon CGV e-invoicing.  
 5. Exécuter la **checklist sandbox** de [34 § checklist A–F](34-BILLIT-RESELLER-TECH.md) dès R2–R5 obtenus (ne pas attendre l’UI admin).  
-6. Gate : 1 facture BE `delivered` + webhook HMAC OK avant tout pilote multi-cabinets.
+6. Gate : 1 facture BE `delivered` + webhook HMAC OK avant tout pilote multi-cabinets.  
+7. Dès reseller reçu : débloquer S5 / BIL-9 + [37 Phase 3](37-ROADMAP-STOCK-FACTURATION.md) (pas de date fixe).
 
 ---
 
@@ -406,4 +411,4 @@ Règles :
 |-------|--------|
 | Doc | `documentation/33-BILLIT-INTEGRATION.md` |
 | Créé | 2026-07-27 |
-| Prochaine revue | Après réponse Billit partner (Phase 0) |
+| Prochaine revue | Après réponse Billit **reseller** (Phase 0 / P0-2) |

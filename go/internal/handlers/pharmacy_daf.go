@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,6 +31,8 @@ func (a *API) registerPharmacyDAFRoutes(pr chi.Router) {
 	pr.Post("/vet/pharmacy/daf/{id}/cancel", a.cancelPharmacyDAF)
 	pr.Get("/vet/pharmacy/daf/{id}/pdf", a.getPharmacyDAFPDF)
 	pr.Post("/vet/pharmacy/daf/{id}/pdf/regenerate", a.regeneratePharmacyDAFPDF)
+	pr.Post("/vet/pharmacy/daf/{id}/vamreg/retry", a.retryPharmacyDAFVAMReg)
+	pr.Get("/vet/pharmacy/daf/{id}/vamreg/audits", a.listPharmacyDAFVAMRegAudits)
 }
 
 func (a *API) writeDAFErr(w http.ResponseWriter, r *http.Request, err error) bool {
@@ -45,10 +49,20 @@ func (a *API) writeDAFErr(w http.ResponseWriter, r *http.Request, err error) boo
 		writeErr(w, r, http.StatusBadRequest, "daf_amm_required", "daf_amm_required")
 	case errors.Is(err, pharmacy.ErrDAFVAMRegIncomplete):
 		writeErr(w, r, http.StatusBadRequest, "daf_vamreg_incomplete", "daf_vamreg_incomplete")
+	case errors.Is(err, pharmacy.ErrDAFNotAntibiotic):
+		writeErr(w, r, http.StatusConflict, "daf_vamreg_not_applicable", "daf_vamreg_not_applicable")
 	case errors.Is(err, pharmacy.ErrDAFAlreadyHasPDF):
 		writeErr(w, r, http.StatusConflict, "daf_pdf_immutable", "daf_pdf_immutable")
 	case errors.Is(err, pharmacy.ErrDAFTraceRequired):
 		writeErr(w, r, http.StatusBadRequest, "daf_trace_required", "daf_trace_required")
+	case errors.Is(err, pharmacy.ErrDAFVAMRegAlreadySent):
+		writeErr(w, r, http.StatusConflict, "daf_vamreg_already_sent", "daf_vamreg_already_sent")
+	case errors.Is(err, pharmacy.ErrDAFVAMRegInFlight):
+		writeErr(w, r, http.StatusConflict, "daf_vamreg_in_flight", "daf_vamreg_in_flight")
+	case errors.Is(err, pharmacy.ErrFoodChainWithdrawalRequired):
+		writeErr(w, r, http.StatusBadRequest, "food_chain_withdrawal_required", "food_chain_withdrawal_required")
+	case errors.Is(err, pharmacy.ErrFoodChainBannedMedication):
+		writeErr(w, r, http.StatusConflict, "food_chain_banned_medication", "food_chain_banned_medication")
 	case errors.Is(err, pharmacy.ErrStockInsufficient):
 		writeErr(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient")
 	case errors.Is(err, pharmacy.ErrStockUnavailableValidLots):
@@ -282,14 +296,114 @@ func (a *API) finalizePharmacyDAF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// PDF after commit (failure does not roll back number).
-	if pdfErr := a.ensureDAFPDF(r, id.PracticeID, dafID); pdfErr != nil {
-		// Return finalized doc anyway; client can retry regenerate.
-		doc, _ = a.store.GetDAF(r.Context(), id.PracticeID, dafID)
+	pdfErr := a.ensureDAFPDF(r, id.PracticeID, dafID)
+	a.enqueueVamregIfNeeded(r.Context(), id.PracticeID, doc)
+	doc, _ = a.store.GetDAF(r.Context(), id.PracticeID, dafID)
+	if pdfErr != nil {
 		httpx.WriteData(w, http.StatusOK, map[string]any{"daf": doc, "pdfError": pdfErr.Error()})
 		return
 	}
-	doc, _ = a.store.GetDAF(r.Context(), id.PracticeID, dafID)
 	httpx.WriteData(w, http.StatusOK, doc)
+}
+
+func (a *API) enqueueVamregIfNeeded(ctx context.Context, practiceID string, doc store.DAFDocument) {
+	if !doc.HasAntibiotic || doc.VamregStatus != "pending" {
+		return
+	}
+	if a.vamregQ == nil {
+		log.Printf("vamreg enqueue unavailable daf=%s — marking failed", doc.ID)
+		if err := a.store.UpdateDAFVamregStatus(ctx, practiceID, doc.ID, "failed"); err != nil {
+			log.Printf("vamreg mark failed daf=%s: %v", doc.ID, err)
+		}
+		return
+	}
+	if err := a.vamregQ.EnqueueDeclare(ctx, practiceID, doc.ID); err != nil {
+		log.Printf("vamreg enqueue daf=%s: %v — marking failed for retry", doc.ID, err)
+		if uerr := a.store.UpdateDAFVamregStatus(ctx, practiceID, doc.ID, "failed"); uerr != nil {
+			log.Printf("vamreg mark failed daf=%s: %v", doc.ID, uerr)
+		}
+	}
+}
+
+func (a *API) retryPharmacyDAFVAMReg(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.write")
+	if !ok {
+		return
+	}
+	dafID := chi.URLParam(r, "id")
+	status, vamreg, hasAB, err := a.store.GetDAFVamregGate(r.Context(), id.PracticeID, dafID)
+	if err != nil {
+		if a.writeDAFErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if status != "finalized" || !hasAB {
+		writeErr(w, r, http.StatusConflict, "daf_vamreg_not_applicable", "daf_vamreg_not_applicable")
+		return
+	}
+	if vamreg == "sent" {
+		doc, _ := a.store.GetDAF(r.Context(), id.PracticeID, dafID)
+		httpx.WriteData(w, http.StatusOK, doc)
+		return
+	}
+	// failed + stuck pending (enqueue crash / worker never picked up) are both retryable.
+	// VAMReg Idempotency-Key = dafID; ProcessDeclare no-ops once status is sent.
+	if vamreg != "failed" && vamreg != "pending" {
+		writeErr(w, r, http.StatusConflict, "daf_vamreg_not_applicable", "daf_vamreg_not_applicable")
+		return
+	}
+	if err := a.store.UpdateDAFVamregStatus(r.Context(), id.PracticeID, dafID, "pending"); err != nil {
+		if a.writeDAFErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if a.vamregQ == nil {
+		_ = a.store.UpdateDAFVamregStatus(r.Context(), id.PracticeID, dafID, "failed")
+		writeErr(w, r, http.StatusBadGateway, "vamreg_enqueue_failed", "vamreg_enqueue_failed")
+		return
+	}
+	if err := a.vamregQ.EnqueueDeclare(r.Context(), id.PracticeID, dafID); err != nil {
+		log.Printf("vamreg retry enqueue daf=%s: %v", dafID, err)
+		_ = a.store.UpdateDAFVamregStatus(r.Context(), id.PracticeID, dafID, "failed")
+		writeErr(w, r, http.StatusBadGateway, "vamreg_enqueue_failed", "vamreg_enqueue_failed")
+		return
+	}
+	doc, _ := a.store.GetDAF(r.Context(), id.PracticeID, dafID)
+	httpx.WriteData(w, http.StatusOK, doc)
+}
+
+func (a *API) listPharmacyDAFVAMRegAudits(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePharmacyEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePracticePerm(w, r, "pharmacy.read")
+	if !ok {
+		return
+	}
+	dafID := chi.URLParam(r, "id")
+	if _, err := a.store.GetDAF(r.Context(), id.PracticeID, dafID); err != nil {
+		if a.writeDAFErr(w, r, err) {
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	rows, err := a.store.ListPharmacyJobAudits(r.Context(), id.PracticeID, "vamreg", dafID, 20)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if rows == nil {
+		rows = []store.PharmacyJobAudit{}
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }
 
 func (a *API) cancelPharmacyDAF(w http.ResponseWriter, r *http.Request) {
@@ -421,25 +535,33 @@ func (a *API) ensureDAFPDF(r *http.Request, practiceID, dafID string) error {
 	lines := make([]pharmacy.DAFPDFLine, 0, len(doc.Items))
 	for _, it := range doc.Items {
 		lines = append(lines, pharmacy.DAFPDFLine{
-			Medication: it.MedicationName,
-			CNK:        it.MedicationCNK,
-			AMM:        it.AMMNumber,
-			Lot:        it.LotNumber,
-			ExpiresOn:  it.ExpiresOn,
-			Qty:        fmt.Sprintf("%g", it.Qty),
-			Unit:       it.Unit,
-			Antibiotic: it.IsAntibiotic,
+			Medication:         it.MedicationName,
+			CNK:                it.MedicationCNK,
+			AMM:                it.AMMNumber,
+			Lot:                it.LotNumber,
+			ExpiresOn:          it.ExpiresOn,
+			Qty:                fmt.Sprintf("%g", it.Qty),
+			Unit:               it.Unit,
+			Antibiotic:         it.IsAntibiotic,
+			WithdrawalMeatDays: it.WithdrawalMeatDays,
+			WithdrawalMilkDays: it.WithdrawalMilkDays,
+			WithdrawalEggsDays: it.WithdrawalEggsDays,
 		})
 	}
+	foodChain := ""
+	if doc.PetID != "" {
+		foodChain, _ = a.store.GetPetFoodChainStatus(r.Context(), doc.PetID)
+	}
 	pdfBytes, err := pharmacy.BuildDAFPDF(pharmacy.DAFPDFInput{
-		DisplayNumber: doc.DisplayNumber,
-		PracticeName:  doc.PracticeName,
-		Prescriber:    doc.PrescriberName,
-		ClientName:    doc.ClientName,
-		PetName:       doc.PetName,
-		IssuedAt:      issued,
-		Notes:         doc.Notes,
-		Lines:         lines,
+		DisplayNumber:   doc.DisplayNumber,
+		PracticeName:    doc.PracticeName,
+		Prescriber:      doc.PrescriberName,
+		ClientName:      doc.ClientName,
+		PetName:         doc.PetName,
+		FoodChainStatus: foodChain,
+		IssuedAt:        issued,
+		Notes:           doc.Notes,
+		Lines:           lines,
 	})
 	if err != nil {
 		return err
