@@ -1055,7 +1055,7 @@
       "addonRevenue": "Addon revenue",
       "commercialDue": "Sales commissions",
       "stagingSeedTitle": "Reset staging database",
-      "stagingSeedWarn": "Irreversible: truncates demo data and re-seeds. Preserved: admin / sales / manager accounts, support tickets, client b.murgo1976@gmail.com (+ related data).",
+      "stagingSeedWarn": "Irreversible: truncates demo data and re-seeds. Preserved: admin / sales / manager accounts, support tickets, client b.murgo1976{'@'}gmail.com (+ related data).",
       "stagingSeedHint": "To confirm, type exactly: {phrase}",
       "stagingSeedConfirmLabel": "Confirmation phrase",
       "stagingSeedConfirmDialog": "Confirm a full reset of the staging database?",

@@ -1055,7 +1055,7 @@
       "addonRevenue": "Addon-omzet",
       "commercialDue": "Commerciële commissies",
       "stagingSeedTitle": "Staging-database resetten",
-      "stagingSeedWarn": "Onomkeerbaar: wist demodata en seed opnieuw. Behouden: admin- / sales- / manager-accounts, supporttickets, client b.murgo1976@gmail.com (+ gerelateerde data).",
+      "stagingSeedWarn": "Onomkeerbaar: wist demodata en seed opnieuw. Behouden: admin- / sales- / manager-accounts, supporttickets, client b.murgo1976{'@'}gmail.com (+ gerelateerde data).",
       "stagingSeedHint": "Ter bevestiging, typ exact: {phrase}",
       "stagingSeedConfirmLabel": "Bevestigingszin",
       "stagingSeedConfirmDialog": "Volledige reset van de staging-database bevestigen?",

@@ -577,8 +577,8 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 	reg.clientIDs[c.email] = clientID
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, $2, $3, $4, 'client', $5, NOW())`,
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, terms_accepted_at)
+		VALUES ($1, $2, $3, $4, 'client', $5, NOW(), NOW())`,
 		clientID, c.email, clientHash, c.fullName, reg.practiceID); err != nil {
 		return err
 	}

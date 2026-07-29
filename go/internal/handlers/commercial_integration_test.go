@@ -59,6 +59,22 @@ func loginToken(t *testing.T, h http.Handler, email, password string) string {
 	if token == "" {
 		t.Fatal("missing accessToken")
 	}
+	// Provisioned clients (vet/commercial create) start with termsAcceptedAt null;
+	// Flutter gates on accept-terms — integration tests accept once after login.
+	code, env = doAuthJSON(t, h, http.MethodGet, "/api/v1/me", token, nil)
+	if code == http.StatusOK {
+		me := dataMap(t, env)
+		if role, _ := me["role"].(string); role == "client" {
+			if me["termsAcceptedAt"] == nil || me["termsAcceptedAt"] == "" {
+				code, env = doAuthJSON(t, h, http.MethodPost, "/api/v1/me/accept-terms", token, map[string]any{
+					"consent": true,
+				})
+				if code != http.StatusOK {
+					t.Fatalf("accept-terms after login %s: %d %#v", email, code, env)
+				}
+			}
+		}
+	}
 	return token
 }
 
