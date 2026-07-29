@@ -434,7 +434,9 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "audio_consent_required")
 		return
 	}
-	if a.gemini == nil || !a.gemini.Configured() {
+	// Hint-only path (tests / offline) skips Gemini; live transcription still needs a key.
+	hint := strings.TrimSpace(r.FormValue("hint"))
+	if hint == "" && (a.gemini == nil || !a.gemini.Configured()) {
 		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
 		return
 	}
@@ -504,7 +506,6 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	hint := strings.TrimSpace(r.FormValue("hint"))
 	transcript := hint
 	if transcript == "" {
 		system := `Tu transcris un compte-rendu vocal vétérinaire ou de soin animalier.

@@ -179,6 +179,7 @@ test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }
   await expect(petSelect).toHaveValue(petId)
 })
 
+test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
   await seedHeartRateComment(petId)
