@@ -216,7 +216,7 @@
     "password_reset_expiry": "Ce lien expire dans 1 heure.",
     "password_reset_disclaimer": "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe reste inchangé.",
     "heartrate_validated_subject": "petsFollow Pro — Relevé cardiaque validé",
-    "heartrate_validated_tagline": "Suivi cardiaque vétérinaire",
+    "heartrate_validated_tagline": "Relevé cardiaque vétérinaire",
     "heartrate_validated_preheader": "Un relevé cardiaque a été validé — BPM {bpm}.",
     "heartrate_validated_greeting": "Bonjour,",
     "heartrate_validated_intro": "Un relevé cardiaque a été validé pour un patient. BPM : {bpm}.",

@@ -216,7 +216,7 @@
     "password_reset_expiry": "Questo collegamento scade tra 1 ora.",
     "password_reset_disclaimer": "Se non hai richiesto questo ripristino, ignora questa email. La tua password rimane invariata.",
     "heartrate_validated_subject": "petsFollow Pro: lettura del cuore convalidata",
-    "heartrate_validated_tagline": "Monitoraggio cardiaco veterinario",
+    "heartrate_validated_tagline": "Lettura cardiaca veterinaria",
     "heartrate_validated_preheader": "Una lettura del cuore è stata convalidata: BPM {bpm}.",
     "heartrate_validated_greeting": "Buongiorno,",
     "heartrate_validated_intro": "Una lettura cardiaca è stata convalidata per un paziente. BPM: {bpm}.",

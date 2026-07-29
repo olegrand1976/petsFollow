@@ -216,7 +216,7 @@
     "password_reset_expiry": "Deze link verloopt over 1 uur.",
     "password_reset_disclaimer": "Als u deze reset niet heeft aangevraagd, negeer deze e-mail. Uw wachtwoord blijft ongewijzigd.",
     "heartrate_validated_subject": "petsFollow Pro — Hartslagmeting gevalideerd",
-    "heartrate_validated_tagline": "Veterinaire hartopvolging",
+    "heartrate_validated_tagline": "Veterinaire hartslagmeting",
     "heartrate_validated_preheader": "Een hartslagmeting werd gevalideerd — BPM {bpm}.",
     "heartrate_validated_greeting": "Hallo,",
     "heartrate_validated_intro": "Een hartslagmeting werd gevalideerd voor een patiënt. BPM: {bpm}.",
