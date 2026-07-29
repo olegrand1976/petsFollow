@@ -5,6 +5,7 @@ import {
   isMFAChallenge,
   isPracticeStaffRole,
   isProRole,
+  isOpsRole,
   isSalesForceRole,
   hasSessionCookie,
   homePathForRole,
@@ -196,6 +197,7 @@ describe('useAuth helpers', () => {
 
   it('isProRole / isSalesForceRole couvrent les rôles Pro', () => {
     expect(isProRole('admin')).toBe(true)
+    expect(isProRole('dev')).toBe(true)
     expect(isProRole('vet')).toBe(true)
     expect(isProRole('vet_assistant')).toBe(true)
     expect(isProRole('secretary')).toBe(true)
@@ -213,6 +215,7 @@ describe('useAuth helpers', () => {
 
   it('homePathForRole route chaque rôle Pro', () => {
     expect(homePathForRole('admin')).toBe('/admin')
+    expect(homePathForRole('dev')).toBe('/admin')
     expect(homePathForRole('commercial')).toBe('/commercial')
     expect(homePathForRole('commercial_manager')).toBe('/commercial-manager')
     expect(homePathForRole('vet')).toBe('/dashboard')
@@ -222,6 +225,15 @@ describe('useAuth helpers', () => {
     expect(homePathForRole('vet', { profileComplete: true })).toBe('/dashboard')
     expect(homePathForRole('client')).toBe('/login')
     expect(homePathForRole(null)).toBe('/login')
+  })
+
+  it('isOpsRole / isProRole couvrent le rôle DEV', () => {
+    expect(isOpsRole('admin')).toBe(true)
+    expect(isOpsRole('dev')).toBe(true)
+    expect(isOpsRole('vet')).toBe(false)
+    expect(isOpsRole('commercial')).toBe(false)
+    expect(isProRole('dev')).toBe(true)
+    expect(isProRole('client')).toBe(false)
   })
 
   it('parseJwtRole reconnaît commercial_manager', () => {
