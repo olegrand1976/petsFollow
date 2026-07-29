@@ -1,7 +1,7 @@
 <template>
   <ProModal
     :open="open"
-    size="lg"
+    size="xl"
     :title="$t('clients.consultation.title')"
     test-id="consultation-modal"
     :prevent-close="reportBusy || closing || leavePromptOpen"

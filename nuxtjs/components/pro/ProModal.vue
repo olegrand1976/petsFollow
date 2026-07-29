@@ -50,7 +50,7 @@ const props = withDefaults(
     open: boolean
     title: string
     closeLabel?: string
-    size?: 'md' | 'lg'
+    size?: 'md' | 'lg' | 'xl'
     /** When true, ignore X / Escape / backdrop close (e.g. save in flight). */
     preventClose?: boolean
     /** data-testid on the root overlay (default keeps existing e2e selectors). */
@@ -69,6 +69,8 @@ const stackDepth = ref(0)
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 'xl':
+      return 'pro-modal__panel--xl'
     case 'lg':
       return 'pro-modal__panel--lg'
     case 'md':
@@ -146,6 +148,11 @@ onBeforeUnmount(() => {
 
 .pro-modal__panel--lg {
   width: min(100%, 42rem);
+}
+
+.pro-modal__panel--xl {
+  width: min(96vw, 56rem);
+  max-height: min(92vh, 52rem);
 }
 
 .pro-modal__header {

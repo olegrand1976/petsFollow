@@ -1125,6 +1125,50 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, updated)
 }
 
+// softDeleteVisit hides a walk-in consultation from /consultations history (deleted_at).
+// Allowed even when done / with persisted CR — unlike cancel.
+func (a *API) softDeleteVisit(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if !kernel.IsPracticeStaff(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	// Soft-delete removes clinical history visibility — need calendar + clinical write.
+	if !a.checkPracticePerm(w, r, id, "calendar.manage") {
+		return
+	}
+	if !a.checkPracticePerm(w, r, id, "pets.write_clinical") {
+		return
+	}
+	visit, err := a.store.GetVisit(r.Context(), chi.URLParam(r, "id"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return
+	}
+	if visit.PracticeID != id.PracticeID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+		return
+	}
+	if !visit.ConsultationSession {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "not_consultation_session")
+		return
+	}
+	updated, err := a.store.SoftDeleteVisit(r.Context(), visit.ID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, updated)
+}
+
 func (a *API) getDiscovery(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil || id.Role != kernel.RoleClient {

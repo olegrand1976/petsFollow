@@ -886,6 +886,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 			LIMIT 1
 		) r ON true
 		WHERE v.pet_id=$1
+			AND v.deleted_at IS NULL
 			AND (
 				v.status = 'done'
 				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
@@ -904,7 +905,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 				'hasReport', false,
 				'reportStatus', ''
 			)
-		FROM visits.visits WHERE pet_id=$1 AND status='done'`
+		FROM visits.visits WHERE pet_id=$1 AND status='done' AND deleted_at IS NULL`
 	}
 	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque',

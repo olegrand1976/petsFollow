@@ -18,6 +18,8 @@ func TestBuildVisitReportImprovePromptVetSections(t *testing.T) {
 		"Plan / suivi",
 		"Pays d'exercice de référence : FR",
 		"PROPOSITIONS IA",
+		"Markdown",
+		"**Anamnèse / motif :**",
 	} {
 		if !strings.Contains(p, want) {
 			t.Fatalf("missing %q in prompt:\n%s", want, p)

@@ -224,6 +224,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/care-reminders/{id}/done", a.markCareReminderDone)
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
+		pr.Delete("/visits/{id}", a.softDeleteVisit)
 		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
 		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
 		pr.Put("/visits/{visitID}/preconsult", a.putVisitPreconsult)

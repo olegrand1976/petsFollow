@@ -623,15 +623,18 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
-		WHERE EXISTS (
-			SELECT 1 FROM pets.pet_access pa
-			WHERE pa.pet_id=v.pet_id AND pa.grantee_user_id=$1
-				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
-		)
-		OR EXISTS (
-			SELECT 1 FROM practice.client_access ca
-			WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
-				AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+		WHERE v.deleted_at IS NULL
+		AND (
+			EXISTS (
+				SELECT 1 FROM pets.pet_access pa
+				WHERE pa.pet_id=v.pet_id AND pa.grantee_user_id=$1
+					AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+			)
+			OR EXISTS (
+				SELECT 1 FROM practice.client_access ca
+				WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+					AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+			)
 		)
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 		LIMIT 200`, granteeUserID)

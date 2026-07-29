@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mapVisitReportFields, persistedHistoryBody } from '../../utils/visitReport'
+import { normalizeReportText, renderSafeMarkdown } from '../../utils/safeMarkdown'
 
 describe('mapVisitReportFields', () => {
   it('returns empty fields for null payload', () => {
@@ -56,5 +57,24 @@ describe('persistedHistoryBody', () => {
 
   it('ignores empty persisted body', () => {
     expect(persistedHistoryBody('', 'raw', 'ai')).toBe('')
+  })
+})
+
+describe('safeMarkdown', () => {
+  it('strips NUL and control chars', () => {
+    expect(normalizeReportText('a\u0000b\u0001c')).toBe('abc')
+  })
+
+  it('renders bold markdown safely', () => {
+    const html = renderSafeMarkdown('**Anamnèse / motif :**\n\n- item')
+    expect(html).toContain('<strong>')
+    expect(html).toContain('Anamnèse')
+    expect(html).toContain('<li>')
+  })
+
+  it('strips script tags from malicious markdown/html', () => {
+    const html = renderSafeMarkdown('ok <script>alert(1)</script> **x**')
+    expect(html.toLowerCase()).not.toContain('<script')
+    expect(html).toContain('<strong>')
   })
 })

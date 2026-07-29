@@ -131,6 +131,13 @@
                   :test-id="`consultation-open-cr-${row.id}`"
                   @click="openReport(row)"
                 />
+                <ProIconAction
+                  v-if="canManageCalendar"
+                  icon="delete"
+                  :label="$t('consultations.delete')"
+                  :test-id="`consultation-delete-${row.id}`"
+                  @click="askDelete(row)"
+                />
                 <NuxtLink
                   v-else-if="row.clientId && row.petId"
                   :to="`/clients/${row.clientId}/pets/${row.petId}`"
@@ -155,7 +162,7 @@
 
     <ProModal
       v-model:open="reportOpen"
-      size="lg"
+      size="xl"
       :title="$t('consultations.reportModalTitle')"
       test-id="consultation-history-report-modal"
     >
@@ -168,8 +175,31 @@
     </ProModal>
 
     <ProModal
+      v-model:open="deleteOpen"
+      size="md"
+      :title="$t('consultations.deleteConfirmTitle')"
+      test-id="consultation-delete-modal"
+    >
+      <p>{{ $t('consultations.deleteConfirmBody') }}</p>
+      <p v-if="deleteError" class="pro-error" role="alert">{{ deleteError }}</p>
+      <template #footer>
+        <ProButton variant="secondary" test-id="consultation-delete-cancel" @click="deleteOpen = false">
+          {{ $t('common.cancel') }}
+        </ProButton>
+        <ProButton
+          variant="primary"
+          :disabled="deleteBusy"
+          test-id="consultation-delete-confirm"
+          @click="confirmDelete"
+        >
+          {{ $t('consultations.deleteConfirmCta') }}
+        </ProButton>
+      </template>
+    </ProModal>
+
+    <ProModal
       v-model:open="audioOpen"
-      size="sm"
+      size="md"
       :title="$t('consultations.audioModalTitle')"
       test-id="consultation-audio-modal"
       @update:open="onAudioModalOpen"
@@ -210,6 +240,7 @@ const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
 const canReadPets = computed(() => canPractice('pets.read'))
+const canManageCalendar = computed(() => canPractice('calendar.manage'))
 
 const rows = ref<ConsultationRow[]>([])
 const loadError = ref('')
@@ -227,6 +258,36 @@ const audioOpen = ref(false)
 const audioUrl = ref('')
 const audioLoading = ref(false)
 const audioError = ref('')
+
+const deleteOpen = ref(false)
+const deleteBusy = ref(false)
+const deleteError = ref('')
+const pendingDeleteId = ref('')
+
+function askDelete(row: ConsultationRow) {
+  pendingDeleteId.value = row.id
+  deleteError.value = ''
+  deleteOpen.value = true
+}
+
+async function confirmDelete() {
+  const id = pendingDeleteId.value
+  if (!id || deleteBusy.value) return
+  deleteBusy.value = true
+  deleteError.value = ''
+  try {
+    await $fetch(`/api/visits/${id}`, { method: 'DELETE' })
+    deleteOpen.value = false
+    pendingDeleteId.value = ''
+    rows.value = rows.value.filter(r => r.id !== id)
+  }
+  catch (e: any) {
+    deleteError.value = mapError(e)
+  }
+  finally {
+    deleteBusy.value = false
+  }
+}
 
 function formatDate(iso?: string) {
   if (!iso) return t('common.dash')

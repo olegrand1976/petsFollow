@@ -154,7 +154,7 @@
       />
     </ProCard>
 
-    <ProModal v-model:open="detailOpen" :title="$t('calendar.visitDetail')">
+    <ProModal v-model:open="detailOpen" size="xl" :title="$t('calendar.visitDetail')">
       <div v-if="selectedVisit" class="visit-detail">
         <p>
           <strong>{{ $t('calendar.columnClient') }} :</strong>

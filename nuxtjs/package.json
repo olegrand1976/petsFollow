@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@nuxtjs/i18n": "^9.5.6",
+    "isomorphic-dompurify": "^3.19.0",
+    "marked": "^18.0.7",
     "nuxt": "^3.15.0",
     "pinia": "^2.3.0"
   },

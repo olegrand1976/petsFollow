@@ -723,7 +723,11 @@
       "cancelled": "Tühistatud",
       "requested": "Taotletud",
       "reschedule_pending": "Ümberplaneerimine"
-    }
+    },
+    "delete": "Kustuta",
+    "deleteConfirmTitle": "Kustuta konsultatsioon?",
+    "deleteConfirmBody": "See kaob ajaloost. Raport jääb arhiveerituks (pehme kustutus).",
+    "deleteConfirmCta": "Kustuta"
   },
   "pets": {
     "title": "Jälgitavad lemmikloomad",
@@ -2753,7 +2757,16 @@
     "requestPreconsult": "Küsi eelkonsultatsiooni",
     "audioConsentClientCheck": "Olen saanud kliendilt suulise nõusoleku salvestamiseks",
     "reportAiProposalBanner": "Tehisintellekti ettepanek — kinnitus enne lõpetamist (diagnostika / ravimid).",
-    "markDone": "Lõpeta"
+    "markDone": "Lõpeta",
+    "audioToText": "Audio → tekst",
+    "reportEditSource": "Muuda teksti",
+    "reportPreview": "Eelvaade",
+    "reportVersionTranscript": "v0 — Transkriptsioon",
+    "reportVersionImproved": "v1 — AI täiendus",
+    "reportVersionSaved": "v2 — Salvestatud versioon",
+    "reportVersionEmpty": "Puudub",
+    "reportRestore": "Taasta",
+    "reportVersionsTitle": "Raporti versioonid"
   },
   "manager": {
     "dashboard": {

@@ -199,7 +199,7 @@ func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	report, err := a.store.UpsertVisitReport(r.Context(), visitID, id.UserID, req.BodyText)
+	report, err := a.store.UpsertVisitReport(r.Context(), visitID, id.UserID, gemini.NormalizeVisitReportText(req.BodyText))
 	if err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
@@ -354,9 +354,9 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 		return
 	}
-	source := report.BodyText
+	source := gemini.NormalizeVisitReportText(report.BodyText)
 	if strings.TrimSpace(source) == "" {
-		source = report.TranscriptText
+		source = gemini.NormalizeVisitReportText(report.TranscriptText)
 	}
 	if strings.TrimSpace(source) == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
@@ -383,7 +383,7 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
 		return
 	}
-	report, err = a.store.UpdateVisitReportImproved(r.Context(), report.ID, strings.TrimSpace(improved))
+	report, err = a.store.UpdateVisitReportImproved(r.Context(), report.ID, gemini.NormalizeVisitReportText(strings.TrimSpace(improved)))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")

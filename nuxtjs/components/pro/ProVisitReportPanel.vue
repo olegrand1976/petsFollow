@@ -42,15 +42,13 @@
     <p v-else-if="!readonly" class="pro-hint" data-testid="visit-report-ai-banner">
       {{ $t('calendar.reportAiProposalBanner') }}
     </p>
-    <textarea
-      id="visit-report-body"
+    <ProMarkdownReportEditor
       v-model="reportBody"
-      class="pro-input"
-      rows="6"
-      data-testid="visit-report-body"
+      input-id="visit-report-body"
       :placeholder="$t('calendar.reportHint')"
       :disabled="reportBusy || reportLocked || dictating || hydrating"
       :readonly="reportLocked"
+      :prefer-preview-tick="preferMarkdownPreviewTick"
     />
     <div
       v-if="dictating"
@@ -104,42 +102,68 @@
         <ProIcon name="mic" :size="16" />
         {{ $t('calendar.dictateAudio') }}
       </ProButton>
-      <label
+      <ProButton
         v-if="reportStatus !== 'final'"
-        class="pro-link-btn pro-visit-report__audio"
+        variant="secondary"
+        :disabled="reportBusy || hydrating"
+        test-id="visit-report-audio-btn"
+        @click="openAudioPicker"
       >
-        <input
-          type="file"
-          accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
-          class="pro-visit-report__file"
-          data-testid="visit-report-audio"
-          :disabled="reportBusy"
-          @change="onReportAudioSelected"
-        >
-        {{ $t('calendar.transcribeAudio') }}
-      </label>
+        <ProIcon name="upload_file" :size="16" />
+        {{ $t('calendar.audioToText') }}
+      </ProButton>
+      <input
+        ref="audioFileInput"
+        type="file"
+        accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
+        class="pro-visit-report__file"
+        data-testid="visit-report-audio"
+        :disabled="reportBusy"
+        @change="onReportAudioSelected"
+      >
     </div>
     <p v-if="reportStatus === 'final'" class="pro-hint">{{ $t('calendar.reportFinal') }}</p>
     <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg">{{ reportMsg }}</p>
     <details
-      v-if="reportTranscript || reportImproved || reportHistorySaved"
       class="visit-report-history"
+      open
       data-testid="visit-report-history"
     >
-      <summary>{{ $t('calendar.reportHistoryTitle') }}</summary>
-      <div class="visit-report-history__block">
-        <h4>{{ $t('calendar.reportHistoryTranscript') }}</h4>
+      <summary>{{ $t('calendar.reportVersionsTitle') }}</summary>
+      <div class="visit-report-history__block" data-testid="visit-report-v0">
+        <div class="pro-flex-gap visit-report-history__head">
+          <h4>{{ $t('calendar.reportVersionTranscript') }}</h4>
+          <ProButton
+            v-if="reportTranscript && !reportLocked"
+            variant="ghost"
+            test-id="visit-report-restore-v0"
+            @click="restoreVersion(reportTranscript)"
+          >
+            {{ $t('calendar.reportRestore') }}
+          </ProButton>
+        </div>
         <pre v-if="reportTranscript" class="visit-report-history__text">{{ reportTranscript }}</pre>
-        <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
+        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
       </div>
-      <div class="visit-report-history__block">
-        <h4>{{ $t('calendar.reportHistoryImproved') }}</h4>
+      <div class="visit-report-history__block" data-testid="visit-report-v1">
+        <div class="pro-flex-gap visit-report-history__head">
+          <h4>{{ $t('calendar.reportVersionImproved') }}</h4>
+          <ProButton
+            v-if="reportImproved && !reportLocked"
+            variant="ghost"
+            test-id="visit-report-restore-v1"
+            @click="restoreVersion(reportImproved)"
+          >
+            {{ $t('calendar.reportRestore') }}
+          </ProButton>
+        </div>
         <pre v-if="reportImproved" class="visit-report-history__text">{{ reportImproved }}</pre>
-        <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
+        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
       </div>
-      <div v-if="reportHistorySaved" class="visit-report-history__block">
-        <h4>{{ $t('calendar.reportHistorySaved') }}</h4>
-        <pre class="visit-report-history__text">{{ reportHistorySaved }}</pre>
+      <div class="visit-report-history__block" data-testid="visit-report-v2">
+        <h4>{{ $t('calendar.reportVersionSaved') }}</h4>
+        <pre v-if="reportPersistedBody.trim()" class="visit-report-history__text">{{ reportPersistedBody }}</pre>
+        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
       </div>
     </details>
 
@@ -171,7 +195,8 @@
 </template>
 
 <script setup lang="ts">
-import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
+import { mapVisitReportFields } from '~/utils/visitReport'
+import { normalizeReportText } from '~/utils/safeMarkdown'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
 export type VisitReportAuthor = {
@@ -220,6 +245,13 @@ const audioConsentChecked = ref(false)
 const pendingAudioFile = ref<File | null>(null)
 /** Which action the client-audio-consent modal is gating: file upload or live dictation. */
 const pendingAction = ref<'file' | 'dictate' | null>(null)
+const audioFileInput = ref<HTMLInputElement | null>(null)
+/** Bumps ProMarkdownReportEditor into preview after IA / restore (always fires). */
+const preferMarkdownPreviewTick = ref(0)
+
+function showMarkdownPreview() {
+  preferMarkdownPreviewTick.value += 1
+}
 
 const dictating = ref(false)
 const dictationSeconds = ref(0)
@@ -262,13 +294,20 @@ const reportLocked = computed(() =>
   Boolean(props.readonly) || viewingPeerReport.value || reportStatus.value === 'final',
 )
 
-const reportHistorySaved = computed(() =>
-  persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
-)
-
 const visitDateLabel = computed(() =>
   props.visitScheduledAt ? formatDate(props.visitScheduledAt) : '',
 )
+
+function restoreVersion(text: string) {
+  if (reportLocked.value) return
+  reportBody.value = text
+  showMarkdownPreview()
+}
+
+function openAudioPicker() {
+  if (props.readonly || viewingPeerReport.value || reportStatus.value === 'final' || reportBusy.value) return
+  audioFileInput.value?.click()
+}
 
 const dictationClock = computed(() => {
   const m = Math.floor(dictationSeconds.value / 60).toString().padStart(2, '0')
@@ -411,7 +450,7 @@ async function saveVisitReport(): Promise<boolean> {
   try {
     const res: any = await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: reportBody.value },
+      body: { bodyText: normalizeReportText(reportBody.value) },
     })
     applyReportPayload(res.data ?? res)
     reportMsg.value = t('calendar.reportSaved')
@@ -485,7 +524,7 @@ async function improveVisitReport() {
   try {
     await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: reportBody.value },
+      body: { bodyText: normalizeReportText(reportBody.value) },
     })
     // Flat BFF path: nested …/report/improve is registered but not matched by rou3
     // when …/report (GET/PUT) is also a leaf — see 03d-visit-report-ai-bff.
@@ -493,6 +532,7 @@ async function improveVisitReport() {
       method: 'POST',
     })
     applyReportPayload(res.data ?? res)
+    showMarkdownPreview()
     reportMsg.value = t('calendar.reportImproved')
     void loadVisitReports(props.visitId)
     emit('saved')
@@ -511,7 +551,7 @@ async function finalizeVisitReport() {
   try {
     await $fetch(`/api/visits/${props.visitId}/report`, {
       method: 'PUT',
-      body: { bodyText: reportBody.value },
+      body: { bodyText: normalizeReportText(reportBody.value) },
     })
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-finalize`, {
       method: 'POST',
@@ -583,6 +623,7 @@ async function transcribeAudio(file: File | Blob, filename: string) {
     })
     applyReportPayload(res.data ?? res)
     applyDatePrefixIfNeeded()
+    showMarkdownPreview()
     reportMsg.value = t('calendar.reportTranscribed')
     void loadVisitReports(props.visitId)
   } catch (e: any) {
@@ -782,8 +823,22 @@ watch(
   cursor: pointer;
 }
 
+.visit-report-history__head {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.visit-report-history__head h4 {
+  margin: 0;
+}
+
 .pro-visit-report__file {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .visit-report-history {

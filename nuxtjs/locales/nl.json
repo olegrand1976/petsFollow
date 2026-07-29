@@ -723,7 +723,11 @@
       "cancelled": "Geannuleerd",
       "requested": "Aangevraagd",
       "reschedule_pending": "Herplannen"
-    }
+    },
+    "delete": "Verwijderen",
+    "deleteConfirmTitle": "Consultatie verwijderen?",
+    "deleteConfirmBody": "Ze verdwijnt uit de geschiedenis. Het verslag blijft gearchiveerd (soft delete).",
+    "deleteConfirmCta": "Verwijderen"
   },
   "pets": {
     "title": "Opgevolgde dieren",
@@ -2784,7 +2788,16 @@
     "requestPreconsult": "Preconsultatie vragen",
     "audioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
     "reportAiProposalBanner": "AI-voorstel — validatie verplicht vóór finalisatie (diagnose / medicatie).",
-    "markDone": "Afronden"
+    "markDone": "Afronden",
+    "audioToText": "Audio → tekst",
+    "reportEditSource": "Tekst bewerken",
+    "reportPreview": "Voorbeeld",
+    "reportVersionTranscript": "v0 — Transcriptie",
+    "reportVersionImproved": "v1 — AI-verbetering",
+    "reportVersionSaved": "v2 — Opgeslagen versie",
+    "reportVersionEmpty": "Geen",
+    "reportRestore": "Herstellen",
+    "reportVersionsTitle": "Verslagversies"
   },
   "manager": {
     "dashboard": {

@@ -723,7 +723,11 @@
       "cancelled": "Cancelled",
       "requested": "Requested",
       "reschedule_pending": "Reschedule pending"
-    }
+    },
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete this consultation?",
+    "deleteConfirmBody": "It will disappear from the history. The visit report stays archived (soft delete).",
+    "deleteConfirmCta": "Delete"
   },
   "pets": {
     "title": "Monitored pets",
@@ -2784,7 +2788,16 @@
     "requestPreconsult": "Request a pre-consultation",
     "audioConsentClientCheck": "I have obtained the client's oral consent to record",
     "reportAiProposalBanner": "AI proposal — vet validation required before finalizing (suggested diagnosis / medication).",
-    "markDone": "Mark done"
+    "markDone": "Mark done",
+    "audioToText": "Audio → text",
+    "reportEditSource": "Edit text",
+    "reportPreview": "Preview",
+    "reportVersionTranscript": "v0 — Transcript",
+    "reportVersionImproved": "v1 — AI improved",
+    "reportVersionSaved": "v2 — Saved version",
+    "reportVersionEmpty": "None",
+    "reportRestore": "Restore",
+    "reportVersionsTitle": "Report versions"
   },
   "manager": {
     "dashboard": {

@@ -94,11 +94,13 @@ func (s *Store) GetClientOverview(ctx context.Context, practiceID, clientID stri
 			(SELECT COUNT(*)::int FROM visits.visits v
 			 JOIN pets.pets p ON p.id = v.pet_id
 			 WHERE v.practice_id = $1 AND p.owner_user_id = $2
+			   AND v.deleted_at IS NULL
 			   AND v.pending_action_by = 'vet'
 			   AND v.status IN ('requested', 'reschedule_pending')),
 			(SELECT MIN(v.scheduled_at) FROM visits.visits v
 			 JOIN pets.pets p ON p.id = v.pet_id
 			 WHERE v.practice_id = $1 AND p.owner_user_id = $2
+			   AND v.deleted_at IS NULL
 			   AND v.scheduled_at IS NOT NULL AND v.scheduled_at >= NOW()
 			   AND v.status IN ('requested', 'confirmed', 'reschedule_pending')),
 			(SELECT COUNT(*)::int FROM practice.client_access a
@@ -141,6 +143,7 @@ func (s *Store) VetOverview(ctx context.Context, practiceID, vetID string) (VetO
 			 WHERE vet_user_id = $2 AND status = 'pending'),
 			(SELECT COUNT(*)::int FROM visits.visits
 			 WHERE practice_id = $1
+			   AND deleted_at IS NULL
 			   AND pending_action_by = 'vet'
 			   AND status IN ('requested', 'reschedule_pending')),
 			(SELECT COUNT(*)::int FROM care.reminders

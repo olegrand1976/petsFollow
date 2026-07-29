@@ -207,6 +207,7 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 		JOIN identity.users u ON u.id = p.owner_user_id
 		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
 		WHERE v.practice_id = $1
+		  AND v.deleted_at IS NULL
 		  AND v.status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND (
 			(v.scheduled_at IS NOT NULL AND v.scheduled_at >= $2 AND v.scheduled_at < $3)
@@ -289,6 +290,7 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID string, start ti
 	err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM visits.visits
 		WHERE practice_id = $1
+		  AND deleted_at IS NULL
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND COALESCE(consultation_session, false) = false
 		  AND ($4 = '' OR id::text <> $4)

@@ -1335,7 +1335,11 @@
       "cancelled": "Annulée",
       "requested": "Demandée",
       "reschedule_pending": "Replanification"
-    }
+    },
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Supprimer la consultation ?",
+    "deleteConfirmBody": "Elle disparaîtra de l’historique. Le compte-rendu reste archivé (suppression logique).",
+    "deleteConfirmCta": "Supprimer"
   },
   "pets": {
     "title": "Animaux suivis",
@@ -2350,7 +2354,16 @@
     "requestPreconsult": "Demander une pré-consultation",
     "audioConsentClientCheck": "J'ai obtenu l'accord oral du client pour enregistrer",
     "reportAiProposalBanner": "Proposition IA — validation obligatoire avant finalisation (diagnostic / médication proposés).",
-    "markDone": "Terminer"
+    "markDone": "Terminer",
+    "audioToText": "Audio → texte",
+    "reportEditSource": "Éditer le texte",
+    "reportPreview": "Aperçu",
+    "reportVersionTranscript": "v0 — Transcription",
+    "reportVersionImproved": "v1 — Amélioration IA",
+    "reportVersionSaved": "v2 — Version enregistrée",
+    "reportVersionEmpty": "Aucune",
+    "reportRestore": "Restaurer",
+    "reportVersionsTitle": "Versions du compte-rendu"
   },
   "commissions": {
     "title": "Mes rétributions",

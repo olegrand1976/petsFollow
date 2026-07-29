@@ -70,7 +70,7 @@ func (s *Store) ListVisits(ctx context.Context, petID string) ([]Visit, error) {
 			'', '', '',
 			duration_minutes, proposed_scheduled_at, pending_action_by,
 			COALESCE(address_text,''), lat, lng, COALESCE(consultation_session, false)
-		FROM visits.visits WHERE pet_id = $1
+		FROM visits.visits WHERE pet_id = $1 AND deleted_at IS NULL
 		ORDER BY COALESCE(scheduled_at, created_at) DESC`, petID)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (s *Store) ListPracticeVisitsByStatus(ctx context.Context, practiceID, stat
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
-		WHERE v.practice_id = $1 AND v.status = $2
+		WHERE v.practice_id = $1 AND v.status = $2 AND v.deleted_at IS NULL
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 		LIMIT 100`, practiceID, status)
 	if err != nil {
@@ -133,6 +133,7 @@ func (s *Store) ListPracticeConsultations(ctx context.Context, practiceID string
 	where := []string{
 		`v.practice_id = $1`,
 		`COALESCE(v.consultation_session, false) = true`,
+		`v.deleted_at IS NULL`,
 	}
 	argN := 2
 
@@ -254,6 +255,7 @@ func (s *Store) ListPracticePendingVetActions(ctx context.Context, practiceID st
 		WHERE v.practice_id = $1
 		  AND v.pending_action_by = 'vet'
 		  AND v.status IN ('requested', 'reschedule_pending')
+		  AND v.deleted_at IS NULL
 		ORDER BY COALESCE(v.scheduled_at, v.proposed_scheduled_at, v.created_at) DESC
 		LIMIT 100`, practiceID)
 	if err != nil {
@@ -452,6 +454,22 @@ func (s *Store) UpdateVisitLocation(ctx context.Context, id, addressText string,
 	return s.GetVisit(ctx, id)
 }
 
+// SoftDeleteVisit marks a visit as soft-deleted (hidden from consultations history).
+// Allowed for walk-in consultations regardless of status / persisted CR.
+func (s *Store) SoftDeleteVisit(ctx context.Context, id string) (Visit, error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE visits.visits
+		SET deleted_at = now()
+		WHERE id = $1 AND deleted_at IS NULL`, id)
+	if err != nil {
+		return Visit{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return Visit{}, ErrNotFound
+	}
+	return s.GetVisit(ctx, id)
+}
+
 func (s *Store) UpdateVisitStatus(ctx context.Context, id, status string) (Visit, error) {
 	var allowedFrom []string
 	switch status {
@@ -492,6 +510,7 @@ func (s *Store) CancelStaleConsultationOrphans(ctx context.Context, olderThan ti
 			SELECT v.id
 			FROM visits.visits v
 			WHERE COALESCE(v.consultation_session, false) = true
+			  AND v.deleted_at IS NULL
 			  AND v.status = 'confirmed'
 			  AND v.scheduled_at IS NOT NULL
 			  AND v.scheduled_at < $1

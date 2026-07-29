@@ -104,4 +104,23 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
     await getReport
     await expect(page.getByTestId('visit-report-body')).toHaveValue(/E2E history CR/, { timeout: 15000 })
   })
+
+  test('soft-delete retire la consultation de la liste', async ({ page }) => {
+    await loginAsVet(page)
+    const visitId = await createWalkInWithReport(page)
+
+    await page.goto('/consultations', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
+
+    await page.getByTestId(`consultation-delete-${visitId}`).click()
+    await expect(page.getByTestId('consultation-delete-modal')).toBeVisible()
+    const delRes = page.waitForResponse(
+      (r) => r.url().includes(`/api/visits/${visitId}`) && r.request().method() === 'DELETE',
+      { timeout: 20000 },
+    )
+    await page.getByTestId('consultation-delete-confirm').click()
+    expect((await delRes).status()).toBe(200)
+    await expect(page.getByTestId(`consultation-row-${visitId}`)).toHaveCount(0, { timeout: 10000 })
+  })
 })

@@ -179,7 +179,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
-| C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres | Client + animal + date ; lien Écouter si `hasAudio` (draft) ; ouvrir CR |
+| C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) ; ouvrir CR ; supprimer → hors liste (`deleted_at`) |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
 
 ### C3 — Calendrier & RDV
@@ -677,7 +677,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
 | `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
-| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR | `@p1` |
+| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |

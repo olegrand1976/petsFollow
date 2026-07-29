@@ -723,7 +723,11 @@
       "cancelled": "Cancelada",
       "requested": "Solicitada",
       "reschedule_pending": "Reprogramación"
-    }
+    },
+    "delete": "Eliminar",
+    "deleteConfirmTitle": "¿Eliminar la consulta?",
+    "deleteConfirmBody": "Desaparecerá del historial. El informe queda archivado (borrado lógico).",
+    "deleteConfirmCta": "Eliminar"
   },
   "pets": {
     "title": "Animales seguidos",
@@ -2753,7 +2757,16 @@
     "requestPreconsult": "Solicitar preconsulta",
     "audioConsentClientCheck": "He obtenido el consentimiento oral del cliente para grabar",
     "reportAiProposalBanner": "Propuesta de IA — validación obligatoria antes de finalizar (diagnóstico / medicación).",
-    "markDone": "Terminar"
+    "markDone": "Terminar",
+    "audioToText": "Audio → texto",
+    "reportEditSource": "Editar texto",
+    "reportPreview": "Vista previa",
+    "reportVersionTranscript": "v0 — Transcripción",
+    "reportVersionImproved": "v1 — Mejora IA",
+    "reportVersionSaved": "v2 — Versión guardada",
+    "reportVersionEmpty": "Ninguna",
+    "reportRestore": "Restaurar",
+    "reportVersionsTitle": "Versiones del informe"
   },
   "manager": {
     "dashboard": {
