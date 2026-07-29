@@ -207,12 +207,14 @@ func (a *API) downloadPublicConsultation(w http.ResponseWriter, r *http.Request)
 	var pdfBytes []byte
 	staleObjectKey := ""
 	if key := strings.TrimSpace(tok.ObjectKey); key != "" {
+		// Bust pre-brand / attachment-layout caches (v1 keys under consultation-shares/).
+		legacyCache := !strings.Contains(key, "consultation-shares-v2")
 		stale, staleErr := a.store.ConsultationShareCacheStale(ctx, tok.VisitID, tok.CachedAt)
 		if staleErr != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		if stale {
+		if stale || legacyCache {
 			staleObjectKey = key
 			if clearErr := a.store.ClearConsultationShareObjectKeyTx(ctx, tx, tok.ID); clearErr != nil {
 				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -231,7 +233,8 @@ func (a *API) downloadPublicConsultation(w http.ResponseWriter, r *http.Request)
 		}
 		pdfBytes = built
 		if a.media != nil {
-			cacheKey = media.ObjectKey("consultation-shares", tok.ID, ".pdf")
+			// v2 = branded PDF layout; new key busts stale mobile-hostile caches.
+			cacheKey = media.ObjectKey("consultation-shares-v2", tok.ID, ".pdf")
 			if _, upErr := a.media.Upload(ctx, cacheKey, bytes.NewReader(pdfBytes), int64(len(pdfBytes)), "application/pdf"); upErr != nil {
 				cacheKey = ""
 			}
@@ -251,7 +254,8 @@ func (a *API) downloadPublicConsultation(w http.ResponseWriter, r *http.Request)
 
 	filename := "consultation-" + sanitizeFilename(tok.PetName) + ".pdf"
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	// inline: mobile browsers / Safari open the PDF in-viewer instead of a blank blob tab.
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, filename))
 	w.Header().Set("Cache-Control", "private, no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(pdfBytes)

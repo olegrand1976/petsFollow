@@ -13,8 +13,6 @@
         <ProKpi :value="statusCount('closed')" :label="$t('admin.support.statsClosed')" />
         <ProKpi :value="supportStats.openOlderThan24h ?? 0" :label="$t('admin.support.statsOpen24h')" />
         <ProKpi :value="supportStats.openOlderThan7d ?? 0" :label="$t('admin.support.statsOpen7d')" />
-        <ProKpi v-if="metrics" :value="metrics.userCount" :label="$t('admin.dashboard.registrations')" />
-        <ProKpi v-if="metrics" :value="metrics.petCount" :label="$t('admin.dashboard.pets')" />
       </div>
     </template>
 

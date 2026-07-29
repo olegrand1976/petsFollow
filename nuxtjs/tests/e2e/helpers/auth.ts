@@ -82,6 +82,13 @@ export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.te
   await page.waitForURL(/\/admin/, { timeout: 20000 })
 }
 
+/** Ops support IT (même MDP seed que admin — passwordDev = passwordAdmin). */
+export async function loginAsDev(page: Page, email = 'dev.demo@petsfollow.test', password = 'AdminDemo123!') {
+  const { status } = await login(page, email, password)
+  expect(status, `login ${email}`).toBe(200)
+  await page.waitForURL(/\/admin/, { timeout: 20000 })
+}
+
 /** Gate commercial : si contact_phone vide (staging sans re-seed), complète le numéro démo. */
 async function completeContactPhoneIfNeeded(page: Page, phone: string) {
   if (!page.url().includes('/complete-contact-phone')) return

@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
       headers: localeHeaders(event),
     })
     const ct = res.headers.get('content-type') || 'application/pdf'
-    const cd = res.headers.get('content-disposition') || 'attachment; filename="consultation.pdf"'
+    const cd = res.headers.get('content-disposition') || 'inline; filename="consultation.pdf"'
     setHeader(event, 'Content-Type', ct)
     setHeader(event, 'Content-Disposition', cd)
     setHeader(event, 'Cache-Control', 'private, no-store')
