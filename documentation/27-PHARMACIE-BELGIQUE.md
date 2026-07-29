@@ -417,6 +417,19 @@ Colonnes minimales attendues (mapping configurable) :
 | `is_antibiotic` | oui (ou dérivé ATC / liste AFMPS) |
 | `pharmaceutical_form`, `pack_size` | non |
 
+### Import PDF Compendium (admin, tag `dev`)
+
+Complément du CSV `import-cnk` : UI admin `/admin/compendium-imports`.
+
+1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages).
+2. Extraction asynchrone Gemini (`GenerateJSONWithMedia`, lots de 2 pages) → staging `pharmacy.compendium_import_*`.
+3. Contrôle humain (édition CNK/nom, exclude) avec compteurs `%` extraction + contrôle.
+4. Commit → upsert `pharmacy.ref_medications` (`afmps_meta.source=compendium-pdf`).
+
+Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store. Lignes sans CNK → statut `error` (pas d’upsert).
+
+---
+
 ### Commande cible
 
 ```bash
