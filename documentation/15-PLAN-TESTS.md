@@ -74,6 +74,7 @@ Mots de passe : véto `VetDemo123!` · client `ClientDemo123!` · admin `AdminDe
 | Commercial | `commercial.demo@petsfollow.test` | CRM + encode |
 | Commercial mgr | `commercial.manager@petsfollow.test` | Dashboard équipe |
 | Admin | `admin.demo@petsfollow.test` | Ops plateforme |
+| DEV | `dev.demo@petsfollow.test` | Support IT léger (sans billing/sales) |
 
 Tokens démo : confirm email `demo-confirm-email` · reset `demo-reset-password`.
 
@@ -90,6 +91,7 @@ Parcours minimum avant toute dist / staging.
 | A3 | Web | `/messages` | Liste threads ; ouvrir un thread |
 | A4 | Web | `/calendar` | Agenda charge ; visite seed visible |
 | A5 | Web | Logout → login `admin.demo` → `/admin` | Métriques admin |
+| A5b | Web | Logout → login `dev.demo` → `/admin` | Shell ops léger (users/support/flags) ; pas billing |
 | A6 | Flutter | Login `client.demo` | Shell 5 tabs (Home / Pets / Care / Messages / Settings) |
 | A7 | Flutter | Ouvrir un pet → démarrer FC (sans valider) | Timer + taps OK |
 | A8 | Flutter | Messagerie : ouvrir un thread | Historique messages |
@@ -256,7 +258,7 @@ Auto UI : Playwright `@p1` `@invoicing` [`18-invoicing.spec.ts`](../nuxtjs/tests
 
 ## D — Web Pro — Admin
 
-Compte : `admin.demo@petsfollow.test`
+Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
@@ -278,6 +280,8 @@ Compte : `admin.demo@petsfollow.test`
 | D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
 | D16 | P1 | Alertes auth ALERT/URGENT | SMTP confirm fail / stuck unverified | Ticket `source=system` + email `OPS_NOTIFY_EMAIL` · Go `TestSMTPConfirmFailCreatesSystemAlertTicket` · job `POST /internal/auth-health/run` |
 | D15 | P2 | Catalogue Stripe | Admin catalogue Stripe | ACL : véto refusé |
+| D17 | P0 | Rôle DEV support IT | Login `dev.demo` → `/admin/users` + `/admin/support` + `/admin/runtime-flags` | 200 ; nav sans billing/sales/brand/AI · Go `TestDevRole*` · UC-AD-02 |
+| D17b | P0 | DEV billing/sales gate | DEV → `/admin/payments` (API) + `/admin/commercials` | 403 · nav absente |
 
 ---
 

@@ -114,6 +114,7 @@ Ordre pour un commercial sur staging :
 | ID | Fichier | Priorité |
 |----|---------|----------|
 | UC-AD-01 | [Ops & support](06-admin/UC-AD-01-ops-support.md) | Secondaire |
+| UC-AD-02 | [DEV support IT](06-admin/UC-AD-02-dev-support-it.md) | Secondaire |
 
 ### Équipe cabinet — [`07-equipe-cabinet/`](07-equipe-cabinet/)
 

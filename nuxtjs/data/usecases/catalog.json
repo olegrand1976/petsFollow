@@ -68,7 +68,8 @@
       "label": "Administration",
       "blurb": "Outils internes (équipe petsFollow).",
       "items": [
-        "UC-AD-01"
+        "UC-AD-01",
+        "UC-AD-02"
       ]
     },
     {
@@ -618,6 +619,49 @@
         "Users",
         "Commercials",
         "Support"
+      ]
+    },
+    "UC-AD-02": {
+      "id": "UC-AD-02",
+      "folderId": "admin",
+      "slug": "UC-AD-02-dev-support-it",
+      "title": "DEV support IT (ops léger)",
+      "duration": "~10 min",
+      "priority": "Secondaire",
+      "surface": "",
+      "destructive": false,
+      "objective": "Montrer le rôle DEV support IT : accès ops utile (users, support, flags) sans billing, sales force, brand ni AI.",
+      "actors": [
+        {
+          "role": "DEV",
+          "account": "dev.demo@petsfollow.test",
+          "password": "AdminDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web (ou seed local + migration 000114).",
+        "Compte seed multi-profils (dev + client + vet VetPlus) — bascule profil possible."
+      ],
+      "steps": [
+        "Se connecter avec dev.demo.",
+        "Vérifier le dashboard admin (vue allégée / pas de KPI billing).",
+        "Ouvrir Utilisateurs : liste lisible.",
+        "Ouvrir Support : liste tickets (+ recherche si présente) ; ouvrir un ticket.",
+        "Ouvrir Runtime flags : lecture des flags.",
+        "Vérifier la nav : pas d’entrées Commercials / Paiements / Imports / Brand / AI.",
+        "(Optionnel) Tenter /admin/payments ou /admin/commercials via URL → refus / redirect.",
+        "(Optionnel) Bascule profil vers client ou véto → shell adapté, retour profil dev OK."
+      ],
+      "expected": [
+        "Accès support IT sans erreur.",
+        "Billing / sales / brand / AI inaccessibles (nav absente + API 403).",
+        "Un admin garde la surface complète (UC-AD-01)."
+      ],
+      "checklist": [
+        "Login DEV",
+        "Users + Support + Flags",
+        "Nav limitée",
+        "Billing/sales refusés"
       ]
     },
     "UC-EQ-01": {
