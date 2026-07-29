@@ -19,8 +19,7 @@
         "UC-VP-01",
         "UC-VP-02",
         "UC-VP-03",
-        "UC-VP-04",
-        "UC-VP-05"
+        "UC-VP-04"
       ]
     },
     {
@@ -261,37 +260,6 @@
         "Modal + CR",
         "CTA DAF / facture"
       ]
-    },
-    "UC-VP-05": {
-      "id": "UC-VP-05",
-      "folderId": "vetpro",
-      "slug": "UC-VP-05-pharmacie-stock-daf",
-      "title": "Pharmacie cabinet : stock FEFO → DAF → VAMReg",
-      "duration": "",
-      "priority": "",
-      "surface": "",
-      "destructive": false,
-      "objective": "Montrer la boucle pharmacie cabinet : réception lot → alerte péremption / réassort → DAF finalisé (lot + AMM) → déclaration VAMReg dry-run.",
-      "actors": [],
-      "prerequisites": [
-        "Flag PHARMACY_ENABLED / NUXT_PUBLIC_PHARMACY_ENABLED",
-        "Catalogue CNK (échantillon ou import)",
-        "Facturation DAF→Billit hors scope tant que reseller Billit non reçu"
-      ],
-      "steps": [
-        "Nav Médicaments — rechercher un CNK (badge antibiotique si applicable).",
-        "Stock — réceptionner un lot (n° lot, DLC, qty ; optionnel n° BL) ; constater bandes 90/60/30.",
-        "Optionnel : seuil réassort → commande e-mail fournisseur ; inventaire (compter → clôturer → écarts).",
-        "Optionnel animal de rente : statut chaîne alimentaire + temps d’attente médicament (V/L/O) avant finalize.",
-        "Finaliser — PDF généré ; statut VAMReg Déclaré (dry-run) ou Relancer si échec.",
-        "(Plus tard) Facturer depuis le DAF — bloqué accès reseller Billit."
-      ],
-      "expected": [
-        "Lot tracé FEFO ; DAF numéroté gapless ; PDF consultable.",
-        "Antibiotique : VAMReg sent en dry-run ; audit visible.",
-        "Badge dev toujours affiché jusqu’à GA (Phase 6)."
-      ],
-      "checklist": []
     },
     "UC-CL-01": {
       "id": "UC-CL-01",
@@ -1190,6 +1158,5 @@
         "Expiry 24 h"
       ]
     }
-  },
-  "useCases": {}
+  }
 }
