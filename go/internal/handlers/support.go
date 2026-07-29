@@ -19,6 +19,7 @@ func (a *API) registerSupportRoutes(r chi.Router) {
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Post("/support/tickets", a.createSupportTicket)
 		pr.Get("/admin/support/tickets", a.adminListSupportTickets)
 		pr.Get("/admin/support/tickets/{id}", a.adminGetSupportTicket)

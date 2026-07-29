@@ -880,12 +880,28 @@ class ApiClient {
     await dio.patch('/api/v1/me/password', data: body);
   }
 
+  Future<void> acceptTerms() async {
+    await dio.post('/api/v1/me/accept-terms', data: {'consent': true});
+  }
+
   Future<bool> mustChangePassword() async {
     try {
       final me = await getMe();
       return me['mustChangePassword'] == true;
     } catch (_) {
-      return false;
+      // Fail-closed : ne pas laisser entrer si /me est indisponible.
+      return true;
+    }
+  }
+
+  /// True si le compte n'a pas encore horodaté le consentement CGU/privacy.
+  /// Fail-closed : en cas d'erreur /me, on force le gate (ne pas laisser entrer).
+  Future<bool> needsAcceptTerms() async {
+    try {
+      final me = await getMe();
+      return me['termsAcceptedAt'] == null;
+    } catch (_) {
+      return true;
     }
   }
 

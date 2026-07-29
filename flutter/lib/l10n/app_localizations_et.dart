@@ -440,6 +440,20 @@ class AppLocalizationsEt extends AppLocalizations {
   String get forceChangePasswordSubmit => 'Salvesta ja jätka';
 
   @override
+  String get acceptTermsTitle => 'Kasutustingimused';
+
+  @override
+  String get acceptTermsSubtitle =>
+      'Teie konto lõi teie kliinik. Jätkamiseks nõustuge tingimuste ja privaatsuspoliitikaga.';
+
+  @override
+  String get acceptTermsSubmit => 'Nõustu ja jätka';
+
+  @override
+  String get acceptTermsFailed =>
+      'Nõusolekut ei saanud salvestada. Proovige uuesti.';
+
+  @override
   String get passwordTooShort => 'Vähemalt 8 tähemärki';
 
   @override
@@ -649,11 +663,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
-      'Juriidiline teave — petsFollow\n\nVäljaandja: LL-IT-SC / petsFollow\nKontakt: support@ll-it-sc.be\n\nMajutus: Google Cloud Platform (GDPR-ga kooskõlas).\n\nVäljaande juht: petsFollow.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/mentions\n\nViimati uuendatud: juuli 2026';
+      'Juriidiline teave — petsFollow\n\nVäljaandja: LL-IT-SC / petsFollow\nKontakt: support@petsfollow.app\n\nMajutus: Google Cloud Platform (GDPR-ga kooskõlas).\n\nVäljaande juht: petsFollow.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/mentions\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get language => 'Keel';

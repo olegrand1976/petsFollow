@@ -376,6 +376,11 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"contactPhone":       u.ContactPhone,
 		"profiles":           profiles,
 	}
+	if u.TermsAcceptedAt != nil {
+		out["termsAcceptedAt"] = u.TermsAcceptedAt.UTC().Format(time.RFC3339)
+	} else {
+		out["termsAcceptedAt"] = nil
+	}
 	if active.ID != "" {
 		out["activeProfileId"] = active.ID
 	}

@@ -47,7 +47,8 @@ func (a *API) internalRunRetentionPurge(w http.ResponseWriter, r *http.Request) 
 				continue
 			}
 			purgedClients++
-		case string(kernel.RoleVet), string(kernel.RoleCommercial), string(kernel.RoleCommercialManager), string(kernel.RoleCarePro):
+		case string(kernel.RoleVet), string(kernel.RoleVetAssistant), string(kernel.RoleSecretary),
+			string(kernel.RoleCommercial), string(kernel.RoleCommercialManager), string(kernel.RoleCarePro):
 			if err := a.anonymizeProAccount(r.Context(), acct.ID); err != nil {
 				failed++
 				fmt.Printf("retention purge: pro %s failed: %v\n", acct.ID, err)
@@ -132,17 +133,23 @@ func (a *API) purgeClientAccount(ctx context.Context, userID string) error {
 	return nil
 }
 
-// anonymizeProAccount — même anonymisation que DELETE /me côté Pro.
+// anonymizeProAccount — même anonymisation que DELETE /me côté Pro
+// (y compris purge client-owned dual profil + médias / Stripe best-effort).
 func (a *API) anonymizeProAccount(ctx context.Context, userID string) error {
-	var avatarURL string
-	if u, err := a.store.GetUserByID(ctx, userID); err == nil {
-		avatarURL = u.AvatarURL
+	artifacts, artErr := a.store.CollectClientAccountArtifacts(ctx, userID)
+	if artErr != nil {
+		fmt.Printf("retention purge: collect pro artifacts for %s failed: %v\n", userID, artErr)
 	}
 	if err := a.store.DeleteProAccount(ctx, userID); err != nil {
 		return err
 	}
-	if k := media.ObjectKeyFromURL(a.cfg, avatarURL); k != "" {
-		a.purgeMediaObjects(ctx, []string{k})
+	a.billing.CancelUserSubscriptions(ctx, artifacts.SubscriptionIDs)
+	keys := artifacts.MediaObjectKeys
+	for _, u := range artifacts.MediaURLs {
+		if k := media.ObjectKeyFromURL(a.cfg, u); k != "" {
+			keys = append(keys, k)
+		}
 	}
+	a.purgeMediaObjects(ctx, keys)
 	return nil
 }

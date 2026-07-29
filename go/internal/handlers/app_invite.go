@@ -26,6 +26,7 @@ func (a *API) registerAppInviteRoutes(r chi.Router, rateLimit func(http.Handler)
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Get("/me/app-invite", a.getMeAppInvite)
 		pr.Get("/vet/app-invite", a.getVetAppInvite) // alias (vet-only) for Nuxt clients
 		pr.Post("/me/vets/claim-invite", a.claimVetAppInvite)

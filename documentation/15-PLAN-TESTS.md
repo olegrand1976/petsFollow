@@ -659,10 +659,13 @@ Fichier : `go/internal/handlers/filiation_chain_integration_test.go`.
 | F10 | Comm→véto→client | Unassign après F8 | Resolve bascule sur fallback `commercial_referrals` (= A) |
 | F10b | Comm→véto→client | Unassign après F9 (était C) | Resolve bascule sur fallback A (pas silent 0) |
 | F11 | Comm→véto→client | Multi-cabinet CommA + CommB | `Resolve(P_A)=A`, `Resolve(P_B)=B`, `Resolve("")=B` (dernier lien) ; List Effectif aligné par practice |
-| F12 | RGPD | Client avec `commercial_referrals` | `GET /me/export` → `commercialReferrals`, `clientReferrals`, **`filiationEvents` (contenu)** ; `DELETE /me` purge referrals **et** events |
+| F12 | RGPD | Client avec `commercial_referrals` | `GET /me/export` → `commercialReferrals`, `clientReferrals`, **`filiationEvents` (contenu)**, **`petDocuments`**, **`deviceTokens`** ; `DELETE /me` purge referrals **et** events |
 | F13 | Commission | Multi-cabinet Accrue 2 pets | ledger `subscription_pct` → CommA sur P_A, CommB sur P_B |
 | F14 | Audit | Encode / referral / claim / unassign / **re-assign** / accept-link | `filiation_events` : `vet_assigned`, `client_referral`, **`practice_client_linked`**, `vet_unassigned` (re-assign émet unassign+assign) |
 | F15 | RGPD pro | `DELETE /me` commercial | purge `filiation_events` + clear `assigned_commercial_id` + `commercial_referrals` |
+| F16 | RGPD staff | `DELETE /me` `vet_assistant` / `secretary` | tombstone (pas 404) ; rétention inclut ces rôles |
+| F17 | RGPD dual | care_pro + pet `owner_user_id` | `DELETE /me` purge pets puis tombstone |
+| F18 | RGPD consent | client `terms_accepted_at` NULL | `POST /me/accept-terms` `{consent:true}` → `termsAcceptedAt` ; **API 403** hors allowlist (`/pets`…) jusqu’à accept |
 
 #### Vue filiation (API + Pro UI)
 

@@ -7,6 +7,7 @@ Legend: `✓` covered · `·` not yet · `~` partial
 | Login email/mdp + erreurs | · | ✓ | ✓ | `login_screen_test` + smoke |
 | Forgot / reset / confirm | · | ~ | · | confirm partiel ; resend depuis login (`login_resend_confirmation`) |
 | Register + consent | · | ~ | · | social buttons existants |
+| Accept terms (provisionné) | · | ✓ | · | `accept_terms_screen_test` (checkbox + POST) |
 | Home HR / poids keys | · | ✓ | · | `pet_quick_actions_test` |
 | Weight sheet validate/save | ✓ | ✓ | ✓ | min 0.01 + POST mock + smoke |
 | Pet.weightKg parse | ✓ | · | · | `pet_weight_test` |

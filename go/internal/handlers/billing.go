@@ -28,6 +28,7 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Post("/pets/{petID}/billing/checkout", a.resumePetCheckout)
 		pr.Post("/pets/{petID}/billing/portal", a.petBillingPortal)
 		pr.Get("/pets/{petID}/entitlement", a.getPetEntitlement)

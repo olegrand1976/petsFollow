@@ -36,6 +36,8 @@ Index des documents de référence du projet.
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
 | 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | **Plan** facturation Peppol Billit (88 € tout compris) — socle mock + live code ; pilote sandbox ops |
 | 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | **Plan technique** Billit reseller — multi-pays, client HTTP, webhook HMAC — livré mock/CI |
+| 35 | [35-ORDONNANCES.md](35-ORDONNANCES.md) | Ordonnances V1 (brouillons + PDF) — module tag `dev` |
+| 36 | [36-RGPD.md](36-RGPD.md) | RGPD technique — export/effacement, Web↔Flutter, checklist ops |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

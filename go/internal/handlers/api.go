@@ -132,6 +132,7 @@ func (a *API) Routes(r chi.Router) {
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		a.registerPharmacyMedicationRoutes(pr)
 		a.registerPharmacyStockRoutes(pr)
 		a.registerPharmacyDAFRoutes(pr)
@@ -142,6 +143,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Patch("/me/password", a.changeMePassword)
 		pr.Delete("/me", a.deleteMe)
 		pr.Get("/me/export", a.exportMe)
+		pr.Post("/me/accept-terms", a.acceptMeTerms)
 		pr.Patch("/me/locale", a.updateMeLocale)
 		a.registerProfileRoutes(pr)
 		pr.Get("/me/vets", a.listMyVets)

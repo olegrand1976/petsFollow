@@ -1101,5 +1101,11 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 
 	log.Println("Équipe VetPlus : vet.colleague@ / vet.assist@ / secretary.demo@ (mdp véto)")
 	log.Println("Modules UI ON : client.demo (care+/horse/kennel/family)")
+	// Comptes démo = consentement CGU déjà accepté (évite le gate Flutter accept-terms).
+	if _, err := pool.Exec(ctx, `
+		UPDATE identity.users SET terms_accepted_at = COALESCE(terms_accepted_at, NOW())
+		WHERE email LIKE '%@petsfollow.test'`); err != nil {
+		return err
+	}
 	return nil
 }

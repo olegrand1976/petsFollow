@@ -150,6 +150,40 @@ func (a *API) deleteProMe(w http.ResponseWriter, r *http.Request, userID string)
 	httpx.WriteData(w, http.StatusOK, map[string]any{"ok": true})
 }
 
+// acceptMeTerms — consentement CGU/privacy pour comptes provisionnés (art. 7).
+func (a *API) acceptMeTerms(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	var req struct {
+		Consent bool `json:"consent"`
+	}
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if !req.Consent {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
+		return
+	}
+	if err := a.store.AcceptUserTerms(r.Context(), id.UserID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "user_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	data, err := a.store.GetUserMe(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, data)
+}
+
 // exportMe — portabilité RGPD (art. 20) : export JSON des données du compte.
 func (a *API) exportMe(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
@@ -157,7 +191,7 @@ func (a *API) exportMe(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	data, err := a.store.ExportUserData(r.Context(), id.UserID, id.Role == kernel.RoleClient)
+	data, err := a.store.ExportUserData(r.Context(), id.UserID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "user_not_found")

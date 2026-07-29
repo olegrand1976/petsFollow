@@ -71,6 +71,7 @@
         <ProButton type="submit" :loading="saving">{{ $t('commercial.settings.save') }}</ProButton>
       </form>
     </ProCard>
+    <ProPrivacyAccountCard class="pro-mt-lg" />
   </div>
 </template>
 

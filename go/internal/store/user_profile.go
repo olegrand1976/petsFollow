@@ -180,9 +180,33 @@ func IsTombstoneEmail(email string) bool {
 	return strings.HasSuffix(email, tombstoneEmailSuffix)
 }
 
-// DeleteProAccount anonymise un compte Pro (vet / commercial / commercial_manager / care_pro) :
-// les données personnelles sont effacées et le login désactivé ; les données cliniques
-// rattachées au cabinet (visites, CR) sont conservées pour leur intégrité.
+// purgeClientOwnedDataExec efface les données détenues en tant que client
+// (pets, messagerie, liens cabinet, referrals) sans supprimer la ligne users.
+// Utilisé par DeleteClientAccount et DeleteProAccount (dual profil care_pro).
+func purgeClientOwnedDataExec(ctx context.Context, tx pgx.Tx, userID string) error {
+	stmts := []string{
+		`DELETE FROM pets.pets WHERE owner_user_id = $1`,
+		`DELETE FROM messaging.threads WHERE client_user_id = $1`,
+		`DELETE FROM practice.vet_leads WHERE client_user_id = $1`,
+		`DELETE FROM practice.practice_clients WHERE client_user_id = $1`,
+		`DELETE FROM practice.client_referrals
+			WHERE referred_client_user_id = $1 OR sponsor_client_user_id = $1`,
+		`DELETE FROM practice.commercial_referrals WHERE client_user_id = $1`,
+		`DELETE FROM practice.filiation_events
+			WHERE client_user_id = $1 OR actor_user_id = $1`,
+	}
+	for _, q := range stmts {
+		if _, err := tx.Exec(ctx, q, userID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteProAccount anonymise un compte Pro (vet / assistant / secretary /
+// commercial / commercial_manager / care_pro) : données personnelles effacées,
+// login désactivé ; données cliniques cabinet (visites, CR) conservées.
+// Si le compte possède aussi des données client (dual profil), elles sont purgées.
 func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -204,6 +228,10 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 		DELETE FROM practice.commercial_referrals WHERE commercial_user_id = $1`, userID); err != nil {
 		return err
 	}
+	// Dual profil : purger pets / threads client avant tombstone (art. 17).
+	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
+		return err
+	}
 	tag, err := tx.Exec(ctx, `
 		UPDATE identity.users SET
 			email = 'deleted+' || id || '`+tombstoneEmailSuffix+`',
@@ -217,7 +245,9 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 			email_verified_at = NULL,
 			assigned_commercial_id = NULL,
 			contact_phone = ''
-		WHERE id = $1 AND role IN ('vet','commercial','commercial_manager','care_pro')`, userID)
+		WHERE id = $1 AND role IN (
+			'vet','vet_assistant','secretary','commercial','commercial_manager','care_pro'
+		)`, userID)
 	if err != nil {
 		return err
 	}
@@ -227,10 +257,10 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
 		return err
 	}
-	// Purge attribution audit rows tied to this pro (commercial / vet / actor).
+	// Attribution restante (commercial / vet) — actor/client déjà purgés ci-dessus.
 	if _, err := tx.Exec(ctx, `
 		DELETE FROM practice.filiation_events
-		WHERE commercial_user_id = $1 OR vet_user_id = $1 OR actor_user_id = $1`, userID); err != nil {
+		WHERE commercial_user_id = $1 OR vet_user_id = $1`, userID); err != nil {
 		return err
 	}
 	// Unlink authorship on practice invoices (cabinet keeps counterparty / fiscal records).
@@ -255,29 +285,7 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM pets.pets WHERE owner_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `DELETE FROM messaging.threads WHERE client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `DELETE FROM practice.vet_leads WHERE client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `DELETE FROM practice.practice_clients WHERE client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `
-		DELETE FROM practice.client_referrals
-		WHERE referred_client_user_id = $1 OR sponsor_client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `DELETE FROM practice.commercial_referrals WHERE client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `
-		DELETE FROM practice.filiation_events
-		WHERE client_user_id = $1 OR actor_user_id = $1`, userID); err != nil {
+	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
 	tag, err := tx.Exec(ctx, `DELETE FROM identity.users WHERE id = $1 AND role = 'client'`, userID)
@@ -288,6 +296,31 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 		return ErrNotFound
 	}
 	return tx.Commit(ctx)
+}
+
+// AcceptUserTerms horodate le consentement CGU/privacy (clients provisionnés / import).
+func (s *Store) AcceptUserTerms(ctx context.Context, userID string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE identity.users SET terms_accepted_at = COALESCE(terms_accepted_at, NOW())
+		WHERE id = $1`, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// UserHasAcceptedTerms — true si terms_accepted_at est renseigné.
+func (s *Store) UserHasAcceptedTerms(ctx context.Context, userID string) (bool, error) {
+	var accepted bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT terms_accepted_at IS NOT NULL FROM identity.users WHERE id = $1`, userID).Scan(&accepted)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, ErrNotFound
+	}
+	return accepted, err
 }
 
 func (s *Store) UpdateEmailPrefs(ctx context.Context, vetID string, onMessage, onHeartRate, onVisitRequest bool) error {
