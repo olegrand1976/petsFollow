@@ -33,15 +33,16 @@
           <p class="pro-page-header__subtitle">{{ $t('consultationPublic.subtitle') }}</p>
           <p v-if="meta.expiresAt" class="pro-hint">{{ $t('consultationPublic.expires', { when: formatWhen(meta.expiresAt) }) }}</p>
 
-          <ProButton
-            block
-            :loading="downloading"
-            test-id="consultation-download"
-            @click="download"
+          <!-- Lien direct (pas de blob URL) : fiable sur iOS Safari / Android. -->
+          <a
+            class="pro-btn pro-btn--primary pro-btn--block"
+            :href="downloadHref"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="consultation-download"
           >
             {{ $t('consultationPublic.downloadCta') }}
-          </ProButton>
-          <p v-if="downloadError" class="pro-field-error" role="alert">{{ downloadError }}</p>
+          </a>
 
           <div class="pro-mt-lg">
             <h2 class="pro-h3">{{ $t('consultationPublic.marketingTitle') }}</h2>
@@ -91,12 +92,15 @@ type ConsultationMeta = {
 }
 
 const loading = ref(true)
-const downloading = ref(false)
 const expired = ref(false)
 const error = ref('')
-const downloadError = ref('')
 const meta = ref<ConsultationMeta | null>(null)
 const registerUrl = ref('')
+
+const token = computed(() => String(route.params.token || ''))
+const downloadHref = computed(
+  () => `/api/public/consultation/${encodeURIComponent(token.value)}/download`,
+)
 
 function formatWhen(iso: string) {
   try {
@@ -107,9 +111,8 @@ function formatWhen(iso: string) {
 }
 
 onMounted(async () => {
-  const token = String(route.params.token || '')
   try {
-    const res: any = await $fetch(`/api/public/consultation/${encodeURIComponent(token)}`)
+    const res: any = await $fetch(`/api/public/consultation/${encodeURIComponent(token.value)}`)
     meta.value = res.data ?? res
     registerUrl.value = meta.value?.registerUrl || ''
   } catch (e: any) {
@@ -124,33 +127,4 @@ onMounted(async () => {
     loading.value = false
   }
 })
-
-async function download() {
-  downloadError.value = ''
-  downloading.value = true
-  const token = String(route.params.token || '')
-  try {
-    const blob = await $fetch<Blob>(`/api/public/consultation/${encodeURIComponent(token)}/download`, {
-      responseType: 'blob',
-    })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `consultation-${meta.value?.petName || 'animal'}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-  } catch (e: any) {
-    const status = e?.statusCode || e?.status || e?.response?.status
-    if (status === 410) {
-      expired.value = true
-      meta.value = null
-    } else {
-      downloadError.value = mapError(e) || t('consultationPublic.downloadError')
-    }
-  } finally {
-    downloading.value = false
-  }
-}
 </script>

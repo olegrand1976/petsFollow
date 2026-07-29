@@ -147,6 +147,9 @@ func TestClientConsultationReadAndShare(t *testing.T) {
 	if !strings.Contains(rec.Header().Get("Content-Type"), "pdf") {
 		t.Fatalf("content-type=%q", rec.Header().Get("Content-Type"))
 	}
+	if cd := rec.Header().Get("Content-Disposition"); !strings.Contains(cd, "inline") {
+		t.Fatalf("expected inline disposition, got %q", cd)
+	}
 	if string(rec.Body.Bytes()[:5]) != "%PDF-" {
 		t.Fatalf("pdf magic %q", rec.Body.Bytes()[:5])
 	}
