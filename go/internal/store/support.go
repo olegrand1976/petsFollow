@@ -179,7 +179,7 @@ func (s *Store) CreateSupportTicket(ctx context.Context, in CreateSupportTicketI
 
 const MaxSupportSearchLen = 100
 
-func (s *Store) ListSupportTickets(ctx context.Context, status, search string, limit, offset int) ([]SupportTicket, int, error) {
+func (s *Store) ListSupportTickets(ctx context.Context, status, source, search string, limit, offset int) ([]SupportTicket, int, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
@@ -187,6 +187,7 @@ func (s *Store) ListSupportTickets(ctx context.Context, status, search string, l
 		offset = 0
 	}
 	status = strings.TrimSpace(status)
+	source = normalizeSupportSource(source)
 	search = strings.TrimSpace(search)
 	if utf8.RuneCountInString(search) > MaxSupportSearchLen {
 		runes := []rune(search)
@@ -201,6 +202,13 @@ func (s *Store) ListSupportTickets(ctx context.Context, status, search string, l
 		}
 		args = append(args, status)
 		conds = append(conds, "t.status = $"+strconv.Itoa(len(args)))
+	}
+	if source != "" {
+		if !validSupportSources[source] {
+			return nil, 0, ErrValidation
+		}
+		args = append(args, source)
+		conds = append(conds, "t.source = $"+strconv.Itoa(len(args)))
 	}
 	if search != "" {
 		args = append(args, "%"+escapeILIKE(search)+"%")
@@ -451,4 +459,70 @@ func (s *Store) ListSupportTicketsForExport(ctx context.Context, userID string) 
 		return nil, err
 	}
 	return json.RawMessage(raw), nil
+}
+
+// SupportTicketStats — agrégats inbox ops (admin / DEV).
+type SupportTicketStats struct {
+	ByStatus       map[string]int `json:"byStatus"`
+	BySource       map[string]int `json:"bySource"`
+	OpenOlderThan24h int          `json:"openOlderThan24h"`
+	OpenOlderThan7d  int          `json:"openOlderThan7d"`
+	Total          int            `json:"total"`
+}
+
+func (s *Store) SupportTicketStats(ctx context.Context) (SupportTicketStats, error) {
+	out := SupportTicketStats{
+		ByStatus: map[string]int{},
+		BySource: map[string]int{},
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT status, COUNT(*)::int FROM ops.support_tickets GROUP BY status`)
+	if err != nil {
+		return out, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var st string
+		var n int
+		if err := rows.Scan(&st, &n); err != nil {
+			return out, err
+		}
+		out.ByStatus[st] = n
+		out.Total += n
+	}
+	if err := rows.Err(); err != nil {
+		return out, err
+	}
+
+	srcRows, err := s.pool.Query(ctx, `
+		SELECT source, COUNT(*)::int FROM ops.support_tickets GROUP BY source`)
+	if err != nil {
+		return out, err
+	}
+	defer srcRows.Close()
+	for srcRows.Next() {
+		var src string
+		var n int
+		if err := srcRows.Scan(&src, &n); err != nil {
+			return out, err
+		}
+		out.BySource[src] = n
+	}
+	if err := srcRows.Err(); err != nil {
+		return out, err
+	}
+
+	now := time.Now().UTC()
+	err = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM ops.support_tickets
+		WHERE status IN ('open', 'in_progress') AND created_at < $1`,
+		now.Add(-24*time.Hour)).Scan(&out.OpenOlderThan24h)
+	if err != nil {
+		return out, err
+	}
+	err = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM ops.support_tickets
+		WHERE status IN ('open', 'in_progress') AND created_at < $1`,
+		now.Add(-7*24*time.Hour)).Scan(&out.OpenOlderThan7d)
+	return out, err
 }

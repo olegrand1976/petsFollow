@@ -34,7 +34,7 @@ func TestSMTPConfirmFailCreatesSystemAlertTicket(t *testing.T) {
 	st := store.New(api.pool)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	tickets, total, err := st.ListSupportTickets(ctx, store.SupportStatusOpen, "ALERT/URGENT", 20, 0)
+	tickets, total, err := st.ListSupportTickets(ctx, store.SupportStatusOpen, "", "ALERT/URGENT", 20, 0)
 	if err != nil {
 		t.Fatalf("list tickets: %v", err)
 	}

@@ -11,7 +11,7 @@ Environnement : **staging** (ou seed local).
 | Client | `ClientDemo123!` |
 | Care pro (Pro Light) | `CareProDemo123!` |
 | Commercial / manager | `CommercialDemo123!` |
-| Admin | `AdminDemo123!` |
+| Admin / DEV | `AdminDemo123!` |
 
 ## Comptes utilisés dans les UC
 
@@ -27,6 +27,7 @@ Environnement : **staging** (ou seed local).
 | Commercial Camille | `commercial.demo@petsfollow.test` | Web Commercial | CO-*, X-07 |
 | Manager | `commercial.manager@petsfollow.test` | Web Manager | CM-01 |
 | Admin | `admin.demo@petsfollow.test` | Web Admin | AD-01 |
+| DEV support IT | `dev.demo@petsfollow.test` | Web Admin (ops) | AD-02 |
 | Client riche | `client.demo@petsfollow.test` | Flutter Client | CL-01/03, X-01…03, X-06 (Spirit seed), X-08 |
 | Client vide | `client.vide@petsfollow.test` | Flutter Client | **CL-02 uniquement** (**Destructif**) |
 

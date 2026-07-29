@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Ricette",
     "commercialAsvMemo": "Memo ASV",
-    "commercialBrochure": "Brochure clinica"
+    "commercialBrochure": "Brochure clinica",
+    "adminRuntimeFlags": "Flag runtime"
   },
   "training": {
     "title": "Allenamento AI",
@@ -1659,7 +1660,9 @@
       "stagingSeedOk": "Database staging reimpostato. {n} email staff inviati.",
       "stagingSeedOkNoEmail": "Database staging reimpostato (nessuna email staff inviata).",
       "stagingSeedFail": "Reimpostazione non riuscita.",
-      "stagingSeedStatusFail": "Impossibile verificare se il reset staging è disponibile."
+      "stagingSeedStatusFail": "Impossibile verificare se il reset staging è disponibile.",
+      "devTitle": "Ops supporto IT",
+      "devSubtitle": "Ticket, account e diagnostica (senza billing)."
     },
     "users": {
       "title": "Iscrizioni",
@@ -2112,7 +2115,16 @@
       "loadError": "Impossibile caricare i ticket di supporto.",
       "searchLabel": "Ricerca",
       "searchPlaceholder": "Oggetto, email o nome…",
-      "searchSubmit": "Cerca"
+      "searchSubmit": "Cerca",
+      "statsOpen": "Aperti",
+      "statsInProgress": "In corso",
+      "statsResolved": "Risolti",
+      "statsClosed": "Chiusi",
+      "statsOpen24h": "Aperti > 24 h",
+      "statsOpen7d": "Aperti > 7 g",
+      "filterAllSources": "Tutte le fonti",
+      "patchError": "Impossibile aggiornare lo stato.",
+      "kanbanTruncated": "Kanban troncato: {shown}/{total} ticket (limite {limit}). Affina i filtri o passa alla tabella."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -2186,6 +2198,14 @@
       "saasEnableConfirm": "Attivare la fatturazione SaaS (Flux A) per « {name} »? Il cron mensile creerà bozze.",
       "saasEnableOk": "Flux A attivato per questa struttura",
       "saasEnableError": "Attivazione Flux A non riuscita"
+    },
+    "runtimeFlags": {
+      "title": "Flag runtime",
+      "subtitle": "Configurazione applicativa (sola lettura, senza secret).",
+      "empty": "Nessun flag.",
+      "loadError": "Impossibile caricare i flag.",
+      "colFlag": "Flag",
+      "colValue": "Valore"
     }
   },
   "calendar": {
@@ -2354,8 +2374,7 @@
     "reportTranscriptHint": "Dettatura o note grezze…",
     "reportDirtyHint": "Modifiche non salvate.",
     "reportDiscardEdits": "Annulla modifiche",
-    "reportStatusFinal": "Finalizzato",
-    "reportStatusDraft": "Bozza"
+    "reportStatusFinal": "Finalizzato"
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -2793,7 +2812,19 @@
       "profileMenu": "Menù profilo",
       "settings": "Parametri",
       "themeDark": "Abilita la modalità oscura",
-      "themeLight": "Abilita la modalità luce"
+      "themeLight": "Abilita la modalità luce",
+      "switchProfile": "Cambia profilo",
+      "activeProfile": "Attivo",
+      "switchProfileError": "Cambio profilo non riuscito.",
+      "profileRole_dev": "DEV support",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Veterinario",
+      "profileRole_vet_assistant": "Assistente",
+      "profileRole_secretary": "Segreteria",
+      "profileRole_commercial": "Commerciale",
+      "profileRole_commercial_manager": "Manager commerciale",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Cliente"
     },
     "table": {
       "emptyTitle": "Nessun dato"

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -19,6 +20,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/admin/metrics/overview", a.adminMetricsOverview)
+		pr.Get("/admin/runtime-flags", a.adminRuntimeFlags)
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
@@ -570,6 +572,18 @@ func (a *API) requireAdmin(w http.ResponseWriter, r *http.Request) (authx.Identi
 	return id, true
 }
 
+// requireAdminOrDev allows admin and DEV for support-IT surfaces only
+// (users list, support tickets, runtime flags). Sales mutations, metrics/billing
+// and staging seed stay requireAdmin.
+func (a *API) requireAdminOrDev(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || !kernel.IsOpsRole(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "ops_only")
+		return authx.Identity{}, false
+	}
+	return id, true
+}
+
 func (a *API) adminMetricsOverview(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requireAdmin(w, r); !ok {
 		return
@@ -583,8 +597,29 @@ func (a *API) adminMetricsOverview(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, m)
 }
 
+func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"appEnv":                 strings.TrimSpace(os.Getenv("APP_ENV")),
+		"devSeedEnabled":         a.cfg.DevSeedEnabled,
+		"adminStagingSeedEnabled": a.cfg.AdminStagingSeedEnabled,
+		"billingMockEnabled":     a.cfg.BillingMockEnabled,
+		"fcmEnabled":             a.cfg.FCMEnabled,
+		"pharmacyEnabled":        a.cfg.PharmacyEnabled,
+		"pharmacyWorkersEnabled": a.cfg.PharmacyWorkersEnabled,
+		"prescriptionsEnabled":   a.cfg.PrescriptionsEnabled,
+		"billitEnabled":          a.cfg.BillitEnabled,
+		"billitMockEnabled":      a.cfg.BillitMockEnabled,
+		"mlmOrgEnabled":          a.cfg.MLMOrgEnabled,
+		"careProPublicRegister":  a.cfg.CareProPublicRegister,
+		"vamregDryRun":           a.cfg.VamregDryRun,
+	})
+}
+
 func (a *API) adminListUsers(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	from, to := parseAdminRange(r)

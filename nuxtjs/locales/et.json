@@ -75,7 +75,8 @@
     "daf": "DAF",
     "prescriptions": "Retseptid",
     "commercialAsvMemo": "ASV memo",
-    "commercialBrochure": "Kliiniku brošüür"
+    "commercialBrochure": "Kliiniku brošüür",
+    "adminRuntimeFlags": "Runtime lipud"
   },
   "auth": {
     "login": {
@@ -1092,7 +1093,9 @@
       "stagingSeedOk": "Staging-andmebaas lähtestatud. {n} personali e-kirja saadetud.",
       "stagingSeedOkNoEmail": "Staging-andmebaas lähtestatud (ühtegi personali e-kirja ei saadetud).",
       "stagingSeedFail": "Lähtestamine ebaõnnestus.",
-      "stagingSeedStatusFail": "Ei saanud kontrollida, kas stagingi lähtestamine on saadaval."
+      "stagingSeedStatusFail": "Ei saanud kontrollida, kas stagingi lähtestamine on saadaval.",
+      "devTitle": "IT-toe ops",
+      "devSubtitle": "Piletid, kontod ja diagnostika (ilma arvelduseta)."
     },
     "users": {
       "title": "Registreerimised",
@@ -1545,7 +1548,16 @@
       "loadError": "Tugipiletite laadimine ebaõnnestus.",
       "searchLabel": "Otsing",
       "searchPlaceholder": "Teema, e-post või nimi…",
-      "searchSubmit": "Otsi"
+      "searchSubmit": "Otsi",
+      "statsOpen": "Avatud",
+      "statsInProgress": "Töös",
+      "statsResolved": "Lahendatud",
+      "statsClosed": "Suletud",
+      "statsOpen24h": "Avatud > 24 h",
+      "statsOpen7d": "Avatud > 7 p",
+      "filterAllSources": "Kõik allikad",
+      "patchError": "Oleku muutmine ebaõnnestus.",
+      "kanbanTruncated": "Kanban kärbitud: {shown}/{total} piletit (limiit {limit}). Täpsustage filtreid või kasutage tabelit."
     },
     "vetPool": {
       "title": "Unassigned practices pool",
@@ -1619,6 +1631,14 @@
       "saasEnableConfirm": "Aktiveeri SaaS-arveldus (Flux A) „{name}” jaoks? Igakuine cron loob mustandid.",
       "saasEnableOk": "Flux A aktiveeritud",
       "saasEnableError": "Flux A aktiveerimine ebaõnnestus"
+    },
+    "runtimeFlags": {
+      "title": "Runtime lipud",
+      "subtitle": "Rakenduse seadistus (ainult lugemine, ilma saladusteta).",
+      "empty": "Lippe pole.",
+      "loadError": "Lippude laadimine ebaõnnestus.",
+      "colFlag": "Lipp",
+      "colValue": "Väärtus"
     }
   },
   "commissions": {
@@ -2010,7 +2030,19 @@
       "profileMenu": "Profiilimenüü",
       "settings": "Seaded",
       "themeDark": "Lülita tume režiim sisse",
-      "themeLight": "Lülita hele režiim sisse"
+      "themeLight": "Lülita hele režiim sisse",
+      "switchProfile": "Vaheta profiili",
+      "activeProfile": "Aktiivne",
+      "switchProfileError": "Profiili vahetamine ebaõnnestus.",
+      "profileRole_dev": "DEV tugi",
+      "profileRole_admin": "Admin",
+      "profileRole_vet": "Loomaarst",
+      "profileRole_vet_assistant": "Assistent",
+      "profileRole_secretary": "Sekretär",
+      "profileRole_commercial": "Müük",
+      "profileRole_commercial_manager": "Müügijuht",
+      "profileRole_care_pro": "Care pro",
+      "profileRole_client": "Klient"
     },
     "table": {
       "emptyTitle": "Andmeid pole"
@@ -2833,8 +2865,7 @@
     "reportTranscriptHint": "Dikteering või toored märkmed…",
     "reportDirtyHint": "Salvestamata muudatused.",
     "reportDiscardEdits": "Tühista muudatused",
-    "reportStatusFinal": "Lõplik",
-    "reportStatusDraft": "Mustand"
+    "reportStatusFinal": "Lõplik"
   },
   "manager": {
     "dashboard": {

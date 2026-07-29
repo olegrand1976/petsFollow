@@ -21,6 +21,7 @@ func (a *API) registerSupportRoutes(r chi.Router) {
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Post("/support/tickets", a.createSupportTicket)
+		pr.Get("/admin/support/stats", a.adminSupportTicketStats)
 		pr.Get("/admin/support/tickets", a.adminListSupportTickets)
 		pr.Get("/admin/support/tickets/{id}", a.adminGetSupportTicket)
 		pr.Patch("/admin/support/tickets/{id}", a.adminPatchSupportTicket)
@@ -129,17 +130,18 @@ func (a *API) createSupportTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) adminListSupportTickets(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	status := r.URL.Query().Get("status")
+	source := r.URL.Query().Get("source")
 	q := r.URL.Query().Get("q")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
-	items, total, err := a.store.ListSupportTickets(r.Context(), status, q, limit, offset)
+	items, total, err := a.store.ListSupportTickets(r.Context(), status, source, q, limit, offset)
 	if err != nil {
 		if errors.Is(err, store.ErrValidation) {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_filter")
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -160,8 +162,20 @@ func (a *API) adminListSupportTickets(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (a *API) adminSupportTicketStats(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	stats, err := a.store.SupportTicketStats(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, stats)
+}
+
 func (a *API) adminGetSupportTicket(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -182,7 +196,7 @@ type patchSupportTicketReq struct {
 }
 
 func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -212,7 +226,7 @@ type replySupportTicketReq struct {
 }
 
 func (a *API) adminReplySupportTicket(w http.ResponseWriter, r *http.Request) {
-	admin, ok := a.requireAdmin(w, r)
+	admin, ok := a.requireAdminOrDev(w, r)
 	if !ok {
 		return
 	}
