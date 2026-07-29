@@ -280,8 +280,8 @@ Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 | D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
 | D16 | P1 | Alertes auth ALERT/URGENT | SMTP confirm fail / stuck unverified | Ticket `source=system` + email `OPS_NOTIFY_EMAIL` · Go `TestSMTPConfirmFailCreatesSystemAlertTicket` · job `POST /internal/auth-health/run` |
 | D15 | P2 | Catalogue Stripe | Admin catalogue Stripe | ACL : véto refusé |
-| D17 | P0 | Rôle DEV support IT | Login `dev.demo` → `/admin/users` + `/admin/support` + `/admin/runtime-flags` | 200 ; nav sans billing/sales/brand/AI · Go `TestDevRole*` · UC-AD-02 |
-| D17b | P0 | DEV billing/sales gate | DEV → `/admin/payments` (API) + `/admin/commercials` | 403 · nav absente |
+| D17 | P0 | Rôle DEV support IT | Login `dev.demo` → `/admin/users` + `/admin/support` + `/admin/runtime-flags` | 200 ; nav sans billing/sales/brand/AI · Go `TestDevRole*` · Playwright `19-dev-support` · UC-AD-02 |
+| D17b | P0 | DEV billing/sales gate | DEV → `/admin/payments` + `/admin/commercials` | redirect home `/admin` (middleware `admin-only`) · API 403 · Playwright `19-dev-support` |
 
 ---
 

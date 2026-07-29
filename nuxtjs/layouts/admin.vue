@@ -39,14 +39,12 @@ const isDevRole = computed(() => user.value?.role === 'dev')
 const navItems = computed<ProNavItem[]>(() => {
   // DEV = support IT léger : tickets, users, flags (pas sales / brand / AI / billing).
   if (isDevRole.value) {
+    // Pas de /usecases : middleware staging-usecases = admin/commercial/manager seulement.
     return [
       { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin', section: t('nav.section.ops') },
       { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
       { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
       { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
-      ...(isStagingLike.value
-        ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
-        : []),
     ]
   }
   return [
