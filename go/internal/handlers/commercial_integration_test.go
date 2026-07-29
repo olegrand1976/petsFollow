@@ -48,6 +48,15 @@ func prospectListItems(t *testing.T, env map[string]any) []any {
 }
 
 func loginToken(t *testing.T, h http.Handler, email, password string) string {
+	return loginTokenOpts(t, h, email, password, true)
+}
+
+// loginTokenRaw logs in without auto-accepting CGU (for RGPD consent-gate tests).
+func loginTokenRaw(t *testing.T, h http.Handler, email, password string) string {
+	return loginTokenOpts(t, h, email, password, false)
+}
+
+func loginTokenOpts(t *testing.T, h http.Handler, email, password string, acceptClientTerms bool) string {
 	t.Helper()
 	code, env := doJSON(t, h, http.MethodPost, "/api/v1/auth/login", map[string]any{
 		"email": email, "password": password,
@@ -59,8 +68,11 @@ func loginToken(t *testing.T, h http.Handler, email, password string) string {
 	if token == "" {
 		t.Fatal("missing accessToken")
 	}
+	if !acceptClientTerms {
+		return token
+	}
 	// Provisioned clients (vet/commercial create) start with termsAcceptedAt null;
-	// Flutter gates on accept-terms — integration tests accept once after login.
+	// Flutter gates on accept-terms — most integration tests accept once after login.
 	code, env = doAuthJSON(t, h, http.MethodGet, "/api/v1/me", token, nil)
 	if code == http.StatusOK {
 		me := dataMap(t, env)

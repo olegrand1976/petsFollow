@@ -167,7 +167,7 @@ func TestRGPDAcceptTermsProvisionedClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tok := loginToken(t, api.handler, email, password)
+	tok := loginTokenRaw(t, api.handler, email, password)
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("me %d %#v", code, env)
