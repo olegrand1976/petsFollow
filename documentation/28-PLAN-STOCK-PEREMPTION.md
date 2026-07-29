@@ -8,7 +8,7 @@
 | Socle | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) |
 | Roadmap étendue | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) (Phases 2–6 + Phase 0 partenaires) |
 | Dernière revue | 2026-07-29 (S6 : VAMReg/workers env Cloud Run + secret optionnel) |
-| Prochaine action | **S6** smoke staging pilote (stock/DAF/VAMReg dry-run) ; **S5** dès accès reseller Billit (P0-2) ; Phase 2.F / 4.A–B attend P0 |
+| Prochaine action | **S6** re-seed staging + `PETSFOLLOW_API_URL=… bash scripts/smoke-pharmacy-s6.sh` ; **S5** dès accès reseller Billit (**P0-2** — en attente, pas de code) ; Phase 2.F / 4.A–B attend P0 |
 
 Légende : ✅ fait · 🟡 partiel / prérequis réutilisable · ⬜ à faire · ❌ hors scope Phase 1
 
@@ -212,7 +212,7 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | Décisions péremption / FEFO / digests / tag `dev` / bloc légal | ✅ |
 | Feature flag nommé `PHARMACY_ENABLED` (décision) | ✅ |
 | Flag réellement branché dans config Go / Nuxt | ✅ |
-| Extension Cloud SQL `pg_trgm` | 🟡 — requise avant migrate staging (user cloudsqlsuperuser si besoin) ; `unaccent` non utilisée (normalize Go) |
+| Extension Cloud SQL `pg_trgm` | ✅ — `medications/search` (ops `%` / `similarity`) HTTP 200 staging 2026-07-29 |
 
 **Done when (restant)** : rien bloquant — passer Sprint 1.
 
@@ -313,8 +313,8 @@ Schéma `pharmacy` — détail colonnes : doc 27 + extensions péremption ci-des
 | Secrets SM + env Cloud Run (expiry) | ✅ |
 | Env `VAMREG_DRY_RUN` + `PHARMACY_WORKERS_ENABLED` Cloud Run | ✅ (`deploy-run-args.sh`) |
 | Secret optionnel `petsfollow-vamreg-api-key` → `VAMREG_API_KEY` | ✅ (branché si présent) |
-| `pg_trgm` Cloud SQL | 🟡 à vérifier à migrate (doc 10) |
-| Smoke staging pilote stock/DAF/VAMReg dry-run | ⬜ manuel |
+| `pg_trgm` Cloud SQL | ✅ vérifié 2026-07-29 (search trigram staging OK) |
+| Smoke staging pilote stock/DAF/VAMReg dry-run | 🟡 MVP `make smoke-staging` ✅ · chemin pharmacie : script `scripts/smoke-pharmacy-s6.sh` vert **local** ; staging ⬜ catalogue `ref_medications` vide (seed staging fail / import-cnk) |
 | Smoke DAF→Billit | ⏸ (après reseller) |
 | Maj [15-PLAN-TESTS.md](15-PLAN-TESTS.md) P0 | ✅ C7.1–C7.15 + e2e `17-pharmacy-stock-daf` |
 | Use case commercial + `make usecases-sync` | ✅ [UC-VP-05](../useCase/01-vetpro/UC-VP-05-pharmacie-stock-daf.md) |
@@ -342,7 +342,7 @@ Erreurs i18n : `stock_insufficient` · `stock_unavailable_valid_lots` · `batch_
 
 ## 7. Checklist ops staging
 
-- [ ] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
+- [x] Extension Cloud SQL **`pg_trgm`** disponible (créer une fois si migrate échoue)
 - [ ] Migrations `000081`+ appliquées
 - [ ] Import CNK exécuté
 - [ ] `PHARMACY_ENABLED=true` (pilote)

@@ -20,7 +20,7 @@ Sans ces prérequis, les phases techniques restent un « presque conforme ».
 | ID | Livrable | Owner | Statut | Critère de sortie |
 |----|----------|-------|--------|-------------------|
 | P0-1 | Accès / contrat API **VAMReg** (dry-run + calendrier go-live) | Ops / juridique | ⬜ Ouvert | Credentials SM + env test |
-| P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente** | Credentials reseller → débloque S5 + Phase 3 |
+| P0-2 | **Accès reseller Billit** | Ops | 🟡 **En attente — aucun chantier S5/Phase 3 tant que credentials absents** | Credentials reseller → débloque S5 + Phase 3 |
 | P0-3 | Source officielle catalogue **AFMPS / CNK** (licence, cadence maj) | Produit | ⬜ Ouvert | Pipeline `import-cnk` prod-ready |
 | P0-4 | Inventaire obligations **stupéfiants BE** + modèle registre | Produit / juridique | ⬜ Ouvert | Spec figée avant Phase 4.B |
 | P0-5 | Contact / docs API **grossistes** (1 pilote : Covetrus / Alcyon / Crocodil) | Produit | ⬜ Ouvert | Scope Phase 5.A |
@@ -60,7 +60,7 @@ Voir détail d’exécution dans [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PER
 |--------|---------|--------|
 | **S4** VAMReg | `job_audit`, Asynq opt-in, dry-run sync, retry UI | ✅ Dry-run |
 | **S5** DAF→Billit | BIL-9 / invoices.connect | ⏸ **Gelé** (P0-2) |
-| **S6** Ops staging | `PHARMACY_ENABLED`, `VAMREG_DRY_RUN`, workers env, `pg_trgm`, smoke, UC | 🟡 Env/secrets ✅ · smoke manuel ⬜ · UC-VP-05 ✅ |
+| **S6** Ops staging | `PHARMACY_ENABLED`, `VAMREG_DRY_RUN`, workers env, `pg_trgm`, smoke, UC | 🟡 Env/secrets ✅ · `pg_trgm` ✅ · smoke MVP ✅ · smoke pharmacie local ✅ / staging catalogue ⬜ · UC-VP-05 ✅ |
 
 **Done when (chemin stock)** : pilote staging — receipt → DAF → VAMReg dry-run OK.  
 **Done when (chemin facture)** : + draft Billit lié DAF — **après** P0-2.

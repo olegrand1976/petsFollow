@@ -167,6 +167,13 @@ billit-saas-master-smoke:
 smoke-staging:
 	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-test.sh
 
+# Pharmacie S6 : receipt → DAF → VAMReg dry-run → movements (local ou PETSFOLLOW_API_URL=staging).
+smoke-pharmacy-s6:
+	@bash scripts/smoke-pharmacy-s6.sh
+
+smoke-pharmacy-s6-staging:
+	PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/smoke-pharmacy-s6.sh
+
 gcp-github:
 	bash infra/gcp/setup-github-deploy.sh
 
