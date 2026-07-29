@@ -33,7 +33,8 @@ function unwrapId(body: unknown): string {
 test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
   test('POST report-improve + report-finalize ne renvoient pas 404 Nitro', async ({ page }) => {
     test.setTimeout(90000)
-    await loginAsVet(page)
+    // Max / Paul Bernard = Clinique du Parc (pas VetPlus / vet.demo).
+    await loginAsVet(page, 'vet.parc@petsfollow.test')
 
     // Pet hors client.demo (évite de polluer l’historique de 09-pet-detail).
     const petsRes = await page.request.get('/api/vet/pets')
@@ -48,7 +49,7 @@ test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
       /max/i.test(String(p.name || '')) && /paul/i.test(String(p.ownerName || '')),
     ) || pets.find(p => /max/i.test(String(p.name || '')))
     const petId = String(pet?.id || '')
-    expect(petId, 'pet Max (Paul) seed').toBeTruthy()
+    expect(petId, 'pet Max (Paul) seed — Clinique du Parc').toBeTruthy()
 
     let visitId = ''
     for (let attempt = 0; attempt < 4 && !visitId; attempt++) {
