@@ -607,7 +607,8 @@ Surface publique `/dossier/{token}` : `Referrer-Policy: no-referrer` et `X-Robot
 | Expiry | GET meta → 410 |
 | ListVisits | `hasFinalReport: true` sur la visite |
 
-Flutter widget : `consultation_view_test` · Playwright mocké : `17-consultation-public.spec.ts` · UC : `UC-X-09`.
+Flutter widget : `consultation_view_test` (ExpansionTile initiallyExpanded · dédup · filet meta · share) · Playwright mocké : `17-consultation-public.spec.ts` · UC : `UC-X-09`.
+Go timeline : `TestPetTimelineClientHasReportOnFinalCR` · `TestPetTimelineNonOwnerStripsHasReport` · `TestClearTimelineMeta` / `stripClientConsultationFlags*`.
 
 Surface publique `/consultation/{token}` : mêmes headers noindex / no-referrer que `/dossier/**`. Purge : retention job + préfixe media `consultation-shares/`.
 

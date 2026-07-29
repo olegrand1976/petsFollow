@@ -123,8 +123,14 @@ func TestPetTimelineNonOwnerStripsHasReport(t *testing.T) {
 	}
 	item := findTimelineVisit(t, env, visitID)
 	meta, _ := item["meta"].(map[string]any)
-	if meta != nil && meta["hasReport"] == true {
-		t.Fatalf("non-owner must not see hasReport %#v", meta)
+	if meta == nil {
+		t.Fatalf("grantee visit meta missing %#v", item)
+	}
+	if _, ok := meta["hasReport"]; ok {
+		t.Fatalf("non-owner must omit hasReport %#v", meta)
+	}
+	if _, ok := meta["reportStatus"]; ok {
+		t.Fatalf("non-owner must omit reportStatus %#v", meta)
 	}
 }
 

@@ -2,9 +2,28 @@ package petdossier
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func TestTimelineLineHasNoReportFields(t *testing.T) {
+	// Public dossier PDF must never grow hasReport / visitId on timeline rows.
+	rt := reflect.TypeOf(TimelineLine{})
+	if rt.NumField() != 3 {
+		t.Fatalf("TimelineLine fields want 3 (When/Title/Body), got %d", rt.NumField())
+	}
+	for _, name := range []string{"When", "Title", "Body"} {
+		if _, ok := rt.FieldByName(name); !ok {
+			t.Fatalf("TimelineLine missing field %s", name)
+		}
+	}
+	for _, forbidden := range []string{"HasReport", "ReportStatus", "VisitID", "Meta"} {
+		if _, ok := rt.FieldByName(forbidden); ok {
+			t.Fatalf("TimelineLine must not expose %s", forbidden)
+		}
+	}
+}
 
 func TestBuildPDFAndZip(t *testing.T) {
 	pdf, err := BuildPDF(PDFInput{

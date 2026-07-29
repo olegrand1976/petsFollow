@@ -143,6 +143,14 @@ void main() {
 
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
     expect(find.byKey(const Key('timeline_section_consultations')), findsOneWidget);
+    final consultationsTile = tester.widget<ExpansionTile>(
+      find.byKey(const Key('timeline_section_consultations')),
+    );
+    expect(consultationsTile.initiallyExpanded, isTrue);
+    final historyTile = tester.widget<ExpansionTile>(
+      find.byKey(const Key('timeline_section_history')),
+    );
+    expect(historyTile.initiallyExpanded, isFalse);
     await tester.tap(find.byKey(const Key('visit_consultation_tile_$visitId')));
     await tester.pumpAndSettle();
 
@@ -262,6 +270,14 @@ void main() {
 
     expect(find.byKey(const Key('timeline_section_consultations')), findsOneWidget);
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
+    expect(
+      tester.widget<ExpansionTile>(find.byKey(const Key('timeline_section_consultations'))).initiallyExpanded,
+      isTrue,
+    );
+    expect(
+      tester.widget<ExpansionTile>(find.byKey(const Key('timeline_section_history'))).initiallyExpanded,
+      isFalse,
+    );
     // Duplicate visit row must not appear under Historique.
     expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
     expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsNothing);
@@ -272,6 +288,87 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('timeline_item_hr-1')), findsOneWidget);
     expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
+  });
+
+  testWidgets('historique expands by default when no consultations', (tester) async {
+    ApiClient.instance.dio.interceptors.remove(mockInterceptor);
+    mockInterceptor = InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final path = options.uri.path.isNotEmpty ? options.uri.path : options.path;
+        if (options.method == 'GET' && path.contains('/heartrate/sessions')) {
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: {'data': []}),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/visits')) {
+          handler.resolve(
+            Response(requestOptions: options, statusCode: 200, data: {'data': <dynamic>[]}),
+          );
+          return;
+        }
+        if (options.method == 'GET' && path.contains('/pets/$petId/timeline')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': 'hr-1',
+                    'type': 'heartrate',
+                    'title': 'Relevé',
+                    'body': 'BPM: 72',
+                    'createdAt': '2026-01-09T10:00:00Z',
+                    'meta': {},
+                  },
+                ],
+              },
+            ),
+          );
+          return;
+        }
+        if (options.method == 'GET' &&
+            (path.endsWith('/pets/$petId') || path.contains('/pets/$petId?'))) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': {
+                  'id': petId,
+                  'name': 'Bella',
+                  'ownerUserId': 'user-1',
+                  'canWriteNotes': true,
+                },
+              },
+            ),
+          );
+          return;
+        }
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            error: 'unmocked ${options.method} $path',
+          ),
+        );
+      },
+    );
+    ApiClient.instance.dio.interceptors.add(mockInterceptor);
+
+    await pumpApp(
+      tester,
+      home: const PetTimelineScreen(petId: petId, petName: 'Bella', canWriteNotes: false),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byKey(const Key('timeline_section_consultations')), findsNothing);
+    expect(
+      tester.widget<ExpansionTile>(find.byKey(const Key('timeline_section_history'))).initiallyExpanded,
+      isTrue,
+    );
+    expect(find.byKey(const Key('timeline_item_hr-1')), findsOneWidget);
   });
 
   testWidgets('historique visit opens CR when ListVisits lacks hasFinalReport', (tester) async {

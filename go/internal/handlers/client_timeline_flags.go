@@ -20,3 +20,10 @@ func stripClientConsultationFlags(items []store.TimelineItem, ownerUserID, viewe
 		delete(items[i].Meta, "reportStatus")
 	}
 }
+
+// clearTimelineMeta drops Meta on all timeline items (dossier PDF uses When/Title/Body only).
+func clearTimelineMeta(items []store.TimelineItem) {
+	for i := range items {
+		items[i].Meta = nil
+	}
+}

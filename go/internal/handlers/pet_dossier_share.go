@@ -283,9 +283,7 @@ func (a *API) buildDossierZip(ctx context.Context, tok store.DossierShareToken) 
 	timeline, _ := a.store.PetTimelineFiltered(ctx, pet.ID, false, false, false)
 	// Dossier PDF only uses title/body/date — drop meta (hasReport etc.) so no
 	// accidental consultation CTA can be wired from this payload later.
-	for i := range timeline {
-		timeline[i].Meta = nil
-	}
+	clearTimelineMeta(timeline)
 	docs, _ := a.store.ListPetDocuments(ctx, pet.ID)
 
 	commercialEmail := ""

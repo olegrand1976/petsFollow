@@ -62,3 +62,42 @@ func TestStripClientConsultationFlags_VetUnchanged(t *testing.T) {
 		t.Fatalf("vet meta must stay %#v", items[0].Meta)
 	}
 }
+
+func TestStripClientConsultationFlags_NilMetaAndCarePro(t *testing.T) {
+	items := []store.TimelineItem{
+		{ID: "v1", Type: kernel.TimelineVisit, Meta: nil},
+		{
+			ID:   "v2",
+			Type: kernel.TimelineVisit,
+			Meta: map[string]any{"hasReport": true, "reportStatus": "final"},
+		},
+	}
+	stripClientConsultationFlags(items, "owner-id", "care-id", kernel.RoleCarePro)
+	if items[0].Meta != nil {
+		t.Fatalf("nil meta must stay nil %#v", items[0].Meta)
+	}
+	if items[1].Meta["hasReport"] != true {
+		t.Fatalf("care_pro must not strip %#v", items[1].Meta)
+	}
+}
+
+func TestClearTimelineMeta(t *testing.T) {
+	items := []store.TimelineItem{
+		{
+			ID:   "v1",
+			Type: kernel.TimelineVisit,
+			Meta: map[string]any{"hasReport": true, "visitId": "v1"},
+		},
+		{
+			ID:   "hr1",
+			Type: kernel.TimelineHeartRate,
+			Meta: map[string]any{"bpm": 72},
+		},
+	}
+	clearTimelineMeta(items)
+	for i, it := range items {
+		if it.Meta != nil {
+			t.Fatalf("item[%d] Meta want nil got %#v", i, it.Meta)
+		}
+	}
+}
