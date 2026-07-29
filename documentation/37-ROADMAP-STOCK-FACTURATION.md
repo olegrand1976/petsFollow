@@ -4,7 +4,7 @@
 
 | Méta | Valeur |
 |------|--------|
-| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 4.C/4.D/4.F ✅ · S6 🟡 · 2.F / S5 / Phase 3 gelés (P0) |
+| Statut | **Cadré** · S4 ✅ · Phase 2.A–2.E ✅ · 4.C/4.D/4.F ✅ · S6 ✅ (smoke staging) · 2.F / S5 / Phase 3 gelés (P0) |
 | Socle Phase 1 | [27-PHARMACIE-BELGIQUE.md](27-PHARMACIE-BELGIQUE.md) · [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) |
 | Facturation | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) · [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) |
 | Dernière revue | 2026-07-29 (S6 env VAMReg/workers Cloud Run) |
@@ -60,7 +60,7 @@ Voir détail d’exécution dans [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PER
 |--------|---------|--------|
 | **S4** VAMReg | `job_audit`, Asynq opt-in, dry-run sync, retry UI | ✅ Dry-run |
 | **S5** DAF→Billit | BIL-9 / invoices.connect | ⏸ **Gelé** (P0-2) |
-| **S6** Ops staging | `PHARMACY_ENABLED`, `VAMREG_DRY_RUN`, workers env, `pg_trgm`, smoke, UC | 🟡 Env/secrets ✅ · `pg_trgm` ✅ · smoke MVP ✅ · smoke pharmacie local ✅ / staging catalogue ⬜ · UC-VP-05 ✅ |
+| **S6** Ops staging | `PHARMACY_ENABLED`, `VAMREG_DRY_RUN`, workers env, `pg_trgm`, smoke, UC | ✅ Env/secrets · `pg_trgm` · smoke MVP · `smoke-pharmacy-s6-staging` · UC-VP-05 |
 
 **Done when (chemin stock)** : pilote staging — receipt → DAF → VAMReg dry-run OK.  
 **Done when (chemin facture)** : + draft Billit lié DAF — **après** P0-2.
@@ -166,7 +166,7 @@ flowchart TB
   P5 --> P6
 ```
 
-**Priorité actuelle** : smoke staging · migrations `000107–113` · attendre P0 pour 2.F / 4.A–B / Phase 5 · **P0-2 Billit reseller** → S5 → Phase 3 (aucun code facture DAF tant que credentials absents).  
+**Priorité actuelle** : attendre P0 pour 2.F / 4.A–B–E / Phase 5 · **P0-2 Billit reseller** → S5 → Phase 3 (aucun code facture DAF tant que credentials absents). S6 staging clôturé (PR #3 + re-seed job + smoke).  
 **Facturation** : dès P0-2 → S5 → Phase 3.
 
 ---
