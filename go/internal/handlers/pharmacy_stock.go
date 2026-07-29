@@ -453,7 +453,7 @@ func (a *API) internalPharmacyExpiryRun(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
-		if a.notifier == nil {
+		if a.notifier == nil || (!settings.ExpiryDigestEnabled && !body.ForceDigest) {
 			continue
 		}
 		sum, err := a.store.ExpirySummary(r.Context(), practiceID)
