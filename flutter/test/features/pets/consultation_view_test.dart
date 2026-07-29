@@ -152,7 +152,7 @@ void main() {
     final historyTile = tester.widget<ExpansionTile>(
       find.byKey(const Key('timeline_section_history')),
     );
-    expect(historyTile.initiallyExpanded, isFalse);
+    expect(historyTile.initiallyExpanded, isTrue);
     await tester.tap(find.byKey(const Key('visit_consultation_cta_$visitId')));
     await tester.pumpAndSettle();
 
@@ -171,7 +171,7 @@ void main() {
     expect(find.text(AppLocalizationsFr().sendConsultationSuccess), findsOneWidget);
   });
 
-  testWidgets('dedupes visit with CR from Historique section', (tester) async {
+  testWidgets('shows consultation CTA on visit card in Historique', (tester) async {
     ApiClient.instance.dio.interceptors.remove(mockInterceptor);
     mockInterceptor = InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -195,6 +195,7 @@ void main() {
                     'status': 'done',
                     'scheduledAt': '2026-01-10T10:00:00Z',
                     'hasFinalReport': true,
+                    'reportStatus': 'final',
                   },
                 ],
               },
@@ -278,18 +279,12 @@ void main() {
     );
     expect(
       tester.widget<ExpansionTile>(find.byKey(const Key('timeline_section_history'))).initiallyExpanded,
-      isFalse,
+      isTrue,
     );
-    // Duplicate visit row must not appear under Historique.
-    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
-    expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsNothing);
-
-    // Historique is collapsed when Consultations is present — expand to assert HR row.
-    await tester.ensureVisible(find.byKey(const Key('timeline_section_history')));
-    await tester.tap(find.byKey(const Key('timeline_section_history')));
-    await tester.pumpAndSettle();
+    // Visit card kept in Historique with the same CTA.
+    expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsOneWidget);
+    expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsNWidgets(2));
     expect(find.byKey(const Key('timeline_item_hr-1')), findsOneWidget);
-    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
   });
 
   testWidgets('historique expands by default when no consultations', (tester) async {
@@ -602,16 +597,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('visit_consultation_tile_$visitId')), findsOneWidget);
-    expect(find.byKey(const Key('visit_consultation_pending_$visitId')), findsOneWidget);
+    // Consultations tile + Historique visit card.
+    expect(find.byKey(const Key('visit_consultation_pending_$visitId')), findsNWidgets(2));
     expect(find.byKey(const Key('visit_consultation_cta_$visitId')), findsNothing);
+    expect(find.byKey(const Key('timeline_visit_pending_$visitId')), findsOneWidget);
     expect(find.byKey(const Key('timeline_visit_report_$visitId')), findsNothing);
-    expect(find.byKey(const Key('timeline_item_$visitId')), findsNothing);
 
-    final pending = tester.widget<TextButton>(
+    final pending = tester.widgetList<TextButton>(
       find.byKey(const Key('visit_consultation_pending_$visitId')),
     );
-    expect(pending.onPressed, isNull);
-    await tester.tap(find.byKey(const Key('visit_consultation_pending_$visitId')));
+    expect(pending, isNotEmpty);
+    for (final btn in pending) {
+      expect(btn.onPressed, isNull);
+    }
+    await tester.tap(find.byKey(const Key('visit_consultation_pending_$visitId')).first);
     await tester.pumpAndSettle();
     expect(find.textContaining('Examen clinique'), findsNothing);
   });

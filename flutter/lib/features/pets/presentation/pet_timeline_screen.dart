@@ -278,6 +278,27 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     );
   }
 
+  Visit? _visitById(String visitId) {
+    for (final v in visits) {
+      if (v.id == visitId) return v;
+    }
+    return null;
+  }
+
+  /// CTA flags: timeline meta + ListVisits (owner flags) for the same visit.
+  ({bool available, bool pending}) _consultationFlagsForVisit({
+    required String visitId,
+    required Map<String, dynamic> timelineRow,
+  }) {
+    final fromList = _visitById(visitId);
+    final available = _timelineHasFinalReport(timelineRow) ||
+        (fromList?.consultationAvailable ?? false);
+    final pending = !available &&
+        (_timelineReportStatus(timelineRow) == 'draft' ||
+            (fromList?.consultationPending ?? false));
+    return (available: available, pending: pending);
+  }
+
   Future<void> _cancelVisit(Visit visit) async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -340,15 +361,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     // Past visits only — avoid doubling confirmed walk-ins still in « À venir ».
     final consultationVisits =
         visits.where((v) => !v.isUpcoming && v.hasConsultationSignal).toList();
-    final consultationIds = {for (final v in consultationVisits) v.id};
-    // Visits already under « Consultations » — drop dead duplicates from Historique.
-    final historyItems = items.where((m) {
-      final type = m['type'] as String? ?? 'event';
-      if (type != 'visit') return true;
-      final visitId = _timelineVisitId(m);
-      if (visitId == null) return true;
-      return !consultationIds.contains(visitId);
-    }).toList();
+    // Keep visit rows in Historique (CTA on the visit card) even when also listed under Consultations.
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.visitHistory)),
@@ -392,6 +405,12 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                         dateFmt.format(v.displayDate),
                                         if (v.notes != null && v.notes!.isNotEmpty) v.notes,
                                       ].join(' · '),
+                                    ),
+                                    trailing: _consultationCta(
+                                      l10n: l10n,
+                                      visitId: v.id,
+                                      available: v.consultationAvailable,
+                                      pending: v.consultationPending,
                                     ),
                                   ),
                                   if (_canWriteNotes)
@@ -477,27 +496,30 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                     ),
                   _TimelineSection(
                     sectionKey: const Key('timeline_section_history'),
-                    title: historyItems.isEmpty
+                    title: items.isEmpty
                         ? l10n.history
-                        : '${l10n.history} (${historyItems.length})',
-                    initiallyExpanded: consultationVisits.isEmpty,
+                        : '${l10n.history} (${items.length})',
+                    initiallyExpanded: true,
                     children: [
-                      if (historyItems.isEmpty)
+                      if (items.isEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Text(l10n.timelineEmpty, style: TextStyle(color: p.textMuted)),
                         )
                       else
-                        ...historyItems.map((m) {
+                        ...items.map((m) {
                           final type = m['type'] as String? ?? 'event';
                           final createdAt = DateTime.tryParse(m['createdAt'] as String? ?? '');
                           final rowId = m['id']?.toString() ?? type;
                           final visitId = type == 'visit' ? _timelineVisitId(m) : null;
-                          final reportStatus = visitId != null ? _timelineReportStatus(m) : '';
-                          // Filet: timeline meta when not already under Consultations.
-                          final openReport = visitId != null && _timelineHasFinalReport(m);
-                          final pendingReport =
-                              visitId != null && !openReport && reportStatus == 'draft';
+                          final flags = visitId == null
+                              ? (available: false, pending: false)
+                              : _consultationFlagsForVisit(
+                                  visitId: visitId,
+                                  timelineRow: m,
+                                );
+                          final openReport = flags.available;
+                          final pendingReport = flags.pending;
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(

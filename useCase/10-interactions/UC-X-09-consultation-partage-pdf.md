@@ -28,8 +28,8 @@ Montrer qu’un propriétaire peut **ouvrir le compte-rendu finalisé** d’une 
 
 ## Étapes
 
-1. **App client** — login `client.demo` → fiche animal → **Historique des visites**.
-2. Dans **Consultations** : bouton **Disponible** (cliquable) si CR finalisé, ou **En attente** (désactivé) si brouillon côté cabinet — ouvrir via le CTA disponible.
+1. **App client** — login `client.demo` → fiche animal → entrée menu **Consultations** (ou **Historique des visites**).
+2. Bouton **Disponible** (cliquable) si CR finalisé, ou **En attente** (désactivé) si brouillon — sur la section **Consultations** **et** sur la card **Visite** dans Historique (même CTA).
 3. Vérifier l’affichage : méta visite + section(s) CR (tous les auteurs finalisés).
 4. Appuyer sur **Envoyer à un vétérinaire** → avertissement PHI + e-mail + **consentement** obligatoire → confirmer.
 5. Ouvrir l’e-mail : marketing petsFollow, CTA inscription, téléphone commercial, lien 24 h.

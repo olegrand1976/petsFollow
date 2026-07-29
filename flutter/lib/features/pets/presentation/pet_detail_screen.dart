@@ -522,7 +522,22 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
             const SizedBox(height: 8),
           ],
           const SizedBox(height: 8),
-          if (pet.isActive)
+          if (pet.isActive) ...[
+            _ActionTile(
+              key: Key('pet_consultations_${pet.id}'),
+              icon: Icons.description_outlined,
+              label: l10n.consultationsHistory,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PetTimelineScreen(
+                    petId: pet.id,
+                    petName: pet.name,
+                    canWriteNotes: pet.canWriteNotes,
+                  ),
+                ),
+              ),
+            ),
             _ActionTile(
               icon: Icons.history,
               label: l10n.visitHistory,
@@ -537,6 +552,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> with WidgetsBindingOb
                 ),
               ),
             ),
+          ],
           if (pet.isOwner && pet.isActive && !pet.needsVetLink) ...[
             _ActionTile(
               icon: Icons.event_available,
