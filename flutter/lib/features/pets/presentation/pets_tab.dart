@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
@@ -76,18 +77,8 @@ class _PetsTabState extends State<PetsTab> {
     return openKennelEncodeAndFollowUp(context, onReload: load);
   }
 
-  String _speciesLabel(AppLocalizations l10n, String species) {
-    switch (species) {
-      case 'dog':
-        return l10n.speciesDog;
-      case 'cat':
-        return l10n.speciesCat;
-      case 'horse':
-        return l10n.speciesHorse;
-      default:
-        return l10n.speciesOther;
-    }
-  }
+  String _speciesLabel(AppLocalizations l10n, String species) =>
+      speciesLabel(l10n, species);
 
   @override
   Widget build(BuildContext context) {

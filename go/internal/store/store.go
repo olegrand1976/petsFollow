@@ -255,12 +255,16 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 }
 
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
+	foodChain := p.FoodChainStatus
+	if foodChain == "" {
+		foodChain = "companion"
+	}
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8,
-			microchip_number=$9, health_book_number=$10, domicile_location=$11, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$12`,
+			microchip_number=$9, health_book_number=$10, domicile_location=$11, food_chain_status=$12, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$13`,
 		p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag,
-		p.MicrochipNumber, p.HealthBookNumber, p.DomicileLocation, p.OwnerUserID)
+		p.MicrochipNumber, p.HealthBookNumber, p.DomicileLocation, foodChain, p.OwnerUserID)
 	if err != nil {
 		return err
 	}

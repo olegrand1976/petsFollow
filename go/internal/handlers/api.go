@@ -790,6 +790,7 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		LitterTag:       existing.LitterTag,
 		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
 		DomicileLocation: existing.DomicileLocation,
+		FoodChainStatus:  existing.FoodChainStatus,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
@@ -800,10 +801,17 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	if req.HealthBookNumber != nil {
 		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
 	}
+	newSpecies := strings.TrimSpace(req.Species)
+	if newSpecies == "" {
+		p.Species = existing.Species
+	} else if newSpecies != existing.Species {
+		// Owner species change: apply regulatory default (rente → food_producing, else companion).
+		p.FoodChainStatus = kernel.DefaultFoodChainStatus(newSpecies)
+	}
 	if req.DomicileLocation != nil {
 		p.DomicileLocation = clipPetIDField(*req.DomicileLocation, maxDomicileLocationLen)
-	} else if strings.TrimSpace(req.Species) != "" && req.Species != "horse" && existing.Species == "horse" {
-		// Species left horse without explicit domicile → drop stale stable location.
+	} else if newSpecies != "" && !kernel.IsFoodChainSpecies(newSpecies) && kernel.IsFoodChainSpecies(existing.Species) {
+		// Left food-chain species without explicit domicile → drop stale housing location.
 		p.DomicileLocation = ""
 	}
 	// Champs omis : conserver les valeurs existantes (édition partielle mobile).

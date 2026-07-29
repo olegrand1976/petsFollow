@@ -112,6 +112,29 @@ func SupportsHeartRateControl(species string) bool {
 	}
 }
 
+// IsFoodChainSpecies is true for species that show domicile / food-chain regulatory UI
+// (équidés, rente, camélidés, lapin).
+func IsFoodChainSpecies(species string) bool {
+	switch species {
+	case "horse", "donkey", "cattle", "sheep", "goat", "pig", "poultry", "rabbit", "alpaca", "llama":
+		return true
+	default:
+		return false
+	}
+}
+
+// DefaultFoodChainStatus returns the food_chain_status to apply on pet create.
+// Production livestock defaults to food_producing; companions / equids stay companion
+// until a vet reclassifies them.
+func DefaultFoodChainStatus(species string) string {
+	switch species {
+	case "cattle", "sheep", "goat", "pig", "poultry", "alpaca", "llama":
+		return "food_producing"
+	default:
+		return "companion"
+	}
+}
+
 // IsHeartRateDeltaAlert is true when the current BPM rose by at least delta
 // compared to the previous validated reading. No previous → no alert.
 func IsHeartRateDeltaAlert(currentBPM int, previousBPM *int, delta int) bool {

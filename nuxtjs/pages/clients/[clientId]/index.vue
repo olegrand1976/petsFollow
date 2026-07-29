@@ -117,7 +117,7 @@
           <tbody>
             <tr v-for="p in pets" :key="p.id">
               <td>{{ p.name }}</td>
-              <td>{{ p.species }}</td>
+              <td>{{ speciesLabel(p.species) }}</td>
               <td>{{ p.breed || $t('common.dash') }}</td>
               <td>{{ p.weightKg != null ? `${p.weightKg} kg` : $t('common.dash') }}</td>
               <td>
@@ -225,7 +225,13 @@ type ClientOverview = {
   shareCount: number
 }
 
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+function speciesLabel(species: string | null | undefined) {
+  if (!species) return t('common.dash')
+  const key = `common.species.${species}`
+  return te(key) ? t(key) : species
+}
 const { mapError } = useApiError()
 const { canPractice } = usePracticePerms()
 const canWriteClinical = computed(() => canPractice('pets.write_clinical'))

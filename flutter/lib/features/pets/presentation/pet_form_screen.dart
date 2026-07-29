@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
@@ -359,14 +360,11 @@ class _PetFormScreenState extends State<PetFormScreen> {
                     initialValue: selectedSpecies,
                     decoration: InputDecoration(labelText: l10n.species),
                     items: [
-                      DropdownMenuItem(
-                          value: 'dog', child: Text(l10n.speciesDog)),
-                      DropdownMenuItem(
-                          value: 'cat', child: Text(l10n.speciesCat)),
-                      DropdownMenuItem(
-                          value: 'horse', child: Text(l10n.speciesHorse)),
-                      DropdownMenuItem(
-                          value: 'other', child: Text(l10n.speciesOther)),
+                      for (final code in kPetSpeciesCodes)
+                        DropdownMenuItem(
+                          value: code,
+                          child: Text(speciesLabel(l10n, code)),
+                        ),
                     ],
                     onChanged: (v) =>
                         setState(() => selectedSpecies = v ?? 'dog'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
@@ -101,18 +102,8 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
     }
   }
 
-  String _speciesLabel(AppLocalizations l10n, String species) {
-    switch (species) {
-      case 'dog':
-        return l10n.speciesDog;
-      case 'cat':
-        return l10n.speciesCat;
-      case 'horse':
-        return l10n.speciesHorse;
-      default:
-        return l10n.speciesOther;
-    }
-  }
+  String _speciesLabel(AppLocalizations l10n, String species) =>
+      speciesLabel(l10n, species);
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +130,7 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
               initialValue: _rows[i].species,
               decoration: InputDecoration(labelText: l10n.species),
               items: [
-                for (final s in const ['dog', 'cat', 'horse', 'other'])
+                for (final s in kPetSpeciesCodes)
                   DropdownMenuItem(value: s, child: Text(_speciesLabel(l10n, s))),
               ],
               onChanged: (v) {

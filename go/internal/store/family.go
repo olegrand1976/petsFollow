@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 type HouseholdCareItem struct {
@@ -110,13 +111,18 @@ func (s *Store) CreatePetsBatchWithPendingEntitlements(ctx context.Context, item
 		if p.PaymentStatus == "" {
 			p.PaymentStatus = "pending_payment"
 		}
+		foodChain := kernel.DefaultFoodChainStatus(p.Species)
+		if p.FoodChainStatus != "" {
+			foodChain = p.FoodChainStatus
+		}
 		err = tx.QueryRow(ctx, `
-			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag, microchip_number, health_book_number)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+			INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag, microchip_number, health_book_number, food_chain_status)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 			RETURNING created_at`,
 			p.ID, nullIfEmpty(strings.TrimSpace(p.PracticeID)), p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag,
-			p.MicrochipNumber, p.HealthBookNumber,
+			p.MicrochipNumber, p.HealthBookNumber, foodChain,
 		).Scan(&p.CreatedAt)
+		p.FoodChainStatus = foodChain
 		if err != nil {
 			return nil, err
 		}

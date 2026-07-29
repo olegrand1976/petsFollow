@@ -108,4 +108,32 @@ void main() {
     expect(updateBody?['species'], 'dog');
     expect(updateBody?['domicileLocation'], '');
   });
+
+  testWidgets('cattle edit sends domicile location', (tester) async {
+    const pet = Pet(
+      id: 'pet-1',
+      name: 'Bella',
+      species: 'cattle',
+      breed: 'Blanc Bleu',
+      ownerUserId: 'user-1',
+      domicileLocation: 'Ferme Demo',
+      foodChainStatus: 'food_producing',
+    );
+
+    await pumpApp(tester, home: const PetEditScreen(pet: pet));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('pet_edit_domicile')), findsOneWidget);
+    await tester.enterText(
+        find.byKey(const Key('pet_edit_domicile')), 'Étable Nord — Namur');
+    await tester.ensureVisible(find.byKey(const Key('pet_edit_save')));
+    await tester.tap(find.byKey(const Key('pet_edit_save')));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(updateBody, isNotNull);
+    expect(updateBody?['domicileLocation'], 'Étable Nord — Namur');
+    expect(updateBody?['species'], 'cattle');
+    expect(find.byType(PetEditScreen), findsNothing);
+  });
 }
