@@ -102,10 +102,10 @@ Flux Web : édition notes → « améliorer » (sections structurées) → **fin
 
 Sections CR vétérinaire (improve) :
 - Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi
-- Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
+- Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas de prescription auto)
 - Care_pro : templates specialty (farrier/physio/…) sans section médication véto
 
-Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
+Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée), `is_reference` (consultation de référence pour amélioration continue, CR final uniquement) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
 Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 `POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.

@@ -469,7 +469,7 @@ func (s *Store) InsertAiCrFeedback(ctx context.Context, practiceID, userID strin
 		return ErrValidation
 	}
 	switch source {
-	case "j14", "j45", "j75", "in_app":
+	case "j14", "j45", "j75", "in_app", "visit_report":
 	default:
 		source = "in_app"
 	}

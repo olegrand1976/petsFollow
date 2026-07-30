@@ -35,6 +35,12 @@ type visitReportBodyReq struct {
 type visitReportImproveReq struct {
 	// Optional override: improve from this text without requiring a prior PUT that overwrites body.
 	SourceText string `json:"sourceText,omitempty"`
+	// TargetLocale: empty/auto = keep source/transcription language; fr|nl|en|es|et|it = force translation.
+	TargetLocale string `json:"targetLocale,omitempty"`
+}
+
+type visitReportReferenceReq struct {
+	IsReference bool `json:"isReference"`
 }
 
 func (a *API) updateVisitLocation(w http.ResponseWriter, r *http.Request) {
@@ -352,6 +358,16 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	if !a.canManageVisit(w, r, id, visit) {
 		return
 	}
+	var improveReq visitReportImproveReq
+	if err := httpx.DecodeJSON(r, &improveReq); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	localeHint, ok := gemini.NormalizeVisitReportTargetLocale(improveReq.TargetLocale)
+	if !ok {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_target_locale")
+		return
+	}
 	// Entitlement (402) before Gemini config (503): paywall must win when the module is off.
 	if !a.requireAiCrEntitlement(w, r, visit.PracticeID) {
 		return
@@ -369,11 +385,6 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 		return
 	}
-	var improveReq visitReportImproveReq
-	if err := httpx.DecodeJSON(r, &improveReq); err != nil && !errors.Is(err, io.EOF) {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
 	source := gemini.NormalizeVisitReportText(improveReq.SourceText)
 	if strings.TrimSpace(source) == "" {
 		source = gemini.NormalizeVisitReportText(report.BodyText)
@@ -388,10 +399,6 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	country := "BE"
 	if contact, cerr := a.store.GetPracticeContact(r.Context(), visit.PracticeID); cerr == nil && contact.CountryCode != "" {
 		country = store.NormalizeCountryCode(contact.CountryCode)
-	}
-	localeHint := "fr"
-	if u, uerr := a.store.GetUserByID(r.Context(), id.UserID); uerr == nil && u.PreferredLocale != "" {
-		localeHint = u.PreferredLocale
 	}
 	promptIn := gemini.VisitReportPromptInput{CountryCode: country, LocaleHint: localeHint}
 	if id.Role == kernel.RoleCarePro {
@@ -416,6 +423,47 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageImprove)
+	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
+}
+
+func (a *API) patchVisitReportReference(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	visitID := chi.URLParam(r, "visitID")
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if !a.canManageVisit(w, r, id, visit) {
+		return
+	}
+	var req visitReportReferenceReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "report_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	report, err = a.store.SetVisitReportReference(r.Context(), report.ID, req.IsReference)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusConflict, "conflict", "report_not_final")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 

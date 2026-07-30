@@ -259,6 +259,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
 		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)
 		pr.Post("/visits/{visitID}/report/transcribe", a.transcribeVisitReport)
+		pr.Patch("/visits/{visitID}/report/reference", a.patchVisitReportReference)
 		pr.Get("/messaging/threads", a.listThreads)
 		pr.Post("/messaging/threads", a.ensureThread)
 		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
