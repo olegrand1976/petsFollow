@@ -22,15 +22,13 @@ async function dismissProModals(page: Page) {
   }
 }
 
-/** Cloud Run viewport: open history <details> overlays CR tabs — close before tab clicks. */
+/** Toggle history <details> via property — click is flaky under treatments overlay on Cloud Run. */
 async function setVisitReportHistoryOpen(page: Page, open: boolean) {
   const history = page.getByTestId('visit-report-history')
   await history.scrollIntoViewIfNeeded().catch(() => undefined)
-  const isOpen = await history.evaluate((el) => (el as HTMLDetailsElement).open)
-  if (isOpen !== open) {
-    // Treatments panel can sit over the summary on short Cloud Run viewports.
-    await history.locator('summary').click({ force: true })
-  }
+  await history.evaluate((el, wantOpen) => {
+    ;(el as HTMLDetailsElement).open = wantOpen
+  }, open)
   await expect
     .poll(async () => history.evaluate((el) => (el as HTMLDetailsElement).open), { timeout: 5000 })
     .toBe(open)

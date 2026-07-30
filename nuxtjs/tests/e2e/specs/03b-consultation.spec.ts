@@ -253,7 +253,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('daf-from-consultation-banner')).toBeVisible()
   })
 
-  test('traitements CNK → preview FEFO → finalize DAF', async ({ page }) => {
+  test('traitements CNK → preview FEFO → finalize DAF', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
     // Treatments panel mounts only after CR saved (avoids overlay on TipTap).
@@ -328,7 +328,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('consultation-treatments-finalized')).toBeVisible({ timeout: 15000 })
   })
 
-  test('protocole clinique 1 clic → lignes + AMM préremplies', async ({ page }) => {
+  test('protocole clinique 1 clic → lignes + AMM préremplies', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
     await saveConsultationReport(page)
