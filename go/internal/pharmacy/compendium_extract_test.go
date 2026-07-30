@@ -20,3 +20,20 @@ func TestParseCompendiumExtractJSON(t *testing.T) {
 		t.Fatalf("expected missing_cnk got %s %s", st, code)
 	}
 }
+
+func TestDedupExtractedMedications(t *testing.T) {
+	in := []ExtractedMedication{
+		{CNK: "111", Name: "A"},
+		{CNK: "111", Name: "A dup"},
+		{CNK: "222", Name: "B"},
+		{CNK: "", Name: "NoCNK"},
+		{CNK: "", Name: "nocnk"},
+	}
+	out := DedupExtractedMedications(in)
+	if len(out) != 3 {
+		t.Fatalf("got %d %#v", len(out), out)
+	}
+	if out[0].Name != "A" || out[1].CNK != "222" || out[2].Name != "NoCNK" {
+		t.Fatalf("%#v", out)
+	}
+}

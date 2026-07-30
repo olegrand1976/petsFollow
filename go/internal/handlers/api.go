@@ -47,6 +47,8 @@ type API struct {
 	billitWebhookRL     *httpx.RateLimiter
 	pharmacyOrderSendRL *httpx.RateLimiter
 	authPulse           *authPulse
+	// compendiumExtract optional mock for admin PDF import tests.
+	compendiumExtract CompendiumExtractFunc
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {

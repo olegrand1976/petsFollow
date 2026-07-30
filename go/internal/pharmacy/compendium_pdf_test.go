@@ -1,6 +1,11 @@
 package pharmacy
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+
+	"github.com/phpdave11/gofpdf"
+)
 
 func TestChunkPageRanges(t *testing.T) {
 	got := ChunkPageRanges(1, 5, 2)
@@ -18,13 +23,37 @@ func TestLooksLikePDF(t *testing.T) {
 	}
 }
 
-func TestExtractPageRangePassthrough(t *testing.T) {
-	raw := []byte("%PDF-1.4 fake")
-	out, err := ExtractPageRange(raw, 1, 2)
+func TestExtractPageRangeTrim(t *testing.T) {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	for i := 1; i <= 4; i++ {
+		pdf.AddPage()
+		pdf.SetFont("Arial", "", 12)
+		pdf.Cell(40, 10, "page")
+	}
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		t.Fatal(err)
+	}
+	raw := buf.Bytes()
+	n, err := PageCount(raw)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(out) != string(raw) {
-		t.Fatal("expected passthrough")
+	if n != 4 {
+		t.Fatalf("pages=%d", n)
+	}
+	slice, err := ExtractPageRange(raw, 2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sn, err := PageCount(slice)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sn != 2 {
+		t.Fatalf("slice pages=%d", sn)
+	}
+	if _, err := ExtractPageRange(raw, 2, 99); err == nil {
+		t.Fatal("expected out of range")
 	}
 }

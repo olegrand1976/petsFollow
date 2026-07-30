@@ -63,7 +63,7 @@
               <td>{{ row.rowNumber }}</td>
               <td>
                 <input
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
                   v-model="row.cnk"
                   class="pro-input"
                   @change="patchRow(row, { cnk: row.cnk })"
@@ -72,30 +72,55 @@
               </td>
               <td>
                 <input
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
                   v-model="row.name"
                   class="pro-input"
                   @change="patchRow(row, { name: row.name })"
                 >
                 <span v-else>{{ row.name }}</span>
               </td>
-              <td>{{ row.atcCode || '—' }}</td>
-              <td>{{ row.pharmaceuticalForm || '—' }}</td>
-              <td>{{ row.isAntibiotic ? '✓' : '—' }}</td>
+              <td>
+                <input
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-model="row.atcCode"
+                  class="pro-input"
+                  @change="patchRow(row, { atcCode: row.atcCode })"
+                >
+                <span v-else>{{ row.atcCode || '—' }}</span>
+              </td>
+              <td>
+                <input
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-model="row.pharmaceuticalForm"
+                  class="pro-input"
+                  @change="patchRow(row, { pharmaceuticalForm: row.pharmaceuticalForm })"
+                >
+                <span v-else>{{ row.pharmaceuticalForm || '—' }}</span>
+              </td>
+              <td>
+                <input
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-model="row.isAntibiotic"
+                  type="checkbox"
+                  data-testid="admin-compendium-ab"
+                  @change="patchRow(row, { isAntibiotic: row.isAntibiotic })"
+                >
+                <span v-else>{{ row.isAntibiotic ? '✓' : '—' }}</span>
+              </td>
               <td>
                 <ProBadge :variant="rowStatusVariant(row.status)">{{ statusLabel(row.status) }}</ProBadge>
                 <span v-if="row.errorCode" class="pro-hint"> {{ row.errorCode }}</span>
               </td>
               <td>
                 <ProButton
-                  v-if="row.status !== 'upserted' && row.status !== 'excluded'"
+                  v-if="canEditRows && row.status !== 'upserted' && row.status !== 'excluded'"
                   variant="ghost"
                   @click="patchRow(row, { excluded: true })"
                 >
                   {{ $t('admin.compendium.exclude') }}
                 </ProButton>
                 <ProButton
-                  v-else-if="row.status === 'excluded'"
+                  v-else-if="canEditRows && row.status === 'excluded'"
                   variant="ghost"
                   @click="patchRow(row, { excluded: false })"
                 >
@@ -112,7 +137,7 @@
         <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.commitHint') }}</p>
         <ProButton
           test-id="admin-compendium-commit"
-          :disabled="busy || job.status !== 'extracted' || !job.readyCount"
+          :disabled="busy || !canCommit"
           @click="commit"
         >
           {{ $t('admin.compendium.commit') }}
@@ -136,6 +161,15 @@ const rows = ref<any[]>([])
 const commitMsg = ref('')
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
+const canCommit = computed(() => {
+  const j = job.value
+  if (!j) return false
+  if (!(j.status === 'extracted' || j.status === 'committing')) return false
+  // Fresh committing (in-flight) still has readyCount; stale reclaim also.
+  return (j.readyCount ?? 0) > 0 || j.status === 'committing'
+})
+const canEditRows = computed(() => job.value?.status === 'extracted')
+
 function statusVariant (status: string) {
   switch (status) {
     case 'completed': case 'ready': case 'upserted': return 'success'
@@ -157,7 +191,7 @@ async function load () {
   job.value = data?.job ?? data
   rows.value = data?.rows ?? []
   loading.value = false
-  if (job.value?.status === 'extracting') {
+  if (job.value?.status === 'extracting' || job.value?.status === 'committing') {
     startPoll()
   } else {
     stopPoll()

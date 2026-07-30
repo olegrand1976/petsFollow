@@ -47,7 +47,7 @@ func (e *CompendiumExtractor) ExtractChunk(ctx context.Context, pdfChunk []byte,
 		return nil, fmt.Errorf("gemini_not_configured")
 	}
 	user := fmt.Sprintf(
-		"The attached PDF may contain many pages. Extract medication products ONLY from absolute pages %d through %d inclusive. Ignore all other pages. Return JSON only.",
+		"The attached PDF is already trimmed to absolute source pages %d–%d (inclusive) of the original Compendium. Extract every medication product visible in this PDF. Map each row's sourcePage to the absolute page number in that range. Return JSON only.",
 		absStart, absEnd,
 	)
 	raw, err := e.Gemini.GenerateJSONWithMedia(ctx, compendiumExtractSystem, user, "application/pdf", pdfChunk, 0.1)
@@ -96,6 +96,38 @@ func ClassifyExtractedRow(m ExtractedMedication) (status, errCode, errMsg string
 		return "error", "missing_cnk", "cnk required for national dictionary"
 	}
 	return "ready", "", ""
+}
+
+// DedupExtractedMedications keeps the first row per CNK (case-insensitive).
+// Rows without CNK are deduped by normalized name.
+func DedupExtractedMedications(meds []ExtractedMedication) []ExtractedMedication {
+	if len(meds) == 0 {
+		return meds
+	}
+	seenCNK := make(map[string]struct{}, len(meds))
+	seenName := make(map[string]struct{}, len(meds))
+	out := make([]ExtractedMedication, 0, len(meds))
+	for _, m := range meds {
+		cnk := strings.ToLower(strings.TrimSpace(m.CNK))
+		if cnk != "" {
+			if _, ok := seenCNK[cnk]; ok {
+				continue
+			}
+			seenCNK[cnk] = struct{}{}
+			out = append(out, m)
+			continue
+		}
+		nameKey := strings.ToLower(strings.TrimSpace(m.Name))
+		if nameKey == "" {
+			continue
+		}
+		if _, ok := seenName[nameKey]; ok {
+			continue
+		}
+		seenName[nameKey] = struct{}{}
+		out = append(out, m)
+	}
+	return out
 }
 
 // FormatBoolish helps tests / CSV-like flags.

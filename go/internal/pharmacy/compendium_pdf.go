@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 const CompendiumPagesPerChunk = 2
 
-// PageCount estimates PDF page count (heuristic on page objects).
-// Good enough to reject absurd pageEnd; not a full PDF parser.
+// PageCount returns the PDF page count via pdfcpu.
 func PageCount(pdf []byte) (int, error) {
 	if len(pdf) == 0 {
 		return 0, fmt.Errorf("empty_pdf")
@@ -18,20 +20,17 @@ func PageCount(pdf []byte) (int, error) {
 	if !LooksLikePDF(pdf) {
 		return 0, fmt.Errorf("invalid_pdf")
 	}
-	// Count leaf page dicts; subtract /Type /Pages trees.
-	n := bytes.Count(pdf, []byte("/Type /Page")) + bytes.Count(pdf, []byte("/Type/Page"))
-	n -= bytes.Count(pdf, []byte("/Type /Pages")) + bytes.Count(pdf, []byte("/Type/Pages"))
+	n, err := api.PageCount(bytes.NewReader(pdf), nil)
+	if err != nil {
+		return 0, fmt.Errorf("pdf_page_count: %w", err)
+	}
 	if n < 1 {
-		// Some writers omit spaces differently — fall back to at least 1.
-		n = 1
+		return 0, fmt.Errorf("pdf_no_pages")
 	}
 	return n, nil
 }
 
-// ExtractPageRange prepares media for Gemini for pages [start, end].
-// V1 sends the full PDF bytes (base64 inline); the model is instructed to
-// restrict extraction to the absolute page range. A true page-trim dependency
-// (pdfcpu) requires Go ≥ 1.22 — deferred to keep the module on Go 1.21.
+// ExtractPageRange returns a new PDF containing only pages [start, end] (1-based inclusive).
 func ExtractPageRange(pdf []byte, start, end int) ([]byte, error) {
 	if len(pdf) == 0 {
 		return nil, fmt.Errorf("empty_pdf")
@@ -39,7 +38,27 @@ func ExtractPageRange(pdf []byte, start, end int) ([]byte, error) {
 	if start < 1 || end < start {
 		return nil, fmt.Errorf("invalid_page_range")
 	}
-	return pdf, nil
+	total, err := PageCount(pdf)
+	if err != nil {
+		return nil, err
+	}
+	if end > total {
+		return nil, fmt.Errorf("page_end_out_of_range:%d>%d", end, total)
+	}
+	if start == 1 && end == total {
+		// Full document — avoid a no-op rewrite when possible.
+		return pdf, nil
+	}
+	sel := fmt.Sprintf("%d-%d", start, end)
+	conf := model.NewDefaultConfiguration()
+	var out bytes.Buffer
+	if err := api.Trim(bytes.NewReader(pdf), &out, []string{sel}, conf); err != nil {
+		return nil, fmt.Errorf("pdf_trim: %w", err)
+	}
+	if out.Len() == 0 {
+		return nil, fmt.Errorf("pdf_trim_empty")
+	}
+	return out.Bytes(), nil
 }
 
 // ChunkPageRanges splits [start, end] into inclusive ranges of at most size pages.

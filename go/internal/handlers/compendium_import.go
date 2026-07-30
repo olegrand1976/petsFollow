@@ -22,16 +22,13 @@ import (
 
 const maxCompendiumPDFBytes = 20 << 20 // 20 MiB
 
-// testCompendiumExtract overrides Gemini extract in integration tests.
-var testCompendiumExtract func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error)
+// CompendiumExtractFunc extracts medications from a PDF page range (tests / Gemini).
+type CompendiumExtractFunc func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error)
 
-// TestSetCompendiumExtract installs a mock extractor (integration tests only).
-func TestSetCompendiumExtract(fn func(ctx context.Context, pdf []byte, start, end int) ([]pharmacy.ExtractedMedication, error)) {
-	testCompendiumExtract = fn
+// TestSetCompendiumExtract installs a per-API mock extractor (integration tests only).
+func (a *API) TestSetCompendiumExtract(fn CompendiumExtractFunc) {
+	a.compendiumExtract = fn
 }
-
-// TestClearCompendiumExtract clears the mock extractor.
-func TestClearCompendiumExtract() { testCompendiumExtract = nil }
 
 func (a *API) registerCompendiumImportRoutes(r chi.Router) {
 	r.Post("/admin/compendium-imports", a.adminCreateCompendiumImport)
@@ -98,9 +95,8 @@ func (a *API) adminCreateCompendiumImport(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_pdf")
 		return
 	}
-	// Heuristic page count can under-count; only reject when clearly impossible.
-	if totalPages > 0 && pageStart > totalPages+50 {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "page_start_out_of_range")
+	if pageEnd > totalPages {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "page_end_out_of_range")
 		return
 	}
 
@@ -190,7 +186,7 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 		return
 	}
-	if testCompendiumExtract == nil && (a.gemini == nil || !a.gemini.Configured()) {
+	if a.compendiumExtract == nil && (a.gemini == nil || !a.gemini.Configured()) {
 		writeErr(w, r, http.StatusServiceUnavailable, "unavailable", "gemini_not_configured")
 		return
 	}
@@ -209,7 +205,16 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	go a.runCompendiumExtract(id)
+	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = a.store.FailCompendiumImportJob(ctx, id, fmt.Sprintf("panic:%v", rec))
+			}
+		}()
+		a.runCompendiumExtract(id)
+	}()
 
 	detail, err := a.store.GetCompendiumImportDetail(r.Context(), id)
 	if err != nil {
@@ -223,70 +228,80 @@ func (a *API) runCompendiumExtract(jobID string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
+	fail := func(msg string) {
+		_ = a.store.FailCompendiumImportJob(ctx, jobID, msg)
+	}
+
 	job, err := a.store.GetCompendiumImportJob(ctx, jobID)
 	if err != nil {
+		fail(fmt.Sprintf("job_load:%v", err))
 		return
 	}
 	rc, _, err := a.media.Open(ctx, job.PDFObjectKey)
 	if err != nil {
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_open_failed")
+		fail("pdf_open_failed")
 		return
 	}
 	pdfBytes, err := io.ReadAll(io.LimitReader(rc, maxCompendiumPDFBytes+1))
 	_ = rc.Close()
 	if err != nil || len(pdfBytes) == 0 || len(pdfBytes) > maxCompendiumPDFBytes {
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_read_failed")
+		fail("pdf_read_failed")
 		return
 	}
 
+	// Trim each Gemini chunk directly from the full PDF (absolute pages) — no pre-trim of the whole range.
 	chunks := pharmacy.ChunkPageRanges(job.PageStart, job.PageEnd, pharmacy.CompendiumPagesPerChunk)
 	extractor := &pharmacy.CompendiumExtractor{Gemini: a.gemini}
-	all := make([]store.CompendiumRowInsert, 0)
+	var allMeds []pharmacy.ExtractedMedication
 
 	for i, rng := range chunks {
 		start, end := rng[0], rng[1]
 		slice, err := pharmacy.ExtractPageRange(pdfBytes, start, end)
 		if err != nil {
-			_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("pdf_trim:%v", err))
+			fail(fmt.Sprintf("pdf_chunk:%v", err))
 			return
 		}
 		var meds []pharmacy.ExtractedMedication
-		if testCompendiumExtract != nil {
-			meds, err = testCompendiumExtract(ctx, slice, start, end)
+		if a.compendiumExtract != nil {
+			meds, err = a.compendiumExtract(ctx, slice, start, end)
 		} else {
 			meds, err = extractor.ExtractChunk(ctx, slice, start, end)
 		}
 		if err != nil {
-			_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("extract:%v", err))
+			fail(fmt.Sprintf("extract:%v", err))
 			return
 		}
-		for _, m := range meds {
-			status, code, msg := pharmacy.ClassifyExtractedRow(m)
-			raw, _ := json.Marshal(m)
-			sp := m.SourcePage
-			if sp == nil {
-				p := start
-				sp = &p
-			}
-			all = append(all, store.CompendiumRowInsert{
-				SourcePage:         sp,
-				CNK:                m.CNK,
-				Name:               m.Name,
-				ATCCode:            m.ATCCode,
-				PharmaceuticalForm: m.PharmaceuticalForm,
-				PackSize:           m.PackSize,
-				IsAntibiotic:       m.IsAntibiotic,
-				RawJSON:            raw,
-				Status:             status,
-				ErrorCode:          code,
-				ErrorMessage:       msg,
-			})
-		}
+		allMeds = append(allMeds, meds...)
 		_ = a.store.SetCompendiumExtractProgress(ctx, jobID, i+1)
 	}
 
+	allMeds = pharmacy.DedupExtractedMedications(allMeds)
+	all := make([]store.CompendiumRowInsert, 0, len(allMeds))
+	for _, m := range allMeds {
+		status, code, msg := pharmacy.ClassifyExtractedRow(m)
+		raw, _ := json.Marshal(m)
+		sp := m.SourcePage
+		if sp == nil {
+			p := job.PageStart
+			sp = &p
+		}
+		all = append(all, store.CompendiumRowInsert{
+			SourcePage:         sp,
+			CNK:                m.CNK,
+			Name:               m.Name,
+			ATCCode:            m.ATCCode,
+			PharmaceuticalForm: m.PharmaceuticalForm,
+			PackSize:           m.PackSize,
+			IsAntibiotic:       m.IsAntibiotic,
+			RawJSON:            raw,
+			Status:             status,
+			ErrorCode:          code,
+			ErrorMessage:       msg,
+		})
+	}
+
 	if err := a.store.ReplaceCompendiumExtractRows(ctx, jobID, all); err != nil {
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("persist:%v", err))
+		fail(fmt.Sprintf("persist:%v", err))
 	}
 }
 
