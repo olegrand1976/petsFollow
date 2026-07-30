@@ -149,6 +149,8 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
 
     // Preview must not execute script from corpus if shown
     if (await page.getByTestId('visit-report-edit-tab').isVisible()) {
+      // Close history <details> so its overlay does not intercept the preview tab click (Cloud Run).
+      await page.getByTestId('visit-report-history').locator('summary').click()
       await page.getByTestId('visit-report-preview-tab').click()
       const preview = page.getByTestId('visit-report-preview')
       await expect(preview).toBeVisible()
