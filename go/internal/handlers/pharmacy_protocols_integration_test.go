@@ -124,6 +124,20 @@ func TestPharmacyDAFPetDispensesAndDrafts(t *testing.T) {
 		t.Fatalf("fresh draft should not be stale %#v", drafts)
 	}
 
+	// Backdate updated_at → draft appears as stale (>1h) for consultation badges.
+	if _, err := api.pool.Exec(ctx, `
+		UPDATE pharmacy.daf_documents SET updated_at = NOW() - INTERVAL '2 hours' WHERE id = $1::uuid`, dafID); err != nil {
+		t.Fatalf("backdate draft: %v", err)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/consultations/daf-drafts?visitIds="+visitID, tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("stale drafts %d %#v", code, env)
+	}
+	drafts, _ = dataMap(t, env)["drafts"].(map[string]any)
+	if drafts == nil || drafts[visitID] != dafID {
+		t.Fatalf("want stale draft map[%s]=%s got %#v", visitID, dafID, drafts)
+	}
+
 	// Preview without stock → stock error with medicationId detail.
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/preview-fefo", tok, map[string]any{
 		"items": []map[string]any{{"medicationId": medID, "qty": 1}},

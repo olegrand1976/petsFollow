@@ -124,6 +124,34 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
     await expect(page.getByTestId(`consultation-row-${visitId}`)).toHaveCount(0, { timeout: 10000 })
   })
 
+  test('badge draft DAF oublié (>1h) sur /consultations', async ({ page }) => {
+    await loginAsVet(page)
+    const visitId = await createWalkInWithReport(page)
+
+    await page.route('**/api/vet/consultations/daf-drafts**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { drafts: { [visitId]: 'daf-stale-mock' } } }),
+      })
+    })
+
+    const draftsRes = page.waitForResponse(
+      (r) => r.url().includes('/api/vet/consultations/daf-drafts') && r.request().method() === 'GET',
+      { timeout: 20000 },
+    ).catch(() => null)
+
+    await page.goto('/consultations', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
+    const hit = await draftsRes
+    if (!hit) {
+      test.skip(true, 'pharmacy off ou pharmacy.read absent — pas d’appel daf-drafts')
+    }
+    await expect(page.getByTestId(`consultation-daf-draft-${visitId}`)).toBeVisible({ timeout: 10000 })
+    await page.unroute('**/api/vet/consultations/daf-drafts**')
+  })
+
   test('durée audio affichée + écoute player', async ({ page, request }) => {
     const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
 

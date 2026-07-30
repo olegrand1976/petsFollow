@@ -63,8 +63,9 @@ func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID st
 }
 
 // UpdateClientContactPhoneByPractice updates contact_phone for a user linked to the practice.
-// The phone lives on identity.users (account-global): any linked practice can read/write it.
-// Empty phone clears the field. Returns the updated ClientSummary, or ErrNotFound if not linked.
+// Product choice: the phone lives on identity.users (account-global). Any linked practice with
+// clients.write can read/write it (last write wins across cabinets). Empty phone clears the field.
+// Returns the updated ClientSummary, or ErrNotFound if not linked.
 func (s *Store) UpdateClientContactPhoneByPractice(ctx context.Context, practiceID, clientID, contactPhone string) (ClientSummary, error) {
 	phone := strings.TrimSpace(contactPhone)
 	var c ClientSummary
