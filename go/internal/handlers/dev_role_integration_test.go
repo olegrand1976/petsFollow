@@ -7,6 +7,7 @@ import (
 
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func TestDevRoleSupportAndBillingGate(t *testing.T) {
@@ -101,11 +102,41 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 }
 
 func TestDevProfileSwitchToVet(t *testing.T) {
-	assertOpsCanSwitchToVet(t, "dev.demo@petsfollow.test", "dev")
+	assertOpsCanSwitchToVet(t, "dev.demo@petsfollow.test", string(kernel.RoleDev))
 }
 
 func TestAdminProfileSwitchToVet(t *testing.T) {
-	assertOpsCanSwitchToVet(t, "admin.demo@petsfollow.test", "admin")
+	assertOpsCanSwitchToVet(t, "admin.demo@petsfollow.test", string(kernel.RoleAdmin))
+}
+
+// TestAdminEnsureUserProfilesNoAutoClient locks the IsProRole(admin) exclusion:
+// a disposable admin must not get a personal client profile from EnsureUserProfiles alone.
+func TestAdminEnsureUserProfilesNoAutoClient(t *testing.T) {
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+	ctx := context.Background()
+	email := uniqueEmail("admin-no-client")
+	userID := insertVerifiedUser(t, api, string(kernel.RoleAdmin), email, "AdminDemo123!", "Admin Jetable", nil)
+	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+		t.Fatalf("EnsureUserProfiles: %v", err)
+	}
+	profiles, err := st.ListProfiles(ctx, userID)
+	if err != nil {
+		t.Fatalf("ListProfiles: %v", err)
+	}
+	roles := map[kernel.Role]bool{}
+	for _, p := range profiles {
+		roles[p.Role] = true
+	}
+	if !roles[kernel.RoleAdmin] {
+		t.Fatalf("expected admin profile, got %#v", profiles)
+	}
+	if roles[kernel.RoleClient] {
+		t.Fatalf("admin must not auto-get client via IsProRole, got %#v", profiles)
+	}
+	if len(profiles) != 1 {
+		t.Fatalf("expected single admin profile, got %#v", profiles)
+	}
 }
 
 func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
@@ -143,8 +174,8 @@ func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
 	if !roles[opsRole] || !roles["vet"] {
 		t.Fatalf("%s seed expected %s+vet profiles, got %#v", opsRole, opsRole, list)
 	}
-	if opsRole == "admin" && !roles["client"] {
-		t.Fatalf("admin seed expected client profile (seed-only), got %#v", list)
+	if !roles["client"] {
+		t.Fatalf("%s seed expected client profile, got %#v", opsRole, list)
 	}
 	if vetProfileID == "" {
 		t.Fatalf("%s missing vet profile: %#v", opsRole, list)
@@ -166,6 +197,10 @@ func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
 	}
 	if dataMap(t, env)["role"] != "vet" {
 		t.Fatalf("expected role vet after switch, got %#v", dataMap(t, env)["role"])
+	}
+	// Restore immediately (narrow poison window for shared seed accounts).
+	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+		t.Fatalf("restore ops profiles after switch: %v", err)
 	}
 }
 
