@@ -104,6 +104,23 @@
             <p class="pro-hint">{{ $t('calendar.reportPaneCrSubtitle') }}</p>
           </div>
           <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+            <label class="visit-report-lang" data-testid="visit-report-lang">
+              <span class="visually-hidden">{{ $t('calendar.reportTargetLang') }}</span>
+              <select
+                v-model="targetLocale"
+                class="pro-input visit-report-lang__select"
+                data-testid="visit-report-target-locale"
+                :disabled="reportBusy || hydrating"
+              >
+                <option value="auto">{{ $t('calendar.reportTargetLangAuto') }}</option>
+                <option value="fr">{{ $t('calendar.reportTargetLangFr') }}</option>
+                <option value="nl">{{ $t('calendar.reportTargetLangNl') }}</option>
+                <option value="en">{{ $t('calendar.reportTargetLangEn') }}</option>
+                <option value="es">{{ $t('calendar.reportTargetLangEs') }}</option>
+                <option value="et">{{ $t('calendar.reportTargetLangEt') }}</option>
+                <option value="it">{{ $t('calendar.reportTargetLangIt') }}</option>
+              </select>
+            </label>
             <ProButton
               :disabled="reportBusy || hydrating || !canImprove"
               :loading="reportBusy && improveInFlight"
@@ -122,17 +139,65 @@
         >
           {{ $t('calendar.reportAiProposalBanner') }}
         </p>
-        <ProMarkdownReportEditor
-          v-model="reportBody"
-          input-id="visit-report-body"
-          textarea-test-id="visit-report-body"
-          editor-test-id="visit-report-editor"
-          test-id-prefix="visit-report"
-          :placeholder="$t('calendar.reportHint')"
-          :disabled="reportBusy || reportLocked || dictating || hydrating"
-          :readonly="reportLocked"
-          :prefer-preview-tick="preferMarkdownPreviewTick"
-        />
+        <ClientOnly>
+          <ProRichReportEditor
+            v-model="reportBody"
+            input-id="visit-report-body"
+            textarea-test-id="visit-report-body"
+            editor-test-id="visit-report-editor"
+            test-id-prefix="visit-report"
+            :placeholder="$t('calendar.reportHint')"
+            :disabled="reportBusy || reportLocked || dictating || hydrating"
+            :readonly="reportLocked"
+          />
+          <template #fallback>
+            <div class="pro-input visit-report-pane__textarea" data-testid="visit-report-editor-fallback">
+              {{ reportBody }}
+            </div>
+          </template>
+        </ClientOnly>
+        <div
+          v-if="showAiQualityBar"
+          class="visit-report-quality"
+          data-testid="visit-report-quality"
+        >
+          <span class="pro-hint">{{ $t('calendar.reportQualityAsk') }}</span>
+          <div class="pro-flex-gap">
+            <ProButton
+              variant="secondary"
+              test-id="visit-report-quality-good"
+              :disabled="qualityBusy"
+              @click="submitAiQuality(true)"
+            >
+              <ProIcon name="thumb_up" :size="16" />
+              {{ $t('calendar.reportQualityGood') }}
+            </ProButton>
+            <ProButton
+              variant="ghost"
+              test-id="visit-report-quality-bad"
+              :disabled="qualityBusy"
+              @click="submitAiQuality(false)"
+            >
+              <ProIcon name="thumb_down" :size="16" />
+              {{ $t('calendar.reportQualityBad') }}
+            </ProButton>
+          </div>
+        </div>
+        <label
+          v-if="reportStatus === 'final' && !viewingPeerReport && !readonly"
+          class="pro-checkbox-label visit-report-reference"
+          data-testid="visit-report-reference"
+        >
+          <input
+            v-model="reportIsReference"
+            type="checkbox"
+            class="pro-checkbox"
+            data-testid="visit-report-reference-check"
+            :disabled="referenceBusy"
+            @change="onReferenceToggle"
+          >
+          {{ $t('calendar.reportMarkReference') }}
+        </label>
       </section>
     </div>
 
@@ -254,6 +319,7 @@
 <script setup lang="ts">
 import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
 import { normalizeReportText } from '~/utils/safeMarkdown'
+import { canonicalizeReportMarkdown } from '~/utils/reportRichText'
 import { probeAudioDurationSec } from '~/utils/audioDuration'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
 
@@ -266,6 +332,7 @@ export type VisitReportAuthor = {
   bodyText?: string
   transcriptText?: string
   improvedText?: string
+  isReference?: boolean
 }
 
 const props = withDefaults(
@@ -300,9 +367,14 @@ const reportTranscript = ref('')
 const reportPersistedTranscript = ref('')
 const reportImproved = ref('')
 const reportStatus = ref('')
+const reportIsReference = ref(false)
 const reportBusy = ref(false)
 const saveInFlight = ref(false)
 const improveInFlight = ref(false)
+const qualityBusy = ref(false)
+const referenceBusy = ref(false)
+const showAiQualityBar = ref(false)
+const targetLocale = ref('auto')
 /** True while initial/visit switch hydrate runs — locks textarea so fill cannot race GET. */
 const hydrating = ref(false)
 let hydrateSeq = 0
@@ -315,12 +387,6 @@ const pendingAudioFile = ref<File | null>(null)
 /** Which action the client-audio-consent modal is gating: file upload or live dictation. */
 const pendingAction = ref<'file' | 'dictate' | null>(null)
 const audioFileInput = ref<HTMLInputElement | null>(null)
-/** Bumps ProMarkdownReportEditor into preview after IA / restore (always fires). */
-const preferMarkdownPreviewTick = ref(0)
-
-function showMarkdownPreview() {
-  preferMarkdownPreviewTick.value += 1
-}
 
 const dictating = ref(false)
 const dictationSeconds = ref(0)
@@ -376,7 +442,7 @@ const historySavedBody = computed(() =>
 )
 
 const dirty = computed(() =>
-  reportBody.value !== reportPersistedBody.value
+  canonicalizeReportMarkdown(reportBody.value) !== canonicalizeReportMarkdown(reportPersistedBody.value)
   || reportTranscript.value !== reportPersistedTranscript.value
   || dictating.value,
 )
@@ -393,7 +459,6 @@ function restoreTranscriptVersion() {
 function restoreImprovedVersion() {
   if (reportLocked.value) return
   reportBody.value = reportImproved.value
-  showMarkdownPreview()
 }
 
 function cancelEdits() {
@@ -432,6 +497,7 @@ function applyReportPayload(data: Record<string, unknown> | null | undefined) {
   reportPersistedTranscript.value = mapped.transcriptText
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
+  reportIsReference.value = mapped.isReference
 }
 
 function reportHasContent(author: VisitReportAuthor | null | undefined) {
@@ -449,6 +515,7 @@ function applyPeerReport(author: VisitReportAuthor) {
     transcriptText: author.transcriptText,
     improvedText: author.improvedText,
     status: author.status,
+    isReference: author.isReference,
   })
   reportBody.value = mapped.bodyText
   reportPersistedBody.value = mapped.bodyText
@@ -456,6 +523,7 @@ function applyPeerReport(author: VisitReportAuthor) {
   reportPersistedTranscript.value = mapped.transcriptText
   reportImproved.value = mapped.improvedText
   reportStatus.value = mapped.status
+  reportIsReference.value = mapped.isReference
 }
 
 async function loadVisitReports(visitId: string) {
@@ -487,6 +555,8 @@ async function hydrateVisitReports(visitId: string) {
   reportPersistedTranscript.value = ''
   reportImproved.value = ''
   reportStatus.value = ''
+  reportIsReference.value = false
+  showAiQualityBar.value = false
   reportMsg.value = ''
   reportAuthors.value = []
   selectedReportAuthorId.value = ''
@@ -660,10 +730,13 @@ async function improveVisitReport() {
     // when …/report (GET/PUT) is also a leaf — see 03d-visit-report-ai-bff.
     const res: any = await $fetch(`/api/visits/${props.visitId}/report-improve`, {
       method: 'POST',
-      body: { sourceText: normalizeReportText(sourceRaw) },
+      body: {
+        sourceText: normalizeReportText(sourceRaw),
+        targetLocale: targetLocale.value || 'auto',
+      },
     })
     applyReportPayload(res.data ?? res)
-    showMarkdownPreview()
+    showAiQualityBar.value = true
     reportMsg.value = t('calendar.reportImproved')
     void loadVisitReports(props.visitId)
     emit('saved')
@@ -672,6 +745,57 @@ async function improveVisitReport() {
   } finally {
     improveInFlight.value = false
     reportBusy.value = false
+  }
+}
+
+async function submitAiQuality(good: boolean) {
+  if (qualityBusy.value) return
+  qualityBusy.value = true
+  try {
+    await $fetch('/api/me/ai-module/feedback', {
+      method: 'POST',
+      body: {
+        nps: good ? 9 : 3,
+        source: 'visit_report',
+        comment: good ? 'cr_quality_ok' : 'cr_quality_needs_work',
+        frictionTags: good ? [] : ['cr_quality'],
+      },
+    })
+    showAiQualityBar.value = false
+    reportMsg.value = t('calendar.reportQualityThanks')
+  } catch (e: any) {
+    showAiQualityBar.value = false
+    const status = e?.statusCode ?? e?.status ?? e?.data?.statusCode ?? e?.response?.status
+    // Module absent / unpaid: don't overwrite the successful improve message.
+    if (status === 404 || status === 403 || status === 402) {
+      reportMsg.value = t('calendar.reportImproved')
+    } else {
+      reportMsg.value = mapError(e)
+    }
+  } finally {
+    qualityBusy.value = false
+  }
+}
+
+async function onReferenceToggle() {
+  if (referenceBusy.value || reportStatus.value !== 'final') return
+  const checked = reportIsReference.value
+  referenceBusy.value = true
+  reportMsg.value = ''
+  try {
+    const res: any = await $fetch(`/api/visits/${props.visitId}/report-reference`, {
+      method: 'PATCH',
+      body: { isReference: checked },
+    })
+    applyReportPayload(res.data ?? res)
+    reportMsg.value = checked
+      ? t('calendar.reportReferenceOn')
+      : t('calendar.reportReferenceOff')
+  } catch (e: any) {
+    reportIsReference.value = !checked
+    reportMsg.value = mapError(e)
+  } finally {
+    referenceBusy.value = false
   }
 }
 
@@ -941,6 +1065,28 @@ watch(
   justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.visit-report-lang__select {
+  min-width: 9.5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.visit-report-quality {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-bg, #f8fafc);
+}
+
+.visit-report-reference {
+  margin: 0.25rem 0 0;
 }
 
 .visit-report-pane__header .pro-hint {

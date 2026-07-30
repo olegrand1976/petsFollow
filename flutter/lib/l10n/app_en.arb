@@ -86,7 +86,7 @@
   "proLightFinalizeReport": "Finalize",
   "proLightNewConsultation": "New consultation",
   "proLightConsultationNextTitle": "Consultation saved — next?",
-  "proLightConsultationCtaDaf": "Create prescription & invoice",
+  "proLightConsultationCtaDaf": "Create DAF & invoice",
   "proLightConsultationCtaInvoice": "Invoice directly",
   "proLightConsultationCtaDone": "Done",
   "proLightReportFinal": "Finalized",

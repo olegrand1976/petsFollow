@@ -1133,6 +1133,8 @@
       "domicileLocation": "Domicilio / scuderia",
       "domicilePlaceholder": "Es. Scuderia dei Salici — Bruxelles",
       "horseRegulatorySaved": "Dati regolamentari salvati.",
+      "dafDispensesTitle": "Dispense DAF",
+      "dafDispensesEmpty": "Nessuna dispensa DAF registrata per questo animale.",
       "timelineRecentTitle": "Ultimi eventi",
       "timelineTypeHeartrate": "Lettura cardiaca",
       "timelineTypeWeight": "Peso",
@@ -1270,7 +1272,7 @@
       "notes": "Note interne (opzionale)",
       "start": "Avvia la consultazione",
       "reportHint": "Scrivi o detta il referto, poi salva per proseguire con DAF / fattura.",
-      "ctaDafInvoice": "Crea ricetta e fattura",
+      "ctaDafInvoice": "Crea DAF e fattura",
       "ctaInvoice": "Fattura direttamente",
       "ctaDone": "Termina",
       "loadPetsError": "Impossibile caricare gli animali.",
@@ -1280,7 +1282,35 @@
       "leaveStay": "Rimanere",
       "leaveDiscard": "Annulla consultazione",
       "leaveSave": "Salva",
-      "leaveSaveEmpty": "Redigi il referto prima di salvare, oppure annulla la consultazione."
+      "leaveSaveEmpty": "Redigi il referto prima di salvare, oppure annulla la consultazione.",
+      "treatmentsTitle": "Trattamenti (DAF)",
+      "treatmentsHint": "Aggiungi farmaci dispensati in clinica — una bozza DAF viene creata automaticamente.",
+      "treatmentsSave": "Salva bozza DAF",
+      "treatmentsPreview": "Anteprima FEFO",
+      "treatmentsFinalize": "Finalizza DAF",
+      "treatmentsFinalizeConfirm": "Finalizzare il DAF e detrarre lo stock (FEFO)? Azione definitiva.",
+      "treatmentsEmpty": "Nessun farmaco — il DAF resterà vuoto.",
+      "treatmentsSaved": "Bozza DAF salvata",
+      "treatmentsFinalized": "DAF finalizzato — stock detratto",
+      "treatmentsStockError": "Stock insufficiente o lotti non validi — correggi le quantità.",
+      "treatmentsRemoveLine": "Rimuovi riga",
+      "finalizeConfirmTitle": "Finalizzare DAF?",
+      "finalizeConfirmBody": "Finalizzare il DAF e scalare lo stock (FEFO)? Azione definitiva.",
+      "finalizeConfirmOk": "Finalizza",
+      "receiptExpressTitle": "Ricezione express lotto",
+      "receiptLot": "N. lotto",
+      "receiptExpiry": "Data di scadenza",
+      "receiptQty": "Quantità ricevuta",
+      "receiptSubmit": "Ricevi e riprova",
+      "protocolsTitle": "Protocolli clinici",
+      "applyProtocol": "Protocollo « {name} » applicato",
+      "stepTreatments": "1. Trattamenti",
+      "stepPreview": "2. Anteprima FEFO",
+      "stepFinalize": "3. Finalizza DAF",
+      "stepInvoice": "4. Fattura",
+      "unsavedTreatmentsHint": "Salva la bozza DAF prima di uscire, o scarta le modifiche.",
+      "draftsOrphanBadge": "Bozza vecchia",
+      "vamregIndicationDefault": "Trattamento antibatterico"
     }
   },
   "consultations": {
@@ -1321,7 +1351,8 @@
     "delete": "Elimina",
     "deleteConfirmTitle": "Eliminare la consultazione?",
     "deleteConfirmBody": "Scomparirà dalla cronologia. Il referto resta archiviato (soft delete).",
-    "deleteConfirmCta": "Elimina"
+    "deleteConfirmCta": "Elimina",
+    "dafDraftOrphan": "Bozza DAF >1 h"
   },
   "pets": {
     "title": "Animali monitorati",
@@ -1374,7 +1405,8 @@
     "relatedInvoice": "Fattura di origine",
     "relatedInvoicePlaceholder": "Scegliere una fattura…",
     "relatedInvoiceEmpty": "Nessuna fattura emessa/consegnata — inviare prima una fattura.",
-    "relatedInvoiceRequired": "Selezionare la fattura collegata a questa nota di credito."
+    "relatedInvoiceRequired": "Selezionare la fattura collegata a questa nota di credito.",
+    "prefillDafAmount": "Importo HT stimato {amount} € (prezzi stock)"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotico",
@@ -1485,7 +1517,9 @@
         "sent": "Dichiarato",
         "failed": "Fallito",
         "na": "N/D"
-      }
+      },
+      "fromConsultation": "Da una consultazione",
+      "backToConsultations": "Torna alle consultazioni"
     },
     "errors": {
       "daf_vamreg_already_sent": "Impossibile annullare: dichiarazione VAMReg già inviata.",
@@ -2360,9 +2394,9 @@
     "reportVisitDate": "Data della visita",
     "reportDatePrefix": "Data del",
     "reportHowItWorksTitle": "Aiuto",
-    "reportHowItWorksStep1": "Detta o scrivi le note a sinistra (consenso del cliente per l’audio).",
-    "reportHowItWorksStep2": "Migliora con l’IA a destra, poi ritocca se serve.",
-    "reportHowItWorksStep3": "Salva, finalizza, poi prosegui con DAF o fattura.",
+    "reportHowItWorksStep1": "Trascrizione: detta o scrivi le note a sinistra (consenso audio del cliente).",
+    "reportHowItWorksStep2": "Analisi IA: strutturazione semantica del referto a destra.",
+    "reportHowItWorksStep3": "Validazione veterinaria: verifica, regola, poi salva / finalizza.",
     "audioConsent": "L'audio viene utilizzato per scrivere il CR. Confermare l'accordo orale del cliente. Eliminato al momento della finalizzazione.",
     "audioConsentTitle": "Consenso audio",
     "audioConsentAccept": "Accetto",
@@ -2461,7 +2495,29 @@
     "reportTranscriptHint": "Dettatura o note grezze…",
     "reportDirtyHint": "Modifiche non salvate.",
     "reportDiscardEdits": "Annulla modifiche",
-    "reportStatusFinal": "Finalizzato"
+    "reportStatusFinal": "Finalizzato",
+    "reportHowItWorksStep4": "Miglioramento continuo: feedback qualità + consulti di riferimento.",
+    "reportHowItWorksImageAlt": "Processo IA: trascrizione, analisi, validazione, miglioramento continuo",
+    "reportHowItWorksImageCaption": "Ciclo di iterazione integrato nel flusso di consultazione",
+    "reportTargetLang": "Lingua del referto",
+    "reportTargetLangAuto": "Auto (lingua della trascrizione)",
+    "reportTargetLangFr": "Francese",
+    "reportTargetLangNl": "Olandese",
+    "reportTargetLangEn": "Inglese",
+    "reportTargetLangEs": "Spagnolo",
+    "reportTargetLangEt": "Estone",
+    "reportTargetLangIt": "Italiano",
+    "reportFormatBold": "Grassetto",
+    "reportFormatItalic": "Corsivo",
+    "reportFormatBullet": "Elenco puntato",
+    "reportFormatOrdered": "Elenco numerato",
+    "reportQualityAsk": "La proposta IA è stata utile?",
+    "reportQualityGood": "Sì",
+    "reportQualityBad": "Da correggere",
+    "reportQualityThanks": "Grazie — questo migliora il modello",
+    "reportMarkReference": "Consulto di riferimento (miglioramento continuo)",
+    "reportReferenceOn": "Segnato come consulto di riferimento",
+    "reportReferenceOff": "Rimosso dai consulti di riferimento"
   },
   "commissions": {
     "title": "Le mie ricompense",
@@ -3556,6 +3612,9 @@
     "errorFormat": "Formato carta non valido (A4 o A5).",
     "errorNotFound": "Ricetta non trovata.",
     "errorNotDraft": "Solo le bozze sono modificabili.",
-    "errorPayload": "Contenuto troppo grande (note o farmaci)."
+    "errorPayload": "Contenuto troppo grande (note o farmaci).",
+    "medSearch": "Cerca (CNK / nome)",
+    "dispenseDaf": "Eroga in clinica (DAF)",
+    "dispenseDafHint": "Crea una bozza DAF (catalogo CNK). Completare i n. AMM e finalizzare nel wizard."
   }
 }

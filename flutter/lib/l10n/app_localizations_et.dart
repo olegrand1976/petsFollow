@@ -261,7 +261,7 @@ class AppLocalizationsEt extends AppLocalizations {
       'Konsultatsioon salvestatud — edasi?';
 
   @override
-  String get proLightConsultationCtaDaf => 'Loo retsept ja arve';
+  String get proLightConsultationCtaDaf => 'Loo DAF ja arvelda';
 
   @override
   String get proLightConsultationCtaInvoice => 'Arvelda otse';

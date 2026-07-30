@@ -110,6 +110,14 @@
               <ProBadge :variant="statusVariant(row.status)">
                 {{ statusLabel(row.status) }}
               </ProBadge>
+              <ProBadge
+                v-if="staleDafDrafts[row.id]"
+                variant="warning"
+                class="consultations-daf-draft-badge"
+                :data-testid="`consultation-daf-draft-${row.id}`"
+              >
+                {{ $t('consultations.dafDraftOrphan') }}
+              </ProBadge>
             </td>
             <td>
               <span v-if="row.hasReport">{{ reportStatusLabel(row.reportStatus) }}</span>
@@ -261,6 +269,7 @@ const canReadPets = computed(() => canPractice('pets.read'))
 const canManageCalendar = computed(() => canPractice('calendar.manage'))
 
 const rows = ref<ConsultationRow[]>([])
+const staleDafDrafts = ref<Record<string, string>>({})
 const loadError = ref('')
 const query = ref('')
 const statusFilter = ref('')
@@ -268,6 +277,9 @@ const fromDate = ref('')
 const toDate = ref('')
 const audioOnly = ref(false)
 const loading = ref(false)
+const pharmacyEnabled = computed(() => isPublicFlagOn(useRuntimeConfig().public.pharmacyEnabled))
+const canReadPharmacy = computed(() => canPractice('pharmacy.read'))
+const showDafDraftBadges = computed(() => pharmacyEnabled.value && canReadPharmacy.value)
 
 const reportOpen = ref(false)
 const selectedVisitId = ref('')
@@ -383,6 +395,21 @@ function dateBounds(dateStr: string, endOfDay: boolean): string | undefined {
   return new Date(utcGuess.getTime() - offset).toISOString()
 }
 
+async function loadStaleDafDrafts(visitIds: string[]) {
+  staleDafDrafts.value = {}
+  if (!showDafDraftBadges.value || !visitIds.length) return
+  try {
+    const res: any = await $fetch('/api/vet/consultations/daf-drafts', {
+      query: { visitIds: visitIds.join(',') },
+    })
+    const drafts = (res?.data ?? res)?.drafts
+    staleDafDrafts.value = drafts && typeof drafts === 'object' ? drafts : {}
+  }
+  catch {
+    staleDafDrafts.value = {}
+  }
+}
+
 async function load() {
   loading.value = true
   loadError.value = ''
@@ -399,10 +426,12 @@ async function load() {
     const res: any = await $fetch(`/api/vet/consultations${qs ? `?${qs}` : ''}`)
     const list = (res?.data ?? res) as ConsultationRow[]
     rows.value = Array.isArray(list) ? list : []
+    await loadStaleDafDrafts(rows.value.map(r => r.id).filter(Boolean))
   }
   catch (e: any) {
     loadError.value = mapError(e) || t('consultations.loadError')
     rows.value = []
+    staleDafDrafts.value = {}
   }
   finally {
     loading.value = false

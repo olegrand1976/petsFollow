@@ -692,12 +692,12 @@ func (s *Store) allocateFEFOTx(ctx context.Context, tx pgx.Tx, practiceID, medic
 				  AND (status <> 'active' OR expires_on < $3::date)`,
 				practiceID, medicationID, todStr).Scan(&invalid)
 			if invalid > 0 && total == 0 {
-				return nil, pharmacy.ErrStockUnavailableValidLots
+				return nil, pharmacy.StockErrForMed(medicationID, pharmacy.ErrStockUnavailableValidLots)
 			}
 		} else if total == 0 {
-			return nil, pharmacy.ErrStockUnavailableValidLots
+			return nil, pharmacy.StockErrForMed(medicationID, pharmacy.ErrStockUnavailableValidLots)
 		}
-		return nil, pharmacy.ErrStockInsufficient
+		return nil, pharmacy.StockErrForMed(medicationID, pharmacy.ErrStockInsufficient)
 	}
 
 	remaining := qty

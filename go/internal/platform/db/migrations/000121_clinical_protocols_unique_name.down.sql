@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS pharmacy.uq_pharmacy_clinical_protocols_practice_name;

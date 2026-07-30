@@ -453,3 +453,186 @@ func TestPharmacyDAFCancelBlockedWhileVAMRegPending(t *testing.T) {
 		t.Fatalf("want daf_vamreg_in_flight got %#v", env)
 	}
 }
+
+func TestPharmacyDAFUpsertForVisit(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	ctx := context.Background()
+	st := store.New(api.pool)
+	medID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
+		CNK: "2999020", Name: "Consult DAF Med", IsActive: true,
+	})
+	if err != nil {
+		t.Fatalf("med: %v", err)
+	}
+
+	tok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pets", tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	var petID string
+	for _, row := range env["data"].([]any) {
+		p, _ := row.(map[string]any)
+		petID, _ = p["id"].(string)
+		if petID != "" {
+			break
+		}
+	}
+	if petID == "" {
+		t.Skip("no pets seeded")
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", tok, map[string]any{
+		"scheduledAt":         time.Now().UTC().Format(time.RFC3339),
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"consultationSession": true,
+		"silentConfirm":       true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID, tok, map[string]any{"status": "cancelled"})
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/daf/for-visit?visitId="+visitID, tok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("get empty want 404 got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/daf/for-visit", tok, map[string]any{
+		"visitId": visitID,
+		"items": []map[string]any{{
+			"medicationId": medID, "qty": 1, "ammNumber": "BE-CONSULT-1",
+		}},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("upsert create %d %#v", code, env)
+	}
+	doc1 := dataMap(t, env)
+	dafID, _ := doc1["id"].(string)
+	if doc1["visitId"] != visitID || doc1["status"] != "draft" {
+		t.Fatalf("unexpected upsert %#v", doc1)
+	}
+	if n := len(doc1["items"].([]any)); n != 1 {
+		t.Fatalf("items=%d %#v", n, doc1)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/vet/pharmacy/daf/for-visit", tok, map[string]any{
+		"visitId": visitID,
+		"items": []map[string]any{{
+			"medicationId": medID, "qty": 3, "ammNumber": "BE-CONSULT-2",
+		}},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("upsert replace %d %#v", code, env)
+	}
+	doc2 := dataMap(t, env)
+	if doc2["id"] != dafID {
+		t.Fatalf("expected same draft id %s got %#v", dafID, doc2)
+	}
+	item0, _ := doc2["items"].([]any)[0].(map[string]any)
+	if item0["qty"] != float64(3) {
+		t.Fatalf("qty not replaced %#v", item0)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/vet/pharmacy/daf/for-visit?visitId="+visitID, tok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get draft %d %#v", code, env)
+	}
+	if dataMap(t, env)["id"] != dafID {
+		t.Fatalf("get mismatch %#v", env)
+	}
+}
+
+func TestPharmacyDAFFromPrescription(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	t.Setenv("PRESCRIPTIONS_ENABLED", "true")
+	api := newTestAPI(t)
+	ctx := context.Background()
+	st := store.New(api.pool)
+	medID, err := st.UpsertRefMedication(ctx, store.RefMedicationUpsert{
+		CNK: "2999021", Name: "Rx Bridge Med", IsActive: true,
+	})
+	if err != nil {
+		t.Fatalf("med: %v", err)
+	}
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	var petID string
+	for _, row := range pets {
+		p, _ := row.(map[string]any)
+		if p["practiceId"] != nil && p["practiceId"] != "" {
+			petID, _ = p["id"].(string)
+			break
+		}
+	}
+	if petID == "" {
+		t.Fatal("no pet with practice")
+	}
+
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prescriptions", vetTok, map[string]any{
+		"petId": petID,
+		"medications": []map[string]any{{
+			"name": "Rx Bridge Med", "dosage": "1", "form": "tab",
+			"quantity": "2", "posology": "SID",
+			"cnk": "2999021", "ref_medication_id": medID,
+		}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("rx create %d %#v", code, env)
+	}
+	rxID, _ := dataMap(t, env)["id"].(string)
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/from-prescription", vetTok, map[string]any{
+		"prescriptionId": rxID,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("from-prescription %d %#v", code, env)
+	}
+	doc := dataMap(t, env)
+	if doc["status"] != "draft" {
+		t.Fatalf("status %#v", doc)
+	}
+	if doc["petId"] != petID {
+		t.Fatalf("petId %#v", doc)
+	}
+	items, _ := doc["items"].([]any)
+	if len(items) != 1 {
+		t.Fatalf("items %#v", doc)
+	}
+	it0, _ := items[0].(map[string]any)
+	if it0["medicationId"] != medID {
+		t.Fatalf("medicationId %#v", it0)
+	}
+	if it0["qty"] != float64(2) {
+		t.Fatalf("qty from rx quantity %#v", it0)
+	}
+
+	// Without catalog link → daf_empty.
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/prescriptions", vetTok, map[string]any{
+		"petId": petID,
+		"medications": []map[string]any{{
+			"name": "Free text only", "quantity": "1",
+		}},
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("rx free %d %#v", code, env)
+	}
+	rxFree, _ := dataMap(t, env)["id"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/pharmacy/daf/from-prescription", vetTok, map[string]any{
+		"prescriptionId": rxFree,
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("want daf_empty 400 got %d %#v", code, env)
+	}
+}

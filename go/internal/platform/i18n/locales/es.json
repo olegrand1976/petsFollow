@@ -645,5 +645,9 @@
     "addon_care_plus_label": "Complemento Care+ — 19 € (pago único)",
     "addon_horse_label": "Complemento Caballo — 39 € (pago único)",
     "addon_kennel_label": "Complemento Kennel — 119 € (pago único)"
+  },
+  "daf": {
+    "timeline_title": "Tratamiento en clínica",
+    "timeline_body": "Tratamiento administrado / dispensado en la clínica"
   }
 }

@@ -131,13 +131,13 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 func documentTitle(cc string) string {
 	switch strings.ToUpper(cc) {
 	case "FR":
-		return "Ordonnance veterinaire"
+		return "Prescription veterinaire"
 	case "IT":
 		return "Ricetta veterinaria"
 	case "ES":
 		return "Receta veterinaria"
 	default:
-		return "Ordonnance veterinaire"
+		return "Prescription veterinaire"
 	}
 }
 
@@ -192,7 +192,7 @@ func disclaimer(cc string) string {
 	case "ES":
 		return "Documento generado por petsFollow (vista previa borrador). No sustituye una receta certificada."
 	default:
-		return "Document genere par petsFollow (apercu brouillon). Ne remplace pas une ordonnance certifiee / eIDAS. Mentions reglementaires pays a completer en phase 2."
+		return "Document genere par petsFollow (apercu brouillon). Ne remplace pas une prescription certifiee / eIDAS. Mentions reglementaires pays a completer en phase 2."
 	}
 }
 

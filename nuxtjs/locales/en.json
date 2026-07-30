@@ -498,7 +498,7 @@
       "notes": "Internal notes (optional)",
       "start": "Start consultation",
       "reportHint": "Write or dictate the report, then save to continue to DAF / invoicing.",
-      "ctaDafInvoice": "Create prescription & invoice",
+      "ctaDafInvoice": "Create DAF & invoice",
       "ctaInvoice": "Invoice directly",
       "ctaDone": "Done",
       "loadPetsError": "Unable to load pets.",
@@ -508,7 +508,35 @@
       "leaveStay": "Stay",
       "leaveDiscard": "Cancel consultation",
       "leaveSave": "Save",
-      "leaveSaveEmpty": "Write the visit report before saving, or cancel the consultation."
+      "leaveSaveEmpty": "Write the visit report before saving, or cancel the consultation.",
+      "treatmentsTitle": "Treatments (DAF)",
+      "treatmentsHint": "Add medications dispensed in-clinic — a DAF draft is created automatically.",
+      "treatmentsSave": "Save DAF draft",
+      "treatmentsPreview": "FEFO preview",
+      "treatmentsFinalize": "Finalize DAF",
+      "treatmentsFinalizeConfirm": "Finalize the DAF and deduct stock (FEFO)? This cannot be undone.",
+      "treatmentsEmpty": "No medications — DAF will stay empty.",
+      "treatmentsSaved": "DAF draft saved",
+      "treatmentsFinalized": "DAF finalized — stock deducted",
+      "treatmentsStockError": "Insufficient stock or no valid lots — adjust quantities.",
+      "treatmentsRemoveLine": "Remove line",
+      "finalizeConfirmTitle": "Finalize DAF?",
+      "finalizeConfirmBody": "Finalize the DAF and deduct stock (FEFO)? This action is final.",
+      "finalizeConfirmOk": "Finalize",
+      "receiptExpressTitle": "Express lot receipt",
+      "receiptLot": "Lot number",
+      "receiptExpiry": "Expiry date",
+      "receiptQty": "Quantity received",
+      "receiptSubmit": "Receive and retry",
+      "protocolsTitle": "Clinical protocols",
+      "applyProtocol": "Protocol “{name}” applied",
+      "stepTreatments": "1. Treatments",
+      "stepPreview": "2. FEFO preview",
+      "stepFinalize": "3. Finalize DAF",
+      "stepInvoice": "4. Invoice",
+      "unsavedTreatmentsHint": "Save the DAF draft before leaving, or discard changes.",
+      "draftsOrphanBadge": "Stale draft",
+      "vamregIndicationDefault": "Antibacterial treatment"
     },
     "detail": {
       "title": "Client profile",
@@ -577,6 +605,8 @@
       "domicileLocation": "Domicile / stable",
       "domicilePlaceholder": "e.g. Willow Stable — Brussels",
       "horseRegulatorySaved": "Regulatory details saved.",
+      "dafDispensesTitle": "DAF dispenses",
+      "dafDispensesEmpty": "No DAF dispenses recorded for this pet.",
       "timelineRecentTitle": "Recent events",
       "timelineTypeHeartrate": "Heart rate reading",
       "timelineTypeWeight": "Weight",
@@ -754,7 +784,8 @@
     "delete": "Delete",
     "deleteConfirmTitle": "Delete this consultation?",
     "deleteConfirmBody": "It will disappear from the history. The visit report stays archived (soft delete).",
-    "deleteConfirmCta": "Delete"
+    "deleteConfirmCta": "Delete",
+    "dafDraftOrphan": "DAF draft >1 h"
   },
   "pets": {
     "title": "Monitored pets",
@@ -833,7 +864,8 @@
     "relatedInvoice": "Original invoice",
     "relatedInvoicePlaceholder": "Select an invoice…",
     "relatedInvoiceEmpty": "No issued/delivered invoice available — send an invoice first.",
-    "relatedInvoiceRequired": "Select the invoice linked to this credit note."
+    "relatedInvoiceRequired": "Select the invoice linked to this credit note.",
+    "prefillDafAmount": "Est. excl. amount {amount} € (stock prices)"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotic",
@@ -949,7 +981,9 @@
         "sent": "Declared",
         "failed": "Failed",
         "na": "N/A"
-      }
+      },
+      "fromConsultation": "From a consultation",
+      "backToConsultations": "Back to consultations"
     },
     "errors": {
       "daf_vamreg_already_sent": "Cannot cancel: VAMReg declaration already sent.",
@@ -2882,9 +2916,9 @@
     "reportVisitDate": "Visit date",
     "reportDatePrefix": "Date",
     "reportHowItWorksTitle": "Help",
-    "reportHowItWorksStep1": "Dictate or type notes on the left (client consent for audio).",
-    "reportHowItWorksStep2": "Improve with AI on the right, then tweak if needed.",
-    "reportHowItWorksStep3": "Save, finalize, then continue to DAF or invoice.",
+    "reportHowItWorksStep1": "Transcription: dictate or type notes on the left (client audio consent).",
+    "reportHowItWorksStep2": "AI analysis: semantic structuring of the visit report on the right.",
+    "reportHowItWorksStep3": "Vet validation: review, adjust, then save / finalize.",
     "audioConsent": "Audio is used to draft the report. Confirm the client's oral consent. Deleted on finalize.",
     "audioConsentTitle": "Audio consent",
     "audioConsentAccept": "I agree",
@@ -2983,7 +3017,29 @@
     "reportTranscriptHint": "Dictation or raw notes…",
     "reportDirtyHint": "Unsaved changes.",
     "reportDiscardEdits": "Discard changes",
-    "reportStatusFinal": "Finalized"
+    "reportStatusFinal": "Finalized",
+    "reportHowItWorksStep4": "Continuous improvement: quality feedback + reference consultations.",
+    "reportHowItWorksImageAlt": "AI process: transcription, analysis, validation, continuous improvement",
+    "reportHowItWorksImageCaption": "Iteration cycle built into the consultation workflow",
+    "reportTargetLang": "Visit report language",
+    "reportTargetLangAuto": "Auto (transcription language)",
+    "reportTargetLangFr": "French",
+    "reportTargetLangNl": "Dutch",
+    "reportTargetLangEn": "English",
+    "reportTargetLangEs": "Spanish",
+    "reportTargetLangEt": "Estonian",
+    "reportTargetLangIt": "Italian",
+    "reportFormatBold": "Bold",
+    "reportFormatItalic": "Italic",
+    "reportFormatBullet": "Bullet list",
+    "reportFormatOrdered": "Numbered list",
+    "reportQualityAsk": "Was the AI proposal useful?",
+    "reportQualityGood": "Yes",
+    "reportQualityBad": "Needs work",
+    "reportQualityThanks": "Thanks — this improves the model",
+    "reportMarkReference": "Reference consultation (continuous improvement)",
+    "reportReferenceOn": "Marked as reference consultation",
+    "reportReferenceOff": "Removed from reference consultations"
   },
   "manager": {
     "dashboard": {
@@ -3587,6 +3643,9 @@
     "errorFormat": "Invalid paper format (A4 or A5).",
     "errorNotFound": "Prescription not found.",
     "errorNotDraft": "Only drafts can be edited.",
-    "errorPayload": "Payload too large (notes or medications)."
+    "errorPayload": "Payload too large (notes or medications).",
+    "medSearch": "Search (CNK / name)",
+    "dispenseDaf": "Dispense in clinic (DAF)",
+    "dispenseDafHint": "Creates a DAF draft (CNK catalog). Fill AMM numbers then finalize in the wizard."
   }
 }

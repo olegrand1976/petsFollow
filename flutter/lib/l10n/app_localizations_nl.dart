@@ -261,7 +261,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Consultatie opgeslagen — verder?';
 
   @override
-  String get proLightConsultationCtaDaf => 'Voorschrift & factureren';
+  String get proLightConsultationCtaDaf => 'DAF maken & factureren';
 
   @override
   String get proLightConsultationCtaInvoice => 'Direct factureren';

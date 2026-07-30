@@ -34,11 +34,12 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
    - **Annuler les modifications** (footer panel) restaure le dernier enregistrement **sans** fermer la consultation ; **Annuler** (footer modal) quitte la consult (confirm leave).
    - Historique des versions (replié) : transcription d’origine → proposition IA → dernière version enregistrée ; restore vers la bonne pane.
    - **Enregistrer** (ou Finaliser).
-5. Choisir :
-   - **Créer une ordonnance & Facturer** → wizard DAF prérempli (client / animal / visite) → finaliser → **Facturer**.
+5. (Optionnel) Panneau **Traitements (DAF)** : protocole 1 clic ou search CNK → AMM auto → enregistrer brouillon ; preview FEFO ; finaliser **dans la modal** (confirm ProModal) ou ouvrir le wizard pour édition avancée.
+6. Choisir :
+   - **Créer un DAF & Facturer** → wizard si besoin, sinon finalize inline puis **Facturer** (`mode=fromDaf`, lignes + montant estimé mock).
    - **ou Facturer directement** → page facturation avec contrepartie préremplie.
    - **ou Terminer** → visite `done` + finalisation auto des brouillons CR non vides (visible côté app client).
-6. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**.
+7. (Optionnel) Même CTA depuis la fiche client **ou la fiche animal**. Voir aussi [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md) pour le parcours stock/DAF détaillé.
 
 ## Résultat attendu
 
@@ -47,8 +48,9 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - Historique cabinet : `/consultations` (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
 - Veille / switch profil : autosave CR + reprise de la consultation pour le **même** utilisateur.
 - CR accessible immédiatement.
-- Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document).
-- E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture).
+- Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module prescriptions `/prescriptions`).
+- Traitements CNK en consult → brouillon DAF `visit_id` ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.
+- E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).
 - E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).
 
 ## Checklist
@@ -69,4 +71,4 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 
 ---
 
-*Réf. QA : C2.13, C2.19–C2.22, C7.4*
+*Réf. QA : C2.13, C2.19–C2.22, C7.4 · companion [`UC-VP-05`](UC-VP-05-pharmacie-stock-daf.md)*

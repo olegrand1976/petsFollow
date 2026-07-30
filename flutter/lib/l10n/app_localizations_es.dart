@@ -260,7 +260,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proLightConsultationNextTitle => 'Consulta guardada — ¿siguiente?';
 
   @override
-  String get proLightConsultationCtaDaf => 'Crear receta y facturar';
+  String get proLightConsultationCtaDaf => 'Crear DAF y facturar';
 
   @override
   String get proLightConsultationCtaInvoice => 'Facturar directamente';

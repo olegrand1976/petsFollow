@@ -498,7 +498,7 @@
       "notes": "Interne notities (optioneel)",
       "start": "Consultatie starten",
       "reportHint": "Schrijf of dicteer het verslag, sla op om door te gaan naar DAF / facturatie.",
-      "ctaDafInvoice": "Voorschrift & factureren",
+      "ctaDafInvoice": "DAF aanmaken & factureren",
       "ctaInvoice": "Direct factureren",
       "ctaDone": "Afronden",
       "loadPetsError": "Dieren laden mislukt.",
@@ -508,7 +508,35 @@
       "leaveStay": "Blijven",
       "leaveDiscard": "Consultatie annuleren",
       "leaveSave": "Opslaan",
-      "leaveSaveEmpty": "Schrijf het verslag vóór het opslaan, of annuleer de consultatie."
+      "leaveSaveEmpty": "Schrijf het verslag vóór het opslaan, of annuleer de consultatie.",
+      "treatmentsTitle": "Behandelingen (DAF)",
+      "treatmentsHint": "Voeg afgeleverde geneesmiddelen toe — een DAF-klad wordt automatisch aangemaakt.",
+      "treatmentsSave": "DAF-klad opslaan",
+      "treatmentsPreview": "FEFO-voorbeeld",
+      "treatmentsFinalize": "DAF finaliseren",
+      "treatmentsFinalizeConfirm": "DAF finaliseren en stock aftrekken (FEFO)? Dit is definitief.",
+      "treatmentsEmpty": "Geen geneesmiddelen — DAF blijft leeg.",
+      "treatmentsSaved": "DAF-klad opgeslagen",
+      "treatmentsFinalized": "DAF gefinaliseerd — stock afgetrokken",
+      "treatmentsStockError": "Onvoldoende stock of geen geldige loten — pas hoeveelheden aan.",
+      "treatmentsRemoveLine": "Regel verwijderen",
+      "finalizeConfirmTitle": "DAF finaliseren?",
+      "finalizeConfirmBody": "DAF finaliseren en voorraad aftrekken (FEFO)? Deze actie is definitief.",
+      "finalizeConfirmOk": "Finaliseren",
+      "receiptExpressTitle": "Express lotontvangst",
+      "receiptLot": "Lotnummer",
+      "receiptExpiry": "Vervaldatum",
+      "receiptQty": "Ontvangen hoeveelheid",
+      "receiptSubmit": "Ontvangen en opnieuw proberen",
+      "protocolsTitle": "Klinische protocollen",
+      "applyProtocol": "Protocol « {name} » toegepast",
+      "stepTreatments": "1. Behandelingen",
+      "stepPreview": "2. FEFO-preview",
+      "stepFinalize": "3. DAF finaliseren",
+      "stepInvoice": "4. Factureren",
+      "unsavedTreatmentsHint": "Sla het DAF-brouillon op voor u vertrekt, of verwerp de wijzigingen.",
+      "draftsOrphanBadge": "Oud brouillon",
+      "vamregIndicationDefault": "Antibacteriële behandeling"
     },
     "detail": {
       "title": "Klantdossier",
@@ -577,6 +605,8 @@
       "domicileLocation": "Domicilie / stal",
       "domicilePlaceholder": "Bv. Stal De Wilgen — Brussel",
       "horseRegulatorySaved": "Reglementaire gegevens opgeslagen.",
+      "dafDispensesTitle": "DAF-uitgiftes",
+      "dafDispensesEmpty": "Geen DAF-uitgiftes geregistreerd voor dit dier.",
       "timelineRecentTitle": "Recente gebeurtenissen",
       "timelineTypeHeartrate": "Hartslagmeting",
       "timelineTypeWeight": "Gewicht",
@@ -754,7 +784,8 @@
     "delete": "Verwijderen",
     "deleteConfirmTitle": "Consultatie verwijderen?",
     "deleteConfirmBody": "Ze verdwijnt uit de geschiedenis. Het verslag blijft gearchiveerd (soft delete).",
-    "deleteConfirmCta": "Verwijderen"
+    "deleteConfirmCta": "Verwijderen",
+    "dafDraftOrphan": "DAF-concept >1 u"
   },
   "pets": {
     "title": "Opgevolgde dieren",
@@ -833,7 +864,8 @@
     "relatedInvoice": "Originele factuur",
     "relatedInvoicePlaceholder": "Kies een factuur…",
     "relatedInvoiceEmpty": "Geen uitgegeven/geleverde factuur — stuur eerst een factuur.",
-    "relatedInvoiceRequired": "Selecteer de factuur gekoppeld aan deze creditnota."
+    "relatedInvoiceRequired": "Selecteer de factuur gekoppeld aan deze creditnota.",
+    "prefillDafAmount": "Geschat bedrag excl. {amount} € (voorraadprijzen)"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiotica",
@@ -949,7 +981,9 @@
         "sent": "Gemeld",
         "failed": "Mislukt",
         "na": "N.v.t."
-      }
+      },
+      "fromConsultation": "Vanuit een consultatie",
+      "backToConsultations": "Terug naar consultaties"
     },
     "errors": {
       "daf_vamreg_already_sent": "Annuleren onmogelijk: VAMReg-aangifte al verzonden.",
@@ -2882,9 +2916,9 @@
     "reportVisitDate": "Bezoekdatum",
     "reportDatePrefix": "Datum van",
     "reportHowItWorksTitle": "Hulp",
-    "reportHowItWorksStep1": "Dicteer of typ notities links (klanttoestemming voor audio).",
-    "reportHowItWorksStep2": "Verbeter met AI rechts, pas daarna bij indien nodig.",
-    "reportHowItWorksStep3": "Opslaan, finaliseren, daarna DAF of factuur.",
+    "reportHowItWorksStep1": "Transcriptie: dicteer of typ notities links (audio-toestemming cliënt).",
+    "reportHowItWorksStep2": "AI-analyse: semantische structurering van het verslag rechts.",
+    "reportHowItWorksStep3": "Dierenartsvalidatie: controleren, bijsturen, dan opslaan / finaliseren.",
     "audioConsent": "Audio dient om het verslag te maken. Bevestig mondelinge toestemming. Wordt verwijderd bij finalisatie.",
     "audioConsentTitle": "Audiotoestemming",
     "audioConsentAccept": "Ik ga akkoord",
@@ -2983,7 +3017,29 @@
     "reportTranscriptHint": "Dictee of ruwe notities…",
     "reportDirtyHint": "Niet-opgeslagen wijzigingen.",
     "reportDiscardEdits": "Wijzigingen annuleren",
-    "reportStatusFinal": "Afgerond"
+    "reportStatusFinal": "Afgerond",
+    "reportHowItWorksStep4": "Continue verbetering: kwaliteitsfeedback + referentieconsultaties.",
+    "reportHowItWorksImageAlt": "AI-proces: transcriptie, analyse, validatie, continue verbetering",
+    "reportHowItWorksImageCaption": "Iteratiecyclus geïntegreerd in de consultatieworkflow",
+    "reportTargetLang": "Taal van het verslag",
+    "reportTargetLangAuto": "Auto (taal van de transcriptie)",
+    "reportTargetLangFr": "Frans",
+    "reportTargetLangNl": "Nederlands",
+    "reportTargetLangEn": "Engels",
+    "reportTargetLangEs": "Spaans",
+    "reportTargetLangEt": "Estisch",
+    "reportTargetLangIt": "Italiaans",
+    "reportFormatBold": "Vet",
+    "reportFormatItalic": "Cursief",
+    "reportFormatBullet": "Opsomming",
+    "reportFormatOrdered": "Genummerde lijst",
+    "reportQualityAsk": "Was het AI-voorstel nuttig?",
+    "reportQualityGood": "Ja",
+    "reportQualityBad": "Te verbeteren",
+    "reportQualityThanks": "Bedankt — dit verbetert het model",
+    "reportMarkReference": "Referentieconsultatie (continue verbetering)",
+    "reportReferenceOn": "Gemarkeerd als referentieconsultatie",
+    "reportReferenceOff": "Verwijderd uit referentieconsultaties"
   },
   "manager": {
     "dashboard": {
@@ -3587,6 +3643,9 @@
     "errorFormat": "Ongeldig papierformaat (A4 of A5).",
     "errorNotFound": "Voorschrift niet gevonden.",
     "errorNotDraft": "Alleen concepten kunnen worden bewerkt.",
-    "errorPayload": "Inhoud te groot (notities of medicijnen)."
+    "errorPayload": "Inhoud te groot (notities of medicijnen).",
+    "medSearch": "Zoeken (CNK / naam)",
+    "dispenseDaf": "Afleveren in praktijk (DAF)",
+    "dispenseDafHint": "Maakt een DAF-klad (CNK-catalogus). Vul AMM-nummers in en finaliseer in de wizard."
   }
 }

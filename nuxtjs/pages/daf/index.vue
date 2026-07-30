@@ -26,6 +26,25 @@
       </div>
     </details>
 
+    <ProListToolbar :show-view-toggle="false">
+      <template #filters>
+        <div class="pro-field pro-field-inline">
+          <label class="pro-label" for="daf-status-filter">{{ $t('pharmacy.daf.colStatus') }}</label>
+          <select
+            id="daf-status-filter"
+            v-model="statusFilter"
+            class="pro-select"
+            data-testid="daf-status-filter"
+          >
+            <option value="">{{ $t('consultations.statusAll') }}</option>
+            <option value="draft">{{ $t('pharmacy.daf.statusDraft') }}</option>
+            <option value="finalized">{{ $t('pharmacy.daf.statusFinalized') }}</option>
+            <option value="cancelled">{{ $t('pharmacy.daf.statusCancelled') }}</option>
+          </select>
+        </div>
+      </template>
+    </ProListToolbar>
+
     <p v-if="error" class="pro-alert">{{ error }}</p>
 
     <ProCard>
@@ -46,7 +65,17 @@
             :data-testid="`daf-row-${row.id}`"
             @click="navigateTo(`/daf/${row.id}`)"
           >
-            <td>{{ row.displayNumber || '—' }}</td>
+            <td>
+              {{ row.displayNumber || '—' }}
+              <ProBadge
+                v-if="row.status === 'draft' && isDraftStale(row.createdAt)"
+                variant="warning"
+                class="daf-age-badge"
+                data-testid="daf-draft-age-hint"
+              >
+                {{ draftAgeHint(row.createdAt) }}
+              </ProBadge>
+            </td>
             <td><ProBadge :variant="statusVariant(row.status)">{{ statusLabel(row.status) }}</ProBadge></td>
             <td>{{ row.createdAt?.slice?.(0, 16) || row.createdAt }}</td>
           </tr>
@@ -66,6 +95,7 @@ const { canPractice } = usePracticePerms()
 const canWritePharmacy = computed(() => canPractice('pharmacy.write'))
 const error = ref('')
 const items = ref<any[]>([])
+const statusFilter = ref('')
 
 function unwrap(res: any) {
   return res?.data ?? res
@@ -84,15 +114,36 @@ function statusLabel(s: string) {
   return s
 }
 
-onMounted(async () => {
+function isDraftStale(createdAt?: string): boolean {
+  if (!createdAt) return false
+  const ageMs = Date.now() - new Date(createdAt).getTime()
+  return ageMs >= 60 * 60 * 1000
+}
+
+function draftAgeHint(createdAt?: string): string {
+  if (!createdAt) return ''
+  const hours = Math.floor((Date.now() - new Date(createdAt).getTime()) / (60 * 60 * 1000))
+  if (hours < 1) return t('clients.consultation.draftsOrphanBadge')
+  return `${t('clients.consultation.draftsOrphanBadge')} (${hours}h)`
+}
+
+async function load() {
+  error.value = ''
   try {
-    const res = await $fetch<any>('/api/vet/pharmacy/daf')
+    const query: Record<string, string> = {}
+    if (statusFilter.value) query.status = statusFilter.value
+    const res = await $fetch<any>('/api/vet/pharmacy/daf', { query })
     items.value = unwrap(res)?.items ?? []
   }
   catch (e: any) {
     error.value = pharmacyErr(e, 'pharmacy.daf.error')
+    items.value = []
   }
-})
+}
+
+watch(statusFilter, () => { void load() })
+
+onMounted(() => { void load() })
 </script>
 
 <style scoped>
@@ -106,4 +157,8 @@ onMounted(async () => {
 .pharmacy-legal__body { margin-top: 0.5rem; display: grid; gap: 0.35rem; }
 .pharmacy-legal__body p { margin: 0; font-size: 0.9rem; color: var(--pf-vet-muted); }
 .daf-row { cursor: pointer; }
+.daf-age-badge {
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
 </style>

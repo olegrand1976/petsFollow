@@ -1,5 +1,5 @@
 ---
-description: Modules Pro tag « dev » (ordonnances, pharmacie, facturation) — pas GA
+description: Modules Pro tag « dev » (prescriptions, pharmacie, facturation) — pas GA
 alwaysApply: true
 ---
 
@@ -12,13 +12,13 @@ Tant qu’un module Pro n’est **pas GA**, il doit rester clairement marqué **
 3. **Flag API** : endpoints gated (404 `*_disabled` si off) ; `make api-dev` force le flag à `true` en local.
 4. **Pas de useCase commercial** inventé tant que tag `dev` ([`usecase-sync.mdc`](usecase-sync.mdc)).
 
-## Ordonnances (actuel)
+## Prescriptions (actuel)
 
 | Surface | Valeur |
 |---------|--------|
-| Routes UI | `/ordonnances`, `/ordonnances/nouveau`, `/ordonnances/[id]` |
+| Routes UI | `/prescriptions`, `/prescriptions/nouveau`, `/prescriptions/[id]` |
 | Flag | `PRESCRIPTIONS_ENABLED` / `NUXT_PUBLIC_PRESCRIPTIONS_ENABLED` |
-| Doc | [`documentation/35-ORDONNANCES.md`](documentation/35-ORDONNANCES.md) |
+| Doc | [`documentation/35-PRESCRIPTIONS.md`](documentation/35-PRESCRIPTIONS.md) |
 | ≠ | DAF pharmacie (`PHARMACY_ENABLED`) — autre module |
 
 V1 = brouillons + preview PDF uniquement. Ne pas présenter comme produit signé / partagé client / conforme multi-pays.

@@ -583,7 +583,7 @@ abstract class AppLocalizations {
   /// No description provided for @proLightConsultationCtaDaf.
   ///
   /// In fr, this message translates to:
-  /// **'Créer une ordonnance & Facturer'**
+  /// **'Créer un DAF & Facturer'**
   String get proLightConsultationCtaDaf;
 
   /// No description provided for @proLightConsultationCtaInvoice.

@@ -1,4 +1,4 @@
-# Ordonnances vétérinaires (module tag `dev`)
+# Prescriptions vétérinaires (module tag `dev`)
 
 > **Statut** : V1 brouillon + preview PDF — **tag `dev`** (badge `nav.tagDev`), **pas** GA, **pas** signature électronique, **pas** partage client.
 > Flag : `PRESCRIPTIONS_ENABLED` / `NUXT_PUBLIC_PRESCRIPTIONS_ENABLED` (on via `make api-dev`).
@@ -7,8 +7,8 @@
 
 | Surface | Attendu |
 |---------|---------|
-| Nav Pro `/ordonnances` | `tag: t('nav.tagDev')` + testid `nav-ordonnances-dev-tag` |
-| Pages liste / nouveau / détail | `ProBadge` `nav.tagDev` (`ordonnances-*-dev-badge`) |
+| Nav Pro `/prescriptions` | `tag: t('nav.tagDev')` + testid `nav-prescriptions-dev-tag` |
+| Pages liste / nouveau / détail | `ProBadge` `nav.tagDev` (`prescriptions-*-dev-badge`) |
 | API | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
 | UI flag | `NUXT_PUBLIC_PRESCRIPTIONS_ENABLED` déclaré (miroir) ; **nav toujours visible** — gate API only, comme pharmacie |
 | Commercial | pas d’entrée `useCase/` tant que tag `dev` |
@@ -20,14 +20,14 @@
 | CRUD brouillons (`status=draft`) | Signature / pad / eIDAS |
 | Preview PDF A4/A5 à la volée | PDF immuable + `pdf_sha256` stocké |
 | `country_code` depuis le cabinet | `date_issued` renseigné (NULL tant que draft) |
-| UI Pro `/ordonnances` + badge `nav.tagDev` | Templates légaux certifiés BE/FR/IT/ES |
+| UI Pro `/prescriptions` + badge `nav.tagDev` | Templates légaux certifiés BE/FR/IT/ES |
 | Export RGPD `owner_id` | Attache `pets.documents` |
-| | Push messagerie |
-| | Lien stock / DAF / VAMReg |
+| Soft-link CNK / `ref_medication_id` (UI picker) | Push messagerie |
+| Pont optionnel `POST …/daf/from-prescription` → draft DAF | Finalize silencieux / VAMReg depuis prescription |
 
 ## Différence avec le DAF pharmacie
 
-| | **Ordonnance** | **DAF** ([27](27-PHARMACIE-BELGIQUE.md)) |
+| | **Prescription** | **DAF** ([27](27-PHARMACIE-BELGIQUE.md)) |
 |--|----------------|------------------------------------------|
 | But | Document propriétaire / officine | Administration / fourniture cabinet BE |
 | Schéma | `prescriptions.prescriptions` | `pharmacy.daf_*` |
@@ -47,6 +47,10 @@ Base : `/api/v1/vet/prescriptions` (BFF `/api/vet/prescriptions`).
 | `GET/PATCH/DELETE` | `/{id}` | Détail / maj / delete draft |
 | `GET` | `/{id}/pdf` | Stream PDF (généré, non persisté) |
 
+Pont pharmacie (si `PHARMACY_ENABLED`) : `POST /api/v1/vet/pharmacy/daf/from-prescription` `{ prescriptionId }` → draft DAF (lignes avec `ref_medication_id` uniquement).
+
+Consultation → DAF : `GET/PUT /api/v1/vet/pharmacy/daf/for-visit?visitId=` (un draft max par visite).
+
 404 `prescriptions_disabled` si flag off. Transitions `signed` / `sent` / `archived` refusées en V1.
 
 ## Schéma
@@ -64,10 +68,10 @@ Préfixe média PHI réservé : `prescriptions/` (`IsSensitiveObjectKey`).
 ## Tests
 
 ```bash
-cd go && go test ./internal/prescription/ ./internal/handlers/ -run 'TestPrescriptions|TestNormalize|TestBuildPDF' -count=1
+cd go && go test ./internal/handlers/ -run 'TestPrescriptions|TestPharmacyDAFUpsertForVisit|TestPharmacyDAFFromPrescription' -count=1
 ```
 
-Checklist : [15-PLAN-TESTS.md](15-PLAN-TESTS.md) (section Ordonnances).
+Checklist : [15-PLAN-TESTS.md](15-PLAN-TESTS.md) (section Prescriptions).
 
 ## Phase 2 (non implémentée)
 

@@ -19,7 +19,8 @@
         "UC-VP-01",
         "UC-VP-02",
         "UC-VP-03",
-        "UC-VP-04"
+        "UC-VP-04",
+        "UC-VP-05"
       ]
     },
     {
@@ -244,8 +245,9 @@
         "Sur une ligne client, cliquer Nouvelle Consultation.",
         "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer.",
         "Écran CR split :",
+        "(Optionnel) Panneau Traitements (DAF) : protocole 1 clic ou search CNK → AMM auto → enregistrer brouillon ; preview FEFO ; finaliser dans la modal (confirm ProModal) ou ouvrir le wizard pour édition avancée.",
         "Choisir :",
-        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal."
+        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal. Voir aussi UC-VP-05 pour le parcours stock/DAF détaillé."
       ],
       "expected": [
         "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
@@ -253,14 +255,58 @@
         "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).",
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
-        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document).",
-        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture).",
+        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module ordonnances /prescriptions).",
+        "Traitements CNK en consult → brouillon DAF visit_id ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.",
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).",
         "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
       ],
       "checklist": [
         "CTA liste clients",
         "Modal + CR",
         "CTA DAF / facture"
+      ]
+    },
+    "UC-VP-05": {
+      "id": "UC-VP-05",
+      "folderId": "vetpro",
+      "slug": "UC-VP-05-pharmacie-stock-daf",
+      "title": "Pharmacie stock → DAF (consultation)",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Montrer le parcours one-sitting : CR → traitements (protocole 1 clic / CNK) → preview FEFO → finalize DAF → facture mock — sans quitter la modal consultation, avec stock démo prêt.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "PHARMACY_ENABLED / NUXT_PUBLIC_PHARMACY_ENABLED on.",
+        "Seed : CNK démo + lots SEED-* VetPlus + protocoles cliniques.",
+        "Module tag dev (nav pharmacie / DAF)."
+      ],
+      "steps": [
+        "Clients → Nouvelle Consultation → animal → Démarrer → enregistrer un CR.",
+        "Panneau Traitements (DAF) :",
+        "Enregistrer le brouillon → Preview FEFO (lots seed visibles).",
+        "Si rupture : mini-réception lot inline → re-preview (sans aller sur /stock).",
+        "Finaliser le DAF → confirm ProModal → stock déduit.",
+        "CTA Facturer (si Billit UI on) → /invoicing?dafId=&mode=fromDaf avec lignes + montant HT estimé si prix stock.",
+        "Fiche animal → bloc Dispenses DAF (lecture).",
+        "/daf?status=draft : badge âge si brouillon > 1 h ; /consultations : badge « Brouillon DAF >1 h »."
+      ],
+      "expected": [
+        "Finalize dans la modal (pas besoin du wizard sauf édition avancée).",
+        "Timeline client : événement non-PHI « Traitement cabinet ».",
+        "Pas de finalize silencieux à la clôture CR ; dirty traitements → leave prompt."
+      ],
+      "checklist": [
+        "Protocole / CNK + FEFO",
+        "Finalize + stock",
+        "Dispenses fiche animal"
       ]
     },
     "UC-CL-01": {

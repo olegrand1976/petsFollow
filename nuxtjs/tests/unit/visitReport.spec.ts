@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mapVisitReportFields, persistedHistoryBody } from '../../utils/visitReport'
 import { normalizeReportText, renderSafeMarkdown } from '../../utils/safeMarkdown'
+import {
+  canonicalizeReportMarkdown,
+  editorHtmlToMarkdown,
+  markdownToEditorHtml,
+} from '../../utils/reportRichText'
 
 /** Shared escape / hostile corpus (aligned with Go normalize tests). */
 export const REPORT_ESCAPE_CORPUS
@@ -15,6 +20,7 @@ describe('mapVisitReportFields', () => {
       transcriptText: '',
       improvedText: '',
       status: '',
+      isReference: false,
     })
   })
 
@@ -25,12 +31,14 @@ describe('mapVisitReportFields', () => {
         transcriptText: 'raw transcript',
         improvedText: 'ai version',
         status: 'draft',
+        isReference: true,
       }),
     ).toEqual({
       bodyText: 'edited body',
       transcriptText: 'raw transcript',
       improvedText: 'ai version',
       status: 'draft',
+      isReference: true,
     })
   })
 
@@ -47,6 +55,7 @@ describe('mapVisitReportFields', () => {
       transcriptText: 'from audio',
       improvedText: '',
       status: 'draft',
+      isReference: false,
     })
   })
 })
@@ -64,6 +73,25 @@ describe('persistedHistoryBody', () => {
   it('ignores empty persisted body', () => {
     expect(persistedHistoryBody('', 'raw', 'ai')).toBe('')
     expect(persistedHistoryBody('', 'raw', 'ai')).toBe('')
+  })
+})
+
+describe('reportRichText', () => {
+  it('round-trips bold section headings without raw asterisks in HTML', () => {
+    const md = '**Anamnèse / motif :**\n\n- item détail'
+    const html = markdownToEditorHtml(md)
+    expect(html).toContain('<strong>')
+    expect(html).not.toContain('**Anamnèse')
+    const back = editorHtmlToMarkdown(html)
+    expect(back).toContain('Anamnèse')
+    expect(back).toMatch(/\*\*|__/)
+  })
+
+  it('canonicalize stabilizes TipTap round-trips for dirty checks', () => {
+    const md = '**Anamnèse / motif :**\n\n- item'
+    const once = canonicalizeReportMarkdown(md)
+    const twice = canonicalizeReportMarkdown(once)
+    expect(twice).toBe(once)
   })
 })
 
