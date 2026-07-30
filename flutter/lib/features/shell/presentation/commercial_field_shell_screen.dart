@@ -61,7 +61,7 @@ class _CommercialFieldShellScreenState extends State<CommercialFieldShellScreen>
           backgroundColor: Colors.transparent,
           title: Row(
             children: [
-              const PetsLogo(height: 28),
+              const PetsLogo(height: 36),
               const SizedBox(width: 8),
               Text(l10n.commercialFieldTitle),
             ],

@@ -257,6 +257,28 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
             bodyText: improved,
             transcriptText: notes,
             improvedText: improved,
+            isReference: false,
+          },
+        }),
+      })
+    })
+
+    let referencePatched: boolean | null = null
+    await page.route('**/api/visits/*/report-reference', async (route) => {
+      const payload = route.request().postDataJSON() as { isReference?: boolean } | null
+      referencePatched = payload?.isReference === true
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'e2e-mock-report',
+            visitId,
+            status: 'final',
+            bodyText: improved,
+            transcriptText: notes,
+            improvedText: improved,
+            isReference: true,
           },
         }),
       })
@@ -269,7 +291,13 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('visit-report-improve')).toHaveCount(0)
     await expect(page.getByTestId('visit-report-dictate')).toHaveCount(0)
 
+    await expect(page.getByTestId('visit-report-reference')).toBeVisible({ timeout: 10000 })
+    await page.getByTestId('visit-report-reference-check').check()
+    await expect.poll(() => referencePatched, { timeout: 10000 }).toBe(true)
+    await expect(page.getByTestId('visit-report-reference-check')).toBeChecked()
+
     await page.unroute('**/api/visits/*/report-improve')
     await page.unroute('**/api/visits/*/report-finalize')
+    await page.unroute('**/api/visits/*/report-reference')
   })
 })

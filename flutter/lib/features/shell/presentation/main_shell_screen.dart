@@ -184,6 +184,6 @@ class PetsAppBarLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PetsLogo(variant: PetsLogoVariant.horizontal, height: 28);
+    return const PetsLogo(variant: PetsLogoVariant.horizontal, height: 36);
   }
 }

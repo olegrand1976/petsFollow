@@ -321,4 +321,33 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     expect(finalized.status()).toBe(200)
     await expect(page.getByTestId('consultation-treatments-finalized')).toBeVisible({ timeout: 15000 })
   })
+
+  test('protocole clinique 1 clic → lignes + AMM préremplies', async ({ page }) => {
+    await openConsultationSetup(page)
+    await startConsultationVisit(page)
+    await saveConsultationReport(page)
+
+    const treatments = page.getByTestId('consultation-treatments')
+    if ((await treatments.count()) === 0) {
+      test.skip(true, 'pharmacy off ou pharmacy.write absent')
+    }
+    await expect(treatments).toBeVisible({ timeout: 10000 })
+
+    const protocols = page.getByTestId('consultation-treatments-protocols')
+    if ((await protocols.count()) === 0) {
+      test.skip(true, 'aucun protocole seed (Antibiothérapie courte)')
+    }
+    await expect(protocols).toBeVisible({ timeout: 10000 })
+
+    const protoBtn = page.getByRole('button', { name: /Antibiothérapie courte/i })
+    if ((await protoBtn.count()) === 0) {
+      test.skip(true, 'protocole Antibiothérapie courte absent du seed')
+    }
+    await protoBtn.first().click()
+
+    const amm = page.getByTestId('consultation-treatment-amm-0')
+    await expect(amm).toBeVisible({ timeout: 10000 })
+    await expect.poll(async () => (await amm.inputValue()).trim(), { timeout: 10000 }).not.toBe('')
+    await expect(page.getByTestId('consultation-treatment-qty-0')).toHaveValue('1')
+  })
 })

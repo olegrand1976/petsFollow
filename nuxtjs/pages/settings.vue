@@ -378,6 +378,10 @@
 import type { PracticeProfileForm } from '~/components/pro/PracticeProfileForm.vue'
 import { emptyPracticeProfileForm, mapPracticeProfileFromApi } from '~/components/pro/PracticeProfileForm.vue'
 import type { AppLocale } from '~/composables/useLocaleSync'
+import {
+  DEFAULT_DESK_IDLE_MINUTES,
+  normalizeDeskIdleMinutes,
+} from '~/utils/deskIdleMinutes'
 
 definePageMeta({ middleware: 'vet-only' })
 
@@ -438,8 +442,7 @@ const disableCode = ref('')
 const disablePassword = ref('')
 
 const selectedDurations = ref<number[]>([60])
-const deskIdleMinutes = ref(2)
-const DESK_IDLE_OPTIONS = [1, 2, 5, 10, 15, 30] as const
+const deskIdleMinutes = ref(DEFAULT_DESK_IDLE_MINUTES)
 
 const emailOnMessage = ref(true)
 const emailOnHeartrate = ref(true)
@@ -589,7 +592,7 @@ onMounted(async () => {
       const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
       selectedDurations.value = durations.length ? durations : [60]
       const idle = Number(data.deskIdleMinutes)
-      deskIdleMinutes.value = DESK_IDLE_OPTIONS.includes(idle as typeof DESK_IDLE_OPTIONS[number]) ? idle : 2
+      deskIdleMinutes.value = normalizeDeskIdleMinutes(idle)
       profileLoaded.value = true
     } catch (e: any) {
       profileError.value = mapError(e) || t('settings.profileLoadFailed')
@@ -786,9 +789,7 @@ async function saveProfile() {
     return
   }
   selectedDurations.value = durations
-  const idle = DESK_IDLE_OPTIONS.includes(deskIdleMinutes.value as typeof DESK_IDLE_OPTIONS[number])
-    ? deskIdleMinutes.value
-    : 2
+  const idle = normalizeDeskIdleMinutes(deskIdleMinutes.value)
   deskIdleMinutes.value = idle
   try {
     await $fetch('/api/vet/profile', {

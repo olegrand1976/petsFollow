@@ -11,6 +11,11 @@ import {
   unwrapAuthData,
 } from '~/composables/useAuth'
 import { useActiveConsultation } from '~/composables/useActiveConsultation'
+import {
+  DEFAULT_DESK_IDLE_MINUTES,
+  normalizeDeskIdleMinutes,
+  resolveDeskIdleMinutes,
+} from '~/utils/deskIdleMinutes'
 
 export type DeskMember = {
   email: string
@@ -24,8 +29,7 @@ const ROSTER_KEY = 'pf_desk_roster'
 const PATHS_KEY = 'pf_desk_last_paths'
 const LOCKED_KEY = 'pf_desk_locked'
 const IDLE_MINUTES_KEY = 'pf_desk_idle_minutes'
-const DEFAULT_IDLE_MS = 2 * 60 * 1000
-const ALLOWED_IDLE_MINUTES = [1, 2, 5, 10, 15, 30] as const
+const DEFAULT_IDLE_MS = DEFAULT_DESK_IDLE_MINUTES * 60 * 1000
 
 /** Module-singleton idle watch — shared across all useDeskSession() callers. */
 let idleTimer: ReturnType<typeof setTimeout> | null = null
@@ -58,12 +62,6 @@ function writeJson(key: string, value: unknown) {
   }
 }
 
-function normalizeDeskIdleMinutes(raw: unknown): number {
-  const n = Number(raw)
-  if ((ALLOWED_IDLE_MINUTES as readonly number[]).includes(n)) return n
-  return 2
-}
-
 function idleMinutesStorageKey(practiceId?: string): string {
   const pid = (practiceId || '').trim()
   return pid ? `${IDLE_MINUTES_KEY}:${pid}` : IDLE_MINUTES_KEY
@@ -80,26 +78,25 @@ function persistDeskIdleMinutes(minutes: number, practiceId?: string) {
 }
 
 function cachedDeskIdleMinutes(practiceId?: string): number {
-  if (!import.meta.client) return 2
+  if (!import.meta.client) return DEFAULT_DESK_IDLE_MINUTES
   const cache = readJson<RosterCache | null>(ROSTER_KEY, null)
   const pid = practiceId || cache?.practiceId
+  let scoped: string | null = null
+  let legacy: string | null = null
   try {
-    const scoped = localStorage.getItem(idleMinutesStorageKey(pid))
-    if (scoped != null) return normalizeDeskIdleMinutes(scoped)
-    // Legacy unscoped key (pre practice-scoped).
+    scoped = localStorage.getItem(idleMinutesStorageKey(pid))
     if (pid) {
-      const legacy = localStorage.getItem(IDLE_MINUTES_KEY)
-      if (legacy != null && (!cache?.practiceId || cache.practiceId === pid)) {
-        return normalizeDeskIdleMinutes(legacy)
-      }
+      legacy = localStorage.getItem(IDLE_MINUTES_KEY)
     }
   } catch {
     /* ignore */
   }
-  if (cache?.deskIdleMinutes != null && (!pid || !cache.practiceId || cache.practiceId === pid)) {
-    return normalizeDeskIdleMinutes(cache.deskIdleMinutes)
-  }
-  return 2
+  return resolveDeskIdleMinutes({
+    practiceId: pid,
+    roster: cache,
+    scopedIdleRaw: scoped,
+    legacyIdleRaw: legacy,
+  })
 }
 
 /** Client-only flag used by auth middleware to avoid bounce to /login while locked. */

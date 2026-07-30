@@ -261,6 +261,11 @@ export function mapPracticeProfileFromApi(data: any): PracticeProfileForm {
 </script>
 
 <script setup lang="ts">
+import {
+  ALLOWED_DESK_IDLE_MINUTES,
+  DEFAULT_DESK_IDLE_MINUTES,
+} from '~/utils/deskIdleMinutes'
+
 const model = defineModel<PracticeProfileForm>({ required: true })
 
 withDefaults(
@@ -273,12 +278,12 @@ withDefaults(
 )
 
 const heartrateDurationsSec = defineModel<number[]>('heartrateDurationsSec', { default: () => [60] })
-const deskIdleMinutes = defineModel<number>('deskIdleMinutes', { default: 2 })
+const deskIdleMinutes = defineModel<number>('deskIdleMinutes', { default: DEFAULT_DESK_IDLE_MINUTES })
 
 defineEmits<{ submit: [] }>()
 
 const durationOptions = [15, 30, 60] as const
-const idleOptions = [1, 2, 5, 10, 15, 30] as const
+const idleOptions = ALLOWED_DESK_IDLE_MINUTES
 const countryOptions = ['BE', 'FR', 'NL', 'LU', 'DE', 'ES', 'EE'] as const
 </script>
 

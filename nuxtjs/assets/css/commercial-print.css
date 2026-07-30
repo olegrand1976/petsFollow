@@ -7,7 +7,8 @@
   .pro-topbar,
   .pro-sidebar,
   .pro-app-shell > .pro-sidebar,
-  aside.pro-sidebar {
+  aside.pro-sidebar,
+  .pro-nav-backdrop {
     display: none !important;
   }
 

@@ -167,10 +167,10 @@ Compte : `vet.demo@petsfollow.test`
 |----|-----|-----|--------|---------|
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
-| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save`) |
+| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save` — **manuel** ; auto = Go `TestClientContactPhone*`) |
 | C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline | Données seed visibles |
 | C2.5 | P1 | Liste pets | `/pets` | Animaux transverses cabinet |
-| C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet (`TestClientContactPhone*`) |
+| C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
 | C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié |
@@ -183,7 +183,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · finalize inline · `/invoicing?visitId=&mode=direct|fromDaf` + contextes ; badge draft DAF oublié `/consultations` |
 | C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR ; supprimer → hors liste (`deleted_at`) ; player modal affiche durée persistée |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
-| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body` + TipTap `visit-report-prose`) ; select langue `visit-report-target-locale` (défaut auto = langue transcription) ; Améliorer disabled si notes **et** CR vides ; footer Annuler / Enregistrer / Finaliser ; Aide rétractable + image process ; feedback qualité post-IA ; référence si final |
+| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body` + TipTap `visit-report-prose`) ; select langue `visit-report-target-locale` (défaut auto = langue transcription) ; Améliorer disabled si notes **et** CR vides ; footer Annuler / Enregistrer / Finaliser ; Aide rétractable + image process ; feedback qualité post-IA ; référence si final (`visit-report-reference` — Go + `03e`) |
 | C2.20 | P1 | CR transcription → versions | hint-transcribe / edit notes → improve → restore | v0 transcript · v1 IA · restore cible pane ; re-improve écrase v1 |
 | C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
 | C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
@@ -487,8 +487,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.13 | P1 | UI `/stock` + prix/BL/CSV e2e | `17-pharmacy-stock-daf.spec.ts` (@p1 @pharmacy) | Shell bands/receipt/inventory/dev-badge ; PUT/GET prices ; BL vide → `MANUAL-*` ; export CSV inventaire |
 | C7.14 | P1 | Lots wasted non ressuscités | `TestPharmacyStockReceiptAndWaste` | Receipt même clé après waste → `batch_wasted` |
 | C7.15 | P1 | Overlay withdrawal practice | `TestPharmacyFoodChainAndWithdrawal` | PATCH withdrawal n’altère pas `ref_medications` national |
-| C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject lignes panneau traitements |
-| C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h ; événement dossier client post-finalize |
+| C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject UI 1 clic `03b` (`consultation-treatments-protocols`) |
+| C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h (`TestPharmacyDAFPetDispensesAndDrafts` stale>1h + e2e `03c` badge mock + `09` `pet-daf-dispenses`) ; événement dossier client post-finalize |
 
 **Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
@@ -543,7 +543,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L4 | P1 | Révoquer | Statut revoked |
 | L5 | P2 | Non-référence | Invite refusé |
 | L6 | P0 | Labels ACL lisibles | Droits i18n + tooltips (pas de clés brutes `clients.read`) |
-| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle (défaut 2 min, `deskIdleMinutes` cabinet) / force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
+| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle (défaut 2 min, `deskIdleMinutes` cabinet — roster serveur prime sur localStorage ; Vitest `deskIdleMinutes.spec.ts`) / force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
 | L8 | P0 | `shares.read` vs manage | Secrétaire / assist : onglet partages visible, pas de create/revoke ; GET OK / POST 403 |
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
 
@@ -720,10 +720,10 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize | `@p0` |
-| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** | `@p1` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize · protocole 1 clic | `@p0` |
+| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** + badge draft DAF | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
-| `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons | `@p1` |
+| `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons · toggle référence post-finalize | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |

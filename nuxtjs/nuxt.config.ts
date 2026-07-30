@@ -81,7 +81,8 @@ export default defineNuxtConfig({
       title: 'petsFollow Pro',
       // Polices auto-hébergées via assets/css/fonts.css (RGPD : aucun appel Google Fonts).
       link: [
-        { rel: 'icon', href: '/brand/emblem.svg' },
+        { rel: 'icon', type: 'image/png', href: '/brand/favicon-192.png' },
+        { rel: 'apple-touch-icon', href: '/brand/apple-touch-icon.png' },
         {
           rel: 'preload',
           href: '/fonts/dm-sans-latin.woff2',
