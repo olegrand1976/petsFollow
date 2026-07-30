@@ -1640,6 +1640,7 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var durationsProbe struct {
 		HeartRateDurationsSec *[]int `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int   `json:"deskIdleMinutes"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1682,8 +1683,17 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		normalized := kernel.NormalizeHeartRateDurations(*durationsProbe.HeartRateDurationsSec)
 		durationsUpdate = &normalized
 	}
+	var deskIdleUpdate *int
+	if durationsProbe.DeskIdleMinutes != nil {
+		if !kernel.IsAllowedDeskIdleMinutes(*durationsProbe.DeskIdleMinutes) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_desk_idle_minutes")
+			return
+		}
+		v := *durationsProbe.DeskIdleMinutes
+		deskIdleUpdate = &v
+	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

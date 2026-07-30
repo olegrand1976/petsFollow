@@ -8,7 +8,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 
 **Poste partagé (PC bureau)** — distinct du multi-profil même compte :
 - Header VetPro : avatars de l’équipe (`GET /vet/team`), clic → re-auth mot de passe (+ 2FA si actif).
-- Idle 2 min → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé).
+- Idle configurable (défaut **2 min**) → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé). Paramétrable par le véto de référence dans `/settings` (`deskIdleMinutes` : 1|2|5|10|15|30).
 - Switch profil : même purge immédiate des cookies (pas de session active derrière le modal / autre onglet) ; « Annuler » → veille (y compris si la purge logout est encore en cours).
 - Header : avatars équipe uniquement si **≥ 2** membres.
 - Au déverrouillage / switch : restauration de la dernière route de l’utilisateur cible.

@@ -23,7 +23,9 @@ export type DeskPromptMode = 'lock' | 'switch' | null
 const ROSTER_KEY = 'pf_desk_roster'
 const PATHS_KEY = 'pf_desk_last_paths'
 const LOCKED_KEY = 'pf_desk_locked'
+const IDLE_MINUTES_KEY = 'pf_desk_idle_minutes'
 const DEFAULT_IDLE_MS = 2 * 60 * 1000
+const ALLOWED_IDLE_MINUTES = [1, 2, 5, 10, 15, 30] as const
 
 /** Module-singleton idle watch — shared across all useDeskSession() callers. */
 let idleTimer: ReturnType<typeof setTimeout> | null = null
@@ -32,6 +34,7 @@ let idleStarted = false
 type RosterCache = {
   practiceId: string
   members: DeskMember[]
+  deskIdleMinutes?: number
   updatedAt: number
 }
 
@@ -53,6 +56,50 @@ function writeJson(key: string, value: unknown) {
   } catch {
     /* private mode / quota */
   }
+}
+
+function normalizeDeskIdleMinutes(raw: unknown): number {
+  const n = Number(raw)
+  if ((ALLOWED_IDLE_MINUTES as readonly number[]).includes(n)) return n
+  return 2
+}
+
+function idleMinutesStorageKey(practiceId?: string): string {
+  const pid = (practiceId || '').trim()
+  return pid ? `${IDLE_MINUTES_KEY}:${pid}` : IDLE_MINUTES_KEY
+}
+
+function persistDeskIdleMinutes(minutes: number, practiceId?: string) {
+  if (!import.meta.client) return
+  try {
+    const pid = practiceId || readJson<RosterCache | null>(ROSTER_KEY, null)?.practiceId
+    localStorage.setItem(idleMinutesStorageKey(pid), String(normalizeDeskIdleMinutes(minutes)))
+  } catch {
+    /* ignore */
+  }
+}
+
+function cachedDeskIdleMinutes(practiceId?: string): number {
+  if (!import.meta.client) return 2
+  const cache = readJson<RosterCache | null>(ROSTER_KEY, null)
+  const pid = practiceId || cache?.practiceId
+  try {
+    const scoped = localStorage.getItem(idleMinutesStorageKey(pid))
+    if (scoped != null) return normalizeDeskIdleMinutes(scoped)
+    // Legacy unscoped key (pre practice-scoped).
+    if (pid) {
+      const legacy = localStorage.getItem(IDLE_MINUTES_KEY)
+      if (legacy != null && (!cache?.practiceId || cache.practiceId === pid)) {
+        return normalizeDeskIdleMinutes(legacy)
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  if (cache?.deskIdleMinutes != null && (!pid || !cache.practiceId || cache.practiceId === pid)) {
+    return normalizeDeskIdleMinutes(cache.deskIdleMinutes)
+  }
+  return 2
 }
 
 /** Client-only flag used by auth middleware to avoid bounce to /login while locked. */
@@ -86,7 +133,7 @@ function idleMs(): number {
       return w.__PF_DESK_IDLE_MS
     }
   }
-  return DEFAULT_IDLE_MS
+  return cachedDeskIdleMinutes() * 60 * 1000
 }
 
 const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'] as const
@@ -112,11 +159,16 @@ export function useDeskSession() {
     roster.value = cache.members
   }
 
-  function persistRoster(practiceId: string, members: DeskMember[]) {
+  function persistRoster(practiceId: string, members: DeskMember[], deskIdleMinutes?: number) {
     roster.value = members
+    const minutes = deskIdleMinutes != null
+      ? normalizeDeskIdleMinutes(deskIdleMinutes)
+      : cachedDeskIdleMinutes(practiceId)
+    persistDeskIdleMinutes(minutes, practiceId)
     writeJson(ROSTER_KEY, {
       practiceId,
       members,
+      deskIdleMinutes: minutes,
       updatedAt: Date.now(),
     } satisfies RosterCache)
     syncIdleWatch()
@@ -147,19 +199,44 @@ export function useDeskSession() {
     saveLastPath(email, full)
   }
 
-  async function refreshRoster() {
-    if (!isPracticeStaffRole(user.value?.role) || !user.value?.practiceId) return
-    try {
-      const res = await $fetch<{ data?: Array<{ email?: string; fullName?: string; teamRole?: string }> } | Array<{ email?: string; fullName?: string; teamRole?: string }>>('/api/vet/team')
-      const list = Array.isArray(res) ? res : (res.data ?? [])
-      const members: DeskMember[] = list
+  function unwrapTeamPayload(res: unknown): { members: DeskMember[]; deskIdleMinutes: number } {
+    const root = res as { data?: unknown } | unknown
+    const data = root && typeof root === 'object' && 'data' in root ? (root as { data: unknown }).data : root
+    if (Array.isArray(data)) {
+      return {
+        members: data
+          .filter((m: { email?: string }) => !!m.email)
+          .map((m: { email?: string; fullName?: string; teamRole?: string }) => ({
+            email: String(m.email),
+            fullName: String(m.fullName || m.email),
+            teamRole: String(m.teamRole || ''),
+          })),
+        deskIdleMinutes: cachedDeskIdleMinutes(),
+      }
+    }
+    const obj = (data && typeof data === 'object' ? data : {}) as {
+      members?: Array<{ email?: string; fullName?: string; teamRole?: string }>
+      deskIdleMinutes?: number
+    }
+    const list = Array.isArray(obj.members) ? obj.members : []
+    return {
+      members: list
         .filter((m) => !!m.email)
         .map((m) => ({
           email: String(m.email),
           fullName: String(m.fullName || m.email),
           teamRole: String(m.teamRole || ''),
-        }))
-      persistRoster(user.value.practiceId, members)
+        })),
+      deskIdleMinutes: normalizeDeskIdleMinutes(obj.deskIdleMinutes),
+    }
+  }
+
+  async function refreshRoster() {
+    if (!isPracticeStaffRole(user.value?.role) || !user.value?.practiceId) return
+    try {
+      const res = await $fetch('/api/vet/team')
+      const { members, deskIdleMinutes } = unwrapTeamPayload(res)
+      persistRoster(user.value.practiceId, members, deskIdleMinutes)
     } catch {
       loadRosterFromCache(user.value.practiceId)
       syncIdleWatch()
@@ -388,6 +465,22 @@ export function useDeskSession() {
     rememberCurrentPath()
   }
 
+  /** Après sauvegarde settings : propage la durée cabinet au timer idle. */
+  function setDeskIdleMinutes(minutes: number) {
+    const practiceId = user.value?.practiceId
+      || readJson<RosterCache | null>(ROSTER_KEY, null)?.practiceId
+    persistDeskIdleMinutes(minutes, practiceId)
+    const cache = readJson<RosterCache | null>(ROSTER_KEY, null)
+    if (cache) {
+      writeJson(ROSTER_KEY, {
+        ...cache,
+        deskIdleMinutes: normalizeDeskIdleMinutes(minutes),
+        updatedAt: Date.now(),
+      } satisfies RosterCache)
+    }
+    syncIdleWatch()
+  }
+
   function forceLockForTests() {
     void lock()
   }
@@ -429,6 +522,7 @@ export function useDeskSession() {
     stopIdleWatch,
     bumpIdle,
     syncIdleWatch,
+    setDeskIdleMinutes,
     forceLockForTests,
     setRosterForTests,
   }

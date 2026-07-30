@@ -31,7 +31,7 @@ Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un a
 4. Vérifier que l’on arrive sur le dernier écran connu de ce compte (ou l’accueil si première fois).
 5. Naviguer vers **Agenda** en secrétaire.
 6. Rebasculer vers `vet.demo` (mot de passe) → vérifier le retour vers l’écran précédent du véto si possible.
-7. Laisser le poste inactif **2 minutes** (ou demander un lock forcé à l’équipe tech en démo) → écran de veille.
+7. Laisser le poste inactif selon le **délai de veille** du cabinet (défaut **2 minutes**, réglable par le véto de référence dans Paramètres — ou demander un lock forcé à l’équipe tech en démo) → écran de veille.
 8. Déverrouiller avec un compte équipe + mot de passe.
 
 ## Résultat attendu
@@ -51,7 +51,7 @@ Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un a
 | Switch avec mot de passe | OK / KO / N/A |
 | Annuler switch → veille (re-auth) | OK / KO / N/A |
 | Restauration dernier écran | OK / KO / N/A |
-| Veille 2 min + déverrouillage (équipe ≥2) | OK / KO / N/A |
+| Veille idle (défaut 2 min, configurable) + déverrouillage (équipe ≥2) | OK / KO / N/A |
 | Solo : pas de veille idle | OK / KO / N/A |
 
 ## Zone retour

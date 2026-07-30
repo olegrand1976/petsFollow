@@ -86,3 +86,26 @@ func TestNormalizeHeartRateDurations(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizeDeskIdleMinutes(t *testing.T) {
+	cases := []struct {
+		in   int
+		want int
+	}{
+		{0, DefaultDeskIdleMinutes},
+		{-1, DefaultDeskIdleMinutes},
+		{3, DefaultDeskIdleMinutes},
+		{1, 1},
+		{2, 2},
+		{5, 5},
+		{10, 10},
+		{15, 15},
+		{30, 30},
+		{60, DefaultDeskIdleMinutes},
+	}
+	for _, tc := range cases {
+		if got := NormalizeDeskIdleMinutes(tc.in); got != tc.want {
+			t.Fatalf("NormalizeDeskIdleMinutes(%d)=%d want %d", tc.in, got, tc.want)
+		}
+	}
+}

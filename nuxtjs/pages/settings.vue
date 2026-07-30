@@ -38,7 +38,9 @@
         <ProPracticeProfileForm
           v-model="profile"
           v-model:heartrate-durations-sec="selectedDurations"
+          v-model:desk-idle-minutes="deskIdleMinutes"
           show-heartrate-durations
+          show-desk-idle
           @submit="saveProfile"
         >
           <template #actions>
@@ -436,6 +438,8 @@ const disableCode = ref('')
 const disablePassword = ref('')
 
 const selectedDurations = ref<number[]>([60])
+const deskIdleMinutes = ref(2)
+const DESK_IDLE_OPTIONS = [1, 2, 5, 10, 15, 30] as const
 
 const emailOnMessage = ref(true)
 const emailOnHeartrate = ref(true)
@@ -584,6 +588,8 @@ onMounted(async () => {
       profile.value = mapFromApi(data)
       const durations = (data.heartrateDurationsSec ?? []).map(Number).filter((n: number) => [15, 30, 60].includes(n))
       selectedDurations.value = durations.length ? durations : [60]
+      const idle = Number(data.deskIdleMinutes)
+      deskIdleMinutes.value = DESK_IDLE_OPTIONS.includes(idle as typeof DESK_IDLE_OPTIONS[number]) ? idle : 2
       profileLoaded.value = true
     } catch (e: any) {
       profileError.value = mapError(e) || t('settings.profileLoadFailed')
@@ -780,12 +786,17 @@ async function saveProfile() {
     return
   }
   selectedDurations.value = durations
+  const idle = DESK_IDLE_OPTIONS.includes(deskIdleMinutes.value as typeof DESK_IDLE_OPTIONS[number])
+    ? deskIdleMinutes.value
+    : 2
+  deskIdleMinutes.value = idle
   try {
     await $fetch('/api/vet/profile', {
       method: 'PUT',
-      body: { ...profile.value, heartrateDurationsSec: durations },
+      body: { ...profile.value, heartrateDurationsSec: durations, deskIdleMinutes: idle },
     })
     profileSaved.value = true
+    useDeskSession().setDeskIdleMinutes(idle)
     await useProUser().fetchUser(true)
   } catch (e: any) {
     profileError.value = mapError(e)

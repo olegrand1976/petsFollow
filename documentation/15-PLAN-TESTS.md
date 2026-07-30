@@ -543,7 +543,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L4 | P1 | Révoquer | Statut revoked |
 | L5 | P2 | Non-référence | Invite refusé |
 | L6 | P0 | Labels ACL lisibles | Droits i18n + tooltips (pas de clés brutes `clients.read`) |
-| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle/force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
+| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle (défaut 2 min, `deskIdleMinutes` cabinet) / force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
 | L8 | P0 | `shares.read` vs manage | Secrétaire / assist : onglet partages visible, pas de create/revoke ; GET OK / POST 403 |
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
 

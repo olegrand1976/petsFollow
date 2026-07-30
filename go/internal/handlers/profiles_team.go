@@ -236,7 +236,14 @@ func (a *API) listVetTeam(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, members)
+	deskIdle := kernel.DefaultDeskIdleMinutes
+	if m, err := a.store.GetPracticeDeskIdleMinutes(r.Context(), id.PracticeID); err == nil {
+		deskIdle = m
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"members":         members,
+		"deskIdleMinutes": deskIdle,
+	})
 }
 
 func (a *API) inviteVetTeam(w http.ResponseWriter, r *http.Request) {
