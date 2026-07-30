@@ -25,6 +25,7 @@ func (a *API) registerSupportRoutes(r chi.Router) {
 		pr.Get("/admin/support/tickets", a.adminListSupportTickets)
 		pr.Get("/admin/support/tickets/{id}", a.adminGetSupportTicket)
 		pr.Patch("/admin/support/tickets/{id}", a.adminPatchSupportTicket)
+		pr.Delete("/admin/support/tickets/{id}", a.adminDeleteSupportTicket)
 		pr.Post("/admin/support/tickets/{id}/replies", a.adminReplySupportTicket)
 	})
 }
@@ -219,6 +220,22 @@ func (a *API) adminPatchSupportTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, ticket)
+}
+
+func (a *API) adminDeleteSupportTicket(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdminOrDev(w, r); !ok {
+		return
+	}
+	id := chi.URLParam(r, "id")
+	if err := a.store.DeleteSupportTicket(r.Context(), id); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type replySupportTicketReq struct {

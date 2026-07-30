@@ -1,6 +1,10 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import { softDeleteVisits } from '../helpers/cleanup'
 import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
+
+/** Walk-ins créés pendant la suite — soft-delete après chaque test. */
+const createdVisitIds: string[] = []
 
 /** /clients peut ouvrir un ProModal (invitations) qui bloque les clics. */
 async function dismissProModals(page: Page) {
@@ -84,7 +88,9 @@ async function startConsultationVisit(page: Page): Promise<{ id: string }> {
   expect(visitPayload?.id).toBeTruthy()
   expect(visitPayload?.consultationSession).toBe(true)
   await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
-  return { id: String(visitPayload.id) }
+  const id = String(visitPayload.id)
+  createdVisitIds.push(id)
+  return { id }
 }
 
 async function fillVisitReportBody(page: Page, text: string) {
@@ -110,6 +116,13 @@ async function saveConsultationReport(page: Page) {
 
 test.describe('nouvelle consultation', { tag: '@p0' }, () => {
   test.describe.configure({ mode: 'serial' })
+
+  test.afterEach(async ({ page }) => {
+    const ids = createdVisitIds.splice(0, createdVisitIds.length)
+    if (ids.length === 0) return
+    // Session véto attendue (suite serial) ; best-effort si cookies perdus.
+    await softDeleteVisits(page, ids)
+  })
 
   test('clients → modal → CR save → CTA Terminer', async ({ page }) => {
     await loginAsVet(page)

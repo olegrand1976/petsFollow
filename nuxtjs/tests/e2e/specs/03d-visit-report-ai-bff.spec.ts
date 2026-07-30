@@ -101,6 +101,8 @@ test.describe('BFF visit report AI routes', { tag: '@p1' }, () => {
     }
     finally {
       await page.request.patch(`/api/visits/${visitId}`, { data: { status: 'cancelled' } }).catch(() => undefined)
+      // Soft-delete only applies to consultation_session walk-ins; ignore if rejected.
+      await page.request.delete(`/api/visits/${visitId}`).catch(() => undefined)
     }
   })
 })
