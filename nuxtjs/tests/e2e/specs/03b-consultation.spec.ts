@@ -298,9 +298,15 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     // Stock seed OK → FEFO; sinon form réception express (pas de skip soft CNK).
     const fefo = page.getByTestId('consultation-treatments-fefo')
     const receipt = page.getByTestId('consultation-treatments-receipt')
-    const fefoVisible = await fefo.waitFor({ state: 'visible', timeout: 10000 }).then(() => true).catch(() => false)
-    if (!fefoVisible) {
-      await expect(receipt).toBeVisible({ timeout: 5000 })
+    const outcome = await Promise.race([
+      fefo.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'fefo' as const),
+      receipt.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'receipt' as const),
+    ]).catch(() => null)
+    if (!outcome) {
+      const errText = await page.getByTestId('consultation-treatments').locator('.pro-error, [role="alert"]').first().textContent().catch(() => '')
+      throw new Error(`preview: ni FEFO ni receipt (erreur UI: ${errText || 'n/a'})`)
+    }
+    if (outcome === 'receipt') {
       const exp = new Date()
       exp.setMonth(exp.getMonth() + 6)
       await page.getByTestId('consultation-receipt-lot').fill(`E2E-${Date.now()}`)
