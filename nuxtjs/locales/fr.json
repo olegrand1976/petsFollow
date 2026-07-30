@@ -969,6 +969,18 @@
       "saved": "Durées enregistrées.",
       "save": "Enregistrer les durées"
     },
+    "deskIdle": {
+      "title": "Veille du poste partagé",
+      "subtitle": "Délai d’inactivité avant verrouillage automatique (équipe ≥ 2).",
+      "label": "Délai de veille",
+      "hint": "S’applique à tous les postes du cabinet. Défaut : 2 minutes.",
+      "minutes1": "1 minute",
+      "minutes2": "2 minutes",
+      "minutes5": "5 minutes",
+      "minutes10": "10 minutes",
+      "minutes15": "15 minutes",
+      "minutes30": "30 minutes"
+    },
     "notifications": {
       "title": "Notifications email",
       "subtitle": "Choisissez les événements pour lesquels vous recevez un email.",
@@ -3123,6 +3135,8 @@
     "invalid_json": "JSON invalide",
     "fields_required": "Tous les champs sont requis",
     "password_too_short": "Mot de passe trop court (8 caractères minimum)",
+    "contact_phone_required": "Numéro de téléphone requis",
+    "contact_phone_too_long": "Numéro de téléphone trop long",
     "image_too_large": "Fichier trop volumineux (limite dépassée)",
     "invalid_image_type": "Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fichier requis",
@@ -3133,6 +3147,7 @@
     "profile_fields_required": "Champs obligatoires manquants",
     "invalid_plan": "Formule invalide",
     "invalid_iban": "IBAN invalide",
+    "invalid_desk_idle_minutes": "Délai de veille invalide (1, 2, 5, 10, 15 ou 30 min)",
     "invalid_bic": "BIC invalide (8 ou 11 caractères)",
     "invalid_account_holder": "Titulaire de compte invalide",
     "invalid_locale": "Langue non supportée",

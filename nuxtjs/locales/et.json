@@ -357,6 +357,18 @@
       "saved": "Kestused salvestatud.",
       "save": "Salvesta kestused"
     },
+    "deskIdle": {
+      "title": "Jagatud töökoha lukustus",
+      "subtitle": "Tegevusetuse viivitus enne automaatset lukustust (meeskond ≥ 2).",
+      "label": "Lukustusviivitus",
+      "hint": "Kehtib praktika kõigi tööjaamade kohta. Vaikimisi: 2 minutit.",
+      "minutes1": "1 minut",
+      "minutes2": "2 minutit",
+      "minutes5": "5 minutit",
+      "minutes10": "10 minutit",
+      "minutes15": "15 minutit",
+      "minutes30": "30 minutit"
+    },
     "notifications": {
       "title": "E-posti teavitused",
       "subtitle": "Valige, millised sündmused käivitavad e-kirja.",
@@ -2243,6 +2255,8 @@
     "invalid_json": "Vigane JSON",
     "fields_required": "Kõik väljad on kohustuslikud",
     "password_too_short": "Parool on liiga lühike (vähemalt 8 tähemärki)",
+    "contact_phone_required": "Telefoninumber on kohustuslik",
+    "contact_phone_too_long": "Telefoninumber on liiga pikk",
     "image_too_large": "Fail on liiga suur (limiit ületatud)",
     "invalid_image_type": "Toetamata vorming (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fail on kohustuslik",
@@ -2253,6 +2267,7 @@
     "profile_fields_required": "Kohustuslikud väljad puuduvad",
     "invalid_plan": "Vigane plaan",
     "invalid_iban": "Vigane IBAN",
+    "invalid_desk_idle_minutes": "Vigane lukustusviivitus (1, 2, 5, 10, 15 või 30 min)",
     "invalid_locale": "Toetamata keel",
     "invalid_bic": "Vigane BIC (8 või 11 tähemärki)",
     "invalid_account_holder": "Vigane kontoomanik",

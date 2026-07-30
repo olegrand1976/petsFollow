@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
@@ -51,13 +50,9 @@ func (a *API) updateMe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if req.ContactPhone != nil {
-		phone := strings.TrimSpace(*req.ContactPhone)
-		if phone == "" {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_required")
-			return
-		}
-		if utf8.RuneCountInString(phone) > 40 {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
+		phone, code := normalizeContactPhone(*req.ContactPhone, true)
+		if code != "" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
 			return
 		}
 		switch id.Role {

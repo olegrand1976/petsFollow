@@ -924,6 +924,18 @@
       "saved": "Tempi registrati.",
       "save": "Salva durate"
     },
+    "deskIdle": {
+      "title": "Blocco postazione condivisa",
+      "subtitle": "Ritardo di inattività prima del blocco automatico (team ≥ 2).",
+      "label": "Ritardo di blocco",
+      "hint": "Si applica a tutte le postazioni della clinica. Predefinito: 2 minuti.",
+      "minutes1": "1 minuto",
+      "minutes2": "2 minuti",
+      "minutes5": "5 minuti",
+      "minutes10": "10 minuti",
+      "minutes15": "15 minuti",
+      "minutes30": "30 minuti"
+    },
     "notifications": {
       "title": "Notifiche e-mail",
       "subtitle": "Scegli gli eventi per i quali ricevere un'e-mail.",
@@ -3047,6 +3059,8 @@
     "invalid_json": "JSON non valido",
     "fields_required": "Tutti i campi sono obbligatori",
     "password_too_short": "Password troppo corta (minimo 8 caratteri)",
+    "contact_phone_required": "Numero di telefono obbligatorio",
+    "contact_phone_too_long": "Numero di telefono troppo lungo",
     "image_too_large": "File troppo grande (limite superato)",
     "invalid_image_type": "Formato non supportato (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "File richiesto",
@@ -3057,6 +3071,7 @@
     "profile_fields_required": "Campi obbligatori mancanti",
     "invalid_plan": "Formula non valida",
     "invalid_iban": "IBAN non valido",
+    "invalid_desk_idle_minutes": "Ritardo di blocco non valido (1, 2, 5, 10, 15 o 30 min)",
     "invalid_bic": "BIC non valido (8 o 11 caratteri)",
     "invalid_account_holder": "Titolare del conto non valido",
     "invalid_locale": "Lingua non supportata",

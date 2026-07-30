@@ -8,7 +8,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 
 **Poste partagé (PC bureau)** — distinct du multi-profil même compte :
 - Header VetPro : avatars de l’équipe (`GET /vet/team`), clic → re-auth mot de passe (+ 2FA si actif).
-- Idle 2 min → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé).
+- Idle configurable (défaut **2 min**) → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé). Paramétrable par le véto de référence dans `/settings` (`deskIdleMinutes` : 1|2|5|10|15|30).
 - Switch profil : même purge immédiate des cookies (pas de session active derrière le modal / autre onglet) ; « Annuler » → veille (y compris si la purge logout est encore en cours).
 - Header : avatars équipe uniquement si **≥ 2** membres.
 - Au déverrouillage / switch : restauration de la dernière route de l’utilisateur cible.
@@ -21,7 +21,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
-| `admin` / commercial* | Nuxt Pro | Inchangé — admin seed : multi-profils `admin` + `client` + `vet` (switch topbar) |
+| `admin` / commercial* | Nuxt Pro | Inchangé — **seed démo only** : `admin.demo` multi-profils `admin` + `client` + `vet` (pas d’auto-profil client pour tout admin via `IsProRole`) |
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).

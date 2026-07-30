@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +30,8 @@ type PracticeProfile struct {
 	VetFullName           string     `json:"vetFullName"`
 	VetEmail              string     `json:"vetEmail"`
 	HeartRateDurationsSec []int      `json:"heartrateDurationsSec"`
+	// DeskIdleMinutes: shared-desk auto-lock delay (1|2|5|10|15|30). Default 2.
+	DeskIdleMinutes int `json:"deskIdleMinutes"`
 	// Company / payout (for commission sheets) — not required for onboarding.
 	CompanyLegalName       string `json:"companyLegalName"`
 	VATNumber              string `json:"vatNumber"`
@@ -122,7 +125,7 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 		SELECT pr.id::text, pr.name, COALESCE(pr.phone,''), COALESCE(pr.contact_email,''),
 			COALESCE(pr.address_line1,''), COALESCE(pr.address_line2,''), COALESCE(pr.city,''),
 			COALESCE(pr.postal_code,''), COALESCE(pr.country_code,'BE'), COALESCE(pr.website,''), pr.profile_completed_at,
-			u.full_name, u.email, pr.heartrate_durations_sec,
+			u.full_name, u.email, pr.heartrate_durations_sec, pr.desk_idle_minutes,
 			COALESCE(pr.company_legal_name,''), COALESCE(pr.vat_number,''), COALESCE(pr.company_number,''),
 			COALESCE(pr.legal_form,''), COALESCE(pr.billing_same_as_practice, true),
 			COALESCE(pr.billing_address_line1,''), COALESCE(pr.billing_address_line2,''),
@@ -133,7 +136,7 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 		WHERE pr.id = $1`, practiceID, vetUserID).Scan(
 		&p.PracticeID, &p.PracticeName, &p.Phone, &p.ContactEmail,
 		&p.AddressLine1, &p.AddressLine2, &p.City, &p.PostalCode, &p.CountryCode, &p.Website, &completedAt,
-		&p.VetFullName, &p.VetEmail, &durations,
+		&p.VetFullName, &p.VetEmail, &durations, &p.DeskIdleMinutes,
 		&p.CompanyLegalName, &p.VATNumber, &p.CompanyNumber, &p.LegalForm, &p.BillingSameAsPractice,
 		&p.BillingAddressLine1, &p.BillingAddressLine2, &p.BillingPostalCode, &p.BillingCity,
 		&p.PayoutIBAN, &p.PayoutBIC, &p.PayoutAccountHolder,
@@ -147,8 +150,23 @@ func (s *Store) GetPracticeProfile(ctx context.Context, practiceID, vetUserID st
 	p.ProfileCompletedAt = completedAt
 	p.CountryCode = NormalizeCountryCode(p.CountryCode)
 	p.HeartRateDurationsSec = int32SliceToInts(durations)
+	p.DeskIdleMinutes = kernel.NormalizeDeskIdleMinutes(p.DeskIdleMinutes)
 	p.PayoutProfileComplete = IsVetPayoutProfileComplete(p)
 	return p, nil
+}
+
+// GetPracticeDeskIdleMinutes returns the shared-desk idle lock delay for a practice.
+func (s *Store) GetPracticeDeskIdleMinutes(ctx context.Context, practiceID string) (int, error) {
+	var minutes int
+	err := s.pool.QueryRow(ctx, `
+		SELECT desk_idle_minutes FROM practice.practices WHERE id = $1`, practiceID).Scan(&minutes)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return kernel.DefaultDeskIdleMinutes, ErrNotFound
+	}
+	if err != nil {
+		return kernel.DefaultDeskIdleMinutes, err
+	}
+	return kernel.NormalizeDeskIdleMinutes(minutes), nil
 }
 
 func int32SliceToInts(in []int32) []int {
@@ -186,7 +204,7 @@ func (s *Store) GetPracticeName(ctx context.Context, practiceID string) (string,
 	return name, err
 }
 
-func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int) error {
+func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int, deskIdleMinutes *int) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -216,8 +234,12 @@ func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID
 		p.PayoutIBAN, p.PayoutBIC, p.PayoutAccountHolder,
 	}
 	if heartRateDurationsSec != nil {
-		q += `, heartrate_durations_sec = $23`
 		args = append(args, *heartRateDurationsSec)
+		q += `, heartrate_durations_sec = $` + strconv.Itoa(len(args))
+	}
+	if deskIdleMinutes != nil {
+		args = append(args, kernel.NormalizeDeskIdleMinutes(*deskIdleMinutes))
+		q += `, desk_idle_minutes = $` + strconv.Itoa(len(args))
 	}
 	if markComplete {
 		q += `, profile_completed_at = COALESCE(profile_completed_at, NOW())`

@@ -802,7 +802,7 @@
         "Vérifier que l’on arrive sur le dernier écran connu de ce compte (ou l’accueil si première fois).",
         "Naviguer vers Agenda en secrétaire.",
         "Rebasculer vers vet.demo (mot de passe) → vérifier le retour vers l’écran précédent du véto si possible.",
-        "Laisser le poste inactif 2 minutes (ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
+        "Laisser le poste inactif selon le délai de veille du cabinet (défaut 2 minutes, réglable par le véto de référence dans Paramètres — ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
         "Déverrouiller avec un compte équipe + mot de passe."
       ],
       "expected": [
@@ -818,7 +818,7 @@
         "Switch avec mot de passe",
         "Annuler switch → veille (re-auth)",
         "Restauration dernier écran",
-        "Veille 2 min + déverrouillage (équipe ≥2)",
+        "Veille idle (défaut 2 min, configurable) + déverrouillage (équipe ≥2)",
         "Solo : pas de veille idle"
       ]
     },

@@ -682,16 +682,18 @@ func seedDev(ctx context.Context, tx pgx.Tx) error {
 }
 
 // EnsureDemoOpsVetProfiles is idempotent — used by seed.Run and integration tests.
+// Demo ops (admin.demo / dev.demo): profils client + vet VetPlus ; admin n'est pas IsProRole
+// (client seed-only, pas auto pour tout admin prod).
 func EnsureDemoOpsVetProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
-	if err := seedOpsDemoVetProfile(ctx, pool, st, "dev.demo@petsfollow.test"); err != nil {
+	if err := seedOpsDemoVetProfile(ctx, pool, st, "dev.demo@petsfollow.test", "dev"); err != nil {
 		return err
 	}
-	return seedOpsDemoVetProfile(ctx, pool, st, "admin.demo@petsfollow.test")
+	return seedOpsDemoVetProfile(ctx, pool, st, "admin.demo@petsfollow.test", "admin")
 }
 
-// seedOpsDemoVetProfile attache EnsureUserProfiles + profil vet VetPlus + team_members.
-// Réactive toujours le profil ops (admin|dev) : les tests de switch partagent la DB seedée.
-func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store, email string) error {
+// seedOpsDemoVetProfile attache EnsureUserProfiles + client (si besoin) + vet VetPlus + team_members.
+// Réactive toujours le profil ops attendu : les tests de switch partagent la DB seedée.
+func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store, email, opsRole string) error {
 	var userID, practiceID string
 	err := pool.QueryRow(ctx, `
 		SELECT id::text FROM identity.users WHERE email = $1`, email).Scan(&userID)
@@ -700,6 +702,12 @@ func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.St
 	}
 	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
 		return fmt.Errorf("%s profiles: %w", email, err)
+	}
+	// Admin n'est pas IsProRole : client perso explicitement au seed démo.
+	if opsRole == "admin" {
+		if err := ensureOpsDemoClientProfile(ctx, pool, userID); err != nil {
+			return fmt.Errorf("%s client profile: %w", email, err)
+		}
 	}
 	err = pool.QueryRow(ctx, `
 		SELECT p.id::text FROM practice.practices p
@@ -733,19 +741,36 @@ func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.St
 	if err != nil {
 		return err
 	}
-	return restoreOpsDemoActiveProfile(ctx, pool, userID)
+	return restoreOpsDemoActiveProfile(ctx, pool, userID, opsRole)
 }
 
-// restoreOpsDemoActiveProfile force le profil admin|dev actif (users.role + active_profile_id).
-func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
-	var opsProfileID, opsRole string
+func ensureOpsDemoClientProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
+	var existing string
 	err := pool.QueryRow(ctx, `
-		SELECT id::text, role::text FROM identity.profiles
-		WHERE user_id = $1 AND role IN ('admin', 'dev')
-		ORDER BY CASE role WHEN 'admin' THEN 0 WHEN 'dev' THEN 1 ELSE 2 END
-		LIMIT 1`, userID).Scan(&opsProfileID, &opsRole)
+		SELECT id::text FROM identity.profiles WHERE user_id = $1 AND role = 'client'`, userID).Scan(&existing)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO identity.profiles (id, user_id, role, practice_id, professional_specialty, created_at)
+		VALUES ($1, $2, 'client', NULL, NULL, NOW())
+		ON CONFLICT (user_id, role) DO NOTHING`,
+		uuid.NewString(), userID)
+	return err
+}
+
+// restoreOpsDemoActiveProfile force le profil ops attendu (users.role + active_profile_id).
+func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID, opsRole string) error {
+	var opsProfileID string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.profiles
+		WHERE user_id = $1 AND role = $2
+		LIMIT 1`, userID, opsRole).Scan(&opsProfileID)
 	if err != nil {
-		return fmt.Errorf("ops profile for %s: %w", userID, err)
+		return fmt.Errorf("ops profile %s for %s: %w", opsRole, userID, err)
 	}
 	_, err = pool.Exec(ctx, `
 		UPDATE identity.users SET

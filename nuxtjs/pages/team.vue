@@ -172,8 +172,11 @@ function isHardDenied(role: string, key: string) {
 
 async function load() {
   await fetchUser(true)
-  const res = await $fetch<{ data?: TeamMember[] } | TeamMember[]>('/api/vet/team')
-  members.value = Array.isArray(res) ? res : (res.data ?? [])
+  const res = await $fetch<{ data?: { members?: TeamMember[]; deskIdleMinutes?: number } | TeamMember[] } | TeamMember[]>('/api/vet/team')
+  const payload = Array.isArray(res) ? res : (res.data ?? [])
+  members.value = Array.isArray(payload)
+    ? payload
+    : (Array.isArray(payload.members) ? payload.members : [])
 }
 
 async function invite() {

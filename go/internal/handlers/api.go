@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
@@ -400,45 +399,6 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, client)
 }
 
-type patchClientReq struct {
-	ContactPhone *string `json:"contactPhone"`
-}
-
-func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requirePracticePerm(w, r, "clients.write")
-	if !ok {
-		return
-	}
-	var req patchClientReq
-	if err := httpx.DecodeJSON(r, &req); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
-	if req.ContactPhone == nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
-		return
-	}
-	phone := strings.TrimSpace(*req.ContactPhone)
-	if utf8.RuneCountInString(phone) > 40 {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
-		return
-	}
-	clientID := chi.URLParam(r, "clientID")
-	if err := a.store.UpdateClientContactPhoneByPractice(r.Context(), id.PracticeID, clientID, phone); err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
-			return
-		}
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, clientID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, client)
-}
 
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
@@ -1680,6 +1640,7 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var durationsProbe struct {
 		HeartRateDurationsSec *[]int `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int   `json:"deskIdleMinutes"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1722,8 +1683,17 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		normalized := kernel.NormalizeHeartRateDurations(*durationsProbe.HeartRateDurationsSec)
 		durationsUpdate = &normalized
 	}
+	var deskIdleUpdate *int
+	if durationsProbe.DeskIdleMinutes != nil {
+		if !kernel.IsAllowedDeskIdleMinutes(*durationsProbe.DeskIdleMinutes) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_desk_idle_minutes")
+			return
+		}
+		v := *durationsProbe.DeskIdleMinutes
+		deskIdleUpdate = &v
+	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

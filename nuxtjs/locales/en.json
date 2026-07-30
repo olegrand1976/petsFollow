@@ -357,6 +357,18 @@
       "saved": "Durations saved.",
       "save": "Save durations"
     },
+    "deskIdle": {
+      "title": "Shared desk lock",
+      "subtitle": "Idle delay before automatic lock (team of 2+).",
+      "label": "Lock delay",
+      "hint": "Applies to every workstation in the practice. Default: 2 minutes.",
+      "minutes1": "1 minute",
+      "minutes2": "2 minutes",
+      "minutes5": "5 minutes",
+      "minutes10": "10 minutes",
+      "minutes15": "15 minutes",
+      "minutes30": "30 minutes"
+    },
     "notifications": {
       "title": "Email notifications",
       "subtitle": "Choose which events trigger an email.",
@@ -2274,6 +2286,8 @@
     "invalid_json": "Invalid JSON",
     "fields_required": "All fields are required",
     "password_too_short": "Password too short (minimum 8 characters)",
+    "contact_phone_required": "Phone number required",
+    "contact_phone_too_long": "Phone number too long",
     "image_too_large": "File too large (limit exceeded)",
     "invalid_image_type": "Unsupported format (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "File required",
@@ -2284,6 +2298,7 @@
     "profile_fields_required": "Required fields missing",
     "invalid_plan": "Invalid plan",
     "invalid_iban": "Invalid IBAN",
+    "invalid_desk_idle_minutes": "Invalid lock delay (1, 2, 5, 10, 15 or 30 min)",
     "invalid_locale": "Unsupported language",
     "invalid_bic": "Invalid BIC (8 or 11 characters)",
     "invalid_account_holder": "Invalid account holder",
