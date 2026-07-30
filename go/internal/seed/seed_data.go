@@ -88,6 +88,7 @@ type petDef struct {
 type clientDef struct {
 	email            string
 	fullName         string
+	contactPhone     string
 	pets             []petDef
 	seedDiscovery    bool
 	extraPracticeVet string // vet email for secondary practice link
@@ -137,6 +138,7 @@ var demoPractices = []practiceDef{
 			{
 				email:            "client.demo@petsfollow.test",
 				fullName:         "Sophie Demo",
+				contactPhone:     "0470 00 00 01",
 				seedDiscovery:    true,
 				extraPracticeVet: "vet.parc@petsfollow.test",
 				pets: []petDef{
@@ -222,9 +224,10 @@ var demoPractices = []practiceDef{
 				},
 			},
 			{
-				email:    "client.vide@petsfollow.test",
-				fullName: "Luc Moreau",
-				pets:     nil,
+				email:        "client.vide@petsfollow.test",
+				fullName:     "Luc Moreau",
+				contactPhone: "0470 00 00 02",
+				pets:         nil,
 			},
 		},
 	},
@@ -243,8 +246,9 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate: true,
 		clients: []clientDef{
 			{
-				email:    "client.marie@petsfollow.test",
-				fullName: "Marie Leclerc",
+				email:        "client.marie@petsfollow.test",
+				fullName:     "Marie Leclerc",
+				contactPhone: "0470 00 00 03",
 				pets: []petDef{
 					{
 						name:          "Mimi",
@@ -287,8 +291,9 @@ var demoPractices = []practiceDef{
 				},
 			},
 			{
-				email:    "client.paul@petsfollow.test",
-				fullName: "Paul Bernard",
+				email:        "client.paul@petsfollow.test",
+				fullName:     "Paul Bernard",
+				contactPhone: "0470 00 00 04",
 				pets: []petDef{
 					{
 						name:          "Max",
@@ -332,8 +337,9 @@ var demoPractices = []practiceDef{
 		notifyOnHeartRate: true,
 		clients: []clientDef{
 			{
-				email:    "client.julie@petsfollow.test",
-				fullName: "Julie Martin",
+				email:        "client.julie@petsfollow.test",
+				fullName:     "Julie Martin",
+				contactPhone: "0470 00 00 05",
 				pets: []petDef{
 					{
 						name:          "Oscar",
@@ -363,8 +369,9 @@ var demoPractices = []practiceDef{
 				},
 			},
 			{
-				email:    "client.thomas@petsfollow.test",
-				fullName: "Thomas Durand",
+				email:        "client.thomas@petsfollow.test",
+				fullName:     "Thomas Durand",
+				contactPhone: "0470 00 00 06",
 				pets: []petDef{
 					{
 						name:          "Luna",
