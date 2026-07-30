@@ -378,6 +378,18 @@ func (s *Store) listSupportTicketReplies(ctx context.Context, ticketID string) (
 	return replies, rows.Err()
 }
 
+// DeleteSupportTicket hard-deletes a ticket (replies CASCADE). Admin/ops cleanup + e2e.
+func (s *Store) DeleteSupportTicket(ctx context.Context, id string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM ops.support_tickets WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) listSupportTicketStatusEvents(ctx context.Context, ticketID string) ([]SupportTicketStatusEvent, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT e.id, e.ticket_id, e.from_status, e.to_status, e.changed_by,

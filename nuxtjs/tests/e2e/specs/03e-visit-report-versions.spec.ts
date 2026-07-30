@@ -1,8 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import { softDeleteVisits } from '../helpers/cleanup'
 
 /** Escape corpus (subset of Vitest / Go normalize suite). */
 const ESCAPE_NOTES = 'Notes "quotes" \'apos\' «guillemets» back\\slash &amp; <script>alert(1)</script> **bold** été 🐶'
+
+const createdVisitIds: string[] = []
 
 async function dismissProModals(page: Page) {
   await page.getByTestId('pro-modal').first()
@@ -127,6 +130,7 @@ async function openConsultationReport(page: Page) {
   expect(visitId).toBeTruthy()
   await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
+  createdVisitIds.push(visitId)
   await expect(page.getByTestId('consultation-report')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('visit-report-pane-left')).toBeVisible()
   await expect(page.getByTestId('visit-report-pane-right')).toBeVisible()
@@ -135,6 +139,12 @@ async function openConsultationReport(page: Page) {
 
 test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
   test.describe.configure({ mode: 'serial' })
+
+  test.afterEach(async ({ page }) => {
+    const ids = createdVisitIds.splice(0, createdVisitIds.length)
+    if (ids.length === 0) return
+    await softDeleteVisits(page, ids)
+  })
 
   test('panes + boutons idle / dirty / cancel / save + escape round-trip', async ({ page }) => {
     test.setTimeout(120000)

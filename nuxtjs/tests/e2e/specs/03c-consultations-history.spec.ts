@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import { softDeleteVisit } from '../helpers/cleanup'
 
 /** C2.17 — historique /consultations (walk-in date DESC + filtres + ouvrir CR). */
 
@@ -82,34 +83,38 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
   test('liste /consultations + filtre + ouvrir CR', async ({ page }) => {
     await loginAsVet(page)
     const visitId = await createWalkInWithReport(page)
+    try {
+      const listRes = page.waitForResponse(
+        (r) => r.url().includes('/api/vet/consultations') && r.request().method() === 'GET',
+        { timeout: 20000 },
+      )
+      await page.goto('/consultations', { waitUntil: 'networkidle' })
+      await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
+      const listed = await listRes
+      expect(listed.status()).toBe(200)
 
-    const listRes = page.waitForResponse(
-      (r) => r.url().includes('/api/vet/consultations') && r.request().method() === 'GET',
-      { timeout: 20000 },
-    )
-    await page.goto('/consultations', { waitUntil: 'networkidle' })
-    await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
-    const listed = await listRes
-    expect(listed.status()).toBe(200)
+      await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('consultations-search')).toBeVisible()
+      await expect(page.getByTestId('consultations-status-filter')).toBeVisible()
 
-    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('consultations-search')).toBeVisible()
-    await expect(page.getByTestId('consultations-status-filter')).toBeVisible()
+      await page.getByTestId('consultations-search').fill('Sophie')
+      await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 10000 })
 
-    await page.getByTestId('consultations-search').fill('Sophie')
-    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 10000 })
-
-    const getReport = page.waitForResponse(
-      (r) => r.url().includes(`/api/visits/${visitId}/report`) && r.request().method() === 'GET',
-      { timeout: 20000 },
-    )
-    await page.getByTestId(`consultation-open-cr-${visitId}`).click()
-    await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
-    await expect(page.getByTestId('visit-report-panel')).toBeVisible()
-    await expect(page).toHaveURL(/\/consultations\/?$/, { timeout: 5000 })
-    await getReport
-    await expect(page.getByTestId('visit-report-body')).toHaveValue(/E2E history CR/, { timeout: 15000 })
+      const getReport = page.waitForResponse(
+        (r) => r.url().includes(`/api/visits/${visitId}/report`) && r.request().method() === 'GET',
+        { timeout: 20000 },
+      )
+      await page.getByTestId(`consultation-open-cr-${visitId}`).click()
+      await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByTestId('pro-modal-expand')).toBeVisible()
+      await expect(page.getByTestId('visit-report-panel')).toBeVisible()
+      await expect(page).toHaveURL(/\/consultations\/?$/, { timeout: 5000 })
+      await getReport
+      await expect(page.getByTestId('visit-report-body')).toHaveValue(/E2E history CR/, { timeout: 15000 })
+    }
+    finally {
+      await softDeleteVisit(page, visitId)
+    }
   })
 
   test('soft-delete retire la consultation de la liste', async ({ page }) => {
@@ -134,29 +139,33 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
   test('badge draft DAF oublié (>1h) sur /consultations', async ({ page }) => {
     await loginAsVet(page)
     const visitId = await createWalkInWithReport(page)
-
-    await page.route('**/api/vet/consultations/daf-drafts**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: { drafts: { [visitId]: 'daf-stale-mock' } } }),
+    try {
+      await page.route('**/api/vet/consultations/daf-drafts**', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: { drafts: { [visitId]: 'daf-stale-mock' } } }),
+        })
       })
-    })
 
-    const draftsRes = page.waitForResponse(
-      (r) => r.url().includes('/api/vet/consultations/daf-drafts') && r.request().method() === 'GET',
-      { timeout: 20000 },
-    ).catch(() => null)
+      const draftsRes = page.waitForResponse(
+        (r) => r.url().includes('/api/vet/consultations/daf-drafts') && r.request().method() === 'GET',
+        { timeout: 20000 },
+      ).catch(() => null)
 
-    await page.goto('/consultations', { waitUntil: 'networkidle' })
-    await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
-    const hit = await draftsRes
-    if (!hit) {
-      test.skip(true, 'pharmacy off ou pharmacy.read absent — pas d’appel daf-drafts')
+      await page.goto('/consultations', { waitUntil: 'networkidle' })
+      await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
+      const hit = await draftsRes
+      if (!hit) {
+        test.skip(true, 'pharmacy off ou pharmacy.read absent — pas d’appel daf-drafts')
+      }
+      await expect(page.getByTestId(`consultation-daf-draft-${visitId}`)).toBeVisible({ timeout: 10000 })
+      await page.unroute('**/api/vet/consultations/daf-drafts**')
     }
-    await expect(page.getByTestId(`consultation-daf-draft-${visitId}`)).toBeVisible({ timeout: 10000 })
-    await page.unroute('**/api/vet/consultations/daf-drafts**')
+    finally {
+      await softDeleteVisit(page, visitId)
+    }
   })
 
   test('durée audio affichée + écoute player', async ({ page, request }) => {
@@ -195,38 +204,46 @@ test.describe('historique consultations', { tag: '@p1' }, () => {
     expect([200, 201]).toContain(create.status())
     const visitId = (await create.json()).data.id as string
 
-    const put = await request.put(`${API}/api/v1/visits/${visitId}/report`, {
-      headers: { Authorization: `Bearer ${vetTok}` },
-      data: { bodyText: 'E2E draft CR with pending audio' },
-    })
-    expect(put.ok()).toBeTruthy()
+    try {
+      const put = await request.put(`${API}/api/v1/visits/${visitId}/report`, {
+        headers: { Authorization: `Bearer ${vetTok}` },
+        data: { bodyText: 'E2E draft CR with pending audio' },
+      })
+      expect(put.ok()).toBeTruthy()
 
-    const form = new FormData()
-    form.append('clientAudioConsent', 'true')
-    form.append('audioDurationSec', '154')
-    form.append('hint', 'E2E audio duration transcript')
-    form.append('audio', new Blob(['fake-webm-e2e'], { type: 'audio/webm' }), 'dictation.webm')
-    const tr = await fetch(`${API}/api/v1/visits/${visitId}/report/transcribe`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${vetTok}` },
-      body: form,
-    })
-    const trText = await tr.text()
-    expect(tr.status, trText).toBe(200)
-    const trBody = JSON.parse(trText) as { data?: { hasAudio?: boolean; audioDurationSec?: number } }
-    expect(trBody.data?.hasAudio).toBe(true)
-    expect(trBody.data?.audioDurationSec).toBe(154)
+      const form = new FormData()
+      form.append('clientAudioConsent', 'true')
+      form.append('audioDurationSec', '154')
+      form.append('hint', 'E2E audio duration transcript')
+      form.append('audio', new Blob(['fake-webm-e2e'], { type: 'audio/webm' }), 'dictation.webm')
+      const tr = await fetch(`${API}/api/v1/visits/${visitId}/report/transcribe`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${vetTok}` },
+        body: form,
+      })
+      const trText = await tr.text()
+      expect(tr.status, trText).toBe(200)
+      const trBody = JSON.parse(trText) as { data?: { hasAudio?: boolean; audioDurationSec?: number } }
+      expect(trBody.data?.hasAudio).toBe(true)
+      expect(trBody.data?.audioDurationSec).toBe(154)
 
-    await loginAsVet(page)
-    await page.goto('/consultations', { waitUntil: 'networkidle' })
-    await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
-    await page.getByTestId('consultations-audio-only').check()
-    await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId(`consultation-audio-duration-${visitId}`)).toHaveText('02:34')
+      await loginAsVet(page)
+      await page.goto('/consultations', { waitUntil: 'networkidle' })
+      await expect(page.getByTestId('consultations-page')).toBeVisible({ timeout: 15000 })
+      await page.getByTestId('consultations-audio-only').check()
+      await expect(page.getByTestId(`consultation-row-${visitId}`)).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId(`consultation-audio-duration-${visitId}`)).toHaveText('02:34')
 
-    await page.getByTestId(`consultation-audio-${visitId}`).click()
-    await expect(page.getByTestId('consultation-audio-modal')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByTestId('consultation-audio-duration-label')).toContainText('02:34')
-    await expect(page.getByTestId('consultation-audio-player')).toBeVisible({ timeout: 15000 })
+      await page.getByTestId(`consultation-audio-${visitId}`).click()
+      await expect(page.getByTestId('consultation-audio-modal')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByTestId('consultation-audio-duration-label')).toContainText('02:34')
+      await expect(page.getByTestId('consultation-audio-player')).toBeVisible({ timeout: 15000 })
+    }
+    finally {
+      await fetch(`${API}/api/v1/visits/${visitId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${vetTok}` },
+      }).catch(() => undefined)
+    }
   })
 })

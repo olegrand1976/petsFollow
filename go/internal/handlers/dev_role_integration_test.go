@@ -90,6 +90,12 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 	if ticketID == "" {
 		t.Fatalf("missing ticket id")
 	}
+	t.Cleanup(func() {
+		if ticketID == "" {
+			return
+		}
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	})
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, devTok, map[string]any{
 		"status": "in_progress",
 	})
@@ -99,6 +105,12 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 	if dataMap(t, env)["status"] != "in_progress" {
 		t.Fatalf("expected in_progress, got %#v", dataMap(t, env)["status"])
 	}
+	// DEV can also hard-delete (ops cleanup).
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, devTok, nil)
+	if code != http.StatusNoContent {
+		t.Fatalf("dev delete ticket %d %#v", code, env)
+	}
+	ticketID = ""
 }
 
 func TestDevProfileSwitchToVet(t *testing.T) {

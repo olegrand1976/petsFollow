@@ -42,6 +42,12 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 	if ticketID == "" {
 		t.Fatalf("missing ticket id: %#v", ticket)
 	}
+	t.Cleanup(func() {
+		if ticketID == "" {
+			return
+		}
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	})
 	if ticket["status"] != "open" {
 		t.Fatalf("expected open, got %#v", ticket["status"])
 	}
@@ -58,6 +64,12 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 	})
 	if code != http.StatusCreated {
 		t.Fatalf("create spoof ticket %d %#v", code, env)
+	}
+	spoofID, _ := dataMap(t, env)["id"].(string)
+	if spoofID != "" {
+		t.Cleanup(func() {
+			_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+spoofID, adminTok, nil)
+		})
 	}
 	if dataMap(t, env)["source"] != "nuxt_pro" {
 		t.Fatalf("spoofed source not overridden: %#v", dataMap(t, env)["source"])
@@ -139,6 +151,23 @@ func TestSupportTicketCreateListReply(t *testing.T) {
 	if !foundDone {
 		t.Fatalf("expected done event in history: %#v", history)
 	}
+
+	// Non-admin cannot delete.
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, vetTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("vet delete expected 403, got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusNoContent {
+		t.Fatalf("admin delete %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	if code != http.StatusNotFound {
+		t.Fatalf("deleted ticket still gettable %d %#v", code, env)
+	}
+	// Avoid double-delete in Cleanup after explicit delete.
+	ticketID = ""
 }
 
 func TestSupportTicketDiagnosticsTooLarge(t *testing.T) {
@@ -175,6 +204,11 @@ func TestSupportTicketSearch(t *testing.T) {
 		t.Fatalf("create %d %#v", code, env)
 	}
 	ticketID, _ := dataMap(t, env)["id"].(string)
+	if ticketID != "" {
+		t.Cleanup(func() {
+			_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+		})
+	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/support/tickets?q="+url.QueryEscape(marker), adminTok, nil)
 	if code != http.StatusOK {
@@ -242,6 +276,9 @@ func TestSupportTicketExportAndAnonymize(t *testing.T) {
 	if ticketID == "" {
 		t.Fatalf("missing ticket id: %#v", env)
 	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	})
 
 	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/export", access, nil)
 	if code != http.StatusOK {
@@ -324,6 +361,9 @@ func TestSupportTicketStatusWorkflowAndAttachments(t *testing.T) {
 		t.Fatalf("create %d %#v", code, env)
 	}
 	ticketID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	})
 
 	for _, st := range []string{"in_progress", "to_test", "done"} {
 		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
@@ -448,6 +488,9 @@ func TestSupportTicketNotifySoftFail(t *testing.T) {
 	if ticketID == "" {
 		t.Fatalf("missing ticket id: %#v", env)
 	}
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/admin/support/tickets/"+ticketID, adminTok, nil)
+	})
 
 	for _, st := range []string{"in_progress", "to_test"} {
 		code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/admin/support/tickets/"+ticketID, adminTok, map[string]any{
