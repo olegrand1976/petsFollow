@@ -1035,13 +1035,13 @@ watch(
 
 .visit-report-split {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.85rem;
 }
 
 @media (min-width: 900px) {
   .visit-report-split {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
   }
 }
@@ -1055,6 +1055,7 @@ watch(
   border-radius: var(--pf-vet-radius, 8px);
   background: var(--pf-vet-surface, #fff);
   box-shadow: var(--pf-vet-shadow-sm, none);
+  min-width: 0;
   min-height: 0;
 }
 
@@ -1228,10 +1229,19 @@ watch(
 /* Consultation full modal only — do not inflate calendar / history / pet hosts. */
 .pro-visit-report--fill {
   flex: 1 1 auto;
+  min-height: 0;
 }
 
 .pro-visit-report--fill .visit-report-split {
   flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  /* Single row that respects the flex-bounded split height (avoids TipTap overflow paint). */
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.pro-visit-report--fill .visit-report-pane {
+  overflow: auto;
   min-height: 0;
 }
 
@@ -1241,19 +1251,24 @@ watch(
   resize: none;
 }
 
-.pro-visit-report--fill :deep(.pro-md-report) {
+/* TipTap root (was .pro-md-report before rich editor migration). */
+.pro-visit-report--fill :deep(.pro-rich-report) {
   flex: 1 1 auto;
   min-height: 16rem;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow: hidden;
 }
 
-.pro-visit-report--fill :deep(.pro-md-report__textarea),
-.pro-visit-report--fill :deep(.pro-md-report__preview) {
+.pro-visit-report--fill :deep(.pro-rich-report__editor) {
   flex: 1 1 auto;
   min-height: 16rem;
-  resize: none;
+  overflow: auto;
+}
+
+.pro-visit-report--fill :deep(.pro-rich-report__editor .ProseMirror) {
+  min-height: 16rem;
 }
 
 .pro-visit-report--fill .pro-visit-report__footer {
