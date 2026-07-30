@@ -26,7 +26,7 @@ async function createWalkInWithReport(page: Page): Promise<string> {
   await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
   await dismissProModals(page)
 
-  const search = page.getByPlaceholder(/nom ou email|name or email|naam of e-mail/i)
+  const search = page.locator('#client-search')
   await search.fill('Sophie')
   await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })
 
