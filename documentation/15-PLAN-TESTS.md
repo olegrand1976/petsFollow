@@ -166,11 +166,11 @@ Compte : `vet.demo@petsfollow.test`
 | ID | Pri | Cas | Étapes | Attendu |
 |----|-----|-----|--------|---------|
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
-| C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents |
-| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions |
+| C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
+| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save`) |
 | C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline | Données seed visibles |
 | C2.5 | P1 | Liste pets | `/pets` | Animaux transverses cabinet |
-| C2.6 | P1 | Créer / rattacher client | Nouveau client ; client existant → link | 409 enrichi + link OK |
+| C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet (`TestClientContactPhone*`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
 | C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié |

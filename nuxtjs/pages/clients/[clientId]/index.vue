@@ -196,6 +196,26 @@
             <p><strong>{{ client.fullName }}</strong></p>
             <p class="text-muted">{{ client.email }}</p>
             <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
+            <div v-if="canWriteClients" class="client-phone-edit">
+              <ProInput
+                v-model="phoneDraft"
+                test-id="client-phone-input"
+                type="tel"
+                :label="$t('clients.detail.contactPhone')"
+              />
+              <div class="pro-flex-gap">
+                <ProButton
+                  test-id="client-phone-save"
+                  :disabled="phoneSaving || phoneDraft === (client.contactPhone || '')"
+                  @click="saveContactPhone"
+                >
+                  {{ $t('clients.detail.savePhone') }}
+                </ProButton>
+              </div>
+              <p v-if="phoneMsg" class="pro-hint" role="status" data-testid="client-phone-msg">{{ phoneMsg }}</p>
+              <p v-if="phoneError" class="pro-error" role="alert">{{ phoneError }}</p>
+            </div>
+            <p v-else-if="client.contactPhone" class="text-muted">{{ client.contactPhone }}</p>
             <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
           </div>
         </div>
@@ -213,6 +233,7 @@ type ClientRow = {
   fullName: string
   petCount: number
   avatarUrl?: string
+  contactPhone?: string
 }
 
 type ClientOverview = {
@@ -250,6 +271,32 @@ const appLinkFeedback = ref('')
 const appInviteOpen = ref(false)
 const activeConsult = useActiveConsultation()
 const clientShares = ref<any[]>([])
+const phoneDraft = ref('')
+const phoneSaving = ref(false)
+const phoneMsg = ref('')
+const phoneError = ref('')
+
+async function saveContactPhone() {
+  phoneSaving.value = true
+  phoneMsg.value = ''
+  phoneError.value = ''
+  try {
+    const res: any = await $fetch(`/api/clients/${clientId}`, {
+      method: 'PATCH',
+      body: { contactPhone: phoneDraft.value.trim() },
+    })
+    const data = res.data ?? res
+    if (client.value) {
+      client.value = { ...client.value, contactPhone: data.contactPhone || '' }
+    }
+    phoneDraft.value = data.contactPhone || ''
+    phoneMsg.value = t('clients.detail.phoneSaved')
+  } catch (e: any) {
+    phoneError.value = mapError(e) || t('clients.detail.phoneSaveError')
+  } finally {
+    phoneSaving.value = false
+  }
+}
 
 function openConsultation() {
   activeConsult.openForClient(clientId)
@@ -382,6 +429,7 @@ onMounted(async () => {
   try {
     const clientRes: any = await $fetch(`/api/clients/${clientId}`)
     client.value = clientRes.data ?? clientRes
+    phoneDraft.value = client.value?.contactPhone || ''
   } catch {
     client.value = null
   }
@@ -425,6 +473,13 @@ onMounted(async () => {
   gap: 1.25rem;
   align-items: flex-start;
   flex-wrap: wrap;
+}
+.client-phone-edit {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 22rem;
 }
 .pro-mb-md {
   margin-bottom: 1rem;
