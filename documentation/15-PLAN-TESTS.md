@@ -180,10 +180,10 @@ Compte : `vet.demo@petsfollow.test`
 | C2.13 | P0 | Nouvelle consultation | `/clients` → CTA → modal pet → visite `confirmDirect` + `consultationSession` → CR | Panel CR ; CTA DAF / facture / Terminer ; walk-in **hors** overlap agenda ; close → confirm Enregistrer/Annuler |
 | C2.14 | P1 | Consultation anti-orphelins | Fermeture modal / sheet sans save CR | Visite `cancelled` (Nuxt + Flutter) ; pendant PUT CR → Cancel/X désactivés ; 409 `consultation_has_report` = garder ; **finalize CR** → auto-`done` ; retention `cancelledStaleConsultations` (âge min **6 h** sans CR, appliqué au **cron quotidien** retention ≈ 03:30) |
 | C2.15 | P1 | Walk-in hors vacation/lock | `consultationSession` + `scheduledAt≈now` | Pas de 400 `on_vacation` ; pas de lock agenda ; `source=care_pro` pour terrain ; care_pro **ne peut pas** cancel/reschedule un RDV cabinet (`403 care_pro_visit_only`), `done` OK |
-| C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · `/invoicing?visitId=&mode=direct` + contextes `daf-consultation-context` / `invoicing-consultation-context` |
+| C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · finalize inline · `/invoicing?visitId=&mode=direct|fromDaf` + contextes ; badge draft DAF oublié `/consultations` |
 | C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR ; supprimer → hors liste (`deleted_at`) ; player modal affiche durée persistée |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
-| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body`) ; Améliorer disabled si notes **et** CR vides (source = notes sinon CR) ; footer Annuler les modifications / Enregistrer / Finaliser |
+| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body` + TipTap `visit-report-prose`) ; select langue `visit-report-target-locale` (défaut auto = langue transcription) ; Améliorer disabled si notes **et** CR vides ; footer Annuler / Enregistrer / Finaliser ; Aide rétractable + image process ; feedback qualité post-IA ; référence si final |
 | C2.20 | P1 | CR transcription → versions | hint-transcribe / edit notes → improve → restore | v0 transcript · v1 IA · restore cible pane ; re-improve écrase v1 |
 | C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
 | C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
@@ -475,7 +475,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
 | C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
-| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` | Draft avec `visitId` ; CTA Facturer si `INVOICING_UI_ENABLED` |
+| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` + panneau traitements | Upsert `PUT …/daf/for-visit` ; banner « depuis consultation » ; CTA libellé DAF (≠ ordonnances) ; finalize FEFO explicite **inline** (ProModal) ; protocoles 1 clic ; AMM catalogue ; rupture → réception express |
 | C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 |
 | C7.6 | P1 | VAMReg dry-run à finalize antibiotique | `TestPharmacyDAFVAMRegDryRun` | `vamregStatus=sent` ; lignes `job_audit` |
 | C7.7 | P1 | Prix + alerte réassort | `PUT …/prices` · `PUT …/reorder-thresholds` · `GET …/reorder-alerts` | Seuil &lt; stock → alerte |
@@ -487,15 +487,17 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.13 | P1 | UI `/stock` + prix/BL/CSV e2e | `17-pharmacy-stock-daf.spec.ts` (@p1 @pharmacy) | Shell bands/receipt/inventory/dev-badge ; PUT/GET prices ; BL vide → `MANUAL-*` ; export CSV inventaire |
 | C7.14 | P1 | Lots wasted non ressuscités | `TestPharmacyStockReceiptAndWaste` | Receipt même clé après waste → `batch_wasted` |
 | C7.15 | P1 | Overlay withdrawal practice | `TestPharmacyFoodChainAndWithdrawal` | PATCH withdrawal n’altère pas `ref_medications` national |
+| C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject lignes panneau traitements |
+| C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h ; événement dossier client post-finalize |
 
-**Ordonnances (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/ordonnances` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-ORDONNANCES.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
+**Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
 | C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
-| C8.4 | P2 | Refus signature V1 | `PATCH` avec `status=signed` → 400 |
+| C8.5 | P1 | Ordonnance → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
 
 ---
 
@@ -718,7 +720,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save (confirm leave) · close pendant save · CTA DAF/facture | `@p0` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize | `@p0` |
 | `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
 | `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons | `@p1` |

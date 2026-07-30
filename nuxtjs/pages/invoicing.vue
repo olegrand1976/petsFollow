@@ -584,6 +584,31 @@ async function applyConsultationPrefill() {
           .join(', ')
           .slice(0, 200)
         hints.push(t('invoicing.prefillDafLines', { n: items.length }))
+
+        // Mock Billit S5: sum qty × sell price from pharmacy prices (when set).
+        let totalExclCents = 0
+        let priced = 0
+        for (const it of items) {
+          const medId = String(it.medicationId || it.refMedicationId || '')
+          const qty = Number(it.qty) || 0
+          if (!medId || qty <= 0) continue
+          try {
+            const priceRes = await $fetch(`/api/vet/pharmacy/prices/${medId}`)
+            const price: any = unwrap(priceRes)
+            const sell = Number(price?.sellPriceCents)
+            if (Number.isFinite(sell) && sell > 0) {
+              totalExclCents += Math.round(sell * qty)
+              priced++
+            }
+          }
+          catch {
+            // price optional
+          }
+        }
+        if (priced > 0 && totalExclCents > 0) {
+          docForm.lineAmount = (totalExclCents / 100).toFixed(2)
+          hints.push(t('invoicing.prefillDafAmount', { amount: docForm.lineAmount }))
+        }
       }
       if (doc?.clientName && !docForm.name) {
         docForm.name = doc.clientName

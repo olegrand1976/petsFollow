@@ -533,5 +533,9 @@
     "addon_care_plus_label": "Opzione Care+ — 19€ (pagamento una tantum)",
     "addon_horse_label": "Opzione Cavallo — € 39 (pagamento una tantum)",
     "addon_kennel_label": "Opzione Allevamento (Kennel) — 119€ (pagamento unico)"
+  },
+  "daf": {
+    "timeline_title": "Trattamento in clinica",
+    "timeline_body": "Trattamento somministrato / erogato in clinica"
   }
 }

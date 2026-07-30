@@ -645,5 +645,9 @@
     "addon_care_plus_label": "Care+ lisa — €19 (ühekordne)",
     "addon_horse_label": "Horse lisa — €39 (ühekordne)",
     "addon_kennel_label": "Kennel lisa — €119 (ühekordne)"
+  },
+  "daf": {
+    "timeline_title": "Kliiniku ravi",
+    "timeline_body": "Ravi manustatud / väljastatud kliinikus"
   }
 }

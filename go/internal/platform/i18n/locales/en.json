@@ -645,5 +645,9 @@
     "addon_care_plus_label": "Care+ add-on — €19 (one-time)",
     "addon_horse_label": "Horse add-on — €39 (one-time)",
     "addon_kennel_label": "Kennel add-on — €119 (one-time)"
+  },
+  "daf": {
+    "timeline_title": "Clinic treatment",
+    "timeline_body": "Treatment administered / dispensed at the clinic"
   }
 }

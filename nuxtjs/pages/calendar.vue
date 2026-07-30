@@ -281,6 +281,12 @@
             :visit-id="selectedVisit.id"
             :visit-scheduled-at="selectedVisit.scheduledAt || selectedVisit.proposedScheduledAt"
           />
+          <ProConsultationTreatmentsPanel
+            v-if="showCalendarDafTreatments"
+            :visit-id="selectedVisit.id"
+            :client-user-id="selectedVisit.clientId || ''"
+            :pet-id="''"
+          />
         </div>
         <div class="pro-flex-gap create-client-actions">
           <label
@@ -385,6 +391,11 @@ const route = useRoute()
 const { t } = useI18n()
 const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
+const { canPractice } = usePracticePerms()
+const runtimeConfig = useRuntimeConfig()
+const showCalendarDafTreatments = computed(
+  () => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled) && canPractice('pharmacy.write'),
+)
 const {
   startOfDay,
   startOfWeek,

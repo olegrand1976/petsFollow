@@ -36,7 +36,7 @@
       />
     </div>
 
-    <!-- Étape B : CR médical -->
+    <!-- Étape B : CR médical + traitements DAF -->
     <div v-else class="consultation-report" data-testid="consultation-report">
       <p v-if="actionError" class="pro-error" role="alert">{{ actionError }}</p>
       <ProVisitReportPanel
@@ -47,6 +47,17 @@
         @saved="onReportSaved"
         @finalized="onReportSaved"
         @busy="onReportBusy"
+      />
+      <ProConsultationTreatmentsPanel
+        v-if="showDafCta && visitId && reportSaved"
+        ref="treatmentsRef"
+        :visit-id="visitId"
+        :client-user-id="flowClientId || props.clientId"
+        :pet-id="petId || selectedPetId"
+        :pet-species="selectedPetSpecies"
+        show-steps-hint
+        @draft-saved="onTreatmentsDraftSaved"
+        @finalized="onTreatmentsFinalized"
       />
     </div>
 
@@ -72,6 +83,36 @@
       </template>
 
       <template v-else-if="reportSaved">
+        <div
+          v-if="showDafCta"
+          class="consultation-footer-steps"
+          data-testid="consultation-daf-steps"
+        >
+          <span :class="{ 'is-active': dafStep === 'treatments' }">{{ $t('clients.consultation.stepTreatments') }}</span>
+          <span aria-hidden="true">·</span>
+          <span :class="{ 'is-active': dafStep === 'preview' }">{{ $t('clients.consultation.stepPreview') }}</span>
+          <span aria-hidden="true">·</span>
+          <span :class="{ 'is-active': dafStep === 'finalize' }">{{ $t('clients.consultation.stepFinalize') }}</span>
+          <span aria-hidden="true">·</span>
+          <span :class="{ 'is-active': dafStep === 'invoice' }">{{ $t('clients.consultation.stepInvoice') }}</span>
+        </div>
+        <ProButton
+          v-if="showDafCta && treatmentsHasLines && !treatmentsFinalized"
+          test-id="consultation-finalize-daf"
+          :disabled="closing || treatmentsBusy"
+          :loading="treatmentsBusy"
+          @click="finalizeTreatments"
+        >
+          {{ $t('clients.consultation.treatmentsFinalize') }}
+        </ProButton>
+        <ProButton
+          v-if="showDafCta && treatmentsFinalized && showInvoiceCta"
+          test-id="consultation-cta-invoice-from-daf"
+          :disabled="closing"
+          @click="goInvoiceFromDaf"
+        >
+          {{ $t('clients.consultation.ctaInvoice') }}
+        </ProButton>
         <ProButton
           v-if="showDafCta"
           variant="secondary"
@@ -82,7 +123,7 @@
           {{ $t('clients.consultation.ctaDafInvoice') }}
         </ProButton>
         <ProButton
-          v-if="showInvoiceCta"
+          v-if="showInvoiceCta && !treatmentsFinalized"
           test-id="consultation-cta-invoice"
           :disabled="closing"
           @click="goInvoice"
@@ -109,7 +150,7 @@
     :prevent-close="leaveBusy"
     @update:open="onLeavePromptOpen"
   >
-    <p class="pro-hint">{{ $t('clients.consultation.leaveHint') }}</p>
+    <p class="pro-hint">{{ leavePromptHint }}</p>
     <p v-if="leaveError" class="pro-error" role="alert">{{ leaveError }}</p>
     <template #footer>
       <ProButton
@@ -133,7 +174,7 @@
         :loading="leaveBusy"
         @click="confirmSaveLeave"
       >
-        {{ $t('clients.consultation.leaveSave') }}
+        {{ leaveSaveLabel }}
       </ProButton>
     </template>
   </ProModal>
@@ -149,6 +190,19 @@ type ReportPanelExpose = {
   isDirty: () => boolean
   currentBody: () => string
   isDictating: () => boolean
+}
+
+type TreatmentsPanelExpose = {
+  isDirty: () => boolean
+  hasUnsavedLines: () => boolean
+  saveDraft: () => Promise<boolean>
+  requestFinalize: () => void
+  finalize: () => Promise<void>
+  dafId: { value: string }
+  finalized: { value: boolean }
+  hasLines: { value: boolean }
+  preview: { value: unknown[] }
+  busy: { value: boolean }
 }
 
 const props = defineProps<{
@@ -203,10 +257,44 @@ const selectedPetId = ref('')
 const notes = ref('')
 const closing = ref(false)
 const leavePromptOpen = ref(false)
+const leavePromptMode = ref<'report' | 'treatments'>('report')
 const leaveBusy = ref(false)
 const leaveError = ref('')
 const reportPanelRef = ref<ReportPanelExpose | null>(null)
+const treatmentsRef = ref<TreatmentsPanelExpose | null>(null)
+const treatmentsDafId = ref('')
+const treatmentsFinalized = ref(false)
 const { user } = useProUser()
+
+const selectedPetSpecies = computed(() => {
+  const pid = petId.value || selectedPetId.value
+  const p = pets.value.find(row => row.id === pid)
+  return p?.species || ''
+})
+
+const treatmentsHasLines = computed(() => treatmentsRef.value?.hasLines?.value ?? false)
+const treatmentsBusy = computed(() => treatmentsRef.value?.busy?.value ?? false)
+
+const dafStep = computed(() => {
+  if (treatmentsFinalized.value) return 'invoice'
+  if (treatmentsRef.value?.preview?.value?.length) return 'finalize'
+  if (treatmentsHasLines.value) return 'preview'
+  return 'treatments'
+})
+
+const leavePromptHint = computed(() => {
+  if (leavePromptMode.value === 'treatments') {
+    return t('clients.consultation.unsavedTreatmentsHint')
+  }
+  return t('clients.consultation.leaveHint')
+})
+
+const leaveSaveLabel = computed(() => {
+  if (leavePromptMode.value === 'treatments') {
+    return t('clients.consultation.treatmentsSave')
+  }
+  return t('clients.consultation.leaveSave')
+})
 
 async function loadPets() {
   if (!props.clientId) return
@@ -292,7 +380,10 @@ watch(
     actionError.value = ''
     closing.value = false
     leavePromptOpen.value = false
+    leavePromptMode.value = 'report'
     leaveError.value = ''
+    treatmentsDafId.value = ''
+    treatmentsFinalized.value = false
     if (props.resumeVisitId) {
       applyResume()
     }
@@ -321,6 +412,20 @@ watch(
   },
 )
 
+watch(
+  () => treatmentsRef.value?.finalized?.value,
+  (v) => {
+    if (v) treatmentsFinalized.value = true
+  },
+)
+
+watch(
+  () => treatmentsRef.value?.dafId?.value,
+  (v) => {
+    if (v) treatmentsDafId.value = v
+  },
+)
+
 async function flushReport() {
   const panel = reportPanelRef.value
   if (!visitId.value || !panel) return
@@ -346,12 +451,23 @@ onBeforeUnmount(() => {
 })
 
 onBeforeRouteLeave((_to, _from, next) => {
-  if (!props.open || !visitId.value || reportSaved.value) {
+  if (!props.open || !visitId.value) {
     next()
     return
   }
-  leavePromptOpen.value = true
-  next(false)
+  if (!reportSaved.value) {
+    leavePromptMode.value = 'report'
+    leavePromptOpen.value = true
+    next(false)
+    return
+  }
+  if (treatmentsRef.value?.isDirty?.()) {
+    leavePromptMode.value = 'treatments'
+    leavePromptOpen.value = true
+    next(false)
+    return
+  }
+  next()
 })
 
 async function finishClose(discard: boolean) {
@@ -376,6 +492,13 @@ async function onOpenUpdate(v: boolean) {
   if (!v) {
     if (reportBusy.value || closing.value || leaveBusy.value) return
     if (visitId.value && !reportSaved.value) {
+      leavePromptMode.value = 'report'
+      leaveError.value = ''
+      leavePromptOpen.value = true
+      return
+    }
+    if (visitId.value && reportSaved.value && treatmentsRef.value?.isDirty?.()) {
+      leavePromptMode.value = 'treatments'
       leaveError.value = ''
       leavePromptOpen.value = true
       return
@@ -411,6 +534,21 @@ async function confirmSaveLeave() {
   leaveBusy.value = true
   leaveError.value = ''
   try {
+    if (leavePromptMode.value === 'treatments') {
+      const panel = treatmentsRef.value
+      if (!panel) {
+        leaveError.value = t('clients.consultation.treatmentsEmpty')
+        return
+      }
+      const ok = await panel.saveDraft()
+      if (!ok) {
+        leaveError.value = t('pharmacy.daf.error')
+        return
+      }
+      leavePromptOpen.value = false
+      await finishClose(false)
+      return
+    }
     const panel = reportPanelRef.value
     if (!panel) {
       leaveError.value = t('clients.consultation.leaveSaveEmpty')
@@ -468,6 +606,24 @@ function onReportBusy(busy: boolean) {
   setReportBusy(busy)
 }
 
+function onTreatmentsDraftSaved(id: string) {
+  treatmentsDafId.value = id
+}
+
+function onTreatmentsFinalized(id: string) {
+  treatmentsDafId.value = id
+  treatmentsFinalized.value = true
+}
+
+async function finalizeTreatments() {
+  treatmentsRef.value?.requestFinalize?.()
+}
+
+async function goInvoiceFromDaf() {
+  const dafId = treatmentsDafId.value || treatmentsRef.value?.dafId?.value || ''
+  await closeAndNavigate(invoicingPath({ dafId, mode: 'fromDaf' }))
+}
+
 async function closeAndNavigate(path: string) {
   const target = path
   closing.value = true
@@ -488,6 +644,7 @@ async function closeAndNavigate(path: string) {
 }
 
 async function goDaf() {
+  // Always open the wizard so draft lines can be edited / finalized (detail page is read-only).
   await closeAndNavigate(dafWizardPath())
 }
 
@@ -532,5 +689,20 @@ async function finishDone() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.consultation-footer-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--pf-vet-muted, #64748b);
+  margin-right: auto;
+  padding-right: 0.75rem;
+}
+.consultation-footer-steps .is-active {
+  color: var(--pf-vet-accent);
+  font-weight: 600;
 }
 </style>

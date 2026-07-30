@@ -109,11 +109,13 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 }
 
 func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
+	medIDs := make(map[string]string, 2)
 	for _, row := range []store.RefMedicationUpsert{
-		{CNK: "2712345", Name: "Amoxicilline Vet Demo", ATCCode: "J01CA04", IsAntibiotic: true, IsActive: true, PharmaceuticalForm: "cp"},
-		{CNK: "2899999", Name: "Vaccin Rage Demo", IsAntibiotic: false, IsActive: true},
+		{CNK: "2712345", Name: "Amoxicilline Vet Demo", ATCCode: "J01CA04", IsAntibiotic: true, IsActive: true, PharmaceuticalForm: "cp", AMMNumber: "BE-DEMO-AMOX-1"},
+		{CNK: "2899999", Name: "Vaccin Rage Demo", IsAntibiotic: false, IsActive: true, AMMNumber: "BE-DEMO-RAGE-1"},
 	} {
-		if _, err := st.UpsertRefMedication(ctx, row); err != nil {
+		id, err := st.UpsertRefMedication(ctx, row)
+		if err != nil {
 			// Schema absent (migrate incomplete) — non-fatal for legacy envs.
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
@@ -122,8 +124,177 @@ func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
 			}
 			return fmt.Errorf("pharmacy med %s: %w", row.CNK, err)
 		}
+		medIDs[row.CNK] = id
 	}
-	log.Println("Pharmacie démo : CNK 2712345 / 2899999")
+	if err := seedPharmacyDemoStock(ctx, st, medIDs); err != nil {
+		return err
+	}
+	if err := seedPharmacyDemoProtocols(ctx, st, medIDs); err != nil {
+		return err
+	}
+	if err := seedPharmacyDemoPrices(ctx, st, medIDs); err != nil {
+		return err
+	}
+	log.Println("Pharmacie démo : CNK 2712345 / 2899999 + lots + protocoles")
+	return nil
+}
+
+func seedPharmacyDemoStock(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	if len(medIDs) == 0 {
+		return nil
+	}
+	practices, err := st.Pool().Query(ctx, `
+		SELECT p.id::text, u.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.role = 'vet'
+		WHERE p.profile_completed_at IS NOT NULL
+		  AND u.email IN ('vet.demo@petsfollow.test', 'vet.parc@petsfollow.test')
+		ORDER BY u.email`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer practices.Close()
+	settings := store.PharmacySettings{ReceiptWarnDays: 90, AllowExpiredReceipt: false}
+	exp := time.Now().AddDate(0, 0, 180)
+	for practices.Next() {
+		var practiceID, vetID string
+		if err := practices.Scan(&practiceID, &vetID); err != nil {
+			return err
+		}
+		for cnk, medID := range medIDs {
+			lot := "SEED-" + cnk
+			var exists bool
+			if err := st.Pool().QueryRow(ctx, `
+				SELECT EXISTS(
+					SELECT 1 FROM pharmacy.medication_batches
+					WHERE practice_id = $1::uuid AND medication_id = $2::uuid AND lot_number = $3
+				)`, practiceID, medID, lot).Scan(&exists); err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+					return nil
+				}
+				return err
+			}
+			if exists {
+				continue
+			}
+			_, _, err := st.ReceiveMedicationBatch(ctx, store.ReceiptInput{
+				PracticeID:   practiceID,
+				MedicationID: medID,
+				LotNumber:    lot,
+				ExpiresOn:    exp,
+				Qty:          50,
+				Unit:         "unit",
+				CreatedBy:    vetID,
+			}, settings, time.Now())
+			if err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+					return nil
+				}
+				return fmt.Errorf("seed batch %s practice %s: %w", cnk, practiceID, err)
+			}
+		}
+	}
+	return practices.Err()
+}
+
+func seedPharmacyDemoProtocols(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	amox := medIDs["2712345"]
+	rage := medIDs["2899999"]
+	if amox == "" || rage == "" {
+		return nil
+	}
+	rows, err := st.Pool().Query(ctx, `
+		SELECT p.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil
+	}
+	var practiceID string
+	if err := rows.Scan(&practiceID); err != nil {
+		return err
+	}
+	protocols := []struct {
+		name, desc string
+		sort       int
+		lines      []store.ClinicalProtocolLine
+	}{
+		{
+			name: "Antibiothérapie courte", desc: "Amoxicilline démo — 1 unité", sort: 1,
+			lines: []store.ClinicalProtocolLine{{MedicationID: amox, Qty: 1, AMMNumber: "BE-DEMO-AMOX-1", Unit: "unit"}},
+		},
+		{
+			name: "Vaccination rage", desc: "Vaccin rage démo", sort: 2,
+			lines: []store.ClinicalProtocolLine{{MedicationID: rage, Qty: 1, AMMNumber: "BE-DEMO-RAGE-1", Unit: "unit"}},
+		},
+		{
+			name: "Post-consult combo", desc: "Vaccin + antibiotique (démo)", sort: 3,
+			lines: []store.ClinicalProtocolLine{
+				{MedicationID: rage, Qty: 1, AMMNumber: "BE-DEMO-RAGE-1", Unit: "unit"},
+				{MedicationID: amox, Qty: 1, AMMNumber: "BE-DEMO-AMOX-1", Unit: "unit"},
+			},
+		},
+	}
+	for _, p := range protocols {
+		if _, err := st.UpsertClinicalProtocol(ctx, practiceID, p.name, p.desc, p.lines, p.sort); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				return nil
+			}
+			return fmt.Errorf("protocol %s: %w", p.name, err)
+		}
+	}
+	return nil
+}
+
+func seedPharmacyDemoPrices(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	if len(medIDs) == 0 {
+		return nil
+	}
+	rows, err := st.Pool().Query(ctx, `
+		SELECT p.id::text, u.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil
+	}
+	var practiceID, vetID string
+	if err := rows.Scan(&practiceID, &vetID); err != nil {
+		return err
+	}
+	for _, medID := range medIDs {
+		if _, err := st.UpsertMedicationPrice(ctx, practiceID, medID, vetID, 800, 2200, 21); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				return nil
+			}
+			return fmt.Errorf("seed price %s: %w", medID, err)
+		}
+	}
 	return nil
 }
 

@@ -645,5 +645,9 @@
     "addon_care_plus_label": "Option Care+ — 19 € (paiement unique)",
     "addon_horse_label": "Option Cheval — 39 € (paiement unique)",
     "addon_kennel_label": "Option Élevage (Kennel) — 119 € (paiement unique)"
+  },
+  "daf": {
+    "timeline_title": "Traitement cabinet",
+    "timeline_body": "Traitement administré / fourni au cabinet"
   }
 }

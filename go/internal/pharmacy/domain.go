@@ -2,6 +2,7 @@ package pharmacy
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -15,6 +16,46 @@ var (
 	ErrBatchWasted               = errors.New("batch_wasted")
 	ErrDAFTraceRequired          = errors.New("daf_trace_required")
 )
+
+// StockMedError wraps a stock sentinel with the failing medication id (FEFO preview / finalize).
+type StockMedError struct {
+	MedicationID string
+	Err          error
+}
+
+func (e *StockMedError) Error() string {
+	if e == nil || e.Err == nil {
+		return "stock_error"
+	}
+	return e.Err.Error()
+}
+
+func (e *StockMedError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Err
+}
+
+// StockErrForMed returns Err if MedicationID is empty, else a StockMedError wrapping Err.
+func StockErrForMed(medicationID string, err error) error {
+	if err == nil {
+		return nil
+	}
+	if strings.TrimSpace(medicationID) == "" {
+		return err
+	}
+	return &StockMedError{MedicationID: strings.TrimSpace(medicationID), Err: err}
+}
+
+// StockMedID extracts the medication id from a StockMedError chain, if any.
+func StockMedID(err error) string {
+	var sm *StockMedError
+	if errors.As(err, &sm) && sm != nil {
+		return sm.MedicationID
+	}
+	return ""
+}
 
 // BrusselsToday returns the calendar date in Europe/Brussels as UTC midnight date.
 func BrusselsToday(now time.Time) time.Time {

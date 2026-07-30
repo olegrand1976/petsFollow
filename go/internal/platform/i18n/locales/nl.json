@@ -645,5 +645,9 @@
     "addon_care_plus_label": "Optie Care+ — 19 € (eenmalig)",
     "addon_horse_label": "Optie Paard — 39 € (eenmalig)",
     "addon_kennel_label": "Optie Kennel — 119 € (eenmalig)"
+  },
+  "daf": {
+    "timeline_title": "Behandeling praktijk",
+    "timeline_body": "Behandeling toegediend / afgeleverd in de praktijk"
   }
 }

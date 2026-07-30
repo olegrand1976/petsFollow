@@ -556,6 +556,8 @@
       "domicileLocation": "Elukoht / tall",
       "domicilePlaceholder": "Nt. Paju tall — Brüssel",
       "horseRegulatorySaved": "Regulatiivsed andmed salvestatud.",
+      "dafDispensesTitle": "DAF väljastused",
+      "dafDispensesEmpty": "Sellele looma ei ole DAF väljastusi registreeritud.",
       "timelineRecentTitle": "Viimased sündmused",
       "timelineTypeHeartrate": "Südame löögisagedus",
       "timelineTypeWeight": "Kaal",
@@ -703,7 +705,7 @@
       "notes": "Sisemised märkmed (valikuline)",
       "start": "Alusta konsultatsiooni",
       "reportHint": "Kirjutage või dikteerige raport, seejärel salvestage DAF / arve jätkamiseks.",
-      "ctaDafInvoice": "Loo retsept ja arvelda",
+      "ctaDafInvoice": "Loo DAF ja arvelda",
       "ctaInvoice": "Arvelda otse",
       "ctaDone": "Lõpeta",
       "loadPetsError": "Loomi ei õnnestunud laadida.",
@@ -713,7 +715,35 @@
       "leaveStay": "Jääda",
       "leaveDiscard": "Tühista konsultatsioon",
       "leaveSave": "Salvesta",
-      "leaveSaveEmpty": "Kirjutage visiidiraport enne salvestamist või tühistage konsultatsioon."
+      "leaveSaveEmpty": "Kirjutage visiidiraport enne salvestamist või tühistage konsultatsioon.",
+      "treatmentsTitle": "Ravi (DAF)",
+      "treatmentsHint": "Lisage kabinetis väljastatud ravimid — DAF mustand luuakse automaatselt.",
+      "treatmentsSave": "Salvesta DAF mustand",
+      "treatmentsPreview": "FEFO eelvaade",
+      "treatmentsFinalize": "Vormista DAF",
+      "treatmentsFinalizeConfirm": "Vormistada DAF ja maha kanda varud (FEFO)? See on lõplik.",
+      "treatmentsEmpty": "Ravimeid pole — DAF jääb tühjaks.",
+      "treatmentsSaved": "DAF mustand salvestatud",
+      "treatmentsFinalized": "DAF vormistatud — varud maha kantud",
+      "treatmentsStockError": "Varud puuduvad või kehtivad partiid puuduvad — kohandage koguseid.",
+      "treatmentsRemoveLine": "Eemalda rida",
+      "finalizeConfirmTitle": "Kas lõpetada DAF?",
+      "finalizeConfirmBody": "Kas lõpetada DAF ja maha arvata laoseis (FEFO)? See on lõplik.",
+      "finalizeConfirmOk": "Lõpeta",
+      "receiptExpressTitle": "Ekspresspartii vastuvõtt",
+      "receiptLot": "Partii number",
+      "receiptExpiry": "Aegumiskuupäev",
+      "receiptQty": "Saadud kogus",
+      "receiptSubmit": "Võta vastu ja proovi uuesti",
+      "protocolsTitle": "Kliinilised protokollid",
+      "applyProtocol": "Protokoll « {name} » rakendatud",
+      "stepTreatments": "1. Ravimid",
+      "stepPreview": "2. FEFO eelvaade",
+      "stepFinalize": "3. Lõpeta DAF",
+      "stepInvoice": "4. Arve",
+      "unsavedTreatmentsHint": "Salvestage DAF mustand enne lahkumist või loobuge muudatustest.",
+      "draftsOrphanBadge": "Vana mustand",
+      "vamregIndicationDefault": "Antibakteriaalne ravi"
     }
   },
   "consultations": {
@@ -754,7 +784,8 @@
     "delete": "Kustuta",
     "deleteConfirmTitle": "Kustuta konsultatsioon?",
     "deleteConfirmBody": "See kaob ajaloost. Raport jääb arhiveerituks (pehme kustutus).",
-    "deleteConfirmCta": "Kustuta"
+    "deleteConfirmCta": "Kustuta",
+    "dafDraftOrphan": "DAF mustand >1 h"
   },
   "pets": {
     "title": "Jälgitavad lemmikloomad",
@@ -807,7 +838,8 @@
     "relatedInvoice": "Algne arve",
     "relatedInvoicePlaceholder": "Vali arve…",
     "relatedInvoiceEmpty": "Väljastatud/kohale toimetatud arvet pole — saatke esmalt arve.",
-    "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve."
+    "relatedInvoiceRequired": "Valige sellele kreeditarvele seotud arve.",
+    "prefillDafAmount": "Hinnanguline summa ilma KM {amount} € (laohinnad)"
   },
   "pharmacy": {
     "antibioticWarning": "Antibiootikum",
@@ -918,7 +950,9 @@
         "sent": "Deklareeritud",
         "failed": "Ebaõnnestus",
         "na": "N/A"
-      }
+      },
+      "fromConsultation": "Konsultatsioonist",
+      "backToConsultations": "Tagasi konsultatsioonide juurde"
     },
     "errors": {
       "daf_vamreg_already_sent": "Tühistamine võimatu: VAMReg deklaratsioon on juba saadetud.",
@@ -2851,9 +2885,9 @@
     "reportVisitDate": "Visiidi kuupäev",
     "reportDatePrefix": "Kuupäev",
     "reportHowItWorksTitle": "Abi",
-    "reportHowItWorksStep1": "Dikteerige või kirjutage märkmed vasakule (kliendi nõusolek helile).",
-    "reportHowItWorksStep2": "Parandage AI-ga paremal, seejärel kohandage vajadusel.",
-    "reportHowItWorksStep3": "Salvestage, vormistage ja jätkake DAF või arve juurde.",
+    "reportHowItWorksStep1": "Transkriptsioon: dikteerige või kirjutage märkmed vasakul (kliendi helinõusolek).",
+    "reportHowItWorksStep2": "AI analüüs: visiidiaruande semantilise struktureerimine paremal.",
+    "reportHowItWorksStep3": "Veterinaari kinnitamine: kontrollige, kohandage, seejärel salvestage / vormistage.",
     "audioConsent": "Helifaili kasutatakse aruande koostamiseks. Kinnitage kliendi suuline nõusolek. Kustutatakse lõpetamisel.",
     "audioConsentTitle": "Helisalvestuse nõusolek",
     "audioConsentAccept": "Nõustun",
@@ -2952,7 +2986,29 @@
     "reportTranscriptHint": "Dikteering või toored märkmed…",
     "reportDirtyHint": "Salvestamata muudatused.",
     "reportDiscardEdits": "Tühista muudatused",
-    "reportStatusFinal": "Lõplik"
+    "reportStatusFinal": "Lõplik",
+    "reportHowItWorksStep4": "Pidev täiustamine: kvaliteedi tagasiside + viitekonsultatsioonid.",
+    "reportHowItWorksImageAlt": "AI protsess: transkriptsioon, analüüs, kinnitamine, pidev täiustamine",
+    "reportHowItWorksImageCaption": "Iteratsioonitsükkel konsultatsiooni töövoos",
+    "reportTargetLang": "Visiidiaruande keel",
+    "reportTargetLangAuto": "Auto (transkriptsiooni keel)",
+    "reportTargetLangFr": "Prantsuse",
+    "reportTargetLangNl": "Hollandi",
+    "reportTargetLangEn": "Inglise",
+    "reportTargetLangEs": "Hispaania",
+    "reportTargetLangEt": "Eesti",
+    "reportTargetLangIt": "Itaalia",
+    "reportFormatBold": "Paks",
+    "reportFormatItalic": "Kursiiv",
+    "reportFormatBullet": "Täpploend",
+    "reportFormatOrdered": "Nummerdatud loend",
+    "reportQualityAsk": "Kas AI ettepanek oli kasulik?",
+    "reportQualityGood": "Jah",
+    "reportQualityBad": "Vajab parandust",
+    "reportQualityThanks": "Aitäh — see täiustab mudelit",
+    "reportMarkReference": "Viitekonsultatsioon (pidev täiustamine)",
+    "reportReferenceOn": "Märgitud viitekonsultatsiooniks",
+    "reportReferenceOff": "Eemaldatud viitekonsultatsioonidest"
   },
   "manager": {
     "dashboard": {
@@ -3556,6 +3612,9 @@
     "errorFormat": "Vigane paberiformaat (A4 või A5).",
     "errorNotFound": "Retsepti ei leitud.",
     "errorNotDraft": "Muuta saab ainult mustandeid.",
-    "errorPayload": "Sisu on liiga mahukas (märkmed või ravimid)."
+    "errorPayload": "Sisu on liiga mahukas (märkmed või ravimid).",
+    "medSearch": "Otsi (CNK / nimi)",
+    "dispenseDaf": "Väljasta kabinetis (DAF)",
+    "dispenseDafHint": "Loob DAF mustandi (CNK kataloog). Täitke AMM numbrid ja vormistage viisardis."
   }
 }

@@ -44,9 +44,17 @@ func (a *API) writePharmacyErr(w http.ResponseWriter, r *http.Request, err error
 	case errors.Is(err, pharmacy.ErrBatchQuarantined):
 		writeErr(w, r, http.StatusConflict, "batch_quarantined", "batch_quarantined")
 	case errors.Is(err, pharmacy.ErrStockInsufficient):
-		writeErr(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient")
+		if medID := pharmacy.StockMedID(err); medID != "" {
+			writeErrDetails(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient", map[string]any{"medicationId": medID})
+		} else {
+			writeErr(w, r, http.StatusConflict, "stock_insufficient", "stock_insufficient")
+		}
 	case errors.Is(err, pharmacy.ErrStockUnavailableValidLots):
-		writeErr(w, r, http.StatusConflict, "stock_unavailable_valid_lots", "stock_unavailable_valid_lots")
+		if medID := pharmacy.StockMedID(err); medID != "" {
+			writeErrDetails(w, r, http.StatusConflict, "stock_unavailable_valid_lots", "stock_unavailable_valid_lots", map[string]any{"medicationId": medID})
+		} else {
+			writeErr(w, r, http.StatusConflict, "stock_unavailable_valid_lots", "stock_unavailable_valid_lots")
+		}
 	case errors.Is(err, pharmacy.ErrDAFTraceRequired):
 		writeErr(w, r, http.StatusBadRequest, "daf_trace_required", "daf_trace_required")
 	case errors.Is(err, pharmacy.ErrBatchNotFound):

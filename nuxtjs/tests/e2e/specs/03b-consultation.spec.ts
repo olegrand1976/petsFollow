@@ -87,14 +87,22 @@ async function startConsultationVisit(page: Page): Promise<{ id: string }> {
   return { id: String(visitPayload.id) }
 }
 
+async function fillVisitReportBody(page: Page, text: string) {
+  // Wait for TipTap (ClientOnly), not the static fallback div.
+  await expect(page.getByTestId('visit-report-editor')).toBeVisible({ timeout: 20000 })
+  const body = page.getByTestId('visit-report-body')
+  await expect(body).toBeVisible({ timeout: 10000 })
+  // TipTap may put contenteditable on the testid node itself or a ProseMirror child.
+  const editable = body.locator('[contenteditable="true"]').or(body)
+  await editable.first().click()
+  await editable.first().fill(text)
+}
+
 async function saveConsultationReport(page: Page) {
   await expect(page.getByTestId('visit-report-panel')).toBeVisible()
   await expect(page.getByTestId('visit-report-pane-left')).toBeVisible()
   await expect(page.getByTestId('visit-report-pane-right')).toBeVisible()
-  const reportBody = page.getByTestId('visit-report-body')
-  await expect(reportBody).toBeEnabled({ timeout: 20000 })
-  await reportBody.click()
-  await reportBody.fill(`E2E consultation CR ${Date.now()}`)
+  await fillVisitReportBody(page, `E2E consultation CR ${Date.now()}`)
   await expect(page.getByTestId('visit-report-save')).toBeEnabled()
   await page.getByTestId('visit-report-save').click()
   await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
@@ -174,10 +182,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
 
     try {
       await expect(page.getByTestId('visit-report-panel')).toBeVisible()
-      const reportBody = page.getByTestId('visit-report-body')
-      await expect(reportBody).toBeEnabled({ timeout: 20000 })
-      await reportBody.click()
-      await reportBody.fill(`E2E busy gate ${Date.now()}`)
+      await fillVisitReportBody(page, `E2E busy gate ${Date.now()}`)
       await page.getByTestId('visit-report-save').click()
 
       await expect(page.getByTestId('consultation-cancel')).toBeDisabled({ timeout: 5000 })
@@ -245,5 +250,75 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     expect(dafUrl.searchParams.get('petId')).toBeTruthy()
     await expect(page.getByTestId('daf-wizard-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('daf-consultation-context')).toBeVisible()
+    await expect(page.getByTestId('daf-from-consultation-banner')).toBeVisible()
+  })
+
+  test('traitements CNK → preview FEFO → finalize DAF', async ({ page }) => {
+    await openConsultationSetup(page)
+    await startConsultationVisit(page)
+    // Treatments panel mounts only after CR saved (avoids overlay on TipTap).
+    await saveConsultationReport(page)
+
+    const treatments = page.getByTestId('consultation-treatments')
+    if ((await treatments.count()) === 0) {
+      test.skip(true, 'pharmacy off ou pharmacy.write absent')
+    }
+    await expect(treatments).toBeVisible({ timeout: 10000 })
+
+    const medInput = page.getByTestId('consultation-treatments').getByTestId('pro-combobox-input').first()
+    if ((await medInput.count()) === 0) {
+      test.skip(true, 'combobox med input absent')
+    }
+    await medInput.fill('Vaccin Rage')
+    const list = page.getByTestId('pro-combobox-list')
+    await expect(list).toBeVisible({ timeout: 10000 })
+    await list.locator('[role="option"]').first().click()
+
+    const amm = page.getByTestId('consultation-treatment-amm-0')
+    await expect(amm).toBeVisible()
+    // Catalogue AMM may auto-fill; ensure non-empty for finalize.
+    if (!(await amm.inputValue()).trim()) {
+      await amm.fill('BE-DEMO-RAGE-1')
+    }
+    // Antibio VAMReg fields (if present) must be filled for canSubmit.
+    const species = page.getByTestId('consultation-treatment-species-0')
+    if ((await species.count()) > 0) {
+      if (!(await species.inputValue()).trim()) await species.fill('dog')
+      const indication = page.getByTestId('consultation-treatment-indication-0')
+      if ((await indication.count()) > 0 && !(await indication.inputValue()).trim()) {
+        await indication.fill('infection')
+      }
+    }
+    await page.getByTestId('consultation-treatment-qty-0').fill('1')
+    await expect(page.getByTestId('consultation-treatments-save')).toBeEnabled({ timeout: 5000 })
+    await page.getByTestId('consultation-treatments-save').click()
+    await expect(page.getByTestId('consultation-treatments-ok')).toBeVisible({ timeout: 15000 })
+
+    await page.getByTestId('consultation-treatments-preview').click()
+    // Stock seed OK → FEFO; sinon form réception express (pas de skip soft CNK).
+    const fefo = page.getByTestId('consultation-treatments-fefo')
+    const receipt = page.getByTestId('consultation-treatments-receipt')
+    const fefoVisible = await fefo.waitFor({ state: 'visible', timeout: 10000 }).then(() => true).catch(() => false)
+    if (!fefoVisible) {
+      await expect(receipt).toBeVisible({ timeout: 5000 })
+      const exp = new Date()
+      exp.setMonth(exp.getMonth() + 6)
+      await page.getByTestId('consultation-receipt-lot').fill(`E2E-${Date.now()}`)
+      await page.getByTestId('consultation-receipt-expiry').fill(exp.toISOString().slice(0, 10))
+      await page.getByTestId('consultation-receipt-qty').fill('10')
+      await page.getByTestId('consultation-receipt-submit').click()
+      await expect(fefo).toBeVisible({ timeout: 15000 })
+    }
+
+    await page.getByTestId('consultation-treatments-finalize').click()
+    await expect(page.getByTestId('consultation-treatments-finalize-confirm')).toBeVisible({ timeout: 5000 })
+    const finalizeRes = page.waitForResponse(
+      (r) => /\/api\/vet\/pharmacy\/daf\/[^/]+\/finalize\b/.test(r.url()) && r.request().method() === 'POST',
+      { timeout: 20000 },
+    )
+    await page.getByTestId('consultation-finalize-ok').click()
+    const finalized = await finalizeRes
+    expect(finalized.status()).toBe(200)
+    await expect(page.getByTestId('consultation-treatments-finalized')).toBeVisible({ timeout: 15000 })
   })
 })

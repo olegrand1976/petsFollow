@@ -84,20 +84,21 @@ type FEFOPreviewLine struct {
 
 func (s *Store) GetRefMedication(ctx context.Context, id string) (RefMedication, error) {
 	var m RefMedication
-	var atc, form, pack string
+	var atc, form, pack, amm string
 	err := s.pool.QueryRow(ctx, `
 		SELECT id::text, cnk, name,
 		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+		       COALESCE(amm_number, ''),
 		       is_antibiotic, is_active,
 		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
 		FROM pharmacy.ref_medications WHERE id = $1`, id).Scan(
-		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
 		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RefMedication{}, ErrNotFound
 	}
-	m.ATCCode, m.PharmaceuticalForm, m.PackSize = atc, form, pack
+	m.ATCCode, m.PharmaceuticalForm, m.PackSize, m.AMMNumber = atc, form, pack, amm
 	return m, err
 }
 
@@ -107,10 +108,11 @@ func (s *Store) GetRefMedicationForPractice(ctx context.Context, practiceID, med
 		return s.GetRefMedication(ctx, medicationID)
 	}
 	var m RefMedication
-	var atc, form, pack string
+	var atc, form, pack, amm string
 	err := s.pool.QueryRow(ctx, `
 		SELECT m.id::text, m.cnk, m.name,
 		       COALESCE(m.atc_code, ''), COALESCE(m.pharmaceutical_form, ''), COALESCE(m.pack_size, ''),
+		       COALESCE(m.amm_number, ''),
 		       m.is_antibiotic, m.is_active,
 		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_meat_days ELSE m.withdrawal_meat_days END,
 		       CASE WHEN o.medication_id IS NOT NULL THEN o.withdrawal_milk_days ELSE m.withdrawal_milk_days END,
@@ -120,13 +122,13 @@ func (s *Store) GetRefMedicationForPractice(ctx context.Context, practiceID, med
 		LEFT JOIN pharmacy.medication_practice_attrs o
 		  ON o.medication_id = m.id AND o.practice_id = $2::uuid
 		WHERE m.id = $1`, medicationID, practiceID).Scan(
-		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+		&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
 		&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return RefMedication{}, ErrNotFound
 	}
-	m.ATCCode, m.PharmaceuticalForm, m.PackSize = atc, form, pack
+	m.ATCCode, m.PharmaceuticalForm, m.PackSize, m.AMMNumber = atc, form, pack, amm
 	return m, err
 }
 
@@ -178,6 +180,15 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 	if len(items) == 0 {
 		return DAFDocument{}, pharmacy.ErrDAFEmpty
 	}
+	visitID = strings.TrimSpace(visitID)
+	// One draft per visit: collide → replace existing draft items.
+	if visitID != "" {
+		if existing, err := s.GetDraftDAFByVisit(ctx, practiceID, visitID); err == nil {
+			return s.ReplaceDAFDraftItems(ctx, practiceID, existing.ID, clientUserID, petID, visitID, notes, items)
+		} else if !errors.Is(err, pharmacy.ErrDAFNotFound) {
+			return DAFDocument{}, err
+		}
+	}
 	year := pharmacy.BrusselsToday(time.Now()).Year()
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -193,6 +204,14 @@ func (s *Store) CreateDAFDraft(ctx context.Context, practiceID, prescriberID str
 		docID, practiceID, year, clientUserID, petID, visitID, prescriberID, strings.TrimSpace(notes),
 	)
 	if err != nil {
+		if visitID != "" && isUniqueViolation(err) {
+			tx.Rollback(ctx)
+			existing, gerr := s.GetDraftDAFByVisit(ctx, practiceID, visitID)
+			if gerr != nil {
+				return DAFDocument{}, err
+			}
+			return s.ReplaceDAFDraftItems(ctx, practiceID, existing.ID, clientUserID, petID, visitID, notes, items)
+		}
 		return DAFDocument{}, err
 	}
 	for i, it := range items {
@@ -368,6 +387,117 @@ func (s *Store) GetDAF(ctx context.Context, practiceID, dafID string) (DAFDocume
 	return d, nil
 }
 
+// ListFinalizedDAFByPet returns finalized DAF documents for a pet (practice-scoped).
+func (s *Store) ListFinalizedDAFByPet(ctx context.Context, practiceID, petID string) ([]DAFDocument, error) {
+	petID = strings.TrimSpace(petID)
+	if practiceID == "" || petID == "" {
+		return nil, ErrValidation
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT d.id::text, d.practice_id::text, d.daf_year, d.daf_number, d.status,
+		       COALESCE(d.client_user_id::text,''), COALESCE(d.pet_id::text,''), COALESCE(d.visit_id::text,''),
+		       d.prescriber_user_id::text, COALESCE(u.full_name,''),
+		       COALESCE(d.notes,''), COALESCE(d.issued_at::text,''), COALESCE(d.finalized_at::text,''),
+		       d.has_antibiotic, d.vamreg_status, d.invoices_export_status, d.created_at::text,
+		       COALESCE(d.pdf_object_key,'')
+		FROM pharmacy.daf_documents d
+		JOIN identity.users u ON u.id = d.prescriber_user_id
+		WHERE d.practice_id = $1 AND d.pet_id = $2::uuid AND d.status = 'finalized'
+		ORDER BY d.finalized_at DESC NULLS LAST, d.created_at DESC
+		LIMIT 50`, practiceID, petID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []DAFDocument
+	for rows.Next() {
+		var d DAFDocument
+		var num *int64
+		if err := rows.Scan(
+			&d.ID, &d.PracticeID, &d.DAFYear, &num, &d.Status,
+			&d.ClientUserID, &d.PetID, &d.VisitID, &d.PrescriberUserID, &d.PrescriberName,
+			&d.Notes, &d.IssuedAt, &d.FinalizedAt, &d.HasAntibiotic, &d.VamregStatus,
+			&d.InvoicesExportStatus, &d.CreatedAt, &d.PDFObjectKey,
+		); err != nil {
+			return nil, err
+		}
+		d.DAFNumber = num
+		if num != nil {
+			d.DisplayNumber = pharmacy.FormatDAFNumber(d.DAFYear, *num)
+		}
+		items, err := s.listDAFItems(ctx, d.ID)
+		if err != nil {
+			return nil, err
+		}
+		d.Items = items
+		out = append(out, d)
+	}
+	return out, rows.Err()
+}
+
+// ListStaleDraftDAFByVisits returns draft DAFs linked to the given visits whose
+// updated_at is older than minAge (idle drafts, not freshly edited).
+func (s *Store) ListStaleDraftDAFByVisits(ctx context.Context, practiceID string, visitIDs []string, minAge time.Duration) (map[string]string, error) {
+	out := map[string]string{}
+	if practiceID == "" || len(visitIDs) == 0 {
+		return out, nil
+	}
+	cutoff := time.Now().Add(-minAge)
+	rows, err := s.pool.Query(ctx, `
+		SELECT visit_id::text, id::text
+		FROM pharmacy.daf_documents
+		WHERE practice_id = $1
+		  AND status = 'draft'
+		  AND visit_id = ANY($2::uuid[])
+		  AND updated_at < $3`, practiceID, visitIDs, cutoff)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var visitID, dafID string
+		if err := rows.Scan(&visitID, &dafID); err != nil {
+			return nil, err
+		}
+		out[visitID] = dafID
+	}
+	return out, rows.Err()
+}
+
+// GetDraftDAFByVisit returns the unique draft DAF linked to a visit, if any.
+func (s *Store) GetDraftDAFByVisit(ctx context.Context, practiceID, visitID string) (DAFDocument, error) {
+	visitID = strings.TrimSpace(visitID)
+	if practiceID == "" || visitID == "" {
+		return DAFDocument{}, ErrValidation
+	}
+	var dafID string
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text FROM pharmacy.daf_documents
+		WHERE practice_id = $1 AND visit_id = $2::uuid AND status = 'draft'
+		ORDER BY created_at DESC
+		LIMIT 1`, practiceID, visitID).Scan(&dafID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return DAFDocument{}, pharmacy.ErrDAFNotFound
+	}
+	if err != nil {
+		return DAFDocument{}, err
+	}
+	return s.GetDAF(ctx, practiceID, dafID)
+}
+
+// UpsertDraftDAFForVisit creates or replaces the draft DAF for a consultation visit.
+func (s *Store) UpsertDraftDAFForVisit(
+	ctx context.Context,
+	practiceID, prescriberID, clientUserID, petID, visitID, notes string,
+	items []DAFItemInput,
+) (DAFDocument, error) {
+	visitID = strings.TrimSpace(visitID)
+	if visitID == "" {
+		return DAFDocument{}, ErrValidation
+	}
+	return s.CreateDAFDraft(ctx, practiceID, prescriberID, clientUserID, petID, visitID, notes, items)
+}
+
 func (s *Store) listDAFItems(ctx context.Context, dafID string) ([]DAFItem, error) {
 	return s.listDAFItemsQuerier(ctx, s.pool, dafID)
 }
@@ -476,9 +606,9 @@ func (s *Store) PreviewFEFOAllocation(ctx context.Context, practiceID string, it
 		rows.Close()
 		if remaining > 1e-9 {
 			if total == 0 {
-				return nil, pharmacy.ErrStockUnavailableValidLots
+				return nil, pharmacy.StockErrForMed(it.MedicationID, pharmacy.ErrStockUnavailableValidLots)
 			}
-			return nil, pharmacy.ErrStockInsufficient
+			return nil, pharmacy.StockErrForMed(it.MedicationID, pharmacy.ErrStockInsufficient)
 		}
 	}
 	return out, nil

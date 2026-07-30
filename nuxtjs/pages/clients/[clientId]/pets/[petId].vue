@@ -149,6 +149,30 @@
         </dl>
       </ProCard>
       <ProCard
+        v-if="pharmacyEnabled && canReadPharmacy"
+        :title="$t('clients.pet.dafDispensesTitle')"
+        class="pro-mb-lg"
+        data-testid="pet-daf-dispenses"
+      >
+        <p v-if="dafDispensesLoading" class="pro-hint">{{ $t('common.loading') }}</p>
+        <p v-else-if="dafDispensesError" class="pro-error" role="alert">{{ dafDispensesError }}</p>
+        <div v-else-if="!dafDispenses.length" class="pro-empty">{{ $t('clients.pet.dafDispensesEmpty') }}</div>
+        <ul v-else class="pet-daf-dispenses">
+          <li v-for="disp in dafDispenses" :key="disp.dafId">
+            <NuxtLink :to="`/daf/${disp.dafId}`" class="pro-link">
+              {{ disp.displayNumber || disp.dafId }}
+            </NuxtLink>
+            <span v-if="disp.finalizedAt" class="pro-hint"> · {{ formatDate(disp.finalizedAt) }}</span>
+            <ul v-if="disp.items?.length" class="pet-daf-dispenses__items">
+              <li v-for="(it, i) in disp.items" :key="i">
+                {{ it.medicationName }} · {{ it.qty }} · lot {{ it.lotNumber || '—' }}
+                <span v-if="it.ammNumber"> · AMM {{ it.ammNumber }}</span>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </ProCard>
+      <ProCard
         v-if="pet && isFoodChainSpecies(pet.species)"
         :title="$t('clients.pet.horseRegulatoryTitle')"
         class="pro-mb-lg"
@@ -709,8 +733,12 @@
 
 <script setup lang="ts">
 import { isFoodChainSpecies } from '~/utils/pet-species'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
+
+const config = useRuntimeConfig()
+const pharmacyEnabled = computed(() => isPublicFlagOn(config.public.pharmacyEnabled))
 
 const route = useRoute()
 const { t, te } = useI18n()
@@ -722,6 +750,7 @@ const canManageShares = computed(() => canPractice('shares.manage'))
 const canReadShares = computed(() => canPractice('shares.read'))
 const canMessage = computed(() => canPractice('messaging'))
 const canValidateHR = computed(() => canPractice('heartrate.validate'))
+const canReadPharmacy = computed(() => canPractice('pharmacy.read'))
 const activeConsult = useActiveConsultation()
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
@@ -783,6 +812,14 @@ const visitDraft = reactive({
   durationMinutes: 30,
 })
 const visitTypes = ref<{ id: string; name: string; durationMinutes: number }[]>([])
+const dafDispenses = ref<Array<{
+  dafId: string
+  displayNumber?: string
+  finalizedAt?: string
+  items?: Array<{ medicationName: string; lotNumber?: string; qty: number; ammNumber?: string }>
+}>>([])
+const dafDispensesLoading = ref(false)
+const dafDispensesError = ref('')
 
 watch(
   () => visitDraft.visitTypeId,
@@ -1280,6 +1317,24 @@ function openVisitReport(v: { id: string, scheduledAt?: string, createdAt?: stri
   visitReportOpen.value = true
 }
 
+async function loadDafDispenses() {
+  if (!pharmacyEnabled.value || !canReadPharmacy.value) return
+  dafDispensesLoading.value = true
+  dafDispensesError.value = ''
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/daf-dispenses`)
+    const data = res?.data ?? res
+    dafDispenses.value = Array.isArray(data?.items) ? data.items : []
+  }
+  catch (e: any) {
+    dafDispenses.value = []
+    dafDispensesError.value = mapError(e)
+  }
+  finally {
+    dafDispensesLoading.value = false
+  }
+}
+
 onMounted(async () => {
   pageError.value = ''
   try {
@@ -1328,7 +1383,7 @@ onMounted(async () => {
       loadSessions(true).catch(() => {})
     }, 8000)
 
-    await Promise.all([careVisitsP, docsP, sharesP, typesP])
+    await Promise.all([careVisitsP, docsP, sharesP, typesP, loadDafDispenses()])
   } catch (e: any) {
     pageError.value = mapError(e)
   }
@@ -1446,6 +1501,19 @@ onBeforeUnmount(() => {
 
 .pro-pet-charts-details[open] > summary::before {
   transform: rotate(90deg);
+}
+
+.pet-daf-dispenses {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+.pet-daf-dispenses__items {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  color: var(--pf-vet-muted, #64748b);
 }
 
 .pro-pet-charts-details__body {

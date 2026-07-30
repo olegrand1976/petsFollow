@@ -1003,6 +1003,21 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 	return out, rows.Err()
 }
 
+func (s *Store) InsertDossierEvent(ctx context.Context, petID, authorUserID, eventType, content string) error {
+	petID = strings.TrimSpace(petID)
+	authorUserID = strings.TrimSpace(authorUserID)
+	eventType = strings.TrimSpace(eventType)
+	content = strings.TrimSpace(content)
+	if petID == "" || authorUserID == "" || eventType == "" || content == "" {
+		return ErrValidation
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO pets.dossier_events (id, pet_id, author_user_id, event_type, content)
+		VALUES ($1, $2::uuid, $3::uuid, $4, $5)`,
+		uuid.NewString(), petID, authorUserID, eventType, content)
+	return err
+}
+
 func (s *Store) LogNotification(ctx context.Context, vetID, kind string, payload map[string]any) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO notifications.notification_log (id, vet_user_id, kind, payload)

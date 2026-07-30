@@ -21,6 +21,7 @@ type RefMedication struct {
 	ATCCode             string          `json:"atcCode,omitempty"`
 	PharmaceuticalForm  string          `json:"pharmaceuticalForm,omitempty"`
 	PackSize            string          `json:"packSize,omitempty"`
+	AMMNumber           string          `json:"ammNumber,omitempty"`
 	IsAntibiotic        bool            `json:"isAntibiotic"`
 	IsActive            bool            `json:"isActive"`
 	WithdrawalMeatDays  *int            `json:"withdrawalMeatDays,omitempty"`
@@ -38,6 +39,7 @@ type RefMedicationUpsert struct {
 	ATCCode            string
 	PharmaceuticalForm string
 	PackSize           string
+	AMMNumber          string
 	IsAntibiotic       bool
 	IsActive           bool
 	AFMPSMeta          json.RawMessage
@@ -73,6 +75,7 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text, cnk, name,
 		       COALESCE(atc_code, ''), COALESCE(pharmaceutical_form, ''), COALESCE(pack_size, ''),
+		       COALESCE(amm_number, ''),
 		       is_antibiotic, is_active,
 		       withdrawal_meat_days, withdrawal_milk_days, withdrawal_eggs_days, food_chain_banned
 		FROM pharmacy.ref_medications
@@ -97,14 +100,15 @@ func (s *Store) SearchRefMedications(ctx context.Context, q string, limit int) (
 	out := make([]RefMedication, 0, limit)
 	for rows.Next() {
 		var m RefMedication
-		var atc, form, pack string
-		if err := rows.Scan(&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &m.IsAntibiotic, &m.IsActive,
+		var atc, form, pack, amm string
+		if err := rows.Scan(&m.ID, &m.CNK, &m.Name, &atc, &form, &pack, &amm, &m.IsAntibiotic, &m.IsActive,
 			&m.WithdrawalMeatDays, &m.WithdrawalMilkDays, &m.WithdrawalEggsDays, &m.FoodChainBanned); err != nil {
 			return nil, err
 		}
 		m.ATCCode = atc
 		m.PharmaceuticalForm = form
 		m.PackSize = pack
+		m.AMMNumber = amm
 		out = append(out, m)
 	}
 	return out, rows.Err()
@@ -127,10 +131,10 @@ func (s *Store) UpsertRefMedication(ctx context.Context, row RefMedicationUpsert
 	err := s.pool.QueryRow(ctx, `
 		INSERT INTO pharmacy.ref_medications (
 			id, cnk, name, name_normalized, atc_code, pharmaceutical_form, pack_size,
-			is_antibiotic, is_active, afmps_meta, updated_at
+			amm_number, is_antibiotic, is_active, afmps_meta, updated_at
 		) VALUES (
 			$1, $2, $3, $4, NULLIF($5, ''), NULLIF($6, ''), NULLIF($7, ''),
-			$8, $9, $10::jsonb, now()
+			COALESCE($8, ''), $9, $10, $11::jsonb, now()
 		)
 		ON CONFLICT (cnk) DO UPDATE SET
 			name = EXCLUDED.name,
@@ -138,6 +142,10 @@ func (s *Store) UpsertRefMedication(ctx context.Context, row RefMedicationUpsert
 			atc_code = EXCLUDED.atc_code,
 			pharmaceutical_form = EXCLUDED.pharmaceutical_form,
 			pack_size = EXCLUDED.pack_size,
+			amm_number = CASE
+				WHEN EXCLUDED.amm_number <> '' THEN EXCLUDED.amm_number
+				ELSE pharmacy.ref_medications.amm_number
+			END,
 			is_antibiotic = EXCLUDED.is_antibiotic,
 			is_active = EXCLUDED.is_active,
 			afmps_meta = EXCLUDED.afmps_meta,
@@ -147,6 +155,7 @@ func (s *Store) UpsertRefMedication(ctx context.Context, row RefMedicationUpsert
 		strings.TrimSpace(row.ATCCode),
 		strings.TrimSpace(row.PharmaceuticalForm),
 		strings.TrimSpace(row.PackSize),
+		strings.TrimSpace(row.AMMNumber),
 		row.IsAntibiotic, row.IsActive, string(meta),
 	).Scan(&id)
 	return id, err
