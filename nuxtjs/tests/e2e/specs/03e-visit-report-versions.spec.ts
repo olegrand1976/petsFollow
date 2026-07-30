@@ -151,7 +151,7 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     if (await page.getByTestId('visit-report-edit-tab').isVisible()) {
       // Close history <details> so its overlay does not intercept the preview tab click (Cloud Run).
       await page.getByTestId('visit-report-history').locator('summary').click()
-      await page.getByTestId('visit-report-preview-tab').click()
+      await page.getByTestId('visit-report-preview-tab').click({ force: true })
       const preview = page.getByTestId('visit-report-preview')
       await expect(preview).toBeVisible()
       const html = await preview.innerHTML()
@@ -206,10 +206,11 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     const history = page.getByTestId('visit-report-history')
     await history.locator('summary').click()
     await expect(page.getByTestId('visit-report-restore-v1')).toBeVisible()
-    await page.getByTestId('visit-report-edit-tab').click()
+    // force: history <details> can overlay tabs on Cloud Run viewport
+    await page.getByTestId('visit-report-edit-tab').click({ force: true })
     await body.fill('dirty right before restore v1')
     await page.getByTestId('visit-report-restore-v1').click()
-    await page.getByTestId('visit-report-edit-tab').click()
+    await page.getByTestId('visit-report-edit-tab').click({ force: true })
     await expect(body).toHaveValue(improved)
 
     // Restore v0 → gauche
