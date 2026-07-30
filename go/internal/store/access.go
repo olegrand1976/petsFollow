@@ -565,7 +565,7 @@ func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([
 				)
 			) AS pet_count
 		FROM identity.users u
-		WHERE u.role='client' AND (
+		WHERE (
 			EXISTS (
 				SELECT 1 FROM practice.client_access ca
 				WHERE ca.client_user_id=u.id AND ca.grantee_user_id=$1

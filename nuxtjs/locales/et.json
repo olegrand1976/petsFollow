@@ -2243,6 +2243,8 @@
     "invalid_json": "Vigane JSON",
     "fields_required": "Kõik väljad on kohustuslikud",
     "password_too_short": "Parool on liiga lühike (vähemalt 8 tähemärki)",
+    "contact_phone_required": "Telefoninumber on kohustuslik",
+    "contact_phone_too_long": "Telefoninumber on liiga pikk",
     "image_too_large": "Fail on liiga suur (limiit ületatud)",
     "invalid_image_type": "Toetamata vorming (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fail on kohustuslik",

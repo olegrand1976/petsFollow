@@ -3123,6 +3123,8 @@
     "invalid_json": "JSON invalide",
     "fields_required": "Tous les champs sont requis",
     "password_too_short": "Mot de passe trop court (8 caractères minimum)",
+    "contact_phone_required": "Numéro de téléphone requis",
+    "contact_phone_too_long": "Numéro de téléphone trop long",
     "image_too_large": "Fichier trop volumineux (limite dépassée)",
     "invalid_image_type": "Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fichier requis",

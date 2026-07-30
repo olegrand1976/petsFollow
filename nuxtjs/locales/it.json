@@ -3047,6 +3047,8 @@
     "invalid_json": "JSON non valido",
     "fields_required": "Tutti i campi sono obbligatori",
     "password_too_short": "Password troppo corta (minimo 8 caratteri)",
+    "contact_phone_required": "Numero di telefono obbligatorio",
+    "contact_phone_too_long": "Numero di telefono troppo lungo",
     "image_too_large": "File troppo grande (limite superato)",
     "invalid_image_type": "Formato non supportato (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "File richiesto",
