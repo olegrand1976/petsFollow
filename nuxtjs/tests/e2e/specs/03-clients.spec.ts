@@ -8,7 +8,7 @@ test('liste clients avec recherche', { tag: '@p0' }, async ({ page }) => {
   await page.goto('/clients')
   await expect(page.getByTestId('clients-page')).toBeVisible()
 
-  const search = page.getByPlaceholder(/nom ou email|name or email|naam of e-mail/i)
+  const search = page.locator('#client-search')
   await search.fill('Sophie')
   // Timeout large : premier chargement de la page en dev (compilation Vite) sous suite complète.
   await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })

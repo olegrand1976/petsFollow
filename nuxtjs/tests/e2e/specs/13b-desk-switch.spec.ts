@@ -223,7 +223,7 @@ test.describe('desk switch — shared workstation', { tag: '@p0' }, () => {
 
     await page.goto('/clients', { waitUntil: 'networkidle' })
     await dismissProModals(page)
-    const search = page.getByPlaceholder(/nom ou email|name or email|naam of e-mail/i)
+    const search = page.locator('#client-search')
     await search.fill('Sophie')
     await expect(page.getByText(/Sophie Demo|client\.demo/i).first()).toBeVisible({ timeout: 15000 })
     const cta = page.locator('[data-testid^="new-consultation-"]').first()

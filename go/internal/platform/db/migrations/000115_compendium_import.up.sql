@@ -1,7 +1,7 @@
 -- Admin Compendium PDF → staging → pharmacy.ref_medications
 CREATE TABLE IF NOT EXISTS pharmacy.compendium_import_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_by_admin_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE,
+    created_by_admin_id UUID NOT NULL REFERENCES identity.users(id) ON DELETE RESTRICT,
     filename TEXT NOT NULL,
     content_type TEXT NOT NULL DEFAULT 'application/pdf',
     page_start INT NOT NULL CHECK (page_start >= 1),
