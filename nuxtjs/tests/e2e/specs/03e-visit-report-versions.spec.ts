@@ -22,6 +22,29 @@ async function dismissProModals(page: Page) {
   }
 }
 
+/** Cloud Run viewport: open history <details> overlays CR tabs — close before tab clicks. */
+async function setVisitReportHistoryOpen(page: Page, open: boolean) {
+  const history = page.getByTestId('visit-report-history')
+  const isOpen = await history.evaluate((el) => (el as HTMLDetailsElement).open)
+  if (isOpen !== open) {
+    await history.locator('summary').click()
+  }
+  await expect
+    .poll(async () => history.evaluate((el) => (el as HTMLDetailsElement).open), { timeout: 5000 })
+    .toBe(open)
+}
+
+/** After improve, preferPreviewTick switches to preview — body textarea is unmounted. */
+async function ensureVisitReportEditMode(page: Page) {
+  await setVisitReportHistoryOpen(page, false)
+  const body = page.getByTestId('visit-report-body')
+  if (await body.count() > 0 && await body.isVisible()) return
+  const editTab = page.getByTestId('visit-report-edit-tab')
+  await expect(editTab).toBeVisible({ timeout: 10000 })
+  await editTab.click()
+  await expect(body).toBeVisible({ timeout: 10000 })
+}
+
 async function openConsultationReport(page: Page) {
   await page.goto('/clients', { waitUntil: 'networkidle' })
   if (page.url().includes('/login')) {
@@ -137,7 +160,7 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('consultation-cta-done')).toBeVisible({ timeout: 15000 })
 
     // History restore targets — require server-persisted transcript (PUT transcriptText).
-    await page.getByTestId('visit-report-history').locator('summary').click()
+    await setVisitReportHistoryOpen(page, true)
     await expect(page.getByTestId('visit-report-v0')).toBeVisible()
     await expect(
       page.getByTestId('visit-report-restore-v0'),
@@ -149,9 +172,8 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
 
     // Preview must not execute script from corpus if shown
     if (await page.getByTestId('visit-report-edit-tab').isVisible()) {
-      // Close history <details> so its overlay does not intercept the preview tab click (Cloud Run).
-      await page.getByTestId('visit-report-history').locator('summary').click()
-      await page.getByTestId('visit-report-preview-tab').click({ force: true })
+      await setVisitReportHistoryOpen(page, false)
+      await page.getByTestId('visit-report-preview-tab').click()
       const preview = page.getByTestId('visit-report-preview')
       await expect(preview).toBeVisible()
       const html = await preview.innerHTML()
@@ -202,19 +224,19 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect.poll(() => improveSource, { timeout: 20000 }).toContain(notes)
     await expect(page.getByTestId('visit-report-msg')).toBeVisible({ timeout: 15000 })
 
-    // History + restore v1 → droite
-    const history = page.getByTestId('visit-report-history')
-    await history.locator('summary').click()
+    // Improve switches markdown editor to preview — reopen history only for restore CTAs.
+    await setVisitReportHistoryOpen(page, true)
     await expect(page.getByTestId('visit-report-restore-v1')).toBeVisible()
-    // force: history <details> can overlay tabs on Cloud Run viewport
-    await page.getByTestId('visit-report-edit-tab').click({ force: true })
+    await ensureVisitReportEditMode(page)
     await body.fill('dirty right before restore v1')
+    await setVisitReportHistoryOpen(page, true)
     await page.getByTestId('visit-report-restore-v1').click()
-    await page.getByTestId('visit-report-edit-tab').click({ force: true })
+    await ensureVisitReportEditMode(page)
     await expect(body).toHaveValue(improved)
 
     // Restore v0 → gauche
     await transcript.fill('dirty left before restore v0')
+    await setVisitReportHistoryOpen(page, true)
     await page.getByTestId('visit-report-restore-v0').click()
     await expect(transcript).toHaveValue(notes)
 
