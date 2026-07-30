@@ -399,15 +399,18 @@ function draftBody() {
 }
 
 function isStockError(e: any): boolean {
-  const code = e?.data?.error?.code || e?.data?.code
+  const code = String(
+    e?.data?.error?.code || e?.data?.code || e?.response?._data?.error?.code || '',
+  ).trim()
   return code === 'stock_insufficient' || code === 'stock_unavailable_valid_lots'
 }
 
 function openStockReceipt(medicationId?: string) {
   const want = String(medicationId || '').trim()
-  const failing = want
+  const failing = (want
     ? lines.value.find(l => l.med?.id === want)
-    : lines.value.find(l => l.med?.id)
+    : undefined)
+    || lines.value.find(l => l.med?.id)
   if (!failing?.med) return
   stockReceiptMed.value = { medicationId: failing.med.id, name: failing.med.label }
   receiptForm.lotNumber = ''
