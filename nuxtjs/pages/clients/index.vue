@@ -85,6 +85,7 @@
       <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
         <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
+        <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" />
         <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
@@ -161,6 +162,7 @@
           <tr>
             <th>{{ $t('clients.columnClient') }}</th>
             <th>{{ $t('clients.columnEmail') }}</th>
+            <th>{{ $t('clients.columnPhone') }}</th>
             <th>{{ $t('clients.columnPets') }}</th>
             <th>{{ $t('common.actions') }}</th>
           </tr>
@@ -178,6 +180,7 @@
               </NuxtLink>
             </td>
             <td>{{ c.email }}</td>
+            <td>{{ c.contactPhone || '—' }}</td>
             <td>{{ c.petCount }}</td>
             <td>
               <div class="pro-client-actions">
@@ -220,6 +223,7 @@
             <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
+            <p v-if="c.contactPhone" class="pro-kanban-card__meta">{{ c.contactPhone }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
             <div class="pro-client-actions pro-kanban-card__actions">
               <ProIconAction
@@ -252,6 +256,7 @@ type ClientRow = {
   email: string
   fullName: string
   avatarUrl?: string
+  contactPhone?: string
   petCount: number
 }
 
@@ -307,7 +312,7 @@ async function loadClients() {
 }
 
 const createOpen = ref(false)
-const clientForm = reactive({ fullName: '', email: '', password: '' })
+const clientForm = reactive({ fullName: '', email: '', contactPhone: '', password: '' })
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
@@ -334,7 +339,7 @@ async function createClient() {
   try {
     await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
     clientMsg.value = t('clients.create.success')
-    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
     await loadClients()
   } catch (e: any) {
     const details = e?.data?.error?.details || e?.data?.details
@@ -364,7 +369,7 @@ async function linkExistingClient() {
     await $fetch(`/api/vet/clients/${linkCandidate.value.userId}/link`, { method: 'POST' })
     clientMsg.value = t('clients.create.linkSuccess')
     linkCandidate.value = null
-    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
     await loadClients()
   } catch {
     clientError.value = t('clients.create.linkError')
@@ -396,11 +401,17 @@ const filtered = computed(() => {
   let list = Array.isArray(clients.value) ? [...clients.value] : []
   const q = query.value.trim().toLowerCase()
   if (q) {
-    list = list.filter(
-      (c) =>
+    const qDigits = q.replace(/\D/g, '')
+    list = list.filter((c) => {
+      const phone = (c.contactPhone || '').toLowerCase()
+      const phoneDigits = phone.replace(/\D/g, '')
+      return (
         c.fullName?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q),
-    )
+        c.email?.toLowerCase().includes(q) ||
+        phone.includes(q) ||
+        (qDigits.length > 0 && phoneDigits.includes(qDigits))
+      )
+    })
   }
   if (petFilter.value === 'none') list = list.filter((c) => c.petCount === 0)
   if (petFilter.value === 'with') list = list.filter((c) => c.petCount > 0)

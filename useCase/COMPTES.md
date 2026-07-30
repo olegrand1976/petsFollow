@@ -43,6 +43,19 @@ Affichés sur la page de dossier partagé (`UC-X-08`) et modifiables dans `/comm
 | Alex (`commercial.demo2@`) | `0471 98 76 54` |
 | Bérénice manager (`commercial.manager@`) | `0472 11 22 33` |
 
+## Téléphones clients seedés
+
+Visibles / filtrables sur `/clients` (VetPro) et éditables sur la fiche Identité.
+
+| Client | Téléphone seedé |
+|--------|-----------------|
+| Sophie (`client.demo@`) | `0470 00 00 01` |
+| Luc (`client.vide@`) | `0470 00 00 02` |
+| Marie (`client.marie@`) | `0470 00 00 03` |
+| Paul (`client.paul@`) | `0470 00 00 04` |
+| Julie (`client.julie@`) | `0470 00 00 05` |
+| Thomas (`client.thomas@`) | `0470 00 00 06` |
+
 ## Autres comptes seed (hors UC V1)
 
 Disponibles pour tests ad hoc — détail dans [`AGENTS.md`](../AGENTS.md) :

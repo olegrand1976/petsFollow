@@ -124,6 +124,10 @@ func TestIsSensitiveObjectKey(t *testing.T) {
 		"prescriptions",
 		"prescriptions/",
 		"prescriptions/p1/r1.pdf",
+		"compendium-imports",
+		"compendium-imports/",
+		"compendium-imports/job1.pdf",
+		"Compendium-Imports/x",
 	}
 	for _, k := range yes {
 		if !IsSensitiveObjectKey(k) {
@@ -154,5 +158,13 @@ func TestSensitiveUploadNoPublicURL(t *testing.T) {
 	}
 	if !IsSensitiveObjectKey("visit-reports/v1/clip.m4a") {
 		t.Fatal("expected sensitive")
+	}
+	pdf := []byte("%PDF-1.4\n%%EOF\n")
+	url, err = st.Upload(nil, "compendium-imports/job.pdf", bytes.NewReader(pdf), int64(len(pdf)), "application/pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if url != "" {
+		t.Fatalf("expected empty public URL for compendium import, got %q", url)
 	}
 }
