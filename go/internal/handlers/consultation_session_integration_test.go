@@ -357,18 +357,27 @@ func TestFinalizeBookedVisitAutoDoneForClientTimeline(t *testing.T) {
 	}
 	petID, _ := pets[0].(map[string]any)["id"].(string)
 	// Booked visit (not walk-in): historically stayed confirmed after finalize.
-	slot := time.Now().UTC().Add(-2 * time.Hour).Format(time.RFC3339)
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     slot,
-		"durationMinutes": 30,
-		"confirmDirect":   true,
-		"silentConfirm":   true,
-		"notes":           "booked finalize auto-done",
-	})
-	if code != http.StatusCreated {
-		t.Fatalf("create %d %#v", code, env)
+	var visitID string
+	for attempt := 0; attempt < 4; attempt++ {
+		slot := time.Now().UTC().Add(-2*time.Hour - time.Duration(attempt)*time.Hour).Truncate(time.Minute).Format(time.RFC3339)
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":     slot,
+			"durationMinutes": 30,
+			"confirmDirect":   true,
+			"silentConfirm":   true,
+			"notes":           "booked finalize auto-done",
+		})
+		if code == http.StatusCreated {
+			visitID, _ = dataMap(t, env)["id"].(string)
+			break
+		}
+		if code != http.StatusConflict {
+			t.Fatalf("create %d %#v", code, env)
+		}
 	}
-	visitID, _ := dataMap(t, env)["id"].(string)
+	if visitID == "" {
+		t.Fatal("create: all slot retries failed (409 slot_taken)")
+	}
 	t.Cleanup(func() {
 		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, vetTok, nil)
 	})
