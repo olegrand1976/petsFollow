@@ -18,7 +18,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | `visits` | Visites (+ reschedule pending, GPS, `visit_reports`, `preconsult_intakes`) |
 | `discovery` | Onboarding client in-app + parcours email (`email_journey`, `email_sends`) |
 | `pharmacy` | **Livré (flag)** — CNK, stocks FEFO, DAF + traçabilité `daf_id`/`daf_item_id` sur sorties ([27](27-PHARMACIE-BELGIQUE.md), [28](28-PLAN-STOCK-PEREMPTION.md), migrations `000081`–`000090`) |
-| `prescriptions` | **Tag `dev` (flag)** — brouillons d’ordonnances + preview PDF ([35](35-ORDONNANCES.md), migration `000091`) ; `date_issued` / signature / PDF persisté = phase 2 |
+| `prescriptions` | **Tag `dev` (flag)** — brouillons de prescriptions + preview PDF ([35](35-PRESCRIPTIONS.md), migration `000091`) ; `date_issued` / signature / PDF persisté = phase 2 |
 
 ## Tables clés
 
@@ -37,7 +37,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | Msg | `messaging.threads`, `messages`, `vet_availability` |
 | Discovery | `discovery.progress`, `discovery.email_journey`, `discovery.email_sends` |
 | Pharmacie | `pharmacy.ref_medications` ; `practice_settings` ; `medication_deposits` ; `medication_batches` (`lot_number` non vide, `expires_on`) ; `stock_movements` (`daf_id` + `daf_item_id` obligatoires si `reason` ∈ {daf, daf_cancel} — `000087`/`000088`) ; `daf_documents` / `daf_items` / `daf_sequences` — API gated `pharmacy.read` / `pharmacy.write` (indépendant de `pets.write_clinical` une fois la clé pharma présente dans l’override ; sinon miroir legacy clinique) |
-| Ordonnances (dev) | `prescriptions.prescriptions` — `status` draft\|signed\|sent\|archived ; `medications` JSONB ; `paper_format` A4\|A5 ; `date_issued` NULL en V1 (posé à la signature phase 2) ; `signature_id` / `pdf_*` réservés phase 2 (`000091`) |
+| Prescriptions (dev) | `prescriptions.prescriptions` — `status` draft\|signed\|sent\|archived ; `medications` JSONB ; `paper_format` A4\|A5 ; `date_issued` NULL en V1 (posé à la signature phase 2) ; `signature_id` / `pdf_*` réservés phase 2 (`000091`) |
 
 ## Entitlements
 

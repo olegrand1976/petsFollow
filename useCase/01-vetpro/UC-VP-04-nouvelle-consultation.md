@@ -48,7 +48,7 @@ Depuis la liste clients, démarrer une consultation rapide : animal → compte-r
 - Historique cabinet : `/consultations` (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).
 - Veille / switch profil : autosave CR + reprise de la consultation pour le **même** utilisateur.
 - CR accessible immédiatement.
-- Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module ordonnances `/prescriptions`).
+- Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; `visitId` persisté sur le document). CTA libellé **DAF** (≠ module prescriptions `/prescriptions`).
 - Traitements CNK en consult → brouillon DAF `visit_id` ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.
 - E2E `@p0` : `03b-consultation.spec.ts` (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).
 - E2E `@p1` : `03e-visit-report-versions.spec.ts` (split panes · discard · restore · escape).

@@ -156,7 +156,7 @@ function navTestId(to: string) {
   if (to === '/messages') return 'nav-messages'
   if (to === '/requests') return 'nav-requests'
   if (to === '/invoicing') return 'nav-invoicing'
-  if (to === '/ordonnances') return 'nav-ordonnances'
+  if (to === '/prescriptions') return 'nav-prescriptions'
   if (to === '/medicaments') return 'nav-medicaments'
   if (to === '/stock') return 'nav-stock'
   if (to === '/daf') return 'nav-daf'
@@ -180,7 +180,7 @@ function badgeTestId(to: string) {
 
 function tagTestId(to: string) {
   if (to === '/invoicing') return 'nav-invoicing-tag'
-  if (to === '/ordonnances') return 'nav-ordonnances-dev-tag'
+  if (to === '/prescriptions') return 'nav-prescriptions-dev-tag'
   if (to === '/medicaments') return 'nav-medicaments-dev-tag'
   if (to === '/stock') return 'nav-stock-dev-tag'
   if (to === '/daf') return 'nav-daf-dev-tag'

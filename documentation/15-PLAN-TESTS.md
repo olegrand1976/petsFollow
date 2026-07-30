@@ -475,7 +475,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
 | C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
-| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` + panneau traitements | Upsert `PUT …/daf/for-visit` ; banner « depuis consultation » ; CTA libellé DAF (≠ ordonnances) ; finalize FEFO explicite **inline** (ProModal) ; protocoles 1 clic ; AMM catalogue ; rupture → réception express |
+| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` + panneau traitements | Upsert `PUT …/daf/for-visit` ; banner « depuis consultation » ; CTA libellé DAF (≠ prescriptions) ; finalize FEFO explicite **inline** (ProModal) ; protocoles 1 clic ; AMM catalogue ; rupture → réception express |
 | C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 |
 | C7.6 | P1 | VAMReg dry-run à finalize antibiotique | `TestPharmacyDAFVAMRegDryRun` | `vamregStatus=sent` ; lignes `job_audit` |
 | C7.7 | P1 | Prix + alerte réassort | `PUT …/prices` · `PUT …/reorder-thresholds` · `GET …/reorder-alerts` | Seuil &lt; stock → alerte |
@@ -497,7 +497,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
-| C8.5 | P1 | Ordonnance → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
+| C8.5 | P1 | Prescription → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
 
 ---
 

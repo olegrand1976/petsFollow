@@ -38,7 +38,7 @@ export default defineNuxtConfig({
       pharmacyEnabled: publicFeatureFlag('NUXT_PUBLIC_PHARMACY_ENABLED'),
       /** Facturation Billit — mirror BILLIT_ENABLED (opt-in). */
       billitEnabled: publicFeatureFlag('NUXT_PUBLIC_BILLIT_ENABLED'),
-      /** Ordonnances (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
+      /** Prescriptions (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
       prescriptionsEnabled: publicFeatureFlag('NUXT_PUBLIC_PRESCRIPTIONS_ENABLED'),
     },
   },

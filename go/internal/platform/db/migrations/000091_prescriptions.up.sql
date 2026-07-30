@@ -1,4 +1,4 @@
--- Ordonnances vétérinaires (V1 : brouillons + preview PDF ; signature / envoi phase 2).
+-- Prescriptions vétérinaires (V1 : brouillons + preview PDF ; signature / envoi phase 2).
 CREATE SCHEMA IF NOT EXISTS prescriptions;
 
 CREATE TABLE IF NOT EXISTS prescriptions.prescriptions (

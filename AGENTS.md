@@ -70,7 +70,7 @@ Relancer les données : `make seed`
 
 **Use cases commerciaux** : scénarios manuels non-tech → dossier [`useCase/`](useCase/) ; page Pro staging `/usecases` (admin / commercial / manager, layout selon rôle). Badge **S** topbar si `NUXT_PUBLIC_APP_ENV=staging` + session auth. Sync catalogue : `make usecases-sync` / garde-fou `make usecases-check` (CI). Règle `.cursor/rules/usecase-sync.mdc`.
 
-**Modules Pro tag `dev`** (badge `nav.tagDev`, pas GA) : facturation `/invoicing` · pharmacie `/medicaments` `/stock` `/daf` (`PHARMACY_ENABLED`) · **ordonnances** `/ordonnances` (`PRESCRIPTIONS_ENABLED`, doc [`35-ORDONNANCES.md`](documentation/35-ORDONNANCES.md)). Règle `.cursor/rules/modules-tag-dev.mdc`.
+**Modules Pro tag `dev`** (badge `nav.tagDev`, pas GA) : facturation `/invoicing` · pharmacie `/medicaments` `/stock` `/daf` (`PHARMACY_ENABLED`) · **prescriptions** `/prescriptions` (`PRESCRIPTIONS_ENABLED`, doc [`35-PRESCRIPTIONS.md`](documentation/35-PRESCRIPTIONS.md)). Règle `.cursor/rules/modules-tag-dev.mdc`.
 
 ```bash
 # Unitaires + intégration Go (intégration skip si DB absente ; sinon make up-infra)

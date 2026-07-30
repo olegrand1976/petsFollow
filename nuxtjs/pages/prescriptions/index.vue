@@ -1,16 +1,16 @@
 <template>
-  <div data-testid="ordonnances-page">
+  <div data-testid="prescriptions-page">
     <ProPageHeader
       :title="$t('prescriptions.title')"
       :subtitle="$t('prescriptions.subtitle')"
     >
       <template #actions>
-        <ProBadge variant="warning" data-testid="ordonnances-page-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
+        <ProBadge variant="warning" data-testid="prescriptions-page-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
         <ProButton
           v-if="canWriteClinical"
           variant="primary"
-          test-id="ordonnances-new"
-          @click="navigateTo('/ordonnances/nouveau')"
+          test-id="prescriptions-new"
+          @click="navigateTo('/prescriptions/nouveau')"
         >
           {{ $t('prescriptions.new') }}
         </ProButton>
@@ -18,14 +18,14 @@
     </ProPageHeader>
 
     <p class="pro-hint">{{ $t('prescriptions.v1Hint') }}</p>
-    <p v-if="loading" class="pro-hint" data-testid="ordonnances-loading">{{ $t('prescriptions.loading') }}</p>
+    <p v-if="loading" class="pro-hint" data-testid="prescriptions-loading">{{ $t('prescriptions.loading') }}</p>
     <p v-if="error" class="pro-alert">{{ error }}</p>
 
     <ProCard v-if="!loading">
-      <div v-if="!items.length && !error" class="pro-empty" data-testid="ordonnances-empty">
+      <div v-if="!items.length && !error" class="pro-empty" data-testid="prescriptions-empty">
         {{ $t('prescriptions.empty') }}
       </div>
-      <table v-else-if="items.length" class="pro-table" data-testid="ordonnances-table">
+      <table v-else-if="items.length" class="pro-table" data-testid="prescriptions-table">
         <thead>
           <tr>
             <th>{{ $t('prescriptions.colPet') }}</th>
@@ -39,8 +39,8 @@
             v-for="row in items"
             :key="row.id"
             class="rx-row"
-            :data-testid="`ordonnances-row-${row.id}`"
-            @click="navigateTo(`/ordonnances/${row.id}`)"
+            :data-testid="`prescriptions-row-${row.id}`"
+            @click="navigateTo(`/prescriptions/${row.id}`)"
           >
             <td>{{ row.petName || '—' }}</td>
             <td>{{ row.ownerName || '—' }}</td>
