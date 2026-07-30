@@ -1,16 +1,14 @@
 <template>
   <component :is="linkTo ? 'NuxtLink' : 'div'" :to="linkTo" class="logo" :class="`logo--${variant}`">
     <img
-      src="/brand/emblem.svg"
-      :alt="emblemAlt"
-      class="logo__emblem"
-      :class="{ 'logo__emblem--animated': animated }"
-      :width="emblemSize"
-      :height="emblemSize"
+      src="/brand/logo-mark.png"
+      :alt="markAlt"
+      class="logo__mark"
+      :class="{ 'logo__mark--animated': animated }"
+      :width="markSize"
+      :height="markSize"
     />
-    <span v-if="showText" class="logo__text">
-      <strong>petsFollow</strong> <em>Pro</em>
-    </span>
+    <span v-if="showPro" class="logo__pro">Pro</span>
   </component>
 </template>
 
@@ -28,19 +26,19 @@ const props = withDefaults(
   },
 )
 
-const showText = computed(() => props.variant !== 'compact')
+/** Le mark inclut déjà « Petsfollow » — n’afficher que le suffixe Pro hors compact/hero. */
+const showPro = computed(() => props.variant === 'default')
 
-/** Texte visible à côté : emblème décoratif (évite le doublon alt tronqué « petsl »). */
-const emblemAlt = computed(() => (showText.value ? '' : 'petsFollow'))
+const markAlt = computed(() => (showPro.value ? 'petsFollow' : 'petsFollow'))
 
-const emblemSize = computed(() => {
+const markSize = computed(() => {
   switch (props.variant) {
     case 'hero':
-      return 72
+      return 120
     case 'compact':
-      return 28
-    default:
       return 36
+    default:
+      return 48
   }
 })
 </script>
@@ -67,22 +65,24 @@ const emblemSize = computed(() => {
   margin-bottom: 0;
 }
 
-.logo--hero .logo__text {
-  font-size: 1.35rem;
-  color: white;
+.logo__mark {
+  display: block;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.logo--hero .logo__text em {
+.logo__pro {
+  font-weight: 600;
+  font-style: normal;
+  color: var(--pf-brand-teal, #2A9D8F);
+  font-size: 1.15rem;
+}
+
+.logo--hero .logo__pro {
   color: var(--pf-brand-gold, #E9C46A);
 }
 
-.logo__text em {
-  color: var(--pf-brand-teal, #2A9D8F);
-  font-style: normal;
-  font-weight: 600;
-}
-
-.logo__emblem--animated {
+.logo__mark--animated {
   animation: pro-emblem-float 3s ease-in-out infinite;
 }
 

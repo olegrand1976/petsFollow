@@ -443,7 +443,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const PetsLogo(height: 28),
+                const PetsLogo(height: 36),
                 const SizedBox(height: 16),
                 Text(l10n.registerSubtitle, textAlign: TextAlign.center),
                 const SizedBox(height: 24),

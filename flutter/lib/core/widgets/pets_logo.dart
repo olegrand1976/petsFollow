@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 
 enum PetsLogoVariant {
-  /// Emblème + wordmark (optionnellement « Pro »).
+  /// Mark circulaire (chien + wordmark intégré).
   horizontal,
 
-  /// Emblème seul (patte + pulse).
+  /// Mark seul (même asset — le mark contient le wordmark).
   emblem,
 
-  /// Wordmark seul (sous un emblème hero déjà affiché).
+  /// Wordmark texte seul (sous un mark hero déjà affiché — rare).
   wordmark,
 }
 
@@ -32,17 +31,15 @@ class PetsLogo extends StatelessWidget {
   /// Ignore le nœud sémantique (ex. wordmark sous un emblème déjà labellisé).
   final bool excludeSemantics;
 
-  static const _emblemAsset = 'assets/brand/petsfollow-emblem.svg';
+  static const markAsset = 'assets/brand/petsfollow-mark.png';
 
   @override
   Widget build(BuildContext context) {
     switch (variant) {
       case PetsLogoVariant.emblem:
-        return SvgPicture.asset(
-          _emblemAsset,
+        return _MarkImage(
           height: height,
-          semanticsLabel: excludeSemantics ? null : 'petsFollow',
-          excludeFromSemantics: excludeSemantics,
+          label: excludeSemantics ? null : 'petsFollow',
         );
       case PetsLogoVariant.wordmark:
         return _Wordmark(
@@ -58,21 +55,51 @@ class PetsLogo extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SvgPicture.asset(
-                _emblemAsset,
-                height: height,
-                excludeFromSemantics: true,
-              ),
-              SizedBox(width: height * 0.28),
-              _Wordmark(
-                height: height,
-                showPro: showPro,
-                excludeSemantics: true,
-              ),
+              _MarkImage(height: height, label: null),
+              if (showPro) ...[
+                SizedBox(width: height * 0.2),
+                Text(
+                  'Pro',
+                  style: TextStyle(
+                    fontSize: height * 0.42,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                    height: 1,
+                  ),
+                ),
+              ],
             ],
           ),
         );
     }
+  }
+}
+
+class _MarkImage extends StatelessWidget {
+  const _MarkImage({
+    required this.height,
+    required this.label,
+  });
+
+  final double height;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final img = ClipOval(
+      child: Image.asset(
+        PetsLogo.markAsset,
+        height: height,
+        width: height,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        excludeFromSemantics: true,
+      ),
+    );
+    if (label == null) {
+      return ExcludeSemantics(child: img);
+    }
+    return Semantics(label: label, image: true, child: img);
   }
 }
 
