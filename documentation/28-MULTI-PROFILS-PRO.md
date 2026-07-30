@@ -21,7 +21,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
-| `admin` / commercial* | Nuxt Pro | Inchangé — admin seed : multi-profils `admin` + `client` + `vet` (switch topbar) |
+| `admin` / commercial* | Nuxt Pro | Inchangé — **seed démo only** : `admin.demo` multi-profils `admin` + `client` + `vet` (pas d’auto-profil client pour tout admin via `IsProRole`) |
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
