@@ -3041,6 +3041,8 @@
       "notificationsEmptyDescription": "Les conversations clients apparaîtront ici.",
       "markAllRead": "Tout marquer comme lu",
       "profileMenu": "Menu profil",
+      "openNav": "Ouvrir le menu",
+      "closeNav": "Fermer le menu",
       "settings": "Paramètres",
       "themeDark": "Activer le mode sombre",
       "themeLight": "Activer le mode clair",

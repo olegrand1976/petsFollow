@@ -2192,6 +2192,8 @@
       "notificationsEmptyDescription": "Client conversations will appear here.",
       "markAllRead": "Mark all as read",
       "profileMenu": "Profile menu",
+      "openNav": "Open menu",
+      "closeNav": "Close menu",
       "settings": "Settings",
       "themeDark": "Enable dark mode",
       "themeLight": "Enable light mode",

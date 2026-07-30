@@ -1,5 +1,20 @@
 <template>
-  <aside class="pro-sidebar">
+  <button
+    v-if="open"
+    type="button"
+    class="pro-nav-backdrop"
+    data-testid="pro-nav-backdrop"
+    :aria-label="$t('components.topbar.closeNav')"
+    @click="closeDrawer"
+  />
+  <aside
+    id="pro-nav-drawer"
+    class="pro-sidebar"
+    :class="{ 'pro-sidebar--open': open }"
+    :aria-hidden="isMobileNav && !open ? true : undefined"
+    :inert="isMobileNav && !open ? true : undefined"
+    data-testid="pro-sidebar"
+  >
     <nav>
       <template v-for="(entry, idx) in entries" :key="entry.key">
         <p
@@ -14,6 +29,7 @@
           :exact="entry.item.exact"
           class="pro-sidebar__link"
           :data-testid="navTestId(entry.item.to)"
+          @click="closeDrawer"
         >
           <span class="pro-sidebar__icon" aria-hidden="true">
             <ProIcon :name="iconName(entry.item.icon)" :size="18" />
@@ -42,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 export type ProNavIcon =
   | 'dashboard'
@@ -90,6 +106,31 @@ export type ProNavItem = {
 const props = defineProps<{
   items: ProNavItem[]
 }>()
+
+const route = useRoute()
+const { open, isMobileNav, closeDrawer } = useProNavDrawer()
+
+watch(() => route.fullPath, () => {
+  closeDrawer()
+})
+
+watch(open, (isOpen) => {
+  if (!import.meta.client) return
+  document.body.style.overflow = isOpen ? 'hidden' : ''
+})
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && open.value) closeDrawer()
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  if (import.meta.client) document.body.style.overflow = ''
+})
 
 type NavEntry = {
   key: string

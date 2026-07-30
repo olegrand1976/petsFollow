@@ -1,6 +1,17 @@
 <template>
   <header class="pro-topbar" data-testid="pro-topbar">
     <div class="pro-topbar__left">
+      <button
+        type="button"
+        class="pro-topbar__icon-btn pro-topbar__menu-btn"
+        :aria-label="navOpen ? $t('components.topbar.closeNav') : $t('components.topbar.openNav')"
+        :aria-expanded="navOpen"
+        aria-controls="pro-nav-drawer"
+        data-testid="pro-nav-menu-btn"
+        @click="onToggleNav"
+      >
+        <ProIcon :name="navOpen ? 'close' : 'menu'" :size="20" />
+      </button>
       <PetsFollowLogo variant="compact" :link-to="homeLink" />
       <span
         v-if="showStagingTag"
@@ -171,6 +182,7 @@ const { user, fetchUser } = useProUser()
 const { isStaging } = useAppEnv()
 const { captureOriginPage } = useSupportDiagnostics()
 const desk = useDeskSession()
+const { open: navOpen, toggleDrawer, closeDrawer } = useProNavDrawer()
 const {
   items: notifItems,
   count: notifCount,
@@ -184,6 +196,12 @@ const notifOpen = ref(false)
 const profiles = ref<ProfileRow[]>([])
 const profileSwitchBusy = ref(false)
 const profileSwitchError = ref('')
+
+function onToggleNav() {
+  notifOpen.value = false
+  closeProfileDetails()
+  toggleDrawer()
+}
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
@@ -232,6 +250,7 @@ watch(
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
   closeProfileDetails()
+  closeDrawer()
   if (notifOpen.value) void refreshNotif()
 }
 
