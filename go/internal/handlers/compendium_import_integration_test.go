@@ -120,6 +120,17 @@ func TestCompendiumImportFlow(t *testing.T) {
 	}
 }
 
+func TestCompendiumImportACL(t *testing.T) {
+	t.Setenv("PHARMACY_ENABLED", "true")
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	pdf := []byte("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n")
+	code, env := doCompendiumUpload(t, api.handler, vetTok, pdf, 1, 2)
+	if code != http.StatusForbidden || errCode(env) != "forbidden" {
+		t.Fatalf("vet upload want 403 forbidden got %d %#v", code, env)
+	}
+}
+
 func doCompendiumUpload(t *testing.T, h http.Handler, token string, pdf []byte, pageStart, pageEnd int) (int, map[string]any) {
 	t.Helper()
 	var body bytes.Buffer
