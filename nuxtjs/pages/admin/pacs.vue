@@ -111,8 +111,10 @@ async function load() {
     ])
     metrics.value = m.data ?? m
     logs.value = (l.data ?? l) || []
-    if (metrics.value?.status?.state === 'ready') waking.value = false
+    const st = metrics.value?.status?.state
+    if (st === 'ready' || st === 'offline') waking.value = false
   } catch (e: any) {
+    waking.value = false
     loadError.value = e?.data?.message || e?.message || 'load_failed'
   } finally {
     loading.value = false

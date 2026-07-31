@@ -570,6 +570,35 @@ func TestPacsInstancePreviewFileFullFlow(t *testing.T) {
 	}
 }
 
+func TestPacsInstancePreviewOutOfRangeIs404(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+	fx := newPacsOrthancFixture()
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/instances/"+fx.instID+"/frames/9/preview" {
+			http.NotFound(w, r)
+			return
+		}
+		fx.handler(t).ServeHTTP(w, r)
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "chest.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+
+	code, _, _ = doAuthBytes(t, api.handler, http.MethodGet,
+		"/api/v1/pacs/instances/"+fx.instID+"/frames/9/preview", vetTok)
+	if code != http.StatusNotFound {
+		t.Fatalf("out-of-range preview want 404 got %d", code)
+	}
+}
+
 func TestPacsInstanceTenantIsolationNoLeak(t *testing.T) {
 	t.Setenv("PACS_ENABLED", "true")
 	api := newTestAPI(t)

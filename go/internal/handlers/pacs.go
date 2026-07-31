@@ -668,6 +668,11 @@ func (a *API) getPacsInstancePreview(w http.ResponseWriter, r *http.Request) {
 	}
 	data, ct, err := client.getInstanceFramesPreview(r.Context(), instanceID, frame)
 	if err != nil {
+		// Orthanc 404 (frame hors plage) → 404 client ; autres erreurs → 502 (pas de clamp UI).
+		if strings.Contains(err.Error(), "orthanc_preview_404") {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
 		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")
 		return
 	}

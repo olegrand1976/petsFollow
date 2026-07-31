@@ -34,6 +34,11 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
     return pacsPollIntervalMs(state)
   }
 
+  function clearWakingIfSettled(state: PacsState) {
+    // ready = success ; offline = cold start failed / Orthanc down — allow re-wake
+    if (state === 'ready' || state === 'offline') waking.value = false
+  }
+
   async function refresh() {
     if (!enabled.value || stopped) return
     loading.value = true
@@ -41,10 +46,11 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
     try {
       const res = await $fetch('/api/pacs/status')
       status.value = unwrap<PacsStatus>(res)
-      if (status.value.state === 'ready') waking.value = false
+      clearWakingIfSettled(status.value.state)
     } catch (e: any) {
       error.value = e?.data?.message || e?.message || 'status_failed'
       status.value = { state: 'offline', error: error.value }
+      waking.value = false
     } finally {
       loading.value = false
       hasPolled.value = true
@@ -81,7 +87,9 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
       if (status.value.state === 'ready') return true
       await new Promise((r) => setTimeout(r, 2000))
     }
-    return status.value.state === 'ready'
+    const ok = status.value.state === 'ready'
+    if (!ok) waking.value = false
+    return ok
   }
 
   function start() {

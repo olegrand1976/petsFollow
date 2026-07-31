@@ -48,9 +48,17 @@ const rightCanvas = ref<HTMLCanvasElement | null>(null)
 
 const imageCache = new Map<string, string>()
 const loadError = ref('')
+/** Bumps on each bind to ignore stale async preview responses. */
+let loadGen = 0
 
 function reportLoadError(message: string) {
   loadError.value = message
+}
+
+function fetchStatus(e: unknown): number | null {
+  const err = e as { statusCode?: number, status?: number, response?: { status?: number } }
+  const n = err?.statusCode ?? err?.status ?? err?.response?.status
+  return typeof n === 'number' ? n : null
 }
 
 async function loadPreview(instanceId: string, frame: number): Promise<string> {
@@ -76,36 +84,54 @@ async function loadPreview(instanceId: string, frame: number): Promise<string> {
   return url
 }
 
-async function bindPane(pane: Pane, canvas: HTMLCanvasElement | null, instanceId?: string) {
+function looksLikeDicom(buf: Uint8Array): boolean {
+  return buf.length >= 132
+    && buf[128] === 0x44 && buf[129] === 0x49 && buf[130] === 0x43 && buf[131] === 0x4d
+}
+
+/** @returns true if a frame was painted successfully */
+async function bindPane(
+  pane: Pane,
+  canvas: HTMLCanvasElement | null,
+  instanceId?: string,
+  gen?: number,
+): Promise<boolean> {
+  const myGen = gen ?? ++loadGen
   if (!canvas || !instanceId) {
     pane.img = null
     paint(pane, canvas)
-    return
+    return false
   }
+  const frame = frameIndex.value
   try {
-    const url = await loadPreview(instanceId, frameIndex.value)
+    const url = await loadPreview(instanceId, frame)
+    if (myGen !== loadGen) return false
     const img = new Image()
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve()
       img.onerror = () => reject(new Error('preview_decode_failed'))
       img.src = url
     })
+    if (myGen !== loadGen) return false
     pane.img = img
     pane.scale = 1
     pane.offsetX = 0
     pane.offsetY = 0
     loadError.value = ''
     paint(pane, canvas)
-  } catch {
+    return true
+  } catch (e) {
+    if (myGen !== loadGen) return false
     pane.img = null
     paint(pane, canvas)
-    if (frameIndex.value > 0) {
-      maxFrame.value = frameIndex.value - 1
+    // Only clamp on Orthanc frame-out-of-range (404) — never on 5xx / réseau.
+    if (frame > 0 && fetchStatus(e) === 404) {
+      maxFrame.value = frame - 1
       frameIndex.value = maxFrame.value
-      await bindPane(pane, canvas, instanceId)
-      return
+      return bindPane(pane, canvas, instanceId, myGen)
     }
     reportLoadError(t('pacs.previewError'))
+    return false
   }
 }
 
@@ -223,17 +249,31 @@ function resizeCanvases() {
   }
 }
 
-async function reloadPanes() {
-  await bindPane(left, leftCanvas.value, props.leftInstanceId)
-  if (props.compare) await bindPane(right, rightCanvas.value, props.rightInstanceId)
+async function reloadPanes(): Promise<boolean> {
+  const gen = ++loadGen
+  const leftOk = await bindPane(left, leftCanvas.value, props.leftInstanceId, gen)
+  if (myGenStale(gen)) return false
+  if (!props.compare) return leftOk
+  const rightOk = await bindPane(right, rightCanvas.value, props.rightInstanceId, gen)
+  return leftOk && rightOk
+}
+
+function myGenStale(gen: number): boolean {
+  return gen !== loadGen
 }
 
 async function stepFrame(delta: number) {
-  const next = frameIndex.value + delta
+  const prev = frameIndex.value
+  const next = prev + delta
   if (next < 0) return
   if (maxFrame.value != null && next > maxFrame.value) return
   frameIndex.value = next
-  await reloadPanes()
+  const ok = await reloadPanes()
+  // Transient failure: revert. EOF clamp inside bindPane already moved frameIndex back.
+  if (!ok && frameIndex.value === next) {
+    frameIndex.value = prev
+    await reloadPanes()
+  }
 }
 
 function onWheel(e: WheelEvent) {
@@ -248,6 +288,10 @@ async function downloadDicom() {
   downloadBusy.value = true
   try {
     const blob = await $fetch<Blob>(`/api/pacs/instances/${id}/file`, { responseType: 'blob' })
+    const head = new Uint8Array(await blob.slice(0, 132).arrayBuffer())
+    if (!looksLikeDicom(head)) {
+      throw new Error('not_dicom')
+    }
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
