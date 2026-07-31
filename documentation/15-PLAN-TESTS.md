@@ -275,6 +275,7 @@ Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 | D9 | P1 | Commissions commercial | Idem commercial | `/admin/commercial-commissions` |
 | D10 | P2 | SPIFF mix bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
+| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` | Page liste + badge `dev` ; middleware `admin-only` (pas `auth` nommé) · e2e `21-compendium-admin` `@p1` `@pharmacy` · Go `TestCompendiumImportFlow` |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |
 | D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
