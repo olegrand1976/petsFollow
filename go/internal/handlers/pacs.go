@@ -887,6 +887,20 @@ func (a *API) getPacsInstancePreview(w http.ResponseWriter, r *http.Request) {
 	if frame < 0 {
 		frame = 0
 	}
+	// Clamp OOR via DICOM tags before Orthanc — staging Orthanc often returns 500/502
+	// for a bad frame index (GCS/plugin path), which would otherwise look like blob miss.
+	if frame > 0 {
+		if tags, tagErr := client.getInstanceSimplifiedTags(r.Context(), instanceID); tagErr == nil {
+			nFrames := 1
+			if n, ok := tagInt(tags, "NumberOfFrames"); ok && n > 0 {
+				nFrames = n
+			}
+			if frame >= nFrames {
+				writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+				return
+			}
+		}
+	}
 	data, ct, err := client.getInstanceFramesPreview(r.Context(), instanceID, frame)
 	if err != nil {
 		a.appendPacsLog(r.Context(), "error", "instance_preview", "orthanc preview failed", err.Error())

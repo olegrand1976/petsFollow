@@ -657,6 +657,40 @@ func TestPacsInstancePreviewOutOfRangeIs404(t *testing.T) {
 			}
 		})
 	}
+
+	// Orthanc may 500/502 on bad frame index (GCS); tags NumberOfFrames must still yield 404.
+	t.Run("tags_clamp_before_orthanc_500", func(t *testing.T) {
+		api := newTestAPI(t)
+		fx := newPacsOrthancFixture()
+		var hitPreview bool
+		orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet && r.URL.Path == "/instances/"+fx.instID+"/frames/99/preview" {
+				hitPreview = true
+				http.Error(w, "storage error", http.StatusInternalServerError)
+				return
+			}
+			fx.handler(t).ServeHTTP(w, r)
+		}))
+		t.Cleanup(orth.Close)
+		handlers.TestSetOrthanc(api.api, orth.URL)
+
+		clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+		vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+		petID := activeDemoPetID(t, api.handler, clientTok)
+		code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "chest.dcm", minimalDicomPayload())
+		if code != http.StatusCreated {
+			t.Fatalf("upload %d %#v", code, env)
+		}
+
+		code, _, _ = doAuthBytes(t, api.handler, http.MethodGet,
+			"/api/v1/pacs/instances/"+fx.instID+"/frames/99/preview", vetTok)
+		if code != http.StatusNotFound {
+			t.Fatalf("tags clamp want 404 got %d", code)
+		}
+		if hitPreview {
+			t.Fatal("must not call Orthanc preview when frame >= NumberOfFrames")
+		}
+	})
 }
 
 func TestPacsInstanceTenantIsolationNoLeak(t *testing.T) {

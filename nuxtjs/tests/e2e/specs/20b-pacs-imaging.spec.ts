@@ -1,7 +1,11 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
+import {
+  demoClientAndPet,
+  openFirstStudyWithFixture,
+  pacsPublicFlagOff,
+  pacsViewerEngine,
+} from '../helpers/pacs'
 
 /**
  * Pet sheet Imagerie — tag @p0.
@@ -9,43 +13,6 @@ import { loginAsVet } from '../helpers/auth'
  * Soft-skips only when the public flag is off so CI without PACS stays green.
  * When the tab is present, upload + canvas assertions are hard (no soft-skip on Orthanc).
  */
-const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
-const FIXTURE = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../../../testdata/pacs/demo-rx.dcm',
-)
-
-async function apiLogin(email: string, password: string): Promise<string> {
-  const res = await fetch(`${API}/api/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`login ${email} ${res.status}`)
-  const body = await res.json()
-  return body.data.accessToken as string
-}
-
-async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> {
-  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
-  const clientsRes = await fetch(`${API}/api/v1/clients`, {
-    headers: { Authorization: `Bearer ${vetTok}` },
-  })
-  if (!clientsRes.ok) throw new Error(`clients ${clientsRes.status}`)
-  const clients = (await clientsRes.json()).data as Array<{ userId: string; email?: string; fullName?: string }>
-  const client = clients.find((c) => c.email === 'client.demo@petsfollow.test')
-    ?? clients.find((c) => /Sophie/i.test(c.fullName || ''))
-  if (!client?.userId) throw new Error('demo client not found')
-
-  const petsRes = await fetch(`${API}/api/v1/clients/${client.userId}/pets`, {
-    headers: { Authorization: `Bearer ${vetTok}` },
-  })
-  if (!petsRes.ok) throw new Error(`client pets ${petsRes.status}`)
-  const pets = (await petsRes.json()).data as Array<{ id: string; paymentStatus?: string }>
-  const pet = pets.find((p) => p.paymentStatus === 'active') ?? pets[0]
-  if (!pet?.id) throw new Error('demo pet not found')
-  return { clientId: client.userId, petId: pet.id }
-}
 
 async function canvasHasNonBackgroundPixels(page: import('@playwright/test').Page): Promise<boolean> {
   return page.getByTestId('dicom-canvas-left').evaluate((canvas) => {
@@ -106,56 +73,11 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
 
   test('upload fixture + preview canvas non vide', async ({ page }) => {
     test.setTimeout(180000)
-    const pacsOn = process.env.NUXT_PUBLIC_PACS_ENABLED
-    test.skip(
-      pacsOn === 'false' || pacsOn === '0',
-      'NUXT_PUBLIC_PACS_ENABLED off',
-    )
-    const engine = (process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas').toLowerCase()
+    test.skip(pacsPublicFlagOff(), 'NUXT_PUBLIC_PACS_ENABLED off')
+    const engine = pacsViewerEngine()
 
-    const { clientId, petId } = await demoClientAndPet()
-    await loginAsVet(page)
-    await page.goto(`/clients/${clientId}/pets/${petId}?tab=imaging`, { waitUntil: 'networkidle' })
-
-    const imagingTabBtn = page.getByTestId('section-tab-imaging')
-    test.skip(
-      (await imagingTabBtn.count()) === 0,
-      'PACS imaging tab not rendered (public flag off)',
-    )
-    await imagingTabBtn.click()
-    await expect(page.getByTestId('pacs-viewer-container')).toBeVisible({ timeout: 15000 })
-
-    const wake = page.getByTestId('pacs-wake-btn')
-    if (await wake.isVisible().catch(() => false)) {
-      await expect(page.getByTestId('pacs-upload-input')).toBeDisabled()
-      await wake.click()
-      await expect(page.getByTestId('pacs-launch-pad')).toBeVisible({ timeout: 10000 })
-    }
-    await expect(page.getByTestId('pacs-status-badge')).toContainText(
-      /ready|prêt|klaar|listo|valmis|pronto/i,
-      { timeout: 120000 },
-    )
-    // Launch pad may celebrate ready ~1.4s before unmount.
-    await expect(page.getByTestId('pacs-launch-pad')).toHaveCount(0, { timeout: 5000 })
-    await expect(page.getByTestId('pacs-upload-input')).toBeEnabled()
-
-    await page.getByTestId('pacs-upload-input').setInputFiles(FIXTURE)
-
-    // Study list grows / existing study clickable after upload (newest first).
-    await expect(page.getByTestId('pacs-study-item').first()).toBeVisible({ timeout: 90000 })
-    const previewOk = page.waitForResponse(
-      (r) => {
-        const u = r.url()
-        const preview = u.includes('/frames/0/preview') && r.request().method() === 'GET'
-        const file = u.includes('/instances/') && u.includes('/file') && r.request().method() === 'GET'
-        return engine === 'cornerstone' ? file : preview
-      },
-      { timeout: 90000 },
-    )
-    await page.getByTestId('pacs-study-item').first().click()
-
-    const mediaRes = await previewOk
-    expect(mediaRes.status(), 'DICOM media must be 200').toBe(200)
+    // Shared helper: wake + upload fixture + open preferred RX (avoid orphan CT → no preview).
+    await openFirstStudyWithFixture(page)
 
     if (engine === 'cornerstone') {
       await expect(page.getByTestId('dicom-viewer-cornerstone')).toBeVisible({ timeout: 30000 })
