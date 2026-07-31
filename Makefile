@@ -5,7 +5,7 @@ COMPOSE      := docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env brand-sync usecases-sync usecases-check up up-infra down migrate seed seed-mass api-dev api-billit-live nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
+.PHONY: help env brand-sync usecases-sync usecases-check up up-infra up-pacs down migrate seed seed-mass api-dev api-billit-live pacs-demo-seed nuxtjs-dev flutter-dev test test-go test-flutter test-flutter-smoke test-nuxt test-auth test-e2e test-e2e-p0 smoke billit-sandbox-smoke billit-saas-master-smoke gcp-setup gcp-github gcp-setup-media gcp-setup-stripe gcp-retention-scheduler gcp-saas-invoices-scheduler gcp-sales-branches-scheduler gcp-pharmacy-expiry-scheduler gcp-seed-scheduler gcp-delete-seed-scheduler gcp-deploy gcp-deploy-prod gcp-domain gcp-smoke firebase-flutter-setup firebase-google-signin-android firebase-android-dist play-android-bundle play-android-bundle-internal play-android-bundle-prod import-cnk
 
 help:
 	@echo "petsFollow — commandes"
@@ -13,10 +13,12 @@ help:
 	@echo "  make brand-sync     tokens CSS + Dart"
 	@echo "  make up             stack Docker complète"
 	@echo "  make up-infra       db + redis + mailhog"
+	@echo "  make up-pacs        Orthanc local (:8042) — démo Imagerie"
 	@echo "  make migrate        migrations API"
 	@echo "  make seed           seed demo"
 	@echo "  make seed-mass      densifie la DB (après seed) — volume démo prod-like"
 	@echo "  make api-dev        API Go (bloque le terminal, port 8291)"
+	@echo "  make pacs-demo-seed upload RX démo sur pet client.demo"
 	@echo "  make api-billit-live  API Go Billit live (MOCK=false — secrets requis)"
 	@echo "  make billit-sandbox-smoke  gates webhook+routes live (doc 34)"
 	@echo "  make billit-saas-master-smoke  Flux A draft (+send) via BILLIT_MASTER_*"
@@ -43,8 +45,9 @@ help:
 	@echo "  make gcp-pharmacy-expiry-scheduler Scheduler quotidien auto-quarantaine lots (PHARMACY_EXPIRY_SECRET=…)"
 	@echo ""
 	@echo "Dev local — 2 terminaux :"
-	@echo "  T1: make up-infra && make migrate && make seed && make api-dev"
+	@echo "  T1: make up-infra && make up-pacs && make migrate && make seed && make api-dev"
 	@echo "  T2: make nuxtjs-dev  →  http://localhost:3002"
+	@echo "  Démo PACS: make pacs-demo-seed → fiche animal ?tab=imaging"
 	@echo "  (+ Flutter) make flutter-dev"
 
 env:
@@ -68,6 +71,11 @@ up: env brand-sync
 up-infra: env
 	$(COMPOSE) up -d db redis mailhog
 
+# Orthanc PACS local (port 8042) — démo Imagerie.
+up-pacs: env
+	$(COMPOSE) up -d orthanc
+	@echo "→ Orthanc http://localhost:$${PETSFOLLOW_ORTHANC_PORT:-8042} (petsfollow/petsfollow)"
+
 down:
 	$(COMPOSE) down
 
@@ -90,7 +98,11 @@ seed-mass: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} PACS_ENABLED=$${PACS_ENABLED:-true} PACS_ORTHANC_URL=$${PACS_ORTHANC_URL:-http://localhost:8042} PACS_ORTHANC_USER=$${PACS_ORTHANC_USER:-petsfollow} PACS_ORTHANC_PASSWORD=$${PACS_ORTHANC_PASSWORD:-petsfollow} PACS_ORTHANC_USE_ID_TOKEN=$${PACS_ORTHANC_USE_ID_TOKEN:-false} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
+
+# Upload fixture DICOM sur pet client.demo (API + Orthanc requis).
+pacs-demo-seed: env
+	@bash scripts/pacs-demo-seed.sh
 
 # API Billit live (sandbox). Exige BILLIT_WEBHOOK_SECRET + BILLIT_SECRETS_BACKEND=local_enc + BILLIT_SECRETS_KEY.
 # Ne pas confondre avec api-dev (mock on par défaut). Smoke : make billit-sandbox-smoke
@@ -110,7 +122,7 @@ api-billit-live: env
 	  go run ./cmd/petsfollow-api
 
 nuxtjs-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && NUXT_PUBLIC_BILLIT_ENABLED=$${NUXT_PUBLIC_BILLIT_ENABLED:-true} NUXT_PUBLIC_PHARMACY_ENABLED=$${NUXT_PUBLIC_PHARMACY_ENABLED:-true} NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=$${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true} npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
+	@set -a && source $(ENV_FILE) && set +a && cd nuxtjs && npm install && NUXT_PUBLIC_BILLIT_ENABLED=$${NUXT_PUBLIC_BILLIT_ENABLED:-true} NUXT_PUBLIC_PHARMACY_ENABLED=$${NUXT_PUBLIC_PHARMACY_ENABLED:-true} NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=$${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true} NUXT_PUBLIC_PACS_ENABLED=$${NUXT_PUBLIC_PACS_ENABLED:-true} npx nuxt dev --port $${PETSFOLLOW_NUXTJS_PORT:-3002} --host 0.0.0.0
 
 # Flavor staging (package …mobile.staging). Device physique : API_BASE=http://<LAN>:8291 make flutter-dev
 GOOGLE_SERVER_CLIENT_ID ?= 237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com

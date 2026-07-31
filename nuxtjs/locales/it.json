@@ -77,6 +77,7 @@
     "commercialAsvMemo": "Memo ASV",
     "commercialBrochure": "Brochure clinica",
     "adminRuntimeFlags": "Flag runtime",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendio PDF"
   },
   "training": {
@@ -1122,6 +1123,7 @@
         "vitals": "FC e peso",
         "care": "Cura e appuntamenti",
         "documents": "Documenti",
+        "imaging": "Imaging",
         "sharing": "Condivisione"
       },
       "kpi": {
@@ -3633,5 +3635,47 @@
     "medSearch": "Cerca (CNK / nome)",
     "dispenseDaf": "Eroga in clinica (DAF)",
     "dispenseDafHint": "Crea una bozza DAF (catalogo CNK). Completare i n. AMM e finalizzare nel wizard."
+  },
+  "pacs": {
+    "title": "Imaging PACS",
+    "wake": "Attiva PACS",
+    "refresh": "Aggiorna",
+    "upload": "Importa DICOM",
+    "compare": "Confronta",
+    "offlineHint": "Il servizio di imaging è spento. Attivalo per consultare o importare radiografie.",
+    "emptyTitle": "Nessuno studio",
+    "emptyDescription": "Importa un file .dcm per iniziare.",
+    "leftSeries": "Serie sinistra",
+    "rightSeries": "Serie destra",
+    "state": {
+      "offline": "Offline",
+      "starting": "Avvio…",
+      "ready": "Pronto"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contrasto",
+      "measure": "Misura",
+      "arrow": "Freccia",
+      "fullscreen": "Schermo intero",
+      "exitFullscreen": "Esci da schermo intero"
+    },
+    "admin": {
+      "title": "PACS — supervisione",
+      "subtitle": "Stato Orthanc, latenza e log di avvio / salute",
+      "metricsTitle": "Metriche",
+      "logsTitle": "Log recenti",
+      "latency": "Latenza",
+      "state": "Stato",
+      "redis": "Redis",
+      "orthancUrl": "URL Orthanc configurato",
+      "refresh": "Aggiorna",
+      "emptyLogs": "Nessun log al momento",
+      "colAt": "Timestamp",
+      "colLevel": "Livello",
+      "colEvent": "Evento",
+      "colMessage": "Messaggio"
+    }
   }
 }

@@ -81,6 +81,19 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 		) ORDER BY d.created_at), '[]'::jsonb)
 			FROM pets.documents d
 			JOIN pets.pets p ON p.id = d.pet_id WHERE p.owner_user_id = $1`,
+		"imagingStudies": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
+			'id', ps.id,
+			'petId', ps.pet_id,
+			'practiceId', ps.practice_id,
+			'orthancStudyId', ps.orthanc_study_id,
+			'studyInstanceUid', ps.study_instance_uid,
+			'orthancSeriesId', ps.orthanc_series_id,
+			'description', ps.description,
+			'modality', ps.modality,
+			'createdAt', ps.created_at
+		) ORDER BY ps.created_at), '[]'::jsonb)
+			FROM imaging.pet_studies ps
+			JOIN pets.pets p ON p.id = ps.pet_id WHERE p.owner_user_id = $1`,
 		"deviceTokens": `SELECT COALESCE(jsonb_agg(jsonb_build_object(
 			'platform', t.platform,
 			'updatedAt', t.updated_at

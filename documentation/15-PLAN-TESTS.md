@@ -492,6 +492,8 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 **Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
+**PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` sous `PACS_ENABLED` — Go `TestPacs*` (dont upload happy-path) · Vitest `pacsPoll` · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) · doc [40](40-PACS.md). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
+
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
 | C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
@@ -739,6 +741,9 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 | `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |
+| `19-dev-support` | DEV ops léger users/support/flags | `@p0` |
+| `20-pacs-admin` | Admin PACS metrics/logs (flag on) | `@p0` |
+| `20b-pacs-imaging` | Fiche animal onglet Imagerie (flag on) | `@p0` |
 
 Local :
 

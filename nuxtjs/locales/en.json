@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV memo",
     "commercialBrochure": "Practice brochure",
     "adminRuntimeFlags": "Runtime flags",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendium PDF"
   },
   "auth": {
@@ -594,6 +595,7 @@
         "vitals": "HR & weight",
         "care": "Care & visits",
         "documents": "Documents",
+        "imaging": "Imaging",
         "sharing": "Sharing"
       },
       "kpi": {
@@ -3664,5 +3666,47 @@
     "medSearch": "Search (CNK / name)",
     "dispenseDaf": "Dispense in clinic (DAF)",
     "dispenseDafHint": "Creates a DAF draft (CNK catalog). Fill AMM numbers then finalize in the wizard."
+  },
+  "pacs": {
+    "title": "PACS Imaging",
+    "wake": "Wake PACS",
+    "refresh": "Refresh",
+    "upload": "Import DICOM",
+    "compare": "Compare",
+    "offlineHint": "The imaging service is offline. Wake it to view or import radiographs.",
+    "emptyTitle": "No studies",
+    "emptyDescription": "Import a .dcm file to get started.",
+    "leftSeries": "Left series",
+    "rightSeries": "Right series",
+    "state": {
+      "offline": "Offline",
+      "starting": "Starting…",
+      "ready": "Ready"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Window/Level",
+      "measure": "Measure",
+      "arrow": "Arrow",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen"
+    },
+    "admin": {
+      "title": "PACS — monitoring",
+      "subtitle": "Orthanc status, latency and wake / health logs",
+      "metricsTitle": "Metrics",
+      "logsTitle": "Recent logs",
+      "latency": "Latency",
+      "state": "State",
+      "redis": "Redis",
+      "orthancUrl": "Configured Orthanc URL",
+      "refresh": "Refresh",
+      "emptyLogs": "No logs yet",
+      "colAt": "Timestamp",
+      "colLevel": "Level",
+      "colEvent": "Event",
+      "colMessage": "Message"
+    }
   }
 }

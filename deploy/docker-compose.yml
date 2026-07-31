@@ -31,6 +31,24 @@ services:
       - "${PETSFOLLOW_MAILHOG_SMTP_PORT:-1027}:1025"
       - "${PETSFOLLOW_MAILHOG_UI_PORT:-8027}:8025"
 
+  # PACS local (filesystem) — config = infra/orthanc/orthanc.local.json (seule source).
+  # Bind loopback only (mdp démo) ; port hôte PETSFOLLOW_ORTHANC_PORT.
+  orthanc:
+    image: orthancteam/orthanc:24.12.0
+    ports:
+      - "127.0.0.1:${PETSFOLLOW_ORTHANC_PORT:-8042}:8042"
+    volumes:
+      - ../infra/orthanc/orthanc.local.json:/etc/orthanc/petsfollow-local.json:ro
+      - orthancdata:/var/lib/orthanc/db
+    environment:
+      VERBOSE_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -u petsfollow:petsfollow http://127.0.0.1:8042/system || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+
   migrate:
     build:
       context: ..
@@ -88,3 +106,4 @@ services:
 
 volumes:
   pgdata:
+  orthancdata:
