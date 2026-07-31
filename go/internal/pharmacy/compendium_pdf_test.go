@@ -17,14 +17,3 @@ func TestLooksLikePDF(t *testing.T) {
 		t.Fatal("expected false")
 	}
 }
-
-func TestExtractPageRangePassthrough(t *testing.T) {
-	raw := []byte("%PDF-1.4 fake")
-	out, err := ExtractPageRange(raw, 1, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(out) != string(raw) {
-		t.Fatal("expected passthrough")
-	}
-}

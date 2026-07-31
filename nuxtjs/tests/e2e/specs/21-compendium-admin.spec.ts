@@ -20,6 +20,12 @@ test.describe('Compendium admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
 
   test('D11b nav sidebar → /admin/compendium-imports', async ({ page }) => {
     test.setTimeout(60000)
+    const pharmacyOn = process.env.NUXT_PUBLIC_PHARMACY_ENABLED
+    test.skip(
+      pharmacyOn === 'false' || pharmacyOn === '0',
+      'NUXT_PUBLIC_PHARMACY_ENABLED off',
+    )
+
     await loginAsAdmin(page, ADMIN_EMAIL, ADMIN_PASSWORD)
     await page.goto('/admin', { waitUntil: 'networkidle' })
 
@@ -31,5 +37,9 @@ test.describe('Compendium admin imports', { tag: ['@p1', '@pharmacy'] }, () => {
     await expect(page.getByTestId('admin-compendium-imports-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('compendium-dev-badge')).toBeVisible()
     await expect(page.getByTestId('admin-compendium-new')).toBeVisible()
+
+    await page.getByTestId('admin-compendium-new').click()
+    await expect(page.getByTestId('admin-compendium-upload-card')).toBeVisible()
+    await expect(page.getByTestId('admin-compendium-file')).toBeVisible()
   })
 })

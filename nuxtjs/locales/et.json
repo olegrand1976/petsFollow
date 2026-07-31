@@ -1741,7 +1741,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Eraldamine {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1773,7 +1773,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Käivita eraldamine uuesti",
+      "previewHint": "Kehtivad read jäävad ootele kuni inimkontrollini (kinnita või paranda CNK/nimi).",
+      "confirmReady": "Kinnita {count} ootel rida",
+      "confirmRow": "Kinnita"
     }
   },
   "commissions": {

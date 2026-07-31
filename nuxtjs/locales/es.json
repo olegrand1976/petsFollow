@@ -1741,7 +1741,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Extracción {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1773,7 +1773,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Reintentar extracción",
+      "previewHint": "Las filas válidas quedan pendientes hasta el control humano (confirmar o corregir CNK/nombre).",
+      "confirmReady": "Confirmar {count} fila(s) pendiente(s)",
+      "confirmRow": "Confirmar"
     }
   },
   "commissions": {

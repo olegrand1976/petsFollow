@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
@@ -87,34 +86,17 @@ func ParseCompendiumExtractJSON(raw string) ([]ExtractedMedication, error) {
 	return out, nil
 }
 
-// ClassifyExtractedRow sets ready vs error (missing CNK/name) for staging.
-func ClassifyExtractedRow(m ExtractedMedication) (status, errCode, errMsg string) {
+// ClassifyExtractedRow sets staging status after AI extract or human edit.
+// Valid CNK+name → pending (needs human confirm) unless confirmed=true → ready.
+func ClassifyExtractedRow(m ExtractedMedication, confirmed bool) (status, errCode, errMsg string) {
 	if strings.TrimSpace(m.Name) == "" {
 		return "error", "missing_name", "name required"
 	}
 	if strings.TrimSpace(m.CNK) == "" {
 		return "error", "missing_cnk", "cnk required for national dictionary"
 	}
-	return "ready", "", ""
-}
-
-// FormatBoolish helps tests / CSV-like flags.
-func FormatBoolish(v bool) string {
-	if v {
-		return "true"
+	if confirmed {
+		return "ready", "", ""
 	}
-	return "false"
-}
-
-// ParseOptionalInt ignores empty.
-func ParseOptionalInt(s string) *int {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		return nil
-	}
-	return &n
+	return "pending", "", ""
 }

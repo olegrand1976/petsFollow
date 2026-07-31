@@ -3,10 +3,11 @@ package pharmacy
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"strings"
 )
 
+// CompendiumPagesPerChunk is retained for tests / future real page-trim.
+// V1 extract sends the full PDF once (see handlers.runCompendiumExtract).
 const CompendiumPagesPerChunk = 2
 
 // PageCount estimates PDF page count (heuristic on page objects).
@@ -28,20 +29,6 @@ func PageCount(pdf []byte) (int, error) {
 	return n, nil
 }
 
-// ExtractPageRange prepares media for Gemini for pages [start, end].
-// V1 sends the full PDF bytes (base64 inline); the model is instructed to
-// restrict extraction to the absolute page range. A true page-trim dependency
-// (pdfcpu) requires Go ≥ 1.22 — deferred to keep the module on Go 1.21.
-func ExtractPageRange(pdf []byte, start, end int) ([]byte, error) {
-	if len(pdf) == 0 {
-		return nil, fmt.Errorf("empty_pdf")
-	}
-	if start < 1 || end < start {
-		return nil, fmt.Errorf("invalid_page_range")
-	}
-	return pdf, nil
-}
-
 // ChunkPageRanges splits [start, end] into inclusive ranges of at most size pages.
 func ChunkPageRanges(start, end, size int) [][2]int {
 	if size < 1 {
@@ -59,11 +46,6 @@ func ChunkPageRanges(start, end, size int) [][2]int {
 		out = append(out, [2]int{p, to})
 	}
 	return out
-}
-
-// ReadAllLimited reads at most max+1 bytes (caller checks size).
-func ReadAllLimited(r io.Reader, max int64) ([]byte, error) {
-	return io.ReadAll(io.LimitReader(r, max+1))
 }
 
 // LooksLikePDF soft-checks magic bytes.

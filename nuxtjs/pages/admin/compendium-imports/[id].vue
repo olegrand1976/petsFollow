@@ -32,12 +32,12 @@
         <p v-if="job.errorMessage" class="pro-hint pro-hint--error pro-mt-md">{{ job.errorMessage }}</p>
         <div class="pro-flex-gap pro-mt-md">
           <ProButton
-            v-if="job.status === 'uploaded' || job.status === 'failed'"
+            v-if="job.status === 'uploaded' || job.status === 'failed' || job.status === 'extracting'"
             test-id="admin-compendium-extract"
             :disabled="busy"
             @click="startExtract"
           >
-            {{ $t('admin.compendium.startExtract') }}
+            {{ job.status === 'uploaded' ? $t('admin.compendium.startExtract') : $t('admin.compendium.retryExtract') }}
           </ProButton>
           <ProBadge :variant="statusVariant(job.status)">{{ statusLabel(job.status) }}</ProBadge>
         </div>
@@ -45,6 +45,17 @@
 
       <ProCard class="pro-mb-lg" data-testid="admin-compendium-preview">
         <h3 class="pro-mb-md">{{ $t('admin.compendium.previewTitle') }}</h3>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.compendium.previewHint') }}</p>
+        <div v-if="pendingCount > 0 && job.status === 'extracted'" class="pro-flex-gap pro-mb-md">
+          <ProButton
+            test-id="admin-compendium-confirm-ready"
+            variant="secondary"
+            :disabled="busy"
+            @click="confirmReady"
+          >
+            {{ $t('admin.compendium.confirmReady', { count: pendingCount }) }}
+          </ProButton>
+        </div>
         <ProTable :empty="!rows.length" :empty-title="$t('admin.compendium.emptyRows')">
           <thead>
             <tr>
@@ -87,6 +98,13 @@
                 <span v-if="row.errorCode" class="pro-hint"> {{ row.errorCode }}</span>
               </td>
               <td>
+                <ProButton
+                  v-if="row.status === 'pending'"
+                  variant="ghost"
+                  @click="patchRow(row, { name: row.name, cnk: row.cnk })"
+                >
+                  {{ $t('admin.compendium.confirmRow') }}
+                </ProButton>
                 <ProButton
                   v-if="row.status !== 'upserted' && row.status !== 'excluded'"
                   variant="ghost"
@@ -136,11 +154,13 @@ const rows = ref<any[]>([])
 const commitMsg = ref('')
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
+const pendingCount = computed(() => rows.value.filter(r => r.status === 'pending').length)
+
 function statusVariant (status: string) {
   switch (status) {
     case 'completed': case 'ready': case 'upserted': return 'success'
     case 'failed': case 'error': return 'danger'
-    case 'extracting': case 'committing': return 'warning'
+    case 'extracting': case 'committing': case 'pending': return 'warning'
     default: return 'neutral'
   }
 }
@@ -196,6 +216,16 @@ async function patchRow (row: any, body: Record<string, unknown>) {
     const updated = res?.data ?? res
     const idx = rows.value.findIndex(r => r.id === row.id)
     if (idx >= 0) rows.value[idx] = { ...rows.value[idx], ...updated }
+    await load()
+  } finally {
+    busy.value = false
+  }
+}
+
+async function confirmReady () {
+  busy.value = true
+  try {
+    await $fetch(`/api/admin/compendium-imports/${id.value}/confirm-ready`, { method: 'POST' })
     await load()
   } finally {
     busy.value = false

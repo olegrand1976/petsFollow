@@ -2269,7 +2269,7 @@
       "kpiReady": "Prêtes",
       "kpiUpserted": "Chargées",
       "progressTitle": "Progression",
-      "progressExtract": "Extraction {pct}% ({done}/{total} lots)",
+      "progressExtract": "Extraction {pct}% ({done}/{total})",
       "progressReview": "Contrôle {pct}% ({done}/{total} lignes)",
       "startExtract": "Lancer l’extraction IA",
       "previewTitle": "Contrôle des lignes",
@@ -2301,7 +2301,11 @@
         "excluded": "Exclu",
         "error": "Erreur",
         "upserted": "Chargé"
-      }
+      },
+      "retryExtract": "Relancer l’extraction",
+      "previewHint": "Les lignes valides restent « en attente » jusqu’au contrôle humain (valider ou corriger CNK/nom).",
+      "confirmReady": "Valider {count} ligne(s) en attente",
+      "confirmRow": "Valider"
     },
     "brandAssets": {
       "title": "Assets QR stores",

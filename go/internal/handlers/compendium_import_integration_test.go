@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -76,20 +77,23 @@ func TestCompendiumImportFlow(t *testing.T) {
 	if len(detail.Rows) != 2 {
 		t.Fatalf("rows=%d %#v", len(detail.Rows), detail.Rows)
 	}
-	var readyID, errID string
+	var pendingID, errID string
 	for _, r := range detail.Rows {
-		if r.Status == "ready" {
-			readyID = r.ID
+		if r.Status == "pending" {
+			pendingID = r.ID
 		}
 		if r.Status == "error" && r.ErrorCode == "missing_cnk" {
 			errID = r.ID
 		}
 	}
-	if readyID == "" || errID == "" {
-		t.Fatalf("expected ready+missing_cnk %#v", detail.Rows)
+	if pendingID == "" || errID == "" {
+		t.Fatalf("expected pending+missing_cnk %#v", detail.Rows)
+	}
+	if detail.Job.ReviewPct != 0 {
+		t.Fatalf("reviewPct want 0 after extract, got %d", detail.Job.ReviewPct)
 	}
 
-	// Human control: fix missing CNK
+	// Human control: fix missing CNK (PATCH confirms → ready)
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch,
 		"/api/v1/admin/compendium-imports/"+jobID+"/rows/"+errID, adminTok,
 		map[string]any{"cnk": "2888002"})
@@ -101,9 +105,19 @@ func TestCompendiumImportFlow(t *testing.T) {
 		t.Fatalf("expected ready after patch %#v", row)
 	}
 
+	// Bulk confirm remaining pending rows
+	code, env = doAuthJSON(t, api.handler, http.MethodPost,
+		"/api/v1/admin/compendium-imports/"+jobID+"/confirm-ready", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("confirm %d %#v", code, env)
+	}
+
 	detail, _ = st.GetCompendiumImportDetail(context.Background(), jobID)
 	if detail.Job.ReviewPct < 100 {
 		t.Fatalf("reviewPct=%d ready=%d rows=%d reviewed=%d", detail.Job.ReviewPct, detail.Job.ReadyCount, detail.Job.RowCount, detail.Job.ReviewedCount)
+	}
+	if detail.Job.ReadyCount < 2 {
+		t.Fatalf("readyCount=%d", detail.Job.ReadyCount)
 	}
 
 	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/compendium-imports/"+jobID+"/commit", adminTok, nil)
@@ -135,8 +149,8 @@ func doCompendiumUpload(t *testing.T, h http.Handler, token string, pdf []byte, 
 	t.Helper()
 	var body bytes.Buffer
 	w := multipart.NewWriter(&body)
-	_ = w.WriteField("pageStart", "1")
-	_ = w.WriteField("pageEnd", "2")
+	_ = w.WriteField("pageStart", strconv.Itoa(pageStart))
+	_ = w.WriteField("pageEnd", strconv.Itoa(pageEnd))
 	part, err := w.CreateFormFile("file", "demo.pdf")
 	if err != nil {
 		t.Fatal(err)
@@ -152,7 +166,5 @@ func doCompendiumUpload(t *testing.T, h http.Handler, token string, pdf []byte, 
 	h.ServeHTTP(rec, req)
 	var env map[string]any
 	_ = json.Unmarshal(rec.Body.Bytes(), &env)
-	_ = pageStart
-	_ = pageEnd
 	return rec.Code, env
 }
