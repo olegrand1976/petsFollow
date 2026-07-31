@@ -137,12 +137,16 @@ EOF
     --quiet
   rm -f "$env_file"
 
-  gcloud run services add-iam-policy-binding "$ORTHANC_SERVICE" \
+  # Best-effort : Cloud Build compute SA often lacks run.services.setIamPolicy.
+  # petsfollow-run invoker is granted once at bootstrap (or manually).
+  if ! gcloud run services add-iam-policy-binding "$ORTHANC_SERVICE" \
     --project="$GCP_PROJECT_ID" \
     --region="$GCP_RUN_REGION" \
     --member="serviceAccount:${SA_EMAIL}" \
     --role="roles/run.invoker" \
-    --quiet >/dev/null
+    --quiet >/dev/null 2>&1; then
+    echo "  WARN: IAM run.invoker sur ${ORTHANC_SERVICE} ignoré (SA sans setIamPolicy)" >&2
+  fi
 }
 
 if [[ "$DEPLOY_ONLY" == "1" || "$DEPLOY_ONLY" == "true" ]]; then
