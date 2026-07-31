@@ -68,6 +68,7 @@ func (a *API) registerPacsRoutes(pr chi.Router) {
 	pr.Get("/pacs/studies/{orthancStudyID}", a.getPacsStudy)
 	pr.Get("/pacs/series/{orthancSeriesID}", a.getPacsSeries)
 	pr.Get("/pacs/instances/{instanceID}/file", a.getPacsInstanceFile)
+	pr.Get("/pacs/instances/{instanceID}/metadata", a.getPacsInstanceMetadata)
 	pr.Get("/pacs/instances/{instanceID}/frames/{frame}/preview", a.getPacsInstancePreview)
 }
 
@@ -651,6 +652,133 @@ func (a *API) getPacsInstanceFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
+}
+
+func (a *API) getPacsInstanceMetadata(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	instanceID := chi.URLParam(r, "instanceID")
+	client, ok := a.authorizePacsInstance(w, r, instanceID)
+	if !ok {
+		return
+	}
+	tags, err := client.getInstanceSimplifiedTags(r.Context(), instanceID)
+	if err != nil {
+		var se *orthancStatusError
+		if errors.As(err, &se) && (se.Status == http.StatusNotFound || se.Status == http.StatusBadRequest) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, buildPacsInstanceMetadata(instanceID, tags))
+}
+
+type pacsInstanceMetadata struct {
+	InstanceID       string         `json:"instanceId"`
+	PixelSpacingMm   []float64      `json:"pixelSpacingMm,omitempty"`
+	WindowCenter     *float64       `json:"windowCenter,omitempty"`
+	WindowWidth      *float64       `json:"windowWidth,omitempty"`
+	NumberOfFrames   int            `json:"numberOfFrames,omitempty"`
+	Modality         string         `json:"modality,omitempty"`
+	Rows             int            `json:"rows,omitempty"`
+	Columns          int            `json:"columns,omitempty"`
+	Tags             map[string]any `json:"tags,omitempty"`
+}
+
+func buildPacsInstanceMetadata(instanceID string, tags map[string]any) pacsInstanceMetadata {
+	out := pacsInstanceMetadata{
+		InstanceID: instanceID,
+		Tags:       tags,
+		Modality:   tagString(tags, "Modality"),
+	}
+	out.PixelSpacingMm = parseSpacingTag(tags, "PixelSpacing")
+	if len(out.PixelSpacingMm) == 0 {
+		out.PixelSpacingMm = parseSpacingTag(tags, "ImagerPixelSpacing")
+	}
+	if v, ok := tagFloat(tags, "WindowCenter"); ok {
+		out.WindowCenter = &v
+	}
+	if v, ok := tagFloat(tags, "WindowWidth"); ok {
+		out.WindowWidth = &v
+	}
+	if n, ok := tagInt(tags, "NumberOfFrames"); ok && n > 0 {
+		out.NumberOfFrames = n
+	}
+	if n, ok := tagInt(tags, "Rows"); ok {
+		out.Rows = n
+	}
+	if n, ok := tagInt(tags, "Columns"); ok {
+		out.Columns = n
+	}
+	return out
+}
+
+func tagString(tags map[string]any, key string) string {
+	v, _ := tags[key].(string)
+	return strings.TrimSpace(v)
+}
+
+func tagFloat(tags map[string]any, key string) (float64, bool) {
+	switch v := tags[key].(type) {
+	case float64:
+		return v, true
+	case string:
+		parts := strings.FieldsFunc(v, func(r rune) bool { return r == '\\' || r == ',' })
+		if len(parts) == 0 {
+			return 0, false
+		}
+		f, err := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+		return f, err == nil
+	default:
+		return 0, false
+	}
+}
+
+func tagInt(tags map[string]any, key string) (int, bool) {
+	switch v := tags[key].(type) {
+	case float64:
+		return int(v), true
+	case string:
+		n, err := strconv.Atoi(strings.TrimSpace(v))
+		return n, err == nil
+	default:
+		return 0, false
+	}
+}
+
+func parseSpacingTag(tags map[string]any, key string) []float64 {
+	raw, ok := tags[key]
+	if !ok || raw == nil {
+		return nil
+	}
+	var s string
+	switch v := raw.(type) {
+	case string:
+		s = v
+	case float64:
+		return []float64{v, v}
+	default:
+		return nil
+	}
+	parts := strings.FieldsFunc(s, func(r rune) bool { return r == '\\' || r == ',' })
+	var out []float64
+	for _, p := range parts {
+		f, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+		if err != nil || f <= 0 {
+			return nil
+		}
+		out = append(out, f)
+	}
+	if len(out) == 1 {
+		out = append(out, out[0])
+	}
+	if len(out) < 2 {
+		return nil
+	}
+	return out[:2]
 }
 
 func (a *API) getPacsInstancePreview(w http.ResponseWriter, r *http.Request) {

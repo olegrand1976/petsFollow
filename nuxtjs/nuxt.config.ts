@@ -42,7 +42,19 @@ export default defineNuxtConfig({
       prescriptionsEnabled: publicFeatureFlag('NUXT_PUBLIC_PRESCRIPTIONS_ENABLED'),
       /** PACS Orthanc (imagerie DICOM) — mirror PACS_ENABLED. */
       pacsEnabled: publicFeatureFlag('NUXT_PUBLIC_PACS_ENABLED'),
+      /** PACS viewer engine: canvas (default) | cornerstone (P2.1 opt-in). */
+      pacsViewerEngine: process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas',
     },
+  },
+  vite: {
+    optimizeDeps: {
+      exclude: ['@cornerstonejs/dicom-image-loader'],
+      include: ['dicom-parser'],
+    },
+    worker: {
+      format: 'es',
+    },
+    assetsInclude: ['**/*.wasm'],
   },
   routeRules: {
     '/admin/usecases': { redirect: '/usecases' },

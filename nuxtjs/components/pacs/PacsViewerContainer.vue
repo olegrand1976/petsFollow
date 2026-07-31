@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import { resolvePacsViewerEngine } from '~/utils/pacs-viewer-engine'
 
 const props = defineProps<{
   petId: string
@@ -8,6 +9,8 @@ const props = defineProps<{
 const { t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
+const viewerEngine = computed(() => resolvePacsViewerEngine(runtimeConfig.public.pacsViewerEngine))
+const useCornerstone = computed(() => viewerEngine.value === 'cornerstone')
 const { status, loading, waking, hasPolled, error, wake, wakeUntilReady, refresh } = usePacsStatus({
   enabled: pacsOn,
 })
@@ -302,8 +305,14 @@ onMounted(() => {
       </div>
 
       <ClientOnly>
+        <PacsCornerstoneDicomViewer
+          v-if="leftInstanceId && useCornerstone"
+          :left-instance-id="leftInstanceId"
+          :right-instance-id="compare ? rightInstanceId : undefined"
+          :compare="compare"
+        />
         <PacsDicomViewer
-          v-if="leftInstanceId"
+          v-else-if="leftInstanceId"
           :left-instance-id="leftInstanceId"
           :right-instance-id="compare ? rightInstanceId : undefined"
           :compare="compare"

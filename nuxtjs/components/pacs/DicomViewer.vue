@@ -305,9 +305,17 @@ async function downloadDicom() {
   }
 }
 
-watch(() => props.leftInstanceId, (id) => {
+watch(() => props.leftInstanceId, async (id) => {
   frameIndex.value = 0
   maxFrame.value = null
+  if (id) {
+    try {
+      const res: any = await $fetch(`/api/pacs/instances/${id}/metadata`)
+      const data = res.data ?? res
+      const n = Number(data.numberOfFrames)
+      if (Number.isFinite(n) && n > 0) maxFrame.value = n - 1
+    } catch { /* optional */ }
+  }
   void bindPane(left, leftCanvas.value, id)
 })
 watch(() => props.rightInstanceId, (id) => { void bindPane(right, rightCanvas.value, id) })

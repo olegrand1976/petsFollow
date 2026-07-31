@@ -18,7 +18,8 @@ func TestOrthancPreviewOutOfRange(t *testing.T) {
 		{"plain", errors.New("orthanc_preview_404"), false},
 		{"404", &orthancStatusError{Resource: "preview", Status: http.StatusNotFound}, true},
 		{"400", &orthancStatusError{Resource: "preview", Status: http.StatusBadRequest}, true},
-		{"500", &orthancStatusError{Resource: "preview", Status: http.StatusBadGateway}, false},
+		{"500", &orthancStatusError{Resource: "preview", Status: http.StatusInternalServerError}, true},
+		{"502", &orthancStatusError{Resource: "preview", Status: http.StatusBadGateway}, false},
 		{"other resource", &orthancStatusError{Resource: "file", Status: http.StatusNotFound}, false},
 		{"wrapped 400", fmt.Errorf("wrap: %w", &orthancStatusError{Resource: "preview", Status: http.StatusBadRequest}), true},
 	}

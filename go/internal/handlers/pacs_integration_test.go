@@ -491,6 +491,9 @@ func (f pacsOrthancFixture) handler(t *testing.T) http.Handler {
 		case r.Method == http.MethodGet && r.URL.Path == "/instances/"+f.instID+"/file":
 			w.Header().Set("Content-Type", "application/dicom")
 			_, _ = w.Write(f.dicomFile)
+		case r.Method == http.MethodGet && r.URL.Path == "/instances/"+f.instID+"/simplified-tags":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"Modality":"CT","PixelSpacing":"0.5\\0.5","WindowCenter":"40","WindowWidth":"400","NumberOfFrames":"1","Rows":"64","Columns":"64"}`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -558,6 +561,20 @@ func TestPacsInstancePreviewFileFullFlow(t *testing.T) {
 		t.Fatalf("file Cache-Control %q", cc)
 	}
 
+	code, env = doAuthJSON(t, api.handler, http.MethodGet,
+		"/api/v1/pacs/instances/"+fx.instID+"/metadata", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("metadata %d %#v", code, env)
+	}
+	md := dataMap(t, env)
+	if md["modality"] != "CT" {
+		t.Fatalf("modality %#v", md)
+	}
+	sp, _ := md["pixelSpacingMm"].([]any)
+	if len(sp) != 2 {
+		t.Fatalf("pixelSpacingMm %#v", md["pixelSpacingMm"])
+	}
+
 	// Client must never reach PHI binary endpoints.
 	code, _, _ = doAuthBytes(t, api.handler, http.MethodGet,
 		"/api/v1/pacs/instances/"+fx.instID+"/frames/0/preview", clientTok)
@@ -574,7 +591,7 @@ func TestPacsInstancePreviewFileFullFlow(t *testing.T) {
 func TestPacsInstancePreviewOutOfRangeIs404(t *testing.T) {
 	t.Setenv("PACS_ENABLED", "true")
 
-	for _, orthStatus := range []int{http.StatusNotFound, http.StatusBadRequest} {
+	for _, orthStatus := range []int{http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError} {
 		orthStatus := orthStatus
 		t.Run(fmt.Sprintf("orthanc_%d", orthStatus), func(t *testing.T) {
 			api := newTestAPI(t)

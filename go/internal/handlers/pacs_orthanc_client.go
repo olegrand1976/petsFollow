@@ -35,13 +35,22 @@ func (e *orthancStatusError) Error() string {
 	return fmt.Sprintf("orthanc_%s_%d", e.Resource, e.Status)
 }
 
-// orthancPreviewOutOfRange reports frame index / missing preview (Orthanc may use 400 or 404).
+// orthancPreviewOutOfRange reports frame index / missing preview.
+// Orthanc versions differ: 400, 404, and sometimes 500 on invalid frame index.
 func orthancPreviewOutOfRange(err error) bool {
 	var se *orthancStatusError
 	if !errors.As(err, &se) {
 		return false
 	}
-	return se.Resource == "preview" && (se.Status == http.StatusNotFound || se.Status == http.StatusBadRequest)
+	if se.Resource != "preview" {
+		return false
+	}
+	switch se.Status {
+	case http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError:
+		return true
+	default:
+		return false
+	}
 }
 
 func validateOrthancID(id string) error {
@@ -237,6 +246,29 @@ func (c *orthancClient) getInstanceFile(ctx context.Context, instanceID string) 
 		ct = "application/dicom"
 	}
 	return body, ct, nil
+}
+
+func (c *orthancClient) getInstanceSimplifiedTags(ctx context.Context, instanceID string) (map[string]any, error) {
+	if err := validateOrthancID(instanceID); err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, http.MethodGet, "/instances/"+url.PathEscape(instanceID)+"/simplified-tags", nil, "", 15*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 300 {
+		return nil, &orthancStatusError{Resource: "tags", Status: resp.StatusCode}
+	}
+	var out map[string]any
+	if err := json.Unmarshal(body, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *orthancClient) getInstanceFramesPreview(ctx context.Context, instanceID string, frame int) ([]byte, string, error) {

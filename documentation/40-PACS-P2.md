@@ -1,7 +1,7 @@
 # 40-PACS — Plan P2 (vers GA clinique)
 
-> **Statut** : arbitrage viewer **A (Cornerstone3D)** acté — **prêt à démarrer P2.0**.  
-> Prérequis : P0 (tenant lock + launch) + P1 (multi-série/frame, download, admin wake) livrés sur `staging` (`0e3512d` + `7e148d4`).  
+> **Statut** : **P2.0** hotfix EOF déployé (`b32145b`) · **P2.1 démarré** (CSP wasm, metadata API, Cornerstone opt-in, flag `NUXT_PUBLIC_PACS_VIEWER_ENGINE`).  
+> Prérequis : P0 + P1 livrés · arbitrage **A Cornerstone3D** acté.  
 > Doc module : [`40-PACS.md`](40-PACS.md) · règle tag `dev` : [`.cursor/rules/modules-tag-dev.mdc`](../.cursor/rules/modules-tag-dev.mdc).
 
 ## Objectif
@@ -58,22 +58,21 @@ flowchart TD
 
 ### P2.0 — Hygiene & alignement staging
 
-- [x] Déployer `7e148d4` (EOF / waking / DICM) — Cloud Build `f3668332…` SUCCESS (2026-07-31).
-- [x] Smoke MVP staging OK ; PACS wake → ready → preview PNG 200 → file DICM 200.
-- [ ] Hotfix : Orthanc preview **400|404** → client 404 (`orthancStatusError`) — à déployer + re-smoke frame hors plage.
-- Mettre à jour l’état G5/G6 dans `40-PACS.md` (déjà livré P1).
+- [x] Déployer `7e148d4` puis hotfix `b32145b` (EOF 400|404 → 404 client).
+- [x] Smoke MVP ; PACS wake → ready → preview/file.
+- [ ] Re-smoke frame hors plage → **404** après deploy `b32145b`.
+- Docs P2 + checklist G5/G6 : faits.
 
-**Done P2.0** : quand OOR → 404 en staging.
+### P2.1 — Viewer clinique (G3) — Cornerstone3D *(en cours)*
 
-### P2.1 — Viewer clinique (G3) — Cornerstone3D
+1. [x] Spike CSP : `wasm-unsafe-eval` + `worker-src 'self' blob:` (pas `*`).
+2. [x] Packages `@cornerstonejs/*` + Vite exclude loader ; flag `NUXT_PUBLIC_PACS_VIEWER_ENGINE` (défaut **canvas**).
+3. [x] Metadata proxy Go `GET …/instances/{id}/metadata` (PixelSpacing, W/L tags) — BFF Nuxt.
+4. [x] `CornerstoneDicomViewer.vue` opt-in (wadouri → BFF `/file`) ; canvas reste défaut.
+5. [ ] Tools Cornerstone (pan/zoom/W/L HU/Length) + e2e smoke engine=cornerstone.
+6. Authz `TestPacs*` inchangée.
 
-1. Spike CSP : `buildCsp()` — `wasm-unsafe-eval` / workers **explicitement**, pas `*`.
-2. Package `@cornerstonejs/*` lazy, `ClientOnly`, flag UI interne `pacsViewerEngine=cornerstone|canvas` (canvas = fallback).
-3. Pipeline pixels : **proxy Go** (WADO-RS Orthanc ou stream `…/file`) — le navigateur **ne parle jamais** à Orthanc.
-4. Nouveau viewer Cornerstone (pan/zoom/W/L HU/stack) ; coexister avec `DicomViewer.vue` canvas jusqu’à bascule.
-5. Conserver authz `TestPacs*` inchangée (gate `practice_id`).
-
-**Done** : W/L HU démontrable sur fixture CT/RX via Cornerstone ; pas de régression authz ; e2e smoke viewer.
+**Done P2.1** : W/L HU démontrable via Cornerstone en staging avec flag on ; e2e non soft-skip.
 
 ### P2.2 — Mesures calibrées (G4)
 
