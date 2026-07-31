@@ -492,6 +492,7 @@
     "sortPets": "Enim lemmikloomi",
     "emptyTitle": "Kliente pole",
     "emptyDescription": "Kliendid ilmuvad siia, kui nad on teie praktikaga seotud.",
+
     "loadError": "Klientide laadimine ebaõnnestus.",
     "columnClient": "Klient",
     "columnEmail": "E-post",
@@ -3645,6 +3646,7 @@
     "offlineHint": "Kujutisteenus on välja lülitatud. Aktiveerige see radiograafiate vaatamiseks või importimiseks.",
     "emptyTitle": "Uuringuid pole",
     "emptyDescription": "Alustamiseks importige .dcm-fail.",
+    "previewError": "Pildi eelvaadet ei õnnestunud laadida. Proovige uuesti või käivitage PACS.",
     "leftSeries": "Vasak seeria",
     "rightSeries": "Parem seeria",
     "state": {

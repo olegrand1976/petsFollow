@@ -492,6 +492,7 @@
     "sortPets": "Más mascotas",
     "emptyTitle": "Sin clientes",
     "emptyDescription": "Los clientes aparecerán aquí cuando estén vinculados a su clínica.",
+
     "loadError": "No se pudieron cargar los clientes.",
     "columnClient": "Cliente",
     "columnEmail": "Correo",
@@ -3645,6 +3646,7 @@
     "offlineHint": "El servicio de imagen está apagado. Actívelo para consultar o importar radiografías.",
     "emptyTitle": "Ningún estudio",
     "emptyDescription": "Importe un archivo .dcm para empezar.",
+    "previewError": "No se pudo cargar la vista previa. Reintente o active el PACS.",
     "leftSeries": "Serie izquierda",
     "rightSeries": "Serie derecha",
     "state": {

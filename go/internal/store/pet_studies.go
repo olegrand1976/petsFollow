@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -49,18 +50,34 @@ const petStudySelect = `
 	FROM imaging.pet_studies`
 
 func (s *Store) CreatePetStudy(ctx context.Context, in CreatePetStudyInput) (PetStudy, error) {
+	if strings.TrimSpace(in.OrthancStudyID) == "" {
+		return PetStudy{}, ErrValidation
+	}
+	existing, err := s.FindPetStudyByOrthancStudy(ctx, in.PracticeID, in.OrthancStudyID)
+	if err == nil {
+		if existing.PetID != in.PetID {
+			return PetStudy{}, ErrConflict
+		}
+		return scanPetStudy(s.pool.QueryRow(ctx, `
+			UPDATE imaging.pet_studies SET
+				study_instance_uid = $3,
+				orthanc_series_id = $4,
+				description = $5,
+				modality = $6
+			WHERE practice_id = $1 AND orthanc_study_id = $2
+			RETURNING id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
+				orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
+		`, in.PracticeID, in.OrthancStudyID, in.StudyInstanceUID, in.OrthancSeriesID, in.Description, in.Modality))
+	}
+	if !errors.Is(err, ErrNotFound) {
+		return PetStudy{}, err
+	}
 	id := uuid.NewString()
 	return scanPetStudy(s.pool.QueryRow(ctx, `
 		INSERT INTO imaging.pet_studies (
 			id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
 			orthanc_series_id, description, modality, uploaded_by_user_id
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,'')::uuid)
-		ON CONFLICT (practice_id, orthanc_study_id) DO UPDATE SET
-			pet_id = EXCLUDED.pet_id,
-			study_instance_uid = EXCLUDED.study_instance_uid,
-			orthanc_series_id = EXCLUDED.orthanc_series_id,
-			description = EXCLUDED.description,
-			modality = EXCLUDED.modality
 		RETURNING id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
 			orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
 	`, id, in.PetID, in.PracticeID, in.OrthancStudyID, in.StudyInstanceUID,

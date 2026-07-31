@@ -157,9 +157,10 @@ func (a *API) anonymizeProAccount(ctx context.Context, userID string) error {
 }
 
 func (a *API) purgeOrthancStudies(ctx context.Context, studyIDs []string) {
-	if len(studyIDs) == 0 || !a.cfg.PacsEnabled {
+	if len(studyIDs) == 0 {
 		return
 	}
+	// Purge PHI Orthanc even when the produit flag is off (UI gated separately).
 	client := a.orthanc()
 	if client == nil {
 		return

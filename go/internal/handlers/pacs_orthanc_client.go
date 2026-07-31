@@ -10,10 +10,11 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
-	"google.golang.org/api/idtoken"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/idtoken"
 )
 
 // Orthanc resource IDs are SHA-1 digests: 40 hex chars, optionally rendered as
@@ -43,6 +44,7 @@ type orthancClient struct {
 	password   string
 	useIDToken bool
 	http       *http.Client
+	tokenMu    sync.Mutex
 	tokenSrc   oauth2.TokenSource // reused when useIDToken
 }
 
@@ -72,14 +74,9 @@ func (c *orthancClient) do(ctx context.Context, method, path string, body io.Rea
 		req.Header.Set("Content-Type", contentType)
 	}
 	if c.useIDToken {
-		ts := c.tokenSrc
-		if ts == nil {
-			src, err := idtoken.NewTokenSource(ctx, c.baseURL)
-			if err != nil {
-				return nil, fmt.Errorf("idtoken: %w", err)
-			}
-			c.tokenSrc = src
-			ts = src
+		ts, err := c.idTokenSource(ctx)
+		if err != nil {
+			return nil, err
 		}
 		tok, err := ts.Token()
 		if err != nil {
@@ -89,11 +86,28 @@ func (c *orthancClient) do(ctx context.Context, method, path string, body io.Rea
 	} else if c.user != "" {
 		req.SetBasicAuth(c.user, c.password)
 	}
-	client := c.http
+	doCtx := ctx
+	var cancel context.CancelFunc
 	if timeout > 0 {
-		client = &http.Client{Timeout: timeout}
+		doCtx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+		req = req.WithContext(doCtx)
 	}
-	return client.Do(req)
+	return c.http.Do(req)
+}
+
+func (c *orthancClient) idTokenSource(ctx context.Context) (oauth2.TokenSource, error) {
+	c.tokenMu.Lock()
+	defer c.tokenMu.Unlock()
+	if c.tokenSrc != nil {
+		return c.tokenSrc, nil
+	}
+	src, err := idtoken.NewTokenSource(ctx, c.baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("idtoken: %w", err)
+	}
+	c.tokenSrc = src
+	return src, nil
 }
 
 func (c *orthancClient) pingSystem(ctx context.Context, timeout time.Duration) (latencyMs int64, err error) {
@@ -245,23 +259,71 @@ func (c *orthancClient) deleteStudy(ctx context.Context, studyID string) error {
 	return nil
 }
 
-func (c *orthancClient) instanceParentStudy(ctx context.Context, instanceID string) (string, error) {
+func (c *orthancClient) deleteInstance(ctx context.Context, instanceID string) error {
 	if err := validateOrthancID(instanceID); err != nil {
-		return "", err
+		return err
 	}
-	resp, err := c.do(ctx, http.MethodGet, "/instances/"+url.PathEscape(instanceID), nil, "", 15*time.Second)
+	resp, err := c.do(ctx, http.MethodDelete, "/instances/"+url.PathEscape(instanceID), nil, "", 30*time.Second)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
-	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if resp.StatusCode >= 300 {
-		return "", fmt.Errorf("orthanc_instance_%d", resp.StatusCode)
+	_ = bDiscard(resp.Body)
+	if resp.StatusCode >= 300 && resp.StatusCode != http.StatusNotFound {
+		return fmt.Errorf("orthanc_delete_instance_%d", resp.StatusCode)
 	}
-	var meta map[string]any
-	if err := json.Unmarshal(body, &meta); err != nil {
+	return nil
+}
+
+func (c *orthancClient) orthancParentStudy(ctx context.Context, resource, id string) (string, error) {
+	meta, err := c.orthancResourceMeta(ctx, resource, id)
+	if err != nil {
 		return "", err
 	}
 	parent, _ := meta["ParentStudy"].(string)
 	return parent, nil
+}
+
+func (c *orthancClient) orthancResourceMeta(ctx context.Context, resource, id string) (map[string]any, error) {
+	if err := validateOrthancID(id); err != nil {
+		return nil, err
+	}
+	path := "/" + resource + "/" + url.PathEscape(id)
+	resp, err := c.do(ctx, http.MethodGet, path, nil, "", 15*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("orthanc_%s_%d", resource, resp.StatusCode)
+	}
+	var meta map[string]any
+	if err := json.Unmarshal(body, &meta); err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+// instanceParentStudy resolves the Orthanc study that owns an instance.
+// Real Orthanc (1.12+) often omits ParentStudy on GET /instances/{id} and only
+// exposes ParentSeries — follow that chain so authz does not false-404.
+func (c *orthancClient) instanceParentStudy(ctx context.Context, instanceID string) (string, error) {
+	meta, err := c.orthancResourceMeta(ctx, "instances", instanceID)
+	if err != nil {
+		return "", err
+	}
+	if parent, _ := meta["ParentStudy"].(string); strings.TrimSpace(parent) != "" {
+		return parent, nil
+	}
+	seriesID, _ := meta["ParentSeries"].(string)
+	seriesID = strings.TrimSpace(seriesID)
+	if seriesID == "" {
+		return "", fmt.Errorf("orthanc_instance_no_parent")
+	}
+	return c.seriesParentStudy(ctx, seriesID)
+}
+
+func (c *orthancClient) seriesParentStudy(ctx context.Context, seriesID string) (string, error) {
+	return c.orthancParentStudy(ctx, "series", seriesID)
 }

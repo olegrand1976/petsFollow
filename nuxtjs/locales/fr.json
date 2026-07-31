@@ -722,6 +722,7 @@
       "listTitle": "Vos modules",
       "emptyTitle": "Pas encore d’activation",
       "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
+
       "colPractice": "Cabinet",
       "colStatus": "Statut",
       "colTrial": "Fin essai",
@@ -3677,6 +3678,7 @@
     "offlineHint": "Le service d’imagerie est éteint. Activez-le pour consulter ou importer des radios.",
     "emptyTitle": "Aucune étude",
     "emptyDescription": "Importez un fichier .dcm pour démarrer.",
+    "previewError": "Impossible de charger l’aperçu de l’image. Réessayez ou réactivez le PACS.",
     "leftSeries": "Série gauche",
     "rightSeries": "Série droite",
     "state": {

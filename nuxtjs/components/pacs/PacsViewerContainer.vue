@@ -20,6 +20,7 @@ const rightInstanceId = ref('')
 const selectedStudyId = ref('')
 const instances = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
+const previewError = ref('')
 
 const badgeVariant = computed(() => {
   if (status.value.state === 'ready') return 'success'
@@ -39,10 +40,22 @@ async function loadStudies() {
   }
 }
 
+function syncComparePane() {
+  if (!compare.value) {
+    rightInstanceId.value = ''
+    return
+  }
+  if (!rightInstanceId.value || !instances.value.includes(rightInstanceId.value)) {
+    rightInstanceId.value = instances.value.find((id) => id !== leftInstanceId.value) || instances.value[0] || ''
+  }
+}
+
 async function openStudy(study: any) {
   selectedStudyId.value = study.orthancStudyId
   leftInstanceId.value = ''
+  rightInstanceId.value = ''
   instances.value = []
+  previewError.value = ''
   try {
     const seriesId = study.orthancSeriesId
     if (seriesId) {
@@ -51,7 +64,7 @@ async function openStudy(study: any) {
       const ids = (data.Instances as string[]) || []
       instances.value = ids
       if (ids[0]) leftInstanceId.value = ids[0]
-      if (ids[1] && compare.value) rightInstanceId.value = ids[1]
+      syncComparePane()
     } else {
       const meta: any = await $fetch(`/api/pacs/studies/${study.orthancStudyId}`)
       const data = meta.data ?? meta
@@ -62,12 +75,17 @@ async function openStudy(study: any) {
         const ids = (sdata.Instances as string[]) || []
         instances.value = ids
         if (ids[0]) leftInstanceId.value = ids[0]
+        syncComparePane()
       }
     }
   } catch (e: any) {
     studiesError.value = e?.data?.message || e?.message || 'open_failed'
   }
 }
+
+watch(compare, () => {
+  syncComparePane()
+})
 
 async function onUpload(ev: Event) {
   const input = ev.target as HTMLInputElement
@@ -148,8 +166,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <p v-if="error || studiesError || uploadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">
-      {{ error || studiesError || uploadError }}
+    <p v-if="error || studiesError || uploadError || previewError" class="pro-inline-feedback pro-inline-feedback--error" role="alert" data-testid="pacs-error">
+      {{ error || studiesError || uploadError || previewError }}
     </p>
 
     <div v-if="status.state !== 'ready'" class="pacs-container__hint">
@@ -198,6 +216,7 @@ onMounted(() => {
           :left-instance-id="leftInstanceId"
           :right-instance-id="compare ? rightInstanceId : undefined"
           :compare="compare"
+          @load-error="(msg: string) => { previewError = msg }"
         />
       </ClientOnly>
     </template>

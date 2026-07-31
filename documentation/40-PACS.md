@@ -74,6 +74,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 
 - Ingress Orthanc = **all** + IAM Cloud Run (ID token API→Orthanc) ; auth Orthanc désactivée derrière IAM (local : `ORTHANC_AUTH_ENABLED=true`).
 - Proxy DICOM : IDs Orthanc liés à `imaging.pet_studies` du **cabinet** (anti-IDOR cross-tenant).
+- Authz instance : `ParentStudy` si présent, sinon chaîne `ParentSeries` → série → `ParentStudy` (Orthanc 1.12 omet souvent `ParentStudy` sur `GET /instances/{id}`). Staff cabinet uniquement (`pets.read` + rôle practice) ; client → 403 ; autre cabinet → 404 opaque.
 - Backups : **Cloud SQL automated backups** (DB `orthanc`) + **GCS versioning** sur `petsfollow-dicom`.
 - RGPD : export JSON `imagingStudies` ; purge `DELETE /me` / rétention → delete Orthanc study (best-effort) après collect artifacts.
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
@@ -81,6 +82,10 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Staging : `PACS_ENABLED` auto-on **uniquement** si `PACS_ORTHANC_URL` est défini (sinon offline UI évité).
 - Viewer V1 = previews Orthanc PNG (mesures en pixels non calibrées) — pas de Cornerstone WASM.
 - Cold start : TTL cache `starting` = 90 s ; UI upload poll jusqu’à `ready`.
+- Upload compensatoire : delete **instance** Orthanc si insert DB échoue (jamais `DELETE /studies` si l’étude était déjà liée).
+- Lien étude ↔ animal : conflit si même `orthanc_study_id` déjà lié à un **autre** pet du cabinet (`409`).
+- Purge RGPD Orthanc : indépendante de `PACS_ENABLED` (dès que `PACS_ORTHANC_URL` est configuré).
+- Proxy preview/file : `Cache-Control: private, no-store`.
 
 ## UI
 
@@ -104,3 +109,26 @@ make test-e2e-p0   # inclut 20-pacs-admin + 20b-pacs-imaging @p0
 ## Hors V1
 
 C-STORE modalité, partage client des images, PgBouncer dédié, conformité multi-pays / archivage légal long terme.
+
+## Critères GA (checklist — décision produit explicite)
+
+Retirer le badge `nav.tagDev` **uniquement** quand tous les points ci-dessous sont validés. Tant que tag `dev` : **pas** de useCase commercial inventé ([`usecase-sync.mdc`](../.cursor/rules/usecase-sync.mdc)).
+
+| # | Critère | État V1 actuel |
+|---|---------|----------------|
+| G1 | Décision produit écrite (GA vs rester `dev`) | À faire |
+| G2 | Flag prod `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` opt-in documenté + smoke staging vert | Staging OK · prod **off** |
+| G3 | Viewer clinique : vrai Window/Level DICOM (HU) **ou** Cornerstone3D (WASM/CSP allowlist) | PNG Orthanc + CSS approx. seulement |
+| G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | Non |
+| G5 | Multi-frame (scroll stack) + multi-série (picker) dans l’UI | Frame 0 · 1ʳᵉ série |
+| G6 | Download `.dcm` depuis l’UI (BFF `…/file` déjà dispo) | API oui · UI non |
+| G7 | Erreur preview visible + e2e upload/canvas non soft-skip Orthanc | Livré (tag `dev`) |
+| G8 | Use case commercial `useCase/` + `make usecases-sync` + entrée session démo | Interdit tant que `dev` |
+| G9 | Index doc + modules métier / vision mis à jour | `documentation/README.md` indexe 40 |
+| G10 | Hors V1 toujours hors GA sauf brief : C-STORE, partage client, archivage légal multi-pays | Documenté |
+
+**Calibrage / Cornerstone (G3–G4)** — piste technique quand GA décidé :
+
+1. CSP Nuxt : autoriser wasm/workers Cornerstone sans élargir `*`.
+2. Remplacer la source PNG par pixels DICOM (WADO-RS Orthanc ou `…/file` + decode) tout en gardant le gate `practice_id`.
+3. Conserver les tests `TestPacs*` d’authz ; étendre e2e outils W/L réels.

@@ -659,6 +659,7 @@
       "listTitle": "I tuoi moduli",
       "emptyTitle": "Nessuna attivazione ancora",
       "emptyDescription": "Scegli una clinica assegnata per iniziare.",
+
       "colPractice": "Clinica",
       "colStatus": "Stato",
       "colTrial": "Fine prova",
@@ -3645,6 +3646,7 @@
     "offlineHint": "Il servizio di imaging è spento. Attivalo per consultare o importare radiografie.",
     "emptyTitle": "Nessuno studio",
     "emptyDescription": "Importa un file .dcm per iniziare.",
+    "previewError": "Impossibile caricare l’anteprima. Riprovare o riattivare il PACS.",
     "leftSeries": "Serie sinistra",
     "rightSeries": "Serie destra",
     "state": {

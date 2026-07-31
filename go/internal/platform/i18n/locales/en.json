@@ -89,6 +89,7 @@
     "invalid_status": "Invalid status",
     "invalid_duration": "Invalid duration",
     "conflict": "Conflict",
+    "pacs_study_other_pet": "This DICOM study is already linked to another pet in the practice",
     "slot_taken": "This time slot is already taken",
     "on_vacation": "The practice is closed on this date",
     "invalid_proposed": "Invalid proposed date or time",

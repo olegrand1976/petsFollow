@@ -89,6 +89,7 @@
     "invalid_status": "Statut invalide",
     "invalid_duration": "Durée invalide",
     "conflict": "Conflit",
+    "pacs_study_other_pet": "Cette étude DICOM est déjà liée à un autre animal du cabinet",
     "slot_taken": "Ce créneau est déjà pris",
     "on_vacation": "Le cabinet est fermé à cette date",
     "invalid_proposed": "Date ou heure proposée invalide",

@@ -399,21 +399,38 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	}
 	studyID := up.ParentStudy
 	seriesID := up.ParentSeries
+	instanceID := up.ID
+	if studyID == "" || validateOrthancID(studyID) != nil {
+		a.appendPacsLog(r.Context(), "error", "upload", "orthanc parent study missing", instanceID)
+		if instanceID != "" {
+			_ = client.deleteInstance(r.Context(), instanceID)
+		}
+		writeErr(w, r, http.StatusBadGateway, "pacs_upload_failed", "pacs_upload_failed")
+		return
+	}
+	studyAlreadyLinked := false
+	if _, linkErr := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, studyID); linkErr == nil {
+		studyAlreadyLinked = true
+	} else if !errors.Is(linkErr, store.ErrNotFound) {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	studyUID := ""
 	modality := ""
 	desc := strings.TrimSpace(r.FormValue("description"))
-	if studyID != "" {
-		if meta, err := client.getStudy(r.Context(), studyID); err == nil {
-			if mt, ok := meta["MainDicomTags"].(map[string]any); ok {
-				if v, ok := mt["StudyInstanceUID"].(string); ok {
-					studyUID = v
-				}
-				if v, ok := mt["StudyDescription"].(string); ok && desc == "" {
-					desc = v
-				}
-				if v, ok := mt["ModalitiesInStudy"].(string); ok {
-					modality = v
-				}
+	if len([]rune(desc)) > 500 {
+		desc = string([]rune(desc)[:500])
+	}
+	if meta, err := client.getStudy(r.Context(), studyID); err == nil {
+		if mt, ok := meta["MainDicomTags"].(map[string]any); ok {
+			if v, ok := mt["StudyInstanceUID"].(string); ok {
+				studyUID = v
+			}
+			if v, ok := mt["StudyDescription"].(string); ok && desc == "" {
+				desc = v
+			}
+			if v, ok := mt["ModalitiesInStudy"].(string); ok {
+				modality = v
 			}
 		}
 	}
@@ -435,9 +452,21 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		a.appendPacsLog(r.Context(), "error", "upload", "db insert failed", err.Error())
-		if studyID != "" {
+		// Prefer instance delete: never wipe a ParentStudy that already holds other PHI.
+		if instanceID != "" {
+			_ = client.deleteInstance(r.Context(), instanceID)
+			a.appendPacsLog(r.Context(), "warn", "upload", "db insert failed — orthanc instance deleted", instanceID)
+		} else if studyID != "" && !studyAlreadyLinked {
 			_ = client.deleteStudy(r.Context(), studyID)
 			a.appendPacsLog(r.Context(), "warn", "upload", "db insert failed — orthanc study deleted", studyID)
+		}
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, r, http.StatusConflict, "conflict", "pacs_study_other_pet")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -512,17 +541,22 @@ func (a *API) getPacsSeries(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "validation_error", "invalid_orthanc_id")
 		return
 	}
-	if _, err := a.store.FindPetStudyByOrthancSeries(r.Context(), id.PracticeID, seriesID); err != nil {
+	client := a.orthanc()
+	if client == nil {
+		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_url_missing")
+		return
+	}
+	parentStudy, err := client.seriesParentStudy(r.Context(), seriesID)
+	if err != nil || parentStudy == "" {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if _, err := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, parentStudy); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	client := a.orthanc()
-	if client == nil {
-		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_url_missing")
 		return
 	}
 	meta, err := client.getSeries(r.Context(), seriesID)
@@ -578,7 +612,7 @@ func (a *API) getPacsInstanceFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "private, max-age=300")
+	w.Header().Set("Cache-Control", "private, no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }
@@ -602,7 +636,7 @@ func (a *API) getPacsInstancePreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", ct)
-	w.Header().Set("Cache-Control", "private, max-age=300")
+	w.Header().Set("Cache-Control", "private, no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }

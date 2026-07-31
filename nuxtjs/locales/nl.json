@@ -492,6 +492,7 @@
     "sortPets": "Meeste dieren",
     "emptyTitle": "Geen klanten",
     "emptyDescription": "Klanten verschijnen hier zodra ze aan uw praktijk zijn gekoppeld.",
+
     "loadError": "Klanten laden mislukt.",
     "columnClient": "Klant",
     "columnEmail": "E-mail",
@@ -3676,6 +3677,7 @@
     "offlineHint": "De beeldvormingsdienst is uitgeschakeld. Activeer hem om röntgenbeelden te bekijken of te importeren.",
     "emptyTitle": "Geen studies",
     "emptyDescription": "Importeer een .dcm-bestand om te beginnen.",
+    "previewError": "Kan de beeldvoorvertoning niet laden. Probeer opnieuw of activeer de PACS.",
     "leftSeries": "Linkerreeks",
     "rightSeries": "Rechterreeks",
     "state": {

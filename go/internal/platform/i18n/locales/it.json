@@ -89,6 +89,7 @@
     "invalid_status": "Stato non valido",
     "invalid_duration": "Durata non valida",
     "conflict": "Conflitto",
+    "pacs_study_other_pet": "Questo studio DICOM è già collegato a un altro animale dello studio",
     "slot_taken": "Questo spazio è già occupato",
     "on_vacation": "In questa data lo studio è chiuso",
     "invalid_proposed": "Data o ora proposta non valida",

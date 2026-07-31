@@ -45,6 +45,15 @@ const leftCanvas = ref<HTMLCanvasElement | null>(null)
 const rightCanvas = ref<HTMLCanvasElement | null>(null)
 
 const imageCache = new Map<string, string>()
+const loadError = ref('')
+const emit = defineEmits<{
+  loadError: [message: string]
+}>()
+
+function reportLoadError(message: string) {
+  loadError.value = message
+  emit('loadError', message)
+}
 
 async function loadPreview(instanceId: string): Promise<string> {
   const cached = imageCache.get(instanceId)
@@ -52,6 +61,10 @@ async function loadPreview(instanceId: string): Promise<string> {
   const blob = await $fetch<Blob>(`/api/pacs/instances/${instanceId}/frames/0/preview`, {
     responseType: 'blob',
   })
+  const ct = (blob.type || '').toLowerCase()
+  if (ct.includes('json') || ct.includes('text') || blob.size < 32) {
+    throw new Error('preview_not_image')
+  }
   const url = URL.createObjectURL(blob)
   imageCache.set(instanceId, url)
   return url
@@ -63,16 +76,26 @@ async function bindPane(pane: Pane, canvas: HTMLCanvasElement | null, instanceId
     paint(pane, canvas)
     return
   }
-  const url = await loadPreview(instanceId)
-  const img = new Image()
-  img.onload = () => {
+  try {
+    const url = await loadPreview(instanceId)
+    const img = new Image()
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('preview_decode_failed'))
+      img.src = url
+    })
     pane.img = img
     pane.scale = 1
     pane.offsetX = 0
     pane.offsetY = 0
+    loadError.value = ''
+    emit('loadError', '')
     paint(pane, canvas)
+  } catch {
+    pane.img = null
+    paint(pane, canvas)
+    reportLoadError(t('pacs.previewError'))
   }
-  img.src = url
 }
 
 function paint(pane: Pane, canvas: HTMLCanvasElement | null) {
@@ -210,6 +233,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="rootEl" class="dicom-viewer" data-testid="dicom-viewer">
+    <p
+      v-if="loadError"
+      class="pro-inline-feedback pro-inline-feedback--error"
+      role="alert"
+      data-testid="dicom-preview-error"
+    >
+      {{ loadError }}
+    </p>
     <div class="dicom-viewer__toolbar" role="toolbar">
       <button
         v-for="tb in (['pan','zoom','wl','measure','arrow'] as Tool[])"
