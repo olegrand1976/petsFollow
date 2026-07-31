@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV-memo",
     "commercialBrochure": "Praktijkfolder",
     "adminRuntimeFlags": "Runtime flags",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendium PDF"
   },
   "auth": {
@@ -357,6 +358,18 @@
       "saved": "Duur opgeslagen.",
       "save": "Duur opslaan"
     },
+    "deskIdle": {
+      "title": "Gedeelde werkplek vergrendelen",
+      "subtitle": "Inactiviteitsduur vóór automatisch vergrendelen (team ≥ 2).",
+      "label": "Vergrendelvertraging",
+      "hint": "Geldt voor alle werkstations van de praktijk. Standaard: 2 minuten.",
+      "minutes1": "1 minuut",
+      "minutes2": "2 minuten",
+      "minutes5": "5 minuten",
+      "minutes10": "10 minuten",
+      "minutes15": "15 minuten",
+      "minutes30": "30 minuten"
+    },
     "notifications": {
       "title": "E-mailmeldingen",
       "subtitle": "Kies bij welke gebeurtenissen u een e-mail ontvangt.",
@@ -582,6 +595,7 @@
         "vitals": "HF & gewicht",
         "care": "Zorg & afspraken",
         "documents": "Documenten",
+        "imaging": "Beeldvorming",
         "sharing": "Delen"
       },
       "kpi": {
@@ -1758,7 +1772,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Extractie {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1790,7 +1804,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Extractie opnieuw starten",
+      "previewHint": "Geldige rijen blijven in afwachting tot menselijke controle (bevestigen of CNK/naam corrigeren).",
+      "confirmReady": "{count} wachtende rij(en) bevestigen",
+      "confirmRow": "Bevestigen"
     }
   },
   "commissions": {
@@ -2180,6 +2198,8 @@
       "notificationsEmptyDescription": "Klantgesprekken verschijnen hier.",
       "markAllRead": "Alles als gelezen markeren",
       "profileMenu": "Profielmenu",
+      "openNav": "Menu openen",
+      "closeNav": "Menu sluiten",
       "settings": "Instellingen",
       "themeDark": "Donkere modus inschakelen",
       "themeLight": "Lichte modus inschakelen",
@@ -2274,6 +2294,8 @@
     "invalid_json": "Ongeldige JSON",
     "fields_required": "Alle velden zijn verplicht",
     "password_too_short": "Wachtwoord te kort (minimaal 8 tekens)",
+    "contact_phone_required": "Telefoonnummer vereist",
+    "contact_phone_too_long": "Telefoonnummer te lang",
     "image_too_large": "Bestand te groot (limiet overschreden)",
     "invalid_image_type": "Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Bestand vereist",
@@ -2284,6 +2306,7 @@
     "profile_fields_required": "Verplichte velden ontbreken",
     "invalid_plan": "Ongeldig abonnement",
     "invalid_iban": "Ongeldig IBAN",
+    "invalid_desk_idle_minutes": "Ongeldige vergrendelvertraging (1, 2, 5, 10, 15 of 30 min)",
     "invalid_locale": "Niet-ondersteunde taal",
     "invalid_bic": "Ongeldige BIC (8 of 11 tekens)",
     "invalid_account_holder": "Ongeldige rekeninghouder",
@@ -3647,5 +3670,95 @@
     "medSearch": "Zoeken (CNK / naam)",
     "dispenseDaf": "Afleveren in praktijk (DAF)",
     "dispenseDafHint": "Maakt een DAF-klad (CNK-catalogus). Vul AMM-nummers in en finaliseer in de wizard."
+  },
+  "pacs": {
+    "title": "PACS-beeldvorming",
+    "wake": "PACS activeren",
+    "refresh": "Vernieuwen",
+    "upload": "DICOM importeren",
+    "compare": "Vergelijken",
+    "offlineHint": "De beeldvormingsdienst is uitgeschakeld. Activeer hem om röntgenbeelden te bekijken of te importeren.",
+    "emptyTitle": "Geen studies",
+    "emptyDescription": "Importeer een .dcm-bestand om te beginnen.",
+    "previewError": "Kan de beeldvoorvertoning niet laden. Probeer opnieuw of activeer de PACS.",
+    "orthancError": "Orthanc-fout (502). Probeer een andere studie (bv. RX) of upload opnieuw een DICOM-bestand — sommige geïndexeerde beelden kunnen onbeschikbaar zijn.",
+    "viewerWaiting": "Viewer wacht — studie gaf geen instance (probeer een andere studie).",
+    "leftSeries": "Linker instantie",
+    "rightSeries": "Rechter instantie",
+    "state": {
+      "offline": "Offline",
+      "starting": "Opstarten…",
+      "ready": "Klaar"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contrast",
+      "measure": "Meten",
+      "arrow": "Pijl",
+      "fullscreen": "Volledig scherm",
+      "exitFullscreen": "Volledig scherm verlaten",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "DICOM downloaden",
+      "measureCalibrated": "Gecalibreerd (mm)",
+      "measureUncalibrated": "Niet gecalibreerd (px)",
+      "measureHintPx": "Geen betrouwbare calibratie — meting in beeldpixels",
+      "measureHintResized": "Orthanc-preview herschaald vs DICOM — alleen px (Cornerstone voor mm)"
+    },
+    "admin": {
+      "title": "PACS — toezicht",
+      "subtitle": "Orthanc-status, dierenarts-playground en wake-/gezondheidslogs",
+      "metricsTitle": "Statistieken",
+      "playgroundTitle": "Beeldvorming playground",
+      "playgroundHint": "Zelfde UI als de dierfiche (dierenarts). Standaard client.demo seed — client fetch-traces hieronder.",
+      "petSelect": "Dier",
+      "petPlaceholder": "Kies een dier…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Plak een petId…",
+      "applyPet": "Openen",
+      "noPetSelected": "Selecteer of plak een dier om de DICOM-viewer te laden.",
+      "viewerLoading": "Viewer laden…",
+      "reloadPets": "Dieren herladen",
+      "debugTitle": "Client-debug (fetch)",
+      "debugClear": "Wissen",
+      "debugEmpty": "Nog geen calls — open een studie of wek de PACS",
+      "debugColOk": "Status",
+      "debugColMethod": "Methode",
+      "debugColUrl": "URL",
+      "debugColMs": "ms",
+      "logsTitle": "Recente serverlogs",
+      "latency": "Latentie",
+      "state": "Status",
+      "redis": "Redis",
+      "orthancUrl": "Geconfigureerde Orthanc-URL",
+      "refresh": "Vernieuwen",
+      "emptyLogs": "Nog geen logs",
+      "colAt": "Tijdstempel",
+      "colLevel": "Niveau",
+      "colEvent": "Gebeurtenis",
+      "colMessage": "Bericht"
+    },
+    "launch": {
+      "title": "PACS-lancering",
+      "subtitle": "Orthanc start op — beeldacties blijven vergrendeld tot alles klaar is.",
+      "waking": "Opstarten…",
+      "actionsLocked": "Upload, vergelijken en weergave blijven vergrendeld tot Klaar.",
+      "steps": {
+        "check": "Preflight — servicestatus",
+        "ignite": "Ontsteking — weksignaal",
+        "liftoff": "Lift-off — Orthanc cold start",
+        "orbit": "Baan — beveiligde verbinding",
+        "ready": "Klaar — beeldvorming beschikbaar"
+      },
+      "notReady": "PACS is niet klaar. Probeer opnieuw te wekken of wacht tot het opstarten klaar is."
+    },
+    "leftInstance": "Linker instantie",
+    "rightInstance": "Rechter instantie",
+    "seriesPicker": "Serie",
+    "seriesOption": "Serie {n} · {id}",
+    "downloadError": "DICOM-download mislukt.",
+    "instanceUnavailable": "DICOM-bestand ontbreekt op de beeldserver. Upload opnieuw of kies een andere studie."
   }
 }

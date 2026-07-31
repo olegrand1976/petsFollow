@@ -98,7 +98,7 @@ const navItems = computed<ProNavItem[]>(() => {
   }
 
   if (prescriptionsOn && canPractice('pets.read')) {
-    items.push({ to: '/ordonnances', label: t('nav.prescriptions'), icon: 'clinical_notes', tag: tagDev, section: clinic })
+    items.push({ to: '/prescriptions', label: t('nav.prescriptions'), icon: 'clinical_notes', tag: tagDev, section: clinic })
   }
   if (pharmacyOn && canPractice('pharmacy.read')) {
     items.push(

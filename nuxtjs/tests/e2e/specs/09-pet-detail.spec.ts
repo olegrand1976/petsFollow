@@ -207,6 +207,42 @@ test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }
   await expect(petSelect).toHaveValue(petId)
 })
 
+test('pet detail — panneau dispenses DAF (C7.17)', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+
+  await page.route(`**/api/pets/${petId}/daf-dispenses**`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          items: [{
+            dafId: 'daf-dispense-mock',
+            displayNumber: 'DAF-E2E-1',
+            finalizedAt: new Date().toISOString(),
+            items: [{ medicationName: 'Vaccin Rage', qty: 1, lotNumber: 'LOT-1', ammNumber: 'BE-DEMO-RAGE-1' }],
+          }],
+        },
+      }),
+    })
+  })
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}`, { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
+  await dismissProModals(page)
+
+  const panel = page.getByTestId('pet-daf-dispenses')
+  if ((await panel.count()) === 0) {
+    test.skip(true, 'pharmacy off ou pharmacy.read absent')
+  }
+  await expect(panel).toBeVisible({ timeout: 10000 })
+  await expect(panel.getByText('DAF-E2E-1')).toBeVisible({ timeout: 10000 })
+  await expect(panel.getByText(/Vaccin Rage/)).toBeVisible()
+  await page.unroute(`**/api/pets/${petId}/daf-dispenses**`)
+})
+
 test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()

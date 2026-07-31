@@ -78,18 +78,18 @@ test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0
     await expect(page.getByTestId('nav-clients')).toBeVisible({ timeout: 10000 })
   })
 
-  test('B3: secretary — /ordonnances/nouveau redirect (no write_clinical)', async ({ page }) => {
+  test('B3: secretary — /prescriptions/nouveau redirect (no write_clinical)', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
-    await page.goto('/ordonnances/nouveau', { waitUntil: 'domcontentloaded' })
-    await page.waitForURL((url) => !url.pathname.includes('/ordonnances/nouveau'), { timeout: 15000 })
+    await page.goto('/prescriptions/nouveau', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL((url) => !url.pathname.includes('/prescriptions/nouveau'), { timeout: 15000 })
     await expect(page).toHaveURL(/dashboard/, { timeout: 10000 })
   })
 
-  test('B4: secretary — pas de CTA nouveau ordonnances', async ({ page }) => {
+  test('B4: secretary — pas de CTA nouveau prescriptions', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
-    await page.goto('/ordonnances', { waitUntil: 'networkidle' })
-    await expect(page.getByTestId('ordonnances-page')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('ordonnances-new')).toHaveCount(0)
+    await page.goto('/prescriptions', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('prescriptions-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('prescriptions-new')).toHaveCount(0)
   })
 
   test('B5: secretary — pas de CTA consultation (no write_clinical)', async ({ page }) => {

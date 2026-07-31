@@ -22,27 +22,23 @@ async function dismissProModals(page: Page) {
   }
 }
 
-/** Cloud Run viewport: open history <details> overlays CR tabs — close before tab clicks. */
+/** Toggle history <details> via property — click is flaky under treatments overlay on Cloud Run. */
 async function setVisitReportHistoryOpen(page: Page, open: boolean) {
   const history = page.getByTestId('visit-report-history')
-  const isOpen = await history.evaluate((el) => (el as HTMLDetailsElement).open)
-  if (isOpen !== open) {
-    await history.locator('summary').click()
-  }
+  await history.scrollIntoViewIfNeeded().catch(() => undefined)
+  await history.evaluate((el, wantOpen) => {
+    ;(el as HTMLDetailsElement).open = wantOpen
+  }, open)
   await expect
     .poll(async () => history.evaluate((el) => (el as HTMLDetailsElement).open), { timeout: 5000 })
     .toBe(open)
 }
 
-/** After improve, preferPreviewTick switches to preview — body textarea is unmounted. */
+/** Rich editor keeps a hidden markdown mirror (visit-report-body) for fill/toHaveValue. */
 async function ensureVisitReportEditMode(page: Page) {
   await setVisitReportHistoryOpen(page, false)
-  const body = page.getByTestId('visit-report-body')
-  if (await body.count() > 0 && await body.isVisible()) return
-  const editTab = page.getByTestId('visit-report-edit-tab')
-  await expect(editTab).toBeVisible({ timeout: 10000 })
-  await editTab.click()
-  await expect(body).toBeVisible({ timeout: 10000 })
+  await expect(page.getByTestId('visit-report-editor')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByTestId('visit-report-body')).toBeAttached({ timeout: 10000 })
 }
 
 async function openConsultationReport(page: Page) {
@@ -170,15 +166,12 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await page.getByTestId('visit-report-restore-v0').click()
     await expect(transcript).toHaveValue(persistedTranscript)
 
-    // Preview must not execute script from corpus if shown
-    if (await page.getByTestId('visit-report-edit-tab').isVisible()) {
-      await setVisitReportHistoryOpen(page, false)
-      await page.getByTestId('visit-report-preview-tab').click()
-      const preview = page.getByTestId('visit-report-preview')
-      await expect(preview).toBeVisible()
-      const html = await preview.innerHTML()
-      expect(html.toLowerCase()).not.toContain('<script')
-    }
+    // Rich prose must not keep raw <script> from hostile corpus
+    await setVisitReportHistoryOpen(page, false)
+    const prose = page.getByTestId('visit-report-prose')
+    await expect(prose).toBeVisible()
+    const html = await prose.innerHTML()
+    expect(html.toLowerCase()).not.toContain('<script')
 
     await page.getByTestId('consultation-cta-done').click()
     await expect(page.getByTestId('consultation-modal')).toHaveCount(0, { timeout: 10000 })
@@ -201,9 +194,14 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await body.fill(bodyBefore)
 
     let improveSource = ''
+    let improveLocale = ''
     await page.route('**/api/visits/*/report-improve', async (route) => {
-      const payload = route.request().postDataJSON() as { sourceText?: string } | null
+      const payload = route.request().postDataJSON() as {
+        sourceText?: string
+        targetLocale?: string
+      } | null
       improveSource = String(payload?.sourceText || '')
+      improveLocale = String(payload?.targetLocale || '')
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -215,13 +213,20 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
             bodyText: improved,
             transcriptText: notes,
             improvedText: improved,
+            isReference: false,
           },
         }),
       })
     })
 
+    await expect(page.getByTestId('visit-report-target-locale')).toHaveValue('auto')
+    await page.getByTestId('visit-report-howto').locator('summary').click()
+    await expect(page.getByTestId('visit-report-howto-image')).toBeVisible()
+
     await page.getByTestId('visit-report-improve').click()
     await expect.poll(() => improveSource, { timeout: 20000 }).toContain(notes)
+    await expect.poll(() => improveLocale, { timeout: 5000 }).toBe('auto')
+    await expect(page.getByTestId('visit-report-quality')).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId('visit-report-msg')).toBeVisible({ timeout: 15000 })
 
     // Improve switches markdown editor to preview — reopen history only for restore CTAs.
@@ -252,6 +257,28 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
             bodyText: improved,
             transcriptText: notes,
             improvedText: improved,
+            isReference: false,
+          },
+        }),
+      })
+    })
+
+    let referencePatched: boolean | null = null
+    await page.route('**/api/visits/*/report-reference', async (route) => {
+      const payload = route.request().postDataJSON() as { isReference?: boolean } | null
+      referencePatched = payload?.isReference === true
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'e2e-mock-report',
+            visitId,
+            status: 'final',
+            bodyText: improved,
+            transcriptText: notes,
+            improvedText: improved,
+            isReference: true,
           },
         }),
       })
@@ -264,7 +291,13 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('visit-report-improve')).toHaveCount(0)
     await expect(page.getByTestId('visit-report-dictate')).toHaveCount(0)
 
+    await expect(page.getByTestId('visit-report-reference')).toBeVisible({ timeout: 10000 })
+    await page.getByTestId('visit-report-reference-check').check()
+    await expect.poll(() => referencePatched, { timeout: 10000 }).toBe(true)
+    await expect(page.getByTestId('visit-report-reference-check')).toBeChecked()
+
     await page.unroute('**/api/visits/*/report-improve')
     await page.unroute('**/api/visits/*/report-finalize')
+    await page.unroute('**/api/visits/*/report-reference')
   })
 })

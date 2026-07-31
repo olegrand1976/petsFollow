@@ -77,6 +77,7 @@
     "commercialAsvMemo": "Memo ASV",
     "commercialBrochure": "Folleto clínica",
     "adminRuntimeFlags": "Flags runtime",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendio PDF"
   },
   "auth": {
@@ -357,6 +358,18 @@
       "saved": "Duraciones guardadas.",
       "save": "Guardar duraciones"
     },
+    "deskIdle": {
+      "title": "Bloqueo del puesto compartido",
+      "subtitle": "Retraso de inactividad antes del bloqueo automático (equipo ≥ 2).",
+      "label": "Retraso de bloqueo",
+      "hint": "Se aplica a todos los puestos de la clínica. Predeterminado: 2 minutos.",
+      "minutes1": "1 minuto",
+      "minutes2": "2 minutos",
+      "minutes5": "5 minutos",
+      "minutes10": "10 minutos",
+      "minutes15": "15 minutos",
+      "minutes30": "30 minutos"
+    },
     "notifications": {
       "title": "Notificaciones por correo",
       "subtitle": "Elija qué eventos desencadenan un correo.",
@@ -533,6 +546,7 @@
         "vitals": "FC y peso",
         "care": "Cuidados y citas",
         "documents": "Documentos",
+        "imaging": "Imagen",
         "sharing": "Compartir"
       },
       "kpi": {
@@ -1727,7 +1741,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Extracción {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1759,7 +1773,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Reintentar extracción",
+      "previewHint": "Las filas válidas quedan pendientes hasta el control humano (confirmar o corregir CNK/nombre).",
+      "confirmReady": "Confirmar {count} fila(s) pendiente(s)",
+      "confirmRow": "Confirmar"
     }
   },
   "commissions": {
@@ -2149,6 +2167,8 @@
       "notificationsEmptyDescription": "Las conversaciones con clientes aparecerán aquí.",
       "markAllRead": "Marcar todo como leído",
       "profileMenu": "Menú de perfil",
+      "openNav": "Abrir menú",
+      "closeNav": "Cerrar menú",
       "settings": "Ajustes",
       "themeDark": "Activar modo oscuro",
       "themeLight": "Activar modo claro",
@@ -2243,6 +2263,8 @@
     "invalid_json": "JSON no válido",
     "fields_required": "Todos los campos son obligatorios",
     "password_too_short": "Contraseña demasiado corta (mínimo 8 caracteres)",
+    "contact_phone_required": "Número de teléfono obligatorio",
+    "contact_phone_too_long": "Número de teléfono demasiado largo",
     "image_too_large": "Archivo demasiado grande (límite superado)",
     "invalid_image_type": "Formato no admitido (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Archivo obligatorio",
@@ -2253,6 +2275,7 @@
     "profile_fields_required": "Faltan campos obligatorios",
     "invalid_plan": "Plan no válido",
     "invalid_iban": "IBAN no válido",
+    "invalid_desk_idle_minutes": "Retraso de bloqueo no válido (1, 2, 5, 10, 15 o 30 min)",
     "invalid_locale": "Idioma no admitido",
     "invalid_bic": "BIC no válido (8 u 11 caracteres)",
     "invalid_account_holder": "Titular de la cuenta no válido",
@@ -3616,5 +3639,95 @@
     "medSearch": "Buscar (CNK / nombre)",
     "dispenseDaf": "Dispensar en clínica (DAF)",
     "dispenseDafHint": "Crea un borrador DAF (catálogo CNK). Complete los n.º AMM y finalice en el asistente."
+  },
+  "pacs": {
+    "title": "Imagen PACS",
+    "wake": "Activar PACS",
+    "refresh": "Actualizar",
+    "upload": "Importar DICOM",
+    "compare": "Comparar",
+    "offlineHint": "El servicio de imagen está apagado. Actívelo para consultar o importar radiografías.",
+    "emptyTitle": "Ningún estudio",
+    "emptyDescription": "Importe un archivo .dcm para empezar.",
+    "previewError": "No se pudo cargar la vista previa. Reintente o active el PACS.",
+    "orthancError": "Error Orthanc (502). Pruebe otro estudio (p. ej. RX) o reimporte un archivo DICOM: algunas imágenes indexadas pueden no estar disponibles.",
+    "viewerWaiting": "Visor en espera — el estudio no dio instancia (pruebe otro estudio).",
+    "leftSeries": "Instancia izquierda",
+    "rightSeries": "Instancia derecha",
+    "state": {
+      "offline": "Fuera de línea",
+      "starting": "Iniciando…",
+      "ready": "Listo"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contraste",
+      "measure": "Medir",
+      "arrow": "Flecha",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Descargar DICOM",
+      "measureCalibrated": "Calibrado (mm)",
+      "measureUncalibrated": "Sin calibrar (px)",
+      "measureHintPx": "Sin calibración fiable — medida en píxeles de imagen",
+      "measureHintResized": "Vista previa Orthanc redimensionada vs DICOM — solo px (Cornerstone para mm)"
+    },
+    "admin": {
+      "title": "PACS — supervisión",
+      "subtitle": "Estado de Orthanc, playground vet y registros de activación / salud",
+      "metricsTitle": "Métricas",
+      "playgroundTitle": "Playground de imagen",
+      "playgroundHint": "Misma UI que la ficha del animal (vet). Por defecto pets seed client.demo — trazas fetch abajo.",
+      "petSelect": "Animal",
+      "petPlaceholder": "Elegir un animal…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Pegar un petId…",
+      "applyPet": "Abrir",
+      "noPetSelected": "Seleccione o pegue un animal para montar el visor DICOM.",
+      "viewerLoading": "Cargando el visor…",
+      "reloadPets": "Recargar animales",
+      "debugTitle": "Debug cliente (fetch)",
+      "debugClear": "Vaciar",
+      "debugEmpty": "Sin llamadas aún — abra un estudio o active el PACS",
+      "debugColOk": "Estado",
+      "debugColMethod": "Método",
+      "debugColUrl": "URL",
+      "debugColMs": "ms",
+      "logsTitle": "Registros de servidor recientes",
+      "latency": "Latencia",
+      "state": "Estado",
+      "redis": "Redis",
+      "orthancUrl": "URL Orthanc configurada",
+      "refresh": "Actualizar",
+      "emptyLogs": "Sin registros por ahora",
+      "colAt": "Marca de tiempo",
+      "colLevel": "Nivel",
+      "colEvent": "Evento",
+      "colMessage": "Mensaje"
+    },
+    "launch": {
+      "title": "Despegue del PACS",
+      "subtitle": "Orthanc arranca — las acciones de imagen permanecen bloqueadas hasta estar listo.",
+      "waking": "Despegando…",
+      "actionsLocked": "Importar, comparar y ver siguen bloqueados hasta Listo.",
+      "steps": {
+        "check": "Chequeo previo — estado del servicio",
+        "ignite": "Ignición — señal de despertar",
+        "liftoff": "Despegue — arranque en frío Orthanc",
+        "orbit": "Órbita — enlace seguro",
+        "ready": "Listo — imagen disponible"
+      },
+      "notReady": "El PACS no está listo. Reintente el arranque o espere a que termine."
+    },
+    "leftInstance": "Instancia izquierda",
+    "rightInstance": "Instancia derecha",
+    "seriesPicker": "Serie",
+    "seriesOption": "Serie {n} · {id}",
+    "downloadError": "No se pudo descargar el DICOM.",
+    "instanceUnavailable": "Falta el DICOM en el servidor. Vuelva a importar el estudio o elija otro."
   }
 }

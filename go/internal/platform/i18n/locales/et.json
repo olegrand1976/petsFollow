@@ -89,6 +89,7 @@
     "invalid_status": "Vigane olek",
     "invalid_duration": "Vigane kestus",
     "conflict": "Konflikt",
+    "pacs_study_other_pet": "See DICOM-uuring on juba seotud teise loomaga kabinetis",
     "slot_taken": "See ajavahemik on juba võetud",
     "on_vacation": "Kabinet on sel kuupäeval suletud",
     "invalid_proposed": "Vigane pakutud kuupäev või kellaaeg",
@@ -184,7 +185,10 @@
     "saas_master_not_configured": "Billiti master-konto pole seadistatud (BILLIT_MASTER_*)",
     "invalid_id": "Vigane identifikaator",
     "care_pro_visit_only": "Lubatud ainult välitööna loodud visiitidele (care pro)",
-    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga"
+    "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga",
+    "pacs_study_other_practice": "See DICOM-uuring on juba seotud teise kabinetiga",
+    "pacs_instance_unavailable": "DICOM-fail puudub pildiserveris (salvestus). Laadige uuring uuesti üles või avage teine.",
+    "pacs_error": "PACS error"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

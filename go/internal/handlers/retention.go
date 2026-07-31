@@ -130,6 +130,7 @@ func (a *API) purgeClientAccount(ctx context.Context, userID string) error {
 		}
 	}
 	a.purgeMediaObjects(ctx, keys)
+	a.purgeOrthancStudies(ctx, artifacts.OrthancStudyIDs)
 	return nil
 }
 
@@ -151,5 +152,22 @@ func (a *API) anonymizeProAccount(ctx context.Context, userID string) error {
 		}
 	}
 	a.purgeMediaObjects(ctx, keys)
+	a.purgeOrthancStudies(ctx, artifacts.OrthancStudyIDs)
 	return nil
+}
+
+func (a *API) purgeOrthancStudies(ctx context.Context, studyIDs []string) {
+	if len(studyIDs) == 0 {
+		return
+	}
+	// Purge PHI Orthanc even when the produit flag is off (UI gated separately).
+	client := a.orthanc()
+	if client == nil {
+		return
+	}
+	for _, id := range studyIDs {
+		if err := client.deleteStudy(ctx, id); err != nil {
+			fmt.Printf("retention purge: orthanc study %s: %v\n", id, err)
+		}
+	}
 }

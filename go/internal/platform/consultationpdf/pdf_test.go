@@ -1,11 +1,18 @@
 package consultationpdf
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestEmbeddedEmblemIsPNG(t *testing.T) {
+	if len(emblemPNG) < 8 || !bytes.Equal(emblemPNG[:8], []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}) {
+		t.Fatalf("embedded emblem must be a real PNG (gofpdf rejects JPEG-as-.png), len=%d magic=%x", len(emblemPNG), emblemPNG[:min(8, len(emblemPNG))])
+	}
+}
 
 func TestBuildPDFProducesMagic(t *testing.T) {
 	b, err := BuildPDF(PDFInput{

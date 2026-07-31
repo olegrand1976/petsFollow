@@ -422,11 +422,11 @@ Colonnes minimales attendues (mapping configurable) :
 Complément du CSV `import-cnk` : UI admin `/admin/compendium-imports`.
 
 1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages).
-2. Extraction asynchrone Gemini (`GenerateJSONWithMedia`, lots de 2 pages) → staging `pharmacy.compendium_import_*`.
-3. Contrôle humain (édition CNK/nom, exclude) avec compteurs `%` extraction + contrôle.
+2. **Un** appel Gemini (`GenerateJSONWithMedia`, PDF entier + instruction de plage) → staging `pharmacy.compendium_import_*` (lignes valides en `pending`).
+3. Contrôle humain : corriger CNK/nom, **Valider** / bulk `confirm-ready`, exclude — KPI contrôle = lignes human-reviewed (`ready|excluded|upserted`).
 4. Commit → upsert `pharmacy.ref_medications` (`afmps_meta.source=compendium-pdf`).
 
-Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store. Lignes sans CNK → statut `error` (pas d’upsert).
+Prérequis : `PHARMACY_ENABLED` (nav admin gated), `GEMINI_API_KEY`, media store. Lignes sans CNK → statut `error` (pas d’upsert). Re-extract autorisé si job bloqué en `extracting`. Erreurs client = codes stables (`extract_failed`, …) ; détail logué côté API.
 
 ---
 

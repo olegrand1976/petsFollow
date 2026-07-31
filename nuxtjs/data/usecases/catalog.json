@@ -255,7 +255,7 @@
         "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).",
         "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
         "CR accessible immédiatement.",
-        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module ordonnances /prescriptions).",
+        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module prescriptions).",
         "Traitements CNK en consult → brouillon DAF visit_id ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.",
         "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).",
         "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
@@ -802,7 +802,7 @@
         "Vérifier que l’on arrive sur le dernier écran connu de ce compte (ou l’accueil si première fois).",
         "Naviguer vers Agenda en secrétaire.",
         "Rebasculer vers vet.demo (mot de passe) → vérifier le retour vers l’écran précédent du véto si possible.",
-        "Laisser le poste inactif 2 minutes (ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
+        "Laisser le poste inactif selon le délai de veille du cabinet (défaut 2 minutes, réglable par le véto de référence dans Paramètres — ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
         "Déverrouiller avec un compte équipe + mot de passe."
       ],
       "expected": [
@@ -818,7 +818,7 @@
         "Switch avec mot de passe",
         "Annuler switch → veille (re-auth)",
         "Restauration dernier écran",
-        "Veille 2 min + déverrouillage (équipe ≥2)",
+        "Veille idle (défaut 2 min, configurable) + déverrouillage (équipe ≥2)",
         "Solo : pas de veille idle"
       ]
     },

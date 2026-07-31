@@ -11,6 +11,7 @@
         :autocomplete="autocomplete"
         :required="required"
         :disabled="disabled"
+        :maxlength="maxlength"
         class="pro-input"
         :class="{ 'pro-input--error': !!error }"
         :data-testid="testId"
@@ -44,6 +45,7 @@ const props = withDefaults(
     autocomplete?: string
     required?: boolean
     disabled?: boolean
+    maxlength?: number | string
     error?: string
     testId?: string
     /** Affiche un bouton œil pour basculer type password ↔ text. */

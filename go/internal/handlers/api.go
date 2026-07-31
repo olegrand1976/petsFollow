@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
@@ -24,6 +23,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/redisx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
@@ -48,6 +48,10 @@ type API struct {
 	billitWebhookRL     *httpx.RateLimiter
 	pharmacyOrderSendRL *httpx.RateLimiter
 	authPulse           *authPulse
+	redis               *redisx.Client
+	orthancClient       *orthancClient
+	// failNextPetStudyInsert — armed only via TestArmFailNextPetStudyInsert (integration tests).
+	failNextPetStudyInsert bool
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -154,6 +158,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPharmacyDAFRoutes(pr)
 		a.registerPharmacyProtocolRoutes(pr)
 		a.registerPrescriptionRoutes(pr)
+		a.registerPacsRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)
@@ -259,6 +264,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
 		pr.Post("/visits/{visitID}/report/improve", a.improveVisitReport)
 		pr.Post("/visits/{visitID}/report/transcribe", a.transcribeVisitReport)
+		pr.Patch("/visits/{visitID}/report/reference", a.patchVisitReportReference)
 		pr.Get("/messaging/threads", a.listThreads)
 		pr.Post("/messaging/threads", a.ensureThread)
 		pr.Post("/messaging/threads/read-all", a.markAllThreadsRead)
@@ -399,45 +405,6 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, client)
 }
 
-type patchClientReq struct {
-	ContactPhone *string `json:"contactPhone"`
-}
-
-func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.requirePracticePerm(w, r, "clients.write")
-	if !ok {
-		return
-	}
-	var req patchClientReq
-	if err := httpx.DecodeJSON(r, &req); err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
-		return
-	}
-	if req.ContactPhone == nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
-		return
-	}
-	phone := strings.TrimSpace(*req.ContactPhone)
-	if utf8.RuneCountInString(phone) > 40 {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
-		return
-	}
-	clientID := chi.URLParam(r, "clientID")
-	if err := a.store.UpdateClientContactPhoneByPractice(r.Context(), id.PracticeID, clientID, phone); err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
-			return
-		}
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, clientID)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	httpx.WriteData(w, http.StatusOK, client)
-}
 
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
@@ -1679,6 +1646,7 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var durationsProbe struct {
 		HeartRateDurationsSec *[]int `json:"heartrateDurationsSec"`
+		DeskIdleMinutes       *int   `json:"deskIdleMinutes"`
 	}
 	if err := json.Unmarshal(raw, &durationsProbe); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -1721,8 +1689,17 @@ func (a *API) updateVetProfile(w http.ResponseWriter, r *http.Request) {
 		normalized := kernel.NormalizeHeartRateDurations(*durationsProbe.HeartRateDurationsSec)
 		durationsUpdate = &normalized
 	}
+	var deskIdleUpdate *int
+	if durationsProbe.DeskIdleMinutes != nil {
+		if !kernel.IsAllowedDeskIdleMinutes(*durationsProbe.DeskIdleMinutes) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_desk_idle_minutes")
+			return
+		}
+		v := *durationsProbe.DeskIdleMinutes
+		deskIdleUpdate = &v
+	}
 	markComplete := r.URL.Query().Get("complete") == "true"
-	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate); err != nil {
+	if err := a.store.UpdatePracticeProfile(r.Context(), id.PracticeID, id.UserID, req, markComplete, durationsUpdate, deskIdleUpdate); err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}

@@ -98,6 +98,14 @@ type Config struct {
 	VamregAfmpsAPIKey  string
 	// PrescriptionsEnabled enables veterinary prescription drafts + PDF preview — default off.
 	PrescriptionsEnabled bool
+	// PacsEnabled enables Orthanc PACS orchestration (status/wake/viewer proxy) — default off.
+	PacsEnabled bool
+	// PacsOrthancURL is the Orthanc Cloud Run / local base URL (no trailing slash).
+	PacsOrthancURL string
+	PacsOrthancUser     string
+	PacsOrthancPassword string
+	// PacsOrthancUseIDToken sends a Google identity token (Cloud Run IAM invoker).
+	PacsOrthancUseIDToken bool
 
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
@@ -197,6 +205,11 @@ func Load() Config {
 		VamregAfmpsBaseURL:      envOr("VAMREG_AFMPS_BASE_URL", ""),
 		VamregAfmpsAPIKey:       envOr("VAMREG_AFMPS_API_KEY", ""),
 		PrescriptionsEnabled:    envBool("PRESCRIPTIONS_ENABLED"),
+		PacsEnabled:             envBool("PACS_ENABLED"),
+		PacsOrthancURL:          envOr("PACS_ORTHANC_URL", ""),
+		PacsOrthancUser:         envOr("PACS_ORTHANC_USER", "petsfollow"),
+		PacsOrthancPassword:     envOr("PACS_ORTHANC_PASSWORD", ""),
+		PacsOrthancUseIDToken:   envBool("PACS_ORTHANC_USE_ID_TOKEN"),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
 		BillitEnabled:              envBool("BILLIT_ENABLED"),

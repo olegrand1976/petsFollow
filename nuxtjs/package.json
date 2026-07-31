@@ -10,14 +10,22 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@cornerstonejs/core": "^5.6.12",
+    "@cornerstonejs/dicom-image-loader": "^5.6.12",
+    "@cornerstonejs/tools": "^5.6.12",
     "@nuxtjs/i18n": "^9.5.6",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
+    "@tiptap/vue-3": "^3.29.2",
     "isomorphic-dompurify": "^3.19.0",
     "marked": "^18.0.7",
     "nuxt": "^3.15.0",
-    "pinia": "^2.3.0"
+    "pinia": "^2.3.0",
+    "turndown": "^7.2.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
+    "@types/turndown": "^5.0.6",
     "@vue/test-utils": "^2.4.6",
     "vitest": "^2.1.8"
   }

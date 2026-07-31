@@ -167,10 +167,10 @@ Compte : `vet.demo@petsfollow.test`
 |----|-----|-----|--------|---------|
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
-| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save`) |
+| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save` — **manuel** ; auto = Go `TestClientContactPhone*`) |
 | C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline | Données seed visibles |
 | C2.5 | P1 | Liste pets | `/pets` | Animaux transverses cabinet |
-| C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet (`TestClientContactPhone*`) |
+| C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
 | C2.9 | P1 | Link-requests | `/clients?invitations=1` accepter/refuser | Statut mis à jour ; client lié |
@@ -183,7 +183,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.16 | P1 | CTA post-CR DAF / facture | Après save CR → CTA | `/daf/nouveau?visitId=` · finalize inline · `/invoicing?visitId=&mode=direct|fromDaf` + contextes ; badge draft DAF oublié `/consultations` |
 | C2.17 | P1 | Historique consultations | `/consultations` liste walk-in date DESC + filtres + **soft-delete** | Client + animal + date ; lien Écouter si `hasAudio` (draft) + **durée `audioDurationSec`** ; ouvrir CR ; supprimer → hors liste (`deleted_at`) ; player modal affiche durée persistée |
 | C2.18 | P1 | Reprise consultation après veille | Desk lock/switch mid-consultation | Autosave CR avant purge JWT ; reprise modal pour **le même** email ; pas de fuite vers un autre profil |
-| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body` + TipTap `visit-report-prose`) ; select langue `visit-report-target-locale` (défaut auto = langue transcription) ; Améliorer disabled si notes **et** CR vides ; footer Annuler / Enregistrer / Finaliser ; Aide rétractable + image process ; feedback qualité post-IA ; référence si final |
+| C2.19 | P1 | CR split notes / CR | Modal ou calendrier → panel CR | Panes gauche (`visit-report-transcript`) / droite (`visit-report-body` + TipTap `visit-report-prose`) ; select langue `visit-report-target-locale` (défaut auto = langue transcription) ; Améliorer disabled si notes **et** CR vides ; footer Annuler / Enregistrer / Finaliser ; Aide rétractable + image process ; feedback qualité post-IA ; référence si final (`visit-report-reference` — Go + `03e`) |
 | C2.20 | P1 | CR transcription → versions | hint-transcribe / edit notes → improve → restore | v0 transcript · v1 IA · restore cible pane ; re-improve écrase v1 |
 | C2.21 | P1 | CR caractères / escape | PUT/GET + preview markdown | C0/NUL strip ; XSS preview sanitized ; guillemets/backslash round-trip |
 | C2.22 | P1 | CR boutons états | idle / dirty / dictating / final | Matrice enabled/disabled Dicter · Améliorer · Annuler · Enregistrer · Finaliser · Restore |
@@ -275,6 +275,7 @@ Comptes : `admin.demo@petsfollow.test` · DEV `dev.demo@petsfollow.test` (D17)
 | D9 | P1 | Commissions commercial | Idem commercial | `/admin/commercial-commissions` |
 | D10 | P2 | SPIFF mix bonuses | `/admin/commercial-bonuses` | Sync / mark-paid |
 | D11 | P2 | Import clients | `/admin/client-imports` upload CSV/XLS | Job + détail `[id]` |
+| D11b | P1 | Compendium PDF | Nav admin → `/admin/compendium-imports` (flag pharmacy) | Page liste + badge `dev` ; extract unique + pending→confirm→commit · e2e `21-compendium-admin` `@p1` `@pharmacy` · Go `TestCompendiumImportFlow` |
 | D12 | P2 | Training admin | `/admin/training` | UI analyse pitch (Gemini si clé) |
 | D13 | P2 | Isolation rôles | Véto tente `/admin` | Refus / redirect |
 | D14 | P1 | Support inbox | Topbar Support → ticket ; `/admin/support` liste (+ `q`) + détail + **réponse** | Ticket visible ; reply listée ; email soft-fail OK · e2e `14-support.spec.ts` `@p1` · Go search/export/anonymize |
@@ -475,7 +476,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.1 | P0 | Receipt lot + DLC | `POST /api/vet/pharmacy/batches` 201 ; lot non vide |
 | C7.2 | P0 | Finalize DAF | Sortie FEFO ; mouvements `reason=daf` + `dafId`/`dafItemId` |
 | C7.3 | P0 | Liste mouvements filtrée | `GET /api/vet/pharmacy/movements?dafId=` |
-| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` + panneau traitements | Upsert `PUT …/daf/for-visit` ; banner « depuis consultation » ; CTA libellé DAF (≠ ordonnances) ; finalize FEFO explicite **inline** (ProModal) ; protocoles 1 clic ; AMM catalogue ; rupture → réception express |
+| C7.4 | P1 | DAF depuis consultation | `/daf/nouveau?clientUserId&petId&visitId` + panneau traitements | Upsert `PUT …/daf/for-visit` ; banner « depuis consultation » ; CTA libellé DAF (≠ prescriptions) ; finalize FEFO explicite **inline** (ProModal) ; protocoles 1 clic ; AMM catalogue ; rupture → réception express |
 | C7.5 | P1 | Facture liée à la visite (API) | `POST …/documents` + `visitId` | `documents.visit_id` persisté ; mismatch → 400 |
 | C7.6 | P1 | VAMReg dry-run à finalize antibiotique | `TestPharmacyDAFVAMRegDryRun` | `vamregStatus=sent` ; lignes `job_audit` |
 | C7.7 | P1 | Prix + alerte réassort | `PUT …/prices` · `PUT …/reorder-thresholds` · `GET …/reorder-alerts` | Seuil &lt; stock → alerte |
@@ -487,17 +488,19 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | C7.13 | P1 | UI `/stock` + prix/BL/CSV e2e | `17-pharmacy-stock-daf.spec.ts` (@p1 @pharmacy) | Shell bands/receipt/inventory/dev-badge ; PUT/GET prices ; BL vide → `MANUAL-*` ; export CSV inventaire |
 | C7.14 | P1 | Lots wasted non ressuscités | `TestPharmacyStockReceiptAndWaste` | Receipt même clé après waste → `batch_wasted` |
 | C7.15 | P1 | Overlay withdrawal practice | `TestPharmacyFoodChainAndWithdrawal` | PATCH withdrawal n’altère pas `ref_medications` national |
-| C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject lignes panneau traitements |
-| C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h ; événement dossier client post-finalize |
+| C7.16 | P1 | Protocoles cliniques | `GET …/protocols` + seed VetPlus | `TestPharmacyClinicalProtocolsList` ; inject UI 1 clic `03b` (`consultation-treatments-protocols`) |
+| C7.17 | P1 | Dispenses pet + drafts oubliés | `GET …/pets/{id}/daf-dispenses` · `GET …/consultations/daf-drafts` | Timeline fiche animal ; badge `/consultations` + `/daf` si draft >1 h (`TestPharmacyDAFPetDispensesAndDrafts` stale>1h + e2e `03c` badge mock + `09` `pet-daf-dispenses`) ; événement dossier client post-finalize |
 
 **Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
+
+**PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` (wake inclus) sous `PACS_ENABLED` — Go `TestPacs*` (upload · preview/file via `ParentSeries` · isolation cross-cabinet · `UNIQUE(orthanc_study_id)` 409 · purge Orthanc rétention · admin wake 202 · frame OOR 404) · Vitest `pacsPoll` + `pacs-measure` (calibration mm) · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) + [`20c-pacs-ga-net.spec.ts`](../nuxtjs/tests/e2e/specs/20c-pacs-ga-net.spec.ts) (download + EOF) · doc [40](40-PACS.md) / [40-P2](40-PACS-P2.md). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
 | C8.1 | P1 | Créer draft | `POST /api/v1/vet/prescriptions` 201 ; `status=draft` |
 | C8.2 | P1 | Preview PDF | `GET …/prescriptions/{id}/pdf` → `%PDF` |
 | C8.3 | P1 | Flag off | `PRESCRIPTIONS_ENABLED=false` → 404 `prescriptions_disabled` |
-| C8.5 | P1 | Ordonnance → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
+| C8.5 | P1 | Prescription → DAF | `POST …/daf/from-prescription` | Lignes avec `ref_medication_id` → draft DAF ; sans lien catalogue → `daf_empty` |
 
 ---
 
@@ -543,7 +546,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | L4 | P1 | Révoquer | Statut revoked |
 | L5 | P2 | Non-référence | Invite refusé |
 | L6 | P0 | Labels ACL lisibles | Droits i18n + tooltips (pas de clés brutes `clients.read`) |
-| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle/force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
+| L7 | P0 | Switch poste + veille | Header avatars si équipe ≥2 ; idle (défaut 2 min, `deskIdleMinutes` cabinet — roster serveur prime sur localStorage ; Vitest `deskIdleMinutes.spec.ts`) / force lock → overlay MDP ; Annuler switch → veille (pas de restore) ; solo = pas d’idle ; restore lastPath |
 | L8 | P0 | `shares.read` vs manage | Secrétaire / assist : onglet partages visible, pas de create/revoke ; GET OK / POST 403 |
 | L9 | P1 | `pharmacy.*` vs clinique | Stock/DAF sur `pharmacy.write` ; override explicite indépendant ; override legacy seul `pets.write_clinical` miroite encore la pharma |
 
@@ -720,10 +723,10 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `01-auth` | Login / register / forgot-reset | `@p0` |
 | `02-locale` | Changement langue EN dans settings | |
 | `03-clients` | Recherche client | `@p0` |
-| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize | `@p0` |
-| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** | `@p1` |
+| `03b-consultation` | Nouvelle consultation : CR→Terminer · close sans save · CTA DAF/facture · traitements→FEFO→finalize · protocole 1 clic | `@p0` |
+| `03c-consultations-history` | Historique `/consultations` : liste walk-in + filtre + ouvrir CR + soft-delete + **durée audio / player** + badge draft DAF | `@p1` |
 | `03d-visit-report-ai-bff` | BFF CR IA : POST `/api/visits/:id/report-improve` (+ finalize, `me/ai-module/roi`) ≠ 404 Nitro | `@p1` |
-| `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons | `@p1` |
+| `03e-visit-report-versions` | CR split : panes · cancel dirty · restore versions · escape save/reload · boutons · toggle référence post-finalize | `@p1` |
 | `04-messaging` | Page messagerie + deep-link + PJ | `@p0` |
 | `05-onboarding` | Redirection véto profil incomplet | |
 | `06-admin` | Admin dashboard / users / commercials / filiation | `@p1` (filiation) |
@@ -739,6 +742,10 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `14-support` | Ticket support | `@p1` |
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 | `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |
+| `19-dev-support` | DEV ops léger users/support/flags | `@p0` |
+| `20-pacs-admin` | Admin PACS metrics/logs/playground + **wake clic** (flag on) | `@p0` |
+| `20b-pacs-imaging` | Fiche animal onglet Imagerie + upload (canvas défaut ; Cornerstone si `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone`) | `@p0` |
+| `20c-pacs-ga-net` | P2.3 : download `.dcm` (magic DICM) + preview frame OOR → 404 (+ clamp canvas) | `@p0` |
 
 Local :
 

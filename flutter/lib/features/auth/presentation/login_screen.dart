@@ -326,16 +326,8 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 48),
-        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
+        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 112)),
         const SizedBox(height: 24),
-        const Center(
-          child: PetsLogo(
-            variant: PetsLogoVariant.wordmark,
-            height: 36,
-            excludeSemantics: true,
-          ),
-        ),
-        const SizedBox(height: 8),
         Text(
           l10n.appTagline,
           textAlign: TextAlign.center,
@@ -430,7 +422,7 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 48),
-        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 72)),
+        const Center(child: PetsLogo(variant: PetsLogoVariant.emblem, height: 96)),
         const SizedBox(height: 24),
         Text(
           l10n.twoFaTitle,

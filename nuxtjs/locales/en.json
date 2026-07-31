@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV memo",
     "commercialBrochure": "Practice brochure",
     "adminRuntimeFlags": "Runtime flags",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendium PDF"
   },
   "auth": {
@@ -357,6 +358,18 @@
       "saved": "Durations saved.",
       "save": "Save durations"
     },
+    "deskIdle": {
+      "title": "Shared desk lock",
+      "subtitle": "Idle delay before automatic lock (team of 2+).",
+      "label": "Lock delay",
+      "hint": "Applies to every workstation in the practice. Default: 2 minutes.",
+      "minutes1": "1 minute",
+      "minutes2": "2 minutes",
+      "minutes5": "5 minutes",
+      "minutes10": "10 minutes",
+      "minutes15": "15 minutes",
+      "minutes30": "30 minutes"
+    },
     "notifications": {
       "title": "Email notifications",
       "subtitle": "Choose which events trigger an email.",
@@ -582,6 +595,7 @@
         "vitals": "HR & weight",
         "care": "Care & visits",
         "documents": "Documents",
+        "imaging": "Imaging",
         "sharing": "Sharing"
       },
       "kpi": {
@@ -1758,7 +1772,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Extraction {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1790,7 +1804,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Retry extraction",
+      "previewHint": "Valid rows stay pending until human control (confirm or fix CNK/name).",
+      "confirmReady": "Confirm {count} pending row(s)",
+      "confirmRow": "Confirm"
     }
   },
   "commissions": {
@@ -2180,6 +2198,8 @@
       "notificationsEmptyDescription": "Client conversations will appear here.",
       "markAllRead": "Mark all as read",
       "profileMenu": "Profile menu",
+      "openNav": "Open menu",
+      "closeNav": "Close menu",
       "settings": "Settings",
       "themeDark": "Enable dark mode",
       "themeLight": "Enable light mode",
@@ -2274,6 +2294,8 @@
     "invalid_json": "Invalid JSON",
     "fields_required": "All fields are required",
     "password_too_short": "Password too short (minimum 8 characters)",
+    "contact_phone_required": "Phone number required",
+    "contact_phone_too_long": "Phone number too long",
     "image_too_large": "File too large (limit exceeded)",
     "invalid_image_type": "Unsupported format (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "File required",
@@ -2284,6 +2306,7 @@
     "profile_fields_required": "Required fields missing",
     "invalid_plan": "Invalid plan",
     "invalid_iban": "Invalid IBAN",
+    "invalid_desk_idle_minutes": "Invalid lock delay (1, 2, 5, 10, 15 or 30 min)",
     "invalid_locale": "Unsupported language",
     "invalid_bic": "Invalid BIC (8 or 11 characters)",
     "invalid_account_holder": "Invalid account holder",
@@ -3647,5 +3670,95 @@
     "medSearch": "Search (CNK / name)",
     "dispenseDaf": "Dispense in clinic (DAF)",
     "dispenseDafHint": "Creates a DAF draft (CNK catalog). Fill AMM numbers then finalize in the wizard."
+  },
+  "pacs": {
+    "title": "PACS Imaging",
+    "wake": "Wake PACS",
+    "refresh": "Refresh",
+    "upload": "Import DICOM",
+    "compare": "Compare",
+    "offlineHint": "The imaging service is offline. Wake it to view or import radiographs.",
+    "emptyTitle": "No studies",
+    "emptyDescription": "Import a .dcm file to get started.",
+    "previewError": "Could not load the image preview. Retry or wake the PACS.",
+    "orthancError": "Orthanc error (502). Try another study (e.g. RX) or re-upload a DICOM file — some indexed images may be unavailable.",
+    "viewerWaiting": "Viewer waiting — study did not yield an instance (try another study).",
+    "leftSeries": "Left instance",
+    "rightSeries": "Right instance",
+    "state": {
+      "offline": "Offline",
+      "starting": "Starting…",
+      "ready": "Ready"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Window/Level",
+      "measure": "Measure",
+      "arrow": "Arrow",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Download DICOM",
+      "measureCalibrated": "Calibrated (mm)",
+      "measureUncalibrated": "Uncalibrated (px)",
+      "measureHintPx": "No reliable calibration — measuring in image pixels",
+      "measureHintResized": "Orthanc preview resized vs DICOM — px only (use Cornerstone for mm)"
+    },
+    "admin": {
+      "title": "PACS — monitoring",
+      "subtitle": "Orthanc status, vet playground and wake / health logs",
+      "metricsTitle": "Metrics",
+      "playgroundTitle": "Imaging playground",
+      "playgroundHint": "Same UI as the pet chart (vet). Defaults to client.demo seed pets — client fetch traces below.",
+      "petSelect": "Pet",
+      "petPlaceholder": "Select a pet…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Paste a petId…",
+      "applyPet": "Open",
+      "noPetSelected": "Select or paste a pet to mount the DICOM viewer.",
+      "viewerLoading": "Loading viewer…",
+      "reloadPets": "Reload pets",
+      "debugTitle": "Client debug (fetch)",
+      "debugClear": "Clear",
+      "debugEmpty": "No calls yet — open a study or wake PACS",
+      "debugColOk": "Status",
+      "debugColMethod": "Method",
+      "debugColUrl": "URL",
+      "debugColMs": "ms",
+      "logsTitle": "Recent server logs",
+      "latency": "Latency",
+      "state": "State",
+      "redis": "Redis",
+      "orthancUrl": "Configured Orthanc URL",
+      "refresh": "Refresh",
+      "emptyLogs": "No logs yet",
+      "colAt": "Timestamp",
+      "colLevel": "Level",
+      "colEvent": "Event",
+      "colMessage": "Message"
+    },
+    "launch": {
+      "title": "PACS launch",
+      "subtitle": "Orthanc is powering up — imaging actions stay locked until ready.",
+      "waking": "Launching…",
+      "actionsLocked": "Upload, compare and viewing stay locked until Ready.",
+      "steps": {
+        "check": "Pre-flight check — service status",
+        "ignite": "Ignition — wake signal",
+        "liftoff": "Liftoff — Orthanc cold start",
+        "orbit": "Orbit — securing the link",
+        "ready": "Ready — imaging available"
+      },
+      "notReady": "PACS is not ready. Retry wake or wait until startup finishes."
+    },
+    "leftInstance": "Left instance",
+    "rightInstance": "Right instance",
+    "seriesPicker": "Series",
+    "seriesOption": "Series {n} · {id}",
+    "downloadError": "DICOM download failed.",
+    "instanceUnavailable": "DICOM file missing on the imaging server. Re-upload the study or pick another one."
   }
 }

@@ -272,6 +272,9 @@ func BuildPDF(in PDFInput) ([]byte, error) {
 	if len(emblemPNG) > 0 {
 		opt := gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
 		_ = pdf.RegisterImageOptionsReader("pf-emblem", opt, bytes.NewReader(emblemPNG))
+		if err := pdf.Error(); err != nil {
+			return nil, fmt.Errorf("consultationpdf: register emblem: %w", err)
+		}
 	}
 
 	pdf.SetHeaderFuncMode(func() {

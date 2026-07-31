@@ -7,7 +7,10 @@ substitutions:
   _CLOUDSQL_INSTANCE: premedica-prod-2025:europe-west9:premedica-db-staging
   _API_SERVICE: petsfollow-api
   _FRONTEND_SERVICE: petsfollow-nuxtjs
+  _ORTHANC_SERVICE: petsfollow-orthanc
   _SKIP_MIGRATE: "false"
+  # true = skip Orthanc image + deploy (API/Nuxt PACS stays off without URL).
+  _SKIP_ORTHANC: "false"
 
 options:
   machineType: E2_HIGHCPU_8
@@ -38,6 +41,26 @@ steps:
       - --build-arg=NUXT_PUBLIC_PHARMACY_ENABLED=true
       - --build-arg=NUXT_PUBLIC_BILLIT_ENABLED=true
       - --build-arg=NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=true
+      # PACS : bake off ; runtime enable via deploy-frontend when Orthanc URL present.
+      - --build-arg=NUXT_PUBLIC_PACS_ENABLED=false
+
+  # :debug = busybox présent (/busybox/sh). :latest n'a plus de shell → OCI create fail.
+  - id: build-orthanc
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: /busybox/sh
+    args:
+      - -c
+      - |
+        if [ "${_SKIP_ORTHANC}" = "true" ]; then
+          echo "→ Orthanc build ignoré (_SKIP_ORTHANC=true)"
+          exit 0
+        fi
+        exec /kaniko/executor \
+          --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:$BUILD_ID \
+          --destination=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:latest \
+          --cache=true \
+          --context=dir://. \
+          --dockerfile=deploy/Dockerfile.orthanc
 
   - id: migrate
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -72,6 +95,29 @@ steps:
           --project="$PROJECT_ID" --region="${_RUN_REGION}" --wait --quiet
     waitFor: ["build-api"]
 
+  - id: deploy-orthanc
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_SKIP_ORTHANC}" == "true" ]]; then
+          echo "→ Orthanc ignoré (_SKIP_ORTHANC=true)"
+          exit 0
+        fi
+        source infra/gcp/lib/gcp-env.sh
+        export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/orthanc:$BUILD_ID"
+        # Best-effort : module tag « dev » — un échec Orthanc ne bloque pas API/Nuxt.
+        # setup-orthanc auto-passe en --deploy-only si déjà bootstrappé (pas de reset SQL).
+        if ! bash infra/gcp/setup-orthanc.sh "$$IMAGE"; then
+          echo "WARN: deploy Orthanc échoué — PACS restera off (PACS_ORTHANC_URL vide)" >&2
+          exit 0
+        fi
+    waitFor: ["build-orthanc"]
+
   - id: deploy-api
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash
@@ -85,6 +131,14 @@ steps:
         source infra/gcp/lib/gcp-env.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
+        # Wire PACS when Orthanc Cloud Run is up (from this build or a prior one).
+        export PACS_ORTHANC_URL="$$(orthanc_run_url)"
+        if [[ -n "$${PACS_ORTHANC_URL}" ]]; then
+          echo "→ PACS_ORTHANC_URL=$${PACS_ORTHANC_URL}"
+        else
+          echo "→ Orthanc URL absent — PACS_ENABLED reste off"
+        fi
         ENV_FILE="$$(mktemp)"
         # false=DEV_SEED, true=ADMIN_STAGING_SEED, staging=APP_ENV (API staging only)
         pf_write_api_env_file "$$ENV_FILE" false true staging
@@ -104,7 +158,7 @@ steps:
           --member=allUsers --role=roles/run.invoker \
           --quiet 2>/dev/null || true
         gcloud run services describe ${_API_SERVICE} --region="${_RUN_REGION}" --format='value(status.url)'
-    waitFor: ["migrate"]
+    waitFor: ["migrate", "deploy-orthanc"]
 
   - id: deploy-frontend
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -118,6 +172,8 @@ steps:
         source infra/gcp/lib/gcp-env.sh
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
+        export ORTHANC_SERVICE="${_ORTHANC_SERVICE}"
+        export PACS_ORTHANC_URL="$$(orthanc_run_url)"
         API_URL="$$(gcloud run services describe ${_API_SERVICE} \
           --region="${_RUN_REGION}" --project="$PROJECT_ID" \
           --format='value(status.url)' 2>/dev/null || true)"

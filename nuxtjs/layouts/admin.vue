@@ -30,6 +30,7 @@ const { user, fetchUser } = useProUser()
 const { isStagingLike } = useAppEnv()
 const runtimeConfig = useRuntimeConfig()
 const billitOn = computed(() => isPublicFlagOn(runtimeConfig.public.billitEnabled))
+const pharmacyOn = computed(() => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled))
 if (!user.value) {
   await fetchUser().catch(() => null)
 }
@@ -45,16 +46,24 @@ const navItems = computed<ProNavItem[]>(() => {
       { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
       { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
       { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
+      ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
+        ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+        : []),
     ]
   }
   return [
     { to: '/admin', label: t('nav.adminDashboard'), exact: true, icon: 'admin', section: t('nav.section.ops') },
     { to: '/admin/users', label: t('nav.adminUsers'), icon: 'users', section: t('nav.section.ops') },
     { to: '/admin/client-imports', label: t('nav.adminClientImports'), icon: 'description', section: t('nav.section.ops') },
-    { to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication', section: t('nav.section.ops'), tag: t('nav.tagDev') },
+    ...(pharmacyOn.value
+      ? [{ to: '/admin/compendium-imports', label: t('nav.adminCompendium'), icon: 'medication' as const, section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      : []),
     { to: '/admin/brand-assets', label: t('nav.adminBrandAssets'), icon: 'description', section: t('nav.section.ops') },
     { to: '/admin/support', label: t('nav.adminSupport'), icon: 'support_agent', section: t('nav.section.ops') },
     { to: '/admin/runtime-flags', label: t('nav.adminRuntimeFlags'), icon: 'tune', section: t('nav.section.ops') },
+    ...(isPublicFlagOn(runtimeConfig.public.pacsEnabled)
+      ? [{ to: '/admin/pacs', label: t('nav.adminPacs'), icon: 'image', section: t('nav.section.ops'), tag: t('nav.tagDev') }]
+      : []),
     ...(isStagingLike.value
       ? [usecasesNavItem(t('nav.usecases'), t('nav.section.ops'))]
       : []),

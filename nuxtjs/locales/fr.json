@@ -78,7 +78,8 @@
     "stock": "Stock cabinet",
     "daf": "DAF",
     "prescriptions": "Prescriptions",
-    "adminRuntimeFlags": "Flags runtime"
+    "adminRuntimeFlags": "Flags runtime",
+    "adminPacs": "PACS"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -969,6 +970,18 @@
       "saved": "Durées enregistrées.",
       "save": "Enregistrer les durées"
     },
+    "deskIdle": {
+      "title": "Veille du poste partagé",
+      "subtitle": "Délai d’inactivité avant verrouillage automatique (équipe ≥ 2).",
+      "label": "Délai de veille",
+      "hint": "S’applique à tous les postes du cabinet. Défaut : 2 minutes.",
+      "minutes1": "1 minute",
+      "minutes2": "2 minutes",
+      "minutes5": "5 minutes",
+      "minutes10": "10 minutes",
+      "minutes15": "15 minutes",
+      "minutes30": "30 minutes"
+    },
     "notifications": {
       "title": "Notifications email",
       "subtitle": "Choisissez les événements pour lesquels vous recevez un email.",
@@ -1204,6 +1217,7 @@
         "vitals": "FC & poids",
         "care": "Soins & RDV",
         "documents": "Documents",
+        "imaging": "Imagerie",
         "sharing": "Partage"
       },
       "kpi": {
@@ -2255,7 +2269,7 @@
       "kpiReady": "Prêtes",
       "kpiUpserted": "Chargées",
       "progressTitle": "Progression",
-      "progressExtract": "Extraction {pct}% ({done}/{total} lots)",
+      "progressExtract": "Extraction {pct}% ({done}/{total})",
       "progressReview": "Contrôle {pct}% ({done}/{total} lignes)",
       "startExtract": "Lancer l’extraction IA",
       "previewTitle": "Contrôle des lignes",
@@ -2287,7 +2301,11 @@
         "excluded": "Exclu",
         "error": "Erreur",
         "upserted": "Chargé"
-      }
+      },
+      "retryExtract": "Relancer l’extraction",
+      "previewHint": "Les lignes valides restent « en attente » jusqu’au contrôle humain (valider ou corriger CNK/nom).",
+      "confirmReady": "Valider {count} ligne(s) en attente",
+      "confirmRow": "Valider"
     },
     "brandAssets": {
       "title": "Assets QR stores",
@@ -3029,6 +3047,8 @@
       "notificationsEmptyDescription": "Les conversations clients apparaîtront ici.",
       "markAllRead": "Tout marquer comme lu",
       "profileMenu": "Menu profil",
+      "openNav": "Ouvrir le menu",
+      "closeNav": "Fermer le menu",
       "settings": "Paramètres",
       "themeDark": "Activer le mode sombre",
       "themeLight": "Activer le mode clair",
@@ -3123,6 +3143,8 @@
     "invalid_json": "JSON invalide",
     "fields_required": "Tous les champs sont requis",
     "password_too_short": "Mot de passe trop court (8 caractères minimum)",
+    "contact_phone_required": "Numéro de téléphone requis",
+    "contact_phone_too_long": "Numéro de téléphone trop long",
     "image_too_large": "Fichier trop volumineux (limite dépassée)",
     "invalid_image_type": "Format non supporté (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fichier requis",
@@ -3133,6 +3155,7 @@
     "profile_fields_required": "Champs obligatoires manquants",
     "invalid_plan": "Formule invalide",
     "invalid_iban": "IBAN invalide",
+    "invalid_desk_idle_minutes": "Délai de veille invalide (1, 2, 5, 10, 15 ou 30 min)",
     "invalid_bic": "BIC invalide (8 ou 11 caractères)",
     "invalid_account_holder": "Titulaire de compte invalide",
     "invalid_locale": "Langue non supportée",
@@ -3648,5 +3671,95 @@
     "medSearch": "Rechercher (CNK / nom)",
     "dispenseDaf": "Délivrer au cabinet (DAF)",
     "dispenseDafHint": "Crée un brouillon DAF (catalogue CNK). Complétez les N° AMM puis finalisez dans le wizard."
+  },
+  "pacs": {
+    "title": "Imagerie PACS",
+    "wake": "Activer le PACS",
+    "refresh": "Actualiser",
+    "upload": "Importer DICOM",
+    "compare": "Comparer",
+    "offlineHint": "Le service d’imagerie est éteint. Activez-le pour consulter ou importer des radios.",
+    "emptyTitle": "Aucune étude",
+    "emptyDescription": "Importez un fichier .dcm pour démarrer.",
+    "previewError": "Impossible de charger l’aperçu de l’image. Réessayez ou réactivez le PACS.",
+    "orthancError": "Erreur Orthanc (502). Essayez une autre étude (ex. RX) ou réimportez un fichier DICOM — certaines images indexées peuvent être indisponibles.",
+    "viewerWaiting": "Viewer en attente — l’étude n’a pas fourni d’instance (réessayez une autre étude).",
+    "leftSeries": "Instance gauche",
+    "rightSeries": "Instance droite",
+    "state": {
+      "offline": "Hors ligne",
+      "starting": "Démarrage…",
+      "ready": "Prêt"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contraste",
+      "measure": "Mesure",
+      "arrow": "Flèche",
+      "fullscreen": "Plein écran",
+      "exitFullscreen": "Quitter plein écran",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Télécharger DICOM",
+      "measureCalibrated": "Calibré (mm)",
+      "measureUncalibrated": "Sans calibrage (px)",
+      "measureHintPx": "Sans calibrage fiable — mesure en pixels image",
+      "measureHintResized": "Aperçu Orthanc redimensionné vs DICOM — mesure en px (Cornerstone recommandé pour mm)"
+    },
+    "admin": {
+      "title": "PACS — supervision",
+      "subtitle": "État Orthanc, playground véto et logs de réveil / santé",
+      "metricsTitle": "Métriques",
+      "playgroundTitle": "Playground imagerie",
+      "playgroundHint": "Même interface que la fiche animal (véto). Animal seed client.demo par défaut — traces client ci-dessous.",
+      "petSelect": "Animal",
+      "petPlaceholder": "Choisir un animal…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Coller un petId…",
+      "applyPet": "Ouvrir",
+      "noPetSelected": "Sélectionnez ou collez un animal pour monter le viewer DICOM.",
+      "viewerLoading": "Chargement du viewer…",
+      "reloadPets": "Recharger les animaux",
+      "debugTitle": "Debug client (fetch)",
+      "debugClear": "Vider",
+      "debugEmpty": "Aucun appel encore — ouvrez une étude ou réveillez le PACS",
+      "debugColOk": "Statut",
+      "debugColMethod": "Méthode",
+      "debugColUrl": "URL",
+      "debugColMs": "ms",
+      "logsTitle": "Logs serveur récents",
+      "latency": "Latence",
+      "state": "État",
+      "redis": "Redis",
+      "orthancUrl": "URL Orthanc configurée",
+      "refresh": "Actualiser",
+      "emptyLogs": "Aucun log pour le moment",
+      "colAt": "Horodatage",
+      "colLevel": "Niveau",
+      "colEvent": "Événement",
+      "colMessage": "Message"
+    },
+    "launch": {
+      "title": "Décollage du PACS",
+      "subtitle": "Allumage Orthanc en cours — les actions imagerie sont indisponibles le temps du démarrage.",
+      "waking": "Décollage…",
+      "actionsLocked": "Import, comparaison et visualisation restent verrouillés jusqu’à l’état Prêt.",
+      "steps": {
+        "check": "Contrôle pré-vol — statut du service",
+        "ignite": "Allumage — signal de réveil",
+        "liftoff": "Décollage — démarrage à froid Orthanc",
+        "orbit": "Mise en orbite — liaison sécurisée",
+        "ready": "Prêt — imagerie disponible"
+      },
+      "notReady": "Le PACS n’est pas prêt. Réessayez l’allumage ou attendez la fin du démarrage."
+    },
+    "leftInstance": "Instance gauche",
+    "rightInstance": "Instance droite",
+    "seriesPicker": "Série",
+    "seriesOption": "Série {n} · {id}",
+    "downloadError": "Téléchargement DICOM impossible.",
+    "instanceUnavailable": "Fichier DICOM introuvable sur le serveur d’imagerie. Réimportez l’étude (ex. RX démo) ou choisissez une autre."
   }
 }

@@ -36,12 +36,13 @@ Index des documents de référence du projet.
 | 31 | [31-PRECONSULTATION.md](31-PRECONSULTATION.md) | Pré-consultation client après confirmation RDV |
 | 33 | [33-BILLIT-INTEGRATION.md](33-BILLIT-INTEGRATION.md) | Facturation Peppol Billit — BIL-9 gelé jusqu’accès reseller |
 | 34 | [34-BILLIT-RESELLER-TECH.md](34-BILLIT-RESELLER-TECH.md) | Plan technique Billit reseller — multi-pays, client HTTP, webhook HMAC — livré mock/CI |
-| 35 | [35-ORDONNANCES.md](35-ORDONNANCES.md) | Ordonnances V1 (brouillons + PDF) — module tag `dev` |
+| 35 | [35-PRESCRIPTIONS.md](35-PRESCRIPTIONS.md) | Prescriptions V1 (brouillons + PDF) — module tag `dev` |
 | 36 | [36-RGPD.md](36-RGPD.md) | RGPD technique — export/effacement, Web↔Flutter, checklist ops |
 | 37 | [37-ROADMAP-STOCK-FACTURATION.md](37-ROADMAP-STOCK-FACTURATION.md) | **Roadmap** stock ops + réglementaire + facturation (Phases 0–6, suivi P0 partenaires) |
 | 38 | [38-RUNBOOK-PHARMACIE-CABINET.md](38-RUNBOOK-PHARMACIE-CABINET.md) | Runbook pilote cabinet (stock / DAF / inventaire / chaîne alimentaire) |
 | 39 | [39-VAMREG-AFMPS-READONLY.md](39-VAMREG-AFMPS-READONLY.md) | Client Go VAMReg AFMPS lecture seule (listes de référence ICD v20260701) |
 | 39 | [39-VAMREG-AFMPS-READONLY.md](39-VAMREG-AFMPS-READONLY.md) | Client M2M readonly VAMREG (ICD FAMHP v20260701) — listes de référence |
+| 40 | [40-PACS.md](40-PACS.md) · [plan P2](40-PACS-P2.md) | PACS Orthanc (tag `dev`) — V1+P0/P1 livrés · P2 = GA clinique |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

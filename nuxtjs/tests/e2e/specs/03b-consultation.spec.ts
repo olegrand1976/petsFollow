@@ -253,7 +253,7 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     await expect(page.getByTestId('daf-from-consultation-banner')).toBeVisible()
   })
 
-  test('traitements CNK → preview FEFO → finalize DAF', async ({ page }) => {
+  test('traitements CNK → preview FEFO → finalize DAF', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
     await openConsultationSetup(page)
     await startConsultationVisit(page)
     // Treatments panel mounts only after CR saved (avoids overlay on TipTap).
@@ -298,9 +298,15 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     // Stock seed OK → FEFO; sinon form réception express (pas de skip soft CNK).
     const fefo = page.getByTestId('consultation-treatments-fefo')
     const receipt = page.getByTestId('consultation-treatments-receipt')
-    const fefoVisible = await fefo.waitFor({ state: 'visible', timeout: 10000 }).then(() => true).catch(() => false)
-    if (!fefoVisible) {
-      await expect(receipt).toBeVisible({ timeout: 5000 })
+    const outcome = await Promise.race([
+      fefo.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'fefo' as const),
+      receipt.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'receipt' as const),
+    ]).catch(() => null)
+    if (!outcome) {
+      const errText = await page.getByTestId('consultation-treatments').locator('.pro-error, [role="alert"]').first().textContent().catch(() => '')
+      throw new Error(`preview: ni FEFO ni receipt (erreur UI: ${errText || 'n/a'})`)
+    }
+    if (outcome === 'receipt') {
       const exp = new Date()
       exp.setMonth(exp.getMonth() + 6)
       await page.getByTestId('consultation-receipt-lot').fill(`E2E-${Date.now()}`)
@@ -320,5 +326,34 @@ test.describe('nouvelle consultation', { tag: '@p0' }, () => {
     const finalized = await finalizeRes
     expect(finalized.status()).toBe(200)
     await expect(page.getByTestId('consultation-treatments-finalized')).toBeVisible({ timeout: 15000 })
+  })
+
+  test('protocole clinique 1 clic → lignes + AMM préremplies', { tag: ['@p0', '@pharmacy'] }, async ({ page }) => {
+    await openConsultationSetup(page)
+    await startConsultationVisit(page)
+    await saveConsultationReport(page)
+
+    const treatments = page.getByTestId('consultation-treatments')
+    if ((await treatments.count()) === 0) {
+      test.skip(true, 'pharmacy off ou pharmacy.write absent')
+    }
+    await expect(treatments).toBeVisible({ timeout: 10000 })
+
+    const protocols = page.getByTestId('consultation-treatments-protocols')
+    if ((await protocols.count()) === 0) {
+      test.skip(true, 'aucun protocole seed (Antibiothérapie courte)')
+    }
+    await expect(protocols).toBeVisible({ timeout: 10000 })
+
+    const protoBtn = page.getByRole('button', { name: /Antibiothérapie courte/i })
+    if ((await protoBtn.count()) === 0) {
+      test.skip(true, 'protocole Antibiothérapie courte absent du seed')
+    }
+    await protoBtn.first().click()
+
+    const amm = page.getByTestId('consultation-treatment-amm-0')
+    await expect(amm).toBeVisible({ timeout: 10000 })
+    await expect.poll(async () => (await amm.inputValue()).trim(), { timeout: 10000 }).not.toBe('')
+    await expect(page.getByTestId('consultation-treatment-qty-0')).toHaveValue('1')
   })
 })

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 )
@@ -39,16 +41,38 @@ func (a *API) registerCompendiumImportRoutes(r chi.Router) {
 	r.Get("/admin/compendium-imports/{id}", a.adminGetCompendiumImport)
 	r.Post("/admin/compendium-imports/{id}/extract", a.adminStartCompendiumExtract)
 	r.Patch("/admin/compendium-imports/{id}/rows/{rowId}", a.adminPatchCompendiumRow)
+	r.Post("/admin/compendium-imports/{id}/confirm-ready", a.adminConfirmCompendiumReady)
 	r.Post("/admin/compendium-imports/{id}/commit", a.adminCommitCompendiumImport)
 }
 
-func (a *API) adminCreateCompendiumImport(w http.ResponseWriter, r *http.Request) {
+func (a *API) requireCompendiumAdmin(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
 	admin, ok := a.requireAdmin(w, r)
 	if !ok {
-		return
+		return authx.Identity{}, false
 	}
 	if !a.cfg.PharmacyEnabled {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+		return authx.Identity{}, false
+	}
+	return admin, true
+}
+
+func scrubCompendiumJob(j *store.CompendiumImportJob) {
+	if j != nil {
+		j.PDFObjectKey = ""
+	}
+}
+
+func scrubCompendiumDetail(d *store.CompendiumImportDetail) {
+	if d == nil {
+		return
+	}
+	scrubCompendiumJob(&d.Job)
+}
+
+func (a *API) adminCreateCompendiumImport(w http.ResponseWriter, r *http.Request) {
+	admin, ok := a.requireCompendiumAdmin(w, r)
+	if !ok {
 		return
 	}
 	if a.media == nil {
@@ -129,15 +153,12 @@ func (a *API) adminCreateCompendiumImport(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	scrubCompendiumJob(&job)
 	httpx.WriteData(w, http.StatusCreated, job)
 }
 
 func (a *API) adminListCompendiumImports(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
-		return
-	}
-	if !a.cfg.PharmacyEnabled {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
 	items, err := a.store.ListCompendiumImportJobs(r.Context(), 50)
@@ -145,15 +166,14 @@ func (a *API) adminListCompendiumImports(w http.ResponseWriter, r *http.Request)
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	for i := range items {
+		scrubCompendiumJob(&items[i])
+	}
 	httpx.WriteData(w, http.StatusOK, map[string]any{"items": items})
 }
 
 func (a *API) adminGetCompendiumImport(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
-		return
-	}
-	if !a.cfg.PharmacyEnabled {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
 	detail, err := a.store.GetCompendiumImportDetail(r.Context(), chi.URLParam(r, "id"))
@@ -165,15 +185,12 @@ func (a *API) adminGetCompendiumImport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	scrubCompendiumDetail(&detail)
 	httpx.WriteData(w, http.StatusOK, detail)
 }
 
 func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
-		return
-	}
-	if !a.cfg.PharmacyEnabled {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
 	id := chi.URLParam(r, "id")
@@ -186,7 +203,8 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	if job.Status != "uploaded" && job.Status != "failed" {
+	// uploaded | failed | extracting (recovery if process died mid-job)
+	if job.Status != "uploaded" && job.Status != "failed" && job.Status != "extracting" {
 		writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 		return
 	}
@@ -199,8 +217,8 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	chunks := pharmacy.ChunkPageRanges(job.PageStart, job.PageEnd, pharmacy.CompendiumPagesPerChunk)
-	if err := a.store.MarkCompendiumExtracting(r.Context(), id, len(chunks)); err != nil {
+	// One Gemini call for the whole page range (full PDF + prompt bounds).
+	if err := a.store.MarkCompendiumExtracting(r.Context(), id, 1); err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
 			return
@@ -216,6 +234,7 @@ func (a *API) adminStartCompendiumExtract(w http.ResponseWriter, r *http.Request
 		httpx.WriteData(w, http.StatusAccepted, map[string]any{"status": "extracting"})
 		return
 	}
+	scrubCompendiumDetail(&detail)
 	httpx.WriteData(w, http.StatusAccepted, detail)
 }
 
@@ -229,73 +248,64 @@ func (a *API) runCompendiumExtract(jobID string) {
 	}
 	rc, _, err := a.media.Open(ctx, job.PDFObjectKey)
 	if err != nil {
+		log.Printf("compendium extract %s: pdf open: %v", jobID, err)
 		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_open_failed")
 		return
 	}
 	pdfBytes, err := io.ReadAll(io.LimitReader(rc, maxCompendiumPDFBytes+1))
 	_ = rc.Close()
 	if err != nil || len(pdfBytes) == 0 || len(pdfBytes) > maxCompendiumPDFBytes {
+		log.Printf("compendium extract %s: pdf read err=%v len=%d", jobID, err, len(pdfBytes))
 		_ = a.store.FailCompendiumImportJob(ctx, jobID, "pdf_read_failed")
 		return
 	}
 
-	chunks := pharmacy.ChunkPageRanges(job.PageStart, job.PageEnd, pharmacy.CompendiumPagesPerChunk)
 	extractor := &pharmacy.CompendiumExtractor{Gemini: a.gemini}
-	all := make([]store.CompendiumRowInsert, 0)
+	var meds []pharmacy.ExtractedMedication
+	if testCompendiumExtract != nil {
+		meds, err = testCompendiumExtract(ctx, pdfBytes, job.PageStart, job.PageEnd)
+	} else {
+		meds, err = extractor.ExtractChunk(ctx, pdfBytes, job.PageStart, job.PageEnd)
+	}
+	if err != nil {
+		log.Printf("compendium extract %s: gemini: %v", jobID, err)
+		_ = a.store.FailCompendiumImportJob(ctx, jobID, "extract_failed")
+		return
+	}
+	_ = a.store.SetCompendiumExtractProgress(ctx, jobID, 1)
 
-	for i, rng := range chunks {
-		start, end := rng[0], rng[1]
-		slice, err := pharmacy.ExtractPageRange(pdfBytes, start, end)
-		if err != nil {
-			_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("pdf_trim:%v", err))
-			return
+	all := make([]store.CompendiumRowInsert, 0, len(meds))
+	for _, m := range meds {
+		status, code, msg := pharmacy.ClassifyExtractedRow(m, false)
+		raw, _ := json.Marshal(m)
+		sp := m.SourcePage
+		if sp == nil {
+			p := job.PageStart
+			sp = &p
 		}
-		var meds []pharmacy.ExtractedMedication
-		if testCompendiumExtract != nil {
-			meds, err = testCompendiumExtract(ctx, slice, start, end)
-		} else {
-			meds, err = extractor.ExtractChunk(ctx, slice, start, end)
-		}
-		if err != nil {
-			_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("extract:%v", err))
-			return
-		}
-		for _, m := range meds {
-			status, code, msg := pharmacy.ClassifyExtractedRow(m)
-			raw, _ := json.Marshal(m)
-			sp := m.SourcePage
-			if sp == nil {
-				p := start
-				sp = &p
-			}
-			all = append(all, store.CompendiumRowInsert{
-				SourcePage:         sp,
-				CNK:                m.CNK,
-				Name:               m.Name,
-				ATCCode:            m.ATCCode,
-				PharmaceuticalForm: m.PharmaceuticalForm,
-				PackSize:           m.PackSize,
-				IsAntibiotic:       m.IsAntibiotic,
-				RawJSON:            raw,
-				Status:             status,
-				ErrorCode:          code,
-				ErrorMessage:       msg,
-			})
-		}
-		_ = a.store.SetCompendiumExtractProgress(ctx, jobID, i+1)
+		all = append(all, store.CompendiumRowInsert{
+			SourcePage:         sp,
+			CNK:                m.CNK,
+			Name:               m.Name,
+			ATCCode:            m.ATCCode,
+			PharmaceuticalForm: m.PharmaceuticalForm,
+			PackSize:           m.PackSize,
+			IsAntibiotic:       m.IsAntibiotic,
+			RawJSON:            raw,
+			Status:             status,
+			ErrorCode:          code,
+			ErrorMessage:       msg,
+		})
 	}
 
 	if err := a.store.ReplaceCompendiumExtractRows(ctx, jobID, all); err != nil {
-		_ = a.store.FailCompendiumImportJob(ctx, jobID, fmt.Sprintf("persist:%v", err))
+		log.Printf("compendium extract %s: persist: %v", jobID, err)
+		_ = a.store.FailCompendiumImportJob(ctx, jobID, "persist_failed")
 	}
 }
 
 func (a *API) adminPatchCompendiumRow(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
-		return
-	}
-	if !a.cfg.PharmacyEnabled {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
 	var body store.PatchCompendiumRowInput
@@ -319,12 +329,34 @@ func (a *API) adminPatchCompendiumRow(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, row)
 }
 
-func (a *API) adminCommitCompendiumImport(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.requireAdmin(w, r); !ok {
+func (a *API) adminConfirmCompendiumReady(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
-	if !a.cfg.PharmacyEnabled {
-		writeErr(w, r, http.StatusNotFound, "not_found", "pharmacy_disabled")
+	n, err := a.store.ConfirmCompendiumPendingRows(r.Context(), chi.URLParam(r, "id"))
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	if errors.Is(err, store.ErrConflict) {
+		writeErr(w, r, http.StatusConflict, "conflict", "invalid_status")
+		return
+	}
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	detail, _ := a.store.GetCompendiumImportDetail(r.Context(), chi.URLParam(r, "id"))
+	scrubCompendiumDetail(&detail)
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"confirmed": n,
+		"job":       detail.Job,
+		"rows":      detail.Rows,
+	})
+}
+
+func (a *API) adminCommitCompendiumImport(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireCompendiumAdmin(w, r); !ok {
 		return
 	}
 	result, err := a.store.CommitCompendiumImport(r.Context(), chi.URLParam(r, "id"))
@@ -341,6 +373,7 @@ func (a *API) adminCommitCompendiumImport(w http.ResponseWriter, r *http.Request
 		return
 	}
 	detail, _ := a.store.GetCompendiumImportDetail(r.Context(), chi.URLParam(r, "id"))
+	scrubCompendiumDetail(&detail)
 	httpx.WriteData(w, http.StatusOK, map[string]any{
 		"result": result,
 		"job":    detail.Job,

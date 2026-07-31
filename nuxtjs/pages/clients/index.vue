@@ -85,7 +85,7 @@
       <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
         <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
-        <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" />
+        <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" :maxlength="40" />
         <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
@@ -353,7 +353,7 @@ async function createClient() {
       }
       clientError.value = t('clients.create.existsError')
     } else {
-      clientError.value = t('clients.create.error')
+      clientError.value = mapError(e) || t('clients.create.error')
     }
   } finally {
     clientSaving.value = false
@@ -366,13 +366,21 @@ async function linkExistingClient() {
   clientError.value = ''
   clientMsg.value = ''
   try {
-    await $fetch(`/api/vet/clients/${linkCandidate.value.userId}/link`, { method: 'POST' })
+    const linkedId = linkCandidate.value.userId
+    await $fetch(`/api/vet/clients/${linkedId}/link`, { method: 'POST' })
+    const phone = clientForm.contactPhone.trim()
+    if (phone) {
+      await $fetch(`/api/clients/${linkedId}`, {
+        method: 'PATCH',
+        body: { contactPhone: phone },
+      })
+    }
     clientMsg.value = t('clients.create.linkSuccess')
     linkCandidate.value = null
     Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
     await loadClients()
-  } catch {
-    clientError.value = t('clients.create.linkError')
+  } catch (e: any) {
+    clientError.value = mapError(e) || t('clients.create.linkError')
   } finally {
     clientSaving.value = false
   }

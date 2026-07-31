@@ -50,6 +50,12 @@ func (s *Store) EnsureUserProfiles(ctx context.Context, userID string) error {
 	return nil
 }
 
+// EnsureRoleProfile creates (or returns) a profile for the given role. Used by seed for
+// demo-only multi-profiles that must not go through IsProRole (e.g. admin → client).
+func (s *Store) EnsureRoleProfile(ctx context.Context, userID string, role kernel.Role, practiceID, specialty string) (string, error) {
+	return s.ensureProfile(ctx, userID, role, practiceID, specialty)
+}
+
 func (s *Store) ensureProfile(ctx context.Context, userID string, role kernel.Role, practiceID, specialty string) (string, error) {
 	var existing string
 	err := s.pool.QueryRow(ctx, `

@@ -62,24 +62,33 @@ func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID st
 	return c, err
 }
 
-// UpdateClientContactPhoneByPractice updates contact_phone for a client linked to the practice.
-// Empty phone clears the field. Returns ErrNotFound if the client is not linked.
-func (s *Store) UpdateClientContactPhoneByPractice(ctx context.Context, practiceID, clientID, contactPhone string) error {
-	tag, err := s.pool.Exec(ctx, `
-		UPDATE identity.users u
-		SET contact_phone = $3
-		FROM practice.practice_clients pc
-		WHERE u.id = pc.client_user_id
-			AND pc.practice_id = $1
-			AND pc.client_user_id = $2
-			AND u.role = 'client'`, practiceID, clientID, strings.TrimSpace(contactPhone))
-	if err != nil {
-		return err
+// UpdateClientContactPhoneByPractice updates contact_phone for a user linked to the practice.
+// Product choice: the phone lives on identity.users (account-global). Any linked practice with
+// clients.write can read/write it (last write wins across cabinets). Empty phone clears the field.
+// Returns the updated ClientSummary, or ErrNotFound if not linked.
+func (s *Store) UpdateClientContactPhoneByPractice(ctx context.Context, practiceID, clientID, contactPhone string) (ClientSummary, error) {
+	phone := strings.TrimSpace(contactPhone)
+	var c ClientSummary
+	err := s.pool.QueryRow(ctx, `
+		WITH upd AS (
+			UPDATE identity.users u
+			SET contact_phone = $3
+			FROM practice.practice_clients pc
+			WHERE u.id = pc.client_user_id
+				AND pc.practice_id = $1
+				AND pc.client_user_id = $2
+			RETURNING u.id, u.email, u.full_name, COALESCE(u.avatar_url,'') AS avatar_url, COALESCE(u.contact_phone,'') AS contact_phone
+		)
+		SELECT upd.id::text, upd.email, upd.full_name, upd.avatar_url, upd.contact_phone, COUNT(p.id)::int
+		FROM upd
+		JOIN practice.practice_clients pc ON pc.client_user_id = upd.id AND pc.practice_id = $1
+		LEFT JOIN pets.pets p ON p.owner_user_id = upd.id AND p.practice_id = pc.practice_id
+		GROUP BY upd.id, upd.email, upd.full_name, upd.avatar_url, upd.contact_phone`, practiceID, clientID, phone).Scan(
+		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ClientSummary{}, ErrNotFound
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return c, err
 }
 
 func (s *Store) GetClientOverview(ctx context.Context, practiceID, clientID string) (ClientOverview, error) {

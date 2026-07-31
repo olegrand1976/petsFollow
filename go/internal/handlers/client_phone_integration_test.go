@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -97,8 +98,38 @@ func TestClientContactPhoneCreateListGetPatch(t *testing.T) {
 	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
 		"contactPhone": tooLong,
 	})
-	if code != http.StatusBadRequest || errCode(env) != "bad_request" {
-		t.Fatalf("too long want 400 bad_request got %d %#v", code, env)
+	if code != http.StatusBadRequest || errorMsgKey(env) != "contact_phone_too_long" {
+		t.Fatalf("too long want 400 contact_phone_too_long got %d %#v", code, env)
+	}
+}
+
+func TestClientContactPhoneCreateOptionalAndTooLong(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+
+	emailNoPhone := fmt.Sprintf("client.nophone.%s@petsfollow.test", uuid.NewString()[:8])
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": emailNoPhone, "password": "TempPass12!", "fullName": "No Phone",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create without phone %d %#v", code, env)
+	}
+	clientID, _ := dataMap(t, env)["userId"].(string)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients/"+clientID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("get %d %#v", code, env)
+	}
+	if phone := dataMap(t, env)["contactPhone"]; phone != nil && phone != "" {
+		t.Fatalf("expected empty contactPhone, got %v", phone)
+	}
+
+	emailLong := fmt.Sprintf("client.longphone.%s@petsfollow.test", uuid.NewString()[:8])
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": emailLong, "password": "TempPass12!", "fullName": "Long Phone",
+		"contactPhone": strings.Repeat("1", 41),
+	})
+	if code != http.StatusBadRequest || errorMsgKey(env) != "contact_phone_too_long" {
+		t.Fatalf("create too long want 400 contact_phone_too_long got %d %#v", code, env)
 	}
 }
 
@@ -112,7 +143,7 @@ func TestClientContactPhonePatchACL(t *testing.T) {
 	if code != http.StatusCreated {
 		t.Fatalf("create %d %#v", code, env)
 	}
-  clientID, _ := dataMap(t, env)["userId"].(string)
+	clientID, _ := dataMap(t, env)["userId"].(string)
 	if clientID == "" {
 		t.Fatalf("missing userId: %#v", env)
 	}
@@ -138,5 +169,87 @@ func TestClientContactPhonePatchACL(t *testing.T) {
 	})
 	if code != http.StatusForbidden {
 		t.Fatalf("commercial want 403 got %d %#v", code, env)
+	}
+}
+
+// TestClientContactPhoneAccountGlobalLastWriteWins documents the product choice:
+// contact_phone lives on identity.users (account-global). Any linked practice with
+// clients.write can update it; other linked practices see the same value (last write wins).
+// Unlinked practices still get 404 (see TestClientContactPhoneCreateListGetPatch).
+func TestClientContactPhoneAccountGlobalLastWriteWins(t *testing.T) {
+	api := newTestAPI(t)
+	ctx := context.Background()
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	parcTok := loginToken(t, api.handler, "vet.parc@petsfollow.test", "VetDemo123!")
+
+	email := fmt.Sprintf("client.phone.shared.%s@petsfollow.test", uuid.NewString()[:8])
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": email, "password": "TempPass12!", "fullName": "Shared Phone", "contactPhone": "0470 11 11 11",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	clientID, _ := dataMap(t, env)["userId"].(string)
+
+	var parcID, parcPracticeID string
+	if err := api.pool.QueryRow(ctx, `
+		SELECT u.id::text, u.practice_id::text FROM identity.users u WHERE u.email='vet.parc@petsfollow.test'`).Scan(&parcID, &parcPracticeID); err != nil {
+		t.Fatalf("parc: %v", err)
+	}
+
+	// Link same client to Clinique du Parc (multi-cabinet household).
+	if _, err := api.pool.Exec(ctx, `
+		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
+		VALUES ($1, $2, $3, $4)`, uuid.NewString(), parcPracticeID, clientID, parcID); err != nil {
+		t.Fatalf("link parc: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, parcTok, map[string]any{
+		"contactPhone": "0470 22 22 22",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("parc patch %d %#v", code, env)
+	}
+	if dataMap(t, env)["contactPhone"] != "0470 22 22 22" {
+		t.Fatalf("parc patch phone=%v", dataMap(t, env)["contactPhone"])
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/clients/"+clientID, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("vetplus get %d %#v", code, env)
+	}
+	if dataMap(t, env)["contactPhone"] != "0470 22 22 22" {
+		t.Fatalf("account-global: VetPlus should see Parc write, got %v", dataMap(t, env)["contactPhone"])
+	}
+}
+
+// TestClientContactPhonePatchIgnoresActiveRole: multi-profile user linked as client can be
+// patched even if identity.users.role is temporarily not 'client'.
+func TestClientContactPhonePatchIgnoresActiveRole(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	email := fmt.Sprintf("client.phone.role.%s@petsfollow.test", uuid.NewString()[:8])
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/vet/clients", vetTok, map[string]any{
+		"email": email, "password": "TempPass12!", "fullName": "Role Flip", "contactPhone": "0470 00 00 20",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create %d %#v", code, env)
+	}
+	clientID, _ := dataMap(t, env)["userId"].(string)
+
+	// Simulate active profile switch: users.role no longer 'client' while practice_clients remains.
+	if _, err := api.pool.Exec(context.Background(), `
+		UPDATE identity.users SET role = 'vet' WHERE id = $1`, clientID); err != nil {
+		t.Fatalf("flip role: %v", err)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/clients/"+clientID, vetTok, map[string]any{
+		"contactPhone": "0470 00 00 21",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("patch with flipped role want 200 got %d %#v", code, env)
+	}
+	if dataMap(t, env)["contactPhone"] != "0470 00 00 21" {
+		t.Fatalf("contactPhone=%v", dataMap(t, env)["contactPhone"])
 	}
 }

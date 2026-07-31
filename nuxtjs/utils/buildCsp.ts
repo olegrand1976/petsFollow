@@ -15,7 +15,7 @@ export function buildCsp(apiBaseEnv = process.env.NUXT_PUBLIC_API_BASE): string 
   // Google Identity Services : https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
+    "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client",
     "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
     // Avatars/photos : BFF, data-URI, blob (aperçus upload) et médias GCS/https.
     "img-src 'self' data: blob: https:",

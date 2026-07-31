@@ -47,6 +47,8 @@ GCP_WORKLOAD_IDENTITY_PROVIDER="${GCP_WORKLOAD_IDENTITY_PROVIDER:-projects/${PRO
 
 GCS_MEDIA_BUCKET="${GCS_MEDIA_BUCKET:-petsfollow-media}"
 GCS_MEDIA_LOCATION="${GCS_MEDIA_LOCATION:-${GCP_RUN_REGION}}"
+GCS_DICOM_BUCKET="${GCS_DICOM_BUCKET:-petsfollow-dicom}"
+ORTHANC_SERVICE="${ORTHANC_SERVICE:-petsfollow-orthanc}"
 LLIT_WEBSITE_URL="${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 
 INFRA_ROOT="${INFRA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)/infra}"
@@ -69,6 +71,12 @@ api_run_url() {
 
 frontend_run_url() {
   gcloud run services describe "$FRONTEND_SERVICE" \
+    --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" \
+    --format='value(status.url)' 2>/dev/null || true
+}
+
+orthanc_run_url() {
+  gcloud run services describe "$ORTHANC_SERVICE" \
     --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" \
     --format='value(status.url)' 2>/dev/null || true
 }

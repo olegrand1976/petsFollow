@@ -22,7 +22,19 @@
           <li>{{ $t('calendar.reportHowItWorksStep1') }}</li>
           <li>{{ $t('calendar.reportHowItWorksStep2') }}</li>
           <li>{{ $t('calendar.reportHowItWorksStep3') }}</li>
+          <li>{{ $t('calendar.reportHowItWorksStep4') }}</li>
         </ol>
+        <figure class="visit-report-howto__figure">
+          <img
+            src="/brand/ai-cr-process.png"
+            :alt="$t('calendar.reportHowItWorksImageAlt')"
+            class="visit-report-howto__img"
+            data-testid="visit-report-howto-image"
+            loading="lazy"
+            decoding="async"
+          >
+          <figcaption class="pro-hint">{{ $t('calendar.reportHowItWorksImageCaption') }}</figcaption>
+        </figure>
       </details>
     </div>
   </div>
@@ -67,7 +79,7 @@ defineProps<{
   border-radius: var(--pf-vet-radius, 8px);
   padding: 0.35rem 0.65rem;
   background: var(--pf-vet-bg, #f8fafc);
-  max-width: min(22rem, 100%);
+  max-width: min(36rem, 100%);
 }
 
 .visit-report-howto > summary {
@@ -82,5 +94,23 @@ defineProps<{
   padding-left: 1.25rem;
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+.visit-report-howto__figure {
+  margin: 0.65rem 0 0.35rem;
+}
+
+.visit-report-howto__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--pf-vet-radius, 8px);
+  border: 1px solid var(--pf-vet-border);
+  background: #fff;
+}
+
+.visit-report-howto__figure .pro-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
 }
 </style>

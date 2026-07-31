@@ -8,7 +8,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 
 **Poste partagé (PC bureau)** — distinct du multi-profil même compte :
 - Header VetPro : avatars de l’équipe (`GET /vet/team`), clic → re-auth mot de passe (+ 2FA si actif).
-- Idle 2 min → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé).
+- Idle configurable (défaut **2 min**) → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé). Paramétrable par le véto de référence dans `/settings` (`deskIdleMinutes` : 1|2|5|10|15|30).
 - Switch profil : même purge immédiate des cookies (pas de session active derrière le modal / autre onglet) ; « Annuler » → veille (y compris si la purge logout est encore en cours).
 - Header : avatars équipe uniquement si **≥ 2** membres.
 - Au déverrouillage / switch : restauration de la dernière route de l’utilisateur cible.
@@ -21,7 +21,7 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
-| `admin` / commercial* | Nuxt Pro | Inchangé — admin seed : multi-profils `admin` + `client` + `vet` (switch topbar) |
+| `admin` / commercial* | Nuxt Pro | Inchangé — **seed démo only** : `admin.demo` multi-profils `admin` + `client` + `vet` (pas d’auto-profil client pour tout admin via `IsProRole`) |
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
@@ -102,10 +102,10 @@ Flux Web : édition notes → « améliorer » (sections structurées) → **fin
 
 Sections CR vétérinaire (improve) :
 - Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi
-- Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
+- Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas de prescription auto)
 - Care_pro : templates specialty (farrier/physio/…) sans section médication véto
 
-Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
+Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée), `is_reference` (consultation de référence pour amélioration continue, CR final uniquement) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
 Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 `POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.

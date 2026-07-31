@@ -34,6 +34,7 @@ Nuxt BFF ── cookies httpOnly (pf_token /  ┘         │
 | Firebase Cloud Messaging | Push mobile |
 | Google Gemini | Amélioration CR (audio temps réel — voir privacy i18n) |
 | Billit (si module facturation activé) | Peppol / factures cabinet — voir `33-BILLIT-INTEGRATION.md` |
+| Orthanc PACS (si `PACS_ENABLED`) | Index Cloud SQL `orthanc` + DICOM GCS — voir `40-PACS.md` |
 
 Aligner périodiquement les pages légales (`nuxtjs/locales/*/legal.privacy`, Flutter l10n) avec cette liste.
 
@@ -55,8 +56,8 @@ Aligner périodiquement les pages légales (`nuxtjs/locales/*/legal.privacy`, Fl
 | Droit | Couverture | Chemin |
 |-------|------------|--------|
 | Transparence | Oui | `/legal/privacy`, Flutter legal in-app |
-| Accès / portabilité | Oui (JSON) | `GET /api/v1/me/export` — Pro `/settings` + `/commercial/settings` ; Flutter profil |
-| Effacement | Oui | `DELETE /api/v1/me` — client = purge ; pro = tombstone (données cliniques cabinet conservées) |
+| Accès / portabilité | Oui (JSON) | `GET /api/v1/me/export` — inclut `imagingStudies` (métadonnées PACS) ; Pro `/settings` + `/commercial/settings` ; Flutter profil |
+| Effacement | Oui | `DELETE /api/v1/me` — client = purge (pets CASCADE `imaging.pet_studies` + delete Orthanc studies best-effort) ; pro = tombstone |
 | Rectification | Partiel | `PATCH /me` (nom, téléphone commercial), locale, mot de passe |
 | Restriction / opposition | Support | `support@ll-it-sc.be` / tickets — pas d’UI dédiée |
 | Consentement inscription | Oui | `"consent": true` → `terms_accepted_at` |

@@ -168,6 +168,135 @@ func TestVisitReportTranscriptPutImproveVersionsFlow(t *testing.T) {
 	if code != http.StatusConflict {
 		t.Fatalf("put after final want 409, got %d %#v", code, env)
 	}
+
+	// 7) Continuous improvement: mark / unmark reference on finalized CR.
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/report/reference", vetTok, map[string]any{
+		"isReference": true,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("mark reference %d %#v", code, env)
+	}
+	if dataMap(t, env)["isReference"] != true {
+		t.Fatalf("want isReference true, got %#v", dataMap(t, env)["isReference"])
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/report/reference", vetTok, map[string]any{
+		"isReference": false,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("unmark reference %d %#v", code, env)
+	}
+	if dataMap(t, env)["isReference"] != false {
+		t.Fatalf("want isReference false, got %#v", dataMap(t, env)["isReference"])
+	}
+}
+
+func TestVisitReportImproveInvalidTargetLocale(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	if len(pets) == 0 {
+		t.Fatal("no pets")
+	}
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+
+	slot := time.Now().UTC().Add(11 * time.Minute).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         slot,
+		"notes":               "invalid locale improve",
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, vetTok, nil)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/visits/"+visitID+"/report/improve", vetTok, map[string]any{
+		"sourceText":   "toux",
+		"targetLocale": "de",
+	})
+	if code != http.StatusBadRequest {
+		t.Fatalf("invalid targetLocale want 400, got %d %#v", code, env)
+	}
+}
+
+func TestVisitReportReferenceRequiresFinal(t *testing.T) {
+	api := newTestAPI(t)
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets", clientTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("pets %d %#v", code, env)
+	}
+	pets, _ := env["data"].([]any)
+	petID, _ := pets[0].(map[string]any)["id"].(string)
+
+	slot := time.Now().UTC().Add(13 * time.Minute).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         slot,
+		"notes":               "reference draft",
+		"durationMinutes":     30,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create visit %d %#v", code, env)
+	}
+	visitID, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID, vetTok, nil)
+	})
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPut, "/api/v1/visits/"+visitID+"/report", vetTok, map[string]any{
+		"bodyText": "**Anamnèse / motif :**\n\ndraft",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("put draft %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID+"/report/reference", vetTok, map[string]any{
+		"isReference": true,
+	})
+	if code != http.StatusConflict {
+		t.Fatalf("reference on draft want 409, got %d %#v", code, env)
+	}
+
+	// No report for another visit path: empty visit without ensure — PATCH without prior PUT
+	slot2 := time.Now().UTC().Add(14 * time.Minute).Format(time.RFC3339)
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+		"scheduledAt":         slot2,
+		"notes":               "no report",
+		"durationMinutes":     15,
+		"confirmDirect":       true,
+		"silentConfirm":       true,
+		"consultationSession": true,
+	})
+	if code != http.StatusCreated && code != http.StatusOK {
+		t.Fatalf("create visit2 %d %#v", code, env)
+	}
+	visitID2, _ := dataMap(t, env)["id"].(string)
+	t.Cleanup(func() {
+		_, _ = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/visits/"+visitID2, vetTok, nil)
+	})
+	code, env = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+visitID2+"/report/reference", vetTok, map[string]any{
+		"isReference": true,
+	})
+	if code != http.StatusNotFound {
+		t.Fatalf("reference without report want 404, got %d %#v", code, env)
+	}
 }
 
 func postTranscribeHint(t *testing.T, api *testAPI, tok, visitID, hint string) *httptest.ResponseRecorder {

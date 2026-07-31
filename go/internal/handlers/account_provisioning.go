@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
@@ -253,17 +252,18 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
-	req.ContactPhone = strings.TrimSpace(req.ContactPhone)
+	phone, phoneCode := normalizeContactPhone(req.ContactPhone, false)
+	if phoneCode != "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", phoneCode)
+		return req, false
+	}
+	req.ContactPhone = phone
 	if req.Email == "" || req.Password == "" || req.FullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return req, false
 	}
 	if len(req.Password) < 8 {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
-		return req, false
-	}
-	if utf8.RuneCountInString(req.ContactPhone) > 40 {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
 		return req, false
 	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {

@@ -89,6 +89,7 @@
     "invalid_status": "Estado no válido",
     "invalid_duration": "Duración no válida",
     "conflict": "Conflicto",
+    "pacs_study_other_pet": "Este estudio DICOM ya está vinculado a otro animal del centro",
     "slot_taken": "Este horario ya está ocupado",
     "on_vacation": "La clínica está cerrada en esta fecha",
     "invalid_proposed": "Fecha u hora propuesta no válida",
@@ -184,7 +185,10 @@
     "saas_master_not_configured": "Cuenta master Billit no configurada (BILLIT_MASTER_*)",
     "invalid_id": "Identificador no válido",
     "care_pro_visit_only": "Solo permitido en visitas creadas en campo (care pro)",
-    "pet_not_in_practice": "El animal no está vinculado a esta clínica"
+    "pet_not_in_practice": "El animal no está vinculado a esta clínica",
+    "pacs_study_other_practice": "Este estudio DICOM ya está vinculado a otro centro",
+    "pacs_instance_unavailable": "Falta el archivo DICOM en el servidor de imagen (almacenamiento). Vuelva a importar el estudio u abra otro.",
+    "pacs_error": "PACS error"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

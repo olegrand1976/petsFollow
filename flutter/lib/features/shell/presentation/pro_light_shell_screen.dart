@@ -353,7 +353,7 @@ class _ProLightShellScreenState extends State<ProLightShellScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          title: const PetsLogo(variant: PetsLogoVariant.horizontal, height: 28),
+          title: const PetsLogo(variant: PetsLogoVariant.horizontal, height: 36),
           actions: [
             IconButton(
               key: const Key('pro_light_support_btn'),

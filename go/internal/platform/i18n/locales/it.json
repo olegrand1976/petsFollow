@@ -89,6 +89,7 @@
     "invalid_status": "Stato non valido",
     "invalid_duration": "Durata non valida",
     "conflict": "Conflitto",
+    "pacs_study_other_pet": "Questo studio DICOM è già collegato a un altro animale dello studio",
     "slot_taken": "Questo spazio è già occupato",
     "on_vacation": "In questa data lo studio è chiuso",
     "invalid_proposed": "Data o ora proposta non valida",
@@ -184,7 +185,10 @@
     "saas_master_not_configured": "Account master Billit non configurato (BILLIT_MASTER_*)",
     "invalid_id": "Identificatore non valido",
     "care_pro_visit_only": "Consentito solo sulle visite create sul campo (care pro)",
-    "pet_not_in_practice": "L'animale non è collegato a questo studio"
+    "pet_not_in_practice": "L'animale non è collegato a questo studio",
+    "pacs_study_other_practice": "Questo studio DICOM è già collegato a un altro studio",
+    "pacs_instance_unavailable": "File DICOM assente sul server imaging (storage). Reimporta lo studio o aprine un altro.",
+    "pacs_error": "PACS error"
   },
   "success": {
     "confirm_email_sent": "È stata inviata un'e-mail di conferma.",

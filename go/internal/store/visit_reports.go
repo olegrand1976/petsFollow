@@ -22,6 +22,7 @@ type VisitReport struct {
 	AudioDurationSec     int        `json:"audioDurationSec,omitempty"`
 	TranscriptText       string     `json:"transcriptText,omitempty"`
 	ImprovedText         string     `json:"improvedText,omitempty"`
+	IsReference          bool       `json:"isReference"`
 	ClientAudioConsentAt *time.Time `json:"clientAudioConsentAt,omitempty"`
 	CreatedAt            time.Time  `json:"createdAt"`
 	UpdatedAt            time.Time  `json:"updatedAt"`
@@ -32,14 +33,14 @@ const visitReportReturning = `
 	id::text, visit_id::text, author_user_id::text, status, COALESCE(body_text,''),
 	COALESCE(audio_url,''), COALESCE(audio_object_key,''), COALESCE(audio_duration_sec, 0),
 	COALESCE(transcript_text,''),
-	COALESCE(improved_text,''), client_audio_consent_at, created_at, updated_at, finalized_at`
+	COALESCE(improved_text,''), COALESCE(is_reference, false), client_audio_consent_at, created_at, updated_at, finalized_at`
 
 func scanVisitReport(row pgx.Row) (VisitReport, error) {
 	var r VisitReport
 	err := row.Scan(
 		&r.ID, &r.VisitID, &r.AuthorUserID, &r.Status, &r.BodyText,
 		&r.AudioURL, &r.AudioObjectKey, &r.AudioDurationSec, &r.TranscriptText, &r.ImprovedText,
-		&r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
+		&r.IsReference, &r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
 	)
 	if err == nil {
 		r.HasAudio = strings.TrimSpace(r.AudioObjectKey) != ""
@@ -183,6 +184,19 @@ func (s *Store) FinalizeVisitReport(ctx context.Context, reportID string) (Visit
 	return r, err
 }
 
+// SetVisitReportReference marks a finalized CR as a quality reference for continuous improvement.
+func (s *Store) SetVisitReportReference(ctx context.Context, reportID string, isReference bool) (VisitReport, error) {
+	r, err := scanVisitReport(s.pool.QueryRow(ctx, `
+		UPDATE visits.visit_reports
+		SET is_reference=$2, updated_at=NOW()
+		WHERE id=$1 AND status='final'
+		RETURNING `+visitReportReturning, reportID, isReference))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VisitReport{}, ErrNotFound
+	}
+	return r, err
+}
+
 // sqlVisitReportIsPersisted — predicate on alias `r` (visits.visit_reports):
 // any author content beyond an empty Ensure draft.
 const sqlVisitReportIsPersisted = `(
@@ -231,7 +245,7 @@ func (s *Store) ListVisitReportsForVisit(ctx context.Context, visitID, viewerUse
 			r.id::text, r.visit_id::text, r.author_user_id::text, r.status, COALESCE(r.body_text,''),
 			COALESCE(r.audio_url,''), COALESCE(r.audio_object_key,''), COALESCE(r.audio_duration_sec, 0),
 			COALESCE(r.transcript_text,''),
-			COALESCE(r.improved_text,''), r.client_audio_consent_at, r.created_at, r.updated_at, r.finalized_at,
+			COALESCE(r.improved_text,''), COALESCE(r.is_reference, false), r.client_audio_consent_at, r.created_at, r.updated_at, r.finalized_at,
 			COALESCE(NULLIF(TRIM(u.full_name), ''), u.email) AS author_full_name
 		FROM visits.visit_reports r
 		JOIN identity.users u ON u.id = r.author_user_id
@@ -248,7 +262,7 @@ func (s *Store) ListVisitReportsForVisit(ctx context.Context, visitID, viewerUse
 		if err := rows.Scan(
 			&r.ID, &r.VisitID, &r.AuthorUserID, &r.Status, &r.BodyText,
 			&r.AudioURL, &r.AudioObjectKey, &r.AudioDurationSec, &r.TranscriptText, &r.ImprovedText,
-			&r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
+			&r.IsReference, &r.ClientAudioConsentAt, &r.CreatedAt, &r.UpdatedAt, &r.FinalizedAt,
 			&sum.AuthorFullName,
 		); err != nil {
 			return nil, err

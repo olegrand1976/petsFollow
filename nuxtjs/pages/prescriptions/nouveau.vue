@@ -1,15 +1,15 @@
 <template>
-  <div data-testid="ordonnances-wizard-page">
+  <div data-testid="prescriptions-wizard-page">
     <ProPageHeader
       :title="$t('prescriptions.wizardTitle')"
       :subtitle="$t('prescriptions.wizardSubtitle')"
     >
       <template #actions>
-        <ProBadge variant="warning" data-testid="ordonnances-wizard-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
+        <ProBadge variant="warning" data-testid="prescriptions-wizard-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
       </template>
     </ProPageHeader>
 
-    <p v-if="error" class="pro-alert" data-testid="ordonnances-wizard-error">{{ error }}</p>
+    <p v-if="error" class="pro-alert" data-testid="prescriptions-wizard-error">{{ error }}</p>
 
     <ProCard class="pro-mb-lg">
       <label class="pro-label">{{ $t('prescriptions.pet') }}</label>
@@ -18,26 +18,37 @@
         v-model="pet"
         :placeholder="$t('prescriptions.petSearch')"
         :search-fn="searchPets"
-        data-testid="ordonnances-pet"
+        data-testid="prescriptions-pet"
       />
       <div class="rx-format">
         <label class="pro-label">{{ $t('prescriptions.paperFormat') }}</label>
-        <select v-model="paperFormat" class="pro-input" data-testid="ordonnances-format">
+        <select v-model="paperFormat" class="pro-input" data-testid="prescriptions-format">
           <option value="A4">A4</option>
           <option value="A5">A5</option>
         </select>
       </div>
       <label class="pro-label">{{ $t('prescriptions.validUntil') }}</label>
-      <input v-model="validUntil" type="date" class="pro-input" data-testid="ordonnances-valid-until" />
+      <input v-model="validUntil" type="date" class="pro-input" data-testid="prescriptions-valid-until" />
       <label class="pro-label">{{ $t('prescriptions.notes') }}</label>
-      <textarea v-model="notes" class="pro-input" rows="2" data-testid="ordonnances-notes" />
+      <textarea v-model="notes" class="pro-input" rows="2" data-testid="prescriptions-notes" />
     </ProCard>
 
     <ProCard class="pro-mb-lg">
-      <div v-for="(line, idx) in lines" :key="idx" class="rx-line" :data-testid="`ordonnances-line-${idx}`">
+      <div v-for="(line, idx) in lines" :key="idx" class="rx-line" :data-testid="`prescriptions-line-${idx}`">
+        <div class="rx-line__full">
+          <label class="pro-label">{{ $t('prescriptions.medSearch') }}</label>
+          <ProCombobox
+            :input-id="`rx-med-${idx}`"
+            v-model="line.med"
+            :placeholder="$t('prescriptions.medSearch')"
+            :search-fn="searchMedications"
+            :data-testid="`prescriptions-med-search-${idx}`"
+            @select="(v) => onMedPicked(idx, v)"
+          />
+        </div>
         <div>
           <label class="pro-label">{{ $t('prescriptions.medName') }}</label>
-          <input v-model="line.name" class="pro-input" :data-testid="`ordonnances-med-name-${idx}`" />
+          <input v-model="line.name" class="pro-input" :data-testid="`prescriptions-med-name-${idx}`" />
         </div>
         <div>
           <label class="pro-label">{{ $t('prescriptions.dosage') }}</label>
@@ -60,18 +71,18 @@
           <input v-model="line.withdrawal_period" class="pro-input" />
         </div>
         <div v-if="lines.length > 1" class="rx-line__full">
-          <ProButton variant="ghost" :test-id="`ordonnances-remove-line-${idx}`" @click="removeLine(idx)">
+          <ProButton variant="ghost" :test-id="`prescriptions-remove-line-${idx}`" @click="removeLine(idx)">
             {{ $t('prescriptions.removeLine') }}
           </ProButton>
         </div>
       </div>
-      <ProButton variant="secondary" test-id="ordonnances-add-line" @click="addLine">
+      <ProButton variant="secondary" test-id="prescriptions-add-line" @click="addLine">
         {{ $t('prescriptions.addLine') }}
       </ProButton>
     </ProCard>
 
     <div class="rx-actions">
-      <ProButton variant="primary" test-id="ordonnances-save-draft" :disabled="busy || !canSubmit" @click="saveDraft">
+      <ProButton variant="primary" test-id="prescriptions-save-draft" :disabled="busy || !canSubmit" @click="saveDraft">
         {{ busy ? $t('prescriptions.loading') : $t('prescriptions.saveDraft') }}
       </ProButton>
     </div>
@@ -84,6 +95,7 @@ import type { ProComboboxItem } from '~/components/pro/ProCombobox.vue'
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.write_clinical' })
 const { t } = useI18n()
 const { mapError } = usePrescriptionError()
+const runtimeConfig = useRuntimeConfig()
 const busy = ref(false)
 const error = ref('')
 const pet = ref<ProComboboxItem | null>(null)
@@ -91,20 +103,34 @@ const paperFormat = ref('A4')
 const validUntil = ref('')
 const notes = ref('')
 const petsCache = ref<any[]>([])
+const pharmacyOn = computed(() => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled))
 
 type Line = {
+  med: ProComboboxItem | null
   name: string
   dosage: string
   form: string
   quantity: string
   posology: string
   withdrawal_period: string
+  cnk: string
+  ref_medication_id: string
 }
 
 const lines = ref<Line[]>([emptyLine()])
 
 function emptyLine(): Line {
-  return { name: '', dosage: '', form: '', quantity: '', posology: '', withdrawal_period: '' }
+  return {
+    med: null,
+    name: '',
+    dosage: '',
+    form: '',
+    quantity: '',
+    posology: '',
+    withdrawal_period: '',
+    cnk: '',
+    ref_medication_id: '',
+  }
 }
 
 function addLine() {
@@ -114,6 +140,17 @@ function addLine() {
 function removeLine(idx: number) {
   if (lines.value.length <= 1) return
   lines.value.splice(idx, 1)
+}
+
+function onMedPicked(idx: number, v: ProComboboxItem) {
+  const line = lines.value[idx]
+  if (!line || !v) return
+  line.med = v
+  const m = (v.raw || {}) as any
+  line.name = String(m.name || v.label || '')
+  line.cnk = String(m.cnk || '')
+  line.ref_medication_id = String(m.id || v.id || '')
+  if (m.pharmaceuticalForm && !line.form) line.form = String(m.pharmaceuticalForm)
 }
 
 const canSubmit = computed(() =>
@@ -149,6 +186,19 @@ async function searchPets(q: string): Promise<ProComboboxItem[]> {
     }))
 }
 
+async function searchMedications(q: string): Promise<ProComboboxItem[]> {
+  if (!pharmacyOn.value) return []
+  const res = await $fetch<any>('/api/vet/pharmacy/medications/search', { query: { q, limit: '20' } })
+  const items = unwrap(res)?.items ?? []
+  return items.map((m: any) => ({
+    id: m.id,
+    label: m.name,
+    hint: m.cnk,
+    badge: m.isAntibiotic ? t('pharmacy.antibioticWarning') : undefined,
+    raw: m,
+  }))
+}
+
 async function saveDraft() {
   if (!canSubmit.value || busy.value) return
   busy.value = true
@@ -158,22 +208,29 @@ async function saveDraft() {
       petId: pet.value!.id,
       paperFormat: paperFormat.value,
       notes: notes.value,
-      medications: lines.value.map(l => ({
-        name: l.name.trim(),
-        dosage: l.dosage.trim(),
-        form: l.form.trim(),
-        quantity: l.quantity.trim(),
-        posology: l.posology.trim(),
-        withdrawal_period: l.withdrawal_period.trim(),
-      })),
+      medications: lines.value.map((l) => {
+        const med: any = {
+          name: l.name.trim(),
+          dosage: l.dosage.trim(),
+          form: l.form.trim(),
+          quantity: l.quantity.trim(),
+          posology: l.posology.trim(),
+          withdrawal_period: l.withdrawal_period.trim(),
+        }
+        if (l.cnk) med.cnk = l.cnk
+        if (l.ref_medication_id) med.ref_medication_id = l.ref_medication_id
+        return med
+      }),
     }
     if (validUntil.value) body.validUntil = validUntil.value
     const res = await $fetch<any>('/api/vet/prescriptions', { method: 'POST', body })
     const doc = unwrap(res)
-    await navigateTo(`/ordonnances/${doc.id}`)
-  } catch (e: any) {
+    await navigateTo(`/prescriptions/${doc.id}`)
+  }
+  catch (e: any) {
     error.value = mapError(e)
-  } finally {
+  }
+  finally {
     busy.value = false
   }
 }

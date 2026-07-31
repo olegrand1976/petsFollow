@@ -37,7 +37,7 @@ pf_write_api_env_file() {
   local app_env="${4:-production}"
   local redis_addr
   local billing_mock
-  local pharmacy_enabled billit_enabled prescriptions_enabled
+  local pharmacy_enabled billit_enabled prescriptions_enabled pacs_enabled
   billing_mock="${BILLING_MOCK_ENABLED:-true}"
   redis_addr="$(pf_resolve_redis_addr)"
   # Modules tag « dev » : on en staging (sidebar Pro) ; prod reste opt-in explicite.
@@ -47,6 +47,12 @@ pf_write_api_env_file() {
     pharmacy_enabled="${PHARMACY_ENABLED:-true}"
     billit_enabled="${BILLIT_ENABLED:-true}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-true}"
+    # PACS on staging only when Orthanc URL is wired (avoid permanent offline UI).
+    if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
+      pacs_enabled="${PACS_ENABLED:-true}"
+    else
+      pacs_enabled="${PACS_ENABLED:-false}"
+    fi
     # Billit tag-dev : mock gateway (pas d’appels live). local_enc + clé via pf_api_secrets.
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_mock="${BILLIT_MOCK_ENABLED:-true}"
@@ -56,6 +62,7 @@ pf_write_api_env_file() {
     pharmacy_enabled="${PHARMACY_ENABLED:-false}"
     billit_enabled="${BILLIT_ENABLED:-false}"
     prescriptions_enabled="${PRESCRIPTIONS_ENABLED:-false}"
+    pacs_enabled="${PACS_ENABLED:-false}"
     billit_mock="${BILLIT_MOCK_ENABLED:-false}"
     if [[ "$billit_enabled" == "true" || "$billit_enabled" == "1" ]]; then
       billit_secrets_backend="${BILLIT_SECRETS_BACKEND:-local_enc}"
@@ -90,6 +97,10 @@ PHARMACY_WORKERS_ENABLED: "${PHARMACY_WORKERS_ENABLED:-false}"
 BILLIT_ENABLED: "${billit_enabled}"
 BILLIT_MOCK_ENABLED: "${billit_mock}"
 PRESCRIPTIONS_ENABLED: "${prescriptions_enabled}"
+PACS_ENABLED: "${pacs_enabled}"
+PACS_ORTHANC_URL: "${PACS_ORTHANC_URL:-}"
+PACS_ORTHANC_USER: "${PACS_ORTHANC_USER:-petsfollow}"
+PACS_ORTHANC_USE_ID_TOKEN: "${PACS_ORTHANC_USE_ID_TOKEN:-true}"
 GCS_MEDIA_BUCKET: "${GCS_MEDIA_BUCKET}"
 LLIT_WEBSITE_URL: "${LLIT_WEBSITE_URL:-https://ll-it-sc.be}"
 GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
@@ -118,7 +129,7 @@ pf_write_frontend_env_file() {
   local api_url="${2:-${PUBLIC_API_URL}}"
   # Explicit : staging | production | local — défaut production (jamais activer UC/badge S par accident).
   local app_env="${3:-production}"
-  local pharmacy_pub billit_pub prescriptions_pub
+  local pharmacy_pub billit_pub prescriptions_pub pacs_pub
   local flag_lines=""
   # Nav Pro tag « dev » : on en staging ; prod opt-in.
   # Ne jamais écrire "false" : Nuxt injecte des strings et Boolean("false")===true côté JS.
@@ -127,10 +138,16 @@ pf_write_frontend_env_file() {
     pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-true}"
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-true}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-true}"
+    if [[ -n "${PACS_ORTHANC_URL:-}" ]]; then
+      pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-true}"
+    else
+      pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
+    fi
   else
     pharmacy_pub="${NUXT_PUBLIC_PHARMACY_ENABLED:-}"
     billit_pub="${NUXT_PUBLIC_BILLIT_ENABLED:-}"
     prescriptions_pub="${NUXT_PUBLIC_PRESCRIPTIONS_ENABLED:-}"
+    pacs_pub="${NUXT_PUBLIC_PACS_ENABLED:-}"
   fi
   if [[ "$pharmacy_pub" == "true" || "$pharmacy_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PHARMACY_ENABLED: \"true\"
@@ -142,6 +159,10 @@ pf_write_frontend_env_file() {
   fi
   if [[ "$prescriptions_pub" == "true" || "$prescriptions_pub" == "1" ]]; then
     flag_lines="${flag_lines}NUXT_PUBLIC_PRESCRIPTIONS_ENABLED: \"true\"
+"
+  fi
+  if [[ "$pacs_pub" == "true" || "$pacs_pub" == "1" ]]; then
+    flag_lines="${flag_lines}NUXT_PUBLIC_PACS_ENABLED: \"true\"
 "
   fi
   cat >"$path" <<EOF
@@ -218,6 +239,10 @@ pf_api_secrets() {
     secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-billit-secrets-key:latest"
   else
     secrets="${secrets},BILLIT_SECRETS_KEY=petsfollow-jwt-signing-key:latest"
+  fi
+  if gcloud secrets versions access latest \
+    --secret=petsfollow-orthanc-password --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
+    secrets="${secrets},PACS_ORTHANC_PASSWORD=petsfollow-orthanc-password:latest"
   fi
   printf '%s' "$secrets"
 }

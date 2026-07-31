@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 )
 
 // CompendiumImportJob tracks PDF → AI extract → human review → upsert.
@@ -204,12 +205,13 @@ func (s *Store) ListCompendiumImportRows(ctx context.Context, jobID string) ([]C
 }
 
 // MarkCompendiumExtracting sets status + extract_total.
+// Allows uploaded | failed | extracting (stuck-job recovery / restart).
 func (s *Store) MarkCompendiumExtracting(ctx context.Context, id string, extractTotal int) error {
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_jobs
 		SET status = 'extracting', extract_total = $2, extract_done = 0,
 		    error_message = NULL, updated_at = now()
-		WHERE id = $1 AND status IN ('uploaded', 'failed')`, id, extractTotal)
+		WHERE id = $1 AND status IN ('uploaded', 'failed', 'extracting')`, id, extractTotal)
 	if err != nil {
 		return err
 	}
@@ -285,7 +287,8 @@ func (s *Store) ReplaceCompendiumExtractRows(ctx context.Context, jobID string, 
 			return err
 		}
 	}
-	reviewed := ready + errs // ready+error count as "reviewed" by classifier; excluded added later
+	// Human-reviewed = ready|excluded|upserted only (pending/error wait for control).
+	reviewed := ready
 	_, err = tx.Exec(ctx, `
 		UPDATE pharmacy.compendium_import_jobs
 		SET status = 'extracted',
@@ -376,19 +379,14 @@ func (s *Store) PatchCompendiumImportRow(ctx context.Context, jobID, rowID strin
 		}
 	}
 	if r.Status != "excluded" {
-		if r.Name == "" {
-			r.Status = "error"
-			r.ErrorCode = "missing_name"
-			r.ErrorMessage = "name required"
-		} else if r.CNK == "" {
-			r.Status = "error"
-			r.ErrorCode = "missing_cnk"
-			r.ErrorMessage = "cnk required for national dictionary"
-		} else {
-			r.Status = "ready"
-			r.ErrorCode = ""
-			r.ErrorMessage = ""
-		}
+		// Any PATCH is a human control action → confirm valid rows to ready.
+		st, code, msg := pharmacy.ClassifyExtractedRow(pharmacy.ExtractedMedication{
+			CNK:  r.CNK,
+			Name: r.Name,
+		}, true)
+		r.Status = st
+		r.ErrorCode = code
+		r.ErrorMessage = msg
 	}
 
 	_, err = tx.Exec(ctx, `
@@ -426,13 +424,53 @@ func refreshCompendiumJobCountsTx(ctx context.Context, tx pgx.Tx, jobID string) 
 				COUNT(*)::int AS total,
 				COUNT(*) FILTER (WHERE status = 'ready')::int AS ready,
 				COUNT(*) FILTER (WHERE status = 'error')::int AS err,
-				COUNT(*) FILTER (WHERE status IN ('ready','excluded','error','upserted'))::int AS reviewed,
+				COUNT(*) FILTER (WHERE status IN ('ready','excluded','upserted'))::int AS reviewed,
 				COUNT(*) FILTER (WHERE status = 'upserted')::int AS upserted
 			FROM pharmacy.compendium_import_rows
 			WHERE job_id = $1
 		) s
 		WHERE j.id = $1`, jobID)
 	return err
+}
+
+// ConfirmCompendiumPendingRows promotes pending rows with valid CNK+name to ready.
+func (s *Store) ConfirmCompendiumPendingRows(ctx context.Context, jobID string) (int, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	var status string
+	err = tx.QueryRow(ctx, `
+		SELECT status FROM pharmacy.compendium_import_jobs WHERE id = $1 FOR UPDATE`, jobID).Scan(&status)
+	if err == pgx.ErrNoRows {
+		return 0, ErrNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+	if status != "extracted" {
+		return 0, ErrConflict
+	}
+
+	tag, err := tx.Exec(ctx, `
+		UPDATE pharmacy.compendium_import_rows
+		SET status = 'ready', error_code = NULL, error_message = NULL
+		WHERE job_id = $1
+		  AND status = 'pending'
+		  AND TRIM(cnk) <> ''
+		  AND TRIM(name) <> ''`, jobID)
+	if err != nil {
+		return 0, err
+	}
+	if err := refreshCompendiumJobCountsTx(ctx, tx, jobID); err != nil {
+		return 0, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
 }
 
 type CompendiumCommitResult struct {

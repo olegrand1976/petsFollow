@@ -76,6 +76,26 @@
       <p class="pro-profile-form__hint">{{ $t('settings.heartrate.hint') }}</p>
     </fieldset>
 
+    <fieldset v-if="showDeskIdle" class="pro-profile-form__desk-idle" data-testid="settings-desk-idle">
+      <legend class="pro-label">{{ $t('settings.deskIdle.title') }}</legend>
+      <p class="pro-profile-form__hint">{{ $t('settings.deskIdle.subtitle') }}</p>
+      <div class="pro-field">
+        <label class="pro-label" for="desk-idle-minutes">{{ $t('settings.deskIdle.label') }}</label>
+        <select
+          id="desk-idle-minutes"
+          v-model.number="deskIdleMinutes"
+          class="pro-select"
+          name="deskIdleMinutes"
+          data-testid="settings-desk-idle-select"
+        >
+          <option v-for="opt in idleOptions" :key="opt" :value="opt">
+            {{ $t(`settings.deskIdle.minutes${opt}`) }}
+          </option>
+        </select>
+      </div>
+      <p class="pro-profile-form__hint">{{ $t('settings.deskIdle.hint') }}</p>
+    </fieldset>
+
     <fieldset v-if="showPayoutSection" class="pro-profile-form__payout" data-testid="profile-payout-section">
       <legend class="pro-profile-form__section-title">{{ $t('components.profileForm.payoutSection') }}</legend>
       <p class="pro-profile-form__hint">{{ $t('components.profileForm.payoutHint') }}</p>
@@ -241,21 +261,29 @@ export function mapPracticeProfileFromApi(data: any): PracticeProfileForm {
 </script>
 
 <script setup lang="ts">
+import {
+  ALLOWED_DESK_IDLE_MINUTES,
+  DEFAULT_DESK_IDLE_MINUTES,
+} from '~/utils/deskIdleMinutes'
+
 const model = defineModel<PracticeProfileForm>({ required: true })
 
 withDefaults(
   defineProps<{
     showHeartrateDurations?: boolean
+    showDeskIdle?: boolean
     showPayoutSection?: boolean
   }>(),
-  { showHeartrateDurations: false, showPayoutSection: true },
+  { showHeartrateDurations: false, showDeskIdle: false, showPayoutSection: true },
 )
 
 const heartrateDurationsSec = defineModel<number[]>('heartrateDurationsSec', { default: () => [60] })
+const deskIdleMinutes = defineModel<number>('deskIdleMinutes', { default: DEFAULT_DESK_IDLE_MINUTES })
 
 defineEmits<{ submit: [] }>()
 
 const durationOptions = [15, 30, 60] as const
+const idleOptions = ALLOWED_DESK_IDLE_MINUTES
 const countryOptions = ['BE', 'FR', 'NL', 'LU', 'DE', 'ES', 'EE'] as const
 </script>
 
@@ -273,6 +301,7 @@ const countryOptions = ['BE', 'FR', 'NL', 'LU', 'DE', 'ES', 'EE'] as const
 }
 
 .pro-profile-form__heartrate,
+.pro-profile-form__desk-idle,
 .pro-profile-form__payout {
   border: none;
   margin: 1rem 0 0;

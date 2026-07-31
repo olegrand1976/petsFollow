@@ -45,9 +45,10 @@ func IsPracticeStaff(role Role) bool {
 }
 
 // IsProRole reports roles that get an automatic personal (client) profile on registration / EnsureUserProfiles.
+// RoleAdmin is intentionally excluded: admin client/vet multi-profiles are seed-only (demo ops), not created for every admin.
 func IsProRole(role Role) bool {
 	return role == RoleVet || role == RoleCarePro || role == RoleCommercial || role == RoleCommercialManager ||
-		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev || role == RoleAdmin
+		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev
 }
 
 func ValidSpecialty(s ProfessionalSpecialty) bool {

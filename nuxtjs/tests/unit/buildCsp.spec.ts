@@ -22,4 +22,12 @@ describe('buildCsp', () => {
     expect(csp).not.toContain('localhost')
     expect(csp).not.toContain('127.0.0.1')
   })
+
+  it('autorise wasm Cornerstone (PACS) sans élargir script-src à *', () => {
+    const csp = buildCsp('')
+    expect(csp).toContain("'wasm-unsafe-eval'")
+    expect(csp).toMatch(/script-src[^;]*'self'/)
+    expect(csp).not.toMatch(/script-src[^;]*\*/)
+    expect(csp).toContain("worker-src 'self' blob:")
+  })
 })

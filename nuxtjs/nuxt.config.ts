@@ -38,9 +38,23 @@ export default defineNuxtConfig({
       pharmacyEnabled: publicFeatureFlag('NUXT_PUBLIC_PHARMACY_ENABLED'),
       /** Facturation Billit — mirror BILLIT_ENABLED (opt-in). */
       billitEnabled: publicFeatureFlag('NUXT_PUBLIC_BILLIT_ENABLED'),
-      /** Ordonnances (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
+      /** Prescriptions (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
       prescriptionsEnabled: publicFeatureFlag('NUXT_PUBLIC_PRESCRIPTIONS_ENABLED'),
+      /** PACS Orthanc (imagerie DICOM) — mirror PACS_ENABLED. */
+      pacsEnabled: publicFeatureFlag('NUXT_PUBLIC_PACS_ENABLED'),
+      /** PACS viewer engine: canvas (default) | cornerstone (P2.1 opt-in). */
+      pacsViewerEngine: process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas',
     },
+  },
+  vite: {
+    optimizeDeps: {
+      exclude: ['@cornerstonejs/dicom-image-loader'],
+      include: ['dicom-parser'],
+    },
+    worker: {
+      format: 'es',
+    },
+    assetsInclude: ['**/*.wasm'],
   },
   routeRules: {
     '/admin/usecases': { redirect: '/usecases' },
@@ -81,7 +95,8 @@ export default defineNuxtConfig({
       title: 'petsFollow Pro',
       // Polices auto-hébergées via assets/css/fonts.css (RGPD : aucun appel Google Fonts).
       link: [
-        { rel: 'icon', href: '/brand/emblem.svg' },
+        { rel: 'icon', type: 'image/png', href: '/brand/favicon-192.png' },
+        { rel: 'apple-touch-icon', href: '/brand/apple-touch-icon.png' },
         {
           rel: 'preload',
           href: '/fonts/dm-sans-latin.woff2',

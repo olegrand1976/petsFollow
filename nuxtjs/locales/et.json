@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV memo",
     "commercialBrochure": "Kliiniku brošüür",
     "adminRuntimeFlags": "Runtime lipud",
+    "adminPacs": "PACS",
     "adminCompendium": "Kompendium PDF"
   },
   "auth": {
@@ -357,6 +358,18 @@
       "saved": "Kestused salvestatud.",
       "save": "Salvesta kestused"
     },
+    "deskIdle": {
+      "title": "Jagatud töökoha lukustus",
+      "subtitle": "Tegevusetuse viivitus enne automaatset lukustust (meeskond ≥ 2).",
+      "label": "Lukustusviivitus",
+      "hint": "Kehtib praktika kõigi tööjaamade kohta. Vaikimisi: 2 minutit.",
+      "minutes1": "1 minut",
+      "minutes2": "2 minutit",
+      "minutes5": "5 minutit",
+      "minutes10": "10 minutit",
+      "minutes15": "15 minutit",
+      "minutes30": "30 minutit"
+    },
     "notifications": {
       "title": "E-posti teavitused",
       "subtitle": "Valige, millised sündmused käivitavad e-kirja.",
@@ -533,6 +546,7 @@
         "vitals": "HR ja kaal",
         "care": "Hooldus ja vastuvõtud",
         "documents": "Dokumendid",
+        "imaging": "Pildistamine",
         "sharing": "Jagamine"
       },
       "kpi": {
@@ -1727,7 +1741,7 @@
       "kpiReady": "Ready",
       "kpiUpserted": "Loaded",
       "progressTitle": "Progress",
-      "progressExtract": "Extract {pct}% ({done}/{total} chunks)",
+      "progressExtract": "Eraldamine {pct}% ({done}/{total})",
       "progressReview": "Review {pct}% ({done}/{total} rows)",
       "startExtract": "Start AI extraction",
       "previewTitle": "Row review",
@@ -1759,7 +1773,11 @@
         "excluded": "Excluded",
         "error": "Error",
         "upserted": "Loaded"
-      }
+      },
+      "retryExtract": "Käivita eraldamine uuesti",
+      "previewHint": "Kehtivad read jäävad ootele kuni inimkontrollini (kinnita või paranda CNK/nimi).",
+      "confirmReady": "Kinnita {count} ootel rida",
+      "confirmRow": "Kinnita"
     }
   },
   "commissions": {
@@ -2149,6 +2167,8 @@
       "notificationsEmptyDescription": "Kliendivestlused ilmuvad siia.",
       "markAllRead": "Märgi kõik loetuks",
       "profileMenu": "Profiilimenüü",
+      "openNav": "Ava menüü",
+      "closeNav": "Sulge menüü",
       "settings": "Seaded",
       "themeDark": "Lülita tume režiim sisse",
       "themeLight": "Lülita hele režiim sisse",
@@ -2243,6 +2263,8 @@
     "invalid_json": "Vigane JSON",
     "fields_required": "Kõik väljad on kohustuslikud",
     "password_too_short": "Parool on liiga lühike (vähemalt 8 tähemärki)",
+    "contact_phone_required": "Telefoninumber on kohustuslik",
+    "contact_phone_too_long": "Telefoninumber on liiga pikk",
     "image_too_large": "Fail on liiga suur (limiit ületatud)",
     "invalid_image_type": "Toetamata vorming (JPEG, PNG, WebP, MP4, MOV, WebM)",
     "file_required": "Fail on kohustuslik",
@@ -2253,6 +2275,7 @@
     "profile_fields_required": "Kohustuslikud väljad puuduvad",
     "invalid_plan": "Vigane plaan",
     "invalid_iban": "Vigane IBAN",
+    "invalid_desk_idle_minutes": "Vigane lukustusviivitus (1, 2, 5, 10, 15 või 30 min)",
     "invalid_locale": "Toetamata keel",
     "invalid_bic": "Vigane BIC (8 või 11 tähemärki)",
     "invalid_account_holder": "Vigane kontoomanik",
@@ -3616,5 +3639,95 @@
     "medSearch": "Otsi (CNK / nimi)",
     "dispenseDaf": "Väljasta kabinetis (DAF)",
     "dispenseDafHint": "Loob DAF mustandi (CNK kataloog). Täitke AMM numbrid ja vormistage viisardis."
+  },
+  "pacs": {
+    "title": "PACS-kuvamine",
+    "wake": "Aktiveeri PACS",
+    "refresh": "Värskenda",
+    "upload": "Impordi DICOM",
+    "compare": "Võrdle",
+    "offlineHint": "Kujutisteenus on välja lülitatud. Aktiveerige see radiograafiate vaatamiseks või importimiseks.",
+    "emptyTitle": "Uuringuid pole",
+    "emptyDescription": "Alustamiseks importige .dcm-fail.",
+    "previewError": "Pildi eelvaadet ei õnnestunud laadida. Proovige uuesti või käivitage PACS.",
+    "orthancError": "Orthanci viga (502). Proovige teist uuringut (nt RX) või laadige DICOM uuesti — mõned indekseeritud pildid võivad puududa.",
+    "viewerWaiting": "Vaataja ootab — uuring ei andnud eksemplari (proovige teist uuringut).",
+    "leftSeries": "Vasak eksemplar",
+    "rightSeries": "Parem eksemplar",
+    "state": {
+      "offline": "Võrguühenduseta",
+      "starting": "Käivitamine…",
+      "ready": "Valmis"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Kontrast",
+      "measure": "Mõõda",
+      "arrow": "Nool",
+      "fullscreen": "Täisekraan",
+      "exitFullscreen": "Välju täisekraanilt",
+      "prevFrame": "Kaader −",
+      "nextFrame": "Kaader +",
+      "frame": "Kaader {n}",
+      "download": "Laadi DICOM alla",
+      "measureCalibrated": "Kalibreeritud (mm)",
+      "measureUncalibrated": "Kalibreerimata (px)",
+      "measureHintPx": "Usaldusväärne kalibreering puudub — mõõtmine piksliühikutes",
+      "measureHintResized": "Orthanci eelvaade muudetud vs DICOM — ainult px (mm jaoks Cornerstone)"
+    },
+    "admin": {
+      "title": "PACS — järelevalve",
+      "subtitle": "Orthanci olek, loomaarsti playground ning äratuse / tervise logid",
+      "metricsTitle": "Mõõdikud",
+      "playgroundTitle": "Kujutise playground",
+      "playgroundHint": "Sama UI nagu looma kaart (vet). Vaikimisi client.demo seed — kliendi fetch-jäljed all.",
+      "petSelect": "Loom",
+      "petPlaceholder": "Vali loom…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Kleebi petId…",
+      "applyPet": "Ava",
+      "noPetSelected": "Vali või kleebi loom DICOM-vaataja avamiseks.",
+      "viewerLoading": "Vaataja laadimine…",
+      "reloadPets": "Laadi loomad uuesti",
+      "debugTitle": "Kliendi debug (fetch)",
+      "debugClear": "Tühjenda",
+      "debugEmpty": "Kutseid pole veel — ava uuring või ärata PACS",
+      "debugColOk": "Olek",
+      "debugColMethod": "Meetod",
+      "debugColUrl": "URL",
+      "debugColMs": "ms",
+      "logsTitle": "Hiljutised serverilogid",
+      "latency": "Latentsus",
+      "state": "Olek",
+      "redis": "Redis",
+      "orthancUrl": "Seadistatud Orthanci URL",
+      "refresh": "Värskenda",
+      "emptyLogs": "Logisid pole veel",
+      "colAt": "Ajatempel",
+      "colLevel": "Tase",
+      "colEvent": "Sündmus",
+      "colMessage": "Sõnum"
+    },
+    "launch": {
+      "title": "PACS-i start",
+      "subtitle": "Orthanc käivitub — pilditoimingud on lukus kuni valmisolekuni.",
+      "waking": "Käivitamine…",
+      "actionsLocked": "Üleslaadimine, võrdlus ja vaade jäävad lukku kuni Valmis.",
+      "steps": {
+        "check": "Eelkontroll — teenuse olek",
+        "ignite": "Süüte — äratamissignaal",
+        "liftoff": "Õhkutõus — Orthanc cold start",
+        "orbit": "Orbiit — turvaline ühendus",
+        "ready": "Valmis — pildindus saadaval"
+      },
+      "notReady": "PACS ei ole valmis. Proovige uuesti äratada või oodake käivituse lõppu."
+    },
+    "leftInstance": "Vasak eksemplar",
+    "rightInstance": "Parem eksemplar",
+    "seriesPicker": "Seeria",
+    "seriesOption": "Seeria {n} · {id}",
+    "downloadError": "DICOM-i allalaadimine ebaõnnestus.",
+    "instanceUnavailable": "DICOM puudub pildiserveris. Laadige uuring uuesti või valige teine."
   }
 }

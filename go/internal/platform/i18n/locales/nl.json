@@ -89,6 +89,7 @@
     "invalid_status": "Ongeldige status",
     "invalid_duration": "Ongeldige duur",
     "conflict": "Conflict",
+    "pacs_study_other_pet": "Deze DICOM-studie is al gekoppeld aan een ander dier in de praktijk",
     "slot_taken": "Dit tijdslot is al bezet",
     "on_vacation": "De praktijk is gesloten op deze datum",
     "invalid_proposed": "Ongeldige voorgestelde datum of tijd",
@@ -184,7 +185,10 @@
     "saas_master_not_configured": "Billit-masteraccount niet geconfigureerd (BILLIT_MASTER_*)",
     "invalid_id": "Ongeldige identifier",
     "care_pro_visit_only": "Alleen toegestaan voor bezoeken aangemaakt in het veld (care pro)",
-    "pet_not_in_practice": "Dier hoort niet bij deze praktijk"
+    "pet_not_in_practice": "Dier hoort niet bij deze praktijk",
+    "pacs_study_other_practice": "Deze DICOM-studie is al gekoppeld aan een andere praktijk",
+    "pacs_instance_unavailable": "DICOM-bestand ontbreekt op de beeldserver (opslag). Upload de studie opnieuw of open een andere.",
+    "pacs_error": "PACS error"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

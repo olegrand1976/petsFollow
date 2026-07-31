@@ -89,6 +89,7 @@
     "invalid_status": "Invalid status",
     "invalid_duration": "Invalid duration",
     "conflict": "Conflict",
+    "pacs_study_other_pet": "This DICOM study is already linked to another pet in the practice",
     "slot_taken": "This time slot is already taken",
     "on_vacation": "The practice is closed on this date",
     "invalid_proposed": "Invalid proposed date or time",
@@ -184,7 +185,10 @@
     "saas_master_not_configured": "Billit master account not configured (BILLIT_MASTER_*)",
     "invalid_id": "Invalid identifier",
     "care_pro_visit_only": "Only allowed on visits created in the field (care pro)",
-    "pet_not_in_practice": "Pet is not linked to this practice"
+    "pet_not_in_practice": "Pet is not linked to this practice",
+    "pacs_study_other_practice": "This DICOM study is already linked to another practice",
+    "pacs_instance_unavailable": "DICOM file missing on the imaging server (storage). Re-upload the study or open another one.",
+    "pacs_error": "PACS / Orthanc error"
   },
   "success": {
     "confirm_email_sent": "A confirmation email has been sent.",

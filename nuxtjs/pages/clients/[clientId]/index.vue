@@ -202,11 +202,12 @@
                 test-id="client-phone-input"
                 type="tel"
                 :label="$t('clients.detail.contactPhone')"
+                :maxlength="40"
               />
               <div class="pro-flex-gap">
                 <ProButton
                   test-id="client-phone-save"
-                  :disabled="phoneSaving || phoneDraft === (client.contactPhone || '')"
+                  :disabled="phoneSaving || phoneDraft.trim() === (client.contactPhone || '').trim()"
                   @click="saveContactPhone"
                 >
                   {{ $t('clients.detail.savePhone') }}
@@ -215,7 +216,7 @@
               <p v-if="phoneMsg" class="pro-hint" role="status" data-testid="client-phone-msg">{{ phoneMsg }}</p>
               <p v-if="phoneError" class="pro-error" role="alert">{{ phoneError }}</p>
             </div>
-            <p v-else-if="client.contactPhone" class="text-muted">{{ client.contactPhone }}</p>
+            <p v-else class="text-muted">{{ client.contactPhone || '—' }}</p>
             <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
           </div>
         </div>

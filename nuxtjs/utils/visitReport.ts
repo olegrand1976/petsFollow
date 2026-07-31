@@ -4,20 +4,22 @@ export type VisitReportFields = {
   transcriptText: string
   improvedText: string
   status: string
+  isReference: boolean
 }
 
 export function mapVisitReportFields(
   data: Record<string, unknown> | null | undefined,
 ): VisitReportFields {
   if (!data) {
-    return { bodyText: '', transcriptText: '', improvedText: '', status: '' }
+    return { bodyText: '', transcriptText: '', improvedText: '', status: '', isReference: false }
   }
   const transcriptText = String(data.transcriptText ?? '')
   const improvedText = String(data.improvedText ?? '')
   const bodyRaw = String(data.bodyText ?? '')
   const bodyText = bodyRaw || transcriptText
   const status = String(data.status ?? '')
-  return { bodyText, transcriptText, improvedText, status }
+  const isReference = Boolean(data.isReference)
+  return { bodyText, transcriptText, improvedText, status, isReference }
 }
 
 /** Persisted body shown in history only when distinct from transcript / IA. */

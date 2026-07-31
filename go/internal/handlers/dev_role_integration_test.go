@@ -7,6 +7,7 @@ import (
 
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 )
 
 func TestDevRoleSupportAndBillingGate(t *testing.T) {
@@ -101,86 +102,64 @@ func TestDevRoleSupportAndBillingGate(t *testing.T) {
 }
 
 func TestDevProfileSwitchToVet(t *testing.T) {
-	api := newTestAPI(t)
-	st := store.New(api.pool)
-	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
-		t.Fatalf("ensure ops vet profiles: %v", err)
-	}
-	t.Cleanup(func() {
-		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
-	})
-	devTok := loginToken(t, api.handler, "dev.demo@petsfollow.test", "AdminDemo123!")
-
-	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", devTok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("list profiles %d %#v", code, env)
-	}
-	raw := env["data"]
-	list, ok := raw.([]any)
-	if !ok {
-		// wrapped differently?
-		if m, mok := raw.(map[string]any); mok {
-			list, _ = m["profiles"].([]any)
-		}
-	}
-	if len(list) < 2 {
-		t.Fatalf("expected multi profiles for DEV, got %#v", env)
-	}
-	var vetProfileID string
-	for _, it := range list {
-		m, _ := it.(map[string]any)
-		if m["role"] == "vet" {
-			vetProfileID, _ = m["id"].(string)
-		}
-	}
-	if vetProfileID == "" {
-		t.Fatalf("DEV missing vet profile: %#v", list)
-	}
-
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/profiles/switch", devTok, map[string]any{
-		"profileId": vetProfileID,
-	})
-	if code != http.StatusOK {
-		t.Fatalf("switch to vet %d %#v", code, env)
-	}
-	data := dataMap(t, env)
-	tok, _ := data["accessToken"].(string)
-	if tok == "" {
-		t.Fatalf("expected new access token after switch: %#v", data)
-	}
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
-	if code != http.StatusOK {
-		t.Fatalf("me after switch %d %#v", code, env)
-	}
-	if dataMap(t, env)["role"] != "vet" {
-		t.Fatalf("expected role vet after switch, got %#v", dataMap(t, env)["role"])
-	}
+	assertOpsCanSwitchToVet(t, "dev.demo@petsfollow.test", string(kernel.RoleDev))
 }
 
 func TestAdminProfileSwitchToVet(t *testing.T) {
+	assertOpsCanSwitchToVet(t, "admin.demo@petsfollow.test", string(kernel.RoleAdmin))
+}
+
+// TestAdminEnsureUserProfilesNoAutoClient locks the IsProRole(admin) exclusion:
+// a disposable admin must not get a personal client profile from EnsureUserProfiles alone.
+func TestAdminEnsureUserProfilesNoAutoClient(t *testing.T) {
+	api := newTestAPI(t)
+	st := store.New(api.pool)
+	ctx := context.Background()
+	email := uniqueEmail("admin-no-client")
+	userID := insertVerifiedUser(t, api, string(kernel.RoleAdmin), email, "AdminDemo123!", "Admin Jetable", nil)
+	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+		t.Fatalf("EnsureUserProfiles: %v", err)
+	}
+	profiles, err := st.ListProfiles(ctx, userID)
+	if err != nil {
+		t.Fatalf("ListProfiles: %v", err)
+	}
+	roles := map[kernel.Role]bool{}
+	for _, p := range profiles {
+		roles[p.Role] = true
+	}
+	if !roles[kernel.RoleAdmin] {
+		t.Fatalf("expected admin profile, got %#v", profiles)
+	}
+	if roles[kernel.RoleClient] {
+		t.Fatalf("admin must not auto-get client via IsProRole, got %#v", profiles)
+	}
+	if len(profiles) != 1 {
+		t.Fatalf("expected single admin profile, got %#v", profiles)
+	}
+}
+
+func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
+	t.Helper()
 	api := newTestAPI(t)
 	st := store.New(api.pool)
 	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
 		t.Fatalf("ensure ops vet profiles: %v", err)
 	}
 	t.Cleanup(func() {
-		_ = seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st)
+		if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+			t.Errorf("cleanup restore ops profiles: %v", err)
+		}
 	})
-	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
 
-	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", adminTok, nil)
+	tok := loginToken(t, api.handler, email, "AdminDemo123!")
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me/profiles", tok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("list profiles %d %#v", code, env)
 	}
-	raw := env["data"]
-	list, ok := raw.([]any)
-	if !ok {
-		if m, mok := raw.(map[string]any); mok {
-			list, _ = m["profiles"].([]any)
-		}
-	}
+	list := profilesList(t, env)
 	if len(list) < 2 {
-		t.Fatalf("expected multi profiles for admin, got %#v", env)
+		t.Fatalf("expected multi profiles for %s, got %#v", opsRole, env)
 	}
 	var vetProfileID string
 	roles := map[string]bool{}
@@ -192,28 +171,49 @@ func TestAdminProfileSwitchToVet(t *testing.T) {
 			vetProfileID, _ = m["id"].(string)
 		}
 	}
-	if !roles["admin"] || !roles["vet"] {
-		t.Fatalf("admin seed expected admin+vet profiles, got %#v", list)
+	if !roles[opsRole] || !roles["vet"] {
+		t.Fatalf("%s seed expected %s+vet profiles, got %#v", opsRole, opsRole, list)
+	}
+	if !roles["client"] {
+		t.Fatalf("%s seed expected client profile, got %#v", opsRole, list)
 	}
 	if vetProfileID == "" {
-		t.Fatalf("admin missing vet profile: %#v", list)
+		t.Fatalf("%s missing vet profile: %#v", opsRole, list)
 	}
 
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/profiles/switch", adminTok, map[string]any{
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/me/profiles/switch", tok, map[string]any{
 		"profileId": vetProfileID,
 	})
 	if code != http.StatusOK {
 		t.Fatalf("switch to vet %d %#v", code, env)
 	}
-	tok, _ := dataMap(t, env)["accessToken"].(string)
-	if tok == "" {
+	access, _ := dataMap(t, env)["accessToken"].(string)
+	if access == "" {
 		t.Fatalf("expected access token after switch: %#v", env)
 	}
-	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", tok, nil)
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/me", access, nil)
 	if code != http.StatusOK {
 		t.Fatalf("me after switch %d %#v", code, env)
 	}
 	if dataMap(t, env)["role"] != "vet" {
 		t.Fatalf("expected role vet after switch, got %#v", dataMap(t, env)["role"])
 	}
+	// Restore immediately (narrow poison window for shared seed accounts).
+	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
+		t.Fatalf("restore ops profiles after switch: %v", err)
+	}
+}
+
+func profilesList(t *testing.T, env map[string]any) []any {
+	t.Helper()
+	raw := env["data"]
+	if list, ok := raw.([]any); ok {
+		return list
+	}
+	if m, ok := raw.(map[string]any); ok {
+		if list, ok := m["profiles"].([]any); ok {
+			return list
+		}
+	}
+	return nil
 }
