@@ -57,7 +57,7 @@ Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind
 
 ## Infra
 
-**Staging Cloud Build** (`infra/gcp/cloudbuild.yaml`) : build Kaniko `orthanc:$BUILD_ID` → `deploy-orthanc` (`setup-orthanc.sh`, **best-effort** — échec Orthanc ≠ échec API) → `deploy-api` / `deploy-frontend` résolvent `PACS_ORTHANC_URL` via `orthanc_run_url`. Opt-out build+deploy : `_SKIP_ORTHANC=true`. Re-deploys : mode **deploy-only** auto (pas de reset mot de passe SQL).
+**Staging Cloud Build** (`infra/gcp/cloudbuild.yaml`) : build Kaniko **`executor:debug`** (shell `/busybox/sh` pour `_SKIP_ORTHANC`) → image `orthanc:$BUILD_ID` → `deploy-orthanc` (`setup-orthanc.sh`, **best-effort** — échec Orthanc ≠ échec API) → `deploy-api` / `deploy-frontend` résolvent `PACS_ORTHANC_URL` via `orthanc_run_url`. Opt-out build+deploy : `_SKIP_ORTHANC=true`. Re-deploys : mode **deploy-only** auto (pas de reset mot de passe SQL).
 
 Manuel :
 

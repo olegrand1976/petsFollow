@@ -44,8 +44,9 @@ steps:
       # PACS : bake off ; runtime enable via deploy-frontend when Orthanc URL present.
       - --build-arg=NUXT_PUBLIC_PACS_ENABLED=false
 
+  # :debug = busybox présent (/busybox/sh). :latest n'a plus de shell → OCI create fail.
   - id: build-orthanc
-    name: gcr.io/kaniko-project/executor:latest
+    name: gcr.io/kaniko-project/executor:debug
     entrypoint: /busybox/sh
     args:
       - -c
