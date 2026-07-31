@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +24,25 @@ var (
 	orthancIDHexRe    = regexp.MustCompile(`^[0-9a-fA-F]{40}$`)
 	orthancIDDashedRe = regexp.MustCompile(`^[0-9a-fA-F]{8}(-[0-9a-fA-F]{8}){4}$`)
 )
+
+// orthancStatusError is returned when Orthanc responds with a non-2xx HTTP status.
+type orthancStatusError struct {
+	Resource string
+	Status   int
+}
+
+func (e *orthancStatusError) Error() string {
+	return fmt.Sprintf("orthanc_%s_%d", e.Resource, e.Status)
+}
+
+// orthancPreviewOutOfRange reports frame index / missing preview (Orthanc may use 400 or 404).
+func orthancPreviewOutOfRange(err error) bool {
+	var se *orthancStatusError
+	if !errors.As(err, &se) {
+		return false
+	}
+	return se.Resource == "preview" && (se.Status == http.StatusNotFound || se.Status == http.StatusBadRequest)
+}
 
 func validateOrthancID(id string) error {
 	id = strings.TrimSpace(id)
@@ -234,7 +254,7 @@ func (c *orthancClient) getInstanceFramesPreview(ctx context.Context, instanceID
 		return nil, "", err
 	}
 	if resp.StatusCode >= 300 {
-		return nil, "", fmt.Errorf("orthanc_preview_%d", resp.StatusCode)
+		return nil, "", &orthancStatusError{Resource: "preview", Status: resp.StatusCode}
 	}
 	ct := resp.Header.Get("Content-Type")
 	if ct == "" {

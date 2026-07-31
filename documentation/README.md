@@ -42,7 +42,7 @@ Index des documents de référence du projet.
 | 38 | [38-RUNBOOK-PHARMACIE-CABINET.md](38-RUNBOOK-PHARMACIE-CABINET.md) | Runbook pilote cabinet (stock / DAF / inventaire / chaîne alimentaire) |
 | 39 | [39-VAMREG-AFMPS-READONLY.md](39-VAMREG-AFMPS-READONLY.md) | Client Go VAMReg AFMPS lecture seule (listes de référence ICD v20260701) |
 | 39 | [39-VAMREG-AFMPS-READONLY.md](39-VAMREG-AFMPS-READONLY.md) | Client M2M readonly VAMREG (ICD FAMHP v20260701) — listes de référence |
-| 40 | [40-PACS.md](40-PACS.md) | PACS Orthanc V1 (upload + preview PNG) — module tag `dev` · checklist GA |
+| 40 | [40-PACS.md](40-PACS.md) · [plan P2](40-PACS-P2.md) | PACS Orthanc (tag `dev`) — V1+P0/P1 livrés · P2 = GA clinique |
 | — | [../AGENTS.md](../AGENTS.md) | Guide agent / comptes démo |
 | — | [../useCase/](../useCase/) | Use cases manuels commerciaux (profils + interactions staging) |
 

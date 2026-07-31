@@ -123,14 +123,16 @@ Retirer le badge `nav.tagDev` **uniquement** quand tous les points ci-dessous so
 | G2 | Flag prod `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` opt-in documenté + smoke staging vert | Staging OK · prod **off** |
 | G3 | Viewer clinique : vrai Window/Level DICOM (HU) **ou** Cornerstone3D (WASM/CSP allowlist) | PNG Orthanc + CSS approx. seulement |
 | G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | Non |
-| G5 | Multi-frame (scroll stack) + multi-série (picker) dans l’UI | Frame 0 · 1ʳᵉ série |
-| G6 | Download `.dcm` depuis l’UI (BFF `…/file` déjà dispo) | API oui · UI non |
+| G5 | Multi-frame (scroll stack) + multi-série (picker) dans l’UI | **Livré (P1)** |
+| G6 | Download `.dcm` depuis l’UI (BFF `…/file` déjà dispo) | **Livré (P1)** |
 | G7 | Erreur preview visible + e2e upload/canvas non soft-skip Orthanc | Livré (tag `dev`) |
 | G8 | Use case commercial `useCase/` + `make usecases-sync` + entrée session démo | Interdit tant que `dev` |
 | G9 | Index doc + modules métier / vision mis à jour | `documentation/README.md` indexe 40 |
 | G10 | Hors V1 toujours hors GA sauf brief : C-STORE, partage client, archivage légal multi-pays | Documenté |
 
-**Calibrage / Cornerstone (G3–G4)** — piste technique quand GA décidé :
+**Plan P2 (vers GA)** : [`40-PACS-P2.md`](40-PACS-P2.md) — **Option A Cornerstone3D** actée ; filet tests ; décision produit + flag prod + UC (G1/G2/G8). Prochaine étape : **P2.0**.
+
+**Calibrage / Cornerstone (G3–G4)** — détail dans le plan P2. Piste technique :
 
 1. CSP Nuxt : autoriser wasm/workers Cornerstone sans élargir `*`.
 2. Remplacer la source PNG par pixels DICOM (WADO-RS Orthanc ou `…/file` + decode) tout en gardant le gate `practice_id`.
