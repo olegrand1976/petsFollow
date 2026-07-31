@@ -84,7 +84,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
 - Pooling : `IndexConnectionsCount=4` ; max-instances Orthanc=10 → surveiller `max_connections` Cloud SQL.
 - Staging : `PACS_ENABLED` auto-on **uniquement** si `PACS_ORTHANC_URL` est défini (sinon offline UI évité).
-- Viewer V1 = previews Orthanc PNG (mesures en pixels non calibrées) — pas de Cornerstone WASM.
+- Viewer V1 défaut = previews Orthanc PNG (canvas) ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
 - Cold start : TTL cache `starting` = 90 s ; UI upload poll jusqu’à `ready`.
 - Upload compensatoire : delete **instance** Orthanc si insert DB échoue (jamais `DELETE /studies` si l’étude était déjà liée).
 - Lien étude ↔ animal : conflit si même `orthanc_study_id` déjà lié à un **autre** pet du cabinet (`409`).
@@ -118,12 +118,12 @@ C-STORE modalité, partage client des images, PgBouncer dédié, conformité mul
 
 Retirer le badge `nav.tagDev` **uniquement** quand tous les points ci-dessous sont validés. Tant que tag `dev` : **pas** de useCase commercial inventé ([`usecase-sync.mdc`](../.cursor/rules/usecase-sync.mdc)).
 
-| # | Critère | État V1 actuel |
-|---|---------|----------------|
-| G1 | Décision produit écrite (GA vs rester `dev`) | À faire |
-| G2 | Flag prod `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` opt-in documenté + smoke staging vert | Staging OK · prod **off** |
-| G3 | Viewer clinique : vrai Window/Level DICOM (HU) **ou** Cornerstone3D (WASM/CSP allowlist) | PNG Orthanc + CSS approx. seulement |
-| G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | Non |
+| # | Critère | État |
+|---|---------|------|
+| G1 | Décision produit écrite (GA vs rester `dev`) | **Rester `dev`** (2026-07-31) — voir [`40-PACS-P2.md`](40-PACS-P2.md) § P2.4 |
+| G2 | Flag prod `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` opt-in documenté + smoke staging vert | Staging OK · prod **off** — runbook ci-dessous |
+| G3 | Viewer clinique : vrai Window/Level DICOM (HU) **ou** Cornerstone3D (WASM/CSP allowlist) | **Livré (P2.1)** — défaut canvas ; Cornerstone via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` |
+| G4 | Mesures calibrées (`PixelSpacing` / spacing Orthanc) — pas seulement pixels écran | **Livré (P2.2)** — mm si spacing + gate bitmap ; sinon px |
 | G5 | Multi-frame (scroll stack) + multi-série (picker) dans l’UI | **Livré (P1)** |
 | G6 | Download `.dcm` depuis l’UI (BFF `…/file` déjà dispo) | **Livré (P1)** |
 | G7 | Erreur preview visible + e2e upload/canvas non soft-skip Orthanc | Livré (tag `dev`) |
@@ -131,10 +131,24 @@ Retirer le badge `nav.tagDev` **uniquement** quand tous les points ci-dessous so
 | G9 | Index doc + modules métier / vision mis à jour | `documentation/README.md` indexe 40 |
 | G10 | Hors V1 toujours hors GA sauf brief : C-STORE, partage client, archivage légal multi-pays | Documenté |
 
-**Plan P2 (vers GA)** : [`40-PACS-P2.md`](40-PACS-P2.md) — **Option A Cornerstone3D** actée ; filet tests ; décision produit + flag prod + UC (G1/G2/G8). Prochaine étape : **P2.0**.
+**Plan P2** : [`40-PACS-P2.md`](40-PACS-P2.md) — P2.0–P2.4 **clos** (G1 = rester `dev`). Réouverture GA = nouvelle note produit + retrait badge + UC.
 
-**Calibrage / Cornerstone (G3–G4)** — détail dans le plan P2. Piste technique :
+### Runbook flags & smoke (G2)
 
-1. CSP Nuxt : autoriser wasm/workers Cornerstone sans élargir `*`.
-2. Remplacer la source PNG par pixels DICOM (WADO-RS Orthanc ou `…/file` + decode) tout en gardant le gate `practice_id`.
-3. Conserver les tests `TestPacs*` d’authz ; étendre e2e outils W/L réels.
+| Environnement | `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` | Notes |
+|---------------|--------------------------------------------|--------|
+| Local | `true` via `make api-dev` / `make nuxtjs-dev` | Orthanc `make up-pacs` |
+| Staging | auto-on **si** `PACS_ORTHANC_URL` | Cloud Build |
+| **Production** | **`false`** (défaut) | Opt-in explicite seulement après décision GA |
+
+Smoke staging après deploy :
+
+```bash
+make gcp-smoke                    # smoke API générique staging
+# Manuel Pro (admin) : /admin/pacs → wake → playground pet démo → ouvrir RX (éviter CT index orphelin)
+# Manuel véto : fiche animal → Imagerie → upload testdata/pacs/demo-rx.dcm → preview/download
+# Cornerstone (opt-in Nuxt) : NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone
+# Filet local : make test-e2e-p0  # 20 / 20b / 20c
+```
+
+**Dette ops staging** : études CT indexées sans blob GCS → 502 study/preview. Contournement UI (préférer RX + fallback série). Nettoyage Orthanc/GCS hors scope code viewer.

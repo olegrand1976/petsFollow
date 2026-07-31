@@ -8,6 +8,8 @@ const props = defineProps<{
   petId: string
   /** When true, emit fetch traces for admin playground debug. */
   debug?: boolean
+  /** Auto-open the first study once the list is loaded (admin playground). */
+  autoOpenFirstStudy?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -91,13 +93,47 @@ const badgeVariant = computed(() => {
 
 const stateLabel = computed(() => t(`pacs.state.${status.value.state}`))
 
+/** Prefer seed RX / DX over broken CT indexes (storage miss → 502 on study/preview). */
+function pickPreferredStudy(items: any[]): any | null {
+  if (!items.length) return null
+  const score = (s: any) => {
+    const mod = String(s.modality || '').toUpperCase()
+    const desc = String(s.description || '').toLowerCase()
+    if (/rx|thorax|demo|petsfollow/.test(desc)) return 100
+    if (/\b(DX|CR|DR|PX)\b/.test(mod)) return 80
+    if (/\bCT\b/.test(mod) || /ct[_ ]?chest/.test(desc)) return 10
+    return 40
+  }
+  return [...items].sort((a, b) => score(b) - score(a))[0]
+}
+
+function pacsFetchMessage(e: any, fallback: string): string {
+  const key = e?.data?.msgKey || e?.data?.error?.msgKey
+  if (key === 'pacs_instance_unavailable') return t('pacs.instanceUnavailable')
+  if (key === 'pacs_error' || key === 'pacs_unavailable') return t('pacs.orthancError')
+  const msg = e?.data?.message || e?.message
+  if (typeof msg === 'string' && msg && msg !== 'Error') return msg
+  return fallback
+}
+
 async function loadStudies() {
   studiesError.value = ''
   try {
     const res: any = await apiFetch(`/api/pets/${props.petId}/pacs/studies`)
     studies.value = res.data ?? res ?? []
+    if (
+      props.autoOpenFirstStudy
+      && !selectedStudyId.value
+      && !leftInstanceId.value
+      && status.value.state === 'ready'
+      && studies.value.length
+      && !actionsLocked.value
+    ) {
+      const preferred = pickPreferredStudy(studies.value)
+      if (preferred) await openStudy(preferred)
+    }
   } catch (e: any) {
-    studiesError.value = e?.data?.message || e?.message || 'load_failed'
+    studiesError.value = pacsFetchMessage(e, 'load_failed')
   }
 }
 
@@ -132,18 +168,32 @@ async function openStudy(study: any) {
   instances.value = []
   seriesIds.value = []
   selectedSeriesId.value = ''
+  studiesError.value = ''
+  const preferred = study.orthancSeriesId
   try {
-    const meta: any = await apiFetch(`/api/pacs/studies/${study.orthancStudyId}`)
-    const data = meta.data ?? meta
-    const fromStudy = (data.Series as string[]) || []
-    const preferred = study.orthancSeriesId
-    seriesIds.value = preferred && !fromStudy.includes(preferred)
-      ? [preferred, ...fromStudy]
-      : (fromStudy.length ? fromStudy : (preferred ? [preferred] : []))
+    try {
+      const meta: any = await apiFetch(`/api/pacs/studies/${study.orthancStudyId}`)
+      const data = meta.data ?? meta
+      const fromStudy = (data.Series as string[]) || []
+      seriesIds.value = preferred && !fromStudy.includes(preferred)
+        ? [preferred, ...fromStudy]
+        : (fromStudy.length ? fromStudy : (preferred ? [preferred] : []))
+    } catch (metaErr: any) {
+      // Study proxy 502 (Orthanc/GCS) — still try linked series from DB row.
+      if (preferred) {
+        seriesIds.value = [preferred]
+      } else {
+        throw metaErr
+      }
+    }
     const first = seriesIds.value[0]
-    if (first) await loadSeries(first)
+    if (!first) {
+      studiesError.value = t('pacs.orthancError')
+      return
+    }
+    await loadSeries(first)
   } catch (e: any) {
-    studiesError.value = e?.data?.message || e?.message || 'open_failed'
+    studiesError.value = pacsFetchMessage(e, t('pacs.orthancError'))
   }
 }
 
@@ -329,6 +379,8 @@ onMounted(() => {
           :left-instance-id="leftInstanceId"
           :right-instance-id="compare ? rightInstanceId : undefined"
           :compare="compare"
+          :debug="debug"
+          @debug="onDebug"
         />
         <PacsDicomViewer
           v-else-if="leftInstanceId"
@@ -336,6 +388,13 @@ onMounted(() => {
           :right-instance-id="compare ? rightInstanceId : undefined"
           :compare="compare"
         />
+        <p
+          v-else-if="selectedStudyId"
+          class="pacs-container__hint"
+          data-testid="pacs-viewer-waiting"
+        >
+          {{ t('pacs.viewerWaiting') }}
+        </p>
       </ClientOnly>
     </template>
   </div>

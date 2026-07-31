@@ -3678,6 +3678,8 @@
     "emptyTitle": "Aucune étude",
     "emptyDescription": "Importez un fichier .dcm pour démarrer.",
     "previewError": "Impossible de charger l’aperçu de l’image. Réessayez ou réactivez le PACS.",
+    "orthancError": "Erreur Orthanc (502). Essayez une autre étude (ex. RX) ou réimportez un fichier DICOM — certaines images indexées peuvent être indisponibles.",
+    "viewerWaiting": "Viewer en attente — l’étude n’a pas fourni d’instance (réessayez une autre étude).",
     "leftSeries": "Instance gauche",
     "rightSeries": "Instance droite",
     "state": {
@@ -3696,7 +3698,11 @@
       "prevFrame": "Frame −",
       "nextFrame": "Frame +",
       "frame": "Frame {n}",
-      "download": "Télécharger DICOM"
+      "download": "Télécharger DICOM",
+      "measureCalibrated": "Calibré (mm)",
+      "measureUncalibrated": "Sans calibrage (px)",
+      "measureHintPx": "Sans calibrage fiable — mesure en pixels image",
+      "measureHintResized": "Aperçu Orthanc redimensionné vs DICOM — mesure en px (Cornerstone recommandé pour mm)"
     },
     "admin": {
       "title": "PACS — supervision",
@@ -3706,6 +3712,11 @@
       "playgroundHint": "Même interface que la fiche animal (véto). Animal seed client.demo par défaut — traces client ci-dessous.",
       "petSelect": "Animal",
       "petPlaceholder": "Choisir un animal…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Coller un petId…",
+      "applyPet": "Ouvrir",
+      "noPetSelected": "Sélectionnez ou collez un animal pour monter le viewer DICOM.",
+      "viewerLoading": "Chargement du viewer…",
       "reloadPets": "Recharger les animaux",
       "debugTitle": "Debug client (fetch)",
       "debugClear": "Vider",

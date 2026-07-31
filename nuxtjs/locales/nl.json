@@ -3677,6 +3677,8 @@
     "emptyTitle": "Geen studies",
     "emptyDescription": "Importeer een .dcm-bestand om te beginnen.",
     "previewError": "Kan de beeldvoorvertoning niet laden. Probeer opnieuw of activeer de PACS.",
+    "orthancError": "Orthanc-fout (502). Probeer een andere studie (bv. RX) of upload opnieuw een DICOM-bestand — sommige geïndexeerde beelden kunnen onbeschikbaar zijn.",
+    "viewerWaiting": "Viewer wacht — studie gaf geen instance (probeer een andere studie).",
     "leftSeries": "Linker instantie",
     "rightSeries": "Rechter instantie",
     "state": {
@@ -3695,7 +3697,11 @@
       "prevFrame": "Frame −",
       "nextFrame": "Frame +",
       "frame": "Frame {n}",
-      "download": "DICOM downloaden"
+      "download": "DICOM downloaden",
+      "measureCalibrated": "Gecalibreerd (mm)",
+      "measureUncalibrated": "Niet gecalibreerd (px)",
+      "measureHintPx": "Geen betrouwbare calibratie — meting in beeldpixels",
+      "measureHintResized": "Orthanc-preview herschaald vs DICOM — alleen px (Cornerstone voor mm)"
     },
     "admin": {
       "title": "PACS — toezicht",
@@ -3705,6 +3711,11 @@
       "playgroundHint": "Zelfde UI als de dierfiche (dierenarts). Standaard client.demo seed — client fetch-traces hieronder.",
       "petSelect": "Dier",
       "petPlaceholder": "Kies een dier…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Plak een petId…",
+      "applyPet": "Openen",
+      "noPetSelected": "Selecteer of plak een dier om de DICOM-viewer te laden.",
+      "viewerLoading": "Viewer laden…",
       "reloadPets": "Dieren herladen",
       "debugTitle": "Client-debug (fetch)",
       "debugClear": "Wissen",

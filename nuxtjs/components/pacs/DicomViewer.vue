@@ -2,7 +2,18 @@
 /**
  * Canvas DICOM viewer (client-only).
  * Loads Orthanc frame previews via BFF; tools: zoom, pan, W/L, measure, arrow, fullscreen, dual-pane, frame scroll, download.
+ * Measures use PixelSpacing (mm) when metadata provides it; otherwise image px.
  */
+import {
+  formatPacsLength,
+  measureScreenSegment,
+  parseMatrixSize,
+  parsePixelSpacingMm,
+  spacingUsableForBitmap,
+  type PacsMatrixSize,
+  type PacsSpacingMm,
+} from '~/utils/pacs-measure'
+
 const props = defineProps<{
   leftInstanceId?: string
   rightInstanceId?: string
@@ -18,6 +29,35 @@ const fullscreen = ref(false)
 const frameIndex = ref(0)
 const maxFrame = ref<number | null>(null)
 const downloadBusy = ref(false)
+/** Spacing from Orthanc metadata (DICOM pixels). */
+const metaSpacing = ref<PacsSpacingMm | null>(null)
+const metaMatrix = ref<PacsMatrixSize | null>(null)
+/** Spacing trusted for the currently loaded left preview bitmap (null → px). */
+const effectiveSpacing = ref<PacsSpacingMm | null>(null)
+const previewResized = ref(false)
+
+const measureCalibrated = computed(() => effectiveSpacing.value != null)
+const measureHint = computed(() => {
+  if (measureCalibrated.value || tool.value !== 'measure') return ''
+  if (previewResized.value) return t('pacs.tools.measureHintResized')
+  return t('pacs.tools.measureHintPx')
+})
+
+function refreshEffectiveSpacing(img: HTMLImageElement | null) {
+  if (!img || !img.naturalWidth) {
+    effectiveSpacing.value = null
+    previewResized.value = false
+    return
+  }
+  const usable = spacingUsableForBitmap(
+    metaSpacing.value,
+    metaMatrix.value,
+    img.naturalWidth,
+    img.naturalHeight,
+  )
+  effectiveSpacing.value = usable
+  previewResized.value = Boolean(metaSpacing.value && metaMatrix.value && !usable)
+}
 
 type Pane = {
   img: HTMLImageElement | null
@@ -117,12 +157,14 @@ async function bindPane(
     pane.scale = 1
     pane.offsetX = 0
     pane.offsetY = 0
+    if (pane === left) refreshEffectiveSpacing(img)
     loadError.value = ''
     paint(pane, canvas)
     return true
   } catch (e) {
     if (myGen !== loadGen) return false
     pane.img = null
+    if (pane === left) refreshEffectiveSpacing(null)
     paint(pane, canvas)
     // Only clamp on Orthanc frame-out-of-range (404) — never on 5xx / réseau.
     if (frame > 0 && fetchStatus(e) === 404) {
@@ -182,12 +224,15 @@ function paint(pane: Pane, canvas: HTMLCanvasElement | null) {
       ctx.fillStyle = color
       ctx.fill()
     } else {
-      const dx = line.x2 - line.x1
-      const dy = line.y2 - line.y1
-      const px = Math.round(Math.hypot(dx, dy))
+      const label = formatPacsLength(measureScreenSegment(
+        line.x2 - line.x1,
+        line.y2 - line.y1,
+        pane.scale,
+        effectiveSpacing.value,
+      ))
       ctx.fillStyle = color
       ctx.font = '12px sans-serif'
-      ctx.fillText(`${px} px`, (line.x1 + line.x2) / 2 + 6, (line.y1 + line.y2) / 2 - 6)
+      ctx.fillText(label, (line.x1 + line.x2) / 2 + 6, (line.y1 + line.y2) / 2 - 6)
     }
   }
   drawLine(pane.measure, '#5eead4')
@@ -318,12 +363,18 @@ async function downloadDicom() {
 watch(() => props.leftInstanceId, async (id) => {
   frameIndex.value = 0
   maxFrame.value = null
+  metaSpacing.value = null
+  metaMatrix.value = null
+  effectiveSpacing.value = null
+  previewResized.value = false
   if (id) {
     try {
       const res: any = await $fetch(`/api/pacs/instances/${id}/metadata`)
       const data = res.data ?? res
       const n = Number(data.numberOfFrames)
       if (Number.isFinite(n) && n > 0) maxFrame.value = n - 1
+      metaSpacing.value = parsePixelSpacingMm(data.pixelSpacingMm)
+      metaMatrix.value = parseMatrixSize(data.rows, data.columns)
     } catch { /* optional */ }
   }
   void bindPane(left, leftCanvas.value, id)
@@ -405,7 +456,21 @@ onBeforeUnmount(() => {
       >
         {{ fullscreen ? t('pacs.tools.exitFullscreen') : t('pacs.tools.fullscreen') }}
       </button>
+      <span
+        class="dicom-viewer__calib"
+        :data-calibrated="measureCalibrated ? '1' : '0'"
+        data-testid="dicom-calib-badge"
+      >
+        {{ measureCalibrated ? t('pacs.tools.measureCalibrated') : t('pacs.tools.measureUncalibrated') }}
+      </span>
     </div>
+    <p
+      v-if="measureHint"
+      class="dicom-viewer__hint"
+      data-testid="dicom-measure-hint"
+    >
+      {{ measureHint }}
+    </p>
     <div class="dicom-viewer__panes" :class="{ 'dicom-viewer__panes--compare': compare }" @wheel="onWheel">
       <div class="dicom-viewer__pane">
         <canvas
@@ -472,6 +537,24 @@ onBeforeUnmount(() => {
   opacity: 0.8;
   min-width: 4.5rem;
   text-align: center;
+}
+.dicom-viewer__calib {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  color: var(--pf-vet-primary);
+  border: 1px dashed var(--pf-vet-border);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+}
+.dicom-viewer__calib[data-calibrated='1'] {
+  border-color: var(--pf-vet-accent);
+  color: var(--pf-vet-accent);
+}
+.dicom-viewer__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  color: var(--pf-vet-primary);
 }
 .dicom-viewer__panes {
   display: grid;

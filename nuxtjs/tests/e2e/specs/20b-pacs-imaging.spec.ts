@@ -111,6 +111,7 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
       pacsOn === 'false' || pacsOn === '0',
       'NUXT_PUBLIC_PACS_ENABLED off',
     )
+    const engine = (process.env.NUXT_PUBLIC_PACS_VIEWER_ENGINE || 'canvas').toLowerCase()
 
     const { clientId, petId } = await demoClientAndPet()
     await loginAsVet(page)
@@ -143,28 +144,53 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
     // Study list grows / existing study clickable after upload (newest first).
     await expect(page.getByTestId('pacs-study-item').first()).toBeVisible({ timeout: 90000 })
     const previewOk = page.waitForResponse(
-      (r) => r.url().includes('/frames/0/preview') && r.request().method() === 'GET',
+      (r) => {
+        const u = r.url()
+        const preview = u.includes('/frames/0/preview') && r.request().method() === 'GET'
+        const file = u.includes('/instances/') && u.includes('/file') && r.request().method() === 'GET'
+        return engine === 'cornerstone' ? file : preview
+      },
       { timeout: 90000 },
     )
     await page.getByTestId('pacs-study-item').first().click()
 
-    const previewRes = await previewOk
-    expect(previewRes.status(), 'preview must be 200 (ParentSeries authz)').toBe(200)
+    const mediaRes = await previewOk
+    expect(mediaRes.status(), 'DICOM media must be 200').toBe(200)
 
-    await expect(page.getByTestId('dicom-viewer')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByTestId('dicom-canvas-left')).toBeVisible()
-    await expect(page.getByTestId('dicom-preview-error')).toHaveCount(0)
+    if (engine === 'cornerstone') {
+      await expect(page.getByTestId('dicom-viewer-cornerstone')).toBeVisible({ timeout: 30000 })
+      await expect(page.getByTestId('dicom-engine-badge')).toContainText(/Cornerstone/i)
+      await expect(page.getByTestId('dicom-cs-left')).toBeVisible()
+      await expect(page.getByTestId('dicom-preview-error')).toHaveCount(0)
+      await expect(page.getByTestId('dicom-tool-pan')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-zoom')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-wl')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-measure')).toBeVisible()
+      await page.getByTestId('dicom-tool-wl').click()
+      await expect(page.getByTestId('dicom-tool-wl')).toHaveClass(/is-active/)
+      await expect(page.getByTestId('dicom-calib-badge')).toBeVisible({ timeout: 20000 })
+      // VOI label is best-effort (depends on image VOI tags / first render).
+      const voi = page.getByTestId('dicom-voi-label')
+      if (await voi.isVisible().catch(() => false)) {
+        await expect(voi).toContainText(/WW|WC/i)
+      }
+    } else {
+      await expect(page.getByTestId('dicom-viewer')).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('dicom-canvas-left')).toBeVisible()
+      await expect(page.getByTestId('dicom-preview-error')).toHaveCount(0)
 
-    await expect.poll(async () => canvasHasNonBackgroundPixels(page), {
-      timeout: 20000,
-      message: 'canvas left should show non-background pixels after preview load',
-    }).toBe(true)
+      await expect.poll(async () => canvasHasNonBackgroundPixels(page), {
+        timeout: 20000,
+        message: 'canvas left should show non-background pixels after preview load',
+      }).toBe(true)
 
-    await expect(page.getByTestId('dicom-tool-pan')).toBeVisible()
-    await expect(page.getByTestId('dicom-tool-zoom')).toBeVisible()
-    await expect(page.getByTestId('dicom-tool-wl')).toBeVisible()
-    await page.getByTestId('pacs-compare-toggle').check()
-    // Compare toggle must not blank the left pane.
-    await expect.poll(async () => canvasHasNonBackgroundPixels(page), { timeout: 10000 }).toBe(true)
+      await expect(page.getByTestId('dicom-tool-pan')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-zoom')).toBeVisible()
+      await expect(page.getByTestId('dicom-tool-wl')).toBeVisible()
+      await expect(page.getByTestId('dicom-calib-badge')).toBeVisible()
+      await page.getByTestId('pacs-compare-toggle').check()
+      // Compare toggle must not blank the left pane.
+      await expect.poll(async () => canvasHasNonBackgroundPixels(page), { timeout: 10000 }).toBe(true)
+    }
   })
 })

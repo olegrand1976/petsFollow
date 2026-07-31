@@ -3677,6 +3677,8 @@
     "emptyTitle": "No studies",
     "emptyDescription": "Import a .dcm file to get started.",
     "previewError": "Could not load the image preview. Retry or wake the PACS.",
+    "orthancError": "Orthanc error (502). Try another study (e.g. RX) or re-upload a DICOM file — some indexed images may be unavailable.",
+    "viewerWaiting": "Viewer waiting — study did not yield an instance (try another study).",
     "leftSeries": "Left instance",
     "rightSeries": "Right instance",
     "state": {
@@ -3695,7 +3697,11 @@
       "prevFrame": "Frame −",
       "nextFrame": "Frame +",
       "frame": "Frame {n}",
-      "download": "Download DICOM"
+      "download": "Download DICOM",
+      "measureCalibrated": "Calibrated (mm)",
+      "measureUncalibrated": "Uncalibrated (px)",
+      "measureHintPx": "No reliable calibration — measuring in image pixels",
+      "measureHintResized": "Orthanc preview resized vs DICOM — px only (use Cornerstone for mm)"
     },
     "admin": {
       "title": "PACS — monitoring",
@@ -3705,6 +3711,11 @@
       "playgroundHint": "Same UI as the pet chart (vet). Defaults to client.demo seed pets — client fetch traces below.",
       "petSelect": "Pet",
       "petPlaceholder": "Select a pet…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Paste a petId…",
+      "applyPet": "Open",
+      "noPetSelected": "Select or paste a pet to mount the DICOM viewer.",
+      "viewerLoading": "Loading viewer…",
       "reloadPets": "Reload pets",
       "debugTitle": "Client debug (fetch)",
       "debugClear": "Clear",

@@ -3646,6 +3646,8 @@
     "emptyTitle": "Uuringuid pole",
     "emptyDescription": "Alustamiseks importige .dcm-fail.",
     "previewError": "Pildi eelvaadet ei õnnestunud laadida. Proovige uuesti või käivitage PACS.",
+    "orthancError": "Orthanci viga (502). Proovige teist uuringut (nt RX) või laadige DICOM uuesti — mõned indekseeritud pildid võivad puududa.",
+    "viewerWaiting": "Vaataja ootab — uuring ei andnud eksemplari (proovige teist uuringut).",
     "leftSeries": "Vasak eksemplar",
     "rightSeries": "Parem eksemplar",
     "state": {
@@ -3664,7 +3666,11 @@
       "prevFrame": "Kaader −",
       "nextFrame": "Kaader +",
       "frame": "Kaader {n}",
-      "download": "Laadi DICOM alla"
+      "download": "Laadi DICOM alla",
+      "measureCalibrated": "Kalibreeritud (mm)",
+      "measureUncalibrated": "Kalibreerimata (px)",
+      "measureHintPx": "Usaldusväärne kalibreering puudub — mõõtmine piksliühikutes",
+      "measureHintResized": "Orthanci eelvaade muudetud vs DICOM — ainult px (mm jaoks Cornerstone)"
     },
     "admin": {
       "title": "PACS — järelevalve",
@@ -3674,6 +3680,11 @@
       "playgroundHint": "Sama UI nagu looma kaart (vet). Vaikimisi client.demo seed — kliendi fetch-jäljed all.",
       "petSelect": "Loom",
       "petPlaceholder": "Vali loom…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Kleebi petId…",
+      "applyPet": "Ava",
+      "noPetSelected": "Vali või kleebi loom DICOM-vaataja avamiseks.",
+      "viewerLoading": "Vaataja laadimine…",
       "reloadPets": "Laadi loomad uuesti",
       "debugTitle": "Kliendi debug (fetch)",
       "debugClear": "Tühjenda",

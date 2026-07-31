@@ -64,6 +64,25 @@
                 </option>
               </select>
             </label>
+            <label class="admin-pacs-pet-label">
+              <span>{{ $t('pacs.admin.petIdManual') }}</span>
+              <input
+                v-model="manualPetId"
+                type="text"
+                data-testid="admin-pacs-pet-id-input"
+                :placeholder="$t('pacs.admin.petIdPlaceholder')"
+                autocomplete="off"
+                spellcheck="false"
+              >
+            </label>
+            <ProButton
+              variant="secondary"
+              data-testid="admin-pacs-apply-pet"
+              :disabled="!manualPetId.trim()"
+              @click="applyManualPet"
+            >
+              {{ $t('pacs.admin.applyPet') }}
+            </ProButton>
             <ProButton
               variant="secondary"
               data-testid="admin-pacs-reload-pets"
@@ -74,13 +93,23 @@
             </ProButton>
           </div>
           <p v-if="petsError" class="pro-error" role="alert">{{ petsError }}</p>
-          <PacsViewerContainer
-            v-if="selectedPetId"
-            :key="selectedPetId"
-            :pet-id="selectedPetId"
-            debug
-            @debug="onViewerDebug"
-          />
+          <p v-if="!activePetId" class="pro-hint" data-testid="admin-pacs-no-pet">
+            {{ $t('pacs.admin.noPetSelected') }}
+          </p>
+          <div v-else data-testid="admin-pacs-viewer-mount" class="admin-pacs-viewer-mount">
+            <ClientOnly>
+              <PacsViewerContainer
+                :key="activePetId"
+                :pet-id="activePetId"
+                debug
+                auto-open-first-study
+                @debug="onViewerDebug"
+              />
+              <template #fallback>
+                <p class="pro-hint">{{ $t('pacs.admin.viewerLoading') }}</p>
+              </template>
+            </ClientOnly>
+          </div>
         </ProCard>
 
         <ProCard :title="$t('pacs.admin.debugTitle')" data-testid="admin-pacs-debug">
@@ -157,8 +186,15 @@ const logs = ref<any[]>([])
 
 const playgroundPets = ref<{ id: string; name: string; species: string; practiceId: string }[]>([])
 const selectedPetId = ref('')
+const manualPetId = ref('')
 const petsLoading = ref(false)
 const petsError = ref('')
+
+const activePetId = computed(() => selectedPetId.value || manualPetId.value.trim())
+
+watch(selectedPetId, (id) => {
+  if (id) manualPetId.value = id
+})
 
 const badgeVariant = computed(() => {
   const s = metrics.value?.status?.state
@@ -176,6 +212,16 @@ function onViewerDebug(entry: PacsDebugEntry) {
   pushDebug(entry)
 }
 
+function applyManualPet() {
+  const id = manualPetId.value.trim()
+  if (!id) return
+  selectedPetId.value = id
+  if (!playgroundPets.value.some(p => p.id === id)) {
+    // Keep select in sync when the UUID is not in the seed list.
+    manualPetId.value = id
+  }
+}
+
 async function loadPlaygroundPets() {
   if (!pacsOn.value) return
   petsLoading.value = true
@@ -187,6 +233,7 @@ async function loadPlaygroundPets() {
     if (!selectedPetId.value || !playgroundPets.value.some(p => p.id === selectedPetId.value)) {
       selectedPetId.value = data.preferredPetId || playgroundPets.value[0]?.id || ''
     }
+    if (selectedPetId.value) manualPetId.value = selectedPetId.value
   } catch (e: any) {
     petsError.value = e?.data?.message || e?.message || 'pets_failed'
   } finally {
@@ -279,9 +326,14 @@ onBeforeUnmount(() => {
   min-width: min(100%, 280px);
   flex: 1;
 }
-.admin-pacs-pet-label select {
+.admin-pacs-pet-label select,
+.admin-pacs-pet-label input {
   font: inherit;
   padding: 0.45rem 0.6rem;
+}
+.admin-pacs-viewer-mount {
+  margin-top: 0.5rem;
+  min-height: 360px;
 }
 .admin-pacs-debug-actions {
   margin-bottom: 0.75rem;

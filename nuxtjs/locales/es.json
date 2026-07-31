@@ -3646,6 +3646,8 @@
     "emptyTitle": "Ningún estudio",
     "emptyDescription": "Importe un archivo .dcm para empezar.",
     "previewError": "No se pudo cargar la vista previa. Reintente o active el PACS.",
+    "orthancError": "Error Orthanc (502). Pruebe otro estudio (p. ej. RX) o reimporte un archivo DICOM: algunas imágenes indexadas pueden no estar disponibles.",
+    "viewerWaiting": "Visor en espera — el estudio no dio instancia (pruebe otro estudio).",
     "leftSeries": "Instancia izquierda",
     "rightSeries": "Instancia derecha",
     "state": {
@@ -3664,7 +3666,11 @@
       "prevFrame": "Frame −",
       "nextFrame": "Frame +",
       "frame": "Frame {n}",
-      "download": "Descargar DICOM"
+      "download": "Descargar DICOM",
+      "measureCalibrated": "Calibrado (mm)",
+      "measureUncalibrated": "Sin calibrar (px)",
+      "measureHintPx": "Sin calibración fiable — medida en píxeles de imagen",
+      "measureHintResized": "Vista previa Orthanc redimensionada vs DICOM — solo px (Cornerstone para mm)"
     },
     "admin": {
       "title": "PACS — supervisión",
@@ -3674,6 +3680,11 @@
       "playgroundHint": "Misma UI que la ficha del animal (vet). Por defecto pets seed client.demo — trazas fetch abajo.",
       "petSelect": "Animal",
       "petPlaceholder": "Elegir un animal…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Pegar un petId…",
+      "applyPet": "Abrir",
+      "noPetSelected": "Seleccione o pegue un animal para montar el visor DICOM.",
+      "viewerLoading": "Cargando el visor…",
       "reloadPets": "Recargar animales",
       "debugTitle": "Debug cliente (fetch)",
       "debugClear": "Vaciar",

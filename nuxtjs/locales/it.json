@@ -3646,6 +3646,8 @@
     "emptyTitle": "Nessuno studio",
     "emptyDescription": "Importa un file .dcm per iniziare.",
     "previewError": "Impossibile caricare l’anteprima. Riprovare o riattivare il PACS.",
+    "orthancError": "Errore Orthanc (502). Prova un altro studio (es. RX) o reimporta un file DICOM: alcune immagini indicizzate possono non essere disponibili.",
+    "viewerWaiting": "Viewer in attesa — lo studio non ha prodotto un’istanza (prova un altro studio).",
     "leftSeries": "Istanza sinistra",
     "rightSeries": "Istanza destra",
     "state": {
@@ -3664,7 +3666,11 @@
       "prevFrame": "Frame −",
       "nextFrame": "Frame +",
       "frame": "Frame {n}",
-      "download": "Scarica DICOM"
+      "download": "Scarica DICOM",
+      "measureCalibrated": "Calibrato (mm)",
+      "measureUncalibrated": "Non calibrato (px)",
+      "measureHintPx": "Nessuna calibrazione affidabile — misura in pixel immagine",
+      "measureHintResized": "Anteprima Orthanc ridimensionata vs DICOM — solo px (Cornerstone per mm)"
     },
     "admin": {
       "title": "PACS — supervisione",
@@ -3674,6 +3680,11 @@
       "playgroundHint": "Stessa UI della scheda animale (vet). Default pet seed client.demo — tracce fetch client sotto.",
       "petSelect": "Animale",
       "petPlaceholder": "Scegli un animale…",
+      "petIdManual": "Pet ID (UUID)",
+      "petIdPlaceholder": "Incolla un petId…",
+      "applyPet": "Apri",
+      "noPetSelected": "Seleziona o incolla un animale per montare il viewer DICOM.",
+      "viewerLoading": "Caricamento viewer…",
       "reloadPets": "Ricarica animali",
       "debugTitle": "Debug client (fetch)",
       "debugClear": "Svuota",

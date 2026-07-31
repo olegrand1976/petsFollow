@@ -493,7 +493,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 
 **Prescriptions (tag `dev`)** : brouillons + preview PDF sous flag `PRESCRIPTIONS_ENABLED` — UI `/prescriptions` + badge `nav.tagDev` ; tests Go `TestPrescriptions*` ([35](35-PRESCRIPTIONS.md)). Signature / partage dossier / chat hors scope V1. Pas de useCase commercial tant que tag `dev`.
 
-**PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` (wake inclus) sous `PACS_ENABLED` — Go `TestPacs*` (upload · preview/file via `ParentSeries` · isolation cross-cabinet · `UNIQUE(orthanc_study_id)` 409 · purge Orthanc rétention · admin wake 202) · Vitest `pacsPoll` · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) (tab + launch pad + **upload fixture + canvas non vide** si flag on) · doc [40](40-PACS.md) (checklist GA). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
+**PACS Orthanc (tag `dev`)** : status/wake + upload `.dcm` (magic `DICM`) + viewer fiche animal + admin `/admin/pacs` (wake inclus) sous `PACS_ENABLED` — Go `TestPacs*` (upload · preview/file via `ParentSeries` · isolation cross-cabinet · `UNIQUE(orthanc_study_id)` 409 · purge Orthanc rétention · admin wake 202 · frame OOR 404) · Vitest `pacsPoll` + `pacs-measure` (calibration mm) · Playwright `@p0` [`20-pacs-admin.spec.ts`](../nuxtjs/tests/e2e/specs/20-pacs-admin.spec.ts) + [`20b-pacs-imaging.spec.ts`](../nuxtjs/tests/e2e/specs/20b-pacs-imaging.spec.ts) + [`20c-pacs-ga-net.spec.ts`](../nuxtjs/tests/e2e/specs/20c-pacs-ga-net.spec.ts) (download + EOF) · doc [40](40-PACS.md) / [40-P2](40-PACS-P2.md). Staging : Orthanc dans Cloud Build + `PACS_ORTHANC_URL` auto. Pas de useCase commercial tant que tag `dev`.
 
 | ID | Prio | Cas | Attendu |
 |----|------|-----|---------|
@@ -743,8 +743,9 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `15-app-invite` | Landing QR client sans CTA cabinet ; modal commercial dual lien | |
 | `16-dossier-public` | Page `/dossier/{token}` meta + expiry + CTA register (mock API) | `@p0` |
 | `19-dev-support` | DEV ops léger users/support/flags | `@p0` |
-| `20-pacs-admin` | Admin PACS metrics/logs (flag on) | `@p0` |
-| `20b-pacs-imaging` | Fiche animal onglet Imagerie (flag on) | `@p0` |
+| `20-pacs-admin` | Admin PACS metrics/logs/playground + **wake clic** (flag on) | `@p0` |
+| `20b-pacs-imaging` | Fiche animal onglet Imagerie + upload (canvas défaut ; Cornerstone si `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone`) | `@p0` |
+| `20c-pacs-ga-net` | P2.3 : download `.dcm` (magic DICM) + preview frame OOR → 404 (+ clamp canvas) | `@p0` |
 
 Local :
 
