@@ -2,12 +2,16 @@
 
 ## Messagerie interne
 
-- Threads client ↔ véto (lié au cabinet / relation).
+- Threads **cabinet × client × animal** (`messaging.threads.pet_id`) ; un client peut avoir plusieurs threads (un par couple practice/pet).
+- Threads **care_pro × client × animal** : `practice_id` **NULL**, unicité `(vet_user_id, client, pet)` — conversation personnelle distincte du fil cabinet (ACL `pet_access` / `client_access` requise).
+- Création côté client : `POST /api/v1/messaging/threads` `{ practiceId, petId }` → `GetOrCreateThreadForPet` (ensure). Si l’animal est déjà rattaché à un autre cabinet → `403` `wrong_practice`.
+- Création côté care_pro : `POST /api/v1/messaging/threads` `{ clientUserId, petId? }` → `GetOrCreateCareProThread` (403 sans grant).
+- Sans véto lié : UI Flutter client verrouillée (pas d’envoi vers cabinet) ; composition après liaison : choix care pro / cabinet + animal filtré par practice.
 - Messages texte + **media** (`POST …/messages/media`).
 - Marquage lu thread / read-all.
-- **Mode indisponible** véto : `PUT/GET /vet/availability` — le client voit l’indisponibilité.
+- **Mode indisponible** véto cabinet : `PUT/GET /vet/availability` — le client voit l’indisponibilité (pas applicable aux threads care_pro).
 
-Surfaces : Pro `/messages` · Flutter messagerie animal/véto.
+Surfaces : Pro `/messages` · Flutter client (onglet Messages) · Flutter Pro Light **identique** pour staff cabinet et `care_pro` (onglet Messages : non-lus, composer client, envoi).
 
 ## Notifications email (livré)
 
@@ -36,7 +40,8 @@ Envoi serveur (API Go, package `internal/notifications/fcm`) via Firebase Admin 
 
 | Événement | Pref client | Payload `data.type` |
 |-----------|-------------|---------------------|
-| Véto envoie un message (texte/média) | `messages` | `message` (+ `threadId`) |
+| Pro (cabinet ou care_pro) envoie un message (texte/média) | `messages` | `message` (+ `threadId`) |
+| Client répond → push au `vet_user_id` (véto ou care_pro) | (device tokens pro) | `message` (+ `threadId`) |
 | Véto confirme un RDV | `visits` | `visit_confirmed` (+ `visitId`, `petId`) |
 | Véto propose un RDV | `visits` | `visit_proposed` |
 | Véto propose un déplacement | `visits` | `visit_reschedule` |

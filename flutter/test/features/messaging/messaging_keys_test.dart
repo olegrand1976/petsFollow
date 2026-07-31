@@ -12,6 +12,11 @@ void main() {
         home: Scaffold(
           body: Row(
             children: [
+              IconButton(
+                key: const Key('message_attach_btn'),
+                onPressed: () {},
+                icon: const Icon(Icons.attach_file),
+              ),
               const Expanded(
                 child: TextField(key: Key('message_draft')),
               ),
@@ -25,8 +30,90 @@ void main() {
         ),
       ),
     );
+    expect(find.byKey(const Key('message_attach_btn')), findsOneWidget);
     expect(find.byKey(const Key('message_draft')), findsOneWidget);
     expect(find.byKey(const Key('message_send_btn')), findsOneWidget);
+  });
+
+  testWidgets('messaging attach sheet exposes camera and gallery keys', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Scaffold(
+              body: ListView(
+                children: [
+                  ListTile(
+                    key: const Key('message_attach_photo'),
+                    title: Text(l10n.attachPhoto),
+                  ),
+                  ListTile(
+                    key: const Key('message_attach_video'),
+                    title: Text(l10n.attachVideo),
+                  ),
+                  ListTile(
+                    key: const Key('message_attach_camera'),
+                    title: Text(l10n.takeVideo),
+                  ),
+                  ListTile(
+                    key: const Key('message_attach_gallery'),
+                    title: Text(l10n.chooseFromGallery),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('message_attach_photo')), findsOneWidget);
+    expect(find.byKey(const Key('message_attach_video')), findsOneWidget);
+    expect(find.byKey(const Key('message_attach_camera')), findsOneWidget);
+    expect(find.byKey(const Key('message_attach_gallery')), findsOneWidget);
+    expect(find.text('Filmer une vidéo'), findsOneWidget);
+  });
+
+  testWidgets('messaging locked and compose keys are findable', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Scaffold(
+              floatingActionButton: FloatingActionButton.extended(
+                key: const Key('message_compose_fab'),
+                onPressed: () {},
+                label: Text(l10n.messageNewConversation),
+              ),
+              body: Column(
+                children: [
+                  FilledButton(
+                    key: const Key('message_link_vet_cta'),
+                    onPressed: () {},
+                    child: Text(l10n.linkVetAfterSaveTitle),
+                  ),
+                  FilledButton(
+                    key: const Key('message_compose_confirm'),
+                    onPressed: () {},
+                    child: Text(l10n.messageStartConversation),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('message_compose_fab')), findsOneWidget);
+    expect(find.byKey(const Key('message_link_vet_cta')), findsOneWidget);
+    expect(find.byKey(const Key('message_compose_confirm')), findsOneWidget);
   });
 
   testWidgets('preconsult_submit and commercial_logout keys', (tester) async {

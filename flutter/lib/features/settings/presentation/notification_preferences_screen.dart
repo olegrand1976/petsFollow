@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
-import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -77,6 +77,7 @@ class _NotificationPreferencesScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     if (loading) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.notificationPreferences)),
@@ -89,7 +90,7 @@ class _NotificationPreferencesScreenState
           padding: scrollPaddingWithSystemBottom(context, all: 16),
           children: [
             Text(l10n.notificationPrefsHint,
-                style: TextStyle(color: AppColors.textMuted, height: 1.4)),
+                style: TextStyle(color: p.textMuted, height: 1.4)),
             const SizedBox(height: 8),
             SwitchListTile(
                 title: Text(l10n.notificationPrefHr),

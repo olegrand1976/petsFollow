@@ -16,4 +16,9 @@ abstract final class AppColors {
   static const alert = Color(0xFFE76F51);
   static const cream = Color(0xFFFEFAE0);
   static const textMuted = Color(0xFF94A3B8);
+  static const bgLight = Color(0xFFF7F9FB);
+  static const surfaceLight = Color(0xFFFFFFFF);
+  static const surfaceElevatedLight = Color(0xFFEEF2F6);
+  static const creamLight = Color(0xFF1B3A4B);
+  static const textMutedLight = Color(0xFF6B7280);
 }

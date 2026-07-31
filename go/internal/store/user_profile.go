@@ -20,6 +20,17 @@ func (s *Store) UpdateUserFullName(ctx context.Context, userID, fullName string)
 	return nil
 }
 
+func (s *Store) UpdateUserContactPhone(ctx context.Context, userID, contactPhone string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE identity.users SET contact_phone = $2 WHERE id = $1`, userID, strings.TrimSpace(contactPhone))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) UpdateUserAvatarURL(ctx context.Context, userID, avatarURL string) error {
 	tag, err := s.pool.Exec(ctx, `UPDATE identity.users SET avatar_url = $2 WHERE id = $1`, userID, avatarURL)
 	if err != nil {
@@ -114,7 +125,15 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		return a, err
 	}
 	if err := collect(&a.MediaObjectKeys, `
-		SELECT COALESCE(d.object_key,'') FROM pets.pet_documents d
+		SELECT COALESCE(health_book_pdf_object_key,'') FROM pets.pets WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaURLs, `
+		SELECT COALESCE(health_book_pdf_url,'') FROM pets.pets WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(d.object_key,'') FROM pets.documents d
 		JOIN pets.pets p ON p.id = d.pet_id WHERE p.owner_user_id=$1`); err != nil {
 		return a, err
 	}
@@ -127,6 +146,18 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 		SELECT COALESCE(vr.audio_object_key,'') FROM visits.visit_reports vr
 		JOIN visits.visits v ON v.id = vr.visit_id
 		JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(object_key,'') FROM pets.dossier_share_tokens WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(object_key,'') FROM pets.consultation_share_tokens WHERE owner_user_id=$1`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.MediaObjectKeys, `
+		SELECT COALESCE(pdf_object_key,'') FROM prescriptions.prescriptions WHERE owner_id=$1`); err != nil {
 		return a, err
 	}
 	if err := collect(&a.SubscriptionIDs, `
@@ -149,9 +180,68 @@ func IsTombstoneEmail(email string) bool {
 	return strings.HasSuffix(email, tombstoneEmailSuffix)
 }
 
-// DeleteProAccount anonymise un compte Pro (vet / commercial / commercial_manager / care_pro) :
-// les données personnelles sont effacées et le login désactivé ; les données cliniques
-// rattachées au cabinet (visites, CR) sont conservées pour leur intégrité.
+// purgeClientOwnedDataExec efface les données détenues en tant que client
+// (pets, messagerie, liens cabinet, referrals) sans supprimer la ligne users.
+// Utilisé par DeleteClientAccount et DeleteProAccount (dual profil care_pro).
+func purgeClientOwnedDataExec(ctx context.Context, tx pgx.Tx, userID string) error {
+	stmts := []string{
+		`DELETE FROM pets.pets WHERE owner_user_id = $1`,
+		`DELETE FROM messaging.threads WHERE client_user_id = $1`,
+		`DELETE FROM practice.vet_leads WHERE client_user_id = $1`,
+		`DELETE FROM practice.practice_clients WHERE client_user_id = $1`,
+		`DELETE FROM practice.client_referrals
+			WHERE referred_client_user_id = $1 OR sponsor_client_user_id = $1`,
+		`DELETE FROM practice.commercial_referrals WHERE client_user_id = $1`,
+		`DELETE FROM practice.filiation_events
+			WHERE client_user_id = $1 OR actor_user_id = $1`,
+	}
+	for _, q := range stmts {
+		if _, err := tx.Exec(ctx, q, userID); err != nil {
+			return err
+		}
+	}
+	return redactPharmacyUserDataExec(ctx, tx, userID)
+}
+
+// redactPharmacyUserDataExec clears pharmacy PII / PHI trails tied to a user while
+// keeping practice operational records (DAF numbers, stock, orders).
+func redactPharmacyUserDataExec(ctx context.Context, tx pgx.Tx, userID string) error {
+	if _, err := tx.Exec(ctx, `
+		UPDATE pharmacy.job_audit ja
+		SET request_json = '{}'::jsonb,
+		    response_json = NULL,
+		    error = CASE WHEN COALESCE(error,'') = '' THEN error ELSE 'redacted' END
+		FROM pharmacy.daf_documents d
+		WHERE ja.entity_id = d.id
+		  AND ja.job_type = 'vamreg'
+		  AND (d.prescriber_user_id = $1 OR d.client_user_id = $1)`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE pharmacy.daf_documents
+		SET client_user_id = NULL, updated_at = now()
+		WHERE client_user_id = $1`, userID); err != nil {
+		return err
+	}
+	for _, q := range []string{
+		`UPDATE pharmacy.purchase_orders SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.delivery_notes SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.inventory_sessions SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.inventory_sessions SET closed_by = NULL WHERE closed_by = $1`,
+		`UPDATE pharmacy.stock_movements SET created_by = NULL WHERE created_by = $1`,
+		`UPDATE pharmacy.medication_prices SET updated_by = NULL WHERE updated_by = $1`,
+	} {
+		if _, err := tx.Exec(ctx, q, userID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteProAccount anonymise un compte Pro (vet / assistant / secretary /
+// commercial / commercial_manager / care_pro) : données personnelles effacées,
+// login désactivé ; données cliniques cabinet (visites, CR) conservées.
+// Si le compte possède aussi des données client (dual profil), elles sont purgées.
 func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -160,6 +250,21 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 	defer tx.Rollback(ctx)
 
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.device_tokens WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	// Drop live attribution before tombstone so Resolve/Accrue/List cannot pay or
+	// surface a deleted commercial (assigned_commercial_id + commercial_referrals).
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = NULL
+		WHERE assigned_commercial_id = $1 AND role = 'vet'`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.commercial_referrals WHERE commercial_user_id = $1`, userID); err != nil {
+		return err
+	}
+	// Dual profil : purger pets / threads client avant tombstone (art. 17).
+	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
 	tag, err := tx.Exec(ctx, `
@@ -172,13 +277,38 @@ func (s *Store) DeleteProAccount(ctx context.Context, userID string) error {
 			totp_secret = NULL,
 			totp_enabled = false,
 			avatar_url = NULL,
-			email_verified_at = NULL
-		WHERE id = $1 AND role IN ('vet','commercial','commercial_manager','care_pro')`, userID)
+			email_verified_at = NULL,
+			assigned_commercial_id = NULL,
+			contact_phone = ''
+		WHERE id = $1 AND role IN (
+			'vet','vet_assistant','secretary','commercial','commercial_manager','care_pro'
+		)`, userID)
 	if err != nil {
 		return err
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
+	}
+	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
+		return err
+	}
+	// Attribution restante (commercial / vet) — actor/client déjà purgés ci-dessus.
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM practice.filiation_events
+		WHERE commercial_user_id = $1 OR vet_user_id = $1`, userID); err != nil {
+		return err
+	}
+	// Unlink authorship on practice invoices (cabinet keeps counterparty / fiscal records).
+	if _, err := tx.Exec(ctx, `
+		UPDATE invoicing.documents SET created_by = NULL WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM invoicing.connect_states WHERE created_by = $1`, userID); err != nil {
+		return err
+	}
+	if err := redactPharmacyUserDataExec(ctx, tx, userID); err != nil {
+		return err
 	}
 	return tx.Commit(ctx)
 }
@@ -190,13 +320,10 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 	}
 	defer tx.Rollback(ctx)
 
-	if _, err := tx.Exec(ctx, `DELETE FROM pets.pets WHERE owner_user_id = $1`, userID); err != nil {
+	if err := anonymizeUserSupportTicketsExec(ctx, tx, userID); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM messaging.threads WHERE client_user_id = $1`, userID); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, `DELETE FROM practice.practice_clients WHERE client_user_id = $1`, userID); err != nil {
+	if err := purgeClientOwnedDataExec(ctx, tx, userID); err != nil {
 		return err
 	}
 	tag, err := tx.Exec(ctx, `DELETE FROM identity.users WHERE id = $1 AND role = 'client'`, userID)
@@ -207,6 +334,31 @@ func (s *Store) DeleteClientAccount(ctx context.Context, userID string) error {
 		return ErrNotFound
 	}
 	return tx.Commit(ctx)
+}
+
+// AcceptUserTerms horodate le consentement CGU/privacy (clients provisionnés / import).
+func (s *Store) AcceptUserTerms(ctx context.Context, userID string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE identity.users SET terms_accepted_at = COALESCE(terms_accepted_at, NOW())
+		WHERE id = $1`, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// UserHasAcceptedTerms — true si terms_accepted_at est renseigné.
+func (s *Store) UserHasAcceptedTerms(ctx context.Context, userID string) (bool, error) {
+	var accepted bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT terms_accepted_at IS NOT NULL FROM identity.users WHERE id = $1`, userID).Scan(&accepted)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, ErrNotFound
+	}
+	return accepted, err
 }
 
 func (s *Store) UpdateEmailPrefs(ctx context.Context, vetID string, onMessage, onHeartRate, onVisitRequest bool) error {

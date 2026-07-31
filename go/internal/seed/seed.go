@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
@@ -25,16 +26,26 @@ type ids struct {
 }
 
 func Run(ctx context.Context, pool *pgxpool.Pool) error {
+	if err := refuseSeedUnlessSeedableEnv("seed"); err != nil {
+		return err
+	}
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(context.Background()) }()
 
+	snap, err := snapshotPreserveClients(ctx, tx)
+	if err != nil {
+		return fmt.Errorf("preserve client snapshot: %w", err)
+	}
 	if err := truncateAll(ctx, tx); err != nil {
 		return err
 	}
 	if err := seedAdmin(ctx, tx); err != nil {
+		return err
+	}
+	if err := seedDev(ctx, tx); err != nil {
 		return err
 	}
 	for _, practice := range demoPractices {
@@ -44,6 +55,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	if err := seedCommercial(ctx, tx); err != nil {
 		return err
+	}
+	if err := restorePreserveClients(ctx, tx, snap); err != nil {
+		return fmt.Errorf("preserve client restore: %w", err)
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
@@ -81,10 +95,206 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedProfilesTeamModules(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := EnsureDemoOpsVetProfiles(ctx, pool, st); err != nil {
+		return err
+	}
+	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
+		return err
+	}
 	if _, err := st.BackfillEmailJourneys(ctx); err != nil {
 		return err
 	}
 	logSummary()
+	return nil
+}
+
+func seedPharmacyDemoMeds(ctx context.Context, st *store.Store) error {
+	medIDs := make(map[string]string, 2)
+	for _, row := range []store.RefMedicationUpsert{
+		{CNK: "2712345", Name: "Amoxicilline Vet Demo", ATCCode: "J01CA04", IsAntibiotic: true, IsActive: true, PharmaceuticalForm: "cp", AMMNumber: "BE-DEMO-AMOX-1"},
+		{CNK: "2899999", Name: "Vaccin Rage Demo", IsAntibiotic: false, IsActive: true, AMMNumber: "BE-DEMO-RAGE-1"},
+	} {
+		id, err := st.UpsertRefMedication(ctx, row)
+		if err != nil {
+			// Schema absent (migrate incomplete) — non-fatal for legacy envs.
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				log.Printf("seed pharmacy meds skipped (undefined table): %v", err)
+				return nil
+			}
+			return fmt.Errorf("pharmacy med %s: %w", row.CNK, err)
+		}
+		medIDs[row.CNK] = id
+	}
+	if err := seedPharmacyDemoStock(ctx, st, medIDs); err != nil {
+		return err
+	}
+	if err := seedPharmacyDemoProtocols(ctx, st, medIDs); err != nil {
+		return err
+	}
+	if err := seedPharmacyDemoPrices(ctx, st, medIDs); err != nil {
+		return err
+	}
+	log.Println("Pharmacie démo : CNK 2712345 / 2899999 + lots + protocoles")
+	return nil
+}
+
+func seedPharmacyDemoStock(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	if len(medIDs) == 0 {
+		return nil
+	}
+	practices, err := st.Pool().Query(ctx, `
+		SELECT p.id::text, u.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.role = 'vet'
+		WHERE p.profile_completed_at IS NOT NULL
+		  AND u.email IN ('vet.demo@petsfollow.test', 'vet.parc@petsfollow.test')
+		ORDER BY u.email`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer practices.Close()
+	settings := store.PharmacySettings{ReceiptWarnDays: 90, AllowExpiredReceipt: false}
+	exp := time.Now().AddDate(0, 0, 180)
+	for practices.Next() {
+		var practiceID, vetID string
+		if err := practices.Scan(&practiceID, &vetID); err != nil {
+			return err
+		}
+		for cnk, medID := range medIDs {
+			lot := "SEED-" + cnk
+			var exists bool
+			if err := st.Pool().QueryRow(ctx, `
+				SELECT EXISTS(
+					SELECT 1 FROM pharmacy.medication_batches
+					WHERE practice_id = $1::uuid AND medication_id = $2::uuid AND lot_number = $3
+				)`, practiceID, medID, lot).Scan(&exists); err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+					return nil
+				}
+				return err
+			}
+			if exists {
+				continue
+			}
+			_, _, err := st.ReceiveMedicationBatch(ctx, store.ReceiptInput{
+				PracticeID:   practiceID,
+				MedicationID: medID,
+				LotNumber:    lot,
+				ExpiresOn:    exp,
+				Qty:          50,
+				Unit:         "unit",
+				CreatedBy:    vetID,
+			}, settings, time.Now())
+			if err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+					return nil
+				}
+				return fmt.Errorf("seed batch %s practice %s: %w", cnk, practiceID, err)
+			}
+		}
+	}
+	return practices.Err()
+}
+
+func seedPharmacyDemoProtocols(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	amox := medIDs["2712345"]
+	rage := medIDs["2899999"]
+	if amox == "" || rage == "" {
+		return nil
+	}
+	rows, err := st.Pool().Query(ctx, `
+		SELECT p.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil
+	}
+	var practiceID string
+	if err := rows.Scan(&practiceID); err != nil {
+		return err
+	}
+	protocols := []struct {
+		name, desc string
+		sort       int
+		lines      []store.ClinicalProtocolLine
+	}{
+		{
+			name: "Antibiothérapie courte", desc: "Amoxicilline démo — 1 unité", sort: 1,
+			lines: []store.ClinicalProtocolLine{{MedicationID: amox, Qty: 1, AMMNumber: "BE-DEMO-AMOX-1", Unit: "unit"}},
+		},
+		{
+			name: "Vaccination rage", desc: "Vaccin rage démo", sort: 2,
+			lines: []store.ClinicalProtocolLine{{MedicationID: rage, Qty: 1, AMMNumber: "BE-DEMO-RAGE-1", Unit: "unit"}},
+		},
+		{
+			name: "Post-consult combo", desc: "Vaccin + antibiotique (démo)", sort: 3,
+			lines: []store.ClinicalProtocolLine{
+				{MedicationID: rage, Qty: 1, AMMNumber: "BE-DEMO-RAGE-1", Unit: "unit"},
+				{MedicationID: amox, Qty: 1, AMMNumber: "BE-DEMO-AMOX-1", Unit: "unit"},
+			},
+		},
+	}
+	for _, p := range protocols {
+		if _, err := st.UpsertClinicalProtocol(ctx, practiceID, p.name, p.desc, p.lines, p.sort); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				return nil
+			}
+			return fmt.Errorf("protocol %s: %w", p.name, err)
+		}
+	}
+	return nil
+}
+
+func seedPharmacyDemoPrices(ctx context.Context, st *store.Store, medIDs map[string]string) error {
+	if len(medIDs) == 0 {
+		return nil
+	}
+	rows, err := st.Pool().Query(ctx, `
+		SELECT p.id::text, u.id::text
+		FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			return nil
+		}
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil
+	}
+	var practiceID, vetID string
+	if err := rows.Scan(&practiceID, &vetID); err != nil {
+		return err
+	}
+	for _, medID := range medIDs {
+		if _, err := st.UpsertMedicationPrice(ctx, practiceID, medID, vetID, 800, 2200, 21); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+				return nil
+			}
+			return fmt.Errorf("seed price %s: %w", medID, err)
+		}
+	}
 	return nil
 }
 
@@ -161,18 +371,38 @@ func payoutHolder(p practiceDef) string {
 // protectedSalesRoles are never deleted by seed (staging real accounts + demos).
 var protectedSalesRoles = []string{"admin", "commercial", "commercial_manager"}
 
+// preserveClientEmails are staging real clients whose account + owned graph survive seed.Run.
+var preserveClientEmails = []string{"b.murgo1976@gmail.com"}
+
+// SetPreserveClientEmailsForTest overrides the preserve list (integration tests only).
+func SetPreserveClientEmailsForTest(emails []string) func() {
+	prev := preserveClientEmails
+	preserveClientEmails = append([]string(nil), emails...)
+	return func() { preserveClientEmails = prev }
+}
+
 func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	if _, err := tx.Exec(ctx, `DELETE FROM notifications.notification_log`); err != nil {
 		return err
 	}
-	// Detach surviving users from practices before TRUNCATE practice.practices.
+	// Detach surviving users from practices/profiles before clearing those tables.
 	if _, err := tx.Exec(ctx, `UPDATE identity.users SET practice_id = NULL, active_profile_id = NULL WHERE true`); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `TRUNCATE practice.team_members, identity.profiles CASCADE`); err != nil {
+	// Drop FK so TRUNCATE … practices CASCADE cannot wipe identity.users via
+	// profiles.practice_id → practices and users.active_profile_id → profiles.
+	if _, err := tx.Exec(ctx, `
+		ALTER TABLE identity.users DROP CONSTRAINT IF EXISTS users_active_profile_id_fkey`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM practice.team_members`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM identity.profiles`); err != nil {
 		return err
 	}
 	// identity.users is intentionally NOT truncated: admin / commercial / commercial_manager must survive.
+	// ops.support_tickets (+ replies) are intentionally NOT truncated: staging support inbox must survive resets.
 	if _, err := tx.Exec(ctx, `TRUNCATE billing.commercial_payout_lines, billing.commercial_payout_runs, billing.commercial_commission_ledger,
 		billing.commercial_bonus_awards,
 		billing.addon_entitlements, sales.prospects,
@@ -183,15 +413,23 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 		identity.email_verification_tokens, identity.password_reset_tokens,
 		notifications.client_preferences, notifications.device_tokens,
 		discovery.email_sends, discovery.email_journey, discovery.progress,
+		ops.auth_alerts,
 		ops.product_digest_sends, ops.product_digests,
 		visits.visits, care.competitions, care.professional_contacts, care.reminders,
 		notifications.notification_preferences, messaging.messages, messaging.threads, messaging.vet_availability,
 		heartrate.sessions, pets.weight_readings, pets.dossier_events, pets.pets,
 		practice.vet_schedule_slots, practice.vet_schedule, practice.vet_vacations,
 		practice.client_import_rows, practice.client_import_jobs,
+		pharmacy.compendium_import_rows, pharmacy.compendium_import_jobs,
 		practice.client_vet_link_requests, practice.invitations, practice.app_invite_codes,
 		practice.commercial_referrals,
 		practice.practice_clients, practice.practices CASCADE`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		ALTER TABLE identity.users
+		ADD CONSTRAINT users_active_profile_id_fkey
+		FOREIGN KEY (active_profile_id) REFERENCES identity.profiles(id) ON DELETE SET NULL`); err != nil {
 		return err
 	}
 	// Drop ephemeral smoke commercials (role protected, but email pattern is disposable).
@@ -202,7 +440,8 @@ func truncateAll(ctx context.Context, tx pgx.Tx) error {
 	}
 	_, err := tx.Exec(ctx, `
 		DELETE FROM identity.users
-		WHERE role <> ALL($1::text[])`, protectedSalesRoles)
+		WHERE role <> ALL($1::text[])
+		  AND email <> ALL($2::text[])`, protectedSalesRoles, preserveClientEmails)
 	return err
 }
 
@@ -216,11 +455,11 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
 			payout_iban, payout_bic, payout_account_holder, must_change_password,
-			base_lat, base_lng, base_city, base_postal_code
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
 		) VALUES (
 			$1, 'commercial.manager@petsfollow.test', $2, 'Bérénice Manager', 'commercial_manager', NULL, NOW(),
 			'BE68539007547034', 'GEBABEBB', 'Bérénice Manager', false,
-			50.6326, 5.5797, 'Liège', '4000'
+			50.6326, 5.5797, 'Liège', '4000', '0472 11 22 33'
 		)
 		ON CONFLICT (email) DO UPDATE SET
 			password_hash = EXCLUDED.password_hash,
@@ -234,7 +473,8 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash)).Scan(&managerID); err != nil {
 		return err
@@ -243,12 +483,12 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 	if err := tx.QueryRow(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id, email_verified_at,
-			payout_iban, payout_bic, payout_account_holder, manager_user_id, must_change_password,
-			base_lat, base_lng, base_city, base_postal_code
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
 		) VALUES (
 			$1, 'commercial.demo@petsfollow.test', $2, 'Camille Vente', 'commercial', NULL, NOW(),
-			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, false,
-			50.8503, 4.3517, 'Bruxelles', '1000'
+			'BE68539007547034', 'GEBABEBB', 'Camille Vente', $3::uuid, $3::uuid, false,
+			50.8503, 4.3517, 'Bruxelles', '1000', '0470 12 34 56'
 		)
 		ON CONFLICT (email) DO UPDATE SET
 			password_hash = EXCLUDED.password_hash,
@@ -258,37 +498,141 @@ func seedCommercial(ctx context.Context, tx pgx.Tx) error {
 			payout_iban = EXCLUDED.payout_iban,
 			payout_bic = EXCLUDED.payout_bic,
 			payout_account_holder = EXCLUDED.payout_account_holder,
-			-- Keep existing manager (e.g. staging Murgo); only fill when unset.
+			-- COALESCE kept for upsert symmetry; demo emails are force-linked just below.
 			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			sponsor_user_id = COALESCE(identity.users.sponsor_user_id, EXCLUDED.sponsor_user_id),
 			must_change_password = false,
 			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
 			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
 			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
-			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code)
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
 		RETURNING id::text`,
 		uuid.NewString(), string(hash), managerID).Scan(&commercialID); err != nil {
 		return err
 	}
-	// vet.demo is assigned to the demo commercial.
+	var commercial2ID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO identity.users (
+			id, email, password_hash, full_name, role, practice_id, email_verified_at,
+			payout_iban, payout_bic, payout_account_holder, manager_user_id, sponsor_user_id, must_change_password,
+			base_lat, base_lng, base_city, base_postal_code, contact_phone
+		) VALUES (
+			$1, 'commercial.demo2@petsfollow.test', $2, 'Alex Vente', 'commercial', NULL, NOW(),
+			'BE68539007547034', 'GEBABEBB', 'Alex Vente', $3::uuid, $3::uuid, false,
+			50.6292, 3.0573, 'Lille', '59000', '0471 98 76 54'
+		)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'commercial',
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			payout_iban = EXCLUDED.payout_iban,
+			payout_bic = EXCLUDED.payout_bic,
+			payout_account_holder = EXCLUDED.payout_account_holder,
+			manager_user_id = COALESCE(identity.users.manager_user_id, EXCLUDED.manager_user_id),
+			sponsor_user_id = COALESCE(identity.users.sponsor_user_id, EXCLUDED.sponsor_user_id),
+			must_change_password = false,
+			base_lat = COALESCE(identity.users.base_lat, EXCLUDED.base_lat),
+			base_lng = COALESCE(identity.users.base_lng, EXCLUDED.base_lng),
+			base_city = COALESCE(NULLIF(identity.users.base_city, ''), EXCLUDED.base_city),
+			base_postal_code = COALESCE(NULLIF(identity.users.base_postal_code, ''), EXCLUDED.base_postal_code),
+			contact_phone = COALESCE(NULLIF(identity.users.contact_phone, ''), EXCLUDED.contact_phone)
+		RETURNING id::text`,
+		uuid.NewString(), string(hash), managerID).Scan(&commercial2ID); err != nil {
+		return err
+	}
+	// Force-link known demo reps to seed manager so overview always shows the 2-rep team
+	// after re-seed (COALESCE above preserves staging reassignments for non-demo emails only).
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET manager_user_id = $1,
+		  sponsor_user_id = CASE
+		    WHEN sponsor_user_id IS NULL OR sponsor_user_id IS NOT DISTINCT FROM manager_user_id THEN $1
+		    ELSE sponsor_user_id
+		  END
+		WHERE email IN ('commercial.demo@petsfollow.test', 'commercial.demo2@petsfollow.test')`,
+		managerID); err != nil {
+		return err
+	}
+	// vet.demo → Camille ; vet.parc → Alex (deux portefeuilles distincts).
 	if _, err := tx.Exec(ctx, `
 		UPDATE identity.users SET assigned_commercial_id = $1
 		WHERE email = 'vet.demo@petsfollow.test' AND role = 'vet'`, commercialID); err != nil {
 		return err
 	}
-	return seedProspects(ctx, tx, commercialID)
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users SET assigned_commercial_id = $1
+		WHERE email = 'vet.parc@petsfollow.test' AND role = 'vet'`, commercial2ID); err != nil {
+		return err
+	}
+	if err := seedProspects(ctx, tx, commercialID, demo1Prospects); err != nil {
+		return err
+	}
+	if err := seedProspects(ctx, tx, commercial2ID, demo2Prospects); err != nil {
+		return err
+	}
+	return seedSalesBranches(ctx, tx, managerID, commercialID, commercial2ID)
 }
 
-func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string) error {
-	prospects := []struct {
-		practiceName, contactName, contactEmail, contactPhone, city, notes, status string
-		ageDays                                                                    int
-	}{
-		{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
-		{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
-		{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
-		{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
-		{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
+func seedSalesBranches(ctx context.Context, tx pgx.Tx, managerID, commercialID, commercial2ID string) error {
+	var bruxellesID, nordID string
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO sales.branches (id, name, code, external_mlm_id)
+		VALUES ($1, 'Bruxelles', 'BRU', NULL)
+		ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
+		RETURNING id::text`, uuid.NewString()).Scan(&bruxellesID); err != nil {
+		return err
 	}
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO sales.branches (id, name, code, external_mlm_id)
+		VALUES ($1, 'Nord', 'NORD', NULL)
+		ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name
+		RETURNING id::text`, uuid.NewString()).Scan(&nordID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET branch_id = $1,
+		    sponsor_user_id = COALESCE(sponsor_user_id, manager_user_id)
+		WHERE id = $2`, bruxellesID, commercialID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET branch_id = $1,
+		    sponsor_user_id = COALESCE(sponsor_user_id, manager_user_id)
+		WHERE id = $2`, nordID, commercial2ID); err != nil {
+		return err
+	}
+	// Manager sees both branches; attach to Bruxelles as primary for seed.
+	_, err := tx.Exec(ctx, `
+		UPDATE identity.users SET branch_id = COALESCE(branch_id, $1)
+		WHERE id = $2`, bruxellesID, managerID)
+	return err
+}
+
+type seedProspect struct {
+	practiceName, contactName, contactEmail, contactPhone, city, notes, status string
+	ageDays                                                                    int
+}
+
+var demo1Prospects = []seedProspect{
+	{"Clinique des Alpes", "Dr Sarah Alpes", "contact@alpes-vet.test", "0450112233", "Annecy", "Intéressée par le suivi cardiaque.", "qualified", 12},
+	{"Cabinet du Vieux Port", "Dr Marc Port", "marc@vieuxport-vet.test", "0491223344", "Marseille", "Premier contact salon pro.", "contacted", 5},
+	{"Vétérinaire Océan", "Dr Léa Océan", "lea@ocean-vet.test", "0240334455", "Nantes", "Demande de démo.", "new", 1},
+	{"Centre Animalier Bordeaux", "Dr Hugo Giron", "hugo@bordeaux-vet.test", "0556445566", "Bordeaux", "A signé, onboarding en cours.", "converted", 30},
+	{"Clinique Petite Patte", "Dr Nina Petit", "nina@petitepatte.test", "0388556677", "Strasbourg", "Pas de budget cette année.", "lost", 45},
+}
+
+var demo2Prospects = []seedProspect{
+	{"Cabinet Flandres Vet", "Dr Inès Flandres", "ines@flandres-vet.test", "0320112233", "Lille", "Relance module CR IA.", "qualified", 10},
+	{"Clinique Grand Place", "Dr Tom Place", "tom@grandplace-vet.test", "0321223344", "Mons", "RDV démo planifié.", "contacted", 4},
+	{"Vet & Co Tournai", "Dr Sara Tour", "sara@vetco-tournai.test", "0690334455", "Tournai", "Lead salon.", "new", 2},
+	{"Centre Équin Ardenne", "Dr Luc Ardenne", "luc@equin-ardenne.test", "0612445566", "Namur", "Converti — onboarding.", "converted", 28},
+	{"Cabinet du Canal", "Dr Eva Canal", "eva@canal-vet.test", "02-5556677", "Bruxelles", "Pas intéressée cette année.", "lost", 40},
+}
+
+func seedProspects(ctx context.Context, tx pgx.Tx, commercialID string, prospects []seedProspect) error {
 	for _, p := range prospects {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO sales.prospects (id, commercial_user_id, practice_name, contact_name, contact_email, contact_phone, city, notes, status, status_changed_at, created_at)
@@ -318,6 +662,101 @@ func seedAdmin(ctx context.Context, tx pgx.Tx) error {
 	return err
 }
 
+func seedDev(ctx context.Context, tx pgx.Tx) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordDev), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, must_change_password)
+		VALUES ($1, 'dev.demo@petsfollow.test', $2, 'Dev Support IT', 'dev', NULL, NOW(), false)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			full_name = EXCLUDED.full_name,
+			role = 'dev',
+			practice_id = NULL,
+			email_verified_at = COALESCE(identity.users.email_verified_at, NOW()),
+			must_change_password = false`,
+		uuid.NewString(), string(hash))
+	return err
+}
+
+// EnsureDemoOpsVetProfiles is idempotent — used by seed.Run and integration tests.
+func EnsureDemoOpsVetProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	if err := seedOpsDemoVetProfile(ctx, pool, st, "dev.demo@petsfollow.test"); err != nil {
+		return err
+	}
+	return seedOpsDemoVetProfile(ctx, pool, st, "admin.demo@petsfollow.test")
+}
+
+// seedOpsDemoVetProfile attache EnsureUserProfiles + profil vet VetPlus + team_members.
+// Réactive toujours le profil ops (admin|dev) : les tests de switch partagent la DB seedée.
+func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.Store, email string) error {
+	var userID, practiceID string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.users WHERE email = $1`, email).Scan(&userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", email, err)
+	}
+	if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+		return fmt.Errorf("%s profiles: %w", email, err)
+	}
+	err = pool.QueryRow(ctx, `
+		SELECT p.id::text FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&practiceID)
+	if err != nil {
+		return fmt.Errorf("vetplus practice for %s profile: %w", email, err)
+	}
+	var profileID string
+	err = pool.QueryRow(ctx, `
+		SELECT id::text FROM identity.profiles WHERE user_id = $1 AND role = 'vet'`, userID).Scan(&profileID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		profileID = uuid.NewString()
+		_, err = pool.Exec(ctx, `
+			INSERT INTO identity.profiles (id, user_id, role, practice_id, professional_specialty, created_at)
+			VALUES ($1, $2, 'vet', $3, NULL, NOW())`, profileID, userID, practiceID)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	_, err = pool.Exec(ctx, `
+		INSERT INTO practice.team_members (id, practice_id, user_id, profile_id, team_role, status)
+		VALUES ($1, $2, $3, $4, 'vet', 'active')
+		ON CONFLICT (practice_id, user_id) DO UPDATE SET
+			profile_id = EXCLUDED.profile_id,
+			team_role = EXCLUDED.team_role,
+			status = 'active'`,
+		uuid.NewString(), practiceID, userID, profileID)
+	if err != nil {
+		return err
+	}
+	return restoreOpsDemoActiveProfile(ctx, pool, userID)
+}
+
+// restoreOpsDemoActiveProfile force le profil admin|dev actif (users.role + active_profile_id).
+func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
+	var opsProfileID, opsRole string
+	err := pool.QueryRow(ctx, `
+		SELECT id::text, role::text FROM identity.profiles
+		WHERE user_id = $1 AND role IN ('admin', 'dev')
+		ORDER BY CASE role WHEN 'admin' THEN 0 WHEN 'dev' THEN 1 ELSE 2 END
+		LIMIT 1`, userID).Scan(&opsProfileID, &opsRole)
+	if err != nil {
+		return fmt.Errorf("ops profile for %s: %w", userID, err)
+	}
+	_, err = pool.Exec(ctx, `
+		UPDATE identity.users SET
+			active_profile_id = $2::uuid,
+			role = $3,
+			practice_id = NULL,
+			professional_specialty = NULL
+		WHERE id = $1`, userID, opsProfileID, opsRole)
+	return err
+}
+
 func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 	practiceID := uuid.NewString()
 	vetID := uuid.NewString()
@@ -330,14 +769,14 @@ func seedPractice(ctx context.Context, tx pgx.Tx, p practiceDef) error {
 		INSERT INTO practice.practices (
 			id, name, phone, contact_email, address_line1, address_line2, city, postal_code, website, profile_completed_at,
 			company_legal_name, vat_number, company_number, legal_form, billing_same_as_practice,
-			payout_iban, payout_bic, payout_account_holder
+			payout_iban, payout_bic, payout_account_holder, saas_billing_enabled
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, CASE WHEN $10 THEN NULL ELSE NOW() END,
-			$11, $12, $13, $14, TRUE, $15, $16, $17
+			$11, $12, $13, $14, TRUE, $15, $16, $17, $18
 		)`,
 		practiceID, p.name, p.phone, p.vetEmail, p.address, p.addressLine2, p.city, p.postalCode, p.website, p.incompleteProfile,
 		payoutLegalName(p), payoutVAT(p), payoutCompanyNumber(p), payoutLegalForm(p),
-		payoutIBAN(p), "GEBABEBB", payoutHolder(p)); err != nil {
+		payoutIBAN(p), "GEBABEBB", payoutHolder(p), !p.incompleteProfile); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -411,9 +850,9 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 	reg.clientIDs[c.email] = clientID
 
 	if _, err := tx.Exec(ctx, `
-		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at)
-		VALUES ($1, $2, $3, $4, 'client', $5, NOW())`,
-		clientID, c.email, clientHash, c.fullName, reg.practiceID); err != nil {
+		INSERT INTO identity.users (id, email, password_hash, full_name, role, practice_id, email_verified_at, terms_accepted_at, contact_phone)
+		VALUES ($1, $2, $3, $4, 'client', $5, NOW(), NOW(), $6)`,
+		clientID, c.email, clientHash, c.fullName, reg.practiceID, c.contactPhone); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -423,10 +862,24 @@ func seedClient(ctx context.Context, tx pgx.Tx, reg *ids, c clientDef, clientHas
 		return err
 	}
 
+	hasSubscription := false
 	for _, pet := range c.pets {
 		petKey := c.email + "/" + pet.name
 		if err := seedPet(ctx, tx, reg, clientID, petKey, pet); err != nil {
 			return fmt.Errorf("pet %q: %w", pet.name, err)
+		}
+		if pet.billingMode == billing.ModeSubscription {
+			hasSubscription = true
+		}
+	}
+	// Portail Stripe (Gérer mon abonnement) exige un customer — même convention que le mock checkout.
+	if hasSubscription {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO billing.stripe_customers (user_id, stripe_customer_id)
+			VALUES ($1, $2)
+			ON CONFLICT (user_id) DO UPDATE SET stripe_customer_id = EXCLUDED.stripe_customer_id`,
+			clientID, billing.MockCustomerID(clientID)); err != nil {
+			return err
 		}
 	}
 
@@ -504,7 +957,7 @@ func seedPet(ctx context.Context, tx pgx.Tx, reg *ids, clientID, petKey string, 
 		}
 	}
 	for _, v := range pet.visits {
-		if err := insertVisit(ctx, tx, petID, reg.practiceID, v); err != nil {
+		if err := insertVisit(ctx, tx, petID, reg.practiceID, reg.vetID, v); err != nil {
 			return err
 		}
 	}
@@ -620,7 +1073,7 @@ func insertCareReminder(ctx context.Context, tx pgx.Tx, petID, practiceID string
 	return err
 }
 
-func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v visitDef) error {
+func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID, vetUserID string, v visitDef) error {
 	status := v.status
 	if status == "" {
 		status = "requested"
@@ -646,10 +1099,30 @@ func insertVisit(ctx context.Context, tx pgx.Tx, petID, practiceID string, v vis
 	if scheduledAt != nil {
 		duration = 30
 	}
+	visitID := uuid.NewString()
 	_, err := tx.Exec(ctx, `
 		INSERT INTO visits.visits (id, pet_id, practice_id, scheduled_at, status, notes, source, pending_action_by, duration_minutes)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		uuid.NewString(), petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
+		visitID, petID, practiceID, scheduledAt, status, v.notes, source, pending, duration)
+	if err != nil {
+		return err
+	}
+	// Done visits with clinical notes get a CR so « Historique suivi » can open the consultation.
+	reportBody := strings.TrimSpace(v.reportBody)
+	if reportBody == "" && status == "done" {
+		reportBody = strings.TrimSpace(v.notes)
+	}
+	if reportBody == "" || vetUserID == "" {
+		return nil
+	}
+	reportStatus := "final"
+	if v.reportDraft {
+		reportStatus = "draft"
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO visits.visit_reports (id, visit_id, author_user_id, status, body_text, finalized_at)
+		VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'final' THEN NOW() ELSE NULL END)`,
+		uuid.NewString(), visitID, vetUserID, reportStatus, reportBody)
 	return err
 }
 
@@ -816,23 +1289,27 @@ func seedCarePros(ctx context.Context, pool *pgxpool.Pool) error {
 }
 
 func logSummary() {
-	log.Println("--- Comptes démo petsFollow ---")
-	log.Printf("Admin  : admin.demo@petsfollow.test / %s", passwordAdmin)
-	log.Printf("Manager: commercial.manager@petsfollow.test / %s", passwordCommercial)
-	log.Printf("Commerc: commercial.demo@petsfollow.test / %s (vet.demo assigné, 5 prospects, rattaché manager)", passwordCommercial)
-	log.Printf("Vétos  : *@petsfollow.test / %s", passwordVet)
+	// Les mots de passe démo restent hors des logs (Cloud Run staging est plus
+	// largement lisible que la base) — voir AGENTS.md.
+	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
+	log.Println("Admin  : admin.demo@petsfollow.test (switch profils client/vet)")
+	log.Println("DEV    : dev.demo@petsfollow.test (support IT — switch profils client/vet)")
+	log.Println("Manager: commercial.manager@petsfollow.test")
+	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
+	log.Println("Commerc: commercial.demo2@petsfollow.test (vet.parc assigné, 5 prospects Nord, rattaché manager)")
+	log.Println("Vétos  : *@petsfollow.test")
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")
 	log.Println("  vet.lyon@        — Lyon (indisponible, Nico pending payment)")
 	log.Println("  vet.onboarding@  — profil cabinet à compléter (onboarding)")
 	log.Println("  vet.unverified@  — email non confirmé (login bloqué)")
 	log.Println("  vet.reset@       — token démo reset mot de passe")
-	log.Printf("Clients: *@petsfollow.test / %s", passwordClient)
+	log.Println("Clients: *@petsfollow.test")
 	log.Println("  client.demo@     — 6 animaux · mix monthly/annual/triennial")
 	log.Println("  client.vide@     — sans animal (kanban)")
 	log.Println("  client.marie@    — Mimi + Chouchou · client.paul@ — Max")
 	log.Println("  client.julie@    — Oscar · client.thomas@ — Luna + Nico (pending)")
-	log.Printf("Care pro: *@petsfollow.test / %s (Flutter pro light)", passwordCarePro)
+	log.Println("Care pro: *@petsfollow.test (Flutter pro light)")
 	log.Println("  farrier.demo@    — maréchal · write_notes sur Spirit + visite ferrage")
 	log.Println("  vetlight.demo@   — véto light · write_notes sur Spirit")
 	log.Printf("Confirm email : http://localhost:3002/confirm-email?token=%s", demoEmailConfirmToken)
@@ -911,11 +1388,27 @@ func seedProfilesTeamModules(ctx context.Context, pool *pgxpool.Pool, st *store.
 			WHERE NOT EXISTS (SELECT 1 FROM care.competitions WHERE pet_id=$2 AND title='CSO régional')`,
 			uuid.NewString(), spiritID, ownerID)
 		_, _ = pool.Exec(ctx, `
+			UPDATE pets.pets
+			SET domicile_location = CASE WHEN COALESCE(domicile_location,'') = '' THEN 'Écurie VetPlus Demo — Bruxelles' ELSE domicile_location END,
+			    food_chain_status = CASE
+					WHEN food_chain_status = 'companion'
+					 AND COALESCE(domicile_location,'') = ''
+					THEN 'excluded_from_food_chain'
+					ELSE food_chain_status
+				END
+			WHERE id = $1`, spiritID)
+		_, _ = pool.Exec(ctx, `
 			UPDATE visits.visits SET lat = 50.8503, lng = 4.3517, address_text = COALESCE(NULLIF(address_text,''), 'Écurie démo — Bruxelles')
 			WHERE pet_id = $1 AND notes LIKE '%démo care_pro%'`, spiritID)
 	}
 
 	log.Println("Équipe VetPlus : vet.colleague@ / vet.assist@ / secretary.demo@ (mdp véto)")
 	log.Println("Modules UI ON : client.demo (care+/horse/kennel/family)")
+	// Comptes démo = consentement CGU déjà accepté (évite le gate Flutter accept-terms).
+	if _, err := pool.Exec(ctx, `
+		UPDATE identity.users SET terms_accepted_at = COALESCE(terms_accepted_at, NOW())
+		WHERE email LIKE '%@petsfollow.test'`); err != nil {
+		return err
+	}
 	return nil
 }

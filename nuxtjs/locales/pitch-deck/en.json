@@ -60,7 +60,7 @@
         "vetProKind": "Web Application",
         "vetProTitle": "Practice & ASV Cockpit",
         "vetProItems": ["Client messaging & timeline", "Record sharing & team", "Practice commission tracking"],
-        "vetProPrice": "69 € excl. VAT / month + Setup 320 € excl. VAT",
+        "vetProPrice": "€834.71 excl. VAT / year + Setup €320 excl. VAT",
         "vetLightLabel": "VetLight",
         "vetLightKind": "Mobile Field App",
         "vetLightTitle": "Caregiver Mobile App",
@@ -112,7 +112,7 @@
         "mockCommissions": "Practice Commissions",
         "mockMessage": "Latest message received (Charly)",
         "mockStatus": "Filed",
-        "footer": "Practice pricing: 69 € excl. VAT/month + setup 320 € excl. VAT (external billing)"
+        "footer": "Practice pricing: €834.71 excl. VAT / year + setup €320 excl. VAT (external billing)"
       },
       "s06": {
         "title": "VetPro — Key Features",
@@ -129,7 +129,7 @@
         "f4Title": "Team & Agenda Management",
         "f4Desc": "Record sharing between colleagues, coordinated clinic agenda and clear commission tracking.",
         "quality": "Quality standard: Easy for the entire care team to adopt.",
-        "langs": "Available in 5 languages"
+        "langs": "Available in 6 languages"
       },
       "s07": {
         "title": "VetLight — Mobile Field App",
@@ -209,7 +209,7 @@
           { "feature": "Fingertip heart rate (if prescribed)", "vetPro": "✓ (Read)", "vetLight": "—", "client": "✓ (Measure)" }
         ],
         "financeLabel": "Financial model",
-        "financeVetPro": "69 € excl. VAT/month",
+        "financeVetPro": "€834.71 excl. VAT / year",
         "financeVetLight": "FREE",
         "financeClient": "Pet subscription",
         "footer": "Clear functional coverage for every team member."
@@ -221,10 +221,10 @@
         "kicker": "11 / PRACTICE PROFITABILITY",
         "headline": "A model self-financed by activations",
         "priceLabel": "VetPro Practice Pricing",
-        "price": "69 € excl. VAT / month",
-        "setup": "+ Initial setup 320 € excl. VAT (external billing)",
+        "price": "€834.71 excl. VAT / year",
+        "setup": "+ Initial setup €320 excl. VAT (external billing)",
         "mechanismTitle": "Self-financing mechanism:",
-        "mechanismDesc": "Each pet activated by the owner generates commission paid to the practice. Rule of thumb: ~7 triennial activations / month cover the SaaS subscription (69 € excl. VAT).",
+        "mechanismDesc": "Each pet activated by the owner generates commission paid to the practice. Rule of thumb: ~8 triennial activations / month cover the SaaS monthly equivalent (≈ €69.56 excl. VAT). Steer: €2,253.72 excl. VAT / 3 years (−10%).",
         "summaryTitle": "In summary for the clinic:",
         "summaryItems": [
           "Full Web cockpit for the entire clinic",
@@ -259,7 +259,7 @@
           {
             "label": "OBJECTION 1",
             "q": "\"Is it only a cardio app?\"",
-            "a": "No, it's a global management platform (messaging, records, Care/Horse reminders, agenda, reports). Heart rate monitoring is one integrated feature among others."
+            "a": "No, it's a global management platform (messaging, records, Care/Horse reminders, agenda, reports). Heart rate reading is one integrated feature among others."
           },
           {
             "label": "OBJECTION 2",
@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Client)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2: Client Mobile App",
             "desc": "The user sends a message or performs a fingertip heart rate reading (if prescribed by the practitioner)."
           },
@@ -333,7 +333,7 @@
         "c2Desc": "Create your test practice space in 2 minutes during the meeting.",
         "c3Title": "Waiting Room Kit",
         "c3Desc": "Dedicated support + waiting room display kit included.",
-        "cta": "Confirm VetPro Setup (320 € excl. VAT + 69 € excl. VAT/month)",
+        "cta": "Confirm VetPro Setup (€320 excl. VAT + €834.71 excl. VAT / year)",
         "footerLeft": "petsFollow Pro — Care continuity guided by the vet",
         "footerRight": "www.petsfollow.com"
       }

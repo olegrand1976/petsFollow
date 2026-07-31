@@ -21,13 +21,40 @@ String mapApiError(Object e, AppLocalizations l10n) {
           case 'invalid_image_type':
             return l10n.errorInvalidMediaType;
           case 'payment_required':
+          case 'pet_inactive':
             return l10n.errorPaymentRequired;
+          case 'consultation_share_limit':
+          case 'dossier_share_limit':
+            final apiMsg = err['message']?.toString();
+            if (apiMsg != null &&
+                apiMsg.isNotEmpty &&
+                !apiMsg.startsWith('errors.')) {
+              return apiMsg;
+            }
+            return l10n.errorGeneric('share');
           case 'ai_module_required':
             return l10n.proLightAiModuleRequired;
           case 'invalid_weight':
             return l10n.weightInvalid;
           case 'file_required':
             return l10n.errorInvalidMediaType;
+          case 'vet_link_required':
+            // Prefer localized API message when present (post-deploy msgKey+i18n).
+            final apiMsg = err['message']?.toString();
+            if (apiMsg != null &&
+                apiMsg.isNotEmpty &&
+                !apiMsg.startsWith('errors.')) {
+              return apiMsg;
+            }
+            return l10n.vetLinkRequired;
+          case 'heartrate_not_supported':
+            return l10n.heartRateNotSupported;
+          case 'invalid_birth_date':
+            return l10n.petBirthDateInvalid;
+          case 'family_pet_limit':
+            return l10n.familyPetLimit;
+          case 'family_requires_two_pets':
+            return l10n.familyRequiresTwoPets;
           default:
             final message = err['message']?.toString();
             if (message != null && message.isNotEmpty) return message;
@@ -39,15 +66,17 @@ String mapApiError(Object e, AppLocalizations l10n) {
 }
 
 /// Extrait le code d'erreur métier brut d'une réponse API enveloppée
-/// `{ error: { code | msgKey | message } }` (ou `{ code }` à plat),
+/// `{ error: { msgKey | messageKey | code | message } }` (ou `{ code }` à plat),
 /// pour les écrans qui mappent eux-mêmes les codes vers leurs messages.
+/// Préfère `msgKey` : `code` est souvent générique (`bad_request`).
 String? apiErrorCode(Object e) {
   if (e is! DioException) return null;
   final data = e.response?.data;
   if (data is Map) {
     final err = data['error'];
     if (err is Map) {
-      return (err['code'] ?? err['msgKey'] ?? err['message'])?.toString();
+      return (err['msgKey'] ?? err['messageKey'] ?? err['code'] ?? err['message'])
+          ?.toString();
     }
     return data['code']?.toString();
   }

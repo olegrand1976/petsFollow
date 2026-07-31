@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -43,12 +44,27 @@ func (s *Store) ListClientVets(ctx context.Context, clientUserID string) ([]Clie
 }
 
 func (s *Store) UpsertPracticeClient(ctx context.Context, practiceID, clientUserID, vetUserID string) error {
+	var prevVet *string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT vet_user_id::text FROM practice.practice_clients
+		WHERE practice_id=$1 AND client_user_id=$2`, practiceID, clientUserID).Scan(&prevVet)
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.practice_clients (id, practice_id, client_user_id, vet_user_id)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (practice_id, client_user_id) DO UPDATE SET vet_user_id = EXCLUDED.vet_user_id`,
 		uuid.NewString(), practiceID, clientUserID, vetUserID)
-	return err
+	if err != nil {
+		return err
+	}
+	changed := prevVet == nil || *prevVet != vetUserID
+	if changed {
+		meta := map[string]any{"source": "upsert_practice_client"}
+		if prevVet != nil && *prevVet != "" && *prevVet != vetUserID {
+			meta["previousVetUserId"] = *prevVet
+		}
+		s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientUserID, vetUserID, vetUserID, meta)
+	}
+	return nil
 }
 
 func (s *Store) ClientIsMemberOfPractice(ctx context.Context, clientUserID, practiceID string) (bool, error) {
@@ -67,6 +83,82 @@ type VetInviteResult struct {
 	Status       string `json:"status"` // pending | not_found
 	PracticeName string `json:"practiceName,omitempty"`
 	VetFullName  string `json:"vetFullName,omitempty"`
+}
+
+// VetLookupHit is a minimal public hit for client autocomplete (email masked).
+type VetLookupHit struct {
+	VetUserID    string `json:"vetUserId"`
+	PracticeID   string `json:"practiceId"`
+	PracticeName string `json:"practiceName"`
+	VetFullName  string `json:"vetFullName"`
+	VetEmail     string `json:"vetEmail"` // masked, e.g. v***@cabinet.fr
+}
+
+// MaskEmail hides the local-part for client-facing lookup responses.
+func MaskEmail(email string) string {
+	email = strings.TrimSpace(strings.ToLower(email))
+	at := strings.LastIndex(email, "@")
+	if at <= 0 || at == len(email)-1 {
+		return "***"
+	}
+	local, domain := email[:at], email[at+1:]
+	r, size := utf8.DecodeRuneInString(local)
+	if r == utf8.RuneError && size == 1 {
+		return "***@" + domain
+	}
+	return string(r) + "***@" + domain
+}
+
+func likeContainsPattern(q string) string {
+	q = strings.ToLower(strings.TrimSpace(q))
+	q = strings.ReplaceAll(q, `\`, `\\`)
+	q = strings.ReplaceAll(q, `%`, `\%`)
+	q = strings.ReplaceAll(q, `_`, `\_`)
+	return "%" + q + "%"
+}
+
+// LookupVets searches vets/practices by name or email fragment (min 3 runes).
+func (s *Store) LookupVets(ctx context.Context, q string, limit int) ([]VetLookupHit, error) {
+	q = strings.TrimSpace(q)
+	if utf8.RuneCountInString(q) < 3 {
+		return nil, nil
+	}
+	if limit <= 0 || limit > 20 {
+		limit = 10
+	}
+	pattern := likeContainsPattern(q)
+	rows, err := s.pool.Query(ctx, `
+		SELECT u.id::text, u.practice_id::text, pr.name, u.full_name, u.email
+		FROM identity.users u
+		JOIN practice.practices pr ON pr.id = u.practice_id
+		WHERE u.role = 'vet' AND u.practice_id IS NOT NULL
+		  AND u.email_verified_at IS NOT NULL
+		  AND (
+			lower(u.email) LIKE $1 ESCAPE '\'
+			OR lower(u.full_name) LIKE $1 ESCAPE '\'
+			OR lower(pr.name) LIKE $1 ESCAPE '\'
+		  )
+		ORDER BY
+			CASE WHEN lower(u.email) = lower($2) THEN 0
+			     WHEN lower(u.email) LIKE lower($2) || '%' ESCAPE '\' THEN 1
+			     ELSE 2 END,
+			pr.name, u.full_name
+		LIMIT $3`, pattern, q, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []VetLookupHit
+	for rows.Next() {
+		var h VetLookupHit
+		var rawEmail string
+		if err := rows.Scan(&h.VetUserID, &h.PracticeID, &h.PracticeName, &h.VetFullName, &rawEmail); err != nil {
+			return nil, err
+		}
+		h.VetEmail = MaskEmail(rawEmail)
+		out = append(out, h)
+	}
+	return out, rows.Err()
 }
 
 // InviteClientToVetByEmail creates a pending link request (no auto-membership).
@@ -89,7 +181,33 @@ func (s *Store) InviteClientToVetByEmail(ctx context.Context, clientUserID, vetE
 	if err != nil {
 		return VetInviteResult{}, err
 	}
-	_, err = s.pool.Exec(ctx, `
+	return s.createPendingVetLink(ctx, clientUserID, practiceID, vetID, practiceName, vetName)
+}
+
+// InviteClientToVetByID creates a pending link request for a known vet user.
+func (s *Store) InviteClientToVetByID(ctx context.Context, clientUserID, vetUserID string) (VetInviteResult, error) {
+	vetUserID = strings.TrimSpace(vetUserID)
+	if vetUserID == "" {
+		return VetInviteResult{Found: false, Status: "not_found"}, nil
+	}
+	var practiceID, vetName, practiceName string
+	err := s.pool.QueryRow(ctx, `
+		SELECT u.practice_id::text, u.full_name, pr.name
+		FROM identity.users u
+		JOIN practice.practices pr ON pr.id = u.practice_id
+		WHERE u.id = $1 AND u.role = 'vet' AND u.practice_id IS NOT NULL`, vetUserID).
+		Scan(&practiceID, &vetName, &practiceName)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VetInviteResult{Found: false, Status: "not_found"}, nil
+	}
+	if err != nil {
+		return VetInviteResult{}, err
+	}
+	return s.createPendingVetLink(ctx, clientUserID, practiceID, vetUserID, practiceName, vetName)
+}
+
+func (s *Store) createPendingVetLink(ctx context.Context, clientUserID, practiceID, vetID, practiceName, vetName string) (VetInviteResult, error) {
+	_, err := s.pool.Exec(ctx, `
 		INSERT INTO practice.client_vet_link_requests (id, client_user_id, practice_id, vet_user_id, status)
 		VALUES ($1, $2, $3, $4, 'pending')
 		ON CONFLICT (client_user_id, practice_id) DO UPDATE SET
@@ -106,6 +224,100 @@ func (s *Store) InviteClientToVetByEmail(ctx context.Context, clientUserID, vetE
 		PracticeName: practiceName,
 		VetFullName:  vetName,
 	}, nil
+}
+
+// VetLeadInput is a client suggestion for a vet not yet on the platform.
+type VetLeadInput struct {
+	Email        string
+	Phone        string
+	FullName     string
+	PracticeName string
+}
+
+// VetLead is a persisted suggestion.
+type VetLead struct {
+	ID           string `json:"id"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	FullName     string `json:"fullName,omitempty"`
+	PracticeName string `json:"practiceName,omitempty"`
+	Status       string `json:"status"`
+}
+
+// CreateVetLead stores a client-suggested vet (no phantom vet account).
+// Upserts on (client_user_id, email) to avoid duplicate open leads.
+func (s *Store) CreateVetLead(ctx context.Context, clientUserID string, in VetLeadInput) (VetLead, error) {
+	email := strings.ToLower(strings.TrimSpace(in.Email))
+	phone := strings.TrimSpace(in.Phone)
+	if email == "" || phone == "" {
+		return VetLead{}, ErrValidation
+	}
+	fullName := strings.TrimSpace(in.FullName)
+	practiceName := strings.TrimSpace(in.PracticeName)
+	var id, status string
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO practice.vet_leads (id, client_user_id, email, phone, full_name, practice_name, status)
+		VALUES ($1, $2, $3, $4, $5, $6, 'new')
+		ON CONFLICT (client_user_id, email) DO UPDATE SET
+			phone = EXCLUDED.phone,
+			full_name = EXCLUDED.full_name,
+			practice_name = EXCLUDED.practice_name,
+			status = 'new',
+			updated_at = NOW()
+		RETURNING id::text, email, phone, full_name, practice_name, status`,
+		uuid.NewString(), clientUserID, email, phone, fullName, practiceName,
+	).Scan(&id, &email, &phone, &fullName, &practiceName, &status)
+	if err != nil {
+		return VetLead{}, err
+	}
+	return VetLead{
+		ID: id, Email: email, Phone: phone, FullName: fullName, PracticeName: practiceName, Status: status,
+	}, nil
+}
+
+// StampClientPracticeIfEmpty sets users.practice_id when still null (first membership wins).
+func (s *Store) StampClientPracticeIfEmpty(ctx context.Context, clientUserID, practiceID string) error {
+	if strings.TrimSpace(clientUserID) == "" || strings.TrimSpace(practiceID) == "" {
+		return nil
+	}
+	_, err := s.pool.Exec(ctx, `
+		UPDATE identity.users
+		SET practice_id = $2::uuid
+		WHERE id = $1 AND role = 'client' AND practice_id IS NULL`,
+		clientUserID, practiceID)
+	return err
+}
+
+// ResolveClientPracticeID returns users.practice_id, or the first practice_clients membership
+// (stamping the user row when empty so subsequent JWTs carry the practice).
+func (s *Store) ResolveClientPracticeID(ctx context.Context, clientUserID string) (string, error) {
+	var practiceID *string
+	err := s.pool.QueryRow(ctx, `
+		SELECT practice_id::text FROM identity.users WHERE id = $1 AND role = 'client'`, clientUserID,
+	).Scan(&practiceID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	if practiceID != nil && *practiceID != "" {
+		return *practiceID, nil
+	}
+	var memberPractice string
+	err = s.pool.QueryRow(ctx, `
+		SELECT practice_id::text FROM practice.practice_clients
+		WHERE client_user_id = $1
+		ORDER BY created_at ASC
+		LIMIT 1`, clientUserID).Scan(&memberPractice)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	_ = s.StampClientPracticeIfEmpty(ctx, clientUserID, memberPractice)
+	return memberPractice, nil
 }
 
 type VetLinkRequest struct {
@@ -169,11 +381,29 @@ func (s *Store) AcceptVetLinkRequest(ctx context.Context, requestID, vetUserID s
 		return err
 	}
 	if _, err := tx.Exec(ctx, `
+		UPDATE identity.users
+		SET practice_id = $2::uuid
+		WHERE id = $1 AND role = 'client' AND practice_id IS NULL`,
+		clientID, practiceID); err != nil {
+		return err
+	}
+	stamped, err := stampOrphanPetsTx(ctx, tx, clientID, practiceID)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
 		UPDATE practice.client_vet_link_requests SET status = 'accepted', updated_at = NOW() WHERE id = $1`,
 		requestID); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	_ = stamped // orphans stamped; care reminders stay manual
+	s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientID, vetUserID, vetUserID, map[string]any{
+		"source": "accept_vet_link",
+	})
+	return nil
 }
 
 func (s *Store) RejectVetLinkRequest(ctx context.Context, requestID, vetUserID string) error {
@@ -198,7 +428,7 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 
 	var ownerID, currentPractice string
 	err = tx.QueryRow(ctx, `
-		SELECT owner_user_id::text, practice_id::text FROM pets.pets WHERE id = $1 FOR UPDATE`, petID,
+		SELECT owner_user_id::text, COALESCE(practice_id::text,'') FROM pets.pets WHERE id = $1 FOR UPDATE`, petID,
 	).Scan(&ownerID, &currentPractice)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
@@ -220,7 +450,9 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 	if !member {
 		return ErrForbidden
 	}
-	if currentPractice != practiceID {
+	// First link (orphan → cabinet) is always allowed, even with an active entitlement.
+	// Switching cabinets after payment remains locked.
+	if currentPractice != "" && currentPractice != practiceID {
 		var status string
 		err := tx.QueryRow(ctx, `
 			SELECT status FROM billing.pet_entitlements WHERE pet_id = $1`, petID).Scan(&status)
@@ -243,4 +475,37 @@ func (s *Store) SetPetPrimaryPractice(ctx context.Context, petID, ownerUserID, p
 		return ErrNotFound
 	}
 	return tx.Commit(ctx)
+}
+
+type stampedOrphanPet struct {
+	ID      string
+	Species string
+}
+
+// stampOrphanPetsTx assigns practice_id to an owner's pets that still have none.
+func stampOrphanPetsTx(ctx context.Context, tx pgx.Tx, ownerUserID, practiceID string) ([]stampedOrphanPet, error) {
+	rows, err := tx.Query(ctx, `
+		UPDATE pets.pets
+		SET practice_id = $2::uuid, updated_at = NOW()
+		WHERE owner_user_id = $1 AND practice_id IS NULL
+		RETURNING id::text, species`, ownerUserID, practiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []stampedOrphanPet
+	for rows.Next() {
+		var p stampedOrphanPet
+		if err := rows.Scan(&p.ID, &p.Species); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// seedCareForStampedPets is a no-op: care reminders are created manually by the client.
+func seedCareForStampedPets(ctx context.Context, s *Store, ownerUserID, practiceID string, stamped []stampedOrphanPet) {
+	_, _, _, _ = ctx, s, ownerUserID, practiceID
+	_ = stamped
 }

@@ -1,19 +1,25 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/auth/google_auth.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/invite/invite_code_store.dart';
 import 'package:petsfollow_mobile/core/invite/preconsult_visit_store.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
+import 'package:petsfollow_mobile/core/support/support_diagnostics_buffer.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
+import 'package:petsfollow_mobile/core/models/manager_overview.dart';
 import 'package:petsfollow_mobile/core/models/message_thread.dart';
 import 'package:petsfollow_mobile/core/models/notification_prefs.dart';
 import 'package:petsfollow_mobile/core/models/practice_availability.dart';
 import 'package:petsfollow_mobile/core/models/vet_link.dart';
+import 'package:petsfollow_mobile/core/models/vet_lookup_hit.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
@@ -25,6 +31,9 @@ Map<String, String>? heartRateCommentPayload(String? comment) {
   if (trimmed == null || trimmed.isEmpty) return null;
   return {'comment': trimmed};
 }
+
+/// Outcome of [ApiClient] refresh — never treat network blips as logout.
+enum _TokenRefreshResult { success, invalid, transient }
 
 class ApiClient {
   ApiClient._() {
@@ -38,6 +47,8 @@ class ApiClient {
   static final instance = ApiClient._();
 
   static const _tokenKey = 'pf_token';
+  static const _refreshKey = 'pf_refresh';
+  static const _sessionMetaKey = 'pf_session_meta';
   static const _apiBaseDefined = String.fromEnvironment('API_BASE');
 
   /// JWT en Keystore/Keychain — jamais en SharedPreferences (lisible sur device rooté/backup).
@@ -55,6 +66,7 @@ class ApiClient {
   }
 
   String? token;
+  String? refreshToken;
 
   /// Fired after a 401 clears the local session (AuthGate rebuilds → login).
   void Function()? onSessionInvalidated;
@@ -64,6 +76,7 @@ class ApiClient {
 
   bool _handlingUnauthorized = false;
   int _authGeneration = 0;
+  Completer<_TokenRefreshResult>? _refreshInFlight;
 
   late final dio = Dio(BaseOptions(
     baseUrl: _apiBase,
@@ -84,16 +97,42 @@ class ApiClient {
         }
         handler.next(options);
       },
-      onError: (error, handler) {
+      onError: (error, handler) async {
+        final path = error.requestOptions.path;
+        final alreadyRetried = error.requestOptions.extra['pf_auth_retried'] == true;
         if (error.response?.statusCode == 401 &&
-            token != null &&
-            !_isPublicAuthPath(error.requestOptions.path)) {
-          // Clear token sync so AuthGate sees token == null immediately.
-          unawaited(_invalidateSessionFromUnauthorized());
+            !_isPublicAuthPath(path) &&
+            !alreadyRetried &&
+            (token != null || refreshToken != null)) {
+          final refreshResult = await _refreshTokens();
+          switch (refreshResult) {
+            case _TokenRefreshResult.success:
+              final req = error.requestOptions;
+              req.extra['pf_auth_retried'] = true;
+              req.headers['Authorization'] = 'Bearer $token';
+              try {
+                final response = await dio.fetch(req);
+                return handler.resolve(response);
+              } on DioException catch (retryErr) {
+                // Only wipe session if the server still rejects auth after refresh.
+                if (retryErr.response?.statusCode == 401) {
+                  unawaited(_invalidateSessionFromUnauthorized());
+                }
+                return handler.next(retryErr);
+              } catch (_) {
+                return handler.next(error);
+              }
+            case _TokenRefreshResult.invalid:
+              unawaited(_invalidateSessionFromUnauthorized());
+            case _TokenRefreshResult.transient:
+              // Keep tokens; propagate the original 401 to the caller.
+              break;
+          }
         }
         handler.next(error);
       },
     ));
+    dio.interceptors.add(SupportDiagnosticsBuffer.instance.dioInterceptor());
   }
 
   static bool _isPublicAuthPath(String path) {
@@ -102,10 +141,11 @@ class ApiClient {
 
   /// Clears session after an authenticated 401. Safe to call multiple times.
   Future<void> _invalidateSessionFromUnauthorized() async {
-    if (_handlingUnauthorized || token == null) return;
+    if (_handlingUnauthorized || (token == null && refreshToken == null)) return;
     _handlingUnauthorized = true;
     final generation = ++_authGeneration;
     token = null;
+    refreshToken = null;
     userId = null;
     userRole = null;
     userSpecialty = null;
@@ -113,9 +153,13 @@ class ApiClient {
     try {
       // Abort if a new login started after we cleared.
       if (_authGeneration != generation || token != null) return;
-      await _persistToken(null);
+      await _persistTokens(null, null);
+      await _persistSessionMeta();
       if (_authGeneration != generation || token != null) {
-        if (token != null) await _persistToken(token);
+        if (token != null) {
+          await _persistTokens(token, refreshToken);
+          await _persistSessionMeta();
+        }
         return;
       }
       NotificationService.instance.resetSession();
@@ -127,52 +171,221 @@ class ApiClient {
     }
   }
 
+  /// Restores session from Keystore. Access JWT (~15 min) is refreshed via
+  /// [refreshToken] (API `JWT_REFRESH_TTL`, défaut 30 j). Network errors do
+  /// not wipe the session. Forgot-password / reset stay independent of this.
   Future<void> restoreSession() async {
-    token = await _readPersistedToken();
+    token = await _readPersistedSecret(_tokenKey);
+    refreshToken = await _readPersistedSecret(_refreshKey);
+    // Legacy access JWT may still live in SharedPreferences.
+    token ??= await _migrateLegacyAccessToken();
+    await _restoreSessionMeta();
     loadToken();
-    if (token != null) {
+    if (token == null && refreshToken == null) return;
+
+    if (token == null) {
+      switch (await _refreshTokens()) {
+        case _TokenRefreshResult.success:
+          break;
+        case _TokenRefreshResult.invalid:
+          await logout();
+          return;
+        case _TokenRefreshResult.transient:
+          // Hors-ligne : garder refresh + meta rôle pour le shell.
+          return;
+      }
+    }
+
+    try {
+      await _hydrateMe();
+    } on DioException catch (e) {
+      if (_isTransientNetworkError(e)) return;
+      if (e.response?.statusCode == 401) {
+        // Interceptor may already have refreshed or invalidated.
+        if (token == null && refreshToken == null) return;
+        switch (await _refreshTokens()) {
+          case _TokenRefreshResult.success:
+            try {
+              await _hydrateMe();
+            } on DioException catch (e2) {
+              if (_isTransientNetworkError(e2)) return;
+              if (e2.response?.statusCode == 401) await logout();
+            } catch (_) {}
+          case _TokenRefreshResult.invalid:
+            await logout();
+          case _TokenRefreshResult.transient:
+            break;
+        }
+        return;
+      }
+      // Autre erreur HTTP : garder les tokens (API down, 5xx…).
+    } catch (_) {
+      // Ne pas détruire la session sur erreur inattendue au boot.
+    }
+  }
+
+  Future<void> _hydrateMe() async {
+    final me = await getMe();
+    userId = me['userId'] as String? ?? me['id'] as String?;
+    userRole = me['role'] as String?;
+    userSpecialty = me['professionalSpecialty'] as String?;
+    await _persistSessionMeta();
+  }
+
+  Future<void> _restoreSessionMeta() async {
+    final raw = await _readPersistedSecret(_sessionMetaKey);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      userId = map['userId'] as String?;
+      userRole = map['role'] as String?;
+      userSpecialty = map['specialty'] as String?;
+    } catch (_) {}
+  }
+
+  Future<void> _persistSessionMeta() async {
+    if (userId == null && userRole == null && userSpecialty == null) {
       try {
-        final me = await getMe();
-        userId = me['userId'] as String? ?? me['id'] as String?;
-        userRole = me['role'] as String?;
-        userSpecialty = me['professionalSpecialty'] as String?;
-      } catch (_) {
-        await logout();
+        await _secureStorage.delete(key: _sessionMetaKey);
+      } catch (_) {}
+      return;
+    }
+    try {
+      await _secureStorage.write(
+        key: _sessionMetaKey,
+        value: jsonEncode({
+          'userId': userId,
+          'role': userRole,
+          'specialty': userSpecialty,
+        }),
+      );
+    } catch (_) {}
+  }
+
+  static bool _isTransientNetworkError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.transformTimeout:
+        return true;
+      case DioExceptionType.badResponse:
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.unknown:
+        return e.response == null;
+    }
+  }
+
+  static bool _isAuthRejectionStatus(int? status) {
+    // Only a true unauthorized from the refresh endpoint should wipe the session.
+    // 400/403 from proxies/WAF must not force logout.
+    return status == 401;
+  }
+
+  /// Proactively exchange the refresh JWT so a post-payment API storm does not
+  /// wipe the session on a stale 15-min access token.
+  Future<bool> ensureFreshSession() async {
+    if (refreshToken == null || refreshToken!.isEmpty) {
+      refreshToken = await _readPersistedSecret(_refreshKey);
+    }
+    if (refreshToken == null || refreshToken!.isEmpty) return token != null;
+    switch (await _refreshTokens()) {
+      case _TokenRefreshResult.success:
+        return true;
+      case _TokenRefreshResult.transient:
+        return token != null;
+      case _TokenRefreshResult.invalid:
+        unawaited(_invalidateSessionFromUnauthorized());
+        return false;
+    }
+  }
+
+  /// Exchange refresh JWT for a new access (+ rotated refresh). Single-flight.
+  Future<_TokenRefreshResult> _refreshTokens() async {
+    if (_refreshInFlight != null) return _refreshInFlight!.future;
+    final stored = refreshToken ?? await _readPersistedSecret(_refreshKey);
+    if (stored == null || stored.isEmpty) return _TokenRefreshResult.invalid;
+
+    final completer = Completer<_TokenRefreshResult>();
+    _refreshInFlight = completer;
+    try {
+      final res = await dio.post(
+        '/api/v1/auth/refresh',
+        data: {'refreshToken': stored},
+        options: Options(extra: {'pf_auth_retried': true}),
+      );
+      final data = res.data['data'] as Map<String, dynamic>?;
+      final access = data?['accessToken'] as String?;
+      final nextRefresh = data?['refreshToken'] as String? ?? stored;
+      if (access == null || access.isEmpty) {
+        completer.complete(_TokenRefreshResult.invalid);
+        return _TokenRefreshResult.invalid;
+      }
+      token = access;
+      refreshToken = nextRefresh;
+      await _persistTokens(token, refreshToken);
+      // onRequest lit [token] à chaud — pas de loadToken() ici (évite de
+      // recréer l'interceptor pendant un onError en cours).
+      completer.complete(_TokenRefreshResult.success);
+      return _TokenRefreshResult.success;
+    } on DioException catch (e) {
+      // 5xx / pas de status / réseau → transient ; seul 401 refresh = invalid.
+      // 400/403 (WAF/proxy) restent transient pour ne pas forcer un logout.
+      final resolved = e.response?.statusCode == null || _isTransientNetworkError(e)
+          ? _TokenRefreshResult.transient
+          : (_isAuthRejectionStatus(e.response?.statusCode)
+              ? _TokenRefreshResult.invalid
+              : _TokenRefreshResult.transient);
+      completer.complete(resolved);
+      return resolved;
+    } catch (_) {
+      completer.complete(_TokenRefreshResult.transient);
+      return _TokenRefreshResult.transient;
+    } finally {
+      if (identical(_refreshInFlight, completer)) {
+        _refreshInFlight = null;
       }
     }
   }
 
-  Future<String?> _readPersistedToken() async {
+  Future<String?> _readPersistedSecret(String key) async {
     try {
-      final secure = await _secureStorage.read(key: _tokenKey);
-      if (secure != null) return secure;
+      return await _secureStorage.read(key: key);
     } catch (_) {
-      // Keystore indisponible : on retombe sur la migration legacy.
+      return null;
     }
-    // Migration one-shot depuis SharedPreferences (stockage historique en clair).
+  }
+
+  Future<String?> _migrateLegacyAccessToken() async {
     final sp = await SharedPreferences.getInstance();
     final legacy = sp.getString(_tokenKey);
-    if (legacy != null) {
-      try {
-        await _secureStorage.write(key: _tokenKey, value: legacy);
-        await sp.remove(_tokenKey);
-      } catch (_) {
-        // Réessaiera au prochain démarrage.
-      }
+    if (legacy == null) return null;
+    try {
+      await _secureStorage.write(key: _tokenKey, value: legacy);
+      await sp.remove(_tokenKey);
+    } catch (_) {
+      // Réessaiera au prochain démarrage.
     }
     return legacy;
   }
 
-  Future<void> _persistToken(String? value) async {
-    if (value == null) {
-      try {
+  Future<void> _persistTokens(String? access, String? refresh) async {
+    try {
+      if (access == null) {
         await _secureStorage.delete(key: _tokenKey);
-      } catch (_) {}
-    } else {
-      try {
-        await _secureStorage.write(key: _tokenKey, value: value);
-      } catch (_) {}
-    }
+      } else {
+        await _secureStorage.write(key: _tokenKey, value: access);
+      }
+    } catch (_) {}
+    try {
+      if (refresh == null) {
+        await _secureStorage.delete(key: _refreshKey);
+      } else {
+        await _secureStorage.write(key: _refreshKey, value: refresh);
+      }
+    } catch (_) {}
     // Purge systématique de l'ancien emplacement en clair.
     final sp = await SharedPreferences.getInstance();
     await sp.remove(_tokenKey);
@@ -180,10 +393,12 @@ class ApiClient {
 
   Future<void> logout() async {
     token = null;
+    refreshToken = null;
     userId = null;
     userRole = null;
     userSpecialty = null;
-    await _persistToken(null);
+    await _persistTokens(null, null);
+    await _persistSessionMeta();
     loadToken();
     NotificationService.instance.resetSession();
     await DiscoveryController.instance.clearLocal();
@@ -200,7 +415,7 @@ class ApiClient {
     return _completeLogin(data);
   }
 
-  Future<void> registerClient({
+  Future<Map<String, dynamic>> registerClient({
     required String email,
     required String password,
     required String fullName,
@@ -209,8 +424,14 @@ class ApiClient {
     String? commercialUserId,
     bool consent = false,
   }) async {
-    final code = inviteCode ?? await InviteCodeStore.instance.peek();
-    await dio.post(
+    final fromStore = await InviteCodeStore.instance.peek();
+    final code = (inviteCode != null && inviteCode.trim().isNotEmpty)
+        ? inviteCode.trim().toUpperCase()
+        : fromStore;
+    if (code != null && code.isNotEmpty) {
+      await InviteCodeStore.instance.save(code);
+    }
+    final res = await dio.post(
       '/api/v1/auth/register-client',
       data: {
         'email': email,
@@ -229,9 +450,33 @@ class ApiClient {
         },
       ),
     );
-    if (code != null && code.isNotEmpty) {
+    final data = res.data is Map ? res.data['data'] : null;
+    final inviteStatus =
+        data is Map ? data['inviteStatus']?.toString() ?? '' : '';
+    // Clear after success or known-invalid code; keep on soft failure for login retry.
+    if (_inviteClaimSettled(inviteStatus)) {
       await InviteCodeStore.instance.save(null);
     }
+    return data is Map
+        ? Map<String, dynamic>.from(data)
+        : <String, dynamic>{};
+  }
+
+  static bool _inviteClaimSucceeded(String status) {
+    switch (status) {
+      case 'referred':
+      case 'linked':
+      case 'granted':
+      case 'already_linked':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /// Clear pending invite after a definitive outcome (success or known-invalid).
+  static bool _inviteClaimSettled(String status) {
+    return _inviteClaimSucceeded(status) || status == 'ignored';
   }
 
   Future<List<dynamic>> listCareProVisits() async {
@@ -300,6 +545,24 @@ class ApiClient {
   Future<Map<String, dynamic>> getMyAppInvite() async {
     final res = await dio.get('/api/v1/me/app-invite');
     return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
+  Future<ManagerOverview> getCommercialManagerOverview() async {
+    final res = await dio.get('/api/v1/commercial-manager/overview');
+    return ManagerOverview.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
+  }
+
+  Future<CommercialSelfStats> getCommercialManagerMemberOverview(
+    String memberUserId,
+  ) async {
+    final res = await dio.get(
+      '/api/v1/commercial-manager/team/$memberUserId/overview',
+    );
+    return CommercialSelfStats.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
   }
 
   Future<({List<dynamic> visits, List<dynamic> clients, List<dynamic> pets})>
@@ -375,10 +638,13 @@ class ApiClient {
     String? filename,
     String? hint,
     bool clientAudioConsent = false,
+    int? audioDurationSec,
   }) async {
     final form = FormData.fromMap({
       if (hint != null && hint.trim().isNotEmpty) 'hint': hint.trim(),
       'clientAudioConsent': clientAudioConsent ? 'true' : 'false',
+      if (audioDurationSec != null && audioDurationSec > 0)
+        'audioDurationSec': '$audioDurationSec',
       'audio': await MultipartFile.fromFile(
         filePath,
         filename: filename ?? filePath.split('/').last,
@@ -416,6 +682,10 @@ class ApiClient {
         'commercialUserId': commercialUserId,
     });
     final data = res.data['data'] as Map<String, dynamic>;
+    final inviteStatus = data['inviteStatus']?.toString() ?? '';
+    if (_inviteClaimSettled(inviteStatus)) {
+      await InviteCodeStore.instance.save(null);
+    }
     if (_isMfaChallenge(data)) return data;
     return _completeLogin(data);
   }
@@ -453,6 +723,11 @@ class ApiClient {
     await dio.post('/api/v1/auth/forgot-password', data: {'email': email});
   }
 
+  /// Always 200 — does not reveal whether the email exists / is already verified.
+  Future<void> resendConfirmation(String email) async {
+    await dio.post('/api/v1/auth/resend-confirmation', data: {'email': email});
+  }
+
   Future<void> resetPassword(String token, String password) async {
     await dio.post('/api/v1/auth/reset-password', data: {
       'token': token,
@@ -479,8 +754,9 @@ class ApiClient {
         message: 'mfa_required_or_missing_token',
       );
     }
+    refreshToken = data['refreshToken'] as String?;
     _authGeneration++;
-    await _persistToken(token);
+    await _persistTokens(token, refreshToken);
     loadToken();
     await syncLocaleFromMe();
     try {
@@ -489,6 +765,7 @@ class ApiClient {
       userRole = me['role'] as String?;
       userSpecialty = me['professionalSpecialty'] as String?;
       DiscoveryController.instance.bindUser(userId);
+      await _persistSessionMeta();
     } catch (_) {
       // Keep token but force safe ACL defaults (Pet.isOwner → false without userId).
       userId = null;
@@ -504,8 +781,24 @@ class ApiClient {
     final code = await InviteCodeStore.instance.peek();
     if (code == null || code.isEmpty) return;
     try {
-      await claimVetInvite(code);
-      await InviteCodeStore.instance.save(null);
+      final result = await claimVetInvite(code);
+      final status = result['status']?.toString() ?? '';
+      if (_inviteClaimSucceeded(status) || status.isNotEmpty) {
+        await InviteCodeStore.instance.save(null);
+      }
+    } on DioException catch (e) {
+      final err = apiErrorCode(e);
+      // Unknown / invalid code: stop retrying forever.
+      if (err == 'invite_not_found' ||
+          err == 'not_found' ||
+          err == 'invalid_role' ||
+          err == 'bad_request' ||
+          e.response?.statusCode == 404 ||
+          e.response?.statusCode == 400) {
+        await InviteCodeStore.instance.save(null);
+        return;
+      }
+      debugPrint('claim invite failed: $e');
     } catch (e) {
       debugPrint('claim invite failed: $e');
     }
@@ -548,6 +841,37 @@ class ApiClient {
     return res.data['data'] as Map<String, dynamic>;
   }
 
+  /// Multi-image health book → server builds one compressed PDF.
+  Future<Map<String, dynamic>> uploadPetHealthBook(
+    String petId,
+    List<String> filePaths,
+  ) async {
+    final files = <MultipartFile>[];
+    for (var i = 0; i < filePaths.length; i++) {
+      files.add(await MultipartFile.fromFile(
+        filePaths[i],
+        filename: 'page_$i.jpg',
+      ));
+    }
+    final form = FormData.fromMap({'files': files});
+    final res = await dio.post('/api/v1/pets/$petId/health-book', data: form);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> deletePetHealthBook(String petId) async {
+    final res = await dio.delete('/api/v1/pets/$petId/health-book');
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  /// Authenticated PDF bytes (PHI — never a public media URL).
+  Future<List<int>> downloadPetHealthBook(String petId) async {
+    final res = await dio.get<List<int>>(
+      '/api/v1/pets/$petId/health-book',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return res.data ?? const <int>[];
+  }
+
   Future<void> changePassword(String currentPassword, String newPassword) async {
     final body = <String, dynamic>{'newPassword': newPassword};
     if (currentPassword.isNotEmpty) {
@@ -556,12 +880,28 @@ class ApiClient {
     await dio.patch('/api/v1/me/password', data: body);
   }
 
+  Future<void> acceptTerms() async {
+    await dio.post('/api/v1/me/accept-terms', data: {'consent': true});
+  }
+
   Future<bool> mustChangePassword() async {
     try {
       final me = await getMe();
       return me['mustChangePassword'] == true;
     } catch (_) {
-      return false;
+      // Fail-closed : ne pas laisser entrer si /me est indisponible.
+      return true;
+    }
+  }
+
+  /// True si le compte n'a pas encore horodaté le consentement CGU/privacy.
+  /// Fail-closed : en cas d'erreur /me, on force le gate (ne pas laisser entrer).
+  Future<bool> needsAcceptTerms() async {
+    try {
+      final me = await getMe();
+      return me['termsAcceptedAt'] == null;
+    } catch (_) {
+      return true;
     }
   }
 
@@ -610,7 +950,7 @@ class ApiClient {
 
   Future<Map<String, dynamic>> createPet(Map<String, dynamic> body) async {
     final res = await dio.post('/api/v1/pets', data: body);
-    return res.data['data'] as Map<String, dynamic>;
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   /// Kennel privilege: create several pets in one call (`POST /pets/batch`).
@@ -620,12 +960,36 @@ class ApiClient {
 
   Future<Map<String, dynamic>> createPetsBatch(List<Map<String, dynamic>> pets) async {
     final res = await dio.post('/api/v1/pets/batch', data: {'pets': pets});
-    return Map<String, dynamic>.from(res.data['data'] as Map);
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   Future<Map<String, dynamic>> getPet(String petId) async {
     final res = await dio.get('/api/v1/pets/$petId');
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  /// Send a 24h download link for the full pet dossier to a care professional.
+  Future<Map<String, dynamic>> sendPetDossierShare(String petId, String email) async {
+    final res = await dio.post(
+      '/api/v1/pets/$petId/dossier-shares',
+      data: {'email': email.trim()},
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  /// Finalized consultation report(s) for the pet owner.
+  Future<Map<String, dynamic>> getClientConsultation(String visitId) async {
+    final res = await dio.get('/api/v1/visits/$visitId/client-consultation');
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  /// Send a 24h PDF download link for a finalized consultation to a vet.
+  Future<Map<String, dynamic>> sendConsultationShare(String visitId, String email) async {
+    final res = await dio.post(
+      '/api/v1/visits/$visitId/consultation-shares',
+      data: {'email': email.trim()},
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
   Future<String> resumeCheckout(String petId) async {
@@ -800,13 +1164,49 @@ class ApiClient {
         .toList();
   }
 
-  Future<Map<String, dynamic>> inviteVet(String email) async {
-    final res = await dio.post('/api/v1/me/vets/invite', data: {'email': email});
+  Future<List<VetLookupHit>> lookupVets(String query) async {
+    final q = query.trim();
+    if (q.length < 3) return [];
+    final res = await dio.get('/api/v1/me/vets/lookup', queryParameters: {'q': q});
+    final data = _asList(res.data is Map ? res.data['data'] : null);
+    return data
+        .whereType<Map>()
+        .map((v) => VetLookupHit.fromJson(Map<String, dynamic>.from(v)))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> inviteVet({String? email, String? vetUserId}) async {
+    final body = <String, dynamic>{};
+    if (vetUserId != null && vetUserId.trim().isNotEmpty) {
+      body['vetUserId'] = vetUserId.trim();
+    } else if (email != null && email.trim().isNotEmpty) {
+      body['email'] = email.trim();
+    }
+    final res = await dio.post('/api/v1/me/vets/invite', data: body);
     final data = res.data['data'];
     if (data is Map) {
       return Map<String, dynamic>.from(data);
     }
     return {'found': false, 'status': 'not_found'};
+  }
+
+  Future<Map<String, dynamic>> suggestVet({
+    required String email,
+    required String phone,
+    String? fullName,
+    String? practiceName,
+  }) async {
+    final res = await dio.post('/api/v1/me/vets/suggest', data: {
+      'email': email.trim(),
+      'phone': phone.trim(),
+      if (fullName != null && fullName.trim().isNotEmpty) 'fullName': fullName.trim(),
+      if (practiceName != null && practiceName.trim().isNotEmpty) 'practiceName': practiceName.trim(),
+    });
+    final data = res.data['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'status': 'suggested', 'found': false};
   }
 
   Future<Map<String, dynamic>> claimVetInvite(String code) async {
@@ -891,10 +1291,18 @@ class ApiClient {
     String petId, {
     String? notes,
     DateTime? scheduledAt,
+    bool confirmDirect = false,
+    bool silentConfirm = false,
+    bool consultationSession = false,
+    int? durationMinutes,
   }) async {
     final res = await dio.post('/api/v1/pets/$petId/visits', data: {
       if (notes != null) 'notes': notes,
       if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+      if (confirmDirect) 'confirmDirect': true,
+      if (silentConfirm) 'silentConfirm': true,
+      if (consultationSession) 'consultationSession': true,
+      if (durationMinutes != null) 'durationMinutes': durationMinutes,
     });
     return Visit.fromJson(res.data['data'] as Map<String, dynamic>);
   }
@@ -983,12 +1391,36 @@ class ApiClient {
   /// Typed messaging threads (single wrapper for `/messaging/threads`).
   Future<List<MessageThread>> getMessageThreads() async {
     final res = await dio.get('/api/v1/messaging/threads');
-    final data = res.data['data'] as List<dynamic>;
-    return data.map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t as Map))).toList();
+    final raw = res.data['data'];
+    final data = raw is List ? raw : const <dynamic>[];
+    return data
+        .whereType<Map>()
+        .map((t) => MessageThread.fromJson(Map<String, dynamic>.from(t)))
+        .toList();
   }
 
   /// Alias of [getMessageThreads] — prefer this or [getMessageThreads], not a raw duplicate.
   Future<List<MessageThread>> getThreads() => getMessageThreads();
+
+  /// Client: [practiceId] + [petId]. Staff: [clientUserId] (+ optional [petId]).
+  Future<MessageThread> ensureMessageThread({
+    String? practiceId,
+    String? petId,
+    String? clientUserId,
+  }) async {
+    final data = <String, dynamic>{};
+    final cid = clientUserId?.trim() ?? '';
+    if (cid.isNotEmpty) {
+      data['clientUserId'] = cid;
+      final pid = petId?.trim() ?? '';
+      if (pid.isNotEmpty) data['petId'] = pid;
+    } else {
+      data['practiceId'] = practiceId?.trim() ?? '';
+      data['petId'] = petId?.trim() ?? '';
+    }
+    final res = await dio.post('/api/v1/messaging/threads', data: data);
+    return MessageThread.fromJson(Map<String, dynamic>.from(res.data['data'] as Map));
+  }
 
   Future<List<ChatMessage>> getChatMessages(String threadId) async {
     final res = await dio.get('/api/v1/messaging/threads/$threadId/messages');
@@ -998,5 +1430,29 @@ class ApiClient {
 
   Future<void> markThreadRead(String threadId) async {
     await dio.post('/api/v1/messaging/threads/$threadId/read');
+  }
+
+  Future<Map<String, dynamic>> createSupportTicket({
+    required String source,
+    required String subject,
+    required String message,
+    required Map<String, dynamic> diagnostics,
+    String? route,
+    String? appVersion,
+  }) async {
+    final res = await dio.post('/api/v1/support/tickets', data: {
+      'source': source,
+      'subject': subject,
+      'message': message,
+      'diagnostics': diagnostics,
+      'locale': LocaleController.instance.languageCode,
+      'route': route ?? '',
+      'appVersion': appVersion ?? 'flutter/${AppEnv.value}',
+      'userAgent': 'petsfollow-flutter/${AppEnv.value}',
+    });
+    final data = res.data['data'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {};
   }
 }

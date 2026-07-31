@@ -87,6 +87,7 @@ void main() {
         home: HeartRateFlowScreen(
           petId: 'pet-1',
           durationsSec: durations,
+          species: 'dog',
         ),
       ),
     );

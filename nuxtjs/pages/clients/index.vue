@@ -3,6 +3,7 @@
     <ProPageHeader :title="$t('clients.title')" :subtitle="$t('clients.subtitle')">
       <template #actions>
         <ProButton
+          v-if="canWriteClients"
           test-id="clients-app-invite-open"
           variant="secondary"
           class="pro-btn--icon"
@@ -12,6 +13,7 @@
           <ProIcon name="qr_code_2" :size="22" />
         </ProButton>
         <ProButton
+          v-if="canManageShares"
           test-id="clients-invitations-open"
           variant="secondary"
           class="pro-btn--icon clients-invites-btn"
@@ -29,6 +31,7 @@
           </ProBadge>
         </ProButton>
         <ProButton
+          v-if="canWriteClients"
           test-id="create-client-open"
           class="pro-btn--icon"
           :aria-label="$t('clients.create.open')"
@@ -82,6 +85,7 @@
       <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
         <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
+        <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" />
         <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
@@ -158,30 +162,43 @@
           <tr>
             <th>{{ $t('clients.columnClient') }}</th>
             <th>{{ $t('clients.columnEmail') }}</th>
+            <th>{{ $t('clients.columnPhone') }}</th>
             <th>{{ $t('clients.columnPets') }}</th>
-            <th />
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="c in filtered" :key="c.userId">
             <td>
-              <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
-              {{ c.fullName }}
+              <NuxtLink
+                :to="`/clients/${c.userId}`"
+                class="pro-name-link"
+                :data-testid="`client-profile-${c.userId}`"
+              >
+                <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
+                {{ c.fullName }}
+              </NuxtLink>
             </td>
             <td>{{ c.email }}</td>
+            <td>{{ c.contactPhone || '—' }}</td>
             <td>{{ c.petCount }}</td>
             <td>
               <div class="pro-client-actions">
-                <NuxtLink :to="`/clients/${c.userId}`">{{ $t('common.profile') }}</NuxtLink>
-                <button
-                  type="button"
-                  class="pro-link-btn"
+                <ProIconAction
+                  v-if="canWriteClinical"
+                  icon="medical_services"
+                  :label="$t('clients.consultation.open')"
+                  :test-id="`new-consultation-${c.userId}`"
+                  @click="openConsultation(c.userId)"
+                />
+                <ProIconAction
+                  v-if="canWriteClients"
+                  icon="send"
+                  :label="sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink')"
                   :disabled="sendingId === c.userId"
-                  :data-testid="`send-app-link-${c.userId}`"
+                  :test-id="`send-app-link-${c.userId}`"
                   @click="sendAppLink(c)"
-                >
-                  {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
-                </button>
+                />
               </div>
             </td>
           </tr>
@@ -206,15 +223,24 @@
             <ProAvatar :src="c.avatarUrl" :name="c.fullName" class="client-avatar" />
             <strong>{{ c.fullName }}</strong>
             <p class="pro-kanban-card__meta">{{ c.email }}</p>
+            <p v-if="c.contactPhone" class="pro-kanban-card__meta">{{ c.contactPhone }}</p>
             <ProBadge variant="neutral">{{ c.petCount }} {{ petLabel(c.petCount) }}</ProBadge>
-            <button
-              type="button"
-              class="pro-link-btn pro-kanban-card__action"
-              :disabled="sendingId === c.userId"
-              @click.prevent="sendAppLink(c)"
-            >
-              {{ sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink') }}
-            </button>
+            <div class="pro-client-actions pro-kanban-card__actions">
+              <ProIconAction
+                v-if="canWriteClinical"
+                icon="medical_services"
+                :label="$t('clients.consultation.open')"
+                :test-id="`new-consultation-kanban-${c.userId}`"
+                @click.prevent="openConsultation(c.userId)"
+              />
+              <ProIconAction
+                v-if="canWriteClients"
+                icon="send"
+                :label="sendingId === c.userId ? $t('clients.sendingAppLink') : $t('clients.sendAppLink')"
+                :disabled="sendingId === c.userId"
+                @click.prevent="sendAppLink(c)"
+              />
+            </div>
           </NuxtLink>
         </ProKanbanColumn>
       </ProKanban>
@@ -223,18 +249,23 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'clients.read' })
 
 type ClientRow = {
   userId: string
   email: string
   fullName: string
   avatarUrl?: string
+  contactPhone?: string
   petCount: number
 }
 
 const route = useRoute()
 const { t } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canWriteClients = computed(() => canPractice('clients.write'))
+const canManageShares = computed(() => canPractice('shares.manage'))
 const { compareStrings } = useFormatters()
 const { mapError } = useApiError()
 const { refresh: refreshNavBadges } = useNavBadges()
@@ -253,6 +284,12 @@ const appInviteOpen = ref(false)
 const linkRequests = ref<any[]>([])
 const busyInviteId = ref('')
 const inviteError = ref('')
+
+const activeConsult = useActiveConsultation()
+
+function openConsultation(clientUserId: string) {
+  activeConsult.openForClient(clientUserId)
+}
 
 function asClientList(raw: unknown): ClientRow[] {
   const list = Array.isArray((raw as any)?.data)
@@ -275,7 +312,7 @@ async function loadClients() {
 }
 
 const createOpen = ref(false)
-const clientForm = reactive({ fullName: '', email: '', password: '' })
+const clientForm = reactive({ fullName: '', email: '', contactPhone: '', password: '' })
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
@@ -302,7 +339,7 @@ async function createClient() {
   try {
     await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
     clientMsg.value = t('clients.create.success')
-    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
     await loadClients()
   } catch (e: any) {
     const details = e?.data?.error?.details || e?.data?.details
@@ -332,7 +369,7 @@ async function linkExistingClient() {
     await $fetch(`/api/vet/clients/${linkCandidate.value.userId}/link`, { method: 'POST' })
     clientMsg.value = t('clients.create.linkSuccess')
     linkCandidate.value = null
-    Object.assign(clientForm, { fullName: '', email: '', password: '' })
+    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
     await loadClients()
   } catch {
     clientError.value = t('clients.create.linkError')
@@ -364,11 +401,17 @@ const filtered = computed(() => {
   let list = Array.isArray(clients.value) ? [...clients.value] : []
   const q = query.value.trim().toLowerCase()
   if (q) {
-    list = list.filter(
-      (c) =>
+    const qDigits = q.replace(/\D/g, '')
+    list = list.filter((c) => {
+      const phone = (c.contactPhone || '').toLowerCase()
+      const phoneDigits = phone.replace(/\D/g, '')
+      return (
         c.fullName?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q),
-    )
+        c.email?.toLowerCase().includes(q) ||
+        phone.includes(q) ||
+        (qDigits.length > 0 && phoneDigits.includes(qDigits))
+      )
+    })
   }
   if (petFilter.value === 'none') list = list.filter((c) => c.petCount === 0)
   if (petFilter.value === 'with') list = list.filter((c) => c.petCount > 0)
@@ -399,6 +442,10 @@ const kanbanColumns = computed(() => [
 ])
 
 async function loadLinkRequests() {
+  if (!canManageShares.value) {
+    linkRequests.value = []
+    return
+  }
   inviteError.value = ''
   try {
     const res: any = await $fetch('/api/vet/link-requests')
@@ -437,7 +484,7 @@ async function rejectLink(id: string) {
 
 onMounted(async () => {
   await Promise.all([loadClients(), loadLinkRequests()])
-  if (route.query.invitations === '1' || linkRequests.value.length > 0) {
+  if (canManageShares.value && (route.query.invitations === '1' || linkRequests.value.length > 0)) {
     invitationsOpen.value = true
   }
 })
@@ -473,27 +520,11 @@ onMounted(async () => {
 .pro-client-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.25rem;
   align-items: center;
 }
-.pro-link-btn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--pf-vet-accent);
-  font: inherit;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-}
-.pro-link-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-.pro-kanban-card__action {
-  display: block;
+.pro-kanban-card__actions {
   margin-top: 0.5rem;
-  text-align: left;
 }
 .pro-inline-feedback {
   margin: 0 0 1rem;

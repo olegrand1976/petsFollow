@@ -4,6 +4,7 @@
       <ProPageHeader
         :title="$t('commercial.aiPlaybook.title')"
         :subtitle="$t('commercial.aiPlaybook.subtitle')"
+        title-tag="p"
       >
         <template #actions>
           <ProButton variant="secondary" @click="copyLink">{{ $t('commercial.aiPlaybook.copyLink') }}</ProButton>
@@ -200,34 +201,9 @@ function mailTo() {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
-  }
   .ai-playbook__doc {
     max-width: none;
     padding: 0;
-  }
-}
-</style>
-
-<style>
-/* Unscoped: hide commercial shell when printing the playbook for email/PDF. */
-@media print {
-  .pro-topbar,
-  .pro-sidebar,
-  .pro-app-shell > .pro-sidebar,
-  aside.pro-sidebar {
-    display: none !important;
-  }
-  .pro-app-shell {
-    display: block !important;
-  }
-  .pro-app-body,
-  .pro-main,
-  .pro-main-inner {
-    margin: 0 !important;
-    padding: 0 !important;
-    max-width: none !important;
   }
 }
 </style>

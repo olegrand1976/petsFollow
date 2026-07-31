@@ -36,6 +36,7 @@
           name="password"
           autocomplete="current-password"
           required
+          revealable
           test-id="login-password"
         />
         <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
@@ -100,14 +101,24 @@
 </template>
 
 <script setup lang="ts">
-import { isAuthSuccess, isMFAChallenge, unwrapAuthData, clearAuthTokens } from '~/composables/useAuth'
+import {
+  isAuthSuccess,
+  isMFAChallenge,
+  isProRole,
+  unwrapAuthData,
+  finishClientLoginSession,
+  homePathForRole,
+  clearAuthTokens,
+  AUTH_LOGIN_REASON_PRO_ONLY,
+  AUTH_POST_LOGIN_RELOAD_PATH,
+} from '~/composables/useAuth'
 import { mountGoogleSignInButton } from '~/composables/useGoogleAuth'
 
 definePageMeta({ layout: false })
 
 const { t } = useI18n()
 const { mapError } = useApiError()
-const { syncFromUser } = useLocaleSync()
+const route = useRoute()
 const config = useRuntimeConfig()
 const googleEnabled = computed(() => !!config.public.googleClientId)
 
@@ -116,32 +127,13 @@ const password = ref(import.meta.dev ? 'VetDemo123!' : '')
 const totpCode = ref('')
 const mfaToken = ref('')
 const step = ref<'credentials' | '2fa'>('credentials')
-const error = ref('')
+const error = ref(
+  String(route.query.reason || '') === AUTH_LOGIN_REASON_PRO_ONLY
+    ? t('auth.login.proOnly')
+    : '',
+)
 const loading = ref(false)
 const googleBtnRef = ref<HTMLElement | null>(null)
-
-async function redirectAfterLogin() {
-  await syncFromUser()
-  try {
-    const { fetchUser } = useProUser()
-    const me = await fetchUser(true)
-    const role = me?.role || parseJwtRole(useCookie('pf_token').value)
-    const profileComplete = me?.profileComplete
-    const mustChangePassword = me?.mustChangePassword
-    if (mustChangePassword === true) {
-      await navigateTo('/change-password')
-      return
-    }
-    if (!isProRole(role)) {
-      await clearAuthTokens()
-      error.value = t('auth.login.proOnly')
-      return
-    }
-    await navigateTo(homePathForRole(role, { profileComplete }))
-  } catch (e: any) {
-    error.value = mapError(e) || t('auth.login.invalidResponse')
-  }
-}
 
 async function handleAuthResult(res: unknown) {
   const data = unwrapAuthData(res)
@@ -155,8 +147,16 @@ async function handleAuthResult(res: unknown) {
     error.value = t('auth.login.invalidResponse')
     return
   }
-  // Cookies httpOnly posés par la BFF — rien à persister côté client.
-  await redirectAfterLogin()
+  const role = !isMFAChallenge(data) && typeof data.role === 'string' ? data.role : null
+  if (role && !isProRole(role)) {
+    await clearAuthTokens()
+    error.value = t('auth.login.proOnly')
+    return
+  }
+  // Navigation document vers la home du rôle (évite bounce `/` + XHR /me WebKit).
+  // Fallback `/` si role absent (ancien BFF) — auth.global SSR redirige alors.
+  const path = role ? homePathForRole(role) : AUTH_POST_LOGIN_RELOAD_PATH
+  finishClientLoginSession(path)
 }
 
 function mapAuthError(e: any) {

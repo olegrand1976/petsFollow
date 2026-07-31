@@ -3,12 +3,14 @@ package store
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/i18n"
+	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -69,7 +71,7 @@ type RegisterVetInput struct {
 	AutoReplyDefault string
 	// TermsAccepted horodate le consentement CGU/privacy (RGPD art. 7).
 	TermsAccepted bool
-	// AssignedCommercialID optional nearby-commercial pick at signup.
+	// AssignedCommercialID optional commercial from invite code at signup.
 	AssignedCommercialID string
 }
 
@@ -171,6 +173,17 @@ func (s *Store) GetPracticeHeartRateDurations(ctx context.Context, practiceID st
 		return []int{60}, nil
 	}
 	return int32SliceToInts(durations), nil
+}
+
+// GetPracticeName returns the practice display name or ErrNotFound.
+func (s *Store) GetPracticeName(ctx context.Context, practiceID string) (string, error) {
+	var name string
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(name,'') FROM practice.practices WHERE id = $1`, practiceID).Scan(&name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return name, err
 }
 
 func (s *Store) UpdatePracticeProfile(ctx context.Context, practiceID, vetUserID string, p PracticeProfile, markComplete bool, heartRateDurationsSec *[]int) error {
@@ -289,6 +302,16 @@ func (s *Store) RegisterVet(ctx context.Context, in RegisterVetInput) (RegisterV
 	}
 	_ = s.EnsureUserProfiles(ctx, userID)
 	_ = s.EnsureReferenceTeamMembership(ctx, practiceID, userID)
+	if in.AssignedCommercialID != "" {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventVetAssigned,
+			CommercialUserID: in.AssignedCommercialID,
+			VetUserID:        userID,
+			PracticeID:       practiceID,
+			ActorUserID:      in.AssignedCommercialID,
+			Meta:             map[string]any{"source": "register_invite"},
+		})
+	}
 	return RegisterVetResult{UserID: userID, Token: token}, nil
 }
 
@@ -350,7 +373,13 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		"twoFactorEnabled":   u.TOTPEnabled,
 		"preferredLocale":    u.PreferredLocale,
 		"mustChangePassword": u.MustChangePassword,
+		"contactPhone":       u.ContactPhone,
 		"profiles":           profiles,
+	}
+	if u.TermsAcceptedAt != nil {
+		out["termsAcceptedAt"] = u.TermsAcceptedAt.UTC().Format(time.RFC3339)
+	} else {
+		out["termsAcceptedAt"] = nil
 	}
 	if active.ID != "" {
 		out["activeProfileId"] = active.ID
@@ -367,6 +396,16 @@ func (s *Store) GetUserMe(ctx context.Context, userID string) (map[string]any, e
 		out["profileComplete"] = complete
 		if ref, _ := s.IsReferenceVet(ctx, u.PracticeID, userID); ref {
 			out["isReferenceVet"] = true
+		}
+		if kernel.IsPracticeStaff(u.Role) {
+			perms, perr := s.PracticePermissions(ctx, u.PracticeID, userID)
+			if perr != nil {
+				// Ne pas faire échouer /me : la nav Nuxt fail-open tant que la clé est absente.
+				log.Printf("GetUserMe practicePermissions user=%s practice=%s: %v", userID, u.PracticeID, perr)
+			} else {
+				// Toujours exposer la map (même vide) pour que le client distingue « erreur » vs « aucun droit ».
+				out["practicePermissions"] = perms
+			}
 		}
 	}
 	return out, nil

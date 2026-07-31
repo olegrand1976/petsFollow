@@ -74,8 +74,8 @@
         <tbody>
           <tr v-for="m in modules" :key="m.practiceId">
             <td>{{ m.practiceName || m.practiceId }}</td>
-            <td>{{ m.status }} · J+{{ m.daysSinceActivation }}</td>
-            <td>{{ formatDate(m.trialEndsAt) }} ({{ m.daysRemainingTrial }}j)</td>
+            <td>{{ m.status }} · {{ $t('commercial.aiModules.daysSince', { n: m.daysSinceActivation }) }}</td>
+            <td>{{ formatDate(m.trialEndsAt) }} ({{ $t('commercial.aiModules.daysRemaining', { n: m.daysRemainingTrial }) }})</td>
             <td class="pro-flex-gap">
               <ProButton
                 v-if="m.status === 'trial' || m.status === 'expired'"

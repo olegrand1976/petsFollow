@@ -99,32 +99,75 @@
     </ProCard>
 
     <ProCard>
-      <ProTable :empty="!vets.length" :empty-title="$t('commercial.vets.empty')">
+      <ProListToolbar>
+        <template #filters>
+          <ProInput
+            v-model="vetSearch"
+            test-id="commercial-vet-search"
+            :label="$t('commercial.vets.search')"
+            :placeholder="$t('commercial.vets.searchPlaceholder')"
+          />
+        </template>
+      </ProListToolbar>
+      <ProTable :empty="!filteredVets.length" :empty-title="$t('commercial.vets.empty')">
         <thead>
           <tr>
             <th>{{ $t('commercial.vets.fullName') }}</th>
             <th>{{ $t('commercial.vets.email') }}</th>
             <th>{{ $t('commercial.vets.practiceName') }}</th>
             <th>{{ $t('commercial.vets.clients') }}</th>
+            <th>{{ $t('commercial.vets.paidPetsMonth') }}</th>
+            <th>{{ $t('commercial.vets.monthEarned') }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="v in vets" :key="v.userId" :data-testid="`commercial-vet-row-${v.userId}`">
+          <tr v-for="v in filteredVets" :key="v.userId" :data-testid="`commercial-vet-row-${v.userId}`">
             <td>{{ v.fullName }}</td>
             <td>{{ v.email }}</td>
             <td>{{ v.practiceName }}</td>
             <td>{{ v.clientCount }}</td>
+            <td>{{ v.paidPetsMonth ?? 0 }}</td>
+            <td>{{ formatCurrency(v.monthEarnedCents ?? 0) }}</td>
+          </tr>
+        </tbody>
+      </ProTable>
+    </ProCard>
+
+    <ProCard class="pro-mb-lg" data-testid="commercial-referrals">
+      <div class="pf-form-toolbar">
+        <h3>{{ $t('commercial.referrals.title') }}</h3>
+      </div>
+      <p class="pro-hint pro-mb-md">{{ $t('commercial.referrals.subtitle') }}</p>
+      <ProTable :empty="!referrals.length" :empty-title="$t('commercial.referrals.empty')">
+        <thead>
+          <tr>
+            <th>{{ $t('commercial.referrals.fullName') }}</th>
+            <th>{{ $t('commercial.referrals.email') }}</th>
+            <th>{{ $t('commercial.referrals.inviteCode') }}</th>
+            <th>{{ $t('commercial.referrals.createdAt') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="r in referrals"
+            :key="r.clientUserId"
+            :data-testid="`commercial-referral-row-${r.clientUserId}`"
+          >
+            <td>{{ r.fullName }}</td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.inviteCode || '—' }}</td>
+            <td>{{ formatDt(r.createdAt) }}</td>
           </tr>
         </tbody>
       </ProTable>
     </ProCard>
 
     <ProCard class="pro-mb-lg" data-testid="commercial-attach-profile">
-      <h3 class="pro-mb-md">Ajouter un profil à un inscrit</h3>
+      <h3 class="pro-mb-md">{{ $t('commercial.vets.attachTitle') }}</h3>
       <form class="pro-form" @submit.prevent="attachProfile">
-        <ProInput v-model="apForm.userId" label="User ID" required />
+        <ProInput v-model="apForm.userId" :label="$t('commercial.vets.attachUserId')" required />
         <div class="pro-field">
-          <label class="pro-label">Rôle</label>
+          <label class="pro-label">{{ $t('commercial.vets.attachRole') }}</label>
           <select v-model="apForm.role" class="pro-select">
             <option value="client">client</option>
             <option value="care_pro">care_pro</option>
@@ -132,10 +175,10 @@
             <option value="secretary">secretary</option>
           </select>
         </div>
-        <ProInput v-if="apForm.role === 'care_pro'" v-model="apForm.specialty" label="specialty" />
-        <ProInput v-if="['vet_assistant','secretary'].includes(apForm.role)" v-model="apForm.practiceId" label="practiceId" />
+        <ProInput v-if="apForm.role === 'care_pro'" v-model="apForm.specialty" :label="$t('commercial.vets.attachSpecialty')" />
+        <ProInput v-if="['vet_assistant','secretary'].includes(apForm.role)" v-model="apForm.practiceId" :label="$t('commercial.vets.attachPracticeId')" />
         <p v-if="apMsg" class="pro-hint">{{ apMsg }}</p>
-        <ProButton type="submit" :disabled="apSaving">Ajouter le profil</ProButton>
+        <ProButton type="submit" :disabled="apSaving">{{ $t('commercial.vets.attachSubmit') }}</ProButton>
       </form>
     </ProCard>
   </div>
@@ -147,9 +190,20 @@ definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 type ClientMode = 'linked' | 'standalone'
 
 const { t } = useI18n()
+const { formatCurrency, formatDate } = useFormatters()
+const route = useRoute()
 const panel = ref<null | 'vet' | 'client'>(null)
 const clientMode = ref<ClientMode>('linked')
 const vets = ref<any[]>([])
+const referrals = ref<any[]>([])
+const vetSearch = ref('')
+const filteredVets = computed(() => {
+  const q = vetSearch.value.trim().toLowerCase()
+  if (!q) return vets.value
+  return vets.value.filter((v) =>
+    [v.fullName, v.email, v.practiceName].some((x) => String(x || '').toLowerCase().includes(q)),
+  )
+})
 const saving = ref(false)
 const formError = ref('')
 const form = reactive({
@@ -171,6 +225,15 @@ const apSaving = ref(false)
 const apMsg = ref('')
 const apForm = reactive({ userId: '', role: 'client', specialty: 'farrier', practiceId: '' })
 
+function formatDt(v?: string) {
+  if (!v) return '—'
+  try {
+    return formatDate(v)
+  } catch {
+    return v
+  }
+}
+
 async function attachProfile() {
   apSaving.value = true
   apMsg.value = ''
@@ -179,9 +242,9 @@ async function attachProfile() {
     if (apForm.role === 'care_pro') body.specialty = apForm.specialty
     if (['vet_assistant', 'secretary'].includes(apForm.role)) body.practiceId = apForm.practiceId
     await $fetch(`/api/commercial/users/${apForm.userId}/profiles`, { method: 'POST', body })
-    apMsg.value = 'OK'
+    apMsg.value = t('commercial.vets.attachOk')
   } catch {
-    apMsg.value = 'Erreur (pas sur soi-même / profil existant)'
+    apMsg.value = t('commercial.vets.attachError')
   } finally {
     apSaving.value = false
   }
@@ -202,8 +265,12 @@ function openClientPanel(mode: ClientMode) {
 }
 
 async function load() {
-  const res: any = await $fetch('/api/commercial/vets')
-  vets.value = res.data ?? res ?? []
+  const [vetsRes, referralsRes]: any[] = await Promise.all([
+    $fetch('/api/commercial/vets'),
+    $fetch('/api/commercial/referrals'),
+  ])
+  vets.value = vetsRes.data ?? vetsRes ?? []
+  referrals.value = referralsRes.data ?? referralsRes ?? []
 }
 
 async function submitVet() {
@@ -247,7 +314,14 @@ async function submitClient() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  const prospectId = typeof route.query.prospectId === 'string' ? route.query.prospectId : ''
+  if (prospectId) {
+    form.prospectId = prospectId
+    panel.value = 'vet'
+  }
+})
 </script>
 
 <style scoped>

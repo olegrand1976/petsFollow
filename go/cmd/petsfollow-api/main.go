@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata" // embed IANA zones — Cloud Run/Alpine may lack /usr/share/zoneinfo
 
 	"github.com/olegrand1976/petsFollow/go/internal/app"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
@@ -24,11 +25,32 @@ func main() {
 		log.Println("migrations OK")
 		return
 	}
+	if app.IsSeedNotifyCmd(os.Args[1:]) {
+		if err := app.SeedNotifyOnly(ctx, cfg); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("seed-notify OK")
+		return
+	}
+	if app.IsSeedMassCmd(os.Args[1:]) {
+		if err := app.SeedMassOnly(ctx, cfg); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("seed-mass OK")
+		return
+	}
 	if app.IsSeedCmd(os.Args[1:]) {
 		if err := app.SeedOnly(ctx, cfg); err != nil {
 			log.Fatal(err)
 		}
 		log.Println("seed OK")
+		return
+	}
+
+	if app.IsImportCNKCmd(os.Args[1:]) {
+		if err := app.ImportCNKOnly(ctx, cfg, os.Args[1:]); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 

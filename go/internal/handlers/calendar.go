@@ -119,6 +119,58 @@ func (a *API) deleteVetVacation(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
+func (a *API) listVetVisitTypes(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
+		return
+	}
+	activeOnly := r.URL.Query().Get("active") == "1" || r.URL.Query().Get("active") == "true"
+	items, err := a.store.ListVisitTypes(r.Context(), id.PracticeID, activeOnly)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
+}
+
+type putVisitTypesReq struct {
+	Items []store.VisitTypeInput `json:"items"`
+}
+
+func (a *API) putVetVisitTypes(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
+		return
+	}
+	var req putVisitTypesReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	items, err := a.store.PutVisitTypes(r.Context(), id.PracticeID, req.Items)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			code := "invalid_visit_type"
+			msg := err.Error()
+			switch {
+			case strings.Contains(msg, "duplicate_name"):
+				code = "duplicate_name"
+			case strings.Contains(msg, "invalid_duration"):
+				code = "invalid_duration"
+			case strings.Contains(msg, "invalid_color"):
+				code = "invalid_color"
+			case strings.Contains(msg, "name_required"):
+				code = "name_required"
+			}
+			writeErr(w, r, http.StatusBadRequest, "bad_request", code)
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
+}
+
 func (a *API) getVetCalendar(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
 	if !ok {

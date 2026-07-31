@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -73,6 +74,9 @@ type PitchSimulation struct {
 	FeedbackSkipped      bool            `json:"feedbackSkipped,omitempty"`
 	CreatedAt            time.Time       `json:"createdAt"`
 	HasFeedback          bool            `json:"hasFeedback,omitempty"`
+	UserFullName         string          `json:"userFullName,omitempty"`
+	UserEmail            string          `json:"userEmail,omitempty"`
+	ManagerNote          string          `json:"managerNote,omitempty"`
 }
 
 type PitchSimFeedback struct {
@@ -570,10 +574,16 @@ func (s *Store) ListTeamPitchSimulations(ctx context.Context, managerID string) 
 			s.vet_prompt_version_id::text, s.coach_prompt_version_id::text, s.outcome, s.appointment_slot,
 			s.duration_sec, s.ended_at, s.transcript_json, s.coach_feedback_json,
 			s.ai_score, s.user_score, s.audio_object_key, s.is_top5, s.feedback_skipped, s.created_at,
-			EXISTS(SELECT 1 FROM sales.pitch_sim_feedback f WHERE f.simulation_id=s.id)
+			EXISTS(SELECT 1 FROM sales.pitch_sim_feedback f WHERE f.simulation_id=s.id),
+			COALESCE(u.full_name,''), COALESCE(u.email,''),
+			COALESCE(n.note,'')
 		FROM sales.pitch_simulations s
 		JOIN identity.users u ON u.id = s.user_id
-		WHERE (u.manager_user_id=$1 OR s.user_id=$1)
+		LEFT JOIN sales.pitch_sim_manager_notes n ON n.simulation_id = s.id
+		WHERE (
+				(u.role = 'commercial' AND u.manager_user_id = $1)
+				OR s.user_id = $1
+			)
 		  AND s.outcome <> 'in_progress'
 		ORDER BY s.created_at DESC
 		LIMIT 200`, managerID)
@@ -583,13 +593,58 @@ func (s *Store) ListTeamPitchSimulations(ctx context.Context, managerID string) 
 	defer rows.Close()
 	var out []PitchSimulation
 	for rows.Next() {
-		sim, err := s.scanPitchSim(rows)
+		sim, err := s.scanTeamPitchSim(rows)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, sim)
 	}
 	return out, rows.Err()
+}
+
+func (s *Store) scanTeamPitchSim(row pgx.Row) (PitchSimulation, error) {
+	var sim PitchSimulation
+	var vetVID, coachVID *string
+	var ended *time.Time
+	var coachFB []byte
+	err := row.Scan(
+		&sim.ID, &sim.UserID, &sim.ScriptID, &sim.InterestLevel, &sim.VoiceName,
+		&vetVID, &coachVID, &sim.Outcome, &sim.AppointmentSlot,
+		&sim.DurationSec, &ended, &sim.TranscriptJSON, &coachFB,
+		&sim.AIScore, &sim.UserScore, &sim.AudioObjectKey, &sim.IsTop5, &sim.FeedbackSkipped, &sim.CreatedAt,
+		&sim.HasFeedback,
+		&sim.UserFullName, &sim.UserEmail, &sim.ManagerNote,
+	)
+	if err != nil {
+		return sim, err
+	}
+	sim.VetPromptVersionID = vetVID
+	sim.CoachPromptVersionID = coachVID
+	sim.EndedAt = ended
+	if len(coachFB) > 0 {
+		sim.CoachFeedbackJSON = coachFB
+	}
+	return sim, nil
+}
+
+func (s *Store) GetPitchSimOwner(ctx context.Context, simulationID string) (string, error) {
+	var userID string
+	err := s.pool.QueryRow(ctx, `
+		SELECT user_id::text FROM sales.pitch_simulations WHERE id=$1`, simulationID).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrPitchSimNotFound
+	}
+	return userID, err
+}
+
+func (s *Store) UpsertPitchSimManagerNote(ctx context.Context, simulationID, managerUserID, note string) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO sales.pitch_sim_manager_notes (simulation_id, manager_user_id, note, updated_at)
+		VALUES ($1, $2, $3, NOW())
+		ON CONFLICT (simulation_id) DO UPDATE SET
+			manager_user_id=$2, note=$3, updated_at=NOW()`,
+		simulationID, managerUserID, strings.TrimSpace(note))
+	return err
 }
 
 func (s *Store) UpsertPitchSimFeedback(ctx context.Context, fb PitchSimFeedback) (PitchSimFeedback, error) {

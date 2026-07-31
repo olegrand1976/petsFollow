@@ -43,8 +43,9 @@ jobs:
         run: |
           chmod +x infra/gcp/*.sh infra/gcp/lib/*.sh 2>/dev/null || true
           gcloud builds submit --config=infra/gcp/cloudbuild.yaml --project="${GCP_PROJECT_ID}" .
-      - name: Postdeploy (seed + smoke)
-        run: bash infra/gcp/postdeploy.sh --seed
+      - name: Postdeploy (jobs + smoke, sans seed)
+        # Seed staging : manuel uniquement (admin Pro « RESET STAGING » ou postdeploy.sh --seed).
+        run: bash infra/gcp/postdeploy.sh
       - name: Summary
         run: |
           API_URL="$(gcloud run services describe petsfollow-api             --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}"             --format='value(status.url)' 2>/dev/null || true)"
@@ -83,7 +84,17 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npx playwright install chromium
-      - name: E2E against Cloud Run frontend
+      - name: E2E P0+P1 against Cloud Run frontend
+        env:
+          CI: true
+          # Specs API-direct (ex. 09-pet-detail) — ne pas laisser le défaut localhost:8291.
+          PETSFOLLOW_API_URL: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}
+          NUXT_PUBLIC_API_BASE: ${{ env.PETSFOLLOW_API_PUBLIC_URL }}
         run: |
-          FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
-          PLAYWRIGHT_BASE_URL="${FE_URL}" npm run test:e2e -- tests/e2e/specs/01-auth.spec.ts
+          FE_URL="${PETSFOLLOW_PUBLIC_SITE_URL}"
+          if ! curl -fsS --max-time 10 "${FE_URL}/" >/dev/null 2>&1; then
+            FE_URL="$(gcloud run services describe petsfollow-nuxtjs --region="${GCP_RUN_REGION}" --project="${GCP_PROJECT_ID}" --format='value(status.url)')"
+          fi
+          # Suite web Pro hors @flaky. @pharmacy exclu tant que PHARMACY_ENABLED+seed CNK absents sur Cloud Run (S6).
+          echo "PLAYWRIGHT_BASE_URL=${FE_URL} PETSFOLLOW_API_URL=${PETSFOLLOW_API_URL}"
+          PLAYWRIGHT_BASE_URL="${FE_URL}" npx playwright test --grep-invert '@flaky|@pharmacy'

@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"fmt"
+	"html"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -19,10 +23,12 @@ func (a *API) registerBillingRoutes(r chi.Router) {
 	r.Post("/billing/webhooks/stripe", a.stripeWebhook)
 	if a.cfg.BillingMockEnabled {
 		r.Get("/billing/dev/mock-complete", a.billingMockComplete)
+		r.Get("/billing/dev/mock-portal", a.billingMockPortal)
 	}
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Post("/pets/{petID}/billing/checkout", a.resumePetCheckout)
 		pr.Post("/pets/{petID}/billing/portal", a.petBillingPortal)
 		pr.Get("/pets/{petID}/entitlement", a.getPetEntitlement)
@@ -68,36 +74,26 @@ func (a *API) listBillingPlans(w http.ResponseWriter, r *http.Request) {
 }
 
 type createPetBilling struct {
-	Plan        string `json:"plan"`
-	BillingMode string `json:"billingMode"`
-	SuccessURL  string `json:"successUrl"`
-	CancelURL   string `json:"cancelUrl"`
+	SuccessURL string `json:"successUrl"`
+	CancelURL  string `json:"cancelUrl"`
 }
 
-func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pet store.Pet, owner authx.Identity, b createPetBilling) {
-	planCode, err := billing.ParsePlanCode(defaultStr(b.Plan, string(billing.PlanTriennial)))
-	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
-		return
+// startPetBillingCheckout assumes pet + pending entitlement are already committed.
+// Checkout failures still return 201 with the pet so the client never sees a false "not saved".
+func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pet store.Pet, owner authx.Identity, b createPetBilling, skipCheckout bool, planCode billing.PlanCode, mode billing.BillingMode) {
+	if pet.Entitlement == nil {
+		if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
+			pet.Entitlement = &ent
+		}
 	}
-	mode, err := billing.ParseBillingMode(defaultStr(b.BillingMode, string(billing.ModeSubscription)))
-	if err != nil {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
-		return
-	}
-	if !billing.SupportsBillingMode(planCode, mode) {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
-		return
-	}
-	plan, _ := billing.GetPlan(planCode)
-	_, err = a.store.CreateEntitlement(r.Context(), pet.ID, owner.UserID, string(planCode), string(mode), plan.AmountCents)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+	if skipCheckout {
+		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
 		return
 	}
 	u, err := a.store.GetUserByID(r.Context(), owner.UserID)
 	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		log.Printf("create pet %s: load owner for checkout: %v", pet.ID, err)
+		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
 		return
 	}
 	sess, err := a.billing.StartCheckout(r.Context(), billing.StartCheckoutInput{
@@ -110,7 +106,8 @@ func (a *API) startPetBillingCheckout(w http.ResponseWriter, r *http.Request, pe
 		CancelURL:   b.CancelURL,
 	})
 	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		log.Printf("create pet %s: checkout after commit: %v", pet.ID, err)
+		httpx.WriteData(w, http.StatusCreated, map[string]any{"pet": pet})
 		return
 	}
 	httpx.WriteData(w, http.StatusCreated, map[string]any{
@@ -248,6 +245,7 @@ func (a *API) stripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	successURL := q.Get("success_url")
 	if addonID := q.Get("addon_id"); addonID != "" {
 		ownerUserID := q.Get("owner_user_id")
 		addonCode := q.Get("addon_code")
@@ -260,7 +258,11 @@ func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, map[string]string{"status": "completed", "addonId": addonID})
+		payload := map[string]string{"status": "completed", "addonId": addonID}
+		if writeMockCompleteResult(w, r, successURL) {
+			return
+		}
+		httpx.WriteData(w, http.StatusOK, payload)
 		return
 	}
 	petID := q.Get("pet_id")
@@ -276,7 +278,82 @@ func (a *API) billingMockComplete(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "completed", "petId": petID})
+	payload := map[string]string{"status": "completed", "petId": petID}
+	if writeMockCompleteResult(w, r, successURL) {
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
+}
+
+// writeMockCompleteResult serves an HTML success page (browser / Flutter external
+// checkout) when success_url is set and the client prefers HTML. Returns true if
+// a response was written. Smoke/e2e without success_url keep JSON.
+func writeMockCompleteResult(w http.ResponseWriter, r *http.Request, successURL string) bool {
+	if successURL == "" || !prefersMockCompleteHTML(r) {
+		return false
+	}
+	if !allowedMockReturnURL(successURL) {
+		return false
+	}
+	safeURL := html.EscapeString(successURL)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0;url=%s">
+<title>petsFollow — payment completed</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:0 1rem;line-height:1.45}
+a{color:#0b6e4f;font-weight:600}
+</style>
+</head><body>
+<h1>Payment completed</h1>
+<p>Your pet subscription is active.</p>
+<p><a href="%s">Return to petsFollow</a></p>
+</body></html>`, safeURL, safeURL)
+	return true
+}
+
+func prefersMockCompleteHTML(r *http.Request) bool {
+	if r.URL.Query().Get("format") == "json" {
+		return false
+	}
+	accept := r.Header.Get("Accept")
+	if strings.Contains(accept, "text/html") {
+		return true
+	}
+	// Some WebViews / in-app browsers send an empty Accept.
+	return accept == ""
+}
+
+// allowedMockReturnURL restricts mock success redirects to the app deep-link
+// scheme only (blocks open redirects / javascript: / https phishing).
+func allowedMockReturnURL(u string) bool {
+	return strings.HasPrefix(u, "petsfollow://") && !strings.ContainsAny(u, "<>\"'")
+}
+
+// billingMockPortal is the Stripe Customer Portal stand-in when BILLING_MOCK_ENABLED.
+func (a *API) billingMockPortal(w http.ResponseWriter, r *http.Request) {
+	customer := r.URL.Query().Get("customer")
+	returnURL := r.URL.Query().Get("return")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>petsFollow — mock billing portal</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:0 1rem;line-height:1.45}
+a{color:#0b6e4f}
+.meta{color:#666;font-size:.9rem;word-break:break-all}
+</style></head><body>
+<h1>Mock Stripe portal</h1>
+<p>Dev / seed billing — no live Stripe Customer Portal.</p>
+<p class="meta">customer: %s</p>
+`, html.EscapeString(customer))
+	if returnURL != "" {
+		_, _ = fmt.Fprintf(w, `<p><a href="%s">Return to app</a></p>`, html.EscapeString(returnURL))
+	}
+	_, _ = io.WriteString(w, `</body></html>`)
 }
 
 func (a *API) requirePremiumAccess(w http.ResponseWriter, r *http.Request, petID string) bool {

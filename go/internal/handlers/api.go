@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,11 +9,16 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
+	"github.com/olegrand1976/petsFollow/go/internal/invoicing"
+	"github.com/olegrand1976/petsFollow/go/internal/invoicing/billit"
+	invoicingmock "github.com/olegrand1976/petsFollow/go/internal/invoicing/mock"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/email"
 	"github.com/olegrand1976/petsFollow/go/internal/notifications/fcm"
+	"github.com/olegrand1976/petsFollow/go/internal/pharmacy"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/config"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
@@ -24,14 +30,24 @@ import (
 )
 
 type API struct {
-	store    *store.Store
-	tokens   *authx.TokenIssuer
-	cfg      config.Config
-	notifier *email.Notifier
-	billing  *billing.Service
-	media    media.Store
-	pusher   fcm.Pusher
-	gemini   *gemini.Client
+	store       *store.Store
+	tokens      *authx.TokenIssuer
+	cfg         config.Config
+	notifier    *email.Notifier
+	billing     *billing.Service
+	invoicing   *invoicing.Service
+	media       media.Store
+	pusher      fcm.Pusher
+	gemini      *gemini.Client
+	vamreg      *pharmacy.VamregDeclarer
+	vamregAFMPS *pharmacy.VamregAFMPSClient
+	vamregQ     VamregEnqueuer
+	// vetLookupRL / vetSuggestRL — anti-scraping / anti-spam (par userId).
+	vetLookupRL         *httpx.RateLimiter
+	vetSuggestRL        *httpx.RateLimiter
+	billitWebhookRL     *httpx.RateLimiter
+	pharmacyOrderSendRL *httpx.RateLimiter
+	authPulse           *authPulse
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -42,8 +58,49 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 	if cfg.GeminiAPIKey != "" {
 		g = gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiLiteModel)
 	}
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, media: mediaStore, pusher: pusher, gemini: g}
+	var inv *invoicing.Service
+	if cfg.BillitEnabled {
+		var gw invoicing.Gateway
+		if cfg.BillitMockEnabled {
+			gw = invoicingmock.New()
+		} else {
+			gw = billit.NewClient(cfg.BillitBaseURL)
+		}
+		inv = invoicing.NewService(st, gw, cfg)
+	}
+	vamregDecl := pharmacy.NewVamregDeclarer(st, cfg.VamregBaseURL, cfg.VamregAPIKey, cfg.VamregDryRun)
+	var vamregAFMPS *pharmacy.VamregAFMPSClient
+	if strings.TrimSpace(cfg.VamregAfmpsAPIKey) != "" {
+		vamregAFMPS = pharmacy.NewVamregAFMPSClient(cfg.VamregAfmpsBaseURL, cfg.VamregAfmpsAPIKey)
+	}
+	a := &API{
+		store: st, tokens: tokens, cfg: cfg, notifier: notifier, billing: bill, invoicing: inv, media: mediaStore, pusher: pusher, gemini: g,
+		vamreg: vamregDecl, vamregAFMPS: vamregAFMPS, vamregQ: inlineVamregEnqueue{decl: vamregDecl},
+		vetLookupRL:         httpx.NewRateLimiter(30, time.Minute),
+		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
+		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),
+		pharmacyOrderSendRL: httpx.NewRateLimiter(10, time.Minute),
+		authPulse:           newAuthPulse(),
+	}
+	return a
 }
+
+// TestReplaceNotifier swaps the email notifier (integration tests only).
+func (a *API) TestReplaceNotifier(n *email.Notifier) { a.notifier = n }
+
+// TestSetMedia installs a media store (integration tests only).
+func (a *API) TestSetMedia(m media.Store) { a.media = m }
+
+// TestSetOpsNotifyEmail sets OPS_NOTIFY_EMAIL (integration tests only).
+func (a *API) TestSetOpsNotifyEmail(addr string) { a.cfg.OpsNotifyEmail = addr }
+
+// TestSetAdminStagingSeedEnabled toggles ADMIN_STAGING_SEED_ENABLED (integration tests only).
+func (a *API) TestSetAdminStagingSeedEnabled(v bool) { a.cfg.AdminStagingSeedEnabled = v }
+
+// TestSetBillitWebhookSecret sets BILLIT_WEBHOOK_SECRET (integration tests only).
+func (a *API) TestSetBillitWebhookSecret(secret string) { a.cfg.BillitWebhookSecret = secret }
+
+func (a *API) TestSetSaasInvoicesSecret(secret string) { a.cfg.SaasInvoicesSecret = secret }
 
 func (a *API) Routes(r chi.Router) {
 	r.Use(httpx.LocaleMiddleware)
@@ -56,16 +113,21 @@ func (a *API) Routes(r chi.Router) {
 		ar.Post("/auth/register-client", a.registerClient)
 		ar.Post("/auth/register-care-pro", a.registerCarePro)
 		ar.Post("/auth/confirm-email", a.confirmEmail)
+		ar.Post("/auth/resend-confirmation", a.resendConfirmation)
 		ar.Post("/auth/forgot-password", a.forgotPassword)
 		ar.Post("/auth/reset-password", a.resetPassword)
 	})
 	r.Post("/auth/refresh", a.refresh)
 	a.registerJourneyPublicRoutes(r)
-	a.registerAppInviteRoutes(r)
+	a.registerAppInviteRoutes(r, authRL.Middleware)
 	a.registerPreconsultPublicRoutes(r, authRL.Middleware)
+	a.registerDossierSharePublicRoutes(r, authRL.Middleware)
+	a.registerConsultationSharePublicRoutes(r, authRL.Middleware)
 	a.registerCommercialDiscoveryRoutes(r, authRL.Middleware)
 	a.registerAuthRoutes(r, authRL.Middleware)
 	a.registerBillingRoutes(r)
+	a.registerInvoicingRoutes(r)
+	a.registerInvoicingWebhookRoutes(r)
 	a.registerAdminRoutes(r)
 	a.registerBrandAssetAdminRoutes(r)
 	a.registerCommissionRoutes(r)
@@ -74,30 +136,49 @@ func (a *API) Routes(r chi.Router) {
 	a.registerPitchTrainingRoutes(r)
 	a.registerProductDigestRoutes(r)
 	a.registerAiCrModuleRoutes(r)
+	a.registerSupportRoutes(r)
 	r.Post("/internal/retention/run", a.internalRunRetentionPurge)
+	r.Post("/internal/saas-invoices/run", a.internalRunSaasInvoices)
+	r.Post("/internal/sales-branches-auto/run", a.internalRunSalesBranchesAuto)
+	r.Post("/internal/auth-health/run", a.internalRunAuthHealth)
+	r.Post("/internal/pharmacy/expiry-run", a.internalPharmacyExpiryRun)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
+		a.registerPharmacyMedicationRoutes(pr)
+		a.registerPharmacyStockRoutes(pr)
+		a.registerPharmacyOrderRoutes(pr)
+		a.registerPharmacyInventoryRoutes(pr)
+		a.registerPharmacyDAFRoutes(pr)
+		a.registerPharmacyProtocolRoutes(pr)
+		a.registerPrescriptionRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)
 		pr.Patch("/me/password", a.changeMePassword)
 		pr.Delete("/me", a.deleteMe)
 		pr.Get("/me/export", a.exportMe)
+		pr.Post("/me/accept-terms", a.acceptMeTerms)
 		pr.Patch("/me/locale", a.updateMeLocale)
 		a.registerProfileRoutes(pr)
 		pr.Get("/me/vets", a.listMyVets)
+		pr.Get("/me/vets/lookup", a.lookupVets)
 		pr.Post("/me/vets/invite", a.inviteVet)
+		pr.Post("/me/vets/suggest", a.suggestVet)
 		pr.Get("/vet/link-requests", a.listVetLinkRequests)
 		pr.Post("/vet/link-requests/{id}/accept", a.acceptVetLinkRequest)
 		pr.Post("/vet/link-requests/{id}/reject", a.rejectVetLinkRequest)
 		pr.Get("/vet/visits", a.listVetVisits)
+		pr.Get("/vet/consultations", a.listVetConsultations)
 		pr.Get("/vet/schedule", a.getVetSchedule)
 		pr.Put("/vet/schedule", a.putVetSchedule)
 		pr.Get("/vet/vacations", a.listVetVacations)
 		pr.Post("/vet/vacations", a.createVetVacation)
 		pr.Delete("/vet/vacations/{id}", a.deleteVetVacation)
+		pr.Get("/vet/visit-types", a.listVetVisitTypes)
+		pr.Put("/vet/visit-types", a.putVetVisitTypes)
 		pr.Get("/vet/calendar", a.getVetCalendar)
 		pr.Get("/practices/{practiceID}/availability", a.getPracticeAvailability)
 		pr.Get("/vet/care-reminders", a.listVetOverdueCare)
@@ -112,6 +193,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/vet/clients/{clientID}/link", a.linkExistingVetClient)
 		pr.Get("/vet/colleagues", a.listPracticeColleagues)
 		pr.Get("/clients/{clientID}", a.getClient)
+		pr.Patch("/clients/{clientID}", a.patchClient)
 		pr.Get("/clients/{clientID}/overview", a.getClientOverview)
 		pr.Post("/clients/{clientID}/send-app-link", a.sendClientAppLink)
 		pr.Get("/clients/{clientID}/pets", a.listClientPets)
@@ -140,14 +222,19 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/pets/{petID}/visits", a.createVisit)
 		pr.Put("/pets/{petID}", a.updatePet)
 		pr.Post("/pets/{petID}/photo", a.uploadPetPhoto)
+		pr.Get("/pets/{petID}/health-book", a.getPetHealthBook)
+		pr.Post("/pets/{petID}/health-book", a.uploadPetHealthBook)
+		pr.Delete("/pets/{petID}/health-book", a.deletePetHealthBook)
 		pr.Get("/pets/{petID}/documents", a.listPetDocuments)
 		pr.Post("/pets/{petID}/documents", a.uploadPetDocument)
 		pr.Delete("/pets/documents/{documentID}", a.deletePetDocument)
 		pr.Get("/pets/{petID}/shares", a.listPetShares)
 		pr.Post("/pets/{petID}/shares", a.createPetShare)
 		pr.Delete("/pets/{petID}/shares/{granteeID}", a.deletePetShare)
+		pr.Post("/pets/{petID}/dossier-shares", a.createPetDossierShare)
 		pr.Get("/pets/{petID}", a.getPet)
 		pr.Get("/pets/{petID}/timeline", a.petTimeline)
+		pr.Get("/pets/{petID}/daf-dispenses", a.listPetDAFDispenses)
 		pr.Post("/pets/{petID}/heartrate/sessions", a.startHeartRate)
 		pr.Get("/pets/{petID}/heartrate/sessions", a.listHeartRate)
 		pr.Post("/pets/{petID}/heartrate/sessions/seen", a.markPetHeartRateSeen)
@@ -159,10 +246,14 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/care-reminders/{id}/done", a.markCareReminderDone)
 		pr.Post("/care-reminders/{id}/postpone", a.postponeCareReminder)
 		pr.Patch("/visits/{id}", a.updateVisit)
+		pr.Delete("/visits/{id}", a.softDeleteVisit)
 		pr.Patch("/visits/{visitID}/location", a.updateVisitLocation)
 		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
 		pr.Put("/visits/{visitID}/preconsult", a.putVisitPreconsult)
+		pr.Get("/visits/{visitID}/client-consultation", a.getClientConsultation)
+		pr.Post("/visits/{visitID}/consultation-shares", a.createConsultationShare)
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
+		pr.Get("/visits/{visitID}/reports", a.listVisitReports)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)
 		pr.Get("/visits/{visitID}/report/audio", a.getVisitReportAudio)
 		pr.Post("/visits/{visitID}/report/finalize", a.finalizeVisitReport)
@@ -200,6 +291,7 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	u, err := a.store.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
+		a.noteAuthSignal(store.AuthAlertLoginFailSpike, authSpikeLoginFail, "login unauthorized (email inconnu ou erreur)")
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
@@ -208,10 +300,12 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
+		a.noteAuthSignal(store.AuthAlertLoginFailSpike, authSpikeLoginFail, "login unauthorized (mauvais mot de passe)")
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
 		return
 	}
 	if (kernel.IsPracticeStaff(u.Role) || u.Role == kernel.RoleClient || u.Role == kernel.RoleCarePro) && u.EmailVerifiedAt == nil {
+		a.noteAuthSignal(store.AuthAlertUnverifiedSpike, authSpikeUnverified, "login email_not_verified")
 		writeErr(w, r, http.StatusForbidden, "email_not_verified", "email_not_verified")
 		return
 	}
@@ -305,6 +399,45 @@ func (a *API) getClient(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, client)
 }
 
+type patchClientReq struct {
+	ContactPhone *string `json:"contactPhone"`
+}
+
+func (a *API) patchClient(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "clients.write")
+	if !ok {
+		return
+	}
+	var req patchClientReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if req.ContactPhone == nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "nothing_to_update")
+		return
+	}
+	phone := strings.TrimSpace(*req.ContactPhone)
+	if utf8.RuneCountInString(phone) > 40 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
+		return
+	}
+	clientID := chi.URLParam(r, "clientID")
+	if err := a.store.UpdateClientContactPhoneByPractice(r.Context(), id.PracticeID, clientID, phone); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "client_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	client, err := a.store.GetClientByPractice(r.Context(), id.PracticeID, clientID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, client)
+}
 
 func (a *API) getClientOverview(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.requirePracticePerm(w, r, "clients.read")
@@ -434,17 +567,21 @@ func (a *API) listMyPets(w http.ResponseWriter, r *http.Request) {
 }
 
 type petReq struct {
-	Name        string   `json:"name"`
-	Species     string   `json:"species"`
-	Breed       string   `json:"breed"`
-	BirthDate   *string  `json:"birthDate"`
-	WeightKg    *float64 `json:"weightKg"`
-	PhotoURL    string   `json:"photoUrl"`
-	LitterTag   string   `json:"litterTag"`
-	Plan        string   `json:"plan"`
-	BillingMode string   `json:"billingMode"`
-	SuccessURL  string   `json:"successUrl"`
-	CancelURL   string   `json:"cancelUrl"`
+	Name             string   `json:"name"`
+	Species          string   `json:"species"`
+	Breed            string   `json:"breed"`
+	BirthDate        *string  `json:"birthDate"`
+	WeightKg         *float64 `json:"weightKg"`
+	PhotoURL         string   `json:"photoUrl"`
+	LitterTag        string   `json:"litterTag"`
+	MicrochipNumber  *string  `json:"microchipNumber"`
+	HealthBookNumber *string  `json:"healthBookNumber"`
+	DomicileLocation *string  `json:"domicileLocation"`
+	Plan             string   `json:"plan"`
+	BillingMode      string   `json:"billingMode"`
+	SuccessURL       string   `json:"successUrl"`
+	CancelURL        string   `json:"cancelUrl"`
+	SkipCheckout     bool     `json:"skipCheckout"`
 }
 
 type petsBatchReq struct {
@@ -457,40 +594,82 @@ func (a *API) createPet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	if strings.TrimSpace(id.PracticeID) == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
-		return
+	// Practice is optional at create — client may link a vet afterwards.
+	practiceID := strings.TrimSpace(id.PracticeID)
+	if practiceID == "" {
+		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
+		if rerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		practiceID = strings.TrimSpace(resolved)
 	}
 	var req petReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
+	name := strings.TrimSpace(req.Name)
+	species := strings.TrimSpace(req.Species)
+	if name == "" || species == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "name_species_required")
+		return
+	}
+	planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+		return
+	}
+	mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
+	if err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
+	if !billing.SupportsBillingMode(planCode, mode) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+		return
+	}
+	plan, planErr := billing.GetPlan(planCode)
+	if planErr != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+		return
+	}
+
 	p := store.Pet{
-		Name: req.Name, Species: req.Species, Breed: req.Breed, WeightKg: req.WeightKg,
+		Name: name, Species: species, Breed: strings.TrimSpace(req.Breed), WeightKg: req.WeightKg,
 		PhotoURL: req.PhotoURL, LitterTag: strings.TrimSpace(req.LitterTag),
-		OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+		OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
+	}
+	if req.MicrochipNumber != nil {
+		p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+	}
+	if req.HealthBookNumber != nil {
+		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
 	}
 	if req.BirthDate != nil {
-		if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
+		raw := strings.TrimSpace(*req.BirthDate)
+		if raw != "" {
+			t, perr := time.Parse("2006-01-02", raw)
+			if perr != nil {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_birth_date")
+				return
+			}
 			p.BirthDate = &t
 		}
 	}
-	created, err := a.store.CreatePetRespectingFamily(r.Context(), p)
+	created, err := a.store.CreatePetWithPendingEntitlement(r.Context(), p, string(planCode), string(mode), plan.AmountCents)
 	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "validation")
+			return
+		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	if err := a.store.SeedDefaultCareReminders(r.Context(), created.ID, created.PracticeID, created.Species); err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if created.Species == "horse" {
-		_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-	}
+	// Care reminders are created manually by the client — no default seed.
 	a.startPetBillingCheckout(w, r, created, id, createPetBilling{
-		Plan: req.Plan, BillingMode: req.BillingMode, SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
-	})
+		SuccessURL: req.SuccessURL, CancelURL: req.CancelURL,
+	}, req.SkipCheckout, planCode, mode)
 }
 
 func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
@@ -499,9 +678,15 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
 		return
 	}
-	if strings.TrimSpace(id.PracticeID) == "" {
-		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
-		return
+	// Practice is optional at create — client may link a vet afterwards.
+	practiceID := strings.TrimSpace(id.PracticeID)
+	if practiceID == "" {
+		resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID)
+		if rerr != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+		practiceID = strings.TrimSpace(resolved)
 	}
 	var body petsBatchReq
 	if err := httpx.DecodeJSON(r, &body); err != nil {
@@ -512,7 +697,9 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "batch_size")
 		return
 	}
-	created := make([]store.Pet, 0, len(body.Pets))
+
+	// Validate all rows before any insert (all-or-nothing TX).
+	items := make([]store.PetWithPendingEntitlement, 0, len(body.Pets))
 	for _, req := range body.Pets {
 		name := strings.TrimSpace(req.Name)
 		species := strings.TrimSpace(req.Species)
@@ -520,46 +707,62 @@ func (a *API) createPetsBatch(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "name_species_required")
 			return
 		}
+		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+			return
+		}
+		mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+			return
+		}
+		if !billing.SupportsBillingMode(planCode, mode) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_billing_mode")
+			return
+		}
+		plan, planErr := billing.GetPlan(planCode)
+		if planErr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_plan")
+			return
+		}
 		p := store.Pet{
 			Name: name, Species: species, Breed: strings.TrimSpace(req.Breed),
 			LitterTag:   strings.TrimSpace(req.LitterTag),
-			OwnerUserID: id.UserID, PracticeID: id.PracticeID, PaymentStatus: "pending_payment",
+			OwnerUserID: id.UserID, PracticeID: practiceID, PaymentStatus: "pending_payment",
+		}
+		if req.MicrochipNumber != nil {
+			p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+		}
+		if req.HealthBookNumber != nil {
+			p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
 		}
 		if req.BirthDate != nil {
-			if t, err := time.Parse("2006-01-02", *req.BirthDate); err == nil {
+			raw := strings.TrimSpace(*req.BirthDate)
+			if raw != "" {
+				t, perr := time.Parse("2006-01-02", raw)
+				if perr != nil {
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_birth_date")
+					return
+				}
 				p.BirthDate = &t
 			}
 		}
-		pet, err := a.store.CreatePetRespectingFamily(r.Context(), p)
-		if err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		_ = a.store.SeedDefaultCareReminders(r.Context(), pet.ID, pet.PracticeID, pet.Species)
-		if pet.Species == "horse" {
-			_ = a.store.SeedHorsePackReminders(r.Context(), id.UserID)
-		}
-		planCode, err := billing.ParsePlanCode(defaultStr(req.Plan, string(billing.PlanTriennial)))
-		if err != nil {
-			planCode = billing.PlanTriennial
-		}
-		mode, err := billing.ParseBillingMode(defaultStr(req.BillingMode, string(billing.ModeSubscription)))
-		if err != nil || !billing.SupportsBillingMode(planCode, mode) {
-			mode = billing.ModeSubscription
-			if !billing.SupportsBillingMode(planCode, mode) {
-				mode = billing.ModeOneTime
-			}
-		}
-		plan, _ := billing.GetPlan(planCode)
-		if _, err := a.store.CreateEntitlement(r.Context(), pet.ID, id.UserID, string(planCode), string(mode), plan.AmountCents); err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		}
-		if ent, e := a.store.GetEntitlementByPetID(r.Context(), pet.ID); e == nil {
-			pet.Entitlement = &ent
-		}
-		created = append(created, pet)
+		items = append(items, store.PetWithPendingEntitlement{
+			Pet: p, PlanCode: string(planCode), BillingMode: string(mode), AmountCents: plan.AmountCents,
+		})
 	}
+
+	created, err := a.store.CreatePetsBatchWithPendingEntitlements(r.Context(), items)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "validation")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	// Care reminders are created manually by the client — no default seed.
 	httpx.WriteData(w, http.StatusCreated, map[string]any{"pets": created, "count": len(created)})
 }
 
@@ -586,10 +789,32 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 	p := store.Pet{
 		ID: existing.ID, Name: req.Name, Species: req.Species, Breed: req.Breed,
 		WeightKg: req.WeightKg, PhotoURL: req.PhotoURL, OwnerUserID: id.UserID,
-		LitterTag: existing.LitterTag,
+		LitterTag:       existing.LitterTag,
+		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
+		DomicileLocation: existing.DomicileLocation,
+		FoodChainStatus:  existing.FoodChainStatus,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
+	}
+	if req.MicrochipNumber != nil {
+		p.MicrochipNumber = clipPetIDField(*req.MicrochipNumber, maxMicrochipLen)
+	}
+	if req.HealthBookNumber != nil {
+		p.HealthBookNumber = clipPetIDField(*req.HealthBookNumber, maxHealthBookNumberLen)
+	}
+	newSpecies := strings.TrimSpace(req.Species)
+	if newSpecies == "" {
+		p.Species = existing.Species
+	} else if newSpecies != existing.Species {
+		// Owner species change: apply regulatory default (rente → food_producing, else companion).
+		p.FoodChainStatus = kernel.DefaultFoodChainStatus(newSpecies)
+	}
+	if req.DomicileLocation != nil {
+		p.DomicileLocation = clipPetIDField(*req.DomicileLocation, maxDomicileLocationLen)
+	} else if newSpecies != "" && !kernel.IsFoodChainSpecies(newSpecies) && kernel.IsFoodChainSpecies(existing.Species) {
+		// Left food-chain species without explicit domicile → drop stale housing location.
+		p.DomicileLocation = ""
 	}
 	// Champs omis : conserver les valeurs existantes (édition partielle mobile).
 	if strings.TrimSpace(req.PhotoURL) == "" {
@@ -650,19 +875,29 @@ func (a *API) petTimeline(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Practice staff: CanAccessPet grants any level for same-practice members; clinical
+	// bodies (visit notes + CR excerpts) stay behind pets.write_clinical.
+	if canNotes && kernel.IsPracticeStaff(id.Role) && !a.allowPracticePerm(r, id, "pets.write_clinical") {
+		canNotes = false
+	}
 	canFull, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermFull)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// Messages: full (or owner/practice vet — CanAccessPet grants any level) only; write_notes alone is not enough.
+	// Messages: care_pro needs pet ACL full; practice staff uses team capability "messaging"
+	// (CanAccessPet grants any level for same-practice members).
 	includeMessages := canFull
+	if kernel.IsPracticeStaff(id.Role) {
+		includeMessages = a.allowPracticePerm(r, id, "messaging")
+	}
 	redactVisitNotes := !canNotes
 	items, err := a.store.PetTimelineFiltered(r.Context(), petID, vetView, includeMessages, redactVisitNotes)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	stripClientConsultationFlags(items, pet.OwnerUserID, id.UserID, id.Role)
 	httpx.WriteData(w, http.StatusOK, items)
 }
 
@@ -681,14 +916,21 @@ func (a *API) startHeartRate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_pet")
 		return
 	}
+	if !kernel.SupportsHeartRateControl(pet.Species) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "heartrate_not_supported")
+		return
+	}
 	if !a.requirePremiumAccess(w, r, pet.ID) {
 		return
 	}
 	var req startHRReq
 	_ = httpx.DecodeJSON(r, &req)
-	allowed, err := a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
-	if err != nil {
-		allowed = nil
+	var allowed []int
+	if strings.TrimSpace(pet.PracticeID) != "" {
+		allowed, err = a.store.GetPracticeHeartRateDurations(r.Context(), pet.PracticeID)
+		if err != nil {
+			allowed = nil
+		}
 	}
 	normalized := kernel.NormalizeHeartRateDurations(allowed)
 	durationSec := req.DurationSec
@@ -736,7 +978,11 @@ func (a *API) completeHeartRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bpm := kernel.CalculateBPM(req.TapCount, sess.DurationSec)
-	alert := kernel.IsHeartRateAlert(bpm, a.cfg.HeartRateMinBPM, a.cfg.HeartRateMaxBPM)
+	alert, err := a.heartRateDeltaAlert(r.Context(), sess.PetID, bpm)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
 	sess, err = a.store.CompleteHeartRateSession(r.Context(), chi.URLParam(r, "sessionID"), id.UserID, req.TapCount, bpm, alert)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
@@ -765,18 +1011,59 @@ func (a *API) validateHeartRate(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "session_not_found")
 		return
 	}
-	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-	prefs, _ := a.store.EmailPrefs(r.Context(), vetID)
-	if prefs.OnHeartRate {
-		vet, _ := a.store.GetUserByID(r.Context(), vetID)
-		locale := vet.PreferredLocale
-		if locale == "" {
-			locale = localeOf(r)
+	practiceID := strings.TrimSpace(sess.PracticeID)
+	if practiceID == "" {
+		practiceID = strings.TrimSpace(id.PracticeID)
+	}
+	if practiceID == "" {
+		if resolved, rerr := a.store.ResolveClientPracticeID(r.Context(), id.UserID); rerr == nil {
+			practiceID = resolved
 		}
-		_ = a.notifier.SendHeartrateValidated(vet.Email, locale, *sess.BPM)
-		_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": sess.BPM})
+	}
+	vetID, _ := a.store.GetVetForClient(r.Context(), id.UserID, practiceID)
+	if vetID != "" {
+		prefs, _ := a.store.EmailPrefs(r.Context(), vetID)
+		if prefs.OnHeartRate {
+			vet, _ := a.store.GetUserByID(r.Context(), vetID)
+			locale := vet.PreferredLocale
+			if locale == "" {
+				locale = localeOf(r)
+			}
+			bpm := 0
+			if sess.BPM != nil {
+				bpm = *sess.BPM
+			}
+			if sess.IsAlert {
+				_ = a.notifier.SendHeartrateThresholdAlert(vet.Email, locale, bpm)
+				_ = a.store.LogNotification(r.Context(), vetID, "heartrate_threshold_alert", map[string]any{"sessionId": sess.ID, "bpm": bpm})
+			} else {
+				_ = a.notifier.SendHeartrateValidated(vet.Email, locale, bpm)
+				_ = a.store.LogNotification(r.Context(), vetID, "heartrate_validated", map[string]any{"sessionId": sess.ID, "bpm": bpm})
+			}
+		}
 	}
 	httpx.WriteData(w, http.StatusOK, sess)
+}
+
+// heartRateDeltaAlert reports whether bpm rose by at least the species delta
+// versus the last validated reading. Unsupported species → false, nil.
+func (a *API) heartRateDeltaAlert(ctx context.Context, petID string, bpm int) (bool, error) {
+	pet, err := a.store.GetPet(ctx, petID)
+	if err != nil {
+		return false, err
+	}
+	delta, ok, err := a.store.GetHeartRateAlertDelta(ctx, pet.Species)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	prev, err := a.store.LastValidatedBPM(ctx, petID)
+	if err != nil {
+		return false, err
+	}
+	return kernel.IsHeartRateDeltaAlert(bpm, prev, delta), nil
 }
 
 func (a *API) cancelHeartRate(w http.ResponseWriter, r *http.Request) {
@@ -849,27 +1136,34 @@ func (a *API) listThreads(w http.ResponseWriter, r *http.Request) {
 		}
 		httpx.WriteData(w, http.StatusOK, threads)
 		return
-	case id.Role == kernel.RoleClient:
-		// Self-signup Google / register-client : pas encore de cabinet → liste vide.
-		if id.PracticeID == "" {
-			httpx.WriteData(w, http.StatusOK, []store.Thread{})
+	case id.Role == kernel.RoleCarePro:
+		threads, err := a.store.ListThreadSummariesForVet(r.Context(), id.UserID)
+		if err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		vetID, err := a.store.GetVetForClient(r.Context(), id.UserID, id.PracticeID)
-		if err != nil {
-			if errors.Is(err, store.ErrNotFound) {
-				httpx.WriteData(w, http.StatusOK, []store.Thread{})
-				return
+		out := make([]store.ThreadSummary, 0, len(threads))
+		for _, t := range threads {
+			th := store.Thread{
+				ID: t.ID, PracticeID: t.PracticeID, ClientUserID: t.ClientUserID,
+				VetUserID: t.VetUserID, PetID: t.PetID,
 			}
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
+			if a.canAccessThread(r, id, th) {
+				out = append(out, t)
+			}
 		}
-		t, err := a.store.GetOrCreateThread(r.Context(), id.PracticeID, id.UserID, vetID)
+		httpx.WriteData(w, http.StatusOK, out)
+		return
+	case id.Role == kernel.RoleClient:
+		threads, err := a.store.ListThreadSummariesForClient(r.Context(), id.UserID)
 		if err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		httpx.WriteData(w, http.StatusOK, []store.Thread{t})
+		if threads == nil {
+			threads = []store.ThreadSummary{}
+		}
+		httpx.WriteData(w, http.StatusOK, threads)
 		return
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
@@ -884,7 +1178,28 @@ func (a *API) canAccessThread(r *http.Request, id authx.Identity, thread store.T
 	if kernel.IsPracticeStaff(id.Role) && id.PracticeID != "" && id.PracticeID == thread.PracticeID {
 		return a.allowPracticePerm(r, id, "messaging")
 	}
-	return id.UserID == thread.VetUserID
+	if id.UserID != thread.VetUserID {
+		return false
+	}
+	// care_pro person-scoped threads: ACL must still be active (revoke cuts access).
+	if id.Role == kernel.RoleCarePro && thread.PracticeID == "" {
+		return a.careProMayAccessThread(r, id, thread)
+	}
+	return true
+}
+
+// careProMayAccessThread re-checks pet_access / client_access for a care_pro thread.
+func (a *API) careProMayAccessThread(r *http.Request, id authx.Identity, thread store.Thread) bool {
+	if thread.PetID != "" {
+		pet, err := a.store.GetPet(r.Context(), thread.PetID)
+		if err != nil {
+			return false
+		}
+		ok, err := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermRead)
+		return err == nil && ok
+	}
+	ok, err := a.store.CareProMayMessageClient(r.Context(), id.UserID, thread.ClientUserID)
+	return err == nil && ok
 }
 
 func (a *API) listMessages(w http.ResponseWriter, r *http.Request) {
@@ -991,8 +1306,9 @@ func (a *API) sendMessage(w http.ResponseWriter, r *http.Request) {
 			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, req.Body)
 		}
+		a.pushNewMessage(thread.VetUserID, thread.ID, req.Body)
 	}
-	if kernel.IsPracticeStaff(id.Role) {
+	if kernel.IsPracticeStaff(id.Role) || id.Role == kernel.RoleCarePro {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, req.Body)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -1050,8 +1366,9 @@ func (a *API) sendMessageMedia(w http.ResponseWriter, r *http.Request) {
 			}
 			_ = a.notifier.SendNewMessage(vet.Email, locale, preview)
 		}
+		a.pushNewMessage(thread.VetUserID, thread.ID, preview)
 	}
-	if kernel.IsPracticeStaff(id.Role) {
+	if kernel.IsPracticeStaff(id.Role) || id.Role == kernel.RoleCarePro {
 		a.pushNewMessage(thread.ClientUserID, thread.ID, preview)
 	}
 	httpx.WriteData(w, http.StatusCreated, msg)
@@ -1112,7 +1429,9 @@ type registerReq struct {
 	PracticeName string `json:"practiceName"`
 	// Consent — acceptation CGU/privacy (checkbox obligatoire côté front, persistée en DB).
 	Consent bool `json:"consent"`
-	// AssignedCommercialID — optional nearby commercial pick (no invite code).
+	// InviteCode — code parrain commercial (practice.app_invite_codes).
+	InviteCode string `json:"inviteCode,omitempty"`
+	// AssignedCommercialID — ignored on /auth/register (assignment only via inviteCode).
 	AssignedCommercialID string `json:"assignedCommercialId,omitempty"`
 }
 
@@ -1135,15 +1454,22 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "consent_required")
 		return
 	}
-	assignedCommercialID := strings.TrimSpace(req.AssignedCommercialID)
-	if assignedCommercialID != "" {
-		ok, err := a.store.IsAssignableCommercial(r.Context(), assignedCommercialID)
+	assignedCommercialID := ""
+	if code := store.NormalizeInviteCode(req.InviteCode); code != "" {
+		inv, err := a.store.GetAppInviteByCode(r.Context(), code)
 		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_invite_code")
+				return
+			}
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
-		if !ok {
-			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_commercial")
+		switch inv.Role {
+		case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+			assignedCommercialID = inv.UserID
+		default:
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_invite_code")
 			return
 		}
 	}
@@ -1164,8 +1490,11 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", a.cfg.ProPublicSiteURL, result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register vet: SMTP confirm fail")
+	}
 	out := map[string]any{
 		"message": t(r, "success.confirm_email_sent", nil),
 	}
@@ -1217,6 +1546,40 @@ func (a *API) confirmEmail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type resendConfirmationReq struct {
+	Email string `json:"email"`
+}
+
+func (a *API) resendConfirmation(w http.ResponseWriter, r *http.Request) {
+	var req resendConfirmationReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+
+	result, err := a.store.RequestEmailConfirmation(r.Context(), req.Email)
+	out := map[string]any{
+		"message": t(r, "success.confirm_email_sent", nil),
+	}
+	if err == nil {
+		confirmURL := fmt.Sprintf("%s/confirm-email?token=%s",
+			strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
+		if sendErr := a.notifier.SendConfirmRegistration(result.Email, result.Locale, result.FullName, confirmURL); sendErr != nil {
+			a.reportConfirmEmailFailure(r.Context(), result.Email, sendErr)
+		}
+		if a.cfg.DevSeedEnabled {
+			out["confirmPath"] = "/confirm-email?token=" + result.Token
+		}
+	}
+	// Always 200 — do not reveal whether the email exists / is already verified.
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
 type forgotPasswordReq struct {
 	Email string `json:"email"`
 }
@@ -1238,7 +1601,7 @@ func (a *API) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		"message": t(r, "success.password_reset_sent", nil),
 	}
 	if err == nil {
-		resetURL := fmt.Sprintf("%s/reset-password?token=%s", a.cfg.ProPublicSiteURL, result.Token)
+		resetURL := fmt.Sprintf("%s/reset-password?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
 		_ = a.notifier.SendPasswordReset(result.Email, result.Locale, result.FullName, resetURL)
 		// Dev/demo only: never expose the reset token outside seeded environments.
 		if a.cfg.DevSeedEnabled {

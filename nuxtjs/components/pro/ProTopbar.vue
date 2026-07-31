@@ -3,6 +3,13 @@
     <div class="pro-topbar__left">
       <PetsFollowLogo variant="compact" :link-to="homeLink" />
       <span
+        v-if="showStagingTag"
+        class="pro-topbar__env"
+        data-testid="pro-topbar-staging"
+        :title="$t('common.stagingEnv')"
+        :aria-label="$t('common.stagingEnv')"
+      >S</span>
+      <span
         v-if="practiceName"
         class="pro-topbar__practice"
         data-testid="pro-topbar-practice"
@@ -10,6 +17,16 @@
       <slot name="breadcrumb" />
     </div>
     <div class="pro-topbar__actions">
+      <NuxtLink
+        to="/support"
+        class="pro-topbar__icon-btn"
+        :aria-label="$t('support.buttonAria')"
+        data-testid="pro-support-btn"
+        @click.capture="onSupportNav"
+      >
+        <ProIcon name="support_agent" :size="20" />
+      </NuxtLink>
+      <ProDeskSwitcher v-if="showDeskSwitcher" />
       <ProLocaleSelect persist />
       <button
         type="button"
@@ -29,7 +46,7 @@
           aria-haspopup="true"
           :aria-expanded="notifOpen"
           data-testid="pro-notifications-btn"
-          @click="toggleNotif"
+          @click.stop="toggleNotif"
         >
           <ProIcon name="notifications" :size="20" />
           <span v-if="notifCount > 0" class="pro-topbar__badge">{{ notifCount }}</span>
@@ -66,61 +83,94 @@
         </div>
       </div>
 
-      <div class="pro-topbar__dropdown-wrap">
-        <button
-          type="button"
+      <!-- details/summary: opens without Vue hydration (Cloud Run SSR / e2e). -->
+      <details class="pro-topbar__dropdown-wrap" data-testid="pro-profile-details">
+        <summary
           class="pro-topbar__profile-btn"
           :aria-label="$t('components.topbar.profileMenu')"
-          aria-haspopup="true"
-          :aria-expanded="profileOpen"
           data-testid="pro-profile-btn"
-          @click="toggleProfile"
+          @click="notifOpen = false"
         >
           <ProAvatar :src="user?.avatarUrl" :name="userName" size="sm" />
           <span class="pro-topbar__profile-name">{{ userName }}</span>
-        </button>
-        <div v-if="profileOpen" class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
+        </summary>
+        <div class="pro-topbar__dropdown pro-topbar__dropdown--profile" role="menu">
           <p class="pro-topbar__dropdown-title">{{ userName }}</p>
           <p class="pro-topbar__dropdown-email">{{ userEmail }}</p>
+          <div
+            v-if="switchableProfiles.length > 1"
+            class="pro-topbar__profiles"
+            data-testid="pro-profile-switcher"
+          >
+            <p class="pro-topbar__dropdown-section">{{ $t('components.topbar.switchProfile') }}</p>
+            <button
+              v-for="p in switchableProfiles"
+              :key="p.id"
+              type="button"
+              class="pro-topbar__profile-switch"
+              :class="{ 'is-active': p.active }"
+              :disabled="p.active || profileSwitchBusy"
+              :data-testid="`pro-profile-switch-${p.role}`"
+              @click="switchToProfile(p)"
+            >
+              <span>{{ profileRoleLabel(p.role) }}</span>
+              <ProBadge v-if="p.active" variant="success">{{ $t('components.topbar.activeProfile') }}</ProBadge>
+            </button>
+            <p v-if="profileSwitchError" class="pro-topbar__profile-error" role="alert">{{ profileSwitchError }}</p>
+          </div>
           <NuxtLink
             v-if="settingsLink"
             :to="settingsLink"
             class="pro-topbar__dropdown-link"
-            @click="profileOpen = false"
+            @click="closeProfileDetails"
           >
             {{ $t('components.topbar.settings') }}
           </NuxtLink>
-          <button
-            type="button"
+          <a
+            href="/api/auth/logout-redirect"
             class="pro-topbar__logout-btn"
             data-testid="pro-logout-btn"
-            @click="handleLogout"
+            @click="closeProfileDetails"
           >
             {{ $t('common.logout') }}
-          </button>
+          </a>
         </div>
-      </div>
+      </details>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { homePathForRole, isPracticeStaffRole, isProRole } from '~/composables/useAuth'
+
+type ProfileRow = {
+  id: string
+  role: string
+  active?: boolean
+  practiceId?: string
+}
+
 const props = withDefaults(
   defineProps<{
     homeLink?: string
     settingsLink?: string
     showNotifications?: boolean
+    showDeskSwitcher?: boolean
   }>(),
   {
     homeLink: '/',
     settingsLink: undefined,
     showNotifications: true,
+    showDeskSwitcher: true,
   },
 )
 
 const { t } = useI18n()
 const { isDark, toggleTheme } = useColorTheme()
-const { user, fetchUser, logout } = useProUser()
+const { user, fetchUser } = useProUser()
+const { isStaging } = useAppEnv()
+const { captureOriginPage } = useSupportDiagnostics()
+const desk = useDeskSession()
 const {
   items: notifItems,
   count: notifCount,
@@ -131,18 +181,31 @@ const {
 } = useProNotifications()
 
 const notifOpen = ref(false)
-const profileOpen = ref(false)
+const profiles = ref<ProfileRow[]>([])
+const profileSwitchBusy = ref(false)
+const profileSwitchError = ref('')
 
 const userName = computed(() => user.value?.fullName || t('common.user'))
 const userEmail = computed(() => user.value?.email || '')
 const practiceName = computed(() => user.value?.practiceName?.trim() || '')
+/** Tag « S » : environnement staging + session authentifiée. */
+const showStagingTag = computed(() => isStaging.value && !!user.value)
+const showDeskSwitcher = computed(
+  () => props.showDeskSwitcher !== false && isPracticeStaffRole(user.value?.role),
+)
+/** Nuxt Pro : uniquement les profils compatibles face Pro (pas client Flutter). */
+const switchableProfiles = computed(() =>
+  profiles.value.filter((p) => isProRole(p.role)),
+)
 
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
   try {
     await fetchUser()
   } catch { /* 401 handled by middleware */ }
-  if (props.showNotifications) {
+  void loadProfiles()
+  // Idle/bootstrap owned by layout — topbar only renders switcher.
+  if (props.showNotifications && !desk.uiBlocked.value) {
     await refreshNotif()
     startPolling()
   }
@@ -153,9 +216,22 @@ onUnmounted(() => {
   if (props.showNotifications) stopPolling()
 })
 
+watch(
+  () => desk.uiBlocked.value,
+  async (blocked) => {
+    if (!props.showNotifications) return
+    if (blocked) {
+      stopPolling()
+      return
+    }
+    await refreshNotif()
+    startPolling()
+  },
+)
+
 function toggleNotif() {
   notifOpen.value = !notifOpen.value
-  profileOpen.value = false
+  closeProfileDetails()
   if (notifOpen.value) void refreshNotif()
 }
 
@@ -167,21 +243,61 @@ async function handleMarkAllRead() {
   }
 }
 
-function toggleProfile() {
-  profileOpen.value = !profileOpen.value
+function closeProfileDetails() {
+  const el = document.querySelector('[data-testid="pro-profile-details"]') as HTMLDetailsElement | null
+  if (el) el.open = false
+}
+
+function onSupportNav() {
+  captureOriginPage()
+  closeProfileDetails()
   notifOpen.value = false
 }
 
-function handleLogout() {
-  profileOpen.value = false
-  logout()
-}
-
 function onDocClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
+  const target = e.target
+  if (!(target instanceof Element)) return
   if (!target.closest('.pro-topbar__dropdown-wrap')) {
     notifOpen.value = false
-    profileOpen.value = false
+    closeProfileDetails()
+  }
+}
+
+async function loadProfiles() {
+  try {
+    const res: any = await $fetch('/api/me/profiles')
+    const data = res?.data ?? res
+    profiles.value = Array.isArray(data) ? data : (data?.profiles ?? data?.items ?? [])
+  } catch {
+    profiles.value = []
+  }
+}
+
+function profileRoleLabel(role: string) {
+  const key = `components.topbar.profileRole_${role}`
+  const label = t(key)
+  return label === key ? role : label
+}
+
+async function switchToProfile(p: ProfileRow) {
+  if (p.active || profileSwitchBusy.value) return
+  profileSwitchBusy.value = true
+  profileSwitchError.value = ''
+  try {
+    await $fetch('/api/me/profiles/switch', {
+      method: 'POST',
+      body: { profileId: p.id },
+    })
+    closeProfileDetails()
+    await fetchUser().catch(() => null)
+    await loadProfiles()
+    const role = user.value?.role || p.role
+    await navigateTo(homePathForRole(role, { profileComplete: user.value?.profileComplete }))
+  } catch {
+    profileSwitchError.value = t('components.topbar.switchProfileError')
+  } finally {
+    profileSwitchBusy.value = false
   }
 }
 </script>
+

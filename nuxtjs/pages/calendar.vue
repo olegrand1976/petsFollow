@@ -2,7 +2,10 @@
   <div data-testid="calendar-page">
     <ProPageHeader :title="$t('calendar.title')" :subtitle="$t('calendar.subtitle')">
       <template #actions>
-        <NuxtLink to="/settings#calendar" class="pro-btn pro-btn--secondary">
+        <ProButton data-testid="calendar-new-appointment" @click="openNewAppointment()">
+          {{ $t('calendar.newAppointment') }}
+        </ProButton>
+        <NuxtLink to="/settings?tab=calendar" class="pro-btn pro-btn--secondary">
           {{ $t('calendar.openSettings') }}
         </NuxtLink>
       </template>
@@ -49,31 +52,43 @@
             </td>
             <td>
               <div class="pro-flex-gap">
-                <ProButton
+                <ProIconAction
                   v-if="v.status === 'requested' && v.pendingActionBy === 'vet'"
+                  icon="check"
+                  :label="$t('calendar.confirm')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'confirm')"
-                >
-                  {{ $t('calendar.confirm') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  icon="event_available"
+                  :label="$t('calendar.acceptReschedule')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'accept_reschedule')"
-                >
-                  {{ $t('calendar.acceptReschedule') }}
-                </ProButton>
-                <ProButton
+                />
+                <ProIconAction
                   v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
-                  variant="ghost"
+                  icon="close"
+                  :label="$t('calendar.rejectReschedule')"
                   :disabled="busyId === v.id"
                   @click="act(v.id, 'reject_reschedule')"
-                >
-                  {{ $t('calendar.rejectReschedule') }}
-                </ProButton>
-                <ProButton variant="ghost" :disabled="busyId === v.id" @click="act(v.id, 'cancel')">
-                  {{ $t('calendar.cancel') }}
-                </ProButton>
+                />
+                <ProIconAction
+                  v-if="v.status === 'confirmed' && v.consultationSession"
+                  icon="task_alt"
+                  :label="$t('calendar.markDone')"
+                  :disabled="busyId === v.id"
+                  test-id="calendar-walkin-done"
+                  @click="act(v.id, 'done')"
+                />
+                <ProIconAction
+                  v-if="!v.consultationSession"
+                  icon="cancel"
+                  variant="danger"
+                  :label="$t('calendar.cancel')"
+                  :disabled="busyId === v.id"
+                  @click="act(v.id, 'cancel')"
+                />
               </div>
             </td>
           </tr>
@@ -139,7 +154,7 @@
       />
     </ProCard>
 
-    <ProModal v-model:open="detailOpen" :title="$t('calendar.visitDetail')">
+    <ProModal v-model:open="detailOpen" size="xl" :title="$t('calendar.visitDetail')">
       <div v-if="selectedVisit" class="visit-detail">
         <p>
           <strong>{{ $t('calendar.columnClient') }} :</strong>
@@ -154,10 +169,37 @@
         <p>
           <strong>{{ $t('calendar.columnWhen') }} :</strong> {{ formatWhen(selectedVisit) }}
         </p>
-        <p>
+        <p v-if="selectedVisit.visitTypeName" data-testid="visit-type-label">
+          <strong>{{ $t('calendar.visitType') }} :</strong>
+          <span
+            v-if="selectedVisit.visitTypeColor"
+            class="visit-type-dot"
+            :style="{ background: selectedVisit.visitTypeColor }"
+            aria-hidden="true"
+          />
+          {{ selectedVisit.visitTypeName }}
+          <span v-if="selectedVisit.durationMinutes" class="text-muted">
+            ({{ selectedVisit.durationMinutes }} min)
+          </span>
+        </p>
+        <p class="pro-flex-gap" style="align-items: center">
           <strong>{{ $t('calendar.columnStatus') }} :</strong>
           <ProBadge :variant="statusVariant(selectedVisit.status)">
             {{ statusLabel(selectedVisit.status) }}
+          </ProBadge>
+          <ProBadge
+            v-if="selectedVisit.consultationSession"
+            variant="warning"
+            data-testid="visit-walkin-badge"
+          >
+            {{ $t('calendar.walkInSession') }}
+          </ProBadge>
+          <ProBadge
+            v-else-if="selectedVisit.source === 'care_pro'"
+            variant="neutral"
+            data-testid="visit-care-pro-badge"
+          >
+            {{ $t('calendar.sourceCarePro') }}
           </ProBadge>
         </p>
         <p v-if="selectedVisit.preconsultStatus || preconsult" data-testid="visit-preconsult-status">
@@ -216,7 +258,7 @@
           <div class="pro-flex-gap" style="margin-top: 0.5rem">
             <ProButton
               variant="secondary"
-              :disabled="reportBusy || !selectedVisit.id"
+              :disabled="addressBusy || !selectedVisit.id"
               test-id="visit-save-address"
               @click="saveVisitAddress"
             >
@@ -232,82 +274,19 @@
               {{ $t('calendar.openMaps') }}
             </a>
           </div>
+          <p v-if="addressMsg" class="pro-hint">{{ addressMsg }}</p>
         </div>
         <div class="pro-field pro-mb-md">
-          <label class="pro-label" for="visit-report-body">{{ $t('calendar.reportTitle') }}</label>
-          <p class="pro-hint" data-testid="visit-report-ai-banner">{{ $t('calendar.reportAiProposalBanner') }}</p>
-          <textarea
-            id="visit-report-body"
-            v-model="reportBody"
-            class="pro-input"
-            rows="6"
-            data-testid="visit-report-body"
-            :placeholder="$t('calendar.reportHint')"
-            :disabled="reportBusy || reportStatus === 'final'"
+          <ProVisitReportPanel
+            :visit-id="selectedVisit.id"
+            :visit-scheduled-at="selectedVisit.scheduledAt || selectedVisit.proposedScheduledAt"
           />
-          <div class="pro-flex-gap" style="margin-top: 0.5rem">
-            <ProButton
-              variant="secondary"
-              :disabled="reportBusy || reportStatus === 'final'"
-              test-id="visit-report-save"
-              @click="saveVisitReport"
-            >
-              {{ $t('calendar.saveReport') }}
-            </ProButton>
-            <ProButton
-              :disabled="reportBusy || reportStatus === 'final'"
-              test-id="visit-report-improve"
-              @click="improveVisitReport"
-            >
-              {{ $t('calendar.improveReport') }}
-            </ProButton>
-            <ProButton
-              variant="secondary"
-              :disabled="reportBusy || reportStatus === 'final' || !reportBody.trim()"
-              test-id="visit-report-finalize"
-              @click="finalizeVisitReport"
-            >
-              {{ $t('calendar.finalizeReport') }}
-            </ProButton>
-            <label
-              v-if="reportStatus !== 'final'"
-              class="pro-link-btn"
-              style="cursor: pointer"
-            >
-              <input
-                type="file"
-                accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm"
-                style="display: none"
-                data-testid="visit-report-audio"
-                :disabled="reportBusy"
-                @change="onReportAudioSelected"
-              >
-              {{ $t('calendar.transcribeAudio') }}
-            </label>
-          </div>
-          <p v-if="reportStatus === 'final'" class="pro-hint">{{ $t('calendar.reportFinal') }}</p>
-          <p v-if="reportMsg" class="pro-hint">{{ reportMsg }}</p>
-          <details
-            v-if="reportTranscript || reportImproved || reportHistorySaved"
-            class="visit-report-history"
-            data-testid="visit-report-history"
-          >
-            <summary>{{ $t('calendar.reportHistoryTitle') }}</summary>
-            <div class="visit-report-history__block">
-              <h4>{{ $t('calendar.reportHistoryTranscript') }}</h4>
-              <pre v-if="reportTranscript" class="visit-report-history__text">{{ reportTranscript }}</pre>
-              <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
-            </div>
-            <div class="visit-report-history__block">
-              <h4>{{ $t('calendar.reportHistoryImproved') }}</h4>
-              <pre v-if="reportImproved" class="visit-report-history__text">{{ reportImproved }}</pre>
-              <p v-else class="pro-hint">{{ $t('calendar.reportHistoryEmpty') }}</p>
-            </div>
-            <div v-if="reportHistorySaved" class="visit-report-history__block">
-              <h4>{{ $t('calendar.reportHistorySaved') }}</h4>
-              <pre class="visit-report-history__text">{{ reportHistorySaved }}</pre>
-            </div>
-          </details>
+          <ProConsultationTreatmentsPanel
+            v-if="showCalendarDafTreatments"
+            :visit-id="selectedVisit.id"
+            :client-user-id="selectedVisit.clientId || ''"
+            :pet-id="''"
+          />
         </div>
         <div class="pro-flex-gap create-client-actions">
           <label
@@ -318,43 +297,50 @@
             <input v-model="requestPreconsult" type="checkbox" class="pro-checkbox">
             {{ $t('calendar.requestPreconsult') }}
           </label>
-          <ProButton
+          <ProIconAction
             v-if="selectedVisit.status === 'requested' && selectedVisit.pendingActionBy === 'vet'"
+            icon="check"
+            :label="$t('calendar.confirm')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('confirm')"
-          >
-            {{ $t('calendar.confirm') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
+            icon="event_available"
+            :label="$t('calendar.acceptReschedule')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('accept_reschedule')"
-          >
-            {{ $t('calendar.acceptReschedule') }}
-          </ProButton>
-          <ProButton
+          />
+          <ProIconAction
             v-if="selectedVisit.status === 'reschedule_pending' && selectedVisit.pendingActionBy === 'vet'"
-            variant="ghost"
+            icon="close"
+            :label="$t('calendar.rejectReschedule')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('reject_reschedule')"
-          >
-            {{ $t('calendar.rejectReschedule') }}
-          </ProButton>
-          <ProButton
-            v-if="selectedVisit.status === 'confirmed'"
-            variant="secondary"
+          />
+          <ProIconAction
+            v-if="selectedVisit.status === 'confirmed' && !selectedVisit.consultationSession"
+            icon="event"
+            :label="$t('calendar.proposeMove')"
             :disabled="busyId === selectedVisit.id"
             @click="openReschedule(selectedVisit)"
-          >
-            {{ $t('calendar.proposeMove') }}
-          </ProButton>
-          <ProButton
-            variant="ghost"
+          />
+          <ProIconAction
+            v-if="selectedVisit.status === 'confirmed' && selectedVisit.consultationSession"
+            icon="task_alt"
+            :label="$t('calendar.markDone')"
+            :disabled="busyId === selectedVisit.id"
+            test-id="calendar-walkin-done-detail"
+            @click="actFromDetail('done')"
+          />
+          <ProIconAction
+            v-if="!selectedVisit.consultationSession"
+            icon="cancel"
+            variant="danger"
+            :label="$t('calendar.cancel')"
             :disabled="busyId === selectedVisit.id"
             @click="actFromDetail('cancel')"
-          >
-            {{ $t('calendar.cancel') }}
-          </ProButton>
+          />
         </div>
       </div>
     </ProModal>
@@ -384,38 +370,20 @@
         </div>
       </form>
     </ProModal>
-    <ProModal v-model:open="audioConsentOpen" :title="$t('calendar.audioConsentTitle')">
-      <p class="pro-hint">{{ $t('calendar.audioConsent') }}</p>
-      <label class="pro-checkbox-label" data-testid="audio-consent-checkbox-label">
-        <input
-          v-model="audioConsentChecked"
-          type="checkbox"
-          class="pro-checkbox"
-          data-testid="audio-consent-checkbox"
-        >
-        {{ $t('calendar.audioConsentClientCheck') }}
-      </label>
-      <template #footer>
-        <ProButton variant="ghost" test-id="audio-consent-cancel" @click="cancelAudioConsent">
-          {{ $t('calendar.cancel') }}
-        </ProButton>
-        <ProButton
-          test-id="audio-consent-accept"
-          :disabled="!audioConsentChecked"
-          @click="acceptAudioConsent"
-        >
-          {{ $t('calendar.audioConsentAccept') }}
-        </ProButton>
-      </template>
-    </ProModal>
+
+    <ProNewAppointmentModal
+      v-model:open="newApptOpen"
+      :visits="visits"
+      :default-day="newApptDay"
+      @created="onAppointmentCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { CalendarVacation, CalendarVisit } from '~/composables/useCalendarGrid'
-import { mapVisitReportFields, persistedHistoryBody } from '~/utils/visitReport'
 
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'calendar.manage' })
 
 type CalendarViewMode = 'week' | 'month'
 
@@ -423,6 +391,11 @@ const route = useRoute()
 const { t } = useI18n()
 const { formatDate, dateLocale } = useFormatters()
 const { mapError } = useApiError()
+const { canPractice } = usePracticePerms()
+const runtimeConfig = useRuntimeConfig()
+const showCalendarDafTreatments = computed(
+  () => isPublicFlagOn(runtimeConfig.public.pharmacyEnabled) && canPractice('pharmacy.write'),
+)
 const {
   startOfDay,
   startOfWeek,
@@ -430,6 +403,7 @@ const {
   monthGridRange,
   visitDisplayAt,
   statusVariant,
+  dayKey,
 } = useCalendarGrid()
 
 const pending = ref<CalendarVisit[]>([])
@@ -442,6 +416,18 @@ const busyId = ref('')
 const requestPreconsult = ref(false)
 const focusVisitId = ref('')
 const anchorDate = ref(startOfDay(new Date()))
+const newApptOpen = ref(false)
+const newApptDay = ref('')
+
+function openNewAppointment(day?: Date) {
+  newApptDay.value = day ? dayKey(startOfDay(day)) : dayKey(startOfDay(new Date()))
+  newApptOpen.value = true
+}
+
+async function onAppointmentCreated() {
+  actionSuccess.value = t('calendar.newAppointmentCreated')
+  await load()
+}
 
 const viewMode = ref<CalendarViewMode>('week')
 if (import.meta.client) {
@@ -452,13 +438,8 @@ if (import.meta.client) {
 const detailOpen = ref(false)
 const selectedVisit = ref<CalendarVisit | null>(null)
 const visitAddress = ref('')
-const reportBody = ref('')
-const reportPersistedBody = ref('')
-const reportTranscript = ref('')
-const reportImproved = ref('')
-const reportStatus = ref('')
-const reportBusy = ref(false)
-const reportMsg = ref('')
+const addressBusy = ref(false)
+const addressMsg = ref('')
 const preconsult = ref<{
   status?: string
   answers?: {
@@ -472,10 +453,6 @@ const preconsult = ref<{
     comment?: string
   }
 } | null>(null)
-
-const reportHistorySaved = computed(() =>
-  persistedHistoryBody(reportPersistedBody.value, reportTranscript.value, reportImproved.value),
-)
 
 const preconsultStatusLabel = computed(() => {
   const st = preconsult.value?.status || selectedVisit.value?.preconsultStatus || ''
@@ -509,9 +486,6 @@ function preconsultEnumLabel(kind: 'duration' | 'behavior' | 'scale' | 'urgency'
   const translated = t(key)
   return translated === key ? value : translated
 }
-const audioConsentOpen = ref(false)
-const audioConsentChecked = ref(false)
-const pendingAudioFile = ref<File | null>(null)
 const rescheduleOpen = ref(false)
 const rescheduleVisitId = ref('')
 const rescheduleAt = ref('')
@@ -630,7 +604,9 @@ async function load() {
     visits.value = cal.visits ?? []
     vacations.value = cal.vacations ?? []
     const todayCal = todayRes.data ?? todayRes
-    todayVisitCount.value = (todayCal.visits ?? []).length
+    todayVisitCount.value = (todayCal.visits ?? []).filter(
+      (v: CalendarVisit) => !v.consultationSession,
+    ).length
     const sched = schedRes.data ?? schedRes
     clientBookingEnabled.value = !!sched.clientBookingEnabled
   } catch (e: any) {
@@ -640,6 +616,8 @@ async function load() {
 }
 
 async function act(id: string, action: string) {
+  if (action === 'cancel' && !window.confirm(t('calendar.cancelConfirm'))) return
+  if (action === 'reject_reschedule' && !window.confirm(t('calendar.rejectRescheduleConfirm'))) return
   busyId.value = id
   actionError.value = ''
   try {
@@ -663,28 +641,13 @@ async function actFromDetail(action: string) {
   await act(selectedVisit.value.id, action)
 }
 
-function applyReportPayload(data: Record<string, unknown> | null | undefined) {
-  const mapped = mapVisitReportFields(data)
-  reportBody.value = mapped.bodyText
-  reportPersistedBody.value = mapped.bodyText
-  reportTranscript.value = mapped.transcriptText
-  reportImproved.value = mapped.improvedText
-  reportStatus.value = mapped.status
-}
-
 function openVisitDetail(v: CalendarVisit) {
   selectedVisit.value = v
   visitAddress.value = v.addressText || ''
-  reportBody.value = ''
-  reportPersistedBody.value = ''
-  reportTranscript.value = ''
-  reportImproved.value = ''
-  reportStatus.value = ''
-  reportMsg.value = ''
+  addressMsg.value = ''
   preconsult.value = null
   focusVisitId.value = v.id
   detailOpen.value = true
-  void loadVisitReport(v.id)
   void loadVisitPreconsult(v.id)
 }
 
@@ -703,19 +666,10 @@ async function loadVisitPreconsult(visitId: string) {
   }
 }
 
-async function loadVisitReport(visitId: string) {
-  try {
-    const res: any = await $fetch(`/api/visits/${visitId}/report`)
-    applyReportPayload(res.data ?? res)
-  } catch {
-    applyReportPayload(null)
-  }
-}
-
 async function saveVisitAddress() {
   if (!selectedVisit.value) return
-  reportBusy.value = true
-  reportMsg.value = ''
+  addressBusy.value = true
+  addressMsg.value = ''
   try {
     const nextAddress = visitAddress.value.trim()
     const prevAddress = (selectedVisit.value.addressText || '').trim()
@@ -735,116 +689,12 @@ async function saveVisitAddress() {
       lat: clearCoords ? (data.lat ?? null) : (data.lat ?? selectedVisit.value.lat),
       lng: clearCoords ? (data.lng ?? null) : (data.lng ?? selectedVisit.value.lng),
     }
-    reportMsg.value = t('calendar.addressSaved')
+    addressMsg.value = t('calendar.addressSaved')
     await load()
   } catch (e: any) {
-    reportMsg.value = mapError(e)
+    addressMsg.value = mapError(e)
   } finally {
-    reportBusy.value = false
-  }
-}
-
-async function saveVisitReport() {
-  if (!selectedVisit.value || reportStatus.value === 'final') return
-  reportBusy.value = true
-  reportMsg.value = ''
-  try {
-    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
-      method: 'PUT',
-      body: { bodyText: reportBody.value },
-    })
-    applyReportPayload(res.data ?? res)
-    reportMsg.value = t('calendar.reportSaved')
-  } catch (e: any) {
-    reportMsg.value = mapError(e)
-  } finally {
-    reportBusy.value = false
-  }
-}
-
-async function improveVisitReport() {
-  if (!selectedVisit.value || reportStatus.value === 'final') return
-  reportBusy.value = true
-  reportMsg.value = ''
-  try {
-    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
-      method: 'PUT',
-      body: { bodyText: reportBody.value },
-    })
-    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/improve`, {
-      method: 'POST',
-    })
-    applyReportPayload(res.data ?? res)
-    reportMsg.value = t('calendar.reportImproved')
-  } catch (e: any) {
-    reportMsg.value = mapError(e)
-  } finally {
-    reportBusy.value = false
-  }
-}
-
-async function finalizeVisitReport() {
-  if (!selectedVisit.value || reportStatus.value === 'final') return
-  reportBusy.value = true
-  reportMsg.value = ''
-  try {
-    await $fetch(`/api/visits/${selectedVisit.value.id}/report`, {
-      method: 'PUT',
-      body: { bodyText: reportBody.value },
-    })
-    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/finalize`, {
-      method: 'POST',
-    })
-    applyReportPayload(res.data ?? res)
-    reportMsg.value = t('calendar.reportFinalized')
-  } catch (e: any) {
-    reportMsg.value = mapError(e)
-  } finally {
-    reportBusy.value = false
-  }
-}
-
-async function onReportAudioSelected(ev: Event) {
-  if (!selectedVisit.value || reportStatus.value === 'final') return
-  const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-  pendingAudioFile.value = file
-  audioConsentChecked.value = false
-  audioConsentOpen.value = true
-}
-
-function cancelAudioConsent() {
-  pendingAudioFile.value = null
-  audioConsentChecked.value = false
-  audioConsentOpen.value = false
-}
-
-async function acceptAudioConsent() {
-  if (!audioConsentChecked.value) return
-  const file = pendingAudioFile.value
-  pendingAudioFile.value = null
-  audioConsentOpen.value = false
-  audioConsentChecked.value = false
-  if (!file || !selectedVisit.value || reportStatus.value === 'final') return
-  reportBusy.value = true
-  reportMsg.value = ''
-  try {
-    const form = new FormData()
-    form.append('audio', file, file.name)
-    form.append('clientAudioConsent', 'true')
-    const res: any = await $fetch(`/api/visits/${selectedVisit.value.id}/report/transcribe`, {
-      method: 'POST',
-      body: form,
-    })
-    const data = res.data ?? res
-    applyReportPayload(data)
-    reportMsg.value = t('calendar.reportTranscribed')
-  } catch (e: any) {
-    reportMsg.value = mapError(e)
-  } finally {
-    reportBusy.value = false
+    addressBusy.value = false
   }
 }
 
@@ -1005,6 +855,14 @@ watch(
 .visit-detail p {
   margin: 0.4rem 0;
 }
+.visit-type-dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  margin: 0 0.35rem 0 0.15rem;
+  vertical-align: middle;
+}
 .preconsult-answers {
   margin: 0.75rem 0 1rem;
   padding: 0.75rem;
@@ -1024,35 +882,6 @@ watch(
 }
 .preconsult-dl dd {
   margin: 0.15rem 0 0;
-}
-.visit-report-history {
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--pf-vet-border);
-  border-radius: var(--pf-vet-radius-md, 8px);
-  background: var(--pf-vet-surface);
-}
-.visit-report-history summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--pf-vet-primary);
-}
-.visit-report-history__block {
-  margin-top: 0.65rem;
-}
-.visit-report-history__block h4 {
-  margin: 0 0 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.visit-report-history__text {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: inherit;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: var(--pf-vet-text, inherit);
 }
 .pro-inline-feedback--error {
   background: color-mix(in srgb, var(--pf-vet-alert) 10%, var(--pf-vet-surface));

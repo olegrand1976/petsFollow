@@ -11,15 +11,55 @@ func TestCalculateBPM(t *testing.T) {
 	}
 }
 
-func TestIsHeartRateAlert(t *testing.T) {
-	if !IsHeartRateAlert(50, 60, 140) {
-		t.Fatal("expected alert for low bpm")
+
+func TestSupportsHeartRateControl(t *testing.T) {
+	if !SupportsHeartRateControl("dog") || !SupportsHeartRateControl("cat") || !SupportsHeartRateControl("horse") {
+		t.Fatal("expected dog/cat/horse supported")
 	}
-	if !IsHeartRateAlert(150, 60, 140) {
-		t.Fatal("expected alert for high bpm")
+	if SupportsHeartRateControl("other") || SupportsHeartRateControl("") || SupportsHeartRateControl("cattle") {
+		t.Fatal("expected other/empty/cattle unsupported")
 	}
-	if IsHeartRateAlert(80, 60, 140) {
-		t.Fatal("expected no alert")
+}
+
+func TestIsFoodChainSpecies(t *testing.T) {
+	for _, sp := range []string{"horse", "donkey", "cattle", "sheep", "goat", "pig", "poultry", "rabbit", "alpaca", "llama"} {
+		if !IsFoodChainSpecies(sp) {
+			t.Fatalf("expected %s food-chain", sp)
+		}
+	}
+	if IsFoodChainSpecies("dog") || IsFoodChainSpecies("cat") || IsFoodChainSpecies("other") {
+		t.Fatal("expected companion species not food-chain UI")
+	}
+}
+
+func TestDefaultFoodChainStatus(t *testing.T) {
+	if got := DefaultFoodChainStatus("cattle"); got != "food_producing" {
+		t.Fatalf("cattle: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("alpaca"); got != "food_producing" {
+		t.Fatalf("alpaca: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("horse"); got != "companion" {
+		t.Fatalf("horse: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("rabbit"); got != "companion" {
+		t.Fatalf("rabbit: got %q", got)
+	}
+	if got := DefaultFoodChainStatus("dog"); got != "companion" {
+		t.Fatalf("dog: got %q", got)
+	}
+}
+
+func TestIsHeartRateDeltaAlert(t *testing.T) {
+	prev := 80
+	if !IsHeartRateDeltaAlert(110, &prev, 30) {
+		t.Fatal("expected alert for +30")
+	}
+	if IsHeartRateDeltaAlert(109, &prev, 30) {
+		t.Fatal("expected no alert for +29")
+	}
+	if IsHeartRateDeltaAlert(110, nil, 30) {
+		t.Fatal("expected no alert without previous")
 	}
 }
 

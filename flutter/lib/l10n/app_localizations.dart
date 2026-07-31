@@ -148,6 +148,24 @@ abstract class AppLocalizations {
   /// **'Confirmez d\'abord votre email (lien reçu à l\'inscription), puis reconnectez-vous.'**
   String get emailNotVerified;
 
+  /// No description provided for @resendConfirmation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer l\'email de confirmation'**
+  String get resendConfirmation;
+
+  /// No description provided for @resendConfirmationSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si le compte existe et n\'est pas encore confirmé, un nouvel email a été envoyé.'**
+  String get resendConfirmationSent;
+
+  /// No description provided for @resendConfirmationFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi impossible. Réessayez dans un instant.'**
+  String get resendConfirmationFailed;
+
   /// No description provided for @loginOr.
   ///
   /// In fr, this message translates to:
@@ -352,6 +370,12 @@ abstract class AppLocalizations {
   /// **'Compte créé. Ouvrez le lien dans l\'email de validation, puis revenez vous connecter dans l\'app.'**
   String get registerSuccess;
 
+  /// No description provided for @registerInviteNotApplied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte créé, mais le code d\'invitation n\'a pas pu être appliqué. Vous pourrez le ressaisir après connexion.'**
+  String get registerInviteNotApplied;
+
   /// No description provided for @registerFailed.
   ///
   /// In fr, this message translates to:
@@ -544,6 +568,36 @@ abstract class AppLocalizations {
   /// **'Finaliser'**
   String get proLightFinalizeReport;
 
+  /// No description provided for @proLightNewConsultation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle Consultation'**
+  String get proLightNewConsultation;
+
+  /// No description provided for @proLightConsultationNextTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation enregistrée — suite ?'**
+  String get proLightConsultationNextTitle;
+
+  /// No description provided for @proLightConsultationCtaDaf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un DAF & Facturer'**
+  String get proLightConsultationCtaDaf;
+
+  /// No description provided for @proLightConsultationCtaInvoice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturer directement'**
+  String get proLightConsultationCtaInvoice;
+
+  /// No description provided for @proLightConsultationCtaDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get proLightConsultationCtaDone;
+
   /// No description provided for @proLightReportFinal.
   ///
   /// In fr, this message translates to:
@@ -685,8 +739,14 @@ abstract class AppLocalizations {
   /// No description provided for @proLightDictationStop.
   ///
   /// In fr, this message translates to:
-  /// **'Arrêter & transcrire'**
+  /// **'Arrêter'**
   String get proLightDictationStop;
+
+  /// No description provided for @proLightRecordingInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement en cours'**
+  String get proLightRecordingInProgress;
 
   /// No description provided for @proLightAudioConsentTitle.
   ///
@@ -868,6 +928,30 @@ abstract class AppLocalizations {
   /// **'Enregistrer et continuer'**
   String get forceChangePasswordSubmit;
 
+  /// No description provided for @acceptTermsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions d\'utilisation'**
+  String get acceptTermsTitle;
+
+  /// No description provided for @acceptTermsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte a été créé par votre cabinet. Acceptez les conditions et la politique de confidentialité pour continuer.'**
+  String get acceptTermsSubtitle;
+
+  /// No description provided for @acceptTermsSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter et continuer'**
+  String get acceptTermsSubmit;
+
+  /// No description provided for @acceptTermsFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer le consentement. Réessayez.'**
+  String get acceptTermsFailed;
+
   /// No description provided for @passwordTooShort.
   ///
   /// In fr, this message translates to:
@@ -921,6 +1005,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous devez accepter les conditions et la politique de confidentialité.'**
   String get registerConsentRequired;
+
+  /// No description provided for @registerInviteCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code d\'invitation (optionnel)'**
+  String get registerInviteCode;
+
+  /// No description provided for @registerInviteCodeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code du QR / lien commercial'**
+  String get registerInviteCodeHint;
 
   /// No description provided for @nearbyCommercialTitle.
   ///
@@ -1231,13 +1327,13 @@ abstract class AppLocalizations {
   /// No description provided for @legalPrivacyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@ll-it-sc.be.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
   String get legalPrivacyBody;
 
   /// No description provided for @legalNoticeBody.
   ///
   /// In fr, this message translates to:
-  /// **'Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@ll-it-sc.be\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Mentions légales — petsFollow\n\nÉditeur : LL-IT-SC / petsFollow\nContact : support@petsfollow.app\n\nHébergement : Google Cloud Platform (conformité RGPD).\n\nDirecteur de publication : petsFollow.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/mentions\n\nDate d\'actualisation : juillet 2026'**
   String get legalNoticeBody;
 
   /// No description provided for @language.
@@ -1281,6 +1377,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Italiano'**
   String get languageIt;
+
+  /// No description provided for @appearance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Apparence'**
+  String get appearance;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get themeDark;
 
   /// No description provided for @planMonthlyLabel.
   ///
@@ -1420,6 +1534,12 @@ abstract class AppLocalizations {
   /// **'Nom'**
   String get petName;
 
+  /// No description provided for @petNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le nom de l’animal'**
+  String get petNameRequired;
+
   /// No description provided for @species.
   ///
   /// In fr, this message translates to:
@@ -1431,6 +1551,108 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Race'**
   String get breed;
+
+  /// No description provided for @petMicrochipOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'N° de puce (optionnel)'**
+  String get petMicrochipOptional;
+
+  /// No description provided for @petHealthBookNumberOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'N° de carnet (optionnel)'**
+  String get petHealthBookNumberOptional;
+
+  /// No description provided for @petDomicileLocation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Domicile / écurie'**
+  String get petDomicileLocation;
+
+  /// No description provided for @petDomicileHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. Écurie des Saules — Bruxelles'**
+  String get petDomicileHint;
+
+  /// No description provided for @petFoodChainStatus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut chaîne alimentaire'**
+  String get petFoodChainStatus;
+
+  /// No description provided for @petFoodChainCompanion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal de compagnie (hors chaîne)'**
+  String get petFoodChainCompanion;
+
+  /// No description provided for @petFoodChainFoodProducing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal de rente / chaîne alimentaire'**
+  String get petFoodChainFoodProducing;
+
+  /// No description provided for @petFoodChainExcluded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exclu de la chaîne alimentaire'**
+  String get petFoodChainExcluded;
+
+  /// No description provided for @petHealthBookAddPages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter des photos du carnet'**
+  String get petHealthBookAddPages;
+
+  /// No description provided for @petHealthBookReplacePages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer le PDF (photos)'**
+  String get petHealthBookReplacePages;
+
+  /// No description provided for @petHealthBookPagesCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} page(s) sélectionnée(s)'**
+  String petHealthBookPagesCount(int count);
+
+  /// No description provided for @petHealthBookPdfAttached.
+  ///
+  /// In fr, this message translates to:
+  /// **'PDF du carnet joint'**
+  String get petHealthBookPdfAttached;
+
+  /// No description provided for @petHealthBookRemovePdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get petHealthBookRemovePdf;
+
+  /// No description provided for @petHealthBookOpenPdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le carnet (PDF)'**
+  String get petHealthBookOpenPdf;
+
+  /// No description provided for @petMicrochipLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Puce : {number}'**
+  String petMicrochipLabel(String number);
+
+  /// No description provided for @petHealthBookNumberLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carnet : {number}'**
+  String petHealthBookNumberLabel(String number);
+
+  /// No description provided for @errorHealthBookUploadFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal enregistré, mais le carnet n\'a pas pu être envoyé'**
+  String get errorHealthBookUploadFailed;
 
   /// No description provided for @choosePlan.
   ///
@@ -1459,8 +1681,26 @@ abstract class AppLocalizations {
   /// No description provided for @continueToPayment.
   ///
   /// In fr, this message translates to:
-  /// **'Continuer vers le paiement'**
+  /// **'Enregistrer et payer'**
   String get continueToPayment;
+
+  /// No description provided for @petFormSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get petFormSave;
+
+  /// No description provided for @petSavedPendingPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal enregistré — activez-le pour accéder aux fonctionnalités'**
+  String get petSavedPendingPayment;
+
+  /// No description provided for @paymentFeaturesLocked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement requis pour utiliser les fonctionnalités de cet animal'**
+  String get paymentFeaturesLocked;
 
   /// No description provided for @paymentConfirmed.
   ///
@@ -1507,7 +1747,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentRequired.
   ///
   /// In fr, this message translates to:
-  /// **'Abonnement requis pour envoyer des médias'**
+  /// **'Abonnement requis pour utiliser cette fonctionnalité'**
   String get errorPaymentRequired;
 
   /// No description provided for @errorPhotoUploadFailed.
@@ -1570,6 +1810,12 @@ abstract class AppLocalizations {
   /// **'Aucune durée de mesure n’est configurée pour ce cabinet. Contactez votre vétérinaire.'**
   String get heartRateNoDurationConfigured;
 
+  /// No description provided for @heartRateNotSupported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le relevé cardiaque n’est pas disponible pour cette espèce'**
+  String get heartRateNotSupported;
+
   /// No description provided for @start.
   ///
   /// In fr, this message translates to:
@@ -1609,7 +1855,7 @@ abstract class AppLocalizations {
   /// No description provided for @thresholdAlert.
   ///
   /// In fr, this message translates to:
-  /// **'Alerte seuil'**
+  /// **'Alerte : hausse significative vs le relevé précédent'**
   String get thresholdAlert;
 
   /// No description provided for @validateAndSend.
@@ -1690,6 +1936,60 @@ abstract class AppLocalizations {
   /// **'Cheval'**
   String get speciesHorse;
 
+  /// No description provided for @speciesDonkey.
+  ///
+  /// In fr, this message translates to:
+  /// **'Âne'**
+  String get speciesDonkey;
+
+  /// No description provided for @speciesCattle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bovin'**
+  String get speciesCattle;
+
+  /// No description provided for @speciesSheep.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ovin'**
+  String get speciesSheep;
+
+  /// No description provided for @speciesGoat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Caprin'**
+  String get speciesGoat;
+
+  /// No description provided for @speciesPig.
+  ///
+  /// In fr, this message translates to:
+  /// **'Porcin'**
+  String get speciesPig;
+
+  /// No description provided for @speciesPoultry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Volaille'**
+  String get speciesPoultry;
+
+  /// No description provided for @speciesRabbit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lapin'**
+  String get speciesRabbit;
+
+  /// No description provided for @speciesAlpaca.
+  ///
+  /// In fr, this message translates to:
+  /// **'Alpaga'**
+  String get speciesAlpaca;
+
+  /// No description provided for @speciesLlama.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lama'**
+  String get speciesLlama;
+
   /// No description provided for @speciesOther.
   ///
   /// In fr, this message translates to:
@@ -1723,13 +2023,13 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryMission.
   ///
   /// In fr, this message translates to:
-  /// **'Votre parcours en 7 jours'**
+  /// **'Votre parcours petsFollow'**
   String get discoveryMission;
 
   /// No description provided for @discoveryDay0Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 0 — Bienvenue'**
+  /// **'Étape 1 — Bienvenue'**
   String get discoveryDay0Title;
 
   /// No description provided for @discoveryDay0Body.
@@ -1741,7 +2041,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay2Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 2 — Première mesure'**
+  /// **'Étape 2 — Première mesure'**
   String get discoveryDay2Title;
 
   /// No description provided for @discoveryDay2Body.
@@ -1753,7 +2053,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay4Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 4 — Routine'**
+  /// **'Étape 3 — Routine'**
   String get discoveryDay4Title;
 
   /// No description provided for @discoveryDay4Body.
@@ -1765,7 +2065,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDay6Title.
   ///
   /// In fr, this message translates to:
-  /// **'Jour 6 — Partage véto'**
+  /// **'Étape 4 — Partage véto'**
   String get discoveryDay6Title;
 
   /// No description provided for @discoveryDay6Body.
@@ -1797,6 +2097,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun vétérinaire lié'**
   String get noVets;
+
+  /// No description provided for @vetLinkRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez un vétérinaire pour activer le suivi avec votre cabinet'**
+  String get vetLinkRequired;
+
+  /// No description provided for @linkVetAfterSaveTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un vétérinaire'**
+  String get linkVetAfterSaveTitle;
+
+  /// No description provided for @linkVetAfterSaveBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez un cabinet pour activer messagerie, visites et rappels de soins.'**
+  String get linkVetAfterSaveBody;
+
+  /// No description provided for @linkVetHomeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un vétérinaire ?'**
+  String get linkVetHomeTitle;
+
+  /// No description provided for @linkVetHomeBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre animal est enregistré. Souhaitez-vous lier un vétérinaire ? C’est optionnel — vous pourrez le faire plus tard.'**
+  String get linkVetHomeBody;
+
+  /// No description provided for @linkVetLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get linkVetLater;
 
   /// No description provided for @primaryVet.
   ///
@@ -2068,6 +2404,18 @@ abstract class AppLocalizations {
   /// **'Tag portée'**
   String get litterTag;
 
+  /// No description provided for @petBirthDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance'**
+  String get petBirthDate;
+
+  /// No description provided for @petBirthDateInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance invalide (AAAA-MM-JJ)'**
+  String get petBirthDateInvalid;
+
   /// No description provided for @discoveryMarkDone.
   ///
   /// In fr, this message translates to:
@@ -2251,7 +2599,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryDayBadge.
   ///
   /// In fr, this message translates to:
-  /// **'J{day}'**
+  /// **'E{day}'**
   String discoveryDayBadge(int day);
 
   /// No description provided for @timelineTypeHeartrate.
@@ -2314,6 +2662,72 @@ abstract class AppLocalizations {
   /// **'Aucune conversation'**
   String get noThreads;
 
+  /// No description provided for @messageNoMessagesYet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore de messages'**
+  String get messageNoMessagesYet;
+
+  /// No description provided for @messageNewConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get messageNewConversation;
+
+  /// No description provided for @messageComposeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get messageComposeTitle;
+
+  /// No description provided for @messageChoosePro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Professionnel de soins'**
+  String get messageChoosePro;
+
+  /// No description provided for @messageChooseClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Client'**
+  String get messageChooseClient;
+
+  /// No description provided for @messageChoosePet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal concerné'**
+  String get messageChoosePet;
+
+  /// No description provided for @messageChoosePetOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Animal (optionnel)'**
+  String get messageChoosePetOptional;
+
+  /// No description provided for @messageGeneralThread.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation générale'**
+  String get messageGeneralThread;
+
+  /// No description provided for @messageStartConversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer'**
+  String get messageStartConversation;
+
+  /// No description provided for @messageLockedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messagerie indisponible'**
+  String get messageLockedTitle;
+
+  /// No description provided for @messageLockedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liez un vétérinaire pour discuter avec un professionnel de soins.'**
+  String get messageLockedBody;
+
   /// No description provided for @vetInviteSent.
   ///
   /// In fr, this message translates to:
@@ -2335,8 +2749,68 @@ abstract class AppLocalizations {
   /// No description provided for @addVetSearchHint.
   ///
   /// In fr, this message translates to:
-  /// **'Nous recherchons ce compte vétérinaire dans petsFollow. S’il existe, une demande de liaison est envoyée au cabinet.'**
+  /// **'Recherchez par nom, email ou cabinet. S’il est déjà sur petsFollow, une demande de liaison est envoyée au cabinet.'**
   String get addVetSearchHint;
+
+  /// No description provided for @addVetSearchLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un vétérinaire'**
+  String get addVetSearchLabel;
+
+  /// No description provided for @addVetSearchFieldHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom, email ou cabinet'**
+  String get addVetSearchFieldHint;
+
+  /// No description provided for @addVetNotListed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon véto n’est pas listé'**
+  String get addVetNotListed;
+
+  /// No description provided for @addVetSuggestTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau vétérinaire'**
+  String get addVetSuggestTitle;
+
+  /// No description provided for @addVetSuggestBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l’email et le téléphone du cabinet. Nous le contacterons pour qu’il rejoigne petsFollow.'**
+  String get addVetSuggestBody;
+
+  /// No description provided for @addVetSuggestEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email du cabinet'**
+  String get addVetSuggestEmail;
+
+  /// No description provided for @addVetSuggestPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get addVetSuggestPhone;
+
+  /// No description provided for @addVetSuggestNameOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du véto (optionnel)'**
+  String get addVetSuggestNameOptional;
+
+  /// No description provided for @addVetSuggestCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la suggestion'**
+  String get addVetSuggestCta;
+
+  /// No description provided for @vetSuggestSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci — nous contactons le cabinet. Vous serez notifié quand il rejoindra petsFollow.'**
+  String get vetSuggestSent;
 
   /// No description provided for @visitRequested.
   ///
@@ -2488,6 +2962,12 @@ abstract class AppLocalizations {
   /// **'Prendre une photo'**
   String get takePhoto;
 
+  /// No description provided for @takeVideo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filmer une vidéo'**
+  String get takeVideo;
+
   /// No description provided for @chooseFromGallery.
   ///
   /// In fr, this message translates to:
@@ -2512,6 +2992,12 @@ abstract class AppLocalizations {
   /// **'Vidéo'**
   String get attachVideo;
 
+  /// No description provided for @compressingMedia.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compression de la vidéo…'**
+  String get compressingMedia;
+
   /// No description provided for @openMedia.
   ///
   /// In fr, this message translates to:
@@ -2535,6 +3021,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Affichez ce QR ou partagez le lien. Un nouveau client qui s’inscrit via ce lien est rattaché automatiquement.'**
   String get appInviteHint;
+
+  /// No description provided for @appInviteHintClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez ce QR avec un proche. Il sera lié à vous (parrainage) et pourra rejoindre votre cabinet s’il n’en a pas encore.'**
+  String get appInviteHintClient;
+
+  /// No description provided for @appInviteHintCommercial.
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux liens : clients (app) et cabinets (inscription Pro avec votre code parrain).'**
+  String get appInviteHintCommercial;
 
   /// No description provided for @appInviteHintShort.
   ///
@@ -2590,11 +3088,101 @@ abstract class AppLocalizations {
   /// **'QR invitation clients et accès au site Pro.'**
   String get commercialFieldSubtitle;
 
+  /// No description provided for @commercialManagerFieldSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats d\'équipe, QR invitation et accès au site Pro.'**
+  String get commercialManagerFieldSubtitle;
+
   /// No description provided for @commercialOpenProWeb.
   ///
   /// In fr, this message translates to:
   /// **'Ouvrir le site Pro'**
   String get commercialOpenProWeb;
+
+  /// No description provided for @managerTeamCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats de mon équipe'**
+  String get managerTeamCta;
+
+  /// No description provided for @managerTeamTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Équipe'**
+  String get managerTeamTitle;
+
+  /// No description provided for @managerTeamSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats équipe'**
+  String get managerTeamSection;
+
+  /// No description provided for @managerSelfSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes résultats'**
+  String get managerSelfSection;
+
+  /// No description provided for @managerMembersSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commerciaux'**
+  String get managerMembersSection;
+
+  /// No description provided for @managerTeamEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun commercial rattaché.'**
+  String get managerTeamEmpty;
+
+  /// No description provided for @managerKpiProspects.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prospects'**
+  String get managerKpiProspects;
+
+  /// No description provided for @managerKpiConverted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Convertis'**
+  String get managerKpiConverted;
+
+  /// No description provided for @managerKpiConversion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de conversion'**
+  String get managerKpiConversion;
+
+  /// No description provided for @managerKpiAppointments.
+  ///
+  /// In fr, this message translates to:
+  /// **'RDV à venir'**
+  String get managerKpiAppointments;
+
+  /// No description provided for @managerKpiStale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stale pipeline'**
+  String get managerKpiStale;
+
+  /// No description provided for @managerKpiMonthEarned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commissions (mois)'**
+  String get managerKpiMonthEarned;
+
+  /// No description provided for @managerKpiLifetimeEarned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commissions (total)'**
+  String get managerKpiLifetimeEarned;
+
+  /// No description provided for @managerKpiVets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Véto assignés'**
+  String get managerKpiVets;
 
   /// No description provided for @featureModules.
   ///
@@ -2937,6 +3525,240 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'CR IA disponible si le cabinet de la visite a le module activé.'**
   String get proLightAiModuleVisitScopedBanner;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get supportTitle;
+
+  /// No description provided for @supportHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le bug. Les diagnostics techniques des 15 dernières minutes sont joints automatiquement.'**
+  String get supportHint;
+
+  /// No description provided for @supportSubject.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sujet'**
+  String get supportSubject;
+
+  /// No description provided for @supportMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get supportMessage;
+
+  /// No description provided for @supportDiagnosticsAttached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics joints automatiquement (erreurs, requêtes, configuration).'**
+  String get supportDiagnosticsAttached;
+
+  /// No description provided for @supportSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get supportSubmit;
+
+  /// No description provided for @supportSending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi…'**
+  String get supportSending;
+
+  /// No description provided for @supportSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message envoyé. Merci !'**
+  String get supportSuccess;
+
+  /// No description provided for @supportErrorRateLimit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de tickets récemment. Réessayez dans une heure.'**
+  String get supportErrorRateLimit;
+
+  /// No description provided for @supportErrorTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics trop volumineux. Relancez l\'app et réessayez.'**
+  String get supportErrorTooLarge;
+
+  /// No description provided for @supportMenu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support'**
+  String get supportMenu;
+
+  /// No description provided for @appInviteHintSales.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).'**
+  String get appInviteHintSales;
+
+  /// No description provided for @appInviteCopyVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien inscription cabinet'**
+  String get appInviteCopyVet;
+
+  /// No description provided for @appInviteCopyClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien invitation client'**
+  String get appInviteCopyClient;
+
+  /// No description provided for @sendDossierToPro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer vers un pro'**
+  String get sendDossierToPro;
+
+  /// No description provided for @sendDossierEmailLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail du professionnel'**
+  String get sendDossierEmailLabel;
+
+  /// No description provided for @sendDossierEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'vet@cabinet.be'**
+  String get sendDossierEmailHint;
+
+  /// No description provided for @sendDossierConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get sendDossierConfirm;
+
+  /// No description provided for @sendDossierSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dossier envoyé — lien valable 24 h.'**
+  String get sendDossierSuccess;
+
+  /// No description provided for @sendDossierInvalidEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail invalide.'**
+  String get sendDossierInvalidEmail;
+
+  /// No description provided for @sendDossierPhiWarning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce dossier contient des données de santé : comptes rendus de visite, carnet de santé et documents. Le lien reste valable 24 h et n\'importe qui le possédant pourra les consulter.'**
+  String get sendDossierPhiWarning;
+
+  /// No description provided for @sendDossierPhiConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte de partager ces données de santé avec ce professionnel.'**
+  String get sendDossierPhiConsent;
+
+  /// No description provided for @consultationsHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultations'**
+  String get consultationsHistory;
+
+  /// No description provided for @consultationTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation'**
+  String get consultationTitle;
+
+  /// No description provided for @consultationTitleWithPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation — {petName}'**
+  String consultationTitleWithPet(String petName);
+
+  /// No description provided for @consultationVisitMeta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Visite'**
+  String get consultationVisitMeta;
+
+  /// No description provided for @consultationReportBy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte-rendu par {author}'**
+  String consultationReportBy(String author);
+
+  /// No description provided for @consultationReportFallback.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte-rendu'**
+  String get consultationReportFallback;
+
+  /// No description provided for @consultationReportEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'(vide)'**
+  String get consultationReportEmpty;
+
+  /// No description provided for @consultationAvailableCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible'**
+  String get consultationAvailableCta;
+
+  /// No description provided for @consultationPendingCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon'**
+  String get consultationPendingCta;
+
+  /// No description provided for @sendConsultationToVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer à un vétérinaire'**
+  String get sendConsultationToVet;
+
+  /// No description provided for @sendConsultationEmailLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail du vétérinaire'**
+  String get sendConsultationEmailLabel;
+
+  /// No description provided for @sendConsultationEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'vet@cabinet.be'**
+  String get sendConsultationEmailHint;
+
+  /// No description provided for @sendConsultationConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get sendConsultationConfirm;
+
+  /// No description provided for @sendConsultationSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consultation envoyée — lien valable 24 h.'**
+  String get sendConsultationSuccess;
+
+  /// No description provided for @sendConsultationInvalidEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail invalide.'**
+  String get sendConsultationInvalidEmail;
+
+  /// No description provided for @sendConsultationPhiWarning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte-rendu contient des données de santé. Le lien reste valable 24 h et n\'importe qui le possédant pourra télécharger le PDF.'**
+  String get sendConsultationPhiWarning;
+
+  /// No description provided for @sendConsultationPhiConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte de partager ce compte-rendu avec ce vétérinaire.'**
+  String get sendConsultationPhiConsent;
 }
 
 class _AppLocalizationsDelegate

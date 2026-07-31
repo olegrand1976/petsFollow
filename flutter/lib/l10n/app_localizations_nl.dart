@@ -31,6 +31,17 @@ class AppLocalizationsNl extends AppLocalizations {
       'Bevestig eerst uw e-mail (link bij registratie), log daarna opnieuw in.';
 
   @override
+  String get resendConfirmation => 'Bevestigingsmail opnieuw versturen';
+
+  @override
+  String get resendConfirmationSent =>
+      'Als het account bestaat en nog niet bevestigd is, is er een nieuwe e-mail verzonden.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Verzenden mislukt. Probeer het zo opnieuw.';
+
+  @override
   String get loginOr => 'of';
 
   @override
@@ -139,6 +150,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Account aangemaakt. Open de link in de bevestigingsmail en kom terug om in te loggen.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Account aangemaakt, maar de uitnodigingscode kon niet worden toegepast. U kunt die na het inloggen opnieuw invoeren.';
+
+  @override
   String get registerFailed => 'Registratie mislukt';
 
   @override
@@ -239,6 +254,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightFinalizeReport => 'Afronden';
 
   @override
+  String get proLightNewConsultation => 'Nieuwe consultatie';
+
+  @override
+  String get proLightConsultationNextTitle =>
+      'Consultatie opgeslagen — verder?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'DAF maken & factureren';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Direct factureren';
+
+  @override
+  String get proLightConsultationCtaDone => 'Afronden';
+
+  @override
   String get proLightReportFinal => 'Afgerond';
 
   @override
@@ -308,7 +339,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get proLightDictationStart => 'Dicteren';
 
   @override
-  String get proLightDictationStop => 'Stop & transcriberen';
+  String get proLightDictationStop => 'Stoppen';
+
+  @override
+  String get proLightRecordingInProgress => 'Opname bezig';
 
   @override
   String get proLightAudioConsentTitle => 'Audiotoestemming';
@@ -406,6 +440,20 @@ class AppLocalizationsNl extends AppLocalizations {
   String get forceChangePasswordSubmit => 'Opslaan en doorgaan';
 
   @override
+  String get acceptTermsTitle => 'Gebruiksvoorwaarden';
+
+  @override
+  String get acceptTermsSubtitle =>
+      'Uw account is aangemaakt door uw praktijk. Aanvaard de voorwaarden en het privacybeleid om verder te gaan.';
+
+  @override
+  String get acceptTermsSubmit => 'Aanvaarden en doorgaan';
+
+  @override
+  String get acceptTermsFailed =>
+      'Toestemming kon niet worden opgeslagen. Probeer opnieuw.';
+
+  @override
   String get passwordTooShort => 'Minimaal 8 tekens';
 
   @override
@@ -433,6 +481,13 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get registerConsentRequired =>
       'U moet de voorwaarden en het privacybeleid aanvaarden.';
+
+  @override
+  String get registerInviteCode => 'Uitnodigingscode (optioneel)';
+
+  @override
+  String get registerInviteCodeHint =>
+      'Voer de code van de QR / commercieel link in';
 
   @override
   String get nearbyCommercialTitle => 'Vertegenwoordiger bij u in de buurt';
@@ -609,11 +664,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@ll-it-sc.be.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@petsfollow.app.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
-      'Juridische vermeldingen — petsFollow\n\nUitgever: LL-IT-SC / petsFollow\nContact: support@ll-it-sc.be\n\nHosting: Google Cloud Platform (AVG-conform).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/mentions\n\nLaatst bijgewerkt: juli 2026';
+      'Juridische vermeldingen — petsFollow\n\nUitgever: LL-IT-SC / petsFollow\nContact: support@petsfollow.app\n\nHosting: Google Cloud Platform (AVG-conform).\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/mentions\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get language => 'Taal';
@@ -635,6 +690,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get languageIt => 'Italiano';
+
+  @override
+  String get appearance => 'Weergave';
+
+  @override
+  String get themeLight => 'Licht';
+
+  @override
+  String get themeDark => 'Donker';
 
   @override
   String get planMonthlyLabel => '3,50 € / maand';
@@ -708,10 +772,71 @@ class AppLocalizationsNl extends AppLocalizations {
   String get petName => 'Naam';
 
   @override
+  String get petNameRequired => 'Geef de naam van het dier op';
+
+  @override
   String get species => 'Soort';
 
   @override
   String get breed => 'Ras';
+
+  @override
+  String get petMicrochipOptional => 'Chipnummer (optioneel)';
+
+  @override
+  String get petHealthBookNumberOptional => 'Paspoortnummer (optioneel)';
+
+  @override
+  String get petDomicileLocation => 'Domicilie / stal';
+
+  @override
+  String get petDomicileHint => 'Bv. Stal De Wilgen — Brussel';
+
+  @override
+  String get petFoodChainStatus => 'Status voedselketen';
+
+  @override
+  String get petFoodChainCompanion => 'Gezelschapsdier (buiten voedselketen)';
+
+  @override
+  String get petFoodChainFoodProducing => 'Productiedier / voedselketen';
+
+  @override
+  String get petFoodChainExcluded => 'Uitgesloten van de voedselketen';
+
+  @override
+  String get petHealthBookAddPages => 'Foto\'s van het paspoort toevoegen';
+
+  @override
+  String get petHealthBookReplacePages => 'PDF vervangen (foto\'s)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count pagina(\'s) geselecteerd';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF van het paspoort bijgevoegd';
+
+  @override
+  String get petHealthBookRemovePdf => 'Verwijderen';
+
+  @override
+  String get petHealthBookOpenPdf => 'Paspoort openen (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Paspoort: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Huisdier opgeslagen, maar het paspoort kon niet worden geüpload';
 
   @override
   String get choosePlan => 'Kies uw formule';
@@ -726,7 +851,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String get autoRenewSubtitle => 'Incasso bij elke vervaldatum';
 
   @override
-  String get continueToPayment => 'Doorgaan naar betaling';
+  String get continueToPayment => 'Opslaan en betalen';
+
+  @override
+  String get petFormSave => 'Opslaan';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Huisdier opgeslagen — activeer het om functies te gebruiken';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Betaling vereist om de functies van dit huisdier te gebruiken';
 
   @override
   String get paymentConfirmed => 'Betaling bevestigd — huisdier actief';
@@ -755,7 +891,8 @@ class AppLocalizationsNl extends AppLocalizations {
       'Niet-ondersteund formaat (JPEG, PNG, WebP, MP4, MOV, WebM)';
 
   @override
-  String get errorPaymentRequired => 'Abonnement vereist om media te versturen';
+  String get errorPaymentRequired =>
+      'Abonnement vereist om deze functie te gebruiken';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -797,6 +934,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Er is geen meetduur geconfigureerd voor deze praktijk. Neem contact op met uw dierenarts.';
 
   @override
+  String get heartRateNotSupported =>
+      'Hartslagmeting is niet beschikbaar voor deze diersoort';
+
+  @override
   String get start => 'Starten';
 
   @override
@@ -823,7 +964,8 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Drempelwaarschuwing';
+  String get thresholdAlert =>
+      'Waarschuwing: significante stijging t.o.v. vorige meting';
 
   @override
   String get validateAndSend => 'Valideren en naar dierenarts sturen';
@@ -865,6 +1007,33 @@ class AppLocalizationsNl extends AppLocalizations {
   String get speciesHorse => 'Paard';
 
   @override
+  String get speciesDonkey => 'Ezel';
+
+  @override
+  String get speciesCattle => 'Rund';
+
+  @override
+  String get speciesSheep => 'Schaap';
+
+  @override
+  String get speciesGoat => 'Geit';
+
+  @override
+  String get speciesPig => 'Varken';
+
+  @override
+  String get speciesPoultry => 'Pluimvee';
+
+  @override
+  String get speciesRabbit => 'Konijn';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Lama';
+
+  @override
   String get speciesOther => 'Anders';
 
   @override
@@ -881,31 +1050,31 @@ class AppLocalizationsNl extends AppLocalizations {
   String get discoveryTitle => 'Ontdek petsFollow';
 
   @override
-  String get discoveryMission => 'Uw 7-daagse traject';
+  String get discoveryMission => 'Uw petsFollow-traject';
 
   @override
-  String get discoveryDay0Title => 'Dag 0 — Welkom';
+  String get discoveryDay0Title => 'Stap 1 — Welkom';
 
   @override
   String get discoveryDay0Body =>
       'Maak het profiel van uw huisdier aan en ontdek de app — berichten, herinneringen en metingen (inclusief hartslag).';
 
   @override
-  String get discoveryDay2Title => 'Dag 2 — Eerste meting';
+  String get discoveryDay2Title => 'Stap 2 — Eerste meting';
 
   @override
   String get discoveryDay2Body =>
       'Doe uw eerste hartslagmeting en oefen de techniek.';
 
   @override
-  String get discoveryDay4Title => 'Dag 4 — Routine';
+  String get discoveryDay4Title => 'Stap 3 — Routine';
 
   @override
   String get discoveryDay4Body =>
       'Bouw een dagelijkse meetroutine op met gepersonaliseerde herinneringen.';
 
   @override
-  String get discoveryDay6Title => 'Dag 6 — Delen met dierenarts';
+  String get discoveryDay6Title => 'Stap 4 — Delen met dierenarts';
 
   @override
   String get discoveryDay6Body =>
@@ -922,6 +1091,27 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get noVets => 'Geen gekoppelde dierenarts';
+
+  @override
+  String get vetLinkRequired =>
+      'Koppel een dierenarts om de opvolging met uw praktijk te activeren';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Dierenarts koppelen';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Koppel een praktijk om berichten, bezoeken en zorgherinneringen te activeren.';
+
+  @override
+  String get linkVetHomeTitle => 'Dierenarts koppelen?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Uw dier is opgeslagen. Wilt u een dierenarts koppelen? Optioneel — u kunt dit later doen.';
+
+  @override
+  String get linkVetLater => 'Later';
 
   @override
   String get primaryVet => 'Hoofddierenarts';
@@ -1070,6 +1260,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get litterTag => 'Nest-tag';
 
   @override
+  String get petBirthDate => 'Geboortedatum';
+
+  @override
+  String get petBirthDateInvalid => 'Ongeldige geboortedatum (JJJJ-MM-DD)';
+
+  @override
   String get discoveryMarkDone => 'Missie voltooid';
 
   @override
@@ -1172,7 +1368,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'D$day';
+    return 'S$day';
   }
 
   @override
@@ -1206,6 +1402,40 @@ class AppLocalizationsNl extends AppLocalizations {
   String get noThreads => 'Geen gesprekken';
 
   @override
+  String get messageNoMessagesYet => 'Nog geen berichten';
+
+  @override
+  String get messageNewConversation => 'Nieuw gesprek';
+
+  @override
+  String get messageComposeTitle => 'Nieuw gesprek';
+
+  @override
+  String get messageChoosePro => 'Zorgprofessional';
+
+  @override
+  String get messageChooseClient => 'Cliënt';
+
+  @override
+  String get messageChoosePet => 'Betrokken dier';
+
+  @override
+  String get messageChoosePetOptional => 'Dier (optioneel)';
+
+  @override
+  String get messageGeneralThread => 'Algemeen gesprek';
+
+  @override
+  String get messageStartConversation => 'Starten';
+
+  @override
+  String get messageLockedTitle => 'Berichten niet beschikbaar';
+
+  @override
+  String get messageLockedBody =>
+      'Koppel een dierenarts om met een zorgprofessional te chatten.';
+
+  @override
   String get vetInviteSent =>
       'Uitnodiging verzonden — de praktijk moet de aanvraag aanvaarden';
 
@@ -1219,7 +1449,39 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'We zoeken dit dierenartsaccount in petsFollow. Als het bestaat, wordt een koppelingsaanvraag naar de praktijk gestuurd.';
+      'Zoek op naam, e-mail of praktijk. Als ze al op petsFollow staan, wordt een koppelingsaanvraag naar de praktijk gestuurd.';
+
+  @override
+  String get addVetSearchLabel => 'Zoek een dierenarts';
+
+  @override
+  String get addVetSearchFieldHint => 'Naam, e-mail of praktijk';
+
+  @override
+  String get addVetNotListed => 'Mijn dierenarts staat niet in de lijst';
+
+  @override
+  String get addVetSuggestTitle => 'Nieuwe dierenarts';
+
+  @override
+  String get addVetSuggestBody =>
+      'Geef het e-mailadres en telefoonnummer van de praktijk. Wij nemen contact op zodat ze petsFollow kunnen gebruiken.';
+
+  @override
+  String get addVetSuggestEmail => 'E-mail van de praktijk';
+
+  @override
+  String get addVetSuggestPhone => 'Telefoon';
+
+  @override
+  String get addVetSuggestNameOptional => 'Naam dierenarts (optioneel)';
+
+  @override
+  String get addVetSuggestCta => 'Suggestie versturen';
+
+  @override
+  String get vetSuggestSent =>
+      'Bedankt — we contacteren de praktijk. U wordt verwittigd wanneer ze petsFollow gebruiken.';
 
   @override
   String get visitRequested => 'Bezoekaanvraag verzonden';
@@ -1301,6 +1563,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get takePhoto => 'Foto maken';
 
   @override
+  String get takeVideo => 'Video opnemen';
+
+  @override
   String get chooseFromGallery => 'Kiezen uit galerij';
 
   @override
@@ -1311,6 +1576,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get attachVideo => 'Video';
+
+  @override
+  String get compressingMedia => 'Video comprimeren…';
 
   @override
   String get openMedia => 'Openen';
@@ -1324,6 +1592,14 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get appInviteHint =>
       'Toon deze QR of deel de link. Een nieuwe cliënt die via deze link registreert, wordt automatisch gekoppeld.';
+
+  @override
+  String get appInviteHintClient =>
+      'Deel deze QR met een vriend. Die wordt aan jou gekoppeld (referral) en kan jouw praktijk volgen als die er nog geen heeft.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Twee links: cliënten (app) en praktijken (Pro-registratie met uw doorverwijscode).';
 
   @override
   String get appInviteHintShort => 'Download- en koppelingslink';
@@ -1354,7 +1630,53 @@ class AppLocalizationsNl extends AppLocalizations {
       'QR-uitnodiging clients en toegang tot de Pro-site.';
 
   @override
+  String get commercialManagerFieldSubtitle =>
+      'Teamresultaten, QR-uitnodiging en toegang tot de Pro-site.';
+
+  @override
   String get commercialOpenProWeb => 'Pro-site openen';
+
+  @override
+  String get managerTeamCta => 'Resultaten van mijn team';
+
+  @override
+  String get managerTeamTitle => 'Team';
+
+  @override
+  String get managerTeamSection => 'Teamresultaten';
+
+  @override
+  String get managerSelfSection => 'Mijn resultaten';
+
+  @override
+  String get managerMembersSection => 'Commercials';
+
+  @override
+  String get managerTeamEmpty => 'Geen commercials toegewezen.';
+
+  @override
+  String get managerKpiProspects => 'Prospects';
+
+  @override
+  String get managerKpiConverted => 'Geconverteerd';
+
+  @override
+  String get managerKpiConversion => 'Conversieratio';
+
+  @override
+  String get managerKpiAppointments => 'Komende afspraken';
+
+  @override
+  String get managerKpiStale => 'Stale pipeline';
+
+  @override
+  String get managerKpiMonthEarned => 'Commissies (maand)';
+
+  @override
+  String get managerKpiLifetimeEarned => 'Commissies (totaal)';
+
+  @override
+  String get managerKpiVets => 'Toegewezen dierenartsen';
 
   @override
   String get featureModules => 'Opties';
@@ -1538,4 +1860,135 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'CR IA beschikbaar als het kabinet van het bezoek de module heeft geactiveerd.';
+
+  @override
+  String get supportTitle => 'Probleem melden';
+
+  @override
+  String get supportHint =>
+      'Beschrijf de bug. Technische diagnostiek van de laatste 15 minuten wordt automatisch bijgevoegd.';
+
+  @override
+  String get supportSubject => 'Onderwerp';
+
+  @override
+  String get supportMessage => 'Beschrijving';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnostiek automatisch bijgevoegd (fouten, requests, configuratie).';
+
+  @override
+  String get supportSubmit => 'Verzenden';
+
+  @override
+  String get supportSending => 'Verzenden…';
+
+  @override
+  String get supportSuccess => 'Bericht verzonden. Dank je!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Te veel tickets recent. Probeer over een uur.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnostiek te groot. Herstart de app en probeer opnieuw.';
+
+  @override
+  String get supportMenu => 'Support';
+
+  @override
+  String get appInviteHintSales =>
+      'Deel je sponsorcode met een praktijk of een cliënt.';
+
+  @override
+  String get appInviteCopyVet => 'Kopieer praktijk-aanmeldlink';
+
+  @override
+  String get appInviteCopyClient => 'Kopieer cliënt-uitnodigingslink';
+
+  @override
+  String get sendDossierToPro => 'Naar een pro sturen';
+
+  @override
+  String get sendDossierEmailLabel => 'E-mail van de professional';
+
+  @override
+  String get sendDossierEmailHint => 'vet@kliniek.be';
+
+  @override
+  String get sendDossierConfirm => 'Versturen';
+
+  @override
+  String get sendDossierSuccess => 'Dossier verstuurd — link 24 uur geldig.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Ongeldig e-mailadres.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Dit dossier bevat gezondheidsgegevens: consultverslagen, gezondheidsboekje en documenten. De link blijft 24 uur geldig en iedereen die hem heeft, kan ze inkijken.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Ik ga ermee akkoord deze gezondheidsgegevens met deze professional te delen.';
+
+  @override
+  String get consultationsHistory => 'Consultaties';
+
+  @override
+  String get consultationTitle => 'Consultatie';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consultatie — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Bezoek';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Verslag door $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Verslag';
+
+  @override
+  String get consultationReportEmpty => '(leeg)';
+
+  @override
+  String get consultationAvailableCta => 'Beschikbaar';
+
+  @override
+  String get consultationPendingCta => 'Concept';
+
+  @override
+  String get sendConsultationToVet => 'Naar een dierenarts sturen';
+
+  @override
+  String get sendConsultationEmailLabel => 'E-mail van de dierenarts';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@kliniek.be';
+
+  @override
+  String get sendConsultationConfirm => 'Versturen';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consultatie verstuurd — link 24 uur geldig.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Ongeldig e-mailadres.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'Dit verslag bevat gezondheidsgegevens. De link blijft 24 uur geldig en iedereen die hem heeft, kan de PDF downloaden.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Ik ga ermee akkoord dit verslag met deze dierenarts te delen.';
 }

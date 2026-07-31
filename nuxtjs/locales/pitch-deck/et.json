@@ -60,7 +60,7 @@
         "vetProKind": "Veebirakendus",
         "vetProTitle": "Kliiniku & ASV Cockpit",
         "vetProItems": ["Kliendi sõnumside & ajajoon", "Dokumentide jagamine & meeskond", "Kliiniku komisjonide jälgimine"],
-        "vetProPrice": "69 € ilma KM / kuu + Setup 320 € ilma KM",
+        "vetProPrice": "834,71 € ilma KM / aasta + Setup 320 € ilma KM",
         "vetLightLabel": "VetLight",
         "vetLightKind": "Mobiil Väli Rakendus",
         "vetLightTitle": "Hooldaja Mobiilirakendus",
@@ -112,7 +112,7 @@
         "mockCommissions": "Kliiniku Komisjonid",
         "mockMessage": "Viimane saadud sõnum (Charly)",
         "mockStatus": "Klassifitseeritud",
-        "footer": "Kliiniku hind: 69 € ilma KM/kuu + setup 320 € ilma KM (väline arveldus)"
+        "footer": "Kliiniku hind: 834,71 € ilma KM / aasta + setup 320 € ilma KM (väline arveldus)"
       },
       "s06": {
         "title": "VetPro — Põhifunktsioonid",
@@ -129,7 +129,7 @@
         "f4Title": "Meeskonna & Päeviku Haldus",
         "f4Desc": "Dokumentide jagamine kolleegide vahel, koordineeritud kliiniku päevik ja selge komisjonide jälgimine.",
         "quality": "Kvaliteedistandard: Lihtne kogu hooldusmeeskonna jaoks omaks võtta.",
-        "langs": "Saadaval 5 keeles"
+        "langs": "Saadaval 6 keeles"
       },
       "s07": {
         "title": "VetLight — Mobiil Väli Rakendus",
@@ -209,7 +209,7 @@
           { "feature": "Pulss sõrmega (kui ette nähtud)", "vetPro": "✓ (Lugemine)", "vetLight": "—", "client": "✓ (Mõõtmine)" }
         ],
         "financeLabel": "Finantsmudel",
-        "financeVetPro": "69 € ilma KM/kuu",
+        "financeVetPro": "834,71 € ilma KM / aasta",
         "financeVetLight": "TASUTA",
         "financeClient": "Looma tellimus",
         "footer": "Selge funktsionaalne katvus iga meeskonnaliikme jaoks."
@@ -221,10 +221,10 @@
         "kicker": "11 / KLIINIKU RENTAABILSUS",
         "headline": "Aktiveerimistega enesemaksuvõime mudel",
         "priceLabel": "VetPro Kliiniku Hind",
-        "price": "69 € ilma KM / kuu",
+        "price": "834,71 € ilma KM / aasta",
         "setup": "+ Algne setup 320 € ilma KM (väline arveldus)",
         "mechanismTitle": "Enesemaksuvõime mehhanism:",
-        "mechanismDesc": "Iga omaniku aktiveeritud loom genereerib komisjoni kliinikule. Suurusjärk: ~7 kolmeaastast aktiveerimist / kuus katab SaaS-tellimuse (69 € ilma käibemaksuta).",
+        "mechanismDesc": "Iga omaniku aktiveeritud loom genereerib komisjoni kliinikule. Suurusjärk: ~8 kolmeaastast aktiveerimist / kuus katab SaaS kuu ekvivalendi (≈ 69,56 € ilma käibemaksuta). Steer: 2 253,72 € ilma KM / 3 aastat (−10 %).",
         "summaryTitle": "Kokkuvõttes kliinikule:",
         "summaryItems": [
           "Täielik veeb cockpit kogu kliinikule",
@@ -259,7 +259,7 @@
           {
             "label": "VASTUVÄIDE 1",
             "q": "« Kas see on ainult kardiorakendus? »",
-            "a": "Ei, see on globaalne haldusplatvorm (sõnumside, dokumendid, Care/Horse meeldetuletused, päevik, aruanded). Pulsi jälgimine on üks integreeritud funktsioon teiste seas."
+            "a": "Ei, see on globaalne haldusplatvorm (sõnumside, dokumendid, Care/Horse meeldetuletused, päevik, aruanded). Pulsi mõõtmine on üks integreeritud funktsioon teiste seas."
           },
           {
             "label": "VASTUVÄIDE 2",
@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Klient)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2: Kliendi Mobiilirakendus",
             "desc": "Kasutaja saadab sõnumi või teeb pulsimõõtmise sõrmega (kui praktik ette näeb)."
           },
@@ -333,7 +333,7 @@
         "c2Desc": "Testkliiniku ruumi loomine 2 minutiga kohtumisel.",
         "c3Title": "Ooteruumi Komplekt",
         "c3Desc": "Pühendatud tugi + ooteruumi reklaamikomplekt kaasas.",
-        "cta": "Kinnita VetPro Setup (320 € ilma KM + 69 € ilma KM/kuu)",
+        "cta": "Kinnita VetPro Setup (320 € ilma KM + 834,71 € ilma KM / aasta)",
         "footerLeft": "petsFollow Pro — Hooldusjätkuvus veterinaari juhtimisel",
         "footerRight": "www.petsfollow.com"
       }

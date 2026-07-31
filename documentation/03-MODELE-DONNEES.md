@@ -1,6 +1,6 @@
 # Modèle de données — petsFollow
 
-Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 → 000039+).
+Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 → 000091+).
 
 ## Schémas
 
@@ -17,24 +17,27 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 | `care` | Rappels, contacts/compétitions horse |
 | `visits` | Visites (+ reschedule pending, GPS, `visit_reports`, `preconsult_intakes`) |
 | `discovery` | Onboarding client in-app + parcours email (`email_journey`, `email_sends`) |
-| `pharmacy` | **Spec** — référentiel CNK, stocks FEFO, DAF, jobs audit ([27](27-PHARMACIE-BELGIQUE.md), migrations `000039+` à venir) |
+| `pharmacy` | **Livré (flag)** — CNK, stocks FEFO, DAF + traçabilité `daf_id`/`daf_item_id` sur sorties ([27](27-PHARMACIE-BELGIQUE.md), [28](28-PLAN-STOCK-PEREMPTION.md), migrations `000081`–`000090`) |
+| `prescriptions` | **Tag `dev` (flag)** — brouillons d’ordonnances + preview PDF ([35](35-ORDONNANCES.md), migration `000091`) ; `date_issued` / signature / PDF persisté = phase 2 |
 
 ## Tables clés
 
 | Domaine | Tables |
 |---------|--------|
 | Auth | `identity.users` (+ `professional_specialty` pour `care_pro`), `email_verification_tokens`, `password_reset_tokens` |
-| Cabinet | `practice.practices`, `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations` |
-| ACL pets | `pets.pet_access` (partage dossier) |
+| Cabinet | `practice.practices`, `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations`, `team_members` (rôles + JSON `permissions` — caps `shares.read`/`shares.manage`, `pharmacy.read`/`pharmacy.write`, etc. via `DefaultTeamPermissions`) |
+| ACL pets | `pets.pet_access` (partage dossier) — lecture staff = `shares.read`, mutation = `shares.manage` |
 | Import | `practice.client_import_jobs`, `client_import_rows` (+ grants `000029`) |
 | Animal | `pets.pets`, `pets.dossier_events`, `pets.weight_readings` |
 | Billing | `pet_entitlements`, `addon_entitlements`, `stripe_customers`, `stripe_events` |
 | Commissions | `commission_tiers`, `commission_ledger`, `commercial_commission_ledger`, payout runs/lines, `commercial_bonus_awards` |
-| Commercial | `sales.prospects` (+ assignation commercial ↔ véto, `manager_user_id`, source `directory`, RDV / contact timestamps — `000031`) ; `practice.commercial_referrals` (QR / nearby signup) ; zone base commercial `000058` |
+| Commercial | `sales.prospects` (claim `commercial_user_id` nullable = pool libre ; inactivité 30 j) ; assignation commercial ↔ véto ; `manager_user_id` ; RDV / contact — `000031` ; `practice.commercial_referrals` (QR client / nearby) ; `practice.client_referrals` (QR parrainage client→client, `000074`) ; `practice.app_invite_codes` (Code Parrain cabinet+client+véto+care_pro) ; zone base commercial `000058` ; pool admin vétos `assigned_commercial_id IS NULL` |
 | FC | `heartrate.sessions` |
 | Poids | `pets.weight_readings` (historique) ; `pets.pets.weight_kg` = dernier `POST /weights` (peut diverger si PATCH fiche animal sans lecture) |
 | Msg | `messaging.threads`, `messages`, `vet_availability` |
 | Discovery | `discovery.progress`, `discovery.email_journey`, `discovery.email_sends` |
+| Pharmacie | `pharmacy.ref_medications` ; `practice_settings` ; `medication_deposits` ; `medication_batches` (`lot_number` non vide, `expires_on`) ; `stock_movements` (`daf_id` + `daf_item_id` obligatoires si `reason` ∈ {daf, daf_cancel} — `000087`/`000088`) ; `daf_documents` / `daf_items` / `daf_sequences` — API gated `pharmacy.read` / `pharmacy.write` (indépendant de `pets.write_clinical` une fois la clé pharma présente dans l’override ; sinon miroir legacy clinique) |
+| Ordonnances (dev) | `prescriptions.prescriptions` — `status` draft\|signed\|sent\|archived ; `medications` JSONB ; `paper_format` A4\|A5 ; `date_issued` NULL en V1 (posé à la signature phase 2) ; `signature_id` / `pdf_*` réservés phase 2 (`000091`) |
 
 ## Entitlements
 

@@ -7,9 +7,11 @@
 | `vet` | Pro web | Prescrire / suivre / messagerie / partage dossier |
 | `client` | Flutter pets | Self-signup, animaux, FC, paiement, messages |
 | `care_pro` | Flutter pro light | Agenda terrain, fiches, CR (specialty : vet_light, farrier, …) |
-| `commercial` | Pro | Apporter cabinets, prospects, activations |
-| `commercial_manager` | Pro | Piloter l’équipe commerciale (KPI contact / RDV / résultat) + portefeuille perso |
-| `admin` | Pro | Ops plateforme, commissions, commercials |
+| `commercial` | Pro | Apporter cabinets, prospects, activations — mappe un **distributeur** MLM |
+| `commercial_manager` | Pro | Piloter l’équipe / **branche** (KPI, suivi, quotas) + portefeuille perso — mappe un **upline L1** |
+| `admin` | Pro | Ops plateforme, commissions flat, commercials, **branches** (prép. MLM) |
+
+Préparation intégration MLM (branches, sponsor, stubs réseau) : [31-MLM-ORG-PREP.md](31-MLM-ORG-PREP.md).
 
 Détail multi-profils / ACL : [28-MULTI-PROFILS-PRO.md](28-MULTI-PROFILS-PRO.md).
 

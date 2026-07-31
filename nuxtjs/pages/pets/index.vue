@@ -21,10 +21,9 @@
             <label class="pro-label" for="species-filter">{{ $t('pets.speciesFilter') }}</label>
             <select id="species-filter" v-model="speciesFilter" class="pro-select" data-testid="pets-species-filter">
               <option value="all">{{ $t('pets.speciesAll') }}</option>
-              <option value="dog">{{ $t('common.species.dog') }}</option>
-              <option value="cat">{{ $t('common.species.cat') }}</option>
-              <option value="horse">{{ $t('common.species.horse') }}</option>
-              <option value="other">{{ $t('common.species.other') }}</option>
+              <option v-for="code in petSpeciesCodes" :key="code" :value="code">
+                {{ $t(`common.species.${code}`) }}
+              </option>
             </select>
           </div>
         </template>
@@ -44,15 +43,21 @@
             <th>{{ $t('pets.columnLastVisit') }}</th>
             <th>{{ $t('pets.columnLastHeartRate') }}</th>
             <th>{{ $t('pets.columnOwner') }}</th>
-            <th />
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="p in filtered" :key="p.id" :data-testid="`pet-row-${p.id}`">
             <td>
               <div class="pets-name-cell">
-                <ProAvatar :src="p.photoUrl" :name="p.name" />
-                <span>{{ p.name }}</span>
+                <NuxtLink
+                  :to="`/clients/${p.ownerUserId}/pets/${p.id}`"
+                  class="pro-name-link"
+                  data-testid="pet-name-link"
+                >
+                  <ProAvatar :src="p.photoUrl" :name="p.name" />
+                  <span>{{ p.name }}</span>
+                </NuxtLink>
                 <ProBadge
                   v-if="(p.unreadHeartrateCount ?? 0) > 0"
                   variant="danger"
@@ -75,9 +80,21 @@
             </td>
             <td>{{ p.ownerName }}</td>
             <td>
-              <NuxtLink :to="`/clients/${p.ownerUserId}/pets/${p.id}`" data-testid="pet-fiche-link">
-                {{ $t('common.profile') }}
-              </NuxtLink>
+              <div class="pro-client-actions">
+                <ProIconAction
+                  icon="pets"
+                  :label="$t('common.profile')"
+                  :to="`/clients/${p.ownerUserId}/pets/${p.id}`"
+                  :test-id="`pet-fiche-action-${p.id}`"
+                />
+                <ProIconAction
+                  v-if="canWriteClinical"
+                  icon="medical_services"
+                  :label="$t('clients.consultation.open')"
+                  :test-id="`new-consultation-pet-${p.id}`"
+                  @click="openConsultation(p.ownerUserId, p.id)"
+                />
+              </div>
             </td>
           </tr>
         </tbody>
@@ -87,7 +104,9 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+import { PET_SPECIES_CODES } from '~/utils/pet-species'
+
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
 type VetPet = {
   id: string
@@ -108,12 +127,20 @@ const { t, te } = useI18n()
 const { formatDate } = useFormatters()
 const { mapError } = useApiError()
 const { petsBadge, refresh: refreshNavBadges } = useNavBadges()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const activeConsult = useActiveConsultation()
+const petSpeciesCodes = PET_SPECIES_CODES
 
 const pets = ref<VetPet[]>([])
 const loadError = ref('')
 const query = ref('')
 const speciesFilter = ref('all')
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+function openConsultation(ownerUserId: string, petId: string) {
+  activeConsult.openForClient(ownerUserId, petId)
+}
 
 function speciesLabel(species: string) {
   const key = `common.species.${species}`

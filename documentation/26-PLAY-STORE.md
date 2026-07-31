@@ -1,6 +1,8 @@
 # 26 — Google Play Store (Android petsFollow)
 
-Checklist pour un passage **complet** de l’app Flutter `be.llitsc.petsfollow_mobile` sur Google Play.
+Checklist pour un passage **complet** de l’app Flutter **prod** `be.llitsc.petsfollow_mobile` sur Google Play.
+
+Le canal **testeurs** est distinct : flavor **staging** (`be.llitsc.petsfollow_mobile.staging`) via Firebase App Distribution — voir [`flutter/README.md`](../flutter/README.md).
 
 Privacy policy URL (obligatoire listing) : **https://petsfollow.ll-it-sc.be/legal/privacy**  
 CGU : https://petsfollow.ll-it-sc.be/legal/terms  
@@ -13,11 +15,14 @@ Support : **support@ll-it-sc.be**
 
 | Item | Statut attendu |
 |------|----------------|
+| Flavor Play | `prod` (`applicationId` sans suffixe) |
+| Flavor testeurs | `staging` (suffixe `.staging`) — **pas** sur Play Production |
 | `targetSdk` / `compileSdk` | 36 (Flutter) |
 | `minSdk` | 24 |
 | Signing release | `flutter/android/key.properties` + `upload-keystore.jks` (gitignored) |
-| AAB | `make play-android-bundle` |
-| `API_BASE` release | `https://…` (fail-fast si non-HTTPS) |
+| AAB | `API_BASE=https://… make play-android-bundle` |
+| Dart defines | `--dart-define=FLAVOR=prod` **et** `APP_ENV=prod` (mêmes valeurs ; `AppEnv.validate`) |
+| `API_BASE` release | `https://…` obligatoire (pas de défaut staging) |
 | `allowBackup` | `false` + règles XML |
 | `AD_ID` | retiré (`tools:node="remove"`) — déclarer « Non » Advertising ID |
 | Suppression compte | in-app (Profil) + API `DELETE /api/v1/me` |
@@ -37,16 +42,16 @@ Afficher les empreintes à coller dans Firebase / Cloud Console :
 keytool -list -v -keystore flutter/android/upload-keystore.jks -alias upload
 ```
 
-Après le **premier** upload Play, récupérer aussi le certificat **App Signing by Google Play** (Play Console → App integrity) et l’ajouter comme SHA Firebase / client OAuth Android.
+Après le **premier** upload Play, récupérer aussi le certificat **App Signing by Google Play** (Play Console → App integrity) et l’ajouter comme SHA Firebase / client OAuth Android (**package prod**).
 
-### Build AAB
+### Build AAB (prod)
 
 ```bash
-make play-android-bundle
-# → flutter/build/app/outputs/bundle/release/app-release.aab
+API_BASE=https://… make play-android-bundle
+# → flutter/build/app/outputs/bundle/prodRelease/app-prod-release.aab
 ```
 
-Firebase App Distribution (APK testeurs) reste : `make firebase-android-dist`.
+Firebase App Distribution (APK **staging** testeurs) : `make firebase-android-dist`.
 
 ---
 
@@ -129,16 +134,19 @@ Justifier comme fonctionnalités **cœur** (pas one-time).
 
 ## 7. OAuth Google Sign-In
 
-1. Client OAuth **Android** pour `be.llitsc.petsfollow_mobile` avec SHA-1 upload + App Signing (et SHA debug en local).
-2. Enregistrer les empreintes puis régénérer `google-services.json` :
+1. Client OAuth **Android** :
+   - **staging** : `be.llitsc.petsfollow_mobile.staging` (SHA debug + upload)
+   - **prod** : `be.llitsc.petsfollow_mobile` (SHA upload + App Signing Play)
+2. Enregistrer les empreintes puis régénérer le `google-services.json` du flavor :
    ```bash
-   make firebase-google-signin-android SHA1=ED:B0:… SHA256=7A:67:…
+   make firebase-google-signin-android SHA1=ED:B0:… SHA256=7A:67:… FLAVOR=staging
+   make firebase-google-signin-android SHA1=ED:B0:… SHA256=7A:67:… FLAVOR=prod
    ```
 3. Conserver le Web client ID (`GOOGLE_SERVER_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_ID`) pour `idToken` serveur :
    `237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com`
-4. API locale / Cloud Run : `GOOGLE_OAUTH_CLIENT_ID` = ce Web client ID. Flutter : `make flutter-dev` (dart-define inclus).
+4. API locale / Cloud Run : `GOOGLE_OAUTH_CLIENT_ID` = ce Web client ID. Flutter staging : `make flutter-dev` (flavor + dart-define inclus).
 
-Sans client Android (`client_type: 1`) dans `google-services.json`, Play Services renvoie `DEVELOPER_ERROR` (code 10).
+Sans client Android (`client_type: 1`) dans le `google-services.json` du flavor, Play Services renvoie `DEVELOPER_ERROR` (code 10).
 
 ---
 
@@ -152,14 +160,16 @@ Dans App content : déclarer les achats numériques / abonnements selon le quest
 ## 9. Parcours de publication recommandé
 
 ```text
-1. keystore + key.properties + SHA Firebase
-2. make play-android-bundle
+1. keystore + key.properties + SHA Firebase (package prod)
+2. API_BASE=https://… make play-android-bundle   # flavor prod
 3. Upload AAB → Internal testing (smoke)
 4. Closed testing (si requis) + notes de version
 5. Remplir Data Safety, Content rating, Account deletion, Ads ID = No
 6. Store listing + screenshots + privacy URL
 7. Production → Review Google
 ```
+
+Canal testeurs (indépendant de Play) : `make firebase-android-dist` (flavor staging).
 
 ---
 

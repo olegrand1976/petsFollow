@@ -6,7 +6,8 @@ COPY go/ .
 RUN CGO_ENABLED=0 go build -o /petsfollow-api ./cmd/petsfollow-api
 
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates
+# tzdata: IANA zones for time.LoadLocation (client booking slots, emails).
+RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /petsfollow-api /app/petsfollow-api
 EXPOSE 8080

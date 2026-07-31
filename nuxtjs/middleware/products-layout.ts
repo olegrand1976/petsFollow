@@ -2,16 +2,17 @@ import { isProRole, parseJwtRole } from '~/composables/useAuth'
 
 /** Pick Pro shell layout for /produits (vet / commercial / admin). */
 export default defineNuxtRouteMiddleware(async () => {
-  const token = useCookie('pf_token')
-  let role = parseJwtRole(token.value)
+  let role: string | null = null
+  try {
+    const { fetchUser } = useProUser()
+    const me = await fetchUser(true)
+    role = me?.role ?? null
+  } catch {
+    return navigateTo('/login')
+  }
+  // Soft fail (5xx) : fallback JWT encore valide pour le layout uniquement.
   if (!role) {
-    try {
-      const { fetchUser } = useProUser()
-      const me = await fetchUser(true)
-      role = me?.role ?? null
-    } catch {
-      role = null
-    }
+    role = parseJwtRole(useCookie('pf_token').value)
   }
   if (!isProRole(role)) {
     return navigateTo('/login')

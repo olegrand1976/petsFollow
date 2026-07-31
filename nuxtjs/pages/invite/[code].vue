@@ -16,10 +16,42 @@
           <h1 data-testid="app-invite-ok">{{ $t('invite.title') }}</h1>
           <p class="pro-page-header__subtitle">{{ subtitle }}</p>
           <p class="pro-hint">{{ autoLinkHint }}</p>
+          <div class="invite-code-row" data-testid="app-invite-code">
+            <p class="invite-code">
+              <span class="text-muted">{{ $t('invite.codeLabel') }}</span>
+              <strong>{{ invite.code }}</strong>
+            </p>
+            <ProButton
+              type="button"
+              variant="secondary"
+              test-id="app-invite-copy-code"
+              @click="copyCode"
+            >
+              <ProIcon name="content_copy" />
+              {{ codeCopied ? $t('invite.codeCopied') : $t('invite.copyCode') }}
+            </ProButton>
+          </div>
+          <p v-if="copyError" class="pro-field-error" role="alert">{{ copyError }}</p>
+          <p class="pro-hint invite-code-hint">{{ codeHint }}</p>
           <div class="invite-actions">
+            <ProButton
+              block
+              test-id="app-invite-open-app"
+              @click="openApp"
+            >
+              {{ $t('invite.openApp') }}
+            </ProButton>
+            <NuxtLink
+              v-if="isCommercialInvite"
+              class="pro-btn pro-btn--secondary pro-btn--block"
+              data-testid="app-invite-cabinet-cta"
+              :to="cabinetRegisterPath"
+            >
+              {{ $t('invite.cabinetCta') }}
+            </NuxtLink>
             <a
               v-if="invite.downloadUrl"
-              class="pro-btn pro-btn--primary pro-btn--block"
+              class="pro-btn pro-btn--secondary pro-btn--block"
               data-testid="app-invite-download"
               :href="invite.downloadUrl"
               target="_blank"
@@ -45,14 +77,6 @@
                 <img :src="invite.qrIos.publicUrl" alt="iOS" width="120" height="120">
               </a>
             </div>
-            <ProButton
-              block
-              variant="secondary"
-              test-id="app-invite-open-app"
-              @click="openApp"
-            >
-              {{ $t('invite.openApp') }}
-            </ProButton>
           </div>
         </template>
         <template v-else>
@@ -67,7 +91,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-type InviteRole = 'vet' | 'care_pro' | 'commercial' | 'commercial_manager'
+type InviteRole = 'vet' | 'care_pro' | 'commercial' | 'commercial_manager' | 'client'
 
 const { t } = useI18n()
 const { mapError } = useApiError()
@@ -75,6 +99,8 @@ const route = useRoute()
 
 const loading = ref(true)
 const error = ref('')
+const codeCopied = ref(false)
+const copyError = ref('')
 const invite = ref<{
   code: string
   role: InviteRole
@@ -82,6 +108,7 @@ const invite = ref<{
   displayName: string
   downloadUrl: string
   deepLink: string
+  vetRegisterUrl?: string
   qrAndroid?: { publicUrl?: string, storeUrl?: string } | null
   qrIos?: { publicUrl?: string, storeUrl?: string } | null
 } | null>(null)
@@ -94,11 +121,24 @@ function normalizeRole(raw: unknown): InviteRole {
       return 'commercial'
     case 'commercial_manager':
       return 'commercial_manager'
+    case 'client':
+      return 'client'
     case 'vet':
+      return 'vet'
     default:
       return 'vet'
   }
 }
+
+const isCommercialInvite = computed(() => {
+  const role = invite.value?.role
+  return role === 'commercial' || role === 'commercial_manager'
+})
+
+const cabinetRegisterPath = computed(() => {
+  const code = invite.value?.code || ''
+  return `/register?invite=${encodeURIComponent(code)}`
+})
 
 const brandTitle = computed(() => {
   const role = invite.value?.role ?? 'vet'
@@ -108,6 +148,8 @@ const brandTitle = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.brandTitleCommercial')
+    case 'client':
+      return t('invite.brandTitleClient')
     case 'vet':
       return t('invite.brandTitle')
     default: {
@@ -130,6 +172,8 @@ const subtitle = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.subtitleCommercial', { name: name || 'petsFollow' })
+    case 'client':
+      return t('invite.subtitleClient', { name: name || 'petsFollow' })
     case 'vet':
       return t('invite.subtitle', {
         practice: practice || 'petsFollow',
@@ -150,6 +194,8 @@ const autoLinkHint = computed(() => {
     case 'commercial':
     case 'commercial_manager':
       return t('invite.autoLinkHintCommercial')
+    case 'client':
+      return t('invite.autoLinkHintClient')
     case 'vet':
       return t('invite.autoLinkHint')
     default: {
@@ -159,17 +205,67 @@ const autoLinkHint = computed(() => {
   }
 })
 
+const codeHint = computed(() => {
+  const role = invite.value?.role ?? 'vet'
+  switch (role) {
+    case 'commercial':
+    case 'commercial_manager':
+      return t('invite.codeHintCommercial')
+    case 'client':
+      return t('invite.codeHintClient')
+    case 'care_pro':
+    case 'vet':
+      return t('invite.codeHint')
+    default: {
+      const _exhaustive: never = role
+      return _exhaustive
+    }
+  }
+})
+
+async function copyCode() {
+  copyError.value = ''
+  codeCopied.value = false
+  const code = invite.value?.code
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+    codeCopied.value = true
+  } catch {
+    copyError.value = t('invite.copyError')
+  }
+}
+
 function openApp() {
   const inv = invite.value
   if (!inv) return
   const preconsult = String(route.query.preconsult || '').trim()
   if (preconsult) {
-    window.location.href = `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}`
+    const code = encodeURIComponent(inv.code || '')
+    const visit = encodeURIComponent(preconsult)
+    const inviteQs = code ? `&inviteCode=${code}` : ''
+    window.location.href = `petsfollow://preconsult?visitId=${visit}${inviteQs}`
     return
   }
   const link = inv.deepLink
   if (!link) return
   window.location.href = link
+}
+
+function isLikelyMobile(): boolean {
+  if (!import.meta.client) return false
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')
+}
+
+/** Attempt deep link on mobile so an already-installed app captures the invite code. */
+function tryAutoOpenApp() {
+  if (!invite.value?.deepLink) return
+  // Skip auto-open when the user explicitly landed for download-only flows.
+  if (String(route.query.download || '') === '1') return
+  // Opt-in via ?open=1, or auto on mobile UA only (avoid desktop custom-scheme dialogs).
+  const forceOpen = String(route.query.open || '') === '1'
+  if (!forceOpen && !isLikelyMobile()) return
+  openApp()
 }
 
 onMounted(async () => {
@@ -183,22 +279,22 @@ onMounted(async () => {
     const res: any = await $fetch(`/api/public/app-invite/${encodeURIComponent(code)}`)
     const data = res.data ?? res
     const preconsult = String(route.query.preconsult || '').trim()
+    const inviteCode = data.code || code
     invite.value = {
-      code: data.code,
+      code: inviteCode,
       role: normalizeRole(data.role),
       practiceName: data.practiceName || '',
       displayName: data.displayName || data.vetFullName || '',
       downloadUrl: data.downloadUrl || '',
       deepLink: preconsult
-        ? `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}`
-        : (data.deepLink || `petsfollow://invite?code=${data.code}`),
+        ? `petsfollow://preconsult?visitId=${encodeURIComponent(preconsult)}&inviteCode=${encodeURIComponent(inviteCode)}`
+        : (data.deepLink || `petsfollow://invite?code=${inviteCode}`),
+      vetRegisterUrl: data.vetRegisterUrl || '',
       qrAndroid: data.qrAndroid || null,
       qrIos: data.qrIos || null,
     }
-    try {
-      localStorage.setItem('pf_invite_code', data.code)
-      if (preconsult) localStorage.setItem('pf_preconsult_visit', preconsult)
-    } catch { /* ignore */ }
+    // Defer slightly so the landing paints before the custom-scheme navigation.
+    setTimeout(tryAutoOpenApp, 400)
   } catch (e) {
     error.value = mapError(e)
   } finally {
@@ -213,6 +309,25 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+.invite-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 0.25rem;
+}
+.invite-code {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+}
+.invite-code strong {
+  margin-left: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.invite-code-hint {
+  margin-bottom: 0;
 }
 .invite-store-qrs {
   display: flex;

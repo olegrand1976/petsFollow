@@ -74,7 +74,8 @@ class DiscoveryController {
     return progress;
   }
 
-  DiscoveryCard? missionCardForToday(List<DiscoveryCard> cards, DiscoveryProgress progress) {
+  /// First unlocked stage that is not yet completed (opens immediately after previous).
+  DiscoveryCard? nextMissionCard(List<DiscoveryCard> cards, DiscoveryProgress progress) {
     for (final dayIndex in DiscoveryCard.journeyDays) {
       if (!progress.isCardUnlocked(dayIndex)) continue;
       if (progress.isCardCompleted(dayIndex)) continue;

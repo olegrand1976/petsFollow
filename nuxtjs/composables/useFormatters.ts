@@ -9,6 +9,10 @@ export function useFormatters() {
         return 'en-GB'
       case 'es':
         return 'es-ES'
+      case 'et':
+        return 'et-EE'
+      case 'it':
+        return 'it-IT'
       default:
         return 'fr-FR'
     }
@@ -22,6 +26,22 @@ export function useFormatters() {
     return new Date(value).toLocaleString(dateLocale())
   }
 
+  function formatDay(value: string | Date) {
+    return new Date(value).toLocaleDateString(dateLocale(), {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  function formatTime(value: string | Date) {
+    return new Date(value).toLocaleTimeString(dateLocale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
   function formatCurrency(cents: number) {
     return new Intl.NumberFormat(currencyLocale(), {
       style: 'currency',
@@ -33,5 +53,13 @@ export function useFormatters() {
     return a.localeCompare(b, dateLocale())
   }
 
-  return { formatDate, formatCurrency, compareStrings, dateLocale, currencyLocale }
+  return {
+    formatDate,
+    formatDay,
+    formatTime,
+    formatCurrency,
+    compareStrings,
+    dateLocale,
+    currencyLocale,
+  }
 }

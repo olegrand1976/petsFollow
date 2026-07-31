@@ -17,28 +17,37 @@ import (
 const MaxHeartRateCommentLen = 500
 
 var (
-	ErrNotFound   = errors.New("not found")
-	ErrValidation = errors.New("validation")
-	ErrForbidden  = errors.New("forbidden")
-	ErrConflict   = errors.New("conflict")
+	ErrNotFound             = errors.New("not found")
+	ErrValidation           = errors.New("validation")
+	ErrForbidden            = errors.New("forbidden")
+	ErrConflict             = errors.New("conflict")
+	ErrInventoryIncomplete  = errors.New("inventory_incomplete")
+	ErrDiagnosticsTooLarge  = errors.New("diagnostics too large")
+	ErrSelfReferral         = errors.New("self referral")
+	ErrAdvisoryLockBusy     = errors.New("advisory lock busy")
 )
 
+// StagingSeedLockKey is the session advisory lock for admin/CLI staging re-seed.
+const StagingSeedLockKey int64 = 0x70667365656401 // "pfseed\x01"
+
 type User struct {
-	ID                     string
-	Email                  string
-	PasswordHash           string
-	FullName               string
-	Role                   kernel.Role
-	PracticeID             string
-	EmailVerifiedAt        *time.Time
-	GoogleSub              string
-	AuthProvider           string
-	TOTPSecret             string
-	TOTPEnabled            bool
-	PreferredLocale        string
-	AvatarURL              string
-	MustChangePassword     bool
-	ProfessionalSpecialty  string
+	ID                    string
+	Email                 string
+	PasswordHash          string
+	FullName              string
+	Role                  kernel.Role
+	PracticeID            string
+	EmailVerifiedAt       *time.Time
+	GoogleSub             string
+	AuthProvider          string
+	TOTPSecret            string
+	TOTPEnabled           bool
+	PreferredLocale       string
+	AvatarURL             string
+	MustChangePassword    bool
+	ProfessionalSpecialty string
+	ContactPhone          string
+	TermsAcceptedAt       *time.Time
 }
 
 type Practice struct {
@@ -58,6 +67,15 @@ type Pet struct {
 	PhotoURL      string    `json:"photoUrl"`
 	PaymentStatus string    `json:"paymentStatus"`
 	LitterTag     string    `json:"litterTag,omitempty"`
+	MicrochipNumber        string `json:"microchipNumber,omitempty"`
+	HealthBookNumber       string `json:"healthBookNumber,omitempty"`
+	HealthBookPDFURL       string `json:"healthBookPdfUrl,omitempty"` // legacy; never a public media URL
+	HealthBookPDFAttached  bool   `json:"healthBookPdfAttached,omitempty"`
+	HealthBookPDFObjectKey string `json:"-"`
+	// FoodChainStatus: companion | food_producing | excluded_from_food_chain (DAF / médicaments).
+	FoodChainStatus string `json:"foodChainStatus,omitempty"`
+	// DomicileLocation: écurie / lieu de détention (équidés, rente, camélidés).
+	DomicileLocation string `json:"domicileLocation,omitempty"`
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
@@ -152,11 +170,12 @@ type TimelineItem struct {
 }
 
 type ClientSummary struct {
-	UserID    string `json:"userId"`
-	Email     string `json:"email"`
-	FullName  string `json:"fullName"`
-	AvatarURL string `json:"avatarUrl,omitempty"`
-	PetCount  int    `json:"petCount"`
+	UserID       string `json:"userId"`
+	Email        string `json:"email"`
+	FullName     string `json:"fullName"`
+	AvatarURL    string `json:"avatarUrl,omitempty"`
+	ContactPhone string `json:"contactPhone,omitempty"`
+	PetCount     int    `json:"petCount"`
 }
 
 type Store struct {
@@ -167,13 +186,18 @@ func New(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
+// Pool exposes the underlying pgx pool (admin staging seed, ops tooling).
+func (s *Store) Pool() *pgxpool.Pool {
+	return s.pool
+}
+
 func scanUser(row pgx.Row) (User, error) {
 	var u User
 	var passwordHash *string
 	err := row.Scan(
 		&u.ID, &u.Email, &passwordHash, &u.FullName, &u.Role, &u.PracticeID, &u.EmailVerifiedAt,
 		&u.GoogleSub, &u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.PreferredLocale, &u.AvatarURL,
-		&u.MustChangePassword, &u.ProfessionalSpecialty,
+		&u.MustChangePassword, &u.ProfessionalSpecialty, &u.ContactPhone, &u.TermsAcceptedAt,
 	)
 	if passwordHash != nil {
 		u.PasswordHash = *passwordHash
@@ -185,7 +209,7 @@ const userSelectCols = `
 	id::text, email, password_hash, full_name, role, COALESCE(practice_id::text,''), email_verified_at,
 	COALESCE(google_sub,''), COALESCE(auth_provider,'password'), COALESCE(totp_secret,''), totp_enabled,
 	COALESCE(preferred_locale,'fr'), COALESCE(avatar_url,''), must_change_password,
-	COALESCE(professional_specialty,'')`
+	COALESCE(professional_specialty,''), COALESCE(contact_phone,''), terms_accepted_at`
 
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
@@ -208,12 +232,12 @@ func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
 
 func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COUNT(p.id)::int
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''), COUNT(p.id)::int
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1
-		GROUP BY u.id, u.email, u.full_name, u.avatar_url
+		GROUP BY u.id, u.email, u.full_name, u.avatar_url, u.contact_phone
 		ORDER BY u.full_name`, practiceID)
 	if err != nil {
 		return nil, err
@@ -222,7 +246,7 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 	out := make([]ClientSummary, 0)
 	for rows.Next() {
 		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount); err != nil {
+		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount); err != nil {
 			return nil, err
 		}
 		out = append(out, c)
@@ -230,22 +254,17 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 	return out, rows.Err()
 }
 
-func (s *Store) CreatePet(ctx context.Context, p Pet) (Pet, error) {
-	p.ID = uuid.NewString()
-	if p.PaymentStatus == "" {
-		p.PaymentStatus = "pending_payment"
-	}
-	err := s.pool.QueryRow(ctx, `
-		INSERT INTO pets.pets (id, practice_id, owner_user_id, name, species, breed, birth_date, weight_kg, photo_url, payment_status, litter_tag)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-		RETURNING created_at`, p.ID, p.PracticeID, p.OwnerUserID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.PaymentStatus, p.LitterTag).Scan(&p.CreatedAt)
-	return p, err
-}
-
 func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
+	foodChain := p.FoodChainStatus
+	if foodChain == "" {
+		foodChain = "companion"
+	}
 	ct, err := s.pool.Exec(ctx, `
-		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$9`, p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag, p.OwnerUserID)
+		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8,
+			microchip_number=$9, health_book_number=$10, domicile_location=$11, food_chain_status=$12, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$13`,
+		p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag,
+		p.MicrochipNumber, p.HealthBookNumber, p.DomicileLocation, foodChain, p.OwnerUserID)
 	if err != nil {
 		return err
 	}
@@ -255,22 +274,64 @@ func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	return nil
 }
 
+func (s *Store) UpdatePetHealthBookPDF(ctx context.Context, petID, url, objectKey string) error {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets SET health_book_pdf_url=$2, health_book_pdf_object_key=$3, updated_at=NOW()
+		WHERE id=$1`, petID, url, objectKey)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) ClearPetHealthBookPDF(ctx context.Context, petID string) (previousObjectKey string, err error) {
+	err = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(health_book_pdf_object_key,'') FROM pets.pets WHERE id=$1`, petID).Scan(&previousObjectKey)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets SET health_book_pdf_url='', health_book_pdf_object_key='', updated_at=NOW()
+		WHERE id=$1`, petID)
+	if err != nil {
+		return "", err
+	}
+	if ct.RowsAffected() == 0 {
+		return "", ErrNotFound
+	}
+	return previousObjectKey, nil
+}
+
 func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 	var p Pet
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
-		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt)
+		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+		&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
+		&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Pet{}, ErrNotFound
 	}
 	if err == nil {
+		decoratePetHealthBook(&p)
 		if ent, e := s.GetEntitlementByPetID(ctx, id); e == nil {
 			p.Entitlement = &ent
 		}
-		if durations, e := s.GetPracticeHeartRateDurations(ctx, p.PracticeID); e == nil {
-			p.HeartrateDurationsSec = durations
+		if p.PracticeID != "" {
+			if durations, e := s.GetPracticeHeartRateDurations(ctx, p.PracticeID); e == nil {
+				p.HeartrateDurationsSec = durations
+			}
 		}
 	}
 	return p, err
@@ -278,8 +339,11 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 
 func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
 		return nil, err
@@ -293,7 +357,10 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 	rows, err := s.pool.Query(ctx, `
 		SELECT p.id::text, COALESCE(p.practice_id::text,''), p.owner_user_id::text, p.name, p.species,
 			COALESCE(p.breed,''), p.birth_date, p.weight_kg, COALESCE(p.photo_url,''),
-			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''), p.created_at,
+			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''),
+			COALESCE(p.microchip_number,''), COALESCE(p.health_book_number,''),
+			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''),
+			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''), p.created_at,
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -334,11 +401,14 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 		var p Pet
 		if err := rows.Scan(
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
-			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt,
+			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
 			&p.Permission,
 		); err != nil {
 			return nil, err
 		}
+		decoratePetHealthBook(&p)
 		out = append(out, p)
 	}
 	if out == nil {
@@ -359,8 +429,11 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 
 func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID string) ([]Pet, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, owner_user_id::text, name, species, COALESCE(breed,''),
-			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''), created_at
+		SELECT id::text, COALESCE(practice_id::text,''), owner_user_id::text, name, species, COALESCE(breed,''),
+			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
+			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
+			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {
 		return nil, err
@@ -373,12 +446,27 @@ func scanPets(rows pgx.Rows) ([]Pet, error) {
 	var out []Pet
 	for rows.Next() {
 		var p Pet
-		if err := rows.Scan(&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
+		decoratePetHealthBook(&p)
 		out = append(out, p)
 	}
 	return out, rows.Err()
+}
+
+// decoratePetHealthBook exposes attachment via flag only — never a public media URL (PHI).
+func decoratePetHealthBook(p *Pet) {
+	if p == nil {
+		return
+	}
+	attached := strings.TrimSpace(p.HealthBookPDFObjectKey) != ""
+	p.HealthBookPDFAttached = attached
+	p.HealthBookPDFURL = ""
 }
 
 func scanPetsWithEntitlements(ctx context.Context, s *Store, rows pgx.Rows) ([]Pet, error) {
@@ -437,7 +525,7 @@ func (s *Store) StartHeartRateSession(ctx context.Context, petID, ownerID, pract
 	}
 	err := s.pool.QueryRow(ctx, `
 		INSERT INTO heartrate.sessions (id, pet_id, owner_user_id, practice_id, status, duration_sec, started_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING started_at`,
+		VALUES ($1,$2,$3,NULLIF($4,'')::uuid,$5,$6,$7) RETURNING started_at`,
 		sess.ID, sess.PetID, sess.OwnerUserID, sess.PracticeID, sess.Status, sess.DurationSec, sess.StartedAt).Scan(&sess.StartedAt)
 	return sess, err
 }
@@ -519,6 +607,43 @@ func (s *Store) ListHeartRateSessions(ctx context.Context, petID string, vetView
 	return out, rows.Err()
 }
 
+// GetHeartRateAlertDelta returns the species rise threshold. ok=false when the
+// species is not monitored (e.g. other).
+func (s *Store) GetHeartRateAlertDelta(ctx context.Context, species string) (int, bool, error) {
+	species = strings.TrimSpace(strings.ToLower(species))
+	if !kernel.SupportsHeartRateControl(species) {
+		return 0, false, nil
+	}
+	var delta int
+	err := s.pool.QueryRow(ctx, `
+		SELECT delta_bpm FROM heartrate.species_alert_deltas WHERE species=$1`, species,
+	).Scan(&delta)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return delta, true, nil
+}
+
+// LastValidatedBPM returns the most recent validated BPM for a pet, if any.
+func (s *Store) LastValidatedBPM(ctx context.Context, petID string) (*int, error) {
+	var bpm int
+	err := s.pool.QueryRow(ctx, `
+		SELECT bpm FROM heartrate.sessions
+		WHERE pet_id=$1 AND status='validated' AND bpm IS NOT NULL
+		ORDER BY COALESCE(validated_at, ended_at, started_at) DESC
+		LIMIT 1`, petID).Scan(&bpm)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &bpm, nil
+}
+
 // MarkPetHeartRateSessionsSeen sets vet_seen_at for all validated unread sessions of a pet in a practice.
 func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practiceID string) (int64, error) {
 	ct, err := s.pool.Exec(ctx, `
@@ -535,21 +660,72 @@ func (s *Store) MarkPetHeartRateSessionsSeen(ctx context.Context, petID, practic
 }
 
 func (s *Store) GetOrCreateThread(ctx context.Context, practiceID, clientID, vetID string) (Thread, error) {
+	return s.GetOrCreateThreadForPet(ctx, practiceID, clientID, vetID, "")
+}
+
+// GetOrCreateThreadForPet returns the (practice, client, pet) thread.
+// Empty petID keeps the legacy general thread (pet_id IS NULL).
+func (s *Store) GetOrCreateThreadForPet(ctx context.Context, practiceID, clientID, vetID, petID string) (Thread, error) {
+	petID = strings.TrimSpace(petID)
 	var t Thread
-	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
-		FROM messaging.threads WHERE practice_id=$1 AND client_user_id=$2`, practiceID, clientID).Scan(
-		&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	var err error
+	if petID == "" {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id IS NULL`,
+			practiceID, clientID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id=$1 AND client_user_id=$2 AND pet_id=$3::uuid`,
+			practiceID, clientID, petID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	}
 	if err == nil {
 		return t, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return Thread{}, err
 	}
-	t = Thread{ID: uuid.NewString(), PracticeID: practiceID, ClientUserID: clientID, VetUserID: vetID}
+	t = Thread{ID: uuid.NewString(), PracticeID: practiceID, ClientUserID: clientID, VetUserID: vetID, PetID: petID}
 	_, err = s.pool.Exec(ctx, `
-		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id) VALUES ($1,$2,$3,$4)`,
-		t.ID, t.PracticeID, t.ClientUserID, t.VetUserID)
+		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
+		VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid)`,
+		t.ID, t.PracticeID, t.ClientUserID, t.VetUserID, t.PetID)
+	return t, err
+}
+
+// GetOrCreateCareProThread returns a person-scoped thread (practice_id IS NULL)
+// between a care_pro and a client. Distinct from cabinet practice threads.
+func (s *Store) GetOrCreateCareProThread(ctx context.Context, careProID, clientID, petID string) (Thread, error) {
+	petID = strings.TrimSpace(petID)
+	var t Thread
+	var err error
+	if petID == "" {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id IS NULL AND vet_user_id=$1 AND client_user_id=$2 AND pet_id IS NULL`,
+			careProID, clientID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+			FROM messaging.threads
+			WHERE practice_id IS NULL AND vet_user_id=$1 AND client_user_id=$2 AND pet_id=$3::uuid`,
+			careProID, clientID, petID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
+	}
+	if err == nil {
+		return t, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return Thread{}, err
+	}
+	t = Thread{ID: uuid.NewString(), ClientUserID: clientID, VetUserID: careProID, PetID: petID}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO messaging.threads (id, practice_id, client_user_id, vet_user_id, pet_id)
+		VALUES ($1,NULL,$2,$3,NULLIF($4,'')::uuid)`,
+		t.ID, t.ClientUserID, t.VetUserID, t.PetID)
 	return t, err
 }
 
@@ -654,7 +830,7 @@ func (s *Store) SetVetAvailability(ctx context.Context, vetID, practiceID string
 func (s *Store) GetThreadByID(ctx context.Context, threadID string) (Thread, error) {
 	var t Thread
 	err := s.pool.QueryRow(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+		SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 		FROM messaging.threads WHERE id=$1`, threadID).Scan(&t.ID, &t.PracticeID, &t.ClientUserID, &t.VetUserID, &t.PetID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Thread{}, ErrNotFound
@@ -664,7 +840,7 @@ func (s *Store) GetThreadByID(ctx context.Context, threadID string) (Thread, err
 
 func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id::text, practice_id::text, client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
+		SELECT id::text, COALESCE(practice_id::text,''), client_user_id::text, vet_user_id::text, COALESCE(pet_id::text,'')
 		FROM messaging.threads WHERE vet_user_id=$1 ORDER BY created_at DESC`, vetID)
 	if err != nil {
 		return nil, err
@@ -681,13 +857,13 @@ func (s *Store) ListThreadsForVet(ctx context.Context, vetID string) ([]Thread, 
 	return out, rows.Err()
 }
 
-func (s *Store) PetTimeline(ctx context.Context, petID string, vetView bool) ([]TimelineItem, error) {
-	return s.PetTimelineFiltered(ctx, petID, vetView, true, false)
-}
-
 // PetTimelineFiltered builds the pet timeline.
 // includeMessages: messaging bodies for this pet's thread.
-// redactVisitNotes: replace visit notes with empty body (ACL read-only).
+// redactVisitNotes: empty visit notes / CR excerpts (no write_notes / no pets.write_clinical for staff).
+// Visit report meta (hasReport) is included for staff/care_pro (vetView) when a non-empty CR exists;
+// CR body excerpts only when !redactVisitNotes — never for client timeline or public dossier share.
+// Vet timeline includes done visits, plus confirmed visits that already have a non-empty CR
+// (walk-in save without Terminer / finalize).
 func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, includeMessages, redactVisitNotes bool) ([]TimelineItem, error) {
 	hrFilter := ""
 	if vetView {
@@ -695,9 +871,77 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 	} else {
 		hrFilter = " AND status IN ('pending_validation','validated')"
 	}
-	visitBody := "COALESCE(notes,'')"
-	if redactVisitNotes {
-		visitBody = "''"
+
+	var visitBranch string
+	if vetView {
+		// Prefer non-empty CR excerpt over visit notes; redact body when ACL forbids clinical text.
+		visitBody := "''"
+		if !redactVisitNotes {
+			visitBody = `
+			CASE
+				WHEN r.id IS NOT NULL THEN left(r.body_text, 280)
+				WHEN btrim(COALESCE(v.notes, '')) <> '' THEN COALESCE(v.notes, '')
+				ELSE ''
+			END`
+		}
+		visitBranch = `
+		SELECT v.id::text, 'visit', 'Visite', ` + visitBody + `,
+			COALESCE(v.scheduled_at, v.created_at),
+			jsonb_build_object(
+				'status', v.status,
+				'source', v.source,
+				'visitId', v.id::text,
+				'hasReport', (r.id IS NOT NULL),
+				'reportStatus', COALESCE(r.status, '')
+			)
+		FROM visits.visits v
+		LEFT JOIN LATERAL (
+			SELECT id, status, body_text
+			FROM visits.visit_reports
+			WHERE visit_id = v.id
+				AND btrim(COALESCE(body_text, '')) <> ''
+			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
+			LIMIT 1
+		) r ON true
+		WHERE v.pet_id=$1
+			AND v.deleted_at IS NULL
+			AND (
+				v.status = 'done'
+				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
+			)`
+	} else {
+		// Client / dossier: hasReport only for finalized CR (opens client consultation).
+		// reportStatus may be draft|final (existence signal only); never leak draft body.
+		// Include confirmed visits that already have a persisted CR so draft/final CTAs appear
+		// before Terminer / even if finalize auto-done was skipped.
+		visitBody := "COALESCE(notes,'')"
+		if redactVisitNotes {
+			visitBody = "''"
+		}
+		visitBranch = `
+		SELECT v.id::text, 'visit', 'Visite', ` + visitBody + `,
+			COALESCE(v.scheduled_at, v.created_at),
+			jsonb_build_object(
+				'status', v.status,
+				'source', v.source,
+				'visitId', v.id::text,
+				'hasReport', (r.id IS NOT NULL AND r.status = 'final'),
+				'reportStatus', COALESCE(r.status, '')
+			)
+		FROM visits.visits v
+		LEFT JOIN LATERAL (
+			SELECT id, status
+			FROM visits.visit_reports r
+			WHERE r.visit_id = v.id
+			  AND ` + sqlVisitReportIsPersisted + `
+			ORDER BY CASE status WHEN 'final' THEN 0 ELSE 1 END, updated_at DESC
+			LIMIT 1
+		) r ON true
+		WHERE v.pet_id=$1 AND v.deleted_at IS NULL
+			AND (
+				v.status = 'done'
+				OR (v.status = 'confirmed' AND r.id IS NOT NULL)
+			)`
 	}
 	q := `
 		SELECT id::text, 'heartrate', 'Relevé cardiaque',
@@ -725,10 +969,7 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		UNION ALL
 		SELECT id::text, 'care', title, type, updated_at, jsonb_build_object('status', status, 'due_at', due_at)
 		FROM care.reminders WHERE pet_id=$1 AND status='done'
-		UNION ALL
-		SELECT id::text, 'visit', 'Visite', ` + visitBody + `, COALESCE(scheduled_at, created_at),
-			jsonb_build_object('status', status, 'source', source)
-		FROM visits.visits WHERE pet_id=$1 AND status='done'`
+		UNION ALL` + visitBranch
 	if includeMessages {
 		q += `
 		UNION ALL
@@ -760,6 +1001,21 @@ func (s *Store) PetTimelineFiltered(ctx context.Context, petID string, vetView, 
 		out = []TimelineItem{}
 	}
 	return out, rows.Err()
+}
+
+func (s *Store) InsertDossierEvent(ctx context.Context, petID, authorUserID, eventType, content string) error {
+	petID = strings.TrimSpace(petID)
+	authorUserID = strings.TrimSpace(authorUserID)
+	eventType = strings.TrimSpace(eventType)
+	content = strings.TrimSpace(content)
+	if petID == "" || authorUserID == "" || eventType == "" || content == "" {
+		return ErrValidation
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO pets.dossier_events (id, pet_id, author_user_id, event_type, content)
+		VALUES ($1, $2::uuid, $3::uuid, $4, $5)`,
+		uuid.NewString(), petID, authorUserID, eventType, content)
+	return err
 }
 
 func (s *Store) LogNotification(ctx context.Context, vetID, kind string, payload map[string]any) error {

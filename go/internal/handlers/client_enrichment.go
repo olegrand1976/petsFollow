@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,7 +29,30 @@ func (a *API) listMyVets(w http.ResponseWriter, r *http.Request) {
 }
 
 type inviteVetReq struct {
-	Email string `json:"email"`
+	Email     string `json:"email"`
+	VetUserID string `json:"vetUserId"`
+}
+
+func (a *API) lookupVets(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	if a.vetLookupRL != nil && !a.vetLookupRL.Allow("lookup:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	hits, err := a.store.LookupVets(r.Context(), q, 10)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if hits == nil {
+		hits = []store.VetLookupHit{}
+	}
+	httpx.WriteData(w, http.StatusOK, hits)
 }
 
 func (a *API) inviteVet(w http.ResponseWriter, r *http.Request) {
@@ -38,16 +62,93 @@ func (a *API) inviteVet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req inviteVetReq
-	if err := httpx.DecodeJSON(r, &req); err != nil || req.Email == "" {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	result, err := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
+	var result store.VetInviteResult
+	switch {
+	case strings.TrimSpace(req.VetUserID) != "":
+		result, err = a.store.InviteClientToVetByID(r.Context(), id.UserID, req.VetUserID)
+	case strings.TrimSpace(req.Email) != "":
+		result, err = a.store.InviteClientToVetByEmail(r.Context(), id.UserID, req.Email)
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, result)
+}
+
+type suggestVetReq struct {
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	FullName     string `json:"fullName"`
+	PracticeName string `json:"practiceName"`
+}
+
+func (a *API) suggestVet(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil || id.Role != kernel.RoleClient {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "client_only")
+		return
+	}
+	if a.vetSuggestRL != nil && !a.vetSuggestRL.Allow("suggest:"+id.UserID) {
+		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
+		return
+	}
+	var req suggestVetReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	phone := strings.TrimSpace(req.Phone)
+	if email == "" || phone == "" || !strings.Contains(email, "@") {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+		return
+	}
+	// If the email already matches a vet on the platform, create a real invite instead.
+	existing, ierr := a.store.InviteClientToVetByEmail(r.Context(), id.UserID, email)
+	if ierr != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if existing.Found {
+		httpx.WriteData(w, http.StatusOK, map[string]any{
+			"status":       "invited",
+			"found":        true,
+			"practiceName": existing.PracticeName,
+			"vetFullName":  existing.VetFullName,
+		})
+		return
+	}
+	lead, err := a.store.CreateVetLead(r.Context(), id.UserID, store.VetLeadInput{
+		Email: email, Phone: phone, FullName: req.FullName, PracticeName: req.PracticeName,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	clientName := id.Email
+	if u, uerr := a.store.GetUserByID(r.Context(), id.UserID); uerr == nil && u.FullName != "" {
+		clientName = u.FullName
+	}
+	if to := strings.TrimSpace(a.cfg.OpsNotifyEmail); to != "" && a.notifier != nil {
+		_ = a.notifier.SendVetLeadNotify(to, clientName, id.Email, lead.Email, lead.Phone, lead.FullName, lead.PracticeName)
+	}
+	httpx.WriteData(w, http.StatusCreated, map[string]any{
+		"status": "suggested",
+		"found":  false,
+		"leadId": lead.ID,
+	})
 }
 
 type primaryPracticeReq struct {
@@ -65,7 +166,11 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	if err := a.store.SetPetPrimaryPractice(r.Context(), chi.URLParam(r, "petID"), id.UserID, req.PracticeID); err != nil {
+	petID := chi.URLParam(r, "petID")
+	if _, ok := a.requirePetOwner(w, r, petID, id.UserID); !ok {
+		return
+	}
+	if err := a.store.SetPetPrimaryPractice(r.Context(), petID, id.UserID, req.PracticeID); err != nil {
 		if errors.Is(err, store.ErrForbidden) {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "cannot_change_practice")
 			return
@@ -77,6 +182,7 @@ func (a *API) setPetPrimaryPractice(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	_ = a.store.StampClientPracticeIfEmpty(r.Context(), id.UserID, req.PracticeID)
 	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
@@ -91,6 +197,15 @@ func (a *API) requirePetOwner(w http.ResponseWriter, r *http.Request, petID, use
 		return store.Pet{}, false
 	}
 	return pet, true
+}
+
+// requirePetPractice rejects cabinet-scoped mutations when the pet has no linked practice yet.
+func (a *API) requirePetPractice(w http.ResponseWriter, r *http.Request, pet store.Pet) bool {
+	if strings.TrimSpace(pet.PracticeID) == "" {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "vet_link_required")
+		return false
+	}
+	return true
 }
 
 func (a *API) requirePetOwnerOrPractice(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
@@ -196,6 +311,12 @@ func (a *API) createCareReminder(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
+	if !a.requirePetPractice(w, r, pet) {
+		return
+	}
 	if kernel.IsPracticeStaff(id.Role) {
 		if !a.checkPracticePerm(w, r, id, "care.manage") {
 			return
@@ -271,6 +392,9 @@ func (a *API) markCareReminderDone(w http.ResponseWriter, r *http.Request) {
 		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
 			return
 		}
+		if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, rem.PetID) {
+			return
+		}
 		updated, err = a.store.MarkCareReminderDoneByID(r.Context(), rem.ID)
 	default:
 		if !a.checkPracticePerm(w, r, id, "care.manage") {
@@ -323,6 +447,9 @@ func (a *API) postponeCareReminder(w http.ResponseWriter, r *http.Request) {
 		if _, ok := a.requirePetAccess(w, r, rem.PetID, id, store.PermWriteNotes); !ok {
 			return
 		}
+		if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, rem.PetID) {
+			return
+		}
 		updated, err = a.store.PostponeCareReminderByID(r.Context(), rem.ID, req.Days)
 	default:
 		if !a.checkPracticePerm(w, r, id, "care.manage") {
@@ -371,6 +498,13 @@ func (a *API) listVisits(w http.ResponseWriter, r *http.Request) {
 			visits[i].Notes = ""
 		}
 	}
+	// hasFinalReport drives the client consultation CTA — owner-only (share/read are owner-gated).
+	if id.Role == kernel.RoleClient && pet.OwnerUserID == id.UserID {
+		if err := a.store.AttachFinalReportFlags(r.Context(), visits); err != nil {
+			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+			return
+		}
+	}
 	httpx.WriteData(w, http.StatusOK, visits)
 }
 
@@ -379,7 +513,12 @@ type createVisitReq struct {
 	Notes             string  `json:"notes"`
 	ConfirmDirect     bool    `json:"confirmDirect"`
 	DurationMinutes   *int    `json:"durationMinutes"`
+	VisitTypeID       *string `json:"visitTypeId"`
 	RequestPreconsult bool    `json:"requestPreconsult"`
+	// SilentConfirm skips client push/email when confirming immediately (walk-in consultation).
+	SilentConfirm bool `json:"silentConfirm"`
+	// ConsultationSession marks a walk-in CR flow (excluded from agenda overlap).
+	ConsultationSession bool `json:"consultationSession"`
 }
 
 func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
@@ -393,6 +532,12 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if id.Role == kernel.RoleClient && !a.requirePremiumAccess(w, r, pet.ID) {
+		return
+	}
+	if !a.requirePetPractice(w, r, pet) {
+		return
+	}
 	var req createVisitReq
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
@@ -400,19 +545,29 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	}
 	var scheduledAt *time.Time
 	if req.ScheduledAt != nil && *req.ScheduledAt != "" {
-		if t, err := time.Parse(time.RFC3339, *req.ScheduledAt); err == nil {
-			scheduledAt = &t
+		t, perr := time.Parse(time.RFC3339, *req.ScheduledAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_scheduled_at")
+			return
 		}
+		scheduledAt = &t
 	}
 	source := "client"
-	if id.Role == kernel.RoleCarePro || kernel.IsPracticeStaff(id.Role) {
+	switch {
+	case id.Role == kernel.RoleCarePro:
+		source = "care_pro"
+	case kernel.IsPracticeStaff(id.Role):
 		source = "vet"
 	}
+	actsAsPro := source == "vet" || source == "care_pro"
 
-	confirmDirect := source == "vet" && req.ConfirmDirect
+	confirmDirect := actsAsPro && req.ConfirmDirect
 	if confirmDirect {
+		// Practice staff with calendar.manage, pet full ACL, or care_pro terrain
+		// (write_notes already checked via requirePetAccess) may confirm immediately.
 		practiceStaff := a.allowPracticePerm(r, id, "calendar.manage") && id.PracticeID != "" && pet.PracticeID == id.PracticeID
-		if !practiceStaff {
+		careProTerrain := id.Role == kernel.RoleCarePro
+		if !practiceStaff && !careProTerrain {
 			fullOK, ferr := a.store.CanAccessPet(r.Context(), store.IdentityOf(id.UserID, id.Role, id.PracticeID), pet, store.PermFull)
 			if ferr != nil {
 				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -425,15 +580,59 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	consultationSession := actsAsPro && req.ConsultationSession
+	if consultationSession {
+		if !confirmDirect {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_requires_confirm")
+			return
+		}
+		if scheduledAt == nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_requires_schedule")
+			return
+		}
+		// Walk-in only: reject far-future slots used to bypass agenda overlap.
+		if scheduledAt.Sub(time.Now()).Abs() > 30*time.Minute {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_stale")
+			return
+		}
+	}
+
 	enabled, slotDur, err := a.store.ClientBookingEnabled(r.Context(), pet.PracticeID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	// Clients always use cabinet slot duration (ignore client-supplied duration).
+	// Clients always use cabinet slot duration (ignore client-supplied duration / type).
 	duration := slotDur
-	if source == "vet" && req.DurationMinutes != nil {
-		duration = *req.DurationMinutes
+	var visitTypeID *string
+	if actsAsPro {
+		if req.VisitTypeID != nil && strings.TrimSpace(*req.VisitTypeID) != "" {
+			vt, verr := a.store.GetVisitType(r.Context(), pet.PracticeID, strings.TrimSpace(*req.VisitTypeID))
+			if verr != nil {
+				if errors.Is(verr, store.ErrNotFound) {
+					writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_visit_type")
+					return
+				}
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if !vt.IsActive {
+				writeErr(w, r, http.StatusBadRequest, "bad_request", "visit_type_inactive")
+				return
+			}
+			duration = vt.DurationMinutes
+			idCopy := vt.ID
+			visitTypeID = &idCopy
+		} else if req.DurationMinutes != nil {
+			duration = *req.DurationMinutes
+		}
+	}
+	if _, err := store.NormalizeVisitDuration(duration); err != nil {
+		if actsAsPro {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_duration")
+			return
+		}
+		duration = 30
 	}
 
 	if source == "client" {
@@ -450,8 +649,9 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "slot_required")
 			return
 		}
-	} else if scheduledAt != nil {
-		// Vet-created timed visits: still block vacation / overlap (slot grid optional).
+	} else if scheduledAt != nil && !consultationSession {
+		// Timed RDV: block vacation (overlap under lock in CreateVisitBooked).
+		// Walk-in consultation sessions skip vacation — terrain / cabinet immédiat.
 		if onVac, err := a.store.IsOnVacation(r.Context(), pet.PracticeID, *scheduledAt); err != nil {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
@@ -459,23 +659,18 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "on_vacation", "on_vacation")
 			return
 		}
-		if overlap, err := a.store.HasVisitOverlap(r.Context(), pet.PracticeID, *scheduledAt, duration, ""); err != nil {
-			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-			return
-		} else if overlap {
-			writeErr(w, r, http.StatusConflict, "slot_taken", "slot_taken")
-			return
-		}
 	}
 
 	in := store.CreateVisitInput{
-		PetID:           pet.ID,
-		PracticeID:      pet.PracticeID,
-		Source:          source,
-		Notes:           req.Notes,
-		ScheduledAt:     scheduledAt,
-		DurationMinutes: &duration,
-		ConfirmDirect:   confirmDirect,
+		PetID:               pet.ID,
+		PracticeID:          pet.PracticeID,
+		Source:              source,
+		Notes:               req.Notes,
+		ScheduledAt:         scheduledAt,
+		DurationMinutes:     &duration,
+		VisitTypeID:         visitTypeID,
+		ConfirmDirect:       confirmDirect,
+		ConsultationSession: consultationSession,
 	}
 	if req.RequestPreconsult && source == "vet" && a.allowPracticePerm(r, id, "calendar.manage") {
 		in.RequestPreconsult = true
@@ -484,7 +679,8 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 		in.DurationMinutes = nil
 	}
 	var visit store.Visit
-	if source == "client" && scheduledAt != nil {
+	// Walk-in sessions skip agenda lock/overlap; timed RDV go through CreateVisitBooked.
+	if scheduledAt != nil && !consultationSession {
 		visit, err = a.store.CreateVisitBooked(r.Context(), in)
 		if err != nil {
 			if errors.Is(err, store.ErrValidation) {
@@ -504,10 +700,10 @@ func (a *API) createVisit(w http.ResponseWriter, r *http.Request) {
 	if source == "client" {
 		a.notifyVetsVisitRequest(pet, visit)
 	}
-	if source == "vet" && !confirmDirect && visit.Status == "requested" {
+	if actsAsPro && !confirmDirect && visit.Status == "requested" {
 		a.pushVisitProposed(pet.OwnerUserID, visit.ID, pet.ID, pet.Name)
 	}
-	if visit.Status == "confirmed" {
+	if visit.Status == "confirmed" && !(req.SilentConfirm || in.ConsultationSession) {
 		a.onVisitConfirmed(pet, visit)
 	}
 	httpx.WriteData(w, http.StatusCreated, visit)
@@ -573,6 +769,66 @@ func (a *API) listVetVisits(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = a.store.AttachPreconsultStatuses(r.Context(), visits)
 	httpx.WriteData(w, http.StatusOK, visits)
+}
+
+func (a *API) listVetConsultations(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "calendar.manage")
+	if !ok {
+		return
+	}
+	q := r.URL.Query()
+	f := store.ListConsultationsFilter{
+		Status: strings.TrimSpace(q.Get("status")),
+		Query:  strings.TrimSpace(q.Get("q")),
+	}
+	switch f.Status {
+	case "", "confirmed", "done", "cancelled", "requested", "reschedule_pending":
+	default:
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+		return
+	}
+	if raw := strings.TrimSpace(q.Get("from")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_from")
+			return
+		}
+		f.From = &t
+	}
+	if raw := strings.TrimSpace(q.Get("to")); raw != "" {
+		t, err := time.Parse(time.RFC3339, raw)
+		if err != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_to")
+			return
+		}
+		f.To = &t
+	}
+	if raw := strings.TrimSpace(q.Get("hasAudio")); raw != "" {
+		v := raw == "1" || strings.EqualFold(raw, "true")
+		f.HasAudio = &v
+	}
+	if raw := strings.TrimSpace(q.Get("limit")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_limit")
+			return
+		}
+		f.Limit = n
+	}
+	if raw := strings.TrimSpace(q.Get("offset")); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 0 {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_offset")
+			return
+		}
+		f.Offset = n
+	}
+	items, err := a.store.ListPracticeConsultations(r.Context(), id.PracticeID, f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, items)
 }
 
 func (a *API) listVetOverdueCare(w http.ResponseWriter, r *http.Request) {
@@ -673,6 +929,18 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Care_pro may complete shared terrain visits (done) but must not cancel/reschedule
+	// cabinet or client bookings — only visits they originated (source=care_pro).
+	if id.Role == kernel.RoleCarePro {
+		switch action {
+		case "cancel", "propose_reschedule", "accept_reschedule", "reject_reschedule", "reopen", "confirm":
+			if visit.Source != "care_pro" {
+				writeErr(w, r, http.StatusForbidden, "forbidden", "care_pro_visit_only")
+				return
+			}
+		}
+	}
+
 	var updated store.Visit
 	switch action {
 	case "confirm":
@@ -710,11 +978,35 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
 		}
+		// Walk-in discard must not race past a CR save (empty Ensure draft is OK to cancel).
+		if visit.ConsultationSession {
+			hasReport, herr := a.store.VisitHasPersistedReport(r.Context(), visit.ID)
+			if herr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+				return
+			}
+			if hasReport {
+				writeErr(w, r, http.StatusConflict, "conflict", "consultation_has_report")
+				return
+			}
+		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "cancelled")
 	case "done":
 		if !actsAsVet {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
 			return
+		}
+		// Only finalize on a valid Terminer transition (confirmed→done) or idempotent already-done.
+		// Never mutate CR/audio on invalid_status (requested/cancelled/…).
+		if visit.Status == "confirmed" || visit.Status == "done" {
+			if ferr := a.finalizePersistedDraftReports(r.Context(), visit, id.UserID); ferr != nil {
+				writeErr(w, r, http.StatusInternalServerError, "internal", "report_finalize_failed")
+				return
+			}
+		}
+		if visit.Status == "done" {
+			updated = visit
+			break
 		}
 		if visit.Status != "confirmed" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
@@ -722,6 +1014,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		updated, err = a.store.UpdateVisitStatus(r.Context(), visit.ID, "done")
 	case "propose_reschedule":
+		if visit.ConsultationSession {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_not_reschedulable")
+			return
+		}
 		if visit.Status != "requested" && visit.Status != "confirmed" && visit.Status != "reschedule_pending" {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
 			return
@@ -772,6 +1068,10 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case "accept_reschedule":
+		if visit.ConsultationSession {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "consultation_session_not_reschedulable")
+			return
+		}
 		if visit.PendingActionBy == nil {
 			writeErr(w, r, http.StatusForbidden, "forbidden", "not_your_turn")
 			return
@@ -832,6 +1132,50 @@ func (a *API) updateVisit(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, store.ErrValidation) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_status")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, updated)
+}
+
+// softDeleteVisit hides a walk-in consultation from /consultations history (deleted_at).
+// Allowed even when done / with persisted CR — unlike cancel.
+func (a *API) softDeleteVisit(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if !kernel.IsPracticeStaff(id.Role) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
+		return
+	}
+	// Soft-delete removes clinical history visibility — need calendar + clinical write.
+	if !a.checkPracticePerm(w, r, id, "calendar.manage") {
+		return
+	}
+	if !a.checkPracticePerm(w, r, id, "pets.write_clinical") {
+		return
+	}
+	visit, err := a.store.GetVisit(r.Context(), chi.URLParam(r, "id"))
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
+		return
+	}
+	if visit.PracticeID != id.PracticeID {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "wrong_practice")
+		return
+	}
+	if !visit.ConsultationSession {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "not_consultation_session")
+		return
+	}
+	updated, err := a.store.SoftDeleteVisit(r.Context(), visit.ID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "visit_not_found")
 			return
 		}
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")

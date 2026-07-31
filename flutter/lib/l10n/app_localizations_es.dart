@@ -31,6 +31,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Confirme primero su email (enlace enviado al registrarse) y vuelva a iniciar sesión.';
 
   @override
+  String get resendConfirmation => 'Reenviar el correo de confirmación';
+
+  @override
+  String get resendConfirmationSent =>
+      'Si la cuenta existe y aún no está confirmada, se ha enviado un nuevo correo.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'No se pudo enviar. Inténtelo de nuevo en un momento.';
+
+  @override
   String get loginOr => 'o';
 
   @override
@@ -139,6 +150,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuenta creada. Abre el enlace del email de validación y vuelve a iniciar sesión en la app.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Cuenta creada, pero no se pudo aplicar el código de invitación. Puede volver a introducirlo tras iniciar sesión.';
+
+  @override
   String get registerFailed => 'No se pudo registrar';
 
   @override
@@ -239,6 +254,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proLightFinalizeReport => 'Finalizar';
 
   @override
+  String get proLightNewConsultation => 'Nueva consulta';
+
+  @override
+  String get proLightConsultationNextTitle => 'Consulta guardada — ¿siguiente?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'Crear DAF y facturar';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Facturar directamente';
+
+  @override
+  String get proLightConsultationCtaDone => 'Terminar';
+
+  @override
   String get proLightReportFinal => 'Finalizado';
 
   @override
@@ -308,7 +338,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proLightDictationStart => 'Dictar';
 
   @override
-  String get proLightDictationStop => 'Parar y transcribir';
+  String get proLightDictationStop => 'Detener';
+
+  @override
+  String get proLightRecordingInProgress => 'Grabación en curso';
 
   @override
   String get proLightAudioConsentTitle => 'Consentimiento de audio';
@@ -407,6 +440,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get forceChangePasswordSubmit => 'Guardar y continuar';
 
   @override
+  String get acceptTermsTitle => 'Condiciones de uso';
+
+  @override
+  String get acceptTermsSubtitle =>
+      'Su cuenta fue creada por su clínica. Acepte las condiciones y la política de privacidad para continuar.';
+
+  @override
+  String get acceptTermsSubmit => 'Aceptar y continuar';
+
+  @override
+  String get acceptTermsFailed =>
+      'No se pudo guardar el consentimiento. Inténtelo de nuevo.';
+
+  @override
   String get passwordTooShort => 'Mínimo 8 caracteres';
 
   @override
@@ -434,6 +481,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get registerConsentRequired =>
       'Debe aceptar las condiciones y la política de privacidad.';
+
+  @override
+  String get registerInviteCode => 'Código de invitación (opcional)';
+
+  @override
+  String get registerInviteCodeHint =>
+      'Introduzca el código del QR / enlace comercial';
 
   @override
   String get nearbyCommercialTitle => 'Comercial cerca de usted';
@@ -610,11 +664,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, continuidad de cuidados (incluidas lecturas cardíacas), mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google).\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@ll-it-sc.be.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
+      'Política de privacidad — petsFollow\n\nDatos recogidos: identidad (nombre, correo), datos de la mascota (nombre, especie, raza, fotos), lecturas de frecuencia cardíaca (datos de salud animal), mensajes y medios con la clínica, informes de visita (texto y grabaciones de audio), coordenadas GPS de las visitas a domicilio (profesionales de cuidado), tokens de notificación (FCM), datos de pago tratados por Stripe.\n\nFinalidades: gestión de la cuenta, continuidad de cuidados (incluidas lecturas cardíacas), mensajería veterinaria, informes de visita, notificaciones, facturación.\n\nTratamiento IA: Google Gemini se utiliza para mejorar los informes de visita (audio procesado en tiempo real, no conservado por Google).\n\nEncargados / socios: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagos), hosting cloud (GCP).\n\nConservación: hasta la eliminación de la cuenta; cuentas inactivas purgadas tras 3 años; audio de los informes conservado mientras exista el expediente.\n\nDerechos RGPD (acceso, rectificación, supresión, portabilidad): Perfil → Exportar mis datos / Eliminar cuenta, o support@petsfollow.app.\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nÚltima actualización: julio de 2026';
 
   @override
   String get legalNoticeBody =>
-      'Aviso legal — petsFollow\n\nEditor: LL-IT-SC / petsFollow\nContacto: support@ll-it-sc.be\n\nAlojamiento: Google Cloud Platform (conforme al RGPD).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nÚltima actualización: julio de 2026';
+      'Aviso legal — petsFollow\n\nEditor: LL-IT-SC / petsFollow\nContacto: support@petsfollow.app\n\nAlojamiento: Google Cloud Platform (conforme al RGPD).\n\nVersión completa: https://petsfollow.ll-it-sc.be/legal/mentions\n\nÚltima actualización: julio de 2026';
 
   @override
   String get language => 'Idioma';
@@ -636,6 +690,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get languageIt => 'Italiano';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
 
   @override
   String get planMonthlyLabel => '3,50 € / mes';
@@ -709,10 +772,72 @@ class AppLocalizationsEs extends AppLocalizations {
   String get petName => 'Nombre';
 
   @override
+  String get petNameRequired => 'Indica el nombre del animal';
+
+  @override
   String get species => 'Especie';
 
   @override
   String get breed => 'Raza';
+
+  @override
+  String get petMicrochipOptional => 'N.º de chip (opcional)';
+
+  @override
+  String get petHealthBookNumberOptional => 'N.º de cartilla (opcional)';
+
+  @override
+  String get petDomicileLocation => 'Domicilio / cuadra';
+
+  @override
+  String get petDomicileHint => 'Ej. Cuadra de los Sauces — Bruselas';
+
+  @override
+  String get petFoodChainStatus => 'Estado cadena alimentaria';
+
+  @override
+  String get petFoodChainCompanion => 'Animal de compañía (fuera de cadena)';
+
+  @override
+  String get petFoodChainFoodProducing =>
+      'Animal de renta / cadena alimentaria';
+
+  @override
+  String get petFoodChainExcluded => 'Excluido de la cadena alimentaria';
+
+  @override
+  String get petHealthBookAddPages => 'Añadir fotos de la cartilla';
+
+  @override
+  String get petHealthBookReplacePages => 'Sustituir PDF (fotos)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count página(s) seleccionada(s)';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'PDF de la cartilla adjunto';
+
+  @override
+  String get petHealthBookRemovePdf => 'Eliminar';
+
+  @override
+  String get petHealthBookOpenPdf => 'Abrir cartilla (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Chip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Cartilla: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Mascota guardada, pero no se pudo enviar la cartilla';
 
   @override
   String get choosePlan => 'Elija su plan';
@@ -727,7 +852,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get autoRenewSubtitle => 'Se cobra en cada renovación';
 
   @override
-  String get continueToPayment => 'Continuar al pago';
+  String get continueToPayment => 'Guardar y pagar';
+
+  @override
+  String get petFormSave => 'Guardar';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Mascota guardada — actívela para acceder a las funciones';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Pago requerido para usar las funciones de esta mascota';
 
   @override
   String get paymentConfirmed => 'Pago confirmado — mascota activa';
@@ -756,7 +892,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorPaymentRequired =>
-      'Se requiere una suscripción para enviar medios';
+      'Se requiere una suscripción para usar esta función';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -798,6 +934,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay ninguna duración de medición configurada para esta clínica. Contacte con su veterinario.';
 
   @override
+  String get heartRateNotSupported =>
+      'La medición cardíaca no está disponible para esta especie';
+
+  @override
   String get start => 'Empezar';
 
   @override
@@ -824,7 +964,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Alerta de umbral';
+  String get thresholdAlert =>
+      'Alerta: aumento significativo respecto a la lectura anterior';
 
   @override
   String get validateAndSend => 'Validar y enviar al veterinario';
@@ -867,6 +1008,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get speciesHorse => 'Caballo';
 
   @override
+  String get speciesDonkey => 'Asno';
+
+  @override
+  String get speciesCattle => 'Bovino';
+
+  @override
+  String get speciesSheep => 'Ovino';
+
+  @override
+  String get speciesGoat => 'Caprino';
+
+  @override
+  String get speciesPig => 'Porcino';
+
+  @override
+  String get speciesPoultry => 'Aves de corral';
+
+  @override
+  String get speciesRabbit => 'Conejo';
+
+  @override
+  String get speciesAlpaca => 'Alpaca';
+
+  @override
+  String get speciesLlama => 'Llama';
+
+  @override
   String get speciesOther => 'Otro';
 
   @override
@@ -883,31 +1051,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get discoveryTitle => 'Descubra petsFollow';
 
   @override
-  String get discoveryMission => 'Su recorrido de 7 días';
+  String get discoveryMission => 'Su recorrido petsFollow';
 
   @override
-  String get discoveryDay0Title => 'Día 0 — Bienvenida';
+  String get discoveryDay0Title => 'Paso 1 — Bienvenida';
 
   @override
   String get discoveryDay0Body =>
       'Cree el perfil de su mascota y descubra la app — mensajería, recordatorios y lecturas (incluida la frecuencia cardíaca).';
 
   @override
-  String get discoveryDay2Title => 'Día 2 — Primera lectura';
+  String get discoveryDay2Title => 'Paso 2 — Primera lectura';
 
   @override
   String get discoveryDay2Body =>
       'Tome su primera lectura de frecuencia cardíaca y familiarícese con la técnica.';
 
   @override
-  String get discoveryDay4Title => 'Día 4 — Rutina';
+  String get discoveryDay4Title => 'Paso 3 — Rutina';
 
   @override
   String get discoveryDay4Body =>
       'Cree el hábito de medir a diario con recordatorios personalizados.';
 
   @override
-  String get discoveryDay6Title => 'Día 6 — Compartir con el veterinario';
+  String get discoveryDay6Title => 'Paso 4 — Compartir con el veterinario';
 
   @override
   String get discoveryDay6Body =>
@@ -924,6 +1092,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noVets => 'Ningún veterinario vinculado';
+
+  @override
+  String get vetLinkRequired =>
+      'Vincula un veterinario para activar el seguimiento con tu clínica';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Vincular un veterinario';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Vincula una clínica para activar mensajería, visitas y recordatorios de cuidados.';
+
+  @override
+  String get linkVetHomeTitle => '¿Vincular un veterinario?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Tu mascota está guardada. ¿Quieres vincular un veterinario? Es opcional — puedes hacerlo más tarde.';
+
+  @override
+  String get linkVetLater => 'Más tarde';
 
   @override
   String get primaryVet => 'Veterinario principal';
@@ -1074,6 +1263,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get litterTag => 'Etiqueta de camada';
 
   @override
+  String get petBirthDate => 'Fecha de nacimiento';
+
+  @override
+  String get petBirthDateInvalid =>
+      'Fecha de nacimiento no válida (AAAA-MM-DD)';
+
+  @override
   String get discoveryMarkDone => 'Misión completada';
 
   @override
@@ -1176,7 +1372,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'D$day';
+    return 'P$day';
   }
 
   @override
@@ -1210,6 +1406,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noThreads => 'Sin conversaciones';
 
   @override
+  String get messageNoMessagesYet => 'Aún no hay mensajes';
+
+  @override
+  String get messageNewConversation => 'Nueva conversación';
+
+  @override
+  String get messageComposeTitle => 'Nueva conversación';
+
+  @override
+  String get messageChoosePro => 'Profesional de cuidados';
+
+  @override
+  String get messageChooseClient => 'Cliente';
+
+  @override
+  String get messageChoosePet => 'Animal concernido';
+
+  @override
+  String get messageChoosePetOptional => 'Animal (opcional)';
+
+  @override
+  String get messageGeneralThread => 'Conversación general';
+
+  @override
+  String get messageStartConversation => 'Empezar';
+
+  @override
+  String get messageLockedTitle => 'Mensajería no disponible';
+
+  @override
+  String get messageLockedBody =>
+      'Vincule un veterinario para hablar con un profesional de cuidados.';
+
+  @override
   String get vetInviteSent =>
       'Invitación enviada — la clínica debe aceptar la solicitud';
 
@@ -1224,7 +1454,39 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'Buscamos esta cuenta de veterinario en petsFollow. Si existe, se envía una solicitud de vinculación a la clínica.';
+      'Busque por nombre, correo o clínica. Si ya está en petsFollow, se envía una solicitud de vinculación a la clínica.';
+
+  @override
+  String get addVetSearchLabel => 'Buscar un veterinario';
+
+  @override
+  String get addVetSearchFieldHint => 'Nombre, correo o clínica';
+
+  @override
+  String get addVetNotListed => 'Mi veterinario no aparece';
+
+  @override
+  String get addVetSuggestTitle => 'Nuevo veterinario';
+
+  @override
+  String get addVetSuggestBody =>
+      'Indique el correo y el teléfono de la clínica. Les contactaremos para que se unan a petsFollow.';
+
+  @override
+  String get addVetSuggestEmail => 'Correo de la clínica';
+
+  @override
+  String get addVetSuggestPhone => 'Teléfono';
+
+  @override
+  String get addVetSuggestNameOptional => 'Nombre del veterinario (opcional)';
+
+  @override
+  String get addVetSuggestCta => 'Enviar sugerencia';
+
+  @override
+  String get vetSuggestSent =>
+      'Gracias — contactaremos a la clínica. Le avisaremos cuando se una a petsFollow.';
 
   @override
   String get visitRequested => 'Solicitud de visita enviada';
@@ -1307,6 +1569,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get takePhoto => 'Hacer una foto';
 
   @override
+  String get takeVideo => 'Grabar un vídeo';
+
+  @override
   String get chooseFromGallery => 'Elegir de la galería';
 
   @override
@@ -1317,6 +1582,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get attachVideo => 'Vídeo';
+
+  @override
+  String get compressingMedia => 'Comprimiendo el vídeo…';
 
   @override
   String get openMedia => 'Abrir';
@@ -1330,6 +1598,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get appInviteHint =>
       'Muestre este QR o comparta el enlace. Un nuevo cliente que se registre con este enlace se vincula automáticamente.';
+
+  @override
+  String get appInviteHintClient =>
+      'Comparte este QR con un amigo. Quedará vinculado a ti (padrinazgo) y podrá unirse a tu clínica si aún no tiene una.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Dos enlaces: clientes (app) y clínicas (registro Pro con su código de patrocinio).';
 
   @override
   String get appInviteHintShort => 'Enlace de descarga y vinculación';
@@ -1360,7 +1636,53 @@ class AppLocalizationsEs extends AppLocalizations {
       'QR de invitación a clientes y acceso al sitio Pro.';
 
   @override
+  String get commercialManagerFieldSubtitle =>
+      'Resultados del equipo, QR de invitación y acceso al sitio Pro.';
+
+  @override
   String get commercialOpenProWeb => 'Abrir sitio Pro';
+
+  @override
+  String get managerTeamCta => 'Resultados de mi equipo';
+
+  @override
+  String get managerTeamTitle => 'Equipo';
+
+  @override
+  String get managerTeamSection => 'Resultados del equipo';
+
+  @override
+  String get managerSelfSection => 'Mis resultados';
+
+  @override
+  String get managerMembersSection => 'Comerciales';
+
+  @override
+  String get managerTeamEmpty => 'Ningún comercial asignado.';
+
+  @override
+  String get managerKpiProspects => 'Prospectos';
+
+  @override
+  String get managerKpiConverted => 'Convertidos';
+
+  @override
+  String get managerKpiConversion => 'Tasa de conversión';
+
+  @override
+  String get managerKpiAppointments => 'Citas próximas';
+
+  @override
+  String get managerKpiStale => 'Pipeline estancado';
+
+  @override
+  String get managerKpiMonthEarned => 'Comisiones (mes)';
+
+  @override
+  String get managerKpiLifetimeEarned => 'Comisiones (total)';
+
+  @override
+  String get managerKpiVets => 'Veterinarios asignados';
 
   @override
   String get featureModules => 'Opciones';
@@ -1543,4 +1865,135 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'CR IA disponible si el centro de la visita tiene el módulo activado.';
+
+  @override
+  String get supportTitle => 'Reportar un problema';
+
+  @override
+  String get supportHint =>
+      'Describa el error. Los diagnósticos técnicos de los últimos 15 minutos se adjuntan automáticamente.';
+
+  @override
+  String get supportSubject => 'Asunto';
+
+  @override
+  String get supportMessage => 'Descripción';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnósticos adjuntos automáticamente (errores, peticiones, configuración).';
+
+  @override
+  String get supportSubmit => 'Enviar';
+
+  @override
+  String get supportSending => 'Enviando…';
+
+  @override
+  String get supportSuccess => 'Mensaje enviado. ¡Gracias!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Demasiados tickets recientemente. Inténtelo en una hora.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnósticos demasiado grandes. Reinicie la app e inténtelo de nuevo.';
+
+  @override
+  String get supportMenu => 'Soporte';
+
+  @override
+  String get appInviteHintSales =>
+      'Comparte tu código con una clínica o un cliente.';
+
+  @override
+  String get appInviteCopyVet => 'Copiar enlace de alta clínica';
+
+  @override
+  String get appInviteCopyClient => 'Copiar enlace de invitación cliente';
+
+  @override
+  String get sendDossierToPro => 'Enviar a un profesional';
+
+  @override
+  String get sendDossierEmailLabel => 'Email del profesional';
+
+  @override
+  String get sendDossierEmailHint => 'vet@clinica.es';
+
+  @override
+  String get sendDossierConfirm => 'Enviar';
+
+  @override
+  String get sendDossierSuccess => 'Historial enviado — enlace válido 24 h.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Email no válido.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'Este historial contiene datos de salud: informes de visita, cartilla sanitaria y documentos. El enlace es válido 24 h y cualquiera que lo tenga podrá consultarlos.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Acepto compartir estos datos de salud con este profesional.';
+
+  @override
+  String get consultationsHistory => 'Consultas';
+
+  @override
+  String get consultationTitle => 'Consulta';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Consulta — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Visita';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Informe de $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Informe';
+
+  @override
+  String get consultationReportEmpty => '(vacío)';
+
+  @override
+  String get consultationAvailableCta => 'Disponible';
+
+  @override
+  String get consultationPendingCta => 'Borrador';
+
+  @override
+  String get sendConsultationToVet => 'Enviar a un veterinario';
+
+  @override
+  String get sendConsultationEmailLabel => 'Email del veterinario';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@clinica.es';
+
+  @override
+  String get sendConsultationConfirm => 'Enviar';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Consulta enviada — enlace válido 24 h.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Email no válido.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'Este informe contiene datos de salud. El enlace es válido 24 h y cualquiera que lo tenga podrá descargar el PDF.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Acepto compartir este informe con este veterinario.';
 }

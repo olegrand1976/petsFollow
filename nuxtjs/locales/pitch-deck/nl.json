@@ -60,7 +60,7 @@
         "vetProKind": "Webapplicatie",
         "vetProTitle": "Praktijk & ASV Cockpit",
         "vetProItems": ["Klantmessaging & timeline", "Dossierdeling & team", "Opvolging praktijkcommissies"],
-        "vetProPrice": "69 € excl. btw / maand + Setup 320 € excl. btw",
+        "vetProPrice": "€834,71 excl. btw / jaar + Setup €320 excl. btw",
         "vetLightLabel": "VetLight",
         "vetLightKind": "Mobiele Veldapp",
         "vetLightTitle": "Mobiele Verzorgerapp",
@@ -112,7 +112,7 @@
         "mockCommissions": "Praktijkcommissies",
         "mockMessage": "Laatste ontvangen bericht (Charly)",
         "mockStatus": "Geclassificeerd",
-        "footer": "Praktijktarief: 69 € excl. btw/maand + setup 320 € excl. btw (externe facturatie)"
+        "footer": "Praktijktarief: €834,71 excl. btw / jaar + setup €320 excl. btw (externe facturatie)"
       },
       "s06": {
         "title": "VetPro — Belangrijkste Functies",
@@ -129,7 +129,7 @@
         "f4Title": "Team- & Agendabeheer",
         "f4Desc": "Dossierdeling tussen collega's, gecoördineerde kliniekagenda en duidelijke commissie-opvolging.",
         "quality": "Kwaliteitsstandaard: Eenvoudig in gebruik voor het hele zorgteam.",
-        "langs": "Beschikbaar in 5 talen"
+        "langs": "Beschikbaar in 6 talen"
       },
       "s07": {
         "title": "VetLight — Mobiele Veldapp",
@@ -209,7 +209,7 @@
           { "feature": "Hartslag via vinger (indien voorgeschreven)", "vetPro": "✓ (Lezen)", "vetLight": "—", "client": "✓ (Meten)" }
         ],
         "financeLabel": "Financieel model",
-        "financeVetPro": "69 € excl. btw/maand",
+        "financeVetPro": "€834,71 excl. btw / jaar",
         "financeVetLight": "GRATIS",
         "financeClient": "Dierabonnement",
         "footer": "Duidelijke functionele dekking voor elk teamlid."
@@ -221,10 +221,10 @@
         "kicker": "11 / RENTABILITEIT PRAKTIJK",
         "headline": "Een model dat zichzelf financiert via activaties",
         "priceLabel": "VetPro Praktijktarief",
-        "price": "69 € excl. btw / maand",
-        "setup": "+ Initiële setup 320 € excl. btw (externe facturatie)",
+        "price": "€834,71 excl. btw / jaar",
+        "setup": "+ Initiële setup €320 excl. btw (externe facturatie)",
         "mechanismTitle": "Zelffinancieringsmechanisme:",
-        "mechanismDesc": "Elk dier geactiveerd door de eigenaar genereert commissie voor de praktijk. Ordegrootte: ~7 triënnale activaties / maand dekken het SaaS-abonnement (69 € excl. btw).",
+        "mechanismDesc": "Elk dier geactiveerd door de eigenaar genereert commissie voor de praktijk. Ordegrootte: ~8 triënnale activaties / maand dekken het SaaS-maandequivalent (≈ €69,56 excl. btw). Steer: €2.253,72 excl. btw / 3 jaar (−10 %).",
         "summaryTitle": "Samengevat voor de kliniek:",
         "summaryItems": [
           "Volledige Web cockpit voor de hele kliniek",
@@ -259,7 +259,7 @@
           {
             "label": "BEZWAAR 1",
             "q": "« Is het enkel een cardio-app? »",
-            "a": "Nee, het is een globaal beheerplatform (messaging, dossiers, Care/Horse-herinneringen, agenda, verslagen). Hartslagopvolging is één geïntegreerde functie onder anderen."
+            "a": "Nee, het is een globaal beheerplatform (messaging, dossiers, Care/Horse-herinneringen, agenda, verslagen). Hartslagmeting is één geïntegreerde functie onder anderen."
           },
           {
             "label": "BEZWAAR 2",
@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Klant)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2: Mobiele Klantenapp",
             "desc": "De gebruiker stuurt een bericht of voert een hartslagmeting via vinger uit (indien voorgeschreven door de behandelaar)."
           },
@@ -333,7 +333,7 @@
         "c2Desc": "Aanmaken van uw testpraktijkruimte in 2 minuten tijdens het gesprek.",
         "c3Title": "Wachtzaalkit",
         "c3Desc": "Toegewijde ondersteuning + wachtzaalkit voor affichage inbegrepen.",
-        "cta": "VetPro Setup Bevestigen (320 € excl. btw + 69 € excl. btw/maand)",
+        "cta": "VetPro Setup Bevestigen (€320 excl. btw + €834,71 excl. btw / jaar)",
         "footerLeft": "petsFollow Pro — Zorgcontinuïteit onder begeleiding van de dierenarts",
         "footerRight": "www.petsfollow.com"
       }

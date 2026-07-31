@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 /// Compact heart + weight actions for an owned active pet.
@@ -10,28 +11,31 @@ class PetQuickActions extends StatelessWidget {
   const PetQuickActions({
     super.key,
     required this.petId,
-    required this.onHeartRate,
+    this.onHeartRate,
     this.onWeightRecorded,
   });
 
   final String petId;
-  final VoidCallback onHeartRate;
+  final VoidCallback? onHeartRate;
   final VoidCallback? onWeightRecorded;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final showHr = onHeartRate != null;
     return Row(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            key: Key('pet_action_heartrate_$petId'),
-            onPressed: onHeartRate,
-            icon: const Icon(Icons.favorite, size: 18),
-            label: Text(l10n.heartRateShort),
+        if (showHr) ...[
+          Expanded(
+            child: OutlinedButton.icon(
+              key: Key('pet_action_heartrate_$petId'),
+              onPressed: onHeartRate,
+              icon: const Icon(Icons.favorite, size: 18),
+              label: Text(l10n.heartRateShort),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
+        ],
         Expanded(
           child: OutlinedButton.icon(
             key: Key('pet_action_weight_$petId'),
@@ -67,7 +71,8 @@ Future<void> showRecordWeightSheet(
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setModal) {
-            final bottom = MediaQuery.viewInsetsOf(ctx).bottom;
+            final bottom =
+                keyboardBottomInset(ctx) + systemBottomInset(ctx);
             return Padding(
               key: const Key('weight_sheet'),
               padding: EdgeInsets.only(

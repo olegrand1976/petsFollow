@@ -1,6 +1,8 @@
 export type CalendarVisit = {
   id: string
   status: string
+  source?: string
+  consultationSession?: boolean
   pendingActionBy?: string
   clientId?: string
   clientName?: string
@@ -13,6 +15,9 @@ export type CalendarVisit = {
   lat?: number
   lng?: number
   preconsultStatus?: string
+  visitTypeId?: string
+  visitTypeName?: string
+  visitTypeColor?: string
 }
 
 export type CalendarVacation = {

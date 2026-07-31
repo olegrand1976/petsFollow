@@ -60,7 +60,7 @@
         "vetProKind": "Aplicación Web",
         "vetProTitle": "Cockpit Consulta & ASV",
         "vetProItems": ["Mensajería & timeline cliente", "Compartir historiales & equipo", "Seguimiento de comisiones consulta"],
-        "vetProPrice": "69 € sin IVA / mes + Setup 320 € sin IVA",
+        "vetProPrice": "834,71 € sin IVA / año + Setup 320 € sin IVA",
         "vetLightLabel": "VetLight",
         "vetLightKind": "App Móvil Campo",
         "vetLightTitle": "App Móvil Asistencial",
@@ -112,7 +112,7 @@
         "mockCommissions": "Comisiones Consulta",
         "mockMessage": "Último mensaje recibido (Charly)",
         "mockStatus": "Clasificado",
-        "footer": "Tarifa Consulta: 69 € sin IVA/mes + setup 320 € sin IVA (facturación externa)"
+        "footer": "Tarifa Consulta: 834,71 € sin IVA / año + setup 320 € sin IVA (facturación externa)"
       },
       "s06": {
         "title": "VetPro — Funcionalidades Clave",
@@ -129,7 +129,7 @@
         "f4Title": "Gestión de Equipo & Agenda",
         "f4Desc": "Compartir historiales entre colegas, agenda de clínica coordinada y seguimiento claro de comisiones.",
         "quality": "Estándar de calidad: Fácil de adoptar por todo el equipo asistencial.",
-        "langs": "Disponible en 5 idiomas"
+        "langs": "Disponible en 6 idiomas"
       },
       "s07": {
         "title": "VetLight — App Móvil Campo",
@@ -209,7 +209,7 @@
           { "feature": "Frecuencia cardíaca al dedo (si prescrito)", "vetPro": "✓ (Lectura)", "vetLight": "—", "client": "✓ (Medición)" }
         ],
         "financeLabel": "Modelo financiero",
-        "financeVetPro": "69 € sin IVA/mes",
+        "financeVetPro": "834,71 € sin IVA / año",
         "financeVetLight": "GRATIS",
         "financeClient": "Suscripción animal",
         "footer": "Una cobertura funcional clara para cada miembro del equipo."
@@ -221,10 +221,10 @@
         "kicker": "11 / RENTABILIDAD CONSULTA",
         "headline": "Un modelo autofinanciado por las activaciones",
         "priceLabel": "Tarifa Consulta VetPro",
-        "price": "69 € sin IVA / mes",
+        "price": "834,71 € sin IVA / año",
         "setup": "+ Setup inicial 320 € sin IVA (facturación externa)",
         "mechanismTitle": "Mecanismo de autofinanciación:",
-        "mechanismDesc": "Cada animal activado por el propietario genera una comisión revertida a la consulta. Orden de magnitud: ~7 activaciones trienales / mes cubren la suscripción SaaS (69 € sin IVA).",
+        "mechanismDesc": "Cada animal activado por el propietario genera una comisión revertida a la consulta. Orden de magnitud: ~8 activaciones trienales / mes cubren el equivalente mensual SaaS (≈ 69,56 € sin IVA). Steer: 2 253,72 € sin IVA / 3 años (−10 %).",
         "summaryTitle": "En resumen para la clínica:",
         "summaryItems": [
           "Cockpit Web completo para toda la clínica",
@@ -259,7 +259,7 @@
           {
             "label": "OBJECIÓN 1",
             "q": "« ¿Es solo una aplicación de cardio? »",
-            "a": "No, es una plataforma global de gestión (mensajería, historiales, recordatorios Care/Horse, agenda, informes). El seguimiento cardíaco es una funcionalidad integrada entre otras."
+            "a": "No, es una plataforma global de gestión (mensajería, historiales, recordatorios Care/Horse, agenda, informes). La lectura cardíaca es una funcionalidad integrada entre otras."
           },
           {
             "label": "OBJECIÓN 2",
@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Cliente)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2: App Cliente Móvil",
             "desc": "El usuario envía un mensaje o realiza una lectura cardíaca al dedo (si prescrita por el profesional)."
           },
@@ -333,7 +333,7 @@
         "c2Desc": "Creación de su espacio consulta de prueba en 2 minutos en la reunión.",
         "c3Title": "Kit Sala de Espera",
         "c3Desc": "Soporte dedicado + kit de cartelería para sala de espera incluido.",
-        "cta": "Validar Setup VetPro (320 € sin IVA + 69 € sin IVA/mes)",
+        "cta": "Validar Setup VetPro (320 € sin IVA + 834,71 € sin IVA / año)",
         "footerLeft": "petsFollow Pro — Continuidad de cuidados guiada por el veterinario",
         "footerRight": "www.petsfollow.com"
       }

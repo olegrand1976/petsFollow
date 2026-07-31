@@ -6,6 +6,10 @@ class Visit {
     this.scheduledAt,
     this.status = 'requested',
     this.notes,
+    this.source,
+    this.consultationSession = false,
+    this.hasFinalReport = false,
+    this.reportStatus = '',
     this.createdAt,
     this.proposedScheduledAt,
     this.pendingActionBy,
@@ -19,6 +23,11 @@ class Visit {
   final DateTime? scheduledAt;
   final String status;
   final String? notes;
+  final String? source;
+  final bool consultationSession;
+  final bool hasFinalReport;
+  /// Owner-only: `final` | `draft` | empty (never includes draft body).
+  final String reportStatus;
   final DateTime? createdAt;
   final DateTime? proposedScheduledAt;
   final String? pendingActionBy;
@@ -36,6 +45,16 @@ class Visit {
   bool get preconsultPending =>
       status == 'confirmed' && preconsultStatus == 'pending';
 
+  /// Show in Consultations section (available or pending draft).
+  bool get hasConsultationSignal =>
+      hasFinalReport || reportStatus == 'final' || reportStatus == 'draft';
+
+  bool get consultationAvailable =>
+      hasFinalReport || reportStatus == 'final';
+
+  bool get consultationPending =>
+      !consultationAvailable && reportStatus == 'draft';
+
   DateTime get displayDate =>
       proposedScheduledAt ?? scheduledAt ?? createdAt ?? DateTime.now();
 
@@ -49,6 +68,10 @@ class Visit {
           : null,
       status: json['status'] as String? ?? 'requested',
       notes: json['notes'] as String?,
+      source: json['source'] as String?,
+      consultationSession: json['consultationSession'] == true,
+      hasFinalReport: json['hasFinalReport'] == true,
+      reportStatus: (json['reportStatus'] as String?)?.trim() ?? '',
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,

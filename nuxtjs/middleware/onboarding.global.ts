@@ -1,3 +1,5 @@
+import { clearAuthTokensUnlessPostLoginGrace, hasSessionCookie } from '~/composables/useAuth'
+
 const SKIP_PATHS = new Set([
   '/',
   '/produits',
@@ -8,6 +10,7 @@ const SKIP_PATHS = new Set([
   '/forgot-password',
   '/reset-password',
   '/change-password',
+  '/complete-contact-phone',
   '/welcome',
   '/onboarding',
 ])
@@ -26,6 +29,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     || to.path.startsWith('/legal')
     || to.path.startsWith('/invite')
     || to.path.startsWith('/preconsult')
+    || to.path.startsWith('/dossier')
+    || to.path.startsWith('/consultation')
     || to.path.startsWith('/admin')
     || to.path.startsWith('/commercial')
     || to.path.startsWith('/commercial-manager')
@@ -46,8 +51,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   } catch (e) {
     if (isUnauthorized(e)) {
-      await clearAuthTokens()
-      return navigateTo('/login')
+      const cleared = await clearAuthTokensUnlessPostLoginGrace()
+      if (cleared) return navigateTo('/login')
     }
   }
 })

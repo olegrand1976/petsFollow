@@ -1,0 +1,31 @@
+---
+description: Modules Pro tag « dev » (ordonnances, pharmacie, facturation) — pas GA
+alwaysApply: true
+---
+
+# Modules Pro — tag `dev`
+
+Tant qu’un module Pro n’est **pas GA**, il doit rester clairement marqué **dev** :
+
+1. **Nav** : `tag: t('nav.tagDev')` sur l’entrée sidebar ([`nuxtjs/layouts/default.vue`](nuxtjs/layouts/default.vue)).
+2. **Pages** : `<ProBadge variant="warning">{{ $t('nav.tagDev') }}</ProBadge>` + `data-testid="…-dev-badge"` quand pertinent.
+3. **Flag API** : endpoints gated (404 `*_disabled` si off) ; `make api-dev` force le flag à `true` en local.
+4. **Pas de useCase commercial** inventé tant que tag `dev` ([`usecase-sync.mdc`](usecase-sync.mdc)).
+
+## Ordonnances (actuel)
+
+| Surface | Valeur |
+|---------|--------|
+| Routes UI | `/ordonnances`, `/ordonnances/nouveau`, `/ordonnances/[id]` |
+| Flag | `PRESCRIPTIONS_ENABLED` / `NUXT_PUBLIC_PRESCRIPTIONS_ENABLED` |
+| Doc | [`documentation/35-ORDONNANCES.md`](documentation/35-ORDONNANCES.md) |
+| ≠ | DAF pharmacie (`PHARMACY_ENABLED`) — autre module |
+
+V1 = brouillons + preview PDF uniquement. Ne pas présenter comme produit signé / partagé client / conforme multi-pays.
+
+## Autres modules tag `dev` (réf.)
+
+- Facturation `/invoicing` — Billit — `BILLIT_ENABLED` / `NUXT_PUBLIC_BILLIT_ENABLED` (nav + API) ; UI métier + CTA Facturer gated par `INVOICING_UI_ENABLED` ([`nuxtjs/utils/invoicing-ui.ts`](../../nuxtjs/utils/invoicing-ui.ts), `false` = écran WIP)
+- Pharmacie `/medicaments`, `/stock`, `/daf` — `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED`
+
+Retirer le badge `nav.tagDev` **uniquement** au passage GA (décision produit explicite).

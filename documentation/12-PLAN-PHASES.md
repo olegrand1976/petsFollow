@@ -34,6 +34,7 @@ Synthèse historique / état — alignée [01-VISION-PRODUIT.md](01-VISION-PRODU
 | Simulation admin 10 ans | [16](16-ADMIN-SIMULATION-10ANS.md) **non livré** |
 | Export / emails Care avancés | Backlog features incluses (**obsolète** comme roadmap « addon Care+ ») |
 | Pharmacie BE (CNK, FEFO, DAF, VAMReg, invoices.connect) | [27](27-PHARMACIE-BELGIQUE.md) **spec / non livré** |
+| Facturation Peppol Billit (Pro 88 € pack, partner) | [33](33-BILLIT-INTEGRATION.md) **socle code** · technique [34](34-BILLIT-RESELLER-TECH.md) · pilote sandbox ops |
 
 ## Phase 4 — Multi-profils & pro santé
 

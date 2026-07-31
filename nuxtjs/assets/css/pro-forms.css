@@ -10,6 +10,43 @@
   color: var(--pf-vet-primary);
 }
 
+.pro-input-wrap {
+  position: relative;
+}
+
+.pro-input-wrap--reveal .pro-input {
+  padding-right: 2.75rem;
+}
+
+.pro-input-reveal {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--pf-vet-radius);
+  background: transparent;
+  color: var(--pf-vet-text-muted);
+  cursor: pointer;
+}
+
+.pro-input-reveal:hover:not(:disabled),
+.pro-input-reveal:focus-visible {
+  color: var(--pf-vet-accent);
+  outline: none;
+}
+
+.pro-input-reveal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .pro-input,
 .pro-select,
 .pro-textarea {

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/deeplink/payment_deeplink.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/notifications/push_navigation.dart';
+import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
+import 'package:petsfollow_mobile/core/theme/theme_controller.dart';
+import 'package:petsfollow_mobile/features/auth/presentation/accept_terms_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/force_change_password_screen.dart';
 import 'package:petsfollow_mobile/features/auth/presentation/login_screen.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/commercial_field_shell_screen.dart';
@@ -24,8 +28,8 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
   @override
   void initState() {
     super.initState();
-    LocaleController.instance.addListener(_onLocaleChanged);
-    LocaleController.instance.load();
+    LocaleController.instance.addListener(_onPrefsChanged);
+    ThemeController.instance.addListener(_onPrefsChanged);
     NotificationService.instance.explainPushPermission = _showPushPermissionInfo;
     NotificationService.instance.init();
     AppDeepLink.instance.start();
@@ -53,18 +57,21 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
 
   @override
   void dispose() {
-    LocaleController.instance.removeListener(_onLocaleChanged);
+    LocaleController.instance.removeListener(_onPrefsChanged);
+    ThemeController.instance.removeListener(_onPrefsChanged);
     AppDeepLink.instance.dispose();
     super.dispose();
   }
 
-  void _onLocaleChanged() => setState(() {});
+  void _onPrefsChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'petsFollow',
-      theme: buildAppTheme(),
+      title: AppEnv.appTitle,
+      theme: buildAppLightTheme(),
+      darkTheme: buildAppDarkTheme(),
+      themeMode: ThemeController.instance.themeMode,
       navigatorKey: PushNavigation.instance.navigatorKey,
       locale: LocaleController.instance.locale,
       localizationsDelegates: const [
@@ -74,6 +81,37 @@ class _PetsFollowAppState extends State<PetsFollowApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) {
+        if (!AppEnv.isStaging || child == null) return child ?? const SizedBox.shrink();
+        return Column(
+          children: [
+            Material(
+              color: AppColors.brandCoral,
+              child: SafeArea(
+                bottom: false,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      'STAGING',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.brandNavy,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: child),
+          ],
+        );
+      },
       home: const AuthGate(),
     );
   }
@@ -89,6 +127,7 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   bool _ready = false;
   bool _mustChangePassword = false;
+  bool _needsAcceptTerms = false;
   int _petsRefreshTick = 0;
   int _loginHintTick = 0;
 
@@ -97,7 +136,9 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
     ApiClient.instance.onSessionInvalidated = _onSessionInvalidated;
     ApiClient.instance.onSessionEstablished = _onAuthChanged;
-    AppDeepLink.instance.onPaymentSuccess = () {
+    AppDeepLink.instance.onPaymentSuccess = () async {
+      final ok = await ApiClient.instance.ensureFreshSession();
+      if (!ok) return;
       if (mounted) setState(() => _petsRefreshTick++);
     };
     AppDeepLink.instance.onLoginHint = () {
@@ -117,6 +158,9 @@ class _AuthGateState extends State<AuthGate> {
     if (AppDeepLink.instance.onLoginHint != null) {
       AppDeepLink.instance.onLoginHint = null;
     }
+    if (AppDeepLink.instance.onPaymentSuccess != null) {
+      AppDeepLink.instance.onPaymentSuccess = null;
+    }
     super.dispose();
   }
 
@@ -125,6 +169,7 @@ class _AuthGateState extends State<AuthGate> {
     PushNavigation.instance.navigatorKey.currentState?.popUntil((r) => r.isFirst);
     setState(() {
       _mustChangePassword = false;
+      _needsAcceptTerms = false;
     });
   }
 
@@ -134,17 +179,27 @@ class _AuthGateState extends State<AuthGate> {
       await NotificationService.instance.init();
       // 401 on /me → interceptor clears token + notifies → login.
       _mustChangePassword = await ApiClient.instance.mustChangePassword();
+      if (!_mustChangePassword) {
+        _needsAcceptTerms = await ApiClient.instance.needsAcceptTerms();
+      }
     }
     if (mounted) setState(() => _ready = true);
   }
 
   Future<void> _onAuthChanged() async {
     var mustChange = false;
+    var needsTerms = false;
     if (ApiClient.instance.token != null) {
       mustChange = await ApiClient.instance.mustChangePassword();
+      if (!mustChange) {
+        needsTerms = await ApiClient.instance.needsAcceptTerms();
+      }
     }
     if (mounted) {
-      setState(() => _mustChangePassword = mustChange);
+      setState(() {
+        _mustChangePassword = mustChange;
+        _needsAcceptTerms = needsTerms;
+      });
     }
   }
 
@@ -161,6 +216,9 @@ class _AuthGateState extends State<AuthGate> {
     }
     if (_mustChangePassword) {
       return ForceChangePasswordScreen(onChanged: _onAuthChanged);
+    }
+    if (_needsAcceptTerms) {
+      return AcceptTermsScreen(onAccepted: _onAuthChanged);
     }
     if (ApiClient.instance.userRole == 'care_pro' ||
         ApiClient.instance.userRole == 'vet' ||

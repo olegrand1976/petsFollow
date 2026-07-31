@@ -67,15 +67,19 @@ func (a *API) registerClient(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	a.tryClaimInvite(r, result.UserID, req.InviteCode)
+	inviteStatus := a.tryClaimInvite(r, result.UserID, req.InviteCode)
 	// Nearby pick only when no invite code (invite wins attribution).
 	if store.NormalizeInviteCode(req.InviteCode) == "" {
 		a.tryLinkCommercialReferral(r, result.UserID, req.CommercialUserID)
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register-client: SMTP confirm fail")
+	}
 	out := map[string]any{
-		"message": t(r, "success.confirm_email_sent", nil),
+		"message":      t(r, "success.confirm_email_sent", nil),
+		"inviteStatus": inviteStatus,
 	}
 	// Dev/demo only: never expose the confirmation token outside seeded environments.
 	if a.cfg.DevSeedEnabled {
@@ -121,7 +125,10 @@ func (a *API) registerCarePro(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	confirmURL := fmt.Sprintf("%s/confirm-email?token=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), result.Token)
-	_ = a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL)
+	if err := a.notifier.SendConfirmRegistration(req.Email, locale, req.FullName, confirmURL); err != nil {
+		a.reportConfirmEmailFailure(r.Context(), req.Email, err)
+		a.noteAuthSignal(store.AuthAlertRegisterFailSpike, authSpikeRegisterFail, "register-care-pro: SMTP confirm fail")
+	}
 	out := map[string]any{
 		"message": t(r, "success.confirm_email_sent", nil),
 	}
@@ -176,7 +183,7 @@ func (a *API) listPetShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	pet, ok := a.requirePetShareManager(w, r, petID, id)
+	pet, ok := a.requirePetShareAccess(w, r, petID, id, "shares.read")
 	if !ok {
 		return
 	}
@@ -262,7 +269,7 @@ func (a *API) listClientShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clientID := chi.URLParam(r, "clientID")
-	if !a.requireClientShareManager(w, r, clientID, id) {
+	if !a.requireClientShareAccess(w, r, clientID, id, "shares.read") {
 		return
 	}
 	var rows []store.AccessGrant
@@ -406,7 +413,7 @@ func (a *API) resolveGrantee(w http.ResponseWriter, r *http.Request, actor authx
 	}
 }
 
-func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+func (a *API) requirePetShareAccess(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity, staffCap string) (store.Pet, bool) {
 	pet, err := a.store.GetPet(r.Context(), petID)
 	if err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
@@ -419,7 +426,7 @@ func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, pet
 			return store.Pet{}, false
 		}
 	default:
-		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+		if !a.checkPracticePerm(w, r, id, staffCap) {
 			return store.Pet{}, false
 		}
 		if pet.PracticeID != id.PracticeID {
@@ -430,7 +437,11 @@ func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, pet
 	return pet, true
 }
 
-func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity) bool {
+func (a *API) requirePetShareManager(w http.ResponseWriter, r *http.Request, petID string, id authx.Identity) (store.Pet, bool) {
+	return a.requirePetShareAccess(w, r, petID, id, "shares.manage")
+}
+
+func (a *API) requireClientShareAccess(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity, staffCap string) bool {
 	switch id.Role {
 	case kernel.RoleClient:
 		if clientID != id.UserID {
@@ -438,7 +449,7 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 			return false
 		}
 	default:
-		if !a.checkPracticePerm(w, r, id, "shares.manage") {
+		if !a.checkPracticePerm(w, r, id, staffCap) {
 			return false
 		}
 		// practice staff must have practice_clients link
@@ -460,6 +471,10 @@ func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 	return true
+}
+
+func (a *API) requireClientShareManager(w http.ResponseWriter, r *http.Request, clientID string, id authx.Identity) bool {
+	return a.requireClientShareAccess(w, r, clientID, id, "shares.manage")
 }
 
 func (a *API) listCareProClients(w http.ResponseWriter, r *http.Request) {

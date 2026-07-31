@@ -35,6 +35,19 @@ void main() {
       expect(apiErrorCode(e), 'google_client_only');
     });
 
+    test('préfère msgKey à code générique bad_request', () {
+      expect(
+        apiErrorCode(_dioError({
+          'error': {
+            'code': 'bad_request',
+            'msgKey': 'vet_link_required',
+            'message': 'Liez un vétérinaire',
+          },
+        })),
+        'vet_link_required',
+      );
+    });
+
     test('retombe sur msgKey puis message', () {
       expect(
         apiErrorCode(_dioError({'error': {'msgKey': 'email_not_verified'}})),

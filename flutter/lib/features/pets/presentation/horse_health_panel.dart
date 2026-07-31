@@ -3,15 +3,24 @@ import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/models/care_reminder.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 const _horseCareTypes = {'farrier', 'fecal_egg'};
 
 class HorseHealthPanel extends StatefulWidget {
-  const HorseHealthPanel({super.key, required this.petId, required this.petName});
+  const HorseHealthPanel({
+    super.key,
+    required this.petId,
+    required this.petName,
+    this.foodChainStatus,
+    this.domicileLocation,
+  });
 
   final String petId;
   final String petName;
+  final String? foodChainStatus;
+  final String? domicileLocation;
 
   @override
   State<HorseHealthPanel> createState() => _HorseHealthPanelState();
@@ -84,6 +93,22 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
       default:
         return reminder.title;
     }
+  }
+
+  String _foodChainLabel(AppLocalizations l10n) {
+    final status = widget.foodChainStatus ?? '';
+    return switch (status) {
+      'food_producing' => l10n.petFoodChainFoodProducing,
+      'excluded_from_food_chain' => l10n.petFoodChainExcluded,
+      'companion' => l10n.petFoodChainCompanion,
+      _ => status,
+    };
+  }
+
+  String _foodChainSubtitle(AppLocalizations l10n) {
+    final label = _foodChainLabel(l10n);
+    if (label.isEmpty) return l10n.petFoodChainStatus;
+    return '${l10n.petFoodChainStatus}: $label';
   }
 
   Future<void> _addContact() async {
@@ -159,6 +184,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final horseReminders = reminders.where((r) => _horseCareTypes.contains(r.type)).toList();
     final otherReminders = reminders.where((r) => !_horseCareTypes.contains(r.type)).toList();
@@ -167,6 +193,27 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.horseHealthTitle, style: Theme.of(context).textTheme.titleMedium),
+        if ((widget.domicileLocation ?? '').isNotEmpty ||
+            (widget.foodChainStatus ?? '').isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Card(
+            key: const Key('horse_regulatory_card'),
+            child: ListTile(
+              leading: const Icon(Icons.home_work_outlined),
+              title: Text(
+                (widget.domicileLocation ?? '').isEmpty
+                    ? l10n.petFoodChainStatus
+                    : widget.domicileLocation!,
+              ),
+              subtitle: Text(
+                (widget.domicileLocation ?? '').isEmpty
+                    ? _foodChainLabel(l10n)
+                    : _foodChainSubtitle(l10n),
+                style: TextStyle(color: p.textMuted),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         if (loading)
           const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
@@ -175,7 +222,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(l10n.noCareReminders, style: TextStyle(color: AppColors.textMuted)),
+                child: Text(l10n.noCareReminders, style: TextStyle(color: p.textMuted)),
               ),
             )
           else
@@ -224,7 +271,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
           (c) => Card(
             child: ListTile(
               title: Text(c['fullName'] as String? ?? ''),
-              subtitle: Text(c['role'] as String? ?? '', style: TextStyle(color: AppColors.textMuted)),
+              subtitle: Text(c['role'] as String? ?? '', style: TextStyle(color: p.textMuted)),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () async {
@@ -248,7 +295,7 @@ class _HorseHealthPanelState extends State<HorseHealthPanel> with WidgetsBinding
               title: Text(c['title'] as String? ?? ''),
               subtitle: Text(
                 '${c['eventDate'] ?? ''} ${c['location'] ?? ''}'.trim(),
-                style: TextStyle(color: AppColors.textMuted),
+                style: TextStyle(color: p.textMuted),
               ),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
@@ -280,6 +327,7 @@ class _HorseCareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = PetsPalette.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: highlighted ? AppColors.gold.withValues(alpha: 0.08) : null,
@@ -297,7 +345,7 @@ class _HorseCareCard extends StatelessWidget {
         title: Text(label, style: TextStyle(fontWeight: highlighted ? FontWeight.w600 : FontWeight.normal)),
         subtitle: Text(
           dueLabel,
-          style: TextStyle(color: isOverdue ? AppColors.alert : AppColors.textMuted),
+          style: TextStyle(color: isOverdue ? AppColors.alert : p.textMuted),
         ),
       ),
     );

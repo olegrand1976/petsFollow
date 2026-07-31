@@ -12,5 +12,11 @@ go/data/uploads/
 .DS_Store
 flutter/.dart_tool/
 flutter/build/
+flutter/android/build/
+nuxtjs/test-results/
+nuxtjs/playwright-report/
+# Logs/artefacts Cursor, mais les rules du repo restent versionnées.
+.cursor/*
+!.cursor/rules/
 .idea/
 .vscode/

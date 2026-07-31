@@ -11,6 +11,7 @@ import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/core/widgets/google_logo.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
@@ -29,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final password = TextEditingController();
   final confirm = TextEditingController();
   final postalCode = TextEditingController();
+  final inviteCodeCtrl = TextEditingController();
   String? error;
   String? info;
   String? success;
@@ -43,12 +45,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
+  String get _effectiveInviteCode => inviteCodeCtrl.text.trim().toUpperCase();
+
+  bool get _hasInviteCode => _effectiveInviteCode.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
     InviteCodeStore.instance.peek().then((code) {
       if (!mounted) return;
+      if (code != null && code.isNotEmpty) {
+        inviteCodeCtrl.text = code;
+      }
       setState(() => _hasInvite = code != null && code.isNotEmpty);
+    });
+    inviteCodeCtrl.addListener(() {
+      final has = _hasInviteCode;
+      if (has != _hasInvite) {
+        setState(() {
+          _hasInvite = has;
+          if (has) _selectedCommercialId = null;
+        });
+      }
     });
   }
 
@@ -59,6 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     password.dispose();
     confirm.dispose();
     postalCode.dispose();
+    inviteCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -90,16 +109,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _busy = true;
     });
     try {
-      await ApiClient.instance.registerClient(
+      final result = await ApiClient.instance.registerClient(
         email: mail,
         password: pass,
         fullName: name,
         locale: LocaleController.instance.locale.languageCode,
         consent: consent,
-        commercialUserId: _hasInvite ? null : _selectedCommercialId,
+        inviteCode: _hasInviteCode ? _effectiveInviteCode : null,
+        commercialUserId: _hasInviteCode ? null : _selectedCommercialId,
       );
       if (!mounted) return;
-      setState(() => success = l10n.registerSuccess);
+      final inviteStatus = result['inviteStatus']?.toString() ?? '';
+      final inviteOk = inviteStatus == 'referred' ||
+          inviteStatus == 'linked' ||
+          inviteStatus == 'granted' ||
+          inviteStatus == 'already_linked';
+      setState(() {
+        success = _hasInviteCode && !inviteOk
+            ? l10n.registerInviteNotApplied
+            : l10n.registerSuccess;
+      });
     } on DioException catch (e) {
       if (!mounted) return;
       final code = apiErrorCode(e);
@@ -131,9 +160,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _busy = true;
     });
     try {
+      if (_hasInviteCode) {
+        await InviteCodeStore.instance.save(_effectiveInviteCode);
+      }
       final data = await GoogleLoginFlow.signIn(
         consent: true,
-        commercialUserId: _hasInvite ? null : _selectedCommercialId,
+        commercialUserId: _hasInviteCode ? null : _selectedCommercialId,
       );
       if (!mounted) return;
       if (data != null) {
@@ -275,7 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildNearbySection(AppLocalizations l10n) {
-    if (_hasInvite) return const SizedBox.shrink();
+    if (_hasInviteCode) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -368,13 +400,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   List<Widget> _buildSocialButtons(AppLocalizations l10n) {
     return [
       if (_isIOS)
-        // Variante blanche des guidelines Apple : le fond de
-        // l'écran (loginGradient) est sombre.
+        // Apple HIG: white on dark backgrounds, black on light.
         FilledButton.icon(
           onPressed: _busy ? null : tapApple,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
+            foregroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
           ),
           icon: const Icon(Icons.apple, size: 24),
           label: Text(l10n.loginWithApple),
@@ -383,7 +418,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (GoogleAuth.isConfigured)
         OutlinedButton.icon(
           onPressed: _busy ? null : submitGoogle,
-          icon: const Icon(Icons.g_mobiledata, size: 28),
+          icon: const GoogleLogo(size: 20),
           label: Text(l10n.loginWithGoogle),
         ),
     ];
@@ -393,7 +428,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
+      decoration: BoxDecoration(gradient: AppTheme.loginGradientOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -463,13 +498,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: confirm,
                     obscureText: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: l10n.confirmNewPassword),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('register_invite_code'),
+                    controller: inviteCodeCtrl,
+                    textCapitalization: TextCapitalization.characters,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => submit(),
-                    decoration: InputDecoration(labelText: l10n.confirmNewPassword),
+                    decoration: InputDecoration(
+                      labelText: l10n.registerInviteCode,
+                      hintText: l10n.registerInviteCodeHint,
+                    ),
                   ),
                   _buildNearbySection(l10n),
                   const SizedBox(height: 16),
                   FilledButton(
+                    key: const Key('register_submit_btn'),
                     onPressed: _busy ? null : submit,
                     child: Text(l10n.registerSubmit),
                   ),

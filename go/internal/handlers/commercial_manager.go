@@ -19,10 +19,20 @@ func (a *API) registerCommercialManagerRoutes(r chi.Router) {
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/commercial-manager/overview", a.managerOverview)
 		pr.Get("/commercial-manager/team", a.managerListTeam)
+		pr.Get("/commercial-manager/filiation", a.managerListFiliation)
+		pr.Get("/commercial-manager/filiation/events", a.managerListFiliationEvents)
 		pr.Get("/commercial-manager/team/{id}/overview", a.managerTeamMemberOverview)
 		pr.Get("/commercial-manager/prospects", a.managerListProspects)
 		pr.Patch("/commercial-manager/prospects/{id}", a.managerUpdateProspect)
+		pr.Patch("/commercial-manager/prospects/{id}/reassign", a.managerReassignProspect)
+		pr.Post("/commercial-manager/prospects/release-inactive", a.managerReleaseInactiveProspects)
+		pr.Post("/commercial-manager/prospects/{id}/release", a.managerReleaseProspect)
 		pr.Get("/commercial-manager/followups", a.managerFollowups)
+		pr.Get("/commercial-manager/leaderboard", a.managerLeaderboard)
+		pr.Get("/commercial-manager/quotas", a.managerListQuotas)
+		pr.Put("/commercial-manager/quotas/{id}", a.managerUpsertQuota)
+		pr.Get("/commercial-manager/ai-modules", a.managerListAiModules)
+		pr.Get("/commercial-manager/ai-modules/friction-alerts", a.managerListAiFrictionAlerts)
 	})
 }
 
@@ -68,6 +78,85 @@ func (a *API) managerListTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteData(w, http.StatusOK, team)
+}
+
+func (a *API) managerListFiliation(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	teamIDs, err := a.store.ListTeamCommercialIDs(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	// Include manager self portfolio (managers may also encode via commercial routes).
+	scope := append([]string{id.UserID}, teamIDs...)
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		allowed := false
+		for _, sid := range scope {
+			if sid == raw {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		scope = []string{raw}
+	}
+	f := store.FiliationFilter{CommercialIDs: scope}
+	applyFiliationQuery(&f, r)
+	page, err := a.store.ListFiliation(r.Context(), f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	writeFiliationList(w, r, page)
+}
+
+func (a *API) managerListFiliationEvents(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	teamIDs, err := a.store.ListTeamCommercialIDs(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	scope := append([]string{id.UserID}, teamIDs...)
+	if raw := strings.TrimSpace(r.URL.Query().Get("commercialId")); raw != "" {
+		if !isUUID(raw) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "bad_request")
+			return
+		}
+		allowed := false
+		for _, sid := range scope {
+			if sid == raw {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		scope = []string{raw}
+	}
+	f := store.FiliationEventFilter{CommercialIDs: scope}
+	applyFiliationEventQuery(&f, r)
+	page, err := a.store.ListFiliationEvents(r.Context(), f)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	writeFiliationEvents(w, r, page)
 }
 
 func (a *API) managerTeamMemberOverview(w http.ResponseWriter, r *http.Request) {
@@ -179,6 +268,159 @@ func (a *API) managerUpdateProspect(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, prospect)
 }
 
+type reassignProspectReq struct {
+	CommercialUserID string `json:"commercialUserId"`
+}
+
+func (a *API) managerReassignProspect(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	prospectID := chi.URLParam(r, "id")
+	var req reassignProspectReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	target := strings.TrimSpace(req.CommercialUserID)
+	if err := a.store.ReassignProspectCommercial(r.Context(), prospectID, target, id.UserID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			msg := "cannot_reassign_converted"
+			if target == "" {
+				msg = "cannot_release_converted"
+			}
+			writeErr(w, r, http.StatusBadRequest, "bad_request", msg)
+			return
+		}
+		if err.Error() == "invalid_commercial" {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_commercial")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (a *API) managerReleaseProspect(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	if err := a.store.ReleaseProspect(r.Context(), chi.URLParam(r, "id"), id.UserID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "cannot_release_converted")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "released"})
+}
+
+func (a *API) managerReleaseInactiveProspects(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	n, err := a.store.ReleaseInactiveProspectsForManager(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{"status": "released", "count": n})
+}
+
+func (a *API) managerLeaderboard(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	period := strings.TrimSpace(r.URL.Query().Get("periodYm"))
+	if period != "" && !store.ValidPeriodYM(period) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_period")
+		return
+	}
+	rows, err := a.store.ManagerLeaderboard(r.Context(), id.UserID, period)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_period")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) managerListQuotas(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	period := strings.TrimSpace(r.URL.Query().Get("periodYm"))
+	if period != "" && !store.ValidPeriodYM(period) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_period")
+		return
+	}
+	rows, err := a.store.ListTeamQuotas(r.Context(), id.UserID, period)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_period")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+type upsertQuotaReq struct {
+	PeriodYM          string `json:"periodYm"`
+	TargetActivations int    `json:"targetActivations"`
+	TargetEarnedCents int    `json:"targetEarnedCents"`
+}
+
+func (a *API) managerUpsertQuota(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	memberID := chi.URLParam(r, "id")
+	belongs, err := a.store.CommercialBelongsToManager(r.Context(), memberID, id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !belongs {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	var req upsertQuotaReq
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	if err := a.store.UpsertCommercialQuota(r.Context(), memberID, req.PeriodYM, req.TargetActivations, req.TargetEarnedCents); err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_quota")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 type prospectUpdateReq struct {
 	PracticeName       string  `json:"practiceName"`
 	ContactName        string  `json:"contactName"`
@@ -268,4 +510,30 @@ func (a *API) parseProspectUpdate(w http.ResponseWriter, r *http.Request, existi
 		}
 	}
 	return in, true
+}
+
+func (a *API) managerListAiModules(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListAiCrModulesForTeam(r.Context(), id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
+}
+
+func (a *API) managerListAiFrictionAlerts(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requireCommercialManager(w, r)
+	if !ok {
+		return
+	}
+	rows, err := a.store.ListRecentFrictionAlertsForTeam(r.Context(), id.UserID, 50)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, rows)
 }

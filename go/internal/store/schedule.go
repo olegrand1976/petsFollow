@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -196,11 +197,17 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 			COALESCE(v.notes,''), v.source, v.created_at,
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
-			COALESCE(v.address_text,''), v.lat, v.lng
+			COALESCE(v.address_text,''), v.lat, v.lng,
+			COALESCE(v.consultation_session, false),
+			COALESCE(v.visit_type_id::text, ''),
+			COALESCE(vt.name, ''),
+			COALESCE(vt.color, '')
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
+		LEFT JOIN practice.visit_types vt ON vt.id = v.visit_type_id
 		WHERE v.practice_id = $1
+		  AND v.deleted_at IS NULL
 		  AND v.status IN ('requested', 'confirmed', 'reschedule_pending')
 		  AND (
 			(v.scheduled_at IS NOT NULL AND v.scheduled_at >= $2 AND v.scheduled_at < $3)
@@ -212,7 +219,24 @@ func (s *Store) ListPracticeVisitsInRange(ctx context.Context, practiceID string
 		return nil, err
 	}
 	defer rows.Close()
-	return scanVisitsFull(rows)
+	var out []Visit
+	for rows.Next() {
+		var v Visit
+		if err := rows.Scan(
+			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
+			&v.PetName, &v.ClientName, &v.ClientID,
+			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession,
+			&v.VisitTypeID, &v.VisitTypeName, &v.VisitTypeColor,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	if out == nil {
+		out = []Visit{}
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID string) (bool, int, error) {
@@ -228,15 +252,27 @@ func (s *Store) ClientBookingEnabled(ctx context.Context, practiceID string) (bo
 	return enabled, duration, err
 }
 
+// scheduleLocation never returns nil (avoids panic: missing Location in Time.In).
+func scheduleLocation(tz string) *time.Location {
+	tz = strings.TrimSpace(tz)
+	if tz == "" {
+		tz = defaultScheduleTZ
+	}
+	if loc, err := time.LoadLocation(tz); err == nil {
+		return loc
+	}
+	if loc, err := time.LoadLocation(defaultScheduleTZ); err == nil {
+		return loc
+	}
+	return time.UTC
+}
+
 func (s *Store) IsOnVacation(ctx context.Context, practiceID string, day time.Time) (bool, error) {
 	sched, err := s.GetVetSchedule(ctx, practiceID)
 	if err != nil {
 		return false, err
 	}
-	loc, err := time.LoadLocation(sched.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation(defaultScheduleTZ)
-	}
+	loc := scheduleLocation(sched.Timezone)
 	localDay := day.In(loc).Format("2006-01-02")
 	var n int
 	err = s.pool.QueryRow(ctx, `
@@ -254,7 +290,9 @@ func (s *Store) HasVisitOverlap(ctx context.Context, practiceID string, start ti
 	err := s.pool.QueryRow(ctx, `
 		SELECT COUNT(*)::int FROM visits.visits
 		WHERE practice_id = $1
+		  AND deleted_at IS NULL
 		  AND status IN ('requested', 'confirmed', 'reschedule_pending')
+		  AND COALESCE(consultation_session, false) = false
 		  AND ($4 = '' OR id::text <> $4)
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) IS NOT NULL
 		  AND COALESCE(proposed_scheduled_at, scheduled_at) < $3
@@ -275,10 +313,7 @@ func (s *Store) ListAvailableSlots(ctx context.Context, practiceID string, from,
 	if !sched.ClientBookingEnabled || len(sched.Slots) == 0 {
 		return []AvailableSlot{}, nil
 	}
-	loc, err := time.LoadLocation(sched.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation(defaultScheduleTZ)
-	}
+	loc := scheduleLocation(sched.Timezone)
 	duration := time.Duration(sched.SlotDurationMinutes) * time.Minute
 	vacations, err := s.ListVacations(ctx, practiceID)
 	if err != nil {
@@ -336,6 +371,9 @@ func parseHM(s string) (h, m int) {
 
 func overlapsBusy(visits []Visit, start, end time.Time, defaultDur int) bool {
 	for _, v := range visits {
+		if v.ConsultationSession {
+			continue
+		}
 		busyAt := v.ScheduledAt
 		if v.Status == "reschedule_pending" && v.ProposedScheduledAt != nil {
 			busyAt = v.ProposedScheduledAt
@@ -357,20 +395,23 @@ func overlapsBusy(visits []Visit, start, end time.Time, defaultDur int) bool {
 }
 
 func (s *Store) ListVetsForVisitAlert(ctx context.Context, practiceID, clientUserID string) ([]User, error) {
-	var vetID string
-	err := s.pool.QueryRow(ctx, `
-		SELECT vet_user_id::text FROM practice.practice_clients
-		WHERE practice_id = $1 AND client_user_id = $2`, practiceID, clientUserID,
-	).Scan(&vetID)
-	if err == nil {
-		u, err := s.GetUserByID(ctx, vetID)
-		if err != nil {
+	clientUserID = strings.TrimSpace(clientUserID)
+	if clientUserID != "" {
+		var vetID string
+		err := s.pool.QueryRow(ctx, `
+			SELECT vet_user_id::text FROM practice.practice_clients
+			WHERE practice_id = $1 AND client_user_id = $2`, practiceID, clientUserID,
+		).Scan(&vetID)
+		if err == nil {
+			u, err := s.GetUserByID(ctx, vetID)
+			if err != nil {
+				return nil, err
+			}
+			return []User{u}, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
 			return nil, err
 		}
-		return []User{u}, nil
-	}
-	if !errors.Is(err, pgx.ErrNoRows) {
-		return nil, err
 	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT `+userSelectCols+` FROM identity.users WHERE practice_id = $1 AND role = 'vet'`, practiceID)

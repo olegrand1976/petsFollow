@@ -27,6 +27,8 @@ export async function waitForAuthForm(page: Page, testId: string) {
     const form = document.querySelector(`[data-testid="${id}"]`)
     return !!form && !!document.querySelector('#__nuxt')
   }, testId)
+  // Cloud Run cold start: wait for JS hydration before submit/click handlers bind.
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
 }
 
 function unwrapData(body: unknown): Record<string, unknown> {
@@ -80,12 +82,32 @@ export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.te
   await page.waitForURL(/\/admin/, { timeout: 20000 })
 }
 
+/** Ops support IT (même MDP seed que admin — passwordDev = passwordAdmin). */
+export async function loginAsDev(page: Page, email = 'dev.demo@petsfollow.test', password = 'AdminDemo123!') {
+  const { status } = await login(page, email, password)
+  expect(status, `login ${email}`).toBe(200)
+  await page.waitForURL(/\/admin/, { timeout: 20000 })
+}
+
+/** Gate commercial : si contact_phone vide (staging sans re-seed), complète le numéro démo. */
+async function completeContactPhoneIfNeeded(page: Page, phone: string) {
+  if (!page.url().includes('/complete-contact-phone')) return
+  await waitForAuthForm(page, 'complete-contact-phone-form')
+  await fillField(page, 'complete-contact-phone', phone)
+  await Promise.all([
+    page.waitForURL((url) => !url.pathname.includes('/complete-contact-phone'), { timeout: 20000 }),
+    page.getByTestId('complete-contact-phone-submit').click(),
+  ])
+}
+
 export async function loginAsCommercial(
   page: Page,
   email = 'commercial.demo@petsfollow.test',
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
+  await completeContactPhoneIfNeeded(page, '0470 12 34 56')
   await page.waitForURL((url) => /^\/commercial(?:\/|$)/.test(url.pathname), { timeout: 20000 })
 }
 
@@ -95,6 +117,8 @@ export async function loginAsCommercialManager(
   password = 'CommercialDemo123!',
 ) {
   await login(page, email, password)
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
+  await completeContactPhoneIfNeeded(page, '0472 11 22 33')
   await page.waitForURL(/\/commercial-manager/, { timeout: 20000 })
 }
 
@@ -106,9 +130,17 @@ export async function nativeClick(page: Page, testId: string) {
 }
 
 export async function logout(page: Page) {
+  await expect(page.getByTestId('pro-profile-btn')).toBeVisible({ timeout: 15000 })
+  // Native <details>/<summary> — open attribute is the source of truth.
   await page.getByTestId('pro-profile-btn').click()
-  await page.getByTestId('pro-logout-btn').click()
-  await expect(page).toHaveURL(/login/)
+  await expect(page.getByTestId('pro-profile-details')).toHaveAttribute('open', /.*/, { timeout: 10000 })
+  await expect(page.getByTestId('pro-logout-btn')).toBeVisible({ timeout: 10000 })
+  // Full-document logout-redirect (clears httpOnly cookies server-side).
+  await Promise.all([
+    page.waitForURL(/\/login/, { timeout: 20000 }),
+    page.getByTestId('pro-logout-btn').click(),
+  ])
+  await waitForAuthForm(page, 'login-form')
 }
 
 export async function registerVet(
@@ -129,7 +161,7 @@ export async function registerVet(
   const responsePromise = expectApi
     ? page.waitForResponse(
       (r) => r.url().includes('/api/auth/register') && r.request().method() === 'POST',
-      { timeout: 15000 },
+      { timeout: 30000 },
     )
     : Promise.resolve(null)
 

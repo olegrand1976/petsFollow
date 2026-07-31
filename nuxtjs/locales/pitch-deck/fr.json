@@ -60,7 +60,7 @@
         "vetProKind": "Application Web",
         "vetProTitle": "Cockpit Cabinet & ASV",
         "vetProItems": ["Messagerie & timeline client", "Partage de dossiers & équipe", "Suivi des commissions cabinet"],
-        "vetProPrice": "69 € HT / mois + Setup 320 € HT",
+        "vetProPrice": "834,71 € HTVA / an + Setup 320 € HTVA",
         "vetLightLabel": "VetLight",
         "vetLightKind": "App Mobile Terrain",
         "vetLightTitle": "App Mobile Soignant",
@@ -112,7 +112,7 @@
         "mockCommissions": "Commissions Cabinet",
         "mockMessage": "Dernier message reçu (Charly)",
         "mockStatus": "Classé",
-        "footer": "Tarif Cabinet : 69 € HT/mois + setup 320 € HT (facturation externe)"
+        "footer": "Tarif Cabinet : 834,71 € HTVA / an + setup 320 € HTVA (facturation externe)"
       },
       "s06": {
         "title": "VetPro — Fonctionnalités Clés",
@@ -129,7 +129,7 @@
         "f4Title": "Gestion d'Équipe & Agenda",
         "f4Desc": "Partage de dossiers entre confrères, agenda de clinique coordonné et suivi clair des commissions.",
         "quality": "Standard de qualité : Simple à prendre en main par toute l'équipe soignante.",
-        "langs": "Disponible en 5 langues"
+        "langs": "Disponible en 6 langues"
       },
       "s07": {
         "title": "VetLight — App Mobile Terrain",
@@ -209,7 +209,7 @@
           { "feature": "Relevé cardiaque au doigt (si prescrit)", "vetPro": "✓ (Lecture)", "vetLight": "—", "client": "✓ (Mesure)" }
         ],
         "financeLabel": "Modèle financier",
-        "financeVetPro": "69 € HT/mois",
+        "financeVetPro": "834,71 € HTVA / an",
         "financeVetLight": "GRATUIT",
         "financeClient": "Abo animal",
         "footer": "Une couverture fonctionnelle claire pour chaque membre de l'équipe."
@@ -221,10 +221,10 @@
         "kicker": "11 / RENTABILITÉ CABINET",
         "headline": "Un modèle autofinancé par les activations",
         "priceLabel": "Tarif Cabinet VetPro",
-        "price": "69 € HT / mois",
-        "setup": "+ Setup initial 320 € HT (facturation externe)",
+        "price": "834,71 € HTVA / an",
+        "setup": "+ Setup initial 320 € HTVA (facturation externe)",
         "mechanismTitle": "Mécanisme d'autofinancement :",
-        "mechanismDesc": "Chaque animal activé par le propriétaire génère une commission reversée au cabinet. Ordre de grandeur : ~7 activations triennales / mois couvrent l'abonnement SaaS (69 € HT).",
+        "mechanismDesc": "Chaque animal activé par le propriétaire génère une commission reversée au cabinet. Ordre de grandeur : ~8 activations triennales / mois couvrent l'équivalent mensuel SaaS (≈ 69,56 € HTVA). Steer : 2 253,72 € HTVA / 3 ans (−10 %).",
         "summaryTitle": "En résumé pour la clinique :",
         "summaryItems": [
           "Cockpit Web complet pour toute la clinique",
@@ -259,7 +259,7 @@
           {
             "label": "OBJECTION 1",
             "q": "« C'est uniquement une application cardio ? »",
-            "a": "Non, c'est une plateforme globale de gestion (messagerie, dossiers, rappels Care/Horse, agenda, comptes rendus). Le suivi cardiaque est une fonctionnalité intégrée parmi d'autres."
+            "a": "Non, c'est une plateforme globale de gestion (messagerie, dossiers, rappels Care/Horse, agenda, comptes rendus). Le relevé cardiaque est une fonctionnalité intégrée parmi d'autres."
           },
           {
             "label": "OBJECTION 2",
@@ -295,7 +295,7 @@
           },
           {
             "tab": "Min 1–2 (Client)",
-            "icon": "smartphone",
+            "icon": "devices",
             "title": "Min 1–2 : App Client Mobile",
             "desc": "L'utilisateur envoie un message ou effectue un relevé cardiaque au doigt (si prescrit par le praticien)."
           },
@@ -333,7 +333,7 @@
         "c2Desc": "Création de votre espace cabinet de test en 2 minutes en séance.",
         "c3Title": "Kit Salle d'Attente",
         "c3Desc": "Support dédié + Kit d'affichage pour la salle d'attente offert.",
-        "cta": "Valider le Setup VetPro (320 € HT + 69 € HT/mois)",
+        "cta": "Valider le Setup VetPro (320 € HTVA + 834,71 € HTVA / an)",
         "footerLeft": "petsFollow Pro — Continuité de soins encadrée par le vétérinaire",
         "footerRight": "www.petsfollow.com"
       }

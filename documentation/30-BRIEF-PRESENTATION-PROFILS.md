@@ -14,16 +14,15 @@ Tu es un designer de pitch deck B2B santé animale. À partir du brief ci-dessou
 1. Produis **12 à 18 slides** (titre + 3–6 bullets max, ou schéma simple).
 2. Organisation obligatoire : **Vue d’ensemble → VetPro (Web) → VetLight (mobile) → Client (mobile) → Écosystème → Offre & modèle → Différenciation → Closing**.
 3. Langue : **français**. Style : clair, confiant, concrêt (bénéfices avant features).
-4. **Identité produit = continuité de soins prescrite** via **trois apps** : Web cabinet · mobile ProLight · mobile particulier. Le relevé cardiaque est **une feature parmi d’autres** — ne jamais présenter petsFollow comme « une app cardiaque ».
-5. **Ne pas centrer le pitch sur « sans boîtier »** — parler des surfaces logicielles (Web + mobile). Ne promets **jamais** : chat WebSocket temps réel, addons payants Family/Care+/Horse, ni un appareil à vendre.
+4. **Identité produit = continuité de soins prescrite + passeport digital de l’animal** via **trois apps** : Web cabinet · mobile ProLight / care pro · mobile particulier. Le relevé cardiaque est **une feature parmi d’autres** — ne jamais présenter petsFollow comme « une app cardiaque ».
+5. **Ne pas centrer le pitch sur « sans boîtier »** — parler des surfaces logicielles (Web + mobile). Ne promets **jamais** : chat WebSocket temps réel, messagerie entre care pro, addons payants Family/Care+/Horse, ni un appareil à vendre. Pitch care pro = **partage de dossier / CR / notes**.
 6. Steer commercial client : plan **triennial 95 € / 3 ans**.
 7. Propose en fin de deck une **slide « Démo terrain »** (parcours 5 minutes).
-
 ---
 
 ## 1. En une phrase
 
-**petsFollow** = **continuité de soins prescrite** — **Web** pour le cabinet (**Pro** / VetPro), **mobile** pour le terrain (**Pro Light** / VetLight) et le particulier (**app client**).
+**petsFollow** = **continuité de soins prescrite**, matérialisée en **passeport digital** de l’animal — **Web** cabinet (**Pro** / VetPro), **mobile** terrain (**Pro Light** / VetLight / care pro), **app** propriétaire (**Client**).
 
 ### Glossaire
 
@@ -33,13 +32,13 @@ Tu es un designer de pitch deck B2B santé animale. À partir du brief ci-dessou
 | **Pro Light** | VetLight | App mobile terrain |
 | **petsFollow** (app client) | Client | App mobile particulier |
 
-Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie — **messagerie, Care/Horse, foyer, relevés cardiaques** inclus.
+Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie — **un même passeport** partagé entre vétérinaires, pros de soins et foyer (messagerie véto↔client, Care/Horse, foyer, relevés, partage ACL).
 
 Trois faces complémentaires :
 
 | Solution | Qui | Surface | Tarif |
 |----------|-----|---------|-------|
-| **VetPro** | Cabinet / vétérinaire | **App Web** SaaS (Nuxt Pro) | **69 € HT/mois** + setup **320 € HT** (facture hors ligne) |
+| **VetPro** | Cabinet / vétérinaire | **App Web** SaaS (Nuxt Pro) | **834,71 € HTVA/an** (ou **2 253,72 € / 3 ans**) + setup **320 € HTVA** (facture hors ligne) |
 | **VetLight** | Véto terrain (et pros santé associés) | **App mobile** Flutter **Pro Light** | **Gratuit** |
 | **Client** | Propriétaire d’animal | **App mobile** Flutter **pets** | **3,50 € / mois** · **35 € / an** · **95 € / 3 ans** (TTC, Stripe) |
 
@@ -108,7 +107,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 | CR / IA | Édition structurée des rapports de visite ; historique transcription / IA / version finale |
 | Équipe | Page équipe, partage animal / client (ACL) |
 | Business | Commissions véto, overview dashboard, Care overdue |
-| i18n | FR / NL / EN / ES / ET |
+| i18n | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (VetPro)
 
@@ -121,7 +120,7 @@ Donner au cabinet un **cockpit Web Pro** pour :
 
 ### Tarif VetPro
 
-- **69 € HT / mois**
+- **834,71 € HTVA / an** (ou **2 253,72 € HTVA / 3 ans**, −10 %)
 - Setup **320 € HT**
 - Facturation **externe** (pas Stripe cabinet)
 - Objectif commercial terrain : **activer des pets payants** (commission à chaque activation ; SPIFF mix triennial)
@@ -141,7 +140,8 @@ Une **app mobile Pro Light gratuite** pour travailler **sur le terrain** :
 
 - Voir l’**agenda** du jour / 7 jours / tout
 - Accéder aux **fiches clients & animaux** partagés
-- Saisir un **compte rendu** (dictée vocale → transcription → amélioration IA → finalisation)
+- Saisir un **compte rendu** (dictée → transcription → finalisation ; Améliorer IA sur Web Pro)
+- Échanger en **messagerie** avec le propriétaire (fil distinct du cabinet)
 - Noter GPS / adresse de visite, ouvrir Maps
 - Marquer une visite **faite**
 
@@ -151,9 +151,9 @@ Une **app mobile Pro Light gratuite** pour travailler **sur le terrain** :
 |---|--------|----------|
 | Surface | **App Web** cabinet | **App mobile** terrain |
 | Prix | SaaS payant | Gratuit |
-| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité |
+| Force | Pilotage, messagerie, config, équipe | Agenda, CR vocaux, mobilité, messagerie client |
 | Compte | Rôle `vet` | Même compte `vet` **ou** `care_pro` + specialty |
-| Messagerie | Oui (cœur) | Hors scope care_pro ; véto utilise surtout le Web pour le chat |
+| Messagerie | Oui (cœur Web) | Oui sur Pro Light (staff **et** care_pro ↔ client ; fil distinct du cabinet). Pas de chat **entre** care pro |
 
 Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’avoir que **VetLight**.
 
@@ -168,20 +168,22 @@ Un véto peut avoir **VetPro + VetLight** (Web + mobile). Un care pro peut n’a
 
 | Domaine | Ce que fait VetLight |
 |---------|----------------------|
-| Shell | Onglets Agenda · Clients · Settings (+ drill-down animal / docs / CR) |
+| Shell | Onglets Agenda · Clients · Animaux · Messages · Settings |
 | Agenda | Filtres Aujourd’hui / 7 j / Tout ; bouton Fait ; GPS / Maps |
 | Dossiers | Clients & pets selon droits (read / write_notes / full) |
-| CR | Micro → upload → transcription Gemini → « améliorer » (SOAP / specialty) → finaliser |
+| Messagerie | Threads care_pro ↔ client (ACL) ; staff cabinet = fil practice |
+| CR | Micro → transcription Gemini → éditer → enregistrer / finaliser (Améliorer IA = Web Pro) |
 | Sécurité PHI | Audio CR non public ; stream auth ; purge à la finalisation |
-| Langues | FR / NL / EN / ES / ET |
+| Langues | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (VetLight)
 
 1. Login (compte véto ou care_pro créé / rattaché)  
 2. Agenda du jour → ouvrir visite  
 3. Consulter fiche animal  
-4. Dictée CR → améliorer IA → enregistrer / finaliser  
-5. Marquer la visite faite  
+4. Dictée CR → enregistrer / finaliser (Améliorer IA sur Web Pro)  
+5. Messages → composer vers le client partagé  
+6. Marquer la visite faite  
 
 ---
 
@@ -220,7 +222,7 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Timeline | Messages + événements + relevés validés |
 | Cardiaque | Sessions 15/30/60 s → BPM + commentaire → envoi véto (**feature**) |
 | Engagement | Missions discovery in-app + emails éducatifs (opt-out possible) |
-| Langues | FR / NL / EN / ES / ET |
+| Langues | FR / NL / EN / ES / ET / IT |
 
 ### Parcours type (Client)
 
@@ -263,23 +265,24 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 
 ### Au vétérinaire (VetPro + VetLight)
 
-> « petsFollow : continuité de soins prescrite — Web pour votre cabinet, mobile ProLight pour le terrain, app pour vos clients. VetPro à 69 € HT/mois (facture hors ligne), autofinançable via commissions. ProLight gratuit. Vos clients paient ≤ 3,5 €/mois — steer 95 € / 3 ans. Messagerie, Care/Horse, relevés cardiaques inclus. »
+> « petsFollow : continuité de soins prescrite — un passeport digital de l’animal partagé entre votre cabinet, les pros de soins terrain et le propriétaire. Web Pro, Pro Light gratuit, app client. VetPro à 834,71 € HTVA/an (facture hors ligne ; −10 % en triennal), autofinançable via commissions. Clients ≤ 3,5 €/mois — steer 95 € / 3 ans. »
 
 ### Au propriétaire (via le véto)
 
-> « Le suivi que votre vétérinaire vous prescrit — messages, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. »
+> « Le passeport digital de votre animal — messages avec le cabinet, rappels, relevés — dans une app mobile, à partir de ~2,6 €/mois sur 3 ans. »
 
 ### Au commercial (interne)
 
-> « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”. »
+> « Ouvrez le cabinet, activez des pets payants → commission sur chaque nouvelle activation. Steer triennial. Pitch = passeport multi-acteurs · Web + 2 mobiles (ProLight + particulier), pas “app cardio”, pas “anti-boîtier”, pas messagerie **entre** care pro (oui care_pro ↔ client sur Pro Light). »
 
 ### Différenciation (1 slide)
 
 - Trois surfaces logicielles : **Web Pro · mobile ProLight · mobile Client**  
 - Prescription vétérinaire (pas un gadget grand public)  
-- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 5 langues  
+- **Passeport multi-acteurs** : vet / care pro / foyer sur le même animal  
+- Continuité multi-profil : VetPro · VetLight · Client · Care pro — 6 langues  
 - Complémentaire du PMS (ne le remplace pas)  
-- VetLight gratuit pour le terrain + CR IA  
+- VetLight gratuit pour le terrain + CR (IA sur Web) + partage ACL + messagerie client  
 - Alignement économique véto / commercial (pas de pénalité co-selling)  
 
 ### Objections fréquentes
@@ -287,10 +290,11 @@ Une **app mobile** simple et rassurante pour le **suivi prescrit** :
 | Objection | Réponse courte |
 |-----------|----------------|
 | « Encore un abonnement » | Prescrit par le véto, **≤ 3,5 €/mois** (triennial ~2,6 €), tout dans l’app |
-| « C’est juste une app cardio ? » | **Non** — messagerie, Care/Horse, foyer, CR terrain + IA ; le FC est une feature |
+| « C’est juste une app cardio ? » | **Non** — passeport digital : messagerie, Care/Horse, foyer, CR + partage care pro ; le FC est une feature |
 | « Et Family / Care+ ? » | Inclus dès qu’un animal est payant |
 | « Je perds s’il y a un commercial » | Non — même plafond commission véto |
-| « On a déjà un logiciel / PMS » | Complementary — petsFollow ajoute la continuité Web + mobile propriétaire, pas un 2ᵉ PMS |
+| « On a déjà un logiciel / PMS » | Complementary — passeport Web + mobile (cabinet / care pro / foyer), pas un 2ᵉ PMS |
+| « Les care pro peuvent chatter entre eux ? » | **Non** — partage dossier / CR / notes ; pas de messagerie inter-pros |
 | « Encore une app à installer ? » | Une pour le propriétaire ; le cabinet a le Web + ProLight terrain si besoin |
 
 ---
@@ -311,9 +315,9 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 ## 9. Structure de slides recommandée
 
 1. Titre — petsFollow  
-2. Promesse — continuité prescrite (Web + mobile + mobile)  
-3. Le problème (fil perdu entre consultations)  
-4. La réponse — 3 apps  
+2. Promesse — continuité prescrite + passeport digital (Web + mobile + mobile)  
+3. Le problème (fil perdu entre consultations **et** entre soignants)  
+4. La réponse — passeport multi-acteurs · 3 apps  
 5. Schéma écosystème  
 6. VetPro Web — pour qui / pourquoi  
 7. VetPro — fonctionnalités  
@@ -340,7 +344,8 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 - Plan 5 ans (quinquennial) comme offre active  
 - Confondre **inscription cabinet** et **revenu** (revenu = animal payant)  
 - Calculer une commission sur le **TTC** (base = HTVA)  
-- **Cantonner petsFollow à « suivi cardiaque »** — identité = continuité prescrite  
+- **Cantonner petsFollow à « suivi cardiaque »** — identité = continuité prescrite + passeport digital  
+- **Promettre une messagerie entre care pro** — parler partage de dossier / CR / notes  
 
 ---
 
@@ -362,10 +367,11 @@ Comptes démo locaux (si besoin) : voir `AGENTS.md`
 
 | Check | Oui / Non | Note |
 |-------|-----------|------|
-| Promesse = **continuité** cabinet / terrain / foyer | | |
+| Promesse = **continuité + passeport** cabinet / care pro / foyer | | |
 | Surfaces = **Web Pro + mobile ProLight + mobile Client** | | |
 | FC présenté comme **feature**, pas comme produit | | |
 | Pas de pitch centré « sans boîtier » | | |
+| Pas de promesse **messagerie entre care pro** (client ↔ care_pro OK) | | |
 | Steer **triennial 95 €** | | |
 | Care/Horse/foyer = **inclus** | | |
 | Pas de promesse WebSocket / addons / appareil à vendre | | |

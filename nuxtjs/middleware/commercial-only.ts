@@ -4,4 +4,10 @@ export default defineNuxtRouteMiddleware(async () => {
     if (isProRole(role)) return navigateTo(homePathForRole(role))
     return navigateTo('/login')
   }
+  // Keep manager shell when browsing shared /commercial/* portfolio pages.
+  if (role === 'commercial_manager') {
+    setPageLayout('commercial-manager')
+  } else {
+    setPageLayout('commercial')
+  }
 })

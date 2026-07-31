@@ -7,8 +7,25 @@ import { refreshAccessToken } from '~/server/utils/api'
 export default defineEventHandler(async (event) => {
   let token = getCookie(event, 'pf_token')
   if (!token) {
-    const pair = await refreshAccessToken(event)
-    token = pair?.accessToken
+    const outcome = await refreshAccessToken(event)
+    switch (outcome.kind) {
+      case 'ok':
+        token = outcome.pair.accessToken
+        break
+      case 'transient':
+        throw createError({
+          statusCode: 503,
+          statusMessage: 'Auth refresh temporarily unavailable',
+          data: { reason: 'refresh_unavailable' },
+        })
+      case 'missing':
+      case 'rejected':
+        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+      default: {
+        const _exhaustive: never = outcome
+        throw _exhaustive
+      }
+    }
   }
   if (!token) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })

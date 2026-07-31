@@ -1,184 +1,249 @@
 <template>
   <div data-testid="admin-users-page">
     <ProPageHeader :title="$t('admin.users.title')" :subtitle="$t('admin.users.subtitle')" />
-    <ProCard class="pro-mb-lg" data-testid="admin-create-commercial">
-      <h3 class="pro-mb-md">{{ $t('admin.users.createCommercial') }}</h3>
-      <form class="pro-form" @submit.prevent="createCommercial">
-        <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" autocomplete="off" :label="$t('admin.users.commercialName')" required />
-        <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" autocomplete="off" :label="$t('admin.users.commercialEmail')" required />
-        <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" autocomplete="new-password" :label="$t('admin.users.commercialPassword')" required />
-        <div class="pro-field">
-          <label class="pro-label" for="admin-commercial-role">{{ $t('admin.users.commercialRole') }}</label>
-          <select id="admin-commercial-role" v-model="cForm.role" class="pro-select" data-testid="admin-commercial-role">
-            <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
-            <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
-          </select>
+
+    <ProSectionTabs
+      v-model="activeTab"
+      :tabs="userTabs"
+      :aria-label="$t('admin.users.tabsLabel')"
+    />
+
+    <div
+      v-show="activeTab === 'list'"
+      role="tabpanel"
+      aria-labelledby="tab-list"
+      data-testid="admin-users-tab-list"
+    >
+      <ProCard>
+        <ProListToolbar v-model:view-mode="viewMode">
+          <template #filters>
+            <div class="pro-field pro-field-inline">
+              <label class="pro-label" for="role-filter">{{ $t('admin.users.role') }}</label>
+              <select id="role-filter" v-model="roleFilter" class="pro-select" data-testid="admin-role-filter">
+                <option value="">{{ $t('admin.users.roleAll') }}</option>
+                <option value="client">{{ $t('admin.users.roleClient') }}</option>
+                <option value="vet">{{ $t('admin.users.roleVet') }}</option>
+                <option value="care_pro">{{ $t('admin.users.roleCarePro') }}</option>
+                <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
+                <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
+                <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
+              </select>
+            </div>
+            <div class="pro-field pro-field-inline">
+              <label class="pro-label" for="payment-filter">{{ $t('admin.users.payment') }}</label>
+              <select id="payment-filter" v-model="paymentFilter" class="pro-select">
+                <option value="all">{{ $t('admin.users.paymentAll') }}</option>
+                <option value="active">{{ $t('admin.users.paymentActive') }}</option>
+                <option value="pending">{{ $t('admin.users.paymentPending') }}</option>
+                <option value="past">{{ $t('admin.users.paymentPast') }}</option>
+              </select>
+            </div>
+          </template>
+        </ProListToolbar>
+
+        <ProTable v-if="viewMode === 'table'" :empty="!filtered.length" :empty-title="$t('admin.users.emptyTitle')">
+          <thead>
+            <tr>
+              <th>{{ $t('admin.users.columnEmail') }}</th>
+              <th>{{ $t('admin.users.columnName') }}</th>
+              <th>{{ $t('admin.users.columnRole') }}</th>
+              <th>{{ $t('admin.users.columnRegistered') }}</th>
+              <th>{{ $t('admin.users.columnPets') }}</th>
+              <th>{{ $t('admin.users.columnPayment') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="u in filtered" :key="u.id">
+              <td>{{ u.email }}</td>
+              <td>{{ u.fullName }}</td>
+              <td><ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge></td>
+              <td>{{ formatRegistered(u.createdAt) }}</td>
+              <td>{{ u.petCount }}</td>
+              <td><ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge></td>
+            </tr>
+          </tbody>
+        </ProTable>
+
+        <ProKanban v-else>
+          <ProKanbanColumn
+            v-for="col in kanbanColumns"
+            :key="col.role"
+            :title="col.title"
+            :count="col.items.length"
+            :empty="!col.items.length"
+            :empty-title="$t('common.none')"
+          >
+            <article v-for="u in col.items" :key="u.id" class="pro-kanban-card pro-kanban-card--static">
+              <strong>{{ u.fullName }}</strong>
+              <p class="pro-kanban-card__meta">{{ u.email }}</p>
+              <div class="pro-flex-gap">
+                <ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge>
+                <ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge>
+              </div>
+            </article>
+          </ProKanbanColumn>
+        </ProKanban>
+
+        <div v-if="viewMode === 'table'" class="pro-pagination">
+          <ProButton variant="secondary" :disabled="page <= 1" @click="page--">{{ $t('common.previous') }}</ProButton>
+          <span class="text-muted">{{ $t('common.page', { page }) }}</span>
+          <ProButton variant="secondary" :disabled="!hasMore" @click="page++">{{ $t('common.next') }}</ProButton>
         </div>
-        <div v-if="cForm.role === 'commercial'" class="pro-field">
-          <label class="pro-label" for="admin-commercial-manager">{{ $t('admin.users.commercialManager') }}</label>
-          <select id="admin-commercial-manager" v-model="cForm.managerUserId" class="pro-select" data-testid="admin-commercial-manager">
-            <option value="">{{ $t('admin.users.commercialManagerNone') }}</option>
-            <option v-for="m in managers" :key="m.userId" :value="m.userId">
-              {{ m.fullName }} ({{ m.email }})
-            </option>
-          </select>
-        </div>
-        <p v-if="cMsg" class="pro-hint" data-testid="admin-commercial-msg">{{ cMsg }}</p>
-        <ProButton type="submit" test-id="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
-      </form>
-    </ProCard>
-    <ProCard class="pro-mb-lg" data-testid="admin-create-vet">
-      <h3 class="pro-mb-md">{{ $t('admin.users.createVet') }}</h3>
-      <form class="pro-form" @submit.prevent="createVet">
-        <ProInput v-model="vForm.fullName" test-id="admin-vet-name" :label="$t('admin.users.vetName')" required />
-        <ProInput v-model="vForm.practiceName" test-id="admin-vet-practice" :label="$t('admin.users.vetPractice')" required />
-        <ProInput v-model="vForm.email" test-id="admin-vet-email" type="email" :label="$t('admin.users.vetEmail')" required />
-        <ProInput v-model="vForm.password" test-id="admin-vet-password" type="password" :label="$t('admin.users.vetPassword')" required />
-        <p v-if="vMsg" class="pro-hint" data-testid="admin-vet-msg">{{ vMsg }}</p>
-        <ProButton type="submit" test-id="admin-vet-submit" :disabled="vSaving">{{ $t('admin.users.createVet') }}</ProButton>
-      </form>
-    </ProCard>
-    <ProCard class="pro-mb-lg" data-testid="admin-create-client">
-      <h3 class="pro-mb-md">{{ $t('admin.users.createClient') }}</h3>
-      <form class="pro-form" @submit.prevent="createClient">
-        <div class="pro-field">
-          <label class="pro-label" for="admin-client-vet">{{ $t('admin.users.clientVet') }}</label>
-          <select id="admin-client-vet" v-model="clForm.vetUserId" class="pro-select" required data-testid="admin-client-vet">
-            <option value="">{{ $t('admin.users.clientVetPlaceholder') }}</option>
-            <option v-for="v in vetOptions" :key="v.userId" :value="v.userId">
-              {{ v.fullName }} — {{ v.practiceName }}
-            </option>
-          </select>
-        </div>
-        <ProInput v-model="clForm.fullName" test-id="admin-client-name" :label="$t('admin.users.clientName')" required />
-        <ProInput v-model="clForm.email" test-id="admin-client-email" type="email" :label="$t('admin.users.clientEmail')" required />
-        <ProInput v-model="clForm.password" test-id="admin-client-password" type="password" :label="$t('admin.users.clientPassword')" required />
-        <p v-if="clMsg" class="pro-hint" data-testid="admin-client-msg">{{ clMsg }}</p>
-        <ProButton type="submit" test-id="admin-client-submit" :disabled="clSaving">{{ $t('admin.users.createClient') }}</ProButton>
-      </form>
-    </ProCard>
-    <ProCard class="pro-mb-lg" data-testid="admin-create-care-pro">
-      <h3 class="pro-mb-md">{{ $t('admin.users.createCarePro') }}</h3>
-      <p class="pro-hint pro-mb-md">{{ $t('admin.users.createCareProHint') }}</p>
-      <form class="pro-form" @submit.prevent="createCarePro">
-        <ProInput v-model="cpForm.fullName" test-id="admin-care-pro-name" :label="$t('admin.users.careProName')" required />
-        <ProInput v-model="cpForm.email" test-id="admin-care-pro-email" type="email" :label="$t('admin.users.careProEmail')" required />
-        <ProInput v-model="cpForm.password" test-id="admin-care-pro-password" type="password" :label="$t('admin.users.careProPassword')" required />
-        <div class="pro-field">
-          <label class="pro-label" for="admin-care-pro-specialty">{{ $t('admin.users.careProSpecialty') }}</label>
-          <select id="admin-care-pro-specialty" v-model="cpForm.specialty" class="pro-select" required data-testid="admin-care-pro-specialty">
-            <option v-for="s in careProSpecialties" :key="s" :value="s">
-              {{ $t(`admin.users.specialty.${s}`) }}
-            </option>
-          </select>
-        </div>
-        <p v-if="cpMsg" class="pro-hint" data-testid="admin-care-pro-msg">{{ cpMsg }}</p>
-        <ProButton type="submit" test-id="admin-care-pro-submit" :disabled="cpSaving">
-          {{ $t('admin.users.createCarePro') }}
-        </ProButton>
-      </form>
-    </ProCard>
-    <ProCard class="pro-mb-lg" data-testid="admin-attach-profile">
-      <h3 class="pro-mb-md">{{ $t('admin.users.attachProfile') || 'Ajouter un profil' }}</h3>
-      <form class="pro-form" @submit.prevent="attachProfile">
-        <ProInput v-model="apForm.userId" :label="$t('admin.users.attachUserId') || 'User ID'" required />
-        <div class="pro-field">
-          <label class="pro-label">{{ $t('admin.users.attachRole') || 'Rôle' }}</label>
-          <select v-model="apForm.role" class="pro-select">
-            <option value="client">client</option>
-            <option value="care_pro">care_pro</option>
-            <option value="vet">vet</option>
-            <option value="vet_assistant">vet_assistant</option>
-            <option value="secretary">secretary</option>
-          </select>
-        </div>
-        <ProInput v-if="apForm.role === 'care_pro'" v-model="apForm.specialty" label="specialty" />
-        <ProInput v-if="['vet','vet_assistant','secretary'].includes(apForm.role)" v-model="apForm.practiceId" label="practiceId" />
-        <p v-if="apMsg" class="pro-hint">{{ apMsg }}</p>
-        <ProButton type="submit" :disabled="apSaving">{{ $t('admin.users.attachProfile') || 'Ajouter un profil' }}</ProButton>
-      </form>
-    </ProCard>
-    <ProCard>
-      <ProListToolbar v-model:view-mode="viewMode">
-        <template #filters>
-          <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="role-filter">{{ $t('admin.users.role') }}</label>
-            <select id="role-filter" v-model="roleFilter" class="pro-select" data-testid="admin-role-filter">
-              <option value="">{{ $t('admin.users.roleAll') }}</option>
-              <option value="client">{{ $t('admin.users.roleClient') }}</option>
-              <option value="vet">{{ $t('admin.users.roleVet') }}</option>
-              <option value="care_pro">{{ $t('admin.users.roleCarePro') }}</option>
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'commercial'"
+      role="tabpanel"
+      aria-labelledby="tab-commercial"
+      data-testid="admin-users-tab-commercial"
+    >
+      <ProCard data-testid="admin-create-commercial">
+        <h3 class="pro-mb-md">{{ $t('admin.users.createCommercial') }}</h3>
+        <form class="pro-form" @submit.prevent="createCommercial">
+          <ProInput v-model="cForm.fullName" test-id="admin-commercial-name" autocomplete="off" :label="$t('admin.users.commercialName')" required />
+          <ProInput v-model="cForm.email" test-id="admin-commercial-email" type="email" autocomplete="off" :label="$t('admin.users.commercialEmail')" required />
+          <ProInput v-model="cForm.password" test-id="admin-commercial-password" type="password" autocomplete="new-password" :label="$t('admin.users.commercialPassword')" required />
+          <div class="pro-field">
+            <label class="pro-label" for="admin-commercial-role">{{ $t('admin.users.commercialRole') }}</label>
+            <select id="admin-commercial-role" v-model="cForm.role" class="pro-select" data-testid="admin-commercial-role">
               <option value="commercial">{{ $t('admin.users.roleCommercial') }}</option>
               <option value="commercial_manager">{{ $t('admin.users.roleCommercialManager') }}</option>
-              <option value="admin">{{ $t('admin.users.roleAdmin') }}</option>
             </select>
           </div>
-          <div class="pro-field pro-field-inline">
-            <label class="pro-label" for="payment-filter">{{ $t('admin.users.payment') }}</label>
-            <select id="payment-filter" v-model="paymentFilter" class="pro-select">
-              <option value="all">{{ $t('admin.users.paymentAll') }}</option>
-              <option value="active">{{ $t('admin.users.paymentActive') }}</option>
-              <option value="pending">{{ $t('admin.users.paymentPending') }}</option>
-              <option value="past">{{ $t('admin.users.paymentPast') }}</option>
+          <div v-if="cForm.role === 'commercial'" class="pro-field">
+            <label class="pro-label" for="admin-commercial-manager">{{ $t('admin.users.commercialManager') }}</label>
+            <select id="admin-commercial-manager" v-model="cForm.managerUserId" class="pro-select" data-testid="admin-commercial-manager">
+              <option value="">{{ $t('admin.users.commercialManagerNone') }}</option>
+              <option v-for="m in managers" :key="m.userId" :value="m.userId">
+                {{ m.fullName }} ({{ m.email }})
+              </option>
             </select>
           </div>
-        </template>
-      </ProListToolbar>
+          <p v-if="cMsg" class="pro-hint" data-testid="admin-commercial-msg">{{ cMsg }}</p>
+          <ProButton type="submit" test-id="admin-commercial-submit" :disabled="cSaving">{{ $t('admin.users.createCommercial') }}</ProButton>
+        </form>
+      </ProCard>
+    </div>
 
-      <ProTable v-if="viewMode === 'table'" :empty="!filtered.length" :empty-title="$t('admin.users.emptyTitle')">
-        <thead>
-          <tr>
-            <th>{{ $t('admin.users.columnEmail') }}</th>
-            <th>{{ $t('admin.users.columnName') }}</th>
-            <th>{{ $t('admin.users.columnRole') }}</th>
-            <th>{{ $t('admin.users.columnRegistered') }}</th>
-            <th>{{ $t('admin.users.columnPets') }}</th>
-            <th>{{ $t('admin.users.columnPayment') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in filtered" :key="u.id">
-            <td>{{ u.email }}</td>
-            <td>{{ u.fullName }}</td>
-            <td><ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge></td>
-            <td>{{ u.createdAt?.substring(0, 10) }}</td>
-            <td>{{ u.petCount }}</td>
-            <td><ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge></td>
-          </tr>
-        </tbody>
-      </ProTable>
+    <div
+      v-show="activeTab === 'vet'"
+      role="tabpanel"
+      aria-labelledby="tab-vet"
+      data-testid="admin-users-tab-vet"
+    >
+      <ProCard data-testid="admin-create-vet">
+        <h3 class="pro-mb-md">{{ $t('admin.users.createVet') }}</h3>
+        <form class="pro-form" @submit.prevent="createVet">
+          <ProInput v-model="vForm.fullName" test-id="admin-vet-name" :label="$t('admin.users.vetName')" required />
+          <ProInput v-model="vForm.practiceName" test-id="admin-vet-practice" :label="$t('admin.users.vetPractice')" required />
+          <ProInput v-model="vForm.email" test-id="admin-vet-email" type="email" :label="$t('admin.users.vetEmail')" required />
+          <ProInput v-model="vForm.password" test-id="admin-vet-password" type="password" :label="$t('admin.users.vetPassword')" required />
+          <p v-if="vMsg" class="pro-hint" data-testid="admin-vet-msg">{{ vMsg }}</p>
+          <ProButton type="submit" test-id="admin-vet-submit" :disabled="vSaving">{{ $t('admin.users.createVet') }}</ProButton>
+        </form>
+      </ProCard>
+    </div>
 
-      <ProKanban v-else>
-        <ProKanbanColumn
-          v-for="col in kanbanColumns"
-          :key="col.role"
-          :title="col.title"
-          :count="col.items.length"
-          :empty="!col.items.length"
-          :empty-title="$t('common.none')"
-        >
-          <article v-for="u in col.items" :key="u.id" class="pro-kanban-card pro-kanban-card--static">
-            <strong>{{ u.fullName }}</strong>
-            <p class="pro-kanban-card__meta">{{ u.email }}</p>
-            <div class="pro-flex-gap">
-              <ProBadge variant="neutral">{{ roleLabel(u.role) }}</ProBadge>
-              <ProBadge :variant="paymentVariant(u.paymentLabel)">{{ paymentLabel(u.paymentLabel) }}</ProBadge>
-            </div>
-          </article>
-        </ProKanbanColumn>
-      </ProKanban>
+    <div
+      v-show="activeTab === 'client'"
+      role="tabpanel"
+      aria-labelledby="tab-client"
+      data-testid="admin-users-tab-client"
+    >
+      <ProCard data-testid="admin-create-client">
+        <h3 class="pro-mb-md">{{ $t('admin.users.createClient') }}</h3>
+        <form class="pro-form" @submit.prevent="createClient">
+          <div class="pro-field">
+            <label class="pro-label" for="admin-client-vet">{{ $t('admin.users.clientVet') }}</label>
+            <select id="admin-client-vet" v-model="clForm.vetUserId" class="pro-select" required data-testid="admin-client-vet">
+              <option value="">{{ $t('admin.users.clientVetPlaceholder') }}</option>
+              <option v-for="v in vetOptions" :key="v.userId" :value="v.userId">
+                {{ v.fullName }} — {{ v.practiceName }}
+              </option>
+            </select>
+          </div>
+          <ProInput v-model="clForm.fullName" test-id="admin-client-name" :label="$t('admin.users.clientName')" required />
+          <ProInput v-model="clForm.email" test-id="admin-client-email" type="email" :label="$t('admin.users.clientEmail')" required />
+          <ProInput v-model="clForm.password" test-id="admin-client-password" type="password" :label="$t('admin.users.clientPassword')" required />
+          <p v-if="clMsg" class="pro-hint" data-testid="admin-client-msg">{{ clMsg }}</p>
+          <ProButton type="submit" test-id="admin-client-submit" :disabled="clSaving">{{ $t('admin.users.createClient') }}</ProButton>
+        </form>
+      </ProCard>
+    </div>
 
-      <div v-if="viewMode === 'table'" class="pro-pagination">
-        <ProButton variant="secondary" :disabled="page <= 1" @click="page--">{{ $t('common.previous') }}</ProButton>
-        <span class="text-muted">{{ $t('common.page', { page }) }}</span>
-        <ProButton variant="secondary" :disabled="!hasMore" @click="page++">{{ $t('common.next') }}</ProButton>
-      </div>
-    </ProCard>
+    <div
+      v-show="activeTab === 'care_pro'"
+      role="tabpanel"
+      aria-labelledby="tab-care_pro"
+      data-testid="admin-users-tab-care-pro"
+    >
+      <ProCard data-testid="admin-create-care-pro">
+        <h3 class="pro-mb-md">{{ $t('admin.users.createCarePro') }}</h3>
+        <p class="pro-hint pro-mb-md">{{ $t('admin.users.createCareProHint') }}</p>
+        <form class="pro-form" @submit.prevent="createCarePro">
+          <ProInput v-model="cpForm.fullName" test-id="admin-care-pro-name" :label="$t('admin.users.careProName')" required />
+          <ProInput v-model="cpForm.email" test-id="admin-care-pro-email" type="email" :label="$t('admin.users.careProEmail')" required />
+          <ProInput v-model="cpForm.password" test-id="admin-care-pro-password" type="password" :label="$t('admin.users.careProPassword')" required />
+          <div class="pro-field">
+            <label class="pro-label" for="admin-care-pro-specialty">{{ $t('admin.users.careProSpecialty') }}</label>
+            <select id="admin-care-pro-specialty" v-model="cpForm.specialty" class="pro-select" required data-testid="admin-care-pro-specialty">
+              <option v-for="s in careProSpecialties" :key="s" :value="s">
+                {{ $t(`admin.users.specialty.${s}`) }}
+              </option>
+            </select>
+          </div>
+          <p v-if="cpMsg" class="pro-hint" data-testid="admin-care-pro-msg">{{ cpMsg }}</p>
+          <ProButton type="submit" test-id="admin-care-pro-submit" :disabled="cpSaving">
+            {{ $t('admin.users.createCarePro') }}
+          </ProButton>
+        </form>
+      </ProCard>
+    </div>
+
+    <div
+      v-show="activeTab === 'attach'"
+      role="tabpanel"
+      aria-labelledby="tab-attach"
+      data-testid="admin-users-tab-attach"
+    >
+      <ProCard data-testid="admin-attach-profile">
+        <h3 class="pro-mb-md">{{ $t('admin.users.attachTitle') }}</h3>
+        <form class="pro-form" @submit.prevent="attachProfile">
+          <ProInput v-model="apForm.userId" test-id="admin-attach-user-id" :label="$t('admin.users.attachUserId')" required />
+          <div class="pro-field">
+            <label class="pro-label" for="admin-attach-role">{{ $t('admin.users.attachRole') }}</label>
+            <select id="admin-attach-role" v-model="apForm.role" class="pro-select" data-testid="admin-attach-role">
+              <option v-for="r in attachRoles" :key="r" :value="r">{{ roleLabel(r) }}</option>
+            </select>
+          </div>
+          <div v-if="apForm.role === 'care_pro'" class="pro-field">
+            <label class="pro-label" for="admin-attach-specialty">{{ $t('admin.users.attachSpecialty') }}</label>
+            <select id="admin-attach-specialty" v-model="apForm.specialty" class="pro-select" data-testid="admin-attach-specialty">
+              <option v-for="s in careProSpecialties" :key="s" :value="s">
+                {{ $t(`admin.users.specialty.${s}`) }}
+              </option>
+            </select>
+          </div>
+          <ProInput
+            v-if="needsPracticeId"
+            v-model="apForm.practiceId"
+            test-id="admin-attach-practice-id"
+            :label="$t('admin.users.attachPracticeId')"
+            required
+          />
+          <p v-if="apMsg" class="pro-hint" data-testid="admin-attach-msg">{{ apMsg }}</p>
+          <ProButton type="submit" test-id="admin-attach-submit" :disabled="apSaving">
+            {{ $t('admin.users.attachSubmit') }}
+          </ProButton>
+        </form>
+      </ProCard>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin-only' })
+definePageMeta({ layout: 'admin', middleware: 'admin-or-dev' })
 
 type AdminUser = {
   id: string
@@ -190,9 +255,13 @@ type AdminUser = {
   paymentLabel: string
 }
 
+type UsersTab = 'list' | 'commercial' | 'vet' | 'client' | 'care_pro' | 'attach'
+
 const { t } = useI18n()
 const { roleLabel, paymentLabel } = useCodeLabels()
+const { formatDate } = useFormatters()
 
+const activeTab = ref<UsersTab>('list')
 const roleFilter = ref('')
 const paymentFilter = ref<'all' | 'active' | 'pending' | 'past'>('all')
 const users = ref<AdminUser[]>([])
@@ -205,23 +274,8 @@ const cForm = reactive({ fullName: '', email: '', password: '', role: 'commercia
 const apSaving = ref(false)
 const apMsg = ref('')
 const apForm = reactive({ userId: '', role: 'client', specialty: 'farrier', practiceId: '' })
+const attachRoles = ['client', 'care_pro', 'vet', 'vet_assistant', 'secretary'] as const
 
-async function attachProfile() {
-  apSaving.value = true
-  apMsg.value = ''
-  try {
-    const body: Record<string, string> = { role: apForm.role }
-    if (apForm.role === 'care_pro') body.specialty = apForm.specialty
-    if (['vet', 'vet_assistant', 'secretary'].includes(apForm.role)) body.practiceId = apForm.practiceId
-    await $fetch(`/api/admin/users/${apForm.userId}/profiles`, { method: 'POST', body })
-    apMsg.value = 'OK'
-    apForm.userId = ''
-  } catch {
-    apMsg.value = 'Erreur'
-  } finally {
-    apSaving.value = false
-  }
-}
 const managers = ref<{ userId: string; fullName: string; email: string }[]>([])
 const vSaving = ref(false)
 const vMsg = ref('')
@@ -241,6 +295,46 @@ const careProSpecialties = [
   'groomer',
   'breeder',
 ] as const
+
+const userTabs = computed(() => [
+  { id: 'list', label: t('admin.users.tabList') },
+  { id: 'commercial', label: t('admin.users.tabCommercial') },
+  { id: 'vet', label: t('admin.users.tabVet') },
+  { id: 'client', label: t('admin.users.tabClient') },
+  { id: 'care_pro', label: t('admin.users.tabCarePro') },
+  { id: 'attach', label: t('admin.users.tabAttach') },
+])
+
+const needsPracticeId = computed(() =>
+  ['vet', 'vet_assistant', 'secretary'].includes(apForm.role),
+)
+
+function formatRegistered(iso?: string) {
+  if (!iso) return t('common.dash')
+  try {
+    return formatDate(iso)
+  } catch {
+    return iso.substring(0, 10)
+  }
+}
+
+async function attachProfile() {
+  apSaving.value = true
+  apMsg.value = ''
+  try {
+    const body: Record<string, string> = { role: apForm.role }
+    if (apForm.role === 'care_pro') body.specialty = apForm.specialty
+    if (needsPracticeId.value) body.practiceId = apForm.practiceId
+    await $fetch(`/api/admin/users/${apForm.userId}/profiles`, { method: 'POST', body })
+    apMsg.value = t('admin.users.attachOk')
+    apForm.userId = ''
+    apForm.practiceId = ''
+  } catch {
+    apMsg.value = t('admin.users.attachError')
+  } finally {
+    apSaving.value = false
+  }
+}
 
 function paymentVariant(label: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const l = (label || '').toLowerCase()
@@ -367,7 +461,6 @@ async function load() {
 }
 
 watch([roleFilter, page], load)
-watch(paymentFilter, () => { /* client-side filter */ })
 onMounted(async () => {
   await Promise.all([load(), loadVets(), loadManagers()])
 })

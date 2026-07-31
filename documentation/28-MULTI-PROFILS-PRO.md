@@ -6,16 +6,25 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 
 Équipe cabinet : `practice.team_members` + `/team` (véto de référence).
 
+**Poste partagé (PC bureau)** — distinct du multi-profil même compte :
+- Header VetPro : avatars de l’équipe (`GET /vet/team`), clic → re-auth mot de passe (+ 2FA si actif).
+- Idle 2 min → veille : cookies httpOnly purgés via BFF ; roster + `lastPath` en localStorage uniquement (pas de JWT). **Désactivé si l’équipe n’a qu’un seul compte** (pas de poste partagé).
+- Switch profil : même purge immédiate des cookies (pas de session active derrière le modal / autre onglet) ; « Annuler » → veille (y compris si la purge logout est encore en cours).
+- Header : avatars équipe uniquement si **≥ 2** membres.
+- Au déverrouillage / switch : restauration de la dernière route de l’utilisateur cible.
+- Voir UC-EQ-02.
+
 ## Surfaces
 
 | Rôle / specialty | Surface principale | Notes |
 |------------------|--------------------|-------|
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
-| `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs |
-| `admin` / commercial* | Nuxt Pro | Inchangé |
+| `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
+| `admin` / commercial* | Nuxt Pro | Inchangé — admin seed : multi-profils `admin` + `client` + `vet` (switch topbar) |
+| `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 
-Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 5 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
+Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 
 ## ACL
 
@@ -51,7 +60,13 @@ Admin `/admin/users` : création **client**, **véto**, **care_pro** (spécialit
 
 ## Pro light Flutter
 
-Tabs : Agenda · Clients · (drill-down animal / docs / CR) · Settings.
+Shell **identique** pour `care_pro` (toutes specialties) et staff cabinet (`vet` / assistant / secretary) :
+
+Tabs : Agenda · Clients · Animaux · **Messages** · Settings.
+
+AppBar : logo petsFollow uniquement (pas de sous-titre specialty / « Pro terrain »).
+
+Messagerie care_pro : threads person-scoped (`practice_id` NULL) via ACL ; le care_pro initie (compose client) ; le client répond dans le même fil.
 
 ## Agenda GPS
 
@@ -62,13 +77,26 @@ Tournées (Vague O) : agenda Flutter pro light — filtres **Aujourd’hui** / *
 
 ## Statut
 
-Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Hors scope : messagerie care_pro, Places, register public, P2, monétisation, pharmacie, GCS privé PHI.
+Plan multi-profils **A→O clos** (care_pro terrain, ACL, GPS/`clearCoords`, tournées, polish notifs/silent-load). Shell Flutter partagé `vet`+`care_pro` : agenda véto via `GET /vet/calendar` (plage), pas le pending-only de `/vet/visits`. Messagerie Pro Light : **staff + care_pro** (threads care_pro person-scoped). Hors scope : Places, register public care_pro, P2, monétisation, pharmacie, GCS privé PHI, compose client→care_pro depuis zéro (le care_pro initie).
 
 ## CR visite + IA
 
 Table `visits.visit_reports` (texte, statut draft/final, audio URL optionnelle, `client_audio_consent_at`).
 
-Flux : **accord oral client (checkbox)** → dictée/upload → transcription Gemini → édition → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
+Flux Flutter Pro Light : **accord oral client (checkbox)** → dictée (bandeau micro + Arrêter) / fichier audio → transcription Gemini → édition → **Enregistrer** / **Finaliser**. L’action « Améliorer (IA) » reste sur **Web Pro** uniquement.
+
+**Web Pro** (`ProVisitReportPanel`) — layout split friendly :
+
+| Zone | Rôle |
+|------|------|
+| Gauche | Notes / dictée (`transcript_text`) — écrire, dicter, upload audio |
+| Droite | Compte-rendu (`body_text`) — Améliorer (IA) depuis la gauche, édition manuelle, preview markdown |
+| Bas | Historique replié : transcription d’origine → proposition IA → dernière version enregistrée |
+| Footer sticky | Annuler (discard dirty) · Finaliser · Enregistrer |
+
+`PUT /visits/{id}/report` accepte `bodyText` et optionnellement `transcriptText` (notes gauche persistées). `POST …/report/improve` accepte optionnellement `sourceText` (source IA sans écraser le body au préalable).
+
+Flux Web : édition notes → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
 
 **Entitlement module** (add-on VetPro, essai 90 j, 39 € HT/mois ou 390 € HT/an) : `transcribe` / `improve` gated par `practice.ai_cr_modules` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
 
@@ -77,7 +105,8 @@ Sections CR vétérinaire (improve) :
 - Pays d’exercice : `practice.practices.country_code` (défaut `BE`) injecté dans le prompt (DCI / dénominations locales ; pas d’ordonnance auto)
 - Care_pro : templates specialty (farrier/physio/…) sans section médication véto
 
-Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`) et Flutter Pro Light.
+Champs conservés : `transcript_text` (original), `improved_text` (version IA), `body_text` (version éditée / enregistrée) — **historique visualisable** côté Web Pro (`/calendar`, modal consultation, dossier) et Flutter Pro Light.
+Web Pro liste aussi tous les CR d’une visite (`GET /visits/{id}/reports`) pour lire le CR d’un auteur terrain (lecture seule) tout en éditant le sien.
 Échec Gemini / transcription vide → `502 gemini_error` / `transcription_failed` (pas de faux succès).
 `POST .../report/transcribe` exige `clientAudioConsent=true` sinon `400 audio_consent_required`.
 Audio CR : **pas** servi via `/media/` public (`visit-reports/` bloqué en local via `DenySensitivePrefixes`) ; stream auth `GET /visits/{id}/report/audio` (refusé si CR `final`) ; **suppression à la finalisation** (Clear DB seulement après Delete média OK). Sur GCS, pas d’URL publique retournée pour ce prefix (GCP refuse une condition IAM sur `allUsers`).

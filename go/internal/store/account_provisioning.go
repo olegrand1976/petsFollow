@@ -14,11 +14,12 @@ import (
 )
 
 type CreateClientInput struct {
-	Email       string
-	Password    string
-	FullName    string
-	Locale      string
-	SkipJourney bool
+	Email        string
+	Password     string
+	FullName     string
+	Locale       string
+	ContactPhone string
+	SkipJourney  bool
 }
 
 // practiceLinkForStaff resolves practice_id for practice staff and the vet_user_id
@@ -84,9 +85,9 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id,
-			email_verified_at, preferred_locale, must_change_password
-		) VALUES ($1, $2, $3, $4, 'client', $5, NOW(), $6, true)`,
-		clientID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.Locale)); err != nil {
+			email_verified_at, preferred_locale, must_change_password, contact_phone
+		) VALUES ($1, $2, $3, $4, 'client', $5, NOW(), $6, true, $7)`,
+		clientID, in.Email, string(hash), in.FullName, practiceID, i18n.NormalizeLocale(in.Locale), strings.TrimSpace(in.ContactPhone)); err != nil {
 		return "", err
 	}
 	if _, err := tx.Exec(ctx, `
@@ -111,6 +112,18 @@ func (s *Store) CreateClientForVet(ctx context.Context, vetUserID string, in Cre
 	} else {
 		_ = s.EnrollEmailJourney(ctx, clientID, time.Now().UTC())
 	}
+	var assignedComm string
+	_ = s.pool.QueryRow(ctx, `
+		SELECT COALESCE(assigned_commercial_id::text,'') FROM identity.users WHERE id=$1`, threadVetID).Scan(&assignedComm)
+	_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+		EventType:        FiliationEventPracticeClientLinked,
+		CommercialUserID: assignedComm,
+		VetUserID:        threadVetID,
+		ClientUserID:     clientID,
+		PracticeID:       practiceID,
+		ActorUserID:      threadVetID,
+		Meta:             map[string]any{"source": "create_client_for_vet"},
+	})
 	return clientID, nil
 }
 
@@ -127,9 +140,9 @@ func (s *Store) CreateClientStandalone(ctx context.Context, in CreateClientInput
 	if _, err := s.pool.Exec(ctx, `
 		INSERT INTO identity.users (
 			id, email, password_hash, full_name, role, practice_id,
-			email_verified_at, preferred_locale, must_change_password
-		) VALUES ($1, $2, $3, $4, 'client', NULL, NOW(), $5, true)`,
-		clientID, in.Email, string(hash), in.FullName, i18n.NormalizeLocale(in.Locale)); err != nil {
+			email_verified_at, preferred_locale, must_change_password, contact_phone
+		) VALUES ($1, $2, $3, $4, 'client', NULL, NOW(), $5, true, $6)`,
+		clientID, in.Email, string(hash), in.FullName, i18n.NormalizeLocale(in.Locale), strings.TrimSpace(in.ContactPhone)); err != nil {
 		return "", err
 	}
 	if in.SkipJourney {
@@ -203,6 +216,16 @@ func (s *Store) CreateVetAsAdmin(ctx context.Context, in EncodeVetInput, assigne
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return "", err
+	}
+	if assignedCommercialID != "" {
+		_ = s.RecordFiliationEvent(ctx, FiliationEventInput{
+			EventType:        FiliationEventVetAssigned,
+			CommercialUserID: assignedCommercialID,
+			VetUserID:        userID,
+			PracticeID:       practiceID,
+			ActorUserID:      assignedCommercialID,
+			Meta:             map[string]any{"source": "admin_create_vet"},
+		})
 	}
 	return userID, nil
 }

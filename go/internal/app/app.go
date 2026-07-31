@@ -3,12 +3,15 @@ package app
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/olegrand1976/petsFollow/go/internal/billing"
 	"github.com/olegrand1976/petsFollow/go/internal/engagement/journey"
 	"github.com/olegrand1976/petsFollow/go/internal/handlers"
@@ -21,7 +24,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/olegrand1976/petsFollow/go/internal/workers"
 )
 
 type Application struct {
@@ -29,12 +32,34 @@ type Application struct {
 	router        chi.Router
 	cfg           config.Config
 	journeyCancel context.CancelFunc
+	asynqServer   *asynq.Server
+	asynqClient   *asynq.Client
 }
 
 func New(ctx context.Context, cfg config.Config) (*Application, error) {
-	// Fail-fast : jamais la clé de signature dev par défaut hors environnement dev/demo.
-	if cfg.JWTSigningKey == "" || (cfg.JWTSigningKey == "dev-change-me" && !cfg.DevSeedEnabled) {
-		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret (default dev key refused outside dev)")
+	// Fail-fast : jamais de secret faible / placeholder hors environnement dev/demo.
+	// Pas de génération aléatoire au boot — toutes les instances Cloud Run doivent
+	// partager JWT_SIGNING_KEY (Secret Manager : petsfollow-jwt-signing-key).
+	key := strings.TrimSpace(cfg.JWTSigningKey)
+	weak := key == "" ||
+		key == "dev-change-me" ||
+		key == "dev-change-me-in-production" ||
+		strings.EqualFold(key, "changeme")
+	if weak && !cfg.DevSeedEnabled {
+		return nil, errors.New("JWT_SIGNING_KEY must be set to a strong secret via env/Secret Manager (weak/default keys refused outside DEV_SEED_ENABLED)")
+	}
+	if key == "" {
+		return nil, errors.New("JWT_SIGNING_KEY must not be empty")
+	}
+	if !cfg.DevSeedEnabled && len(key) < 32 {
+		return nil, errors.New("JWT_SIGNING_KEY too short (min 32 characters outside DEV_SEED_ENABLED)")
+	}
+	cfg.JWTSigningKey = key
+	if err := cfg.ValidateBillit(); err != nil {
+		return nil, err
+	}
+	if err := cfg.ValidateVamreg(); err != nil {
+		return nil, err
 	}
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -54,7 +79,7 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	st := store.New(pool)
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
-	notifier := email.NewNotifier(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
+	notifier := email.NewNotifierAuth(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.SMTPUser, cfg.SMTPPass, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
 	bill := billing.NewService(st, cfg)
 	mediaBundle, err := media.New(cfg)
 	if err != nil {
@@ -63,6 +88,28 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
+
+	var asynqClient *asynq.Client
+	var asynqServer *asynq.Server
+	if cfg.PharmacyWorkersEnabled {
+		client, err := workers.NewAsynqClient(cfg.RedisAddr)
+		if err != nil {
+			log.Printf("pharmacy workers: asynq unavailable (%v) — keeping inline VAMReg enqueue", err)
+		} else {
+			asynqClient = client
+			api.SetVamregEnqueuer(&workers.VamregEnqueue{Client: asynqClient})
+			asynqServer = workers.NewAsynqServer(cfg.RedisAddr)
+			if asynqServer != nil {
+				mux := asynq.NewServeMux()
+				workers.RegisterVamregHandler(mux, api.VamregDeclarer())
+				go func() {
+					if err := asynqServer.Run(mux); err != nil {
+						log.Printf("asynq server exited: %v", err)
+					}
+				}()
+			}
+		}
+	}
 
 	r := httpx.NewBaseRouter()
 	r.Use(selectiveTimeout)
@@ -88,7 +135,10 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	go jr.Start(journeyCtx)
 
-	return &Application{pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel}, nil
+	return &Application{
+		pool: pool, router: r, cfg: cfg, journeyCancel: journeyCancel,
+		asynqServer: asynqServer, asynqClient: asynqClient,
+	}, nil
 }
 
 // corsAllowedOrigins : allowlist depuis CORS_ALLOWED_ORIGINS, sinon le site Pro public.
@@ -167,6 +217,12 @@ func (a *Application) Close() {
 	if a.journeyCancel != nil {
 		a.journeyCancel()
 	}
+	if a.asynqServer != nil {
+		a.asynqServer.Shutdown()
+	}
+	if a.asynqClient != nil {
+		_ = a.asynqClient.Close()
+	}
 	if a.pool != nil {
 		a.pool.Close()
 	}
@@ -187,7 +243,39 @@ func SeedOnly(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 	defer pool.Close()
-	return seed.Run(ctx, pool)
+	if err := seed.Run(ctx, pool); err != nil {
+		return err
+	}
+	if cfg.SeedNotifyStaff {
+		return notifyStagingSeedStaff(ctx, pool, cfg)
+	}
+	return nil
+}
+
+// SeedMassOnly densifies the DB after a normal seed (additive mass.* accounts).
+func SeedMassOnly(ctx context.Context, cfg config.Config) error {
+	pool, err := db.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	return seed.RunMass(ctx, pool)
+}
+
+// SeedNotifyOnly emails staging seed notice to staff (no DB truncate).
+func SeedNotifyOnly(ctx context.Context, cfg config.Config) error {
+	pool, err := db.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	return notifyStagingSeedStaff(ctx, pool, cfg)
+}
+
+func notifyStagingSeedStaff(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
+	notifier := email.NewNotifierAuth(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPFrom, cfg.SMTPUser, cfg.SMTPPass, cfg.ProPublicSiteURL, cfg.LLITWebsiteURL)
+	_, err := seed.NotifyStaff(ctx, store.New(pool), notifier, cfg.ProPublicSiteURL, cfg.OpsNotifyEmail)
+	return err
 }
 
 func IsMigrateCmd(args []string) bool {
@@ -196,4 +284,16 @@ func IsMigrateCmd(args []string) bool {
 
 func IsSeedCmd(args []string) bool {
 	return len(args) > 0 && strings.EqualFold(args[0], "seed")
+}
+
+func IsSeedMassCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "seed-mass")
+}
+
+func IsSeedNotifyCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "seed-notify")
+}
+
+func IsImportCNKCmd(args []string) bool {
+	return len(args) > 0 && strings.EqualFold(args[0], "import-cnk")
 }

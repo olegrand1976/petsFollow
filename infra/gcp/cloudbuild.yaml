@@ -31,6 +31,13 @@ steps:
       - --cache=true
       - --context=dir://.
       - --dockerfile=deploy/Dockerfile.nuxtjs
+      # CSP connect-src : API publique (jamais localhost bake).
+      - --build-arg=NUXT_PUBLIC_API_BASE=https://api.petsfollow.ll-it-sc.be
+      - --build-arg=NUXT_PUBLIC_APP_ENV=staging
+      # Modules Pro tag « dev » (nav + pages) — mirror make nuxtjs-dev.
+      - --build-arg=NUXT_PUBLIC_PHARMACY_ENABLED=true
+      - --build-arg=NUXT_PUBLIC_BILLIT_ENABLED=true
+      - --build-arg=NUXT_PUBLIC_PRESCRIPTIONS_ENABLED=true
 
   - id: migrate
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -79,7 +86,8 @@ steps:
         source infra/gcp/lib/deploy-run-args.sh
         export GCP_PROJECT_ID="$PROJECT_ID" GCP_RUN_REGION="${_RUN_REGION}"
         ENV_FILE="$$(mktemp)"
-        pf_write_api_env_file "$$ENV_FILE"
+        # false=DEV_SEED, true=ADMIN_STAGING_SEED, staging=APP_ENV (API staging only)
+        pf_write_api_env_file "$$ENV_FILE" false true staging
         SECRETS="$$(pf_api_secrets)"
         # timeout 900s : WebSocket Gemini Live (appel pitch 8 min + marge)
         gcloud run deploy ${_API_SERVICE} \
@@ -117,7 +125,7 @@ steps:
           API_URL="$${PUBLIC_API_URL}"
         fi
         ENV_FILE="$$(mktemp)"
-        pf_write_frontend_env_file "$$ENV_FILE" "$$API_URL"
+        pf_write_frontend_env_file "$$ENV_FILE" "$$API_URL" "staging"
         gcloud run deploy ${_FRONTEND_SERVICE} \
           --project="$PROJECT_ID" --image="$$IMAGE" --region="${_RUN_REGION}" \
           --service-account="$$SA" --allow-unauthenticated --port=3000 \

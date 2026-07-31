@@ -3,7 +3,8 @@
     <div
       v-if="open"
       class="pro-modal"
-      data-testid="pro-modal"
+      :data-testid="testId"
+      :style="{ zIndex: String(1000 + stackDepth) }"
       @keydown.escape.prevent="close"
     >
       <div class="pro-modal__backdrop" aria-hidden="true" @click="close" />
@@ -23,6 +24,7 @@
             class="pro-modal__close"
             :aria-label="resolvedCloseLabel"
             data-testid="pro-modal-close"
+            :disabled="preventClose"
             @click="close"
           >
             <ProIcon name="close" :size="22" />
@@ -40,14 +42,21 @@
 </template>
 
 <script setup lang="ts">
+/** Nested modals: keep body scroll locked until the last one closes. */
+let modalOpenCount = 0
+
 const props = withDefaults(
   defineProps<{
     open: boolean
     title: string
     closeLabel?: string
-    size?: 'md' | 'lg'
+    size?: 'md' | 'lg' | 'xl' | 'full'
+    /** When true, ignore X / Escape / backdrop close (e.g. save in flight). */
+    preventClose?: boolean
+    /** data-testid on the root overlay (default keeps existing e2e selectors). */
+    testId?: string
   }>(),
-  { size: 'md' },
+  { size: 'md', testId: 'pro-modal', preventClose: false },
 )
 
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -55,10 +64,15 @@ const emit = defineEmits<{ 'update:open': [boolean] }>()
 const { t } = useI18n()
 const panelRef = ref<HTMLElement | null>(null)
 const titleId = `pro-modal-title-${useId()}`
+const stackDepth = ref(0)
 
 const resolvedCloseLabel = computed(() => props.closeLabel || t('common.cancel'))
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 'full':
+      return 'pro-modal__panel--full'
+    case 'xl':
+      return 'pro-modal__panel--xl'
     case 'lg':
       return 'pro-modal__panel--lg'
     case 'md':
@@ -71,23 +85,37 @@ const sizeClass = computed(() => {
 })
 
 function close() {
+  if (props.preventClose) return
   emit('update:open', false)
 }
 
 watch(
   () => props.open,
-  async (isOpen) => {
+  async (isOpen, wasOpen) => {
     if (!import.meta.client) return
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-    if (isOpen) {
+    if (isOpen && !wasOpen) {
+      modalOpenCount += 1
+      stackDepth.value = modalOpenCount
+      document.body.style.overflow = 'hidden'
       await nextTick()
       panelRef.value?.focus()
+    }
+    else if (!isOpen && wasOpen) {
+      modalOpenCount = Math.max(0, modalOpenCount - 1)
+      stackDepth.value = 0
+      if (modalOpenCount === 0) {
+        document.body.style.overflow = ''
+      }
     }
   },
 )
 
 onBeforeUnmount(() => {
-  if (import.meta.client) document.body.style.overflow = ''
+  if (!import.meta.client) return
+  if (props.open) {
+    modalOpenCount = Math.max(0, modalOpenCount - 1)
+    if (modalOpenCount === 0) document.body.style.overflow = ''
+  }
 })
 </script>
 
@@ -111,9 +139,11 @@ onBeforeUnmount(() => {
 .pro-modal__panel {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 28rem);
   max-height: min(90vh, 40rem);
-  overflow: auto;
+  overflow: hidden;
   background: var(--pf-vet-surface);
   border-radius: var(--pf-vet-radius);
   box-shadow: var(--pf-vet-shadow-md);
@@ -124,7 +154,32 @@ onBeforeUnmount(() => {
   width: min(100%, 42rem);
 }
 
+.pro-modal__panel--xl {
+  width: min(96vw, 56rem);
+  max-height: min(92vh, 52rem);
+}
+
+.pro-modal__panel--full {
+  width: min(98vw, 90rem);
+  height: 96vh;
+  max-height: 96vh;
+}
+
+@media (max-width: 720px) {
+  .pro-modal:has(.pro-modal__panel--full) {
+    padding: 0.5rem;
+  }
+
+  .pro-modal__panel--full {
+    width: 100%;
+    height: 96vh;
+    max-height: 96vh;
+    border-radius: var(--pf-vet-radius);
+  }
+}
+
 .pro-modal__header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -150,19 +205,37 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-.pro-modal__close:hover {
+.pro-modal__close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pro-modal__close:hover:not(:disabled) {
   color: var(--pf-vet-primary);
   background: var(--pf-vet-bg);
 }
 
 .pro-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding: 0.75rem 1.25rem 1.25rem;
 }
 
+.pro-modal__panel--full .pro-modal__body {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0.75rem;
+}
+
 .pro-modal__footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0 1.25rem 1.25rem;
+  padding: 0.75rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--pf-vet-border);
+  background: var(--pf-vet-surface);
 }
 </style>

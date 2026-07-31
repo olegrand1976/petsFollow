@@ -7,7 +7,7 @@ class DiscoveryCard {
     this.locked = false,
   });
 
-  /// Day index in the 7-day journey: 0, 2, 4, or 6.
+  /// Stage index in the journey (API keys: day0 / day2 / day4 / day6).
   final int dayIndex;
   final String title;
   final String body;

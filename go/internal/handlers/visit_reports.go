@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -27,7 +28,13 @@ type visitLocationReq struct {
 }
 
 type visitReportBodyReq struct {
-	BodyText string `json:"bodyText"`
+	BodyText       string  `json:"bodyText"`
+	TranscriptText *string `json:"transcriptText,omitempty"`
+}
+
+type visitReportImproveReq struct {
+	// Optional override: improve from this text without requiring a prior PUT that overwrites body.
+	SourceText string `json:"sourceText,omitempty"`
 }
 
 func (a *API) updateVisitLocation(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +126,66 @@ func (a *API) getVisitReport(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, redactVisitReportAudio(report))
 }
 
+func (a *API) listVisitReports(w http.ResponseWriter, r *http.Request) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return
+	}
+	if id.Role != kernel.RoleCarePro && !(kernel.IsPracticeStaff(id.Role) && a.allowPracticePerm(r, id, "pets.read")) {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	visitID := chi.URLParam(r, "visitID")
+	visit, err := a.store.GetVisit(r.Context(), visitID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	pet, err := a.store.GetPet(r.Context(), visit.PetID)
+	if err != nil {
+		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")
+		return
+	}
+	ident := store.IdentityOf(id.UserID, id.Role, id.PracticeID)
+	canRead, err := a.store.CanAccessPet(r.Context(), ident, pet, store.PermRead)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if !canRead {
+		writeErr(w, r, http.StatusForbidden, "forbidden", "forbidden")
+		return
+	}
+	reports, err := a.store.ListVisitReportsForVisit(r.Context(), visitID, id.UserID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	out := make([]any, 0, len(reports))
+	for _, sum := range reports {
+		item := redactVisitReportAudio(sum.VisitReport)
+		out = append(out, map[string]any{
+			"id":                   item.ID,
+			"visitId":              item.VisitID,
+			"authorUserId":         item.AuthorUserID,
+			"authorFullName":       sum.AuthorFullName,
+			"mine":                 sum.Mine,
+			"status":               item.Status,
+			"bodyText":             item.BodyText,
+			"audioUrl":             item.AudioURL,
+			"hasAudio":             item.HasAudio,
+			"transcriptText":       item.TranscriptText,
+			"improvedText":         item.ImprovedText,
+			"clientAudioConsentAt": item.ClientAudioConsentAt,
+			"createdAt":            item.CreatedAt,
+			"updatedAt":            item.UpdatedAt,
+			"finalizedAt":          item.FinalizedAt,
+		})
+	}
+	httpx.WriteData(w, http.StatusOK, out)
+}
+
 func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 	id, err := authx.FromContext(r.Context())
 	if err != nil {
@@ -139,7 +206,13 @@ func (a *API) putVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
 		return
 	}
-	report, err := a.store.UpsertVisitReport(r.Context(), visitID, id.UserID, req.BodyText)
+	body := gemini.NormalizeVisitReportText(req.BodyText)
+	var transcript *string
+	if req.TranscriptText != nil {
+		normalized := gemini.NormalizeVisitReportText(*req.TranscriptText)
+		transcript = &normalized
+	}
+	report, err := a.store.UpsertVisitReportFields(r.Context(), visitID, id.UserID, body, transcript)
 	if err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
@@ -163,12 +236,29 @@ func (a *API) getVisitReportAudio(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 		return
 	}
+	// Clinical PHI: stream only for write_notes ACL (vet / assistant / care_pro write).
+	// Secretary (pets.read only) must not hear draft audio — same policy as CR body excerpt.
 	if !a.canAccessVisitReport(w, r, id, visit, store.PermWriteNotes, true) {
 		return
 	}
-	report, err := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+	report, err := a.store.GetVisitReportWithAudio(r.Context(), visitID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
+			// Distinguish finalized (audio purged) from never uploaded.
+			mine, gerr := a.store.GetVisitReport(r.Context(), visitID, id.UserID)
+			if gerr == nil && mine.Status == "final" {
+				writeErr(w, r, http.StatusGone, "gone", "report_finalized")
+				return
+			}
+			reports, lerr := a.store.ListVisitReportsForVisit(r.Context(), visitID, id.UserID)
+			if lerr == nil {
+				for _, sum := range reports {
+					if sum.Status == "final" {
+						writeErr(w, r, http.StatusGone, "gone", "report_finalized")
+						return
+					}
+				}
+			}
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
 		}
@@ -233,6 +323,14 @@ func (a *API) finalizeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
+	// Closing the medical loop (finalize CR) marks the visit done so the owner
+	// sees it under Consultations / client timeline (status=done gate).
+	// Walk-in or booked: CTA Terminer stays idempotent afterwards.
+	if visit.Status == "confirmed" {
+		if _, derr := a.store.UpdateVisitStatus(r.Context(), visit.ID, "done"); derr != nil {
+			fmt.Printf("finalizeVisitReport: auto-done visit %s: %v\n", visit.ID, derr)
+		}
+	}
 	report.AudioURL = ""
 	report.AudioObjectKey = ""
 	a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageFinalize)
@@ -245,10 +343,6 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	if a.gemini == nil || !a.gemini.Configured() {
-		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
-		return
-	}
 	visitID := chi.URLParam(r, "visitID")
 	visit, err := a.store.GetVisit(r.Context(), visitID)
 	if err != nil {
@@ -258,7 +352,12 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 	if !a.canManageVisit(w, r, id, visit) {
 		return
 	}
+	// Entitlement (402) before Gemini config (503): paywall must win when the module is off.
 	if !a.requireAiCrEntitlement(w, r, visit.PracticeID) {
+		return
+	}
+	if a.gemini == nil || !a.gemini.Configured() {
+		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
 		return
 	}
 	report, err := a.store.EnsureVisitReport(r.Context(), visitID, id.UserID)
@@ -270,9 +369,17 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
 		return
 	}
-	source := report.BodyText
+	var improveReq visitReportImproveReq
+	if err := httpx.DecodeJSON(r, &improveReq); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_json")
+		return
+	}
+	source := gemini.NormalizeVisitReportText(improveReq.SourceText)
 	if strings.TrimSpace(source) == "" {
-		source = report.TranscriptText
+		source = gemini.NormalizeVisitReportText(report.BodyText)
+	}
+	if strings.TrimSpace(source) == "" {
+		source = gemini.NormalizeVisitReportText(report.TranscriptText)
 	}
 	if strings.TrimSpace(source) == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
@@ -299,7 +406,7 @@ func (a *API) improveVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadGateway, "gemini_error", "internal")
 		return
 	}
-	report, err = a.store.UpdateVisitReportImproved(r.Context(), report.ID, strings.TrimSpace(improved))
+	report, err = a.store.UpdateVisitReportImproved(r.Context(), report.ID, gemini.NormalizeVisitReportText(strings.TrimSpace(improved)))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusConflict, "conflict", "report_finalized")
@@ -349,7 +456,9 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "audio_consent_required")
 		return
 	}
-	if a.gemini == nil || !a.gemini.Configured() {
+	// Hint-only path (tests / offline) skips Gemini; live transcription still needs a key.
+	hint := strings.TrimSpace(r.FormValue("hint"))
+	if hint == "" && (a.gemini == nil || !a.gemini.Configured()) {
 		writeErr(w, r, http.StatusServiceUnavailable, "not_configured", "gemini_not_configured")
 		return
 	}
@@ -380,10 +489,14 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	objectKey := fmt.Sprintf("visit-reports/%s/%s-%s", visitID, uuid.NewString(), safeName)
 	ct := header.Header.Get("Content-Type")
-	if ct == "" {
+	baseCT := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+	if baseCT == "" || baseCT == "application/octet-stream" {
 		ct = mimeFromFilename(safeName)
 	}
 	ct = normalizeAudioMIME(ct)
+	if ct == "" {
+		ct = normalizeAudioMIME(mimeFromFilename(safeName))
+	}
 	if ct == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_audio_type")
 		return
@@ -399,7 +512,13 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 	}
 	// Do not expose public /media URL for PHI audio — store key only; stream via authenticated GET.
 	_ = url
-	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, "", objectKey)
+	durationSec := 0
+	if raw := strings.TrimSpace(r.FormValue("audioDurationSec")); raw != "" {
+		if n, perr := strconv.Atoi(raw); perr == nil && n > 0 {
+			durationSec = n
+		}
+	}
+	report, err = a.store.UpdateVisitReportAudio(r.Context(), report.ID, "", objectKey, durationSec)
 	if err != nil {
 		_ = a.media.Delete(r.Context(), objectKey)
 		if errors.Is(err, store.ErrNotFound) {
@@ -409,9 +528,8 @@ func (a *API) transcribeVisitReport(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
 	}
-	hint := strings.TrimSpace(r.FormValue("hint"))
-	transcript := hint
-	if transcript == "" {
+	transcript := gemini.NormalizeVisitReportText(hint)
+	if strings.TrimSpace(hint) == "" {
 		system := `Tu transcris un compte-rendu vocal vétérinaire ou de soin animalier.
 Retourne uniquement le texte transcrit, clair, en français (ou la langue parlée). N'invente pas de faits médicaux absents de l'audio.`
 		userPrompt := "Transcris cet enregistrement de visite."
@@ -422,7 +540,7 @@ Retourne uniquement le texte transcrit, clair, en français (ou la langue parlé
 			writeErr(w, r, http.StatusBadGateway, "gemini_error", "transcription_failed")
 			return
 		}
-		transcript = strings.TrimSpace(out)
+		transcript = gemini.NormalizeVisitReportText(strings.TrimSpace(out))
 		if transcript == "" {
 			a.trackAiCrUsage(visit.PracticeID, id.UserID, visitID, store.AiCrUsageError)
 			_ = a.purgeVisitReportAudio(r.Context(), report)
@@ -533,6 +651,7 @@ func normalizeAudioMIME(ct string) string {
 
 // redactVisitReportAudio hides public audio URLs from API clients (PHI).
 func redactVisitReportAudio(r store.VisitReport) store.VisitReport {
+	r.HasAudio = strings.TrimSpace(r.AudioObjectKey) != "" || r.HasAudio
 	r.AudioURL = ""
 	r.AudioObjectKey = ""
 	return r
@@ -549,6 +668,28 @@ func (a *API) purgeVisitReportAudio(ctx context.Context, report store.VisitRepor
 		if err := a.store.ClearVisitReportAudio(ctx, report.ID); err != nil && !errors.Is(err, store.ErrNotFound) {
 			return err
 		}
+	}
+	return nil
+}
+
+// finalizePersistedDraftReports closes the medical loop: draft CRs with body → final
+// so the pet owner can open / share the consultation. Audio is purged first (RGPD).
+func (a *API) finalizePersistedDraftReports(ctx context.Context, visit store.Visit, actorUserID string) error {
+	reports, err := a.store.ListDraftVisitReportsWithBody(ctx, visit.ID)
+	if err != nil {
+		return err
+	}
+	for _, report := range reports {
+		if err := a.purgeVisitReportAudio(ctx, report); err != nil {
+			return err
+		}
+		if _, err := a.store.FinalizeVisitReport(ctx, report.ID); err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				continue // raced to final elsewhere
+			}
+			return err
+		}
+		a.trackAiCrUsage(visit.PracticeID, actorUserID, visit.ID, store.AiCrUsageFinalize)
 	}
 	return nil
 }

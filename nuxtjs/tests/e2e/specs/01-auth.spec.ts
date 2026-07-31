@@ -13,7 +13,7 @@ import {
   waitForAuthForm,
 } from '../helpers/auth'
 
-test.describe('auth — login / logout', () => {
+test.describe('auth — login / logout', { tag: '@p0' }, () => {
   test('login véto vers dashboard', async ({ page }) => {
     const { status } = await login(page, 'vet.demo@petsfollow.test', 'VetDemo123!', { expectStatus: 200 })
     expect(status).toBe(200)
@@ -83,7 +83,7 @@ test.describe('auth — login / logout', () => {
   })
 })
 
-test.describe('auth — inscription et confirmation', () => {
+test.describe('auth — inscription et confirmation', { tag: '@p0' }, () => {
   test('register → sent → confirm → dashboard/welcome', async ({ page }) => {
     const email = uniqueE2EEmail('register')
     const { confirmPath, status } = await registerVet(page, {
@@ -134,21 +134,18 @@ test.describe('auth — inscription et confirmation', () => {
     await expect(page.locator('[data-testid="register-form"] .pro-field-error')).toBeVisible({ timeout: 10000 })
   })
 
-  test('register nearby commercial par code postal', async ({ page }) => {
+  test('register sans code → hint pool admin', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'networkidle' })
     await waitForAuthForm(page, 'register-form')
-    await expect(page.getByTestId('register-nearby-commercial')).toBeVisible()
-    // ProInput pose data-testid sur l'<input> lui-même (pas sur le wrapper).
-    await page.getByTestId('register-nearby-postal').fill('1000')
-    await page.getByTestId('register-nearby-postal-btn').click()
-    // Seed commercial.demo est à Bruxelles 1000 — résultat attendu en local après seed.
-    await expect(
-      page.locator('.nearby-commercial__option').first().or(page.locator('.pro-field-hint')),
-    ).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('register-invite-code')).toBeVisible()
+    await expect(page.getByTestId('register-pool-hint')).toBeVisible()
+    await expect(page.getByTestId('register-nearby-commercial')).toHaveCount(0)
+    await page.getByTestId('register-invite-code').fill('ABC12345')
+    await expect(page.getByTestId('register-pool-hint')).toHaveCount(0)
   })
 })
 
-test.describe('auth — forgot / reset password', () => {
+test.describe('auth — forgot / reset password', { tag: '@p0' }, () => {
   test('forgot → reset via API path → login nouveau MDP', async ({ page }) => {
     const email = 'vet.reset@petsfollow.test'
     const newPassword = `Reset${Date.now()}!`

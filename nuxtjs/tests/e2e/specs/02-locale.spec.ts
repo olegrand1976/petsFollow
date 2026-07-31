@@ -6,7 +6,7 @@ test('changement de langue dans paramètres', async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/)
 
   // Pas de networkidle : la WebSocket notifications du shell reste ouverte en continu.
-  await page.goto('/settings')
+  await page.goto('/settings?tab=account')
   // Attendre l’init async (preferredLocale) — peut être fr ou en selon runs précédents.
   const activeLocale = page.locator('[data-testid^="settings-locale-"].pro-toggle-btn--active')
   await expect(activeLocale).toBeVisible({ timeout: 15000 })

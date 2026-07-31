@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/base64"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -14,12 +15,18 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-func (a *API) registerAppInviteRoutes(r chi.Router) {
-	r.Get("/public/app-invite/{code}", a.getPublicAppInvite)
+func (a *API) registerAppInviteRoutes(r chi.Router, rateLimit func(http.Handler) http.Handler) {
+	// Public: brute-force d'un code (~40 bits) sinon possible sans limite.
+	if rateLimit != nil {
+		r.With(rateLimit).Get("/public/app-invite/{code}", a.getPublicAppInvite)
+	} else {
+		r.Get("/public/app-invite/{code}", a.getPublicAppInvite)
+	}
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.AuthMiddleware(a.tokens))
 		pr.Use(a.localeFromUserMiddleware)
+		pr.Use(a.requireTermsAcceptedMiddleware)
 		pr.Get("/me/app-invite", a.getMeAppInvite)
 		pr.Get("/vet/app-invite", a.getVetAppInvite) // alias (vet-only) for Nuxt clients
 		pr.Post("/me/vets/claim-invite", a.claimVetAppInvite)
@@ -51,13 +58,14 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
-	httpx.WriteData(w, http.StatusOK, map[string]any{
+	proSite := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
+	payload := map[string]any{
 		"code":          inv.Code,
 		"role":          inv.Role,
 		"inviteUrl":     inviteURL,
 		"deepLink":      a.appInviteDeepLink(inv.Code),
 		"downloadUrl":   downloadURL,
-		"proSiteUrl":    strings.TrimRight(a.cfg.ProPublicSiteURL, "/"),
+		"proSiteUrl":    proSite,
 		"qrCodeDataUrl": qr,
 		"qrAndroid":     brandAssetPublicDTO(android),
 		"qrIos":         brandAssetPublicDTO(ios),
@@ -66,7 +74,12 @@ func (a *API) writeAppInvitePayload(w http.ResponseWriter, r *http.Request, inv 
 		"specialty":     inv.Specialty,
 		// Compat Nuxt ProAppInviteModal
 		"vetFullName": inv.DisplayName,
-	})
+	}
+	switch inv.Role {
+	case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+		payload["vetRegisterUrl"] = proSite + "/register?invite=" + inv.Code
+	}
+	httpx.WriteData(w, http.StatusOK, payload)
 }
 
 func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +96,7 @@ func (a *API) getMeAppInvite(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
-	case id.Role == kernel.RoleCarePro, id.Role == kernel.RoleCommercial, id.Role == kernel.RoleCommercialManager:
+	case id.Role == kernel.RoleCarePro, id.Role == kernel.RoleCommercial, id.Role == kernel.RoleCommercialManager, id.Role == kernel.RoleClient:
 		// ok — self
 	default:
 		writeErr(w, r, http.StatusForbidden, "forbidden", "invite_role_denied")
@@ -136,7 +149,8 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 	}
 	downloadURL := strings.TrimSpace(a.cfg.PetsAppDownloadURL)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
-	httpx.WriteData(w, http.StatusOK, map[string]any{
+	proSite := strings.TrimRight(a.cfg.ProPublicSiteURL, "/")
+	out := map[string]any{
 		"code":         inv.Code,
 		"role":         inv.Role,
 		"practiceName": inv.PracticeName,
@@ -146,9 +160,15 @@ func (a *API) getPublicAppInvite(w http.ResponseWriter, r *http.Request) {
 		"downloadUrl":  downloadURL,
 		"deepLink":     a.appInviteDeepLink(inv.Code),
 		"inviteUrl":    a.appInviteWebURL(inv.Code),
+		"proSiteUrl":   proSite,
 		"qrAndroid":    brandAssetPublicDTO(android),
 		"qrIos":        brandAssetPublicDTO(ios),
-	})
+	}
+	switch inv.Role {
+	case string(kernel.RoleCommercial), string(kernel.RoleCommercialManager):
+		out["vetRegisterUrl"] = proSite + "/register?invite=" + inv.Code
+	}
+	httpx.WriteData(w, http.StatusOK, out)
 }
 
 type claimInviteReq struct {
@@ -172,6 +192,10 @@ func (a *API) claimVetAppInvite(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "invite_not_found")
 			return
 		}
+		if errors.Is(err, store.ErrSelfReferral) {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "self_referral")
+			return
+		}
 		if errors.Is(err, store.ErrValidation) {
 			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_role")
 			return
@@ -182,13 +206,46 @@ func (a *API) claimVetAppInvite(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusOK, result)
 }
 
-// tryClaimInvite soft-applies an invite code (invalid codes are ignored).
-func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) {
+// Invite claim outcomes returned to clients (register / Google).
+const (
+	inviteStatusIgnored  = "ignored"
+	inviteStatusFailed   = "failed"
+	inviteStatusReferred = "referred"
+	inviteStatusLinked   = "linked"
+	inviteStatusGranted  = "granted"
+	inviteStatusAlready  = "already_linked"
+)
+
+// tryClaimInvite soft-applies an invite code and returns a status for the client.
+// Empty / unknown / invalid codes → "ignored"; unexpected store errors → "failed" (logged).
+func (a *API) tryClaimInvite(r *http.Request, clientUserID, code string) string {
 	code = store.NormalizeInviteCode(code)
 	if code == "" || clientUserID == "" {
-		return
+		return inviteStatusIgnored
 	}
-	_, _ = a.store.ClaimAppInvite(r.Context(), clientUserID, code)
+	result, err := a.store.ClaimAppInvite(r.Context(), clientUserID, code)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) || errors.Is(err, store.ErrValidation) || errors.Is(err, store.ErrSelfReferral) {
+			return inviteStatusIgnored
+		}
+		log.Printf("claim invite user=%s code=%s: %v", clientUserID, code, err)
+		return inviteStatusFailed
+	}
+	switch result.Status {
+	case "referred":
+		return inviteStatusReferred
+	case "linked":
+		return inviteStatusLinked
+	case "granted":
+		return inviteStatusGranted
+	case "already_linked":
+		return inviteStatusAlready
+	default:
+		if result.Status != "" {
+			return result.Status
+		}
+		return inviteStatusLinked
+	}
 }
 
 // tryLinkCommercialReferral soft-links a nearby commercial pick (invalid IDs ignored).
@@ -197,5 +254,7 @@ func (a *API) tryLinkCommercialReferral(r *http.Request, clientUserID, commercia
 	if commercialUserID == "" || clientUserID == "" {
 		return
 	}
-	_ = a.store.LinkClientCommercialReferral(r.Context(), clientUserID, commercialUserID)
+	if err := a.store.LinkClientCommercialReferral(r.Context(), clientUserID, commercialUserID); err != nil {
+		log.Printf("link commercial referral client=%s commercial=%s: %v", clientUserID, commercialUserID, err)
+	}
 }

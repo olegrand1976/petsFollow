@@ -395,7 +395,13 @@ func (s *Store) LinkExistingClientToVet(ctx context.Context, vetUserID, clientUs
 		)`, uuid.NewString(), practiceID, clientUserID, threadVetID); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	s.RecordPracticeClientLinkedEvent(ctx, practiceID, clientUserID, threadVetID, vetUserID, map[string]any{
+		"source": "link_existing_client",
+	})
+	return nil
 }
 
 // LookupClientConflict returns details for an email that already exists (client preferred).
@@ -461,7 +467,10 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 	rows, err := s.pool.Query(ctx, `
 		SELECT p.id::text, COALESCE(p.practice_id::text,''), p.owner_user_id::text, p.name, p.species,
 			COALESCE(p.breed,''), p.birth_date, p.weight_kg, COALESCE(p.photo_url,''),
-			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''), p.created_at,
+			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''),
+			COALESCE(p.microchip_number,''), COALESCE(p.health_book_number,''),
+			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''),
+			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''), p.created_at,
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -499,11 +508,14 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 		var p Pet
 		if err := rows.Scan(
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
-			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag, &p.CreatedAt,
+			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
+			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
 			&p.Permission,
 		); err != nil {
 			return nil, err
 		}
+		decoratePetHealthBook(&p)
 		out = append(out, p)
 	}
 	if out == nil {
@@ -512,10 +524,31 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 	return out, rows.Err()
 }
 
+// CareProMayMessageClient reports whether the care_pro has any active ACL on the client
+// (client_access) or at least one of their pets (pet_access).
+func (s *Store) CareProMayMessageClient(ctx context.Context, careProID, clientUserID string) (bool, error) {
+	ok, err := s.hasClientAccess(ctx, clientUserID, careProID, PermRead)
+	if err != nil || ok {
+		return ok, err
+	}
+	var n int
+	err = s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM pets.pets p
+		WHERE p.owner_user_id=$1 AND EXISTS (
+			SELECT 1 FROM pets.pet_access pa
+			WHERE pa.pet_id=p.id AND pa.grantee_user_id=$2
+				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+		)`, clientUserID, careProID).Scan(&n)
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
 // ListCareProClients aggregates distinct owners from pet grants + client_access.
 func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''),
+		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
 			(
 				SELECT COUNT(*)::int FROM pets.pets p
 				WHERE p.owner_user_id=u.id AND (
@@ -553,7 +586,7 @@ func (s *Store) ListCareProClients(ctx context.Context, granteeUserID string) ([
 	var out []ClientSummary
 	for rows.Next() {
 		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.PetCount); err != nil {
+		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount); err != nil {
 			return nil, err
 		}
 		out = append(out, c)
@@ -572,6 +605,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 			COALESCE(p.name,''), COALESCE(u.full_name,''), p.owner_user_id::text,
 			v.duration_minutes, v.proposed_scheduled_at, v.pending_action_by,
 			COALESCE(v.address_text,''), v.lat, v.lng,
+			COALESCE(v.consultation_session, false),
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -591,15 +625,18 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 		FROM visits.visits v
 		JOIN pets.pets p ON p.id = v.pet_id
 		JOIN identity.users u ON u.id = p.owner_user_id
-		WHERE EXISTS (
-			SELECT 1 FROM pets.pet_access pa
-			WHERE pa.pet_id=v.pet_id AND pa.grantee_user_id=$1
-				AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
-		)
-		OR EXISTS (
-			SELECT 1 FROM practice.client_access ca
-			WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
-				AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+		WHERE v.deleted_at IS NULL
+		AND (
+			EXISTS (
+				SELECT 1 FROM pets.pet_access pa
+				WHERE pa.pet_id=v.pet_id AND pa.grantee_user_id=$1
+					AND (pa.expires_at IS NULL OR pa.expires_at > NOW())
+			)
+			OR EXISTS (
+				SELECT 1 FROM practice.client_access ca
+				WHERE ca.client_user_id=p.owner_user_id AND ca.grantee_user_id=$1
+					AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+			)
 		)
 		ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 		LIMIT 200`, granteeUserID)
@@ -614,7 +651,7 @@ func (s *Store) ListCareProVisits(ctx context.Context, granteeUserID string) ([]
 			&v.ID, &v.PetID, &v.PracticeID, &v.ScheduledAt, &v.Status, &v.Notes, &v.Source, &v.CreatedAt,
 			&v.PetName, &v.ClientName, &v.ClientID,
 			&v.DurationMinutes, &v.ProposedScheduledAt, &v.PendingActionBy,
-			&v.AddressText, &v.Lat, &v.Lng, &v.Permission,
+			&v.AddressText, &v.Lat, &v.Lng, &v.ConsultationSession, &v.Permission,
 		); err != nil {
 			return nil, err
 		}

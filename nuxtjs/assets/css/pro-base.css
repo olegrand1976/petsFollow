@@ -15,9 +15,12 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-feature-settings: 'liga';
   user-select: none;
   vertical-align: middle;
   color: inherit;
+  max-width: 1.25em;
+  overflow: hidden;
 }
 
 body {
@@ -58,3 +61,6 @@ code {
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
 }
+
+.pro-mb-md { margin-bottom: 1rem; }
+.pro-mb-lg { margin-bottom: 1.25rem; }

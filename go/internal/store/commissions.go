@@ -81,7 +81,7 @@ type VetCommissionSummary struct {
 	NextTierMinClients    *int                  `json:"nextTierMinClients,omitempty"`
 	MonthPeriodYM         string                `json:"monthPeriodYm"`
 	MonthEarnedCents      int                   `json:"monthEarnedCents"`
-	LifetimeEarnedCents      int                   `json:"lifetimeEarnedCents"`
+	LifetimeEarnedCents   int                   `json:"lifetimeEarnedCents"`
 	Tiers                 []CommissionTier      `json:"tiers"`
 	PlanRates             []PlanRateInfo        `json:"planRates"`
 	AddonRates            []PlanRateInfo        `json:"addonRates"`
@@ -117,6 +117,14 @@ func NextPeriodYM(period string) (string, error) {
 		return "", err
 	}
 	return t.AddDate(0, 1, 0).Format("2006-01"), nil
+}
+
+func PrevPeriodYM(period string) (string, error) {
+	t, err := time.Parse("2006-01", period)
+	if err != nil {
+		return "", err
+	}
+	return t.AddDate(0, -1, 0).Format("2006-01"), nil
 }
 
 func (s *Store) ResolveOpenPeriodYM(ctx context.Context, preferred string) (string, error) {
@@ -421,7 +429,7 @@ func (s *Store) AccrueVetForAddon(ctx context.Context, addonID string) error {
 	}
 	if practiceID == "" {
 		_ = s.pool.QueryRow(ctx, `
-			SELECT practice_id::text FROM pets.pets
+			SELECT COALESCE(practice_id::text,'') FROM pets.pets
 			WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 1`, addon.OwnerUserID).Scan(&practiceID)
 	}
 	vetUserID, _, err := s.resolveVetCommercial(ctx, addon.OwnerUserID, practiceID)
@@ -1054,7 +1062,7 @@ func (s *Store) VetCommissionSummary(ctx context.Context, vetUserID string) (Vet
 		NextTierMinClients:    nextMin,
 		MonthPeriodYM:         month,
 		MonthEarnedCents:      monthEarned,
-		LifetimeEarnedCents:      lifetime,
+		LifetimeEarnedCents:   lifetime,
 		Tiers:                 tiers,
 		PlanRates:             SubscriptionPlanRates(),
 		AddonRates:            AddonPlanRates(),

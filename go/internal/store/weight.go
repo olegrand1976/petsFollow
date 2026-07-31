@@ -66,7 +66,7 @@ func (s *Store) CreateWeightReading(ctx context.Context, petID, ownerID, authorI
 	err = tx.QueryRow(ctx, `
 		INSERT INTO pets.weight_readings (
 			id, pet_id, owner_user_id, author_user_id, practice_id, weight_kg, comment, recorded_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+		) VALUES ($1,$2,$3,$4,NULLIF($5,'')::uuid,$6,$7,$8)
 		RETURNING weight_kg::float8, recorded_at`,
 		reading.ID, reading.PetID, reading.OwnerUserID, reading.AuthorUserID,
 		reading.PracticeID, reading.WeightKg, reading.Comment, reading.RecordedAt,

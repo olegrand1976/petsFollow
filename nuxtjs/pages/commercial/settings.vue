@@ -9,6 +9,27 @@
       <p class="pro-hint pro-mb-md">{{ $t('settings.language.subtitle') }}</p>
       <ProLocaleSelect persist />
     </ProCard>
+    <ProCard class="pro-mb-lg" data-testid="commercial-contact-phone-card">
+      <form class="pro-form" @submit.prevent="savePhone">
+        <h3 class="pro-mb-md">{{ $t('commercial.settings.contactPhoneTitle') }}</h3>
+        <p class="pro-hint pro-mb-md">{{ $t('commercial.settings.contactPhoneHint') }}</p>
+        <div class="pro-field">
+          <label class="pro-label" for="contact-phone">{{ $t('commercial.settings.contactPhone') }}</label>
+          <input
+            id="contact-phone"
+            v-model="contactPhone"
+            class="pro-input"
+            type="tel"
+            autocomplete="tel"
+            required
+            data-testid="commercial-contact-phone"
+          >
+        </div>
+        <p v-if="phoneError" class="pro-field-error" role="alert">{{ phoneError }}</p>
+        <p v-if="phoneSaved" class="pro-success">{{ $t('commercial.settings.contactPhoneSaved') }}</p>
+        <ProButton type="submit" :loading="phoneSaving">{{ $t('commercial.settings.savePhone') }}</ProButton>
+      </form>
+    </ProCard>
     <ProCard>
       <form class="pro-form" @submit.prevent="save">
         <h3 class="pro-mb-md">{{ $t('commercial.settings.baseLocationTitle') }}</h3>
@@ -50,6 +71,7 @@
         <ProButton type="submit" :loading="saving">{{ $t('commercial.settings.save') }}</ProButton>
       </form>
     </ProCard>
+    <ProPrivacyAccountCard class="pro-mt-lg" />
   </div>
 </template>
 
@@ -57,6 +79,7 @@
 definePageMeta({ layout: 'commercial', middleware: 'commercial-only' })
 
 const { mapError } = useApiError()
+const { fetchUser } = useProUser()
 const iban = ref('')
 const bic = ref('')
 const accountHolder = ref('')
@@ -64,11 +87,17 @@ const baseCity = ref('')
 const basePostalCode = ref('')
 const baseLat = ref('')
 const baseLng = ref('')
+const contactPhone = ref('')
 const saving = ref(false)
 const saved = ref(false)
 const error = ref('')
+const phoneSaving = ref(false)
+const phoneSaved = ref(false)
+const phoneError = ref('')
 
 onMounted(async () => {
+  const me = await fetchUser(true)
+  contactPhone.value = me?.contactPhone || ''
   const res: any = await $fetch('/api/commercial/me/payout-profile')
   const data = res.data ?? res
   iban.value = data.iban || ''
@@ -79,6 +108,21 @@ onMounted(async () => {
   baseLat.value = data.baseLat != null ? String(data.baseLat) : ''
   baseLng.value = data.baseLng != null ? String(data.baseLng) : ''
 })
+
+async function savePhone() {
+  phoneSaving.value = true
+  phoneError.value = ''
+  phoneSaved.value = false
+  try {
+    await $fetch('/api/me', { method: 'PATCH', body: { contactPhone: contactPhone.value.trim() } })
+    await fetchUser(true)
+    phoneSaved.value = true
+  } catch (e: any) {
+    phoneError.value = mapError(e)
+  } finally {
+    phoneSaving.value = false
+  }
+}
 
 function parseCoord(raw: string): number | null {
   const t = raw.trim()

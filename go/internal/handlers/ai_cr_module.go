@@ -374,28 +374,6 @@ func (a *API) activateAiModuleFor(w http.ResponseWriter, r *http.Request, byUser
 	httpx.WriteData(w, http.StatusOK, enrichAiCrDTO(m))
 }
 
-func (a *API) notifyPracticeAiModuleActivated(r *http.Request, practiceID string, m store.AiCrModule) {
-	if a.notifier == nil {
-		return
-	}
-	vets, err := a.store.ListVetsForVisitAlert(r.Context(), practiceID, "")
-	if err != nil {
-		return
-	}
-	for _, v := range vets {
-		if strings.TrimSpace(v.Email) == "" {
-			continue
-		}
-		_ = a.notifier.SendVetAlert(v.Email,
-			"petsFollow — module CR IA activé (90 jours offerts)",
-			"Le module Compte-rendu IA est activé pour votre cabinet.\n"+
-				"Essai : 90 jours jusqu'au "+m.TrialEndsAt.Format("02/01/2006")+".\n"+
-				"Dictez vos CR dans Pro Light (Flutter) ou uploadez l'audio sur le calendrier Web.\n"+
-				"Dès J60, votre bilan temps gagné / ROI s'affiche sur le tableau de bord.\n"+
-				"Après l'essai : 39 € HT/mois ou 390 € HT/an (facture externe).")
-	}
-}
-
 // requireAiCrEntitlement gates improve/transcribe; returns false after writing the error.
 func (a *API) requireAiCrEntitlement(w http.ResponseWriter, r *http.Request, practiceID string) bool {
 	ok, err := a.store.AiCrModuleAllowed(r.Context(), practiceID)
@@ -416,43 +394,6 @@ func (a *API) trackAiCrUsage(practiceID, userID, visitID string, kind store.AiCr
 			log.Printf("ai_cr usage: %v", err)
 		}
 	}()
-}
-
-func (a *API) internalRunAiModuleFriction(w http.ResponseWriter, r *http.Request) {
-	if !secretHeaderOK(r, "X-Ai-Module-Friction-Secret", a.cfg.AiModuleFrictionSecret) {
-		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "unauthorized")
-		return
-	}
-	expired, _ := a.store.ExpireStaleAiCrTrials(r.Context())
-	candidates, err := a.store.ListAiCrFrictionCandidates(r.Context())
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	alerts := 0
-	now := time.Now().UTC()
-	for _, c := range candidates {
-		signals := a.detectAiCrFriction(r, c, now)
-		for _, sig := range signals {
-			exists, _ := a.store.RecentFrictionAlertExists(r.Context(), c.PracticeID, sig.code, 7*24*time.Hour)
-			if exists {
-				continue
-			}
-			_ = a.store.InsertFrictionAlert(r.Context(), c.PracticeID, c.CommercialUserID, sig.code, sig.detail)
-			alerts++
-			if c.CommercialEmail != "" && a.notifier != nil {
-				_ = a.notifier.SendVetAlert(c.CommercialEmail,
-					"petsFollow — friction module CR IA : "+c.PracticeName,
-					"Signal : "+sig.code+"\nCabinet : "+c.PracticeName+"\n"+sig.detail+
-						"\nRelancez le cabinet et proposez le mode d'emploi /commercial/ai-cr-playbook.")
-			}
-		}
-	}
-	httpx.WriteData(w, http.StatusOK, map[string]any{
-		"expiredTrials": expired,
-		"alertsCreated": alerts,
-		"scanned":       len(candidates),
-	})
 }
 
 type frictionSignal struct {

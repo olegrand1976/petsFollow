@@ -32,12 +32,18 @@
           class="cal-chip cal-chip--row"
           :class="[
             `cal-chip--${statusVariant(v.status)}`,
-            { 'cal-chip--focus': focusVisitId === v.id },
+            {
+              'cal-chip--focus': focusVisitId === v.id,
+              'cal-chip--walkin': !!v.consultationSession,
+              'cal-chip--typed': !!v.visitTypeColor,
+            },
           ]"
+          :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
           :data-testid="`calendar-chip-${v.id}`"
           @click="emit('select-visit', v)"
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
+          <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }}</span>
           <span v-if="v.addressText" class="cal-chip__place" :title="v.addressText">{{ $t('calendar.placeBadge') }}</span>
         </button>
@@ -89,7 +95,18 @@ const byDay = computed(() => visitsByDay(props.visits))
 const todayKey = dayKey(startOfDay(new Date()))
 
 const weekdayHeaders = computed(() => {
-  const loc = locale.value === 'nl' ? 'nl-NL' : locale.value === 'en' ? 'en-GB' : locale.value === 'es' ? 'es-ES' : 'fr-FR'
+  const loc =
+    locale.value === 'nl'
+      ? 'nl-NL'
+      : locale.value === 'en'
+        ? 'en-GB'
+        : locale.value === 'es'
+          ? 'es-ES'
+          : locale.value === 'et'
+            ? 'et-EE'
+            : locale.value === 'it'
+              ? 'it-IT'
+              : 'fr-FR'
   // Lundi → dimanche via dates fixes (2024-01-01 = lundi)
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(2024, 0, 1 + i)

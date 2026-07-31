@@ -9,9 +9,12 @@
 
 **Déclenchement** : **une fois** à chaque **nouvelle** activation payante (animal) du cabinet assigné. Pas de re-commission au renouvellement Stripe.
 
-**Inscription sans QR** : le client ou le véto peut choisir un commercial « près de chez moi » (`GET /commercials/nearby`).  
-- Véto → `assigned_commercial_id` (source principale des commissions).  
-- Client → `commercial_referrals` ; si le véto lié n’a **pas** de commercial assigné, ce referral sert de fallback commission. Un commercial déjà posé sur le véto **gagne toujours**.
+**Inscription sans QR** : le client peut choisir un commercial « près de chez moi » ou un `inviteCode`.  
+- **Véto** : seul le **Code Parrain** (`inviteCode`) pose `assigned_commercial_id` à l’inscription. Sans code → pool admin.  
+- Client → `commercial_referrals` ; si le véto lié n’a **pas** de commercial assigné, ce referral sert de fallback commission. Un commercial déjà posé sur le véto **gagne toujours**.  
+- Chaîne **Comm → Véto → Client** : après rattachement cabinet, `ResolveVetCommercial` paie le commercial du véto ; la row `commercial_referrals` (QR / nearby) reste first-wins et redevient le fallback si le véto est unassign.  
+- **QR client parrain** : le filleul peut hériter le commercial de référence du parrain (seed `commercial_referrals`) — toujours en **fallback** seulement ; si le filleul joint un cabinet dont le véto a déjà un commercial assigné, **ce commercial est payé** (`ResolveVetCommercial`). Pas de commission au client promoteur.
+- **UI Filiation** (`/commercial|commercial-manager|admin/filiation`) : badge **Effectif** = même priorité que `ResolveVetCommercial`. Accrue commission = `Resolve(practiceID)` du pet (multi-cabinet : un payé par cabinet). La row referral **orpheline** (pas de `practice_clients`) reste visible avec Effectif **`none`** — Accrue ne paie personne tant qu’il n’y a pas de lien cabinet ; dès qu’un lien existe sans assign véto, Effectif = fallback referral (= `Resolve("")`). Export CSV = **page affichée** ; liste/events plafonnés (`limit`/`truncated`/`offset`). Historique append-only `practice.filiation_events` (`vet_assigned` / `vet_unassigned` / `client_referral` / `practice_client_linked`, meta `source`). RGPD : export + purge client ; tombstone pro = purge events + clear assigns/referrals.
 
 ## Votre grille
 | Offre | Taux HT | € indicatif |

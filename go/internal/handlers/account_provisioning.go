@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
@@ -12,10 +13,11 @@ import (
 )
 
 type createClientReq struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FullName  string `json:"fullName"`
-	VetUserID string `json:"vetUserId"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	FullName     string `json:"fullName"`
+	ContactPhone string `json:"contactPhone"`
+	VetUserID    string `json:"vetUserId"`
 }
 
 type createVetAdminReq struct {
@@ -41,10 +43,11 @@ func (a *API) createVetClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clientID, err := a.store.CreateClientForVet(r.Context(), id.UserID, store.CreateClientInput{
-		Email:    req.Email,
-		Password: req.Password,
-		FullName: req.FullName,
-		Locale:   localeOf(r),
+		Email:        req.Email,
+		Password:     req.Password,
+		FullName:     req.FullName,
+		ContactPhone: req.ContactPhone,
+		Locale:       localeOf(r),
 	})
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -67,10 +70,11 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in := store.CreateClientInput{
-		Email:    req.Email,
-		Password: req.Password,
-		FullName: req.FullName,
-		Locale:   localeOf(r),
+		Email:        req.Email,
+		Password:     req.Password,
+		FullName:     req.FullName,
+		ContactPhone: req.ContactPhone,
+		Locale:       localeOf(r),
 	}
 
 	// Optional vet link: empty vetUserId → standalone client (no practice).
@@ -80,6 +84,8 @@ func (a *API) commercialCreateClient(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 			return
 		}
+		// Attribute standalone client to the creating commercial (QR/nearby table).
+		a.tryLinkCommercialReferral(r, clientID, id.UserID)
 		httpx.WriteData(w, http.StatusCreated, map[string]string{"userId": clientID, "email": req.Email})
 		return
 	}
@@ -123,10 +129,11 @@ func (a *API) adminCreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clientID, err := a.store.CreateClientForVet(r.Context(), req.VetUserID, store.CreateClientInput{
-		Email:    req.Email,
-		Password: req.Password,
-		FullName: req.FullName,
-		Locale:   localeOf(r),
+		Email:        req.Email,
+		Password:     req.Password,
+		FullName:     req.FullName,
+		ContactPhone: req.ContactPhone,
+		Locale:       localeOf(r),
 	})
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -246,12 +253,17 @@ func (a *API) decodeCreateClient(w http.ResponseWriter, r *http.Request) (create
 		return req, false
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.ContactPhone = strings.TrimSpace(req.ContactPhone)
 	if req.Email == "" || req.Password == "" || req.FullName == "" {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "fields_required")
 		return req, false
 	}
 	if len(req.Password) < 8 {
 		writeErr(w, r, http.StatusBadRequest, "bad_request", "password_too_short")
+		return req, false
+	}
+	if utf8.RuneCountInString(req.ContactPhone) > 40 {
+		writeErr(w, r, http.StatusBadRequest, "bad_request", "contact_phone_too_long")
 		return req, false
 	}
 	if _, err := a.store.GetUserByEmail(r.Context(), req.Email); err == nil {

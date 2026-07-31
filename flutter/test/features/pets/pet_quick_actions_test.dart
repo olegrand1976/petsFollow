@@ -82,6 +82,26 @@ void main() {
     expect(heartTapped, isTrue);
   });
 
+  testWidgets('hides heart action when onHeartRate is null', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: PetQuickActions(
+            petId: petId,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key('pet_action_heartrate_$petId')), findsNothing);
+    expect(find.byKey(Key('pet_action_weight_$petId')), findsOneWidget);
+  });
+
+
   testWidgets('weight sheet rejects below 0.01 and saves valid kg', (
     tester,
   ) async {

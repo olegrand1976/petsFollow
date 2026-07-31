@@ -303,6 +303,45 @@ func (s *Store) ListAiCrModulesForCommercial(ctx context.Context, commercialUser
 	return out, rows.Err()
 }
 
+func (s *Store) ListAiCrModulesForTeam(ctx context.Context, managerUserID string) ([]AiCrModule, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT m.practice_id::text, COALESCE(p.name,''), m.status, m.activated_at, m.trial_ends_at,
+			COALESCE(m.activated_by_user_id::text,''), m.converted_at, m.price_plan,
+			m.baseline_minutes_per_cr, m.hourly_cost_cents
+		FROM practice.ai_cr_modules m
+		JOIN practice.practices p ON p.id = m.practice_id
+		WHERE EXISTS (
+			SELECT 1 FROM identity.users u
+			WHERE u.practice_id = m.practice_id AND u.role = 'vet'
+			  AND (
+				u.assigned_commercial_id = $1
+				OR u.assigned_commercial_id IN (
+					SELECT id FROM identity.users WHERE role='commercial' AND manager_user_id=$1
+				)
+			)
+		)
+		ORDER BY m.activated_at DESC`, managerUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	now := time.Now().UTC()
+	out := make([]AiCrModule, 0)
+	for rows.Next() {
+		var m AiCrModule
+		if err := rows.Scan(
+			&m.PracticeID, &m.PracticeName, &m.Status, &m.ActivatedAt, &m.TrialEndsAt,
+			&m.ActivatedByUserID, &m.ConvertedAt, &m.PricePlan,
+			&m.BaselineMinutesPerCR, &m.HourlyCostCents,
+		); err != nil {
+			return nil, err
+		}
+		m.refreshDerived(now)
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
 func (s *Store) CommercialOwnsPractice(ctx context.Context, commercialUserID, practiceID string) (bool, error) {
 	var n int
 	err := s.pool.QueryRow(ctx, `
@@ -551,6 +590,75 @@ func (s *Store) ListRecentFrictionAlertsForCommercial(ctx context.Context, comme
 			"signal":       signal,
 			"detail":       detail,
 			"createdAt":    created,
+		})
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) ListRecentFrictionAlertsForTeam(ctx context.Context, managerUserID string, limit int) ([]map[string]any, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 30
+	}
+	rows, err := s.pool.Query(ctx, `
+		WITH team AS (
+			SELECT id FROM identity.users WHERE role='commercial' AND manager_user_id=$1
+			UNION
+			SELECT $1::uuid
+		)
+		SELECT a.id::text, a.practice_id::text, COALESCE(p.name,''), a.signal, a.detail, a.created_at,
+			COALESCE(owner.id::text, c.id::text, ''),
+			COALESCE(owner.full_name, c.full_name, ''),
+			COALESCE(owner.email, c.email, ''),
+			COALESCE(p.phone,''), COALESCE(p.contact_email,'')
+		FROM practice.ai_cr_friction_alerts a
+		JOIN practice.practices p ON p.id = a.practice_id
+		LEFT JOIN identity.users c ON c.id = a.commercial_user_id
+			AND c.role = 'commercial'
+			AND c.id IN (SELECT id FROM team)
+		LEFT JOIN LATERAL (
+			SELECT u.id, u.full_name, u.email
+			FROM identity.users v
+			JOIN identity.users u ON u.id = v.assigned_commercial_id
+			WHERE v.practice_id = a.practice_id AND v.role='vet'
+			  AND v.assigned_commercial_id IN (SELECT id FROM team)
+			  AND u.role = 'commercial'
+			ORDER BY v.created_at
+			LIMIT 1
+		) owner ON true
+		WHERE a.commercial_user_id IN (SELECT id FROM team)
+		   OR EXISTS (
+				SELECT 1 FROM identity.users v
+				WHERE v.practice_id = a.practice_id AND v.role='vet'
+				  AND v.assigned_commercial_id IN (SELECT id FROM team)
+			)
+		ORDER BY a.created_at DESC
+		LIMIT $2`, managerUserID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]map[string]any, 0)
+	for rows.Next() {
+		var id, practiceID, practiceName, signal, detail, commercialID, commercialName, commercialEmail string
+		var practicePhone, practiceContactEmail string
+		var created time.Time
+		if err := rows.Scan(&id, &practiceID, &practiceName, &signal, &detail, &created,
+			&commercialID, &commercialName, &commercialEmail,
+			&practicePhone, &practiceContactEmail); err != nil {
+			return nil, err
+		}
+		out = append(out, map[string]any{
+			"id":                   id,
+			"practiceId":           practiceID,
+			"practiceName":         practiceName,
+			"signal":               signal,
+			"detail":               detail,
+			"createdAt":            created,
+			"commercialUserId":     commercialID,
+			"commercialName":       commercialName,
+			"commercialEmail":      commercialEmail,
+			"practicePhone":        practicePhone,
+			"practiceContactEmail": practiceContactEmail,
 		})
 	}
 	return out, rows.Err()

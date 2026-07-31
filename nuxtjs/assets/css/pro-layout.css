@@ -54,6 +54,23 @@
   line-height: 1.2;
 }
 
+.pro-topbar__env {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  background: var(--pf-vet-alert);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
 .pro-topbar__actions {
   display: flex;
   align-items: center;
@@ -62,6 +79,14 @@
 
 .pro-topbar__dropdown-wrap {
   position: relative;
+}
+
+.pro-topbar__profile-btn {
+  list-style: none;
+}
+
+.pro-topbar__profile-btn::-webkit-details-marker {
+  display: none;
 }
 
 .pro-topbar__icon-btn,

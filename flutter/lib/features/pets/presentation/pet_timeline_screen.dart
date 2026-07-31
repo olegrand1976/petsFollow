@@ -6,10 +6,12 @@ import 'package:petsfollow_mobile/core/models/pet.dart';
 import 'package:petsfollow_mobile/core/models/visit.dart';
 import 'package:petsfollow_mobile/core/notifications/notification_service.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_chart.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/book_visit_screen.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/consultation_view_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/preconsult_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -174,7 +176,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
     }
   }
 
-  Color _colorForType(String type) {
+  Color _colorForType(String type, Color textMuted) {
     switch (type) {
       case 'heartrate':
         return AppColors.alert;
@@ -187,7 +189,7 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       case 'visit':
         return AppColors.primary;
       default:
-        return AppColors.textMuted;
+        return textMuted;
     }
   }
 
@@ -208,6 +210,93 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
       default:
         return type;
     }
+  }
+
+  /// Visit id from a timeline row (`meta.visitId` or row `id`).
+  String? _timelineVisitId(Map<String, dynamic> m) {
+    final meta = m['meta'];
+    if (meta is Map) {
+      final fromMeta = meta['visitId']?.toString().trim() ?? '';
+      if (fromMeta.isNotEmpty) return fromMeta;
+    }
+    final id = m['id']?.toString().trim() ?? '';
+    return id.isEmpty ? null : id;
+  }
+
+  /// Client timeline sets hasReport only for finalized CR (owner-gated server-side).
+  bool _timelineHasFinalReport(Map<String, dynamic> m) {
+    final meta = m['meta'];
+    return meta is Map && meta['hasReport'] == true;
+  }
+
+  String _timelineReportStatus(Map<String, dynamic> m) {
+    final meta = m['meta'];
+    if (meta is! Map) return '';
+    return (meta['reportStatus']?.toString() ?? '').trim();
+  }
+
+  Widget? _consultationCta({
+    required AppLocalizations l10n,
+    required String visitId,
+    required bool available,
+    required bool pending,
+  }) {
+    if (available) {
+      return TextButton(
+        key: Key('visit_consultation_cta_$visitId'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: () => _openConsultation(visitId),
+        child: Text(l10n.consultationAvailableCta),
+      );
+    }
+    if (pending) {
+      return TextButton(
+        key: Key('visit_consultation_pending_$visitId'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
+        onPressed: null,
+        child: Text(l10n.consultationPendingCta),
+      );
+    }
+    return null;
+  }
+
+  void _openConsultation(String visitId) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ConsultationViewScreen(
+          visitId: visitId,
+          petName: widget.petName,
+        ),
+      ),
+    );
+  }
+
+  Visit? _visitById(String visitId) {
+    for (final v in visits) {
+      if (v.id == visitId) return v;
+    }
+    return null;
+  }
+
+  /// CTA flags: timeline meta + ListVisits (owner flags) for the same visit.
+  ({bool available, bool pending}) _consultationFlagsForVisit({
+    required String visitId,
+    required Map<String, dynamic> timelineRow,
+  }) {
+    final fromList = _visitById(visitId);
+    final available = _timelineHasFinalReport(timelineRow) ||
+        (fromList?.consultationAvailable ?? false);
+    final pending = !available &&
+        (_timelineReportStatus(timelineRow) == 'draft' ||
+            (fromList?.consultationPending ?? false));
+    return (available: available, pending: pending);
   }
 
   Future<void> _cancelVisit(Visit visit) async {
@@ -266,8 +355,13 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     final upcoming = visits.where((v) => v.isUpcoming).toList();
+    // Past visits only — avoid doubling confirmed walk-ins still in « À venir ».
+    final consultationVisits =
+        visits.where((v) => !v.isUpcoming && v.hasConsultationSignal).toList();
+    // Keep visit rows in Historique (CTA on the visit card) even when also listed under Consultations.
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.visitHistory)),
@@ -286,116 +380,218 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                     HeartRateChart(points: chartPoints, height: 200),
                     const SizedBox(height: 24),
                   ],
-                  if (upcoming.isNotEmpty) ...[
-                    Text(l10n.upcomingVisits, style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    ...upcoming.map(
-                      (v) => Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              ListTile(
-                                leading: Icon(
-                                  Icons.event,
-                                  color: AppColors.primary,
-                                ),
-                                title: Text(_visitStatusLabel(l10n, v.status)),
-                                subtitle: Text(
-                                  [
-                                    dateFmt.format(v.displayDate),
-                                    if (v.notes != null && v.notes!.isNotEmpty) v.notes,
-                                  ].join(' · '),
+                  if (upcoming.isNotEmpty)
+                    _TimelineSection(
+                      sectionKey: const Key('timeline_section_upcoming'),
+                      title: '${l10n.upcomingVisits} (${upcoming.length})',
+                      initiallyExpanded: true,
+                      children: [
+                        for (final v in upcoming)
+                          Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ListTile(
+                                    leading: Icon(
+                                      Icons.event,
+                                      color: AppColors.primary,
+                                    ),
+                                    title: Text(_visitStatusLabel(l10n, v.status)),
+                                    subtitle: Text(
+                                      [
+                                        dateFmt.format(v.displayDate),
+                                        if (v.notes != null && v.notes!.isNotEmpty) v.notes,
+                                      ].join(' · '),
+                                    ),
+                                    trailing: _consultationCta(
+                                      l10n: l10n,
+                                      visitId: v.id,
+                                      available: v.consultationAvailable,
+                                      pending: v.consultationPending,
+                                    ),
+                                  ),
+                                  if (_canWriteNotes)
+                                    Wrap(
+                                      alignment: WrapAlignment.end,
+                                      children: [
+                                        if (v.preconsultPending && _canWriteNotes)
+                                          TextButton(
+                                            onPressed: () async {
+                                              await Navigator.push<void>(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => PreconsultScreen(
+                                                    visitId: v.id,
+                                                    petName: widget.petName,
+                                                  ),
+                                                ),
+                                              );
+                                              if (mounted) await load();
+                                            },
+                                            child: Text(l10n.preconsultFillCta),
+                                          ),
+                                        if (v.status == 'requested' && !v.awaitingClient)
+                                          TextButton(
+                                            onPressed: () => _cancelVisit(v),
+                                            child: Text(l10n.visitCancelAction),
+                                          ),
+                                        if ((v.status == 'requested' || v.status == 'confirmed') &&
+                                            !v.awaitingClient)
+                                          TextButton(
+                                            onPressed: () => _proposeReschedule(v),
+                                            child: Text(l10n.visitProposeReschedule),
+                                          ),
+                                        if (v.awaitingClient && v.status == 'requested')
+                                          TextButton(
+                                            onPressed: () => _visitAction(v, 'confirm'),
+                                            child: Text(l10n.visitConfirm),
+                                          ),
+                                        if (v.awaitingClient && v.status == 'reschedule_pending') ...[
+                                          TextButton(
+                                            onPressed: () => _visitAction(v, 'accept_reschedule'),
+                                            child: Text(l10n.visitAcceptReschedule),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => _visitAction(v, 'reject_reschedule'),
+                                            child: Text(l10n.visitRejectReschedule),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  if (consultationVisits.isNotEmpty)
+                    _TimelineSection(
+                      sectionKey: const Key('timeline_section_consultations'),
+                      title: '${l10n.consultationsHistory} (${consultationVisits.length})',
+                      initiallyExpanded: true,
+                      children: [
+                        for (final v in consultationVisits)
+                          Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              key: Key('visit_consultation_tile_${v.id}'),
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                                child: Icon(Icons.description_outlined, color: AppColors.primary, size: 20),
+                              ),
+                              title: Text(l10n.consultationTitle),
+                              subtitle: Text(dateFmt.format(v.displayDate)),
+                              trailing: _consultationCta(
+                                l10n: l10n,
+                                visitId: v.id,
+                                available: v.consultationAvailable,
+                                pending: v.consultationPending,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  _TimelineSection(
+                    sectionKey: const Key('timeline_section_history'),
+                    title: items.isEmpty
+                        ? l10n.history
+                        : '${l10n.history} (${items.length})',
+                    initiallyExpanded: true,
+                    children: [
+                      if (items.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(l10n.timelineEmpty, style: TextStyle(color: p.textMuted)),
+                        )
+                      else
+                        ...items.map((m) {
+                          final type = m['type'] as String? ?? 'event';
+                          final createdAt = DateTime.tryParse(m['createdAt'] as String? ?? '');
+                          final rowId = m['id']?.toString() ?? type;
+                          final visitId = type == 'visit' ? _timelineVisitId(m) : null;
+                          final flags = visitId == null
+                              ? (available: false, pending: false)
+                              : _consultationFlagsForVisit(
+                                  visitId: visitId,
+                                  timelineRow: m,
+                                );
+                          final openReport = flags.available;
+                          final pendingReport = flags.pending;
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              key: Key(
+                                openReport
+                                    ? 'timeline_visit_report_$visitId'
+                                    : pendingReport
+                                        ? 'timeline_visit_pending_$visitId'
+                                        : 'timeline_item_$rowId',
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                    _colorForType(type, p.textMuted).withValues(alpha: 0.15),
+                                child: Icon(
+                                  _iconForType(type),
+                                  color: _colorForType(type, p.textMuted),
+                                  size: 20,
                                 ),
                               ),
-                              if (_canWriteNotes)
-                                Wrap(
-                                  alignment: WrapAlignment.end,
-                                  children: [
-                                    if (v.preconsultPending && _canWriteNotes)
-                                      TextButton(
-                                        onPressed: () async {
-                                          await Navigator.push<void>(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => PreconsultScreen(
-                                                visitId: v.id,
-                                                petName: widget.petName,
-                                              ),
-                                            ),
-                                          );
-                                          if (mounted) await load();
-                                        },
-                                        child: Text(l10n.preconsultFillCta),
-                                      ),
-                                    if (v.status == 'requested' && !v.awaitingClient)
-                                      TextButton(
-                                        onPressed: () => _cancelVisit(v),
-                                        child: Text(l10n.visitCancelAction),
-                                      ),
-                                    if ((v.status == 'requested' || v.status == 'confirmed') &&
-                                        !v.awaitingClient)
-                                      TextButton(
-                                        onPressed: () => _proposeReschedule(v),
-                                        child: Text(l10n.visitProposeReschedule),
-                                      ),
-                                    if (v.awaitingClient && v.status == 'requested')
-                                      TextButton(
-                                        onPressed: () => _visitAction(v, 'confirm'),
-                                        child: Text(l10n.visitConfirm),
-                                      ),
-                                    if (v.awaitingClient && v.status == 'reschedule_pending') ...[
-                                      TextButton(
-                                        onPressed: () => _visitAction(v, 'accept_reschedule'),
-                                        child: Text(l10n.visitAcceptReschedule),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => _visitAction(v, 'reject_reschedule'),
-                                        child: Text(l10n.visitRejectReschedule),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  Text(l10n.history, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  if (items.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Text(l10n.timelineEmpty, style: TextStyle(color: AppColors.textMuted)),
-                    )
-                  else
-                    ...items.map((m) {
-                      final type = m['type'] as String? ?? 'event';
-                      final createdAt = DateTime.tryParse(m['createdAt'] as String? ?? '');
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: _colorForType(type).withValues(alpha: 0.15),
-                            child: Icon(_iconForType(type), color: _colorForType(type), size: 20),
-                          ),
-                          title: Text(_typeLabel(l10n, type)),
-                          subtitle: Text(
-                            [
-                              if (createdAt != null) dateFmt.format(createdAt.toLocal()),
-                              if ((m['body'] as String?)?.isNotEmpty == true) m['body'] as String,
-                            ].join(' · '),
-                          ),
-                        ),
-                      );
-                    }),
+                              title: Text(_typeLabel(l10n, type)),
+                              subtitle: Text(
+                                [
+                                  if (createdAt != null) dateFmt.format(createdAt.toLocal()),
+                                  if ((m['body'] as String?)?.isNotEmpty == true)
+                                    m['body'] as String,
+                                ].join(' · '),
+                              ),
+                              trailing: visitId == null
+                                  ? null
+                                  : _consultationCta(
+                                      l10n: l10n,
+                                      visitId: visitId,
+                                      available: openReport,
+                                      pending: pendingReport,
+                                    ),
+                            ),
+                          );
+                        }),
+                    ],
+                  ),
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _TimelineSection extends StatelessWidget {
+  const _TimelineSection({
+    required this.sectionKey,
+    required this.title,
+    required this.initiallyExpanded,
+    required this.children,
+  });
+
+  final Key sectionKey;
+  final String title;
+  final bool initiallyExpanded;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        key: sectionKey,
+        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        initiallyExpanded: initiallyExpanded,
+        childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        children: children,
+      ),
     );
   }
 }

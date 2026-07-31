@@ -1,28 +1,5 @@
-/**
- * CSP calculée au build : Nuxt requiert 'unsafe-inline' (scripts d'hydratation),
- * Google Sign-In son script/iframe, et le WS pitch une connexion directe à l'API.
- */
-function buildCsp(): string {
-  const apiBase = (process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291').replace(/\/$/, '')
-  const apiWs = apiBase.replace(/^http/, 'ws')
-  return [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com",
-    "style-src 'self' 'unsafe-inline'",
-    // Avatars/photos : BFF, data-URI, blob (aperçus upload) et médias GCS/https.
-    "img-src 'self' data: blob: https:",
-    "font-src 'self'",
-    `connect-src 'self' ${apiBase} ${apiWs} https://accounts.google.com`,
-    // Audio des comptes rendus (stream authentifié via API).
-    `media-src 'self' blob: ${apiBase}`,
-    'frame-src https://accounts.google.com',
-    "worker-src 'self' blob:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-  ].join('; ')
-}
+import { buildCsp } from './utils/buildCsp'
+import { publicFeatureFlag } from './utils/public-feature-flag'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-15',
@@ -35,6 +12,7 @@ export default defineNuxtConfig({
       { code: 'en', language: 'en-GB', files: ['en.json', 'pitch-deck/en.json'] },
       { code: 'es', language: 'es-ES', files: ['es.json', 'pitch-deck/es.json'] },
       { code: 'et', language: 'et-EE', files: ['et.json', 'pitch-deck/et.json'] },
+      { code: 'it', language: 'it-IT', files: ['it.json', 'pitch-deck/it.json'] },
     ],
     defaultLocale: 'fr',
     strategy: 'no_prefix',
@@ -54,9 +32,37 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291',
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+      /** local | staging | production — pages use cases + badge S (staging AUTH). */
+      appEnv: process.env.NUXT_PUBLIC_APP_ENV || 'local',
+      /** Pharmacie cabinet (CNK / stock / DAF) — mirror PHARMACY_ENABLED. */
+      pharmacyEnabled: publicFeatureFlag('NUXT_PUBLIC_PHARMACY_ENABLED'),
+      /** Facturation Billit — mirror BILLIT_ENABLED (opt-in). */
+      billitEnabled: publicFeatureFlag('NUXT_PUBLIC_BILLIT_ENABLED'),
+      /** Ordonnances (brouillons + preview PDF) — mirror PRESCRIPTIONS_ENABLED. */
+      prescriptionsEnabled: publicFeatureFlag('NUXT_PUBLIC_PRESCRIPTIONS_ENABLED'),
     },
   },
   routeRules: {
+    '/admin/usecases': { redirect: '/usecases' },
+    '/admin/usecases/**': { redirect: '/usecases' },
+    '/commercial/usecases': { redirect: '/usecases' },
+    '/commercial/usecases/**': { redirect: '/usecases' },
+    '/commercial-manager/usecases': { redirect: '/usecases' },
+    '/commercial-manager/usecases/**': { redirect: '/usecases' },
+    // Le token de partage est dans l'URL : sans no-referrer, un clic vers /register
+    // ou /produits (même origine) le transmettrait dans l'en-tête Referer.
+    '/dossier/**': {
+      headers: {
+        'Referrer-Policy': 'no-referrer',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+    },
+    '/consultation/**': {
+      headers: {
+        'Referrer-Policy': 'no-referrer',
+        'X-Robots-Tag': 'noindex, nofollow',
+      },
+    },
     '/**': {
       headers: {
         'X-Frame-Options': 'DENY',
@@ -79,6 +85,13 @@ export default defineNuxtConfig({
         {
           rel: 'preload',
           href: '/fonts/dm-sans-latin.woff2',
+          as: 'font',
+          type: 'font/woff2',
+          crossorigin: 'anonymous',
+        },
+        {
+          rel: 'preload',
+          href: '/fonts/material-symbols-outlined.woff2',
           as: 'font',
           type: 'font/woff2',
           crossorigin: 'anonymous',

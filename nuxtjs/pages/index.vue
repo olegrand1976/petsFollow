@@ -6,8 +6,8 @@
         <ProLocaleSelect />
         <a href="#produits" class="pro-landing__nav-link">{{ $t('index.productsLink') }}</a>
         <NuxtLink to="/login" class="pro-landing__nav-link">{{ $t('index.login') }}</NuxtLink>
-        <NuxtLink to="/register">
-          <ProButton test-id="landing-cta">{{ $t('index.registerCta') }}</ProButton>
+        <NuxtLink to="/register" class="pro-btn pro-btn--primary" data-testid="landing-cta">
+          {{ $t('index.registerCta') }}
         </NuxtLink>
       </nav>
     </header>
@@ -15,43 +15,76 @@
     <section class="pro-landing__hero">
       <div class="pro-landing__hero-content">
         <span class="pro-landing__badge">{{ $t('index.badge') }}</span>
-        <h1>{{ $t('index.heroTitle') }}</h1>
+        <h1>
+          <span class="pro-landing__hero-line">{{ $t('index.heroTitleLine1') }}</span>
+          <span class="pro-landing__hero-line">{{ $t('index.heroTitleLine2') }}</span>
+        </h1>
         <p class="pro-landing__lead">{{ $t('index.heroLead') }}</p>
         <div class="pro-landing__hero-actions">
-          <NuxtLink to="/register">
-            <ProButton test-id="landing-hero-cta">{{ $t('index.heroCta') }}</ProButton>
+          <NuxtLink to="/register" class="pro-btn pro-btn--primary" data-testid="landing-hero-cta">
+            {{ $t('index.heroCta') }}
           </NuxtLink>
           <NuxtLink to="/login" class="pro-landing__secondary-link">{{ $t('index.heroLogin') }}</NuxtLink>
         </div>
       </div>
-      <div class="pro-landing__hero-visual" aria-hidden="true">
-        <div class="pro-landing__card pro-landing__card--float">
-          <ProIcon name="chat" class="pro-landing__card-icon" :size="24" />
-          <strong>{{ $t('index.cards.messaging.title') }}</strong>
-          <p>{{ $t('index.cards.messaging.text') }}</p>
+
+      <div class="pro-landing__triangle" aria-hidden="true">
+        <div class="pro-landing__actor pro-landing__actor--cabinet">
+          <ProIcon name="local_hospital" :size="22" />
+          <strong>{{ $t('index.actors.cabinet.title') }}</strong>
+          <span>{{ $t('index.actors.cabinet.text') }}</span>
         </div>
-        <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay">
-          <ProIcon name="description" class="pro-landing__card-icon" :size="24" />
-          <strong>{{ $t('index.cards.records.title') }}</strong>
-          <p>{{ $t('index.cards.records.text') }}</p>
-        </div>
-        <div class="pro-landing__card pro-landing__card--float pro-landing__card--delay2">
-          <ProIcon name="favorite" class="pro-landing__card-icon" :size="24" />
-          <strong>{{ $t('index.cards.heartrate.title') }}</strong>
-          <p>{{ $t('index.cards.heartrate.text') }}</p>
+        <div class="pro-landing__triangle-mid">
+          <div class="pro-landing__actor pro-landing__actor--care">
+            <ProIcon name="handshake" :size="22" />
+            <strong>{{ $t('index.actors.care.title') }}</strong>
+            <span>{{ $t('index.actors.care.text') }}</span>
+          </div>
+          <div class="pro-landing__passport-node">
+            <ProIcon name="folder_shared" :size="26" />
+            <strong>{{ $t('index.actors.passport') }}</strong>
+          </div>
+          <div class="pro-landing__actor pro-landing__actor--owner">
+            <ProIcon name="person" :size="22" />
+            <strong>{{ $t('index.actors.owner.title') }}</strong>
+            <span>{{ $t('index.actors.owner.text') }}</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="pro-landing__features">
-      <h2>{{ $t('index.featuresTitle') }}</h2>
-      <div class="pro-landing__feature-grid">
-        <article v-for="feature in features" :key="feature.key" class="pro-landing__feature">
-          <ProIcon :name="feature.icon" class="pro-landing__feature-icon" :size="28" />
-          <h3>{{ $t(`index.features.${feature.key}.title`) }}</h3>
-          <p>{{ $t(`index.features.${feature.key}.text`) }}</p>
+    <section class="pro-landing__problem">
+      <div class="pro-landing__problem-inner">
+        <h2>{{ $t('index.problemTitle') }}</h2>
+        <p>{{ $t('index.problemLead') }}</p>
+      </div>
+    </section>
+
+    <section class="pro-landing__passport">
+      <h2>{{ $t('index.passportTitle') }}</h2>
+      <p class="pro-landing__section-lead">{{ $t('index.passportLead') }}</p>
+      <div class="pro-landing__faces">
+        <article v-for="face in faces" :key="face.key" class="pro-landing__face">
+          <span class="pro-landing__face-role">{{ $t(`index.faces.${face.key}.role`) }}</span>
+          <ProIcon :name="face.icon" class="pro-landing__face-icon" :size="28" />
+          <h3>{{ $t(`index.faces.${face.key}.title`) }}</h3>
+          <p>{{ $t(`index.faces.${face.key}.text`) }}</p>
         </article>
       </div>
+    </section>
+
+    <section class="pro-landing__continuity">
+      <h2>{{ $t('index.continuityTitle') }}</h2>
+      <p class="pro-landing__section-lead">{{ $t('index.continuityLead') }}</p>
+      <ol class="pro-landing__steps">
+        <li v-for="(step, i) in steps" :key="step.key" class="pro-landing__step">
+          <span class="pro-landing__step-num">{{ i + 1 }}</span>
+          <div>
+            <h3>{{ $t(`index.steps.${step.key}.title`) }}</h3>
+            <p>{{ $t(`index.steps.${step.key}.text`) }}</p>
+          </div>
+        </li>
+      </ol>
     </section>
 
     <section id="produits" class="pro-landing__products">
@@ -62,7 +95,7 @@
         <article
           v-for="sol in solutions"
           :key="sol.key"
-          class="pro-landing__feature pro-landing__solution"
+          class="pro-landing__solution"
           :class="{ 'pro-landing__solution--featured': sol.featured }"
           :data-testid="`landing-solution-${sol.key}`"
         >
@@ -78,7 +111,7 @@
       <h3 class="pro-landing__products-sub">{{ $t('index.clientPlansTitle') }}</h3>
       <p class="pro-landing__products-lead pro-landing__products-lead--tight">{{ $t('index.clientPlansLead') }}</p>
       <div class="pro-landing__products-grid">
-        <article v-for="item in productHighlights" :key="item.key" class="pro-landing__feature">
+        <article v-for="item in productHighlights" :key="item.key" class="pro-landing__plan">
           <strong class="pro-landing__products-price">{{ $t(`index.productHighlights.${item.key}.price`) }}</strong>
           <h3>{{ $t(`index.productHighlights.${item.key}.title`) }}</h3>
           <p>{{ $t(`index.productHighlights.${item.key}.text`) }}</p>
@@ -86,8 +119,8 @@
       </div>
 
       <div class="pro-landing__products-actions">
-        <NuxtLink to="/register">
-          <ProButton test-id="landing-products-cta">{{ $t('index.productsCta') }}</ProButton>
+        <NuxtLink to="/register" class="pro-btn pro-btn--primary" data-testid="landing-products-cta">
+          {{ $t('index.productsCta') }}
         </NuxtLink>
       </div>
     </section>
@@ -96,8 +129,8 @@
       <div class="pro-landing__cta-inner">
         <h2>{{ $t('index.ctaTitle') }}</h2>
         <p>{{ $t('index.ctaText') }}</p>
-        <NuxtLink to="/register">
-          <ProButton variant="secondary">{{ $t('index.ctaButton') }}</ProButton>
+        <NuxtLink to="/register" class="pro-btn pro-btn--primary" data-testid="landing-footer-cta">
+          {{ $t('index.ctaButton') }}
         </NuxtLink>
       </div>
     </section>
@@ -123,14 +156,18 @@ function listFrom(key: string): string[] {
   return raw.map((x) => (typeof x === 'string' ? x : rt(x as any)))
 }
 
-const features = [
-  { key: 'messaging', icon: 'chat' },
-  { key: 'partner', icon: 'handshake' },
-  { key: 'heartrate', icon: 'favorite' },
-  { key: 'alerts', icon: 'notifications' },
-  { key: 'security', icon: 'lock' },
-  { key: 'onboarding', icon: 'bolt' },
-]
+const faces = [
+  { key: 'pro', icon: 'local_hospital' },
+  { key: 'proLight', icon: 'phone_android' },
+  { key: 'owner', icon: 'pets' },
+] as const
+
+const steps = [
+  { key: 'prescribe' },
+  { key: 'observe' },
+  { key: 'document' },
+  { key: 'retrieve' },
+] as const
 
 const solutions = computed(() =>
   (['proComplete', 'proLight'] as const).map((key) => ({

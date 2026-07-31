@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class KennelQuickEncodeScreen extends StatefulWidget {
@@ -56,36 +59,51 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
         'species': r.species,
         if (birth.isNotEmpty) 'birthDate': birth,
         'litterTag': r.litterTag.text.trim(),
+        // Default steer plan (same as API defaultStr) — explicit for clarity.
+        'plan': 'triennial',
+        'billingMode': 'subscription',
       });
     }
     if (pets.isEmpty) return;
     setState(() => _submitting = true);
     try {
-      await ApiClient.instance.createPetsBatch(pets);
+      final res = await ApiClient.instance.createPetsBatch(pets);
       if (!mounted) return;
-      Navigator.pop(context, true);
+      final rawPets = res['pets'];
+      var needsVet = false;
+      if (rawPets is List) {
+        for (final item in rawPets) {
+          if (item is! Map) continue;
+          final pid = item['practiceId']?.toString().trim() ?? '';
+          if (pid.isEmpty) {
+            needsVet = true;
+            break;
+          }
+        }
+      } else {
+        needsVet = true;
+      }
+      // Caller shows snack + optional link-vet prompt on Home/Pets.
+      Navigator.pop(
+        context,
+        PetCreateResult(promptLinkVet: needsVet),
+      );
     } catch (e) {
       if (!mounted) return;
-      final raw = e.toString();
-      final msg = raw.contains('vet_link_required') ? l10n.noVets : raw;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      final msg = mapApiError(e, l10n);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          key: const Key('kennel_error'),
+          content: Text(msg),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
   }
 
-  String _speciesLabel(AppLocalizations l10n, String species) {
-    switch (species) {
-      case 'dog':
-        return l10n.speciesDog;
-      case 'cat':
-        return l10n.speciesCat;
-      case 'horse':
-        return l10n.speciesHorse;
-      default:
-        return l10n.speciesOther;
-    }
-  }
+  String _speciesLabel(AppLocalizations l10n, String species) =>
+      speciesLabel(l10n, species);
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +130,7 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
               initialValue: _rows[i].species,
               decoration: InputDecoration(labelText: l10n.species),
               items: [
-                for (final s in const ['dog', 'cat', 'horse', 'other'])
+                for (final s in kPetSpeciesCodes)
                   DropdownMenuItem(value: s, child: Text(_speciesLabel(l10n, s))),
               ],
               onChanged: (v) {
@@ -123,7 +141,10 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _rows[i].birth,
-              decoration: InputDecoration(labelText: l10n.horseCompetitionDate),
+              decoration: InputDecoration(
+                labelText: l10n.petBirthDate,
+                hintText: 'YYYY-MM-DD',
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -139,6 +160,7 @@ class _KennelQuickEncodeScreenState extends State<KennelQuickEncodeScreen> {
           ),
           const SizedBox(height: 12),
           FilledButton(
+            key: const Key('kennel_submit'),
             onPressed: _submitting ? null : _submit,
             child: _submitting
                 ? const SizedBox(

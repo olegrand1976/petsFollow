@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/theme/app_theme.dart';
 import 'package:petsfollow_mobile/core/widgets/pets_logo.dart';
+import 'package:petsfollow_mobile/features/commercial/presentation/manager_team_results_screen.dart';
 import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Minimal field shell for commercial / commercial_manager: QR + open Pro web.
+/// Field shell for commercial / commercial_manager: QR, Pro web,
+/// and team results (manager only).
 class CommercialFieldShellScreen extends StatefulWidget {
   const CommercialFieldShellScreen({super.key, required this.onLogout});
 
@@ -52,7 +54,7 @@ class _CommercialFieldShellScreenState extends State<CommercialFieldShellScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.loginGradient),
+      decoration: BoxDecoration(gradient: AppTheme.loginGradientOf(context)),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -71,10 +73,27 @@ class _CommercialFieldShellScreenState extends State<CommercialFieldShellScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                l10n.commercialFieldSubtitle,
+                ApiClient.instance.userRole == 'commercial_manager'
+                    ? l10n.commercialManagerFieldSubtitle
+                    : l10n.commercialFieldSubtitle,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 24),
+              if (ApiClient.instance.userRole == 'commercial_manager') ...[
+                FilledButton.icon(
+                  key: const Key('commercial_manager_team'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ManagerTeamResultsScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.groups_outlined),
+                  label: Text(l10n.managerTeamCta),
+                ),
+                const SizedBox(height: 12),
+              ],
               FilledButton.icon(
                 onPressed: () {
                   Navigator.of(context).push(

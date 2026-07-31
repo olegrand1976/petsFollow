@@ -1,7 +1,8 @@
 import type { H3Event } from 'h3'
+import { authCookieSecure } from '../../utils/authCookieSecure'
 
-/** Aligné sur JWT_REFRESH_TTL (7 jours). */
-const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
+/** Aligné sur JWT_REFRESH_TTL (30 jours). */
+const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
 
 export function apiBase() {
   const config = useRuntimeConfig()
@@ -26,24 +27,32 @@ export function apiHeaders(event: H3Event) {
   return { ...authHeaders(event), ...localeHeaders(event) }
 }
 
-function authCookieOpts() {
+function requestProtocol(event: H3Event): string | undefined {
+  try {
+    return getRequestURL(event).protocol
+  } catch {
+    return undefined
+  }
+}
+
+function authCookieOpts(event: H3Event) {
   return {
     maxAge: AUTH_COOKIE_MAX_AGE,
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: authCookieSecure({ protocol: requestProtocol(event) }),
     // Anti-XSS : les JWT ne sont jamais lisibles par le JS navigateur.
     httpOnly: true,
   }
 }
 
 /** Marqueur de session non-httpOnly (aucune donnée sensible) pour les middlewares côté client. */
-function sessionMarkerOpts() {
+function sessionMarkerOpts(event: H3Event) {
   return {
     maxAge: AUTH_COOKIE_MAX_AGE,
     path: '/',
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: authCookieSecure({ protocol: requestProtocol(event) }),
   }
 }
 
@@ -51,24 +60,37 @@ export function setAuthCookies(
   event: H3Event,
   pair: { accessToken: string, refreshToken?: string },
 ) {
-  const opts = authCookieOpts()
+  const opts = authCookieOpts(event)
   setCookie(event, 'pf_token', pair.accessToken, opts)
   if (pair.refreshToken) {
     setCookie(event, 'pf_refresh', pair.refreshToken, opts)
   }
-  setCookie(event, 'pf_session', '1', sessionMarkerOpts())
+  setCookie(event, 'pf_session', '1', sessionMarkerOpts(event))
 }
 
 export function clearAuthCookies(event: H3Event) {
-  const opts = { path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production' }
-  deleteCookie(event, 'pf_token', opts)
-  deleteCookie(event, 'pf_refresh', opts)
-  deleteCookie(event, 'pf_session', opts)
+  // httpOnly must match setAuthCookies or browsers may keep pf_token / pf_refresh.
+  const secure = authCookieSecure({ protocol: requestProtocol(event) })
+  const tokenOpts = {
+    path: '/',
+    sameSite: 'lax' as const,
+    secure,
+    httpOnly: true,
+  }
+  const markerOpts = {
+    path: '/',
+    sameSite: 'lax' as const,
+    secure,
+  }
+  deleteCookie(event, 'pf_token', tokenOpts)
+  deleteCookie(event, 'pf_refresh', tokenOpts)
+  deleteCookie(event, 'pf_session', markerOpts)
 }
 
 /**
  * Absorbe une réponse auth Go : pose les cookies httpOnly et retire les JWT du body
  * renvoyé au navigateur. Les challenges MFA (sans accessToken) passent inchangés.
+ * Expose `role` (claim JWT) pour la navigation document post-login sans XHR /me.
  */
 export function absorbAuthTokens<T>(event: H3Event, res: T): T {
   const envelope = res as { data?: Record<string, unknown> } & Record<string, unknown>
@@ -77,15 +99,47 @@ export function absorbAuthTokens<T>(event: H3Event, res: T): T {
   if (!accessToken) return res
   setAuthCookies(event, { accessToken, refreshToken: data.refreshToken as string | undefined })
   const { accessToken: _a, refreshToken: _r, ...rest } = data
-  const sanitized = { ...rest, authenticated: true }
+  const role = roleFromAccessToken(accessToken)
+  const sanitized = {
+    ...rest,
+    authenticated: true,
+    ...(role ? { role } : {}),
+  }
   return (envelope?.data ? { ...envelope, data: sanitized } : sanitized) as T
+}
+
+/** Claim `role` du JWT access — pas de vérif crypto (token déjà émis par notre API). */
+export function roleFromAccessToken(accessToken: string): string | undefined {
+  const parts = accessToken.split('.')
+  if (parts.length < 2) return undefined
+  try {
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = Buffer.from(b64, 'base64').toString('utf8')
+    const payload = JSON.parse(json) as { role?: unknown }
+    return typeof payload.role === 'string' ? payload.role : undefined
+  } catch {
+    return undefined
+  }
 }
 
 type TokenPair = { accessToken: string, refreshToken?: string, expiresIn?: number }
 
-export async function refreshAccessToken(event: H3Event): Promise<TokenPair | null> {
+/** Résultat refresh — permet au proxy de renvoyer 503 (pas 401) si l'API est momentanément down. */
+export type RefreshOutcome =
+  | { kind: 'ok', pair: TokenPair }
+  | { kind: 'missing' }
+  | { kind: 'rejected' }
+  | { kind: 'transient', status?: number }
+
+/** 401/403 = session morte ; tout le reste (5xx, réseau) = garder les cookies. */
+export function classifyRefreshHttpStatus(status: number | undefined): 'rejected' | 'transient' {
+  if (status === 401 || status === 403) return 'rejected'
+  return 'transient'
+}
+
+export async function refreshAccessToken(event: H3Event): Promise<RefreshOutcome> {
   const refreshToken = getCookie(event, 'pf_refresh')
-  if (!refreshToken) return null
+  if (!refreshToken) return { kind: 'missing' }
   try {
     const res = await $fetch<{ data?: TokenPair } & TokenPair>(`${apiBase()}/api/v1/auth/refresh`, {
       method: 'POST',
@@ -93,12 +147,50 @@ export async function refreshAccessToken(event: H3Event): Promise<TokenPair | nu
       headers: localeHeaders(event),
     })
     const pair = (res as { data?: TokenPair }).data ?? (res as TokenPair)
-    if (!pair?.accessToken) return null
+    if (!pair?.accessToken) {
+      console.warn('[auth/refresh] rejected, empty accessToken')
+      clearAuthCookies(event)
+      return { kind: 'rejected' }
+    }
     setAuthCookies(event, pair)
-    return pair
-  } catch {
-    clearAuthCookies(event)
-    return null
+    return { kind: 'ok', pair }
+  } catch (e: unknown) {
+    const err = e as { statusCode?: number, status?: number }
+    const status = err?.statusCode ?? err?.status
+    const kind = classifyRefreshHttpStatus(status)
+    if (kind === 'rejected') {
+      console.warn('[auth/refresh] rejected, clearing cookies', { status })
+      clearAuthCookies(event)
+      return { kind: 'rejected' }
+    }
+    console.warn('[auth/refresh] transient failure, keeping cookies', { status: status ?? 'unknown' })
+    return { kind: 'transient', status }
+  }
+}
+
+function refreshUnavailableError() {
+  return createError({
+    statusCode: 503,
+    statusMessage: 'Auth refresh temporarily unavailable',
+    data: { reason: 'refresh_unavailable' },
+  })
+}
+
+/** Après un 401 upstream : retry si refresh OK, sinon 401 session morte ou 503 transient. */
+function throwAfterFailedRefresh(outcome: RefreshOutcome, originalUnauthorized: unknown): never {
+  switch (outcome.kind) {
+    case 'ok':
+      // Invariant : l'appelant ne passe ici que si refresh a échoué.
+      throw toProxyError(originalUnauthorized)
+    case 'transient':
+      throw refreshUnavailableError()
+    case 'missing':
+    case 'rejected':
+      throw toProxyError(originalUnauthorized)
+    default: {
+      const _exhaustive: never = outcome
+      throw _exhaustive
+    }
   }
 }
 
@@ -165,10 +257,10 @@ export async function proxyApi<T>(
     return await fetchOnce()
   } catch (e: any) {
     if (!isUnauthorized(e)) throw toProxyError(e)
-    const pair = await refreshAccessToken(event)
-    if (!pair) throw toProxyError(e)
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
     try {
-      return await fetchOnce(pair.accessToken)
+      return await fetchOnce(outcome.pair.accessToken)
     } catch (retryErr: any) {
       throw toProxyError(retryErr)
     }
@@ -202,10 +294,10 @@ export async function proxyUpload(
     return await fetchOnce()
   } catch (e: any) {
     if (!isUnauthorized(e)) throw toProxyError(e)
-    const pair = await refreshAccessToken(event)
-    if (!pair) throw toProxyError(e)
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
     try {
-      return await fetchOnce(pair.accessToken)
+      return await fetchOnce(outcome.pair.accessToken)
     } catch (retryErr: any) {
       throw toProxyError(retryErr)
     }

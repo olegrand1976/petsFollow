@@ -141,3 +141,61 @@ func TestRegisterClientConfirmLogin(t *testing.T) {
 		t.Fatalf("expected client role, got %#v", envelope)
 	}
 }
+
+func TestResendConfirmationClient(t *testing.T) {
+	api := newTestAPI(t)
+	email := uniqueEmail("e2e-resend")
+	password := "ClientPass123!"
+
+	code, env := doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/register-client", map[string]any{
+		"email": email, "password": password, "fullName": "Resend Client",
+		"consent": true,
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("register-client %d %#v", code, env)
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/resend-confirmation", map[string]any{
+		"email": email,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("resend %d %#v", code, env)
+	}
+	confirmPath, _ := dataMap(t, env)["confirmPath"].(string)
+	token := ""
+	if idx := len("/confirm-email?token="); len(confirmPath) > idx {
+		token = confirmPath[idx:]
+	}
+	if token == "" {
+		t.Fatalf("missing confirm token after resend: %#v", env)
+	}
+
+	// Unknown email must still be 200 (no enumeration).
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/resend-confirmation", map[string]any{
+		"email": "nobody-exists@petsfollow.test",
+	})
+	if code != http.StatusOK {
+		t.Fatalf("resend unknown should be 200, got %d %#v", code, env)
+	}
+	if _, ok := dataMap(t, env)["confirmPath"]; ok {
+		t.Fatal("confirmPath must not be present for unknown email")
+	}
+
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/confirm-email", map[string]any{
+		"token": token,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("confirm after resend %d %#v", code, env)
+	}
+
+	// Already verified → still 200, no confirmPath.
+	code, env = doJSON(t, api.handler, http.MethodPost, "/api/v1/auth/resend-confirmation", map[string]any{
+		"email": email,
+	})
+	if code != http.StatusOK {
+		t.Fatalf("resend verified should be 200, got %d %#v", code, env)
+	}
+	if _, ok := dataMap(t, env)["confirmPath"]; ok {
+		t.Fatal("confirmPath must not be present for already verified email")
+	}
+}

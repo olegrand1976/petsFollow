@@ -27,6 +27,7 @@ import (
 type testAPI struct {
 	handler http.Handler
 	pool    *pgxpool.Pool
+	api     *handlers.API
 }
 
 func loadDotEnv() {
@@ -41,7 +42,9 @@ func loadDotEnv() {
 				}
 				parts := strings.SplitN(line, "=", 2)
 				k, v := parts[0], parts[1]
-				if os.Getenv(k) == "" {
+				// Prefer repo .env for DATABASE_URL: shell may point at petsfollow_app
+				// (DML-only), which cannot apply ownership-bound migrations.
+				if k == "DATABASE_URL" || os.Getenv(k) == "" {
 					_ = os.Setenv(k, v)
 				}
 			}
@@ -57,6 +60,12 @@ func loadDotEnv() {
 
 func newTestAPI(t *testing.T) *testAPI {
 	t.Helper()
+	return newTestAPIWithBilling(t, nil)
+}
+
+// newTestAPIWithBilling builds a test API; if gw is non-nil it replaces the default mock gateway.
+func newTestAPIWithBilling(t *testing.T, gw billing.Gateway) *testAPI {
+	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -65,8 +74,18 @@ func newTestAPI(t *testing.T) *testAPI {
 	// dev/demo) et sur le gateway billing mock (opt-in explicite).
 	_ = os.Setenv("DEV_SEED_ENABLED", "true")
 	_ = os.Setenv("BILLING_MOCK_ENABLED", "true")
+	_ = os.Setenv("BILLIT_ENABLED", "true")
+	_ = os.Setenv("BILLIT_MOCK_ENABLED", "true")
+	if os.Getenv("BILLIT_WEBHOOK_SECRET") == "" {
+		_ = os.Setenv("BILLIT_WEBHOOK_SECRET", "test-billit-webhook-secret")
+	}
+	// seed.Run refuse de tourner hors environnement seedable (allowlist APP_ENV).
+	_ = os.Setenv("APP_ENV", "test")
 	// Pas de throttling dans la suite d'intégration (nombreux logins depuis la même IP httptest).
-	_ = os.Setenv("AUTH_RATE_LIMIT_PER_MIN", "0")
+	// Les tests qui vérifient le rate limit posent AUTH_RATE_LIMIT_PER_MIN via t.Setenv.
+	if os.Getenv("AUTH_RATE_LIMIT_PER_MIN") == "" {
+		_ = os.Setenv("AUTH_RATE_LIMIT_PER_MIN", "0")
+	}
 	cfg := config.Load()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -85,14 +104,19 @@ func newTestAPI(t *testing.T) *testAPI {
 	st := store.New(pool)
 	tokens := authx.NewTokenIssuer(cfg.JWTSigningKey, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	notifier := email.NewNotifier("127.0.0.1", 9, "test@petsfollow.test", "http://localhost:3002", "https://ll-it-sc.be")
-	bill := billing.NewService(st, cfg)
+	var bill *billing.Service
+	if gw != nil {
+		bill = billing.NewServiceWithGateway(st, cfg, gw)
+	} else {
+		bill = billing.NewService(st, cfg)
+	}
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, nil, nil)
 
 	r := httpx.NewBaseRouter()
 	r.Route("/api/v1", api.Routes)
 
 	t.Cleanup(func() { pool.Close() })
-	return &testAPI{handler: r, pool: pool}
+	return &testAPI{handler: r, pool: pool, api: api}
 }
 
 func uniqueEmail(prefix string) string {

@@ -17,6 +17,16 @@
         <div class="pro-pet-header-actions">
           <ProBadge v-if="isPrimaryPractice" variant="success">{{ $t('clients.pet.primaryBadge') }}</ProBadge>
           <ProButton
+            v-if="canWriteClinical"
+            variant="primary"
+            test-id="pet-new-consultation"
+            @click="openConsultation"
+          >
+            <ProIcon name="medical_services" :size="18" />
+            {{ $t('clients.consultation.open') }}
+          </ProButton>
+          <ProButton
+            v-if="canMessage"
             variant="secondary"
             test-id="pet-open-messages"
             :disabled="messagingBusy"
@@ -88,6 +98,7 @@
           :upload-url="`/api/pets/${petId}/photo`"
           :label="$t('clients.pet.photoChange')"
           :hint="$t('clients.pet.photoHint')"
+          :disabled="!canWriteClinical"
           @uploaded="onPetPhotoUploaded"
         />
       </ProCard>
@@ -95,7 +106,7 @@
         <dl class="pro-pet-summary">
           <div>
             <dt>{{ $t('pets.columnSpecies') }}</dt>
-            <dd>{{ pet.species || $t('common.dash') }}</dd>
+            <dd>{{ speciesLabel(pet.species) }}</dd>
           </div>
           <div>
             <dt>{{ $t('pets.columnBreed') }}</dt>
@@ -104,6 +115,26 @@
           <div v-if="pet.weightKg != null">
             <dt>{{ $t('clients.pet.columnWeight') }}</dt>
             <dd>{{ pet.weightKg }} kg</dd>
+          </div>
+          <div v-if="pet.microchipNumber">
+            <dt>{{ $t('clients.pet.microchip') }}</dt>
+            <dd data-testid="pet-microchip">{{ pet.microchipNumber }}</dd>
+          </div>
+          <div v-if="pet.healthBookNumber">
+            <dt>{{ $t('clients.pet.healthBookNumber') }}</dt>
+            <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber }}</dd>
+          </div>
+          <div v-if="pet.healthBookPdfAttached">
+            <dt>{{ $t('clients.pet.healthBookPdf') }}</dt>
+            <dd>
+              <a
+                class="pro-link"
+                :href="`/api/pets/${petId}/health-book`"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="pet-health-book-pdf"
+              >{{ $t('clients.pet.healthBookOpenPdf') }}</a>
+            </dd>
           </div>
           <div>
             <dt>{{ $t('clients.pet.summaryPlan') }}</dt>
@@ -117,23 +148,112 @@
           </div>
         </dl>
       </ProCard>
-      <ProCard :title="$t('clients.pet.timelineRecentTitle')">
-        <ul v-if="timelinePreview.length" class="pro-timeline">
-          <li v-for="item in timelinePreview" :key="item.id" class="pro-timeline__item">
-            <div class="pro-timeline__dot" aria-hidden="true" />
-            <div>
-              <strong>{{ timelineItemTitle(item) }}</strong>
-              <p>{{ item.body }}</p>
-              <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
-            </div>
+      <ProCard
+        v-if="pharmacyEnabled && canReadPharmacy"
+        :title="$t('clients.pet.dafDispensesTitle')"
+        class="pro-mb-lg"
+        data-testid="pet-daf-dispenses"
+      >
+        <p v-if="dafDispensesLoading" class="pro-hint">{{ $t('common.loading') }}</p>
+        <p v-else-if="dafDispensesError" class="pro-error" role="alert">{{ dafDispensesError }}</p>
+        <div v-else-if="!dafDispenses.length" class="pro-empty">{{ $t('clients.pet.dafDispensesEmpty') }}</div>
+        <ul v-else class="pet-daf-dispenses">
+          <li v-for="disp in dafDispenses" :key="disp.dafId">
+            <NuxtLink :to="`/daf/${disp.dafId}`" class="pro-link">
+              {{ disp.displayNumber || disp.dafId }}
+            </NuxtLink>
+            <span v-if="disp.finalizedAt" class="pro-hint"> · {{ formatDate(disp.finalizedAt) }}</span>
+            <ul v-if="disp.items?.length" class="pet-daf-dispenses__items">
+              <li v-for="(it, i) in disp.items" :key="i">
+                {{ it.medicationName }} · {{ it.qty }} · lot {{ it.lotNumber || '—' }}
+                <span v-if="it.ammNumber"> · AMM {{ it.ammNumber }}</span>
+              </li>
+            </ul>
           </li>
         </ul>
-        <ProEmptyState
-          v-else
-          :title="$t('clients.pet.timelineEmptyTitle')"
-          :description="$t('clients.pet.timelineEmptyDescription')"
-        />
       </ProCard>
+      <ProCard
+        v-if="pet && isFoodChainSpecies(pet.species)"
+        :title="$t('clients.pet.horseRegulatoryTitle')"
+        class="pro-mb-lg"
+        data-testid="pet-horse-regulatory"
+      >
+        <p class="pro-hint pro-mb-md">{{ $t('clients.pet.horseRegulatoryHint') }}</p>
+        <div class="pro-pet-horse-reg">
+          <div>
+            <label class="pro-label" for="pet-food-chain">{{ $t('clients.pet.foodChainStatus') }}</label>
+            <select
+              id="pet-food-chain"
+              v-model="horseFoodChain"
+              class="pro-input"
+              data-testid="pet-food-chain"
+              :disabled="!canWriteClinical || horseRegSaving"
+            >
+              <option value="companion">{{ $t('clients.pet.foodChainCompanion') }}</option>
+              <option value="food_producing">{{ $t('clients.pet.foodChainFoodProducing') }}</option>
+              <option value="excluded_from_food_chain">{{ $t('clients.pet.foodChainExcluded') }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="pro-label" for="pet-domicile">{{ $t('clients.pet.domicileLocation') }}</label>
+            <input
+              id="pet-domicile"
+              v-model="horseDomicile"
+              class="pro-input"
+              type="text"
+              maxlength="500"
+              :placeholder="$t('clients.pet.domicilePlaceholder')"
+              data-testid="pet-domicile"
+              :disabled="!canWriteClinical || horseRegSaving"
+            >
+          </div>
+        </div>
+        <p v-if="horseRegError" class="pro-alert" data-testid="pet-horse-reg-error">{{ horseRegError }}</p>
+        <p v-if="horseRegSaved" class="pro-hint" data-testid="pet-horse-reg-saved">{{ $t('clients.pet.horseRegulatorySaved') }}</p>
+        <ProButton
+          v-if="canWriteClinical"
+          class="pro-mt-md"
+          test-id="pet-horse-reg-save"
+          :disabled="horseRegSaving || !horseRegDirty"
+          @click="saveHorseRegulatory"
+        >
+          {{ $t('common.save') }}
+        </ProButton>
+      </ProCard>
+      <details
+        v-if="hasChartData || hasWeightChartData"
+        class="pro-pet-charts-details"
+        open
+        data-testid="pet-overview-charts"
+      >
+        <summary>{{ $t('clients.pet.chartsToggle') }}</summary>
+        <div class="pro-pet-charts-details__body">
+          <ProPetVitalsCharts
+            layout="grid"
+            :chart-range="chartRange"
+            :weight-chart-range="weightChartRange"
+            :has-chart-data="hasChartData"
+            :has-weight-chart-data="hasWeightChartData"
+            :chart-values="chartValues"
+            :chart-alerts="chartAlerts"
+            :chart-dates="chartDates"
+            :domain-start="chartDomain.start"
+            :domain-end="chartDomain.end"
+            :weight-chart-values="weightChartValues"
+            :weight-chart-dates="weightChartDates"
+            :weight-domain-start="weightChartDomain.start"
+            :weight-domain-end="weightChartDomain.end"
+            @update:chart-range="chartRange = $event"
+            @update:weight-chart-range="weightChartRange = $event"
+          />
+        </div>
+      </details>
+
+      <ProPetDayTimeline
+        :items="timeline"
+        class="pro-mb-lg"
+        @open-visit="openVisitReport"
+      />
     </div>
 
     <div
@@ -142,52 +262,23 @@
       aria-labelledby="tab-vitals"
       data-testid="pet-tab-vitals"
     >
-      <ProCard v-if="hasChartData" :title="$t('clients.pet.chartTitle')">
-      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '3m' }"
-          :aria-pressed="chartRange === '3m'"
-          data-testid="pet-chart-range-3m"
-          @click="chartRange = '3m'"
-        >
-          {{ $t('clients.pet.chartRange3m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '6m' }"
-          :aria-pressed="chartRange === '6m'"
-          data-testid="pet-chart-range-6m"
-          @click="chartRange = '6m'"
-        >
-          {{ $t('clients.pet.chartRange6m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': chartRange === '1y' }"
-          :aria-pressed="chartRange === '1y'"
-          data-testid="pet-chart-range-1y"
-          @click="chartRange = '1y'"
-        >
-          {{ $t('clients.pet.chartRange1y') }}
-        </button>
-      </div>
-      <ProBpmChart
-        v-if="chartValues.length"
-        :values="chartValues"
-        :alerts="chartAlerts"
-        :dates="chartDates"
+      <ProPetVitalsCharts
+        :chart-range="chartRange"
+        :weight-chart-range="weightChartRange"
+        :has-chart-data="hasChartData"
+        :has-weight-chart-data="hasWeightChartData"
+        :chart-values="chartValues"
+        :chart-alerts="chartAlerts"
+        :chart-dates="chartDates"
         :domain-start="chartDomain.start"
         :domain-end="chartDomain.end"
-        :aria-label="$t('clients.pet.chartTitle')"
+        :weight-chart-values="weightChartValues"
+        :weight-chart-dates="weightChartDates"
+        :weight-domain-start="weightChartDomain.start"
+        :weight-domain-end="weightChartDomain.end"
+        @update:chart-range="chartRange = $event"
+        @update:weight-chart-range="weightChartRange = $event"
       />
-      <p v-else class="text-muted" data-testid="pet-chart-empty-period">
-        {{ $t('clients.pet.chartEmptyPeriod') }}
-      </p>
-      </ProCard>
 
       <ProCard :title="$t('clients.pet.heartrateTitle')">
       <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.heartrateTitle')">
@@ -263,59 +354,6 @@
       </ProTable>
       </ProCard>
 
-      <ProCard
-      v-if="hasWeightChartData"
-      :title="$t('clients.pet.weightChartTitle')"
-      data-testid="pet-weight-chart-card"
-      >
-      <div class="pro-toggle pro-pet-filter" role="group" :aria-label="$t('clients.pet.chartRangeLabel')">
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '3m' }"
-          :aria-pressed="weightChartRange === '3m'"
-          data-testid="pet-weight-range-3m"
-          @click="weightChartRange = '3m'"
-        >
-          {{ $t('clients.pet.chartRange3m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '6m' }"
-          :aria-pressed="weightChartRange === '6m'"
-          data-testid="pet-weight-range-6m"
-          @click="weightChartRange = '6m'"
-        >
-          {{ $t('clients.pet.chartRange6m') }}
-        </button>
-        <button
-          type="button"
-          class="pro-toggle-btn"
-          :class="{ 'pro-toggle-btn--active': weightChartRange === '1y' }"
-          :aria-pressed="weightChartRange === '1y'"
-          data-testid="pet-weight-range-1y"
-          @click="weightChartRange = '1y'"
-        >
-          {{ $t('clients.pet.chartRange1y') }}
-        </button>
-      </div>
-      <ProBpmChart
-        v-if="weightChartValues.length"
-        :values="weightChartValues"
-        :dates="weightChartDates"
-        :domain-start="weightChartDomain.start"
-        :domain-end="weightChartDomain.end"
-        :axis-title="$t('clients.pet.weightAxisKg')"
-        auto-y-domain
-        hide-legend
-        :aria-label="$t('clients.pet.weightChartTitle')"
-      />
-      <p v-else class="text-muted">
-        {{ $t('clients.pet.chartEmptyPeriod') }}
-      </p>
-      </ProCard>
-
       <ProCard :title="$t('clients.pet.weightTitle')" data-testid="pet-weight-table-card">
       <ProTable
         :empty="!weights.length"
@@ -355,7 +393,7 @@
       data-testid="pet-tab-care"
     >
       <ProCard :title="$t('clients.pet.careTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="createCare">
+      <form v-if="canManageCare" class="pro-pet-inline-form" @submit.prevent="createCare">
         <input v-model="careDraft.title" class="pro-input" :placeholder="$t('clients.pet.careTitleField')" required />
         <select v-model="careDraft.type" class="pro-input" :aria-label="$t('clients.pet.careType')">
           <option value="vaccination">{{ $t('clients.pet.careTypeVaccination') }}</option>
@@ -393,9 +431,19 @@
             </td>
             <td>{{ c.status }}</td>
             <td>
-              <div v-if="c.status === 'pending'" class="pro-flex-gap">
-                <ProButton :disabled="careBusy" @click="markCareDone(c.id)">{{ $t('clients.pet.careDone') }}</ProButton>
-                <ProButton variant="ghost" :disabled="careBusy" @click="postponeCare(c.id, 7)">{{ $t('clients.pet.carePostpone') }}</ProButton>
+              <div v-if="canManageCare && c.status === 'pending'" class="pro-flex-gap">
+                <ProIconAction
+                  icon="task_alt"
+                  :label="$t('clients.pet.careDone')"
+                  :disabled="careBusy"
+                  @click="markCareDone(c.id)"
+                />
+                <ProIconAction
+                  icon="schedule"
+                  :label="$t('clients.pet.carePostpone')"
+                  :disabled="careBusy"
+                  @click="postponeCare(c.id, 7)"
+                />
               </div>
             </td>
           </tr>
@@ -404,8 +452,25 @@
       </ProCard>
 
       <ProCard :title="$t('clients.pet.visitsTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
+      <form v-if="canManageCalendar" class="pro-pet-inline-form" @submit.prevent="proposeVisit(false)">
         <input v-model="visitDraft.scheduledAt" class="pro-input" type="datetime-local" :aria-label="$t('clients.pet.visitScheduledAt')" required />
+        <select v-model="visitDraft.visitTypeId" class="pro-select" :aria-label="$t('calendar.visitType')" data-testid="pet-visit-type">
+          <option value="">{{ $t('calendar.visitTypeNone') }}</option>
+          <option v-for="vt in visitTypes" :key="vt.id" :value="vt.id">
+            {{ vt.name }} ({{ vt.durationMinutes }} min)
+          </option>
+        </select>
+        <input
+          v-model.number="visitDraft.durationMinutes"
+          class="pro-input"
+          type="number"
+          min="5"
+          max="480"
+          step="5"
+          :disabled="!!visitDraft.visitTypeId"
+          :aria-label="$t('calendar.durationMinutes')"
+          data-testid="pet-visit-duration"
+        >
         <input v-model="visitDraft.notes" class="pro-input" :placeholder="$t('clients.pet.visitNotes')" />
         <label class="pro-checkbox-label" data-testid="visit-request-preconsult">
           <input v-model="visitDraft.requestPreconsult" type="checkbox" class="pro-checkbox">
@@ -443,7 +508,7 @@
             </td>
             <td>
               <div class="pro-flex-gap">
-                <template v-if="v.status === 'requested' && v.pendingActionBy === 'vet'">
+                <template v-if="canManageCalendar && v.status === 'requested' && v.pendingActionBy === 'vet'">
                   <label class="pro-checkbox-label" data-testid="visit-confirm-request-preconsult">
                     <input
                       v-model="confirmPreconsultByVisit[v.id]"
@@ -452,43 +517,48 @@
                     >
                     {{ $t('clients.pet.visitRequestPreconsult') }}
                   </label>
-                  <ProButton
+                  <ProIconAction
+                    icon="check"
+                    :label="$t('clients.pet.visitConfirm')"
                     :disabled="visitBusy"
                     @click="visitAction(v.id, 'confirm')"
-                  >
-                    {{ $t('clients.pet.visitConfirm') }}
-                  </ProButton>
+                  />
                 </template>
-                <ProButton
-                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                <ProIconAction
+                  v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  icon="event_available"
+                  :label="$t('calendar.acceptReschedule')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'accept_reschedule')"
-                >
-                  {{ $t('calendar.acceptReschedule') }}
-                </ProButton>
-                <ProButton
-                  v-if="v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
-                  variant="ghost"
+                />
+                <ProIconAction
+                  v-if="canManageCalendar && v.status === 'reschedule_pending' && v.pendingActionBy === 'vet'"
+                  icon="close"
+                  :label="$t('calendar.rejectReschedule')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'reject_reschedule')"
-                >
-                  {{ $t('calendar.rejectReschedule') }}
-                </ProButton>
-                <ProButton
-                  v-if="v.status === 'confirmed'"
+                />
+                <ProIconAction
+                  icon="description"
+                  :label="$t('calendar.reportTitle')"
+                  :test-id="`pet-visit-report-open-${v.id}`"
+                  @click="openVisitReport(v)"
+                />
+                <ProIconAction
+                  v-if="canManageCalendar && v.status === 'confirmed'"
+                  icon="task_alt"
+                  :label="$t('clients.pet.visitDone')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'done')"
-                >
-                  {{ $t('clients.pet.visitDone') }}
-                </ProButton>
-                <ProButton
-                  v-if="v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending'"
-                  variant="ghost"
+                />
+                <ProIconAction
+                  v-if="canManageCalendar && (v.status === 'requested' || v.status === 'confirmed' || v.status === 'reschedule_pending')"
+                  icon="cancel"
+                  variant="danger"
+                  :label="$t('clients.pet.visitCancel')"
                   :disabled="visitBusy"
                   @click="visitAction(v.id, 'cancel')"
-                >
-                  {{ $t('clients.pet.visitCancel') }}
-                </ProButton>
+                />
               </div>
             </td>
           </tr>
@@ -504,7 +574,7 @@
       data-testid="pet-tab-documents"
     >
       <ProCard :title="$t('clients.pet.documentsTitle')" class="pro-mb-lg">
-      <form class="pro-pet-inline-form" @submit.prevent="uploadDocument">
+      <form v-if="canWriteClinical" class="pro-pet-inline-form" @submit.prevent="uploadDocument">
         <input
           ref="docInputEl"
           type="file"
@@ -552,12 +622,19 @@
             <td>{{ d.uploaderName || $t('common.dash') }}</td>
             <td>
               <div class="pro-flex-gap">
-                <a :href="d.fileUrl" target="_blank" rel="noopener noreferrer" class="pro-link-btn">
-                  {{ $t('clients.pet.documentOpen') }}
-                </a>
-                <ProButton variant="ghost" :disabled="docBusy" @click="deleteDocument(d.id)">
-                  {{ $t('common.delete') }}
-                </ProButton>
+                <ProIconAction
+                  icon="open_in_new"
+                  :label="$t('clients.pet.documentOpen')"
+                  :href="d.fileUrl"
+                />
+                <ProIconAction
+                  v-if="canWriteClinical"
+                  icon="delete"
+                  variant="danger"
+                  :label="$t('common.delete')"
+                  :disabled="docBusy"
+                  @click="deleteDocument(d.id)"
+                />
               </div>
             </td>
           </tr>
@@ -574,7 +651,7 @@
     >
       <ProCard :title="$t('share.petTitle')" class="pro-mb-lg" data-testid="pet-shares-card">
       <p class="pro-hint pro-mb-md">{{ $t('share.petHint') }}</p>
-      <form class="pro-pet-inline-form" @submit.prevent="addPetShare">
+      <form v-if="canManageShares" class="pro-pet-inline-form" @submit.prevent="addPetShare">
         <select v-model="shareColleagueId" class="pro-input" data-testid="pet-share-colleague">
           <option value="">{{ $t('share.colleaguePlaceholder') }}</option>
           <option v-for="c in colleagues" :key="c.userId" :value="c.userId">
@@ -615,7 +692,12 @@
             <td>{{ s.permission }}</td>
             <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
             <td>
-              <ProButton variant="ghost" :disabled="shareBusy" @click="revokePetShare(s.granteeUserId)">
+              <ProButton
+                v-if="canManageShares"
+                variant="ghost"
+                :disabled="shareBusy"
+                @click="revokePetShare(s.granteeUserId)"
+              >
                 {{ $t('share.revoke') }}
               </ProButton>
             </td>
@@ -623,36 +705,73 @@
         </tbody>
       </ProTable>
       </ProCard>
-    
-      <ProCard :title="$t('clients.pet.timelineTitle')" data-testid="pet-timeline-card">
-      <ul v-if="timeline.length" class="pro-timeline">
-        <li v-for="item in timeline" :key="item.id" class="pro-timeline__item">
-          <div class="pro-timeline__dot" aria-hidden="true" />
-          <div>
-            <strong>{{ timelineItemTitle(item) }}</strong>
-            <p>{{ item.body }}</p>
-            <small class="text-muted">{{ formatDate(item.createdAt) }}</small>
-          </div>
-        </li>
-      </ul>
-      <ProEmptyState
-        v-else
-        :title="$t('clients.pet.timelineEmptyTitle')"
-        :description="$t('clients.pet.timelineEmptyDescription')"
-      />
-      </ProCard>
     </div>
+
+    <ProModal
+      v-model:open="visitReportOpen"
+      :title="$t('calendar.reportTitle')"
+      size="lg"
+    >
+      <ProVisitReportPanel
+        v-if="visitReportId"
+        :visit-id="visitReportId"
+        :visit-scheduled-at="visitReportScheduledAt"
+        :readonly="!canWriteClinical"
+      />
+      <p class="pro-hint pro-mb-md">
+        <NuxtLink
+          v-if="visitReportId"
+          :to="`/calendar?visit=${visitReportId}`"
+          data-testid="pet-visit-report-calendar-link"
+        >
+          {{ $t('clients.pet.openReportInCalendar') }}
+        </NuxtLink>
+      </p>
+    </ProModal>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+import { isFoodChainSpecies } from '~/utils/pet-species'
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
+
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
+
+const config = useRuntimeConfig()
+const pharmacyEnabled = computed(() => isPublicFlagOn(config.public.pharmacyEnabled))
 
 const route = useRoute()
+const { t, te } = useI18n()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canManageCare = computed(() => canPractice('care.manage'))
+const canManageCalendar = computed(() => canPractice('calendar.manage'))
+const canManageShares = computed(() => canPractice('shares.manage'))
+const canReadShares = computed(() => canPractice('shares.read'))
+const canMessage = computed(() => canPractice('messaging'))
+const canValidateHR = computed(() => canPractice('heartrate.validate'))
+const canReadPharmacy = computed(() => canPractice('pharmacy.read'))
+const activeConsult = useActiveConsultation()
 const clientId = route.params.clientId as string
 const petId = route.params.petId as string
+
+function speciesLabel(species: string | null | undefined) {
+  if (!species) return t('common.dash')
+  const key = `common.species.${species}`
+  return te(key) ? t(key) : species
+}
+
+function openConsultation() {
+  if (!canWriteClinical.value) return
+  activeConsult.openForClient(clientId, petId)
+}
 const pet = ref<any>(null)
 const petPhotoUrl = ref('')
+const horseFoodChain = ref('companion')
+const horseDomicile = ref('')
+const horseRegSaving = ref(false)
+const horseRegError = ref('')
+const horseRegSaved = ref(false)
 const sessions = ref<any[]>([])
 const weights = ref<any[]>([])
 const timeline = ref<any[]>([])
@@ -665,6 +784,9 @@ const weightChartRange = ref<'3m' | '6m' | '1y'>('3m')
 const highlightedNewIds = ref<Set<string>>(new Set())
 const careBusy = ref(false)
 const visitBusy = ref(false)
+const visitReportOpen = ref(false)
+const visitReportId = ref('')
+const visitReportScheduledAt = ref('')
 const messagingBusy = ref(false)
 const messagingError = ref('')
 const pageError = ref('')
@@ -682,27 +804,53 @@ const shareExpiresDays = ref('')
 const shareBusy = ref(false)
 const shareError = ref('')
 const careDraft = reactive({ title: '', type: 'vaccination' })
-const visitDraft = reactive({ scheduledAt: '', notes: '', requestPreconsult: false })
+const visitDraft = reactive({
+  scheduledAt: '',
+  notes: '',
+  requestPreconsult: false,
+  visitTypeId: '',
+  durationMinutes: 30,
+})
+const visitTypes = ref<{ id: string; name: string; durationMinutes: number }[]>([])
+const dafDispenses = ref<Array<{
+  dafId: string
+  displayNumber?: string
+  finalizedAt?: string
+  items?: Array<{ medicationName: string; lotNumber?: string; qty: number; ammNumber?: string }>
+}>>([])
+const dafDispensesLoading = ref(false)
+const dafDispensesError = ref('')
+
+watch(
+  () => visitDraft.visitTypeId,
+  (id) => {
+    if (!id) return
+    const vt = visitTypes.value.find((x) => x.id === id)
+    if (vt) visitDraft.durationMinutes = vt.durationMinutes
+  },
+)
 const confirmPreconsultByVisit = reactive<Record<string, boolean>>({})
 const activeTab = ref('overview')
 let sessionsPollTimer: ReturnType<typeof setInterval> | null = null
 
 const { formatDate } = useFormatters()
-const { t } = useI18n()
 const { mapError } = useApiError()
 const { user, fetchUser } = useProUser()
 const { refresh: refreshNavBadges } = useNavBadges()
 const router = useRouter()
 
-const petTabs = computed(() => [
-  { id: 'overview', label: t('clients.pet.tabs.overview') },
-  { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
-  { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
-  { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
-  { id: 'sharing', label: t('clients.pet.tabs.sharing') },
-])
-
-const timelinePreview = computed(() => timeline.value.slice(0, 5))
+const petTabs = computed(() => {
+  const tabs = [
+    { id: 'overview', label: t('clients.pet.tabs.overview') },
+    { id: 'vitals', label: t('clients.pet.tabs.vitals'), count: sessions.value.length || undefined },
+    { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
+    { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
+  ]
+  if (canReadShares.value) {
+    tabs.push({ id: 'sharing', label: t('clients.pet.tabs.sharing') })
+  }
+  return tabs
+})
 
 const petPlanLabel = computed(() => {
   const code = pet.value?.entitlement?.planCode || pet.value?.planCode
@@ -774,22 +922,6 @@ const kpiNextVisit = computed(() => {
   return formatDate(upcoming[0].scheduledAt)
 })
 
-function timelineItemTitle(item: { type?: string; title?: string }) {
-  if (item.title?.trim()) return item.title
-  const type = item.type ?? ''
-  const keyByType: Record<string, string> = {
-    heartrate: 'clients.pet.timelineTypeHeartrate',
-    weight: 'clients.pet.timelineTypeWeight',
-    message: 'clients.pet.timelineTypeMessage',
-    care: 'clients.pet.timelineTypeCare',
-    visit: 'clients.pet.timelineTypeVisit',
-    event: 'clients.pet.timelineTypeEvent',
-  }
-  const key = keyByType[type]
-  if (key) return t(key)
-  return type || t('clients.pet.timelineTypeEvent')
-}
-
 function isReadingNew(s: { id: string, isNew?: boolean }) {
   return highlightedNewIds.value.has(s.id) || !!s.isNew
 }
@@ -807,7 +939,7 @@ async function loadSessions(markSeenAfter = false) {
   }
   highlightedNewIds.value = next
   sessions.value = list
-  if (markSeenAfter && hadNew) {
+  if (markSeenAfter && hadNew && canValidateHR.value) {
     try {
       await $fetch(`/api/pets/${petId}/heartrate/seen`, { method: 'POST' })
       await refreshNavBadges()
@@ -845,7 +977,7 @@ function careTypeLabel(type: string) {
 
 const petSubtitle = computed(() => {
   if (!pet.value) return ''
-  return [pet.value.species, pet.value.breed].filter(Boolean).join(' · ')
+  return [speciesLabel(pet.value.species), pet.value.breed].filter(Boolean).join(' · ')
 })
 
 const isPrimaryPractice = computed(() => {
@@ -915,6 +1047,42 @@ const weightChartDates = computed(() => weightChartReadings.value.map(w => w.rec
 function onPetPhotoUploaded(data: any) {
   pet.value = { ...pet.value, ...data }
   petPhotoUrl.value = data?.photoUrl || petPhotoUrl.value
+}
+
+const horseRegDirty = computed(() => {
+  if (!pet.value || !isFoodChainSpecies(pet.value.species)) return false
+  const curStatus = pet.value.foodChainStatus || 'companion'
+  const curDom = pet.value.domicileLocation || ''
+  return horseFoodChain.value !== curStatus || horseDomicile.value !== curDom
+})
+
+async function saveHorseRegulatory() {
+  if (!canWriteClinical.value || !pet.value) return
+  horseRegSaving.value = true
+  horseRegError.value = ''
+  horseRegSaved.value = false
+  try {
+    const res: any = await $fetch(`/api/vet/pets/${petId}/food-chain`, {
+      method: 'PATCH',
+      body: {
+        foodChainStatus: horseFoodChain.value,
+        domicileLocation: horseDomicile.value,
+      },
+    })
+    const data = res?.data ?? res
+    pet.value = {
+      ...pet.value,
+      foodChainStatus: data?.foodChainStatus ?? horseFoodChain.value,
+      domicileLocation: data?.domicileLocation ?? horseDomicile.value,
+    }
+    horseFoodChain.value = pet.value.foodChainStatus || 'companion'
+    horseDomicile.value = pet.value.domicileLocation || ''
+    horseRegSaved.value = true
+  } catch (e: any) {
+    horseRegError.value = mapError(e)
+  } finally {
+    horseRegSaving.value = false
+  }
 }
 
 function isCareOverdue(c: any) {
@@ -1095,18 +1263,26 @@ async function proposeVisit(confirmDirect: boolean) {
   if (!visitDraft.scheduledAt) return
   visitBusy.value = true
   try {
+    const body: Record<string, unknown> = {
+      notes: visitDraft.notes,
+      confirmDirect,
+      requestPreconsult: visitDraft.requestPreconsult,
+      scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
+    }
+    if (visitDraft.visitTypeId) {
+      body.visitTypeId = visitDraft.visitTypeId
+    } else {
+      body.durationMinutes = Number(visitDraft.durationMinutes) || 30
+    }
     await $fetch(`/api/pets/${petId}/visits`, {
       method: 'POST',
-      body: {
-        notes: visitDraft.notes,
-        confirmDirect,
-        requestPreconsult: visitDraft.requestPreconsult,
-        scheduledAt: new Date(visitDraft.scheduledAt).toISOString(),
-      },
+      body,
     })
     visitDraft.notes = ''
     visitDraft.scheduledAt = ''
     visitDraft.requestPreconsult = false
+    visitDraft.visitTypeId = ''
+    visitDraft.durationMinutes = 30
     await loadCareAndVisits()
   } finally {
     visitBusy.value = false
@@ -1114,6 +1290,8 @@ async function proposeVisit(confirmDirect: boolean) {
 }
 
 async function visitAction(id: string, action: string) {
+  if (action === 'cancel' && !window.confirm(t('clients.pet.visitCancelConfirm'))) return
+  if (action === 'reject_reschedule' && !window.confirm(t('calendar.rejectRescheduleConfirm'))) return
   visitBusy.value = true
   pageError.value = ''
   try {
@@ -1133,6 +1311,30 @@ async function visitAction(id: string, action: string) {
   }
 }
 
+function openVisitReport(v: { id: string, scheduledAt?: string, createdAt?: string }) {
+  visitReportId.value = v.id
+  visitReportScheduledAt.value = v.scheduledAt || v.createdAt || ''
+  visitReportOpen.value = true
+}
+
+async function loadDafDispenses() {
+  if (!pharmacyEnabled.value || !canReadPharmacy.value) return
+  dafDispensesLoading.value = true
+  dafDispensesError.value = ''
+  try {
+    const res: any = await $fetch(`/api/pets/${petId}/daf-dispenses`)
+    const data = res?.data ?? res
+    dafDispenses.value = Array.isArray(data?.items) ? data.items : []
+  }
+  catch (e: any) {
+    dafDispenses.value = []
+    dafDispensesError.value = mapError(e)
+  }
+  finally {
+    dafDispensesLoading.value = false
+  }
+}
+
 onMounted(async () => {
   pageError.value = ''
   try {
@@ -1140,6 +1342,38 @@ onMounted(async () => {
     const petRes: any = await $fetch(`/api/pets/${petId}`)
     pet.value = petRes.data ?? petRes
     petPhotoUrl.value = pet.value?.photoUrl || ''
+    horseFoodChain.value = pet.value?.foodChainStatus || 'companion'
+    horseDomicile.value = pet.value?.domicileLocation || ''
+
+    // Care/visits must not wait on HR sessions — demo pets can have large histories
+    // and staging Cloud Run e2e times out waiting for pet-visit-report-open.
+    const careVisitsP = loadCareAndVisits().catch((e: any) => {
+      pageError.value = mapError(e)
+    })
+    const docsP = loadDocuments().catch((e: any) => {
+      docError.value = mapError(e)
+    })
+    const sharesP = canReadShares.value
+      ? loadPetShares().catch(() => {
+          petShares.value = []
+        })
+      : Promise.resolve()
+    const typesP = canManageCalendar.value
+      ? $fetch('/api/vet/visit-types?active=1')
+          .then((res: any) => {
+            const list = res.data ?? res ?? []
+            visitTypes.value = (Array.isArray(list) ? list : [])
+              .filter((vt: any) => vt?.id)
+              .map((vt: any) => ({
+                id: vt.id,
+                name: vt.name,
+                durationMinutes: vt.durationMinutes || 30,
+              }))
+          })
+          .catch(() => {
+            visitTypes.value = []
+          })
+      : Promise.resolve()
 
     const timelineRes: any = await $fetch(`/api/pets/${petId}/timeline`)
     timeline.value = timelineRes.data ?? timelineRes ?? []
@@ -1148,27 +1382,10 @@ onMounted(async () => {
     sessionsPollTimer = setInterval(() => {
       loadSessions(true).catch(() => {})
     }, 8000)
+
+    await Promise.all([careVisitsP, docsP, sharesP, typesP, loadDafDispenses()])
   } catch (e: any) {
     pageError.value = mapError(e)
-    return
-  }
-
-  try {
-    await loadCareAndVisits()
-  } catch (e: any) {
-    pageError.value = mapError(e)
-  }
-
-  try {
-    await loadDocuments()
-  } catch (e: any) {
-    docError.value = mapError(e)
-  }
-
-  try {
-    await loadPetShares()
-  } catch {
-    petShares.value = []
   }
 })
 
@@ -1194,6 +1411,15 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
   margin: 0;
+}
+.pro-pet-horse-reg {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .pro-pet-horse-reg {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .pro-pet-summary dt {
   font-size: 0.8rem;
@@ -1247,39 +1473,52 @@ onBeforeUnmount(() => {
   min-width: 8rem;
 }
 
-.pro-timeline {
+.pro-pet-charts-details {
+  border: 1px solid var(--pf-vet-border);
+  border-radius: var(--pf-vet-radius, 8px);
+  background: var(--pf-vet-surface);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.pro-pet-charts-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--pf-vet-primary);
   list-style: none;
+}
+
+.pro-pet-charts-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pro-pet-charts-details > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4rem;
+  transition: transform 0.15s ease;
+}
+
+.pro-pet-charts-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.pet-daf-dispenses {
   margin: 0;
-  padding: 0;
-}
-
-.pro-timeline__item {
+  padding-left: 1rem;
   display: grid;
-  grid-template-columns: 1rem 1fr;
-  gap: 0.75rem 1rem;
-  padding-bottom: 1.25rem;
-  border-left: 2px solid var(--pf-vet-border);
-  margin-left: 0.35rem;
-  padding-left: 1.25rem;
-  position: relative;
+  gap: 0.65rem;
+}
+.pet-daf-dispenses__items {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  color: var(--pf-vet-muted, #64748b);
 }
 
-.pro-timeline__item:last-child {
-  border-left-color: transparent;
-  padding-bottom: 0;
-}
-
-.pro-timeline__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--pf-vet-accent);
-  position: absolute;
-  left: -6px;
-  top: 0.35rem;
-}
-
-.pro-timeline__item p {
-  margin: 0.25rem 0;
+.pro-pet-charts-details__body {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pf-vet-border);
 }
 </style>

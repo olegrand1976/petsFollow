@@ -20,6 +20,10 @@ echo "$REFRESHED" | python3 -c "import sys,json; d=json.load(sys.stdin)['data'];
 CLIENT=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"client.demo@petsfollow.test","password":"ClientDemo123!"}')
 CLIENT_TOKEN=$(echo "$CLIENT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+# Staging may lag seed terms backfill after consent gate — accept-terms is idempotent.
+curl -sf -X POST "$API/api/v1/me/accept-terms" \
+  -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"consent":true}' >/dev/null
 
 ADMIN=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"admin.demo@petsfollow.test","password":"AdminDemo123!"}')
@@ -68,6 +72,20 @@ THREAD_ID=$(echo "$THREADS" | python3 -c "import sys,json; t=json.load(sys.stdin
 curl -sf -X POST "$API/api/v1/messaging/threads/$THREAD_ID/messages" \
   -H "Authorization: Bearer $CLIENT_TOKEN" -H 'Content-Type: application/json' \
   -d '{"body":"smoke test message"}' >/dev/null
+
+# H1 croisé : véto → client (assert lecture côté client)
+VET_MSG="smoke vet to client $(date +%s)"
+curl -sf -X POST "$API/api/v1/messaging/threads/$THREAD_ID/messages" \
+  -H "Authorization: Bearer $VET_TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"body\":\"$VET_MSG\"}" >/dev/null
+MSGS=$(curl -sf "$API/api/v1/messaging/threads/$THREAD_ID/messages" -H "Authorization: Bearer $CLIENT_TOKEN")
+VET_MSG="$VET_MSG" python3 -c '
+import json, os, sys
+want = os.environ["VET_MSG"]
+rows = json.load(sys.stdin).get("data") or []
+if not any((m.get("body") or "") == want for m in rows):
+    raise SystemExit("H1: client did not see vet message")
+' <<<"$MSGS"
 
 SESS=$(curl -sf -X POST "$API/api/v1/pets/$PET_ID/heartrate/sessions" -H "Authorization: Bearer $CLIENT_TOKEN")
 SESS_ID=$(echo "$SESS" | python3 -c "import sys,json; s=json.load(sys.stdin)['data']; print(s.get('id') or s.get('ID',''))")
@@ -152,4 +170,9 @@ BAD=$(curl -s -o /tmp/pf-smoke-bad-login.json -w '%{http_code}' -X POST "$API/ap
   -d '{"email":"vet.demo@petsfollow.test","password":"WrongPass999!"}')
 test "$BAD" = "401"
 
-echo "OK — smoke MVP + billing + auth reset + register-client + shares/media + commercial + manager passed"
+# H13 — surface publique partage de dossier (route montée ; token inconnu → 404)
+DOSSIER=$(curl -s -o /tmp/pf-smoke-dossier.json -w '%{http_code}' \
+  "$API/api/v1/public/pet-dossier/smoke-inconnu-$(date +%s)")
+test "$DOSSIER" = "404"
+
+echo "OK — smoke MVP + billing + auth reset + register-client + shares/media + commercial + manager + dossier public passed"

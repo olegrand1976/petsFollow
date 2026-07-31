@@ -33,7 +33,10 @@
           </thead>
           <tbody>
             <tr v-for="m in overview.team" :key="m.userId" :data-testid="`manager-team-row-${m.userId}`">
-              <td>{{ m.fullName }}<br><span class="pro-hint">{{ m.email }}</span></td>
+              <td>
+                <NuxtLink :to="`/commercial-manager/member/${m.userId}`">{{ m.fullName }}</NuxtLink>
+                <br><span class="pro-hint">{{ m.email }}</span>
+              </td>
               <td>{{ m.assignedVets }}</td>
               <td>{{ m.contacts30d }}</td>
               <td>{{ m.appointmentsUpcoming }} / {{ m.appointmentsDone }}</td>

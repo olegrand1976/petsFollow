@@ -6,6 +6,7 @@ const (
 	RoleVet               Role = "vet"
 	RoleClient            Role = "client"
 	RoleAdmin             Role = "admin"
+	RoleDev               Role = "dev"
 	RoleCommercial        Role = "commercial"
 	RoleCommercialManager Role = "commercial_manager"
 	RoleCarePro           Role = "care_pro"
@@ -26,11 +27,16 @@ const (
 
 func ValidRole(role Role) bool {
 	switch role {
-	case RoleVet, RoleClient, RoleAdmin, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
+	case RoleVet, RoleClient, RoleAdmin, RoleDev, RoleCommercial, RoleCommercialManager, RoleCarePro, RoleVetAssistant, RoleSecretary:
 		return true
 	default:
 		return false
 	}
+}
+
+// IsOpsRole reports platform ops roles (admin full + DEV support IT).
+func IsOpsRole(role Role) bool {
+	return role == RoleAdmin || role == RoleDev
 }
 
 // IsPracticeStaff reports whether the role belongs to a veterinary practice team.
@@ -38,10 +44,10 @@ func IsPracticeStaff(role Role) bool {
 	return role == RoleVet || role == RoleVetAssistant || role == RoleSecretary
 }
 
-// IsProRole reports roles that get an automatic personal (client) profile on registration.
+// IsProRole reports roles that get an automatic personal (client) profile on registration / EnsureUserProfiles.
 func IsProRole(role Role) bool {
 	return role == RoleVet || role == RoleCarePro || role == RoleCommercial || role == RoleCommercialManager ||
-		role == RoleVetAssistant || role == RoleSecretary
+		role == RoleVetAssistant || role == RoleSecretary || role == RoleDev || role == RoleAdmin
 }
 
 func ValidSpecialty(s ProfessionalSpecialty) bool {
@@ -96,6 +102,44 @@ func CalculateBPM(tapCount, durationSec int) int {
 	return (tapCount * 60) / durationSec
 }
 
-func IsHeartRateAlert(bpm, minBPM, maxBPM int) bool {
-	return bpm < minBPM || bpm > maxBPM
+// SupportsHeartRateControl is false for "other" and unknown species.
+func SupportsHeartRateControl(species string) bool {
+	switch species {
+	case "dog", "cat", "horse":
+		return true
+	default:
+		return false
+	}
+}
+
+// IsFoodChainSpecies is true for species that show domicile / food-chain regulatory UI
+// (équidés, rente, camélidés, lapin).
+func IsFoodChainSpecies(species string) bool {
+	switch species {
+	case "horse", "donkey", "cattle", "sheep", "goat", "pig", "poultry", "rabbit", "alpaca", "llama":
+		return true
+	default:
+		return false
+	}
+}
+
+// DefaultFoodChainStatus returns the food_chain_status to apply on pet create.
+// Production livestock defaults to food_producing; companions / equids stay companion
+// until a vet reclassifies them.
+func DefaultFoodChainStatus(species string) string {
+	switch species {
+	case "cattle", "sheep", "goat", "pig", "poultry", "alpaca", "llama":
+		return "food_producing"
+	default:
+		return "companion"
+	}
+}
+
+// IsHeartRateDeltaAlert is true when the current BPM rose by at least delta
+// compared to the previous validated reading. No previous → no alert.
+func IsHeartRateDeltaAlert(currentBPM int, previousBPM *int, delta int) bool {
+	if previousBPM == nil || delta <= 0 {
+		return false
+	}
+	return currentBPM-*previousBPM >= delta
 }

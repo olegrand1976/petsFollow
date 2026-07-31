@@ -1,5 +1,8 @@
+import { clearAuthTokensUnlessPostLoginGrace, hasSessionCookie, homePathForRole } from '~/composables/useAuth'
+
 const SKIP_PREFIXES = [
   '/change-password',
+  '/complete-contact-phone',
   '/login',
   '/register',
   '/confirm-email',
@@ -9,6 +12,8 @@ const SKIP_PREFIXES = [
   '/legal',
   '/invite',
   '/preconsult',
+  '/dossier',
+  '/consultation',
 ]
 
 function isUnauthorized(e: unknown): boolean {
@@ -35,9 +40,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   } catch (e) {
     if (isUnauthorized(e)) {
-      await clearAuthTokens()
-      return navigateTo('/login')
+      const cleared = await clearAuthTokensUnlessPostLoginGrace()
+      if (cleared) return navigateTo('/login')
     }
-    // 5xx / network: do not force logout.
+    // 5xx / network / grâce post-login: do not force logout.
   }
 })

@@ -11,6 +11,7 @@
     >
       <template #actions>
         <ProButton
+          v-if="canWriteClients"
           variant="secondary"
           class="pro-btn--icon"
           test-id="client-app-invite-open"
@@ -20,14 +21,23 @@
           <ProIcon name="qr_code_2" :size="22" />
         </ProButton>
         <ProButton
-          v-if="client"
+          v-if="client && canWriteClients"
           :disabled="sendingAppLink"
           :loading="sendingAppLink"
           data-testid="send-app-link"
           @click="sendAppLink"
         >
-          <ProIcon name="smartphone" />
+          <ProIcon name="qr_code_2" />
           {{ $t('clients.detail.sendAppLink') }}
+        </ProButton>
+        <ProButton
+          v-if="client && canWriteClinical"
+          variant="secondary"
+          test-id="client-new-consultation"
+          @click="openConsultation"
+        >
+          <ProIcon name="medical_services" />
+          {{ $t('clients.consultation.open') }}
         </ProButton>
       </template>
     </ProPageHeader>
@@ -74,7 +84,7 @@
         icon="group"
         :value="overview.shareCount"
         :label="$t('clients.detail.kpi.shares')"
-        :to="`/clients/${clientId}?tab=sharing`"
+        :to="canReadShares ? `/clients/${clientId}?tab=sharing` : undefined"
       />
     </div>
     <p v-if="overview?.upcomingVisitAt" class="pro-hint pro-mb-md" data-testid="client-upcoming-visit">
@@ -107,7 +117,7 @@
           <tbody>
             <tr v-for="p in pets" :key="p.id">
               <td>{{ p.name }}</td>
-              <td>{{ p.species }}</td>
+              <td>{{ speciesLabel(p.species) }}</td>
               <td>{{ p.breed || $t('common.dash') }}</td>
               <td>{{ p.weightKg != null ? `${p.weightKg} kg` : $t('common.dash') }}</td>
               <td>
@@ -125,7 +135,7 @@
     <div v-show="activeTab === 'sharing'" role="tabpanel" aria-labelledby="tab-sharing" data-testid="client-tab-sharing">
       <ProCard :title="$t('share.clientTitle')" data-testid="client-shares-card">
         <p class="pro-hint pro-mb-md">{{ $t('share.clientHint') }}</p>
-        <form class="pro-pet-inline-form" @submit.prevent="addClientShare">
+        <form v-if="canManageShares" class="pro-pet-inline-form" @submit.prevent="addClientShare">
           <ProInput v-model="shareEmail" type="email" :label="$t('share.email')" required />
           <select v-model="sharePermission" class="pro-input" data-testid="client-share-permission">
             <option value="read">{{ $t('share.permRead') }}</option>
@@ -158,7 +168,12 @@
               <td>{{ s.permission }}</td>
               <td>{{ s.expiresAt ? formatShareDate(s.expiresAt) : $t('share.expiresNever') }}</td>
               <td>
-                <ProButton variant="ghost" :disabled="shareBusy" @click="revokeClientShare(s.granteeUserId)">
+                <ProButton
+                  v-if="canManageShares"
+                  variant="ghost"
+                  :disabled="shareBusy"
+                  @click="revokeClientShare(s.granteeUserId)"
+                >
                   {{ $t('share.revoke') }}
                 </ProButton>
               </td>
@@ -181,6 +196,26 @@
             <p><strong>{{ client.fullName }}</strong></p>
             <p class="text-muted">{{ client.email }}</p>
             <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
+            <div v-if="canWriteClients" class="client-phone-edit">
+              <ProInput
+                v-model="phoneDraft"
+                test-id="client-phone-input"
+                type="tel"
+                :label="$t('clients.detail.contactPhone')"
+              />
+              <div class="pro-flex-gap">
+                <ProButton
+                  test-id="client-phone-save"
+                  :disabled="phoneSaving || phoneDraft === (client.contactPhone || '')"
+                  @click="saveContactPhone"
+                >
+                  {{ $t('clients.detail.savePhone') }}
+                </ProButton>
+              </div>
+              <p v-if="phoneMsg" class="pro-hint" role="status" data-testid="client-phone-msg">{{ phoneMsg }}</p>
+              <p v-if="phoneError" class="pro-error" role="alert">{{ phoneError }}</p>
+            </div>
+            <p v-else-if="client.contactPhone" class="text-muted">{{ client.contactPhone }}</p>
             <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
           </div>
         </div>
@@ -190,7 +225,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'vet-only' })
+definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'clients.read' })
 
 type ClientRow = {
   userId: string
@@ -198,6 +233,7 @@ type ClientRow = {
   fullName: string
   petCount: number
   avatarUrl?: string
+  contactPhone?: string
 }
 
 type ClientOverview = {
@@ -210,8 +246,19 @@ type ClientOverview = {
   shareCount: number
 }
 
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+function speciesLabel(species: string | null | undefined) {
+  if (!species) return t('common.dash')
+  const key = `common.species.${species}`
+  return te(key) ? t(key) : species
+}
 const { mapError } = useApiError()
+const { canPractice } = usePracticePerms()
+const canWriteClinical = computed(() => canPractice('pets.write_clinical'))
+const canManageShares = computed(() => canPractice('shares.manage'))
+const canReadShares = computed(() => canPractice('shares.read'))
+const canWriteClients = computed(() => canPractice('clients.write'))
 const route = useRoute()
 
 const clientId = route.params.clientId as string
@@ -222,7 +269,38 @@ const petsLoadError = ref('')
 const sendingAppLink = ref(false)
 const appLinkFeedback = ref('')
 const appInviteOpen = ref(false)
+const activeConsult = useActiveConsultation()
 const clientShares = ref<any[]>([])
+const phoneDraft = ref('')
+const phoneSaving = ref(false)
+const phoneMsg = ref('')
+const phoneError = ref('')
+
+async function saveContactPhone() {
+  phoneSaving.value = true
+  phoneMsg.value = ''
+  phoneError.value = ''
+  try {
+    const res: any = await $fetch(`/api/clients/${clientId}`, {
+      method: 'PATCH',
+      body: { contactPhone: phoneDraft.value.trim() },
+    })
+    const data = res.data ?? res
+    if (client.value) {
+      client.value = { ...client.value, contactPhone: data.contactPhone || '' }
+    }
+    phoneDraft.value = data.contactPhone || ''
+    phoneMsg.value = t('clients.detail.phoneSaved')
+  } catch (e: any) {
+    phoneError.value = mapError(e) || t('clients.detail.phoneSaveError')
+  } finally {
+    phoneSaving.value = false
+  }
+}
+
+function openConsultation() {
+  activeConsult.openForClient(clientId)
+}
 const shareEmail = ref('')
 const sharePermission = ref('write_notes')
 const shareExpiresDays = ref('')
@@ -256,11 +334,20 @@ function petRowStatusVariant(p: any): 'success' | 'warning' | 'danger' | 'neutra
 
 const clientSubtitle = computed(() => client.value?.email || t('clients.detail.subtitle'))
 
-const clientTabs = computed(() => [
-  { id: 'pets', label: t('clients.detail.tabs.pets'), count: overview.value?.petCount || pets.value.length || undefined },
-  { id: 'sharing', label: t('clients.detail.tabs.sharing'), count: overview.value?.shareCount || undefined },
-  { id: 'identity', label: t('clients.detail.tabs.identity') },
-])
+const clientTabs = computed(() => {
+  const tabs = [
+    { id: 'pets', label: t('clients.detail.tabs.pets'), count: overview.value?.petCount || pets.value.length || undefined },
+    { id: 'identity', label: t('clients.detail.tabs.identity') },
+  ]
+  if (canReadShares.value) {
+    tabs.splice(1, 0, {
+      id: 'sharing',
+      label: t('clients.detail.tabs.sharing'),
+      count: overview.value?.shareCount || undefined,
+    })
+  }
+  return tabs
+})
 
 async function loadClientShares() {
   const res: any = await $fetch(`/api/clients/${clientId}/shares`)
@@ -342,6 +429,7 @@ onMounted(async () => {
   try {
     const clientRes: any = await $fetch(`/api/clients/${clientId}`)
     client.value = clientRes.data ?? clientRes
+    phoneDraft.value = client.value?.contactPhone || ''
   } catch {
     client.value = null
   }
@@ -359,7 +447,9 @@ onMounted(async () => {
     petsLoadError.value = mapError(e) || t('clients.loadError')
   }
   try {
-    await loadClientShares()
+    if (canReadShares.value) {
+      await loadClientShares()
+    }
   } catch {
     clientShares.value = []
   }
@@ -383,6 +473,13 @@ onMounted(async () => {
   gap: 1.25rem;
   align-items: flex-start;
   flex-wrap: wrap;
+}
+.client-phone-edit {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 22rem;
 }
 .pro-mb-md {
   margin-bottom: 1rem;

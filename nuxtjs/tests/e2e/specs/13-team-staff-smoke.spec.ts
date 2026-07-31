@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { login, fillField, waitForAuthForm } from '../helpers/auth'
+import { INVOICING_UI_ENABLED } from '../../../utils/invoicing-ui'
 
 const STAFF_PASSWORD = 'VetDemo123!'
 /** Mot de passe post-invite (mustChangePassword) — stable pour rejouer le smoke. */
@@ -9,7 +10,22 @@ async function completeForcedPasswordChange(page: Page, nextPassword = STAFF_PAS
   await waitForAuthForm(page, 'force-change-password-form')
   await fillField(page, 'force-change-password', nextPassword)
   await fillField(page, 'force-change-password-confirm', nextPassword)
-  await page.getByTestId('force-change-submit').click()
+  await expect(page.getByTestId('force-change-password')).toHaveValue(nextPassword)
+  await expect(page.getByTestId('force-change-password-confirm')).toHaveValue(nextPassword)
+  const patch = page.waitForResponse(
+    (r) => r.url().includes('/api/me/password') && r.request().method() === 'PATCH',
+    { timeout: 25000 },
+  )
+  await page.getByTestId('force-change-password-form').evaluate((node) => {
+    const form = node as HTMLFormElement
+    if (typeof form.requestSubmit === 'function') form.requestSubmit()
+    else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+  })
+  const res = await patch
+  if (!res.ok()) {
+    const errText = await page.locator('.pro-field-error').innerText().catch(() => '')
+    throw new Error(`force-change password PATCH ${res.status()} ${errText}`)
+  }
   await page.waitForURL((url) => !url.pathname.includes('/change-password'), { timeout: 20000 })
 }
 
@@ -40,7 +56,7 @@ async function loginExpectDashboard(page: Page, email: string, password = STAFF_
   await expect(page).toHaveURL(/dashboard/, { timeout: 15000 })
 }
 
-test.describe('team staff smoke — assist / secretary / reference', () => {
+test.describe('team staff smoke — assist / secretary / reference', { tag: '@p0' }, () => {
   test('A: assist login → /dashboard with nav', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.assist@petsfollow.test')
     const nav = page
@@ -51,6 +67,79 @@ test.describe('team staff smoke — assist / secretary / reference', () => {
 
   test('B: secretary login → /dashboard', async ({ page }) => {
     await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+  })
+
+  test('B2: secretary — nav sans commissions, sections présentes', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await expect(page.getByTestId('nav-commissions')).toHaveCount(0)
+    await expect(page.locator('a[href="/commissions"]')).toHaveCount(0)
+    await expect(page.getByText(/^Journée$|^Daily$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Cabinet$|^Practice$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('nav-clients')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('B3: secretary — /ordonnances/nouveau redirect (no write_clinical)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/ordonnances/nouveau', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL((url) => !url.pathname.includes('/ordonnances/nouveau'), { timeout: 15000 })
+    await expect(page).toHaveURL(/dashboard/, { timeout: 10000 })
+  })
+
+  test('B4: secretary — pas de CTA nouveau ordonnances', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/ordonnances', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('ordonnances-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('ordonnances-new')).toHaveCount(0)
+  })
+
+  test('B5: secretary — pas de CTA consultation (no write_clinical)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('create-client-open')).toBeVisible({ timeout: 10000 })
+    // Seed VetPlus : au moins un client — sinon le count CTA serait vrai à vide.
+    await expect(page.locator('table tbody tr, .pro-kanban-card').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-testid^="new-consultation-"]')).toHaveCount(0)
+  })
+
+  test('B6: secretary — settings sans fiche cabinet, sans invitations', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/settings', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('settings-practice-profile-denied')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('settings-practice-profile')).toHaveCount(0)
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('clients-invitations-open')).toHaveCount(0)
+  })
+
+  test('B7: secretary — factu sans activate Billit (pas practice.settings)', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+
+    await page.goto('/invoicing', { waitUntil: 'networkidle' })
+    if (!page.url().includes('/invoicing')) {
+      test.skip(true, 'NUXT_PUBLIC_BILLIT_ENABLED off (redirect)')
+    }
+    await expect(page.getByTestId('invoicing-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('invoicing-connect-start')).toHaveCount(0)
+    if (!INVOICING_UI_ENABLED) {
+      await expect(page.getByTestId('invoicing-under-development')).toBeVisible({ timeout: 10000 })
+      return
+    }
+    await expect(page.getByTestId('invoicing-under-development')).toHaveCount(0)
+    await expect(page.getByTestId('invoicing-connection-readonly')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('B8: secretary — voit onglet partages (read) sans formulaire manage', async ({ page }) => {
+    await loginExpectDashboard(page, 'secretary.demo@petsfollow.test')
+    await page.goto('/clients', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('clients-page')).toBeVisible({ timeout: 15000 })
+    const profile = page.locator('[data-testid^="client-profile-"]').first()
+    await expect(profile).toBeVisible({ timeout: 15000 })
+    await profile.click()
+    await expect(page.getByTestId('section-tab-sharing')).toBeVisible({ timeout: 15000 })
+    await page.getByTestId('section-tab-sharing').click()
+    await expect(page.getByTestId('client-shares-card')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('client-share-permission')).toHaveCount(0)
   })
 
   test('C: assist — /commissions redirected, /team OK', async ({ page }) => {
@@ -76,10 +165,28 @@ test.describe('team staff smoke — assist / secretary / reference', () => {
     await expect(page.getByRole('button', { name: /invit/i })).toBeVisible({ timeout: 10000 })
   })
 
+  test('D2: vet.demo — ACL labels i18n (not raw keys)', async ({ page }) => {
+    await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
+    await page.goto('/team', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('vet-team-page')).toBeVisible({ timeout: 15000 })
+    const perms = page.getByTestId('team-perms').first()
+    await expect(perms).toBeVisible({ timeout: 10000 })
+    await expect(perms.getByText(/voir les clients|view clients/i)).toBeVisible({ timeout: 5000 })
+    await expect(perms.getByText('clients.read')).toHaveCount(0)
+    await expect(perms.getByText('pets.write_clinical')).toHaveCount(0)
+  })
+
   test('E: vet.demo — /commissions allowed for reference', async ({ page }) => {
     await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
     await page.goto('/commissions', { waitUntil: 'networkidle' })
     await expect(page).toHaveURL(/commissions/)
     await expect(page.getByTestId('vet-commissions-page')).toBeVisible({ timeout: 15000 })
+  })
+
+  test('E2: vet.demo — nav commissions + sections', async ({ page }) => {
+    await loginExpectDashboard(page, 'vet.demo@petsfollow.test')
+    await expect(page.getByTestId('nav-commissions')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Journée$|^Daily$/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/^Finance$/i).first()).toBeVisible({ timeout: 10000 })
   })
 })

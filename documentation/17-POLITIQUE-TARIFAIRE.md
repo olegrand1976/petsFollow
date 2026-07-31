@@ -1,6 +1,6 @@
 # Politique tarifaire petsFollow
 
-Positionnement : **continuité de soins prescrite** — Web Pro · mobile ProLight · mobile Client. Le relevé cardiaque est une feature.  
+Positionnement : **continuité de soins prescrite** + **passeport digital** de l’animal — Web Pro · mobile ProLight / care pro · mobile Client. Le relevé cardiaque est une feature.  
 Monétisation **double** :
 
 1. **SaaS cabinet Pro** — facturation **externe** (pas de Stripe)  
@@ -18,21 +18,20 @@ Objectif : grille **attractive pour véto et commercial**, **concurrentielle** p
 
 | Offre | Surface | Tarif | Paiement |
 |-------|---------|-------|----------|
-| **Pro** | Web SaaS + app clients | **69 € HT / mois** (+ setup **320 € HT** one-shot) | **Facturation externe** (commercial / compta) — **pas** de checkout Stripe cabinet |
+| **Pro** | Web SaaS + app clients | **834,71 € HTVA / an** (+ setup **320 € HTVA** one-shot) · **2 253,72 € HTVA / 3 ans** (−10 %) | **Facturation externe** (commercial / compta) — **pas** de checkout Stripe cabinet |
 | **Pro Light** | App mobile ProLight (Flutter) | **0 €** | — |
 
 Engagements Pro (facturation externe) :
 
-| Prestation | Tarif HT | Notes |
-|------------|----------|-------|
+| Prestation | Tarif HTVA | Notes |
+|------------|------------|-------|
 | Mise en place & formation | **320 €** | One-shot |
-| Mensuel | **69 € / mois** | Engagement 12 mois |
-| Annuel | **828 € / an** | 12 × 69 |
-| Long terme 3 ans | **745,20 € / an** | −10 % vs annuel (≈ 62,10 €/mois) |
+| Annuel | **834,71 € / an** | ≈ 69,56 € / mois |
+| Triennal (recommandé) | **2 253,72 € / 3 ans** | −10 % vs 3× annuel (économie **250,41 €** · ≈ 62,60 €/mois) |
 | Migration données | Sur devis (≥ **350 €**) | Option |
-| **Module CR IA** (add-on) | **39 € HT / mois** ou **390 € HT / an** | Essai **90 j** à l’activation ; facture externe ; ROI dès J60 — voir `documentation/32-MODULE-IA-CR.md` |
+| **Module CR IA** (add-on) | **39 € HTVA / mois** ou **390 € HTVA / an** | Essai **90 j** à l’activation ; facture externe ; ROI dès J60 — voir `documentation/32-MODULE-IA-CR.md` |
 
-Les commissions partenaires (activations clients) peuvent **compenser** la facture SaaS hors ligne (ordre de grandeur : ~7 activations triennales / mois ≈ couverture du mensuel).
+Les commissions partenaires (activations clients) peuvent **compenser** la facture SaaS hors ligne (ordre de grandeur : ~8 activations triennales / mois ≈ couverture de l’équivalent mensuel ≈ 69,56 € HTVA).
 
 ---
 

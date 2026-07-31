@@ -38,12 +38,19 @@
           class="cal-chip cal-chip--column"
           :class="[
             `cal-chip--${statusVariant(v.status)}`,
-            { 'cal-chip--focus': focusVisitId === v.id },
+            {
+              'cal-chip--focus': focusVisitId === v.id,
+              'cal-chip--walkin': !!v.consultationSession,
+              'cal-chip--typed': !!v.visitTypeColor,
+            },
           ]"
+          :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
           :data-testid="`calendar-chip-${v.id}`"
           @click="emit('select-visit', v)"
         >
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
+          <span v-if="v.visitTypeName" class="cal-chip__type">{{ v.visitTypeName }}</span>
+          <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
           <span v-if="v.addressText" class="cal-chip__place">{{ v.addressText }}</span>
         </button>

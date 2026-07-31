@@ -59,6 +59,12 @@ class Pet {
     this.entitlement,
     this.heartrateDurationsSec = const [60],
     this.weightKg,
+    this.microchipNumber,
+    this.healthBookNumber,
+    this.healthBookPdfUrl,
+    this.healthBookPdfAttached = false,
+    this.foodChainStatus,
+    this.domicileLocation,
   });
 
   final String id;
@@ -75,6 +81,14 @@ class Pet {
   final List<int> heartrateDurationsSec;
   /// Last recorded weight (kg) from API `weightKg` / `pets.weight_kg`.
   final double? weightKg;
+  final String? microchipNumber;
+  final String? healthBookNumber;
+  /// Legacy / unused public URL — prefer [healthBookPdfAttached] + auth stream.
+  final String? healthBookPdfUrl;
+  final bool healthBookPdfAttached;
+  /// companion | food_producing | excluded_from_food_chain
+  final String? foodChainStatus;
+  final String? domicileLocation;
 
   /// True when the logged-in client owns this pet (billing / HR / edit).
   bool get isOwner {
@@ -124,6 +138,12 @@ class Pet {
   bool get needsResumePayment =>
       isOwner && paymentStatus == 'pending_payment' && !isActive;
 
+  /// True when the pet has no linked practice yet (vet can be linked after create).
+  bool get needsVetLink {
+    final id = practiceId?.trim();
+    return id == null || id.isEmpty;
+  }
+
   factory Pet.fromJson(Map<String, dynamic> json) {
     final rawDurations = json['heartrateDurationsSec'] as List<dynamic>?;
     return Pet(
@@ -137,12 +157,26 @@ class Pet {
       ownerUserId: json['ownerUserId'] as String?,
       permission: json['permission'] as String?,
       entitlement: PetEntitlement.fromJson(
-        json['entitlement'] as Map<String, dynamic>?,
+        json['entitlement'] is Map
+            ? Map<String, dynamic>.from(json['entitlement'] as Map)
+            : null,
       ),
       heartrateDurationsSec: rawDurations == null || rawDurations.isEmpty
           ? const [60]
           : rawDurations.map((e) => (e as num).toInt()).toList(),
       weightKg: (json['weightKg'] as num?)?.toDouble(),
+      microchipNumber: _optionalString(json['microchipNumber']),
+      healthBookNumber: _optionalString(json['healthBookNumber']),
+      healthBookPdfUrl: resolveMediaUrl(_optionalString(json['healthBookPdfUrl'])),
+      healthBookPdfAttached: json['healthBookPdfAttached'] == true,
+      foodChainStatus: _optionalString(json['foodChainStatus']),
+      domicileLocation: _optionalString(json['domicileLocation']),
     );
+  }
+
+  static String? _optionalString(dynamic v) {
+    final s = (v as String?)?.trim();
+    if (s == null || s.isEmpty) return null;
+    return s;
   }
 }

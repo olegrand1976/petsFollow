@@ -3,9 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
+import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class PetFormScreen extends StatefulWidget {
@@ -19,11 +23,15 @@ class _PetFormScreenState extends State<PetFormScreen> {
   final name = TextEditingController();
   String selectedSpecies = 'dog';
   final breed = TextEditingController();
+  final microchip = TextEditingController();
+  final healthBookNumber = TextEditingController();
   String selectedPlan = 'triennial';
   bool autoRenew = true;
   bool loading = false;
+  bool _nameError = false;
   List<Map<String, dynamic>> plans = [];
   XFile? photoFile;
+  List<XFile> healthBookPages = [];
 
   @override
   void initState() {
@@ -35,6 +43,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
   void dispose() {
     name.dispose();
     breed.dispose();
+    microchip.dispose();
+    healthBookNumber.dispose();
     super.dispose();
   }
 
@@ -83,6 +93,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (file != null) setState(() => photoFile = file);
   }
 
+  Future<void> _pickHealthBookPages() async {
+    final picker = ImagePicker();
+    final files = await picker.pickMultiImage(
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
+    );
+    if (files.isEmpty) return;
+    setState(() {
+      healthBookPages = [...healthBookPages, ...files].take(10).toList();
+    });
+  }
+
   /// Monthly is subscription-only; annual/triennial allow one-time or auto-renew.
   bool get _subscriptionForced => selectedPlan == 'monthly';
 
@@ -105,21 +128,49 @@ class _PetFormScreenState extends State<PetFormScreen> {
     return l10n.planOneTime(label);
   }
 
-  Future<void> save() async {
-    setState(() => loading = true);
+  Future<void> save({bool payNow = false}) async {
+    final trimmed = name.text.trim();
+    if (loading) return;
+    if (trimmed.isEmpty) {
+      setState(() => _nameError = true);
+      return;
+    }
+    setState(() {
+      _nameError = false;
+      loading = true;
+    });
     try {
-      final renew = autoRenew || _subscriptionForced;
+      // Monthly is subscription-only (API rejects monthly/one_time).
+      final billingMode =
+          selectedPlan == 'monthly' || autoRenew ? 'subscription' : 'one_time';
       final res = await ApiClient.instance.createPet({
-        'name': name.text,
+        'name': trimmed,
         'species': selectedSpecies,
-        'breed': breed.text,
+        'breed': breed.text.trim(),
+        'microchipNumber': microchip.text.trim(),
+        'healthBookNumber': healthBookNumber.text.trim(),
         'plan': selectedPlan,
-        'billingMode': renew ? 'subscription' : 'one_time',
+        'billingMode': billingMode,
+        'skipCheckout': !payNow,
       });
       final checkoutUrl = res['checkoutUrl'] as String?;
-      final pet = res['pet'] as Map<String, dynamic>? ?? res;
-      final petId = pet['id'] as String?;
-      if (petId != null && photoFile != null) {
+      final rawPet = res['pet'];
+      final pet = rawPet is Map
+          ? Map<String, dynamic>.from(rawPet)
+          : res;
+      final petId = pet['id']?.toString();
+      if (petId == null || petId.isEmpty) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            key: const Key('pet_form_error'),
+            content: Text(l10n.errorGeneric('missing pet id')),
+          ),
+        );
+        return;
+      }
+      if (photoFile != null) {
         try {
           await ApiClient.instance.uploadPetPhoto(petId, photoFile!.path);
         } catch (_) {
@@ -131,37 +182,52 @@ class _PetFormScreenState extends State<PetFormScreen> {
           }
         }
       }
-      if (checkoutUrl != null) {
-        final opened = await openExternalUrl(checkoutUrl);
-        if (!opened && mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.errorCouldNotOpenLink)),
+      if (healthBookPages.isNotEmpty) {
+        try {
+          await ApiClient.instance.uploadPetHealthBook(
+            petId,
+            healthBookPages.map((f) => f.path).toList(),
           );
-        } else if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.paymentPending)),
-          );
+        } catch (_) {
+          if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.errorHealthBookUploadFailed)),
+            );
+          }
         }
       }
-      if (!mounted || petId == null) return;
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        final raw = e.toString();
-        final msg = raw.contains('family_pet_limit')
-            ? l10n.familyPetLimit
-            : raw.contains('family_requires_two_pets')
-                ? l10n.familyRequiresTwoPets
-                : raw.contains('vet_link_required')
-                    ? l10n.noVets
-                    : l10n.errorGeneric(raw);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
+      if (!mounted) return;
+      final hasCheckout = checkoutUrl != null && checkoutUrl.isNotEmpty;
+      late final PetCreateSnack snack;
+      if (payNow && hasCheckout) {
+        final opened = await openExternalUrl(checkoutUrl);
+        if (!mounted) return;
+        snack = opened
+            ? PetCreateSnack.paymentPending
+            : PetCreateSnack.couldNotOpenLink;
+      } else {
+        // skipCheckout, or payNow without URL — resume later via needsResumePayment.
+        snack = PetCreateSnack.savedPendingPayment;
       }
+      final practiceId = pet['practiceId']?.toString().trim() ?? '';
+      Navigator.pop(
+        context,
+        PetCreateResult(
+          promptLinkVet: practiceId.isEmpty,
+          snack: snack,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final msg = mapApiError(e, l10n);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          key: const Key('pet_form_error'),
+          content: Text(msg),
+        ),
+      );
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -170,6 +236,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final displayPlans = plans.isNotEmpty
         ? plans
         : [
@@ -180,162 +247,268 @@ class _PetFormScreenState extends State<PetFormScreen> {
     final initial =
         (name.text.isNotEmpty ? name.text : '?').substring(0, 1).toUpperCase();
 
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final ctaButtons = <Widget>[
+      Text(_summary(l10n), style: Theme.of(context).textTheme.bodyMedium),
+      const SizedBox(height: 12),
+      FilledButton(
+        key: const Key('pet_form_save'),
+        onPressed: loading ? null : () => save(payNow: false),
+        child: loading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(l10n.petFormSave),
+      ),
+      const SizedBox(height: 8),
+      OutlinedButton(
+        key: const Key('pet_form_continue_payment'),
+        onPressed: loading ? null : () => save(payNow: true),
+        child: Text(l10n.continueToPayment),
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newPet)),
-      body: SingleChildScrollView(
-          padding: scrollPaddingWithSystemBottom(context, all: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickPhoto,
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: AppColors.primary, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.18),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: photoFile != null
-                              ? Image.file(
-                                  File(photoFile!.path),
-                                  fit: BoxFit.cover,
-                                  width: 140,
-                                  height: 140,
-                                )
-                              : ColoredBox(
-                                  color: AppColors.surfaceElevated,
-                                  child: Center(
-                                    child: Text(initial,
-                                        style: const TextStyle(
-                                            fontSize: 36,
-                                            fontWeight: FontWeight.w600)),
-                                  ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: scrollPaddingWithSystemBottom(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: _pickPhoto,
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.primary, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.18),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: photoFile != null
+                                  ? Image.file(
+                                      File(photoFile!.path),
+                                      fit: BoxFit.cover,
+                                      width: 140,
+                                      height: 140,
+                                    )
+                                  : ColoredBox(
+                                      color: p.surfaceElevated,
+                                      child: Center(
+                                        child: Text(initial,
+                                            style: const TextStyle(
+                                                fontSize: 36,
+                                                fontWeight: FontWeight.w600)),
+                                      ),
+                                    ),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.photoFrameHint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: p.textMuted, fontSize: 12),
+                        ),
+                        TextButton.icon(
+                          onPressed: _pickPhoto,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: Text(photoFile == null
+                              ? l10n.addPhoto
+                              : l10n.changePhoto),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_name'),
+                    controller: name,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l10n.petName,
+                      errorText: _nameError ? l10n.petNameRequired : null,
+                    ),
+                    onChanged: (_) {
+                      setState(() {
+                        if (_nameError && name.text.trim().isNotEmpty) {
+                          _nameError = false;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedSpecies,
+                    decoration: InputDecoration(labelText: l10n.species),
+                    items: [
+                      for (final code in kPetSpeciesCodes)
+                        DropdownMenuItem(
+                          value: code,
+                          child: Text(speciesLabel(l10n, code)),
+                        ),
+                    ],
+                    onChanged: (v) =>
+                        setState(() => selectedSpecies = v ?? 'dog'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                      controller: breed,
+                      decoration: InputDecoration(labelText: l10n.breed)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_microchip'),
+                    controller: microchip,
+                    decoration: InputDecoration(
+                      labelText: l10n.petMicrochipOptional,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('pet_form_health_book_number'),
+                    controller: healthBookNumber,
+                    decoration: InputDecoration(
+                      labelText: l10n.petHealthBookNumberOptional,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('pet_form_health_book_pick'),
+                    onPressed: loading ? null : _pickHealthBookPages,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(
+                      healthBookPages.isEmpty
+                          ? l10n.petHealthBookAddPages
+                          : l10n.petHealthBookPagesCount(healthBookPages.length),
+                    ),
+                  ),
+                  if (healthBookPages.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(
-                      l10n.photoFrameHint,
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: AppColors.textMuted, fontSize: 12),
-                    ),
-                    TextButton.icon(
-                      onPressed: _pickPhoto,
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: Text(
-                          photoFile == null ? l10n.addPhoto : l10n.changePhoto),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (var i = 0; i < healthBookPages.length; i++)
+                          InputChip(
+                            label: Text('${i + 1}'),
+                            onDeleted: () => setState(() {
+                              healthBookPages = List.of(healthBookPages)
+                                ..removeAt(i);
+                            }),
+                          ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                  controller: name,
-                  decoration: InputDecoration(labelText: l10n.petName),
-                  onChanged: (_) => setState(() {})),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedSpecies,
-                decoration: InputDecoration(labelText: l10n.species),
-                items: [
-                  DropdownMenuItem(value: 'dog', child: Text(l10n.speciesDog)),
-                  DropdownMenuItem(value: 'cat', child: Text(l10n.speciesCat)),
-                  DropdownMenuItem(
-                      value: 'horse', child: Text(l10n.speciesHorse)),
-                  DropdownMenuItem(
-                      value: 'other', child: Text(l10n.speciesOther)),
+                  const SizedBox(height: 24),
+                  Text(l10n.choosePlan,
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  RadioGroup<String>(
+                    groupValue: selectedPlan,
+                    onChanged: (v) => setState(() {
+                      selectedPlan = v!;
+                      if (selectedPlan == 'monthly') {
+                        autoRenew = true;
+                      }
+                    }),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: displayPlans.map((plan) {
+                        final code = plan['code'] as String;
+                        final recommended = plan['recommended'] == true;
+                        return Card(
+                          color: selectedPlan == code
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                              : null,
+                          child: RadioListTile<String>(
+                            value: code,
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    plan['label'] as String? ?? code,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (recommended) ...[
+                                  const SizedBox(width: 8),
+                                  Chip(
+                                    label: Text(l10n.recommended,
+                                        style: const TextStyle(fontSize: 11)),
+                                    visualDensity: VisualDensity.compact,
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .secondaryContainer,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.autoRenewTitle),
+                    subtitle: Text(
+                      _subscriptionForced
+                          ? l10n.planMonthlySub
+                          : l10n.autoRenewSubtitle,
+                    ),
+                    value: autoRenew || _subscriptionForced,
+                    onChanged: _subscriptionForced
+                        ? null
+                        : (v) => setState(() => autoRenew = v),
+                  ),
+                  if (keyboardOpen) ...[
+                    const SizedBox(height: 24),
+                    ...ctaButtons,
+                  ],
                 ],
-                onChanged: (v) => setState(() => selectedSpecies = v ?? 'dog'),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                  controller: breed,
-                  decoration: InputDecoration(labelText: l10n.breed)),
-              const SizedBox(height: 24),
-              Text(l10n.choosePlan,
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              RadioGroup<String>(
-                groupValue: selectedPlan,
-                onChanged: (v) => setState(() {
-                  selectedPlan = v!;
-                  if (selectedPlan == 'monthly') {
-                    autoRenew = true;
-                  }
-                }),
+            ),
+          ),
+          // Sticky CTA — hidden while keyboard is open (shown in scroll instead).
+          if (!keyboardOpen)
+            Material(
+              elevation: 6,
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  12 + systemBottomInset(context),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: displayPlans.map((plan) {
-                    final code = plan['code'] as String;
-                    final recommended = plan['recommended'] == true;
-                    return Card(
-                      color: selectedPlan == code
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      child: RadioListTile<String>(
-                        value: code,
-                        title: Row(
-                          children: [
-                            Text(plan['label'] as String? ?? code),
-                            if (recommended) ...[
-                              const SizedBox(width: 8),
-                              Chip(
-                                label: Text(l10n.recommended,
-                                    style: const TextStyle(fontSize: 11)),
-                                visualDensity: VisualDensity.compact,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                  mainAxisSize: MainAxisSize.min,
+                  children: ctaButtons,
                 ),
               ),
-              SwitchListTile(
-                title: Text(l10n.autoRenewTitle),
-                subtitle: Text(
-                  _subscriptionForced
-                      ? l10n.planMonthlySub
-                      : l10n.autoRenewSubtitle,
-                ),
-                value: autoRenew || _subscriptionForced,
-                onChanged: _subscriptionForced
-                    ? null
-                    : (v) => setState(() => autoRenew = v),
-              ),
-              Text(_summary(l10n),
-                  style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: loading ? null : save,
-                child: loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l10n.continueToPayment),
-              ),
-            ],
-          ),
+            ),
+        ],
       ),
     );
   }

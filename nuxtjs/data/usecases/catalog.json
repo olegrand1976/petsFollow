@@ -1,0 +1,1255 @@
+{
+  "source": "useCase/",
+  "demoSession": [
+    "UC-VP-01",
+    "UC-X-01",
+    "UC-X-02",
+    "UC-X-05",
+    "UC-PL-01",
+    "UC-CL-02",
+    "UC-CO-02"
+  ],
+  "folders": [
+    {
+      "id": "vetpro",
+      "dir": "01-vetpro",
+      "label": "Cabinet (site web)",
+      "blurb": "Ce que voit le vétérinaire sur l’ordinateur du cabinet.",
+      "items": [
+        "UC-VP-01",
+        "UC-VP-02",
+        "UC-VP-03",
+        "UC-VP-04",
+        "UC-VP-05"
+      ]
+    },
+    {
+      "id": "client",
+      "dir": "02-client",
+      "label": "Propriétaire (app mobile)",
+      "blurb": "Ce que voit le client avec son téléphone.",
+      "items": [
+        "UC-CL-01",
+        "UC-CL-02",
+        "UC-CL-03"
+      ]
+    },
+    {
+      "id": "pro-light",
+      "dir": "03-pro-light",
+      "label": "Terrain (app mobile)",
+      "blurb": "Maréchal / véto en visite — application légère.",
+      "items": [
+        "UC-PL-01",
+        "UC-PL-02"
+      ]
+    },
+    {
+      "id": "commercial",
+      "dir": "04-commercial",
+      "label": "Commercial",
+      "blurb": "Prospects, inscriptions et commissions.",
+      "items": [
+        "UC-CO-01",
+        "UC-CO-02"
+      ]
+    },
+    {
+      "id": "commercial-manager",
+      "dir": "05-commercial-manager",
+      "label": "Responsable commercial",
+      "blurb": "Pilotage de l’équipe commerciale.",
+      "items": [
+        "UC-CM-01"
+      ]
+    },
+    {
+      "id": "admin",
+      "dir": "06-admin",
+      "label": "Administration",
+      "blurb": "Outils internes (équipe petsFollow).",
+      "items": [
+        "UC-AD-01",
+        "UC-AD-02"
+      ]
+    },
+    {
+      "id": "equipe-cabinet",
+      "dir": "07-equipe-cabinet",
+      "label": "Équipe du cabinet",
+      "blurb": "Collègue, assistante, secrétaire.",
+      "items": [
+        "UC-EQ-01",
+        "UC-EQ-02"
+      ]
+    },
+    {
+      "id": "interactions",
+      "dir": "10-interactions",
+      "label": "À deux (cabinet + app)",
+      "blurb": "Scénarios où deux personnes se parlent via l’outil.",
+      "items": [
+        "UC-X-01",
+        "UC-X-02",
+        "UC-X-03",
+        "UC-X-04",
+        "UC-X-05",
+        "UC-X-06",
+        "UC-X-07",
+        "UC-X-08",
+        "UC-X-09"
+      ]
+    }
+  ],
+  "cases": {
+    "UC-VP-01": {
+      "id": "UC-VP-01",
+      "folderId": "vetpro",
+      "slug": "UC-VP-01-cockpit-cabinet",
+      "title": "Cockpit cabinet VetPro",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Vérifier que le vétérinaire arrive dans son espace cabinet, voit le tableau de bord, ouvre un client et consulte le dossier d’un animal.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web : https://petsfollow.ll-it-sc.be",
+        "Navigateur desktop (Chrome ou Safari)"
+      ],
+      "steps": [
+        "Ouvrir le site staging → page de connexion.",
+        "Se connecter avec vet.demo@petsfollow.test / VetDemo123!.",
+        "Vérifier l’arrivée sur le tableau de bord (chiffres et aperçu du cabinet visibles).",
+        "Aller dans Clients → ouvrir un client (ex. client démo lié au cabinet).",
+        "Ouvrir un animal du client.",
+        "Parcourir rapidement : historique / relevés / care / infos générales."
+      ],
+      "expected": [
+        "Connexion sans erreur.",
+        "menu du site (barre latérale et en-tête) visible.",
+        "Fiche client et dossier animal lisibles, données seed présentes."
+      ],
+      "checklist": [
+        "Login → dashboard",
+        "Liste clients",
+        "Dossier animal"
+      ]
+    },
+    "UC-VP-02": {
+      "id": "UC-VP-02",
+      "folderId": "vetpro",
+      "slug": "UC-VP-02-onboarding",
+      "title": "Onboarding véto incomplet",
+      "duration": "~8 min",
+      "priority": "Important",
+      "surface": "Web VetPro",
+      "destructive": true,
+      "objective": "Vérifier qu’un vétérinaire au profil incomplet est forcé de compléter son profil avant d’accéder au cabinet.",
+      "actors": [
+        {
+          "role": "Véto onboarding",
+          "account": "vet.onboarding@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Si le profil est déjà complété sur cet environnement → N/A (ou demander un reset seed à l’équipe)."
+      ],
+      "steps": [
+        "Se connecter avec vet.onboarding@petsfollow.test.",
+        "Constater l’écran de complétion de profil (pas le tableau de bord cabinet).",
+        "Remplir les champs demandés (infos cabinet, au moins une durée de relevé cardiaque si proposé).",
+        "Valider / terminer.",
+        "Vérifier l’accès au tableau de bord."
+      ],
+      "expected": [
+        "Impossible d’accéder au tableau de bord tant que le profil est incomplet.",
+        "Après complétion : accès normal au cabinet."
+      ],
+      "checklist": [
+        "Redirect onboarding",
+        "Complétion → dashboard"
+      ]
+    },
+    "UC-VP-03": {
+      "id": "UC-VP-03",
+      "folderId": "vetpro",
+      "slug": "UC-VP-03-agenda-messagerie",
+      "title": "Agenda et messagerie (solo VetPro)",
+      "duration": "~8 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Vérifier côté cabinet seul que l’agenda charge et que la messagerie liste les conversations clients.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Pour le test bilatéral (message reçu côté client) : voir UC-X-01."
+      ],
+      "steps": [
+        "Se connecter en vet.demo.",
+        "Ouvrir Agenda / Calendrier.",
+        "Vérifier qu’au moins une visite seed est visible (ou que l’agenda charge sans erreur).",
+        "Ouvrir Messages.",
+        "Ouvrir un fil de discussion existant.",
+        "(Optionnel) Envoyer un message texte de test."
+      ],
+      "expected": [
+        "Agenda charge sans page blanche / erreur.",
+        "Liste des threads visible ; un thread s’ouvre avec historique."
+      ],
+      "checklist": [
+        "Agenda",
+        "Liste messages",
+        "Ouverture thread"
+      ]
+    },
+    "UC-VP-04": {
+      "id": "UC-VP-04",
+      "folderId": "vetpro",
+      "slug": "UC-VP-04-nouvelle-consultation",
+      "title": "Nouvelle consultation (CR → DAF / facture)",
+      "duration": "~12 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Depuis la liste clients, démarrer une consultation rapide : animal → compte-rendu → enchaînement DAF et/ou facture Billit.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging / local Web Pro.",
+        "Flags PHARMACY_ENABLED / Billit selon l’environnement (CTA masqués si off).",
+        "Client seed avec au moins un animal."
+      ],
+      "steps": [
+        "Se connecter en véto → Clients.",
+        "Sur une ligne client, cliquer Nouvelle Consultation.",
+        "Choisir l’animal (pré-sélectionné depuis Animaux ou la fiche animal, ou s’il n’y en a qu’un) → Démarrer.",
+        "Écran CR split :",
+        "(Optionnel) Panneau Traitements (DAF) : protocole 1 clic ou search CNK → AMM auto → enregistrer brouillon ; preview FEFO ; finaliser dans la modal (confirm ProModal) ou ouvrir le wizard pour édition avancée.",
+        "Choisir :",
+        "(Optionnel) Même CTA depuis la fiche client ou la fiche animal. Voir aussi UC-VP-05 pour le parcours stock/DAF détaillé."
+      ],
+      "expected": [
+        "Visite créée en confirmed sans friction agenda (session walk-in : n’occupe pas un créneau client ; hors congés cabinet ; source=care_pro en terrain).",
+        "Fermeture sans enregistrement CR → confirm Enregistrer / Annuler la consultation / Rester ; Annuler → visite annulée (pas d’orphelin). Fermeture pendant un enregistrement CR → attend la fin du PUT ; si le CR est déjà persisté (409 serveur), la visite est conservée.",
+        "Historique cabinet : /consultations (date décroissante, filtres, audio draft si disponible + durée d’enregistrement).",
+        "Veille / switch profil : autosave CR + reprise de la consultation pour le même utilisateur.",
+        "CR accessible immédiatement.",
+        "Deep-links DAF / Billit cohérents avec le contexte consultation (montant facture saisi manuellement ; visitId persisté sur le document). CTA libellé DAF (≠ module ordonnances /prescriptions).",
+        "Traitements CNK en consult → brouillon DAF visit_id ; finalize = FEFO + déduction stock (jamais silencieux à la clôture CR) ; leave prompt si traitements dirty.",
+        "E2E @p0 : 03b-consultation.spec.ts (Terminer · close sans save · CTA DAF/facture · traitements→preview FEFO→finalize).",
+        "E2E @p1 : 03e-visit-report-versions.spec.ts (split panes · discard · restore · escape)."
+      ],
+      "checklist": [
+        "CTA liste clients",
+        "Modal + CR",
+        "CTA DAF / facture"
+      ]
+    },
+    "UC-VP-05": {
+      "id": "UC-VP-05",
+      "folderId": "vetpro",
+      "slug": "UC-VP-05-pharmacie-stock-daf",
+      "title": "Pharmacie stock → DAF (consultation)",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Montrer le parcours one-sitting : CR → traitements (protocole 1 clic / CNK) → preview FEFO → finalize DAF → facture mock — sans quitter la modal consultation, avec stock démo prêt.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "PHARMACY_ENABLED / NUXT_PUBLIC_PHARMACY_ENABLED on.",
+        "Seed : CNK démo + lots SEED-* VetPlus + protocoles cliniques.",
+        "Module tag dev (nav pharmacie / DAF)."
+      ],
+      "steps": [
+        "Clients → Nouvelle Consultation → animal → Démarrer → enregistrer un CR.",
+        "Panneau Traitements (DAF) :",
+        "Enregistrer le brouillon → Preview FEFO (lots seed visibles).",
+        "Si rupture : mini-réception lot inline → re-preview (sans aller sur /stock).",
+        "Finaliser le DAF → confirm ProModal → stock déduit.",
+        "CTA Facturer (si Billit UI on) → /invoicing?dafId=&mode=fromDaf avec lignes + montant HT estimé si prix stock.",
+        "Fiche animal → bloc Dispenses DAF (lecture).",
+        "/daf?status=draft : badge âge si brouillon > 1 h ; /consultations : badge « Brouillon DAF >1 h »."
+      ],
+      "expected": [
+        "Finalize dans la modal (pas besoin du wizard sauf édition avancée).",
+        "Timeline client : événement non-PHI « Traitement cabinet ».",
+        "Pas de finalize silencieux à la clôture CR ; dirty traitements → leave prompt."
+      ],
+      "checklist": [
+        "Protocole / CNK + FEFO",
+        "Finalize + stock",
+        "Dispenses fiche animal"
+      ]
+    },
+    "UC-CL-01": {
+      "id": "UC-CL-01",
+      "folderId": "client",
+      "slug": "UC-CL-01-parcours-accueil",
+      "title": "Parcours accueil app Client",
+      "duration": "~8 min",
+      "priority": "Démo",
+      "surface": "Flutter Client",
+      "destructive": false,
+      "objective": "Vérifier la connexion propriétaire et la navigation des 5 onglets principaux.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "APK / build staging installé.",
+        "Compte seed disponible."
+      ],
+      "steps": [
+        "Ouvrir l’app → écran de connexion.",
+        "Se connecter avec client.demo / ClientDemo123!.",
+        "Vérifier la barre d’onglets : Accueil / Animaux / Care / Messages / Réglages (libellés selon langue).",
+        "Parcourir chaque onglet rapidement.",
+        "Ouvrir un animal dans Animaux."
+      ],
+      "expected": [
+        "application propriétaire (pas Pro Light).",
+        "Les 5 onglets accessibles ; animaux seed visibles."
+      ],
+      "checklist": [
+        "Login",
+        "5 onglets",
+        "Fiche animal"
+      ]
+    },
+    "UC-CL-02": {
+      "id": "UC-CL-02",
+      "folderId": "client",
+      "slug": "UC-CL-02-activation-paiement",
+      "title": "Activation animal + paiement",
+      "duration": "~12 min",
+      "priority": "Démo",
+      "surface": "Flutter Client",
+      "destructive": true,
+      "objective": "Créer un animal depuis un compte vide et activer un plan payant (mensuel / annuel / triennal).",
+      "actors": [
+        {
+          "role": "Client vide",
+          "account": "client.vide@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "App staging.",
+        "Sur staging, paiement Stripe test ou parcours mode test selon config — noter si le paiement échoue.",
+        "Si le compte a déjà un animal payant → N/A (ou reset seed).",
+        "Réservé à ce scénario : ne pas utiliser client.vide pour le lien cabinet."
+      ],
+      "steps": [
+        "Se connecter avec client.vide.",
+        "Créer un nouvel animal (nom, espèce, infos demandées).",
+        "Choisir un plan : 3,50 € / mois, 35 € / an ou 95 € / 3 ans (recommandé).",
+        "Aller jusqu’au paiement / activation.",
+        "Après succès : vérifier que l’animal est actif (accès Care, messages, relevés selon offre)."
+      ],
+      "expected": [
+        "Plans affichés correctement (pas d’addons Family/Care+/Horse vendus).",
+        "Après paiement : abonnement animal actif actif, fonctionnalités de suivi accessibles."
+      ],
+      "checklist": [
+        "Création animal",
+        "Affichage plans",
+        "Activation réussie"
+      ]
+    },
+    "UC-CL-03": {
+      "id": "UC-CL-03",
+      "folderId": "client",
+      "slug": "UC-CL-03-releve-cardiaque",
+      "title": "Relevé cardiaque (côté client)",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Flutter Client",
+      "destructive": false,
+      "objective": "Démarrer un relevé cardiaque sur un animal, saisir les taps, puis valider (avec commentaire optionnel).",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Animal avec suivi actif (seed client.demo).",
+        "Pour voir le résultat côté VetPro : enchaîner avec UC-X-02."
+      ],
+      "steps": [
+        "Se connecter en client.demo.",
+        "Ouvrir un animal → lancer un relevé cardiaque.",
+        "Effectuer les taps pendant le timer (15 / 30 / 60 s selon options).",
+        "Valider le relevé.",
+        "Ajouter un commentaire si proposé (ex. « repos »).",
+        "Vérifier que le relevé apparaît dans l’historique animal côté client."
+      ],
+      "expected": [
+        "Timer et taps fonctionnels.",
+        "Après validation : relevé enregistré côté client (BPM + date).",
+        "Un relevé non validé ne doit pas être considéré comme envoyé au véto."
+      ],
+      "checklist": [
+        "Démarrage FC",
+        "Validation",
+        "Historique client"
+      ]
+    },
+    "UC-PL-01": {
+      "id": "UC-PL-01",
+      "folderId": "pro-light",
+      "slug": "UC-PL-01-agenda-terrain",
+      "title": "Agenda terrain Pro Light",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Flutter Pro Light",
+      "destructive": false,
+      "objective": "Se connecter en care pro / VetLight, voir l’agenda du jour et marquer une visite comme faite.",
+      "actors": [
+        {
+          "role": "Farrier (ou vet_light)",
+          "account": "farrier.demo@petsfollow.test ou vetlight.demo@petsfollow.test",
+          "password": "CareProDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "App staging (même APK ; application terrain après login care_pro).",
+        "Seed avec animal partagé (ex. Spirit pour farrier) — voir aussi UC-X-05."
+      ],
+      "steps": [
+        "Se connecter avec farrier.demo (ou vetlight.demo).",
+        "Vérifier le shell Pro Light : AppBar logo petsFollow seul ; tabs Agenda · Clients · Animaux · Messages · Réglages (identique staff / care_pro).",
+        "Ouvrir Agenda → vue Aujourd’hui (ou équivalent).",
+        "Ouvrir une visite / créneau si présent.",
+        "Marquer Fait (ou action équivalente).",
+        "(Optionnel) Compte rendu : dictée (bandeau micro + Arrêter) ou fichier audio ; pas de bouton Améliorer IA ; Enregistrer / Finaliser.",
+        "Nouvelle Consultation (VetLight / farrier avec write_notes) : fiche animal → CTA → visite confirmée immédiate (source=care_pro, hors overlap agenda) → CR → après enregistrement : CTA Web Pro (DAF / facture) ou Terminer (finalise le brouillon CR non vide pour le client).",
+        "Onglet Messages → composer vers le client partagé → envoyer (voir aussi UC-X-01 étape care_pro)."
+      ],
+      "expected": [
+        "Application terrain distincte de l’application propriétaire.",
+        "Agenda utilisable ; action « Fait » prise en compte.",
+        "Messages et CR utilisables sans confusion de boutons.",
+        "Consultation terrain créable hors créneau préexistant (visite confirmed)."
+      ],
+      "checklist": [
+        "Login Pro Light",
+        "Agenda Aujourd’hui",
+        "Marquer Fait",
+        "Nouvelle Consultation + CR"
+      ]
+    },
+    "UC-PL-02": {
+      "id": "UC-PL-02",
+      "folderId": "pro-light",
+      "slug": "UC-PL-02-switch-profil",
+      "title": "Switch profil pro ↔ client",
+      "duration": "~8 min",
+      "priority": "Important",
+      "surface": "Flutter Pro Light / Client",
+      "destructive": false,
+      "objective": "Vérifier qu’un care pro dual (ex. farrier) peut basculer entre son profil professionnel et son profil client personnel.",
+      "actors": [
+        {
+          "role": "Farrier dual",
+          "account": "farrier.demo@petsfollow.test",
+          "password": "CareProDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Compte seed avec double profil (pro + client).",
+        "App staging."
+      ],
+      "steps": [
+        "Se connecter en farrier.demo → arriver en Pro Light.",
+        "Trouver l’action de changement de profil (réglages ou sélecteur).",
+        "Basculer vers le profil client.",
+        "Vérifier le application propriétaire (onglets client).",
+        "Revenir au profil pro."
+      ],
+      "expected": [
+        "Passage pro → client et retour sans se déconnecter complètement.",
+        "Interfaces distinctes selon le profil actif."
+      ],
+      "checklist": [
+        "Pro → Client",
+        "Client → Pro"
+      ]
+    },
+    "UC-CO-01": {
+      "id": "UC-CO-01",
+      "folderId": "commercial",
+      "slug": "UC-CO-01-prospects-crm",
+      "title": "Prospects CRM commercial",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Web Commercial",
+      "destructive": false,
+      "objective": "Parcourir le CRM prospects du commercial (Camille) : overview, pipeline, transitions de statut.",
+      "actors": [
+        {
+          "role": "Commercial",
+          "account": "commercial.demo@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Seed Camille : prospects Bruxelles + vet.demo assigné."
+      ],
+      "steps": [
+        "Se connecter avec commercial.demo.",
+        "Arriver sur l’espace Commercial (overview / portfolio).",
+        "Ouvrir la liste des prospects.",
+        "Ouvrir un prospect → noter les champs (contact, RDV, statut).",
+        "Faire une transition simple si possible (ex. contact → RDV) sans écraser des données critiques si environnement partagé — sinon lire seulement et noter N/A sur l’écriture.",
+        "Vérifier qu’un prospect déjà « owned » par un collègue affiche un message adapté (si cas seed)."
+      ],
+      "expected": [
+        "Overview et liste prospects chargent.",
+        "Fiche prospect lisible ; transitions cohérentes si testées."
+      ],
+      "checklist": [
+        "Overview",
+        "Liste prospects",
+        "Fiche / transition"
+      ]
+    },
+    "UC-CO-02": {
+      "id": "UC-CO-02",
+      "folderId": "commercial",
+      "slug": "UC-CO-02-encode-activation",
+      "title": "Encode véto/client + activation",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Web Commercial",
+      "destructive": true,
+      "objective": "Vérifier le parcours commercial : encoder un vétérinaire ou un client lié, puis constater le chemin vers activation payante / commission.",
+      "actors": [
+        {
+          "role": "Commercial",
+          "account": "commercial.demo@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Utiliser un email jetable unique pour l’encode (ex. demo.uc.co02+1430@example.com) — ne pas toucher aux comptes *.petsfollow.test.",
+        "Sur staging partagé : préférer encoder un client de test plutôt qu’un véto déjà assigné."
+      ],
+      "steps": [
+        "Se connecter en commercial.demo.",
+        "Aller dans Vétérinaires (encode) ou encode client lié au cabinet.",
+        "Créer un compte de test avec email unique + consentement si demandé.",
+        "Si encode véto : vérifier l’assignation au commercial.",
+        "Si encode client : rattacher / créer un animal et pousser jusqu’à activation payante (ou mode test selon env.).",
+        "Ouvrir Commissions et vérifier qu’une ligne apparaît (ou le chemin pour y arriver est clair)."
+      ],
+      "expected": [
+        "Encode réussi (ou message clair si déjà assigné ailleurs — 409 métier compréhensible).",
+        "Chemin activation → commission compréhensible pour une démo."
+      ],
+      "checklist": [
+        "Encode",
+        "Activation / abonnement animal actif",
+        "Commission visible"
+      ]
+    },
+    "UC-CM-01": {
+      "id": "UC-CM-01",
+      "folderId": "commercial-manager",
+      "slug": "UC-CM-01-dashboard-equipe",
+      "title": "Dashboard responsable commercial",
+      "duration": "~10 min",
+      "priority": "Important",
+      "surface": "Web Commercial manager",
+      "destructive": false,
+      "objective": "Piloter l’équipe commerciale : indicateurs, suivi, prospects d’équipe, production personnelle.",
+      "actors": [
+        {
+          "role": "Manager",
+          "account": "commercial.manager@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Seed : manager Bérénice + reps Camille / Alex."
+      ],
+      "steps": [
+        "Se connecter avec commercial.manager.",
+        "Ouvrir le tableau de bord équipe.",
+        "Vérifier les indicateurs d’équipe.",
+        "Ouvrir le suivi (RDV / relances) si disponible.",
+        "Consulter les prospects équipe.",
+        "Vérifier l’accès à la production personnelle (CRM / encode du manager)."
+      ],
+      "expected": [
+        "Dashboard équipe charge.",
+        "Distinction claire équipe vs portefeuille perso.",
+        "Reps Camille / Alex visibles dans le pilotage."
+      ],
+      "checklist": [
+        "indicateurs équipe",
+        "Suivi / prospects équipe",
+        "Production perso"
+      ]
+    },
+    "UC-AD-01": {
+      "id": "UC-AD-01",
+      "folderId": "admin",
+      "slug": "UC-AD-01-ops-support",
+      "title": "Ops admin & support",
+      "duration": "~12 min",
+      "priority": "Secondaire",
+      "surface": "Web Admin",
+      "destructive": false,
+      "objective": "Contrôle rapide ops : métriques, utilisateurs, commercials, inbox support.",
+      "actors": [
+        {
+          "role": "Admin",
+          "account": "admin.demo@petsfollow.test",
+          "password": "AdminDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Usage interne (pas nécessairement en démo client final).",
+        "Compte seed multi-profils (admin + client + vet VetPlus) — bascule profil possible dans la topbar."
+      ],
+      "steps": [
+        "Se connecter avec admin.demo.",
+        "Vérifier le tableau de bord admin (métriques).",
+        "Ouvrir Utilisateurs : filtres / rôles visibles.",
+        "Ouvrir Commerciaux : liste + assignations lisibles.",
+        "Ouvrir Support : liste des tickets ; ouvrir un ticket si présent.",
+        "(Optionnel) Paiements / commissions — lecture seule.",
+        "(Optionnel) Menu profil → basculer vers vet (VetPlus) puis revenir admin."
+      ],
+      "expected": [
+        "Accès admin sans erreur.",
+        "Pages utilisateurs / commerciaux / support utilisables.",
+        "Un compte véto ne doit pas accéder à l’espace admin (test optionnel : se déconnecter → vet.demo → tenter d’ouvrir l’URL admin)."
+      ],
+      "checklist": [
+        "Dashboard admin",
+        "Users",
+        "Commercials",
+        "Support"
+      ]
+    },
+    "UC-AD-02": {
+      "id": "UC-AD-02",
+      "folderId": "admin",
+      "slug": "UC-AD-02-dev-support-it",
+      "title": "DEV support IT (ops léger)",
+      "duration": "~10 min",
+      "priority": "Secondaire",
+      "surface": "",
+      "destructive": false,
+      "objective": "Montrer le rôle DEV support IT : accès ops utile (users, support, flags) sans billing, sales force, brand ni AI.",
+      "actors": [
+        {
+          "role": "DEV",
+          "account": "dev.demo@petsfollow.test",
+          "password": "AdminDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web (ou seed local + migration 000114).",
+        "Compte seed multi-profils (dev + client + vet VetPlus) — bascule profil possible."
+      ],
+      "steps": [
+        "Se connecter avec dev.demo.",
+        "Vérifier le dashboard admin (vue allégée / pas de KPI billing).",
+        "Ouvrir Utilisateurs : liste lisible.",
+        "Ouvrir Support : liste tickets (+ recherche si présente) ; ouvrir un ticket.",
+        "Ouvrir Runtime flags : lecture des flags.",
+        "Vérifier la nav : pas d’entrées Commercials / Paiements / Imports / Brand / AI.",
+        "(Optionnel) Tenter /admin/payments ou /admin/commercials via URL → refus / redirect.",
+        "(Optionnel) Bascule profil vers client ou véto → shell adapté, retour profil dev OK."
+      ],
+      "expected": [
+        "Accès support IT sans erreur.",
+        "Billing / sales / brand / AI inaccessibles (nav absente + API 403).",
+        "Un admin garde la surface complète (UC-AD-01)."
+      ],
+      "checklist": [
+        "Login DEV",
+        "Users + Support + Flags",
+        "Nav limitée",
+        "Billing/sales refusés"
+      ]
+    },
+    "UC-EQ-01": {
+      "id": "UC-EQ-01",
+      "folderId": "equipe-cabinet",
+      "slug": "UC-EQ-01-roles-team",
+      "title": "Rôles équipe cabinet",
+      "duration": "~12 min",
+      "priority": "Important",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Vérifier la page équipe et que collègue / assistante / secrétaire se connectent avec des droits adaptés.",
+      "actors": [
+        {
+          "role": "Véto référence",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Collègue",
+          "account": "vet.colleague@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Assistante",
+          "account": "vet.assist@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Secrétaire",
+          "account": "secretary.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Seed équipe VetPlus."
+      ],
+      "steps": [
+        "Se connecter en vet.demo → ouvrir la page Équipe.",
+        "Vérifier la liste des membres (collègue, assistante, secrétaire).",
+        "Vérifier que les droits affichent des libellés clairs (ex. « Voir les clients ») avec info-bulle au survol — pas de codes techniques.",
+        "Se déconnecter → se connecter en vet.colleague : accès cabinet cohérent.",
+        "Se connecter en vet.assist : noter ce qui est accessible / masqué (droits réduits).",
+        "Se connecter en secretary.demo : idem, focus secrétariat (agenda / clients selon l’écran)."
+      ],
+      "expected": [
+        "Page Équipe lisible côté véto référence (droits compréhensibles).",
+        "Chaque rôle se connecte ; l’espace Admin reste inaccessible.",
+        "Différences de droits perceptibles (même sommaires) entre assistante / secrétaire / collègue."
+      ],
+      "checklist": [
+        "Page équipe (vet.demo)",
+        "Login collègue",
+        "Login assistante",
+        "Login secrétaire"
+      ]
+    },
+    "UC-EQ-02": {
+      "id": "UC-EQ-02",
+      "folderId": "equipe-cabinet",
+      "slug": "UC-EQ-02-switch-poste",
+      "title": "Switch poste partagé (veille)",
+      "duration": "~10 min",
+      "priority": "Important",
+      "surface": "Web VetPro",
+      "destructive": false,
+      "objective": "Sur un PC partagé au cabinet, basculer rapidement d’un compte équipe à un autre avec mot de passe, et vérifier que l’inactivité met le poste en veille.",
+      "actors": [
+        {
+          "role": "Véto référence",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Secrétaire",
+          "account": "secretary.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Seed équipe VetPlus."
+      ],
+      "steps": [
+        "Se connecter en vet.demo → ouvrir Clients (ou une fiche animal).",
+        "Dans le header, repérer les avatars de l’équipe.",
+        "Cliquer l’avatar de la secrétaire → saisir son mot de passe → valider.",
+        "Vérifier que l’on arrive sur le dernier écran connu de ce compte (ou l’accueil si première fois).",
+        "Naviguer vers Agenda en secrétaire.",
+        "Rebasculer vers vet.demo (mot de passe) → vérifier le retour vers l’écran précédent du véto si possible.",
+        "Laisser le poste inactif 2 minutes (ou demander un lock forcé à l’équipe tech en démo) → écran de veille.",
+        "Déverrouiller avec un compte équipe + mot de passe."
+      ],
+      "expected": [
+        "Switch toujours protégé par mot de passe (jamais de bascule silencieuse).",
+        "Dès l’ouverture du switch, la session précédente est invalidée (comme en veille) : un autre onglet ne garde pas l’accès.",
+        "« Annuler » sur le switch ne restaure pas le compte précédent sans mot de passe → écran de veille (même si on annule tout de suite).",
+        "Veille après inactivité uniquement si l’équipe a au moins 2 comptes : plus d’accès aux données sans re-saisie du mot de passe.",
+        "Cabinet solo (1 compte) : pas de veille applicative ni d’avatars switch dans le header.",
+        "Chaque utilisateur retrouve son dernier écran."
+      ],
+      "checklist": [
+        "Avatars équipe dans le header (≥2)",
+        "Switch avec mot de passe",
+        "Annuler switch → veille (re-auth)",
+        "Restauration dernier écran",
+        "Veille 2 min + déverrouillage (équipe ≥2)",
+        "Solo : pas de veille idle"
+      ]
+    },
+    "UC-X-01": {
+      "id": "UC-X-01",
+      "folderId": "interactions",
+      "slug": "UC-X-01-messagerie-vet-client",
+      "title": "Messagerie véto ↔ client",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Web VetPro + Flutter Client + Flutter Pro Light",
+      "destructive": false,
+      "objective": "Envoyer un message depuis le cabinet (Web ou app Pro Light) et le retrouver dans l’app propriétaire (et inversement si temps). Couvrir aussi le fil care_pro ↔ client (thread distinct du cabinet).",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Care pro (vet_light)",
+          "account": "vetlight.demo@petsfollow.test",
+          "password": "CareProDemo123!"
+        },
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web + app mobile staging.",
+        "Client lié au cabinet VetPlus (seed) ; Spirit partagé write_notes avec vetlight."
+      ],
+      "steps": [
+        "Web — login vet.demo → Messages → ouvrir le thread avec client.demo (ou le client seed correspondant).",
+        "Envoyer un message texte unique (ex. UC-X-01 web 14:32).",
+        "App client — login client.demo → onglet Messages → ouvrir le même fil → vérifier le message.",
+        "(Optionnel) Répondre depuis l’app client → rafraîchir le thread côté Web.",
+        "App Pro Light staff — login vet.demo → onglet Messages → composer/texte utilisable → envoyer un second message (ex. UC-X-01 mobile 14:35) → vérifier côté client.",
+        "App Pro Light care_pro — login vetlight.demo → onglet Messages → composer vers client.demo / Spirit → envoyer (ex. UC-X-01 care 14:40) → vérifier côté client (fil distinct du cabinet) → (optionnel) réponse client."
+      ],
+      "expected": [
+        "Message visible Web ↔ Client ↔ Pro Light staff (après refresh si pas de push).",
+        "Message care_pro ↔ Client sur un autre thread (pas mélangé au fil VetPlus).",
+        "Push FCM : bonus si reçu ; sinon N/A (ne pas bloquer le test)."
+      ],
+      "checklist": [
+        "Envoi Web → Client",
+        "Réponse Client → Web",
+        "Envoi Pro Light staff → Client",
+        "Envoi care_pro → Client",
+        "Push (si applicable)"
+      ]
+    },
+    "UC-X-02": {
+      "id": "UC-X-02",
+      "folderId": "interactions",
+      "slug": "UC-X-02-fc-client-vers-pro",
+      "title": "Relevé cardiaque client → VetPro",
+      "duration": "~12 min",
+      "priority": "Démo",
+      "surface": "Flutter Client → Web VetPro",
+      "destructive": false,
+      "objective": "Valider un relevé côté propriétaire et le voir apparaître dans le dossier animal côté cabinet (BPM + commentaire).",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Animal seed actif côté client.demo / VetPlus.",
+        "Enchaînement logique après UC-CL-03."
+      ],
+      "steps": [
+        "App — login client.demo → animal → relevé cardiaque → taps → valider + commentaire (ex. UC-X-02 repos).",
+        "Noter l’heure / BPM approximatif.",
+        "Web — login vet.demo → Clients → même animal.",
+        "Vérifier le relevé dans le tableau / chart / historique.",
+        "Vérifier le commentaire."
+      ],
+      "expected": [
+        "Relevé validé visible côté Pro avec BPM et date.",
+        "Commentaire visible.",
+        "Un relevé abandonné (non validé) ne doit pas apparaître côté véto."
+      ],
+      "checklist": [
+        "Validate client",
+        "Visible Pro + BPM",
+        "Commentaire Pro"
+      ]
+    },
+    "UC-X-03": {
+      "id": "UC-X-03",
+      "folderId": "interactions",
+      "slug": "UC-X-03-rdv-bout-en-bout",
+      "title": "RDV bout-en-bout",
+      "duration": "~15 min",
+      "priority": "Démo",
+      "surface": "Flutter Client + Web VetPro",
+      "destructive": false,
+      "objective": "Demander ou proposer un rendez-vous et le confirmer jusqu’à cohérence agenda des deux côtés.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Booking client activé côté cabinet (sinon : véto propose le RDV depuis la fiche pet).",
+        "Staging Web + app."
+      ],
+      "steps": [
+        "App client.demo → animal → demander / réserver une visite.",
+        "Web vet.demo → Agenda → trouver la demande → confirmer.",
+        "App : vérifier le statut confirmé (et push si dispo).",
+        "Web → fiche pet → proposer un RDV.",
+        "App : vérifier la visite proposée / confirmée."
+      ],
+      "expected": [
+        "RDV visible agenda Pro et côté client.",
+        "Statuts cohérents (demandé / confirmé / annulé si testé)."
+      ],
+      "checklist": [
+        "Création / demande",
+        "Confirmation",
+        "Visibilité bilatérale"
+      ]
+    },
+    "UC-X-04": {
+      "id": "UC-X-04",
+      "folderId": "interactions",
+      "slug": "UC-X-04-lien-cabinet",
+      "title": "Lien cabinet (invite / demande de rattachement)",
+      "duration": "~12 min",
+      "priority": "Important",
+      "surface": "Web VetPro + Flutter Client",
+      "destructive": false,
+      "objective": "Rattacher un propriétaire à un cabinet via invitation ou demande de lien, puis accepter côté véto.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test (ou vet.parc)",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Client",
+          "account": "Email jetable (inscription app ou invite) — pas client.vide",
+          "password": "selon création"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web + app.",
+        "Ne pas utiliser client.vide (réservé à UC-CL-02).",
+        "Créer un client de test avec un email unique, ou partir d’un compte non encore lié au cabinet cible.",
+        "Lien / QR d’invitation selon l’écran disponible."
+      ],
+      "steps": [
+        "Web — depuis une fiche client ou la liste Clients : envoyer une invitation app / lien cabinet (vers l’email jetable).",
+        "App — côté client : suivre le flux d’invitation ou initier une demande de rattachement vers le cabinet.",
+        "Web — ouvrir les invitations / demandes en attente → accepter.",
+        "Vérifier que le client apparaît bien lié et que la messagerie / animaux sont cohérents."
+      ],
+      "expected": [
+        "Flux invite ou demande aboutit à un rattachement.",
+        "Refus possible et statut mis à jour (si testé)."
+      ],
+      "checklist": [
+        "Invite / demande",
+        "Acceptation véto",
+        "Client lié visible"
+      ]
+    },
+    "UC-X-05": {
+      "id": "UC-X-05",
+      "folderId": "interactions",
+      "slug": "UC-X-05-partage-care-pro",
+      "title": "Partage animal → care pro (Pro Light)",
+      "duration": "~12 min",
+      "priority": "Démo",
+      "surface": "Web VetPro → Flutter Pro Light",
+      "destructive": false,
+      "objective": "Partager un animal depuis le cabinet avec un care pro ; vérifier la visibilité et les notes côté Pro Light.",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Farrier",
+          "account": "farrier.demo@petsfollow.test",
+          "password": "CareProDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Seed : Spirit souvent déjà partagé avec farrier — vérifier ou créer un share.",
+        "App staging + Web."
+      ],
+      "steps": [
+        "Web — login vet.demo → dossier animal (ex. Spirit, chez client.demo) → Partager.",
+        "Sélectionner le care pro maréchal (farrier) avec le droit d’écrire des notes si proposé.",
+        "App — login farrier.demo → Clients / Animaux → ouvrir l’animal partagé.",
+        "Vérifier la fiche (lecture).",
+        "(Optionnel) Ajouter une note terrain."
+      ],
+      "expected": [
+        "Animal visible en Pro Light après partage.",
+        "Notes possibles si le droit d’écriture a été accordé ; lecture seule sinon."
+      ],
+      "checklist": [
+        "Share depuis Pro",
+        "Visible Pro Light",
+        "Note (si ACL)"
+      ]
+    },
+    "UC-X-06": {
+      "id": "UC-X-06",
+      "folderId": "interactions",
+      "slug": "UC-X-06-care-continuity",
+      "title": "Continuité Care (rappel Pro ↔ client)",
+      "duration": "~12 min",
+      "priority": "Important",
+      "surface": "Web VetPro + Flutter Client",
+      "destructive": false,
+      "objective": "Créer un rappel Care côté cabinet et le voir / le cocher côté propriétaire ; synchroniser l’état (dont en retard).",
+      "actors": [
+        {
+          "role": "Véto",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Animal seed avec Care activé (client.demo).",
+        "Staging Web + app."
+      ],
+      "steps": [
+        "Web — fiche animal → créer un rappel Care (libellé unique, échéance proche).",
+        "App — login client.demo → onglet Care → trouver le rappel.",
+        "Marquer le rappel comme fait / done côté client.",
+        "Web — rafraîchir : statut à jour ; vérifier le signal en retard dashboard si un rappel est en retard (seed ou test volontaire)."
+      ],
+      "expected": [
+        "Rappel créé Pro visible onglet Care client.",
+        "Done client reflété côté Pro.",
+        "Overdue signalé sur le dashboard si applicable."
+      ],
+      "checklist": [
+        "Création Pro",
+        "Visible onglet Care",
+        "Sync done / en retard"
+      ]
+    },
+    "UC-X-07": {
+      "id": "UC-X-07",
+      "folderId": "interactions",
+      "slug": "UC-X-07-funnel-commercial-complet",
+      "title": "Funnel commercial complet",
+      "duration": "~20 min",
+      "priority": "Démo",
+      "surface": "Web Commercial (+ Client / VetPro si activation réelle)",
+      "destructive": true,
+      "objective": "Enchaîner le parcours commercial de bout en bout : prospect → encode → client / animal payant → commission.",
+      "actors": [
+        {
+          "role": "Commercial",
+          "account": "commercial.demo@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Staging Web.",
+        "Emails jetables pour l’encode (ne pas écraser les comptes *.petsfollow.test).",
+        "Complète / approfondit UC-CO-01 + UC-CO-02."
+      ],
+      "steps": [
+        "Login commercial.demo → aperçu commercial.",
+        "Ouvrir / mettre à jour un prospect (contact → RDV → résultat) sur une fiche de test.",
+        "Encoder un véto de test ou un client lié à un cabinet déjà assigné (Camille → VetPlus).",
+        "Pousser l’activation d’un animal payant (paiement test / mode test).",
+        "Ouvrir Commissions : vérifier l’apparition d’une ligne / montant cohérent.",
+        "(Optionnel) Se connecter côté VetPro du cabinet pour montrer le client activé."
+      ],
+      "expected": [
+        "Chaîne commerciale compréhensible pour une démo terrain.",
+        "Commission liée à l’activation.",
+        "Messages d’erreur clairs si cabinet déjà assigné à un autre commercial."
+      ],
+      "checklist": [
+        "Prospect CRM",
+        "Encode",
+        "Activation",
+        "Commission"
+      ]
+    },
+    "UC-X-08": {
+      "id": "UC-X-08",
+      "folderId": "interactions",
+      "slug": "UC-X-08-envoi-dossier-pro",
+      "title": "Client envoie le dossier animal à un pro (lien 24 h)",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "Flutter Client → e-mail → page Web publique /dossier/{token}",
+      "destructive": false,
+      "objective": "Montrer qu’un propriétaire peut envoyer le dossier complet d’un animal (PDF + pièces + carnet + timeline/visites) à un professionnel hors plateforme, via un lien magique valable 24 h, avec message marketing petsFollow et téléphone du commercial.",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Destinataire",
+          "account": "boîte MailHog / e-mail test",
+          "password": "—"
+        },
+        {
+          "role": "Commercial (contexte)",
+          "account": "commercial.demo@petsfollow.test (Camille, rattachée via vet.demo)",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Seed + app client + API + SMTP (MailHog local ou staging).",
+        "Animal actif chez client.demo (ex. Bella / Rex).",
+        "Commercial avec téléphone profil (seed Camille) — sinon gate Pro à la connexion."
+      ],
+      "steps": [
+        "App client — login client.demo → ouvrir la fiche d’un animal actif.",
+        "Appuyer sur Envoyer vers un pro.",
+        "Lire l’avertissement « données de santé », saisir l’e-mail du professionnel destinataire, cocher le consentement (le bouton d’envoi reste grisé sans la case) → confirmer.",
+        "Ouvrir l’e-mail reçu : vérifier le ton marketing, le CTA inscription, le téléphone commercial, le lien 24 h.",
+        "Ouvrir le lien → page /dossier/... → Télécharger le dossier.",
+        "Vérifier le ZIP : dossier.pdf (identité, mesures, visites avec pro consulté, liens petsFollow, téléphone commercial) + documents / carnet si présents.",
+        "(Optionnel) Attendre / forcer l’expiration → page « lien expiré »."
+      ],
+      "expected": [
+        "Snackbar succès côté client.",
+        "E-mail branding petsFollow + CTA pro + contact commercial.",
+        "Téléchargement ZIP avant expiry ; refus après 24 h.",
+        "Messagerie non incluse dans le pack."
+      ],
+      "checklist": [
+        "CTA fiche animal",
+        "Avertissement PHI + consentement obligatoire",
+        "E-mail reçu",
+        "Téléphone commercial visible (mail + PDF)",
+        "ZIP + dossier.pdf",
+        "Visites avec pro consulté",
+        "Expiry 24 h"
+      ]
+    },
+    "UC-X-09": {
+      "id": "UC-X-09",
+      "folderId": "interactions",
+      "slug": "UC-X-09-consultation-partage-pdf",
+      "title": "Client visualise / partage une consultation (PDF 24 h)",
+      "duration": "~10 min",
+      "priority": "Démo",
+      "surface": "",
+      "destructive": false,
+      "objective": "Montrer qu’un propriétaire peut ouvrir le compte-rendu finalisé d’une visite dans l’app, puis l’envoyer à un vétérinaire hors plateforme via un lien magique 24 h pour télécharger un PDF brandé petsFollow (promo + contact commercial).",
+      "actors": [
+        {
+          "role": "Client",
+          "account": "client.demo@petsfollow.test",
+          "password": "ClientDemo123!"
+        },
+        {
+          "role": "Véto (auteur CR)",
+          "account": "vet.demo@petsfollow.test",
+          "password": "VetDemo123!"
+        },
+        {
+          "role": "Destinataire",
+          "account": "boîte MailHog / e-mail test",
+          "password": "—"
+        },
+        {
+          "role": "Commercial (contexte)",
+          "account": "commercial.demo@petsfollow.test",
+          "password": "CommercialDemo123!"
+        }
+      ],
+      "prerequisites": [
+        "Seed + app client + API + SMTP (MailHog local ou staging).",
+        "Au moins une visite avec CR finalisé pour un animal actif de client.demo (sinon créer une consultation Pro / Pro Light puis Enregistrer + Terminer — le mark-done finalise le brouillon non vide ; ou bouton Finaliser explicite).",
+        "Distinct de UC-X-08 (dossier complet ZIP)."
+      ],
+      "steps": [
+        "App client — login client.demo → fiche animal → entrée menu Consultations (ou Historique des visites).",
+        "Bouton Disponible (cliquable) si CR finalisé, ou En attente (désactivé) si brouillon — sur la section Consultations et sur la card Visite dans Historique (même CTA).",
+        "Vérifier l’affichage : méta visite + section(s) CR (tous les auteurs finalisés).",
+        "Appuyer sur Envoyer à un vétérinaire → avertissement PHI + e-mail + consentement obligatoire → confirmer.",
+        "Ouvrir l’e-mail : marketing petsFollow, CTA inscription, téléphone commercial, lien 24 h.",
+        "Ouvrir /consultation/... → Télécharger le PDF → vérifier en-tête petsFollow + corps CR + bandeau commercial.",
+        "(Optionnel) Forcer l’expiration → page « lien expiré »."
+      ],
+      "expected": [
+        "Snackbar succès côté client.",
+        "Brouillons non lisibles / non partageables ; signal En attente seulement (pas de contenu).",
+        "PDF téléchargeable avant expiry ; 410 après 24 h."
+      ],
+      "checklist": [
+        "CTA disponible (final) cliquable",
+        "CTA en attente (draft) désactivé",
+        "Lecture CR multi-auteurs",
+        "Consentement PHI",
+        "E-mail + tél. commercial",
+        "PDF brandé",
+        "Expiry 24 h"
+      ]
+    }
+  }
+}

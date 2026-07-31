@@ -1,7 +1,26 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { loginAsVet } from '../helpers/auth'
 
 const API = process.env.PETSFOLLOW_API_URL || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8291'
+
+/** Invitation / overlay ProModal can intercept the CTA click on Cloud Run. */
+async function dismissProModals(page: Page) {
+  await page.getByTestId('pro-modal').first()
+    .waitFor({ state: 'visible', timeout: 1500 })
+    .catch(() => undefined)
+  for (let i = 0; i < 3; i++) {
+    const inviteOnly = page.getByTestId('pro-modal')
+    if ((await inviteOnly.count()) === 0) return
+    const close = page.getByTestId('pro-modal-close')
+    if ((await close.count()) > 0) {
+      await close.first().click({ force: true })
+    }
+    else {
+      await page.keyboard.press('Escape')
+    }
+    await expect(inviteOnly).toHaveCount(0, { timeout: 5000 }).catch(() => undefined)
+  }
+}
 
 async function apiLogin(email: string, password: string): Promise<string> {
   const res = await fetch(`${API}/api/v1/auth/login`, {
@@ -63,22 +82,164 @@ async function demoClientAndPet(): Promise<{ clientId: string; petId: string }> 
   return { clientId: client.userId, petId: pet.id }
 }
 
-test('pet detail — chart filtres, shares, commentaire HR', async ({ page }) => {
+test('pet detail — CR IA ouvert depuis Soins & RDV', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(90000)
+  const { clientId, petId } = await demoClientAndPet()
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  // Unique slot: +3h + jitter — avoids slot_taken 409 on Playwright retry / parallel runs.
+  const when = new Date(
+    Date.now() + 3 * 60 * 60 * 1000 + Math.floor(Math.random() * 50) * 60_000,
+  ).toISOString()
+  const create = await fetch(`${API}/api/v1/pets/${petId}/visits`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${vetTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      notes: `e2e cr ${Date.now()}`,
+      confirmDirect: true,
+      scheduledAt: when,
+    }),
+  })
+  // 409 slot_taken: a prior attempt (or seed) already holds a nearby slot — still open CR.
+  if (!create.ok && create.status !== 409) {
+    throw new Error(`create visit ${create.status}`)
+  }
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=care`)
+  await expect(page.getByTestId('pet-tab-care')).toBeVisible({ timeout: 15000 })
+  const openReport = page.locator('[data-testid^="pet-visit-report-open"]').first()
+  await expect(openReport).toBeVisible({ timeout: 30000 })
+  await openReport.click()
+  await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('visit-report-body')).toBeVisible()
+  await expect(page.getByTestId('visit-report-improve')).toBeVisible()
+  await expect(page.getByTestId('visit-report-audio')).toBeAttached()
+})
+
+test('pet detail — CR visualisable depuis l’historique', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(90000)
+  const { clientId, petId } = await demoClientAndPet()
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  const probe = `e2e history cr ${Date.now()}`
+  const headers = {
+    Authorization: `Bearer ${vetTok}`,
+    'Content-Type': 'application/json',
+  }
+
+  let visitId = ''
+  for (let attempt = 0; attempt < 4 && !visitId; attempt++) {
+    const when = new Date(
+      Date.now() + (5 + attempt) * 60 * 60 * 1000 + Math.floor(Math.random() * 50) * 60_000,
+    ).toISOString()
+    const create = await fetch(`${API}/api/v1/pets/${petId}/visits`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        notes: '',
+        confirmDirect: true,
+        scheduledAt: when,
+      }),
+    })
+    if (create.ok) {
+      visitId = (await create.json()).data.id as string
+      break
+    }
+    // 409 slot_taken: retry with another slot (parallel / Playwright retry).
+    if (create.status !== 409) {
+      throw new Error(`create visit ${create.status}`)
+    }
+  }
+  if (!visitId) {
+    throw new Error('create visit: all slot retries failed (409)')
+  }
+
+  const putReport = await fetch(`${API}/api/v1/visits/${visitId}/report`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ bodyText: probe }),
+  })
+  if (!putReport.ok) {
+    throw new Error(`put report ${putReport.status}`)
+  }
+  const done = await fetch(`${API}/api/v1/visits/${visitId}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status: 'done' }),
+  })
+  if (!done.ok) {
+    throw new Error(`mark done ${done.status}`)
+  }
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+  await expect(page.getByTestId('pet-timeline-card')).toBeVisible({ timeout: 15000 })
+  const historyTile = page.getByTestId('pet-history-visit-report').first()
+  await expect(historyTile).toBeVisible({ timeout: 30000 })
+  await expect(historyTile).toContainText(probe)
+  await historyTile.click()
+  await expect(page.getByTestId('visit-report-panel')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('visit-report-body')).toBeVisible()
+})
+
+test('pet detail — CTA nouvelle consultation', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}`, { waitUntil: 'networkidle' })
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
+  await dismissProModals(page)
+  const cta = page.getByTestId('pet-new-consultation')
+  await expect(cta).toBeVisible({ timeout: 15000 })
+  await expect(cta).toBeEnabled()
+  try {
+    await cta.click({ timeout: 5000 })
+  }
+  catch {
+    await dismissProModals(page)
+    await cta.click()
+  }
+  await expect(page.getByTestId('consultation-modal')).toBeVisible({ timeout: 20000 })
+  const petSelect = page.getByTestId('consultation-pet-select')
+  await expect(petSelect).toBeEnabled({ timeout: 15000 })
+  await expect(petSelect).toHaveValue(petId)
+})
+
+test('pet detail — overview graphes + historique par jour', { tag: '@p0' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  await seedHeartRateComment(petId)
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible()
+  await expect(page.getByTestId('pet-tab-overview')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-overview-charts')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-timeline-card')).toBeVisible()
+  await expect(page.getByTestId('pet-history-day').first()).toBeVisible()
+})
+
+test('pet detail — chart filtres, shares, commentaire HR', { tag: '@p0' }, async ({ page }) => {
   test.setTimeout(60000)
   const { clientId, petId } = await demoClientAndPet()
   const comment = await seedHeartRateComment(petId)
 
   await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
-  await expect(page.getByTestId('pet-chart-range-3m')).toBeVisible()
-  await page.getByTestId('pet-chart-range-6m').click()
-  await page.getByTestId('pet-filter-all').click()
-  await expect(page.getByTestId('pet-shares-card')).toBeVisible()
-
-  await expect(page.getByTestId('pet-reading-comment').filter({ hasText: comment })).toBeVisible({
+  const vitals = page.getByTestId('pet-tab-vitals')
+  await expect(vitals).toBeVisible({ timeout: 15000 })
+  await expect(vitals.getByTestId('pet-chart-range-3m')).toBeVisible()
+  await vitals.getByTestId('pet-chart-range-6m').click()
+  await vitals.getByTestId('pet-filter-all').click()
+  await expect(vitals.getByTestId('pet-reading-comment').filter({ hasText: comment })).toBeVisible({
     timeout: 15000,
   })
+
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=sharing`)
+  await expect(page.getByTestId('pet-shares-card')).toBeVisible({ timeout: 15000 })
 })
 
 test('pet detail — suivi poids chart + tableau', async ({ page }) => {
@@ -98,10 +259,9 @@ test('pet detail — suivi poids chart + tableau', async ({ page }) => {
   if (!create.ok) throw new Error(`create weight ${create.status}`)
 
   await loginAsVet(page)
-  await page.goto(`/clients/${clientId}/pets/${petId}`)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=vitals`)
   await expect(page.getByTestId('pet-detail-page')).toBeVisible()
-  await page.getByTestId('section-tab-vitals').click()
-  await expect(page.getByTestId('pet-weight-table-card')).toBeVisible()
+  await expect(page.getByTestId('pet-weight-table-card')).toBeVisible({ timeout: 15000 })
   await expect(page.getByTestId('pet-weight-comment').filter({ hasText: comment })).toBeVisible({
     timeout: 15000,
   })
@@ -127,8 +287,10 @@ test('heartrate — durées cabinet exposées au client + BPM sur 15s', async ()
     }),
   })
   if (!reg.ok) throw new Error(`register vet ${reg.status}`)
-  const confirmPath = (await reg.json()).data.confirmPath as string
-  const confirmToken = confirmPath.replace('/confirm-email?token=', '')
+  const confirmPath = (await reg.json()).data?.confirmPath as string | undefined
+  // confirmPath only when DEV_SEED_ENABLED=true (local/CI) — staging production-like omits it.
+  test.skip(!confirmPath, 'confirmPath masqué hors DEV_SEED_ENABLED')
+  const confirmToken = confirmPath!.replace('/confirm-email?token=', '')
   const confirm = await fetch(`${API}/api/v1/auth/confirm-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

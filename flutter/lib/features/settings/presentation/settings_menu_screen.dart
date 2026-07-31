@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/locale/locale_controller.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/appearance_settings_tile.dart';
 import 'package:petsfollow_mobile/features/education/presentation/how_to_measure_screen.dart';
+import 'package:petsfollow_mobile/features/invite/presentation/app_invite_qr_screen.dart';
 import 'package:petsfollow_mobile/features/legal/domain/legal_document_type.dart';
 import 'package:petsfollow_mobile/features/legal/presentation/legal_document_screen.dart';
 import 'package:petsfollow_mobile/features/profile/presentation/profile_screen.dart';
@@ -10,6 +12,7 @@ import 'package:petsfollow_mobile/features/settings/presentation/feature_modules
 import 'package:petsfollow_mobile/features/settings/presentation/notification_preferences_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/reminder_settings_screen.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/switch_profile_screen.dart';
+import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
 import 'package:petsfollow_mobile/features/vets/presentation/my_vets_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
@@ -49,6 +52,7 @@ class SettingsMenuScreen extends StatelessWidget {
                   DropdownMenuItem(value: 'en', child: Text(l10n.languageEn)),
                   DropdownMenuItem(value: 'es', child: Text(l10n.languageEs)),
                   DropdownMenuItem(value: 'et', child: Text(l10n.languageEt)),
+                  DropdownMenuItem(value: 'it', child: Text(l10n.languageIt)),
                 ],
                 onChanged: (next) async {
                   if (next == null || next == code) return;
@@ -66,6 +70,7 @@ class SettingsMenuScreen extends StatelessWidget {
             );
           },
         ),
+        const AppearanceSettingsTile(),
         ListTile(
           leading: const Icon(Icons.play_circle_outline),
           title: Text(l10n.howToMeasure),
@@ -82,6 +87,16 @@ class SettingsMenuScreen extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MyVetsScreen()),
+          ),
+        ),
+        ListTile(
+          key: const Key('settings_app_invite'),
+          leading: const Icon(Icons.qr_code_2_outlined),
+          title: Text(l10n.appInviteTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AppInviteQrScreen()),
           ),
         ),
         ListTile(
@@ -128,6 +143,13 @@ class SettingsMenuScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const SwitchProfileScreen()),
           ),
+        ),
+        ListTile(
+          key: const Key('settings_support'),
+          leading: const Icon(Icons.support_agent_outlined),
+          title: Text(l10n.supportMenu),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => openSupportReport(context, source: 'flutter_client'),
         ),
         const Divider(),
         ListTile(

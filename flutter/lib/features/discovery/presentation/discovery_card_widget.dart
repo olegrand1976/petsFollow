@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class DiscoveryCardWidget extends StatelessWidget {
@@ -18,13 +19,14 @@ class DiscoveryCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final opacity = card.locked ? 0.45 : 1.0;
 
     return Opacity(
       opacity: opacity,
       child: Card(
         margin: EdgeInsets.only(bottom: mission ? 16 : 8),
-        color: mission ? AppColors.gold.withValues(alpha: 0.12) : AppColors.surfaceElevated,
+        color: mission ? AppColors.gold.withValues(alpha: 0.12) : p.surfaceElevated,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: mission
@@ -44,9 +46,18 @@ class DiscoveryCardWidget extends StatelessWidget {
                         : AppColors.gold.withValues(alpha: 0.2),
                     child: card.completed
                         ? Icon(Icons.check, color: AppColors.primary, size: 20)
-                        : Text(
-                            l10n.discoveryDayBadge(card.dayIndex),
-                            style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
+                        : Builder(
+                            builder: (_) {
+                              final step =
+                                  DiscoveryCard.journeyDays.indexOf(card.dayIndex);
+                              return Text(
+                                l10n.discoveryDayBadge(step >= 0 ? step + 1 : 1),
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            },
                           ),
                   ),
                   const SizedBox(width: 12),
@@ -71,7 +82,7 @@ class DiscoveryCardWidget extends StatelessWidget {
                     ),
                   ),
                   if (card.locked)
-                    Icon(Icons.lock_outline, size: 18, color: AppColors.textMuted)
+                    Icon(Icons.lock_outline, size: 18, color: p.textMuted)
                   else if (card.completed)
                     Icon(Icons.check_circle, color: AppColors.primary, size: 22),
                 ],
@@ -79,7 +90,7 @@ class DiscoveryCardWidget extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 card.body,
-                style: TextStyle(color: AppColors.textMuted, height: 1.35),
+                style: TextStyle(color: p.textMuted, height: 1.35),
               ),
               if (!card.completed && !card.locked && onComplete != null) ...[
                 const SizedBox(height: 14),

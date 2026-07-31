@@ -3,6 +3,8 @@
 Document de **mise en place** (architecture, modèle, API, infra, sprints).  
 **Statut** : spécification — **non implémenté** dans le code au moment de la rédaction.
 
+Plan d’exécution **tracé** (fait / partiel / à faire) : [28-PLAN-STOCK-PEREMPTION.md](28-PLAN-STOCK-PEREMPTION.md) — S0 spec ✅ · code métier ⬜ · migrations cibles **000081+** (les numéros 000039–000042 de ce doc sont obsolètes : déjà utilisés par d’autres features).
+
 Ne confondre pas avec l’addon **Care+** (rappels médicaments côté client Flutter) : ce module est une **pharmacie cabinet** (Pro Nuxt), multi-tenant `practice_id`, alignée sur les contraintes belges (CNK / AFMPS, DAF, VAMReg).
 
 ---
@@ -135,7 +137,7 @@ nuxtjs/
 └── locales/{fr,en,nl,es,et}.json     # nav.* + pharmacy.*
 ```
 
-Nav véto (`layouts/default.vue`) : **Médicaments** · **Stock** · **DAF**.  
+Nav véto (`layouts/default.vue`) : **Médicaments** · **Stock** · **DAF**, chacun avec tag menu **`dev`** (en cours de développement) — détail [28 §7](28-PLAN-STOCK-PEREMPTION.md#7-ux-pro).  
 Middleware : `vet-only`. Lien animal (section fiche pet) = Phase 1.1 optionnelle.
 
 ---
@@ -415,6 +417,19 @@ Colonnes minimales attendues (mapping configurable) :
 | `is_antibiotic` | oui (ou dérivé ATC / liste AFMPS) |
 | `pharmaceutical_form`, `pack_size` | non |
 
+### Import PDF Compendium (admin, tag `dev`)
+
+Complément du CSV `import-cnk` : UI admin `/admin/compendium-imports`.
+
+1. Upload PDF + plage `pageStart`–`pageEnd` (max 200 pages).
+2. Extraction asynchrone Gemini (`GenerateJSONWithMedia`, lots de 2 pages) → staging `pharmacy.compendium_import_*`.
+3. Contrôle humain (édition CNK/nom, exclude) avec compteurs `%` extraction + contrôle.
+4. Commit → upsert `pharmacy.ref_medications` (`afmps_meta.source=compendium-pdf`).
+
+Prérequis : `PHARMACY_ENABLED`, `GEMINI_API_KEY`, media store. Lignes sans CNK → statut `error` (pas d’upsert).
+
+---
+
 ### Commande cible
 
 ```bash
@@ -492,9 +507,8 @@ Champs TVA / prix unitaires : hors Phase 1 pharmacie pure — le connecteur envo
 | `VAMREG_BASE_URL` | API autorités / passerelle |
 | `VAMREG_API_KEY` / cert | Auth (détail selon contrat officiel) |
 | `VAMREG_DRY_RUN` | Stub local / staging sans appel réel |
-| `PHARMACY_WORKERS_ENABLED` | Démarre Asynq server |
-| `ASYNQ_REDIS_ADDR` | Défaut = `REDIS_ADDR` |
-| `ASYNQ_KEY_PREFIX` | Défaut `petsfollow:asynq:` |
+| `PHARMACY_WORKERS_ENABLED` | Démarre Asynq server (sinon enqueue **inline** avec timeout détaché) |
+| Redis | Isolation staging/prod via **DB Redis** dans `REDIS_ADDR` (pas de key prefix Asynq) |
 
 Handler :
 
@@ -516,9 +530,6 @@ PHARMACY_WORKERS_ENABLED=false
 # Redis (déjà présent)
 REDIS_ADDR=localhost:6382
 REDIS_KEY_PREFIX=petsfollow:
-
-# Asynq
-ASYNQ_KEY_PREFIX=petsfollow:asynq:
 
 # VAMReg
 VAMREG_DRY_RUN=true
@@ -550,10 +561,10 @@ Redis / GCS : déjà documentés dans [10-GCP-DEPLOIEMENT.md](10-GCP-DEPLOIEMENT
 Option retenue pour la mise en place :
 
 1. Image unique `petsfollow-api`.
-2. Service Run `petsfollow-worker` : commande `workers` (Asynq only), mêmes secrets Redis + VAMReg + invoices.
-3. API HTTP : `PHARMACY_WORKERS_ENABLED=false` (enqueue seul).
+2. **Défaut staging/prod** : `PHARMACY_WORKERS_ENABLED=false` → déclaration VAMReg en **sync** dans le process API (`syncVamregEnqueue`) + `VAMREG_DRY_RUN=true` jusqu’à P0-1.
+3. Opt-in Asynq : `PHARMACY_WORKERS_ENABLED=true` (même image, Redis) — remplace l’enqueue sync ; service worker séparé possible plus tard.
 
-Local : `make api-dev` peut co-héberger workers si flag `true` (DX simplifiée).
+Local : `make api-dev` pose `VAMREG_DRY_RUN=true` ; workers off sauf flag explicite.
 
 ---
 
@@ -569,6 +580,8 @@ Local : `make api-dev` peut co-héberger workers si flag `true` (DX simplifiée)
 | `/daf` | Liste |
 | `/daf/nouveau` | Wizard : client/pet → lignes Combobox → preview lots FEFO → finalize |
 | `/daf/[id]` | Détail, PDF, VAMReg, export |
+
+Nav : pastille **`dev`** sur Médicaments / Stock / DAF tant que le module est en développement ([28 §7](28-PLAN-STOCK-PEREMPTION.md#7-ux-pro)).
 
 ### Composants
 

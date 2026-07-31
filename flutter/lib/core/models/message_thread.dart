@@ -7,9 +7,12 @@ class MessageThread {
     this.clientUserId,
     this.vetUserId,
     this.petId,
+    this.petName,
     this.practiceName,
     this.vetName,
+    this.clientName,
     this.lastMessagePreview,
+    this.lastMessageAt,
     this.unreadCount = 0,
   });
 
@@ -18,20 +21,56 @@ class MessageThread {
   final String? clientUserId;
   final String? vetUserId;
   final String? petId;
+  final String? petName;
   final String? practiceName;
   final String? vetName;
+  final String? clientName;
   final String? lastMessagePreview;
+  final DateTime? lastMessageAt;
   final int unreadCount;
 
+  /// Client shell: practice · pet. Staff shell: client · pet (or client alone).
   String get displayLabel {
-    if (practiceName != null && practiceName!.isNotEmpty) {
-      if (vetName != null && vetName!.isNotEmpty) {
-        return '$practiceName · $vetName';
-      }
-      return practiceName!;
-    }
-    if (vetName != null && vetName!.isNotEmpty) return vetName!;
-    return id.substring(0, 8);
+    final client = (clientName != null && clientName!.isNotEmpty) ? clientName! : '';
+    final pro = (practiceName != null && practiceName!.isNotEmpty)
+        ? practiceName!
+        : (vetName != null && vetName!.isNotEmpty ? vetName! : '');
+    final pet = (petName != null && petName!.isNotEmpty) ? petName! : '';
+    final primary = client.isNotEmpty ? client : pro;
+    if (primary.isNotEmpty && pet.isNotEmpty) return '$primary · $pet';
+    if (primary.isNotEmpty) return primary;
+    if (pet.isNotEmpty) return pet;
+    return id.length >= 8 ? id.substring(0, 8) : id;
+  }
+
+  MessageThread copyWith({
+    String? id,
+    String? practiceId,
+    String? clientUserId,
+    String? vetUserId,
+    String? petId,
+    String? petName,
+    String? practiceName,
+    String? vetName,
+    String? clientName,
+    String? lastMessagePreview,
+    DateTime? lastMessageAt,
+    int? unreadCount,
+  }) {
+    return MessageThread(
+      id: id ?? this.id,
+      practiceId: practiceId ?? this.practiceId,
+      clientUserId: clientUserId ?? this.clientUserId,
+      vetUserId: vetUserId ?? this.vetUserId,
+      petId: petId ?? this.petId,
+      petName: petName ?? this.petName,
+      practiceName: practiceName ?? this.practiceName,
+      vetName: vetName ?? this.vetName,
+      clientName: clientName ?? this.clientName,
+      lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
   }
 
   factory MessageThread.fromJson(Map<String, dynamic> json) {
@@ -41,9 +80,14 @@ class MessageThread {
       clientUserId: json['clientUserId'] as String?,
       vetUserId: json['vetUserId'] as String?,
       petId: json['petId'] as String?,
+      petName: json['petName'] as String?,
       practiceName: json['practiceName'] as String?,
-      vetName: json['vetFullName'] as String? ?? json['clientName'] as String?,
+      vetName: json['vetFullName'] as String?,
+      clientName: json['clientName'] as String?,
       lastMessagePreview: json['lastMessagePreview'] as String?,
+      lastMessageAt: json['lastMessageAt'] != null
+          ? DateTime.tryParse(json['lastMessageAt'] as String)
+          : null,
       unreadCount: json['unreadCount'] as int? ?? 0,
     );
   }

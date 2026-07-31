@@ -31,6 +31,17 @@ class AppLocalizationsEt extends AppLocalizations {
       'Kinnitage esmalt oma e-post (registreerimisel saadetud link), seejärel logige uuesti sisse.';
 
   @override
+  String get resendConfirmation => 'Saada kinnituskiri uuesti';
+
+  @override
+  String get resendConfirmationSent =>
+      'Kui konto on olemas ja veel kinnitamata, saadeti uus e-kiri.';
+
+  @override
+  String get resendConfirmationFailed =>
+      'Saatmine ebaõnnestus. Proovige hetke pärast uuesti.';
+
+  @override
   String get loginOr => 'või';
 
   @override
@@ -139,6 +150,10 @@ class AppLocalizationsEt extends AppLocalizations {
       'Konto loodud. Avage kinnitusmeili link ja tulge rakendusse sisse logima.';
 
   @override
+  String get registerInviteNotApplied =>
+      'Konto loodud, kuid kutsekoodi ei saanud rakendada. Saate selle pärast sisselogimist uuesti sisestada.';
+
+  @override
   String get registerFailed => 'Registreerimine ebaõnnestus';
 
   @override
@@ -239,6 +254,22 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightFinalizeReport => 'Lõpeta';
 
   @override
+  String get proLightNewConsultation => 'Uus konsultatsioon';
+
+  @override
+  String get proLightConsultationNextTitle =>
+      'Konsultatsioon salvestatud — edasi?';
+
+  @override
+  String get proLightConsultationCtaDaf => 'Loo DAF ja arvelda';
+
+  @override
+  String get proLightConsultationCtaInvoice => 'Arvelda otse';
+
+  @override
+  String get proLightConsultationCtaDone => 'Lõpeta';
+
+  @override
   String get proLightReportFinal => 'Lõpetatud';
 
   @override
@@ -308,7 +339,10 @@ class AppLocalizationsEt extends AppLocalizations {
   String get proLightDictationStart => 'Dikteeri';
 
   @override
-  String get proLightDictationStop => 'Peata ja transkribeeri';
+  String get proLightDictationStop => 'Peata';
+
+  @override
+  String get proLightRecordingInProgress => 'Salvestamine käib';
 
   @override
   String get proLightAudioConsentTitle => 'Helisalvestuse nõusolek';
@@ -406,6 +440,20 @@ class AppLocalizationsEt extends AppLocalizations {
   String get forceChangePasswordSubmit => 'Salvesta ja jätka';
 
   @override
+  String get acceptTermsTitle => 'Kasutustingimused';
+
+  @override
+  String get acceptTermsSubtitle =>
+      'Teie konto lõi teie kliinik. Jätkamiseks nõustuge tingimuste ja privaatsuspoliitikaga.';
+
+  @override
+  String get acceptTermsSubmit => 'Nõustu ja jätka';
+
+  @override
+  String get acceptTermsFailed =>
+      'Nõusolekut ei saanud salvestada. Proovige uuesti.';
+
+  @override
   String get passwordTooShort => 'Vähemalt 8 tähemärki';
 
   @override
@@ -433,6 +481,12 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get registerConsentRequired =>
       'Peate nõustuma tingimuste ja privaatsuspoliitikaga.';
+
+  @override
+  String get registerInviteCode => 'Kutsekood (valikuline)';
+
+  @override
+  String get registerInviteCodeHint => 'Sisestage QR / müügilinki kood';
 
   @override
   String get nearbyCommercialTitle => 'Müügiesindaja teie lähedal';
@@ -609,11 +663,11 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@ll-it-sc.be.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
-      'Juriidiline teave — petsFollow\n\nVäljaandja: LL-IT-SC / petsFollow\nKontakt: support@ll-it-sc.be\n\nMajutus: Google Cloud Platform (GDPR-ga kooskõlas).\n\nVäljaande juht: petsFollow.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/mentions\n\nViimati uuendatud: juuli 2026';
+      'Juriidiline teave — petsFollow\n\nVäljaandja: LL-IT-SC / petsFollow\nKontakt: support@petsfollow.app\n\nMajutus: Google Cloud Platform (GDPR-ga kooskõlas).\n\nVäljaande juht: petsFollow.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/mentions\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get language => 'Keel';
@@ -635,6 +689,15 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get languageIt => 'Italiano';
+
+  @override
+  String get appearance => 'Välimus';
+
+  @override
+  String get themeLight => 'Hele';
+
+  @override
+  String get themeDark => 'Tume';
 
   @override
   String get planMonthlyLabel => '€3,50 / kuu';
@@ -708,10 +771,71 @@ class AppLocalizationsEt extends AppLocalizations {
   String get petName => 'Nimi';
 
   @override
+  String get petNameRequired => 'Sisesta looma nimi';
+
+  @override
   String get species => 'Liik';
 
   @override
   String get breed => 'Tõug';
+
+  @override
+  String get petMicrochipOptional => 'Kiibi number (valikuline)';
+
+  @override
+  String get petHealthBookNumberOptional => 'Tervisekaardi number (valikuline)';
+
+  @override
+  String get petDomicileLocation => 'Elukoht / tall';
+
+  @override
+  String get petDomicileHint => 'Nt. Paju tall — Brüssel';
+
+  @override
+  String get petFoodChainStatus => 'Toiduahela staatus';
+
+  @override
+  String get petFoodChainCompanion => 'Lemmikloom (väljaspool toiduahelat)';
+
+  @override
+  String get petFoodChainFoodProducing => 'Tootmisloom / toiduahel';
+
+  @override
+  String get petFoodChainExcluded => 'Toiduahelast välja arvatud';
+
+  @override
+  String get petHealthBookAddPages => 'Lisa tervisekaardi fotod';
+
+  @override
+  String get petHealthBookReplacePages => 'Asenda PDF (fotod)';
+
+  @override
+  String petHealthBookPagesCount(int count) {
+    return '$count lehekülg(e) valitud';
+  }
+
+  @override
+  String get petHealthBookPdfAttached => 'Tervisekaardi PDF lisatud';
+
+  @override
+  String get petHealthBookRemovePdf => 'Eemalda';
+
+  @override
+  String get petHealthBookOpenPdf => 'Ava tervisekaart (PDF)';
+
+  @override
+  String petMicrochipLabel(String number) {
+    return 'Kiip: $number';
+  }
+
+  @override
+  String petHealthBookNumberLabel(String number) {
+    return 'Kaart: $number';
+  }
+
+  @override
+  String get errorHealthBookUploadFailed =>
+      'Lemmikloom salvestatud, kuid tervisekaarti ei õnnestunud üles laadida';
 
   @override
   String get choosePlan => 'Valige oma plaan';
@@ -726,7 +850,18 @@ class AppLocalizationsEt extends AppLocalizations {
   String get autoRenewSubtitle => 'Võetakse iga uuendamise ajal';
 
   @override
-  String get continueToPayment => 'Jätka maksele';
+  String get continueToPayment => 'Salvesta ja maksa';
+
+  @override
+  String get petFormSave => 'Salvesta';
+
+  @override
+  String get petSavedPendingPayment =>
+      'Lemmikloom salvestatud — aktiveerige funktsioonide kasutamiseks';
+
+  @override
+  String get paymentFeaturesLocked =>
+      'Selle lemmiklooma funktsioonide kasutamiseks on vaja makset';
 
   @override
   String get paymentConfirmed => 'Makse kinnitatud — lemmikloom aktiivne';
@@ -754,7 +889,8 @@ class AppLocalizationsEt extends AppLocalizations {
       'Toetamata vorming (JPEG, PNG, WebP, MP4, MOV, WebM)';
 
   @override
-  String get errorPaymentRequired => 'Meedia saatmiseks on vaja tellimust';
+  String get errorPaymentRequired =>
+      'Selle funktsiooni kasutamiseks on vaja tellimust';
 
   @override
   String get errorPhotoUploadFailed =>
@@ -797,6 +933,10 @@ class AppLocalizationsEt extends AppLocalizations {
       'Selle praktika jaoks pole mõõtmise kestust seadistatud. Võtke ühendust oma loomaarstiga.';
 
   @override
+  String get heartRateNotSupported =>
+      'Südame löögisageduse mõõtmine ei ole selle liigi jaoks saadaval';
+
+  @override
   String get start => 'Alusta';
 
   @override
@@ -823,7 +963,8 @@ class AppLocalizationsEt extends AppLocalizations {
   }
 
   @override
-  String get thresholdAlert => 'Lävehoiatus';
+  String get thresholdAlert =>
+      'Hoiatus: oluline tõus võrreldes eelmise mõõtmisega';
 
   @override
   String get validateAndSend => 'Kinnita ja saada loomaarstile';
@@ -863,7 +1004,34 @@ class AppLocalizationsEt extends AppLocalizations {
   String get speciesCat => 'Kass';
 
   @override
-  String get speciesHorse => 'Horse';
+  String get speciesHorse => 'Hobune';
+
+  @override
+  String get speciesDonkey => 'Eesel';
+
+  @override
+  String get speciesCattle => 'Veis';
+
+  @override
+  String get speciesSheep => 'Lammas';
+
+  @override
+  String get speciesGoat => 'Kits';
+
+  @override
+  String get speciesPig => 'Siga';
+
+  @override
+  String get speciesPoultry => 'Linnuliha';
+
+  @override
+  String get speciesRabbit => 'Küülik';
+
+  @override
+  String get speciesAlpaca => 'Alpaka';
+
+  @override
+  String get speciesLlama => 'Laama';
 
   @override
   String get speciesOther => 'Muu';
@@ -882,31 +1050,31 @@ class AppLocalizationsEt extends AppLocalizations {
   String get discoveryTitle => 'Avastage petsFollow';
 
   @override
-  String get discoveryMission => 'Teie 7-päevane teekond';
+  String get discoveryMission => 'Teie petsFollow teekond';
 
   @override
-  String get discoveryDay0Title => 'Päev 0 — Tere tulemast';
+  String get discoveryDay0Title => 'Samm 1 — Tere tulemast';
 
   @override
   String get discoveryDay0Body =>
       'Looge oma lemmiklooma profiil ja avastage rakendus — sõnumid, meeldetuletused ja mõõtmised (sh südame löögisagedus).';
 
   @override
-  String get discoveryDay2Title => 'Päev 2 — Esimene näit';
+  String get discoveryDay2Title => 'Samm 2 — Esimene näit';
 
   @override
   String get discoveryDay2Body =>
       'Tehke esimene südame löögisageduse mõõtmine ja harjuge tehnikaga.';
 
   @override
-  String get discoveryDay4Title => 'Päev 4 — Rutiin';
+  String get discoveryDay4Title => 'Samm 3 — Rutiin';
 
   @override
   String get discoveryDay4Body =>
       'Looge igapäevane mõõtmisharjumus isiklike meeldetuletustega.';
 
   @override
-  String get discoveryDay6Title => 'Päev 6 — Jagamine loomaarstiga';
+  String get discoveryDay6Title => 'Samm 4 — Jagamine loomaarstiga';
 
   @override
   String get discoveryDay6Body =>
@@ -923,6 +1091,27 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get noVets => 'Seotud loomaarsti pole';
+
+  @override
+  String get vetLinkRequired =>
+      'Seo loomaarst, et aktiveerida jälgimine oma kabinetiga';
+
+  @override
+  String get linkVetAfterSaveTitle => 'Seo loomaarst';
+
+  @override
+  String get linkVetAfterSaveBody =>
+      'Seo kabinet, et aktiveerida sõnumid, visiidid ja hooldusmeeldetuletused.';
+
+  @override
+  String get linkVetHomeTitle => 'Seo loomaarst?';
+
+  @override
+  String get linkVetHomeBody =>
+      'Sinu lemmikloom on salvestatud. Kas soovid loomaarsti siduda? Valikuline — saad seda hiljem teha.';
+
+  @override
+  String get linkVetLater => 'Hiljem';
 
   @override
   String get primaryVet => 'Peamine loomaarst';
@@ -1072,6 +1261,12 @@ class AppLocalizationsEt extends AppLocalizations {
   String get litterTag => 'Pesakonna silt';
 
   @override
+  String get petBirthDate => 'Sünnikuupäev';
+
+  @override
+  String get petBirthDateInvalid => 'Vigane sünnikuupäev (AAAA-KK-PP)';
+
+  @override
   String get discoveryMarkDone => 'Missioon täidetud';
 
   @override
@@ -1174,7 +1369,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String discoveryDayBadge(int day) {
-    return 'P$day';
+    return 'S$day';
   }
 
   @override
@@ -1208,6 +1403,40 @@ class AppLocalizationsEt extends AppLocalizations {
   String get noThreads => 'Vestlusi pole';
 
   @override
+  String get messageNoMessagesYet => 'Sõnumeid pole veel';
+
+  @override
+  String get messageNewConversation => 'Uus vestlus';
+
+  @override
+  String get messageComposeTitle => 'Uus vestlus';
+
+  @override
+  String get messageChoosePro => 'Hooldusspetsialist';
+
+  @override
+  String get messageChooseClient => 'Klient';
+
+  @override
+  String get messageChoosePet => 'Asjaomane loom';
+
+  @override
+  String get messageChoosePetOptional => 'Loom (valikuline)';
+
+  @override
+  String get messageGeneralThread => 'Üldine vestlus';
+
+  @override
+  String get messageStartConversation => 'Alusta';
+
+  @override
+  String get messageLockedTitle => 'Sõnumid pole saadaval';
+
+  @override
+  String get messageLockedBody =>
+      'Siduge loomaarst, et hooldusspetsialistiga vestelda.';
+
+  @override
   String get vetInviteSent =>
       'Kutse saadetud — praktika peab taotluse vastu võtma';
 
@@ -1221,7 +1450,39 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get addVetSearchHint =>
-      'Otsime seda loomaarsti kontot petsFollowist. Kui see on olemas, saadetakse praktikale ühenduse taotlus.';
+      'Otsige nime, e-posti või praktika järgi. Kui nad on juba petsFollowis, saadetakse praktikale ühenduse taotlus.';
+
+  @override
+  String get addVetSearchLabel => 'Otsi loomaarsti';
+
+  @override
+  String get addVetSearchFieldHint => 'Nimi, e-post või praktika';
+
+  @override
+  String get addVetNotListed => 'Minu loomaarsti pole nimekirjas';
+
+  @override
+  String get addVetSuggestTitle => 'Uus loomaarst';
+
+  @override
+  String get addVetSuggestBody =>
+      'Sisestage praktika e-post ja telefon. Võtame nendega ühendust, et nad liituksid petsFollowiga.';
+
+  @override
+  String get addVetSuggestEmail => 'Praktika e-post';
+
+  @override
+  String get addVetSuggestPhone => 'Telefon';
+
+  @override
+  String get addVetSuggestNameOptional => 'Loomaarsti nimi (valikuline)';
+
+  @override
+  String get addVetSuggestCta => 'Saada soovitus';
+
+  @override
+  String get vetSuggestSent =>
+      'Aitäh — võtame praktikaga ühendust. Teavitame teid, kui nad liituvad petsFollowiga.';
 
   @override
   String get visitRequested => 'Visiidi taotlus saadetud';
@@ -1303,6 +1564,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get takePhoto => 'Tee foto';
 
   @override
+  String get takeVideo => 'Salvesta video';
+
+  @override
   String get chooseFromGallery => 'Vali galeriist';
 
   @override
@@ -1313,6 +1577,9 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get attachVideo => 'Video';
+
+  @override
+  String get compressingMedia => 'Video tihendamine…';
 
   @override
   String get openMedia => 'Ava';
@@ -1326,6 +1593,14 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get appInviteHint =>
       'Kuvage see QR või jagage linki. Uus klient, kes registreerub selle lingi kaudu, seotakse automaatselt.';
+
+  @override
+  String get appInviteHintClient =>
+      'Jaga seda QR-koodi sõbraga. Ta seotakse sinuga (soovitus) ja võib liituda sinu kabinetiga, kui tal seda veel pole.';
+
+  @override
+  String get appInviteHintCommercial =>
+      'Kaks linki: kliendid (rakendus) ja kabinetid (Pro registreerumine teie soovituskoodiga).';
 
   @override
   String get appInviteHintShort => 'Allalaadimise ja sidumise link';
@@ -1356,7 +1631,53 @@ class AppLocalizationsEt extends AppLocalizations {
       'Kliendi kutse QR ja Pro veebi juurdepääs.';
 
   @override
+  String get commercialManagerFieldSubtitle =>
+      'Meeskonna tulemused, kliendi kutse QR ja Pro veebi juurdepääs.';
+
+  @override
   String get commercialOpenProWeb => 'Ava Pro veebisait';
+
+  @override
+  String get managerTeamCta => 'Minu meeskonna tulemused';
+
+  @override
+  String get managerTeamTitle => 'Meeskond';
+
+  @override
+  String get managerTeamSection => 'Meeskonna tulemused';
+
+  @override
+  String get managerSelfSection => 'Minu tulemused';
+
+  @override
+  String get managerMembersSection => 'Müügiesindajad';
+
+  @override
+  String get managerTeamEmpty => 'Müügiesindajaid ei ole määratud.';
+
+  @override
+  String get managerKpiProspects => 'Potentsiaalsed kliendid';
+
+  @override
+  String get managerKpiConverted => 'Konverteeritud';
+
+  @override
+  String get managerKpiConversion => 'Konversioonimäär';
+
+  @override
+  String get managerKpiAppointments => 'Tulevased kohtumised';
+
+  @override
+  String get managerKpiStale => 'Seisnud pipeline';
+
+  @override
+  String get managerKpiMonthEarned => 'Komisjonitasud (kuu)';
+
+  @override
+  String get managerKpiLifetimeEarned => 'Komisjonitasud (kokku)';
+
+  @override
+  String get managerKpiVets => 'Määratud loomaarstid';
 
   @override
   String get featureModules => 'Valikud';
@@ -1540,4 +1861,135 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get proLightAiModuleVisitScopedBanner =>
       'CR IA on saadaval, kui visiidi kabinetil on moodul aktiveeritud.';
+
+  @override
+  String get supportTitle => 'Teata probleemist';
+
+  @override
+  String get supportHint =>
+      'Kirjelda viga. Viimase 15 minuti tehniline diagnostika lisatakse automaatselt.';
+
+  @override
+  String get supportSubject => 'Teema';
+
+  @override
+  String get supportMessage => 'Kirjeldus';
+
+  @override
+  String get supportDiagnosticsAttached =>
+      'Diagnostika lisatakse automaatselt (vead, päringud, seadistus).';
+
+  @override
+  String get supportSubmit => 'Saada';
+
+  @override
+  String get supportSending => 'Saadan…';
+
+  @override
+  String get supportSuccess => 'Sõnum saadetud. Aitäh!';
+
+  @override
+  String get supportErrorRateLimit =>
+      'Liiga palju pileteid hiljuti. Proovi tunni pärast.';
+
+  @override
+  String get supportErrorTooLarge =>
+      'Diagnostika liiga mahukas. Taaskäivita rakendus ja proovi uuesti.';
+
+  @override
+  String get supportMenu => 'Tugi';
+
+  @override
+  String get appInviteHintSales =>
+      'Jaga oma sponsorikoodi kabineti või kliendiga.';
+
+  @override
+  String get appInviteCopyVet => 'Kopeeri kabineti registreerimislink';
+
+  @override
+  String get appInviteCopyClient => 'Kopeeri kliendi kutselink';
+
+  @override
+  String get sendDossierToPro => 'Saada spetsialistile';
+
+  @override
+  String get sendDossierEmailLabel => 'Spetsialisti e-post';
+
+  @override
+  String get sendDossierEmailHint => 'vet@kliinik.ee';
+
+  @override
+  String get sendDossierConfirm => 'Saada';
+
+  @override
+  String get sendDossierSuccess => 'Toimik saadetud — link kehtib 24 tundi.';
+
+  @override
+  String get sendDossierInvalidEmail => 'Vigane e-posti aadress.';
+
+  @override
+  String get sendDossierPhiWarning =>
+      'See toimik sisaldab terviseandmeid: visiidiaruanded, tervisekaart ja dokumendid. Link kehtib 24 tundi ja igaüks, kellel see on, pääseb neile ligi.';
+
+  @override
+  String get sendDossierPhiConsent =>
+      'Nõustun jagama neid terviseandmeid selle spetsialistiga.';
+
+  @override
+  String get consultationsHistory => 'Konsultatsioonid';
+
+  @override
+  String get consultationTitle => 'Konsultatsioon';
+
+  @override
+  String consultationTitleWithPet(String petName) {
+    return 'Konsultatsioon — $petName';
+  }
+
+  @override
+  String get consultationVisitMeta => 'Külastus';
+
+  @override
+  String consultationReportBy(String author) {
+    return 'Aruanne: $author';
+  }
+
+  @override
+  String get consultationReportFallback => 'Aruanne';
+
+  @override
+  String get consultationReportEmpty => '(tühi)';
+
+  @override
+  String get consultationAvailableCta => 'Saadaval';
+
+  @override
+  String get consultationPendingCta => 'Mustand';
+
+  @override
+  String get sendConsultationToVet => 'Saada loomaarstile';
+
+  @override
+  String get sendConsultationEmailLabel => 'Loomaarsti e-post';
+
+  @override
+  String get sendConsultationEmailHint => 'vet@kliinik.ee';
+
+  @override
+  String get sendConsultationConfirm => 'Saada';
+
+  @override
+  String get sendConsultationSuccess =>
+      'Konsultatsioon saadetud — link kehtib 24 tundi.';
+
+  @override
+  String get sendConsultationInvalidEmail => 'Vigane e-posti aadress.';
+
+  @override
+  String get sendConsultationPhiWarning =>
+      'See aruanne sisaldab terviseandmeid. Link kehtib 24 tundi ja igaüks, kellel see on, saab PDF-i alla laadida.';
+
+  @override
+  String get sendConsultationPhiConsent =>
+      'Nõustun jagama seda aruannet selle loomaarstiga.';
 }

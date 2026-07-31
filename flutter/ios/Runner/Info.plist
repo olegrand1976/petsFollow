@@ -7,7 +7,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>petsFollow a besoin d'accéder à vos photos pour l'avatar, la fiche animal et l'envoi au vétérinaire.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>petsFollow a besoin de la caméra pour photographier votre animal.</string>
+	<string>petsFollow a besoin de la caméra pour photographier ou filmer votre animal (fiche et messagerie vétérinaire).</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>petsFollow peut enregistrer des photos sur votre appareil.</string>
 	<key>NSMicrophoneUsageDescription</key>

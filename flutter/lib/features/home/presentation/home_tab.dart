@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
@@ -6,16 +7,20 @@ import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
 import 'package:petsfollow_mobile/core/models/pet.dart';
+import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
+import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/kennel_quick_encode_screen.dart';
+import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
+import 'package:petsfollow_mobile/features/pets/presentation/pet_create_flow.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_detail_screen.dart';
-import 'package:petsfollow_mobile/features/pets/presentation/pet_form_screen.dart';
 import 'package:petsfollow_mobile/features/pets/presentation/pet_quick_actions.dart';
 import 'package:petsfollow_mobile/features/settings/presentation/feature_modules_controller.dart';
 import 'package:petsfollow_mobile/features/shell/presentation/main_shell_screen.dart';
+import 'package:petsfollow_mobile/features/support/presentation/support_report_screen.dart';
+import 'package:petsfollow_mobile/features/vets/presentation/widgets/add_vet_panel.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class HomeTab extends StatefulWidget {
@@ -123,34 +128,45 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     if (mounted) setState(() => discoveryProgress = progress);
   }
 
-  String _speciesLabel(AppLocalizations l10n, String species) {
-    switch (species) {
-      case 'dog':
-        return l10n.speciesDog;
-      case 'cat':
-        return l10n.speciesCat;
-      case 'horse':
-        return l10n.speciesHorse;
-      default:
-        return l10n.speciesOther;
-    }
-  }
+  Future<void> _openPetForm() => openPetFormAndFollowUp(
+        context,
+        onReload: load,
+        hasLinkedVets: hasVets,
+      );
+
+  Future<void> _openKennelEncode() => openKennelEncodeAndFollowUp(
+        context,
+        onReload: load,
+        hasLinkedVets: hasVets,
+      );
+
+  String _speciesLabel(AppLocalizations l10n, String species) =>
+      speciesLabel(l10n, species);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     final greeting = userName != null && userName!.isNotEmpty
         ? l10n.greeting(userName!.split(' ').first)
         : l10n.myPets;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
-    final mission = DiscoveryController.instance.missionCardForToday(
+    final mission = DiscoveryController.instance.nextMissionCard(
       cards.where((c) => !c.completed && !c.locked).toList(),
       progress,
     );
 
     return PetsTabScaffold(
       title: const PetsAppBarLogo(),
+      actions: [
+        IconButton(
+          key: const Key('home_support_btn'),
+          tooltip: l10n.supportMenu,
+          onPressed: () => openSupportReport(context, source: 'flutter_client'),
+          icon: const Icon(Icons.support_agent_outlined),
+        ),
+      ],
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : loadError != null
@@ -162,11 +178,14 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 children: [
                   Text(greeting, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 4),
-                  Text(l10n.appTagline, style: TextStyle(color: AppColors.textMuted)),
+                  Text(l10n.appTagline, style: TextStyle(color: p.textMuted)),
                   const SizedBox(height: 20),
                   if (hasVets == false) ...[
                     _AddFirstVetCard(
-                      onLinked: load,
+                      onLinked: () async {
+                        await ApiClient.instance.ensureFreshSession();
+                        if (mounted) load();
+                      },
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -179,17 +198,11 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   ],
                   if (pets.isEmpty)
                     _EmptyPetsState(
-                      onAdd: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PetFormScreen()),
-                        );
-                        load();
-                      },
+                      onAdd: _openPetForm,
                     )
                   else ...[
                     if (FeatureModulesController.instance.kennel) ...[
-                      _KennelEncodeButton(l10n: l10n, onDone: load),
+                      _KennelEncodeButton(l10n: l10n, onPressed: _openKennelEncode),
                       const SizedBox(height: 12),
                     ],
                     if (FeatureModulesController.instance.family)
@@ -207,10 +220,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         speciesLabel: _speciesLabel(l10n, pet.species),
                         l10n: l10n,
                         onTap: () => _openPetDetail(pet),
-                        onMeasure: pet.isOwner && pet.isActive
+                        onMeasure: pet.isOwner &&
+                                pet.isActive &&
+                                supportsHeartRateControl(pet.species)
                             ? () => _startMeasurement(pet)
                             : null,
-                        onWeightRecorded: pet.isOwner && pet.isActive ? load : null,
+                        onWeightRecorded:
+                            pet.isOwner && pet.isActive ? load : null,
                         onResumePayment:
                             pet.needsResumePayment ? () => _resumePayment(pet) : null,
                       ),
@@ -233,13 +249,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       floatingActionButton: pets.isNotEmpty
           ? null
           : FloatingActionButton.extended(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PetFormScreen()),
-                );
-                load();
-              },
+              onPressed: _openPetForm,
               icon: const Icon(Icons.add),
               label: Text(l10n.newPet),
             ),
@@ -253,6 +263,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         builder: (_) => HeartRateFlowScreen(
           petId: pet.id,
           durationsSec: pet.heartrateDurationsSec,
+          species: pet.species,
         ),
       ),
     );
@@ -262,7 +273,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   Future<void> _resumePayment(Pet pet) async {
     final url = await ApiClient.instance.resumeCheckout(pet.id);
     await openExternalUrl(url);
-    load();
+    // Do not reload here — wait for payment deep link / resume to refresh.
   }
 
   void _openPetDetail(Pet pet) {
@@ -273,67 +284,19 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   }
 }
 
-class _AddFirstVetCard extends StatefulWidget {
+class _AddFirstVetCard extends StatelessWidget {
   const _AddFirstVetCard({required this.onLinked});
 
   final VoidCallback onLinked;
 
   @override
-  State<_AddFirstVetCard> createState() => _AddFirstVetCardState();
-}
-
-class _AddFirstVetCardState extends State<_AddFirstVetCard> {
-  final _emailCtrl = TextEditingController();
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context)!;
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty || _submitting) return;
-    setState(() => _submitting = true);
-    try {
-      final result = await ApiClient.instance.inviteVet(email);
-      if (!mounted) return;
-      final found = result['found'] == true;
-      if (found) {
-        _emailCtrl.clear();
-        final practice = (result['practiceName'] as String?)?.trim() ?? '';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              practice.isEmpty ? l10n.vetInviteSent : l10n.vetInviteSentNamed(practice),
-            ),
-          ),
-        );
-        widget.onLinked();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.vetNotFound)),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric('invite'))),
-        );
-      }
-    }
-    if (mounted) setState(() => _submitting = false);
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: p.surfaceElevated,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
@@ -353,38 +316,9 @@ class _AddFirstVetCardState extends State<_AddFirstVetCard> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(l10n.homeAddFirstVetBody, style: TextStyle(color: AppColors.textMuted, height: 1.35)),
+          Text(l10n.homeAddFirstVetBody, style: TextStyle(color: p.textMuted, height: 1.35)),
           const SizedBox(height: 14),
-          TextField(
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            enabled: !_submitting,
-            decoration: InputDecoration(
-              labelText: l10n.addVetByEmail,
-              hintText: l10n.vetEmailHint,
-              filled: true,
-              fillColor: AppColors.surface,
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.addVetSearchHint,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.35),
-          ),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: _submitting ? null : _submit,
-            icon: _submitting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.bg),
-                  )
-                : const Icon(Icons.person_add_alt_1),
-            label: Text(l10n.homeAddFirstVetCta),
-          ),
+          AddVetPanel(compact: true, onLinked: onLinked),
         ],
       ),
     );
@@ -429,10 +363,13 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
     final title = pack == 'kennel'
         ? widget.l10n.kennelHouseholdTitle(count)
         : widget.l10n.familyHouseholdTitle(count);
+    final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    final now = DateTime.now();
+    final p = PetsPalette.of(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: p.surfaceElevated,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
@@ -445,17 +382,44 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
           ),
           if (upcoming.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(widget.l10n.familyHouseholdNext, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            Text(widget.l10n.familyHouseholdNext, style: TextStyle(color: p.textMuted, fontSize: 12)),
             const SizedBox(height: 6),
             ...upcoming.take(3).map((raw) {
               final item = Map<String, dynamic>.from(raw as Map);
               final petName = '${item['petName'] ?? ''}';
-              final title = '${item['title'] ?? item['type'] ?? ''}';
+              final reminderTitle = '${item['title'] ?? item['type'] ?? ''}';
+              final dueAt = DateTime.tryParse('${item['dueAt'] ?? ''}')?.toLocal();
+              final isOverdue = item['isOverdue'] == true ||
+                  (dueAt != null && dueAt.isBefore(now));
+              final dateLabel = dueAt == null
+                  ? null
+                  : (isOverdue
+                      ? '${widget.l10n.careOverdue} · ${dateFmt.format(dueAt)}'
+                      : dateFmt.format(dueAt));
               return Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '• $petName — $title',
-                  style: const TextStyle(fontSize: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '• $petName — $reminderTitle',
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                    if (dateLabel != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        dateLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isOverdue ? AppColors.alert : p.textMuted,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               );
             }),
@@ -467,21 +431,15 @@ class _FamilyHouseholdCardState extends State<_FamilyHouseholdCard> {
 }
 
 class _KennelEncodeButton extends StatelessWidget {
-  const _KennelEncodeButton({required this.l10n, this.onDone});
+  const _KennelEncodeButton({required this.l10n, required this.onPressed});
 
   final AppLocalizations l10n;
-  final Future<void> Function()? onDone;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
-      onPressed: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const KennelQuickEncodeScreen()),
-        );
-        await onDone?.call();
-      },
+      onPressed: onPressed,
       icon: const Icon(Icons.pets_outlined, size: 18),
       label: Text(l10n.kennelQuickEncodeTitle),
     );
@@ -496,6 +454,7 @@ class _EmptyPetsState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final p = PetsPalette.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -508,7 +467,7 @@ class _EmptyPetsState extends StatelessWidget {
             Text(
               l10n.emptyPetsBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, height: 1.4),
+              style: TextStyle(color: p.textMuted, height: 1.4),
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
@@ -544,6 +503,7 @@ class _PetHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = PetsPalette.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -558,7 +518,7 @@ class _PetHeroCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: AppColors.surfaceElevated,
+                    backgroundColor: p.surfaceElevated,
                     backgroundImage: pet.photoUrl?.isNotEmpty == true
                         ? NetworkImage(pet.photoUrl!)
                         : null,
@@ -575,18 +535,18 @@ class _PetHeroCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(pet.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('$speciesLabel · ${pet.breed}', style: TextStyle(color: AppColors.textMuted)),
+                        Text('$speciesLabel · ${pet.breed}', style: TextStyle(color: p.textMuted)),
                       ],
                     ),
                   ),
                   _PaymentBadge(pet: pet, l10n: l10n),
                 ],
               ),
-              if (onMeasure != null) ...[
+              if (onMeasure != null || onWeightRecorded != null) ...[
                 const SizedBox(height: 12),
                 PetQuickActions(
                   petId: pet.id,
-                  onHeartRate: onMeasure!,
+                  onHeartRate: onMeasure,
                   onWeightRecorded: onWeightRecorded,
                 ),
               ],
@@ -617,8 +577,9 @@ class _PaymentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ent = pet.entitlement;
+    final p = PetsPalette.of(context);
     if (pet.isSharedAccess) {
-      return _BadgeChip(label: pet.sharedAccessLabel(l10n), color: AppColors.textMuted);
+      return _BadgeChip(label: pet.sharedAccessLabel(l10n), color: p.textMuted);
     }
     if (pet.needsResumePayment) {
       return _BadgeChip(label: l10n.badgePendingPayment, color: AppColors.alert);

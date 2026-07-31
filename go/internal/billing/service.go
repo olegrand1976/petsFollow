@@ -256,7 +256,7 @@ func (s *Service) MockCompleteCheckout(ctx context.Context, petID, ownerUserID, 
 	payload, sig, err := BuildTestWebhookPayload(s.cfg.StripeWebhookSecret, "checkout.session.completed", map[string]any{
 		"id":             sessionID,
 		"payment_status": "paid",
-		"customer":       "cus_mock_" + ownerUserID,
+		"customer":       MockCustomerID(ownerUserID),
 		"subscription":   nil,
 		"payment_intent": "pi_mock_" + petID,
 		"metadata": map[string]any{
@@ -273,7 +273,7 @@ func (s *Service) MockCompleteCheckout(ctx context.Context, petID, ownerUserID, 
 		obj := map[string]any{
 			"id":             sessionID,
 			"payment_status": "paid",
-			"customer":       "cus_mock_" + ownerUserID,
+			"customer":       MockCustomerID(ownerUserID),
 			"subscription":   "sub_mock_" + petID,
 			"payment_intent": "pi_mock_" + petID,
 			"metadata": map[string]any{
@@ -308,7 +308,7 @@ func (s *Service) MockCompleteAddonCheckout(ctx context.Context, addonID, ownerU
 	payload, sig, err := BuildTestWebhookPayload(s.cfg.StripeWebhookSecret, "checkout.session.completed", map[string]any{
 		"id":             sessionID,
 		"payment_status": "paid",
-		"customer":       "cus_mock_" + ownerUserID,
+		"customer":       MockCustomerID(ownerUserID),
 		"subscription":   nil,
 		"payment_intent": "pi_mock_addon_" + addonID,
 		"metadata": map[string]any{

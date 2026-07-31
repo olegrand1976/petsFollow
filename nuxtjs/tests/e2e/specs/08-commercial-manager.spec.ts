@@ -14,3 +14,28 @@ test('responsable commercial voit suivi et prospects équipe', async ({ page }) 
   await page.goto('/commercial-manager/prospects')
   await expect(page.getByTestId('manager-prospects-page')).toBeVisible()
 })
+
+test('responsable commercial ouvre le mémo ASV et la plaquette', async ({ page }) => {
+  await loginAsCommercialManager(page)
+  await expect(page.getByTestId('nav-commercial-asv-memo')).toBeVisible()
+  await expect(page.getByTestId('nav-commercial-brochure')).toBeVisible()
+  await page.goto('/commercial/asv-memo', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByTestId('commercial-asv-memo')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('asv-memo-print')).toBeVisible()
+  await page.goto('/commercial/brochure', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByTestId('commercial-brochure')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('brochure-print')).toBeVisible()
+  await expect(page.getByTestId('nav-commercial-settings')).toBeVisible()
+})
+
+test.describe('manager filiation', { tag: '@p1' }, () => {
+  test('responsable ouvre la page filiation', async ({ page }) => {
+    await loginAsCommercialManager(page)
+    await page.goto('/commercial-manager/filiation', { waitUntil: 'networkidle' })
+    await expect(page.getByTestId('manager-filiation-page')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('filiation-table')).toBeVisible()
+    await expect(page.getByTestId('filiation-error')).toHaveCount(0)
+    await expect(page.getByTestId('filiation-export-csv')).toBeVisible()
+    await expect(page.getByTestId('filiation-history')).toBeVisible()
+  })
+})

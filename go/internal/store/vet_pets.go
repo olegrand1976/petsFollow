@@ -26,7 +26,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			p.id::text,
-			p.practice_id::text,
+			COALESCE(p.practice_id::text,''),
 			p.owner_user_id::text,
 			COALESCE(u.full_name, ''),
 			p.name,
@@ -43,7 +43,7 @@ func (s *Store) ListPetsForPractice(ctx context.Context, practiceID string) ([]V
 		LEFT JOIN LATERAL (
 			SELECT COALESCE(v.scheduled_at, v.created_at) AS last_visit_at
 			FROM visits.visits v
-			WHERE v.pet_id = p.id AND v.status = 'done'
+			WHERE v.pet_id = p.id AND v.status = 'done' AND v.deleted_at IS NULL
 			ORDER BY COALESCE(v.scheduled_at, v.created_at) DESC
 			LIMIT 1
 		) lv ON TRUE
