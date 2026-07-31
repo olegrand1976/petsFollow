@@ -87,36 +87,51 @@ function stackIds(instanceId: string, frames: number) {
   return Array.from({ length: n }, (_, i) => imageIdFor(instanceId, i))
 }
 
-async function loadMetadata(instanceId: string) {
+type InstanceMeta = {
+  spacing: PacsSpacingMm | null
+  frames: number
+  modality?: string
+}
+
+async function readInstanceMeta(instanceId: string): Promise<InstanceMeta> {
   try {
     const res: any = await apiFetch(`/api/pacs/instances/${instanceId}/metadata`)
     const data = res.data ?? res
-    pixelSpacing.value = parsePixelSpacingMm(data.pixelSpacingMm)
-    spacingApplied.value = false
-    const spacing = pixelSpacing.value ? pixelSpacing.value.join('×') : null
     const nFrames = Number(data.numberOfFrames)
-    maxFrame.value = Number.isFinite(nFrames) && nFrames > 0 ? nFrames - 1 : 0
-    const parts = [
-      data.modality,
-      spacing ? `${spacing} mm` : null,
-      maxFrame.value > 0 ? `${maxFrame.value + 1} frames` : null,
-    ].filter(Boolean)
-    metaLabel.value = parts.join(' · ')
+    const frames = Number.isFinite(nFrames) && nFrames > 0 ? nFrames : 1
+    return {
+      spacing: parsePixelSpacingMm(data.pixelSpacingMm),
+      frames,
+      modality: data.modality,
+    }
   } catch {
-    metaLabel.value = ''
-    maxFrame.value = 0
-    pixelSpacing.value = null
-    spacingApplied.value = false
+    return { spacing: null, frames: 1 }
   }
 }
 
-async function applyApiSpacingCalibration(imageIds: string[]) {
+function applyLeftUiMeta(meta: InstanceMeta) {
+  pixelSpacing.value = meta.spacing
+  maxFrame.value = Math.max(0, meta.frames - 1)
   spacingApplied.value = false
-  if (!renderingEngine || !pixelSpacing.value || !imageIds.length) return
+  const spacing = meta.spacing ? meta.spacing.join('×') : null
+  const parts = [
+    meta.modality,
+    spacing ? `${spacing} mm` : null,
+    maxFrame.value > 0 ? `${maxFrame.value + 1} frames` : null,
+  ].filter(Boolean)
+  metaLabel.value = parts.join(' · ')
+}
+
+/** @returns true when calibrateImageSpacing applied. */
+async function applyApiSpacingCalibration(
+  imageIds: string[],
+  spacing: PacsSpacingMm | null,
+): Promise<boolean> {
+  if (!renderingEngine || !spacing || !imageIds.length) return false
   try {
     const tools = await import('@cornerstonejs/tools')
     const core = await import('@cornerstonejs/core')
-    const [rowMm, colMm] = pixelSpacing.value
+    const [rowMm, colMm] = spacing
     const calibration = {
       type: core.Enums.CalibrationTypes.USER,
       rowPixelSpacing: rowMm,
@@ -125,10 +140,10 @@ async function applyApiSpacingCalibration(imageIds: string[]) {
     for (const imageId of imageIds) {
       tools.utilities.calibrateImageSpacing(imageId, renderingEngine, calibration)
     }
-    spacingApplied.value = true
+    return true
   } catch {
     // Viewer stays usable; Length stays in px until calibration succeeds.
-    spacingApplied.value = false
+    return false
   }
 }
 
@@ -233,6 +248,8 @@ async function attachVoiListener(el: HTMLDivElement | null) {
 
 async function bindStack(element: HTMLDivElement | null, instanceId: string | undefined, viewportId: string) {
   if (!element || !instanceId || !renderingEngine) return
+  const meta = await readInstanceMeta(instanceId)
+  if (viewportId === 'left') applyLeftUiMeta(meta)
   const core = await import('@cornerstonejs/core')
   element.innerHTML = ''
   renderingEngine.enableElement({
@@ -241,9 +258,11 @@ async function bindStack(element: HTMLDivElement | null, instanceId: string | un
     type: core.Enums.ViewportType.STACK,
   })
   const vp = renderingEngine.getViewport(viewportId)
-  const ids = stackIds(instanceId, maxFrame.value + 1)
-  await vp.setStack(ids, Math.min(frameIndex.value, ids.length - 1))
-  await applyApiSpacingCalibration(ids)
+  const ids = stackIds(instanceId, meta.frames)
+  const startIdx = viewportId === 'left' ? Math.min(frameIndex.value, ids.length - 1) : 0
+  await vp.setStack(ids, startIdx)
+  const calibrated = await applyApiSpacingCalibration(ids, meta.spacing)
+  if (viewportId === 'left') spacingApplied.value = calibrated
   vp.render()
   if (viewportId === 'left') {
     await attachVoiListener(element)
@@ -265,7 +284,6 @@ async function reload() {
       renderingEngine = null
     }
     renderingEngine = new core.RenderingEngine(ENGINE_ID)
-    await loadMetadata(props.leftInstanceId)
     await nextTick()
     const viewportIds = ['left']
     await bindStack(leftEl.value, props.leftInstanceId, 'left')

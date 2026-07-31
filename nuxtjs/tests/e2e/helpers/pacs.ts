@@ -81,11 +81,17 @@ export async function openFirstStudyWithFixture(
   await page.getByTestId('pacs-upload-input').setInputFiles(PACS_FIXTURE)
   await expect(page.getByTestId('pacs-study-item').first()).toBeVisible({ timeout: 90000 })
 
-  // Prefer RX/DX / demo fixture over orphan CT indexes (study meta → 502).
-  const preferred = page
-    .getByTestId('pacs-study-item')
-    .filter({ hasText: /rx|thorax|demo|petsfollow|\b(DX|CR|DR|PX)\b/i })
-  const studyBtn = (await preferred.count()) > 0 ? preferred.first() : page.getByTestId('pacs-study-item').first()
+  // Newest study is first in the list after upload; prefer it when RX-like,
+  // else fall back to another RX/DX (avoid orphan CT → 502).
+  const preferredRe = /rx|thorax|demo|petsfollow|\b(DX|CR|DR|PX)\b/i
+  const items = page.getByTestId('pacs-study-item')
+  const newest = items.first()
+  const newestText = await newest.innerText()
+  let studyBtn = newest
+  if (!preferredRe.test(newestText)) {
+    const preferred = items.filter({ hasText: preferredRe })
+    if ((await preferred.count()) > 0) studyBtn = preferred.first()
+  }
 
   const mediaOk = page.waitForResponse(
     (r) => {

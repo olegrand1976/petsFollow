@@ -94,17 +94,17 @@ const badgeVariant = computed(() => {
 const stateLabel = computed(() => t(`pacs.state.${status.value.state}`))
 
 /** Prefer seed RX / DX over broken CT indexes (storage miss → 502 on study/preview). */
-function pickPreferredStudy(items: any[]): any | null {
-  if (!items.length) return null
-  const score = (s: any) => {
-    const mod = String(s.modality || '').toUpperCase()
-    const desc = String(s.description || '').toLowerCase()
-    if (/rx|thorax|demo|petsfollow/.test(desc)) return 100
-    if (/\b(DX|CR|DR|PX)\b/.test(mod)) return 80
-    if (/\bCT\b/.test(mod) || /ct[_ ]?chest/.test(desc)) return 10
-    return 40
-  }
-  return [...items].sort((a, b) => score(b) - score(a))[0]
+function studyOpenScore(s: any): number {
+  const mod = String(s.modality || '').toUpperCase()
+  const desc = String(s.description || '').toLowerCase()
+  if (/rx|thorax|demo|petsfollow/.test(desc)) return 100
+  if (/\b(DX|CR|DR|PX)\b/.test(mod)) return 80
+  if (/\bCT\b/.test(mod) || /ct[_ ]?chest/.test(desc)) return 10
+  return 40
+}
+
+function rankStudiesForOpen(items: any[]): any[] {
+  return [...items].sort((a, b) => studyOpenScore(b) - studyOpenScore(a))
 }
 
 function pacsFetchMessage(e: any, fallback: string): string {
@@ -129,8 +129,9 @@ async function loadStudies() {
       && studies.value.length
       && !actionsLocked.value
     ) {
-      const preferred = pickPreferredStudy(studies.value)
-      if (preferred) await openStudy(preferred)
+      for (const s of rankStudiesForOpen(studies.value)) {
+        if (await openStudy(s)) break
+      }
     }
   } catch (e: any) {
     studiesError.value = pacsFetchMessage(e, 'load_failed')
@@ -160,9 +161,9 @@ async function loadSeries(seriesId: string) {
   syncComparePane()
 }
 
-async function openStudy(study: any) {
-  if (actionsLocked.value) return
-  selectedStudyId.value = study.orthancStudyId
+/** @returns true when an instance is bound (selection committed). */
+async function openStudy(study: any): Promise<boolean> {
+  if (actionsLocked.value) return false
   leftInstanceId.value = ''
   rightInstanceId.value = ''
   instances.value = []
@@ -189,11 +190,21 @@ async function openStudy(study: any) {
     const first = seriesIds.value[0]
     if (!first) {
       studiesError.value = t('pacs.orthancError')
-      return
+      selectedStudyId.value = ''
+      return false
     }
     await loadSeries(first)
+    if (!leftInstanceId.value) {
+      studiesError.value = t('pacs.orthancError')
+      selectedStudyId.value = ''
+      return false
+    }
+    selectedStudyId.value = study.orthancStudyId
+    return true
   } catch (e: any) {
+    selectedStudyId.value = ''
     studiesError.value = pacsFetchMessage(e, t('pacs.orthancError'))
+    return false
   }
 }
 
