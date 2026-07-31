@@ -3731,6 +3731,7 @@
     "rightInstance": "Right instance",
     "seriesPicker": "Series",
     "seriesOption": "Series {n} · {id}",
-    "downloadError": "DICOM download failed."
+    "downloadError": "DICOM download failed.",
+    "instanceUnavailable": "DICOM file missing on the imaging server. Re-upload the study or pick another one."
   }
 }

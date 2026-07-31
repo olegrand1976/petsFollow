@@ -130,9 +130,19 @@ async function bindPane(
       frameIndex.value = maxFrame.value
       return bindPane(pane, canvas, instanceId, myGen)
     }
-    reportLoadError(t('pacs.previewError'))
+    reportLoadError(fetchErrorMessage(e) || t('pacs.previewError'))
     return false
   }
+}
+
+function fetchErrorMessage(e: unknown): string {
+  const err = e as { data?: any, message?: string }
+  const d = err?.data
+  const msg = d?.message || d?.error?.message || d?.statusMessage
+  if (typeof msg === 'string' && msg && msg !== 'Error' && !msg.startsWith('errors.')) return msg
+  const key = d?.msgKey || d?.error?.msgKey
+  if (key === 'pacs_instance_unavailable') return t('pacs.instanceUnavailable')
+  return ''
 }
 
 function paint(pane: Pane, canvas: HTMLCanvasElement | null) {

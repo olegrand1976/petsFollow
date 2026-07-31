@@ -3700,6 +3700,7 @@
     "rightInstance": "Instancia derecha",
     "seriesPicker": "Serie",
     "seriesOption": "Serie {n} · {id}",
-    "downloadError": "No se pudo descargar el DICOM."
+    "downloadError": "No se pudo descargar el DICOM.",
+    "instanceUnavailable": "Falta el DICOM en el servidor. Vuelva a importar el estudio o elija otro."
   }
 }

@@ -645,6 +645,11 @@ func (a *API) getPacsInstanceFile(w http.ResponseWriter, r *http.Request) {
 	}
 	data, ct, err := client.getInstanceFile(r.Context(), instanceID)
 	if err != nil {
+		a.appendPacsLog(r.Context(), "error", "instance_file", "orthanc file failed", err.Error())
+		if orthancBlobUnavailable(err) {
+			writeErr(w, r, http.StatusBadGateway, "pacs_instance_unavailable", "pacs_instance_unavailable")
+			return
+		}
 		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")
 		return
 	}
@@ -796,9 +801,15 @@ func (a *API) getPacsInstancePreview(w http.ResponseWriter, r *http.Request) {
 	}
 	data, ct, err := client.getInstanceFramesPreview(r.Context(), instanceID, frame)
 	if err != nil {
-		// Orthanc 400/404 (frame hors plage) → 404 client ; autres erreurs → 502 (pas de clamp UI).
-		if orthancPreviewOutOfRange(err) {
+		a.appendPacsLog(r.Context(), "error", "instance_preview", "orthanc preview failed", err.Error())
+		// Frame hors plage (400/404, frame>0) → 404 pour clamp UI.
+		if orthancPreviewOutOfRange(err, frame) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		// Index Orthanc OK mais bytes absents (souvent GCS) → message dédié.
+		if orthancBlobUnavailable(err) {
+			writeErr(w, r, http.StatusBadGateway, "pacs_instance_unavailable", "pacs_instance_unavailable")
 			return
 		}
 		writeErr(w, r, http.StatusBadGateway, "pacs_error", "pacs_error")

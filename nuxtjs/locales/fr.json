@@ -3732,6 +3732,7 @@
     "rightInstance": "Instance droite",
     "seriesPicker": "Série",
     "seriesOption": "Série {n} · {id}",
-    "downloadError": "Téléchargement DICOM impossible."
+    "downloadError": "Téléchargement DICOM impossible.",
+    "instanceUnavailable": "Fichier DICOM introuvable sur le serveur d’imagerie. Réimportez l’étude (ex. RX démo) ou choisissez une autre."
   }
 }

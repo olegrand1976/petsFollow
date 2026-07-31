@@ -3700,6 +3700,7 @@
     "rightInstance": "Parem eksemplar",
     "seriesPicker": "Seeria",
     "seriesOption": "Seeria {n} · {id}",
-    "downloadError": "DICOM-i allalaadimine ebaõnnestus."
+    "downloadError": "DICOM-i allalaadimine ebaõnnestus.",
+    "instanceUnavailable": "DICOM puudub pildiserveris. Laadige uuring uuesti või valige teine."
   }
 }

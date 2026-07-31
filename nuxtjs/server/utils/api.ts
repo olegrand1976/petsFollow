@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { createError } from 'h3'
 import { authCookieSecure } from '../../utils/authCookieSecure'
 
 /** Aligné sur JWT_REFRESH_TTL (30 jours). */
@@ -316,27 +317,37 @@ export async function proxyBinary(
       : { ...apiHeaders(event) }
     const res = await fetch(url, { headers })
     if (!res.ok) {
-      const err: any = new Error(`upstream_${res.status}`)
-      err.statusCode = res.status
-      err.status = res.status
+      let payload: any = null
+      try {
+        payload = await res.json()
+      } catch { /* non-JSON upstream */ }
+      const err: any = createError({
+        statusCode: res.status,
+        statusMessage: payload?.error?.message || payload?.message || res.statusText || 'Error',
+        data: payload?.error || payload || { code: 'upstream_error', message: `upstream_${res.status}` },
+      })
       throw err
     }
     const buf = Buffer.from(await res.arrayBuffer())
     const ct = res.headers.get('content-type') || 'application/octet-stream'
     setHeader(event, 'content-type', ct)
-    setHeader(event, 'cache-control', res.headers.get('cache-control') || 'private, max-age=300')
+    setHeader(event, 'cache-control', res.headers.get('cache-control') || 'private, no-store')
     return buf
   }
 
   try {
     return await fetchOnce()
   } catch (e: any) {
-    if (!isUnauthorized(e)) throw toProxyError(e)
+    if (!isUnauthorized(e)) {
+      if (e?.statusCode) throw e
+      throw toProxyError(e)
+    }
     const outcome = await refreshAccessToken(event)
     if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
     try {
       return await fetchOnce(outcome.pair.accessToken)
     } catch (retryErr: any) {
+      if (retryErr?.statusCode) throw retryErr
       throw toProxyError(retryErr)
     }
   }

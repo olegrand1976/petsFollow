@@ -35,9 +35,12 @@ func (e *orthancStatusError) Error() string {
 	return fmt.Sprintf("orthanc_%s_%d", e.Resource, e.Status)
 }
 
-// orthancPreviewOutOfRange reports frame index / missing preview.
-// Orthanc versions differ: 400, 404, and sometimes 500 on invalid frame index.
-func orthancPreviewOutOfRange(err error) bool {
+// orthancPreviewOutOfRange reports an invalid frame index (not missing storage).
+// Only 400/404 and only when frame > 0 — Orthanc may also 500 when the blob is gone.
+func orthancPreviewOutOfRange(err error, frame int) bool {
+	if frame <= 0 {
+		return false
+	}
 	var se *orthancStatusError
 	if !errors.As(err, &se) {
 		return false
@@ -45,8 +48,20 @@ func orthancPreviewOutOfRange(err error) bool {
 	if se.Resource != "preview" {
 		return false
 	}
+	return se.Status == http.StatusBadRequest || se.Status == http.StatusNotFound
+}
+
+// orthancBlobUnavailable: instance indexed but DICOM bytes / preview unavailable (GCS cold miss, purged object).
+func orthancBlobUnavailable(err error) bool {
+	var se *orthancStatusError
+	if !errors.As(err, &se) {
+		return false
+	}
+	if se.Resource != "preview" && se.Resource != "file" && se.Resource != "tags" {
+		return false
+	}
 	switch se.Status {
-	case http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError:
+	case http.StatusNotFound, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable:
 		return true
 	default:
 		return false
@@ -239,7 +254,7 @@ func (c *orthancClient) getInstanceFile(ctx context.Context, instanceID string) 
 		return nil, "", err
 	}
 	if resp.StatusCode >= 300 {
-		return nil, "", fmt.Errorf("orthanc_file_%d", resp.StatusCode)
+		return nil, "", &orthancStatusError{Resource: "file", Status: resp.StatusCode}
 	}
 	ct := resp.Header.Get("Content-Type")
 	if ct == "" {

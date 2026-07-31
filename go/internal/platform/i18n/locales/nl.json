@@ -186,7 +186,9 @@
     "invalid_id": "Ongeldige identifier",
     "care_pro_visit_only": "Alleen toegestaan voor bezoeken aangemaakt in het veld (care pro)",
     "pet_not_in_practice": "Dier hoort niet bij deze praktijk",
-    "pacs_study_other_practice": "Deze DICOM-studie is al gekoppeld aan een andere praktijk"
+    "pacs_study_other_practice": "Deze DICOM-studie is al gekoppeld aan een andere praktijk",
+    "pacs_instance_unavailable": "DICOM-bestand ontbreekt op de beeldserver (opslag). Upload de studie opnieuw of open een andere.",
+    "pacs_error": "PACS error"
   },
   "success": {
     "confirm_email_sent": "Er is een bevestigingsmail verzonden.",

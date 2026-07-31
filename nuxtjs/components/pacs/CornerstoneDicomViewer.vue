@@ -88,10 +88,20 @@ async function reload() {
       await bindStack(rightEl.value, props.rightInstanceId, 'right')
     }
   } catch (e: any) {
-    loadError.value = e?.message || t('pacs.previewError')
+    loadError.value = fetchCsError(e) || e?.message || t('pacs.previewError')
   } finally {
     busy.value = false
   }
+}
+
+function fetchCsError(e: unknown): string {
+  const err = e as { data?: any }
+  const d = err?.data
+  const msg = d?.message || d?.error?.message
+  if (typeof msg === 'string' && msg && msg !== 'Error') return msg
+  const key = d?.msgKey || d?.error?.msgKey
+  if (key === 'pacs_instance_unavailable') return t('pacs.instanceUnavailable')
+  return ''
 }
 
 watch(

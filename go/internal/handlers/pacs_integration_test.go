@@ -588,10 +588,46 @@ func TestPacsInstancePreviewFileFullFlow(t *testing.T) {
 	}
 }
 
+func TestPacsInstanceBlobUnavailableMessage(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+	fx := newPacsOrthancFixture()
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/preview") || strings.HasSuffix(r.URL.Path, "/file") {
+			http.Error(w, "storage miss", http.StatusInternalServerError)
+			return
+		}
+		fx.handler(t).ServeHTTP(w, r)
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "chest.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+
+	code, body, _ := doAuthBytes(t, api.handler, http.MethodGet,
+		"/api/v1/pacs/instances/"+fx.instID+"/frames/0/preview", vetTok)
+	if code != http.StatusBadGateway {
+		t.Fatalf("preview want 502 got %d body=%s", code, string(body))
+	}
+	var env2 map[string]any
+	if err := json.Unmarshal(body, &env2); err != nil {
+		t.Fatal(err)
+	}
+	if errMsgKey(env2) != "pacs_instance_unavailable" {
+		t.Fatalf("msgKey %#v", env2)
+	}
+}
+
 func TestPacsInstancePreviewOutOfRangeIs404(t *testing.T) {
 	t.Setenv("PACS_ENABLED", "true")
 
-	for _, orthStatus := range []int{http.StatusNotFound, http.StatusBadRequest, http.StatusInternalServerError} {
+	for _, orthStatus := range []int{http.StatusNotFound, http.StatusBadRequest} {
 		orthStatus := orthStatus
 		t.Run(fmt.Sprintf("orthanc_%d", orthStatus), func(t *testing.T) {
 			api := newTestAPI(t)

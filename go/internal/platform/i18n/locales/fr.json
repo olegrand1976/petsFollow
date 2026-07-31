@@ -186,7 +186,9 @@
     "invalid_id": "Identifiant invalide",
     "care_pro_visit_only": "Action réservée aux visites créées en terrain (care pro)",
     "pet_not_in_practice": "Animal non rattaché à ce cabinet",
-    "pacs_study_other_practice": "Cette étude DICOM est déjà liée à un autre cabinet"
+    "pacs_study_other_practice": "Cette étude DICOM est déjà liée à un autre cabinet",
+    "pacs_instance_unavailable": "Fichier DICOM introuvable sur le serveur d’imagerie (stockage). Réimportez l’étude ou ouvrez une autre.",
+    "pacs_error": "Erreur PACS / Orthanc"
   },
   "success": {
     "confirm_email_sent": "Un email de confirmation a été envoyé.",
