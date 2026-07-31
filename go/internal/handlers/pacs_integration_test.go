@@ -951,3 +951,84 @@ func TestPacsAdminWake(t *testing.T) {
 		t.Fatalf("wake state want starting got %#v", row)
 	}
 }
+
+func TestPacsAdminPlaygroundAccess(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","Series":["` + seriesID + `"],"MainDicomTags":{"StudyInstanceUID":"1.2.3.admin","StudyDescription":"admin playground","ModalitiesInStudy":"DX"}}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/series/"+seriesID:
+			_, _ = w.Write([]byte(`{"ID":"` + seriesID + `","ParentStudy":"` + studyID + `","Instances":["` + instID + `"]}`))
+		default:
+			_ = body
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pacs/status", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin status %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets?ownerEmail=someone@gmail.com", adminTok, nil)
+	if code != http.StatusBadRequest || errCode(env) != "validation_error" {
+		t.Fatalf("non-seed email expected 400 validation_error got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("playground-pets %d %#v", code, env)
+	}
+	data := dataMap(t, env)
+	pets, ok := data["pets"].([]any)
+	if !ok || len(pets) == 0 {
+		t.Fatalf("expected seed pets %#v", env)
+	}
+	preferred, _ := data["preferredPetId"].(string)
+	if preferred == "" {
+		t.Fatalf("preferredPetId empty %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+preferred+"/pacs/studies", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin list studies %d %#v", code, env)
+	}
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+	code, env = doAuthPacsUpload(t, api.handler, petID, vetTok, "admin-play.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("vet upload for admin proxy %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pacs/studies/"+studyID, adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin study proxy %d %#v", code, env)
+	}
+	if dataMap(t, env)["ID"] != studyID {
+		t.Fatalf("admin study proxy body %#v", env)
+	}
+
+	code, _ = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/pacs/playground-pets", vetTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("vet playground-pets expected 403 got %d", code)
+	}
+}

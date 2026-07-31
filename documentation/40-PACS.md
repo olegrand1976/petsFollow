@@ -37,6 +37,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
 | `GET` | `/api/v1/admin/pacs/metrics` | admin |
 | `POST` | `/api/v1/admin/pacs/wake` | admin — cold start Orthanc (même sémantique que `/pacs/wake`) |
+| `GET` | `/api/v1/admin/pacs/playground-pets` | admin — pets seed pour playground (défaut `client.demo@…` ; `ownerEmail` limité à `*@petsfollow.test`) |
 
 ## Démo locale (présentation)
 
@@ -94,7 +95,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 
 - Fiche animal → onglet Imagerie → `PacsViewerContainer` (badge état, wake, upload, dual-pane).
 - Viewer canvas (preview Orthanc) : Zoom, Pan, Window/Level, mesure, flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`.
-- Admin `/admin/pacs` : métriques + logs (poll 5s), bouton **wake**, badge `nav.tagDev`.
+- Admin `/admin/pacs` : métriques + **playground** (= `PacsViewerContainer` véto) + debug fetch client + logs serveur (poll 5s), bouton **wake**, badge `nav.tagDev`. Les routes cliniques PACS acceptent aussi le rôle `admin` (sans switch profil véto).
 
 ## Tests
 

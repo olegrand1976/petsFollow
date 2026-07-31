@@ -76,6 +76,7 @@ func (a *API) registerAdminPacsRoutes(pr chi.Router) {
 	pr.Get("/admin/pacs/logs", a.adminPacsLogs)
 	pr.Get("/admin/pacs/metrics", a.adminPacsMetrics)
 	pr.Post("/admin/pacs/wake", a.adminPacsWake)
+	pr.Get("/admin/pacs/playground-pets", a.adminPacsPlaygroundPets)
 }
 
 func (a *API) requirePacsEnabled(w http.ResponseWriter, r *http.Request) bool {
@@ -343,19 +344,73 @@ func (a *API) adminPacsMetrics(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// adminPacsPlaygroundPets lists pets for the admin PACS playground (default: client.demo seed).
+// ownerEmail is optional and restricted to *.petsfollow.test to avoid arbitrary PHI lookup.
+func (a *API) adminPacsPlaygroundPets(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	email := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("ownerEmail")))
+	if email == "" {
+		email = "client.demo@petsfollow.test"
+	}
+	if !strings.HasSuffix(email, "@petsfollow.test") {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "playground_email_restricted")
+		return
+	}
+	u, err := a.store.GetUserByEmail(r.Context(), email)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "owner_not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	pets, err := a.store.ListPetsByOwner(r.Context(), u.ID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	type item struct {
+		ID         string `json:"id"`
+		Name       string `json:"name"`
+		Species    string `json:"species"`
+		PracticeID string `json:"practiceId"`
+	}
+	out := make([]item, 0, len(pets))
+	for _, p := range pets {
+		out = append(out, item{ID: p.ID, Name: p.Name, Species: p.Species, PracticeID: p.PracticeID})
+	}
+	preferred := ""
+	if len(out) > 0 {
+		preferred = out[0].ID
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"ownerEmail":     email,
+		"preferredPetId": preferred,
+		"pets":           out,
+	})
+}
+
 func (a *API) listPetPacsStudies(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePacsEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.read")
 	if !ok {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	if _, ok := a.requirePetAccess(w, r, petID, id, store.PermRead); !ok {
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermRead)
+	if !ok {
 		return
 	}
-	items, err := a.store.ListPetStudies(r.Context(), petID, id.PracticeID)
+	practiceID := a.resolvePacsPracticeID(id, pet)
+	items, err := a.store.ListPetStudies(r.Context(), petID, practiceID)
 	if err != nil {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
 		return
@@ -370,14 +425,16 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	if !a.requirePacsEnabled(w, r) {
 		return
 	}
-	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.write_clinical")
 	if !ok {
 		return
 	}
 	petID := chi.URLParam(r, "petID")
-	if _, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes); !ok {
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
+	if !ok {
 		return
 	}
+	practiceID := a.resolvePacsPracticeID(id, pet)
 	client := a.orthanc()
 	if client == nil {
 		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_url_missing")
@@ -442,7 +499,7 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 		instanceID = ""
 	}
 	studyAlreadyLinked := false
-	if _, linkErr := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, studyID); linkErr == nil {
+	if _, linkErr := a.store.FindPetStudyByOrthancStudy(r.Context(), practiceID, studyID); linkErr == nil {
 		studyAlreadyLinked = true
 	} else if !errors.Is(linkErr, store.ErrNotFound) {
 		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
@@ -474,7 +531,7 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	} else {
 		row, err = a.store.CreatePetStudy(r.Context(), store.CreatePetStudyInput{
 			PetID:            petID,
-			PracticeID:       id.PracticeID,
+			PracticeID:       practiceID,
 			OrthancStudyID:   studyID,
 			StudyInstanceUID: studyUID,
 			OrthancSeriesID:  seriesID,
@@ -512,10 +569,41 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteData(w, http.StatusCreated, row)
 }
 
+// requirePacsClinicalAccess allows practice staff with the given capability, or global admin
+// (ops playground on /admin/pacs — no practice switch required).
+func (a *API) requirePacsClinicalAccess(w http.ResponseWriter, r *http.Request, capability string) (authx.Identity, bool) {
+	id, err := authx.FromContext(r.Context())
+	if err != nil {
+		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
+		return authx.Identity{}, false
+	}
+	if id.Role == kernel.RoleAdmin {
+		return id, true
+	}
+	return a.requirePracticePerm(w, r, capability)
+}
+
+func (a *API) resolvePacsPracticeID(id authx.Identity, pet store.Pet) string {
+	if strings.TrimSpace(id.PracticeID) != "" {
+		return id.PracticeID
+	}
+	return pet.PracticeID
+}
+
+func (a *API) findPetStudyForPacs(ctx context.Context, id authx.Identity, orthancStudyID string) (store.PetStudy, error) {
+	if id.Role == kernel.RoleAdmin {
+		return a.store.FindPetStudyByOrthancStudyID(ctx, orthancStudyID)
+	}
+	return a.store.FindPetStudyByOrthancStudy(ctx, id.PracticeID, orthancStudyID)
+}
+
 func (a *API) requirePacsVetRead(w http.ResponseWriter, r *http.Request) (authx.Identity, bool) {
-	id, ok := a.requirePracticePerm(w, r, "pets.read")
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.read")
 	if !ok {
 		return authx.Identity{}, false
+	}
+	if id.Role == kernel.RoleAdmin {
+		return id, true
 	}
 	if !kernel.IsPracticeStaff(id.Role) {
 		writeErr(w, r, http.StatusForbidden, "forbidden", "vet_only")
@@ -533,7 +621,7 @@ func (a *API) requireOrthancStudyAccess(w http.ResponseWriter, r *http.Request, 
 		writeErr(w, r, http.StatusBadRequest, "validation_error", "invalid_orthanc_id")
 		return authx.Identity{}, false
 	}
-	if _, err := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, orthancStudyID); err != nil {
+	if _, err := a.findPetStudyForPacs(r.Context(), id, orthancStudyID); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return authx.Identity{}, false
@@ -588,7 +676,7 @@ func (a *API) getPacsSeries(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 		return
 	}
-	if _, err := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, parentStudy); err != nil {
+	if _, err := a.findPetStudyForPacs(r.Context(), id, parentStudy); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return
@@ -623,7 +711,7 @@ func (a *API) authorizePacsInstance(w http.ResponseWriter, r *http.Request, inst
 		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 		return nil, false
 	}
-	if _, err := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, parentStudy); err != nil {
+	if _, err := a.findPetStudyForPacs(r.Context(), id, parentStudy); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
 			return nil, false

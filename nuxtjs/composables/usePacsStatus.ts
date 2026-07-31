@@ -1,5 +1,7 @@
 import type { PacsState } from '~/utils/pacs-poll'
 import { pacsPollIntervalMs } from '~/utils/pacs-poll'
+import type { PacsDebugEntry } from '~/composables/usePacsDebugLog'
+import { pacsDebugFetch } from '~/composables/usePacsDebugLog'
 
 export type PacsStatus = {
   state: PacsState
@@ -15,7 +17,10 @@ function unwrap<T>(res: any): T {
 /**
  * Adaptive PACS status polling: fast while starting, slow when ready/offline.
  */
-export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
+export function usePacsStatus(opts: {
+  enabled?: Ref<boolean> | boolean
+  onDebug?: (entry: PacsDebugEntry) => void
+} = {}) {
   const status = ref<PacsStatus>({ state: 'offline' })
   const loading = ref(false)
   const waking = ref(false)
@@ -39,12 +44,19 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
     if (state === 'ready' || state === 'offline') waking.value = false
   }
 
+  async function pacsFetch<T>(url: string, fetchOpts?: Record<string, any>) {
+    if (opts.onDebug) {
+      return pacsDebugFetch<T>(url, fetchOpts, opts.onDebug)
+    }
+    return $fetch<T>(url, fetchOpts)
+  }
+
   async function refresh() {
     if (!enabled.value || stopped) return
     loading.value = true
     error.value = ''
     try {
-      const res = await $fetch('/api/pacs/status')
+      const res = await pacsFetch('/api/pacs/status')
       status.value = unwrap<PacsStatus>(res)
       clearWakingIfSettled(status.value.state)
     } catch (e: any) {
@@ -69,7 +81,7 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
     waking.value = true
     error.value = ''
     try {
-      const res = await $fetch('/api/pacs/wake', { method: 'POST', body: {} })
+      const res = await pacsFetch('/api/pacs/wake', { method: 'POST', body: {} })
       status.value = unwrap<PacsStatus>(res)
       schedule()
     } catch (e: any) {

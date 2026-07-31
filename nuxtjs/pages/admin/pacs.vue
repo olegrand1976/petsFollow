@@ -48,6 +48,71 @@
           </dl>
         </ProCard>
 
+        <ProCard :title="$t('pacs.admin.playgroundTitle')" data-testid="admin-pacs-playground">
+          <p class="pro-hint admin-pacs-playground-hint">{{ $t('pacs.admin.playgroundHint') }}</p>
+          <div class="admin-pacs-playground-bar">
+            <label class="admin-pacs-pet-label">
+              <span>{{ $t('pacs.admin.petSelect') }}</span>
+              <select
+                v-model="selectedPetId"
+                data-testid="admin-pacs-pet-select"
+                :disabled="!playgroundPets.length"
+              >
+                <option disabled value="">{{ $t('pacs.admin.petPlaceholder') }}</option>
+                <option v-for="p in playgroundPets" :key="p.id" :value="p.id">
+                  {{ p.name }} · {{ p.species }} · {{ p.id.slice(0, 8) }}
+                </option>
+              </select>
+            </label>
+            <ProButton
+              variant="secondary"
+              data-testid="admin-pacs-reload-pets"
+              :disabled="petsLoading"
+              @click="loadPlaygroundPets"
+            >
+              {{ $t('pacs.admin.reloadPets') }}
+            </ProButton>
+          </div>
+          <p v-if="petsError" class="pro-error" role="alert">{{ petsError }}</p>
+          <PacsViewerContainer
+            v-if="selectedPetId"
+            :key="selectedPetId"
+            :pet-id="selectedPetId"
+            debug
+            @debug="onViewerDebug"
+          />
+        </ProCard>
+
+        <ProCard :title="$t('pacs.admin.debugTitle')" data-testid="admin-pacs-debug">
+          <div class="admin-pacs-debug-actions">
+            <ProButton variant="secondary" data-testid="admin-pacs-debug-clear" @click="clearDebug">
+              {{ $t('pacs.admin.debugClear') }}
+            </ProButton>
+          </div>
+          <ProTable :empty="!debugEntries.length" :empty-title="$t('pacs.admin.debugEmpty')">
+            <thead>
+              <tr>
+                <th>{{ $t('pacs.admin.colAt') }}</th>
+                <th>{{ $t('pacs.admin.debugColOk') }}</th>
+                <th>{{ $t('pacs.admin.debugColMethod') }}</th>
+                <th>{{ $t('pacs.admin.debugColUrl') }}</th>
+                <th>{{ $t('pacs.admin.debugColMs') }}</th>
+                <th>{{ $t('pacs.admin.colMessage') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, i) in debugEntries" :key="i" data-testid="admin-pacs-debug-row">
+                <td>{{ row.at }}</td>
+                <td>{{ row.ok ? 'ok' : (row.status || 'err') }}</td>
+                <td>{{ row.method }}</td>
+                <td class="admin-pacs-debug-url">{{ row.url }}</td>
+                <td>{{ row.ms }}</td>
+                <td>{{ row.message || '—' }}</td>
+              </tr>
+            </tbody>
+          </ProTable>
+        </ProCard>
+
         <ProCard :title="$t('pacs.admin.logsTitle')" data-testid="admin-pacs-logs">
           <ProTable :empty="!logs.length" :empty-title="$t('pacs.admin.emptyLogs')">
             <thead>
@@ -75,18 +140,25 @@
 
 <script setup lang="ts">
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
+import type { PacsDebugEntry } from '~/composables/usePacsDebugLog'
 
 definePageMeta({ layout: 'admin', middleware: 'admin-only' })
 
 const { t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
+const { entries: debugEntries, push: pushDebug, clear: clearDebug } = usePacsDebugLog()
 
 const loading = ref(false)
 const waking = ref(false)
 const loadError = ref('')
 const metrics = ref<any>(null)
 const logs = ref<any[]>([])
+
+const playgroundPets = ref<{ id: string; name: string; species: string; practiceId: string }[]>([])
+const selectedPetId = ref('')
+const petsLoading = ref(false)
+const petsError = ref('')
 
 const badgeVariant = computed(() => {
   const s = metrics.value?.status?.state
@@ -99,6 +171,28 @@ const stateLabel = computed(() => {
   const s = metrics.value?.status?.state || 'offline'
   return t(`pacs.state.${s}`)
 })
+
+function onViewerDebug(entry: PacsDebugEntry) {
+  pushDebug(entry)
+}
+
+async function loadPlaygroundPets() {
+  if (!pacsOn.value) return
+  petsLoading.value = true
+  petsError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/pacs/playground-pets')
+    const data = res.data ?? res
+    playgroundPets.value = data.pets || []
+    if (!selectedPetId.value || !playgroundPets.value.some(p => p.id === selectedPetId.value)) {
+      selectedPetId.value = data.preferredPetId || playgroundPets.value[0]?.id || ''
+    }
+  } catch (e: any) {
+    petsError.value = e?.data?.message || e?.message || 'pets_failed'
+  } finally {
+    petsLoading.value = false
+  }
+}
 
 async function load() {
   if (!pacsOn.value) return
@@ -141,6 +235,7 @@ async function wakeAdmin() {
 let poll: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   void load()
+  void loadPlaygroundPets()
   poll = setInterval(() => { void load() }, 5000)
 })
 onBeforeUnmount(() => {
@@ -166,5 +261,34 @@ onBeforeUnmount(() => {
 .admin-pacs-metrics dd {
   margin: 0.25rem 0 0;
   font-weight: 600;
+}
+.admin-pacs-playground-hint {
+  margin: 0 0 0.75rem;
+}
+.admin-pacs-playground-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+.admin-pacs-pet-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: min(100%, 280px);
+  flex: 1;
+}
+.admin-pacs-pet-label select {
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+}
+.admin-pacs-debug-actions {
+  margin-bottom: 0.75rem;
+}
+.admin-pacs-debug-url {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
 }
 </style>

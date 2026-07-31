@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { isPublicFlagOn } from '~/utils/public-feature-flag'
 import { resolvePacsViewerEngine } from '~/utils/pacs-viewer-engine'
+import type { PacsDebugEntry } from '~/composables/usePacsDebugLog'
+import { pacsDebugFetch } from '~/composables/usePacsDebugLog'
 
 const props = defineProps<{
   petId: string
+  /** When true, emit fetch traces for admin playground debug. */
+  debug?: boolean
+}>()
+
+const emit = defineEmits<{
+  debug: [entry: PacsDebugEntry]
 }>()
 
 const { t } = useI18n()
@@ -11,8 +19,19 @@ const runtimeConfig = useRuntimeConfig()
 const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
 const viewerEngine = computed(() => resolvePacsViewerEngine(runtimeConfig.public.pacsViewerEngine))
 const useCornerstone = computed(() => viewerEngine.value === 'cornerstone')
+
+function onDebug(entry: PacsDebugEntry) {
+  if (props.debug) emit('debug', entry)
+}
+
+async function apiFetch<T = any>(url: string, opts?: Record<string, any>) {
+  if (props.debug) return pacsDebugFetch<T>(url, opts, onDebug)
+  return $fetch<T>(url, opts)
+}
+
 const { status, loading, waking, hasPolled, error, wake, wakeUntilReady, refresh } = usePacsStatus({
   enabled: pacsOn,
+  onDebug: props.debug ? onDebug : undefined,
 })
 
 const studies = ref<any[]>([])
@@ -75,7 +94,7 @@ const stateLabel = computed(() => t(`pacs.state.${status.value.state}`))
 async function loadStudies() {
   studiesError.value = ''
   try {
-    const res: any = await $fetch(`/api/pets/${props.petId}/pacs/studies`)
+    const res: any = await apiFetch(`/api/pets/${props.petId}/pacs/studies`)
     studies.value = res.data ?? res ?? []
   } catch (e: any) {
     studiesError.value = e?.data?.message || e?.message || 'load_failed'
@@ -97,7 +116,7 @@ async function loadSeries(seriesId: string) {
   leftInstanceId.value = ''
   rightInstanceId.value = ''
   instances.value = []
-  const series: any = await $fetch(`/api/pacs/series/${seriesId}`)
+  const series: any = await apiFetch(`/api/pacs/series/${seriesId}`)
   const data = series.data ?? series
   const ids = (data.Instances as string[]) || []
   instances.value = ids
@@ -114,7 +133,7 @@ async function openStudy(study: any) {
   seriesIds.value = []
   selectedSeriesId.value = ''
   try {
-    const meta: any = await $fetch(`/api/pacs/studies/${study.orthancStudyId}`)
+    const meta: any = await apiFetch(`/api/pacs/studies/${study.orthancStudyId}`)
     const data = meta.data ?? meta
     const fromStudy = (data.Series as string[]) || []
     const preferred = study.orthancSeriesId
@@ -157,7 +176,7 @@ async function onUpload(ev: Event) {
     }
     const fd = new FormData()
     fd.append('file', file)
-    await $fetch(`/api/pets/${props.petId}/pacs/studies`, { method: 'POST', body: fd })
+    await apiFetch(`/api/pets/${props.petId}/pacs/studies`, { method: 'POST', body: fd })
     await loadStudies()
   } catch (e: any) {
     uploadError.value = e?.data?.message || e?.message || 'upload_failed'
