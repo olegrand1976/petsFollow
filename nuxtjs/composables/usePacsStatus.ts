@@ -19,6 +19,7 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
   const status = ref<PacsStatus>({ state: 'offline' })
   const loading = ref(false)
   const waking = ref(false)
+  const hasPolled = ref(false)
   const error = ref('')
   let timer: ReturnType<typeof setTimeout> | null = null
   let stopped = false
@@ -46,6 +47,7 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
       status.value = { state: 'offline', error: error.value }
     } finally {
       loading.value = false
+      hasPolled.value = true
       schedule()
     }
   }
@@ -84,6 +86,7 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
 
   function start() {
     stopped = false
+    hasPolled.value = false
     void refresh()
   }
 
@@ -102,5 +105,5 @@ export function usePacsStatus(opts: { enabled?: Ref<boolean> | boolean } = {}) {
     else stop()
   })
 
-  return { status, loading, waking, error, refresh, wake, wakeUntilReady, start, stop }
+  return { status, loading, waking, hasPolled, error, refresh, wake, wakeUntilReady, start, stop }
 }

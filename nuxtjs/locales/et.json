@@ -492,7 +492,6 @@
     "sortPets": "Enim lemmikloomi",
     "emptyTitle": "Kliente pole",
     "emptyDescription": "Kliendid ilmuvad siia, kui nad on teie praktikaga seotud.",
-
     "loadError": "Klientide laadimine ebaõnnestus.",
     "columnClient": "Klient",
     "columnEmail": "E-post",
@@ -3647,8 +3646,8 @@
     "emptyTitle": "Uuringuid pole",
     "emptyDescription": "Alustamiseks importige .dcm-fail.",
     "previewError": "Pildi eelvaadet ei õnnestunud laadida. Proovige uuesti või käivitage PACS.",
-    "leftSeries": "Vasak seeria",
-    "rightSeries": "Parem seeria",
+    "leftSeries": "Vasak eksemplar",
+    "rightSeries": "Parem eksemplar",
     "state": {
       "offline": "Võrguühenduseta",
       "starting": "Käivitamine…",
@@ -3661,7 +3660,11 @@
       "measure": "Mõõda",
       "arrow": "Nool",
       "fullscreen": "Täisekraan",
-      "exitFullscreen": "Välju täisekraanilt"
+      "exitFullscreen": "Välju täisekraanilt",
+      "prevFrame": "Kaader −",
+      "nextFrame": "Kaader +",
+      "frame": "Kaader {n}",
+      "download": "Laadi DICOM alla"
     },
     "admin": {
       "title": "PACS — järelevalve",
@@ -3678,6 +3681,25 @@
       "colLevel": "Tase",
       "colEvent": "Sündmus",
       "colMessage": "Sõnum"
-    }
+    },
+    "launch": {
+      "title": "PACS-i start",
+      "subtitle": "Orthanc käivitub — pilditoimingud on lukus kuni valmisolekuni.",
+      "waking": "Käivitamine…",
+      "actionsLocked": "Üleslaadimine, võrdlus ja vaade jäävad lukku kuni Valmis.",
+      "steps": {
+        "check": "Eelkontroll — teenuse olek",
+        "ignite": "Süüte — äratamissignaal",
+        "liftoff": "Õhkutõus — Orthanc cold start",
+        "orbit": "Orbiit — turvaline ühendus",
+        "ready": "Valmis — pildindus saadaval"
+      },
+      "notReady": "PACS ei ole valmis. Proovige uuesti äratada või oodake käivituse lõppu."
+    },
+    "leftInstance": "Vasak eksemplar",
+    "rightInstance": "Parem eksemplar",
+    "seriesPicker": "Seeria",
+    "seriesOption": "Seeria {n} · {id}",
+    "downloadError": "DICOM-i allalaadimine ebaõnnestus."
   }
 }

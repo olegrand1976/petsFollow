@@ -8,7 +8,9 @@ const props = defineProps<{
 const { t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
-const { status, loading, waking, error, wake, wakeUntilReady, refresh } = usePacsStatus({ enabled: pacsOn })
+const { status, loading, waking, hasPolled, error, wake, wakeUntilReady, refresh } = usePacsStatus({
+  enabled: pacsOn,
+})
 
 const studies = ref<any[]>([])
 const studiesError = ref('')
@@ -18,13 +20,50 @@ const compare = ref(false)
 const leftInstanceId = ref('')
 const rightInstanceId = ref('')
 const selectedStudyId = ref('')
+const seriesIds = ref<string[]>([])
+const selectedSeriesId = ref('')
 const instances = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
-const previewError = ref('')
+
+/** Hold launch pad ~1.4s after ready so step « ready » is visible. */
+const celebrateReady = ref(false)
+let celebrateTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(
+  () => status.value.state,
+  (state, prev) => {
+    if (state === 'ready' && (prev === 'starting' || prev === 'offline')) {
+      celebrateReady.value = true
+      if (celebrateTimer) clearTimeout(celebrateTimer)
+      celebrateTimer = setTimeout(() => {
+        celebrateReady.value = false
+        celebrateTimer = null
+      }, 1400)
+      return
+    }
+    if (state !== 'ready') {
+      celebrateReady.value = false
+      if (celebrateTimer) {
+        clearTimeout(celebrateTimer)
+        celebrateTimer = null
+      }
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  if (celebrateTimer) clearTimeout(celebrateTimer)
+})
+
+const isStarting = computed(() => waking.value || status.value.state === 'starting')
+/** Only show pad during wake/starting or short ready celebration — never on first silent poll. */
+const showLaunchPad = computed(() => isStarting.value || celebrateReady.value)
+const actionsLocked = computed(() => status.value.state !== 'ready' || isStarting.value || uploadBusy.value)
+const wakeDisabled = computed(() => isStarting.value || (!hasPolled.value && loading.value))
 
 const badgeVariant = computed(() => {
   if (status.value.state === 'ready') return 'success'
-  if (status.value.state === 'starting') return 'warning'
+  if (status.value.state === 'starting' || waking.value) return 'warning'
   return 'neutral'
 })
 
@@ -50,34 +89,46 @@ function syncComparePane() {
   }
 }
 
+async function loadSeries(seriesId: string) {
+  selectedSeriesId.value = seriesId
+  leftInstanceId.value = ''
+  rightInstanceId.value = ''
+  instances.value = []
+  const series: any = await $fetch(`/api/pacs/series/${seriesId}`)
+  const data = series.data ?? series
+  const ids = (data.Instances as string[]) || []
+  instances.value = ids
+  if (ids[0]) leftInstanceId.value = ids[0]
+  syncComparePane()
+}
+
 async function openStudy(study: any) {
+  if (actionsLocked.value) return
   selectedStudyId.value = study.orthancStudyId
   leftInstanceId.value = ''
   rightInstanceId.value = ''
   instances.value = []
-  previewError.value = ''
+  seriesIds.value = []
+  selectedSeriesId.value = ''
   try {
-    const seriesId = study.orthancSeriesId
-    if (seriesId) {
-      const series: any = await $fetch(`/api/pacs/series/${seriesId}`)
-      const data = series.data ?? series
-      const ids = (data.Instances as string[]) || []
-      instances.value = ids
-      if (ids[0]) leftInstanceId.value = ids[0]
-      syncComparePane()
-    } else {
-      const meta: any = await $fetch(`/api/pacs/studies/${study.orthancStudyId}`)
-      const data = meta.data ?? meta
-      const seriesList = (data.Series as string[]) || []
-      if (seriesList[0]) {
-        const series: any = await $fetch(`/api/pacs/series/${seriesList[0]}`)
-        const sdata = series.data ?? series
-        const ids = (sdata.Instances as string[]) || []
-        instances.value = ids
-        if (ids[0]) leftInstanceId.value = ids[0]
-        syncComparePane()
-      }
-    }
+    const meta: any = await $fetch(`/api/pacs/studies/${study.orthancStudyId}`)
+    const data = meta.data ?? meta
+    const fromStudy = (data.Series as string[]) || []
+    const preferred = study.orthancSeriesId
+    seriesIds.value = preferred && !fromStudy.includes(preferred)
+      ? [preferred, ...fromStudy]
+      : (fromStudy.length ? fromStudy : (preferred ? [preferred] : []))
+    const first = seriesIds.value[0]
+    if (first) await loadSeries(first)
+  } catch (e: any) {
+    studiesError.value = e?.data?.message || e?.message || 'open_failed'
+  }
+}
+
+async function onSeriesChange() {
+  if (!selectedSeriesId.value || actionsLocked.value) return
+  try {
+    await loadSeries(selectedSeriesId.value)
   } catch (e: any) {
     studiesError.value = e?.data?.message || e?.message || 'open_failed'
   }
@@ -97,7 +148,7 @@ async function onUpload(ev: Event) {
     if (status.value.state !== 'ready') {
       const ok = await wakeUntilReady(90000)
       if (!ok) {
-        uploadError.value = 'pacs_not_ready'
+        uploadError.value = t('pacs.launch.notReady')
         return
       }
     }
@@ -129,7 +180,7 @@ onMounted(() => {
         <h3 class="pacs-container__title">{{ t('pacs.title') }}</h3>
         <ProBadge variant="warning" data-testid="pacs-dev-badge">{{ t('nav.tagDev') }}</ProBadge>
         <ProBadge :variant="badgeVariant" data-testid="pacs-status-badge">
-          <span v-if="status.state === 'starting' || waking" class="pacs-spinner" aria-hidden="true" />
+          <span v-if="isStarting" class="pacs-spinner" aria-hidden="true" />
           {{ stateLabel }}
           <template v-if="status.latencyMs != null && status.state === 'ready'">
             · {{ status.latencyMs }} ms
@@ -140,38 +191,61 @@ onMounted(() => {
         <ProButton
           v-if="status.state !== 'ready'"
           data-testid="pacs-wake-btn"
-          :disabled="waking || status.state === 'starting'"
+          :disabled="wakeDisabled"
+          :loading="isStarting"
           @click="wake"
         >
-          {{ t('pacs.wake') }}
+          {{ isStarting ? t('pacs.launch.waking') : t('pacs.wake') }}
         </ProButton>
-        <ProButton variant="secondary" data-testid="pacs-refresh-btn" :disabled="loading" @click="refresh">
+        <ProButton
+          variant="secondary"
+          data-testid="pacs-refresh-btn"
+          :disabled="loading || isStarting"
+          @click="refresh"
+        >
           {{ t('pacs.refresh') }}
         </ProButton>
-        <label class="pacs-upload">
+        <label class="pacs-upload" :class="{ 'is-disabled': actionsLocked }">
           <input
             ref="fileInput"
             type="file"
             accept=".dcm,application/dicom"
             data-testid="pacs-upload-input"
-            :disabled="uploadBusy"
+            :disabled="actionsLocked"
             @change="onUpload"
           >
           <span class="pro-btn pro-btn--secondary">{{ t('pacs.upload') }}</span>
         </label>
-        <label class="pacs-compare">
-          <input v-model="compare" type="checkbox" data-testid="pacs-compare-toggle">
+        <label class="pacs-compare" :class="{ 'is-disabled': actionsLocked }">
+          <input
+            v-model="compare"
+            type="checkbox"
+            data-testid="pacs-compare-toggle"
+            :disabled="actionsLocked"
+          >
           {{ t('pacs.compare') }}
         </label>
       </div>
     </div>
 
-    <p v-if="error || studiesError || uploadError || previewError" class="pro-inline-feedback pro-inline-feedback--error" role="alert" data-testid="pacs-error">
-      {{ error || studiesError || uploadError || previewError }}
+    <p v-if="error || studiesError || uploadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert" data-testid="pacs-error">
+      {{ error || studiesError || uploadError }}
     </p>
 
-    <div v-if="status.state !== 'ready'" class="pacs-container__hint">
-      {{ t('pacs.offlineHint') }}
+    <PacsLaunchPad
+      v-if="showLaunchPad"
+      :state="status.state"
+      :waking="waking"
+      :celebrating="celebrateReady"
+    />
+
+    <div
+      v-else-if="status.state !== 'ready'"
+      class="pacs-container__hint"
+      data-testid="pacs-offline-hint"
+    >
+      <p>{{ t('pacs.offlineHint') }}</p>
+      <p class="pacs-container__hint-lock">{{ t('pacs.launch.actionsLocked') }}</p>
     </div>
 
     <template v-else>
@@ -188,6 +262,7 @@ onMounted(() => {
           class="pacs-study"
           :class="{ 'is-active': selectedStudyId === s.orthancStudyId }"
           data-testid="pacs-study-item"
+          :disabled="actionsLocked"
           @click="openStudy(s)"
         >
           <strong>{{ s.description || s.modality || s.orthancStudyId }}</strong>
@@ -195,16 +270,32 @@ onMounted(() => {
         </button>
       </div>
 
+      <div v-if="seriesIds.length > 1" class="pacs-instances">
+        <label>
+          {{ t('pacs.seriesPicker') }}
+          <select
+            v-model="selectedSeriesId"
+            data-testid="pacs-series-select"
+            :disabled="actionsLocked"
+            @change="onSeriesChange"
+          >
+            <option v-for="(id, i) in seriesIds" :key="id" :value="id">
+              {{ t('pacs.seriesOption', { n: i + 1, id: id.slice(0, 12) }) }}
+            </option>
+          </select>
+        </label>
+      </div>
+
       <div v-if="instances.length > 1" class="pacs-instances">
         <label>
-          {{ t('pacs.leftSeries') }}
-          <select v-model="leftInstanceId" data-testid="pacs-left-instance">
+          {{ t('pacs.leftInstance') }}
+          <select v-model="leftInstanceId" data-testid="pacs-left-instance" :disabled="actionsLocked">
             <option v-for="id in instances" :key="id" :value="id">{{ id.slice(0, 12) }}</option>
           </select>
         </label>
         <label v-if="compare">
-          {{ t('pacs.rightSeries') }}
-          <select v-model="rightInstanceId" data-testid="pacs-right-instance">
+          {{ t('pacs.rightInstance') }}
+          <select v-model="rightInstanceId" data-testid="pacs-right-instance" :disabled="actionsLocked">
             <option v-for="id in instances" :key="'r-'+id" :value="id">{{ id.slice(0, 12) }}</option>
           </select>
         </label>
@@ -216,7 +307,6 @@ onMounted(() => {
           :left-instance-id="leftInstanceId"
           :right-instance-id="compare ? rightInstanceId : undefined"
           :compare="compare"
-          @load-error="(msg: string) => { previewError = msg }"
         />
       </ClientOnly>
     </template>
@@ -231,6 +321,12 @@ onMounted(() => {
 .pacs-container__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .pacs-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .pacs-upload { position: relative; cursor: pointer; }
+.pacs-upload.is-disabled,
+.pacs-compare.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pacs-upload.is-disabled { pointer-events: none; }
 .pacs-compare { display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; }
 .pacs-spinner {
   display: inline-block; width: 0.7rem; height: 0.7rem; margin-right: 0.35rem;
@@ -243,9 +339,12 @@ onMounted(() => {
   text-align: left; border: 1px solid var(--pf-vet-border); background: var(--pf-vet-bg);
   border-radius: 8px; padding: 0.6rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.15rem;
 }
+.pacs-study:disabled { opacity: 0.5; cursor: not-allowed; }
 .pacs-study.is-active { border-color: var(--pf-vet-accent); }
 .pacs-study span { font-size: 0.8rem; opacity: 0.75; }
 .pacs-instances { display: flex; flex-wrap: wrap; gap: 1rem; }
 .pacs-instances select { margin-left: 0.35rem; }
-.pacs-container__hint { color: var(--pf-vet-primary); opacity: 0.8; }
+.pacs-container__hint { color: var(--pf-vet-primary); opacity: 0.9; }
+.pacs-container__hint p { margin: 0 0 0.35rem; }
+.pacs-container__hint-lock { font-size: 0.88rem; opacity: 0.75; }
 </style>

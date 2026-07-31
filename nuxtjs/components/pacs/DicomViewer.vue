@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /**
  * Canvas DICOM viewer (client-only).
- * Loads Orthanc frame previews via BFF; tools: zoom, pan, W/L, measure, arrow, fullscreen, dual-pane.
- * Cornerstone3D-ready structure — pixel source is Orthanc preview for V1 reliability (no WASM CDN).
+ * Loads Orthanc frame previews via BFF; tools: zoom, pan, W/L, measure, arrow, fullscreen, dual-pane, frame scroll, download.
  */
 const props = defineProps<{
   leftInstanceId?: string
@@ -16,6 +15,9 @@ const { t } = useI18n()
 const rootEl = ref<HTMLElement | null>(null)
 const tool = ref<Tool>('pan')
 const fullscreen = ref(false)
+const frameIndex = ref(0)
+const maxFrame = ref<number | null>(null)
+const downloadBusy = ref(false)
 
 type Pane = {
   img: HTMLImageElement | null
@@ -46,27 +48,31 @@ const rightCanvas = ref<HTMLCanvasElement | null>(null)
 
 const imageCache = new Map<string, string>()
 const loadError = ref('')
-const emit = defineEmits<{
-  loadError: [message: string]
-}>()
 
 function reportLoadError(message: string) {
   loadError.value = message
-  emit('loadError', message)
 }
 
-async function loadPreview(instanceId: string): Promise<string> {
-  const cached = imageCache.get(instanceId)
+async function loadPreview(instanceId: string, frame: number): Promise<string> {
+  const key = `${instanceId}:${frame}`
+  const cached = imageCache.get(key)
   if (cached) return cached
-  const blob = await $fetch<Blob>(`/api/pacs/instances/${instanceId}/frames/0/preview`, {
+  const blob = await $fetch<Blob>(`/api/pacs/instances/${instanceId}/frames/${frame}/preview`, {
     responseType: 'blob',
   })
   const ct = (blob.type || '').toLowerCase()
-  if (ct.includes('json') || ct.includes('text') || blob.size < 32) {
+  if (ct.includes('json') || ct.includes('text')) {
+    throw new Error('preview_not_image')
+  }
+  const head = new Uint8Array(await blob.slice(0, 8).arrayBuffer())
+  const isPng = head.length >= 8
+    && head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47
+  const isJpeg = head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff
+  if (!isPng && !isJpeg && !ct.startsWith('image/')) {
     throw new Error('preview_not_image')
   }
   const url = URL.createObjectURL(blob)
-  imageCache.set(instanceId, url)
+  imageCache.set(key, url)
   return url
 }
 
@@ -77,7 +83,7 @@ async function bindPane(pane: Pane, canvas: HTMLCanvasElement | null, instanceId
     return
   }
   try {
-    const url = await loadPreview(instanceId)
+    const url = await loadPreview(instanceId, frameIndex.value)
     const img = new Image()
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve()
@@ -89,11 +95,16 @@ async function bindPane(pane: Pane, canvas: HTMLCanvasElement | null, instanceId
     pane.offsetX = 0
     pane.offsetY = 0
     loadError.value = ''
-    emit('loadError', '')
     paint(pane, canvas)
   } catch {
     pane.img = null
     paint(pane, canvas)
+    if (frameIndex.value > 0) {
+      maxFrame.value = frameIndex.value - 1
+      frameIndex.value = maxFrame.value
+      await bindPane(pane, canvas, instanceId)
+      return
+    }
     reportLoadError(t('pacs.previewError'))
   }
 }
@@ -212,7 +223,49 @@ function resizeCanvases() {
   }
 }
 
-watch(() => props.leftInstanceId, (id) => { void bindPane(left, leftCanvas.value, id) })
+async function reloadPanes() {
+  await bindPane(left, leftCanvas.value, props.leftInstanceId)
+  if (props.compare) await bindPane(right, rightCanvas.value, props.rightInstanceId)
+}
+
+async function stepFrame(delta: number) {
+  const next = frameIndex.value + delta
+  if (next < 0) return
+  if (maxFrame.value != null && next > maxFrame.value) return
+  frameIndex.value = next
+  await reloadPanes()
+}
+
+function onWheel(e: WheelEvent) {
+  if (!e.shiftKey) return
+  e.preventDefault()
+  void stepFrame(e.deltaY > 0 ? 1 : -1)
+}
+
+async function downloadDicom() {
+  const id = props.leftInstanceId
+  if (!id || downloadBusy.value) return
+  downloadBusy.value = true
+  try {
+    const blob = await $fetch<Blob>(`/api/pacs/instances/${id}/file`, { responseType: 'blob' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${id.slice(0, 12)}.dcm`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    reportLoadError(t('pacs.downloadError'))
+  } finally {
+    downloadBusy.value = false
+  }
+}
+
+watch(() => props.leftInstanceId, (id) => {
+  frameIndex.value = 0
+  maxFrame.value = null
+  void bindPane(left, leftCanvas.value, id)
+})
 watch(() => props.rightInstanceId, (id) => { void bindPane(right, rightCanvas.value, id) })
 watch(() => props.compare, () => nextTick(resizeCanvases))
 
@@ -220,8 +273,7 @@ onMounted(async () => {
   await nextTick()
   resizeCanvases()
   window.addEventListener('resize', resizeCanvases)
-  await bindPane(left, leftCanvas.value, props.leftInstanceId)
-  if (props.compare) await bindPane(right, rightCanvas.value, props.rightInstanceId)
+  await reloadPanes()
 })
 
 onBeforeUnmount(() => {
@@ -256,13 +308,43 @@ onBeforeUnmount(() => {
       <button
         type="button"
         class="dicom-viewer__tool"
+        data-testid="dicom-tool-frame-prev"
+        :disabled="frameIndex <= 0"
+        @click="stepFrame(-1)"
+      >
+        {{ t('pacs.tools.prevFrame') }}
+      </button>
+      <span class="dicom-viewer__frame" data-testid="dicom-frame-label">
+        {{ t('pacs.tools.frame', { n: frameIndex + 1 }) }}
+      </span>
+      <button
+        type="button"
+        class="dicom-viewer__tool"
+        data-testid="dicom-tool-frame-next"
+        :disabled="maxFrame != null && frameIndex >= maxFrame"
+        @click="stepFrame(1)"
+      >
+        {{ t('pacs.tools.nextFrame') }}
+      </button>
+      <button
+        type="button"
+        class="dicom-viewer__tool"
+        data-testid="dicom-tool-download"
+        :disabled="!leftInstanceId || downloadBusy"
+        @click="downloadDicom"
+      >
+        {{ t('pacs.tools.download') }}
+      </button>
+      <button
+        type="button"
+        class="dicom-viewer__tool"
         data-testid="dicom-tool-fullscreen"
         @click="toggleFullscreen"
       >
         {{ fullscreen ? t('pacs.tools.exitFullscreen') : t('pacs.tools.fullscreen') }}
       </button>
     </div>
-    <div class="dicom-viewer__panes" :class="{ 'dicom-viewer__panes--compare': compare }">
+    <div class="dicom-viewer__panes" :class="{ 'dicom-viewer__panes--compare': compare }" @wheel="onWheel">
       <div class="dicom-viewer__pane">
         <canvas
           ref="leftCanvas"
@@ -302,6 +384,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
 }
 .dicom-viewer__tool {
   border: 1px solid var(--pf-vet-border);
@@ -312,10 +395,21 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   cursor: pointer;
 }
+.dicom-viewer__tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .dicom-viewer__tool.is-active {
   background: var(--pf-vet-accent);
   color: #fff;
   border-color: transparent;
+}
+.dicom-viewer__frame {
+  font-size: 0.8rem;
+  color: var(--pf-vet-primary);
+  opacity: 0.8;
+  min-width: 4.5rem;
+  text-align: center;
 }
 .dicom-viewer__panes {
   display: grid;

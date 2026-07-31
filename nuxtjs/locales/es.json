@@ -492,7 +492,6 @@
     "sortPets": "Más mascotas",
     "emptyTitle": "Sin clientes",
     "emptyDescription": "Los clientes aparecerán aquí cuando estén vinculados a su clínica.",
-
     "loadError": "No se pudieron cargar los clientes.",
     "columnClient": "Cliente",
     "columnEmail": "Correo",
@@ -3647,8 +3646,8 @@
     "emptyTitle": "Ningún estudio",
     "emptyDescription": "Importe un archivo .dcm para empezar.",
     "previewError": "No se pudo cargar la vista previa. Reintente o active el PACS.",
-    "leftSeries": "Serie izquierda",
-    "rightSeries": "Serie derecha",
+    "leftSeries": "Instancia izquierda",
+    "rightSeries": "Instancia derecha",
     "state": {
       "offline": "Fuera de línea",
       "starting": "Iniciando…",
@@ -3661,7 +3660,11 @@
       "measure": "Medir",
       "arrow": "Flecha",
       "fullscreen": "Pantalla completa",
-      "exitFullscreen": "Salir de pantalla completa"
+      "exitFullscreen": "Salir de pantalla completa",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Descargar DICOM"
     },
     "admin": {
       "title": "PACS — supervisión",
@@ -3678,6 +3681,25 @@
       "colLevel": "Nivel",
       "colEvent": "Evento",
       "colMessage": "Mensaje"
-    }
+    },
+    "launch": {
+      "title": "Despegue del PACS",
+      "subtitle": "Orthanc arranca — las acciones de imagen permanecen bloqueadas hasta estar listo.",
+      "waking": "Despegando…",
+      "actionsLocked": "Importar, comparar y ver siguen bloqueados hasta Listo.",
+      "steps": {
+        "check": "Chequeo previo — estado del servicio",
+        "ignite": "Ignición — señal de despertar",
+        "liftoff": "Despegue — arranque en frío Orthanc",
+        "orbit": "Órbita — enlace seguro",
+        "ready": "Listo — imagen disponible"
+      },
+      "notReady": "El PACS no está listo. Reintente el arranque o espere a que termine."
+    },
+    "leftInstance": "Instancia izquierda",
+    "rightInstance": "Instancia derecha",
+    "seriesPicker": "Serie",
+    "seriesOption": "Serie {n} · {id}",
+    "downloadError": "No se pudo descargar el DICOM."
   }
 }

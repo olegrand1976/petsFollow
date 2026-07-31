@@ -492,7 +492,6 @@
     "sortPets": "Meeste dieren",
     "emptyTitle": "Geen klanten",
     "emptyDescription": "Klanten verschijnen hier zodra ze aan uw praktijk zijn gekoppeld.",
-
     "loadError": "Klanten laden mislukt.",
     "columnClient": "Klant",
     "columnEmail": "E-mail",
@@ -3678,8 +3677,8 @@
     "emptyTitle": "Geen studies",
     "emptyDescription": "Importeer een .dcm-bestand om te beginnen.",
     "previewError": "Kan de beeldvoorvertoning niet laden. Probeer opnieuw of activeer de PACS.",
-    "leftSeries": "Linkerreeks",
-    "rightSeries": "Rechterreeks",
+    "leftSeries": "Linker instantie",
+    "rightSeries": "Rechter instantie",
     "state": {
       "offline": "Offline",
       "starting": "Opstarten…",
@@ -3692,7 +3691,11 @@
       "measure": "Meten",
       "arrow": "Pijl",
       "fullscreen": "Volledig scherm",
-      "exitFullscreen": "Volledig scherm verlaten"
+      "exitFullscreen": "Volledig scherm verlaten",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "DICOM downloaden"
     },
     "admin": {
       "title": "PACS — toezicht",
@@ -3709,6 +3712,25 @@
       "colLevel": "Niveau",
       "colEvent": "Gebeurtenis",
       "colMessage": "Bericht"
-    }
+    },
+    "launch": {
+      "title": "PACS-lancering",
+      "subtitle": "Orthanc start op — beeldacties blijven vergrendeld tot alles klaar is.",
+      "waking": "Opstarten…",
+      "actionsLocked": "Upload, vergelijken en weergave blijven vergrendeld tot Klaar.",
+      "steps": {
+        "check": "Preflight — servicestatus",
+        "ignite": "Ontsteking — weksignaal",
+        "liftoff": "Lift-off — Orthanc cold start",
+        "orbit": "Baan — beveiligde verbinding",
+        "ready": "Klaar — beeldvorming beschikbaar"
+      },
+      "notReady": "PACS is niet klaar. Probeer opnieuw te wekken of wacht tot het opstarten klaar is."
+    },
+    "leftInstance": "Linker instantie",
+    "rightInstance": "Rechter instantie",
+    "seriesPicker": "Serie",
+    "seriesOption": "Serie {n} · {id}",
+    "downloadError": "DICOM-download mislukt."
   }
 }

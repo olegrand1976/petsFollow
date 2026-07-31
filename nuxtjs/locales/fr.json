@@ -722,7 +722,6 @@
       "listTitle": "Vos modules",
       "emptyTitle": "Pas encore d’activation",
       "emptyDescription": "Choisissez un cabinet assigné pour démarrer.",
-
       "colPractice": "Cabinet",
       "colStatus": "Statut",
       "colTrial": "Fin essai",
@@ -3679,8 +3678,8 @@
     "emptyTitle": "Aucune étude",
     "emptyDescription": "Importez un fichier .dcm pour démarrer.",
     "previewError": "Impossible de charger l’aperçu de l’image. Réessayez ou réactivez le PACS.",
-    "leftSeries": "Série gauche",
-    "rightSeries": "Série droite",
+    "leftSeries": "Instance gauche",
+    "rightSeries": "Instance droite",
     "state": {
       "offline": "Hors ligne",
       "starting": "Démarrage…",
@@ -3693,7 +3692,11 @@
       "measure": "Mesure",
       "arrow": "Flèche",
       "fullscreen": "Plein écran",
-      "exitFullscreen": "Quitter plein écran"
+      "exitFullscreen": "Quitter plein écran",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Télécharger DICOM"
     },
     "admin": {
       "title": "PACS — supervision",
@@ -3710,6 +3713,25 @@
       "colLevel": "Niveau",
       "colEvent": "Événement",
       "colMessage": "Message"
-    }
+    },
+    "launch": {
+      "title": "Décollage du PACS",
+      "subtitle": "Allumage Orthanc en cours — les actions imagerie sont indisponibles le temps du démarrage.",
+      "waking": "Décollage…",
+      "actionsLocked": "Import, comparaison et visualisation restent verrouillés jusqu’à l’état Prêt.",
+      "steps": {
+        "check": "Contrôle pré-vol — statut du service",
+        "ignite": "Allumage — signal de réveil",
+        "liftoff": "Décollage — démarrage à froid Orthanc",
+        "orbit": "Mise en orbite — liaison sécurisée",
+        "ready": "Prêt — imagerie disponible"
+      },
+      "notReady": "Le PACS n’est pas prêt. Réessayez l’allumage ou attendez la fin du démarrage."
+    },
+    "leftInstance": "Instance gauche",
+    "rightInstance": "Instance droite",
+    "seriesPicker": "Série",
+    "seriesOption": "Série {n} · {id}",
+    "downloadError": "Téléchargement DICOM impossible."
   }
 }

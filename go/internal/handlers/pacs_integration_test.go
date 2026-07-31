@@ -421,6 +421,9 @@ func TestPacsCreatePetStudyRejectsOtherPetConflict(t *testing.T) {
 	if code != http.StatusConflict {
 		t.Fatalf("second pet same study expected 409 got %d %#v", code, env)
 	}
+	if errMsgKey(env) != "pacs_study_other_pet" {
+		t.Fatalf("msgKey want pacs_study_other_pet got %q %#v", errMsgKey(env), env)
+	}
 	deletedMu.Lock()
 	got := deletedInstance
 	deletedMu.Unlock()
@@ -699,5 +702,163 @@ func TestPacsInstanceAuthzRequiresParentChain(t *testing.T) {
 		"/api/v1/pacs/instances/not-valid!!!/frames/0/preview", vetTok, nil)
 	if code != http.StatusBadRequest {
 		t.Fatalf("bad instance id expected 400 got %d %#v", code, env)
+	}
+}
+
+func TestPacsUploadResolvesParentViaSeries(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			// No ParentStudy on upload (Orthanc 1.12 asymmetry).
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/series/"+seriesID:
+			_, _ = w.Write([]byte(`{"ID":"` + seriesID + `","ParentStudy":"` + studyID + `"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","MainDicomTags":{"StudyDescription":"via-series","ModalitiesInStudy":"CT"}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "chest.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload via ParentSeries %d %#v", code, env)
+	}
+	row := dataMap(t, env)
+	if row["orthancStudyId"] != studyID {
+		t.Fatalf("orthancStudyId=%v want %s", row["orthancStudyId"], studyID)
+	}
+	if row["orthancSeriesId"] != seriesID {
+		t.Fatalf("orthancSeriesId=%v want %s", row["orthancSeriesId"], seriesID)
+	}
+}
+
+func TestPacsUploadRejectsOtherPractice(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+	var deletedMu sync.Mutex
+	var deletedInstance string
+
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","MainDicomTags":{}}`))
+		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/instances/"):
+			deletedMu.Lock()
+			deletedInstance = strings.TrimPrefix(r.URL.Path, "/instances/")
+			deletedMu.Unlock()
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	vetPlusTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	clientDemoTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	petPlus := activeDemoPetID(t, api.handler, clientDemoTok)
+
+	code, env := doAuthPacsUpload(t, api.handler, petPlus, vetPlusTok, "a.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("vetplus upload %d %#v", code, env)
+	}
+
+	vetParcTok := loginToken(t, api.handler, "vet.parc@petsfollow.test", "VetDemo123!")
+	marieTok := loginToken(t, api.handler, "client.marie@petsfollow.test", "ClientDemo123!")
+	petParc := activeDemoPetID(t, api.handler, marieTok)
+
+	deletedMu.Lock()
+	deletedInstance = ""
+	deletedMu.Unlock()
+
+	code, env = doAuthPacsUpload(t, api.handler, petParc, vetParcTok, "b.dcm", minimalDicomPayload())
+	if code != http.StatusConflict {
+		t.Fatalf("cross-practice expected 409 got %d %#v", code, env)
+	}
+	if errMsgKey(env) != "pacs_study_other_practice" {
+		t.Fatalf("msgKey want pacs_study_other_practice got %q %#v", errMsgKey(env), env)
+	}
+	deletedMu.Lock()
+	got := deletedInstance
+	deletedMu.Unlock()
+	if got != instID {
+		t.Fatalf("must compensate instance delete, got %q", got)
+	}
+}
+
+func TestPacsPurgeOrthancStudiesDeletesMapped(t *testing.T) {
+	// Purge Orthanc must work even when the product flag is off (RGPD).
+	t.Setenv("PACS_ENABLED", "false")
+	api := newTestAPI(t)
+
+	orthancStudy := uniqueOrthancID()
+	var deletedMu sync.Mutex
+	var deletedStudy string
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/studies/") {
+			deletedMu.Lock()
+			deletedStudy = strings.TrimPrefix(r.URL.Path, "/studies/")
+			deletedMu.Unlock()
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{}`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	handlers.TestPurgeOrthancStudies(api.api, []string{orthancStudy})
+
+	deletedMu.Lock()
+	got := deletedStudy
+	deletedMu.Unlock()
+	if got != orthancStudy {
+		t.Fatalf("Orthanc DELETE study want %q got %q", orthancStudy, got)
+	}
+}
+
+func TestPacsAdminWake(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+	handlers.TestSetOrthanc(api.api, "http://127.0.0.1:1")
+	tok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+
+	code, env := doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/wake", tok, nil)
+	if code != http.StatusAccepted {
+		t.Fatalf("wake status=%d %#v", code, env)
+	}
+	row := dataMap(t, env)
+	if row["state"] != "starting" {
+		t.Fatalf("wake state want starting got %#v", row)
 	}
 }

@@ -10,6 +10,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// Sentinel conflicts for imaging.pet_studies (compatible with errors.Is(..., ErrConflict) via handler checks).
+var (
+	ErrPacsStudyOtherPet      = errors.New("pacs_study_other_pet")
+	ErrPacsStudyOtherPractice = errors.New("pacs_study_other_practice")
+)
+
 type PetStudy struct {
 	ID               string    `json:"id"`
 	PetID            string    `json:"petId"`
@@ -49,31 +55,45 @@ const petStudySelect = `
 		orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
 	FROM imaging.pet_studies`
 
+func (s *Store) classifyPetStudyConflict(existing PetStudy, in CreatePetStudyInput) error {
+	if existing.PracticeID != in.PracticeID {
+		return ErrPacsStudyOtherPractice
+	}
+	if existing.PetID != in.PetID {
+		return ErrPacsStudyOtherPet
+	}
+	return nil
+}
+
+func (s *Store) updatePetStudyMeta(ctx context.Context, in CreatePetStudyInput) (PetStudy, error) {
+	return scanPetStudy(s.pool.QueryRow(ctx, `
+		UPDATE imaging.pet_studies SET
+			study_instance_uid = $3,
+			orthanc_series_id = $4,
+			description = $5,
+			modality = $6
+		WHERE practice_id = $1 AND orthanc_study_id = $2
+		RETURNING id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
+			orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
+	`, in.PracticeID, in.OrthancStudyID, in.StudyInstanceUID, in.OrthancSeriesID, in.Description, in.Modality))
+}
+
 func (s *Store) CreatePetStudy(ctx context.Context, in CreatePetStudyInput) (PetStudy, error) {
 	if strings.TrimSpace(in.OrthancStudyID) == "" {
 		return PetStudy{}, ErrValidation
 	}
-	existing, err := s.FindPetStudyByOrthancStudy(ctx, in.PracticeID, in.OrthancStudyID)
+	existing, err := s.FindPetStudyByOrthancStudyID(ctx, in.OrthancStudyID)
 	if err == nil {
-		if existing.PetID != in.PetID {
-			return PetStudy{}, ErrConflict
+		if cerr := s.classifyPetStudyConflict(existing, in); cerr != nil {
+			return PetStudy{}, cerr
 		}
-		return scanPetStudy(s.pool.QueryRow(ctx, `
-			UPDATE imaging.pet_studies SET
-				study_instance_uid = $3,
-				orthanc_series_id = $4,
-				description = $5,
-				modality = $6
-			WHERE practice_id = $1 AND orthanc_study_id = $2
-			RETURNING id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
-				orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
-		`, in.PracticeID, in.OrthancStudyID, in.StudyInstanceUID, in.OrthancSeriesID, in.Description, in.Modality))
+		return s.updatePetStudyMeta(ctx, in)
 	}
 	if !errors.Is(err, ErrNotFound) {
 		return PetStudy{}, err
 	}
 	id := uuid.NewString()
-	return scanPetStudy(s.pool.QueryRow(ctx, `
+	row, err := scanPetStudy(s.pool.QueryRow(ctx, `
 		INSERT INTO imaging.pet_studies (
 			id, pet_id, practice_id, orthanc_study_id, study_instance_uid,
 			orthanc_series_id, description, modality, uploaded_by_user_id
@@ -82,6 +102,21 @@ func (s *Store) CreatePetStudy(ctx context.Context, in CreatePetStudyInput) (Pet
 			orthanc_series_id, description, modality, COALESCE(uploaded_by_user_id::text,''), created_at
 	`, id, in.PetID, in.PracticeID, in.OrthancStudyID, in.StudyInstanceUID,
 		in.OrthancSeriesID, in.Description, in.Modality, in.UploadedByUserID))
+	if err == nil {
+		return row, nil
+	}
+	if !isUniqueViolation(err) {
+		return PetStudy{}, err
+	}
+	// Race: another practice/pet won the insert — classify from winner row.
+	winner, findErr := s.FindPetStudyByOrthancStudyID(ctx, in.OrthancStudyID)
+	if findErr != nil {
+		return PetStudy{}, ErrConflict
+	}
+	if cerr := s.classifyPetStudyConflict(winner, in); cerr != nil {
+		return PetStudy{}, cerr
+	}
+	return s.updatePetStudyMeta(ctx, in)
 }
 
 func (s *Store) ListPetStudies(ctx context.Context, petID, practiceID string) ([]PetStudy, error) {
@@ -116,6 +151,13 @@ func (s *Store) FindPetStudyByOrthancStudy(ctx context.Context, practiceID, orth
 	return scanPetStudy(s.pool.QueryRow(ctx, petStudySelect+`
 		WHERE practice_id = $1 AND orthanc_study_id = $2
 	`, practiceID, orthancStudyID))
+}
+
+// FindPetStudyByOrthancStudyID looks up any practice binding for an Orthanc study (global uniqueness).
+func (s *Store) FindPetStudyByOrthancStudyID(ctx context.Context, orthancStudyID string) (PetStudy, error) {
+	return scanPetStudy(s.pool.QueryRow(ctx, petStudySelect+`
+		WHERE orthanc_study_id = $1
+	`, orthancStudyID))
 }
 
 // FindPetStudyByOrthancSeries — tenant gate for Orthanc series proxy.

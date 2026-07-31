@@ -157,6 +157,12 @@ func errCode(envelope map[string]any) string {
 	return code
 }
 
+func errMsgKey(envelope map[string]any) string {
+	e, _ := envelope["error"].(map[string]any)
+	k, _ := e["msgKey"].(string)
+	return k
+}
+
 func TestAuthRegisterConfirmLoginForgotReset(t *testing.T) {
 	api := newTestAPI(t)
 	email := uniqueEmail("e2e-auth")

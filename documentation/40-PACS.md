@@ -36,6 +36,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/pacs/studies\|series\|instances/…` | proxy Orthanc |
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
 | `GET` | `/api/v1/admin/pacs/metrics` | admin |
+| `POST` | `/api/v1/admin/pacs/wake` | admin — cold start Orthanc (même sémantique que `/pacs/wake`) |
 
 ## Démo locale (présentation)
 
@@ -50,8 +51,9 @@ Scénario pitch (~3 min) :
 
 1. Login `vet.demo@petsfollow.test` / `VetDemo123!`
 2. Client Sophie → animal actif → onglet **Imagerie** (`?tab=imaging`)
-3. Badge état `ready` · étude « RX thorax demo » · outils zoom / pan / W/L
-4. Badge `dev` visible (module non GA)
+3. Si Orthanc froid : bouton **Activer** → panneau « Décollage » (étapes pré-vol → orbite) ; import/compare verrouillés jusqu’à **Prêt**
+4. Badge état `ready` · étude « RX thorax demo » · outils zoom / pan / W/L
+5. Badge `dev` visible (module non GA)
 
 Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind **loopback only**, config [`infra/orthanc/orthanc.local.json`](../infra/orthanc/orthanc.local.json)). Fixture : `testdata/pacs/demo-rx.dcm` (`scripts/gen-minimal-dicom.py`). Reset stockage local : `docker compose -f deploy/docker-compose.yml --env-file .env rm -sf orthanc && docker volume rm deploy_orthancdata` (nom exact via `docker volume ls | grep orthanc`).
 
@@ -75,6 +77,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Ingress Orthanc = **all** + IAM Cloud Run (ID token API→Orthanc) ; auth Orthanc désactivée derrière IAM (local : `ORTHANC_AUTH_ENABLED=true`).
 - Proxy DICOM : IDs Orthanc liés à `imaging.pet_studies` du **cabinet** (anti-IDOR cross-tenant).
 - Authz instance : `ParentStudy` si présent, sinon chaîne `ParentSeries` → série → `ParentStudy` (Orthanc 1.12 omet souvent `ParentStudy` sur `GET /instances/{id}`). Staff cabinet uniquement (`pets.read` + rôle practice) ; client → 403 ; autre cabinet → 404 opaque.
+- Lien Orthanc **globalement unique** (`UNIQUE(orthanc_study_id)`) : un study déjà lié à un cabinet ne peut pas être rattacher à un autre (`409 pacs_study_other_practice`). Upload : même fallback `ParentSeries` si `ParentStudy` absent.
 - Backups : **Cloud SQL automated backups** (DB `orthanc`) + **GCS versioning** sur `petsfollow-dicom`.
 - RGPD : export JSON `imagingStudies` ; purge `DELETE /me` / rétention → delete Orthanc study (best-effort) après collect artifacts.
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
@@ -90,8 +93,8 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 ## UI
 
 - Fiche animal → onglet Imagerie → `PacsViewerContainer` (badge état, wake, upload, dual-pane).
-- Viewer canvas (preview Orthanc) : Zoom, Pan, Window/Level, mesure, flèche, plein écran, comparaison.
-- Admin `/admin/pacs` : métriques + logs (poll 5s), badge `nav.tagDev`.
+- Viewer canvas (preview Orthanc) : Zoom, Pan, Window/Level, mesure, flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`.
+- Admin `/admin/pacs` : métriques + logs (poll 5s), bouton **wake**, badge `nav.tagDev`.
 
 ## Tests
 

@@ -53,18 +53,18 @@ async function canvasHasNonBackgroundPixels(page: import('@playwright/test').Pag
     const ctx = c.getContext('2d')
     if (!ctx || c.width < 8 || c.height < 8) return false
     const { data } = ctx.getImageData(0, 0, c.width, c.height)
-    // Background fill is #0b1220 — count pixels that clearly diverge.
+    // Background fill is #0b1220 — tolerate dark RX; count pixels that diverge.
     let lit = 0
-    for (let i = 0; i < data.length; i += 16) {
+    for (let i = 0; i < data.length; i += 8) {
       const r = data[i]
       const g = data[i + 1]
       const b = data[i + 2]
-      if (Math.abs(r - 0x0b) > 12 || Math.abs(g - 0x12) > 12 || Math.abs(b - 0x20) > 12) {
+      if (Math.abs(r - 0x0b) > 8 || Math.abs(g - 0x12) > 8 || Math.abs(b - 0x20) > 8) {
         lit++
-        if (lit > 40) return true
+        if (lit > 8) return true
       }
     }
-    return lit > 40
+    return lit > 8
   })
 }
 
@@ -95,7 +95,10 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
     await expect(page.getByTestId('pacs-refresh-btn')).toBeVisible()
     const wake = page.getByTestId('pacs-wake-btn')
     if (await wake.isVisible().catch(() => false)) {
+      // Smoke only — do not click wake (avoids cold-start side effects on the next test).
       await expect(wake).toBeEnabled()
+      await expect(page.getByTestId('pacs-upload-input')).toBeDisabled()
+      await expect(page.getByTestId('pacs-offline-hint')).toBeVisible()
     } else {
       await expect(page.getByTestId('pacs-status-badge')).toContainText(/ready|prêt|klaar|listo|valmis|pronto/i)
     }
@@ -123,12 +126,17 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
 
     const wake = page.getByTestId('pacs-wake-btn')
     if (await wake.isVisible().catch(() => false)) {
+      await expect(page.getByTestId('pacs-upload-input')).toBeDisabled()
       await wake.click()
+      await expect(page.getByTestId('pacs-launch-pad')).toBeVisible({ timeout: 10000 })
     }
     await expect(page.getByTestId('pacs-status-badge')).toContainText(
       /ready|prêt|klaar|listo|valmis|pronto/i,
       { timeout: 120000 },
     )
+    // Launch pad may celebrate ready ~1.4s before unmount.
+    await expect(page.getByTestId('pacs-launch-pad')).toHaveCount(0, { timeout: 5000 })
+    await expect(page.getByTestId('pacs-upload-input')).toBeEnabled()
 
     await page.getByTestId('pacs-upload-input').setInputFiles(FIXTURE)
 

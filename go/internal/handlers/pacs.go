@@ -74,6 +74,7 @@ func (a *API) registerPacsRoutes(pr chi.Router) {
 func (a *API) registerAdminPacsRoutes(pr chi.Router) {
 	pr.Get("/admin/pacs/logs", a.adminPacsLogs)
 	pr.Get("/admin/pacs/metrics", a.adminPacsMetrics)
+	pr.Post("/admin/pacs/wake", a.adminPacsWake)
 }
 
 func (a *API) requirePacsEnabled(w http.ResponseWriter, r *http.Request) bool {
@@ -113,9 +114,14 @@ func TestArmFailNextPetStudyInsert(a *API) {
 	a.failNextPetStudyInsert = true
 }
 
-// TestClearFailNextPetStudyInsert clears a pending armed fail (test cleanup).
+// TestClearFailNextPetStudyInsert disarms the fail-next insert hook (test cleanup).
 func TestClearFailNextPetStudyInsert(a *API) {
 	a.failNextPetStudyInsert = false
+}
+
+// TestPurgeOrthancStudies exposes retention Orthanc delete for integration tests.
+func TestPurgeOrthancStudies(a *API, studyIDs []string) {
+	a.purgeOrthancStudies(context.Background(), studyIDs)
 }
 
 
@@ -152,6 +158,20 @@ func (a *API) pacsWake(w http.ResponseWriter, r *http.Request) {
 	if _, ok := a.requirePacsVetRead(w, r); !ok {
 		return
 	}
+	a.beginPacsWake(w, r)
+}
+
+func (a *API) adminPacsWake(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	a.beginPacsWake(w, r)
+}
+
+func (a *API) beginPacsWake(w http.ResponseWriter, r *http.Request) {
 	a.appendPacsLog(r.Context(), "info", "wake", "wake requested", "")
 	starting := pacsStatusPayload{
 		State:     pacsStateStarting,
@@ -397,16 +417,28 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusBadGateway, "pacs_upload_failed", "pacs_upload_failed")
 		return
 	}
-	studyID := up.ParentStudy
-	seriesID := up.ParentSeries
-	instanceID := up.ID
+	studyID := strings.TrimSpace(up.ParentStudy)
+	seriesID := strings.TrimSpace(up.ParentSeries)
+	instanceID := strings.TrimSpace(up.ID)
+	// Orthanc 1.12 may omit ParentStudy on upload response — resolve via ParentSeries.
+	if (studyID == "" || validateOrthancID(studyID) != nil) && seriesID != "" && validateOrthancID(seriesID) == nil {
+		if resolved, resErr := client.seriesParentStudy(r.Context(), seriesID); resErr == nil {
+			studyID = strings.TrimSpace(resolved)
+		}
+	}
 	if studyID == "" || validateOrthancID(studyID) != nil {
 		a.appendPacsLog(r.Context(), "error", "upload", "orthanc parent study missing", instanceID)
-		if instanceID != "" {
+		if instanceID != "" && validateOrthancID(instanceID) == nil {
 			_ = client.deleteInstance(r.Context(), instanceID)
 		}
 		writeErr(w, r, http.StatusBadGateway, "pacs_upload_failed", "pacs_upload_failed")
 		return
+	}
+	if seriesID != "" && validateOrthancID(seriesID) != nil {
+		seriesID = ""
+	}
+	if instanceID != "" && validateOrthancID(instanceID) != nil {
+		instanceID = ""
 	}
 	studyAlreadyLinked := false
 	if _, linkErr := a.store.FindPetStudyByOrthancStudy(r.Context(), id.PracticeID, studyID); linkErr == nil {
@@ -460,7 +492,11 @@ func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {
 			_ = client.deleteStudy(r.Context(), studyID)
 			a.appendPacsLog(r.Context(), "warn", "upload", "db insert failed — orthanc study deleted", studyID)
 		}
-		if errors.Is(err, store.ErrConflict) {
+		if errors.Is(err, store.ErrPacsStudyOtherPractice) {
+			writeErr(w, r, http.StatusConflict, "conflict", "pacs_study_other_practice")
+			return
+		}
+		if errors.Is(err, store.ErrPacsStudyOtherPet) || errors.Is(err, store.ErrConflict) {
 			writeErr(w, r, http.StatusConflict, "conflict", "pacs_study_other_pet")
 			return
 		}

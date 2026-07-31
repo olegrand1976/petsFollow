@@ -281,6 +281,13 @@ func (c *orthancClient) orthancParentStudy(ctx context.Context, resource, id str
 		return "", err
 	}
 	parent, _ := meta["ParentStudy"].(string)
+	parent = strings.TrimSpace(parent)
+	if parent == "" {
+		return "", nil
+	}
+	if err := validateOrthancID(parent); err != nil {
+		return "", fmt.Errorf("orthanc_parent_study_invalid")
+	}
 	return parent, nil
 }
 
@@ -314,12 +321,19 @@ func (c *orthancClient) instanceParentStudy(ctx context.Context, instanceID stri
 		return "", err
 	}
 	if parent, _ := meta["ParentStudy"].(string); strings.TrimSpace(parent) != "" {
+		parent = strings.TrimSpace(parent)
+		if err := validateOrthancID(parent); err != nil {
+			return "", fmt.Errorf("orthanc_parent_study_invalid")
+		}
 		return parent, nil
 	}
 	seriesID, _ := meta["ParentSeries"].(string)
 	seriesID = strings.TrimSpace(seriesID)
 	if seriesID == "" {
 		return "", fmt.Errorf("orthanc_instance_no_parent")
+	}
+	if err := validateOrthancID(seriesID); err != nil {
+		return "", err
 	}
 	return c.seriesParentStudy(ctx, seriesID)
 }

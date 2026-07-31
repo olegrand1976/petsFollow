@@ -36,6 +36,7 @@ test.describe('PACS admin dashboard', { tag: '@p0' }, () => {
 
     await expect(page.getByTestId('admin-pacs-page')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('admin-pacs-dev-badge')).toBeVisible()
+    await expect(page.getByTestId('admin-pacs-wake')).toBeVisible()
     await expect(page.getByTestId('admin-pacs-metrics')).toBeVisible()
     await expect(page.getByTestId('admin-pacs-logs')).toBeVisible()
   })

@@ -185,7 +185,8 @@
     "saas_master_not_configured": "Cuenta master Billit no configurada (BILLIT_MASTER_*)",
     "invalid_id": "Identificador no válido",
     "care_pro_visit_only": "Solo permitido en visitas creadas en campo (care pro)",
-    "pet_not_in_practice": "El animal no está vinculado a esta clínica"
+    "pet_not_in_practice": "El animal no está vinculado a esta clínica",
+    "pacs_study_other_practice": "Este estudio DICOM ya está vinculado a otro centro"
   },
   "success": {
     "confirm_email_sent": "Se ha enviado un correo de confirmación.",

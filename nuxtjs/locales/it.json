@@ -659,7 +659,6 @@
       "listTitle": "I tuoi moduli",
       "emptyTitle": "Nessuna attivazione ancora",
       "emptyDescription": "Scegli una clinica assegnata per iniziare.",
-
       "colPractice": "Clinica",
       "colStatus": "Stato",
       "colTrial": "Fine prova",
@@ -3647,8 +3646,8 @@
     "emptyTitle": "Nessuno studio",
     "emptyDescription": "Importa un file .dcm per iniziare.",
     "previewError": "Impossibile caricare l’anteprima. Riprovare o riattivare il PACS.",
-    "leftSeries": "Serie sinistra",
-    "rightSeries": "Serie destra",
+    "leftSeries": "Istanza sinistra",
+    "rightSeries": "Istanza destra",
     "state": {
       "offline": "Offline",
       "starting": "Avvio…",
@@ -3661,7 +3660,11 @@
       "measure": "Misura",
       "arrow": "Freccia",
       "fullscreen": "Schermo intero",
-      "exitFullscreen": "Esci da schermo intero"
+      "exitFullscreen": "Esci da schermo intero",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Scarica DICOM"
     },
     "admin": {
       "title": "PACS — supervisione",
@@ -3678,6 +3681,25 @@
       "colLevel": "Livello",
       "colEvent": "Evento",
       "colMessage": "Messaggio"
-    }
+    },
+    "launch": {
+      "title": "Decollo PACS",
+      "subtitle": "Orthanc si avvia — le azioni imaging restano bloccate fino a Pronto.",
+      "waking": "Decollo…",
+      "actionsLocked": "Import, confronto e visualizzazione restano bloccati fino a Pronto.",
+      "steps": {
+        "check": "Pre-volo — stato del servizio",
+        "ignite": "Accensione — segnale di wake",
+        "liftoff": "Decollo — cold start Orthanc",
+        "orbit": "Orbita — collegamento sicuro",
+        "ready": "Pronto — imaging disponibile"
+      },
+      "notReady": "Il PACS non è pronto. Riprovare il wake o attendere la fine dell’avvio."
+    },
+    "leftInstance": "Istanza sinistra",
+    "rightInstance": "Istanza destra",
+    "seriesPicker": "Serie",
+    "seriesOption": "Serie {n} · {id}",
+    "downloadError": "Download DICOM non riuscito."
   }
 }

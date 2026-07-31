@@ -492,7 +492,6 @@
     "sortPets": "Most pets",
     "emptyTitle": "No clients",
     "emptyDescription": "Clients will appear here once linked to your practice.",
-
     "loadError": "Unable to load clients.",
     "columnClient": "Client",
     "columnEmail": "Email",
@@ -3678,8 +3677,8 @@
     "emptyTitle": "No studies",
     "emptyDescription": "Import a .dcm file to get started.",
     "previewError": "Could not load the image preview. Retry or wake the PACS.",
-    "leftSeries": "Left series",
-    "rightSeries": "Right series",
+    "leftSeries": "Left instance",
+    "rightSeries": "Right instance",
     "state": {
       "offline": "Offline",
       "starting": "Starting…",
@@ -3692,7 +3691,11 @@
       "measure": "Measure",
       "arrow": "Arrow",
       "fullscreen": "Fullscreen",
-      "exitFullscreen": "Exit fullscreen"
+      "exitFullscreen": "Exit fullscreen",
+      "prevFrame": "Frame −",
+      "nextFrame": "Frame +",
+      "frame": "Frame {n}",
+      "download": "Download DICOM"
     },
     "admin": {
       "title": "PACS — monitoring",
@@ -3709,6 +3712,25 @@
       "colLevel": "Level",
       "colEvent": "Event",
       "colMessage": "Message"
-    }
+    },
+    "launch": {
+      "title": "PACS launch",
+      "subtitle": "Orthanc is powering up — imaging actions stay locked until ready.",
+      "waking": "Launching…",
+      "actionsLocked": "Upload, compare and viewing stay locked until Ready.",
+      "steps": {
+        "check": "Pre-flight check — service status",
+        "ignite": "Ignition — wake signal",
+        "liftoff": "Liftoff — Orthanc cold start",
+        "orbit": "Orbit — securing the link",
+        "ready": "Ready — imaging available"
+      },
+      "notReady": "PACS is not ready. Retry wake or wait until startup finishes."
+    },
+    "leftInstance": "Left instance",
+    "rightInstance": "Right instance",
+    "seriesPicker": "Series",
+    "seriesOption": "Series {n} · {id}",
+    "downloadError": "DICOM download failed."
   }
 }

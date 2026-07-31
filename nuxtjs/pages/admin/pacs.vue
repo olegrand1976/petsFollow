@@ -3,6 +3,14 @@
     <ProPageHeader :title="$t('pacs.admin.title')" :subtitle="$t('pacs.admin.subtitle')">
       <template #actions>
         <ProBadge variant="warning" data-testid="admin-pacs-dev-badge">{{ $t('nav.tagDev') }}</ProBadge>
+        <ProButton
+          data-testid="admin-pacs-wake"
+          :disabled="!pacsOn || waking || metrics?.status?.state === 'starting'"
+          :loading="waking"
+          @click="wakeAdmin"
+        >
+          {{ waking || metrics?.status?.state === 'starting' ? $t('pacs.launch.waking') : $t('pacs.wake') }}
+        </ProButton>
         <ProButton data-testid="admin-pacs-refresh" :disabled="loading" @click="load">
           {{ $t('pacs.admin.refresh') }}
         </ProButton>
@@ -75,6 +83,7 @@ const runtimeConfig = useRuntimeConfig()
 const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
 
 const loading = ref(false)
+const waking = ref(false)
 const loadError = ref('')
 const metrics = ref<any>(null)
 const logs = ref<any[]>([])
@@ -102,10 +111,28 @@ async function load() {
     ])
     metrics.value = m.data ?? m
     logs.value = (l.data ?? l) || []
+    if (metrics.value?.status?.state === 'ready') waking.value = false
   } catch (e: any) {
     loadError.value = e?.data?.message || e?.message || 'load_failed'
   } finally {
     loading.value = false
+  }
+}
+
+async function wakeAdmin() {
+  if (!pacsOn.value || waking.value) return
+  waking.value = true
+  loadError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/pacs/wake', { method: 'POST', body: {} })
+    const data = res.data ?? res
+    if (metrics.value) {
+      metrics.value = { ...metrics.value, status: data }
+    }
+    await load()
+  } catch (e: any) {
+    waking.value = false
+    loadError.value = e?.data?.message || e?.message || 'wake_failed'
   }
 }
 
