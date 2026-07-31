@@ -65,7 +65,13 @@ test.describe('PACS pet imaging tab', { tag: '@p0' }, () => {
     await expect(page.getByTestId('pacs-viewer-container')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('pacs-dev-badge')).toBeVisible()
     await expect(page.getByTestId('pacs-status-badge')).toBeVisible()
-    await expect(page.getByTestId('pacs-wake-btn')).toBeVisible()
     await expect(page.getByTestId('pacs-refresh-btn')).toBeVisible()
+    // Wake only when not already ready (staging Orthanc warm → bouton absent).
+    const wake = page.getByTestId('pacs-wake-btn')
+    if (await wake.isVisible().catch(() => false)) {
+      await expect(wake).toBeEnabled()
+    } else {
+      await expect(page.getByTestId('pacs-status-badge')).toContainText(/ready|prêt|klaar|listo|valmis|pronto/i)
+    }
   })
 })
