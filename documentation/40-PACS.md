@@ -6,7 +6,7 @@ Module **tag `dev`** : lecture / upload DICOM vétérinaire via Orthanc sur Clou
 
 | Couche | Rôle |
 |--------|------|
-| Cloud Run `petsfollow-orthanc` | Orthanc HTTP `:8080`, min=0 max=10, ingress **internal** |
+| Cloud Run `petsfollow-orthanc` | Orthanc HTTP `:8080`, min=0 max=10, ingress **all** + IAM (pas d’invoker public) |
 | Cloud SQL DB `orthanc` | Index Orthanc (plugin PostgreSQL, `IndexConnectionsCount=4`) |
 | GCS `petsfollow-dicom` | Stockage `.dcm` (plugin Google Cloud Storage) + **versioning** |
 | API Go | Orchestration status/wake, proxy authé, logs admin, lien `imaging.pet_studies` |
@@ -57,7 +57,7 @@ Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind
 
 ## Infra
 
-**Staging Cloud Build** (`infra/gcp/cloudbuild.yaml`) : build Kaniko **`executor:debug`** (shell `/busybox/sh` pour `_SKIP_ORTHANC`) → image `orthanc:$BUILD_ID` → `deploy-orthanc` (`setup-orthanc.sh`, **best-effort** — échec Orthanc ≠ échec API) → `deploy-api` / `deploy-frontend` résolvent `PACS_ORTHANC_URL` via `orthanc_run_url`. Opt-out build+deploy : `_SKIP_ORTHANC=true`. Re-deploys : mode **deploy-only** auto (pas de reset mot de passe SQL).
+**Staging Cloud Build** (`infra/gcp/cloudbuild.yaml`) : build Kaniko **`executor:debug`** (shell `/busybox/sh` pour `_SKIP_ORTHANC`) → image `orthanc:$BUILD_ID` → `deploy-orthanc` (`setup-orthanc.sh`, **best-effort** — échec Orthanc ≠ échec API) → `deploy-api` / `deploy-frontend` résolvent `PACS_ORTHANC_URL` via `orthanc_run_url`. Opt-out build+deploy : `_SKIP_ORTHANC=true`. Re-deploys : mode **deploy-only** auto (pas de reset mot de passe SQL). Orthanc Cloud Run : **`ingress=all` + IAM** (ID token) — `ingress=internal` casse l’appel API→Orthanc quand l’API a `vpc-egress=private-ranges-only`.
 
 Manuel :
 
@@ -72,7 +72,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 
 ## Sécurité & backups
 
-- Ingress Orthanc = internal ; auth Orthanc désactivée derrière IAM Cloud Run (local : `ORTHANC_AUTH_ENABLED=true`).
+- Ingress Orthanc = **all** + IAM Cloud Run (ID token API→Orthanc) ; auth Orthanc désactivée derrière IAM (local : `ORTHANC_AUTH_ENABLED=true`).
 - Proxy DICOM : IDs Orthanc liés à `imaging.pet_studies` du **cabinet** (anti-IDOR cross-tenant).
 - Backups : **Cloud SQL automated backups** (DB `orthanc`) + **GCS versioning** sur `petsfollow-dicom`.
 - RGPD : export JSON `imagingStudies` ; purge `DELETE /me` / rétention → delete Orthanc study (best-effort) après collect artifacts.

@@ -112,7 +112,10 @@ PG_USERNAME: "${ORTHANC_DB_USER}"
 GCS_SA_FILE: ""
 EOF
 
-  echo "→ Deploy Cloud Run ${ORTHANC_SERVICE} (min=0 max=10 ingress=internal)"
+  # ingress=all + IAM (no unauthenticated) : l'API Cloud Run appelle Orthanc via
+  # URL run.app + ID token. ingress=internal + egress private-ranges-only → 404
+  # (trafic run.app sort en public et n'est pas traité comme appel inter-services).
+  echo "→ Deploy Cloud Run ${ORTHANC_SERVICE} (min=0 max=10 ingress=all IAM-only)"
   gcloud run deploy "$ORTHANC_SERVICE" \
     --project="$GCP_PROJECT_ID" \
     --image="$IMAGE" \
@@ -123,7 +126,8 @@ EOF
     --timeout=300 \
     --concurrency=20 \
     --cpu-boost \
-    --ingress=internal \
+    --port=8080 \
+    --ingress=all \
     --no-allow-unauthenticated \
     --vpc-connector="$CONNECTOR" \
     --vpc-egress=private-ranges-only \
@@ -189,11 +193,15 @@ else
         --quiet
       echo "  Secret ${name} créé"
     fi
-    gcloud secrets add-iam-policy-binding "$name" \
+    # Best-effort : Cloud Build SA (compute) peut créer le secret sans setIamPolicy.
+    # petsfollow-run a déjà secretAccessor au niveau projet (setup-gcp.sh).
+    if ! gcloud secrets add-iam-policy-binding "$name" \
       --project="$GCP_PROJECT_ID" \
       --member="serviceAccount:${SA_EMAIL}" \
       --role="roles/secretmanager.secretAccessor" \
-      --quiet >/dev/null
+      --quiet >/dev/null 2>&1; then
+      echo "  WARN: IAM secretAccessor sur ${name} ignoré (SA Cloud Build sans setIamPolicy)" >&2
+    fi
   }
 
   ORTHANC_PASS="$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)"
