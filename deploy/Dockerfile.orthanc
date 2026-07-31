@@ -1,0 +1,18 @@
+# Orthanc PACS for petsFollow — PostgreSQL index + GCS storage plugins.
+# Build: docker build -f deploy/Dockerfile.orthanc -t petsfollow-orthanc .
+# Tag Orthanc Team (full = plugins PG + GCS). Local compose uses :24.12.0 non-full.
+FROM orthancteam/orthanc:24.12.0-full
+
+USER root
+COPY infra/orthanc/orthanc.json /etc/orthanc/orthanc.json.template
+COPY infra/orthanc/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Cloud Run health / traffic on PORT (default 8080).
+ENV PORT=8080 \
+    ORTHANC_TEMPLATE=/etc/orthanc/orthanc.json.template \
+    ORTHANC_CONFIG=/tmp/orthanc.json \
+    VERBOSE_ENABLED=true
+
+EXPOSE 8080
+ENTRYPOINT ["/entrypoint.sh"]

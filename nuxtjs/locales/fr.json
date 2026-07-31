@@ -78,7 +78,8 @@
     "stock": "Stock cabinet",
     "daf": "DAF",
     "prescriptions": "Prescriptions",
-    "adminRuntimeFlags": "Flags runtime"
+    "adminRuntimeFlags": "Flags runtime",
+    "adminPacs": "PACS"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -1216,6 +1217,7 @@
         "vitals": "FC & poids",
         "care": "Soins & RDV",
         "documents": "Documents",
+        "imaging": "Imagerie",
         "sharing": "Partage"
       },
       "kpi": {
@@ -3665,5 +3667,47 @@
     "medSearch": "Rechercher (CNK / nom)",
     "dispenseDaf": "Délivrer au cabinet (DAF)",
     "dispenseDafHint": "Crée un brouillon DAF (catalogue CNK). Complétez les N° AMM puis finalisez dans le wizard."
+  },
+  "pacs": {
+    "title": "Imagerie PACS",
+    "wake": "Activer le PACS",
+    "refresh": "Actualiser",
+    "upload": "Importer DICOM",
+    "compare": "Comparer",
+    "offlineHint": "Le service d’imagerie est éteint. Activez-le pour consulter ou importer des radios.",
+    "emptyTitle": "Aucune étude",
+    "emptyDescription": "Importez un fichier .dcm pour démarrer.",
+    "leftSeries": "Série gauche",
+    "rightSeries": "Série droite",
+    "state": {
+      "offline": "Hors ligne",
+      "starting": "Démarrage…",
+      "ready": "Prêt"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contraste",
+      "measure": "Mesure",
+      "arrow": "Flèche",
+      "fullscreen": "Plein écran",
+      "exitFullscreen": "Quitter plein écran"
+    },
+    "admin": {
+      "title": "PACS — supervision",
+      "subtitle": "État Orthanc, latence et logs de réveil / santé",
+      "metricsTitle": "Métriques",
+      "logsTitle": "Logs récents",
+      "latency": "Latence",
+      "state": "État",
+      "redis": "Redis",
+      "orthancUrl": "URL Orthanc configurée",
+      "refresh": "Actualiser",
+      "emptyLogs": "Aucun log pour le moment",
+      "colAt": "Horodatage",
+      "colLevel": "Niveau",
+      "colEvent": "Événement",
+      "colMessage": "Message"
+    }
   }
 }

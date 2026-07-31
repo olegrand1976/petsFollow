@@ -23,6 +23,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/redisx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
 	"golang.org/x/crypto/bcrypt"
@@ -47,6 +48,10 @@ type API struct {
 	billitWebhookRL     *httpx.RateLimiter
 	pharmacyOrderSendRL *httpx.RateLimiter
 	authPulse           *authPulse
+	redis               *redisx.Client
+	orthancClient       *orthancClient
+	// failNextPetStudyInsert — armed only via TestArmFailNextPetStudyInsert (integration tests).
+	failNextPetStudyInsert bool
 }
 
 func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notifier *email.Notifier, bill *billing.Service, mediaStore media.Store, pusher fcm.Pusher) *API {
@@ -153,6 +158,7 @@ func (a *API) Routes(r chi.Router) {
 		a.registerPharmacyDAFRoutes(pr)
 		a.registerPharmacyProtocolRoutes(pr)
 		a.registerPrescriptionRoutes(pr)
+		a.registerPacsRoutes(pr)
 		pr.Get("/me", a.me)
 		pr.Patch("/me", a.updateMe)
 		pr.Post("/me/avatar", a.uploadMyAvatar)

@@ -644,6 +644,18 @@
     </div>
 
     <div
+      v-if="pacsEnabled"
+      v-show="activeTab === 'imaging'"
+      role="tabpanel"
+      aria-labelledby="tab-imaging"
+      data-testid="pet-tab-imaging"
+    >
+      <ProCard class="pro-mb-lg">
+        <PacsViewerContainer :pet-id="petId" />
+      </ProCard>
+    </div>
+
+    <div
       v-show="activeTab === 'sharing'"
       role="tabpanel"
       aria-labelledby="tab-sharing"
@@ -739,6 +751,7 @@ definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.
 
 const config = useRuntimeConfig()
 const pharmacyEnabled = computed(() => isPublicFlagOn(config.public.pharmacyEnabled))
+const pacsEnabled = computed(() => isPublicFlagOn(config.public.pacsEnabled))
 
 const route = useRoute()
 const { t, te } = useI18n()
@@ -846,6 +859,9 @@ const petTabs = computed(() => {
     { id: 'care', label: t('clients.pet.tabs.care'), count: careReminders.value.length || undefined },
     { id: 'documents', label: t('clients.pet.tabs.documents'), count: documents.value.length || undefined },
   ]
+  if (pacsEnabled.value) {
+    tabs.push({ id: 'imaging', label: t('clients.pet.tabs.imaging') })
+  }
   if (canReadShares.value) {
     tabs.push({ id: 'sharing', label: t('clients.pet.tabs.sharing') })
   }

@@ -1,0 +1,232 @@
+<script setup lang="ts">
+import { isPublicFlagOn } from '~/utils/public-feature-flag'
+
+const props = defineProps<{
+  petId: string
+}>()
+
+const { t } = useI18n()
+const runtimeConfig = useRuntimeConfig()
+const pacsOn = computed(() => isPublicFlagOn(runtimeConfig.public.pacsEnabled))
+const { status, loading, waking, error, wake, wakeUntilReady, refresh } = usePacsStatus({ enabled: pacsOn })
+
+const studies = ref<any[]>([])
+const studiesError = ref('')
+const uploadBusy = ref(false)
+const uploadError = ref('')
+const compare = ref(false)
+const leftInstanceId = ref('')
+const rightInstanceId = ref('')
+const selectedStudyId = ref('')
+const instances = ref<string[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const badgeVariant = computed(() => {
+  if (status.value.state === 'ready') return 'success'
+  if (status.value.state === 'starting') return 'warning'
+  return 'neutral'
+})
+
+const stateLabel = computed(() => t(`pacs.state.${status.value.state}`))
+
+async function loadStudies() {
+  studiesError.value = ''
+  try {
+    const res: any = await $fetch(`/api/pets/${props.petId}/pacs/studies`)
+    studies.value = res.data ?? res ?? []
+  } catch (e: any) {
+    studiesError.value = e?.data?.message || e?.message || 'load_failed'
+  }
+}
+
+async function openStudy(study: any) {
+  selectedStudyId.value = study.orthancStudyId
+  leftInstanceId.value = ''
+  instances.value = []
+  try {
+    const seriesId = study.orthancSeriesId
+    if (seriesId) {
+      const series: any = await $fetch(`/api/pacs/series/${seriesId}`)
+      const data = series.data ?? series
+      const ids = (data.Instances as string[]) || []
+      instances.value = ids
+      if (ids[0]) leftInstanceId.value = ids[0]
+      if (ids[1] && compare.value) rightInstanceId.value = ids[1]
+    } else {
+      const meta: any = await $fetch(`/api/pacs/studies/${study.orthancStudyId}`)
+      const data = meta.data ?? meta
+      const seriesList = (data.Series as string[]) || []
+      if (seriesList[0]) {
+        const series: any = await $fetch(`/api/pacs/series/${seriesList[0]}`)
+        const sdata = series.data ?? series
+        const ids = (sdata.Instances as string[]) || []
+        instances.value = ids
+        if (ids[0]) leftInstanceId.value = ids[0]
+      }
+    }
+  } catch (e: any) {
+    studiesError.value = e?.data?.message || e?.message || 'open_failed'
+  }
+}
+
+async function onUpload(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  uploadBusy.value = true
+  uploadError.value = ''
+  try {
+    if (status.value.state !== 'ready') {
+      const ok = await wakeUntilReady(90000)
+      if (!ok) {
+        uploadError.value = 'pacs_not_ready'
+        return
+      }
+    }
+    const fd = new FormData()
+    fd.append('file', file)
+    await $fetch(`/api/pets/${props.petId}/pacs/studies`, { method: 'POST', body: fd })
+    await loadStudies()
+  } catch (e: any) {
+    uploadError.value = e?.data?.message || e?.message || 'upload_failed'
+  } finally {
+    uploadBusy.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+watch(() => status.value.state, (s) => {
+  if (s === 'ready') void loadStudies()
+})
+
+onMounted(() => {
+  if (status.value.state === 'ready') void loadStudies()
+})
+</script>
+
+<template>
+  <div v-if="pacsOn" class="pacs-container" data-testid="pacs-viewer-container">
+    <div class="pacs-container__header">
+      <div class="pacs-container__title-row">
+        <h3 class="pacs-container__title">{{ t('pacs.title') }}</h3>
+        <ProBadge variant="warning" data-testid="pacs-dev-badge">{{ t('nav.tagDev') }}</ProBadge>
+        <ProBadge :variant="badgeVariant" data-testid="pacs-status-badge">
+          <span v-if="status.state === 'starting' || waking" class="pacs-spinner" aria-hidden="true" />
+          {{ stateLabel }}
+          <template v-if="status.latencyMs != null && status.state === 'ready'">
+            · {{ status.latencyMs }} ms
+          </template>
+        </ProBadge>
+      </div>
+      <div class="pacs-container__actions">
+        <ProButton
+          v-if="status.state !== 'ready'"
+          data-testid="pacs-wake-btn"
+          :disabled="waking || status.state === 'starting'"
+          @click="wake"
+        >
+          {{ t('pacs.wake') }}
+        </ProButton>
+        <ProButton variant="secondary" data-testid="pacs-refresh-btn" :disabled="loading" @click="refresh">
+          {{ t('pacs.refresh') }}
+        </ProButton>
+        <label class="pacs-upload">
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".dcm,application/dicom"
+            data-testid="pacs-upload-input"
+            :disabled="uploadBusy"
+            @change="onUpload"
+          >
+          <span class="pro-btn pro-btn--secondary">{{ t('pacs.upload') }}</span>
+        </label>
+        <label class="pacs-compare">
+          <input v-model="compare" type="checkbox" data-testid="pacs-compare-toggle">
+          {{ t('pacs.compare') }}
+        </label>
+      </div>
+    </div>
+
+    <p v-if="error || studiesError || uploadError" class="pro-inline-feedback pro-inline-feedback--error" role="alert">
+      {{ error || studiesError || uploadError }}
+    </p>
+
+    <div v-if="status.state !== 'ready'" class="pacs-container__hint">
+      {{ t('pacs.offlineHint') }}
+    </div>
+
+    <template v-else>
+      <ProEmptyState
+        v-if="!studies.length"
+        :title="t('pacs.emptyTitle')"
+        :description="t('pacs.emptyDescription')"
+      />
+      <div v-else class="pacs-studies">
+        <button
+          v-for="s in studies"
+          :key="s.id"
+          type="button"
+          class="pacs-study"
+          :class="{ 'is-active': selectedStudyId === s.orthancStudyId }"
+          data-testid="pacs-study-item"
+          @click="openStudy(s)"
+        >
+          <strong>{{ s.description || s.modality || s.orthancStudyId }}</strong>
+          <span>{{ s.modality }} · {{ s.studyInstanceUid || s.orthancStudyId }}</span>
+        </button>
+      </div>
+
+      <div v-if="instances.length > 1" class="pacs-instances">
+        <label>
+          {{ t('pacs.leftSeries') }}
+          <select v-model="leftInstanceId" data-testid="pacs-left-instance">
+            <option v-for="id in instances" :key="id" :value="id">{{ id.slice(0, 12) }}</option>
+          </select>
+        </label>
+        <label v-if="compare">
+          {{ t('pacs.rightSeries') }}
+          <select v-model="rightInstanceId" data-testid="pacs-right-instance">
+            <option v-for="id in instances" :key="'r-'+id" :value="id">{{ id.slice(0, 12) }}</option>
+          </select>
+        </label>
+      </div>
+
+      <ClientOnly>
+        <PacsDicomViewer
+          v-if="leftInstanceId"
+          :left-instance-id="leftInstanceId"
+          :right-instance-id="compare ? rightInstanceId : undefined"
+          :compare="compare"
+        />
+      </ClientOnly>
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.pacs-container { display: flex; flex-direction: column; gap: 1rem; }
+.pacs-container__header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; }
+.pacs-container__title-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.pacs-container__title { margin: 0; font-size: 1.1rem; color: var(--pf-vet-primary); }
+.pacs-container__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.pacs-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pacs-upload { position: relative; cursor: pointer; }
+.pacs-compare { display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; }
+.pacs-spinner {
+  display: inline-block; width: 0.7rem; height: 0.7rem; margin-right: 0.35rem;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: pacs-spin 0.7s linear infinite; vertical-align: -1px;
+}
+@keyframes pacs-spin { to { transform: rotate(360deg); } }
+.pacs-studies { display: flex; flex-direction: column; gap: 0.35rem; }
+.pacs-study {
+  text-align: left; border: 1px solid var(--pf-vet-border); background: var(--pf-vet-bg);
+  border-radius: 8px; padding: 0.6rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.15rem;
+}
+.pacs-study.is-active { border-color: var(--pf-vet-accent); }
+.pacs-study span { font-size: 0.8rem; opacity: 0.75; }
+.pacs-instances { display: flex; flex-wrap: wrap; gap: 1rem; }
+.pacs-instances select { margin-left: 0.35rem; }
+.pacs-container__hint { color: var(--pf-vet-primary); opacity: 0.8; }
+</style>

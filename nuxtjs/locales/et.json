@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV memo",
     "commercialBrochure": "Kliiniku brošüür",
     "adminRuntimeFlags": "Runtime lipud",
+    "adminPacs": "PACS",
     "adminCompendium": "Kompendium PDF"
   },
   "auth": {
@@ -545,6 +546,7 @@
         "vitals": "HR ja kaal",
         "care": "Hooldus ja vastuvõtud",
         "documents": "Dokumendid",
+        "imaging": "Pildistamine",
         "sharing": "Jagamine"
       },
       "kpi": {
@@ -3633,5 +3635,47 @@
     "medSearch": "Otsi (CNK / nimi)",
     "dispenseDaf": "Väljasta kabinetis (DAF)",
     "dispenseDafHint": "Loob DAF mustandi (CNK kataloog). Täitke AMM numbrid ja vormistage viisardis."
+  },
+  "pacs": {
+    "title": "PACS-kuvamine",
+    "wake": "Aktiveeri PACS",
+    "refresh": "Värskenda",
+    "upload": "Impordi DICOM",
+    "compare": "Võrdle",
+    "offlineHint": "Kujutisteenus on välja lülitatud. Aktiveerige see radiograafiate vaatamiseks või importimiseks.",
+    "emptyTitle": "Uuringuid pole",
+    "emptyDescription": "Alustamiseks importige .dcm-fail.",
+    "leftSeries": "Vasak seeria",
+    "rightSeries": "Parem seeria",
+    "state": {
+      "offline": "Võrguühenduseta",
+      "starting": "Käivitamine…",
+      "ready": "Valmis"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Kontrast",
+      "measure": "Mõõda",
+      "arrow": "Nool",
+      "fullscreen": "Täisekraan",
+      "exitFullscreen": "Välju täisekraanilt"
+    },
+    "admin": {
+      "title": "PACS — järelevalve",
+      "subtitle": "Orthanci olek, latentsus ning äratuse / tervise logid",
+      "metricsTitle": "Mõõdikud",
+      "logsTitle": "Hiljutised logid",
+      "latency": "Latentsus",
+      "state": "Olek",
+      "redis": "Redis",
+      "orthancUrl": "Seadistatud Orthanci URL",
+      "refresh": "Värskenda",
+      "emptyLogs": "Logisid pole veel",
+      "colAt": "Ajatempel",
+      "colLevel": "Tase",
+      "colEvent": "Sündmus",
+      "colMessage": "Sõnum"
+    }
   }
 }

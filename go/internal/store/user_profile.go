@@ -85,9 +85,10 @@ func (s *Store) ChangeUserPassword(ctx context.Context, userID, currentPassword,
 // ClientAccountArtifacts — références externes à purger après l'effacement DB (RGPD art. 17) :
 // objets média (avatar, photos, documents, médias messages, audio CR) et abonnements Stripe.
 type ClientAccountArtifacts struct {
-	MediaURLs       []string
-	MediaObjectKeys []string
-	SubscriptionIDs []string
+	MediaURLs        []string
+	MediaObjectKeys  []string
+	SubscriptionIDs  []string
+	OrthancStudyIDs  []string
 }
 
 func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string) (ClientAccountArtifacts, error) {
@@ -168,6 +169,13 @@ func (s *Store) CollectClientAccountArtifacts(ctx context.Context, userID string
 	if err := collect(&a.SubscriptionIDs, `
 		SELECT COALESCE(stripe_subscription_id,'') FROM billing.addon_entitlements
 		WHERE owner_user_id=$1 AND status = 'active'`); err != nil {
+		return a, err
+	}
+	if err := collect(&a.OrthancStudyIDs, `
+		SELECT DISTINCT ps.orthanc_study_id
+		FROM imaging.pet_studies ps
+		JOIN pets.pets p ON p.id = ps.pet_id
+		WHERE p.owner_user_id = $1 AND ps.orthanc_study_id <> ''`); err != nil {
 		return a, err
 	}
 	return a, nil

@@ -27,5 +27,6 @@ V1 = brouillons + preview PDF uniquement. Ne pas présenter comme produit signé
 
 - Facturation `/invoicing` — Billit — `BILLIT_ENABLED` / `NUXT_PUBLIC_BILLIT_ENABLED` (nav + API) ; UI métier + CTA Facturer gated par `INVOICING_UI_ENABLED` ([`nuxtjs/utils/invoicing-ui.ts`](../../nuxtjs/utils/invoicing-ui.ts), `false` = écran WIP)
 - Pharmacie `/medicaments`, `/stock`, `/daf` — `PHARMACY_ENABLED` / `NUXT_PUBLIC_PHARMACY_ENABLED`
+- **PACS** onglet Imagerie fiche animal + `/admin/pacs` — `PACS_ENABLED` / `NUXT_PUBLIC_PACS_ENABLED` — doc [`40-PACS.md`](documentation/40-PACS.md)
 
 Retirer le badge `nav.tagDev` **uniquement** au passage GA (décision produit explicite).

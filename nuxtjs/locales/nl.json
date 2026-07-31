@@ -77,6 +77,7 @@
     "commercialAsvMemo": "ASV-memo",
     "commercialBrochure": "Praktijkfolder",
     "adminRuntimeFlags": "Runtime flags",
+    "adminPacs": "PACS",
     "adminCompendium": "Compendium PDF"
   },
   "auth": {
@@ -594,6 +595,7 @@
         "vitals": "HF & gewicht",
         "care": "Zorg & afspraken",
         "documents": "Documenten",
+        "imaging": "Beeldvorming",
         "sharing": "Delen"
       },
       "kpi": {
@@ -3664,5 +3666,47 @@
     "medSearch": "Zoeken (CNK / naam)",
     "dispenseDaf": "Afleveren in praktijk (DAF)",
     "dispenseDafHint": "Maakt een DAF-klad (CNK-catalogus). Vul AMM-nummers in en finaliseer in de wizard."
+  },
+  "pacs": {
+    "title": "PACS-beeldvorming",
+    "wake": "PACS activeren",
+    "refresh": "Vernieuwen",
+    "upload": "DICOM importeren",
+    "compare": "Vergelijken",
+    "offlineHint": "De beeldvormingsdienst is uitgeschakeld. Activeer hem om röntgenbeelden te bekijken of te importeren.",
+    "emptyTitle": "Geen studies",
+    "emptyDescription": "Importeer een .dcm-bestand om te beginnen.",
+    "leftSeries": "Linkerreeks",
+    "rightSeries": "Rechterreeks",
+    "state": {
+      "offline": "Offline",
+      "starting": "Opstarten…",
+      "ready": "Klaar"
+    },
+    "tools": {
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "wl": "Contrast",
+      "measure": "Meten",
+      "arrow": "Pijl",
+      "fullscreen": "Volledig scherm",
+      "exitFullscreen": "Volledig scherm verlaten"
+    },
+    "admin": {
+      "title": "PACS — toezicht",
+      "subtitle": "Orthanc-status, latentie en wake-/gezondheidslogs",
+      "metricsTitle": "Statistieken",
+      "logsTitle": "Recente logs",
+      "latency": "Latentie",
+      "state": "Status",
+      "redis": "Redis",
+      "orthancUrl": "Geconfigureerde Orthanc-URL",
+      "refresh": "Vernieuwen",
+      "emptyLogs": "Nog geen logs",
+      "colAt": "Tijdstempel",
+      "colLevel": "Niveau",
+      "colEvent": "Gebeurtenis",
+      "colMessage": "Bericht"
+    }
   }
 }

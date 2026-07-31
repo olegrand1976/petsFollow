@@ -22,6 +22,7 @@ import (
 	"github.com/olegrand1976/petsFollow/go/internal/platform/db"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/media"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/redisx"
 	"github.com/olegrand1976/petsFollow/go/internal/seed"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/internal/workers"
@@ -88,6 +89,12 @@ func New(ctx context.Context, cfg config.Config) (*Application, error) {
 	}
 	pusher := fcm.NewFromADC(ctx, cfg.FCMEnabled)
 	api := handlers.NewAPI(st, tokens, cfg, notifier, bill, mediaBundle.Store, pusher)
+
+	if redisClient, err := redisx.New(cfg.RedisAddr, cfg.RedisKeyPrefix); err != nil {
+		log.Printf("redis cache unavailable (%v) — PACS status falls back to memory", err)
+	} else if redisClient != nil {
+		api.SetRedis(redisClient)
+	}
 
 	var asynqClient *asynq.Client
 	var asynqServer *asynq.Server

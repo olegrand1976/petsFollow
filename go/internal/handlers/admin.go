@@ -21,6 +21,7 @@ func (a *API) registerAdminRoutes(r chi.Router) {
 		pr.Use(a.localeFromUserMiddleware)
 		pr.Get("/admin/metrics/overview", a.adminMetricsOverview)
 		pr.Get("/admin/runtime-flags", a.adminRuntimeFlags)
+		a.registerAdminPacsRoutes(pr)
 		pr.Get("/admin/users", a.adminListUsers)
 		pr.Get("/admin/payments", a.adminListPayments)
 		pr.Get("/admin/commercials", a.adminListCommercials)
@@ -611,6 +612,7 @@ func (a *API) adminRuntimeFlags(w http.ResponseWriter, r *http.Request) {
 		"pharmacyEnabled":         a.cfg.PharmacyEnabled,
 		"pharmacyWorkersEnabled":  a.cfg.PharmacyWorkersEnabled,
 		"prescriptionsEnabled":    a.cfg.PrescriptionsEnabled,
+		"pacsEnabled":             a.cfg.PacsEnabled,
 		"billitEnabled":           a.cfg.BillitEnabled,
 		"billitMockEnabled":       a.cfg.BillitMockEnabled,
 		"mlmOrgEnabled":           a.cfg.MLMOrgEnabled,

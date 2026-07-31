@@ -303,3 +303,41 @@ export async function proxyUpload(
     }
   }
 }
+
+/** Proxy binary GET (DICOM / preview) — streams ArrayBuffer to the client. */
+export async function proxyBinary(
+  event: H3Event,
+  path: string,
+) {
+  const url = `${apiBase()}${path}`
+  const fetchOnce = async (accessToken?: string) => {
+    const headers = accessToken
+      ? bearerHeaders(event, accessToken)
+      : { ...apiHeaders(event) }
+    const res = await fetch(url, { headers })
+    if (!res.ok) {
+      const err: any = new Error(`upstream_${res.status}`)
+      err.statusCode = res.status
+      err.status = res.status
+      throw err
+    }
+    const buf = Buffer.from(await res.arrayBuffer())
+    const ct = res.headers.get('content-type') || 'application/octet-stream'
+    setHeader(event, 'content-type', ct)
+    setHeader(event, 'cache-control', res.headers.get('cache-control') || 'private, max-age=300')
+    return buf
+  }
+
+  try {
+    return await fetchOnce()
+  } catch (e: any) {
+    if (!isUnauthorized(e)) throw toProxyError(e)
+    const outcome = await refreshAccessToken(event)
+    if (outcome.kind !== 'ok') throwAfterFailedRefresh(outcome, e)
+    try {
+      return await fetchOnce(outcome.pair.accessToken)
+    } catch (retryErr: any) {
+      throw toProxyError(retryErr)
+    }
+  }
+}
