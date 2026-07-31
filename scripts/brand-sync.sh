@@ -82,15 +82,48 @@ dart_lines = [
 ]
 (root / "flutter/lib/core/theme/app_colors.dart").write_text("\n".join(dart_lines))
 
-emblem_src = root / "brand/emblem/petsfollow-emblem.svg"
-logo_src = root / "brand/logo/petsfollow-horizontal.svg"
-emblem_nuxt = root / "nuxtjs/public/brand/emblem.svg"
+try:
+    from PIL import Image
+except ImportError as e:
+    raise SystemExit(
+        "brand-sync requires Pillow (pip install Pillow) — needed to normalize the mark PNG for UI + gofpdf"
+    ) from e
+
+mark_src = root / "brand/logo/petsfollow-mark.png"
+if not mark_src.is_file():
+    raise SystemExit(f"missing mark source: {mark_src}")
+
+nuxt_brand = root / "nuxtjs/public/brand"
 flutter_brand = root / "flutter/assets/brand"
+pdf_emblem = root / "go/internal/platform/consultationpdf/assets/emblem.png"
+nuxt_brand.mkdir(parents=True, exist_ok=True)
 flutter_brand.mkdir(parents=True, exist_ok=True)
-emblem_nuxt.parent.mkdir(parents=True, exist_ok=True)
-emblem_nuxt.write_text(emblem_src.read_text())
-(flutter_brand / "petsfollow-emblem.svg").write_text(emblem_src.read_text())
-(flutter_brand / "petsfollow-horizontal.svg").write_text(logo_src.read_text())
+pdf_emblem.parent.mkdir(parents=True, exist_ok=True)
+
+# Flatten to RGB: mark sits on an opaque white square; RGBA PNGs balloon (~5× vs JPEG).
+# Source may historically be JPEG bytes under a .png name — always emit real PNG for gofpdf.
+mark = Image.open(mark_src).convert("RGBA")
+bg = Image.new("RGB", mark.size, (255, 255, 255))
+bg.paste(mark, mask=mark.split()[-1])
+mark_rgb = bg
+
+def save_png(img, path, size=None):
+    out = img.resize(size, Image.Resampling.LANCZOS) if size else img
+    out.save(path, format="PNG", optimize=True, compress_level=9)
+
+# UI: 512 px is enough for hero/topbar; keeps login/topbar payloads lean.
+save_png(mark_rgb, nuxt_brand / "logo-mark.png", (512, 512))
+save_png(mark_rgb, flutter_brand / "petsfollow-mark.png", (512, 512))
+# PDF header is 16 mm — 256 px is enough and keeps embeds lean.
+save_png(mark_rgb, pdf_emblem, (256, 256))
+
+# Drop obsolete paw/horizontal SVG copies from runtime trees (archive stays under brand/emblem/).
+for stale in (
+    nuxt_brand / "emblem.svg",
+    flutter_brand / "petsfollow-emblem.svg",
+    flutter_brand / "petsfollow-horizontal.svg",
+):
+    stale.unlink(missing_ok=True)
 
 print("→ brand-sync OK")
 PY

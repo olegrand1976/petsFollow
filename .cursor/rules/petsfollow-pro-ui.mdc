@@ -42,7 +42,7 @@ ProApp
 
 - Composant : `ProIcon` (`name` = ligature Material, ex. `light_mode`, `notifications`, `dashboard`)
 - Police auto-hébergée via `nuxtjs/assets/css/fonts.css` + `public/fonts/` (pas de CDN Google Fonts)
-- Exceptions : logo brand (`PetsFollowLogo` / emblème SVG), graphiques dataviz (`ProBpmChart`)
+- Exceptions : logo brand (`PetsFollowLogo` / mark PNG), graphiques dataviz (`ProBpmChart`)
 
 ## Composants Pro
 
@@ -76,6 +76,6 @@ Split-screen + `PetsFollowLogo variant="hero" animated` sur panneau brand.
 
 ## Références
 
-- Logo : `brand/emblem/petsfollow-emblem.svg` → `nuxtjs/public/brand/emblem.svg`
+- Logo : `brand/logo/petsfollow-mark.png` → `nuxtjs/public/brand/logo-mark.png` (`PetsFollowLogo`)
 - Charte : `documentation/13-CHARTE-GRAPHIQUE.md`
 - Onboarding : `AGENTS.md`

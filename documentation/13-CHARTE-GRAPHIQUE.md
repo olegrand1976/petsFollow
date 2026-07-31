@@ -34,7 +34,8 @@ Ne **pas** importer la palette / le look dark Flutter dans le shell Pro.
 - Mark circulaire (chien + mains + pulse + wordmark) — `brand/logo/petsfollow-mark.png`
 - Servi Nuxt : `/brand/logo-mark.png` (favicon `/brand/favicon-192.png`)
 - Flutter : `assets/brand/petsfollow-mark.png` (+ icônes launcher Android/iOS)
-- L’ancien emblème SVG patte (`brand/emblem/petsfollow-emblem.svg`) est conservé en archive, plus servi en UI.
+- PDF consultation (partage CR) : `go/internal/platform/consultationpdf/assets/emblem.png` (copie du mark via `make brand-sync`)
+- L’ancien emblème SVG patte (`brand/emblem/petsfollow-emblem.svg`) est conservé en archive, plus servi en UI ni dans les PDF.
 - Composant : `PetsFollowLogo`
 
 | Variant | Usage |
@@ -272,7 +273,8 @@ Dossier : `nuxtjs/components/pro/` · CSS : `pro-components.css`, `pro-forms.css
 | `nuxtjs/assets/css/tokens.css` | CSS généré |
 | `nuxtjs/assets/css/fonts.css` | @font-face |
 | `nuxtjs/assets/css/pro-*.css` | Layout, composants, forms, dark |
-| `brand/logo/petsfollow-mark.png` | Logo mark |
+| `brand/logo/petsfollow-mark.png` | Logo mark (source) |
+| `go/.../consultationpdf/assets/emblem.png` | Logo mark embarqué PDF CR |
 | `documentation/13-CHARTE-GRAPHIQUE.md` | Ce document |
 
 Sync après modification tokens : `make brand-sync`.
