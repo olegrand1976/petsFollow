@@ -41,10 +41,10 @@ Seed démo Pro (hors `client`, masqué sur Nuxt) :
 | Compte | Profils |
 |--------|---------|
 | `admin.demo` | admin, dev, research, vet, vet_assistant, secretary, commercial, commercial_manager (+ client) |
-| `commercial.manager` | commercial_manager, commercial, dev, research, vet, vet_assistant, secretary (+ client) |
-| `commercial.demo` / `demo2` | commercial, dev, research, vet, vet_assistant, secretary (+ client) |
+| `commercial.manager` | commercial_manager, commercial, research, vet, vet_assistant, secretary (+ client) — pas `dev` |
+| `commercial.demo` / `demo2` | commercial, research, vet, vet_assistant, secretary (+ client) — pas `dev` / `admin` / manager |
 
-Staff cabinet : une ligne `team_members` VetPlus ; au switch staff, `team_role` est aligné sur le profil actif (pas de demote `reference_vet`).
+Staff cabinet : une ligne `team_members` VetPlus (accès switch) ; `ListTeamMembers` / desk masque les comptes dont le home n’est pas staff. Au switch staff, `team_role` aligné sur le profil actif (pas de demote `reference_vet`).
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 

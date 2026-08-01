@@ -32,7 +32,7 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 		"shares.read": true, "shares.manage": true,
 		"pharmacy.read": true, "pharmacy.write": true,
 		"practice.settings": true,
-		"team.manage": true, "commissions.view": true,
+		"team.manage":       true, "commissions.view": true,
 	}
 	switch role {
 	case TeamRoleReferenceVet:
@@ -51,7 +51,7 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 			"shares.read": true, "shares.manage": false,
 			"pharmacy.read": true, "pharmacy.write": true,
 			"practice.settings": false,
-			"team.manage": false, "commissions.view": false,
+			"team.manage":       false, "commissions.view": false,
 		}
 	case TeamRoleSecretary:
 		return map[string]bool{
@@ -62,7 +62,7 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 			"shares.read": true, "shares.manage": false,
 			"pharmacy.read": true, "pharmacy.write": false,
 			"practice.settings": false,
-			"team.manage": false, "commissions.view": false,
+			"team.manage":       false, "commissions.view": false,
 		}
 	default:
 		return map[string]bool{}
@@ -70,16 +70,16 @@ func DefaultTeamPermissions(role TeamRole) map[string]bool {
 }
 
 type TeamMember struct {
-	ID             string          `json:"id"`
-	PracticeID     string          `json:"practiceId"`
-	UserID         string          `json:"userId"`
-	ProfileID      string          `json:"profileId,omitempty"`
-	TeamRole       TeamRole        `json:"teamRole"`
-	Permissions    map[string]bool `json:"permissions"`
-	Status         string          `json:"status"`
-	Email          string          `json:"email"`
-	FullName       string          `json:"fullName"`
-	CreatedAt      time.Time       `json:"createdAt"`
+	ID          string          `json:"id"`
+	PracticeID  string          `json:"practiceId"`
+	UserID      string          `json:"userId"`
+	ProfileID   string          `json:"profileId,omitempty"`
+	TeamRole    TeamRole        `json:"teamRole"`
+	Permissions map[string]bool `json:"permissions"`
+	Status      string          `json:"status"`
+	Email       string          `json:"email"`
+	FullName    string          `json:"fullName"`
+	CreatedAt   time.Time       `json:"createdAt"`
 }
 
 // hardDeniedCapabilities cannot be elevated via override for non-reference roles.
@@ -89,7 +89,7 @@ func hardDeniedCapabilities(role TeamRole) map[string]bool {
 		return map[string]bool{
 			"pets.write_clinical": true, "pharmacy.write": true,
 			"heartrate.validate": true,
-			"shares.manage": true, "practice.settings": true,
+			"shares.manage":      true, "practice.settings": true,
 			"team.manage": true, "commissions.view": true,
 		}
 	case TeamRoleAssistant:
@@ -138,12 +138,20 @@ func mergeTeamPermissions(role TeamRole, override map[string]bool) map[string]bo
 }
 
 func (s *Store) ListTeamMembers(ctx context.Context, practiceID string) ([]TeamMember, error) {
+	// Hide multi-switch demo accounts whose home profile is not practice staff
+	// (admin/commercial attached to VetPlus for switch demos only).
 	rows, err := s.pool.Query(ctx, `
 		SELECT tm.id::text, tm.practice_id::text, tm.user_id::text, COALESCE(tm.profile_id::text,''),
 			tm.team_role, tm.permissions, tm.status, u.email, u.full_name, tm.created_at
 		FROM practice.team_members tm
 		JOIN identity.users u ON u.id = tm.user_id
 		WHERE tm.practice_id = $1 AND tm.status <> 'revoked'
+		  AND (
+			SELECT p.role FROM identity.profiles p
+			WHERE p.user_id = tm.user_id AND p.role <> 'client'
+			ORDER BY p.created_at ASC, p.id ASC
+			LIMIT 1
+		  ) IN ('vet', 'vet_assistant', 'secretary')
 		ORDER BY CASE tm.team_role
 			WHEN 'reference_vet' THEN 0 WHEN 'vet' THEN 1 WHEN 'vet_assistant' THEN 2 ELSE 3 END,
 			tm.created_at`, practiceID)
@@ -285,10 +293,10 @@ func teamRoleToKernel(r TeamRole) kernel.Role {
 }
 
 type InviteTeamMemberInput struct {
-	Email     string
-	FullName  string
-	Password  string // temp password if creating
-	TeamRole  TeamRole
+	Email       string
+	FullName    string
+	Password    string // temp password if creating
+	TeamRole    TeamRole
 	Permissions map[string]bool // optional override
 }
 

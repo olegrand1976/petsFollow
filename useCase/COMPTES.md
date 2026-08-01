@@ -28,8 +28,8 @@ Environnement : **staging** (ou seed local).
 | Secrétaire | `secretary.demo@petsfollow.test` | Web VetPro | EQ-01 |
 | Care pro farrier | `farrier.demo@petsfollow.test` | Flutter Pro Light | PL-*, X-05 |
 | Care pro vet_light | `vetlight.demo@petsfollow.test` | Flutter Pro Light | PL-01 (alt.) |
-| Commercial Camille | `commercial.demo@petsfollow.test` | Web Commercial | CO-*, X-07 — switch profils Pro (sauf admin / manager) |
-| Manager | `commercial.manager@petsfollow.test` | Web Manager | CM-01 — switch profils Pro (sauf admin) |
+| Commercial Camille | `commercial.demo@petsfollow.test` | Web Commercial | CO-*, X-07 — switch profils Pro (sauf admin / manager / dev) |
+| Manager | `commercial.manager@petsfollow.test` | Web Manager | CM-01 — switch profils Pro (sauf admin / dev) |
 | Admin | `admin.demo@petsfollow.test` | Web Admin (ops + switch tous profils Pro) | AD-01 |
 | DEV support IT | `dev.demo@petsfollow.test` | Web Admin (ops) | AD-02 |
 | Client riche | `client.demo@petsfollow.test` | Flutter Client | CL-01/03, X-01…03, X-06 (Spirit seed), X-08 |

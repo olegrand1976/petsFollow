@@ -24,9 +24,27 @@ describe('homeSwitchRole', () => {
   it('picks earliest non-client profile', () => {
     expect(
       homeSwitchRole([
-        { role: 'client', createdAt: '2020-01-01T00:00:00Z' },
-        { role: 'secretary', createdAt: '2024-06-01T00:00:00Z' },
-        { role: 'commercial', createdAt: '2024-01-01T00:00:00Z' },
+        { id: 'c', role: 'client', createdAt: '2020-01-01T00:00:00Z' },
+        { id: 's', role: 'secretary', createdAt: '2024-06-01T00:00:00Z' },
+        { id: 'm', role: 'commercial', createdAt: '2024-01-01T00:00:00Z' },
+      ]),
+    ).toBe('commercial')
+  })
+
+  it('keeps API order when createdAt missing', () => {
+    expect(
+      homeSwitchRole([
+        { id: '1', role: 'commercial' },
+        { id: '2', role: 'secretary' },
+      ]),
+    ).toBe('commercial')
+  })
+
+  it('tie-breaks equal createdAt by id', () => {
+    expect(
+      homeSwitchRole([
+        { id: 'b', role: 'secretary', createdAt: '2024-01-01T00:00:00Z' },
+        { id: 'a', role: 'commercial', createdAt: '2024-01-01T00:00:00Z' },
       ]),
     ).toBe('commercial')
   })

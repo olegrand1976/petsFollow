@@ -146,10 +146,12 @@ func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
 	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
 		t.Fatalf("ensure ops vet profiles: %v", err)
 	}
+	_ = seed.EnsureDemoMultiSwitchProfiles(context.Background(), api.pool, st)
 	t.Cleanup(func() {
 		if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
 			t.Errorf("cleanup restore ops profiles: %v", err)
 		}
+		_ = seed.EnsureDemoMultiSwitchProfiles(context.Background(), api.pool, st)
 	})
 
 	tok := loginToken(t, api.handler, email, "AdminDemo123!")
@@ -202,6 +204,7 @@ func assertOpsCanSwitchToVet(t *testing.T, email, opsRole string) {
 	if err := seed.EnsureDemoOpsVetProfiles(context.Background(), api.pool, st); err != nil {
 		t.Fatalf("restore ops profiles after switch: %v", err)
 	}
+	_ = seed.EnsureDemoMultiSwitchProfiles(context.Background(), api.pool, st)
 }
 
 func profilesList(t *testing.T, env map[string]any) []any {
