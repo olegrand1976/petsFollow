@@ -27,45 +27,65 @@ func TestConsultationSessionExcludedFromOverlap(t *testing.T) {
 	}
 	petID, _ := pets[0].(map[string]any)["id"].(string)
 
-	// Offset within the ±30m walk-in window, away from typical :00/:30 seed slots.
-	slotTime := time.Now().UTC().Add(27 * time.Minute)
-	slot := slotTime.Format(time.RFC3339)
-
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":         slot,
-		"durationMinutes":     30,
-		"confirmDirect":       true,
-		"silentConfirm":       true,
-		"consultationSession": true,
-		"notes":               "walk-in overlap probe",
-	})
-	if code == http.StatusBadRequest {
-		// Cabinet on vacation for "now+27m" — skip rather than flake.
-		t.Skipf("consultation create blocked: %#v", env)
+	// Within ±30m walk-in window; retry odd offsets if seed already booked the slot.
+	var (
+		slot      string
+		consultID string
+	)
+	offsets := []time.Duration{
+		23*time.Minute + 11*time.Second,
+		19*time.Minute + 7*time.Second,
+		14*time.Minute + 43*time.Second,
+		27*time.Minute + 19*time.Second,
 	}
-	if code != http.StatusCreated {
-		t.Fatalf("consultation create %d %#v", code, env)
+	for _, offset := range offsets {
+		slotTime := time.Now().UTC().Add(offset)
+		slot = slotTime.Format(time.RFC3339)
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":         slot,
+			"durationMinutes":     30,
+			"confirmDirect":       true,
+			"silentConfirm":       true,
+			"consultationSession": true,
+			"notes":               "walk-in overlap probe",
+		})
+		if code == http.StatusBadRequest {
+			continue
+		}
+		if code != http.StatusCreated {
+			t.Fatalf("consultation create %d %#v", code, env)
+		}
+		consultID, _ = dataMap(t, env)["id"].(string)
+		if dataMap(t, env)["consultationSession"] != true {
+			t.Fatalf("want consultationSession true %#v", env)
+		}
+		// Same slot, normal booked visit must succeed (walk-in does not occupy the slot).
+		code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
+			"scheduledAt":     slot,
+			"durationMinutes": 30,
+			"confirmDirect":   true,
+			"notes":           "rdv after walk-in",
+		})
+		if code == http.StatusConflict {
+			_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+consultID, vetTok, map[string]any{
+				"status": "cancelled",
+			})
+			consultID = ""
+			continue
+		}
+		if code != http.StatusCreated {
+			t.Fatalf("booked create after consultation %d %#v", code, env)
+		}
+		break
 	}
-	consultID, _ := dataMap(t, env)["id"].(string)
+	if consultID == "" {
+		t.Skip("no free walk-in window slot (seed/vacation)")
+	}
 	t.Cleanup(func() {
 		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+consultID, vetTok, map[string]any{
 			"status": "cancelled",
 		})
 	})
-	if dataMap(t, env)["consultationSession"] != true {
-		t.Fatalf("want consultationSession true %#v", env)
-	}
-
-	// Same slot, normal booked visit must succeed (walk-in does not occupy the slot).
-	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/pets/"+petID+"/visits", vetTok, map[string]any{
-		"scheduledAt":     slot,
-		"durationMinutes": 30,
-		"confirmDirect":   true,
-		"notes":           "rdv after walk-in",
-	})
-	if code != http.StatusCreated {
-		t.Fatalf("booked create after consultation %d %#v", code, env)
-	}
 	bookedID, _ := dataMap(t, env)["id"].(string)
 	t.Cleanup(func() {
 		_, _ = doAuthJSON(t, api.handler, http.MethodPatch, "/api/v1/visits/"+bookedID, vetTok, map[string]any{
