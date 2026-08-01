@@ -153,13 +153,14 @@
 
 <script setup lang="ts">
 import { homePathForRole, isPracticeStaffRole, isProRole } from '~/composables/useAuth'
-import { canActivateProfile, profileRoleSortIndex } from '~/utils/profile-switch'
+import { canActivateProfile, homeSwitchRole, profileRoleSortIndex } from '~/utils/profile-switch'
 
 type ProfileRow = {
   id: string
   role: string
   active?: boolean
   practiceId?: string
+  createdAt?: string
 }
 
 const props = withDefaults(
@@ -214,9 +215,9 @@ const showDeskSwitcher = computed(
 )
 /** Nuxt Pro : profils face Pro, filtrés par matrice CanActivate (pas client Flutter). */
 const switchableProfiles = computed(() => {
-  const ownedRoles = profiles.value.map((p) => p.role)
+  const home = homeSwitchRole(profiles.value)
   return profiles.value
-    .filter((p) => isProRole(p.role) && canActivateProfile(ownedRoles, p.role))
+    .filter((p) => isProRole(p.role) && canActivateProfile(home, p.role))
     .slice()
     .sort((a, b) => {
       if (a.active && !b.active) return -1

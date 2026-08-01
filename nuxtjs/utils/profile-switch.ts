@@ -11,17 +11,32 @@ const PROFILE_ROLE_ORDER: string[] = [
 ]
 
 /**
- * Whether a user who owns `ownedRoles` may activate `target`.
- * Mirrors go/pkg/kernel.CanActivateProfile (owned profiles, not active role).
+ * Home role for the switch matrix: earliest non-client profile (stable across switches).
+ * Mirrors store.homeSwitchRole ordering (createdAt ASC).
  */
-export function canActivateProfile(ownedRoles: string[], target: string): boolean {
-  const ownsAdmin = ownedRoles.includes('admin')
-  const ownsManager = ownedRoles.includes('commercial_manager')
-  const ownsCommercial = ownedRoles.includes('commercial')
-  if (ownsAdmin) return true
-  if (ownsManager) return target !== 'admin'
-  if (ownsCommercial) return target !== 'admin' && target !== 'commercial_manager'
-  return true
+export function homeSwitchRole(profiles: { role: string; createdAt?: string }[]): string {
+  const nonClient = profiles
+    .filter((p) => p.role !== 'client')
+    .slice()
+    .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')))
+  return nonClient[0]?.role || ''
+}
+
+/**
+ * Whether an account with `homeRole` may activate `target`.
+ * Mirrors go/pkg/kernel.CanActivateProfile.
+ */
+export function canActivateProfile(homeRole: string, target: string): boolean {
+  switch (homeRole) {
+    case 'admin':
+      return true
+    case 'commercial_manager':
+      return target !== 'admin'
+    case 'commercial':
+      return target !== 'admin' && target !== 'commercial_manager'
+    default:
+      return true
+  }
 }
 
 export function profileRoleSortIndex(role: string): number {

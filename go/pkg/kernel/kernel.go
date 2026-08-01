@@ -75,38 +75,25 @@ func IsSalesForce(role Role) bool {
 	return role == RoleCommercial || role == RoleCommercialManager
 }
 
-// CanActivateProfile reports whether a user who owns ownedRoles may activate target.
-// Matrix is based on owned profiles (not the currently active role) so a manager who
-// switched to commercial can still return to commercial_manager.
+// CanActivateProfile reports whether an account with the given home role may activate target.
+// homeRole is the account's primary Pro profile (earliest non-client profile), not the
+// currently active role — so a manager who switched to commercial can still return.
 //
-//	owns admin              → any owned target
-//	owns commercial_manager → any owned target except admin
-//	owns commercial         → any owned target except admin and commercial_manager
+//	home admin              → any owned target
+//	home commercial_manager → any owned target except admin
+//	home commercial         → any owned target except admin and commercial_manager
 //	otherwise               → any owned target
-func CanActivateProfile(ownedRoles []Role, target Role) bool {
-	ownsAdmin := false
-	ownsManager := false
-	ownsCommercial := false
-	for _, r := range ownedRoles {
-		switch r {
-		case RoleAdmin:
-			ownsAdmin = true
-		case RoleCommercialManager:
-			ownsManager = true
-		case RoleCommercial:
-			ownsCommercial = true
-		}
-	}
-	if ownsAdmin {
+func CanActivateProfile(homeRole, target Role) bool {
+	switch homeRole {
+	case RoleAdmin:
+		return true
+	case RoleCommercialManager:
+		return target != RoleAdmin
+	case RoleCommercial:
+		return target != RoleAdmin && target != RoleCommercialManager
+	default:
 		return true
 	}
-	if ownsManager {
-		return target != RoleAdmin
-	}
-	if ownsCommercial {
-		return target != RoleAdmin && target != RoleCommercialManager
-	}
-	return true
 }
 
 type SessionStatus string

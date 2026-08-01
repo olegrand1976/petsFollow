@@ -25,15 +25,15 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 | `research` | Nuxt `/research` | Observatoire épidémio anonymisé (tag `dev`) — associable à `vet` / `admin` · doc [42](42-RESEARCH.md) · seed `research.demo` **+** profil `research` sur `vet.demo` / `admin.demo` (switch) |
 
-### Matrice switch (profils possédés)
+### Matrice switch (profil home)
 
-`POST /me/profiles/switch` + UI topbar (`CanActivateProfile`) — basée sur les rôles **possédés**, pas le rôle actif :
+`POST /me/profiles/switch` + UI topbar (`CanActivateProfile`) — basée sur le profil **home** (plus ancien hors `client`), pas le rôle actif :
 
-| Possède | Peut activer |
-|---------|----------------|
+| Home | Peut activer |
+|------|----------------|
 | `admin` | tout profil possédé |
-| `commercial_manager` (sans admin) | tout sauf `admin` |
-| `commercial` (sans admin/manager) | tout sauf `admin` et `commercial_manager` |
+| `commercial_manager` | tout sauf `admin` |
+| `commercial` | tout sauf `admin` et `commercial_manager` |
 | autre | ownership seul |
 
 Seed démo Pro (hors `client`, masqué sur Nuxt) :

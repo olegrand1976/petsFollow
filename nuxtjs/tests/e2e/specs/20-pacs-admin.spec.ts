@@ -42,9 +42,14 @@ test.describe('PACS admin dashboard', { tag: '@p0' }, () => {
     await expect(page.getByTestId('admin-pacs-logs')).toBeVisible()
     await expect(page.getByTestId('admin-pacs-playground')).toBeVisible()
     await expect(page.getByTestId('admin-pacs-debug')).toBeVisible()
+    await expect(page.getByTestId('admin-pacs-client-select')).toBeVisible({ timeout: 15000 })
     await expect(page.getByTestId('admin-pacs-pet-select')).toBeVisible({ timeout: 15000 })
+    // Default seed: client.demo → preferred pet → viewer ready for DICOM import.
+    await expect(page.getByTestId('admin-pacs-client-select')).not.toHaveValue('')
+    await expect(page.getByTestId('admin-pacs-pet-select')).not.toHaveValue('')
     await expect(page.getByTestId('admin-pacs-viewer-mount')).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId('pacs-viewer-container')).toBeVisible({ timeout: 20000 })
+    await expect(page.getByTestId('pacs-upload-input')).toBeVisible()
   })
 
   test('admin wake clic → état starting|ready', async ({ page }) => {
