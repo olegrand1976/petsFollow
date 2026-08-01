@@ -30,4 +30,13 @@ void main() {
     expect(p.isCardCompleted(0), isTrue);
     expect(p.isCardCompleted(6), isFalse);
   });
+
+  test('isJourneyComplete only when all four stages are done', () {
+    expect(progress().isJourneyComplete, isFalse);
+    expect(progress(completed: ['day0', 'day2', 'day4']).isJourneyComplete, isFalse);
+    expect(
+      progress(completed: ['day0', 'day2', 'day4', 'day6']).isJourneyComplete,
+      isTrue,
+    );
+  });
 }

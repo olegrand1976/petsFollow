@@ -154,10 +154,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         : l10n.myPets;
     final progress = discoveryProgress ?? DiscoveryProgress(userId: '', startedAt: DateTime.now());
     final cards = _discoveryCards(l10n, progress);
-    final mission = DiscoveryController.instance.nextMissionCard(
-      cards.where((c) => !c.completed && !c.locked).toList(),
-      progress,
-    );
+    final discoveryDone = progress.isJourneyComplete;
+    final mission = discoveryDone
+        ? null
+        : DiscoveryController.instance.nextMissionCard(
+            cards.where((c) => !c.completed && !c.locked).toList(),
+            progress,
+          );
 
     return PetsTabScaffold(
       title: const PetsAppBarLogo(),
@@ -243,17 +246,19 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  Text(l10n.discoveryTitle, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(l10n.discoveryMission, style: TextStyle(color: AppColors.gold)),
-                  const SizedBox(height: 12),
-                  ...cards.map(
-                    (card) => DiscoveryCardWidget(
-                      card: card,
-                      onComplete: card.locked || card.completed ? null : () => _completeMission(card),
+                  if (!discoveryDone) ...[
+                    const SizedBox(height: 24),
+                    Text(l10n.discoveryTitle, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(l10n.discoveryMission, style: TextStyle(color: AppColors.gold)),
+                    const SizedBox(height: 12),
+                    ...cards.map(
+                      (card) => DiscoveryCardWidget(
+                        card: card,
+                        onComplete: card.locked || card.completed ? null : () => _completeMission(card),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
