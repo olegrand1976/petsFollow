@@ -28,6 +28,33 @@ curl -sf -X POST "$API/api/v1/me/accept-terms" \
 ADMIN=$(curl -sf -X POST "$API/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"admin.demo@petsfollow.test","password":"AdminDemo123!"}')
 ADMIN_TOKEN=$(echo "$ADMIN" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+# Multi-profil : le profil actif peut être vet/client après un switch manuel — forcer admin pour metrics.
+ADMIN_TOKEN=$(python3 - <<'PY' "$API" "$ADMIN_TOKEN"
+import json, sys, urllib.request
+
+api, token = sys.argv[1], sys.argv[2]
+
+def req(method, path, body=None, bearer=None):
+    data = None if body is None else json.dumps(body).encode()
+    r = urllib.request.Request(api + path, data=data, method=method)
+    r.add_header("Content-Type", "application/json")
+    if bearer:
+        r.add_header("Authorization", "Bearer " + bearer)
+    with urllib.request.urlopen(r, timeout=30) as resp:
+        return json.load(resp)["data"]
+
+me = req("GET", "/api/v1/me", bearer=token)
+if me.get("role") == "admin":
+    print(token)
+    raise SystemExit(0)
+profiles = req("GET", "/api/v1/me/profiles", bearer=token)
+admin_id = next((p.get("id") for p in (profiles or []) if p.get("role") == "admin"), None)
+if not admin_id:
+    raise SystemExit("admin.demo has no admin profile")
+sw = req("POST", "/api/v1/me/profiles/switch", {"profileId": admin_id}, bearer=token)
+print(sw["accessToken"])
+PY
+)
 
 curl -sf "$API/api/v1/clients" -H "Authorization: Bearer $VET_TOKEN" >/dev/null
 curl -sf "$API/api/v1/billing/plans" >/dev/null
