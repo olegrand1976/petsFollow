@@ -549,6 +549,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | K3 | P1 | Admin attach profil | `/admin/users` — pas sur soi-même |
 | K4 | P1 | Commercial attach | `POST /commercial/users/{id}/profiles` |
 | K5 | P2 | farrier pro ↔ personnel | Dual shell |
+| K6 | P1 | Matrice switch admin / sales | Admin → secretary/commercial OK ; commercial ↛ admin/manager (403) ; manager ↛ admin, retour manager OK ; e2e `13c-profile-switch` topbar liste verticale ; Vitest `profile-switch.spec.ts` |
 
 ## L — Équipe cabinet
 
