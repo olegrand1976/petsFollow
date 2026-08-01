@@ -83,10 +83,17 @@
     <ProModal v-model:open="createOpen" :title="$t('clients.create.title')">
       <p class="pro-hint pro-mb-md">{{ $t('clients.create.hint') }}</p>
       <form v-if="!linkCandidate" class="pro-form" data-testid="vet-create-client-form" @submit.prevent="createClient">
-        <ProInput v-model="clientForm.fullName" test-id="create-client-name" :label="$t('clients.create.fullName')" required />
+        <ProInput v-model="clientForm.firstName" test-id="create-client-first-name" :label="$t('clients.create.firstName')" required />
+        <ProInput v-model="clientForm.lastName" test-id="create-client-last-name" :label="$t('clients.create.lastName')" required />
         <ProInput v-model="clientForm.email" test-id="create-client-email" type="email" :label="$t('clients.create.email')" required />
         <ProInput v-model="clientForm.contactPhone" test-id="create-client-phone" type="tel" :label="$t('clients.create.contactPhone')" :maxlength="40" />
-        <ProInput v-model="clientForm.password" test-id="create-client-password" type="password" :label="$t('clients.create.password')" required />
+        <ProInput v-model="clientForm.address" test-id="create-client-address" :label="$t('clients.create.address')" :maxlength="500" />
+        <ProInput
+          v-model="clientForm.nationalRegistryNumber"
+          test-id="create-client-niss"
+          :label="$t('clients.create.nationalRegistryNumber')"
+          :maxlength="20"
+        />
         <p v-if="clientMsg" class="pro-hint" data-testid="create-client-msg">{{ clientMsg }}</p>
         <p v-if="clientError" class="pro-error">{{ clientError }}</p>
         <div class="create-client-actions">
@@ -311,8 +318,17 @@ async function loadClients() {
   }
 }
 
+const emptyClientForm = () => ({
+  firstName: '',
+  lastName: '',
+  email: '',
+  contactPhone: '',
+  address: '',
+  nationalRegistryNumber: '',
+})
+
 const createOpen = ref(false)
-const clientForm = reactive({ fullName: '', email: '', contactPhone: '', password: '' })
+const clientForm = reactive(emptyClientForm())
 const clientSaving = ref(false)
 const clientMsg = ref('')
 const clientError = ref('')
@@ -324,10 +340,15 @@ const linkCandidate = ref<{
   alreadyLinked?: boolean
 } | null>(null)
 
+function resetClientForm() {
+  Object.assign(clientForm, emptyClientForm())
+}
+
 function openCreateModal() {
   clientMsg.value = ''
   clientError.value = ''
   linkCandidate.value = null
+  resetClientForm()
   createOpen.value = true
 }
 
@@ -337,9 +358,28 @@ async function createClient() {
   clientError.value = ''
   linkCandidate.value = null
   try {
-    await $fetch('/api/vet/clients', { method: 'POST', body: { ...clientForm } })
+    const res: any = await $fetch('/api/vet/clients', {
+      method: 'POST',
+      body: {
+        firstName: clientForm.firstName.trim(),
+        lastName: clientForm.lastName.trim(),
+        email: clientForm.email.trim(),
+        contactPhone: clientForm.contactPhone.trim(),
+        address: clientForm.address.trim(),
+        nationalRegistryNumber: clientForm.nationalRegistryNumber.trim(),
+      },
+    })
+    const createdId = (res?.data ?? res)?.userId as string | undefined
     clientMsg.value = t('clients.create.success')
-    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
+    if (createdId) {
+      try {
+        await $fetch(`/api/clients/${createdId}/send-app-link`, { method: 'POST' })
+        clientMsg.value = t('clients.create.successWithInvite')
+      } catch {
+        // Account created; invite email is best-effort.
+      }
+    }
+    resetClientForm()
     await loadClients()
   } catch (e: any) {
     const details = e?.data?.error?.details || e?.data?.details
@@ -368,16 +408,23 @@ async function linkExistingClient() {
   try {
     const linkedId = linkCandidate.value.userId
     await $fetch(`/api/vet/clients/${linkedId}/link`, { method: 'POST' })
+    const body: Record<string, string> = {}
     const phone = clientForm.contactPhone.trim()
-    if (phone) {
-      await $fetch(`/api/clients/${linkedId}`, {
-        method: 'PATCH',
-        body: { contactPhone: phone },
-      })
+    const address = clientForm.address.trim()
+    const niss = clientForm.nationalRegistryNumber.trim()
+    const firstName = clientForm.firstName.trim()
+    const lastName = clientForm.lastName.trim()
+    if (phone) body.contactPhone = phone
+    if (address) body.address = address
+    if (niss) body.nationalRegistryNumber = niss
+    if (firstName) body.firstName = firstName
+    if (lastName) body.lastName = lastName
+    if (Object.keys(body).length) {
+      await $fetch(`/api/clients/${linkedId}`, { method: 'PATCH', body })
     }
     clientMsg.value = t('clients.create.linkSuccess')
     linkCandidate.value = null
-    Object.assign(clientForm, { fullName: '', email: '', contactPhone: '', password: '' })
+    resetClientForm()
     await loadClients()
   } catch (e: any) {
     clientError.value = mapError(e) || t('clients.create.linkError')

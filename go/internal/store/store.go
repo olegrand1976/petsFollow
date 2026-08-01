@@ -76,6 +76,10 @@ type Pet struct {
 	FoodChainStatus string `json:"foodChainStatus,omitempty"`
 	// DomicileLocation: écurie / lieu de détention (équidés, rente, camélidés).
 	DomicileLocation string `json:"domicileLocation,omitempty"`
+	// Lifecycle status dates (adopted / sold / deceased) — DATE, all species.
+	AdoptedAt  *time.Time `json:"adoptedAt,omitempty"`
+	SoldAt     *time.Time `json:"soldAt,omitempty"`
+	DeceasedAt *time.Time `json:"deceasedAt,omitempty"`
 	HeartrateDurationsSec []int `json:"heartrateDurationsSec,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Entitlement   *Entitlement `json:"entitlement,omitempty"`
@@ -170,12 +174,16 @@ type TimelineItem struct {
 }
 
 type ClientSummary struct {
-	UserID       string `json:"userId"`
-	Email        string `json:"email"`
-	FullName     string `json:"fullName"`
-	AvatarURL    string `json:"avatarUrl,omitempty"`
-	ContactPhone string `json:"contactPhone,omitempty"`
-	PetCount     int    `json:"petCount"`
+	UserID                 string `json:"userId"`
+	Email                  string `json:"email"`
+	FullName               string `json:"fullName"`
+	FirstName              string `json:"firstName,omitempty"`
+	LastName               string `json:"lastName,omitempty"`
+	AvatarURL              string `json:"avatarUrl,omitempty"`
+	ContactPhone           string `json:"contactPhone,omitempty"`
+	Address                string `json:"address,omitempty"`
+	NationalRegistryNumber string `json:"nationalRegistryNumber,omitempty"`
+	PetCount               int    `json:"petCount"`
 }
 
 type Store struct {
@@ -230,14 +238,34 @@ func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
 	return u, err
 }
 
+const clientSummarySelect = `
+		u.id::text, u.email, u.full_name,
+		COALESCE(u.first_name,''), COALESCE(u.last_name,''),
+		COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''),
+		COALESCE(u.address,''), COALESCE(u.national_registry_number,''),
+		COUNT(p.id)::int`
+
+const clientSummaryGroupBy = `
+		u.id, u.email, u.full_name, u.first_name, u.last_name,
+		u.avatar_url, u.contact_phone, u.address, u.national_registry_number`
+
+func scanClientSummary(scan func(dest ...any) error) (ClientSummary, error) {
+	var c ClientSummary
+	err := scan(
+		&c.UserID, &c.Email, &c.FullName, &c.FirstName, &c.LastName,
+		&c.AvatarURL, &c.ContactPhone, &c.Address, &c.NationalRegistryNumber, &c.PetCount,
+	)
+	return c, err
+}
+
 func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([]ClientSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''), COUNT(p.id)::int
+		SELECT `+clientSummarySelect+`
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1
-		GROUP BY u.id, u.email, u.full_name, u.avatar_url, u.contact_phone
+		GROUP BY `+clientSummaryGroupBy+`
 		ORDER BY u.full_name`, practiceID)
 	if err != nil {
 		return nil, err
@@ -245,8 +273,8 @@ func (s *Store) ListClientsByPractice(ctx context.Context, practiceID string) ([
 	defer rows.Close()
 	out := make([]ClientSummary, 0)
 	for rows.Next() {
-		var c ClientSummary
-		if err := rows.Scan(&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount); err != nil {
+		c, err := scanClientSummary(rows.Scan)
+		if err != nil {
 			return nil, err
 		}
 		out = append(out, c)
@@ -261,10 +289,28 @@ func (s *Store) UpdatePet(ctx context.Context, p Pet) error {
 	}
 	ct, err := s.pool.Exec(ctx, `
 		UPDATE pets.pets SET name=$2, species=$3, breed=$4, birth_date=$5, weight_kg=$6, photo_url=$7, litter_tag=$8,
-			microchip_number=$9, health_book_number=$10, domicile_location=$11, food_chain_status=$12, updated_at=NOW()
-		WHERE id=$1 AND owner_user_id=$13`,
+			microchip_number=$9, health_book_number=$10, domicile_location=$11, food_chain_status=$12,
+			adopted_at=$13, sold_at=$14, deceased_at=$15, updated_at=NOW()
+		WHERE id=$1 AND owner_user_id=$16`,
 		p.ID, p.Name, p.Species, p.Breed, p.BirthDate, p.WeightKg, p.PhotoURL, p.LitterTag,
-		p.MicrochipNumber, p.HealthBookNumber, p.DomicileLocation, foodChain, p.OwnerUserID)
+		p.MicrochipNumber, p.HealthBookNumber, p.DomicileLocation, foodChain,
+		p.AdoptedAt, p.SoldAt, p.DeceasedAt, p.OwnerUserID)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// SetPetLifecycleDates updates adopted/sold/deceased dates for a practice pet (vet clinical write).
+func (s *Store) SetPetLifecycleDates(ctx context.Context, practiceID, petID string, adoptedAt, soldAt, deceasedAt *time.Time) error {
+	ct, err := s.pool.Exec(ctx, `
+		UPDATE pets.pets
+		SET adopted_at = $3, sold_at = $4, deceased_at = $5, updated_at = NOW()
+		WHERE id = $1 AND practice_id = $2`,
+		petID, practiceID, adoptedAt, soldAt, deceasedAt)
 	if err != nil {
 		return err
 	}
@@ -315,11 +361,12 @@ func (s *Store) GetPet(ctx context.Context, id string) (Pet, error) {
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
 			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
 			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
-			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''),
+			adopted_at, sold_at, deceased_at, created_at
 		FROM pets.pets WHERE id=$1`, id).Scan(
 		&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
 		&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
-		&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt)
+		&p.FoodChainStatus, &p.DomicileLocation, &p.AdoptedAt, &p.SoldAt, &p.DeceasedAt, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Pet{}, ErrNotFound
 	}
@@ -343,7 +390,8 @@ func (s *Store) ListPetsByOwner(ctx context.Context, ownerID string) ([]Pet, err
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
 			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
 			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
-			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''),
+			adopted_at, sold_at, deceased_at, created_at
 		FROM pets.pets WHERE owner_user_id=$1 ORDER BY name`, ownerID)
 	if err != nil {
 		return nil, err
@@ -360,7 +408,8 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''),
 			COALESCE(p.microchip_number,''), COALESCE(p.health_book_number,''),
 			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''),
-			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''), p.created_at,
+			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''),
+			p.adopted_at, p.sold_at, p.deceased_at, p.created_at,
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -403,7 +452,7 @@ func (s *Store) ListPetsAccessibleToClient(ctx context.Context, clientUserID str
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
 			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
 			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
-			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.AdoptedAt, &p.SoldAt, &p.DeceasedAt, &p.CreatedAt,
 			&p.Permission,
 		); err != nil {
 			return nil, err
@@ -433,7 +482,8 @@ func (s *Store) ListPetsByClientForVet(ctx context.Context, practiceID, clientID
 			birth_date, weight_kg, COALESCE(photo_url,''), payment_status, COALESCE(litter_tag,''),
 			COALESCE(microchip_number,''), COALESCE(health_book_number,''),
 			COALESCE(health_book_pdf_url,''), COALESCE(health_book_pdf_object_key,''),
-			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''), created_at
+			COALESCE(food_chain_status,'companion'), COALESCE(domicile_location,''),
+			adopted_at, sold_at, deceased_at, created_at
 		FROM pets.pets WHERE practice_id=$1 AND owner_user_id=$2 ORDER BY name`, practiceID, clientID)
 	if err != nil {
 		return nil, err
@@ -449,7 +499,7 @@ func scanPets(rows pgx.Rows) ([]Pet, error) {
 		if err := rows.Scan(
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed, &p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
 			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
-			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.AdoptedAt, &p.SoldAt, &p.DeceasedAt, &p.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

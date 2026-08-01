@@ -47,48 +47,83 @@ type ClientOverview struct {
 }
 
 func (s *Store) GetClientByPractice(ctx context.Context, practiceID, clientID string) (ClientSummary, error) {
-	var c ClientSummary
-	err := s.pool.QueryRow(ctx, `
-		SELECT u.id::text, u.email, u.full_name, COALESCE(u.avatar_url,''), COALESCE(u.contact_phone,''), COUNT(p.id)::int
+	c, err := scanClientSummary(s.pool.QueryRow(ctx, `
+		SELECT `+clientSummarySelect+`
 		FROM practice.practice_clients pc
 		JOIN identity.users u ON u.id = pc.client_user_id
 		LEFT JOIN pets.pets p ON p.owner_user_id = u.id AND p.practice_id = pc.practice_id
 		WHERE pc.practice_id = $1 AND pc.client_user_id = $2
-		GROUP BY u.id, u.email, u.full_name, u.avatar_url, u.contact_phone`, practiceID, clientID).Scan(
-		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount)
+		GROUP BY `+clientSummaryGroupBy, practiceID, clientID).Scan)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ClientSummary{}, ErrNotFound
 	}
 	return c, err
 }
 
-// UpdateClientContactPhoneByPractice updates contact_phone for a user linked to the practice.
-// Product choice: the phone lives on identity.users (account-global). Any linked practice with
-// clients.write can read/write it (last write wins across cabinets). Empty phone clears the field.
-// Returns the updated ClientSummary, or ErrNotFound if not linked.
+// ClientProfilePatch — nil fields are left unchanged (account-global identity on identity.users).
+type ClientProfilePatch struct {
+	ContactPhone           *string
+	FirstName              *string
+	LastName               *string
+	Address                *string
+	NationalRegistryNumber *string
+}
+
+// UpdateClientProfileByPractice updates identity fields for a client linked to the practice.
+// Product choice: fields live on identity.users (account-global). Any linked practice with
+// clients.write can read/write (last write wins across cabinets). Empty strings clear fields.
+func (s *Store) UpdateClientProfileByPractice(ctx context.Context, practiceID, clientID string, patch ClientProfilePatch) (ClientSummary, error) {
+	cur, err := s.GetClientByPractice(ctx, practiceID, clientID)
+	if err != nil {
+		return ClientSummary{}, err
+	}
+	phone := cur.ContactPhone
+	first := cur.FirstName
+	last := cur.LastName
+	addr := cur.Address
+	niss := cur.NationalRegistryNumber
+	if patch.ContactPhone != nil {
+		phone = strings.TrimSpace(*patch.ContactPhone)
+	}
+	if patch.FirstName != nil {
+		first = strings.TrimSpace(*patch.FirstName)
+	}
+	if patch.LastName != nil {
+		last = strings.TrimSpace(*patch.LastName)
+	}
+	if patch.Address != nil {
+		addr = strings.TrimSpace(*patch.Address)
+	}
+	if patch.NationalRegistryNumber != nil {
+		niss = strings.TrimSpace(*patch.NationalRegistryNumber)
+	}
+	fullName := strings.TrimSpace(first + " " + last)
+	if fullName == "" {
+		fullName = cur.FullName
+	}
+	_, err = s.pool.Exec(ctx, `
+		UPDATE identity.users u
+		SET contact_phone = $3,
+			first_name = $4,
+			last_name = $5,
+			address = $6,
+			national_registry_number = $7,
+			full_name = $8
+		FROM practice.practice_clients pc
+		WHERE u.id = pc.client_user_id
+			AND pc.practice_id = $1
+			AND pc.client_user_id = $2`,
+		practiceID, clientID, phone, first, last, addr, niss, fullName)
+	if err != nil {
+		return ClientSummary{}, err
+	}
+	return s.GetClientByPractice(ctx, practiceID, clientID)
+}
+
+// UpdateClientContactPhoneByPractice updates contact_phone only (compat wrapper).
 func (s *Store) UpdateClientContactPhoneByPractice(ctx context.Context, practiceID, clientID, contactPhone string) (ClientSummary, error) {
 	phone := strings.TrimSpace(contactPhone)
-	var c ClientSummary
-	err := s.pool.QueryRow(ctx, `
-		WITH upd AS (
-			UPDATE identity.users u
-			SET contact_phone = $3
-			FROM practice.practice_clients pc
-			WHERE u.id = pc.client_user_id
-				AND pc.practice_id = $1
-				AND pc.client_user_id = $2
-			RETURNING u.id, u.email, u.full_name, COALESCE(u.avatar_url,'') AS avatar_url, COALESCE(u.contact_phone,'') AS contact_phone
-		)
-		SELECT upd.id::text, upd.email, upd.full_name, upd.avatar_url, upd.contact_phone, COUNT(p.id)::int
-		FROM upd
-		JOIN practice.practice_clients pc ON pc.client_user_id = upd.id AND pc.practice_id = $1
-		LEFT JOIN pets.pets p ON p.owner_user_id = upd.id AND p.practice_id = pc.practice_id
-		GROUP BY upd.id, upd.email, upd.full_name, upd.avatar_url, upd.contact_phone`, practiceID, clientID, phone).Scan(
-		&c.UserID, &c.Email, &c.FullName, &c.AvatarURL, &c.ContactPhone, &c.PetCount)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return ClientSummary{}, ErrNotFound
-	}
-	return c, err
+	return s.UpdateClientProfileByPractice(ctx, practiceID, clientID, ClientProfilePatch{ContactPhone: &phone})
 }
 
 func (s *Store) GetClientOverview(ctx context.Context, practiceID, clientID string) (ClientOverview, error) {

@@ -192,31 +192,51 @@
             :name="client.fullName"
             size="lg"
           />
-          <div>
-            <p><strong>{{ client.fullName }}</strong></p>
+          <div class="client-identity__fields">
             <p class="text-muted">{{ client.email }}</p>
             <ProBadge variant="neutral">{{ client.petCount }} {{ petLabel(client.petCount) }}</ProBadge>
-            <div v-if="canWriteClients" class="client-phone-edit">
-              <ProInput
-                v-model="phoneDraft"
-                test-id="client-phone-input"
-                type="tel"
-                :label="$t('clients.detail.contactPhone')"
-                :maxlength="40"
-              />
-              <div class="pro-flex-gap">
-                <ProButton
-                  test-id="client-phone-save"
-                  :disabled="phoneSaving || phoneDraft.trim() === (client.contactPhone || '').trim()"
-                  @click="saveContactPhone"
-                >
-                  {{ $t('clients.detail.savePhone') }}
-                </ProButton>
-              </div>
-              <p v-if="phoneMsg" class="pro-hint" role="status" data-testid="client-phone-msg">{{ phoneMsg }}</p>
-              <p v-if="phoneError" class="pro-error" role="alert">{{ phoneError }}</p>
-            </div>
-            <p v-else class="text-muted">{{ client.contactPhone || '—' }}</p>
+            <template v-if="canWriteClients">
+              <form class="client-identity-edit pro-form" data-testid="client-identity-form" @submit.prevent="saveIdentity">
+                <ProInput v-model="identityDraft.firstName" test-id="client-first-name" :label="$t('clients.detail.firstName')" />
+                <ProInput v-model="identityDraft.lastName" test-id="client-last-name" :label="$t('clients.detail.lastName')" />
+                <ProInput
+                  v-model="identityDraft.contactPhone"
+                  test-id="client-phone-input"
+                  type="tel"
+                  :label="$t('clients.detail.contactPhone')"
+                  :maxlength="40"
+                />
+                <ProInput
+                  v-model="identityDraft.address"
+                  test-id="client-address"
+                  :label="$t('clients.detail.address')"
+                  :maxlength="500"
+                />
+                <ProInput
+                  v-model="identityDraft.nationalRegistryNumber"
+                  test-id="client-niss"
+                  :label="$t('clients.detail.nationalRegistryNumber')"
+                  :maxlength="20"
+                />
+                <div class="pro-flex-gap">
+                  <ProButton
+                    type="submit"
+                    test-id="client-identity-save"
+                    :disabled="identitySaving || !identityDirty"
+                  >
+                    {{ $t('clients.detail.saveIdentity') }}
+                  </ProButton>
+                </div>
+                <p v-if="identityMsg" class="pro-hint" role="status" data-testid="client-identity-msg">{{ identityMsg }}</p>
+                <p v-if="identityError" class="pro-error" role="alert">{{ identityError }}</p>
+              </form>
+            </template>
+            <template v-else>
+              <p><strong>{{ client.fullName }}</strong></p>
+              <p class="text-muted">{{ client.contactPhone || '—' }}</p>
+              <p class="text-muted">{{ client.address || '—' }}</p>
+              <p class="text-muted">{{ client.nationalRegistryNumber || '—' }}</p>
+            </template>
             <p class="text-muted pro-hint">{{ $t('clients.detail.sendAppLinkHint') }}</p>
           </div>
         </div>
@@ -232,9 +252,13 @@ type ClientRow = {
   userId: string
   email: string
   fullName: string
+  firstName?: string
+  lastName?: string
   petCount: number
   avatarUrl?: string
   contactPhone?: string
+  address?: string
+  nationalRegistryNumber?: string
 }
 
 type ClientOverview = {
@@ -272,30 +296,60 @@ const appLinkFeedback = ref('')
 const appInviteOpen = ref(false)
 const activeConsult = useActiveConsultation()
 const clientShares = ref<any[]>([])
-const phoneDraft = ref('')
-const phoneSaving = ref(false)
-const phoneMsg = ref('')
-const phoneError = ref('')
+const identityDraft = reactive({
+  firstName: '',
+  lastName: '',
+  contactPhone: '',
+  address: '',
+  nationalRegistryNumber: '',
+})
+const identitySaving = ref(false)
+const identityMsg = ref('')
+const identityError = ref('')
 
-async function saveContactPhone() {
-  phoneSaving.value = true
-  phoneMsg.value = ''
-  phoneError.value = ''
+function syncIdentityDraft(c: ClientRow | null) {
+  identityDraft.firstName = c?.firstName || ''
+  identityDraft.lastName = c?.lastName || ''
+  identityDraft.contactPhone = c?.contactPhone || ''
+  identityDraft.address = c?.address || ''
+  identityDraft.nationalRegistryNumber = c?.nationalRegistryNumber || ''
+}
+
+const identityDirty = computed(() => {
+  const c = client.value
+  if (!c) return false
+  return (
+    identityDraft.firstName.trim() !== (c.firstName || '').trim() ||
+    identityDraft.lastName.trim() !== (c.lastName || '').trim() ||
+    identityDraft.contactPhone.trim() !== (c.contactPhone || '').trim() ||
+    identityDraft.address.trim() !== (c.address || '').trim() ||
+    identityDraft.nationalRegistryNumber.trim() !== (c.nationalRegistryNumber || '').trim()
+  )
+})
+
+async function saveIdentity() {
+  identitySaving.value = true
+  identityMsg.value = ''
+  identityError.value = ''
   try {
     const res: any = await $fetch(`/api/clients/${clientId}`, {
       method: 'PATCH',
-      body: { contactPhone: phoneDraft.value.trim() },
+      body: {
+        firstName: identityDraft.firstName.trim(),
+        lastName: identityDraft.lastName.trim(),
+        contactPhone: identityDraft.contactPhone.trim(),
+        address: identityDraft.address.trim(),
+        nationalRegistryNumber: identityDraft.nationalRegistryNumber.trim(),
+      },
     })
     const data = res.data ?? res
-    if (client.value) {
-      client.value = { ...client.value, contactPhone: data.contactPhone || '' }
-    }
-    phoneDraft.value = data.contactPhone || ''
-    phoneMsg.value = t('clients.detail.phoneSaved')
+    client.value = { ...(client.value || {} as ClientRow), ...data }
+    syncIdentityDraft(client.value)
+    identityMsg.value = t('clients.detail.identitySaved')
   } catch (e: any) {
-    phoneError.value = mapError(e) || t('clients.detail.phoneSaveError')
+    identityError.value = mapError(e) || t('clients.detail.identitySaveError')
   } finally {
-    phoneSaving.value = false
+    identitySaving.value = false
   }
 }
 
@@ -430,7 +484,7 @@ onMounted(async () => {
   try {
     const clientRes: any = await $fetch(`/api/clients/${clientId}`)
     client.value = clientRes.data ?? clientRes
-    phoneDraft.value = client.value?.contactPhone || ''
+    syncIdentityDraft(client.value)
   } catch {
     client.value = null
   }
@@ -475,12 +529,13 @@ onMounted(async () => {
   align-items: flex-start;
   flex-wrap: wrap;
 }
-.client-phone-edit {
+.client-identity__fields {
+  flex: 1;
+  min-width: 16rem;
+}
+.client-identity-edit {
   margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 22rem;
+  max-width: 28rem;
 }
 .pro-mb-md {
   margin-bottom: 1rem;
