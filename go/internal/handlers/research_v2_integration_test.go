@@ -23,6 +23,11 @@ func TestResearchGroupsAndDataRoom(t *testing.T) {
 
 	researchTok := loginToken(t, api.handler, "research.demo@petsfollow.test", "ResearchDemo123!")
 
+	// Seed may enable a demo Data room group — isolate gate assertions.
+	if _, err := api.pool.Exec(ctx, `UPDATE research.groups SET dataroom_enabled = false`); err != nil {
+		t.Fatalf("reset dataroom flags: %v", err)
+	}
+
 	code, env := doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/research/dataroom/events", researchTok, nil)
 	if code != http.StatusForbidden || errCode(env) != "research_dataroom_forbidden" {
 		t.Fatalf("dataroom without access expected 403 research_dataroom_forbidden, got %d %#v", code, env)
