@@ -102,13 +102,15 @@ async function ensureActiveRole(page: Page, role: string) {
 }
 
 export async function loginAsVet(page: Page, email = 'vet.demo@petsfollow.test', password = 'VetDemo123!') {
-  await login(page, email, password)
+  const result = await login(page, email, password)
   await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 })
+  return result
 }
 
 export async function loginAsAdmin(page: Page, email = 'admin.demo@petsfollow.test', password = 'AdminDemo123!') {
-  await login(page, email, password)
+  const result = await login(page, email, password)
   await page.waitForURL(/\/admin/, { timeout: 20000 })
+  return result
 }
 
 /** Ops support IT (même MDP seed que admin — passwordDev = passwordAdmin). */

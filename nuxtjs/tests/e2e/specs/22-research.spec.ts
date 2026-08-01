@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login } from '../helpers/auth'
+import { login, loginAsAdmin } from '../helpers/auth'
 
 const RESEARCH_EMAIL = 'research.demo@petsfollow.test'
 const RESEARCH_PASSWORD = 'ResearchDemo123!'
@@ -64,8 +64,8 @@ test.describe('Research observatory', { tag: '@p0' }, () => {
       'NUXT_PUBLIC_RESEARCH_ENABLED off',
     )
 
-    await login(page, ADMIN_EMAIL, ADMIN_PASSWORD)
-    await page.goto('/admin/research', { waitUntil: 'networkidle' })
+    await loginAsAdmin(page, ADMIN_EMAIL, ADMIN_PASSWORD)
+    await page.goto('/admin/research', { waitUntil: 'domcontentloaded' })
     if (await page.getByTestId('research-disabled').isVisible().catch(() => false)) {
       test.skip(true, 'Research public flag off in this build')
     }

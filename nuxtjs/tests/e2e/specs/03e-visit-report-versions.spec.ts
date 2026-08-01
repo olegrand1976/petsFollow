@@ -34,6 +34,25 @@ async function setVisitReportHistoryOpen(page: Page, open: boolean) {
     .toBe(open)
 }
 
+/** History CTAs sit under sticky head/footer in fill layout — center in scroll + force click. */
+async function clickVisitReportRestore(page: Page, testId: 'visit-report-restore-v0' | 'visit-report-restore-v1') {
+  await setVisitReportHistoryOpen(page, true)
+  const btn = page.getByTestId(testId)
+  await expect(btn).toBeVisible({ timeout: 5000 })
+  await btn.evaluate((el) => {
+    const scroll = el.closest('.pro-visit-report__scroll') as HTMLElement | null
+    if (scroll) {
+      const er = el.getBoundingClientRect()
+      const sr = scroll.getBoundingClientRect()
+      scroll.scrollTop += er.top - sr.top - sr.height / 2 + er.height / 2
+    }
+    else {
+      el.scrollIntoView({ block: 'center', inline: 'nearest' })
+    }
+  })
+  await btn.click({ force: true })
+}
+
 /** Rich editor keeps a hidden markdown mirror (visit-report-body) for fill/toHaveValue. */
 async function ensureVisitReportEditMode(page: Page) {
   await setVisitReportHistoryOpen(page, false)
@@ -163,7 +182,7 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
       'restore v0 requires API PUT transcriptText persistence — rebuild/restart API if missing',
     ).toBeVisible({ timeout: 5000 })
     await transcript.fill('dirty left before restore')
-    await page.getByTestId('visit-report-restore-v0').click()
+    await clickVisitReportRestore(page, 'visit-report-restore-v0')
     await expect(transcript).toHaveValue(persistedTranscript)
 
     // Rich prose must not keep raw <script> from hostile corpus
@@ -274,15 +293,13 @@ test.describe('CR split versions + boutons', { tag: '@p1' }, () => {
     await expect(page.getByTestId('visit-report-restore-v1')).toBeVisible()
     await ensureVisitReportEditMode(page)
     await body.fill('dirty right before restore v1')
-    await setVisitReportHistoryOpen(page, true)
-    await page.getByTestId('visit-report-restore-v1').click()
+    await clickVisitReportRestore(page, 'visit-report-restore-v1')
     await ensureVisitReportEditMode(page)
     await expect(body).toHaveValue(improved)
 
     // Restore v0 → gauche
     await transcript.fill('dirty left before restore v0')
-    await setVisitReportHistoryOpen(page, true)
-    await page.getByTestId('visit-report-restore-v0').click()
+    await clickVisitReportRestore(page, 'visit-report-restore-v0')
     await expect(transcript).toHaveValue(notes)
 
     await page.route('**/api/visits/*/report-finalize', async (route) => {
