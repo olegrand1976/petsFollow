@@ -3766,6 +3766,12 @@ abstract class AppLocalizations {
   /// **'dev'**
   String get clientAiDevBadge;
 
+  /// No description provided for @clientAiSectionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistance IA'**
+  String get clientAiSectionTitle;
+
   /// No description provided for @clientAiExplainCta.
   ///
   /// In fr, this message translates to:
@@ -3789,6 +3795,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Préparation de l\'explication…'**
   String get clientAiExplainLoading;
+
+  /// No description provided for @clientAiExplainListTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comprendre un compte-rendu'**
+  String get clientAiExplainListTitle;
+
+  /// No description provided for @clientAiExplainListSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Explication simplifiée d\'un CR finalisé'**
+  String get clientAiExplainListSubtitle;
+
+  /// No description provided for @clientAiExplainListEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte-rendu finalisé à expliquer pour le moment.'**
+  String get clientAiExplainListEmpty;
 
   /// No description provided for @clientAiTriageTitle.
   ///

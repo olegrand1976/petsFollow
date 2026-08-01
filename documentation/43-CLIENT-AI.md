@@ -6,15 +6,17 @@ Module **tag `dev`** : assistants IA pour l’app Flutter **client** (propriéta
 
 | Feature | Entrée Flutter | API Go |
 |---------|----------------|--------|
-| Vulgarisation CR | `ConsultationViewScreen` → « Comprendre mon compte-rendu » | `GET /api/v1/visits/{id}/client-consultation/explain` |
-| Triage 24/7 | Home + Settings | `POST/GET /api/v1/client-ai/triage/sessions…` |
+| Vulgarisation CR | Settings → Assistance IA · Timeline (pastille) · `ConsultationViewScreen` → « Comprendre mon compte-rendu » | `GET /api/v1/visits/{id}/client-consultation/explain` |
+| Triage 24/7 | Home + Settings → Assistance IA | `POST/GET /api/v1/client-ai/triage/sessions…` |
+
+Démo seed : pet **Rex** (`client.demo@petsfollow.test`) a des CR `final` ; les autres animaux seed n’en ont pas.
 
 ## Flags
 
 | Couche | Variable |
 |--------|----------|
-| API | `CLIENT_AI_ENABLED` (défaut off ; `make api-dev` → true) |
-| Flutter | `--dart-define=CLIENT_AI_ENABLED` (`make flutter-dev` → true) |
+| API | `CLIENT_AI_ENABLED` (défaut off ; `make api-dev` → true ; **staging Cloud Run → true** via `pf_write_api_env_file` ; prod opt-in) |
+| Flutter | `--dart-define=CLIENT_AI_ENABLED` (`make flutter-dev` / Firebase App Dist → true ; Play AAB → off tant que non passé) |
 
 Endpoints → **404** `client_ai_disabled` si flag off.
 
@@ -38,6 +40,14 @@ Endpoints → **404** `client_ai_disabled` si flag off.
 - Export : `visitReportExplanations`, `clientAiTriageSessions`, `clientAiUsageEvents`
 - Purge : cascade pets → explanations ; `DELETE` sessions triage par `user_id` dans `purgeClientOwnedDataExec`
 - Sous-traitant Gemini (privacy Flutter + [`36-RGPD.md`](36-RGPD.md))
+
+## Build / dist Flutter
+
+| Cible | Flag UI |
+|-------|---------|
+| `make flutter-dev` | on (défaut) |
+| `make firebase-android-dist` | on (défaut) — **rebuild requis** après changement UI |
+| Play AAB (`build-play-bundle.sh`) | off tant que `--dart-define=CLIENT_AI_ENABLED` n’est pas passé |
 
 ## Hors scope MVP
 

@@ -1988,6 +1988,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'AI assistance';
+
+  @override
   String get clientAiExplainCta => 'Understand my visit report';
 
   @override
@@ -1999,6 +2002,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Preparing the explanation…';
+
+  @override
+  String get clientAiExplainListTitle => 'Understand a visit report';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Simplified explanation of a finalized report';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'No finalized visit report to explain yet.';
 
   @override
   String get clientAiTriageTitle => '24/7 emergency help';

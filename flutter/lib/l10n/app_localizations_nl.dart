@@ -1996,6 +1996,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'AI-assistentie';
+
+  @override
   String get clientAiExplainCta => 'Mijn verslag begrijpen';
 
   @override
@@ -2007,6 +2010,17 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Uitleg voorbereiden…';
+
+  @override
+  String get clientAiExplainListTitle => 'Een verslag begrijpen';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Vereenvoudigde uitleg van een afgerond verslag';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'Nog geen afgerond bezoekverslag om uit te leggen.';
 
   @override
   String get clientAiTriageTitle => 'Hulp bij spoedgevallen 24/7';

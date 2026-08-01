@@ -2005,6 +2005,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'Assistenza IA';
+
+  @override
   String get clientAiExplainCta => 'Capire il mio referto';
 
   @override
@@ -2016,6 +2019,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Preparazione della spiegazione…';
+
+  @override
+  String get clientAiExplainListTitle => 'Capire un referto';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Spiegazione semplificata di un referto finalizzato';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'Nessun referto finalizzato da spiegare per ora.';
 
   @override
   String get clientAiTriageTitle => 'Aiuto urgenza 24/7';

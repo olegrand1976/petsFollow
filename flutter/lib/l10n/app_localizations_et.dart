@@ -1997,6 +1997,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get clientAiDevBadge => 'dev';
 
   @override
+  String get clientAiSectionTitle => 'AI tugi';
+
+  @override
   String get clientAiExplainCta => 'Saa aru oma visiidiaruandest';
 
   @override
@@ -2008,6 +2011,17 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get clientAiExplainLoading => 'Selgituse ettevalmistamine…';
+
+  @override
+  String get clientAiExplainListTitle => 'Saa aru visiidiaruandest';
+
+  @override
+  String get clientAiExplainListSubtitle =>
+      'Lõplikust aruandest lihtsustatud selgitus';
+
+  @override
+  String get clientAiExplainListEmpty =>
+      'Selgitamiseks pole veel ühtegi lõplikku visiidiaruannet.';
 
   @override
   String get clientAiTriageTitle => 'Hädaabi 24/7';
