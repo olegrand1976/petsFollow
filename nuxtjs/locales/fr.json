@@ -3810,7 +3810,10 @@
       "measureCalibrated": "Calibré (mm)",
       "measureUncalibrated": "Sans calibrage (px)",
       "measureHintPx": "Sans calibrage fiable — mesure en pixels image",
-      "measureHintResized": "Aperçu Orthanc redimensionné vs DICOM — mesure en px (Cornerstone recommandé pour mm)"
+      "measureHintResized": "Aperçu Orthanc redimensionné vs DICOM — mesure en px (Cornerstone recommandé pour mm)",
+      "contrastUp": "Augmenter le contraste",
+      "contrastDown": "Diminuer le contraste",
+      "measureHintScaled": "Calibrage approximatif — aperçu Orthanc redimensionné (mm estimés)"
     },
     "admin": {
       "title": "PACS — supervision",
@@ -3869,7 +3872,14 @@
     "seriesPicker": "Série",
     "seriesOption": "Série {n} · {id}",
     "downloadError": "Téléchargement DICOM impossible.",
-    "instanceUnavailable": "Fichier DICOM introuvable sur le serveur d’imagerie. Réimportez l’étude (ex. RX démo) ou choisissez une autre."
+    "instanceUnavailable": "Fichier DICOM introuvable sur le serveur d’imagerie. Réimportez l’étude (ex. RX démo) ou choisissez une autre.",
+    "comments": {
+      "title": "Commentaires d’étude",
+      "placeholder": "Ajouter un commentaire…",
+      "submit": "Envoyer",
+      "empty": "Aucun commentaire pour cette étude.",
+      "error": "Impossible de charger ou d’envoyer le commentaire."
+    }
   },
   "research": {
     "disabledTitle": "Module Research désactivé",

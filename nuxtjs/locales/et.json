@@ -3778,7 +3778,10 @@
       "measureCalibrated": "Kalibreeritud (mm)",
       "measureUncalibrated": "Kalibreerimata (px)",
       "measureHintPx": "Usaldusväärne kalibreering puudub — mõõtmine piksliühikutes",
-      "measureHintResized": "Orthanci eelvaade muudetud vs DICOM — ainult px (mm jaoks Cornerstone)"
+      "measureHintResized": "Orthanci eelvaade muudetud vs DICOM — ainult px (mm jaoks Cornerstone)",
+      "contrastUp": "Suurenda kontrasti",
+      "contrastDown": "Vähenda kontrasti",
+      "measureHintScaled": "Ligikaudne kalibreering — Orthanci eelvaade muudetud (hinnangulised mm)"
     },
     "admin": {
       "title": "PACS — järelevalve",
@@ -3837,7 +3840,14 @@
     "seriesPicker": "Seeria",
     "seriesOption": "Seeria {n} · {id}",
     "downloadError": "DICOM-i allalaadimine ebaõnnestus.",
-    "instanceUnavailable": "DICOM puudub pildiserveris. Laadige uuring uuesti või valige teine."
+    "instanceUnavailable": "DICOM puudub pildiserveris. Laadige uuring uuesti või valige teine.",
+    "comments": {
+      "title": "Uuringu kommentaarid",
+      "placeholder": "Lisa kommentaar…",
+      "submit": "Saada",
+      "empty": "Sellel uuringul pole veel kommentaare.",
+      "error": "Kommentaari laadimine või saatmine ebaõnnestus."
+    }
   },
   "research": {
     "disabledTitle": "Research module disabled",

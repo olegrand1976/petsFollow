@@ -3809,7 +3809,10 @@
       "measureCalibrated": "Gecalibreerd (mm)",
       "measureUncalibrated": "Niet gecalibreerd (px)",
       "measureHintPx": "Geen betrouwbare calibratie — meting in beeldpixels",
-      "measureHintResized": "Orthanc-preview herschaald vs DICOM — alleen px (Cornerstone voor mm)"
+      "measureHintResized": "Orthanc-preview herschaald vs DICOM — alleen px (Cornerstone voor mm)",
+      "contrastUp": "Contrast verhogen",
+      "contrastDown": "Contrast verlagen",
+      "measureHintScaled": "Benaderende kalibratie — Orthanc-preview herschaald (geschatte mm)"
     },
     "admin": {
       "title": "PACS — toezicht",
@@ -3868,7 +3871,14 @@
     "seriesPicker": "Serie",
     "seriesOption": "Serie {n} · {id}",
     "downloadError": "DICOM-download mislukt.",
-    "instanceUnavailable": "DICOM-bestand ontbreekt op de beeldserver. Upload opnieuw of kies een andere studie."
+    "instanceUnavailable": "DICOM-bestand ontbreekt op de beeldserver. Upload opnieuw of kies een andere studie.",
+    "comments": {
+      "title": "Studiecommentaren",
+      "placeholder": "Voeg een commentaar toe…",
+      "submit": "Verzenden",
+      "empty": "Nog geen commentaren bij deze studie.",
+      "error": "Commentaar laden of verzenden mislukt."
+    }
   },
   "research": {
     "disabledTitle": "Research module disabled",

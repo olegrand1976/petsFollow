@@ -98,7 +98,17 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			'orthancSeriesId', ps.orthanc_series_id,
 			'description', ps.description,
 			'modality', ps.modality,
-			'createdAt', ps.created_at
+			'createdAt', ps.created_at,
+			'comments', COALESCE((
+				SELECT jsonb_agg(jsonb_build_object(
+					'id', c.id,
+					'body', c.body,
+					'createdAt', c.created_at,
+					'authorUserId', c.author_user_id
+				) ORDER BY c.created_at)
+				FROM imaging.pet_study_comments c
+				WHERE c.pet_study_id = ps.id
+			), '[]'::jsonb)
 		) ORDER BY ps.created_at), '[]'::jsonb)
 			FROM imaging.pet_studies ps
 			JOIN pets.pets p ON p.id = ps.pet_id WHERE p.owner_user_id = $1`,

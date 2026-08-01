@@ -33,6 +33,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/pacs/status` | auth (véto…) — timeout Orthanc 2s + cache Redis |
 | `POST` | `/api/v1/pacs/wake` | auth — cold start |
 | `GET/POST` | `/api/v1/pets/{id}/pacs/studies` | practice perm + pet access |
+| `GET/POST` | `/api/v1/pets/{petId}/pacs/studies/{studyId}/comments` | commentaires étude (`studyId` = UUID `imaging.pet_studies.id`, append-only) ; UUID invalide / étude absente → 404 ; pet hors cabinet → 403 |
 | `GET` | `/api/v1/pacs/studies\|series\|instances/…` | proxy Orthanc |
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
 | `GET` | `/api/v1/admin/pacs/metrics` | admin |
@@ -87,11 +88,12 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Authz instance : `ParentStudy` si présent, sinon chaîne `ParentSeries` → série → `ParentStudy` (Orthanc 1.12 omet souvent `ParentStudy` sur `GET /instances/{id}`). Staff cabinet uniquement (`pets.read` + rôle practice) ; client → 403 ; autre cabinet → 404 opaque.
 - Lien Orthanc **globalement unique** (`UNIQUE(orthanc_study_id)`) : un study déjà lié à un cabinet ne peut pas être rattacher à un autre (`409 pacs_study_other_practice`). Upload : même fallback `ParentSeries` si `ParentStudy` absent.
 - Backups : **Cloud SQL automated backups** (DB `orthanc`) + **GCS versioning** sur `petsfollow-dicom`.
-- RGPD : export JSON `imagingStudies` ; purge `DELETE /me` / rétention → delete Orthanc study (best-effort) après collect artifacts.
+- RGPD : export JSON `imagingStudies` (incl. `comments[]` append-only) ; purge `DELETE /me` / rétention → delete Orthanc study (best-effort) après collect artifacts ; commentaires CASCADE avec `pet_studies`.
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
 - Pooling : `IndexConnectionsCount=4` ; max-instances Orthanc=10 → surveiller `max_connections` Cloud SQL.
 - Staging : `PACS_ENABLED` auto-on **uniquement** si `PACS_ORTHANC_URL` est défini (sinon offline UI évité).
-- Viewer V1 défaut = previews Orthanc PNG (canvas) ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
+- Viewer V1 défaut = previews Orthanc PNG (canvas) : contraste ± (filtre CSS, pas vrai W/L DICOM), annotations en coords image (plein écran stable), mesure mm via `PixelSpacing` exact ou scalé si preview redimensionné ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
+- Commentaires d’étude : table `imaging.pet_study_comments` (auteur + `created_at`, pas d’édition/suppression UI V1) ; panneau sous le viewer.
 - Cold start : TTL cache `starting` = 90 s ; UI upload poll jusqu’à `ready`.
 - Upload compensatoire : delete **instance** Orthanc si insert DB échoue (jamais `DELETE /studies` si l’étude était déjà liée).
 - Lien étude ↔ animal : conflit si même `orthanc_study_id` déjà lié à un **autre** pet du cabinet (`409`).
@@ -102,7 +104,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 ## UI
 
 - Fiche animal → onglet Imagerie → `PacsViewerContainer` (badge état, wake, upload, dual-pane).
-- Viewer canvas (preview Orthanc) : Zoom, Pan, Window/Level, mesure, flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`.
+- Viewer canvas (preview Orthanc) : Zoom, Pan, contraste (drag + ±), mesure (mm/px), flèche, plein écran, comparaison multi-instance, picker multi-série, frames (boutons + Shift+molette), téléchargement `.dcm`, historique commentaires étude.
 - Admin `/admin/pacs` : métriques + **playground** (= `PacsViewerContainer` véto) + debug fetch client + logs serveur (poll 5s), bouton **wake**, badge `nav.tagDev`. Les routes cliniques PACS acceptent aussi le rôle `admin` (sans switch profil véto).
 
 ## Tests
@@ -112,7 +114,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 cd go && go test ./internal/handlers/ -run 'TestPacs' -count=1
 
 # Vitest
-cd nuxtjs && npm test -- tests/unit/pacsPoll.spec.ts
+cd nuxtjs && npm test -- tests/unit/pacsPoll.spec.ts tests/unit/pacs-measure.spec.ts
 
 # Playwright (API + Nuxt + flag on)
 make test-e2e-p0   # inclut 20-pacs-admin + 20b-pacs-imaging @p0

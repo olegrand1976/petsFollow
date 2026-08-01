@@ -3809,7 +3809,10 @@
       "measureCalibrated": "Calibrated (mm)",
       "measureUncalibrated": "Uncalibrated (px)",
       "measureHintPx": "No reliable calibration — measuring in image pixels",
-      "measureHintResized": "Orthanc preview resized vs DICOM — px only (use Cornerstone for mm)"
+      "measureHintResized": "Orthanc preview resized vs DICOM — px only (use Cornerstone for mm)",
+      "contrastUp": "Increase contrast",
+      "contrastDown": "Decrease contrast",
+      "measureHintScaled": "Approximate calibration — Orthanc preview resized (estimated mm)"
     },
     "admin": {
       "title": "PACS — monitoring",
@@ -3868,7 +3871,14 @@
     "seriesPicker": "Series",
     "seriesOption": "Series {n} · {id}",
     "downloadError": "DICOM download failed.",
-    "instanceUnavailable": "DICOM file missing on the imaging server. Re-upload the study or pick another one."
+    "instanceUnavailable": "DICOM file missing on the imaging server. Re-upload the study or pick another one.",
+    "comments": {
+      "title": "Study comments",
+      "placeholder": "Add a comment…",
+      "submit": "Send",
+      "empty": "No comments on this study yet.",
+      "error": "Could not load or send the comment."
+    }
   },
   "research": {
     "disabledTitle": "Research module disabled",

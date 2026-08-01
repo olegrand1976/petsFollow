@@ -2,15 +2,19 @@
 /**
  * Canvas DICOM viewer (client-only).
  * Loads Orthanc frame previews via BFF; tools: zoom, pan, W/L, measure, arrow, fullscreen, dual-pane, frame scroll, download.
- * Measures use PixelSpacing (mm) when metadata provides it; otherwise image px.
+ * Annotations stored in image space (survive resize/fullscreen). Measures use PixelSpacing (mm), scaled if preview resized.
  */
 import {
   formatPacsLength,
-  measureScreenSegment,
+  measureImageSegment,
   parseMatrixSize,
   parsePixelSpacingMm,
+  scaleSpacingToBitmap,
+  screenToImage,
+  segmentImageToScreen,
   spacingUsableForBitmap,
   type PacsMatrixSize,
+  type PacsSegment,
   type PacsSpacingMm,
 } from '~/utils/pacs-measure'
 
@@ -24,6 +28,7 @@ type Tool = 'pan' | 'zoom' | 'wl' | 'measure' | 'arrow'
 
 const { t } = useI18n()
 const rootEl = ref<HTMLElement | null>(null)
+const panesEl = ref<HTMLElement | null>(null)
 const tool = ref<Tool>('pan')
 const fullscreen = ref(false)
 const frameIndex = ref(0)
@@ -34,14 +39,17 @@ const metaSpacing = ref<PacsSpacingMm | null>(null)
 const metaMatrix = ref<PacsMatrixSize | null>(null)
 /** Spacing trusted for the currently loaded left preview bitmap (null → px). */
 const effectiveSpacing = ref<PacsSpacingMm | null>(null)
+/** True when mm come from scaled spacing (preview ≠ DICOM matrix). */
 const previewResized = ref(false)
 
 const measureCalibrated = computed(() => effectiveSpacing.value != null)
 const measureHint = computed(() => {
-  if (measureCalibrated.value || tool.value !== 'measure') return ''
-  if (previewResized.value) return t('pacs.tools.measureHintResized')
+  if (tool.value !== 'measure') return ''
+  if (measureCalibrated.value && previewResized.value) return t('pacs.tools.measureHintScaled')
+  if (measureCalibrated.value) return ''
   return t('pacs.tools.measureHintPx')
 })
+const wlBadge = computed(() => `B ${Math.round(left.wl)} · C ${Math.round(left.ww)}`)
 
 function refreshEffectiveSpacing(img: HTMLImageElement | null) {
   if (!img || !img.naturalWidth) {
@@ -49,14 +57,25 @@ function refreshEffectiveSpacing(img: HTMLImageElement | null) {
     previewResized.value = false
     return
   }
-  const usable = spacingUsableForBitmap(
+  const exact = spacingUsableForBitmap(
     metaSpacing.value,
     metaMatrix.value,
     img.naturalWidth,
     img.naturalHeight,
   )
-  effectiveSpacing.value = usable
-  previewResized.value = Boolean(metaSpacing.value && metaMatrix.value && !usable)
+  if (exact) {
+    effectiveSpacing.value = exact
+    previewResized.value = false
+    return
+  }
+  const scaled = scaleSpacingToBitmap(
+    metaSpacing.value,
+    metaMatrix.value,
+    img.naturalWidth,
+    img.naturalHeight,
+  )
+  effectiveSpacing.value = scaled
+  previewResized.value = Boolean(scaled)
 }
 
 type Pane = {
@@ -69,8 +88,9 @@ type Pane = {
   dragging: boolean
   lastX: number
   lastY: number
-  measure: { x1: number, y1: number, x2: number, y2: number } | null
-  arrow: { x1: number, y1: number, x2: number, y2: number } | null
+  /** Image-space segments (bitmap px, origin = image centre). */
+  measure: PacsSegment | null
+  arrow: PacsSegment | null
   drawing: boolean
 }
 
@@ -90,6 +110,7 @@ const imageCache = new Map<string, string>()
 const loadError = ref('')
 /** Bumps on each bind to ignore stale async preview responses. */
 let loadGen = 0
+let resizeObserver: ResizeObserver | null = null
 
 function reportLoadError(message: string) {
   loadError.value = message
@@ -99,6 +120,35 @@ function fetchStatus(e: unknown): number | null {
   const err = e as { statusCode?: number, status?: number, response?: { status?: number } }
   const n = err?.statusCode ?? err?.status ?? err?.response?.status
   return typeof n === 'number' ? n : null
+}
+
+function clampWl(v: number) {
+  return Math.max(-80, Math.min(80, v))
+}
+function clampWw(v: number) {
+  return Math.max(20, Math.min(300, v))
+}
+
+function bumpContrast(deltaWl: number, deltaWw: number) {
+  left.wl = clampWl(left.wl + deltaWl)
+  left.ww = clampWw(left.ww + deltaWw)
+  if (props.compare) {
+    right.wl = left.wl
+    right.ww = left.ww
+  }
+  paint(left, leftCanvas.value)
+  if (props.compare) paint(right, rightCanvas.value)
+}
+
+function seedWlFromMetadata(windowCenter: unknown, windowWidth: unknown) {
+  const wc = Number(windowCenter)
+  const ww = Number(windowWidth)
+  if (!Number.isFinite(wc) || !Number.isFinite(ww) || ww <= 0) return
+  // Map DICOM W/L into canvas filter ranges (heuristic, preview already windowed).
+  left.wl = clampWl(wc / 40)
+  left.ww = clampWw(ww / 4)
+  right.wl = left.wl
+  right.ww = left.ww
 }
 
 async function loadPreview(instanceId: string, frame: number): Promise<string> {
@@ -166,7 +216,6 @@ async function bindPane(
     pane.img = null
     if (pane === left) refreshEffectiveSpacing(null)
     paint(pane, canvas)
-    // Only clamp on Orthanc frame-out-of-range (404) — never on 5xx / réseau.
     if (frame > 0 && fetchStatus(e) === 404) {
       maxFrame.value = frame - 1
       frameIndex.value = maxFrame.value
@@ -206,8 +255,9 @@ function paint(pane: Pane, canvas: HTMLCanvasElement | null) {
   ctx.drawImage(pane.img, -pane.img.width / 2, -pane.img.height / 2)
   ctx.restore()
 
-  const drawLine = (line: { x1: number, y1: number, x2: number, y2: number } | null, color: string, arrow = false) => {
-    if (!line) return
+  const drawLine = (seg: PacsSegment | null, color: string, arrow = false) => {
+    if (!seg) return
+    const line = segmentImageToScreen(seg, w, h, pane.offsetX, pane.offsetY, pane.scale)
     ctx.strokeStyle = color
     ctx.lineWidth = 2
     ctx.beginPath()
@@ -224,10 +274,9 @@ function paint(pane: Pane, canvas: HTMLCanvasElement | null) {
       ctx.fillStyle = color
       ctx.fill()
     } else {
-      const label = formatPacsLength(measureScreenSegment(
-        line.x2 - line.x1,
-        line.y2 - line.y1,
-        pane.scale,
+      const label = formatPacsLength(measureImageSegment(
+        seg.x2 - seg.x1,
+        seg.y2 - seg.y1,
         effectiveSpacing.value,
       ))
       ctx.fillStyle = color
@@ -239,6 +288,18 @@ function paint(pane: Pane, canvas: HTMLCanvasElement | null) {
   drawLine(pane.arrow, '#fbbf24', true)
 }
 
+function pointerToImage(pane: Pane, canvas: HTMLCanvasElement, e: PointerEvent) {
+  return screenToImage(
+    e.offsetX,
+    e.offsetY,
+    canvas.width,
+    canvas.height,
+    pane.offsetX,
+    pane.offsetY,
+    pane.scale,
+  )
+}
+
 function onPointerDown(pane: Pane, canvas: HTMLCanvasElement | null, e: PointerEvent) {
   if (!canvas) return
   canvas.setPointerCapture(e.pointerId)
@@ -247,7 +308,8 @@ function onPointerDown(pane: Pane, canvas: HTMLCanvasElement | null, e: PointerE
   pane.lastY = e.offsetY
   if (tool.value === 'measure' || tool.value === 'arrow') {
     pane.drawing = true
-    const line = { x1: e.offsetX, y1: e.offsetY, x2: e.offsetX, y2: e.offsetY }
+    const p = pointerToImage(pane, canvas, e)
+    const line = { x1: p.x, y1: p.y, x2: p.x, y2: p.y }
     if (tool.value === 'measure') pane.measure = line
     else pane.arrow = line
   }
@@ -263,13 +325,14 @@ function onPointerMove(pane: Pane, canvas: HTMLCanvasElement | null, e: PointerE
   } else if (tool.value === 'zoom') {
     pane.scale = Math.min(8, Math.max(0.2, pane.scale * (1 + dy * -0.01)))
   } else if (tool.value === 'wl') {
-    pane.wl = Math.max(-80, Math.min(80, pane.wl + dx * 0.3))
-    pane.ww = Math.max(20, Math.min(300, pane.ww + dy * -0.5))
+    pane.wl = clampWl(pane.wl + dx * 0.3)
+    pane.ww = clampWw(pane.ww + dy * -0.5)
   } else if (pane.drawing) {
     const line = tool.value === 'measure' ? pane.measure : pane.arrow
     if (line) {
-      line.x2 = e.offsetX
-      line.y2 = e.offsetY
+      const p = pointerToImage(pane, canvas, e)
+      line.x2 = p.x
+      line.y2 = p.y
     }
   }
   pane.lastX = e.offsetX
@@ -286,11 +349,14 @@ async function toggleFullscreen() {
   if (!rootEl.value) return
   if (!document.fullscreenElement) {
     await rootEl.value.requestFullscreen()
-    fullscreen.value = true
   } else {
     await document.exitFullscreen()
-    fullscreen.value = false
   }
+}
+
+function syncFullscreenFlag() {
+  fullscreen.value = document.fullscreenElement === rootEl.value
+  nextTick(resizeCanvases)
 }
 
 function resizeCanvases() {
@@ -298,8 +364,9 @@ function resizeCanvases() {
     if (!el) continue
     const parent = el.parentElement
     if (!parent) continue
-    el.width = parent.clientWidth
-    el.height = Math.max(320, parent.clientHeight)
+    // Keep buffer size == CSS layout size so offsetX/Y map 1:1 (fullscreen/resize).
+    el.width = Math.max(1, parent.clientWidth)
+    el.height = Math.max(1, parent.clientHeight)
     paint(pane as Pane, el)
   }
 }
@@ -324,7 +391,6 @@ async function stepFrame(delta: number) {
   if (maxFrame.value != null && next > maxFrame.value) return
   frameIndex.value = next
   const ok = await reloadPanes()
-  // Transient failure: revert. EOF clamp inside bindPane already moved frameIndex back.
   if (!ok && frameIndex.value === next) {
     frameIndex.value = prev
     await reloadPanes()
@@ -367,6 +433,8 @@ watch(() => props.leftInstanceId, async (id) => {
   metaMatrix.value = null
   effectiveSpacing.value = null
   previewResized.value = false
+  left.measure = null
+  left.arrow = null
   if (id) {
     try {
       const res: any = await $fetch(`/api/pacs/instances/${id}/metadata`)
@@ -375,22 +443,35 @@ watch(() => props.leftInstanceId, async (id) => {
       if (Number.isFinite(n) && n > 0) maxFrame.value = n - 1
       metaSpacing.value = parsePixelSpacingMm(data.pixelSpacingMm)
       metaMatrix.value = parseMatrixSize(data.rows, data.columns)
+      seedWlFromMetadata(data.windowCenter, data.windowWidth)
     } catch { /* optional */ }
   }
   void bindPane(left, leftCanvas.value, id)
 })
-watch(() => props.rightInstanceId, (id) => { void bindPane(right, rightCanvas.value, id) })
+watch(() => props.rightInstanceId, (id) => {
+  right.measure = null
+  right.arrow = null
+  void bindPane(right, rightCanvas.value, id)
+})
 watch(() => props.compare, () => nextTick(resizeCanvases))
 
 onMounted(async () => {
   await nextTick()
   resizeCanvases()
   window.addEventListener('resize', resizeCanvases)
+  document.addEventListener('fullscreenchange', syncFullscreenFlag)
+  if (typeof ResizeObserver !== 'undefined' && panesEl.value) {
+    resizeObserver = new ResizeObserver(() => resizeCanvases())
+    resizeObserver.observe(panesEl.value)
+  }
   await reloadPanes()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeCanvases)
+  document.removeEventListener('fullscreenchange', syncFullscreenFlag)
+  resizeObserver?.disconnect()
+  resizeObserver = null
   for (const url of imageCache.values()) URL.revokeObjectURL(url)
   imageCache.clear()
 })
@@ -418,6 +499,25 @@ onBeforeUnmount(() => {
       >
         {{ t(`pacs.tools.${tb}`) }}
       </button>
+      <button
+        type="button"
+        class="dicom-viewer__tool"
+        data-testid="dicom-contrast-down"
+        :title="t('pacs.tools.contrastDown')"
+        @click="bumpContrast(-8, -15)"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        class="dicom-viewer__tool"
+        data-testid="dicom-contrast-up"
+        :title="t('pacs.tools.contrastUp')"
+        @click="bumpContrast(8, 15)"
+      >
+        +
+      </button>
+      <span class="dicom-viewer__wl" data-testid="dicom-wl-badge">{{ wlBadge }}</span>
       <button
         type="button"
         class="dicom-viewer__tool"
@@ -471,7 +571,12 @@ onBeforeUnmount(() => {
     >
       {{ measureHint }}
     </p>
-    <div class="dicom-viewer__panes" :class="{ 'dicom-viewer__panes--compare': compare }" @wheel="onWheel">
+    <div
+      ref="panesEl"
+      class="dicom-viewer__panes"
+      :class="{ 'dicom-viewer__panes--compare': compare }"
+      @wheel="onWheel"
+    >
       <div class="dicom-viewer__pane">
         <canvas
           ref="leftCanvas"
@@ -507,6 +612,20 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   padding: 0.75rem;
 }
+.dicom-viewer:fullscreen {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+.dicom-viewer:fullscreen .dicom-viewer__panes {
+  flex: 1;
+  min-height: 0;
+}
+.dicom-viewer:fullscreen .dicom-viewer__pane {
+  min-height: 0;
+  height: 100%;
+}
 .dicom-viewer__toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -531,12 +650,19 @@ onBeforeUnmount(() => {
   color: #fff;
   border-color: transparent;
 }
-.dicom-viewer__frame {
+.dicom-viewer__frame,
+.dicom-viewer__wl {
   font-size: 0.8rem;
   color: var(--pf-vet-primary);
-  opacity: 0.8;
+  opacity: 0.85;
   min-width: 4.5rem;
   text-align: center;
+}
+.dicom-viewer__wl {
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--pf-vet-border);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
 }
 .dicom-viewer__calib {
   font-size: 0.78rem;
