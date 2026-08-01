@@ -44,10 +44,24 @@ const compare = ref(false)
 const leftInstanceId = ref('')
 const rightInstanceId = ref('')
 const selectedStudyId = ref('')
+/** imaging.pet_studies.id (UUID) — comments API; distinct from Orthanc study id. */
+const selectedPetStudyId = ref('')
 const seriesIds = ref<string[]>([])
 const selectedSeriesId = ref('')
 const instances = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
+
+type PacsStudyComment = {
+  id: string
+  body: string
+  createdAt: string
+  author: { id: string, displayName: string }
+}
+const comments = ref<PacsStudyComment[]>([])
+const commentDraft = ref('')
+const commentsLoading = ref(false)
+const commentsBusy = ref(false)
+const commentsError = ref('')
 
 /** Hold launch pad ~1.4s after ready so step « ready » is visible. */
 const celebrateReady = ref(false)
@@ -162,6 +176,47 @@ async function loadSeries(seriesId: string) {
 }
 
 /** @returns true when an instance is bound (selection committed). */
+async function loadComments(petStudyId: string) {
+  commentsError.value = ''
+  commentsLoading.value = true
+  try {
+    const res: any = await apiFetch(`/api/pets/${props.petId}/pacs/studies/${petStudyId}/comments`)
+    comments.value = res.data ?? res ?? []
+  } catch (e: any) {
+    comments.value = []
+    commentsError.value = pacsFetchMessage(e, t('pacs.comments.error'))
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+function formatCommentAt(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString()
+  } catch {
+    return iso
+  }
+}
+
+async function submitComment() {
+  const body = commentDraft.value.trim()
+  if (!body || !selectedPetStudyId.value || commentsBusy.value) return
+  commentsBusy.value = true
+  commentsError.value = ''
+  try {
+    await apiFetch(`/api/pets/${props.petId}/pacs/studies/${selectedPetStudyId.value}/comments`, {
+      method: 'POST',
+      body: { body },
+    })
+    commentDraft.value = ''
+    await loadComments(selectedPetStudyId.value)
+  } catch (e: any) {
+    commentsError.value = pacsFetchMessage(e, t('pacs.comments.error'))
+  } finally {
+    commentsBusy.value = false
+  }
+}
+
 async function openStudy(study: any): Promise<boolean> {
   if (actionsLocked.value) return false
   leftInstanceId.value = ''
@@ -169,6 +224,10 @@ async function openStudy(study: any): Promise<boolean> {
   instances.value = []
   seriesIds.value = []
   selectedSeriesId.value = ''
+  selectedPetStudyId.value = ''
+  comments.value = []
+  commentDraft.value = ''
+  commentsError.value = ''
   studiesError.value = ''
   const preferred = study.orthancSeriesId
   try {
@@ -200,9 +259,12 @@ async function openStudy(study: any): Promise<boolean> {
       return false
     }
     selectedStudyId.value = study.orthancStudyId
+    selectedPetStudyId.value = study.id || ''
+    if (selectedPetStudyId.value) void loadComments(selectedPetStudyId.value)
     return true
   } catch (e: any) {
     selectedStudyId.value = ''
+    selectedPetStudyId.value = ''
     studiesError.value = pacsFetchMessage(e, t('pacs.orthancError'))
     return false
   }
@@ -407,6 +469,65 @@ onMounted(() => {
           {{ t('pacs.viewerWaiting') }}
         </p>
       </ClientOnly>
+
+      <section
+        v-if="selectedPetStudyId"
+        class="pacs-comments"
+        data-testid="pacs-study-comments"
+      >
+        <h4 class="pacs-comments__title">{{ t('pacs.comments.title') }}</h4>
+        <p
+          v-if="commentsError"
+          class="pro-inline-feedback pro-inline-feedback--error"
+          role="alert"
+        >
+          {{ commentsError }}
+        </p>
+        <div class="pacs-comments__compose">
+          <textarea
+            v-model="commentDraft"
+            class="pacs-comments__input"
+            rows="3"
+            maxlength="4000"
+            data-testid="pacs-comment-input"
+            :placeholder="t('pacs.comments.placeholder')"
+            :disabled="actionsLocked || commentsBusy"
+          />
+          <ProButton
+            data-testid="pacs-comment-submit"
+            :disabled="actionsLocked || commentsBusy || !commentDraft.trim()"
+            :loading="commentsBusy"
+            @click="submitComment"
+          >
+            {{ t('pacs.comments.submit') }}
+          </ProButton>
+        </div>
+        <ul
+          v-if="comments.length"
+          class="pacs-comments__list"
+          data-testid="pacs-comments-list"
+        >
+          <li
+            v-for="c in comments"
+            :key="c.id"
+            class="pacs-comments__item"
+            data-testid="pacs-comment-item"
+          >
+            <header class="pacs-comments__meta">
+              <strong>{{ c.author?.displayName || '—' }}</strong>
+              <time :datetime="c.createdAt">{{ formatCommentAt(c.createdAt) }}</time>
+            </header>
+            <p class="pacs-comments__body">{{ c.body }}</p>
+          </li>
+        </ul>
+        <p
+          v-else-if="!commentsLoading"
+          class="pacs-comments__empty"
+          data-testid="pacs-comments-empty"
+        >
+          {{ t('pacs.comments.empty') }}
+        </p>
+      </section>
     </template>
   </div>
 </template>
@@ -445,4 +566,26 @@ onMounted(() => {
 .pacs-container__hint { color: var(--pf-vet-primary); opacity: 0.9; }
 .pacs-container__hint p { margin: 0 0 0.35rem; }
 .pacs-container__hint-lock { font-size: 0.88rem; opacity: 0.75; }
+.pacs-comments {
+  display: flex; flex-direction: column; gap: 0.65rem;
+  border-top: 1px solid var(--pf-vet-border); padding-top: 0.85rem;
+}
+.pacs-comments__title { margin: 0; font-size: 1rem; color: var(--pf-vet-primary); }
+.pacs-comments__compose { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.pacs-comments__input {
+  width: 100%; max-width: 40rem; resize: vertical;
+  border: 1px solid var(--pf-vet-border); border-radius: 8px;
+  padding: 0.55rem 0.7rem; font: inherit; background: var(--pf-vet-bg); color: inherit;
+}
+.pacs-comments__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+.pacs-comments__item {
+  border: 1px solid var(--pf-vet-border); border-radius: 8px;
+  padding: 0.55rem 0.75rem; background: var(--pf-vet-bg);
+}
+.pacs-comments__meta {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 0.85rem; justify-content: space-between;
+  font-size: 0.82rem; opacity: 0.85; margin-bottom: 0.25rem;
+}
+.pacs-comments__body { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.pacs-comments__empty { margin: 0; font-size: 0.9rem; opacity: 0.75; }
 </style>

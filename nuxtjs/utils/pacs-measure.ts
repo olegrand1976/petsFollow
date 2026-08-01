@@ -16,6 +16,13 @@ export type PacsMatrixSize = {
   columns: number
 }
 
+export type PacsSegment = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
 /** Parse API `pixelSpacingMm` ([row, col]) or reject invalid values. */
 export function parsePixelSpacingMm(raw: unknown): PacsSpacingMm | null {
   if (!Array.isArray(raw) || raw.length < 2) return null
@@ -50,6 +57,26 @@ export function spacingUsableForBitmap(
 }
 
 /**
+ * Scale DICOM PixelSpacing to Orthanc preview bitmap size when the PNG is
+ * downsampled (approx. mm still consistent with on-screen anatomy).
+ */
+export function scaleSpacingToBitmap(
+  spacing: PacsSpacingMm | null,
+  matrix: PacsMatrixSize | null,
+  bitmapWidth: number,
+  bitmapHeight: number,
+): PacsSpacingMm | null {
+  if (!spacing || !matrix) return null
+  if (bitmapWidth < 1 || bitmapHeight < 1) return null
+  const rowScale = matrix.rows / bitmapHeight
+  const colScale = matrix.columns / bitmapWidth
+  if (!Number.isFinite(rowScale) || !Number.isFinite(colScale) || rowScale <= 0 || colScale <= 0) {
+    return null
+  }
+  return [spacing[0] * rowScale, spacing[1] * colScale]
+}
+
+/**
  * Convert a screen-space segment (canvas coords after pan/zoom paint) to image length.
  * `scale` is the viewer zoom factor (image pixels × scale = screen pixels).
  */
@@ -60,8 +87,15 @@ export function measureScreenSegment(
   spacing: PacsSpacingMm | null,
 ): PacsLengthResult {
   const s = scale > 0 && Number.isFinite(scale) ? scale : 1
-  const dxImg = dxScreen / s
-  const dyImg = dyScreen / s
+  return measureImageSegment(dxScreen / s, dyScreen / s, spacing)
+}
+
+/** Length from image-space deltas (origin = image centre, units = bitmap px). */
+export function measureImageSegment(
+  dxImg: number,
+  dyImg: number,
+  spacing: PacsSpacingMm | null,
+): PacsLengthResult {
   if (spacing) {
     const [rowMm, colMm] = spacing
     const mm = Math.hypot(dxImg * colMm, dyImg * rowMm)
@@ -75,4 +109,53 @@ export function formatPacsLength(result: PacsLengthResult, digits = 1): string {
     ? result.length.toFixed(digits)
     : String(Math.round(result.length))
   return `${n} ${result.unit}`
+}
+
+/**
+ * Canvas paint uses: translate(w/2+offsetX, h/2+offsetY) then scale(s).
+ * Image coords: origin at image centre, +x right, +y down (bitmap pixels).
+ */
+export function screenToImage(
+  screenX: number,
+  screenY: number,
+  canvasW: number,
+  canvasH: number,
+  offsetX: number,
+  offsetY: number,
+  scale: number,
+): { x: number, y: number } {
+  const s = scale > 0 && Number.isFinite(scale) ? scale : 1
+  return {
+    x: (screenX - canvasW / 2 - offsetX) / s,
+    y: (screenY - canvasH / 2 - offsetY) / s,
+  }
+}
+
+export function imageToScreen(
+  imgX: number,
+  imgY: number,
+  canvasW: number,
+  canvasH: number,
+  offsetX: number,
+  offsetY: number,
+  scale: number,
+): { x: number, y: number } {
+  const s = scale > 0 && Number.isFinite(scale) ? scale : 1
+  return {
+    x: imgX * s + canvasW / 2 + offsetX,
+    y: imgY * s + canvasH / 2 + offsetY,
+  }
+}
+
+export function segmentImageToScreen(
+  seg: PacsSegment,
+  canvasW: number,
+  canvasH: number,
+  offsetX: number,
+  offsetY: number,
+  scale: number,
+): PacsSegment {
+  const a = imageToScreen(seg.x1, seg.y1, canvasW, canvasH, offsetX, offsetY, scale)
+  const b = imageToScreen(seg.x2, seg.y2, canvasW, canvasH, offsetX, offsetY, scale)
+  return { x1: a.x, y1: a.y, x2: b.x, y2: b.y }
 }

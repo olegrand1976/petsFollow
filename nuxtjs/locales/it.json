@@ -3778,7 +3778,10 @@
       "measureCalibrated": "Calibrato (mm)",
       "measureUncalibrated": "Non calibrato (px)",
       "measureHintPx": "Nessuna calibrazione affidabile — misura in pixel immagine",
-      "measureHintResized": "Anteprima Orthanc ridimensionata vs DICOM — solo px (Cornerstone per mm)"
+      "measureHintResized": "Anteprima Orthanc ridimensionata vs DICOM — solo px (Cornerstone per mm)",
+      "contrastUp": "Aumenta contrasto",
+      "contrastDown": "Diminuisci contrasto",
+      "measureHintScaled": "Calibrazione approssimativa — anteprima Orthanc ridimensionata (mm stimati)"
     },
     "admin": {
       "title": "PACS — supervisione",
@@ -3837,7 +3840,14 @@
     "seriesPicker": "Serie",
     "seriesOption": "Serie {n} · {id}",
     "downloadError": "Download DICOM non riuscito.",
-    "instanceUnavailable": "DICOM assente sul server. Reimporta lo studio o scegline un altro."
+    "instanceUnavailable": "DICOM assente sul server. Reimporta lo studio o scegline un altro.",
+    "comments": {
+      "title": "Commenti dello studio",
+      "placeholder": "Aggiungi un commento…",
+      "submit": "Invia",
+      "empty": "Nessun commento su questo studio.",
+      "error": "Impossibile caricare o inviare il commento."
+    }
   },
   "research": {
     "disabledTitle": "Research module disabled",

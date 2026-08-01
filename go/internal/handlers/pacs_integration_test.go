@@ -1182,3 +1182,98 @@ func TestPacsAdminPlaygroundAccess(t *testing.T) {
 		t.Fatalf("vet playground-pets expected 403 got %d", code)
 	}
 }
+
+func TestPacsStudyCommentsCRUDAndIsolation(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","MainDicomTags":{"StudyInstanceUID":"1.2.840.comments","StudyDescription":"RX comments","ModalitiesInStudy":"DX"}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	vetParcTok := loginToken(t, api.handler, "vet.parc@petsfollow.test", "VetDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "comments.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+	rowID, _ := dataMap(t, env)["id"].(string)
+	if rowID == "" {
+		t.Fatalf("missing pet_studies id %#v", env)
+	}
+	path := "/api/v1/pets/" + petID + "/pacs/studies/" + rowID + "/comments"
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, path, vetTok, map[string]any{"body": "   "})
+	if code != http.StatusBadRequest || errCode(env) != "validation_error" {
+		t.Fatalf("empty body want 400 validation_error got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, path, vetTok, map[string]any{
+		"body": "Suspicion pneumonie — contrôle à J7",
+	})
+	if code != http.StatusCreated {
+		t.Fatalf("create comment %d %#v", code, env)
+	}
+	created := dataMap(t, env)
+	if created["body"] != "Suspicion pneumonie — contrôle à J7" {
+		t.Fatalf("body %#v", created)
+	}
+	author, _ := created["author"].(map[string]any)
+	if author == nil || author["displayName"] == "" {
+		t.Fatalf("author displayName required %#v", created)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, path, vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list comments %d %#v", code, env)
+	}
+	list, ok := env["data"].([]any)
+	if !ok || len(list) < 1 {
+		t.Fatalf("expected comments %#v", env)
+	}
+	first, _ := list[0].(map[string]any)
+	if first["id"] != created["id"] {
+		t.Fatalf("newest-first want %v got %#v", created["id"], first)
+	}
+
+	// Pet-scoped routes: other practice → 403 (no pet access), opaque vs study probe.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, path, vetParcTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("cross-cabinet list want 403 got %d %#v", code, env)
+	}
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, path, vetParcTok, map[string]any{"body": "leak"})
+	if code != http.StatusForbidden {
+		t.Fatalf("cross-cabinet post want 403 got %d %#v", code, env)
+	}
+
+	badUUIDPath := "/api/v1/pets/" + petID + "/pacs/studies/not-a-uuid/comments"
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, badUUIDPath, vetTok, nil)
+	if code != http.StatusNotFound || errCode(env) != "not_found" {
+		t.Fatalf("invalid studyUUID want 404 not_found got %d %#v", code, env)
+	}
+
+	missingPath := "/api/v1/pets/" + petID + "/pacs/studies/" + uuid.NewString() + "/comments"
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, missingPath, vetTok, nil)
+	if code != http.StatusNotFound || errCode(env) != "not_found" {
+		t.Fatalf("unknown study row want 404 not_found got %d %#v", code, env)
+	}
+}

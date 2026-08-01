@@ -66,6 +66,8 @@ func (a *API) registerPacsRoutes(pr chi.Router) {
 	pr.Post("/pacs/wake", a.pacsWake)
 	pr.Get("/pets/{petID}/pacs/studies", a.listPetPacsStudies)
 	pr.Post("/pets/{petID}/pacs/studies", a.uploadPetPacsStudy)
+	pr.Get("/pets/{petID}/pacs/studies/{studyID}/comments", a.listPetPacsStudyComments)
+	pr.Post("/pets/{petID}/pacs/studies/{studyID}/comments", a.createPetPacsStudyComment)
 	pr.Get("/pacs/studies/{orthancStudyID}", a.getPacsStudy)
 	pr.Get("/pacs/series/{orthancSeriesID}", a.getPacsSeries)
 	pr.Get("/pacs/instances/{instanceID}/file", a.getPacsInstanceFile)
@@ -503,6 +505,90 @@ func (a *API) listPetPacsStudies(w http.ResponseWriter, r *http.Request) {
 		items = []store.PetStudy{}
 	}
 	httpx.WriteData(w, http.StatusOK, items)
+}
+
+func (a *API) requirePetPacsStudyRow(w http.ResponseWriter, r *http.Request, petID, studyRowID string, id authx.Identity, pet store.Pet) (store.PetStudy, bool) {
+	if !isUUID(studyRowID) {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return store.PetStudy{}, false
+	}
+	practiceID := a.resolvePacsPracticeID(id, pet)
+	st, err := a.store.GetPetStudyForPet(r.Context(), studyRowID, petID, practiceID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return store.PetStudy{}, false
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return store.PetStudy{}, false
+	}
+	return st, true
+}
+
+func (a *API) listPetPacsStudyComments(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.read")
+	if !ok {
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	studyID := chi.URLParam(r, "studyID")
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermRead)
+	if !ok {
+		return
+	}
+	st, ok := a.requirePetPacsStudyRow(w, r, petID, studyID, id, pet)
+	if !ok {
+		return
+	}
+	items, err := a.store.ListPetStudyComments(r.Context(), st.ID)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	if items == nil {
+		items = []store.PetStudyComment{}
+	}
+	httpx.WriteData(w, http.StatusOK, items)
+}
+
+func (a *API) createPetPacsStudyComment(w http.ResponseWriter, r *http.Request) {
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	id, ok := a.requirePacsClinicalAccess(w, r, "pets.write_clinical")
+	if !ok {
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	studyID := chi.URLParam(r, "studyID")
+	pet, ok := a.requirePetAccess(w, r, petID, id, store.PermWriteNotes)
+	if !ok {
+		return
+	}
+	st, ok := a.requirePetPacsStudyRow(w, r, petID, studyID, id, pet)
+	if !ok {
+		return
+	}
+	var body struct {
+		Body string `json:"body"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "invalid_json")
+		return
+	}
+	comment, err := a.store.InsertPetStudyComment(r.Context(), st.ID, id.UserID, body.Body)
+	if err != nil {
+		if errors.Is(err, store.ErrValidation) {
+			writeErr(w, r, http.StatusBadRequest, "validation_error", "body_required")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusCreated, comment)
 }
 
 func (a *API) uploadPetPacsStudy(w http.ResponseWriter, r *http.Request) {

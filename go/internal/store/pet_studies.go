@@ -205,6 +205,74 @@ func (s *Store) DeletePetStudyByID(ctx context.Context, id string) error {
 	return nil
 }
 
+// PetStudyComment is an append-only clinical note on an imaging.pet_studies row.
+type PetStudyComment struct {
+	ID        string                `json:"id"`
+	Body      string                `json:"body"`
+	CreatedAt time.Time             `json:"createdAt"`
+	Author    PetStudyCommentAuthor `json:"author"`
+}
+
+type PetStudyCommentAuthor struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"displayName"`
+}
+
+// GetPetStudyForPet returns a study row scoped to pet + practice (anti-IDOR).
+func (s *Store) GetPetStudyForPet(ctx context.Context, studyRowID, petID, practiceID string) (PetStudy, error) {
+	return scanPetStudy(s.pool.QueryRow(ctx, petStudySelect+`
+		WHERE id = $1 AND pet_id = $2 AND practice_id = $3
+	`, studyRowID, petID, practiceID))
+}
+
+// ListPetStudyComments returns comments newest-first.
+func (s *Store) ListPetStudyComments(ctx context.Context, petStudyID string) ([]PetStudyComment, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT c.id::text, c.body, c.created_at,
+			c.author_user_id::text, COALESCE(u.full_name, '')
+		FROM imaging.pet_study_comments c
+		JOIN identity.users u ON u.id = c.author_user_id
+		WHERE c.pet_study_id = $1
+		ORDER BY c.created_at DESC
+	`, petStudyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []PetStudyComment
+	for rows.Next() {
+		var c PetStudyComment
+		if err := rows.Scan(&c.ID, &c.Body, &c.CreatedAt, &c.Author.ID, &c.Author.DisplayName); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// InsertPetStudyComment appends a comment (body 1–4000 runes after trim).
+func (s *Store) InsertPetStudyComment(ctx context.Context, petStudyID, authorUserID, body string) (PetStudyComment, error) {
+	body = strings.TrimSpace(body)
+	if body == "" || len([]rune(body)) > 4000 {
+		return PetStudyComment{}, ErrValidation
+	}
+	id := uuid.NewString()
+	var c PetStudyComment
+	err := s.pool.QueryRow(ctx, `
+		WITH inserted AS (
+			INSERT INTO imaging.pet_study_comments (id, pet_study_id, author_user_id, body)
+			VALUES ($1::uuid, $2::uuid, $3::uuid, $4)
+			RETURNING id, body, created_at, author_user_id
+		)
+		SELECT i.id::text, i.body, i.created_at, i.author_user_id::text, COALESCE(u.full_name, '')
+		FROM inserted i
+		JOIN identity.users u ON u.id = i.author_user_id
+	`, id, petStudyID, authorUserID, body).Scan(
+		&c.ID, &c.Body, &c.CreatedAt, &c.Author.ID, &c.Author.DisplayName,
+	)
+	return c, err
+}
+
 // ListPetStudyOrthancIDsForOwner returns Orthanc study IDs for pets owned by userID (RGPD purge).
 func (s *Store) ListPetStudyOrthancIDsForOwner(ctx context.Context, ownerUserID string) ([]string, error) {
 	rows, err := s.pool.Query(ctx, `
