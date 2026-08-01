@@ -283,14 +283,17 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
   Widget _consultationLeading({
     required String visitId,
     required bool available,
+    IconData fallbackIcon = Icons.description_outlined,
+    Color? accent,
   }) {
     final showAi = available && AppEnv.isClientAiEnabled;
+    final color = accent ?? AppColors.primary;
     return CircleAvatar(
       key: showAi ? Key('visit_consultation_ai_badge_$visitId') : null,
-      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+      backgroundColor: color.withValues(alpha: 0.15),
       child: Icon(
-        showAi ? Icons.auto_awesome_outlined : Icons.description_outlined,
-        color: AppColors.primary,
+        showAi ? Icons.auto_awesome_outlined : fallbackIcon,
+        color: color,
         size: 20,
       ),
     );
@@ -425,10 +428,16 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   ListTile(
-                                    leading: Icon(
-                                      Icons.event,
-                                      color: AppColors.primary,
-                                    ),
+                                    leading: v.consultationAvailable
+                                        ? _consultationLeading(
+                                            visitId: v.id,
+                                            available: true,
+                                            fallbackIcon: Icons.event,
+                                          )
+                                        : Icon(
+                                            Icons.event,
+                                            color: AppColors.primary,
+                                          ),
                                     title: Text(_visitStatusLabel(l10n, v.status)),
                                     subtitle: Text(
                                       [
@@ -560,15 +569,22 @@ class _PetTimelineScreenState extends State<PetTimelineScreen> {
                                         ? 'timeline_visit_pending_$visitId'
                                         : 'timeline_item_$rowId',
                               ),
-                              leading: CircleAvatar(
-                                backgroundColor:
-                                    _colorForType(type, p.textMuted).withValues(alpha: 0.15),
-                                child: Icon(
-                                  _iconForType(type),
-                                  color: _colorForType(type, p.textMuted),
-                                  size: 20,
-                                ),
-                              ),
+                              leading: visitId != null && openReport
+                                  ? _consultationLeading(
+                                      visitId: visitId,
+                                      available: true,
+                                      fallbackIcon: _iconForType(type),
+                                      accent: _colorForType(type, p.textMuted),
+                                    )
+                                  : CircleAvatar(
+                                      backgroundColor: _colorForType(type, p.textMuted)
+                                          .withValues(alpha: 0.15),
+                                      child: Icon(
+                                        _iconForType(type),
+                                        color: _colorForType(type, p.textMuted),
+                                        size: 20,
+                                      ),
+                                    ),
                               title: Text(_typeLabel(l10n, type)),
                               subtitle: Text(
                                 [

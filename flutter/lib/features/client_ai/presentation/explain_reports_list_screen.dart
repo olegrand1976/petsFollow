@@ -56,17 +56,25 @@ class _ExplainReportsListScreenState extends State<ExplainReportsListScreen> {
           .map((e) => Pet.fromJson(Map<String, dynamic>.from(e)))
           .where((p) => p.id.isNotEmpty)
           .toList();
-      final collected = <_ExplainVisitRow>[];
-      for (final pet in petList) {
-        final visits = await ApiClient.instance.getVisits(pet.id);
-        for (final v in visits) {
-          if (!v.consultationAvailable) continue;
-          collected.add(_ExplainVisitRow(visit: v, petName: pet.name));
-        }
-      }
-      collected.sort(
-        (a, b) => b.visit.displayDate.compareTo(a.visit.displayDate),
+
+      // Parallel per-pet fetch; one failure must not wipe the whole list.
+      final chunks = await Future.wait(
+        petList.map((pet) async {
+          try {
+            final visits = await ApiClient.instance.getVisits(pet.id);
+            return visits
+                .where((v) => v.consultationAvailable)
+                .map((v) => _ExplainVisitRow(visit: v, petName: pet.name))
+                .toList();
+          } catch (_) {
+            return const <_ExplainVisitRow>[];
+          }
+        }),
       );
+
+      final collected = chunks.expand((e) => e).toList()
+        ..sort((a, b) => b.visit.displayDate.compareTo(a.visit.displayDate));
+
       if (!mounted) return;
       setState(() {
         rows = collected;
@@ -161,7 +169,7 @@ class _ExplainReportsListScreenState extends State<ExplainReportsListScreen> {
                                 title: Text(
                                   row.petName.isEmpty
                                       ? l10n.consultationTitle
-                                      : row.petName,
+                                      : '${row.petName} · ${l10n.consultationTitle}',
                                 ),
                                 subtitle: Text(
                                   dateFmt.format(row.visit.displayDate.toLocal()),

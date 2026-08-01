@@ -21,9 +21,30 @@ Statut multi-profil compte : `identity.profiles` + switch Flutter/Web ; inscript
 | `client` | Flutter (shell owner) | Self-signup `POST /auth/register-client` |
 | `vet` | Nuxt Pro (full) | Flutter : shell pro light (terrain — agenda via `GET /vet/calendar`) |
 | `care_pro` + specialty | Flutter (shell pro light) | Terrain : agenda, clients, fiche, CR, docs, **Messages** |
-| `admin` / commercial* | Nuxt Pro | Inchangé — **seed démo only** : `admin.demo` multi-profils `admin` + `client` + `vet` (+ `research` en démo) (pas d’auto-profil client pour tout admin via `IsProRole`) |
+| `admin` / commercial* | Nuxt Pro | **Seed démo** multi-switch (`EnsureDemoMultiSwitchProfiles`) : voir matrice ci-dessous (pas d’auto-profil client pour tout admin via `IsProRole`) |
 | `dev` | Nuxt Admin (ops léger) | Support IT : users / tickets / flags — pas billing/sales/seed · UC-AD-02 |
 | `research` | Nuxt `/research` | Observatoire épidémio anonymisé (tag `dev`) — associable à `vet` / `admin` · doc [42](42-RESEARCH.md) · seed `research.demo` **+** profil `research` sur `vet.demo` / `admin.demo` (switch) |
+
+### Matrice switch (profils possédés)
+
+`POST /me/profiles/switch` + UI topbar (`CanActivateProfile`) — basée sur les rôles **possédés**, pas le rôle actif :
+
+| Possède | Peut activer |
+|---------|----------------|
+| `admin` | tout profil possédé |
+| `commercial_manager` (sans admin) | tout sauf `admin` |
+| `commercial` (sans admin/manager) | tout sauf `admin` et `commercial_manager` |
+| autre | ownership seul |
+
+Seed démo Pro (hors `client`, masqué sur Nuxt) :
+
+| Compte | Profils |
+|--------|---------|
+| `admin.demo` | admin, dev, research, vet, vet_assistant, secretary, commercial, commercial_manager (+ client) |
+| `commercial.manager` | commercial_manager, commercial, dev, research, vet, vet_assistant, secretary (+ client) |
+| `commercial.demo` / `demo2` | commercial, dev, research, vet, vet_assistant, secretary (+ client) |
+
+Staff cabinet : une ligne `team_members` VetPlus ; au switch staff, `team_role` est aligné sur le profil actif (pas de demote `reference_vet`).
 
 Specialties supportées : `vet_light`, `farrier`, `physio`, `behaviorist`, `groomer`, `breeder` (labels Flutter 6 langues). Pharmacie : track [27](27-PHARMACIE-BELGIQUE.md).
 

@@ -101,6 +101,9 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	if err := seedResearchDemo(ctx, pool, st); err != nil {
 		return err
 	}
+	if err := EnsureDemoMultiSwitchProfiles(ctx, pool, st); err != nil {
+		return err
+	}
 	if err := seedPharmacyDemoMeds(ctx, st); err != nil {
 		return err
 	}
@@ -916,13 +919,125 @@ func seedOpsDemoVetProfile(ctx context.Context, pool *pgxpool.Pool, st *store.St
 
 // restoreOpsDemoActiveProfile force le profil ops attendu (users.role + active_profile_id).
 func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID string, opsRole kernel.Role) error {
-	var opsProfileID string
+	return restoreHomeProfile(ctx, pool, userID, opsRole)
+}
+
+// EnsureDemoMultiSwitchProfiles attaches demo Pro switch targets on admin / sales accounts.
+// Idempotent. Called after EnsureDemoOpsVetProfiles + seedResearchDemo.
+func EnsureDemoMultiSwitchProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store) error {
+	type target struct {
+		email     string
+		homeRole  kernel.Role
+		extraRoles []kernel.Role
+	}
+	// Staff roles handled separately (practice + team_members).
+	staffRoles := []kernel.Role{kernel.RoleVet, kernel.RoleVetAssistant, kernel.RoleSecretary}
+	targets := []target{
+		{
+			email:    "admin.demo@petsfollow.test",
+			homeRole: kernel.RoleAdmin,
+			extraRoles: []kernel.Role{
+				kernel.RoleDev, kernel.RoleResearch,
+				kernel.RoleCommercial, kernel.RoleCommercialManager,
+			},
+		},
+		{
+			email:    "commercial.manager@petsfollow.test",
+			homeRole: kernel.RoleCommercialManager,
+			extraRoles: []kernel.Role{
+				kernel.RoleCommercial, kernel.RoleDev, kernel.RoleResearch,
+			},
+		},
+		{
+			email:    "commercial.demo@petsfollow.test",
+			homeRole: kernel.RoleCommercial,
+			extraRoles: []kernel.Role{
+				kernel.RoleDev, kernel.RoleResearch,
+			},
+		},
+		{
+			email:    "commercial.demo2@petsfollow.test",
+			homeRole: kernel.RoleCommercial,
+			extraRoles: []kernel.Role{
+				kernel.RoleDev, kernel.RoleResearch,
+			},
+		},
+	}
+	var practiceID string
+	err := pool.QueryRow(ctx, `
+		SELECT p.id::text FROM practice.practices p
+		JOIN identity.users u ON u.practice_id = p.id AND u.email = 'vet.demo@petsfollow.test'
+		LIMIT 1`).Scan(&practiceID)
+	if err != nil {
+		return fmt.Errorf("vetplus practice for multi-switch profiles: %w", err)
+	}
+	for _, t := range targets {
+		var userID string
+		if err := pool.QueryRow(ctx, `SELECT id::text FROM identity.users WHERE email = $1`, t.email).Scan(&userID); err != nil {
+			return fmt.Errorf("%s: %w", t.email, err)
+		}
+		if err := st.EnsureUserProfiles(ctx, userID); err != nil {
+			return fmt.Errorf("%s profiles: %w", t.email, err)
+		}
+		for _, role := range t.extraRoles {
+			if _, err := st.EnsureRoleProfile(ctx, userID, role, "", ""); err != nil {
+				return fmt.Errorf("%s %s profile: %w", t.email, role, err)
+			}
+		}
+		vetProfileID, err := ensureStaffSwitchProfiles(ctx, pool, st, userID, practiceID, staffRoles)
+		if err != nil {
+			return fmt.Errorf("%s staff profiles: %w", t.email, err)
+		}
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO practice.team_members (id, practice_id, user_id, profile_id, team_role, status)
+			VALUES ($1, $2, $3, $4, 'vet', 'active')
+			ON CONFLICT (practice_id, user_id) DO UPDATE SET
+				profile_id = EXCLUDED.profile_id,
+				team_role = CASE
+					WHEN practice.team_members.team_role = 'reference_vet' THEN practice.team_members.team_role
+					ELSE 'vet'
+				END,
+				status = 'active'`,
+			uuid.NewString(), practiceID, userID, vetProfileID); err != nil {
+			return fmt.Errorf("%s team_members: %w", t.email, err)
+		}
+		if err := restoreHomeProfile(ctx, pool, userID, t.homeRole); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ensureStaffSwitchProfiles(ctx context.Context, pool *pgxpool.Pool, st *store.Store, userID, practiceID string, roles []kernel.Role) (vetProfileID string, err error) {
+	for _, role := range roles {
+		pid, eerr := st.EnsureRoleProfile(ctx, userID, role, practiceID, "")
+		if eerr != nil {
+			return "", eerr
+		}
+		if _, eerr = pool.Exec(ctx, `
+			UPDATE identity.profiles SET practice_id = $2::uuid
+			WHERE id = $1 AND (practice_id IS NULL OR practice_id IS DISTINCT FROM $2::uuid)`,
+			pid, practiceID); eerr != nil {
+			return "", eerr
+		}
+		if role == kernel.RoleVet {
+			vetProfileID = pid
+		}
+	}
+	if vetProfileID == "" {
+		return "", fmt.Errorf("missing vet profile for %s", userID)
+	}
+	return vetProfileID, nil
+}
+
+func restoreHomeProfile(ctx context.Context, pool *pgxpool.Pool, userID string, homeRole kernel.Role) error {
+	var profileID string
 	err := pool.QueryRow(ctx, `
 		SELECT id::text FROM identity.profiles
 		WHERE user_id = $1 AND role = $2
-		LIMIT 1`, userID, string(opsRole)).Scan(&opsProfileID)
+		LIMIT 1`, userID, string(homeRole)).Scan(&profileID)
 	if err != nil {
-		return fmt.Errorf("ops profile %s for %s: %w", opsRole, userID, err)
+		return fmt.Errorf("home profile %s for %s: %w", homeRole, userID, err)
 	}
 	_, err = pool.Exec(ctx, `
 		UPDATE identity.users SET
@@ -930,7 +1045,7 @@ func restoreOpsDemoActiveProfile(ctx context.Context, pool *pgxpool.Pool, userID
 			role = $3,
 			practice_id = NULL,
 			professional_specialty = NULL
-		WHERE id = $1`, userID, opsProfileID, string(opsRole))
+		WHERE id = $1`, userID, profileID, string(homeRole))
 	return err
 }
 
@@ -1533,12 +1648,12 @@ func logSummary() {
 	// Les mots de passe démo restent hors des logs (Cloud Run staging est plus
 	// largement lisible que la base) — voir AGENTS.md.
 	log.Println("--- Comptes démo petsFollow (mots de passe : AGENTS.md) ---")
-	log.Println("Admin  : admin.demo@petsfollow.test (switch profils client/vet)")
+	log.Println("Admin  : admin.demo@petsfollow.test (switch tous profils Pro + client)")
 	log.Println("DEV    : dev.demo@petsfollow.test (support IT — switch profils client/vet)")
 	log.Println("Research: research.demo@petsfollow.test (observatoire — switch aussi sur vet.demo/admin.demo)")
-	log.Println("Manager: commercial.manager@petsfollow.test")
-	log.Println("Commerc: commercial.demo@petsfollow.test (vet.demo assigné, 5 prospects, rattaché manager)")
-	log.Println("Commerc: commercial.demo2@petsfollow.test (vet.parc assigné, 5 prospects Nord, rattaché manager)")
+	log.Println("Manager: commercial.manager@petsfollow.test (switch tous sauf admin)")
+	log.Println("Commerc: commercial.demo@petsfollow.test (switch tous sauf admin/manager ; vet.demo assigné)")
+	log.Println("Commerc: commercial.demo2@petsfollow.test (switch tous sauf admin/manager ; vet.parc assigné)")
 	log.Println("Vétos  : *@petsfollow.test")
 	log.Println("  vet.demo@        — VetPlus (profil complet, messages non lus, BPM pending)")
 	log.Println("  vet.parc@        — Clinique du Parc (alerte Chouchou)")

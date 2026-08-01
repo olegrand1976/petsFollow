@@ -116,7 +116,85 @@ void main() {
       find.byKey(const Key('client_ai_explain_list_item_visit-1')),
       findsOneWidget,
     );
-    expect(find.text('Rex'), findsOneWidget);
+    expect(
+      find.textContaining('Rex'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('explain list keeps other pets when one visits call fails', (tester) async {
+    ApiClient.instance.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final path =
+              options.uri.path.isNotEmpty ? options.uri.path : options.path;
+          if (options.method == 'GET' && path.endsWith('/pets')) {
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'data': [
+                    {'id': 'pet-ok', 'name': 'Rex', 'species': 'dog'},
+                    {'id': 'pet-bad', 'name': 'Bella', 'species': 'cat'},
+                  ],
+                },
+              ),
+            );
+            return;
+          }
+          if (options.method == 'GET' && path.contains('/pets/pet-bad/visits')) {
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.badResponse,
+                response: Response(requestOptions: options, statusCode: 500),
+              ),
+            );
+            return;
+          }
+          if (options.method == 'GET' && path.contains('/pets/pet-ok/visits')) {
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'data': [
+                    {
+                      'id': 'visit-ok',
+                      'petId': 'pet-ok',
+                      'status': 'done',
+                      'hasFinalReport': true,
+                      'reportStatus': 'final',
+                      'scheduledAt': '2026-07-30T10:00:00Z',
+                    },
+                  ],
+                },
+              ),
+            );
+            return;
+          }
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              error: 'unexpected ${options.method} $path',
+            ),
+          );
+        },
+      ),
+    );
+
+    await pumpApp(
+      tester,
+      home: const ExplainReportsListScreen(),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('client_ai_explain_list_item_visit-ok')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Rex'), findsOneWidget);
   });
 
   testWidgets('settings hides Client AI when flag off', (tester) async {

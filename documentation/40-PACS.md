@@ -58,7 +58,7 @@ Scénario pitch (~3 min) :
 4. Badge état `ready` · étude « RX thorax demo » · outils zoom / pan / W/L
 5. Badge `dev` visible (module non GA)
 
-Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind **loopback only**, config [`infra/orthanc/orthanc.local.json`](../infra/orthanc/orthanc.local.json)). Fixture : `testdata/pacs/demo-rx.dcm` (`scripts/gen-minimal-dicom.py`). Reset stockage local : `docker compose -f deploy/docker-compose.yml --env-file .env rm -sf orthanc && docker volume rm deploy_orthancdata` (nom exact via `docker volume ls | grep orthanc`).
+Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind **loopback only**, config [`infra/orthanc/orthanc.local.json`](../infra/orthanc/orthanc.local.json)). Fixture : `testdata/pacs/demo-rx.dcm` (`scripts/gen-minimal-dicom.py`) — Modality `DX`, **`PixelSpacing` / `ImagerPixelSpacing` = `0.5\\0.5` mm** (mesure canvas calibrée ; preview Orthanc = 64×64 = matrice → path exact). Sans ces tags → fallback px. US/Echo sans regions DICOM = hors V1. Orthanc `OverwriteInstances=false` : après régénération du `.dcm`, bump SOP/Study UID dans le générateur **ou** purge études / `make pacs-demo-seed` (sinon l’ancienne instance sans spacing reste servie). Reset stockage local : `docker compose -f deploy/docker-compose.yml --env-file .env rm -sf orthanc && docker volume rm deploy_orthancdata` (nom exact via `docker volume ls | grep orthanc`).
 
 ## Infra
 
@@ -92,7 +92,7 @@ Puis monter `PACS_ORTHANC_URL` / `PACS_ORTHANC_PASSWORD` sur l’API (voir `pf_a
 - Pas de DIMSE (port 4242) en V1 — Cloud Run HTTP only ; ingestion via upload `.dcm` Pro.
 - Pooling : `IndexConnectionsCount=4` ; max-instances Orthanc=10 → surveiller `max_connections` Cloud SQL.
 - Staging : `PACS_ENABLED` auto-on **uniquement** si `PACS_ORTHANC_URL` est défini (sinon offline UI évité).
-- Viewer V1 défaut = previews Orthanc PNG (canvas) : contraste ± (filtre CSS, pas vrai W/L DICOM), annotations en coords image (plein écran stable), mesure mm via `PixelSpacing` exact ou scalé si preview redimensionné ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
+- Viewer V1 défaut = previews Orthanc PNG (canvas) : contraste ± (filtre CSS, pas vrai W/L DICOM), annotations en coords image (plein écran stable), mesure mm via metadata `PixelSpacing` → `ImagerPixelSpacing` → `NominalScannedPixelSpacing` (exact si preview = Rows×Columns, sinon spacing scalé) ; **opt-in** Cornerstone3D via `NUXT_PUBLIC_PACS_VIEWER_ENGINE=cornerstone` (pan/zoom/W/L HU/Length + badge WW/WC).
 - Commentaires d’étude : table `imaging.pet_study_comments` (auteur + `created_at`, pas d’édition/suppression UI V1) ; panneau sous le viewer.
 - Cold start : TTL cache `starting` = 90 s ; UI upload poll jusqu’à `ready`.
 - Upload compensatoire : delete **instance** Orthanc si insert DB échoue (jamais `DELETE /studies` si l’étude était déjà liée).
