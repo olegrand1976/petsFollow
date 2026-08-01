@@ -661,7 +661,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, care continuity (including heart-rate readings), vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google).\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@petsfollow.app.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
+      'Privacy policy — petsFollow\n\nData collected: identity (first name, email), pet data (name, species, breed, photos), heart rate readings (animal health data), messages and media with the practice, visit reports (text and audio recordings), GPS coordinates of home visits (care professionals), notification tokens (FCM), payment data processed by Stripe.\n\nPurposes: account management, care continuity (including heart-rate readings), vet messaging, visit reports, notifications, billing.\n\nAI processing: Google Gemini is used to improve visit reports (audio processed in real time, not retained by Google) and, on the client app (experimental module), to explain finalized visit reports and provide conversational emergency triage.\n\nProcessors / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (payments), cloud hosting (GCP).\n\nRetention: until account deletion; inactive accounts purged after 3 years; visit report audio kept as long as the record.\n\nGDPR rights (access, rectification, deletion, portability): Profile → Export my data / Delete account, or support@petsfollow.app.\n\nFull version: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLast updated: July 2026';
 
   @override
   String get legalNoticeBody =>
@@ -1983,6 +1983,72 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'I agree to share this report with this veterinarian.';
+
+  @override
+  String get clientAiDevBadge => 'dev';
+
+  @override
+  String get clientAiExplainCta => 'Understand my visit report';
+
+  @override
+  String get clientAiExplainTitle => 'Your visit report explained';
+
+  @override
+  String get clientAiExplainDisclaimer =>
+      'This is not medical advice. Always follow your veterinarian\'s instructions.';
+
+  @override
+  String get clientAiExplainLoading => 'Preparing the explanation…';
+
+  @override
+  String get clientAiTriageTitle => '24/7 emergency help';
+
+  @override
+  String get clientAiTriageSubtitle =>
+      'Describe the situation — we assess how urgent it is.';
+
+  @override
+  String get clientAiTriageHint => 'E.g. my dog ate chocolate…';
+
+  @override
+  String get clientAiTriageSend => 'Send';
+
+  @override
+  String get clientAiTriageLevelGreen => 'Advice';
+
+  @override
+  String get clientAiTriageLevelOrange => 'Book an appointment';
+
+  @override
+  String get clientAiTriageLevelRed => 'Emergency';
+
+  @override
+  String get clientAiTriageWatchSigns => 'Signs to watch';
+
+  @override
+  String get clientAiTriageCallPractice => 'Call the practice';
+
+  @override
+  String get clientAiTriageBookVisit => 'Book an appointment';
+
+  @override
+  String get clientAiTriageMessageVet => 'Message my vet';
+
+  @override
+  String get clientAiTriageSelectPet => 'Which pet?';
+
+  @override
+  String get clientAiTriageNoPet => 'Continue without a pet';
+
+  @override
+  String get clientAiTriageStart => 'Start';
+
+  @override
+  String get clientAiTriageEmergencyFallback =>
+      'If you cannot reach your practice, contact a local veterinary emergency service immediately.';
+
+  @override
+  String get clientAiTriageOpenMessages => 'Open messaging';
 
   @override
   String get bloodPressureShort => 'BP';

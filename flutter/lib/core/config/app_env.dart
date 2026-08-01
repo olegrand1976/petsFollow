@@ -22,6 +22,16 @@ class AppEnv {
 
   static String get appTitle => isStaging ? 'petsFollow Staging' : 'petsFollow';
 
+  /// Client AI (CR explain + triage) — build-time; API also gates with CLIENT_AI_ENABLED.
+  static const bool clientAiEnabled =
+      bool.fromEnvironment('CLIENT_AI_ENABLED', defaultValue: false);
+
+  /// Test-only override for [isClientAiEnabled].
+  @visibleForTesting
+  static bool? debugClientAiOverride;
+
+  static bool get isClientAiEnabled => debugClientAiOverride ?? clientAiEnabled;
+
   /// Call once at process start (before Firebase init).
   /// Throws if `FLAVOR` and `APP_ENV` disagree, or if an unknown value is used.
   static void validate() {

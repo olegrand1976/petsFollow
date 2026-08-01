@@ -983,6 +983,45 @@ class ApiClient {
     return _asMap(res.data is Map ? res.data['data'] : null);
   }
 
+  /// Owner-facing AI vulgarization of a finalized consultation (CLIENT_AI_ENABLED).
+  Future<Map<String, dynamic>> getClientConsultationExplain(
+    String visitId, {
+    bool refresh = false,
+  }) async {
+    final res = await dio.get(
+      '/api/v1/visits/$visitId/client-consultation/explain',
+      queryParameters: refresh ? {'refresh': '1'} : null,
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  /// Start a 24/7 triage session (optional [petId]).
+  Future<Map<String, dynamic>> createClientAiTriageSession({String? petId}) async {
+    final res = await dio.post(
+      '/api/v1/client-ai/triage/sessions',
+      data: {
+        if (petId != null && petId.trim().isNotEmpty) 'petId': petId.trim(),
+      },
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  Future<Map<String, dynamic>> getClientAiTriageSession(String sessionId) async {
+    final res = await dio.get('/api/v1/client-ai/triage/sessions/$sessionId');
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
+  Future<Map<String, dynamic>> postClientAiTriageMessage(
+    String sessionId,
+    String body,
+  ) async {
+    final res = await dio.post(
+      '/api/v1/client-ai/triage/sessions/$sessionId/messages',
+      data: {'body': body.trim()},
+    );
+    return _asMap(res.data is Map ? res.data['data'] : null);
+  }
+
   /// Send a 24h PDF download link for a finalized consultation to a vet.
   Future<Map<String, dynamic>> sendConsultationShare(String visitId, String email) async {
     final res = await dio.post(

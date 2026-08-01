@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
 import 'package:petsfollow_mobile/core/api/open_url.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/discovery/discovery_controller.dart';
 import 'package:petsfollow_mobile/core/models/discovery_card.dart';
 import 'package:petsfollow_mobile/core/models/discovery_progress.dart';
@@ -11,6 +12,7 @@ import 'package:petsfollow_mobile/core/models/pet_species.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
+import 'package:petsfollow_mobile/features/client_ai/presentation/triage_chat_screen.dart';
 import 'package:petsfollow_mobile/features/discovery/presentation/discovery_card_widget.dart';
 import 'package:petsfollow_mobile/features/heartrate/presentation/heart_rate_flow_screen.dart';
 import 'package:petsfollow_mobile/features/heartrate/supports_heart_rate.dart';
@@ -160,6 +162,15 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     return PetsTabScaffold(
       title: const PetsAppBarLogo(),
       actions: [
+        if (AppEnv.isClientAiEnabled)
+          IconButton(
+            key: const Key('home_triage_btn'),
+            tooltip: l10n.clientAiTriageTitle,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TriageChatScreen()),
+            ),
+            icon: const Icon(Icons.health_and_safety_outlined),
+          ),
         IconButton(
           key: const Key('home_support_btn'),
           tooltip: l10n.supportMenu,

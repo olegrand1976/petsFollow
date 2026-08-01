@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:petsfollow_mobile/core/api/api_client.dart';
 import 'package:petsfollow_mobile/core/api/api_errors.dart';
+import 'package:petsfollow_mobile/core/config/app_env.dart';
 import 'package:petsfollow_mobile/core/theme/app_colors.dart';
 import 'package:petsfollow_mobile/core/theme/pets_palette.dart';
 import 'package:petsfollow_mobile/core/ui/load_error_view.dart';
 import 'package:petsfollow_mobile/core/ui/safe_bottom.dart';
+import 'package:petsfollow_mobile/features/client_ai/presentation/consultation_explain_screen.dart';
 import 'package:petsfollow_mobile/l10n/app_localizations.dart';
 
 class ConsultationViewScreen extends StatefulWidget {
@@ -176,6 +178,24 @@ class _ConsultationViewScreenState extends State<ConsultationViewScreen> {
                         );
                       }),
                       const SizedBox(height: 8),
+                      if (AppEnv.isClientAiEnabled) ...[
+                        OutlinedButton.icon(
+                          key: Key('consultation_explain_cta_${widget.visitId}'),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ConsultationExplainScreen(
+                                  visitId: widget.visitId,
+                                  petName: titleName.isEmpty ? null : titleName,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.auto_awesome_outlined),
+                          label: Text(l10n.clientAiExplainCta),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       FilledButton.icon(
                         key: Key('consultation_share_cta_${widget.visitId}'),
                         onPressed: _share,

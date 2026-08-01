@@ -663,7 +663,7 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita).\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
+      'Privaatsuspoliitika — petsFollow\n\nKogutavad andmed: isikuandmed (eesnimi, e-post), lemmiklooma andmed (nimi, liik, tõug, fotod), südame löögisageduse näidud (looma terviseandmed), sõnumid ja meedia praktikaga, visiidiaruanded (tekst ja helisalvestised), koduvisiitide GPS-koordinaadid (hooldusspetsialistid), teavituste märgid (FCM), Stripe\'i töödeldud makseandmed.\n\nEesmärgid: konto haldamine, ravi järjepidevus (sh südame löögisageduse mõõtmised), loomaarsti sõnumid, visiidiaruanded, teavitused, arveldus.\n\nAI-töötlus: Google Geminit kasutatakse visiidiaruannete parandamiseks (heli töödeldakse reaalajas, Google seda ei säilita) ning kliendirakenduses (eksperimentaalne moodul) lõplikuks vormistatud aruannete selgitamiseks ja vestluspõhiseks erakorraliseks triaažiks.\n\nTöötlejad / partnerid: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (maksed), pilvemajutus (GCP).\n\nSäilitamine: kuni konto kustutamiseni; passiivsed kontod kustutatakse 3 aasta järel; visiidiaruannete heli säilitatakse toimiku eluea jooksul.\n\nGDPR õigused (juurdepääs, parandamine, kustutamine, ülekantavus): Profiil → Ekspordi minu andmed / Kustuta konto või support@petsfollow.app.\n\nTäielik versioon: https://petsfollow.ll-it-sc.be/legal/privacy\n\nViimati uuendatud: juuli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -1992,6 +1992,72 @@ class AppLocalizationsEt extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Nõustun jagama seda aruannet selle loomaarstiga.';
+
+  @override
+  String get clientAiDevBadge => 'dev';
+
+  @override
+  String get clientAiExplainCta => 'Saa aru oma visiidiaruandest';
+
+  @override
+  String get clientAiExplainTitle => 'Teie visiidiaruanne selgitatult';
+
+  @override
+  String get clientAiExplainDisclaimer =>
+      'See ei ole meditsiiniline nõuanne. Järgige alati loomaarsti juhiseid.';
+
+  @override
+  String get clientAiExplainLoading => 'Selgituse ettevalmistamine…';
+
+  @override
+  String get clientAiTriageTitle => 'Hädaabi 24/7';
+
+  @override
+  String get clientAiTriageSubtitle =>
+      'Kirjeldage olukorda — hindame kiireloomulisust.';
+
+  @override
+  String get clientAiTriageHint => 'Nt mu koer sõi šokolaadi…';
+
+  @override
+  String get clientAiTriageSend => 'Saada';
+
+  @override
+  String get clientAiTriageLevelGreen => 'Nõuanne';
+
+  @override
+  String get clientAiTriageLevelOrange => 'Broneeri aeg';
+
+  @override
+  String get clientAiTriageLevelRed => 'Hädaolukord';
+
+  @override
+  String get clientAiTriageWatchSigns => 'Jälgitavad tunnused';
+
+  @override
+  String get clientAiTriageCallPractice => 'Helista kliinikusse';
+
+  @override
+  String get clientAiTriageBookVisit => 'Broneeri aeg';
+
+  @override
+  String get clientAiTriageMessageVet => 'Võta ühendust loomaarstiga';
+
+  @override
+  String get clientAiTriageSelectPet => 'Millise looma jaoks?';
+
+  @override
+  String get clientAiTriageNoPet => 'Jätka ilma loomata';
+
+  @override
+  String get clientAiTriageStart => 'Alusta';
+
+  @override
+  String get clientAiTriageEmergencyFallback =>
+      'Kui te ei saa oma kliinikut kätte, võtke kohe ühendust kohaliku veterinaarabi teenusega.';
+
+  @override
+  String get clientAiTriageOpenMessages => 'Ava sõnumid';
 
   @override
   String get bloodPressureShort => 'RR';

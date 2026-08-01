@@ -99,7 +99,7 @@ seed-mass: env
 	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} go run ./cmd/petsfollow-api seed-mass
 
 api-dev: env
-	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} PACS_ENABLED=$${PACS_ENABLED:-true} PACS_ORTHANC_URL=$${PACS_ORTHANC_URL:-http://localhost:8042} PACS_ORTHANC_USER=$${PACS_ORTHANC_USER:-petsfollow} PACS_ORTHANC_PASSWORD=$${PACS_ORTHANC_PASSWORD:-petsfollow} PACS_ORTHANC_USE_ID_TOKEN=$${PACS_ORTHANC_USE_ID_TOKEN:-false} RESEARCH_ENABLED=$${RESEARCH_ENABLED:-true} RESEARCH_ETL_SECRET=$${RESEARCH_ETL_SECRET:-dev-research-etl} RESEARCH_ANON_SALT=$${RESEARCH_ANON_SALT:-petsfollow-research-dev-salt} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
+	@set -a && source $(ENV_FILE) && set +a && cd go && GOTOOLCHAIN=local APP_ENV=$${APP_ENV:-local} MIGRATE_ON_BOOT=true DEV_SEED_ENABLED=true BILLING_MOCK_ENABLED=$${BILLING_MOCK_ENABLED:-true} BILLIT_ENABLED=$${BILLIT_ENABLED:-true} BILLIT_MOCK_ENABLED=$${BILLIT_MOCK_ENABLED:-true} AUTH_RATE_LIMIT_PER_MIN=$${AUTH_RATE_LIMIT_PER_MIN:-1000} PHARMACY_ENABLED=$${PHARMACY_ENABLED:-true} PRESCRIPTIONS_ENABLED=$${PRESCRIPTIONS_ENABLED:-true} PACS_ENABLED=$${PACS_ENABLED:-true} PACS_ORTHANC_URL=$${PACS_ORTHANC_URL:-http://localhost:8042} PACS_ORTHANC_USER=$${PACS_ORTHANC_USER:-petsfollow} PACS_ORTHANC_PASSWORD=$${PACS_ORTHANC_PASSWORD:-petsfollow} PACS_ORTHANC_USE_ID_TOKEN=$${PACS_ORTHANC_USE_ID_TOKEN:-false} RESEARCH_ENABLED=$${RESEARCH_ENABLED:-true} RESEARCH_ETL_SECRET=$${RESEARCH_ETL_SECRET:-dev-research-etl} RESEARCH_ANON_SALT=$${RESEARCH_ANON_SALT:-petsfollow-research-dev-salt} CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true} VAMREG_DRY_RUN=$${VAMREG_DRY_RUN:-true} go run ./cmd/petsfollow-api
 
 # Upload fixture DICOM sur pet client.demo (API + Orthanc requis).
 pacs-demo-seed: env
@@ -135,7 +135,8 @@ flutter-dev: env
 		--dart-define=FLAVOR=staging \
 		--dart-define=APP_ENV=staging \
 		--dart-define=API_BASE=$(API_BASE) \
-		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID)
+		--dart-define=GOOGLE_SERVER_CLIENT_ID=$(GOOGLE_SERVER_CLIENT_ID) \
+		--dart-define=CLIENT_AI_ENABLED=$${CLIENT_AI_ENABLED:-true}
 
 test-go:
 	# -p 1 : les suites d'intégration partagent une seule base (seed tronque pendant que handlers lit).

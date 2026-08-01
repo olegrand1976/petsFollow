@@ -1327,7 +1327,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalPrivacyBody.
   ///
   /// In fr, this message translates to:
-  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google).\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
+  /// **'Politique de confidentialité — petsFollow\n\nDonnées collectées : identité (prénom, email), données animal (nom, espèce, race, photos), relevés de fréquence cardiaque (données de santé animale), messages et médias échangés avec le cabinet, comptes rendus de visite (texte et enregistrements audio), coordonnées GPS des visites à domicile (professionnels de soin), jetons de notification (FCM), données de paiement traitées par Stripe.\n\nFinalités : gestion du compte, continuité de soins (dont relevés cardiaques), messagerie vétérinaire, comptes rendus de visite, notifications, facturation.\n\nTraitement IA : Google Gemini est utilisé pour améliorer les comptes rendus de visite (audio traité en temps réel, non conservé par Google) et, côté app client (module expérimental), pour vulgariser les comptes rendus finalisés et proposer un triage d\'urgence conversationnel.\n\nSous-traitants / partenaires : Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (paiements), hébergement cloud (GCP).\n\nConservation : jusqu\'à suppression du compte ; comptes inactifs purgés après 3 ans ; audio des comptes rendus conservé le temps du dossier.\n\nDroits RGPD (accès, rectification, suppression, portabilité) : Profil → Exporter mes données / Supprimer le compte, ou contact support@petsfollow.app.\n\nVersion complète : https://petsfollow.ll-it-sc.be/legal/privacy\n\nDate d\'actualisation : juillet 2026'**
   String get legalPrivacyBody;
 
   /// No description provided for @legalNoticeBody.
@@ -3759,6 +3759,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'J\'accepte de partager ce compte-rendu avec ce vétérinaire.'**
   String get sendConsultationPhiConsent;
+
+  /// No description provided for @clientAiDevBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'dev'**
+  String get clientAiDevBadge;
+
+  /// No description provided for @clientAiExplainCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comprendre mon compte-rendu'**
+  String get clientAiExplainCta;
+
+  /// No description provided for @clientAiExplainTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte-rendu expliqué'**
+  String get clientAiExplainTitle;
+
+  /// No description provided for @clientAiExplainDisclaimer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ceci n\'est pas un avis médical. Suivez toujours les consignes de votre vétérinaire.'**
+  String get clientAiExplainDisclaimer;
+
+  /// No description provided for @clientAiExplainLoading.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparation de l\'explication…'**
+  String get clientAiExplainLoading;
+
+  /// No description provided for @clientAiTriageTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aide d\'urgence 24/7'**
+  String get clientAiTriageTitle;
+
+  /// No description provided for @clientAiTriageSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez la situation — nous évaluons le degré d\'urgence.'**
+  String get clientAiTriageSubtitle;
+
+  /// No description provided for @clientAiTriageHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : mon chien a mangé du chocolat…'**
+  String get clientAiTriageHint;
+
+  /// No description provided for @clientAiTriageSend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get clientAiTriageSend;
+
+  /// No description provided for @clientAiTriageLevelGreen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conseil'**
+  String get clientAiTriageLevelGreen;
+
+  /// No description provided for @clientAiTriageLevelOrange.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre RDV'**
+  String get clientAiTriageLevelOrange;
+
+  /// No description provided for @clientAiTriageLevelRed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence'**
+  String get clientAiTriageLevelRed;
+
+  /// No description provided for @clientAiTriageWatchSigns.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signes à guetter'**
+  String get clientAiTriageWatchSigns;
+
+  /// No description provided for @clientAiTriageCallPractice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler le cabinet'**
+  String get clientAiTriageCallPractice;
+
+  /// No description provided for @clientAiTriageBookVisit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre un rendez-vous'**
+  String get clientAiTriageBookVisit;
+
+  /// No description provided for @clientAiTriageMessageVet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter mon vétérinaire'**
+  String get clientAiTriageMessageVet;
+
+  /// No description provided for @clientAiTriageSelectPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour quel animal ?'**
+  String get clientAiTriageSelectPet;
+
+  /// No description provided for @clientAiTriageNoPet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer sans animal'**
+  String get clientAiTriageNoPet;
+
+  /// No description provided for @clientAiTriageStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer'**
+  String get clientAiTriageStart;
+
+  /// No description provided for @clientAiTriageEmergencyFallback.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous ne pouvez pas joindre votre cabinet, contactez immédiatement un service de garde vétérinaire local.'**
+  String get clientAiTriageEmergencyFallback;
+
+  /// No description provided for @clientAiTriageOpenMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la messagerie'**
+  String get clientAiTriageOpenMessages;
 
   /// No description provided for @bloodPressureShort.
   ///

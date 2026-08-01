@@ -193,6 +193,8 @@ func IsTombstoneEmail(email string) bool {
 // Utilisé par DeleteClientAccount et DeleteProAccount (dual profil care_pro).
 func purgeClientOwnedDataExec(ctx context.Context, tx pgx.Tx, userID string) error {
 	stmts := []string{
+		`DELETE FROM client_ai.triage_sessions WHERE user_id = $1`,
+		`DELETE FROM client_ai.usage_events WHERE user_id = $1`,
 		`DELETE FROM pets.pets WHERE owner_user_id = $1`,
 		`DELETE FROM messaging.threads WHERE client_user_id = $1`,
 		`DELETE FROM practice.vet_leads WHERE client_user_id = $1`,

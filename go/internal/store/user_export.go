@@ -44,6 +44,30 @@ func (s *Store) ExportUserData(ctx context.Context, userID string) (map[string]a
 			FROM visits.preconsult_intakes i
 			JOIN visits.visits v ON v.id = i.visit_id
 			JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id = $1`,
+		"visitReportExplanations": `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
+			FROM visits.visit_report_explanations e
+			JOIN visits.visits v ON v.id = e.visit_id
+			JOIN pets.pets p ON p.id = v.pet_id WHERE p.owner_user_id = $1`,
+		"clientAiTriageSessions": `SELECT COALESCE(jsonb_agg(to_jsonb(s) ORDER BY s.created_at), '[]'::jsonb)
+			FROM (
+				SELECT ts.id, ts.pet_id, ts.practice_id, ts.created_at, ts.updated_at,
+					COALESCE((
+						SELECT jsonb_agg(jsonb_build_object(
+							'id', m.id,
+							'role', m.role,
+							'body', m.body,
+							'level', m.level,
+							'watchSigns', m.watch_signs,
+							'recommendedAction', m.recommended_action,
+							'createdAt', m.created_at
+						) ORDER BY m.created_at)
+						FROM client_ai.triage_messages m WHERE m.session_id = ts.id
+					), '[]'::jsonb) AS messages
+				FROM client_ai.triage_sessions ts
+				WHERE ts.user_id = $1
+			) s`,
+		"clientAiUsageEvents": `SELECT COALESCE(jsonb_agg(to_jsonb(e) ORDER BY e.created_at), '[]'::jsonb)
+			FROM client_ai.usage_events e WHERE e.user_id = $1`,
 		"messages": `SELECT COALESCE(jsonb_agg(to_jsonb(m) ORDER BY m.created_at), '[]'::jsonb)
 			FROM messaging.messages m JOIN messaging.threads t ON t.id = m.thread_id
 			WHERE t.client_user_id = $1`,

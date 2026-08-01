@@ -448,6 +448,7 @@ Comptes : `farrier.demo` / `vetlight.demo` · pet seed Spirit (write_notes)
 | H5 | P1 | Share → care_pro | Vet share → farrier | Agenda/fiche ; notes selon permission |
 | H13 | P1 | Envoi dossier animal → pro | Client Flutter → e-mail pro → `/dossier/{token}` | ZIP (PDF + docs + carnet) ; marketing + tél. commercial ; expiry 24 h ; UC-X-08 |
 | H14 | P1 | Consultation client + partage PDF | Historique Flutter → CTA disponible (final) / en attente (draft) → CR final → e-mail → `/consultation/{token}` | PDF CR brandé ; multi-auteurs finaux ; expiry 24 h ; UC-X-09 |
+| H15 | P1 | Client AI (tag `dev`) | CR final → « Comprendre mon CR » ; Home/Settings → triage 24/7 Vert/Orange/Rouge | Explication additive + disclaimer ; escalade Rouge = tel cabinet + messagerie + RDV ; flag `CLIENT_AI_ENABLED` |
 | H6 | P1 | Billing → features | Checkout pet | Entitlement → FC + messaging + Care/Horse ; commission activation |
 | H7 | P1 | Care overdue | Pro crée → client postpone/done | Dashboard véto sync |
 | H8 | P2 | Indispo messagerie | Vet unavailable → client | État côté app |
@@ -648,6 +649,23 @@ Flutter widget : `consultation_view_test` (CTA disponible/en attente · Expansio
 Go timeline : `TestPetTimelineIncludesVisitReportForVetNotClient` (draft → `reportStatus`) · `TestPetTimelineClientHasReportOnFinalCR` · `TestPetTimelineNonOwnerStripsHasReport` · `TestClearTimelineMeta` / `stripClientConsultationFlags*`.
 
 Surface publique `/consultation/{token}` : mêmes headers noindex / no-referrer que `/dossier/**`. Purge : retention job + préfixe media `consultation-shares/`.
+
+### Client AI — vulgarisation CR + triage (Go + Flutter — H15)
+
+`go test ./internal/handlers/ -run 'TestClientAI|TestClientConsultationExplain' -count=1`
+`go test ./internal/platform/gemini/ -run 'TestParseClient' -count=1`
+`cd flutter && flutter test test/features/client_ai/`
+
+| Cas | Attendu |
+|-----|---------|
+| Flag off | 404 `client_ai_disabled` |
+| Explain owner + CR final | cards + disclaimer ; 2ᵉ GET = cache |
+| Explain non-owner | 403 |
+| Triage session + message chocolat | level `red` + escalation `practicePhone` / canBook / canMessage |
+| Flutter explain CTA | `consultation_explain_test` |
+| Flutter triage CTAs | `triage_chat_test` (call / book / message) |
+
+Doc : [`43-CLIENT-AI.md`](43-CLIENT-AI.md). Pas de useCase commercial tant que tag `dev`.
 
 ### Parrainage / QR (Go intégration — anti-régression)
 

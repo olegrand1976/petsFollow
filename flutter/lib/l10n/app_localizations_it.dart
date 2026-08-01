@@ -665,7 +665,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Informativa sulla privacy — petsFollow\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell\'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google).\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell\'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@petsfollow.app.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026';
+      'Informativa sulla privacy — petsFollow\n\nDati raccolti: identità (nome, email), dati degli animali (nome, specie, razza, foto), letture della frequenza cardiaca (dati sulla salute degli animali), messaggi e media scambiati con lo studio, resoconti delle visite (registrazioni di testo e audio), coordinate GPS delle visite a domicilio (professionisti dell\'assistenza), token di notifica (FCM), dati di pagamento elaborati da Stripe.\n\nFinalità: gestione account, continuità delle cure (comprese letture cardiache), messaggistica veterinaria, resoconti visite, notifiche, fatturazione.\n\nElaborazione AI: Google Gemini viene utilizzato per migliorare i report sulle visite (audio elaborato in tempo reale, non archiviato da Google) e, nell\'app cliente (modulo sperimentale), per spiegare i referti finalizzati e offrire un triage conversazionale di urgenza.\n\nSubappaltatori/partner: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (pagamenti), cloud hosting (GCP).\n\nConservazione: fino alla cancellazione dell\'account; account inattivi eliminati dopo 3 anni; audio delle relazioni conservate per tutta la durata del fascicolo.\n\nDiritti GDPR (accesso, rettifica, cancellazione, portabilità): Profilo → Esporta i miei dati / Elimina account o contatta support@petsfollow.app.\n\nVersione completa: https://petsfollow.ll-it-sc.be/legal/privacy\n\nData aggiornata: luglio 2026';
 
   @override
   String get legalNoticeBody =>
@@ -2000,6 +2000,72 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Accetto di condividere questo referto con questo veterinario.';
+
+  @override
+  String get clientAiDevBadge => 'dev';
+
+  @override
+  String get clientAiExplainCta => 'Capire il mio referto';
+
+  @override
+  String get clientAiExplainTitle => 'Il tuo referto spiegato';
+
+  @override
+  String get clientAiExplainDisclaimer =>
+      'Questo non è un parere medico. Segui sempre le istruzioni del veterinario.';
+
+  @override
+  String get clientAiExplainLoading => 'Preparazione della spiegazione…';
+
+  @override
+  String get clientAiTriageTitle => 'Aiuto urgenza 24/7';
+
+  @override
+  String get clientAiTriageSubtitle =>
+      'Descrivi la situazione — valutiamo il grado di urgenza.';
+
+  @override
+  String get clientAiTriageHint => 'Es.: il mio cane ha mangiato cioccolato…';
+
+  @override
+  String get clientAiTriageSend => 'Invia';
+
+  @override
+  String get clientAiTriageLevelGreen => 'Consiglio';
+
+  @override
+  String get clientAiTriageLevelOrange => 'Prenota visita';
+
+  @override
+  String get clientAiTriageLevelRed => 'Urgenza';
+
+  @override
+  String get clientAiTriageWatchSigns => 'Segni da osservare';
+
+  @override
+  String get clientAiTriageCallPractice => 'Chiama la clinica';
+
+  @override
+  String get clientAiTriageBookVisit => 'Prenota una visita';
+
+  @override
+  String get clientAiTriageMessageVet => 'Contatta il veterinario';
+
+  @override
+  String get clientAiTriageSelectPet => 'Per quale animale?';
+
+  @override
+  String get clientAiTriageNoPet => 'Continua senza animale';
+
+  @override
+  String get clientAiTriageStart => 'Inizia';
+
+  @override
+  String get clientAiTriageEmergencyFallback =>
+      'Se non riesci a contattare la clinica, chiama subito un servizio di guardia veterinaria locale.';
+
+  @override
+  String get clientAiTriageOpenMessages => 'Apri messaggi';
 
   @override
   String get bloodPressureShort => 'PA';

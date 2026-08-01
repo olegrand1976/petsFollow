@@ -47,6 +47,8 @@ type API struct {
 	vetSuggestRL        *httpx.RateLimiter
 	billitWebhookRL     *httpx.RateLimiter
 	pharmacyOrderSendRL *httpx.RateLimiter
+	clientAiTriageRL    *httpx.RateLimiter
+	clientAiExplainRL   *httpx.RateLimiter
 	authPulse           *authPulse
 	redis               *redisx.Client
 	orthancClient       *orthancClient
@@ -84,6 +86,8 @@ func NewAPI(st *store.Store, tokens *authx.TokenIssuer, cfg config.Config, notif
 		vetSuggestRL:        httpx.NewRateLimiter(10, time.Minute),
 		billitWebhookRL:     httpx.NewRateLimiter(120, time.Minute),
 		pharmacyOrderSendRL: httpx.NewRateLimiter(10, time.Minute),
+		clientAiTriageRL:    httpx.NewRateLimiter(20, time.Hour),
+		clientAiExplainRL:   httpx.NewRateLimiter(10, time.Hour),
 		authPulse:           newAuthPulse(),
 	}
 	return a
@@ -266,7 +270,11 @@ func (a *API) Routes(r chi.Router) {
 		pr.Get("/visits/{visitID}/preconsult", a.getVisitPreconsult)
 		pr.Put("/visits/{visitID}/preconsult", a.putVisitPreconsult)
 		pr.Get("/visits/{visitID}/client-consultation", a.getClientConsultation)
+		pr.Get("/visits/{visitID}/client-consultation/explain", a.getClientConsultationExplain)
 		pr.Post("/visits/{visitID}/consultation-shares", a.createConsultationShare)
+		pr.Post("/client-ai/triage/sessions", a.createClientAITriageSession)
+		pr.Get("/client-ai/triage/sessions/{sessionID}", a.getClientAITriageSession)
+		pr.Post("/client-ai/triage/sessions/{sessionID}/messages", a.postClientAITriageMessage)
 		pr.Get("/visits/{visitID}/report", a.getVisitReport)
 		pr.Get("/visits/{visitID}/reports", a.listVisitReports)
 		pr.Put("/visits/{visitID}/report", a.putVisitReport)

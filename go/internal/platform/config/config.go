@@ -112,6 +112,8 @@ type Config struct {
 	ResearchEtlSecret string
 	// ResearchAnonSalt salts practice_id_hash in research.anon_events (never exposed via API).
 	ResearchAnonSalt string
+	// ClientAIEnabled enables Flutter client AI (CR explain + triage 24/7) — default off, tag dev.
+	ClientAIEnabled bool
 
 	// BillitEnabled exposes invoicing routes (Billit reseller / Peppol).
 	BillitEnabled bool
@@ -219,6 +221,7 @@ func Load() Config {
 		ResearchEnabled:         envBool("RESEARCH_ENABLED"),
 		ResearchEtlSecret:       envOr("RESEARCH_ETL_SECRET", ""),
 		ResearchAnonSalt:        envOr("RESEARCH_ANON_SALT", ""),
+		ClientAIEnabled:         envBool("CLIENT_AI_ENABLED"),
 
 		// Billit : off par défaut ; mock uniquement opt-in (comme BILLING_MOCK_ENABLED).
 		BillitEnabled:              envBool("BILLIT_ENABLED"),
