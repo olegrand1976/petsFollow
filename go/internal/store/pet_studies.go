@@ -167,6 +167,43 @@ func (s *Store) FindPetStudyByOrthancSeries(ctx context.Context, practiceID, ort
 	`, practiceID, orthancSeriesID))
 }
 
+// ListAllPetStudies returns recent imaging links (admin ops — prune orphans).
+func (s *Store) ListAllPetStudies(ctx context.Context, limit int) ([]PetStudy, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 500
+	}
+	rows, err := s.pool.Query(ctx, petStudySelect+`
+		ORDER BY created_at DESC
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []PetStudy
+	for rows.Next() {
+		var st PetStudy
+		if err := rows.Scan(&st.ID, &st.PetID, &st.PracticeID, &st.OrthancStudyID, &st.StudyInstanceUID,
+			&st.OrthancSeriesID, &st.Description, &st.Modality, &st.UploadedByUserID, &st.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, st)
+	}
+	return out, rows.Err()
+}
+
+// DeletePetStudyByID removes an imaging.pet_studies row (admin prune / ops).
+func (s *Store) DeletePetStudyByID(ctx context.Context, id string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM imaging.pet_studies WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // ListPetStudyOrthancIDsForOwner returns Orthanc study IDs for pets owned by userID (RGPD purge).
 func (s *Store) ListPetStudyOrthancIDsForOwner(ctx context.Context, ownerUserID string) ([]string, error) {
 	rows, err := s.pool.Query(ctx, `

@@ -986,6 +986,86 @@ func TestPacsAdminWake(t *testing.T) {
 	}
 }
 
+func TestPacsAdminPruneOrphans(t *testing.T) {
+	t.Setenv("PACS_ENABLED", "true")
+	api := newTestAPI(t)
+
+	studyID := uniqueOrthancID()
+	seriesID := uniqueOrthancID()
+	instID := uniqueOrthancID()
+	studyGone := false
+
+	orth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/system":
+			_, _ = w.Write([]byte(`{"Version":"1.12.7"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/instances":
+			_, _ = w.Write([]byte(`{"ID":"` + instID + `","ParentStudy":"` + studyID + `","ParentSeries":"` + seriesID + `","Status":"Success"}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/studies/"+studyID:
+			if studyGone {
+				http.NotFound(w, r)
+				return
+			}
+			_, _ = w.Write([]byte(`{"ID":"` + studyID + `","Series":["` + seriesID + `"]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(orth.Close)
+	handlers.TestSetOrthanc(api.api, orth.URL)
+
+	clientTok := loginToken(t, api.handler, "client.demo@petsfollow.test", "ClientDemo123!")
+	vetTok := loginToken(t, api.handler, "vet.demo@petsfollow.test", "VetDemo123!")
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	petID := activeDemoPetID(t, api.handler, clientTok)
+
+	code, env := doAuthPacsUpload(t, api.handler, petID, vetTok, "prune.dcm", minimalDicomPayload())
+	if code != http.StatusCreated {
+		t.Fatalf("upload %d %#v", code, env)
+	}
+
+	// Warm status cache to ready.
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pacs/status", adminTok, nil)
+	if code != http.StatusOK || dataMap(t, env)["state"] != "ready" {
+		t.Fatalf("status ready want 200 ready got %d %#v", code, env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/prune-orphans", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prune kept %d %#v", code, env)
+	}
+	if int(dataMap(t, env)["kept"].(float64)) < 1 {
+		t.Fatalf("expected kept>=1 %#v", env)
+	}
+
+	studyGone = true
+	code, env = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/prune-orphans", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("prune orphans %d %#v", code, env)
+	}
+	pruned, _ := dataMap(t, env)["pruned"].([]any)
+	if len(pruned) < 1 {
+		t.Fatalf("expected pruned rows %#v", env)
+	}
+
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/pets/"+petID+"/pacs/studies", vetTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("list after prune %d %#v", code, env)
+	}
+	for _, item := range env["data"].([]any) {
+		m, _ := item.(map[string]any)
+		if m["orthancStudyId"] == studyID {
+			t.Fatalf("orphan study still listed %#v", env)
+		}
+	}
+
+	code, _ = doAuthJSON(t, api.handler, http.MethodPost, "/api/v1/admin/pacs/prune-orphans", vetTok, nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("vet prune expected 403 got %d", code)
+	}
+}
+
 func TestPacsAdminPlaygroundAccess(t *testing.T) {
 	t.Setenv("PACS_ENABLED", "true")
 	api := newTestAPI(t)

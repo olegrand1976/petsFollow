@@ -14,6 +14,15 @@
         <ProButton data-testid="admin-pacs-refresh" :disabled="loading" @click="load">
           {{ $t('pacs.admin.refresh') }}
         </ProButton>
+        <ProButton
+          variant="secondary"
+          data-testid="admin-pacs-prune"
+          :disabled="!pacsOn || pruning || metrics?.status?.state !== 'ready'"
+          :loading="pruning"
+          @click="pruneOrphans"
+        >
+          {{ $t('pacs.admin.pruneOrphans') }}
+        </ProButton>
       </template>
     </ProPageHeader>
 
@@ -23,6 +32,7 @@
 
     <template v-else>
       <p v-if="loadError" class="pro-error" role="alert">{{ loadError }}</p>
+      <p v-if="pruneMsg" class="pro-hint" data-testid="admin-pacs-prune-result" role="status">{{ pruneMsg }}</p>
 
       <div class="admin-pacs-grid">
         <ProCard :title="$t('pacs.admin.metricsTitle')" data-testid="admin-pacs-metrics">
@@ -180,7 +190,9 @@ const { entries: debugEntries, push: pushDebug, clear: clearDebug } = usePacsDeb
 
 const loading = ref(false)
 const waking = ref(false)
+const pruning = ref(false)
 const loadError = ref('')
+const pruneMsg = ref('')
 const metrics = ref<any>(null)
 const logs = ref<any[]>([])
 
@@ -276,6 +288,28 @@ async function wakeAdmin() {
   } catch (e: any) {
     waking.value = false
     loadError.value = e?.data?.message || e?.message || 'wake_failed'
+  }
+}
+
+async function pruneOrphans() {
+  if (!pacsOn.value || pruning.value) return
+  pruning.value = true
+  pruneMsg.value = ''
+  loadError.value = ''
+  try {
+    const res: any = await $fetch('/api/admin/pacs/prune-orphans', { method: 'POST', body: {} })
+    const data = res.data ?? res
+    const n = Array.isArray(data.pruned) ? data.pruned.length : 0
+    pruneMsg.value = t('pacs.admin.pruneResult', {
+      pruned: n,
+      kept: data.kept ?? 0,
+      skipped: data.skipped ?? 0,
+    })
+    await load()
+  } catch (e: any) {
+    loadError.value = e?.data?.message || e?.message || 'prune_failed'
+  } finally {
+    pruning.value = false
   }
 }
 

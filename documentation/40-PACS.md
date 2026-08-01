@@ -37,6 +37,7 @@ Le navigateur **ne parle jamais** à Orthanc : uniquement via BFF → Go → Ort
 | `GET` | `/api/v1/admin/pacs/logs` | admin |
 | `GET` | `/api/v1/admin/pacs/metrics` | admin |
 | `POST` | `/api/v1/admin/pacs/wake` | admin — cold start Orthanc (même sémantique que `/pacs/wake`) |
+| `POST` | `/api/v1/admin/pacs/prune-orphans` | admin — supprime les lignes `imaging.pet_studies` dont l’étude Orthanc est absente (404) ; Orthanc ready requis |
 | `GET` | `/api/v1/admin/pacs/playground-pets` | admin — pets seed pour playground (défaut `client.demo@…` ; `ownerEmail` limité à `*@petsfollow.test`) |
 
 ## Démo locale (présentation)
@@ -151,4 +152,4 @@ make gcp-smoke                    # smoke API générique staging
 # Filet local : make test-e2e-p0  # 20 / 20b / 20c
 ```
 
-**Dette ops staging** : études CT indexées sans blob GCS → 502 study/preview. Contournement UI (préférer RX + fallback série). Nettoyage Orthanc/GCS hors scope code viewer.
+**Ops staging — liens orphelins** : si Orthanc est reset (0 études) alors que Postgres garde des `pet_studies`, les études listées → 502. Remède : wake → **Purger liens orphelins** (`POST /admin/pacs/prune-orphans` / bouton `/admin/pacs`) → `PETSFOLLOW_API_URL=https://api.petsfollow.ll-it-sc.be bash scripts/pacs-demo-seed.sh`. Contournement UI (préférer RX) reste utile si un blob GCS manque alors que l’index Orthanc existe encore.

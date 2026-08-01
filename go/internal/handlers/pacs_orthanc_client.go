@@ -211,7 +211,7 @@ func (c *orthancClient) getStudy(ctx context.Context, studyID string) (map[strin
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("orthanc_study_%d", resp.StatusCode)
+		return nil, &orthancStatusError{Resource: "study", Status: resp.StatusCode}
 	}
 	var out map[string]any
 	if err := json.Unmarshal(body, &out); err != nil {

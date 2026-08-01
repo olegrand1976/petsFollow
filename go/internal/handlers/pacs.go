@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -76,6 +77,7 @@ func (a *API) registerAdminPacsRoutes(pr chi.Router) {
 	pr.Get("/admin/pacs/logs", a.adminPacsLogs)
 	pr.Get("/admin/pacs/metrics", a.adminPacsMetrics)
 	pr.Post("/admin/pacs/wake", a.adminPacsWake)
+	pr.Post("/admin/pacs/prune-orphans", a.adminPacsPruneOrphans)
 	pr.Get("/admin/pacs/playground-pets", a.adminPacsPlaygroundPets)
 }
 
@@ -341,6 +343,70 @@ func (a *API) adminPacsMetrics(w http.ResponseWriter, r *http.Request) {
 		"orthancUrlSet":  strings.TrimSpace(a.cfg.PacsOrthancURL) != "",
 		"useIdToken":     a.cfg.PacsOrthancUseIDToken,
 		"redisConnected": a.redis != nil,
+	})
+}
+
+// adminPacsPruneOrphans deletes imaging.pet_studies rows whose Orthanc study is gone
+// (e.g. Orthanc DB reset while Postgres links remain). Does not touch Orthanc itself.
+func (a *API) adminPacsPruneOrphans(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.requireAdmin(w, r); !ok {
+		return
+	}
+	if !a.requirePacsEnabled(w, r) {
+		return
+	}
+	client := a.orthanc()
+	if client == nil {
+		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_url_missing")
+		return
+	}
+	st := a.resolvePacsStatus(r.Context(), false)
+	if st.State != "ready" {
+		writeErr(w, r, http.StatusServiceUnavailable, "pacs_unavailable", "orthanc_not_ready")
+		return
+	}
+	rows, err := a.store.ListAllPetStudies(r.Context(), 500)
+	if err != nil {
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	type prunedRow struct {
+		ID             string `json:"id"`
+		OrthancStudyID string `json:"orthancStudyId"`
+		Description    string `json:"description"`
+	}
+	pruned := make([]prunedRow, 0)
+	kept := 0
+	skipped := 0
+	for _, row := range rows {
+		_, gerr := client.getStudy(r.Context(), row.OrthancStudyID)
+		if gerr == nil {
+			kept++
+			continue
+		}
+		var se *orthancStatusError
+		if errors.As(gerr, &se) && se.Status == http.StatusNotFound {
+			if derr := a.store.DeletePetStudyByID(r.Context(), row.ID); derr != nil {
+				a.appendPacsLog(r.Context(), "error", "prune_orphan", "delete failed", derr.Error())
+				skipped++
+				continue
+			}
+			pruned = append(pruned, prunedRow{
+				ID:             row.ID,
+				OrthancStudyID: row.OrthancStudyID,
+				Description:    row.Description,
+			})
+			continue
+		}
+		a.appendPacsLog(r.Context(), "warn", "prune_orphan", "orthanc lookup failed", gerr.Error())
+		skipped++
+	}
+	a.appendPacsLog(r.Context(), "info", "prune_orphan",
+		fmt.Sprintf("pruned=%d kept=%d skipped=%d", len(pruned), kept, skipped), "")
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"pruned":  pruned,
+		"kept":    kept,
+		"skipped": skipped,
 	})
 }
 
