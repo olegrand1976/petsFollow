@@ -17,6 +17,14 @@ on:
         description: "Digest date YYYY-MM-DD (Brussels), empty = today"
         required: false
         default: ""
+      branch:
+        description: "Git branch to summarize (default staging)"
+        required: false
+        default: "staging"
+      environment:
+        description: "Environment label in the email (default staging)"
+        required: false
+        default: "staging"
 
 jobs:
   ingest:
@@ -25,6 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.inputs.branch || 'staging' }}
 
       - name: Build commit payload and ingest
         env:
@@ -32,6 +41,8 @@ jobs:
           DIGEST_SECRET: ${{ secrets.PRODUCT_DIGEST_SECRET }}
           SINCE_HOURS: ${{ github.event.inputs.since_hours || '24' }}
           DIGEST_DATE: ${{ github.event.inputs.date || '' }}
+          DIGEST_BRANCH: ${{ github.event.inputs.branch || 'staging' }}
+          DIGEST_ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
         run: |
           set -euo pipefail
           if [[ -z "${API_URL:-}" || -z "${DIGEST_SECRET:-}" ]]; then
@@ -44,8 +55,21 @@ jobs:
 
           since_hours = os.environ.get("SINCE_HOURS") or "24"
           digest_date = (os.environ.get("DIGEST_DATE") or "").strip()
+          branch = (os.environ.get("DIGEST_BRANCH") or "").strip() or "staging"
+          environment = (os.environ.get("DIGEST_ENVIRONMENT") or "").strip() or branch
           api = os.environ["API_URL"].rstrip("/")
           secret = os.environ["DIGEST_SECRET"]
+
+          try:
+              head_branch = subprocess.check_output(
+                  ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                  text=True,
+                  errors="replace",
+              ).strip()
+              if head_branch and head_branch != "HEAD":
+                  branch = head_branch
+          except Exception:
+              pass
 
           log = subprocess.check_output(
               [
@@ -74,7 +98,11 @@ jobs:
                   "author": author.strip(),
               })
 
-          payload = {"commits": commits}
+          payload = {
+              "commits": commits,
+              "branch": branch,
+              "environment": environment,
+          }
           if digest_date:
               payload["date"] = digest_date
 
@@ -90,5 +118,5 @@ jobs:
           )
           with urllib.request.urlopen(req, timeout=120) as resp:
               print(resp.read().decode())
-          print(f"Ingested {len(commits)} commit(s)")
+          print(f"Ingested {len(commits)} commit(s) from branch={branch} env={environment}")
           PY
