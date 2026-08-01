@@ -945,21 +945,21 @@ func EnsureDemoMultiSwitchProfiles(ctx context.Context, pool *pgxpool.Pool, st *
 			email:    "commercial.manager@petsfollow.test",
 			homeRole: kernel.RoleCommercialManager,
 			extraRoles: []kernel.Role{
-				kernel.RoleCommercial, kernel.RoleDev, kernel.RoleResearch,
+				kernel.RoleCommercial, kernel.RoleResearch,
 			},
 		},
 		{
 			email:    "commercial.demo@petsfollow.test",
 			homeRole: kernel.RoleCommercial,
 			extraRoles: []kernel.Role{
-				kernel.RoleDev, kernel.RoleResearch,
+				kernel.RoleResearch,
 			},
 		},
 		{
 			email:    "commercial.demo2@petsfollow.test",
 			homeRole: kernel.RoleCommercial,
 			extraRoles: []kernel.Role{
-				kernel.RoleDev, kernel.RoleResearch,
+				kernel.RoleResearch,
 			},
 		},
 	}

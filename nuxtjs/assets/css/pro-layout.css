@@ -201,11 +201,15 @@
   box-shadow: var(--pf-vet-shadow-sm);
 }
 
-.pro-topbar__profile-switch.is-active,
-.pro-topbar__profile-switch:disabled {
+.pro-topbar__profile-switch.is-active {
   cursor: default;
   background: color-mix(in srgb, var(--pf-vet-accent) 12%, var(--pf-vet-surface));
   border-color: color-mix(in srgb, var(--pf-vet-accent) 35%, var(--pf-vet-border));
+}
+
+.pro-topbar__profile-switch:disabled:not(.is-active) {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .pro-topbar__profile-error {
