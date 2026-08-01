@@ -84,7 +84,11 @@
     "adminAfmps": "Import AFMPS",
     "researchOverview": "Observatoire",
     "researchHeatmap": "Carte régionale",
-    "researchAlerts": "Alertes"
+    "researchAlerts": "Alertes",
+    "researchTimeseries": "Séries temporelles",
+    "adminResearch": "Research opt-in",
+    "researchGroups": "Groupes",
+    "researchDataroom": "Data room"
   },
   "usecases": {
     "title": "Guides de test (use cases)",
@@ -2502,6 +2506,24 @@
         "unchanged": "Inchangé",
         "error": "Erreur"
       }
+    },
+    "research": {
+      "title": "Research — cabinets opt-in",
+      "subtitle": "Cabinets contributeurs à l’observatoire anonymisé (tag dev).",
+      "empty": "Aucun cabinet opt-in.",
+      "loadError": "Impossible de charger la liste opt-in.",
+      "colName": "Cabinet",
+      "colPostal": "CP",
+      "colCity": "Ville",
+      "colCountry": "Pays",
+      "colOptedInAt": "Opt-in le",
+      "optInsTitle": "Cabinets opt-in",
+      "groupsTitle": "Groupes Research",
+      "groupsHint": "Seul un admin peut activer la Data room pour un groupe (k-anonymité multi-cabinets).",
+      "groupsEmpty": "Aucun groupe.",
+      "groupsLoadError": "Impossible de charger / mettre à jour les groupes.",
+      "enableDataroom": "Activer Data room",
+      "disableDataroom": "Désactiver Data room"
     }
   },
   "calendar": {
@@ -3885,7 +3907,9 @@
     },
     "filters": {
       "species": "Espèce (ex. dog)",
-      "signal": "Signal (ex. visit_volume)"
+      "signal": "Signal (ex. visit_volume)",
+      "country": "Pays (ex. BE)",
+      "postalCode": "Code postal"
     },
     "signals": {
       "preconsult_syndrome": "Préconsult",
@@ -3911,6 +3935,48 @@
     "accountSettings": {
       "title": "Compte Research",
       "subtitle": "Langue et mot de passe du profil Research."
+    },
+    "timeseries": {
+      "title": "Séries temporelles",
+      "subtitle": "Volume hebdomadaire agrégé (filtres espèce / signal / région).",
+      "empty": "Aucune série pour ces filtres.",
+      "week": "Semaine",
+      "count": "Volume"
+    },
+    "groups": {
+      "title": "Groupes Research",
+      "subtitle": "Analyse collaborative — accès Data room réservé aux membres d’un groupe.",
+      "createTitle": "Nouveau groupe",
+      "name": "Nom",
+      "description": "Description",
+      "create": "Créer",
+      "createError": "Impossible de créer le groupe.",
+      "empty": "Aucun groupe pour l’instant.",
+      "members": "Membres",
+      "role": "Rôle",
+      "open": "Ouvrir",
+      "back": "Retour aux groupes",
+      "addMember": "Ajouter un membre Research",
+      "memberEmail": "E-mail Research",
+      "add": "Ajouter",
+      "memberError": "Ajout / retrait impossible (profil research requis).",
+      "noMembers": "Aucun membre.",
+      "colName": "Nom",
+      "colEmail": "E-mail",
+      "dataroom": "Data room",
+      "dataroomOn": "Activée",
+      "dataroomOff": "Désactivée"
+    },
+    "dataroom": {
+      "title": "Data room",
+      "subtitle": "Micro-événements anonymisés du réseau opt-in (k≥5 cabinets). Le groupe ouvre l’accès, sans filtrer les données.",
+      "goGroups": "Voir les groupes",
+      "kAnonHint": "Seuls les grains avec au moins {k} cabinets distincts sont listés. Pas de payload clinique détaillé.",
+      "empty": "Aucun événement éligible pour ces filtres.",
+      "week": "Semaine",
+      "ageBand": "Tranche d’âge",
+      "forbiddenTitle": "Data room non autorisée",
+      "forbiddenHint": "Il faut être membre d’un groupe dont l’admin a activé la Data room (créer un groupe seul ne suffit pas)."
     }
   }
 }

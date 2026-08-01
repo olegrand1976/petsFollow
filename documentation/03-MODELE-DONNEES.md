@@ -28,7 +28,7 @@ Source de vérité : migrations `go/internal/platform/db/migrations/` (000001 �
 |---------|--------|
 | Auth | `identity.users` (+ `professional_specialty` pour `care_pro` ; rôle `research` — `000130`), `email_verification_tokens`, `password_reset_tokens`, `identity.profiles` |
 | Cabinet | `practice.practices` (+ `research_opt_in_at` / `research_opt_in_by` — `000131`), `practice_clients`, `client_access`, `client_vet_link_requests`, `vet_schedule`, `vet_vacations`, `team_members` (rôles + JSON `permissions` — caps `shares.read`/`shares.manage`, `pharmacy.read`/`pharmacy.write`, etc. via `DefaultTeamPermissions`) |
-| Research (dev) | `research.anon_events`, `research.weekly_aggregates`, `research.etl_watermarks` — pas de PII ; `practice_id_hash` interne seulement |
+| Research (dev) | `research.anon_events`, `research.weekly_aggregates`, `research.etl_watermarks`, `research.groups`, `research.group_members` — pas de PII dans events ; `practice_id_hash` interne seulement |
 | ACL pets | `pets.pet_access` (partage dossier) — lecture staff = `shares.read`, mutation = `shares.manage` |
 | Import | `practice.client_import_jobs`, `client_import_rows` (+ grants `000029`) |
 | Animal | `pets.pets`, `pets.dossier_events`, `pets.weight_readings`, `pets.blood_pressure_readings` |

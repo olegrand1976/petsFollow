@@ -95,6 +95,21 @@ func TestResearchOptInETLAndOverview(t *testing.T) {
 		t.Fatalf("expected anon events after ETL, got %d", n)
 	}
 
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/research/heatmap?from=not-a-date", researchTok, nil)
+	if code != http.StatusBadRequest {
+		t.Fatalf("heatmap bad from expected 400, got %d %#v", code, env)
+	}
+
+	adminTok := loginToken(t, api.handler, "admin.demo@petsfollow.test", "AdminDemo123!")
+	code, env = doAuthJSON(t, api.handler, http.MethodGet, "/api/v1/admin/research/opt-ins", adminTok, nil)
+	if code != http.StatusOK {
+		t.Fatalf("admin opt-ins %d %#v", code, env)
+	}
+	items, _ := dataMap(t, env)["items"].([]any)
+	if len(items) < 1 {
+		t.Fatalf("expected at least one opt-in practice, got %#v", dataMap(t, env))
+	}
+
 	code, env = doAuthJSON(t, api.handler, http.MethodDelete, "/api/v1/vet/practice/research-opt-in", vetTok, nil)
 	if code != http.StatusOK {
 		t.Fatalf("opt-out %d %#v", code, env)

@@ -8,7 +8,8 @@ Module **tag `dev`** : profil `research` + couche de données anonymisées (opt-
 |-------|--------|
 | Rôle | `research` (multi-profil, associable à `vet` / `admin`) |
 | Contribution | **Opt-in cabinet** (`practice.practices.research_opt_in_at`) |
-| Accès | Observatoire agrégé uniquement (pas d’export micro-données) ; k-anonymité ≥ 5 heatmap/alerts |
+| Accès V1 | Observatoire agrégé ; k-anonymité ≥ 5 heatmap/alerts |
+| Accès V2 | Data room micro-événements (k ≥ 5 **cabinets distincts**) + membership d’un groupe avec `dataroom_enabled` (toggle **admin**) |
 | Flags | `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` |
 | Surface | Nuxt Pro `/research` — pas de shell Flutter Research |
 
@@ -41,6 +42,7 @@ Sources cliniques (opt-in practice)
 | `anon_events` | événement anonymisé (semaine ISO, CP, pays, espèce, age_band, signal_type, payload JSONB, source_hash, practice_id_hash) |
 | `weekly_aggregates` | `week × postal_code × country × species × signal_type` + `event_count` |
 | `etl_watermarks` | curseurs incrémentaux par source |
+| `groups` / `group_members` | groupes collaboratifs V2 (owner/member) + `dataroom_enabled` (admin) |
 
 ### Signaux V1
 
@@ -62,7 +64,15 @@ Sources cliniques (opt-in practice)
 | `RESEARCH_ETL_SECRET` | protège `POST /internal/research-etl/run` |
 | `RESEARCH_ANON_SALT` | sel HMAC `practice_id_hash` (**obligatoire** hors local/test ; jamais dérivé du secret ETL ; `make api-dev` pose un sel local) |
 
-404 `research_disabled` si flag off.
+404 `research_disabled` si flag off. Boot **fail-fast** si `RESEARCH_ENABLED` hors env seedable sans salt + secret ETL.
+
+### Ops GCP
+
+| Élément | Notes |
+|---------|--------|
+| Staging flags | `RESEARCH_ENABLED=true` + bake `NUXT_PUBLIC_RESEARCH_ENABLED=true` (`deploy-run-args` / Cloud Build) |
+| Secrets SM | `petsfollow-research-etl-secret` · `petsfollow-research-anon-salt` |
+| Scheduler | `make gcp-research-etl-scheduler` — `POST /internal/research-etl/run` toutes les 6 h (`Europe/Brussels`) |
 
 ## Endpoints API
 
@@ -72,6 +82,14 @@ Sources cliniques (opt-in practice)
 | `GET` | `/api/v1/research/heatmap` | `research` |
 | `GET` | `/api/v1/research/timeseries` | `research` |
 | `GET` | `/api/v1/research/alerts` | `research` |
+| `GET` | `/api/v1/admin/research/opt-ins` | `admin` / `dev` |
+| `GET/POST` | `/api/v1/research/groups` | `research` |
+| `GET/PATCH/DELETE` | `/api/v1/research/groups/{id}` | `research` (membre / owner) |
+| `GET/POST` | `/api/v1/research/groups/{id}/members` | `research` (POST anti-énumération : toujours `{ok:true}`) |
+| `DELETE` | `/api/v1/research/groups/{id}/members/{userId}` | `research` |
+| `GET` | `/api/v1/admin/research/groups` | `admin` / `dev` |
+| `PATCH` | `/api/v1/admin/research/groups/{id}/dataroom` | `admin` / `dev` — `{enabled}` |
+| `GET` | `/api/v1/research/dataroom/events` | `research` + membre d’un groupe `dataroom_enabled` |
 | `GET` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
 | `POST` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
 | `DELETE` | `/api/v1/vet/practice/research-opt-in` | staff `practice.settings` |
@@ -80,7 +98,8 @@ Sources cliniques (opt-in practice)
 ## RGPD
 
 - Finalité **distincte** de la continuité de soins (observatoire / santé publique vétérinaire). Base légale à valider juridiquement (intérêt légitime + contrat opt-in cabinet recommandé).
-- Minimisation : pas de nom, email, microchip, rue, UUID pet/user dans les payloads API.
+- Minimisation : pas de nom, email, microchip, rue, UUID pet/user dans les réponses API.
+- Data room API : **pas de `payload`** warehouse (reste en base pour ETL) — champs exposés = semaine / CP / pays / espèce / age_band / signal.
 - Opt-out : stop ingest + purge `anon_events` par `practice_id_hash` ; rebuild agrégats.
 - `GET /me/export` : **ne pas** inclure les agrégats research (pas de donnée personnelle).
 - Voir aussi [36-RGPD.md](36-RGPD.md).
@@ -93,18 +112,34 @@ Sources cliniques (opt-in practice)
 - Biais géo « cabinet » (pas domicile animal).
 - Densité limitée aux cabinets opt-in petsFollow.
 
-## V2 (spécifié, non livré)
+## V2 (livré — tag `dev`)
 
-- `research.groups` + memberships (analyse collaborative).
-- Data room : API micro-événements avec k-anonymity ≥ 5.
+- `research.groups` + `research.group_members` (owner/member) + `dataroom_enabled` (défaut off).
+- Data room : `GET /research/dataroom/events` — sans `practice_id_hash` / `source_hash` / `city` / `payload` ; grain éligible si **COUNT(DISTINCT practice_id_hash) ≥ 5** ; membership d’un groupe **dataroom_enabled** (pas de solo-groupe).
+- **Scope réseau** : le groupe est une **porte d’accès** (privilege), pas un filtre de données — un membre autorisé voit tous les micro-événements k-anon du réseau opt-in, pas seulement ceux « de son groupe ».
+- Seed : groupe « Réseau démo BE » + flag Data room on + 5 hashes cabinet synthétiques (TRUNCATE au re-seed).
+
+### Encore hors scope
+
 - Signaux amont (fièvre, respiratoire, diagnostic codé).
 - Flutter lecture seule optionnelle.
 - Use cases commerciaux (`useCase/`) **uniquement à la GA** (règle modules tag `dev`).
 
+## Surfaces UI
+
+| Route | Rôle |
+|-------|------|
+| `/research` · `/heatmap` · `/timeseries` · `/alerts` · `/settings` | `research` |
+| `/research/groups` · `/research/dataroom` | `research` (V2) |
+| `/admin/research` | `admin` / `dev` — liste cabinets opt-in |
+| Settings cabinet (toggle opt-in) | staff `practice.settings` |
+
+Semaines ISO : borne lundi **Europe/Brussels**. Agrégats ETL : refresh **incrémental** des semaines touchées ; rebuild global à l’opt-out.
+
 ## Démo locale
 
 ```bash
-make up-infra && make migrate && make seed
+make up-infra && make migrate && make seed   # opt-in VetPlus + ETL seed
 make api-dev          # RESEARCH_ENABLED=true
 make nuxtjs-dev       # NUXT_PUBLIC_RESEARCH_ENABLED=true
 # Login research.demo@petsfollow.test / ResearchDemo123!
@@ -115,6 +150,6 @@ curl -X POST http://localhost:8291/api/v1/internal/research-etl/run \
 
 ## Tests
 
-- Go : `TestResearch*` (flag, opt-in, ETL, overview sans PII, multi-profil).
-- Playwright : smoke login → `/research` (flag on).
+- Go : `TestResearch*` + `TestResearchGroupsAndDataRoom` (groups, gate Data room, k-anon sans PII).
+- Playwright : `@p0` `22-research` — overview + timeseries + heatmap + groups + dataroom + admin opt-ins + toggle Data room.
 - Plan : [15-PLAN-TESTS.md](15-PLAN-TESTS.md).
