@@ -149,6 +149,13 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 	if err != nil {
 		return Profile{}, err
 	}
+	owned, oerr := s.listOwnedRoles(ctx, userID)
+	if oerr != nil {
+		return Profile{}, oerr
+	}
+	if !kernel.CanActivateProfile(owned, p.Role) {
+		return Profile{}, ErrForbidden
+	}
 	if kernel.IsPracticeStaff(p.Role) && p.PracticeID != "" {
 		ok, aerr := s.HasActivePracticeStaffAccess(ctx, p.PracticeID, userID)
 		if aerr != nil {
@@ -179,8 +186,62 @@ func (s *Store) SwitchProfile(ctx context.Context, userID, profileID string) (Pr
 	if err != nil {
 		return Profile{}, err
 	}
+	if kernel.IsPracticeStaff(p.Role) && p.PracticeID != "" {
+		if serr := s.syncTeamRoleForStaffProfile(ctx, userID, p); serr != nil {
+			return Profile{}, serr
+		}
+	}
 	p.Active = true
 	return p, nil
+}
+
+func (s *Store) listOwnedRoles(ctx context.Context, userID string) ([]kernel.Role, error) {
+	rows, err := s.pool.Query(ctx, `SELECT role FROM identity.profiles WHERE user_id=$1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []kernel.Role
+	for rows.Next() {
+		var role string
+		if err := rows.Scan(&role); err != nil {
+			return nil, err
+		}
+		out = append(out, kernel.Role(role))
+	}
+	return out, rows.Err()
+}
+
+// syncTeamRoleForStaffProfile aligns team_members.team_role with the active staff profile
+// so ACL permissions match the switched role. Never demotes reference_vet.
+func (s *Store) syncTeamRoleForStaffProfile(ctx context.Context, userID string, p Profile) error {
+	teamRole := kernelRoleToTeamRole(p.Role)
+	if teamRole == "" {
+		return nil
+	}
+	_, err := s.pool.Exec(ctx, `
+		UPDATE practice.team_members
+		SET profile_id = $3::uuid,
+		    team_role = $4
+		WHERE practice_id = $1::uuid
+		  AND user_id = $2::uuid
+		  AND status = 'active'
+		  AND team_role <> 'reference_vet'`,
+		p.PracticeID, userID, p.ID, string(teamRole))
+	return err
+}
+
+func kernelRoleToTeamRole(role kernel.Role) TeamRole {
+	switch role {
+	case kernel.RoleVetAssistant:
+		return TeamRoleAssistant
+	case kernel.RoleSecretary:
+		return TeamRoleSecretary
+	case kernel.RoleVet:
+		return TeamRoleVet
+	default:
+		return ""
+	}
 }
 
 type AttachProfileInput struct {
