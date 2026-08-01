@@ -25,8 +25,9 @@
         icon="favorite"
         :value="unreadHeartrate"
         :label="$t('dashboard.unreadHeartrate')"
-        to="/pets"
+        :to="unreadHeartrateRaw > 0 ? '/pets?unread=1' : '/pets'"
         :variant="unreadHeartrateRaw > 0 ? 'alert' : 'default'"
+        data-testid="dashboard-kpi-unread-readings"
       />
       <ProKpi
         v-if="canManageShares"

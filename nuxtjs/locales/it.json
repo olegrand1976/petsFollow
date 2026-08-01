@@ -1116,7 +1116,7 @@
       },
       "kpi": {
         "pets": "Pet",
-        "unreadHeartrate": "FC non letti",
+        "unreadHeartrate": "Rilevazioni non lette",
         "alertSessions7d": "Avvisi HR (7 giorni)",
         "overdueCare": "Cura tardiva",
         "pendingVisits": "Appuntamento in attesa",
@@ -1385,6 +1385,9 @@
     "searchPlaceholder": "Nome, razza, cliente…",
     "speciesFilter": "Tipo",
     "speciesAll": "Tutto",
+    "unreadFilter": "Rilevazioni",
+    "unreadAll": "Tutte",
+    "unreadOnly": "Non lette",
     "emptyTitle": "Nessun animale",
     "emptyDescription": "Gli animali dei tuoi clienti appariranno qui.",
     "columnName": "Animale",
@@ -1392,10 +1395,14 @@
     "columnBreed": "Razza",
     "columnBirthDate": "Nascita",
     "columnLastVisit": "Ultima visita",
-    "columnLastHeartRate": "Ultima dichiarazione",
+    "columnReadingType": "Tipo di rilevazione",
+    "columnLastHeartRate": "Ultima FC",
     "columnOwner": "Cliente",
-    "unreadBadge": "Nuovo",
-    "unreadCount": "{n} nuovo"
+    "readingType": {
+      "heartrate": "FC"
+    },
+    "unreadBadge": "Rilevazione non letta",
+    "unreadCount": "{n} rilevazioni non lette"
   },
   "invoicing": {
     "title": "Fatturazione",
@@ -1650,7 +1657,7 @@
         "other": "Altro"
       }
     },
-    "unreadHeartrate": "FC non viste",
+    "unreadHeartrate": "Rilevazioni non lette",
     "todayTitle": "Oggi",
     "todayEmptyTitle": "Nessun appuntamento oggi",
     "todayEmptyDescription": "Niente di pianificato per oggi.",

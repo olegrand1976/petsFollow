@@ -588,7 +588,7 @@
       },
       "kpi": {
         "pets": "Pets",
-        "unreadHeartrate": "Unread HR",
+        "unreadHeartrate": "Unread readings",
         "alertSessions7d": "HR alerts (7d)",
         "overdueCare": "Overdue care",
         "pendingVisits": "Pending visits",
@@ -818,6 +818,9 @@
     "searchPlaceholder": "Name, breed, client…",
     "speciesFilter": "Type",
     "speciesAll": "All",
+    "unreadFilter": "Readings",
+    "unreadAll": "All",
+    "unreadOnly": "Unread",
     "emptyTitle": "No pets",
     "emptyDescription": "Pets belonging to your clients will appear here.",
     "columnName": "Pet",
@@ -825,10 +828,14 @@
     "columnBreed": "Breed",
     "columnBirthDate": "Date of birth",
     "columnLastVisit": "Last visit",
-    "columnLastHeartRate": "Last reading",
+    "columnReadingType": "Reading type",
+    "columnLastHeartRate": "Last HR",
     "columnOwner": "Client",
-    "unreadBadge": "New",
-    "unreadCount": "{n} new"
+    "readingType": {
+      "heartrate": "HR"
+    },
+    "unreadBadge": "Unread reading",
+    "unreadCount": "{n} unread readings"
   },
   "invoicing": {
     "title": "Invoicing",
@@ -1114,7 +1121,7 @@
         "other": "Other"
       }
     },
-    "unreadHeartrate": "Unread heart rates",
+    "unreadHeartrate": "Unread readings",
     "todayTitle": "Today",
     "todayEmptyTitle": "No visits today",
     "todayEmptyDescription": "Nothing scheduled for today.",

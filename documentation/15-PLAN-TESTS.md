@@ -170,7 +170,7 @@ Compte : `vet.demo@petsfollow.test`
 | C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save` — **manuel** ; auto = Go `TestClientContactPhone*`) |
 | C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline | Données seed visibles |
 | C2.4b | P1 | Tension & labos | Onglet vitals : saisir tension Pro (site/commentaire) ; créer/éditer panel labo (`valueNum`/`valueText`) ; timeline `blood_pressure` / `lab_panel` ; client Flutter sheet tension + lecture panels | Go `TestBloodPressure*` / `TestLabPanel*` ; Flutter `pet_quick_actions_test` + `lab_panels_screen_test` ; Playwright `09-pet-detail` `@p1` ; `make smoke` BP/labs |
-| C2.5 | P1 | Liste pets | `/pets` | Animaux transverses cabinet |
+| C2.5 | P1 | Liste pets | `/pets` (+ `?unread=1` depuis KPI dashboard) | Animaux transverses ; filtre **Non lus** ; badge relevé non lu ; colonne **Type de relevé** (FC) ; Vitest `vet-pets-list.spec.ts` |
 | C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
 | C2.7 | P1 | Photo animal | Upload photo pet | Affichée Pro + Flutter |
 | C2.8 | P1 | Invite app | Depuis client | Lien / QR / email selon UI |
