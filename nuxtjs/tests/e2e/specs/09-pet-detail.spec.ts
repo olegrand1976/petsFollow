@@ -499,3 +499,41 @@ test('heartrate — durées cabinet exposées au client + BPM sur 15s', async ()
   expect(done.tapCount).toBe(taps)
   expect(done.bpm).toBe(60) // (15 * 60) / 15
 })
+
+test('pet detail — données médicales + statut animal', { tag: '@p1' }, async ({ page }) => {
+  test.setTimeout(60000)
+  const { clientId, petId } = await demoClientAndPet()
+  const vetTok = await apiLogin('vet.demo@petsfollow.test', 'VetDemo123!')
+  const adopted = '2019-06-01'
+
+  await loginAsVet(page)
+  await page.goto(`/clients/${clientId}/pets/${petId}?tab=overview`)
+  await expect(page.getByTestId('pet-detail-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('pet-medical-data')).toBeVisible()
+  await expect(page.getByTestId('pet-birth-date')).toBeVisible()
+  await expect(page.getByTestId('pet-microchip')).toBeVisible()
+  await expect(page.getByTestId('pet-health-book-number')).toBeVisible()
+  await expect(page.getByTestId('pet-lifecycle')).toBeVisible()
+
+  await page.getByTestId('pet-adopted-at').fill(adopted)
+  await page.getByTestId('pet-lifecycle-save').click()
+  await expect(page.getByTestId('pet-lifecycle-saved')).toBeVisible({ timeout: 10000 })
+
+  const getRes = await fetch(`${API}/api/v1/pets/${petId}`, {
+    headers: { Authorization: `Bearer ${vetTok}` },
+  })
+  expect(getRes.ok).toBeTruthy()
+  const pet = (await getRes.json()).data as { adoptedAt?: string }
+  expect(String(pet.adoptedAt || '').slice(0, 10)).toBe(adopted)
+
+  // Cleanup — avoid polluting seed for other specs.
+  await fetch(`${API}/api/v1/vet/pets/${petId}/lifecycle`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${vetTok}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ adoptedAt: '', soldAt: '', deceasedAt: '' }),
+  })
+})
+

@@ -1888,10 +1888,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get supportSuccess => 'Bericht verzonden. Dank je!';
 
   @override
-  String get supportErrorRateLimit =>
-      'Te veel tickets recent. Probeer over een uur.';
-
-  @override
   String get supportErrorTooLarge =>
       'Diagnostiek te groot. Herstart de app en probeer opnieuw.';
 

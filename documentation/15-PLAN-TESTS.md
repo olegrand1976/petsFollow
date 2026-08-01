@@ -167,8 +167,8 @@ Compte : `vet.demo@petsfollow.test`
 |----|-----|-----|--------|---------|
 | C2.1 | P0 | Dashboard | Ouvrir `/dashboard` | Overview + care overdue si seed |
 | C2.2 | P0 | Liste clients | `/clients` recherche / filtre | Résultats cohérents ; colonne / filtre téléphone si seed (`0470 00 00 01` Sophie) |
-| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition `contactPhone` si `clients.write` (`client-phone-save` — **manuel** ; auto = Go `TestClientContactPhone*`) |
-| C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline | Données seed visibles |
+| C2.3 | P0 | Fiche client | Ouvrir client | Pets, invite app, actions ; édition identité (prénom/nom/tél/adresse/NISS) si `clients.write` (`client-identity-save` — **manuel** ; auto = Go `TestClientContactPhone*` + `TestClientIdentityCreateWithoutPasswordAndPatch`) |
+| C2.4 | P0 | Dossier pet | Chart FC, relevés, care, RDV, timeline ; carte **Données médicales** (naissance, puce, passeport) ; **Statut animal** (adopté/vendu/décédé) éditable Pro ; cheval : domicile + chaîne alimentaire oui/non | Données seed visibles ; Go `TestVetPetLifecycleDates` ; Playwright `09-pet-detail` `@p1` données médicales + lifecycle |
 | C2.4b | P1 | Tension & labos | Onglet vitals : saisir tension Pro (site/commentaire) ; créer/éditer panel labo (`valueNum`/`valueText`) ; timeline `blood_pressure` / `lab_panel` ; client Flutter sheet tension + lecture panels | Go `TestBloodPressure*` / `TestLabPanel*` ; Flutter `pet_quick_actions_test` + `lab_panels_screen_test` ; Playwright `09-pet-detail` `@p1` ; `make smoke` BP/labs |
 | C2.5 | P1 | Liste pets | `/pets` (+ `?unread=1` depuis KPI dashboard) | Animaux transverses ; filtre **Non lus** ; badge relevé non lu ; colonne **Type de relevé** (FC) ; Vitest `vet-pets-list.spec.ts` |
 | C2.6 | P1 | Créer / rattacher client | Nouveau client (+ `contactPhone` optionnel) ; client existant → link | 409 enrichi + link OK ; téléphone visible liste/get ; `PATCH /clients/{id}` isolé cabinet non lié (`TestClientContactPhone*`) ; **account-global** last-write-wins si multi-cabinets (`TestClientContactPhoneAccountGlobalLastWriteWins`) |
@@ -766,7 +766,7 @@ Répertoire : `nuxtjs/tests/e2e/specs/`
 | `24-product-flows` | `/flux` nav + deep-link `?profile=` + redirect alias + admin/manager + refus véto | P2 |
 | `08-commercial-manager` | Dashboard manager / suivi / prospects / mémo ASV / filiation | `@p1` (filiation) |
 | `08-requests` | Calendrier + invitations clients | |
-| `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR | `@p0` (parcours chart/HR) + `@p1` CTA |
+| `09-pet-detail` | Fiche animal, CTA consultation, shares, commentaire relevé HR, données médicales + statut animal | `@p0` (parcours chart/HR) + `@p1` CTA / lifecycle |
 | `10-products` | `/produits` plans TTC 3,50 / 35 / 95 | |
 | `11-admin-stripe-catalog` | Catalogue Stripe admin + ACL véto | |
 | `12-competition` | Concurrence commerciale FR/BE/ES | |

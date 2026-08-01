@@ -59,12 +59,16 @@ class Pet {
     this.entitlement,
     this.heartrateDurationsSec = const [60],
     this.weightKg,
+    this.birthDate,
     this.microchipNumber,
     this.healthBookNumber,
     this.healthBookPdfUrl,
     this.healthBookPdfAttached = false,
     this.foodChainStatus,
     this.domicileLocation,
+    this.adoptedAt,
+    this.soldAt,
+    this.deceasedAt,
   });
 
   final String id;
@@ -81,6 +85,7 @@ class Pet {
   final List<int> heartrateDurationsSec;
   /// Last recorded weight (kg) from API `weightKg` / `pets.weight_kg`.
   final double? weightKg;
+  final DateTime? birthDate;
   final String? microchipNumber;
   final String? healthBookNumber;
   /// Legacy / unused public URL — prefer [healthBookPdfAttached] + auth stream.
@@ -89,6 +94,9 @@ class Pet {
   /// companion | food_producing | excluded_from_food_chain
   final String? foodChainStatus;
   final String? domicileLocation;
+  final DateTime? adoptedAt;
+  final DateTime? soldAt;
+  final DateTime? deceasedAt;
 
   /// True when the logged-in client owns this pet (billing / HR / edit).
   bool get isOwner {
@@ -165,12 +173,16 @@ class Pet {
           ? const [60]
           : rawDurations.map((e) => (e as num).toInt()).toList(),
       weightKg: (json['weightKg'] as num?)?.toDouble(),
+      birthDate: _optionalDate(json['birthDate']),
       microchipNumber: _optionalString(json['microchipNumber']),
       healthBookNumber: _optionalString(json['healthBookNumber']),
       healthBookPdfUrl: resolveMediaUrl(_optionalString(json['healthBookPdfUrl'])),
       healthBookPdfAttached: json['healthBookPdfAttached'] == true,
       foodChainStatus: _optionalString(json['foodChainStatus']),
       domicileLocation: _optionalString(json['domicileLocation']),
+      adoptedAt: _optionalDate(json['adoptedAt']),
+      soldAt: _optionalDate(json['soldAt']),
+      deceasedAt: _optionalDate(json['deceasedAt']),
     );
   }
 
@@ -178,5 +190,12 @@ class Pet {
     final s = (v as String?)?.trim();
     if (s == null || s.isEmpty) return null;
     return s;
+  }
+
+  static DateTime? _optionalDate(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString().trim();
+    if (s.isEmpty) return null;
+    return DateTime.tryParse(s);
   }
 }

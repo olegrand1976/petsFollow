@@ -3574,12 +3574,6 @@ abstract class AppLocalizations {
   /// **'Message envoyé. Merci !'**
   String get supportSuccess;
 
-  /// No description provided for @supportErrorRateLimit.
-  ///
-  /// In fr, this message translates to:
-  /// **'Trop de tickets récemment. Réessayez dans une heure.'**
-  String get supportErrorRateLimit;
-
   /// No description provided for @supportErrorTooLarge.
   ///
   /// In fr, this message translates to:

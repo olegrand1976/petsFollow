@@ -470,7 +470,8 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 			COALESCE(p.payment_status,''), COALESCE(p.litter_tag,''),
 			COALESCE(p.microchip_number,''), COALESCE(p.health_book_number,''),
 			COALESCE(p.health_book_pdf_url,''), COALESCE(p.health_book_pdf_object_key,''),
-			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''), p.created_at,
+			COALESCE(p.food_chain_status,'companion'), COALESCE(p.domicile_location,''),
+			p.adopted_at, p.sold_at, p.deceased_at, p.created_at,
 			COALESCE((
 				SELECT CASE
 					WHEN MAX(CASE x.permission WHEN 'full' THEN 3 WHEN 'write_notes' THEN 2 ELSE 1 END) = 3 THEN 'full'
@@ -510,7 +511,7 @@ func (s *Store) ListCareProAccessiblePets(ctx context.Context, granteeUserID str
 			&p.ID, &p.PracticeID, &p.OwnerUserID, &p.Name, &p.Species, &p.Breed,
 			&p.BirthDate, &p.WeightKg, &p.PhotoURL, &p.PaymentStatus, &p.LitterTag,
 			&p.MicrochipNumber, &p.HealthBookNumber, &p.HealthBookPDFURL, &p.HealthBookPDFObjectKey,
-			&p.FoodChainStatus, &p.DomicileLocation, &p.CreatedAt,
+			&p.FoodChainStatus, &p.DomicileLocation, &p.AdoptedAt, &p.SoldAt, &p.DeceasedAt, &p.CreatedAt,
 			&p.Permission,
 		); err != nil {
 			return nil, err

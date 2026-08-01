@@ -114,9 +114,7 @@ async function submit() {
     setTimeout(() => emit('update:open', false), 900)
   } catch (e: any) {
     const code = e?.data?.error?.code || e?.data?.error?.msgKey || ''
-    if (code === 'rate_limited' || e?.statusCode === 429) {
-      error.value = t('support.errorRateLimit')
-    } else if (code === 'diagnostics_too_large' || code === 'payload_too_large' || e?.statusCode === 413) {
+    if (code === 'diagnostics_too_large' || code === 'payload_too_large' || e?.statusCode === 413) {
       error.value = t('support.errorTooLarge')
     } else {
       error.value = t('support.errorGeneric')

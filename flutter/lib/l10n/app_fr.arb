@@ -767,7 +767,6 @@
   "supportSubmit": "Envoyer",
   "supportSending": "Envoi…",
   "supportSuccess": "Message envoyé. Merci !",
-  "supportErrorRateLimit": "Trop de tickets récemment. Réessayez dans une heure.",
   "supportErrorTooLarge": "Diagnostics trop volumineux. Relancez l'app et réessayez.",
   "supportMenu": "Support",
   "appInviteHintSales": "Partagez votre code parrain avec un cabinet (inscription Pro) ou un client (invitation app).",

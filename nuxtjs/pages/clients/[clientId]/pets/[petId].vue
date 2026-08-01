@@ -107,7 +107,7 @@
           @uploaded="onPetPhotoUploaded"
         />
       </ProCard>
-      <ProCard v-if="pet" :title="$t('clients.pet.summaryTitle')" class="pro-mb-lg">
+      <ProCard v-if="pet" :title="$t('clients.pet.summaryTitle')" class="pro-mb-lg" data-testid="pet-medical-data">
         <dl class="pro-pet-summary">
           <div>
             <dt>{{ $t('pets.columnSpecies') }}</dt>
@@ -117,17 +117,21 @@
             <dt>{{ $t('pets.columnBreed') }}</dt>
             <dd>{{ pet.breed || $t('common.unknownBreed') }}</dd>
           </div>
+          <div>
+            <dt>{{ $t('pets.columnBirthDate') }}</dt>
+            <dd data-testid="pet-birth-date">{{ formatPetDay(pet.birthDate) }}</dd>
+          </div>
           <div v-if="pet.weightKg != null">
             <dt>{{ $t('clients.pet.columnWeight') }}</dt>
             <dd>{{ pet.weightKg }} kg</dd>
           </div>
-          <div v-if="pet.microchipNumber">
+          <div>
             <dt>{{ $t('clients.pet.microchip') }}</dt>
-            <dd data-testid="pet-microchip">{{ pet.microchipNumber }}</dd>
+            <dd data-testid="pet-microchip">{{ pet.microchipNumber || $t('common.dash') }}</dd>
           </div>
-          <div v-if="pet.healthBookNumber">
+          <div>
             <dt>{{ $t('clients.pet.healthBookNumber') }}</dt>
-            <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber }}</dd>
+            <dd data-testid="pet-health-book-number">{{ pet.healthBookNumber || $t('common.dash') }}</dd>
           </div>
           <div v-if="pet.healthBookPdfAttached">
             <dt>{{ $t('clients.pet.healthBookPdf') }}</dt>
@@ -152,6 +156,59 @@
             </dd>
           </div>
         </dl>
+      </ProCard>
+      <ProCard
+        v-if="pet"
+        :title="$t('clients.pet.lifecycleTitle')"
+        class="pro-mb-lg"
+        data-testid="pet-lifecycle"
+      >
+        <div class="pro-pet-horse-reg">
+          <div>
+            <label class="pro-label" for="pet-adopted-at">{{ $t('clients.pet.adoptedAt') }}</label>
+            <input
+              id="pet-adopted-at"
+              v-model="lifecycleAdoptedAt"
+              class="pro-input"
+              type="date"
+              data-testid="pet-adopted-at"
+              :disabled="!canWriteClinical || lifecycleSaving"
+            >
+          </div>
+          <div>
+            <label class="pro-label" for="pet-sold-at">{{ $t('clients.pet.soldAt') }}</label>
+            <input
+              id="pet-sold-at"
+              v-model="lifecycleSoldAt"
+              class="pro-input"
+              type="date"
+              data-testid="pet-sold-at"
+              :disabled="!canWriteClinical || lifecycleSaving"
+            >
+          </div>
+          <div>
+            <label class="pro-label" for="pet-deceased-at">{{ $t('clients.pet.deceasedAt') }}</label>
+            <input
+              id="pet-deceased-at"
+              v-model="lifecycleDeceasedAt"
+              class="pro-input"
+              type="date"
+              data-testid="pet-deceased-at"
+              :disabled="!canWriteClinical || lifecycleSaving"
+            >
+          </div>
+        </div>
+        <p v-if="lifecycleError" class="pro-alert" data-testid="pet-lifecycle-error">{{ lifecycleError }}</p>
+        <p v-if="lifecycleSaved" class="pro-hint" data-testid="pet-lifecycle-saved">{{ $t('clients.pet.lifecycleSaved') }}</p>
+        <ProButton
+          v-if="canWriteClinical"
+          class="pro-mt-md"
+          test-id="pet-lifecycle-save"
+          :disabled="lifecycleSaving || !lifecycleDirty"
+          @click="saveLifecycle"
+        >
+          {{ $t('common.save') }}
+        </ProButton>
       </ProCard>
       <ProCard
         v-if="pharmacyEnabled && canReadPharmacy"
@@ -189,14 +246,13 @@
             <label class="pro-label" for="pet-food-chain">{{ $t('clients.pet.foodChainStatus') }}</label>
             <select
               id="pet-food-chain"
-              v-model="horseFoodChain"
+              v-model="horseFoodChainYesNo"
               class="pro-input"
               data-testid="pet-food-chain"
               :disabled="!canWriteClinical || horseRegSaving"
             >
-              <option value="companion">{{ $t('clients.pet.foodChainCompanion') }}</option>
-              <option value="food_producing">{{ $t('clients.pet.foodChainFoodProducing') }}</option>
-              <option value="excluded_from_food_chain">{{ $t('clients.pet.foodChainExcluded') }}</option>
+              <option value="yes">{{ $t('clients.pet.foodChainYes') }}</option>
+              <option value="no">{{ $t('clients.pet.foodChainNo') }}</option>
             </select>
           </div>
           <div>
@@ -1211,11 +1267,41 @@ function openConsultation() {
 }
 const pet = ref<any>(null)
 const petPhotoUrl = ref('')
-const horseFoodChain = ref('companion')
+const horseFoodChainYesNo = ref<'yes' | 'no'>('no')
 const horseDomicile = ref('')
 const horseRegSaving = ref(false)
 const horseRegError = ref('')
 const horseRegSaved = ref(false)
+const lifecycleAdoptedAt = ref('')
+const lifecycleSoldAt = ref('')
+const lifecycleDeceasedAt = ref('')
+const lifecycleSaving = ref(false)
+const lifecycleError = ref('')
+const lifecycleSaved = ref(false)
+
+function toDateInputValue(value?: string | null) {
+  if (!value) return ''
+  const day = String(value).slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : ''
+}
+
+function formatPetDay(value?: string | null) {
+  if (!value) return t('common.dash')
+  const day = String(value).slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    const [y, m, d] = day.split('-')
+    return `${d}/${m}/${y}`
+  }
+  return formatDate(value)
+}
+
+function foodChainToYesNo(status?: string | null): 'yes' | 'no' {
+  return status === 'food_producing' ? 'yes' : 'no'
+}
+
+function yesNoToFoodChain(v: 'yes' | 'no') {
+  return v === 'yes' ? 'food_producing' : 'companion'
+}
 const sessions = ref<any[]>([])
 const weights = ref<any[]>([])
 const bloodPressures = ref<any[]>([])
@@ -1908,9 +1994,18 @@ function onPetPhotoUploaded(data: any) {
 
 const horseRegDirty = computed(() => {
   if (!pet.value || !isFoodChainSpecies(pet.value.species)) return false
-  const curStatus = pet.value.foodChainStatus || 'companion'
+  const curYesNo = foodChainToYesNo(pet.value.foodChainStatus)
   const curDom = pet.value.domicileLocation || ''
-  return horseFoodChain.value !== curStatus || horseDomicile.value !== curDom
+  return horseFoodChainYesNo.value !== curYesNo || horseDomicile.value !== curDom
+})
+
+const lifecycleDirty = computed(() => {
+  if (!pet.value) return false
+  return (
+    lifecycleAdoptedAt.value !== toDateInputValue(pet.value.adoptedAt)
+    || lifecycleSoldAt.value !== toDateInputValue(pet.value.soldAt)
+    || lifecycleDeceasedAt.value !== toDateInputValue(pet.value.deceasedAt)
+  )
 })
 
 async function saveHorseRegulatory() {
@@ -1919,26 +2014,59 @@ async function saveHorseRegulatory() {
   horseRegError.value = ''
   horseRegSaved.value = false
   try {
+    const status = yesNoToFoodChain(horseFoodChainYesNo.value)
     const res: any = await $fetch(`/api/vet/pets/${petId}/food-chain`, {
       method: 'PATCH',
       body: {
-        foodChainStatus: horseFoodChain.value,
+        foodChainStatus: status,
         domicileLocation: horseDomicile.value,
       },
     })
     const data = res?.data ?? res
     pet.value = {
       ...pet.value,
-      foodChainStatus: data?.foodChainStatus ?? horseFoodChain.value,
+      foodChainStatus: data?.foodChainStatus ?? status,
       domicileLocation: data?.domicileLocation ?? horseDomicile.value,
     }
-    horseFoodChain.value = pet.value.foodChainStatus || 'companion'
+    horseFoodChainYesNo.value = foodChainToYesNo(pet.value.foodChainStatus)
     horseDomicile.value = pet.value.domicileLocation || ''
     horseRegSaved.value = true
   } catch (e: any) {
     horseRegError.value = mapError(e)
   } finally {
     horseRegSaving.value = false
+  }
+}
+
+async function saveLifecycle() {
+  if (!canWriteClinical.value || !pet.value) return
+  lifecycleSaving.value = true
+  lifecycleError.value = ''
+  lifecycleSaved.value = false
+  try {
+    const res: any = await $fetch(`/api/vet/pets/${petId}/lifecycle`, {
+      method: 'PATCH',
+      body: {
+        adoptedAt: lifecycleAdoptedAt.value,
+        soldAt: lifecycleSoldAt.value,
+        deceasedAt: lifecycleDeceasedAt.value,
+      },
+    })
+    const data = res?.data ?? res
+    pet.value = {
+      ...pet.value,
+      adoptedAt: data?.adoptedAt ?? (lifecycleAdoptedAt.value || null),
+      soldAt: data?.soldAt ?? (lifecycleSoldAt.value || null),
+      deceasedAt: data?.deceasedAt ?? (lifecycleDeceasedAt.value || null),
+    }
+    lifecycleAdoptedAt.value = toDateInputValue(pet.value.adoptedAt)
+    lifecycleSoldAt.value = toDateInputValue(pet.value.soldAt)
+    lifecycleDeceasedAt.value = toDateInputValue(pet.value.deceasedAt)
+    lifecycleSaved.value = true
+  } catch (e: any) {
+    lifecycleError.value = mapError(e)
+  } finally {
+    lifecycleSaving.value = false
   }
 }
 
@@ -2199,8 +2327,11 @@ onMounted(async () => {
     const petRes: any = await $fetch(`/api/pets/${petId}`)
     pet.value = petRes.data ?? petRes
     petPhotoUrl.value = pet.value?.photoUrl || ''
-    horseFoodChain.value = pet.value?.foodChainStatus || 'companion'
+    horseFoodChainYesNo.value = foodChainToYesNo(pet.value?.foodChainStatus)
     horseDomicile.value = pet.value?.domicileLocation || ''
+    lifecycleAdoptedAt.value = toDateInputValue(pet.value?.adoptedAt)
+    lifecycleSoldAt.value = toDateInputValue(pet.value?.soldAt)
+    lifecycleDeceasedAt.value = toDateInputValue(pet.value?.deceasedAt)
 
     // Care/visits must not wait on HR sessions — demo pets can have large histories
     // and staging Cloud Run e2e times out waiting for pet-visit-report-open.

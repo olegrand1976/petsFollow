@@ -704,7 +704,6 @@
   "supportSubmit": "Send",
   "supportSending": "Sending…",
   "supportSuccess": "Message sent. Thank you!",
-  "supportErrorRateLimit": "Too many tickets recently. Try again in an hour.",
   "supportErrorTooLarge": "Diagnostics too large. Restart the app and try again.",
   "supportMenu": "Support",
   "appInviteHintSales": "Share your referral code with practices (cabinet signup) or clients (app invite).",

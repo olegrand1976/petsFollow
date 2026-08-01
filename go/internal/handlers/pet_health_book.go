@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
@@ -30,6 +32,92 @@ func clipPetIDField(s string, maxRunes int) string {
 		return s
 	}
 	return string([]rune(s)[:maxRunes])
+}
+
+// parseOptionalPetDate accepts YYYY-MM-DD or empty (clears). Invalid format → error.
+func parseOptionalPetDate(raw string) (*time.Time, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	t, err := time.Parse("2006-01-02", raw)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func formatPetDateJSON(t *time.Time) any {
+	if t == nil {
+		return nil
+	}
+	return t.Format("2006-01-02")
+}
+
+// PATCH /vet/pets/{petID}/lifecycle — adoptedAt / soldAt / deceasedAt (DATE, clear with "").
+func (a *API) patchVetPetLifecycle(w http.ResponseWriter, r *http.Request) {
+	id, ok := a.requirePracticePerm(w, r, "pets.write_clinical")
+	if !ok {
+		return
+	}
+	var body struct {
+		AdoptedAt  *string `json:"adoptedAt"`
+		SoldAt     *string `json:"soldAt"`
+		DeceasedAt *string `json:"deceasedAt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, r, http.StatusBadRequest, "invalid_json", "invalid_json")
+		return
+	}
+	if body.AdoptedAt == nil && body.SoldAt == nil && body.DeceasedAt == nil {
+		writeErr(w, r, http.StatusBadRequest, "validation_error", "validation_error")
+		return
+	}
+	petID := chi.URLParam(r, "petID")
+	existing, err := a.store.GetPet(r.Context(), petID)
+	if err != nil || existing.PracticeID != id.PracticeID {
+		writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+		return
+	}
+	adoptedAt, soldAt, deceasedAt := existing.AdoptedAt, existing.SoldAt, existing.DeceasedAt
+	if body.AdoptedAt != nil {
+		t, perr := parseOptionalPetDate(*body.AdoptedAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_adopted_at")
+			return
+		}
+		adoptedAt = t
+	}
+	if body.SoldAt != nil {
+		t, perr := parseOptionalPetDate(*body.SoldAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_sold_at")
+			return
+		}
+		soldAt = t
+	}
+	if body.DeceasedAt != nil {
+		t, perr := parseOptionalPetDate(*body.DeceasedAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_deceased_at")
+			return
+		}
+		deceasedAt = t
+	}
+	if err := a.store.SetPetLifecycleDates(r.Context(), id.PracticeID, petID, adoptedAt, soldAt, deceasedAt); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			writeErr(w, r, http.StatusNotFound, "not_found", "not_found")
+			return
+		}
+		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
+		return
+	}
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"id":         petID,
+		"adoptedAt":  formatPetDateJSON(adoptedAt),
+		"soldAt":     formatPetDateJSON(soldAt),
+		"deceasedAt": formatPetDateJSON(deceasedAt),
+	})
 }
 
 func (a *API) getPetHealthBook(w http.ResponseWriter, r *http.Request) {

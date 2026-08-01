@@ -704,7 +704,6 @@
   "supportSubmit": "Enviar",
   "supportSending": "Enviando…",
   "supportSuccess": "Mensaje enviado. ¡Gracias!",
-  "supportErrorRateLimit": "Demasiados tickets recientemente. Inténtelo en una hora.",
   "supportErrorTooLarge": "Diagnósticos demasiado grandes. Reinicie la app e inténtelo de nuevo.",
   "supportMenu": "Soporte",
   "appInviteHintSales": "Comparte tu código con una clínica o un cliente.",

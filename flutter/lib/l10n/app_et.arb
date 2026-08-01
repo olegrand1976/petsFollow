@@ -704,7 +704,6 @@
   "supportSubmit": "Saada",
   "supportSending": "Saadan…",
   "supportSuccess": "Sõnum saadetud. Aitäh!",
-  "supportErrorRateLimit": "Liiga palju pileteid hiljuti. Proovi tunni pärast.",
   "supportErrorTooLarge": "Diagnostika liiga mahukas. Taaskäivita rakendus ja proovi uuesti.",
   "supportMenu": "Tugi",
   "appInviteHintSales": "Jaga oma sponsorikoodi kabineti või kliendiga.",
