@@ -65,7 +65,7 @@ Orthanc local : `http://127.0.0.1:8042` (basic `petsfollow` / `petsfollow`, bind
 
 **Image Cloud Run** : `orthancteam/orthanc:*-full` avec **ENTRYPOINT Orthanc Team** (`/docker-entrypoint.sh`). Ne pas le remplacer par un `exec Orthanc` custom : sinon `/usr/share/orthanc/plugins` reste vide → fallback **SQLite + `/tmp/OrthancStorage`** (données perdues à chaque cold start / redeploy), bucket `petsfollow-dicom` vide. Plugins activés via `POSTGRESQL_PLUGIN_ENABLED` / `GOOGLE_CLOUD_STORAGE_PLUGIN_ENABLED` / `DICOM_WEB_PLUGIN_ENABLED` + secrets/host `ORTHANC__POSTGRESQL__*` / `ORTHANC__GOOGLE_CLOUD_STORAGE__*` (`setup-orthanc.sh`).
 
-**GCS** : le plugin Orthanc n’accepte **pas** l’ADC — il faut un JSON keyfile (`CreateServiceAccountCredentialsFromJsonFilePath`). `setup-orthanc.sh` crée une fois la clé de `petsfollow-run` → Secret Manager `petsfollow-orthanc-gcs-sa`, montée en fichier Cloud Run `/var/run/secrets/petsfollow-gcs-sa.json` (`ORTHANC__GOOGLE_CLOUD_STORAGE__SERVICE_ACCOUNT_FILE`).
+**GCS** : le plugin Orthanc n’accepte **pas** l’ADC — il faut un JSON keyfile (`CreateServiceAccountCredentialsFromJsonFilePath`). `setup-orthanc.sh` crée une fois la clé de `petsfollow-run` → Secret Manager `petsfollow-orthanc-gcs-sa`, montée en fichier Cloud Run `/var/run/secrets/petsfollow-gcs-sa.json` (`ORTHANC__GOOGLE_CLOUD_STORAGE__SERVICE_ACCOUNT_FILE`). Le deploy **échoue** si `petsfollow-run` n’a pas `secretAccessor` sur ce secret (évite un Orthanc « ready » en FilesystemStorage `/tmp`).
 
 Vérif post-deploy (logs Orthanc) : `Registering` PostgreSQL + `Google Cloud Storage` (pas `SQLite index` / `FilesystemStorage` pour les nouveaux uploads) ; après upload démo → objet sous `gs://petsfollow-dicom/dicom/`.
 

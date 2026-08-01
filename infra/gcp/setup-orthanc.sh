@@ -127,13 +127,28 @@ ensure_gcs_sa_secret() {
     rm -f "$keyfile"
     echo "  Secret ${GCS_SA_SECRET} créé"
   fi
-  if ! gcloud secrets add-iam-policy-binding "$GCS_SA_SECRET" \
+  # Fail hard : sans secretAccessor, Orthanc boote mais le plugin GCS tombe en
+  # FilesystemStorage /tmp (même panne silencieuse qu'avant).
+  gcloud secrets add-iam-policy-binding "$GCS_SA_SECRET" \
     --project="$GCP_PROJECT_ID" \
     --member="serviceAccount:${SA_EMAIL}" \
     --role="roles/secretmanager.secretAccessor" \
-    --quiet >/dev/null 2>&1; then
-    echo "  WARN: IAM secretAccessor sur ${GCS_SA_SECRET} ignoré (SA sans setIamPolicy)" >&2
+    --quiet >/dev/null 2>&1 || true
+  if ! gcloud secrets get-iam-policy "$GCS_SA_SECRET" \
+    --project="$GCP_PROJECT_ID" --format=json | python3 -c "
+import json, sys
+want = 'serviceAccount:' + sys.argv[1]
+pol = json.load(sys.stdin)
+for b in pol.get('bindings') or []:
+    if b.get('role') == 'roles/secretmanager.secretAccessor' and want in (b.get('members') or []):
+        raise SystemExit(0)
+raise SystemExit(1)
+" "$SA_EMAIL"; then
+    echo "ERREUR: ${SA_EMAIL} n'a pas secretAccessor sur ${GCS_SA_SECRET}" >&2
+    echo "  Accorde roles/secretmanager.secretAccessor puis relance." >&2
+    exit 1
   fi
+  echo "  IAM secretAccessor OK sur ${GCS_SA_SECRET}"
 }
 
 deploy_orthanc_run() {
