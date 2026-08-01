@@ -34,7 +34,7 @@ type ResearchGroupMember struct {
 
 func (s *Store) ListResearchGroupsForUser(ctx context.Context, userID string) ([]ResearchGroup, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT g.id::text, g.name, g.description, g.created_by::text, m.member_role,
+		SELECT g.id::text, g.name, g.description, COALESCE(g.created_by::text, ''), m.member_role,
 		       (SELECT COUNT(*)::int FROM research.group_members gm WHERE gm.group_id = g.id),
 		       g.dataroom_enabled, g.created_at, g.updated_at
 		FROM research.groups g
@@ -62,7 +62,7 @@ func (s *Store) ListResearchGroupsForUser(ctx context.Context, userID string) ([
 // ListAllResearchGroups is admin-facing (opt-in network + Data room flags).
 func (s *Store) ListAllResearchGroups(ctx context.Context) ([]ResearchGroup, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT g.id::text, g.name, g.description, g.created_by::text, '',
+		SELECT g.id::text, g.name, g.description, COALESCE(g.created_by::text, ''), '',
 		       (SELECT COUNT(*)::int FROM research.group_members gm WHERE gm.group_id = g.id),
 		       g.dataroom_enabled, g.created_at, g.updated_at
 		FROM research.groups g
@@ -126,7 +126,7 @@ func (s *Store) CreateResearchGroup(ctx context.Context, userID, name, descripti
 func (s *Store) GetResearchGroupForUser(ctx context.Context, userID, groupID string) (ResearchGroup, error) {
 	var g ResearchGroup
 	err := s.pool.QueryRow(ctx, `
-		SELECT g.id::text, g.name, g.description, g.created_by::text, m.member_role,
+		SELECT g.id::text, g.name, g.description, COALESCE(g.created_by::text, ''), m.member_role,
 		       (SELECT COUNT(*)::int FROM research.group_members gm WHERE gm.group_id = g.id),
 		       g.dataroom_enabled, g.created_at, g.updated_at
 		FROM research.groups g
@@ -338,7 +338,7 @@ func (s *Store) SetResearchGroupDataroomEnabled(ctx context.Context, groupID str
 	}
 	var g ResearchGroup
 	err = s.pool.QueryRow(ctx, `
-		SELECT g.id::text, g.name, g.description, g.created_by::text, '',
+		SELECT g.id::text, g.name, g.description, COALESCE(g.created_by::text, ''), '',
 		       (SELECT COUNT(*)::int FROM research.group_members gm WHERE gm.group_id = g.id),
 		       g.dataroom_enabled, g.created_at, g.updated_at
 		FROM research.groups g WHERE g.id = $1::uuid`, groupID).Scan(

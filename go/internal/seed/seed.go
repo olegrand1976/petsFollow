@@ -783,10 +783,7 @@ func seedResearchGroupAndDensity(ctx context.Context, pool *pgxpool.Pool, st *st
 	if err != nil {
 		return fmt.Errorf("research density practice: %w", err)
 	}
-	week := time.Now().UTC().Truncate(24 * time.Hour)
-	for week.Weekday() != time.Monday {
-		week = week.AddDate(0, 0, -1)
-	}
+	week := store.ResearchIsoWeekMonday(time.Now())
 	// Distinct practice_id_hash (≥ k) — wiped on re-seed TRUNCATE; not tied to VetPlus opt-out.
 	for i := 0; i < store.ResearchKAnonymity; i++ {
 		hash := fmt.Sprintf("seed-dataroom-practice-%d", i)

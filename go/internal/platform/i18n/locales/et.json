@@ -188,7 +188,10 @@
     "pet_not_in_practice": "Loom ei ole seotud selle kabinetiga",
     "pacs_study_other_practice": "See DICOM-uuring on juba seotud teise kabinetiga",
     "pacs_instance_unavailable": "DICOM-fail puudub pildiserveris (salvestus). Laadige uuring uuesti üles või avage teine.",
-    "pacs_error": "PACS error"
+    "pacs_error": "PACS error",
+    "research_dataroom_forbidden": "Data room pole lubatud — liituge admini aktiveeritud grupiga",
+    "research_disabled": "Research moodul on keelatud",
+    "research_anon_salt_required": "Research on valesti seadistatud (anonüümsuse sool puudub)"
   },
   "success": {
     "confirm_email_sent": "Kinnituskiri on saadetud.",

@@ -8,7 +8,7 @@ Module **tag `dev`** : profil `research` + couche de données anonymisées (opt-
 |-------|--------|
 | Rôle | `research` (multi-profil, associable à `vet` / `admin`) |
 | Contribution | **Opt-in cabinet** (`practice.practices.research_opt_in_at`) |
-| Accès V1 | Observatoire agrégé ; k-anonymité ≥ 5 heatmap/alerts |
+| Accès V1 | Observatoire agrégé ; k-anonymité ≥ 5 **cabinets distincts** (heatmap/alerts) |
 | Accès V2 | Data room micro-événements (k ≥ 5 **cabinets distincts**) + membership d’un groupe avec `dataroom_enabled` (toggle **admin**) |
 | Flags | `RESEARCH_ENABLED` / `NUXT_PUBLIC_RESEARCH_ENABLED` |
 | Surface | Nuxt Pro `/research` — pas de shell Flutter Research |
@@ -117,7 +117,8 @@ Sources cliniques (opt-in practice)
 - `research.groups` + `research.group_members` (owner/member) + `dataroom_enabled` (défaut off).
 - Data room : `GET /research/dataroom/events` — sans `practice_id_hash` / `source_hash` / `city` / `payload` ; grain éligible si **COUNT(DISTINCT practice_id_hash) ≥ 5** ; membership d’un groupe **dataroom_enabled** (pas de solo-groupe).
 - **Scope réseau** : le groupe est une **porte d’accès** (privilege), pas un filtre de données — un membre autorisé voit tous les micro-événements k-anon du réseau opt-in, pas seulement ceux « de son groupe ».
-- Seed : groupe « Réseau démo BE » + flag Data room on + 5 hashes cabinet synthétiques (TRUNCATE au re-seed).
+- Seed : groupe « Réseau démo BE » + flag Data room on + 5 hashes cabinet synthétiques (semaine ISO Brussels via `ResearchIsoWeekMonday` ; TRUNCATE au re-seed).
+- `groups.created_by` : `ON DELETE SET NULL` (purge user ne bloque pas).
 
 ### Encore hors scope
 
