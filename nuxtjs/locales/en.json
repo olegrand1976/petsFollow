@@ -83,7 +83,12 @@
     "adminAfmps": "AFMPS import",
     "researchOverview": "Observatory",
     "researchHeatmap": "Regional map",
-    "researchAlerts": "Alerts"
+    "researchAlerts": "Alerts",
+    "researchTimeseries": "Timeseries",
+    "adminResearch": "Research opt-in",
+    "researchGroups": "Groups",
+    "researchDataroom": "Data room",
+    "productFlows": "Product flows"
   },
   "auth": {
     "login": {
@@ -1890,6 +1895,24 @@
         "unchanged": "Unchanged",
         "error": "Error"
       }
+    },
+    "research": {
+      "title": "Research — opted-in practices",
+      "subtitle": "Practices contributing to the anonymized observatory (dev tag).",
+      "empty": "No opted-in practices.",
+      "loadError": "Could not load the opt-in list.",
+      "colName": "Practice",
+      "colPostal": "Postcode",
+      "colCity": "City",
+      "colCountry": "Country",
+      "colOptedInAt": "Opted in at",
+      "optInsTitle": "Opted-in practices",
+      "groupsTitle": "Research groups",
+      "groupsHint": "Only an admin can enable the Data room for a group (multi-practice k-anonymity).",
+      "groupsEmpty": "No groups.",
+      "groupsLoadError": "Could not load / update groups.",
+      "enableDataroom": "Enable Data room",
+      "disableDataroom": "Disable Data room"
     }
   },
   "commissions": {
@@ -3884,7 +3907,9 @@
     },
     "filters": {
       "species": "Species (e.g. dog)",
-      "signal": "Signal (e.g. visit_volume)"
+      "signal": "Signal (e.g. visit_volume)",
+      "country": "Country (e.g. BE)",
+      "postalCode": "Postal code"
     },
     "signals": {
       "preconsult_syndrome": "Preconsult",
@@ -3910,6 +3935,275 @@
     "accountSettings": {
       "title": "Research account",
       "subtitle": "Language and password for the Research profile."
+    },
+    "timeseries": {
+      "title": "Timeseries",
+      "subtitle": "Weekly aggregated volume (species / signal / region filters).",
+      "empty": "No series for these filters.",
+      "week": "Week",
+      "count": "Volume"
+    },
+    "groups": {
+      "title": "Research groups",
+      "subtitle": "Collaborative analysis — Data room access requires group membership.",
+      "createTitle": "New group",
+      "name": "Name",
+      "description": "Description",
+      "create": "Create",
+      "createError": "Could not create the group.",
+      "empty": "No groups yet.",
+      "members": "Members",
+      "role": "Role",
+      "open": "Open",
+      "back": "Back to groups",
+      "addMember": "Add a Research member",
+      "memberEmail": "Research email",
+      "add": "Add",
+      "memberError": "Could not add/remove (Research profile required).",
+      "noMembers": "No members.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "dataroom": "Data room",
+      "dataroomOn": "Enabled",
+      "dataroomOff": "Disabled"
+    },
+    "dataroom": {
+      "title": "Data room",
+      "subtitle": "Anonymized micro-events (k-anonymity ≥ 5) — no practice identifiers.",
+      "goGroups": "View groups",
+      "kAnonHint": "Events are shown only when volume ≥ {k} on postcode × species × signal × week.",
+      "empty": "No eligible events for these filters.",
+      "week": "Week",
+      "ageBand": "Age band",
+      "forbiddenTitle": "Data room not allowed",
+      "forbiddenHint": "You must be a member of a group whose Data room was enabled by an admin (creating a solo group is not enough)."
+    }
+  },
+  "productFlows": {
+    "title": "petsFollow flows",
+    "subtitle": "Journeys by profile, key features, and how product surfaces connect.",
+    "howtoTitle": "How to read this map?",
+    "howto1": "Pick a profile (vet, client, sales…).",
+    "howto2": "Follow the step-by-step journey, then the related features.",
+    "howto3": "Click a cross-link to jump to the connected profile.",
+    "selectProfile": "Profiles",
+    "flowTitle": "Journey",
+    "featuresTitle": "Features",
+    "linksTitle": "Links with other profiles",
+    "linksBlurb": "These links show how one profile’s action impacts or opens a surface for another.",
+    "linksEmpty": "No cross-links for this profile.",
+    "usecasesCta": "Open test guides",
+    "usecasesCtaHint": "On staging / local: detailed scenarios with seed accounts and checklists.",
+    "surface": {
+      "web_pro": "Pro web",
+      "flutter_client": "Client app (Flutter)",
+      "flutter_pro_light": "Pro Light (Flutter)"
+    },
+    "profiles": {
+      "vet": {
+        "label": "Veterinarian",
+        "mission": "Follow patients, chat with owners, validate vitals, and run the practice."
+      },
+      "client": {
+        "label": "Pet owner",
+        "mission": "Manage pets, subscribe to a plan, send vitals, and message the practice."
+      },
+      "care_pro": {
+        "label": "Care pro (Pro Light)",
+        "mission": "Field work (farrier, vet light…) with agenda and synced notes."
+      },
+      "commercial": {
+        "label": "Sales rep",
+        "mission": "Bring practices, register accounts, activate paid pets, track commissions."
+      },
+      "commercial_manager": {
+        "label": "Sales manager",
+        "mission": "Steer the team / branch (KPIs, follow-ups) while keeping a personal portfolio."
+      },
+      "admin": {
+        "label": "Admin",
+        "mission": "Platform ops: users, sales force, payroll, flags, and cross-cutting modules."
+      },
+      "practice_staff": {
+        "label": "Practice staff",
+        "mission": "Assistants / reception: desk, messaging, and records in the shared Pro shell."
+      },
+      "research": {
+        "label": "Research",
+        "mission": "Anonymised epidemiology observatory (dev-tagged module)."
+      }
+    },
+    "features": {
+      "onboarding": {
+        "title": "Onboarding",
+        "desc": "Sign-up, e-mail confirmation, and profile / practice completion."
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "desc": "Day view: patients, alerts, quick access to tools."
+      },
+      "messaging": {
+        "title": "Messaging",
+        "desc": "Cross threads practice ↔ owner, with client push."
+      },
+      "hr_vitals": {
+        "title": "Heart-rate readings",
+        "desc": "Owner-side HR measures; vet-side validation and follow-up."
+      },
+      "link_requests": {
+        "title": "Link requests",
+        "desc": "Owner asks to join a practice; vet accepts."
+      },
+      "dossier_share": {
+        "title": "Record sharing",
+        "desc": "Temporary pet dossier (PHI) sent to a pro after consent."
+      },
+      "billing_client": {
+        "title": "Client subscription",
+        "desc": "Monthly / annual / triennial plans via Stripe; active pet entitlement."
+      },
+      "care_horse": {
+        "title": "Care / Horse / household",
+        "desc": "Included once entitled: Care+, Horse, kennel, household."
+      },
+      "commissions": {
+        "title": "Commissions",
+        "desc": "Vet and sales ledger triggered by activations / client payments."
+      },
+      "prospects": {
+        "title": "Prospects CRM",
+        "desc": "Sales pipeline: target practices, follow-ups, status."
+      },
+      "encode": {
+        "title": "Registration encoding",
+        "desc": "Sales creates vet / linked client / standalone client."
+      },
+      "network": {
+        "title": "Network / attribution",
+        "desc": "Branches, sponsor, MLM-ready attribution and network view."
+      },
+      "team_kpi": {
+        "title": "Team steering",
+        "desc": "Manager dashboard: meetings, follow-ups, leaderboard, team prospects."
+      },
+      "ops_users": {
+        "title": "User ops",
+        "desc": "Registrations, imports, support, runtime flags."
+      },
+      "ops_billing": {
+        "title": "Payroll & catalog ops",
+        "desc": "Payments, commissions, Stripe catalog, SaaS invoicing."
+      },
+      "ai_cr": {
+        "title": "AI visit-report module",
+        "desc": "Assisted reports and pitch training (admin / sales surfaces)."
+      },
+      "pro_light_agenda": {
+        "title": "Pro Light agenda",
+        "desc": "Field rounds, pet records, and care_pro notes."
+      },
+      "practice_desk": {
+        "title": "Practice desk",
+        "desc": "Colleague / assist / secretary roles on the same Pro shell."
+      },
+      "research_obs": {
+        "title": "Research observatory",
+        "desc": "Practice opt-in, anonymised ETL, heatmap / timeseries / alerts."
+      }
+    },
+    "steps": {
+      "vet_register": "Sign-up + e-mail confirm",
+      "vet_onboarding": "Practice profile onboarding",
+      "vet_dashboard": "Clients & requests dashboard",
+      "vet_care": "Messaging, HR readings, dossier share",
+      "vet_earn": "Commissions & practice modules",
+      "client_register": "Register / login (e-mail or Google)",
+      "client_pet": "Create a pet + choose a plan",
+      "client_pay": "Stripe Checkout",
+      "client_active": "Active entitlement → HR, messages, Care/Horse",
+      "client_engage": "In-app discovery + educational e-mails",
+      "care_login": "care_pro login (Pro Light)",
+      "care_agenda": "Agenda / day’s round",
+      "care_notes": "Notes & pet records",
+      "care_sync": "Sync visible on the practice side",
+      "co_login": "Sales login",
+      "co_overview": "Day overview",
+      "co_prospects": "Prospects CRM",
+      "co_encode": "Encode vet / client",
+      "co_activate": "Activate paid pets",
+      "co_earn": "Commissions ledger",
+      "cm_login": "Sales manager login",
+      "cm_team": "Team / branch dashboard",
+      "cm_followups": "Meetings + follow-ups",
+      "cm_self": "My private production",
+      "cm_encode": "Personal encode / CRM",
+      "ad_login": "Admin login",
+      "ad_metrics": "Ops metrics",
+      "ad_users": "Users / imports / support",
+      "ad_sales": "Sales force & branches",
+      "ad_close": "Close commissions & catalog",
+      "eq_login": "Practice staff login",
+      "eq_desk": "Shared Pro shell",
+      "eq_clients": "Clients & pets",
+      "eq_msg": "Messaging / front desk",
+      "re_optin": "Practice Research opt-in",
+      "re_etl": "Anonymisation ETL",
+      "re_login": "Login / switch research profile",
+      "re_obs": "Observatory (heatmap, alerts…)"
+    },
+    "links": {
+      "msg_vet_client": {
+        "label": "Cross messaging",
+        "desc": "A vet message shows for the owner (push) and the other way around."
+      },
+      "link_req_client_vet": {
+        "label": "Link request",
+        "desc": "Client asks for a practice; vet validates in Requests."
+      },
+      "hr_client_vet": {
+        "label": "Reading → validation",
+        "desc": "Owner sends HR; vet sees and validates it."
+      },
+      "pay_client_commissions": {
+        "label": "Payment → sales commission",
+        "desc": "Activating a paid pet credits the referring sales rep."
+      },
+      "pay_client_vet_commissions": {
+        "label": "Payment → vet payout",
+        "desc": "The linked practice earns its ledger payout."
+      },
+      "encode_co_vet": {
+        "label": "Practice encoding",
+        "desc": "Sales creates the vet account; the practice starts onboarding."
+      },
+      "encode_co_client": {
+        "label": "Client encoding",
+        "desc": "Sales provisions a client (linked or standalone) to speed activation."
+      },
+      "care_notes_vet": {
+        "label": "Field notes → practice",
+        "desc": "Pro Light notes enrich the VetPro follow-up."
+      },
+      "dossier_client_pro": {
+        "label": "Record sharing",
+        "desc": "Owner sends a temporary pack a pro can open."
+      },
+      "manager_team_co": {
+        "label": "Steering → sales",
+        "desc": "Manager tracks KPIs, meetings, and team prospects."
+      },
+      "admin_sales_co": {
+        "label": "Admin → sales force",
+        "desc": "Admin creates sales reps, branches, and attributions."
+      },
+      "staff_vet_desk": {
+        "label": "Shared desk",
+        "desc": "Practice staff work on the same patients as the vet."
+      },
+      "research_vet_optin": {
+        "label": "Opt-in → observatory",
+        "desc": "Practice enables Research; anonymous aggregates feed the observatory."
+      }
     }
   }
 }
