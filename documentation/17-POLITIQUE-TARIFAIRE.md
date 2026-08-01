@@ -26,10 +26,10 @@ Engagements Pro (facturation externe) :
 | Prestation | Tarif HTVA | Notes |
 |------------|------------|-------|
 | Mise en place & formation | **320 €** | One-shot |
-| Annuel | **834,71 € / an** | ≈ 69,56 € / mois |
-| Triennal (recommandé) | **2 253,72 € / 3 ans** | −10 % vs 3× annuel (économie **250,41 €** · ≈ 62,60 €/mois) |
+| Annuel | **834,71 € / an** | ≈ 69,56 € / mois — **CR IA inclus** |
+| Triennal (recommandé) | **2 253,72 € / 3 ans** | −10 % vs 3× annuel (économie **250,41 €** · ≈ 62,60 €/mois) — **CR IA inclus** |
 | Migration données | Sur devis (≥ **350 €**) | Option |
-| **Module CR IA** (add-on) | **39 € HTVA / mois** ou **390 € HTVA / an** | Essai **90 j** à l’activation ; facture externe ; ROI dès J60 — voir `documentation/32-MODULE-IA-CR.md` |
+| **CR IA** | **Inclus** dans Pro | Dictée / improve — plus d’add-on 39/390 € — voir `documentation/32-MODULE-IA-CR.md` |
 
 Les commissions partenaires (activations clients) peuvent **compenser** la facture SaaS hors ligne (ordre de grandeur : ~8 activations triennales / mois ≈ couverture de l’équivalent mensuel ≈ 69,56 € HTVA).
 

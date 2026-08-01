@@ -152,7 +152,7 @@
     "invalid_thirst": "Invalid thirst",
     "invalid_elimination": "Invalid stool / urine value",
     "invalid_urgency": "Invalid urgency",
-    "ai_module_required": "AI visit-report module not activated or trial ended — contact your sales rep",
+    "ai_module_required": "AI visit-report feature disabled for this practice — contact support",
     "ai_module_not_found": "AI visit-report module not found for this practice",
     "self_referral": "Self-referral is not allowed",
     "invalid_counterparty": "Invalid customer / tax identifiers",

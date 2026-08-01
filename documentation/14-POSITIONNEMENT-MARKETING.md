@@ -16,9 +16,9 @@ Sous-ligne : Pro pilote · Pro Light documente · le propriétaire suit et paie 
 
 **Vocabulaire** : **passeport digital** = identité produit (dossier vivant multi-acteurs). « Carnet de santé » = alias UI côté propriétaire, pas le positionnement canon.
 
-**Pro** (app **Web** + apps mobiles) facturé **hors ligne** (834,71 € HTVA/an + setup, ou 2 253,72 € / 3 ans) ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
+**Pro** (app **Web** + apps mobiles) facturé **hors ligne** (834,71 € HTVA/an + setup, ou 2 253,72 € / 3 ans) — **CR vocaux et amélioration IA inclus** ; **Pro Light** (app **mobile** ProLight) gratuit ; le propriétaire paie un abonnement par animal (~2–3,5 €/mois) via l’app **mobile** pets.
 
-Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit.
+Le relevé cardiaque (15 / 30 / 60 s, dans l’app) est une **fonctionnalité différenciante**, pas l’identité produit. Le CR IA est une **plus-value cabinet incluse**, pas un add-on.
 
 ## Axes du passeport
 
@@ -36,7 +36,7 @@ Le passeport = **quoi** circule entre acteurs. La continuité prescrite = **pour
 
 | Acteur | Bénéfice |
 |--------|----------|
-| Véto (Pro) | Continuité entre consultations + passeport partagé + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA (Web) |
+| Véto (Pro) | Continuité entre consultations + passeport partagé + commissions pouvant compenser le SaaS ; CR vocaux + amélioration IA **inclus** |
 | Pro Light (ProLight) | App mobile terrain gratuite (véto light / care pro), notes / CR / docs + partage ACL ; avec ou sans compte Web Pro |
 | Client | App mobile simple : face propriétaire du passeport — suivi prescrit, messages (↔ véto), rappels Care/Horse, relevé FC |
 | Commercial | Commission sur chaque nouvelle activation + SPIFF mix triennial |

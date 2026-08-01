@@ -1552,12 +1552,12 @@
     },
     "aiModules": {
       "title": "CR IA moodul",
-      "subtitle": "Activation VetPro — essai 90 jours, puis 39 € HT/mois ou 390 € HT/an",
+      "subtitle": "AI-CR Pro’s kaasas — jälgi kasutuselevõttu ja ROI-d (admin kill-switch vajadusel)",
       "activateTitle": "Activer un cabinet",
       "practice": "Cabinet",
       "practicePlaceholder": "Choisir un cabinet",
-      "activate": "Activer l’essai 90 j",
-      "activatedOk": "Module activé (essai 90 jours)",
+      "activate": "Aktiveeri ROI jälgimine",
+      "activatedOk": "ROI jälgimine aktiveeritud",
       "listTitle": "Modules actifs",
       "emptyTitle": "Aucun module",
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
@@ -1565,8 +1565,8 @@
       "colStatus": "Statut",
       "colTrial": "Fin essai",
       "colDays": "J+ / restant",
-      "convertMonthly": "Convertir 39 €/mois",
-      "convertAnnual": "Convertir 390 €/an",
+      "convertMonthly": "Märgi aktiivseks",
+      "convertAnnual": "Märgi aktiivseks (aastane)",
       "disable": "Désactiver"
     },
     "branches": {
@@ -2011,8 +2011,8 @@
     "registerCta": "Registreeru",
     "badge": "Ettekirjutatud ravi järjepidevus",
     "heroTitleLine1": "Mitte järjekordne tarkvara.",
-    "heroTitleLine2": "Ravi järjepidevus, ettekirjutatud ja jagatud.",
-    "heroLead": "Tagame sideme teie kabineti, omaniku ja loomade terviseprofessionaalide vahel jagatud digitaalse passi kaudu.",
+    "heroTitleLine2": "Jagatud ravitoimik konsultatsioonide vahel.",
+    "heroLead": "Digitaalne pass teie kliiniku, väli-spetsialistide ja omaniku vahel — häälelised visiidiprotokollid ja AI-parandus Pro’s kaasas. Teie kliendid maksavad oma loomade jälgimise eest.",
     "heroCta": "Loo professionaalne konto",
     "heroLogin": "Mul on juba konto",
     "actors": {
@@ -2037,18 +2037,18 @@
     "faces": {
       "pro": {
         "role": "Pro · Veeb",
-        "title": "Kabinet juhib",
-        "text": "Te määrate järelkontrolli, loete ajajoont ja hoiate sidet leibkonnaga — passi juhtimiskoht."
+        "title": "Kliinik juhib",
+        "text": "Te määrate jälgimise, loete ajajoont, dikteerite CR-e AI-ga ja hoiate sidet koduga."
       },
       "proLight": {
         "role": "Pro Light · Mobiil",
         "title": "Väli dokumenteerib",
-        "text": "Vet light ja care pro’d lisavad märkmeid, visiidiraporte ja dokumente sama looma juurde — ilma pro’devahelise vestluseta."
+        "text": "Vet light ja care pro lisavad märkmeid, CR-e ja dokumente samale loomale — ilma prodevahelise vestluseta."
       },
       "owner": {
-        "role": "Kliendi äpp · Mobiil",
+        "role": "Kliendiäpp · Mobiil",
         "title": "Omanik jälgib",
-        "text": "Sõnumid, Care/Horse meeldetuletused, mõõtmised — leibkond jälgib seda, mida te määrasite."
+        "text": "Sõnumid, Care/Horse meeldetuletused, mõõtmised — kodu jälgib seda, mida te määrasite."
       }
     },
     "continuityTitle": "Ettekirjutatud järjepidevus",
@@ -2072,40 +2072,39 @@
       }
     },
     "ctaTitle": "Avage oma kabineti pass",
-    "ctaText": "Looge Pro-konto — või alustage tasuta Pro Light’iga väljas. Teie kliendid maksavad oma loomade järelkontrolli eest.",
+    "ctaText": "Looge Pro konto — jagatud toimik, sõnumid ja AI-CR kaasas. Või alustage tasuta Pro Lightiga väljas. Teie kliendid maksavad jälgimise eest.",
     "ctaButton": "Alusta registreerimist",
     "productsLink": "Tooted",
     "productsTitle": "Kuidas pass kujuneb",
-    "productsLead": "Kaks professionaalset nägu, üks omaniku tellimus. Täiendab teie PMS-i — mitte teine kliinikutarkvara.",
+    "productsLead": "Pro pakkumine (veeb + AI-CR kaasas), tasuta Pro Light, omaniku tellimus. Täiendab teie PMS-i — mitte teine kliinikutarkvara.",
     "productsCta": "Loo konto",
     "solutions": {
       "proComplete": {
-        "price": "834,71 € km-ta / aasta",
+        "price": "834,71 € KM-ta / aasta",
         "title": "Pro",
-        "text": "Passi veebijuhtimine + klientide mobiilirakendus. Sõnumside, ajajoon, jagamine ja lojaalsus.",
+        "text": "Passi veebijuhtimine + kliendi mobiiliäpp. Sõnumid, ajajoon, jagamine ja AI-CR kaasas.",
         "features": [
+          "Häälelised protokollid ja AI-parandus kaasas",
           "Digitaalne pass ja jagatud ajajoon",
-          "Turvaline sõnumside + push (kabinet ↔ klient)",
-          "Meeldetuletused, vastuvõtud ja ravi järgimine",
+          "Turvaline sõnumside + push (kliinik ↔ klient)",
+          "Juhendatud südame mõõtmised 15 / 30 / 60 s",
+          "Meeldetuletused, vastuvõtud ja järgimine",
           "Toimiku jagamine care pro / kolleegidega",
-          "Partnerikomisjonid (väline arveldus)",
-          "Häälelised konsultatsiooniraportid",
-          "IA raportite täiustamine — struktureeritud, muudetav enne salvestamist, ajalugu säilib",
-          "CR IA lisamoodul: 90 päeva proov, seejärel 39 € HT/kuu või 390 €/aasta — ROI alates päevast 60"
-        ]
+          "Partneritasud (väline arveldus)"
+        ],
+        "priceSub": "Käivitus ja koolitus: 320 € KM-ta (ühekordne) · AI-CR kaasas"
       },
       "proLight": {
         "price": "Tasuta",
         "title": "Pro Light",
-        "text": "Välja / care pro mobiilirakendus — märkmed, visiidiraportid, dokumendid ja jagamine passil. Koos Web Pro kontoga või ilma.",
+        "text": "Välja / care pro mobiiliäpp — märkmed, CR-d, dokumendid ja jagamine passil. Koos või ilma Web Pro kontota.",
         "features": [
-          "Välipäevakava ja kliendikaardid",
+          "Väljaagenda ja kliendikaardid",
           "Loomade ajalugu",
-          "Soovitus-QR-kood",
+          "Suunamise QR-kood",
           "Jagatud dokumendid ja märkmed",
-          "Toimiku jagamine kolleegide / väliste pro'dega",
-          "Häälelised konsultatsiooniraportid",
-          "AI aruandeparandus (+ ajalugu), kui VetPro kabinet on aktiveeritud"
+          "Toimiku jagamine kolleegide / väliste prodega",
+          "Häälelised protokollid ja AI kui toimiku Pro kliinik on aktiivne"
         ]
       }
     },
@@ -2115,20 +2114,42 @@
       "monthly": {
         "price": "3,50 € / kuu",
         "title": "Igakuine",
-        "text": "Paindlikkus — pass / tervisekaart, sõnumside, ajajoon, Care/Horse meeldetuletused, leibkond. Ilma pika kohustuseta."
+        "text": "Paindlikkus — pass / terviseraamat, sõnumid, ajajoon, Care/Horse, koduvaade. Ilma pika kohustuseta."
       },
       "annual": {
         "price": "35 € / aasta",
         "title": "Aastane",
-        "text": "≈ 2,9 € / kuu — sama täielik pass, parem hind kui igakuine."
+        "text": "≈ 2,9 € / kuu — sama täielik pass, parem kui igakuine."
       },
       "triennial": {
         "price": "95 € / 3 aastat",
-        "title": "Kolmeaastane (soovitatav)",
+        "title": "Kolmeaastane",
         "text": "≈ 2,6 € / kuu — põhitarne, täielik pass, −10 % vs 3× aastane."
       }
     },
-    "footer": "© {year} petsFollow — Ravi järjepidevus · looma digitaalne pass"
+    "footer": "© {year} petsFollow — Ravi järjepidevus · looma digitaalne pass",
+    "recommended": "Soovitatav",
+    "saasTitle": "Pro SaaS kohustused (KM-ta)",
+    "saasLead": "Offline arveldus (müük / raamatupidamine) — praktikal pole Stripe checkout’i. Steer: 3 aastat.",
+    "saas": {
+      "setup": {
+        "name": "Käivitus ja koolitus",
+        "price": "320 € KM-ta",
+        "description": "Konto, seadistus, koolitus, käivitus (ühekordne)."
+      },
+      "annual": {
+        "name": "Aastane",
+        "price": "834,71 € KM-ta / aasta",
+        "description": "≈ 69,56 € KM-ta / kuu — pass + AI-CR kaasas."
+      },
+      "longTerm": {
+        "name": "Kolmeaastane",
+        "price": "2 253,72 € KM-ta / 3 aastat",
+        "description": "−10 % vs 3× aastane — sääst 250,41 € (≈ 62,60 € KM-ta / kuu)."
+      }
+    },
+    "autofinanceTip": "≈ 8 kolmeaastast kliendi aktiveerimist / kuu ≈ katab Pro kuu ekvivalendi (≈ 69,56 € KM-ta).",
+    "clientIncludedLine": "Igas plaanis: pass, sõnumid + push, HR 15/30/60 s, Care/Horse, kodu, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Professionaalne pakkumine",
@@ -2138,20 +2159,21 @@
     "badge": "Kliiniku esitluse tugi",
     "title": "petsFollow pakkumine",
     "lead": "Oluline: Pro pakkumine (veebikliinik), Pro Light ja klienditellimused.",
-    "hook": "Ettekirjutatud ravi järjepidevus + looma digitaalne pass, jagatud kabineti, care pro ja omaniku vahel.",
+    "hook": "Määratud hoolduse järjepidevus + jagatud digipass — häälelised CR-d ja AI Pro’s kaasas.",
     "pro": {
       "name": "PetsFollow veebiplatvorm (kliinik)",
       "badge": "Pro pakkumine",
       "price": "834,71 € km-ta / aasta",
-      "setup": "≈ 69,56 € km-ta / kuu · käivitamine ja koolitus: 320 € km-ta (one-shot)",
-      "tagline": "Kliiniku juhtimislaud: digitaalne pass, sõnumside, meeldetuletused, jagamine ja aktiveerimiste jälgimine.",
+      "setup": "≈ 69,56 € KM-ta / kuu · käivitus ja koolitus: 320 € KM-ta (ühekordne) · AI-CR kaasas",
+      "tagline": "Kliiniku juhtimine: digipass, sõnumid, AI-CR, meeldetuletused, jagamine ja aktiveerimiste jälgimine.",
       "features": [
+        "Häälelised protokollid ja AI-parandus kaasas",
         "Digitaalne pass + jagatud ajajoon (kliinik / klient / care pro)",
         "Turvaline sõnumside klient ↔ kliinik + push",
-        "Meeldetuletused, retseptid ja vastuvõtutaotlused",
+        "Juhendatud südame mõõtmised 15 / 30 / 60 s",
+        "Meeldetuletused ja vastuvõtutaotlused",
         "Toimiku jagamine (kolleegid / care pro)",
-        "Kliendiaktiveerimiste ja partnerikomisjonide jälgimine",
-        "Häälelised CR + IA lisamoodul (90 päeva proov → 39 € km-ta/kuu või 390 €/aasta)"
+        "Kliendi aktiveerimiste ja partneritasude jälgimine"
       ],
       "invoiceNote": "Offline arveldus (müük / raamatupidamine) — Stripe'i kaudu kliiniku SaaS-makseid ei ole."
     },
@@ -2161,9 +2183,9 @@
       "price": "0 €",
       "tagline": "Välja / care pro mobiilirakendus — koos Web Pro kontoga või ilma.",
       "features": [
-        "Välipäevakava, loomakaardid, visiidimärkmed",
-        "Toimiku jagamine + soovitus-QR",
-        "Häälelised CR (IA kui Pro kabinet mooduli aktiveeris)"
+        "Väljaagenda, loomakaardid, visiidimärkmed",
+        "Toimiku jagamine + suunamise QR",
+        "Häälelised CR-d ja AI kui toimiku Pro kliinik on aktiivne"
       ]
     },
     "clientsTitle": "Kliendiäpp (omanikud)",
@@ -2697,13 +2719,13 @@
     },
     "aiModules": {
       "title": "AI CR moodul",
-      "subtitle": "Aktiveeri prooviperiood oma praktikatele, jälgi kasutuselevõttu, konverteeri 39 € / 390 €",
+      "subtitle": "AI-CR Pro’s kaasas — jälgi oma praktikate kasutuselevõttu ja ROI-d",
       "openPlaybook": "Ava juhend / pitch",
       "activateTitle": "Aktiveeri üks oma praktikatest",
       "practice": "Praktika",
       "practicePlaceholder": "Vali",
-      "activate": "Aktiveeri 90 tasuta päeva",
-      "activatedOk": "Proov aktiveeritud — loomaarst sai e-kirja",
+      "activate": "Aktiveeri ROI jälgimine",
+      "activatedOk": "ROI jälgimine aktiveeritud",
       "listTitle": "Sinu moodulid",
       "emptyTitle": "Aktiveerimist pole veel",
       "emptyDescription": "Alustamiseks vali määratud praktika.",
@@ -2727,47 +2749,47 @@
       "print": "Imprimer / PDF",
       "linkCopied": "Lien copié",
       "mailSubject": "petsFollow — guide module Compte-rendu IA",
-      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du module Compte-rendu IA petsFollow (essai 90 jours, puis 39 € HT/mois ou 390 € HT/an).",
-      "badge": "90 jours offerts · preuve ROI dès J60",
+      "mailBody": "Tere,\n\nSiin on petsFollow AI-CR juhend — Pro pakkumises kaasas (ilma lisamoodulita).",
+      "badge": "Pro’s kaasas · ROI tõend alates päevast 60",
       "docTitle": "petsFollow AI visit report — how-to",
-      "promise": "Dictate, structure, save time on every visit — we prove value in 90 days before billing.",
-      "priceMonthly": "€39 excl. VAT / month / practice",
-      "priceAnnual": "€390 excl. VAT / year (−17%)",
+      "promise": "Dictate, structure, save time on every visit — AI is included in your Pro subscription.",
+      "priceMonthly": "Kaasas Pro SaaS-is",
+      "priceAnnual": "Eraldi lisamoodulit pole",
       "whoTitle": "Pour qui ?",
       "whoBody": "Cabinets VetPro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet activé en bénéficient aussi sur ces visites.",
       "changeTitle": "Ce que ça change",
       "change1": "Avant : CR tapés le soir, dossiers incomplets, fatigue terrain.",
       "change2": "Après : dictée mobile → transcription → CR structuré (anamnèse, examen, diagnostic proposé, plan).",
-      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — argument de conversion clair.",
+      "change3": "At day 60: time-saved summary on the dashboard — clear value proof.",
       "howtoTitle": "Mode d’emploi en 6 étapes",
-      "step1": "Commercial ou admin active le module (essai 90 j) depuis l’espace petsFollow.",
+      "step1": "AI visit reports are included with Pro — sales can enable ROI tracking from petsFollow.",
       "step2": "Sur place : obtenir l’accord oral du client (case à cocher) avant d’enregistrer.",
       "step3": "Dicter le CR dans Pro Light (Flutter) ou uploader un fichier audio sur le calendrier Web.",
       "step4": "Lancer « Améliorer » pour structurer le texte, puis éditer si besoin.",
       "step5": "Finaliser = validation exclusive du pro (purge audio).",
       "step6": "À partir de J60, lire le ROI (minutes gagnées) sur le tableau de bord VetPro.",
       "pitchTitle": "Argumentaire terrain",
-      "pitchBody": "« On active 90 jours offerts. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné. Si ça tient, c’est 39 € HT/mois — bien en dessous d’une heure de temps véto. »",
+      "pitchBody": "« Pro’s on AI kaasas. Te dikteerite väljas, AI struktureerib toimiku. Päeval 60 vaatame koos ajavõitu — tõend, et SaaS töötab teie heaks. »",
       "objectionsTitle": "Objections fréquentes",
       "obj1q": "« C’est trop cher. »",
-      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. À 80 €/h, 39 € est < 5 % de la valeur basse.",
+      "obj1a": "Anchor on time: 5–7 min/report × 10 reports/day ≈ 1 h/day. AI is already in the Pro ticket — not a second subscription.",
       "obj2q": "« J’ai déjà Whisper / un dictaphone. »",
       "obj2a": "Ici : consentement, CR structuré métier, dossier animal, ROI cabinet, pas un fichier texte isolé.",
       "obj3q": "« Mes assistants vont s’en servir ? »",
       "obj3a": "Oui si droits write notes. VetLight / care_pro : seulement si le cabinet de la visite est activé.",
       "roiTitle": "Preuve ROI",
-      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. Prix catalogue fixe : pas de promo intro — la preuve suffit.",
-      "calendarTitle": "Calendrier d’adhésion (checklist commercial)",
-      "calJ0": "J0 — activation + 3 premiers CR",
+      "roiBody": "Formula: AI-assisted reports × (baseline 10 min − 4 min AI). Shown from day 60. AI is included in Pro — proof drives adoption, not add-on conversion.",
+      "calendarTitle": "Adoption calendar (sales checklist)",
+      "calJ0": "Day 0 — first dictated reports",
       "calJ14": "J14 — NPS #1",
       "calJ45": "J45 — NPS #2 + tags friction",
       "calJ60": "J60 — bilan ROI ensemble",
-      "calJ75": "J75 — proposition 39 € / 390 €",
-      "calJ90": "J90 — conversion ou coupure IA (CR manuel reste)",
+      "calJ75": "Päev 75 — harjumuse kinnitamine (ilma tasulise konversioonita)",
+      "calJ90": "Day 90 — adoption review; manual reports always possible",
       "frictionTitle": "Quand relancer",
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
-      "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
-      "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+      "footer": "AI-CR kaasas Pro SaaS-is (väline arve). petsFollow — määratud hoolduse järjepidevus.",
+      "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report guide (PDF via Print / Save as PDF from the sales area).\n\nAI is included in the Pro offer — no separate add-on.\n\nBest regards,"
     },
     "network": {
       "title": "Minu võrgustik",

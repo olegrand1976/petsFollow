@@ -152,7 +152,7 @@
     "invalid_thirst": "Kehtetu janu",
     "invalid_elimination": "Kehtetu väljaheide / uriin",
     "invalid_urgency": "Kehtetu kiireloomulisus",
-    "ai_module_required": "CR IA moodul pole aktiveeritud või prooviperiood lõppenud — võtke ühendust müügiesindajaga",
+    "ai_module_required": "AI-CR funktsioon on selle praktika jaoks välja lülitatud — võtke ühendust toega",
     "ai_module_not_found": "CR IA moodulit selle kabineti jaoks ei leitud",
     "self_referral": "Enesesoovitamine pole lubatud",
     "invalid_counterparty": "Kehtetud kliendi / maksuandmed",

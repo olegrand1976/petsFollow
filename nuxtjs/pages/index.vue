@@ -100,6 +100,12 @@
           :data-testid="`landing-solution-${sol.key}`"
         >
           <strong class="pro-landing__products-price">{{ $t(`index.solutions.${sol.key}.price`) }}</strong>
+          <p
+            v-if="hasKey(`index.solutions.${sol.key}.priceSub`)"
+            class="pro-landing__products-price-sub"
+          >
+            {{ $t(`index.solutions.${sol.key}.priceSub`) }}
+          </p>
           <h3>{{ $t(`index.solutions.${sol.key}.title`) }}</h3>
           <p>{{ $t(`index.solutions.${sol.key}.text`) }}</p>
           <ul class="pro-landing__solution-list">
@@ -108,15 +114,44 @@
         </article>
       </div>
 
+      <h3 class="pro-landing__products-sub">{{ $t('index.saasTitle') }}</h3>
+      <p class="pro-landing__products-lead pro-landing__products-lead--tight">{{ $t('index.saasLead') }}</p>
+      <div class="pro-landing__products-grid pro-landing__products-grid--saas">
+        <article
+          v-for="row in saasRows"
+          :key="row.key"
+          class="pro-landing__plan"
+          :class="{ 'pro-landing__plan--featured': row.featured }"
+          :data-testid="`landing-saas-${row.key}`"
+        >
+          <strong class="pro-landing__products-price">{{ $t(`index.saas.${row.key}.price`) }}</strong>
+          <h3>
+            {{ $t(`index.saas.${row.key}.name`) }}
+            <span v-if="row.featured" class="pro-landing__plan-badge">{{ $t('index.recommended') }}</span>
+          </h3>
+          <p>{{ $t(`index.saas.${row.key}.description`) }}</p>
+        </article>
+      </div>
+      <p class="pro-landing__autofinance" data-testid="landing-autofinance">{{ $t('index.autofinanceTip') }}</p>
+
       <h3 class="pro-landing__products-sub">{{ $t('index.clientPlansTitle') }}</h3>
       <p class="pro-landing__products-lead pro-landing__products-lead--tight">{{ $t('index.clientPlansLead') }}</p>
       <div class="pro-landing__products-grid">
-        <article v-for="item in productHighlights" :key="item.key" class="pro-landing__plan">
+        <article
+          v-for="item in productHighlights"
+          :key="item.key"
+          class="pro-landing__plan"
+          :class="{ 'pro-landing__plan--featured': item.key === 'triennial' }"
+        >
           <strong class="pro-landing__products-price">{{ $t(`index.productHighlights.${item.key}.price`) }}</strong>
-          <h3>{{ $t(`index.productHighlights.${item.key}.title`) }}</h3>
+          <h3>
+            {{ $t(`index.productHighlights.${item.key}.title`) }}
+            <span v-if="item.key === 'triennial'" class="pro-landing__plan-badge">{{ $t('index.recommended') }}</span>
+          </h3>
           <p>{{ $t(`index.productHighlights.${item.key}.text`) }}</p>
         </article>
       </div>
+      <p class="pro-landing__products-lead pro-landing__products-lead--tight">{{ $t('index.clientIncludedLine') }}</p>
 
       <div class="pro-landing__products-actions">
         <NuxtLink to="/register" class="pro-btn pro-btn--primary" data-testid="landing-products-cta">
@@ -148,12 +183,16 @@ definePageMeta({ layout: false })
 
 const year = new Date().getFullYear()
 
-const { tm, rt } = useI18n()
+const { tm, rt, te } = useI18n()
 
 function listFrom(key: string): string[] {
   const raw = tm(key) as unknown
   if (!Array.isArray(raw)) return []
   return raw.map((x) => (typeof x === 'string' ? x : rt(x as any)))
+}
+
+function hasKey(key: string): boolean {
+  return te(key)
 }
 
 const faces = [
@@ -176,6 +215,12 @@ const solutions = computed(() =>
     features: listFrom(`index.solutions.${key}.features`),
   })),
 )
+
+const saasRows = [
+  { key: 'setup', featured: false },
+  { key: 'annual', featured: false },
+  { key: 'longTerm', featured: true },
+] as const
 
 const productHighlights = [
   { key: 'monthly' },

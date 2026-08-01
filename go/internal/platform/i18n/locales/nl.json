@@ -152,7 +152,7 @@
     "invalid_thirst": "Ongeldige dorst",
     "invalid_elimination": "Ongeldige ontlasting / urine",
     "invalid_urgency": "Ongeldige urgentie",
-    "ai_module_required": "CR IA-module niet geactiveerd of proefperiode verlopen — contacteer uw commercial",
+    "ai_module_required": "AI-CR functie uitgeschakeld voor deze praktijk — neem contact op met support",
     "ai_module_not_found": "CR IA-module niet gevonden voor dit kabinet",
     "self_referral": "Zelf-doorverwijzing is niet toegestaan",
     "invalid_counterparty": "Ongeldige klant- / fiscale gegevens",

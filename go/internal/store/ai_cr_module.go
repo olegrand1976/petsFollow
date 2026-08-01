@@ -87,14 +87,9 @@ func (m *AiCrModule) refreshDerived(now time.Time) {
 }
 
 func (m *AiCrModule) isAllowedAt(now time.Time) bool {
-	switch m.Status {
-	case AiCrStatusActive:
-		return true
-	case AiCrStatusTrial:
-		return !now.After(m.TrialEndsAt)
-	default:
-		return false
-	}
+	_ = now
+	// Native IA in Pro: allowed unless the practice was explicitly disabled.
+	return m.Status != AiCrStatusDisabled
 }
 
 func NormalizeAiCrPricePlan(p string) string {
@@ -137,10 +132,14 @@ func (s *Store) GetAiCrModule(ctx context.Context, practiceID string) (AiCrModul
 }
 
 // AiCrModuleAllowed reports whether IA transcribe/improve is permitted for the practice.
+// CR IA is included in Pro: any practice is allowed unless explicitly disabled.
 func (s *Store) AiCrModuleAllowed(ctx context.Context, practiceID string) (bool, error) {
+	if strings.TrimSpace(practiceID) == "" {
+		return false, nil
+	}
 	m, err := s.GetAiCrModule(ctx, practiceID)
 	if errors.Is(err, ErrNotFound) {
-		return false, nil
+		return true, nil
 	}
 	if err != nil {
 		return false, err
@@ -148,7 +147,8 @@ func (s *Store) AiCrModuleAllowed(ctx context.Context, practiceID string) (bool,
 	return m.Allowed, nil
 }
 
-// ActivateAiCrModule starts a 90-day trial (idempotent if already active or valid trial).
+// ActivateAiCrModule enables ROI/adoption tracking for a practice.
+// CR IA is included in Pro: status is always active (not a paid trial).
 func (s *Store) ActivateAiCrModule(ctx context.Context, practiceID, byUserID string) (AiCrModule, error) {
 	now := time.Now().UTC()
 	existing, err := s.GetAiCrModule(ctx, practiceID)
@@ -156,32 +156,43 @@ func (s *Store) ActivateAiCrModule(ctx context.Context, practiceID, byUserID str
 		if existing.Status == AiCrStatusActive {
 			return existing, nil
 		}
-		// Valid (non-expired) trial → idempotent.
-		if existing.Status == AiCrStatusTrial && !now.After(existing.TrialEndsAt) {
-			return existing, nil
+		// Keep activated_at for in-progress ROI windows (trial/expired); only re-stamp when disabled/missing.
+		if existing.Status == AiCrStatusTrial || existing.Status == AiCrStatusExpired {
+			tag, uerr := s.pool.Exec(ctx, `
+				UPDATE practice.ai_cr_modules
+				SET status = 'active', converted_at = NULL, updated_at = NOW()
+				WHERE practice_id = $1`, practiceID)
+			if uerr != nil {
+				return AiCrModule{}, uerr
+			}
+			if tag.RowsAffected() == 0 {
+				return AiCrModule{}, ErrNotFound
+			}
+			return s.GetAiCrModule(ctx, practiceID)
 		}
-		// Past-due trial / expired / disabled → new trial below.
+		// disabled → fresh active window below
 	} else if !errors.Is(err, ErrNotFound) {
 		return AiCrModule{}, err
 	}
-	trialEnds := now.AddDate(0, 0, AiCrTrialDays)
+	roiWindowEnds := now.AddDate(0, 0, AiCrTrialDays)
 	var activatedBy any
 	if strings.TrimSpace(byUserID) != "" {
 		activatedBy = byUserID
 	}
+	// price_plan kept for schema CHECK only — CR IA is included (no module billing).
 	_, err = s.pool.Exec(ctx, `
 		INSERT INTO practice.ai_cr_modules (
 			practice_id, status, activated_at, trial_ends_at, activated_by_user_id,
 			converted_at, price_plan, baseline_minutes_per_cr, hourly_cost_cents, updated_at
-		) VALUES ($1, 'trial', $2, $3, $4, NULL, 'monthly_39', $5, $6, NOW())
+		) VALUES ($1, 'active', $2, $3, $4, NULL, 'monthly_39', $5, $6, NOW())
 		ON CONFLICT (practice_id) DO UPDATE SET
-			status = 'trial',
+			status = 'active',
 			activated_at = EXCLUDED.activated_at,
 			trial_ends_at = EXCLUDED.trial_ends_at,
 			activated_by_user_id = EXCLUDED.activated_by_user_id,
 			converted_at = NULL,
 			updated_at = NOW()`,
-		practiceID, now, trialEnds, activatedBy, AiCrDefaultBaselineMin, AiCrDefaultHourlyCents)
+		practiceID, now, roiWindowEnds, activatedBy, AiCrDefaultBaselineMin, AiCrDefaultHourlyCents)
 	if err != nil {
 		return AiCrModule{}, err
 	}
@@ -448,19 +459,9 @@ func (s *Store) ComputeAiCrROI(ctx context.Context, practiceID string) (AiCrROI,
 	roi.MinutesSaved = crs * per
 	roi.HoursSaved = float64(roi.MinutesSaved) / 60.0
 	roi.EuroEquivCents = int(roi.HoursSaved * float64(m.HourlyCostCents))
-	// Module cost during trial = 0; after conversion prorate roughly by months since convert.
-	if m.Status == AiCrStatusActive && m.ConvertedAt != nil {
-		months := int(time.Since(*m.ConvertedAt).Hours()/24/30) + 1
-		if months < 1 {
-			months = 1
-		}
-		unit := 3900 // 39 €
-		if m.PricePlan == AiCrPlanAnnual390 {
-			unit = 39000 / 12
-		}
-		roi.ModuleCostCents = unit * months
-	}
-	roi.NetEuroCents = roi.EuroEquivCents - roi.ModuleCostCents
+	// CR IA is included in Pro SaaS — no separate module cost in ROI net.
+	roi.ModuleCostCents = 0
+	roi.NetEuroCents = roi.EuroEquivCents
 	return roi, nil
 }
 

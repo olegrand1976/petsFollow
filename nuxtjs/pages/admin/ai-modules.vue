@@ -48,19 +48,12 @@
             <td>{{ m.daysSinceActivation }} / −{{ m.daysRemainingTrial }}</td>
             <td class="pro-flex-gap">
               <ProButton
-                v-if="m.status === 'trial' || m.status === 'expired'"
+                v-if="m.status === 'disabled'"
                 :disabled="busy"
-                @click="convert(m.practiceId, 'monthly_39')"
+                test-id="admin-ai-reactivate"
+                @click="reactivate(m.practiceId)"
               >
-                {{ $t('admin.aiModules.convertMonthly') }}
-              </ProButton>
-              <ProButton
-                v-if="m.status === 'trial' || m.status === 'expired'"
-                variant="secondary"
-                :disabled="busy"
-                @click="convert(m.practiceId, 'annual_390')"
-              >
-                {{ $t('admin.aiModules.convertAnnual') }}
+                {{ $t('admin.aiModules.activate') }}
               </ProButton>
               <ProButton
                 v-if="m.status !== 'disabled'"
@@ -139,14 +132,11 @@ async function activate() {
   }
 }
 
-async function convert(practiceId: string, pricePlan: string) {
+async function reactivate(practiceId: string) {
   busy.value = true
   err.value = ''
   try {
-    await $fetch(`/api/admin/ai-modules/${practiceId}/convert`, {
-      method: 'POST',
-      body: { pricePlan },
-    })
+    await $fetch(`/api/admin/ai-modules/${practiceId}/activate`, { method: 'POST' })
     await load()
   } catch (e: any) {
     err.value = mapError(e)

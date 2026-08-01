@@ -685,7 +685,7 @@
   },
   "proLightAudioConsentClientCheck": "Ik heb mondelinge toestemming van de klant om op te nemen",
   "proLightReportAiProposalBanner": "AI-voorstel — validatie door de dierenarts verplicht vóór finalisatie (incl. diagnose / medicatie).",
-  "proLightAiModuleRequired": "CR IA-module niet geactiveerd of proef verlopen — contacteer uw petsFollow-commercial.",
+  "proLightAiModuleRequired": "AI-CR functie uitgeschakeld voor deze praktijk — neem contact op met petsFollow support.",
   "proLightAiModuleTrialBanner": "CR IA-proef — nog {days} dagen. Dicteer en verbeter uw verslagen.",
   "proLightAiModuleInactiveBanner": "CR IA niet geactiveerd voor dit kabinet. AI-dictatie is niet beschikbaar.",
   "proLightAiModuleVisitScopedBanner": "CR IA beschikbaar als het kabinet van het bezoek de module heeft geactiveerd.",

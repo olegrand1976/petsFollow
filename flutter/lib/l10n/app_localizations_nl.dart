@@ -1846,7 +1846,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get proLightAiModuleRequired =>
-      'CR IA-module niet geactiveerd of proef verlopen — contacteer uw petsFollow-commercial.';
+      'AI-CR functie uitgeschakeld voor deze praktijk — neem contact op met petsFollow support.';
 
   @override
   String proLightAiModuleTrialBanner(int days) {

@@ -53,13 +53,13 @@ func (a *API) getMyAiModule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id.Role == kernel.RoleCarePro {
+		// Gate is visit-scoped (practice of the visit); do not claim allowed here.
 		httpx.WriteData(w, http.StatusOK, map[string]any{
-			"status":         "visit_scoped",
-			"allowed":        false,
-			"roiUnlocked":    false,
-			"priceMonthlyHt": 39,
-			"priceAnnualHt":  390,
-			"hint":           "ai_depends_on_visit_practice",
+			"status":        "visit_scoped",
+			"allowed":       false,
+			"includedInPro": true,
+			"roiUnlocked":   false,
+			"hint":          "ai_depends_on_visit_practice",
 		})
 		return
 	}
@@ -71,12 +71,11 @@ func (a *API) getMyAiModule(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == store.ErrNotFound {
 			httpx.WriteData(w, http.StatusOK, map[string]any{
-				"practiceId":     practiceID,
-				"status":         "none",
-				"allowed":        false,
-				"roiUnlocked":    false,
-				"priceMonthlyHt": 39,
-				"priceAnnualHt":  390,
+				"practiceId":    practiceID,
+				"status":        "included",
+				"allowed":       true,
+				"includedInPro": true,
+				"roiUnlocked":   false,
 			})
 			return
 		}
@@ -88,21 +87,20 @@ func (a *API) getMyAiModule(w http.ResponseWriter, r *http.Request) {
 
 func enrichAiCrDTO(m store.AiCrModule) map[string]any {
 	return map[string]any{
-		"practiceId":            m.PracticeID,
-		"practiceName":          m.PracticeName,
-		"status":                m.Status,
-		"activatedAt":           m.ActivatedAt,
-		"trialEndsAt":           m.TrialEndsAt,
-		"convertedAt":           m.ConvertedAt,
-		"pricePlan":             m.PricePlan,
-		"baselineMinutesPerCr":  m.BaselineMinutesPerCR,
-		"hourlyCostCents":       m.HourlyCostCents,
-		"daysSinceActivation":   m.DaysSinceActivation,
-		"daysRemainingTrial":    m.DaysRemainingTrial,
-		"allowed":               m.Allowed,
-		"roiUnlocked":           m.RoiUnlocked,
-		"priceMonthlyHt":        39,
-		"priceAnnualHt":         390,
+		"practiceId":           m.PracticeID,
+		"practiceName":         m.PracticeName,
+		"status":               m.Status,
+		"activatedAt":          m.ActivatedAt,
+		"trialEndsAt":          m.TrialEndsAt,
+		"convertedAt":          m.ConvertedAt,
+		"pricePlan":            m.PricePlan,
+		"baselineMinutesPerCr": m.BaselineMinutesPerCR,
+		"hourlyCostCents":      m.HourlyCostCents,
+		"daysSinceActivation":  m.DaysSinceActivation,
+		"daysRemainingTrial":   m.DaysRemainingTrial,
+		"allowed":              m.Allowed,
+		"roiUnlocked":          m.RoiUnlocked,
+		"includedInPro":        m.Status != store.AiCrStatusDisabled,
 	}
 }
 
@@ -171,26 +169,14 @@ func (a *API) requestMyAiModulePaid(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, http.StatusUnauthorized, "unauthorized", "login_required")
 		return
 	}
-	practiceID, ok := a.requireAiCrPracticeAccess(w, r, id)
-	if !ok {
+	if _, ok := a.requireAiCrPracticeAccess(w, r, id); !ok {
 		return
 	}
-	m, err := a.store.GetAiCrModule(r.Context(), practiceID)
-	if err != nil {
-		writeErr(w, r, http.StatusNotFound, "not_found", "ai_module_not_found")
-		return
-	}
-	commercialID, _ := a.store.ResolvePracticeCommercialID(r.Context(), practiceID)
-	detail := "vet_requested_paid conversion practice=" + practiceID + " status=" + m.Status
-	_ = a.store.InsertFrictionAlert(r.Context(), practiceID, commercialID, "paid_request", detail)
-	if commercialID != "" {
-		if u, uerr := a.store.GetUserByID(r.Context(), commercialID); uerr == nil && a.notifier != nil && strings.TrimSpace(u.Email) != "" {
-			_ = a.notifier.SendVetAlert(u.Email,
-				"petsFollow — demande activation payante CR IA",
-				"Le cabinet a demandé la conversion payante du module CR IA.\n"+detail+"\nPrix catalogue : 39 € HT/mois ou 390 € HT/an (facture externe).")
-		}
-	}
-	httpx.WriteData(w, http.StatusOK, map[string]string{"status": "requested"})
+	// Legacy endpoint: CR IA is included in Pro — no paid conversion to request.
+	httpx.WriteData(w, http.StatusOK, map[string]any{
+		"status":        "included",
+		"includedInPro": true,
+	})
 }
 
 func (a *API) adminListAiModules(w http.ResponseWriter, r *http.Request) {

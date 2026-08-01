@@ -120,7 +120,7 @@ Flux Flutter Pro Light : **accord oral client (checkbox)** → dictée (bandeau 
 
 Flux Web : édition notes → « améliorer » (sections structurées) → **finalisation = validation exclusive du pro**.
 
-**Entitlement module** (add-on VetPro, essai 90 j, 39 € HT/mois ou 390 € HT/an) : `transcribe` / `improve` gated par `practice.ai_cr_modules` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
+**Entitlement CR IA** (inclus dans Pro) : `transcribe` / `improve` autorisés sauf statut `disabled` — voir `documentation/32-MODULE-IA-CR.md`. CR manuel sans IA reste possible.
 
 Sections CR vétérinaire (improve) :
 - Anamnèse / motif · Examen clinique · Observations · **Diagnostic proposé** · **Médication proposée** · Plan / suivi

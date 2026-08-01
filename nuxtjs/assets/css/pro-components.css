@@ -1282,9 +1282,39 @@ a.pro-kpi-card:focus-visible {
   margin: 0;
 }
 
-.pro-landing__solution--featured {
+.pro-landing__solution--featured,
+.pro-landing__plan--featured {
   border-color: var(--pf-vet-primary);
   box-shadow: 0 0 0 1px var(--pf-vet-primary);
+}
+
+.pro-landing__products-price-sub {
+  margin: 0 0 0.5rem;
+  color: var(--pf-vet-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.pro-landing__plan-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--pf-vet-radius-sm, 4px);
+  background: color-mix(in srgb, var(--pf-vet-accent) 18%, transparent);
+  color: var(--pf-vet-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.pro-landing__autofinance {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+  color: var(--pf-vet-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
 .pro-landing__solution-list {

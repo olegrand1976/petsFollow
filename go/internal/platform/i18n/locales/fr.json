@@ -128,7 +128,7 @@
     "internal": "Erreur interne du serveur",
     "not_ready": "Service non prêt",
     "gemini_not_configured": "Gemini non configuré (GEMINI_API_KEY)",
-    "ai_module_required": "Module CR IA non activé ou essai expiré — contactez votre commercial",
+    "ai_module_required": "Fonction CR IA désactivée pour ce cabinet — contactez le support",
     "ai_module_not_found": "Module CR IA introuvable pour ce cabinet",
     "gemini_failed": "Échec de l’analyse Gemini",
     "import_not_found": "Import introuvable",

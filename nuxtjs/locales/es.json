@@ -1552,12 +1552,12 @@
     },
     "aiModules": {
       "title": "Módulo CR IA",
-      "subtitle": "Activation VetPro — essai 90 jours, puis 39 € HT/mois ou 390 € HT/an",
+      "subtitle": "CR IA incluido en Pro — seguimiento de adopción y ROI (kill-switch admin si hace falta)",
       "activateTitle": "Activer un cabinet",
       "practice": "Cabinet",
       "practicePlaceholder": "Choisir un cabinet",
-      "activate": "Activer l’essai 90 j",
-      "activatedOk": "Module activé (essai 90 jours)",
+      "activate": "Activar seguimiento ROI",
+      "activatedOk": "Seguimiento ROI activado",
       "listTitle": "Modules actifs",
       "emptyTitle": "Aucun module",
       "emptyDescription": "Activez un cabinet pour démarrer l’essai.",
@@ -1565,8 +1565,8 @@
       "colStatus": "Statut",
       "colTrial": "Fin essai",
       "colDays": "J+ / restant",
-      "convertMonthly": "Convertir 39 €/mois",
-      "convertAnnual": "Convertir 390 €/an",
+      "convertMonthly": "Marcar activo",
+      "convertAnnual": "Marcar activo (anual)",
       "disable": "Désactiver"
     },
     "branches": {
@@ -2011,8 +2011,8 @@
     "registerCta": "Registrarse",
     "badge": "Continuidad de cuidados prescrita",
     "heroTitleLine1": "No es un software más.",
-    "heroTitleLine2": "La continuidad de cuidados, prescrita y compartida.",
-    "heroLead": "Aseguramos el vínculo entre su clínica, el propietario y los profesionales de salud animal gracias al pasaporte digital compartido.",
+    "heroTitleLine2": "El historial de cuidados compartido, entre consultas.",
+    "heroLead": "Pasaporte digital entre su clínica, los profesionales de campo y el propietario — con informes de voz y mejora IA incluidos en Pro. Sus clientes pagan el seguimiento de sus animales.",
     "heroCta": "Crear mi cuenta profesional",
     "heroLogin": "Ya tengo una cuenta",
     "actors": {
@@ -2038,12 +2038,12 @@
       "pro": {
         "role": "Pro · Web",
         "title": "La clínica pilota",
-        "text": "Usted prescribe el seguimiento, lee la timeline y mantiene el vínculo con el hogar — el puesto de pilotaje del pasaporte."
+        "text": "Usted prescribe el seguimiento, lee la timeline, dicta los CR con IA y mantiene el vínculo con el hogar."
       },
       "proLight": {
         "role": "Pro Light · Móvil",
         "title": "El terreno documenta",
-        "text": "Vet light y care pro depositan notas, informes y docs sobre el mismo animal — sin chat entre pros."
+        "text": "Vet light y care pro añaden notas, CR y docs sobre el mismo animal, sin chat entre profesionales."
       },
       "owner": {
         "role": "App cliente · Móvil",
@@ -2072,40 +2072,39 @@
       }
     },
     "ctaTitle": "Abra el pasaporte de su clínica",
-    "ctaText": "Cree su cuenta Pro — o empiece gratis con Pro Light en el terreno. Sus clientes pagan el seguimiento de sus animales.",
+    "ctaText": "Cree su cuenta Pro — historial compartido, mensajería y CR IA incluidos. O empiece gratis con Pro Light en el terreno. Sus clientes pagan el seguimiento.",
     "ctaButton": "Empezar el registro",
     "productsLink": "Productos",
     "productsTitle": "Cómo se materializa el pasaporte",
-    "productsLead": "Dos caras profesionales, una suscripción del propietario. Complementario a su PMS — no un segundo software de clínica.",
+    "productsLead": "Oferta Pro (Web + CR IA incluidos), Pro Light gratis, suscripción del propietario. Complementario a su PMS — no un segundo software clínico.",
     "productsCta": "Crear mi cuenta",
     "solutions": {
       "proComplete": {
         "price": "834,71 € sin IVA / año",
         "title": "Pro",
-        "text": "Puesto de pilotaje Web del pasaporte + app móvil clientes. Mensajería, timeline, compartición y fidelización.",
+        "text": "Puesto de pilotaje Web del pasaporte + app móvil clientes. Mensajería, timeline, compartición y CR IA incluidos.",
         "features": [
+          "Informes de voz y mejora IA incluidos",
           "Pasaporte digital y timeline compartida",
           "Mensajería segura + push (clínica ↔ cliente)",
+          "Lecturas cardíacas guiadas 15 / 30 / 60 s",
           "Recordatorios, citas y adherencia",
-          "Compartición de dossier con care pro / colegas",
-          "Comisiones partner (facturación externa)",
-          "Informes de consulta por voz",
-          "Mejora IA de informes — estructurado, editable antes de guardar, historiales conservados",
-          "Add-on CR IA: prueba 90 días luego 39 € HT/mes o 390 €/año — ROI desde J60"
-        ]
+          "Compartir historial con care pro / colegas",
+          "Comisiones partner (facturación externa)"
+        ],
+        "priceSub": "Puesta en marcha y formación: 320 € sin IVA (único) · CR IA incluido"
       },
       "proLight": {
         "price": "Gratis",
         "title": "Pro Light",
-        "text": "App móvil terreno / care pro — notas, informes, docs y compartición en el pasaporte. Con o sin cuenta Web Pro.",
+        "text": "App móvil terreno / care pro — notas, CR, docs y compartición en el pasaporte. Con o sin cuenta Web Pro.",
         "features": [
           "Agenda de campo y fichas de clientes",
           "Historial de animales",
-          "Código QR de referidos",
-          "Documentos compartidos y notas",
-          "Compartición de dossier con colegas / pros externos",
-          "Informes de consulta por voz",
-          "Mejora IA de informes (+ historial) si el centro VetPro está activado"
+          "Código QR de referido",
+          "Documentos y notas compartidos",
+          "Compartir historial con colegas / pros externos",
+          "Informes de voz e IA si la clínica Pro del historial está activa"
         ]
       }
     },
@@ -2115,20 +2114,42 @@
       "monthly": {
         "price": "3,50 € / mes",
         "title": "Mensual",
-        "text": "Flexibilidad — pasaporte / cartilla, mensajería, timeline, recordatorios Care/Horse, hogar. Sin compromiso largo."
+        "text": "Flexibilidad — pasaporte / cartilla, mensajería, timeline, Care/Horse, vista hogar. Sin compromiso largo."
       },
       "annual": {
         "price": "35 € / año",
         "title": "Anual",
-        "text": "≈ 2,9 € / mes — mismo pasaporte completo, mejor precio que el mensual."
+        "text": "≈ 2,9 € / mes — el mismo pasaporte completo, mejor precio que el mensual."
       },
       "triennial": {
         "price": "95 € / 3 años",
-        "title": "Trienal (recomendado)",
-        "text": "≈ 2,6 € / mes — oferta principal, pasaporte completo, −10 % vs 3× anual."
+        "title": "Trienal",
+        "text": "≈ 2,6 € / mes — oferta central, pasaporte completo, −10 % vs 3× anual."
       }
     },
-    "footer": "© {year} petsFollow — Continuidad de cuidados · pasaporte digital del animal"
+    "footer": "© {year} petsFollow — Continuidad de cuidados · pasaporte digital del animal",
+    "recommended": "Recomendado",
+    "saasTitle": "Compromisos SaaS Pro (sin IVA)",
+    "saasLead": "Facturación offline (comercial / contabilidad) — sin checkout Stripe para la clínica. Steer: 3 años.",
+    "saas": {
+      "setup": {
+        "name": "Puesta en marcha y formación",
+        "price": "320 € sin IVA",
+        "description": "Cuenta, config, formación, arranque (único)."
+      },
+      "annual": {
+        "name": "Anual",
+        "price": "834,71 € sin IVA / año",
+        "description": "≈ 69,56 € sin IVA / mes — pasaporte + CR IA incluidos."
+      },
+      "longTerm": {
+        "name": "Trienal",
+        "price": "2 253,72 € sin IVA / 3 años",
+        "description": "−10 % vs 3× anual — ahorro 250,41 € (≈ 62,60 € sin IVA / mes)."
+      }
+    },
+    "autofinanceTip": "≈ 8 activaciones cliente trienales / mes ≈ cubren el equivalente mensual Pro (≈ 69,56 € sin IVA).",
+    "clientIncludedLine": "Incluido en cualquier plan: pasaporte, mensajería + push, lecturas HR 15/30/60 s, Care/Horse, hogar, FR/NL/EN/ES/ET/IT."
   },
   "products": {
     "seoTitle": "petsFollow — Oferta profesional",
@@ -2138,20 +2159,21 @@
     "badge": "Soporte de presentación clínica",
     "title": "Oferta petsFollow",
     "lead": "Lo esencial: oferta Pro (Web clínica), Pro Light y suscripciones clientes.",
-    "hook": "Continuidad de cuidados prescrita + pasaporte digital del animal, compartido entre clínica, care pro y propietario.",
+    "hook": "Continuidad de cuidados prescrita + pasaporte digital compartido — CR de voz e IA incluidos en Pro.",
     "pro": {
       "name": "Plataforma Web PetsFollow (clínica)",
       "badge": "Oferta Pro",
       "price": "834,71 € sin IVA / año",
-      "setup": "≈ 69,56 € sin IVA / mes · puesta en marcha y formación: 320 € sin IVA (one-shot)",
-      "tagline": "El puesto de mando de la clínica: pasaporte digital, mensajería, recordatorios, compartición y seguimiento de activaciones.",
+      "setup": "≈ 69,56 € sin IVA / mes · puesta en marcha y formación: 320 € sin IVA (único) · CR IA incluido",
+      "tagline": "El puesto de pilotaje: pasaporte digital, mensajería, CR IA, recordatorios, compartición y seguimiento de activaciones.",
       "features": [
+        "Informes de voz y mejora IA incluidos",
         "Pasaporte digital + timeline compartida (clínica / cliente / care pro)",
         "Mensajería segura cliente ↔ clínica + push",
-        "Recordatorios, recetas y solicitudes de cita",
-        "Compartición de dossier (colegas / care pro)",
-        "Seguimiento de activaciones y comisiones partner",
-        "CR por voz + IA add-on (prueba 90 días → 39 € sin IVA/mes o 390 €/año)"
+        "Lecturas cardíacas guiadas 15 / 30 / 60 s",
+        "Recordatorios y solicitudes de cita",
+        "Compartir historial (colegas / care pro)",
+        "Seguimiento de activaciones y comisiones partner"
       ],
       "invoiceNote": "Facturación offline (comercial / contabilidad) — sin pago SaaS de clínica vía Stripe."
     },
@@ -2162,8 +2184,8 @@
       "tagline": "App móvil de campo / care pro — con o sin cuenta Web Pro.",
       "features": [
         "Agenda de campo, fichas animales, notas de visita",
-        "Compartición de dossier + QR de referidos",
-        "CR por voz (IA si la clínica Pro activó el módulo)"
+        "Compartir historial + QR de referido",
+        "CR de voz e IA si la clínica Pro del historial está activa"
       ]
     },
     "clientsTitle": "App cliente (propietarios)",
@@ -2697,13 +2719,13 @@
     },
     "aiModules": {
       "title": "Módulo CR IA",
-      "subtitle": "Activa la prueba en tus clínicas, sigue la adopción, convierte a 39 € / 390 €",
+      "subtitle": "CR IA incluido en Pro — siga la adopción y el ROI de sus clínicas",
       "openPlaybook": "Abrir guía / argumentario",
       "activateTitle": "Activar una de tus clínicas",
       "practice": "Clínica",
       "practicePlaceholder": "Elegir",
-      "activate": "Activar 90 días gratis",
-      "activatedOk": "Prueba activada — el vet recibió un email",
+      "activate": "Activar seguimiento ROI",
+      "activatedOk": "Seguimiento ROI activado",
       "listTitle": "Tus módulos",
       "emptyTitle": "Sin activación aún",
       "emptyDescription": "Elige una clínica asignada para empezar.",
@@ -2727,47 +2749,47 @@
       "print": "Imprimer / PDF",
       "linkCopied": "Lien copié",
       "mailSubject": "petsFollow — guide module Compte-rendu IA",
-      "mailBody": "Bonjour,\n\nVoici le mode d’emploi du module Compte-rendu IA petsFollow (essai 90 jours, puis 39 € HT/mois ou 390 € HT/an).",
-      "badge": "90 jours offerts · preuve ROI dès J60",
+      "mailBody": "Hola,\n\nAquí tiene la guía de CR IA petsFollow — incluida en la oferta Pro (sin add-on).",
+      "badge": "Incluido en Pro · prueba ROI desde el día 60",
       "docTitle": "petsFollow AI visit report — how-to",
-      "promise": "Dictate, structure, save time on every visit — we prove value in 90 days before billing.",
-      "priceMonthly": "€39 excl. VAT / month / practice",
-      "priceAnnual": "€390 excl. VAT / year (−17%)",
+      "promise": "Dicte, estructure, gane tiempo en cada visita — la IA está incluida en su suscripción Pro.",
+      "priceMonthly": "Incluido en el SaaS Pro",
+      "priceAnnual": "Sin add-on separado",
       "whoTitle": "Pour qui ?",
       "whoBody": "Cabinets VetPro (Web + Pro Light). Les care_pro rattachés à un animal du cabinet activé en bénéficient aussi sur ces visites.",
       "changeTitle": "Ce que ça change",
       "change1": "Avant : CR tapés le soir, dossiers incomplets, fatigue terrain.",
       "change2": "Après : dictée mobile → transcription → CR structuré (anamnèse, examen, diagnostic proposé, plan).",
-      "change3": "À J60 : bilan temps gagné visible sur le tableau de bord — argument de conversion clair.",
+      "change3": "At day 60: time-saved summary on the dashboard — clear value proof.",
       "howtoTitle": "Mode d’emploi en 6 étapes",
-      "step1": "Commercial ou admin active le module (essai 90 j) depuis l’espace petsFollow.",
+      "step1": "AI visit reports are included with Pro — sales can enable ROI tracking from petsFollow.",
       "step2": "Sur place : obtenir l’accord oral du client (case à cocher) avant d’enregistrer.",
       "step3": "Dicter le CR dans Pro Light (Flutter) ou uploader un fichier audio sur le calendrier Web.",
       "step4": "Lancer « Améliorer » pour structurer le texte, puis éditer si besoin.",
       "step5": "Finaliser = validation exclusive du pro (purge audio).",
       "step6": "À partir de J60, lire le ROI (minutes gagnées) sur le tableau de bord VetPro.",
       "pitchTitle": "Argumentaire terrain",
-      "pitchBody": "« On active 90 jours offerts. Vous dictez sur le terrain, l’IA structure le dossier. À J60 on regarde ensemble le temps gagné. Si ça tient, c’est 39 € HT/mois — bien en dessous d’une heure de temps véto. »",
+      "pitchBody": "« En Pro, la IA está incluida. Dicta en el terreno, la IA estructura el historial. El día 60 revisamos juntos el tiempo ganado: prueba de que el SaaS trabaja para usted. »",
       "objectionsTitle": "Objections fréquentes",
       "obj1q": "« C’est trop cher. »",
-      "obj1a": "Ancrez sur le temps : 5–7 min/CR × 10 CR/j ≈ 1 h/j. À 80 €/h, 39 € est < 5 % de la valeur basse.",
+      "obj1a": "Ancle en el tiempo: 5–7 min/CR × 10 CR/día ≈ 1 h/día. La IA ya está en el ticket Pro — no es un segundo abono.",
       "obj2q": "« J’ai déjà Whisper / un dictaphone. »",
       "obj2a": "Ici : consentement, CR structuré métier, dossier animal, ROI cabinet, pas un fichier texte isolé.",
       "obj3q": "« Mes assistants vont s’en servir ? »",
       "obj3a": "Oui si droits write notes. VetLight / care_pro : seulement si le cabinet de la visite est activé.",
       "roiTitle": "Preuve ROI",
-      "roiBody": "Formule : CR assistés × (baseline 10 min − 4 min IA). Affichage dès J60. Prix catalogue fixe : pas de promo intro — la preuve suffit.",
-      "calendarTitle": "Calendrier d’adhésion (checklist commercial)",
-      "calJ0": "J0 — activation + 3 premiers CR",
+      "roiBody": "Formula: AI-assisted reports × (baseline 10 min − 4 min AI). Shown from day 60. AI is included in Pro — proof drives adoption, not add-on conversion.",
+      "calendarTitle": "Adoption calendar (sales checklist)",
+      "calJ0": "Day 0 — first dictated reports",
       "calJ14": "J14 — NPS #1",
       "calJ45": "J45 — NPS #2 + tags friction",
       "calJ60": "J60 — bilan ROI ensemble",
-      "calJ75": "J75 — proposition 39 € / 390 €",
-      "calJ90": "J90 — conversion ou coupure IA (CR manuel reste)",
+      "calJ75": "J75 — anclar el hábito (sin conversión de pago)",
+      "calJ90": "J90 — revisión de adopción; el CR manual sigue posible",
       "frictionTitle": "Quand relancer",
       "frictionBody": "0 usage à J7, chute d’usage, erreurs Gemini, NPS ≤ 6, abandon après démarrage. L’app vous alerte ; utilisez ce guide pour la relance.",
-      "footer": "Facturation externe (comme le SaaS Pro). petsFollow — continuité de soins prescrite.",
-      "mailBodyPdf": "Hello,\n\nPlease find attached the petsFollow AI visit-report how-to (PDF via Print / Save as PDF from the commercial space).\n\n90-day trial, then €39 excl. VAT/month or €390/year (external invoice).\n\nBest regards,"
+      "footer": "CR IA incluido en el SaaS Pro (factura externa). petsFollow — continuidad de cuidados prescrita.",
+      "mailBodyPdf": "Hola,\n\nAdjunto la guía del CR IA petsFollow (PDF vía Imprimir / Guardar PDF desde el área comercial).\n\nLa IA está incluida en Pro — sin add-on separado.\n\nSaludos,"
     },
     "network": {
       "title": "Mi red",
