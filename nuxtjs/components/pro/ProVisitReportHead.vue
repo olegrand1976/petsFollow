@@ -54,6 +54,8 @@ defineProps<{
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--pf-vet-border);
 }
 
 .pro-visit-report__meta {

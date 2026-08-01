@@ -4,201 +4,251 @@
     :class="{ 'pro-visit-report--fill': fillHeight }"
     data-testid="visit-report-panel"
   >
+    <!-- Meta + Aide : hors zone scroll (reste visible sous le titre de modale). -->
     <ProVisitReportHead
       :visit-date-label="visitDateLabel"
       :report-status="reportStatus"
     />
 
-    <div
-      v-if="reportAuthors.length > 1"
-      class="pro-flex-gap visit-report-authors"
-      data-testid="visit-report-authors"
-    >
-      <ProButton
-        v-for="author in reportAuthors"
-        :key="author.authorUserId || author.id"
-        :variant="selectedReportAuthorId === author.authorUserId ? 'primary' : 'secondary'"
-        :test-id="author.mine ? 'visit-report-author-mine' : `visit-report-author-${author.authorUserId}`"
-        @click="selectReportAuthor(author)"
+    <div class="pro-visit-report__scroll">
+      <div
+        v-if="reportAuthors.length > 1"
+        class="pro-flex-gap visit-report-authors"
+        data-testid="visit-report-authors"
       >
-        {{ author.mine
-          ? $t('calendar.reportAuthorMine')
-          : (author.authorFullName || $t('calendar.reportAuthorPeer')) }}
-        <span v-if="author.status" class="pro-hint"> · {{ author.status }}</span>
-      </ProButton>
-    </div>
-    <p
-      v-if="viewingPeerReport"
-      class="pro-hint"
-      data-testid="visit-report-peer-readonly"
-    >
-      {{ $t('calendar.reportReadOnlyPeer') }}
-    </p>
+        <ProButton
+          v-for="author in reportAuthors"
+          :key="author.authorUserId || author.id"
+          :variant="selectedReportAuthorId === author.authorUserId ? 'primary' : 'secondary'"
+          :test-id="author.mine ? 'visit-report-author-mine' : `visit-report-author-${author.authorUserId}`"
+          @click="selectReportAuthor(author)"
+        >
+          {{ author.mine
+            ? $t('calendar.reportAuthorMine')
+            : (author.authorFullName || $t('calendar.reportAuthorPeer')) }}
+          <span v-if="author.status" class="pro-hint"> · {{ author.status }}</span>
+        </ProButton>
+      </div>
+      <p
+        v-if="viewingPeerReport"
+        class="pro-hint"
+        data-testid="visit-report-peer-readonly"
+      >
+        {{ $t('calendar.reportReadOnlyPeer') }}
+      </p>
 
-    <div class="visit-report-split">
-      <!-- Left: notes / dictation -->
-      <section class="visit-report-pane" data-testid="visit-report-pane-left">
-        <header class="visit-report-pane__header">
-          <div>
-            <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneNotesTitle') }}</h3>
-            <p class="pro-hint">{{ $t('calendar.reportPaneNotesSubtitle') }}</p>
-          </div>
-          <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
-            <ProButton
-              :disabled="reportBusy || hydrating"
-              test-id="visit-report-dictate"
-              @click="onDictateClick"
-            >
-              <ProIcon name="mic" :size="16" />
-              {{ $t('calendar.dictateAudio') }}
-            </ProButton>
+      <div class="visit-report-split">
+        <!-- Left: notes / dictation -->
+        <section class="visit-report-pane" data-testid="visit-report-pane-left">
+          <header class="visit-report-pane__header">
+            <div>
+              <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneNotesTitle') }}</h3>
+              <p class="pro-hint">{{ $t('calendar.reportPaneNotesSubtitle') }}</p>
+            </div>
+            <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+              <ProButton
+                :disabled="reportBusy || hydrating"
+                test-id="visit-report-dictate"
+                @click="onDictateClick"
+              >
+                <ProIcon name="mic" :size="16" />
+                {{ $t('calendar.dictateAudio') }}
+              </ProButton>
+              <ProButton
+                variant="secondary"
+                :disabled="reportBusy || hydrating"
+                test-id="visit-report-audio-btn"
+                @click="openAudioPicker"
+              >
+                <ProIcon name="upload_file" :size="16" />
+                {{ $t('calendar.audioToText') }}
+              </ProButton>
+            </div>
+          </header>
+
+          <div
+            v-if="dictating"
+            class="visit-report-recording"
+            data-testid="visit-report-recording-banner"
+          >
+            <ProIcon name="mic" :size="24" class="visit-report-recording__mic" />
+            <div class="visit-report-recording__info">
+              <strong>{{ $t('calendar.recordingInProgress') }}</strong>
+              <span data-testid="visit-report-recording-clock">{{ dictationClock }}</span>
+            </div>
             <ProButton
               variant="secondary"
-              :disabled="reportBusy || hydrating"
-              test-id="visit-report-audio-btn"
-              @click="openAudioPicker"
+              test-id="visit-report-dictate-stop"
+              @click="stopDictation"
             >
-              <ProIcon name="upload_file" :size="16" />
-              {{ $t('calendar.audioToText') }}
+              {{ $t('calendar.recordingStop') }}
             </ProButton>
           </div>
-        </header>
 
-        <div
-          v-if="dictating"
-          class="visit-report-recording"
-          data-testid="visit-report-recording-banner"
-        >
-          <ProIcon name="mic" :size="24" class="visit-report-recording__mic" />
-          <div class="visit-report-recording__info">
-            <strong>{{ $t('calendar.recordingInProgress') }}</strong>
-            <span data-testid="visit-report-recording-clock">{{ dictationClock }}</span>
-          </div>
-          <ProButton
-            variant="secondary"
-            test-id="visit-report-dictate-stop"
-            @click="stopDictation"
-          >
-            {{ $t('calendar.recordingStop') }}
-          </ProButton>
-        </div>
-
-        <label class="visually-hidden" for="visit-report-transcript">{{ $t('calendar.reportPaneNotesTitle') }}</label>
-        <textarea
-          id="visit-report-transcript"
-          v-model="reportTranscript"
-          class="pro-input visit-report-pane__textarea"
-          rows="12"
-          data-testid="visit-report-transcript"
-          :placeholder="$t('calendar.reportTranscriptHint')"
-          :disabled="reportBusy || reportLocked || dictating || hydrating"
-          :readonly="reportLocked"
-        />
-      </section>
-
-      <!-- Right: CR / AI -->
-      <section class="visit-report-pane" data-testid="visit-report-pane-right">
-        <header class="visit-report-pane__header">
-          <div>
-            <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneCrTitle') }}</h3>
-            <p class="pro-hint">{{ $t('calendar.reportPaneCrSubtitle') }}</p>
-          </div>
-          <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
-            <label class="visit-report-lang" data-testid="visit-report-lang">
-              <span class="visually-hidden">{{ $t('calendar.reportTargetLang') }}</span>
-              <select
-                v-model="targetLocale"
-                class="pro-input visit-report-lang__select"
-                data-testid="visit-report-target-locale"
-                :disabled="reportBusy || hydrating"
-              >
-                <option value="auto">{{ $t('calendar.reportTargetLangAuto') }}</option>
-                <option value="fr">{{ $t('calendar.reportTargetLangFr') }}</option>
-                <option value="nl">{{ $t('calendar.reportTargetLangNl') }}</option>
-                <option value="en">{{ $t('calendar.reportTargetLangEn') }}</option>
-                <option value="es">{{ $t('calendar.reportTargetLangEs') }}</option>
-                <option value="et">{{ $t('calendar.reportTargetLangEt') }}</option>
-                <option value="it">{{ $t('calendar.reportTargetLangIt') }}</option>
-              </select>
-            </label>
-            <ProButton
-              :disabled="reportBusy || hydrating || !canImprove"
-              :loading="reportBusy && improveInFlight"
-              test-id="visit-report-improve"
-              @click="improveVisitReport"
-            >
-              <ProIcon name="auto_awesome" :size="16" />
-              {{ $t('calendar.improveReport') }}
-            </ProButton>
-          </div>
-        </header>
-        <p
-          v-if="!readonly && !viewingPeerReport"
-          class="pro-hint visit-report-pane__ai-hint"
-          data-testid="visit-report-ai-banner"
-        >
-          {{ $t('calendar.reportAiProposalBanner') }}
-        </p>
-        <ClientOnly>
-          <ProRichReportEditor
-            v-model="reportBody"
-            input-id="visit-report-body"
-            textarea-test-id="visit-report-body"
-            editor-test-id="visit-report-editor"
-            test-id-prefix="visit-report"
-            :placeholder="$t('calendar.reportHint')"
+          <label class="visually-hidden" for="visit-report-transcript">{{ $t('calendar.reportPaneNotesTitle') }}</label>
+          <textarea
+            id="visit-report-transcript"
+            v-model="reportTranscript"
+            class="pro-input visit-report-pane__textarea"
+            rows="12"
+            data-testid="visit-report-transcript"
+            :placeholder="$t('calendar.reportTranscriptHint')"
             :disabled="reportBusy || reportLocked || dictating || hydrating"
             :readonly="reportLocked"
           />
-          <template #fallback>
-            <div class="pro-input visit-report-pane__textarea" data-testid="visit-report-editor-fallback">
-              {{ reportBody }}
+        </section>
+
+        <!-- Right: CR / AI -->
+        <section class="visit-report-pane" data-testid="visit-report-pane-right">
+          <header class="visit-report-pane__header">
+            <div>
+              <h3 class="visit-report-pane__title">{{ $t('calendar.reportPaneCrTitle') }}</h3>
+              <p class="pro-hint">{{ $t('calendar.reportPaneCrSubtitle') }}</p>
             </div>
-          </template>
-        </ClientOnly>
-        <div
-          v-if="showAiQualityBar"
-          class="visit-report-quality"
-          data-testid="visit-report-quality"
-        >
-          <span class="pro-hint">{{ $t('calendar.reportQualityAsk') }}</span>
-          <div class="pro-flex-gap">
-            <ProButton
-              variant="secondary"
-              test-id="visit-report-quality-good"
-              :disabled="qualityBusy"
-              @click="submitAiQuality(true)"
+            <div v-if="!reportLocked && !dictating" class="pro-flex-gap visit-report-pane__toolbar">
+              <label class="visit-report-lang" data-testid="visit-report-lang">
+                <span class="visually-hidden">{{ $t('calendar.reportTargetLang') }}</span>
+                <select
+                  v-model="targetLocale"
+                  class="pro-input visit-report-lang__select"
+                  data-testid="visit-report-target-locale"
+                  :disabled="reportBusy || hydrating"
+                >
+                  <option value="auto">{{ $t('calendar.reportTargetLangAuto') }}</option>
+                  <option value="fr">{{ $t('calendar.reportTargetLangFr') }}</option>
+                  <option value="nl">{{ $t('calendar.reportTargetLangNl') }}</option>
+                  <option value="en">{{ $t('calendar.reportTargetLangEn') }}</option>
+                  <option value="es">{{ $t('calendar.reportTargetLangEs') }}</option>
+                  <option value="et">{{ $t('calendar.reportTargetLangEt') }}</option>
+                  <option value="it">{{ $t('calendar.reportTargetLangIt') }}</option>
+                </select>
+              </label>
+              <ProButton
+                :disabled="reportBusy || hydrating || !canImprove"
+                :loading="reportBusy && improveInFlight"
+                test-id="visit-report-improve"
+                @click="improveVisitReport"
+              >
+                <ProIcon name="auto_awesome" :size="16" />
+                {{ $t('calendar.improveReport') }}
+              </ProButton>
+            </div>
+          </header>
+          <p
+            v-if="!readonly && !viewingPeerReport"
+            class="pro-hint visit-report-pane__ai-hint"
+            data-testid="visit-report-ai-banner"
+          >
+            {{ $t('calendar.reportAiProposalBanner') }}
+          </p>
+          <ClientOnly>
+            <ProRichReportEditor
+              v-model="reportBody"
+              input-id="visit-report-body"
+              textarea-test-id="visit-report-body"
+              editor-test-id="visit-report-editor"
+              test-id-prefix="visit-report"
+              :placeholder="$t('calendar.reportHint')"
+              :disabled="reportBusy || reportLocked || dictating || hydrating"
+              :readonly="reportLocked"
+            />
+            <template #fallback>
+              <div class="pro-input visit-report-pane__textarea" data-testid="visit-report-editor-fallback">
+                {{ reportBody }}
+              </div>
+            </template>
+          </ClientOnly>
+          <div
+            v-if="showAiQualityBar"
+            class="visit-report-quality"
+            data-testid="visit-report-quality"
+          >
+            <span class="pro-hint">{{ $t('calendar.reportQualityAsk') }}</span>
+            <div class="pro-flex-gap">
+              <ProButton
+                variant="secondary"
+                test-id="visit-report-quality-good"
+                :disabled="qualityBusy"
+                @click="submitAiQuality(true)"
+              >
+                <ProIcon name="thumb_up" :size="16" />
+                {{ $t('calendar.reportQualityGood') }}
+              </ProButton>
+              <ProButton
+                variant="ghost"
+                test-id="visit-report-quality-bad"
+                :disabled="qualityBusy"
+                @click="submitAiQuality(false)"
+              >
+                <ProIcon name="thumb_down" :size="16" />
+                {{ $t('calendar.reportQualityBad') }}
+              </ProButton>
+            </div>
+          </div>
+          <label
+            v-if="reportStatus === 'final' && !viewingPeerReport && !readonly"
+            class="pro-checkbox-label visit-report-reference"
+            data-testid="visit-report-reference"
+          >
+            <input
+              v-model="reportIsReference"
+              type="checkbox"
+              class="pro-checkbox"
+              data-testid="visit-report-reference-check"
+              :disabled="referenceBusy"
+              @change="onReferenceToggle"
             >
-              <ProIcon name="thumb_up" :size="16" />
-              {{ $t('calendar.reportQualityGood') }}
-            </ProButton>
+            {{ $t('calendar.reportMarkReference') }}
+          </label>
+        </section>
+      </div>
+
+      <details
+        class="visit-report-history"
+        data-testid="visit-report-history"
+      >
+        <summary>{{ $t('calendar.reportVersionsTitle') }}</summary>
+        <div class="visit-report-history__block" data-testid="visit-report-v0">
+          <div class="pro-flex-gap visit-report-history__head">
+            <h4>{{ $t('calendar.reportVersionTranscript') }}</h4>
             <ProButton
+              v-if="reportPersistedTranscript && !reportLocked && !dictating"
               variant="ghost"
-              test-id="visit-report-quality-bad"
-              :disabled="qualityBusy"
-              @click="submitAiQuality(false)"
+              test-id="visit-report-restore-v0"
+              @click="restoreTranscriptVersion"
             >
-              <ProIcon name="thumb_down" :size="16" />
-              {{ $t('calendar.reportQualityBad') }}
+              {{ $t('calendar.reportRestore') }}
             </ProButton>
           </div>
+          <pre v-if="reportPersistedTranscript" class="visit-report-history__text">{{ reportPersistedTranscript }}</pre>
+          <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
         </div>
-        <label
-          v-if="reportStatus === 'final' && !viewingPeerReport && !readonly"
-          class="pro-checkbox-label visit-report-reference"
-          data-testid="visit-report-reference"
-        >
-          <input
-            v-model="reportIsReference"
-            type="checkbox"
-            class="pro-checkbox"
-            data-testid="visit-report-reference-check"
-            :disabled="referenceBusy"
-            @change="onReferenceToggle"
-          >
-          {{ $t('calendar.reportMarkReference') }}
-        </label>
-      </section>
+        <div class="visit-report-history__block" data-testid="visit-report-v1">
+          <div class="pro-flex-gap visit-report-history__head">
+            <h4>{{ $t('calendar.reportVersionImproved') }}</h4>
+            <ProButton
+              v-if="reportImproved && !reportLocked && !dictating"
+              variant="ghost"
+              test-id="visit-report-restore-v1"
+              @click="restoreImprovedVersion"
+            >
+              {{ $t('calendar.reportRestore') }}
+            </ProButton>
+          </div>
+          <pre v-if="reportImproved" class="visit-report-history__text">{{ reportImproved }}</pre>
+          <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
+        </div>
+        <div class="visit-report-history__block" data-testid="visit-report-v2">
+          <h4>{{ $t('calendar.reportVersionSaved') }}</h4>
+          <pre v-if="historySavedBody" class="visit-report-history__text">{{ historySavedBody }}</pre>
+          <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
+        </div>
+      </details>
+
+      <p v-if="dirty && !reportLocked" class="pro-hint" data-testid="visit-report-dirty-hint">
+        {{ $t('calendar.reportDirtyHint') }}
+      </p>
+      <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg" role="alert">{{ reportMsg }}</p>
     </div>
 
     <input
@@ -210,53 +260,6 @@
       :disabled="reportBusy"
       @change="onReportAudioSelected"
     >
-
-    <details
-      class="visit-report-history"
-      data-testid="visit-report-history"
-    >
-      <summary>{{ $t('calendar.reportVersionsTitle') }}</summary>
-      <div class="visit-report-history__block" data-testid="visit-report-v0">
-        <div class="pro-flex-gap visit-report-history__head">
-          <h4>{{ $t('calendar.reportVersionTranscript') }}</h4>
-          <ProButton
-            v-if="reportPersistedTranscript && !reportLocked && !dictating"
-            variant="ghost"
-            test-id="visit-report-restore-v0"
-            @click="restoreTranscriptVersion"
-          >
-            {{ $t('calendar.reportRestore') }}
-          </ProButton>
-        </div>
-        <pre v-if="reportPersistedTranscript" class="visit-report-history__text">{{ reportPersistedTranscript }}</pre>
-        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
-      </div>
-      <div class="visit-report-history__block" data-testid="visit-report-v1">
-        <div class="pro-flex-gap visit-report-history__head">
-          <h4>{{ $t('calendar.reportVersionImproved') }}</h4>
-          <ProButton
-            v-if="reportImproved && !reportLocked && !dictating"
-            variant="ghost"
-            test-id="visit-report-restore-v1"
-            @click="restoreImprovedVersion"
-          >
-            {{ $t('calendar.reportRestore') }}
-          </ProButton>
-        </div>
-        <pre v-if="reportImproved" class="visit-report-history__text">{{ reportImproved }}</pre>
-        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
-      </div>
-      <div class="visit-report-history__block" data-testid="visit-report-v2">
-        <h4>{{ $t('calendar.reportVersionSaved') }}</h4>
-        <pre v-if="historySavedBody" class="visit-report-history__text">{{ historySavedBody }}</pre>
-        <p v-else class="pro-hint">{{ $t('calendar.reportVersionEmpty') }}</p>
-      </div>
-    </details>
-
-    <p v-if="dirty && !reportLocked" class="pro-hint" data-testid="visit-report-dirty-hint">
-      {{ $t('calendar.reportDirtyHint') }}
-    </p>
-    <p v-if="reportMsg" class="pro-hint" data-testid="visit-report-msg" role="alert">{{ reportMsg }}</p>
 
     <div
       v-if="!reportLocked"
@@ -1033,6 +1036,14 @@ watch(
   min-height: 0;
 }
 
+.pro-visit-report__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
 .visit-report-split {
   display: grid;
   grid-template-columns: 1fr;
@@ -1150,16 +1161,14 @@ watch(
 
 .pro-visit-report__footer {
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.25rem;
+  margin-top: 0;
   padding: 0.75rem 0 0.15rem;
-  background: linear-gradient(to top, var(--pf-vet-surface, #fff) 70%, transparent);
+  border-top: 1px solid var(--pf-vet-border);
+  background: var(--pf-vet-surface, #fff);
 }
 
 .pro-visit-report__file {
@@ -1225,9 +1234,25 @@ watch(
   border: 0;
 }
 
-/* Consultation full modal only — do not inflate calendar / history / pet hosts. */
+/*
+ * Host modale avec ProModal contain-scroll (ou size=full) :
+ * head + footer épinglés, seul __scroll défile.
+ * Ne pas activer hors de ces hosts (calendrier embed = flux naturel).
+ */
 .pro-visit-report--fill {
   flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pro-visit-report--fill .pro-visit-report__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.15rem;
 }
 
 .pro-visit-report--fill .visit-report-split {
@@ -1254,10 +1279,5 @@ watch(
   flex: 1 1 auto;
   min-height: 16rem;
   resize: none;
-}
-
-.pro-visit-report--fill .pro-visit-report__footer {
-  position: static;
-  background: transparent;
 }
 </style>

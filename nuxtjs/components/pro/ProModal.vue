@@ -11,7 +11,7 @@
       <div
         ref="panelRef"
         class="pro-modal__panel"
-        :class="sizeClass"
+        :class="[sizeClass, { 'pro-modal__panel--contain': containScroll }]"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"
@@ -30,7 +30,10 @@
             <ProIcon name="close" :size="22" />
           </button>
         </header>
-        <div class="pro-modal__body">
+        <div
+          class="pro-modal__body"
+          :class="{ 'pro-modal__body--contain': containScroll }"
+        >
           <slot />
         </div>
         <footer v-if="$slots.footer" class="pro-modal__footer">
@@ -53,10 +56,15 @@ const props = withDefaults(
     size?: 'md' | 'lg' | 'xl' | 'full'
     /** When true, ignore X / Escape / backdrop close (e.g. save in flight). */
     preventClose?: boolean
+    /**
+     * Body does not scroll — child fills height and manages its own overflow
+     * (e.g. visit-report panel with pinned meta + actions).
+     */
+    containScroll?: boolean
     /** data-testid on the root overlay (default keeps existing e2e selectors). */
     testId?: string
   }>(),
-  { size: 'md', testId: 'pro-modal', preventClose: false },
+  { size: 'md', testId: 'pro-modal', preventClose: false, containScroll: false },
 )
 
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -222,9 +230,33 @@ onBeforeUnmount(() => {
   padding: 0.75rem 1.25rem 1.25rem;
 }
 
+.pro-modal__body--contain {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.75rem;
+}
+
+/* Hauteur définie pour que le child (ex. CR) puisse flex + scroller en interne. */
+.pro-modal__panel--contain.pro-modal__panel--md {
+  height: min(90vh, 40rem);
+  max-height: min(90vh, 40rem);
+}
+
+.pro-modal__panel--contain.pro-modal__panel--lg {
+  height: min(90vh, 40rem);
+  max-height: min(90vh, 40rem);
+}
+
+.pro-modal__panel--contain.pro-modal__panel--xl {
+  height: min(92vh, 52rem);
+  max-height: min(92vh, 52rem);
+}
+
 .pro-modal__panel--full .pro-modal__body {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   padding-bottom: 0.75rem;
 }
 
