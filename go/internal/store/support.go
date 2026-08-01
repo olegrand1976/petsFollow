@@ -24,11 +24,10 @@ const (
 	SupportStatusResolved   = "resolved"
 	SupportStatusClosed     = "closed"
 
-	MaxSupportSubjectLen      = 200
-	MaxSupportMessageLen      = 8000
-	MaxSupportReplyLen        = 8000
+	MaxSupportSubjectLen       = 200
+	MaxSupportMessageLen       = 8000
+	MaxSupportReplyLen         = 8000
 	MaxSupportDiagnosticsBytes = 512 * 1024
-	SupportTicketsPerHour     = 5
 )
 
 var validSupportSources = map[string]bool{
@@ -46,23 +45,23 @@ var validSupportStatuses = map[string]bool{
 }
 
 type SupportTicket struct {
-	ID          string          `json:"id"`
-	CreatedBy   *string         `json:"createdBy,omitempty"`
-	CreatorEmail string         `json:"creatorEmail,omitempty"`
-	CreatorName  string         `json:"creatorName,omitempty"`
-	CreatorRole  string         `json:"creatorRole,omitempty"`
-	Source      string          `json:"source"`
-	Subject     string          `json:"subject"`
-	Message     string          `json:"message"`
-	Status      string          `json:"status"`
-	Diagnostics json.RawMessage `json:"diagnostics,omitempty"`
-	UserAgent   string          `json:"userAgent,omitempty"`
-	AppVersion  string          `json:"appVersion,omitempty"`
-	Locale      string          `json:"locale,omitempty"`
-	Route       string          `json:"route,omitempty"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	UpdatedAt   time.Time       `json:"updatedAt"`
-	ReplyCount  int             `json:"replyCount,omitempty"`
+	ID           string          `json:"id"`
+	CreatedBy    *string         `json:"createdBy,omitempty"`
+	CreatorEmail string          `json:"creatorEmail,omitempty"`
+	CreatorName  string          `json:"creatorName,omitempty"`
+	CreatorRole  string          `json:"creatorRole,omitempty"`
+	Source       string          `json:"source"`
+	Subject      string          `json:"subject"`
+	Message      string          `json:"message"`
+	Status       string          `json:"status"`
+	Diagnostics  json.RawMessage `json:"diagnostics,omitempty"`
+	UserAgent    string          `json:"userAgent,omitempty"`
+	AppVersion   string          `json:"appVersion,omitempty"`
+	Locale       string          `json:"locale,omitempty"`
+	Route        string          `json:"route,omitempty"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	UpdatedAt    time.Time       `json:"updatedAt"`
+	ReplyCount   int             `json:"replyCount,omitempty"`
 }
 
 type SupportTicketReply struct {
@@ -112,14 +111,6 @@ func ResolveSupportSource(role kernel.Role, requested string) string {
 	default:
 		return SupportSourceNuxtPro
 	}
-}
-
-func (s *Store) CountRecentSupportTickets(ctx context.Context, userID string, since time.Time) (int, error) {
-	var n int
-	err := s.pool.QueryRow(ctx, `
-		SELECT COUNT(*) FROM ops.support_tickets
-		WHERE created_by = $1 AND created_at >= $2`, userID, since).Scan(&n)
-	return n, err
 }
 
 func (s *Store) CreateSupportTicket(ctx context.Context, in CreateSupportTicketInput) (SupportTicket, error) {
@@ -463,11 +454,11 @@ func (s *Store) ListSupportTicketsForExport(ctx context.Context, userID string) 
 
 // SupportTicketStats — agrégats inbox ops (admin / DEV).
 type SupportTicketStats struct {
-	ByStatus       map[string]int `json:"byStatus"`
-	BySource       map[string]int `json:"bySource"`
-	OpenOlderThan24h int          `json:"openOlderThan24h"`
-	OpenOlderThan7d  int          `json:"openOlderThan7d"`
-	Total          int            `json:"total"`
+	ByStatus         map[string]int `json:"byStatus"`
+	BySource         map[string]int `json:"bySource"`
+	OpenOlderThan24h int            `json:"openOlderThan24h"`
+	OpenOlderThan7d  int            `json:"openOlderThan7d"`
+	Total            int            `json:"total"`
 }
 
 func (s *Store) SupportTicketStats(ctx context.Context) (SupportTicketStats, error) {

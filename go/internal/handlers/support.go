@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
@@ -60,17 +59,6 @@ func (a *API) createSupportTicket(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Diagnostics) > store.MaxSupportDiagnosticsBytes {
 		writeErr(w, r, http.StatusRequestEntityTooLarge, "diagnostics_too_large", "diagnostics_too_large")
-		return
-	}
-
-	since := time.Now().UTC().Add(-time.Hour)
-	n, err := a.store.CountRecentSupportTickets(r.Context(), id.UserID, since)
-	if err != nil {
-		writeErr(w, r, http.StatusInternalServerError, "internal", "internal")
-		return
-	}
-	if n >= store.SupportTicketsPerHour {
-		writeErr(w, r, http.StatusTooManyRequests, "rate_limited", "too_many_requests")
 		return
 	}
 

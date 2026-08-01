@@ -1889,10 +1889,6 @@ class AppLocalizationsEt extends AppLocalizations {
   String get supportSuccess => 'Sõnum saadetud. Aitäh!';
 
   @override
-  String get supportErrorRateLimit =>
-      'Liiga palju pileteid hiljuti. Proovi tunni pärast.';
-
-  @override
   String get supportErrorTooLarge =>
       'Diagnostika liiga mahukas. Taaskäivita rakendus ja proovi uuesti.';
 

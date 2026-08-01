@@ -767,7 +767,6 @@
   "supportSubmit": "Invia",
   "supportSending": "Invio…",
   "supportSuccess": "Messaggio inviato. Grazie!",
-  "supportErrorRateLimit": "Troppi ticket di recente. Riprova tra un'ora.",
   "supportErrorTooLarge": "Diagnostici troppo grandi. Riavvia l'app e riprova.",
   "supportMenu": "Supporto",
   "appInviteHintSales": "Condividi il codice sponsor con uno studio o un cliente.",

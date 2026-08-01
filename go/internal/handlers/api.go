@@ -212,6 +212,7 @@ func (a *API) Routes(r chi.Router) {
 		pr.Post("/clients/{clientID}/shares", a.createClientShare)
 		pr.Delete("/clients/{clientID}/shares/{granteeID}", a.deleteClientShare)
 		pr.Get("/vet/pets", a.listVetPets)
+		pr.Patch("/vet/pets/{petID}/lifecycle", a.patchVetPetLifecycle)
 		pr.Get("/care-pro/clients", a.listCareProClients)
 		pr.Get("/care-pro/pets", a.listCareProPets)
 		pr.Get("/care-pro/visits", a.listCareProVisits)
@@ -562,6 +563,9 @@ type petReq struct {
 	MicrochipNumber  *string  `json:"microchipNumber"`
 	HealthBookNumber *string  `json:"healthBookNumber"`
 	DomicileLocation *string  `json:"domicileLocation"`
+	AdoptedAt        *string  `json:"adoptedAt"`
+	SoldAt           *string  `json:"soldAt"`
+	DeceasedAt       *string  `json:"deceasedAt"`
 	Plan             string   `json:"plan"`
 	BillingMode      string   `json:"billingMode"`
 	SuccessURL       string   `json:"successUrl"`
@@ -778,6 +782,9 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		MicrochipNumber: existing.MicrochipNumber, HealthBookNumber: existing.HealthBookNumber,
 		DomicileLocation: existing.DomicileLocation,
 		FoodChainStatus:  existing.FoodChainStatus,
+		AdoptedAt:        existing.AdoptedAt,
+		SoldAt:           existing.SoldAt,
+		DeceasedAt:       existing.DeceasedAt,
 	}
 	if tag := strings.TrimSpace(req.LitterTag); tag != "" {
 		p.LitterTag = tag
@@ -814,6 +821,30 @@ func (a *API) updatePet(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		p.BirthDate = existing.BirthDate
+	}
+	if req.AdoptedAt != nil {
+		t, perr := parseOptionalPetDate(*req.AdoptedAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_adopted_at")
+			return
+		}
+		p.AdoptedAt = t
+	}
+	if req.SoldAt != nil {
+		t, perr := parseOptionalPetDate(*req.SoldAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_sold_at")
+			return
+		}
+		p.SoldAt = t
+	}
+	if req.DeceasedAt != nil {
+		t, perr := parseOptionalPetDate(*req.DeceasedAt)
+		if perr != nil {
+			writeErr(w, r, http.StatusBadRequest, "bad_request", "invalid_deceased_at")
+			return
+		}
+		p.DeceasedAt = t
 	}
 	if err := a.store.UpdatePet(r.Context(), p); err != nil {
 		writeErr(w, r, http.StatusNotFound, "not_found", "pet_not_found")

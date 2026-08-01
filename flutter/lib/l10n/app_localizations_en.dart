@@ -1880,10 +1880,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportSuccess => 'Message sent. Thank you!';
 
   @override
-  String get supportErrorRateLimit =>
-      'Too many tickets recently. Try again in an hour.';
-
-  @override
   String get supportErrorTooLarge =>
       'Diagnostics too large. Restart the app and try again.';
 

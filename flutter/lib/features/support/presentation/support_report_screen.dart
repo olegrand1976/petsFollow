@@ -56,9 +56,7 @@ class _SupportReportScreenState extends State<SupportReportScreen> {
       if (!mounted) return;
       final code = apiErrorCode(e);
       setState(() {
-        if (code == 'rate_limited') {
-          _error = l10n.supportErrorRateLimit;
-        } else if (code == 'diagnostics_too_large' || code == 'payload_too_large') {
+        if (code == 'diagnostics_too_large' || code == 'payload_too_large') {
           _error = l10n.supportErrorTooLarge;
         } else {
           _error = mapApiError(e, l10n);
