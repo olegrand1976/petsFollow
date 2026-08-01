@@ -664,7 +664,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google).\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@petsfollow.app.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
+      'Privacybeleid — petsFollow\n\nVerzamelde gegevens: identiteit (voornaam, e-mail), huisdiergegevens (naam, soort, ras, foto\'s), hartslagmetingen (diergezondheidsgegevens), berichten en media met de praktijk, bezoekverslagen (tekst en audio-opnamen), GPS-coördinaten van huisbezoeken (zorgprofessionals), notificatietokens (FCM), betalingsgegevens via Stripe.\n\nDoeleinden: accountbeheer, zorgcontinuïteit (inclusief hartslagmetingen), dierenartsberichten, bezoekverslagen, notificaties, facturatie.\n\nAI-verwerking: Google Gemini wordt gebruikt om bezoekverslagen te verbeteren (audio in realtime verwerkt, niet bewaard door Google) en, in de cliënt-app (experimentele module), om afgeronde verslagen uit te leggen en conversatie-triage bij spoedgevallen te bieden.\n\nVerwerkers / partners: Google (Sign-In, Firebase Cloud Messaging, Gemini), Stripe (betalingen), cloudhosting (GCP).\n\nBewaring: tot verwijdering van het account; inactieve accounts na 3 jaar verwijderd; audio van bezoekverslagen bewaard zolang het dossier bestaat.\n\nAVG-rechten (inzage, rectificatie, wissing, overdraagbaarheid): Profiel → Mijn gegevens exporteren / Account verwijderen, of support@petsfollow.app.\n\nVolledige versie: https://petsfollow.ll-it-sc.be/legal/privacy\n\nLaatst bijgewerkt: juli 2026';
 
   @override
   String get legalNoticeBody =>
@@ -1991,6 +1991,72 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get sendConsultationPhiConsent =>
       'Ik ga ermee akkoord dit verslag met deze dierenarts te delen.';
+
+  @override
+  String get clientAiDevBadge => 'dev';
+
+  @override
+  String get clientAiExplainCta => 'Mijn verslag begrijpen';
+
+  @override
+  String get clientAiExplainTitle => 'Uw verslag uitgelegd';
+
+  @override
+  String get clientAiExplainDisclaimer =>
+      'Dit is geen medisch advies. Volg altijd de instructies van uw dierenarts.';
+
+  @override
+  String get clientAiExplainLoading => 'Uitleg voorbereiden…';
+
+  @override
+  String get clientAiTriageTitle => 'Hulp bij spoedgevallen 24/7';
+
+  @override
+  String get clientAiTriageSubtitle =>
+      'Beschrijf de situatie — wij beoordelen de urgentie.';
+
+  @override
+  String get clientAiTriageHint => 'Bv. mijn hond heeft chocolade gegeten…';
+
+  @override
+  String get clientAiTriageSend => 'Verzenden';
+
+  @override
+  String get clientAiTriageLevelGreen => 'Advies';
+
+  @override
+  String get clientAiTriageLevelOrange => 'Afspraak maken';
+
+  @override
+  String get clientAiTriageLevelRed => 'Spoed';
+
+  @override
+  String get clientAiTriageWatchSigns => 'Tekenen om te bewaken';
+
+  @override
+  String get clientAiTriageCallPractice => 'Praktijk bellen';
+
+  @override
+  String get clientAiTriageBookVisit => 'Afspraak maken';
+
+  @override
+  String get clientAiTriageMessageVet => 'Mijn dierenarts berichten';
+
+  @override
+  String get clientAiTriageSelectPet => 'Voor welk dier?';
+
+  @override
+  String get clientAiTriageNoPet => 'Doorgaan zonder dier';
+
+  @override
+  String get clientAiTriageStart => 'Start';
+
+  @override
+  String get clientAiTriageEmergencyFallback =>
+      'Als u uw praktijk niet kunt bereiken, neem dan onmiddellijk contact op met een lokale spoeddierenarts.';
+
+  @override
+  String get clientAiTriageOpenMessages => 'Berichten openen';
 
   @override
   String get bloodPressureShort => 'RR';

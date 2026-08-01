@@ -26,6 +26,18 @@
               </option>
             </select>
           </div>
+          <div class="pro-field pro-field-inline">
+            <label class="pro-label" for="unread-filter">{{ $t('pets.unreadFilter') }}</label>
+            <select
+              id="unread-filter"
+              v-model="unreadFilter"
+              class="pro-select"
+              data-testid="pets-unread-filter"
+            >
+              <option value="all">{{ $t('pets.unreadAll') }}</option>
+              <option value="unread">{{ $t('pets.unreadOnly') }}</option>
+            </select>
+          </div>
         </template>
       </ProListToolbar>
 
@@ -41,6 +53,7 @@
             <th>{{ $t('pets.columnBreed') }}</th>
             <th>{{ $t('pets.columnBirthDate') }}</th>
             <th>{{ $t('pets.columnLastVisit') }}</th>
+            <th>{{ $t('pets.columnReadingType') }}</th>
             <th>{{ $t('pets.columnLastHeartRate') }}</th>
             <th>{{ $t('pets.columnOwner') }}</th>
             <th>{{ $t('common.actions') }}</th>
@@ -71,6 +84,7 @@
             <td>{{ p.breed || $t('common.unknownBreed') }}</td>
             <td>{{ formatBirthDate(p.birthDate) }}</td>
             <td>{{ p.lastVisitAt ? formatDate(p.lastVisitAt) : $t('common.dash') }}</td>
+            <td data-testid="pet-reading-type">{{ readingTypeLabel(p) }}</td>
             <td>
               <template v-if="p.lastHeartRateAt">
                 <code v-if="p.lastHeartRateBpm != null">{{ p.lastHeartRateBpm }}</code>
@@ -105,25 +119,21 @@
 
 <script setup lang="ts">
 import { PET_SPECIES_CODES } from '~/utils/pet-species'
+import { filterVetPetsList, petReadingType, type VetPetListRow } from '~/utils/vet-pets-list'
 
 definePageMeta({ middleware: ['vet-only', 'practice-perm'], practicePerm: 'pets.read' })
 
-type VetPet = {
-  id: string
+type VetPet = VetPetListRow & {
   ownerUserId: string
-  ownerName: string
-  name: string
-  species: string
-  breed?: string
   birthDate?: string
   photoUrl?: string
   lastVisitAt?: string
-  lastHeartRateAt?: string
   lastHeartRateBpm?: number
-  unreadHeartrateCount?: number
 }
 
 const { t, te } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const { formatDate } = useFormatters()
 const { mapError } = useApiError()
 const { petsBadge, refresh: refreshNavBadges } = useNavBadges()
@@ -136,6 +146,7 @@ const pets = ref<VetPet[]>([])
 const loadError = ref('')
 const query = ref('')
 const speciesFilter = ref('all')
+const unreadFilter = ref<'all' | 'unread'>(route.query.unread === '1' ? 'unread' : 'all')
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 function openConsultation(ownerUserId: string, petId: string) {
@@ -145,6 +156,11 @@ function openConsultation(ownerUserId: string, petId: string) {
 function speciesLabel(species: string) {
   const key = `common.species.${species}`
   return te(key) ? t(key) : species
+}
+
+function readingTypeLabel(p: VetPet) {
+  const type = petReadingType(p)
+  return type ? t(`pets.readingType.${type}`) : t('common.dash')
 }
 
 function unreadLabel(count: number) {
@@ -166,14 +182,22 @@ function formatBirthDate(value?: string) {
   return formatDate(value)
 }
 
-const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  return pets.value.filter((p) => {
-    if (speciesFilter.value !== 'all' && p.species !== speciesFilter.value) return false
-    if (!q) return true
-    const hay = [p.name, p.breed, p.ownerName, p.species].filter(Boolean).join(' ').toLowerCase()
-    return hay.includes(q)
-  })
+const filtered = computed(() =>
+  filterVetPetsList(pets.value, {
+    query: query.value,
+    species: speciesFilter.value,
+    unreadOnly: unreadFilter.value === 'unread',
+  }),
+)
+
+watch(unreadFilter, (value) => {
+  const hasUnread = route.query.unread === '1'
+  if (value === 'unread' && hasUnread) return
+  if (value === 'all' && !hasUnread) return
+  const nextQuery = { ...route.query }
+  if (value === 'unread') nextQuery.unread = '1'
+  else delete nextQuery.unread
+  void router.replace({ query: nextQuery })
 })
 
 async function loadPets(silent = false) {

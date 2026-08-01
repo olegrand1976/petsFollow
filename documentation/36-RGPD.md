@@ -32,7 +32,7 @@ Nuxt BFF ── cookies httpOnly (pf_token /  ┘         │
 | Google Cloud (Cloud Run, Cloud SQL, GCS) | Hébergement UE (config projet) |
 | Stripe | Paiements abonnements client / SaaS |
 | Firebase Cloud Messaging | Push mobile |
-| Google Gemini | Amélioration CR (audio temps réel — voir privacy i18n) |
+| Google Gemini | Amélioration CR Pro (audio temps réel) + Client AI tag `dev` (vulgarisation CR finalisés + triage conversationnel — voir privacy i18n / [`43-CLIENT-AI.md`](43-CLIENT-AI.md)) |
 | Billit (si module facturation activé) | Peppol / factures cabinet — voir `33-BILLIT-INTEGRATION.md` |
 | Orthanc PACS (si `PACS_ENABLED`) | Index Cloud SQL `orthanc` + DICOM GCS — voir `40-PACS.md` |
 

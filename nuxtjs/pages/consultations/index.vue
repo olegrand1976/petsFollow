@@ -178,11 +178,13 @@
     <ProModal
       v-model:open="reportOpen"
       size="xl"
+      contain-scroll
       :title="$t('consultations.reportModalTitle')"
       test-id="consultation-history-report-modal"
     >
       <ProVisitReportPanel
         v-if="selectedVisitId"
+        fill-height
         :visit-id="selectedVisitId"
         :visit-scheduled-at="selectedVisitScheduledAt || undefined"
         :readonly="!canWriteClinical"

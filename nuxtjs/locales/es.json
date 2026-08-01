@@ -539,7 +539,7 @@
       },
       "kpi": {
         "pets": "Animales",
-        "unreadHeartrate": "FC sin leer",
+        "unreadHeartrate": "Lecturas sin leer",
         "alertSessions7d": "Alertas FC (7 d)",
         "overdueCare": "Cuidados atrasados",
         "pendingVisits": "Citas pendientes",
@@ -818,6 +818,9 @@
     "searchPlaceholder": "Nombre, raza, cliente…",
     "speciesFilter": "Tipo",
     "speciesAll": "Todos",
+    "unreadFilter": "Lecturas",
+    "unreadAll": "Todas",
+    "unreadOnly": "Sin leer",
     "emptyTitle": "Sin animales",
     "emptyDescription": "Los animales de sus clientes aparecerán aquí.",
     "columnName": "Animal",
@@ -825,10 +828,14 @@
     "columnBreed": "Raza",
     "columnBirthDate": "Fecha de nacimiento",
     "columnLastVisit": "Última visita",
-    "columnLastHeartRate": "Última lectura",
+    "columnReadingType": "Tipo de lectura",
+    "columnLastHeartRate": "Última FC",
     "columnOwner": "Cliente",
-    "unreadBadge": "Nuevo",
-    "unreadCount": "{n} nuevos"
+    "readingType": {
+      "heartrate": "FC"
+    },
+    "unreadBadge": "Lectura sin leer",
+    "unreadCount": "{n} lecturas sin leer"
   },
   "invoicing": {
     "title": "Facturación",
@@ -1083,7 +1090,7 @@
         "other": "Otro"
       }
     },
-    "unreadHeartrate": "FC sin revisar",
+    "unreadHeartrate": "Lecturas sin leer",
     "todayTitle": "Hoy",
     "todayEmptyTitle": "Sin citas hoy",
     "todayEmptyDescription": "Nada planificado para hoy.",

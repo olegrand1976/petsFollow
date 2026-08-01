@@ -1210,7 +1210,7 @@
       },
       "kpi": {
         "pets": "Animaux",
-        "unreadHeartrate": "FC non lues",
+        "unreadHeartrate": "Relevés non lus",
         "alertSessions7d": "Alertes FC (7 j)",
         "overdueCare": "Soins en retard",
         "pendingVisits": "RDV en attente",
@@ -1430,6 +1430,9 @@
     "searchPlaceholder": "Nom, race, client…",
     "speciesFilter": "Type",
     "speciesAll": "Tous",
+    "unreadFilter": "Relevés",
+    "unreadAll": "Tous",
+    "unreadOnly": "Non lus",
     "emptyTitle": "Aucun animal",
     "emptyDescription": "Les animaux de vos clients apparaîtront ici.",
     "columnName": "Animal",
@@ -1437,10 +1440,14 @@
     "columnBreed": "Race",
     "columnBirthDate": "Naissance",
     "columnLastVisit": "Dernière visite",
-    "columnLastHeartRate": "Dernier relevé",
+    "columnReadingType": "Type de relevé",
+    "columnLastHeartRate": "Dernière FC",
     "columnOwner": "Client",
-    "unreadBadge": "Nouveau",
-    "unreadCount": "{n} nouveaux"
+    "readingType": {
+      "heartrate": "FC"
+    },
+    "unreadBadge": "Relevé non lu",
+    "unreadCount": "{n} relevés non lus"
   },
   "invoicing": {
     "title": "Facturation",
@@ -1726,7 +1733,7 @@
         "other": "Autre"
       }
     },
-    "unreadHeartrate": "FC non vues",
+    "unreadHeartrate": "Relevés non lus",
     "todayTitle": "Aujourd'hui",
     "todayEmptyTitle": "Aucun RDV aujourd’hui",
     "todayEmptyDescription": "Rien de planifié pour cette journée.",

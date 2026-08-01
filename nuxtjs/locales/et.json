@@ -539,7 +539,7 @@
       },
       "kpi": {
         "pets": "Loomad",
-        "unreadHeartrate": "Lugemata HR",
+        "unreadHeartrate": "Lugemata näidud",
         "alertSessions7d": "HR hoiatused (7 p)",
         "overdueCare": "Hilinenud hooldus",
         "pendingVisits": "Ootel vastuvõtud",
@@ -818,6 +818,9 @@
     "searchPlaceholder": "Nimi, tõug, klient…",
     "speciesFilter": "Tüüp",
     "speciesAll": "Kõik",
+    "unreadFilter": "Näidud",
+    "unreadAll": "Kõik",
+    "unreadOnly": "Lugemata",
     "emptyTitle": "Lemmikloomi pole",
     "emptyDescription": "Teie klientide lemmikloomad ilmuvad siia.",
     "columnName": "Lemmikloom",
@@ -825,10 +828,14 @@
     "columnBreed": "Tõug",
     "columnBirthDate": "Sünnikuupäev",
     "columnLastVisit": "Viimane visiit",
-    "columnLastHeartRate": "Viimane mõõtmine",
+    "columnReadingType": "Näidu tüüp",
+    "columnLastHeartRate": "Viimane HR",
     "columnOwner": "Klient",
-    "unreadBadge": "Uus",
-    "unreadCount": "{n} uut"
+    "readingType": {
+      "heartrate": "HR"
+    },
+    "unreadBadge": "Lugemata näit",
+    "unreadCount": "{n} lugemata näitu"
   },
   "invoicing": {
     "title": "Arveldamine",
@@ -1083,7 +1090,7 @@
         "other": "Muu"
       }
     },
-    "unreadHeartrate": "Lugemata südamekloppimine",
+    "unreadHeartrate": "Lugemata näidud",
     "todayTitle": "Täna",
     "todayEmptyTitle": "Täna visiite pole",
     "todayEmptyDescription": "Tänaseks midagi planeeritud ei ole.",

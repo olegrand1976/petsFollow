@@ -1163,22 +1163,26 @@
       v-model:open="visitReportOpen"
       :title="$t('calendar.reportTitle')"
       size="lg"
+      contain-scroll
     >
-      <ProVisitReportPanel
-        v-if="visitReportId"
-        :visit-id="visitReportId"
-        :visit-scheduled-at="visitReportScheduledAt"
-        :readonly="!canWriteClinical"
-      />
-      <p class="pro-hint pro-mb-md">
-        <NuxtLink
+      <div class="pet-visit-report-modal">
+        <ProVisitReportPanel
           v-if="visitReportId"
-          :to="`/calendar?visit=${visitReportId}`"
-          data-testid="pet-visit-report-calendar-link"
-        >
-          {{ $t('clients.pet.openReportInCalendar') }}
-        </NuxtLink>
-      </p>
+          fill-height
+          :visit-id="visitReportId"
+          :visit-scheduled-at="visitReportScheduledAt"
+          :readonly="!canWriteClinical"
+        />
+        <p class="pro-hint pet-visit-report-modal__link">
+          <NuxtLink
+            v-if="visitReportId"
+            :to="`/calendar?visit=${visitReportId}`"
+            data-testid="pet-visit-report-calendar-link"
+          >
+            {{ $t('clients.pet.openReportInCalendar') }}
+          </NuxtLink>
+        </p>
+      </div>
     </ProModal>
   </div>
 </template>
@@ -2347,5 +2351,18 @@ onBeforeUnmount(() => {
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--pf-vet-border);
+}
+
+.pet-visit-report-modal {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pet-visit-report-modal__link {
+  flex-shrink: 0;
+  margin: 0;
 }
 </style>

@@ -588,7 +588,7 @@
       },
       "kpi": {
         "pets": "Dieren",
-        "unreadHeartrate": "Ongelezen HF",
+        "unreadHeartrate": "Ongelezen metingen",
         "alertSessions7d": "HF-alerten (7 d)",
         "overdueCare": "Achterstallige zorg",
         "pendingVisits": "Openstaande afspraken",
@@ -818,6 +818,9 @@
     "searchPlaceholder": "Naam, ras, cliënt…",
     "speciesFilter": "Type",
     "speciesAll": "Alle",
+    "unreadFilter": "Metingen",
+    "unreadAll": "Alle",
+    "unreadOnly": "Ongelezen",
     "emptyTitle": "Geen dieren",
     "emptyDescription": "Dieren van uw cliënten verschijnen hier.",
     "columnName": "Dier",
@@ -825,10 +828,14 @@
     "columnBreed": "Ras",
     "columnBirthDate": "Geboortedatum",
     "columnLastVisit": "Laatste bezoek",
-    "columnLastHeartRate": "Laatste meting",
+    "columnReadingType": "Type meting",
+    "columnLastHeartRate": "Laatste HF",
     "columnOwner": "Cliënt",
-    "unreadBadge": "Nieuw",
-    "unreadCount": "{n} nieuwe"
+    "readingType": {
+      "heartrate": "HF"
+    },
+    "unreadBadge": "Ongelezen meting",
+    "unreadCount": "{n} ongelezen metingen"
   },
   "invoicing": {
     "title": "Facturatie",
@@ -1114,7 +1121,7 @@
         "other": "Andere"
       }
     },
-    "unreadHeartrate": "Ongelezen hartslag",
+    "unreadHeartrate": "Ongelezen metingen",
     "todayTitle": "Vandaag",
     "todayEmptyTitle": "Geen afspraken vandaag",
     "todayEmptyDescription": "Niets gepland voor vandaag.",

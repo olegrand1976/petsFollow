@@ -12,6 +12,8 @@ ANDROID_APP_ID="${FIREBASE_ANDROID_APP_ID:-1:237481297060:android:a15f2666e4707c
 # URL Cloud Run directe (voir documentation/10-GCP-DEPLOIEMENT.md).
 API_BASE="${API_BASE:-https://petsfollow-api-a7ako2njea-od.a.run.app}"
 GOOGLE_SERVER_CLIENT_ID="${GOOGLE_SERVER_CLIENT_ID:-237481297060-90gihf09ec8pv2cc3jhnnodjo00vejde.apps.googleusercontent.com}"
+# Staging App Distribution: Client AI (CR explain + triage) on by default — tag dev.
+CLIENT_AI_ENABLED="${CLIENT_AI_ENABLED:-true}"
 GROUP_ALIAS="${APP_DIST_GROUP:-petsfollow-testers}"
 RELEASE_NOTES="${RELEASE_NOTES:-petsFollow pets staging — Google Sign-In client (API ${API_BASE})}"
 
@@ -50,7 +52,8 @@ flutter build apk --release --flavor staging \
   --dart-define="FLAVOR=staging" \
   --dart-define="APP_ENV=staging" \
   --dart-define="API_BASE=${API_BASE}" \
-  --dart-define="GOOGLE_SERVER_CLIENT_ID=${GOOGLE_SERVER_CLIENT_ID}"
+  --dart-define="GOOGLE_SERVER_CLIENT_ID=${GOOGLE_SERVER_CLIENT_ID}" \
+  --dart-define="CLIENT_AI_ENABLED=${CLIENT_AI_ENABLED}"
 
 APK_PATH="${FLUTTER_DIR}/build/app/outputs/flutter-apk/app-staging-release.apk"
 if [[ ! -f "${APK_PATH}" ]]; then
