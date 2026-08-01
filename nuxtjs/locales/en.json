@@ -951,6 +951,9 @@
       "reorderOnHand": "On hand",
       "reorderMin": "Min",
       "orderEmail": "Supplier email",
+      "orderSupplier": "Supplier",
+      "orderSupplierPlaceholder": "Select a supplier…",
+      "orderSupplierName": "Supplier name",
       "orderCreateSend": "Email order",
       "orderSent": "Order sent.",
       "errorOrder": "Could not send order.",
@@ -1040,7 +1043,8 @@
       "email_send_failed": "Email send failed.",
       "vamreg_enqueue_failed": "Could not retry VAMReg.",
       "not_found": "Not found.",
-      "validation_error": "Invalid data."
+      "validation_error": "Invalid data.",
+      "supplier_email_required": "Supplier email required."
     }
   },
   "recommend": {

@@ -459,7 +459,8 @@ func FormatPurchaseOrderCSV(o PurchaseOrder) string {
 	var b strings.Builder
 	b.WriteString("cnk;name;qty;unit\n")
 	for _, it := range o.Items {
-		b.WriteString(fmt.Sprintf("%s;%s;%g;%s\n", it.MedicationCNK, csvEscape(it.MedicationName), it.Qty, it.Unit))
+		b.WriteString(fmt.Sprintf("%s;%s;%g;%s\n",
+			csvEscape(it.MedicationCNK), csvEscape(it.MedicationName), it.Qty, csvEscape(it.Unit)))
 	}
 	return b.String()
 }

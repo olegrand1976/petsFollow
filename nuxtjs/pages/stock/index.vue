@@ -35,10 +35,15 @@
     <PharmacyStockReorderCard
       v-if="canWritePharmacy && reorderAlerts.length"
       :alerts="reorderAlerts"
+      :suppliers="suppliers"
+      :supplier-id="orderSupplierId"
       :email="orderEmail"
+      :new-supplier-name="orderSupplierName"
       :msg="orderMsg"
       :busy="busyOrder"
+      @update:supplier-id="orderSupplierId = $event"
       @update:email="orderEmail = $event"
+      @update:new-supplier-name="orderSupplierName = $event"
       @send="createAndSendOrder"
     />
 
@@ -100,7 +105,10 @@ const {
   receipt,
   batches,
   reorderAlerts,
+  suppliers,
+  orderSupplierId,
   orderEmail,
+  orderSupplierName,
   orderMsg,
   invSession,
   invCounts,

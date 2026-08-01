@@ -925,6 +925,9 @@
       "reorderOnHand": "Laos",
       "reorderMin": "Lävi",
       "orderEmail": "Tarnija e-post",
+      "orderSupplier": "Tarnija",
+      "orderSupplierPlaceholder": "Vali tarnija…",
+      "orderSupplierName": "Tarnija nimi",
       "orderCreateSend": "Telli e-postiga",
       "orderSent": "Tellimus saadetud.",
       "errorOrder": "Tellimust ei saanud saata.",
@@ -1009,7 +1012,8 @@
       "email_send_failed": "Email send failed.",
       "vamreg_enqueue_failed": "Could not retry VAMReg.",
       "not_found": "Not found.",
-      "validation_error": "Invalid data."
+      "validation_error": "Invalid data.",
+      "supplier_email_required": "Tarnija e-post puudub."
     }
   },
   "recommend": {
