@@ -200,6 +200,8 @@ Compte : `vet.demo@petsfollow.test`
 | C3.5 | P1 | Annuler / done | Actions visite | Statuts cohérents |
 | C3.6 | P2 | Deep-link visite | `/calendar?visit={id}` (email) | Focus bonne visite |
 | C3.7 | P2 | GPS / adresse | Saisir adresse visite | Lien Maps si présent |
+| C3.8 | P1 | Nouveau RDV modal | `/calendar` → + Nouveau RDV | Modal `lg` 2 colonnes ; créer propose/confirm |
+| C3.9 | P1 | Pré-consult urgente | Opt-in pré-consult → client soumet `urgency=high` | Badge Urgent calendrier ; détail + IA informatif ; email véto immédiat (alerte clinique) |
 
 ### C4 — Messagerie Pro
 
@@ -608,6 +610,17 @@ Toute mutation métier doit renforcer le filet (règle Cursor `anti-regression-q
 ### API (smoke)
 
 `make smoke` — health, auth véto/client/admin, clients, billing mock, messagerie **H1 croisé** (véto → client), heartrate validate **avec comment**, timeline, tension client + panel labo véto (`valueText` + trend crea), **H13** `GET /public/pet-dossier/{token}` inconnu → 404.
+
+### Pré-consultation + alerte urgence (Go — C3.9)
+
+`go test ./internal/handlers/ -run 'TestPublicPreconsult' -count=1`
+`go test ./internal/platform/gemini/ -run 'TestParsePreconsultUrgency' -count=1`
+
+| Cas | Attendu |
+|-----|---------|
+| Soumission `urgency=high` | notif immédiate (avant Gemini) ; `notification_log.kind=preconsult_urgent` ; calendar `preconsultAlert=urgent` |
+| Gemini absent | Soumission 200 ; pas d'`aiUrgency` ; alerte si `high` déclarée |
+| XSS answers | 400 `html_not_allowed` |
 
 ### Envoi dossier animal (Go intégration — H13)
 

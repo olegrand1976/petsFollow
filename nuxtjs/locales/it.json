@@ -2555,6 +2555,11 @@
     "newAppointmentCreated": "Appuntamento creato.",
     "newAppointmentFailed": "Creazione appuntamento non riuscita.",
     "newAppointmentLoadFailed": "Impossibile caricare i dati del modulo.",
+    "newAppt": {
+      "sectionWho": "Chi",
+      "sectionWhen": "Quando",
+      "preconsultHint": "Il cliente riceve un link per descrivere lo stato dell'animale prima della visita."
+    },
     "selectClient": "Scegli un cliente…",
     "selectPet": "Scegli un animale…",
     "visitType": "Tipo di appuntamento",
@@ -2663,6 +2668,16 @@
     "preconsultElimination": "Feci/urina",
     "preconsultUrgency": "Emergenza",
     "preconsultComment": "Commento",
+    "preconsultUrgentShort": "Urgente",
+    "preconsultAiTitle": "Triage IA",
+    "preconsultAiDisclaimer": "Indicativo — non sostituisce il giudizio clinico.",
+    "preconsultAiLevel": "Livello",
+    "preconsultAiSummary": "Sintesi",
+    "preconsultAiLevels": {
+      "green": "Basso",
+      "orange": "Da monitorare",
+      "red": "Urgente"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Oggi",

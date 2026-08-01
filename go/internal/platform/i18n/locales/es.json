@@ -249,6 +249,14 @@
     "visit_request_detail": "Hora propuesta: {when}\nNotas: {notes}",
     "visit_request_cta": "Ver solicitud",
     "visit_request_disclaimer": "Inicie sesión en petsFollow Pro para confirmar o proponer otro horario.",
+    "preconsult_urgent_subject": "Preconsulta urgente — {petName}",
+    "preconsult_urgent_tagline": "Alerta de preconsulta",
+    "preconsult_urgent_preheader": "Urgencia señalada para {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Hola,",
+    "preconsult_urgent_intro": "Se ha enviado una preconsulta urgente para {petName} ({clientName}).",
+    "preconsult_urgent_detail": "Cita: {when}\nMotivo: {chiefComplaint}\nUrgencia declarada: {urgency}\nResumen IA: {aiSummary}",
+    "preconsult_urgent_cta": "Ver la cita",
+    "preconsult_urgent_disclaimer": "Inicie sesión en petsFollow Pro para revisar el expediente y priorizar la atención.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visitar LL-IT Software & Computer",
     "product_digest_subject": "petsFollow — Evoluciones del {date}",
@@ -624,7 +632,10 @@
     "sales_branch_congrats_detail": "• Nombre: {branchName}\n• Código: {branchCode}\n\nPuedes consultar tu asignación en la sección Red de petsFollow Pro.",
     "sales_branch_congrats_cta": "Ver mi red",
     "sales_branch_congrats_disclaimer": "Email automático — creación de sucursal comercial petsFollow.",
-    "sales_branch_congrats_fallback_name": "comercial"
+    "sales_branch_congrats_fallback_name": "comercial",
+    "preconsult_urgency_low": "Baja",
+    "preconsult_urgency_medium": "Moderada",
+    "preconsult_urgency_high": "Alta"
   },
   "push": {
     "new_message_title": "Nuevo mensaje",

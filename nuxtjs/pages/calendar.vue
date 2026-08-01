@@ -207,6 +207,13 @@
           <ProBadge :variant="preconsultBadgeVariant">
             {{ preconsultStatusLabel }}
           </ProBadge>
+          <ProBadge
+            v-if="preconsultIsUrgent"
+            variant="danger"
+            data-testid="visit-preconsult-urgent"
+          >
+            {{ $t('calendar.preconsultUrgentShort') }}
+          </ProBadge>
         </p>
         <div
           v-if="preconsult?.status === 'submitted'"
@@ -248,6 +255,28 @@
               <dd>{{ preconsult.answers.comment }}</dd>
             </div>
           </dl>
+          <div
+            v-if="preconsult.aiUrgency || preconsult.aiSummary"
+            class="preconsult-ai"
+            data-testid="visit-preconsult-ai"
+          >
+            <h3 class="pro-section-title">{{ $t('calendar.preconsultAiTitle') }}</h3>
+            <p class="pro-settings-hint">{{ $t('calendar.preconsultAiDisclaimer') }}</p>
+            <dl class="preconsult-dl">
+              <div v-if="preconsult.aiUrgency">
+                <dt>{{ $t('calendar.preconsultAiLevel') }}</dt>
+                <dd>
+                  <ProBadge :variant="preconsultAiBadgeVariant">
+                    {{ preconsultAiLevelLabel }}
+                  </ProBadge>
+                </dd>
+              </div>
+              <div v-if="preconsult.aiSummary">
+                <dt>{{ $t('calendar.preconsultAiSummary') }}</dt>
+                <dd>{{ preconsult.aiSummary }}</dd>
+              </div>
+            </dl>
+          </div>
         </div>
         <div class="pro-field pro-mb-md">
           <ProInput
@@ -442,6 +471,8 @@ const addressBusy = ref(false)
 const addressMsg = ref('')
 const preconsult = ref<{
   status?: string
+  aiUrgency?: string
+  aiSummary?: string
   answers?: {
     chiefComplaint?: string
     duration?: string
@@ -453,6 +484,35 @@ const preconsult = ref<{
     comment?: string
   }
 } | null>(null)
+
+const preconsultIsUrgent = computed(() => {
+  return (
+    preconsult.value?.answers?.urgency === 'high'
+    || preconsult.value?.aiUrgency === 'red'
+    || selectedVisit.value?.preconsultAlert === 'urgent'
+  )
+})
+
+const preconsultAiLevelLabel = computed(() => {
+  const level = preconsult.value?.aiUrgency
+  if (!level) return ''
+  const key = `calendar.preconsultAiLevels.${level}`
+  const translated = t(key)
+  return translated === key ? level : translated
+})
+
+const preconsultAiBadgeVariant = computed(() => {
+  switch (preconsult.value?.aiUrgency) {
+    case 'red':
+      return 'danger'
+    case 'orange':
+      return 'warning'
+    case 'green':
+      return 'success'
+    default:
+      return 'neutral'
+  }
+})
 
 const preconsultStatusLabel = computed(() => {
   const st = preconsult.value?.status || selectedVisit.value?.preconsultStatus || ''
@@ -469,6 +529,7 @@ const preconsultStatusLabel = computed(() => {
 })
 
 const preconsultBadgeVariant = computed(() => {
+  if (preconsultIsUrgent.value) return 'danger'
   const st = preconsult.value?.status || selectedVisit.value?.preconsultStatus || ''
   switch (st) {
     case 'submitted':
@@ -656,10 +717,28 @@ async function loadVisitPreconsult(visitId: string) {
     const res: any = await $fetch(`/api/visits/${visitId}/preconsult`)
     preconsult.value = res.data ?? res
     if (selectedVisit.value?.id === visitId && preconsult.value?.status) {
+      const alert =
+        preconsult.value.aiUrgency === 'red' || preconsult.value.answers?.urgency === 'high'
+          ? 'urgent'
+          : selectedVisit.value.preconsultAlert
       selectedVisit.value = {
         ...selectedVisit.value,
         preconsultStatus: preconsult.value.status,
+        preconsultAlert: alert || undefined,
       }
+      const patch = (list: CalendarVisit[]) => {
+        const idx = list.findIndex((v) => v.id === visitId)
+        if (idx < 0) return list
+        const next = list.slice()
+        next[idx] = {
+          ...next[idx],
+          preconsultStatus: preconsult.value?.status,
+          preconsultAlert: alert || undefined,
+        }
+        return next
+      }
+      visits.value = patch(visits.value)
+      pending.value = patch(pending.value)
     }
   } catch {
     preconsult.value = null
@@ -882,6 +961,11 @@ watch(
 }
 .preconsult-dl dd {
   margin: 0.15rem 0 0;
+}
+.preconsult-ai {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pf-vet-border);
 }
 .pro-inline-feedback--error {
   background: color-mix(in srgb, var(--pf-vet-alert) 10%, var(--pf-vet-surface));

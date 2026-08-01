@@ -42,6 +42,7 @@
               'cal-chip--focus': focusVisitId === v.id,
               'cal-chip--walkin': !!v.consultationSession,
               'cal-chip--typed': !!v.visitTypeColor,
+              'cal-chip--urgent': v.preconsultAlert === 'urgent',
             },
           ]"
           :style="v.visitTypeColor ? { '--cal-type-color': v.visitTypeColor } : undefined"
@@ -51,6 +52,11 @@
           <span class="cal-chip__time">{{ chipTime(v) }}</span>
           <span v-if="v.visitTypeName" class="cal-chip__type">{{ v.visitTypeName }}</span>
           <span v-if="v.consultationSession" class="cal-chip__walkin">{{ $t('calendar.walkInShort') }}</span>
+          <span
+            v-if="v.preconsultAlert === 'urgent'"
+            class="cal-chip__urgent"
+            data-testid="calendar-chip-preconsult-urgent"
+          >{{ $t('calendar.preconsultUrgentShort') }}</span>
           <span class="cal-chip__title">{{ v.petName || '—' }} · {{ v.clientName || '—' }}</span>
           <span v-if="v.addressText" class="cal-chip__place">{{ v.addressText }}</span>
         </button>

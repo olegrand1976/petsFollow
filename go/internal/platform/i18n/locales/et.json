@@ -249,6 +249,14 @@
     "visit_request_detail": "Pakutud aeg: {when}\nMärkused: {notes}",
     "visit_request_cta": "Vaata taotlust",
     "visit_request_disclaimer": "Logige petsFollow Pro'sse sisse, et kinnitada või pakkuda teist aega.",
+    "preconsult_urgent_subject": "Kiireloomuline eelkonsultatsioon — {petName}",
+    "preconsult_urgent_tagline": "Eelkonsultatsiooni hoiatus",
+    "preconsult_urgent_preheader": "Kiireloomulisus märgitud loomale {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Tere,",
+    "preconsult_urgent_intro": "Loomale {petName} ({clientName}) esitati kiireloomuline eelkonsultatsioon.",
+    "preconsult_urgent_detail": "Vastuvõtt: {when}\nKaebus: {chiefComplaint}\nDeklareeritud kiireloomulisus: {urgency}\nIA kokkuvõte: {aiSummary}",
+    "preconsult_urgent_cta": "Vaata vastuvõttu",
+    "preconsult_urgent_disclaimer": "Logige petsFollow Pro'sse sisse, et faili vaadata ja ravi prioriseerida.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Külasta LL-IT Software & Computer",
     "product_digest_subject": "petsFollow — Uuendused {date}",
@@ -624,7 +632,10 @@
     "sales_branch_congrats_detail": "• Nimi: {branchName}\n• Kood: {branchCode}\n\nSaad oma seost vaadata petsFollow Pro võrgustiku jaotisest.",
     "sales_branch_congrats_cta": "Vaata minu võrgustikku",
     "sales_branch_congrats_disclaimer": "Automaatne e-kiri — petsFollow müügiharu loomine.",
-    "sales_branch_congrats_fallback_name": "müügiesindaja"
+    "sales_branch_congrats_fallback_name": "müügiesindaja",
+    "preconsult_urgency_low": "Madal",
+    "preconsult_urgency_medium": "Keskmine",
+    "preconsult_urgency_high": "Kõrge"
   },
   "push": {
     "new_message_title": "Uus sõnum",

@@ -190,3 +190,44 @@ func (a *API) notifyVetsVisitRequest(pet store.Pet, visit store.Visit) {
 		}
 	}()
 }
+
+// notifyVetsPreconsultUrgent is synchronous — callers already run in a background goroutine.
+// Clinical alert: always emailed (not gated by emailOnVisitRequest). Deduped per visit.
+func (a *API) notifyVetsPreconsultUrgent(ctx context.Context, pet store.Pet, visit store.Visit, answers store.PreconsultAnswers, aiSummary string) {
+	if exists, err := a.store.HasNotificationKindForVisit(ctx, "preconsult_urgent", visit.ID); err == nil && exists {
+		return
+	}
+	vets, err := a.store.ListVetsForVisitAlert(ctx, pet.PracticeID, pet.OwnerUserID)
+	if err != nil || len(vets) == 0 {
+		return
+	}
+	client, _ := a.store.GetUserByID(ctx, pet.OwnerUserID)
+	when := ""
+	loc, _ := time.LoadLocation("Europe/Brussels")
+	if loc == nil {
+		loc = time.Local
+	}
+	if visit.ScheduledAt != nil {
+		when = visit.ScheduledAt.In(loc).Format("02/01/2006 15:04")
+	} else if visit.ProposedScheduledAt != nil {
+		when = visit.ProposedScheduledAt.In(loc).Format("02/01/2006 15:04")
+	}
+	ctaURL := fmt.Sprintf("%s/calendar?visit=%s", strings.TrimRight(a.cfg.ProPublicSiteURL, "/"), visit.ID)
+	for _, vet := range vets {
+		locale := vet.PreferredLocale
+		if locale == "" {
+			locale = "fr"
+		}
+		if a.notifier != nil {
+			_ = a.notifier.SendPreconsultUrgent(
+				vet.Email, locale, client.FullName, pet.Name, when,
+				answers.ChiefComplaint, answers.Urgency, aiSummary, ctaURL,
+			)
+		}
+		_ = a.store.LogNotification(ctx, vet.ID, "preconsult_urgent", map[string]any{
+			"visitId":         visit.ID,
+			"petId":           pet.ID,
+			"declaredUrgency": answers.Urgency,
+		})
+	}
+}

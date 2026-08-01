@@ -3083,6 +3083,11 @@
     "newAppointmentCreated": "Appointment created.",
     "newAppointmentFailed": "Could not create the appointment.",
     "newAppointmentLoadFailed": "Could not load the form data.",
+    "newAppt": {
+      "sectionWho": "Who",
+      "sectionWhen": "When",
+      "preconsultHint": "The client receives a link to describe the pet's condition before the visit."
+    },
     "selectClient": "Choose a client…",
     "selectPet": "Choose a pet…",
     "visitType": "Appointment type",
@@ -3191,6 +3196,16 @@
     "preconsultElimination": "Stool / urine",
     "preconsultUrgency": "Urgency",
     "preconsultComment": "Comment",
+    "preconsultUrgentShort": "Urgent",
+    "preconsultAiTitle": "AI triage",
+    "preconsultAiDisclaimer": "Indicative only — does not replace clinical judgment.",
+    "preconsultAiLevel": "Level",
+    "preconsultAiSummary": "Summary",
+    "preconsultAiLevels": {
+      "green": "Low",
+      "orange": "Watch",
+      "red": "Urgent"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Today",

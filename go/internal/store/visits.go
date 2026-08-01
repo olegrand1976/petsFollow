@@ -36,6 +36,8 @@ type Visit struct {
 	VisitTypeColor string `json:"visitTypeColor,omitempty"`
 	// PreconsultStatus is pending|submitted|skipped when an intake exists.
 	PreconsultStatus string `json:"preconsultStatus,omitempty"`
+	// PreconsultAlert is "urgent" when submitted intake is AI-red or declared high.
+	PreconsultAlert string `json:"preconsultAlert,omitempty"`
 	// RequestPreconsult: VetPro opted in to send public preconsult questionnaire.
 	RequestPreconsult bool `json:"requestPreconsult,omitempty"`
 	// ConsultationSession: walk-in CR flow — excluded from agenda overlap / slot busy.

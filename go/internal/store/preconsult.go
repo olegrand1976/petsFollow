@@ -38,6 +38,10 @@ type PreconsultIntake struct {
 	SubmittedAt *time.Time        `json:"submittedAt,omitempty"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	UpdatedAt   time.Time         `json:"updatedAt"`
+	// Informative AI assessment (does not override answers.urgency).
+	AIUrgency    string     `json:"aiUrgency,omitempty"`
+	AISummary    string     `json:"aiSummary,omitempty"`
+	AIAssessedAt *time.Time `json:"aiAssessedAt,omitempty"`
 	// Optional denormalized fields for client UI.
 	PetID   string `json:"petId,omitempty"`
 	PetName string `json:"petName,omitempty"`
@@ -105,6 +109,7 @@ func scanPreconsult(row pgx.Row) (PreconsultIntake, error) {
 	var raw []byte
 	err := row.Scan(
 		&in.ID, &in.VisitID, &in.Status, &raw, &in.SubmittedAt, &in.CreatedAt, &in.UpdatedAt,
+		&in.AIUrgency, &in.AISummary, &in.AIAssessedAt,
 	)
 	if err != nil {
 		return PreconsultIntake{}, err
@@ -115,8 +120,11 @@ func scanPreconsult(row pgx.Row) (PreconsultIntake, error) {
 	return in, nil
 }
 
+const preconsultCols = `id::text, visit_id::text, status, answers, submitted_at, created_at, updated_at,
+		COALESCE(ai_urgency,''), COALESCE(ai_summary,''), ai_assessed_at`
+
 const preconsultSelect = `
-	SELECT id::text, visit_id::text, status, answers, submitted_at, created_at, updated_at
+	SELECT ` + preconsultCols + `
 	FROM visits.preconsult_intakes`
 
 // EnsurePreconsultPending creates a pending intake for a confirmed visit.
@@ -133,7 +141,7 @@ func (s *Store) EnsurePreconsultPending(ctx context.Context, visitID string) (Pr
 	in, err := scanPreconsult(s.pool.QueryRow(ctx, `
 		INSERT INTO visits.preconsult_intakes (id, visit_id, status, answers)
 		VALUES ($1, $2, 'pending', '{}'::jsonb)
-		RETURNING id::text, visit_id::text, status, answers, submitted_at, created_at, updated_at`,
+		RETURNING `+preconsultCols,
 		id, visitID))
 	if err != nil {
 		// Race: another writer won.
@@ -168,7 +176,7 @@ func (s *Store) SubmitPreconsult(ctx context.Context, visitID string, answers Pr
 		UPDATE visits.preconsult_intakes
 		SET status = 'submitted', answers = $2::jsonb, submitted_at = NOW(), updated_at = NOW()
 		WHERE visit_id = $1 AND status = 'pending'
-		RETURNING id::text, visit_id::text, status, answers, submitted_at, created_at, updated_at`,
+		RETURNING `+preconsultCols,
 		visitID, raw))
 	if errors.Is(err, pgx.ErrNoRows) {
 		cur, gerr := s.GetPreconsultByVisit(ctx, visitID)
@@ -198,30 +206,78 @@ func IsPreconsultValidation(err error) (string, bool) {
 	return "", false
 }
 
-// MapPreconsultStatuses returns visitID → status for a practice visit list.
-func (s *Store) MapPreconsultStatuses(ctx context.Context, visitIDs []string) (map[string]string, error) {
-	out := map[string]string{}
+// PreconsultMeta is status (+ optional Pro alert) for calendar enrichment.
+type PreconsultMeta struct {
+	Status string
+	Alert  string // "urgent" when submitted and AI red or declared high
+}
+
+// MapPreconsultMeta returns visitID → status/alert for a practice visit list.
+func (s *Store) MapPreconsultMeta(ctx context.Context, visitIDs []string) (map[string]PreconsultMeta, error) {
+	out := map[string]PreconsultMeta{}
 	if len(visitIDs) == 0 {
 		return out, nil
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT visit_id::text, status FROM visits.preconsult_intakes
+		SELECT visit_id::text, status,
+			COALESCE(ai_urgency, ''),
+			COALESCE(answers->>'urgency', '')
+		FROM visits.preconsult_intakes
 		WHERE visit_id = ANY($1::uuid[])`, visitIDs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id, status string
-		if err := rows.Scan(&id, &status); err != nil {
+		var id, status, aiUrgency, declared string
+		if err := rows.Scan(&id, &status, &aiUrgency, &declared); err != nil {
 			return nil, err
 		}
-		out[id] = status
+		meta := PreconsultMeta{Status: status}
+		if status == PreconsultSubmitted && (aiUrgency == "red" || declared == "high") {
+			meta.Alert = "urgent"
+		}
+		out[id] = meta
 	}
 	return out, rows.Err()
 }
 
-// AttachPreconsultStatuses fills Visit.PreconsultStatus when an intake exists.
+// MapPreconsultStatuses returns visitID → status for a practice visit list.
+func (s *Store) MapPreconsultStatuses(ctx context.Context, visitIDs []string) (map[string]string, error) {
+	meta, err := s.MapPreconsultMeta(ctx, visitIDs)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]string, len(meta))
+	for id, m := range meta {
+		out[id] = m.Status
+	}
+	return out, nil
+}
+
+const maxPreconsultAISummaryRunes = 800
+
+// SavePreconsultAIAssessment persists the informative Gemini urgency judgment.
+// Does not bump updated_at (avoids re-queueing research ETL on AI-only writes).
+func (s *Store) SavePreconsultAIAssessment(ctx context.Context, visitID, urgency, summary string) error {
+	urgency = strings.ToLower(strings.TrimSpace(urgency))
+	switch urgency {
+	case "green", "orange", "red":
+	default:
+		return errors.New("invalid_ai_urgency")
+	}
+	summary = strings.TrimSpace(summary)
+	if runes := []rune(summary); len(runes) > maxPreconsultAISummaryRunes {
+		summary = string(runes[:maxPreconsultAISummaryRunes])
+	}
+	_, err := s.pool.Exec(ctx, `
+		UPDATE visits.preconsult_intakes
+		SET ai_urgency = $2, ai_summary = $3, ai_assessed_at = NOW()
+		WHERE visit_id = $1`, visitID, urgency, summary)
+	return err
+}
+
+// AttachPreconsultStatuses fills Visit.PreconsultStatus / PreconsultAlert when an intake exists.
 func (s *Store) AttachPreconsultStatuses(ctx context.Context, visits []Visit) error {
 	if len(visits) == 0 {
 		return nil
@@ -230,13 +286,14 @@ func (s *Store) AttachPreconsultStatuses(ctx context.Context, visits []Visit) er
 	for i, v := range visits {
 		ids[i] = v.ID
 	}
-	m, err := s.MapPreconsultStatuses(ctx, ids)
+	m, err := s.MapPreconsultMeta(ctx, ids)
 	if err != nil {
 		return err
 	}
 	for i := range visits {
-		if st, ok := m[visits[i].ID]; ok {
-			visits[i].PreconsultStatus = st
+		if meta, ok := m[visits[i].ID]; ok {
+			visits[i].PreconsultStatus = meta.Status
+			visits[i].PreconsultAlert = meta.Alert
 		}
 	}
 	return nil

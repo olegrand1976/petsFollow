@@ -3052,6 +3052,11 @@
     "newAppointmentCreated": "Cita creada.",
     "newAppointmentFailed": "No se pudo crear la cita.",
     "newAppointmentLoadFailed": "No se pudieron cargar los datos del formulario.",
+    "newAppt": {
+      "sectionWho": "Quién",
+      "sectionWhen": "Cuándo",
+      "preconsultHint": "El cliente recibe un enlace para describir el estado del animal antes de la visita."
+    },
     "selectClient": "Elegir un cliente…",
     "selectPet": "Elegir un animal…",
     "visitType": "Tipo de cita",
@@ -3160,6 +3165,16 @@
     "preconsultElimination": "Heces / orina",
     "preconsultUrgency": "Urgencia",
     "preconsultComment": "Comentario",
+    "preconsultUrgentShort": "Urgente",
+    "preconsultAiTitle": "Triaje IA",
+    "preconsultAiDisclaimer": "Indicativo — no sustituye el juicio clínico.",
+    "preconsultAiLevel": "Nivel",
+    "preconsultAiSummary": "Resumen",
+    "preconsultAiLevels": {
+      "green": "Bajo",
+      "orange": "Vigilancia",
+      "red": "Urgente"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Hoy",

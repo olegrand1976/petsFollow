@@ -249,6 +249,14 @@
     "visit_request_detail": "Voorgesteld tijdstip: {when}\nNotities: {notes}",
     "visit_request_cta": "Aanvraag bekijken",
     "visit_request_disclaimer": "Meld u aan bij petsFollow Pro om te bevestigen of een ander moment voor te stellen.",
+    "preconsult_urgent_subject": "Urgente preconsultatie — {petName}",
+    "preconsult_urgent_tagline": "Preconsultatie-alert",
+    "preconsult_urgent_preheader": "Urgentie gemeld voor {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Hallo,",
+    "preconsult_urgent_intro": "Er is een urgente preconsultatie ingediend voor {petName} ({clientName}).",
+    "preconsult_urgent_detail": "Afspraak: {when}\nKlacht: {chiefComplaint}\nOpgegeven urgentie: {urgency}\nAI-samenvatting: {aiSummary}",
+    "preconsult_urgent_cta": "Afspraak bekijken",
+    "preconsult_urgent_disclaimer": "Meld u aan bij petsFollow Pro om het dossier te bekijken en de zorg te prioriteren.",
     "footer_powered_by": "petsFollow — aangedreven door LL-IT Software & Computer",
     "footer_visit_llit": "Bezoek LL-IT Software & Computer",
     "product_digest_subject": "petsFollow — Updates van {date}",
@@ -624,7 +632,10 @@
     "sales_branch_congrats_detail": "• Naam: {branchName}\n• Code: {branchCode}\n\nJe kunt je toewijzing bekijken in de sectie Netwerk van petsFollow Pro.",
     "sales_branch_congrats_cta": "Mijn netwerk bekijken",
     "sales_branch_congrats_disclaimer": "Automatische e-mail — aanmaak verkoopbranche petsFollow.",
-    "sales_branch_congrats_fallback_name": "commercieel"
+    "sales_branch_congrats_fallback_name": "commercieel",
+    "preconsult_urgency_low": "Laag",
+    "preconsult_urgency_medium": "Matig",
+    "preconsult_urgency_high": "Hoog"
   },
   "push": {
     "new_message_title": "Nieuw bericht",

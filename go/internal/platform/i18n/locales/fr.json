@@ -249,6 +249,14 @@
     "visit_request_detail": "Date proposée : {when}\nNotes : {notes}",
     "visit_request_cta": "Voir la demande",
     "visit_request_disclaimer": "Connectez-vous à petsFollow Pro pour confirmer ou proposer un autre créneau.",
+    "preconsult_urgent_subject": "Pré-consultation urgente — {petName}",
+    "preconsult_urgent_tagline": "Alerte pré-consultation",
+    "preconsult_urgent_preheader": "Urgence signalée pour {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Bonjour,",
+    "preconsult_urgent_intro": "Une pré-consultation urgente a été soumise pour {petName} ({clientName}).",
+    "preconsult_urgent_detail": "Date du RDV : {when}\nMotif : {chiefComplaint}\nUrgence déclarée : {urgency}\nSynthèse IA : {aiSummary}",
+    "preconsult_urgent_cta": "Voir le rendez-vous",
+    "preconsult_urgent_disclaimer": "Connectez-vous à petsFollow Pro pour consulter le dossier et prioriser la prise en charge.",
     "footer_powered_by": "petsFollow — propulsé par LL-IT Software & Computer",
     "footer_visit_llit": "Visiter le site LL-IT Software & Computer",
     "product_digest_subject": "petsFollow — Évolutions du {date}",
@@ -624,7 +632,10 @@
     "sales_branch_congrats_detail": "• Nom : {branchName}\n• Code : {branchCode}\n\nVous pouvez consulter votre rattachement dans la section Réseau de petsFollow Pro.",
     "sales_branch_congrats_cta": "Voir mon réseau",
     "sales_branch_congrats_disclaimer": "Email automatique — création de branche commerciale petsFollow.",
-    "sales_branch_congrats_fallback_name": "commercial"
+    "sales_branch_congrats_fallback_name": "commercial",
+    "preconsult_urgency_low": "Faible",
+    "preconsult_urgency_medium": "Modérée",
+    "preconsult_urgency_high": "Élevée"
   },
   "push": {
     "new_message_title": "Nouveau message",

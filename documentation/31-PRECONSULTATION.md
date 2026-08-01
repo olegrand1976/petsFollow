@@ -17,6 +17,11 @@ Créer / confirmer RDV (checkbox « Demander une pré-consultation »)
     → Email SendVisitPreconsult
          CTA = {ProPublicSiteURL}/preconsult/{token}
     → Client remplit GET/POST /api/v1/public/preconsult/{token}
+    → Si urgency déclarée=high : alerte véto immédiate (email + LogNotification)
+    → (async) Gemini AssessPreconsultUrgency → ai_urgency / ai_summary (locale cabinet/véto)
+    → Si ai_urgency=red et pas déjà notifié : alerte véto
+         Email SendPreconsultUrgent (toujours — alerte clinique, hors pref visit_request)
+         + LogNotification kind=preconsult_urgent (dedupe par visitId)
     → Page remerciement (bénéfices + QR stores admin + lien invite)
 
   Sinon:
@@ -25,6 +30,8 @@ Créer / confirmer RDV (checkbox « Demander une pré-consultation »)
 ```
 
 L’auto-création d’intake + mail à **chaque** confirm est **désactivée**. Le formulaire Flutter auth reste secondaire ; la source de vérité est le **formulaire web public**.
+
+Échec Gemini = soft-fail (soumission OK, pas d’`aiUrgency`).
 
 ## Schéma JSON `answers`
 
@@ -39,7 +46,23 @@ L’auto-création d’intake + mail à **chaque** confirm est **désactivée**.
 | `urgency` | enum | `low` · `medium` · `high` |
 | `comment` | string | libre (optionnel ; plain text) |
 
+### Colonnes assessment IA (intake)
+
+| Champ API | Colonne | Valeurs |
+|-----------|---------|---------|
+| `aiUrgency` | `ai_urgency` | `green` · `orange` · `red` (nullable) |
+| `aiSummary` | `ai_summary` | 1–2 phrases (nullable) |
+| `aiAssessedAt` | `ai_assessed_at` | timestamptz (nullable) |
+
+L’IA **n’écrase pas** `answers.urgency` (auto-déclarée). Affichage Pro : disclaimer « informatif ».
+
 Statuts intake : `pending` → `submitted` (ou `skipped` réservé).
+
+## Signal Pro (calendrier)
+
+- Payload visite : `preconsultAlert: "urgent"` si intake soumis avec `ai_urgency=red` **ou** `answers.urgency=high`.
+- UI : badge sur chips semaine/mois + détail RDV (réponses + bloc IA).
+- Pas de centre de notifications topbar dédié (messages seulement).
 
 ## API
 
@@ -57,7 +80,8 @@ Statuts intake : `pending` → `submitted` (ou `skipped` réservé).
 - Token opaque (pas de PII dans l’URL), expiration, rate-limit authRL.
 - Texte libre : trim, max length, **rejet** si balises/`<>` (`html_not_allowed`).
 - Affichage Pro : plain text (pas de HTML brut).
-- Pref client `visits` respectée pour les e-mails.
+- Pref client `visits` respectée pour les e-mails pré-consult client.
+- Alerte urgence pré-consult : email clinique **toujours** envoyé aux vétos du cabinet (indépendant de `emailOnVisitRequest`).
 
 ## QR stores & pack profil
 
@@ -67,9 +91,9 @@ Statuts intake : `pending` → `submitted` (ou `skipped` réservé).
 
 ## Prefs / RGPD
 
-- Export : `preconsultIntakes` dans `GET /me/export`.
+- Export : `preconsultIntakes` dans `GET /me/export` (inclut colonnes AI).
 - Purge : cascade visits → intakes / tokens.
 
 ## Hors scope
 
-Deferred deep link Play Store natif, SMS, rappel J-1, templates par espèce, abonnement facturé « VetPro 834,71 € HTVA / an ».
+Deferred deep link Play Store natif, SMS, rappel J-1, templates par espèce, inbox topbar urgences, abonnement facturé « VetPro 834,71 € HTVA / an ».

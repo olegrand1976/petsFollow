@@ -249,6 +249,14 @@
     "visit_request_detail": "Proposed time: {when}\nNotes: {notes}",
     "visit_request_cta": "View request",
     "visit_request_disclaimer": "Sign in to petsFollow Pro to confirm or propose another slot.",
+    "preconsult_urgent_subject": "Urgent pre-consultation — {petName}",
+    "preconsult_urgent_tagline": "Pre-consultation alert",
+    "preconsult_urgent_preheader": "Urgency flagged for {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Hello,",
+    "preconsult_urgent_intro": "An urgent pre-consultation was submitted for {petName} ({clientName}).",
+    "preconsult_urgent_detail": "Appointment: {when}\nChief complaint: {chiefComplaint}\nDeclared urgency: {urgency}\nAI summary: {aiSummary}",
+    "preconsult_urgent_cta": "View appointment",
+    "preconsult_urgent_disclaimer": "Sign in to petsFollow Pro to review the file and prioritize care.",
     "footer_powered_by": "petsFollow — powered by LL-IT Software & Computer",
     "footer_visit_llit": "Visit LL-IT Software & Computer",
     "product_digest_subject": "petsFollow — Updates for {date}",
@@ -624,7 +632,10 @@
     "sales_branch_congrats_detail": "• Name: {branchName}\n• Code: {branchCode}\n\nYou can review your assignment in the Network section of petsFollow Pro.",
     "sales_branch_congrats_cta": "View my network",
     "sales_branch_congrats_disclaimer": "Automated email — petsFollow sales branch creation.",
-    "sales_branch_congrats_fallback_name": "salesperson"
+    "sales_branch_congrats_fallback_name": "salesperson",
+    "preconsult_urgency_low": "Low",
+    "preconsult_urgency_medium": "Moderate",
+    "preconsult_urgency_high": "High"
   },
   "push": {
     "new_message_title": "New message",

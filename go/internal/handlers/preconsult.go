@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/authx"
+	"github.com/olegrand1976/petsFollow/go/internal/platform/gemini"
 	"github.com/olegrand1976/petsFollow/go/internal/platform/httpx"
 	"github.com/olegrand1976/petsFollow/go/internal/store"
 	"github.com/olegrand1976/petsFollow/go/pkg/kernel"
@@ -89,6 +90,7 @@ func (a *API) putVisitPreconsult(w http.ResponseWriter, r *http.Request) {
 	}
 	in.PetID = pet.ID
 	in.PetName = pet.Name
+	a.afterPreconsultSubmitted(pet, visit, in.Answers)
 	httpx.WriteData(w, http.StatusOK, in)
 }
 
@@ -247,6 +249,9 @@ func (a *API) postPublicPreconsult(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = a.store.MarkPreconsultTokenUsed(r.Context(), token)
+	if pet, perr := a.store.GetPet(r.Context(), visit.PetID); perr == nil {
+		a.afterPreconsultSubmitted(pet, visit, in.Answers)
+	}
 	ctxData, _ := a.store.GetPublicPreconsultContext(r.Context(), visitID)
 	a.enrichPublicPreconsultLinks(r.Context(), &ctxData)
 	android, ios, _ := a.store.StoreQRAssets(r.Context())
@@ -259,6 +264,68 @@ func (a *API) postPublicPreconsult(w http.ResponseWriter, r *http.Request) {
 		"qrAndroid":    brandAssetPublicDTO(android),
 		"qrIos":        brandAssetPublicDTO(ios),
 	})
+}
+
+// afterPreconsultSubmitted alerts on declared high immediately, then Gemini (soft-fail), then AI-red if needed.
+func (a *API) afterPreconsultSubmitted(pet store.Pet, visit store.Visit, answers store.PreconsultAnswers) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		defer cancel()
+
+		notified := false
+		if answers.Urgency == "high" {
+			a.notifyVetsPreconsultUrgent(ctx, pet, visit, answers, "")
+			notified = true
+		}
+
+		aiUrgency := ""
+		aiSummary := ""
+		locale := a.preconsultAILocale(ctx, pet)
+		if a.gemini != nil && a.gemini.Configured() {
+			out, err := a.gemini.AssessPreconsultUrgency(ctx, gemini.PreconsultUrgencyInput{
+				Locale:         locale,
+				PetName:        pet.Name,
+				Species:        pet.Species,
+				ChiefComplaint: answers.ChiefComplaint,
+				Duration:       answers.Duration,
+				Behavior:       answers.Behavior,
+				Appetite:       answers.Appetite,
+				Thirst:         answers.Thirst,
+				Elimination:    answers.Elimination,
+				Urgency:        answers.Urgency,
+				Comment:        answers.Comment,
+			})
+			if err != nil {
+				log.Printf("preconsult: gemini assess visit %s: %v", visit.ID, err)
+			} else if out != nil {
+				aiUrgency = string(out.Urgency)
+				aiSummary = out.Summary
+				if serr := a.store.SavePreconsultAIAssessment(ctx, visit.ID, aiUrgency, aiSummary); serr != nil {
+					log.Printf("preconsult: save ai assess visit %s: %v", visit.ID, serr)
+				}
+			}
+		}
+		if aiUrgency == "red" && !notified {
+			a.notifyVetsPreconsultUrgent(ctx, pet, visit, answers, aiSummary)
+		}
+	}()
+}
+
+// preconsultAILocale picks practice/vet locale for the AI summary (not the client's).
+func (a *API) preconsultAILocale(ctx context.Context, pet store.Pet) string {
+	if refID, err := a.store.PracticeReferenceVetUserID(ctx, pet.PracticeID); err == nil && refID != "" {
+		if loc, err := a.store.GetUserPreferredLocale(ctx, refID); err == nil && strings.TrimSpace(loc) != "" {
+			return loc
+		}
+	}
+	if vets, err := a.store.ListVetsForVisitAlert(ctx, pet.PracticeID, pet.OwnerUserID); err == nil {
+		for _, vet := range vets {
+			if strings.TrimSpace(vet.PreferredLocale) != "" {
+				return vet.PreferredLocale
+			}
+		}
+	}
+	return "fr"
 }
 
 func (a *API) enrichPublicPreconsultLinks(ctx context.Context, out *store.PublicPreconsultContext) {

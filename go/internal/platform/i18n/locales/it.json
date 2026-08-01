@@ -249,6 +249,14 @@
     "visit_request_detail": "Data proposta: {when}\nNote: {notes}",
     "visit_request_cta": "Visualizza richiesta",
     "visit_request_disclaimer": "Accedi a petsFollow Pro per confermare o suggerire un altro slot.",
+    "preconsult_urgent_subject": "Pre-consulto urgente — {petName}",
+    "preconsult_urgent_tagline": "Avviso pre-consulto",
+    "preconsult_urgent_preheader": "Urgenza segnalata per {petName} ({clientName}).",
+    "preconsult_urgent_greeting": "Ciao,",
+    "preconsult_urgent_intro": "È stato inviato un pre-consulto urgente per {petName} ({clientName}).",
+    "preconsult_urgent_detail": "Appuntamento: {when}\nMotivo: {chiefComplaint}\nUrgenza dichiarata: {urgency}\nSintesi IA: {aiSummary}",
+    "preconsult_urgent_cta": "Vedi appuntamento",
+    "preconsult_urgent_disclaimer": "Accedi a petsFollow Pro per consultare il fascicolo e dare priorità alla presa in carico.",
     "footer_powered_by": "petsFollow: gestito da LL-IT Software & Computer",
     "footer_visit_llit": "Visita il sito web di LL-IT Software e computer",
     "product_digest_subject": "petsFollow — Evoluzioni di {date}",
@@ -512,7 +520,10 @@
     "sales_branch_congrats_detail": "• Nome: {branchName}\n• Codice: {branchCode}\n\nPuoi consultare il tuo assegnamento nella sezione Rete di petsFollow Pro.",
     "sales_branch_congrats_cta": "Vedi la mia rete",
     "sales_branch_congrats_disclaimer": "Email automatica — creazione filiale commerciale petsFollow.",
-    "sales_branch_congrats_fallback_name": "commerciale"
+    "sales_branch_congrats_fallback_name": "commerciale",
+    "preconsult_urgency_low": "Bassa",
+    "preconsult_urgency_medium": "Moderata",
+    "preconsult_urgency_high": "Alta"
   },
   "push": {
     "new_message_title": "Nuovo messaggio",

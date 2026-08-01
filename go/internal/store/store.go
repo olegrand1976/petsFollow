@@ -1116,6 +1116,19 @@ func (s *Store) LogNotification(ctx context.Context, vetID, kind string, payload
 	return err
 }
 
+// HasNotificationKindForVisit reports whether any notification_log row exists for kind+visitId.
+func (s *Store) HasNotificationKindForVisit(ctx context.Context, kind, visitID string) (bool, error) {
+	visitID = strings.TrimSpace(visitID)
+	if kind == "" || visitID == "" {
+		return false, nil
+	}
+	var n int
+	err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM notifications.notification_log
+		WHERE kind = $1 AND payload->>'visitId' = $2`, kind, visitID).Scan(&n)
+	return n > 0, err
+}
+
 func (s *Store) GetVetForClient(ctx context.Context, clientID, practiceID string) (string, error) {
 	var vetID string
 	err := s.pool.QueryRow(ctx, `

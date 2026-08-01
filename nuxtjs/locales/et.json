@@ -3052,6 +3052,11 @@
     "newAppointmentCreated": "Vastuvõtt loodud.",
     "newAppointmentFailed": "Vastuvõtu loomine ebaõnnestus.",
     "newAppointmentLoadFailed": "Vormi andmete laadimine ebaõnnestus.",
+    "newAppt": {
+      "sectionWho": "Kes",
+      "sectionWhen": "Millal",
+      "preconsultHint": "Klient saab lingi, et kirjeldada looma seisundit enne vastuvõttu."
+    },
     "selectClient": "Vali klient…",
     "selectPet": "Vali loom…",
     "visitType": "Vastuvõtu tüüp",
@@ -3160,6 +3165,16 @@
     "preconsultElimination": "Väljaheide / uriin",
     "preconsultUrgency": "Kiireloomulisus",
     "preconsultComment": "Kommentaar",
+    "preconsultUrgentShort": "Kiireloomuline",
+    "preconsultAiTitle": "AI triaaž",
+    "preconsultAiDisclaimer": "Ainult suunav — ei asenda kliinilist hinnangut.",
+    "preconsultAiLevel": "Tase",
+    "preconsultAiSummary": "Kokkuvõte",
+    "preconsultAiLevels": {
+      "green": "Madal",
+      "orange": "Jälgida",
+      "red": "Kiireloomuline"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Täna",

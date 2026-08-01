@@ -3083,6 +3083,11 @@
     "newAppointmentCreated": "Afspraak aangemaakt.",
     "newAppointmentFailed": "Afspraak aanmaken mislukt.",
     "newAppointmentLoadFailed": "Formuliergegevens laden mislukt.",
+    "newAppt": {
+      "sectionWho": "Wie",
+      "sectionWhen": "Wanneer",
+      "preconsultHint": "De cliënt ontvangt een link om de toestand van het dier vóór het bezoek te beschrijven."
+    },
     "selectClient": "Kies een cliënt…",
     "selectPet": "Kies een dier…",
     "visitType": "Type afspraak",
@@ -3191,6 +3196,16 @@
     "preconsultElimination": "Ontlasting / urine",
     "preconsultUrgency": "Urgentie",
     "preconsultComment": "Opmerking",
+    "preconsultUrgentShort": "Urgent",
+    "preconsultAiTitle": "AI-triage",
+    "preconsultAiDisclaimer": "Enkel indicatief — vervangt geen klinisch oordeel.",
+    "preconsultAiLevel": "Niveau",
+    "preconsultAiSummary": "Samenvatting",
+    "preconsultAiLevels": {
+      "green": "Laag",
+      "orange": "Opvolgen",
+      "red": "Urgent"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Vandaag",

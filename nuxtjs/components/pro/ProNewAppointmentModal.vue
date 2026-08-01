@@ -1,139 +1,172 @@
 <template>
-  <ProModal :open="open" :title="$t('calendar.newAppointment')" @update:open="onOpenChange">
-    <form class="new-appt" data-testid="new-appointment-modal" @submit.prevent="submit(false)">
-      <div class="pro-field">
-        <label class="pro-label" for="new-appt-client">{{ $t('calendar.columnClient') }}</label>
-        <select
-          id="new-appt-client"
-          v-model="clientId"
-          class="pro-select"
-          required
-          data-testid="new-appt-client"
-        >
-          <option value="">{{ $t('calendar.selectClient') }}</option>
-          <option v-for="c in clients" :key="c.userId" :value="c.userId">
-            {{ c.displayName || c.email || c.userId }}
-          </option>
-        </select>
-      </div>
+  <ProModal
+    :open="open"
+    size="lg"
+    :title="$t('calendar.newAppointment')"
+    @update:open="onOpenChange"
+  >
+    <form
+      id="new-appt-form"
+      class="new-appt"
+      data-testid="new-appointment-modal"
+      @submit.prevent="submit(false)"
+    >
+      <div class="new-appt__grid">
+        <section class="new-appt__section" aria-labelledby="new-appt-who">
+          <h3 id="new-appt-who" class="pro-section-title">{{ $t('calendar.newAppt.sectionWho') }}</h3>
 
-      <div class="pro-field">
-        <label class="pro-label" for="new-appt-pet">{{ $t('calendar.columnPet') }}</label>
-        <select
-          id="new-appt-pet"
-          v-model="petId"
-          class="pro-select"
-          required
-          :disabled="!clientId || petsLoading"
-          data-testid="new-appt-pet"
-        >
-          <option value="">{{ $t('calendar.selectPet') }}</option>
-          <option v-for="p in pets" :key="p.id" :value="p.id">{{ p.name }}</option>
-        </select>
-      </div>
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-client">{{ $t('calendar.columnClient') }}</label>
+            <select
+              id="new-appt-client"
+              v-model="clientId"
+              class="pro-select"
+              required
+              data-testid="new-appt-client"
+            >
+              <option value="">{{ $t('calendar.selectClient') }}</option>
+              <option v-for="c in clients" :key="c.userId" :value="c.userId">
+                {{ c.displayName || c.email || c.userId }}
+              </option>
+            </select>
+          </div>
 
-      <div class="pro-field">
-        <label class="pro-label" for="new-appt-type">{{ $t('calendar.visitType') }}</label>
-        <select
-          id="new-appt-type"
-          v-model="visitTypeId"
-          class="pro-select"
-          data-testid="new-appt-type"
-        >
-          <option value="">{{ $t('calendar.visitTypeNone') }}</option>
-          <option v-for="vt in visitTypes" :key="vt.id" :value="vt.id">
-            {{ vt.name }} ({{ vt.durationMinutes }} min)
-          </option>
-        </select>
-      </div>
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-pet">{{ $t('calendar.columnPet') }}</label>
+            <select
+              id="new-appt-pet"
+              v-model="petId"
+              class="pro-select"
+              required
+              :disabled="!clientId || petsLoading"
+              data-testid="new-appt-pet"
+            >
+              <option value="">{{ $t('calendar.selectPet') }}</option>
+              <option v-for="p in pets" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </div>
 
-      <div class="pro-field">
-        <label class="pro-label" for="new-appt-day">{{ $t('calendar.newAppointmentDay') }}</label>
-        <input
-          id="new-appt-day"
-          v-model="day"
-          type="date"
-          class="pro-input"
-          required
-          data-testid="new-appt-day"
-        >
-      </div>
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-type">{{ $t('calendar.visitType') }}</label>
+            <select
+              id="new-appt-type"
+              v-model="visitTypeId"
+              class="pro-select"
+              data-testid="new-appt-type"
+            >
+              <option value="">{{ $t('calendar.visitTypeNone') }}</option>
+              <option v-for="vt in visitTypes" :key="vt.id" :value="vt.id">
+                {{ vt.name }} ({{ vt.durationMinutes }} min)
+              </option>
+            </select>
+          </div>
 
-      <div v-if="day" class="new-appt__day" data-testid="new-appt-day-agenda">
-        <h3 class="pro-section-title">{{ $t('calendar.dayAgenda') }}</h3>
-        <p v-if="!dayVisits.length" class="text-muted">{{ $t('calendar.dayAgendaEmpty') }}</p>
-        <ul v-else class="new-appt__day-list">
-          <li
-            v-for="item in dayAgenda"
-            :key="item.key"
-            class="new-appt__day-item"
-            :class="{ 'new-appt__day-item--free': item.kind === 'free' }"
-          >
-            <span
-              v-if="item.kind === 'visit' && item.color"
-              class="new-appt__swatch"
-              :style="{ background: item.color }"
-            />
-            <span class="new-appt__when">{{ item.label }}</span>
-            <span v-if="item.title" class="new-appt__title">{{ item.title }}</span>
-          </li>
-        </ul>
-      </div>
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-notes">{{ $t('clients.pet.visitNotes') }}</label>
+            <input id="new-appt-notes" v-model="notes" type="text" class="pro-input" data-testid="new-appt-notes">
+          </div>
 
-      <div class="new-appt__row">
-        <div class="pro-field">
-          <label class="pro-label" for="new-appt-time">{{ $t('calendar.newAppointmentTime') }}</label>
-          <input
-            id="new-appt-time"
-            v-model="time"
-            type="time"
-            class="pro-input"
-            required
-            data-testid="new-appt-time"
-          >
-        </div>
-        <div class="pro-field">
-          <label class="pro-label" for="new-appt-duration">{{ $t('calendar.durationMinutes') }}</label>
-          <input
-            id="new-appt-duration"
-            v-model.number="durationMinutes"
-            type="number"
-            class="pro-input"
-            min="5"
-            max="480"
-            step="5"
-            :disabled="!!visitTypeId"
-            required
-            data-testid="new-appt-duration"
-          >
-        </div>
-      </div>
-      <p v-if="visitTypeId" class="pro-settings-hint">{{ $t('calendar.durationFromType') }}</p>
+          <label class="pro-checkbox-row">
+            <input v-model="requestPreconsult" type="checkbox" data-testid="new-appt-preconsult">
+            <span>{{ $t('clients.pet.visitRequestPreconsult') }}</span>
+          </label>
+          <p class="pro-settings-hint">{{ $t('calendar.newAppt.preconsultHint') }}</p>
+        </section>
 
-      <div class="pro-field">
-        <label class="pro-label" for="new-appt-notes">{{ $t('clients.pet.visitNotes') }}</label>
-        <input id="new-appt-notes" v-model="notes" type="text" class="pro-input" data-testid="new-appt-notes">
-      </div>
+        <section class="new-appt__section" aria-labelledby="new-appt-when">
+          <h3 id="new-appt-when" class="pro-section-title">{{ $t('calendar.newAppt.sectionWhen') }}</h3>
 
-      <label class="pro-checkbox-row">
-        <input v-model="requestPreconsult" type="checkbox" data-testid="new-appt-preconsult">
-        <span>{{ $t('clients.pet.visitRequestPreconsult') }}</span>
-      </label>
+          <div class="pro-field">
+            <label class="pro-label" for="new-appt-day">{{ $t('calendar.newAppointmentDay') }}</label>
+            <input
+              id="new-appt-day"
+              v-model="day"
+              type="date"
+              class="pro-input"
+              required
+              data-testid="new-appt-day"
+            >
+          </div>
+
+          <div v-if="day" class="new-appt__day" data-testid="new-appt-day-agenda">
+            <h4 class="pro-section-title">{{ $t('calendar.dayAgenda') }}</h4>
+            <p v-if="!dayVisits.length" class="text-muted">{{ $t('calendar.dayAgendaEmpty') }}</p>
+            <ul v-else class="new-appt__day-list">
+              <li
+                v-for="item in dayAgenda"
+                :key="item.key"
+                class="new-appt__day-item"
+                :class="{ 'new-appt__day-item--free': item.kind === 'free' }"
+              >
+                <span
+                  v-if="item.kind === 'visit' && item.color"
+                  class="new-appt__swatch"
+                  :style="{ background: item.color }"
+                />
+                <span class="new-appt__when">{{ item.label }}</span>
+                <span v-if="item.title" class="new-appt__title">{{ item.title }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="new-appt__row">
+            <div class="pro-field">
+              <label class="pro-label" for="new-appt-time">{{ $t('calendar.newAppointmentTime') }}</label>
+              <input
+                id="new-appt-time"
+                v-model="time"
+                type="time"
+                class="pro-input"
+                required
+                data-testid="new-appt-time"
+              >
+            </div>
+            <div class="pro-field">
+              <label class="pro-label" for="new-appt-duration">{{ $t('calendar.durationMinutes') }}</label>
+              <input
+                id="new-appt-duration"
+                v-model.number="durationMinutes"
+                type="number"
+                class="pro-input"
+                min="5"
+                max="480"
+                step="5"
+                :disabled="!!visitTypeId"
+                required
+                data-testid="new-appt-duration"
+              >
+            </div>
+          </div>
+          <p v-if="visitTypeId" class="pro-settings-hint">{{ $t('calendar.durationFromType') }}</p>
+        </section>
+      </div>
 
       <p v-if="error" class="pro-field-error" role="alert">{{ error }}</p>
-
-      <div class="create-client-actions">
-        <ProButton type="button" variant="ghost" :disabled="busy" @click="onOpenChange(false)">
-          {{ $t('common.cancel') }}
-        </ProButton>
-        <ProButton type="submit" variant="secondary" :disabled="busy || !canSubmit" data-testid="new-appt-propose">
-          {{ $t('clients.pet.visitPropose') }}
-        </ProButton>
-        <ProButton type="button" :loading="busy" :disabled="!canSubmit" data-testid="new-appt-confirm" @click="submit(true)">
-          {{ $t('clients.pet.visitConfirmDirect') }}
-        </ProButton>
-      </div>
     </form>
+
+    <template #footer>
+      <ProButton type="button" variant="ghost" :disabled="busy" @click="onOpenChange(false)">
+        {{ $t('common.cancel') }}
+      </ProButton>
+      <ProButton
+        type="submit"
+        form="new-appt-form"
+        variant="secondary"
+        :disabled="busy || !canSubmit"
+        data-testid="new-appt-propose"
+      >
+        {{ $t('clients.pet.visitPropose') }}
+      </ProButton>
+      <ProButton
+        type="button"
+        :loading="busy"
+        :disabled="!canSubmit"
+        data-testid="new-appt-confirm"
+        @click="submit(true)"
+      >
+        {{ $t('clients.pet.visitConfirmDirect') }}
+      </ProButton>
+    </template>
   </ProModal>
 </template>
 
@@ -336,6 +369,18 @@ async function submit(confirmDirect: boolean) {
   flex-direction: column;
   gap: 0.75rem;
 }
+.new-appt__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+}
+.new-appt__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
 .new-appt__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -346,7 +391,7 @@ async function submit(confirmDirect: boolean) {
   border-radius: var(--pf-vet-radius-md, 8px);
   padding: 0.75rem;
   background: var(--pf-vet-bg);
-  max-height: 14rem;
+  max-height: 18rem;
   overflow: auto;
 }
 .new-appt__day-list {
@@ -378,14 +423,10 @@ async function submit(confirmDirect: boolean) {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.create-client-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 0.5rem;
-}
-@media (max-width: 560px) {
+@media (max-width: 720px) {
+  .new-appt__grid {
+    grid-template-columns: 1fr;
+  }
   .new-appt__row {
     grid-template-columns: 1fr;
   }

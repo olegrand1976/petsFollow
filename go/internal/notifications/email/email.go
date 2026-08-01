@@ -457,6 +457,55 @@ func (n *Notifier) SendVisitRequest(to, locale, clientName, petName, when, notes
 	return n.SendVetAlert(to, subject, body)
 }
 
+func (n *Notifier) SendPreconsultUrgent(to, locale, clientName, petName, when, chiefComplaint, urgency, aiSummary, ctaURL string) error {
+	locale = i18n.NormalizeLocale(locale)
+	urgencyLabel := strings.TrimSpace(urgency)
+	switch strings.ToLower(urgencyLabel) {
+	case "low":
+		urgencyLabel = mustT(locale, "emails.preconsult_urgency_low")
+	case "medium":
+		urgencyLabel = mustT(locale, "emails.preconsult_urgency_medium")
+	case "high":
+		urgencyLabel = mustT(locale, "emails.preconsult_urgency_high")
+	case "":
+		urgencyLabel = "—"
+	}
+	vars := map[string]string{
+		"clientName":     clientName,
+		"petName":        petName,
+		"when":           when,
+		"chiefComplaint": chiefComplaint,
+		"urgency":        urgencyLabel,
+		"aiSummary":      aiSummary,
+	}
+	if vars["when"] == "" {
+		vars["when"] = "—"
+	}
+	if vars["chiefComplaint"] == "" {
+		vars["chiefComplaint"] = "—"
+	}
+	if vars["aiSummary"] == "" {
+		vars["aiSummary"] = "—"
+	}
+	subject := mustT(locale, "emails.preconsult_urgent_subject", vars)
+	detail := mustT(locale, "emails.preconsult_urgent_detail", vars)
+	body := renderBrandedEmail(brandedEmailContent{
+		Lang:            locale,
+		Tagline:         mustT(locale, "emails.preconsult_urgent_tagline"),
+		Greeting:        mustT(locale, "emails.preconsult_urgent_greeting"),
+		Intro:           mustT(locale, "emails.preconsult_urgent_intro", vars),
+		Detail:          detail,
+		CTALabel:        mustT(locale, "emails.preconsult_urgent_cta"),
+		CTAURL:          ctaURL,
+		Disclaimer:      mustT(locale, "emails.preconsult_urgent_disclaimer"),
+		Preheader:       mustT(locale, "emails.preconsult_urgent_preheader", vars),
+		Brand:           n.brandURLs(),
+		FooterPoweredBy: mustT(locale, "emails.footer_powered_by"),
+		FooterVisit:     mustT(locale, "emails.footer_visit_llit"),
+	})
+	return n.SendVetAlert(to, subject, body)
+}
+
 // SendPetDossierShare emails a pro with a 24h download link for a client pet dossier.
 func (n *Notifier) SendPetDossierShare(
 	to, locale, petName, clientName, downloadURL,

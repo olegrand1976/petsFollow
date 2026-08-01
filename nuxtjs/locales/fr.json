@@ -2631,6 +2631,11 @@
     "newAppointmentCreated": "Rendez-vous créé.",
     "newAppointmentFailed": "Création du rendez-vous impossible.",
     "newAppointmentLoadFailed": "Impossible de charger les données du formulaire.",
+    "newAppt": {
+      "sectionWho": "Qui",
+      "sectionWhen": "Quand",
+      "preconsultHint": "Le client reçoit un lien pour décrire l'état de l'animal avant la visite."
+    },
     "selectClient": "Choisir un client…",
     "selectPet": "Choisir un animal…",
     "visitType": "Type de RDV",
@@ -2761,6 +2766,16 @@
     "preconsultElimination": "Selles / urines",
     "preconsultUrgency": "Urgence",
     "preconsultComment": "Commentaire",
+    "preconsultUrgentShort": "Urgent",
+    "preconsultAiTitle": "Repérage IA",
+    "preconsultAiDisclaimer": "Indication indicative — ne remplace pas le jugement clinique.",
+    "preconsultAiLevel": "Niveau",
+    "preconsultAiSummary": "Synthèse",
+    "preconsultAiLevels": {
+      "green": "Faible",
+      "orange": "À surveiller",
+      "red": "Urgent"
+    },
     "preconsultEnums": {
       "duration": {
         "today": "Aujourd'hui",
